@@ -6,7 +6,7 @@ import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star
 import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
-import { ActivityFolder, ActivityFolderItem } from '@/types/activityFolder';
+import { ActivityFolder, ActivityFolderItem, getCurrentCycleWeek } from '@/types/activityFolder';
 
 export interface FolderGamePlanTask {
   folderId: string;
@@ -605,9 +605,18 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           .order('order_index');
 
         const allItems = (folderItemsData || []) as unknown as ActivityFolderItem[];
+        const folderMap = new Map(allFolders.map(f => [f.id, f]));
 
-        // Filter items to today
+        // Filter items to today + cycle week filtering
         const todayItems = allItems.filter(item => {
+          // Cycle week filter for rotating programs
+          const itemFolder = folderMap.get(item.folder_id);
+          if (itemFolder && itemFolder.cycle_type === 'custom_rotation' && itemFolder.start_date && itemFolder.cycle_length_weeks) {
+            const currentWeek = getCurrentCycleWeek(itemFolder.start_date, itemFolder.cycle_length_weeks);
+            if (item.cycle_week !== null && item.cycle_week !== undefined && item.cycle_week !== currentWeek) return false;
+            if (item.cycle_week !== null && item.cycle_week !== undefined && item.cycle_week !== currentWeek) return false;
+          }
+
           const hasDays = item.assigned_days && item.assigned_days.length > 0;
           const hasDates = item.specific_dates && item.specific_dates.length > 0;
           if (!hasDays && !hasDates) return true; // always show
@@ -633,7 +642,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         }
 
         // Build folder tasks
-        const folderMap = new Map(allFolders.map(f => [f.id, f]));
         const builtFolderTasks: FolderGamePlanTask[] = todayItems.map(item => {
           const folder = folderMap.get(item.folder_id)!;
           const completion = completionsMap[item.id];

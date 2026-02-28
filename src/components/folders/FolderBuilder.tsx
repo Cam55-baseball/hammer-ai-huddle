@@ -147,22 +147,32 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
         {/* Frequency Days removed - scheduling is at activity level only */}
 
         {/* Cycle Type */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Cycle Type</Label>
-            <Select value={cycleType} onValueChange={setCycleType}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="weekly">Repeating Weekly</SelectItem>
-                <SelectItem value="custom_rotation">Custom Rotation</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {cycleType === 'custom_rotation' && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Cycle Length (Weeks)</Label>
-              <Input type="number" min={2} max={12} value={cycleLengthWeeks} onChange={e => setCycleLengthWeeks(Number(e.target.value))} />
+              <Label>Program Type</Label>
+              <Select value={cycleType} onValueChange={setCycleType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Same Every Week</SelectItem>
+                  <SelectItem value="custom_rotation">Rotating Program</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            {cycleType === 'custom_rotation' && (
+              <div className="space-y-2">
+                <Label>Rotation Length (Weeks)</Label>
+                <Input type="number" min={2} max={12} value={cycleLengthWeeks} onChange={e => setCycleLengthWeeks(Number(e.target.value))} />
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {cycleType === 'custom_rotation'
+              ? `Activities tagged with the current rotation week will appear on your Game Plan. The system auto-advances each week based on your start date. You're setting up a ${cycleLengthWeeks}-week rotating cycle.`
+              : 'All activities in this folder appear every week on their scheduled days.'}
+          </p>
+          {cycleType === 'custom_rotation' && !startDate && (
+            <p className="text-xs text-destructive font-medium">⚠ A Start Date is required for rotating programs so the system can calculate the current week.</p>
           )}
         </div>
 
@@ -181,7 +191,7 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
-          <Button onClick={handleSave} disabled={!name.trim() || saving} className="flex-1">
+          <Button onClick={handleSave} disabled={!name.trim() || saving || (cycleType === 'custom_rotation' && !startDate)} className="flex-1">
             {saving ? 'Saving...' : (initialData ? 'Update Folder' : 'Create Folder')}
           </Button>
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
