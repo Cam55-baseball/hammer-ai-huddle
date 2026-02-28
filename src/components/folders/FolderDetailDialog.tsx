@@ -13,11 +13,31 @@ import { FolderBuilder } from './FolderBuilder';
 import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
 import { ActivityPickerDialog } from './ActivityPickerDialog';
 import { CustomActivityTemplate, Exercise } from '@/types/customActivity';
-import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil, Plus, Library, Edit } from 'lucide-react';
+import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil, Plus, Library, Edit, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable item wrapper
+function SortableFolderItem({ id, children }: { id: string; children: (props: { dragHandleProps: React.HTMLAttributes<HTMLDivElement>; style: React.CSSProperties }) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative' as const,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ dragHandleProps: { ...attributes, ...listeners }, style: {} })}
+    </div>
+  );
+}
 
 interface FolderDetailDialogProps {
   open: boolean;
@@ -49,6 +69,26 @@ export function FolderDetailDialog({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [showCurrentWeekOnly, setShowCurrentWeekOnly] = useState(true);
   const [pendingCycleWeek, setPendingCycleWeek] = useState<number | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = items.findIndex(i => i.id === active.id);
+    const newIdx = items.findIndex(i => i.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove([...items], oldIdx, newIdx);
+    setItems(reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from('activity_folder_items')
+        .update({ order_index: i })
+        .eq('id', reordered[i].id);
+    }
+  };
 
   useEffect(() => {
     if (!open || !folder) return;
@@ -322,65 +362,74 @@ export function FolderDetailDialog({
             ) : displayItems.length === 0 ? (
               <p className="text-sm text-muted-foreground">{isRotating && showCurrentWeekOnly ? 'No items for the current rotation week.' : 'No items yet.'}</p>
             ) : (
-              displayItems.map(item => (
-                <div key={item.id} className="p-3 rounded-lg border bg-card space-y-1">
-                  <div className="flex items-start gap-3">
-                    {item.completion_tracking && onToggleCompletion && (
-                      <Checkbox
-                        checked={completions[item.id] || false}
-                        onCheckedChange={() => handleToggle(item.id)}
-                        className="mt-0.5"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
-                          {item.title}
-                        </span>
-                        {item.item_type && (
-                          <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
-                        )}
-                        {performanceDataMap[item.id]?.sets?.length > 0 && (
-                          <Badge variant="secondary" className="text-[10px]">{performanceDataMap[item.id].sets.length} sets</Badge>
-                        )}
-                      </div>
-                      {item.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
-                        {item.specific_dates && item.specific_dates.length > 0 ? (
-                          <span className="flex items-center gap-0.5">
-                            <CalendarDays className="h-2.5 w-2.5" />
-                            {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
-                          </span>
-                        ) : item.assigned_days && item.assigned_days.length > 0 ? (
-                          <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
-                        ) : null}
-                        {item.duration_minutes && (
-                          <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
-                        )}
-                        {item.cycle_week && <span>Wk {item.cycle_week}</span>}
-                        {item.notes && (
-                          <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {item.completion_tracking && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => setExpandedLoggers(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                        >
-                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expandedLoggers[item.id] ? 'rotate-180' : ''}`} />
-                        </Button>
-                      )}
-                      {isOwner && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={displayItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                  {displayItems.map(item => (
+                    <SortableFolderItem key={item.id} id={item.id}>
+                      {({ dragHandleProps }) => (
+                        <div className="p-3 rounded-lg border bg-card space-y-1">
+                          <div className="flex items-start gap-2">
+                            {isOwner && (
+                              <div {...dragHandleProps} className="cursor-grab mt-1 touch-none">
+                                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            )}
+                            {item.completion_tracking && onToggleCompletion && (
+                              <Checkbox
+                                checked={completions[item.id] || false}
+                                onCheckedChange={() => handleToggle(item.id)}
+                                className="mt-0.5"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
+                                  {item.title}
+                                </span>
+                                {item.item_type && (
+                                  <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
+                                )}
+                                {performanceDataMap[item.id]?.sets?.length > 0 && (
+                                  <Badge variant="secondary" className="text-[10px]">{performanceDataMap[item.id].sets.length} sets</Badge>
+                                )}
+                              </div>
+                              {item.description && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                              )}
+                              <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                                {item.specific_dates && item.specific_dates.length > 0 ? (
+                                  <span className="flex items-center gap-0.5">
+                                    <CalendarDays className="h-2.5 w-2.5" />
+                                    {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
+                                  </span>
+                                ) : item.assigned_days && item.assigned_days.length > 0 ? (
+                                  <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
+                                ) : null}
+                                {item.duration_minutes && (
+                                  <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
+                                )}
+                                {item.cycle_week && <span>Wk {item.cycle_week}</span>}
+                                {item.notes && (
+                                  <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {item.completion_tracking && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => setExpandedLoggers(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                >
+                                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expandedLoggers[item.id] ? 'rotate-180' : ''}`} />
+                                </Button>
+                              )}
+                              {isOwner && (
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                       {isOwner && onDeleteItem && (
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}>
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -397,8 +446,12 @@ export function FolderDetailDialog({
                       compact
                     />
                   )}
-                </div>
-              ))
+                        </div>
+                      )}
+                    </SortableFolderItem>
+                  ))}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </div>

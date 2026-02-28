@@ -229,12 +229,13 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
           <div className="grid gap-3 sm:grid-cols-2">
             {playerFolders.folders.map(f => (
               <FolderCard
-                key={f.id}
-                folder={f}
-                onOpen={() => openDetail(f, true)}
-                onEdit={() => setEditingFolder(f)}
-                onDelete={() => setDeletingFolder({ folder: f, type: 'player' })}
-              />
+                  key={f.id}
+                  folder={f}
+                  onOpen={() => openDetail(f, true)}
+                  onEdit={() => setEditingFolder(f)}
+                  onDelete={() => setDeletingFolder({ folder: f, type: 'player' })}
+                  showMenu={false}
+                />
             ))}
           </div>
         )}

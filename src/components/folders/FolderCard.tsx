@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ActivityFolder } from '@/types/activityFolder';
-import { FolderOpen, Calendar, Send, MoreVertical, Trash2, Archive, Edit, BookCopy } from 'lucide-react';
+import { FolderOpen, Calendar, Send, MoreVertical, Trash2, Archive, Edit, BookCopy, Pencil } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 
@@ -14,6 +14,7 @@ interface FolderCardProps {
   onDelete?: (folder: ActivityFolder) => void;
   onArchive?: (folder: ActivityFolder) => void;
   onPublishTemplate?: (folder: ActivityFolder) => void;
+  showMenu?: boolean;
   itemCount?: number;
 }
 
@@ -24,7 +25,7 @@ const STATUS_STYLES: Record<string, string> = {
   archived: 'bg-muted text-muted-foreground',
 };
 
-export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive, onPublishTemplate, itemCount }: FolderCardProps) {
+export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive, onPublishTemplate, showMenu = true, itemCount }: FolderCardProps) {
   return (
     <Card
       className="cursor-pointer hover:shadow-md transition-shadow border-l-4"
@@ -47,43 +48,58 @@ export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive
             <Badge className={STATUS_STYLES[folder.status] || ''} variant="secondary">
               {folder.status}
             </Badge>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {onSend && folder.status !== 'archived' && (
-                  <DropdownMenuItem onClick={() => onSend(folder)}>
-                    <Send className="h-4 w-4 mr-2" /> Send to Players
-                  </DropdownMenuItem>
-                )}
-                {onEdit && (
-                  <DropdownMenuItem onClick={() => onEdit(folder)}>
-                    <Edit className="h-4 w-4 mr-2" /> Edit
-                  </DropdownMenuItem>
-                )}
-                {onArchive && folder.status !== 'archived' && (
-                  <DropdownMenuItem onClick={() => onArchive(folder)}>
-                    <Archive className="h-4 w-4 mr-2" /> Archive
-                  </DropdownMenuItem>
-                )}
-                {onPublishTemplate && !folder.is_template && folder.status !== 'archived' && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onPublishTemplate(folder)}>
-                      <BookCopy className="h-4 w-4 mr-2" /> Publish as Template
+            {showMenu ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onSend && folder.status !== 'archived' && (
+                    <DropdownMenuItem onClick={() => onSend(folder)}>
+                      <Send className="h-4 w-4 mr-2" /> Send to Players
                     </DropdownMenuItem>
-                  </>
+                  )}
+                  {onEdit && (
+                    <DropdownMenuItem onClick={() => onEdit(folder)}>
+                      <Edit className="h-4 w-4 mr-2" /> Edit
+                    </DropdownMenuItem>
+                  )}
+                  {onArchive && folder.status !== 'archived' && (
+                    <DropdownMenuItem onClick={() => onArchive(folder)}>
+                      <Archive className="h-4 w-4 mr-2" /> Archive
+                    </DropdownMenuItem>
+                  )}
+                  {onPublishTemplate && !folder.is_template && folder.status !== 'archived' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onPublishTemplate(folder)}>
+                        <BookCopy className="h-4 w-4 mr-2" /> Publish as Template
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem onClick={() => onDelete(folder)} className="text-destructive">
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                {onEdit && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(folder)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
                 )}
                 {onDelete && (
-                  <DropdownMenuItem onClick={() => onDelete(folder)} className="text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                  </DropdownMenuItem>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDelete(folder)}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
                 )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </>
+            )}
           </div>
         </div>
 
