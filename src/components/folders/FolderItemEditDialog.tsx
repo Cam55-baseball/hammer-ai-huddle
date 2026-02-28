@@ -100,7 +100,7 @@ export function FolderItemEditDialog({ open, onOpenChange, item, onSaved, cycleT
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-base">Edit Item</DialogTitle>
         </DialogHeader>

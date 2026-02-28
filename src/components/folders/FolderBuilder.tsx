@@ -53,7 +53,7 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
       label,
       start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
       end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
-      frequency_days: frequencyDays.length > 0 ? frequencyDays : null,
+      frequency_days: null,
       cycle_type: cycleType,
       cycle_length_weeks: cycleType === 'custom_rotation' ? cycleLengthWeeks : null,
       placement: placement as any,
@@ -144,26 +144,7 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
           </div>
         </div>
 
-        {/* Frequency Days */}
-        <div className="space-y-2">
-          <Label>Frequency (Days Per Week)</Label>
-          <div className="flex gap-2">
-            {DAY_LABELS.map((label, i) => (
-              <button
-                key={i}
-                onClick={() => toggleDay(i)}
-                className={cn(
-                  "w-10 h-10 rounded-full text-xs font-semibold border-2 transition-all",
-                  frequencyDays.includes(i)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted text-muted-foreground border-border hover:border-primary/50"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Frequency Days removed - scheduling is at activity level only */}
 
         {/* Cycle Type */}
         <div className="grid grid-cols-2 gap-4">
