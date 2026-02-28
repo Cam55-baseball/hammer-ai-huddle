@@ -1,75 +1,72 @@
 
 
-# Activity Editing, Scheduling Order, and Folder Logic Fixes
+# Make Cycle System Crystal Clear -- 10-Year-Old Friendly
 
-## Overview
+## Problem
 
-Three fixes: resolve the scroll cutoff in the activity builder dialog, add drag-and-drop reordering for folder items, and remove the three-dot menu from personal folder cards.
+The cycle/rotation system works correctly in code but the UI provides zero visual explanation. Users see "Program Type" and "Rotating Program" with no understanding of what it does, how it affects their activities, or what "Week 2 of 4" means in practice.
 
-## 1. Critical Scroll Issue -- Edit Activity View
+## Changes
 
-**File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
+### 1. Rewrite FolderBuilder Cycle Section with Visual Explanation
 
-**Root cause**: Line 418 uses `<ScrollArea className="max-h-[calc(90vh-140px)]">` with an inner `<div className="... overflow-hidden">` (line 419). The `ScrollArea` component uses Radix's virtual scrollbar which miscalculates content height, and `overflow-hidden` clips content further. The save footer at line 940 sits outside the scroll container, consuming part of the 90vh budget that the ScrollArea's calc doesn't fully account for.
+**File: `src/components/folders/FolderBuilder.tsx`**
 
-**Fix**:
-- Remove the `ScrollArea` wrapper entirely
-- Change the `DialogContent` (line 396) to use flex-column layout: `className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden"`
-- Replace the `ScrollArea` with a plain `<div className="flex-1 overflow-y-auto px-3 sm:px-6" style={{ WebkitOverflowScrolling: 'touch' }}>` 
-- Remove `overflow-hidden` from the inner content div (line 419), change to just `className="space-y-6 py-4"`
-- The footer (line 940) stays as `flex-shrink-0` -- already correct
-- This ensures native browser scrolling reaches every field, toggle, and the save button on all devices
+Replace the current "Program Type" section (lines 149-177) with a guided, visual explanation:
 
-## 2. Drag-and-Drop Reordering of Folder Items
+- Rename "Program Type" label to **"How should activities repeat?"**
+- Replace the Select dropdown with two tappable cards (radio-style):
+  - **Card 1: "Same Every Week"** with a one-line description: "Your activities show up every week, same routine."  Plus a small visual: `[Mon Tue Wed] -> [Mon Tue Wed] -> [Mon Tue Wed]`
+  - **Card 2: "Rotating Program"** with: "Activities change each week in a cycle, then repeat." Plus a small visual: `[Wk1: Strength] -> [Wk2: Speed] -> [Wk3: Recovery] -> back to Wk1`
+- When "Rotating Program" is selected, show an inline explainer box (styled like a tip/callout):
+  - "Pick a start date and how many weeks your cycle lasts. Each activity you add will be assigned to a specific week. The system automatically knows which week you're in and only shows those activities on your Game Plan."
+  - Visual example: "If you set a 3-week cycle starting Jan 6: Jan 6-12 = Week 1, Jan 13-19 = Week 2, Jan 20-26 = Week 3, Jan 27+ = back to Week 1"
+- Keep the cycle length input but relabel to **"How many weeks before it repeats?"** with a stepper (not raw number input) clamped 2-12
+- Start Date picker gets a helper: "When does Week 1 begin?"
+- If no start date is set when Rotating is chosen, show a friendly warning: "Pick a start date so the system knows which week you're in!"
+
+### 2. Improve Cycle Week Banner in FolderDetailDialog
 
 **File: `src/components/folders/FolderDetailDialog.tsx`**
 
-The `@dnd-kit/sortable` package is already installed. Items already load sorted by `order_index`. The missing piece is the reorder UI.
+Upgrade the existing "Week X of Y" banner (lines 332-344) to be more informative:
 
-**Changes**:
-- Import `DndContext`, `closestCenter`, `KeyboardSensor`, `PointerSensor`, `useSensor`, `useSensors` from `@dnd-kit/core`
-- Import `SortableContext`, `verticalListSortingStrategy`, `useSortable`, `arrayMove` from `@dnd-kit/sortable`
-- Import `CSS` from `@dnd-kit/utilities` and `GripVertical` from `lucide-react`
-- Create a `SortableFolderItem` wrapper component that uses `useSortable` and renders a drag handle (GripVertical icon) alongside each item card
-- Wrap the items list (lines 325-402) in `DndContext` + `SortableContext` with `verticalListSortingStrategy`
-- On `onDragEnd`, use `arrayMove` to reorder the local `items` state, then persist the new `order_index` values to the database:
+- Change from a compact badge to a slightly larger info card
+- Show: "You're in **Week 2** of your 4-week cycle"
+- Add a sub-line: "Activities tagged 'Week 2' are showing. After this week, Week 3 activities will appear."
+- The "Current week only" toggle stays, but relabel to: "Show only this week's activities"
+- When toggle is OFF (showing all), group items visually with week headers: "-- Week 1 --", "-- Week 2 --", etc., plus "-- Every Week --" for untagged items
 
-```text
-const reorderedItems = arrayMove(items, oldIndex, newIndex);
-setItems(reorderedItems);
-// Batch persist
-for (let i = 0; i < reorderedItems.length; i++) {
-  await supabase.from('activity_folder_items')
-    .update({ order_index: i })
-    .eq('id', reorderedItems[i].id);
-}
-```
+### 3. Clarify Cycle Week Selector in Activity Builder
 
-- Order persists for both recurring and specific-date items consistently
-- New items default to the end of the list (existing behavior via `order_index`)
+**File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
 
-## 3. Remove Three-Dot Menu from Personal Folder Cards
+When adding/editing an activity inside a rotating folder, the "Rotation Week" dropdown needs context:
 
-**File: `src/components/folders/FolderCard.tsx`**
+- Relabel from "Rotation Week" to **"Which week does this belong to?"**
+- Add helper text: "This activity will only show on your Game Plan during this week of the cycle"
+- Include an "Every Week" option (sets cycle_week to null) with helper: "Shows up every week, no matter which cycle week it is"
+- Show a visual indicator next to each option: "Wk 1 (current)" if that week is the active one
 
-The `MoreVertical` dropdown menu (lines 50-86) contains Edit, Send, Archive, Publish Template, and Delete actions. For personal folders, only Edit and Delete are passed (no `onSend`, `onArchive`, `onPublishTemplate`).
+### 4. No Multi-Start-Date or Cross-Folder Co-Planning
 
-**Fix**:
-- Add a new optional prop `showMenu?: boolean` (default `true`) to `FolderCardProps`
-- When `showMenu` is `false`, hide the entire `DropdownMenu` block
-- Retain the Edit and Delete actions as direct icon buttons on the card (matching the inline pattern used in `FolderDetailDialog` item cards)
+Each folder is its own independent container. This is by design and should be stated clearly:
 
-**File: `src/components/folders/FolderTabContent.tsx`**
-
-- For the personal folders section (line 231), pass `showMenu={false}` to `FolderCard`
-- Coach folders continue to use the dropdown menu (they need Send, Archive, Publish Template actions)
+- In the FolderBuilder, add a small note under the rotation section: "Each folder runs its own schedule independently."
+- No changes to cross-folder logic needed -- folders don't interact with each other's cycles
 
 ## Technical Summary
 
 | File | Changes |
 |------|---------|
-| `CustomActivityBuilderDialog.tsx` | Replace `ScrollArea` with flex-column layout using native `overflow-y-auto`; remove `overflow-hidden` from inner div |
-| `FolderDetailDialog.tsx` | Add `@dnd-kit/sortable` drag-and-drop reordering with `order_index` persistence |
-| `FolderCard.tsx` | Add `showMenu` prop; when false, replace dropdown with inline Edit/Delete buttons |
-| `FolderTabContent.tsx` | Pass `showMenu={false}` to personal folder `FolderCard` instances |
+| `src/components/folders/FolderBuilder.tsx` | Replace Select dropdown with visual card selector; add inline explainer with examples; relabel all fields to plain language; add stepper for cycle length |
+| `src/components/folders/FolderDetailDialog.tsx` | Upgrade cycle banner to info card with context sentence; group items by week headers when showing all weeks |
+| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | Relabel rotation week dropdown; add helper text; mark current week; add "Every Week" option explanation |
 
+## What This Does NOT Change
+
+- The database schema (no migrations needed)
+- The Game Plan filtering logic (already working correctly)
+- The `getCurrentCycleWeek` calculation (already correct)
+- Cross-folder behavior (folders remain independent by design)
+- The ability to have multiple folders with different rotation schedules (already supported)
