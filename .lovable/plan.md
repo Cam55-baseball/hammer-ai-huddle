@@ -1,89 +1,71 @@
 
 
-# Folder Editing and Activity Card Fixes
+# Folder and Activity Scheduling Fixes
 
-## 1. Critical Bug: Edit Click Triggers Deletion
+## Overview
 
-**Root cause**: In `FolderTabContent.tsx`, the `onDelete` prop on `FolderCard` calls `deleteFolder()` immediately with no confirmation dialog. The dropdown menu items for "Edit" and "Delete" are adjacent, and clicking Edit may be visually misaligning with the Delete handler due to dropdown rendering. Additionally, there is zero confirmation on delete -- one accidental tap permanently removes the folder.
+Four fixes: explicit Save button for folder edits, upgraded scheduling with specific date + weekly + no-schedule options, scroll bug fix in folder edit dialog, and stability improvements.
 
-**Fix**:
-- Add a confirmation dialog (`AlertDialog`) before any folder deletion in `FolderTabContent.tsx`
-- Replace the direct `onDelete={() => playerFolders.deleteFolder(f.id)}` and `onDelete={() => coachFolders.deleteFolder(f.id)}` calls with a state-based flow: set a `deletingFolder` state, show confirm dialog, then delete on confirm
-- This eliminates accidental deletions entirely
+## Changes
 
-## 2. Folder Action Buttons at Bottom of Folder View
+### 1. Explicit Save Button for Folder Edit View
 
-**Current state**: Inside `FolderDetailDialog.tsx`, only "Create Activity" and "Import" buttons exist, embedded in the scrollable content area.
+**File: `src/components/folders/FolderDetailDialog.tsx`** (lines 474-488)
 
-**Fix**:
-- Add a fixed footer section (outside the scrollable div) with four horizontally laid-out buttons: **Create Activity**, **Import**, **Edit Folder**, **Delete Folder**
-- "Edit Folder" opens the `FolderBuilder` in a dialog (same pattern as `FolderTabContent.tsx` line 237-254) pre-populated with folder data
-- "Delete Folder" shows a confirmation `AlertDialog`, then deletes and closes the detail dialog
-- New props needed on `FolderDetailDialog`: `onEditFolder`, `onDeleteFolder`
+Currently, the "Edit Folder" button opens a nested Dialog with `FolderBuilder` inside. `FolderBuilder` already has its own Save/Cancel buttons, so folder edits are NOT auto-saving -- changes persist only when "Update Folder" is clicked.
 
-## 3. Scroll Lock Bug After Editing an Item
+However, the nested Dialog wrapping is causing issues (scroll lock, confusing UX). The fix:
 
-**Root cause**: `FolderItemEditDialog` uses `onPointerDownOutside={(e) => e.preventDefault()}` which can interfere with the parent dialog's scroll state. When the nested dialog closes, the parent `DialogContent` overflow may not reset properly.
+- Remove the nested `<Dialog>` wrapper around `FolderBuilder` when editing
+- Instead, swap the folder detail view to show the `FolderBuilder` inline (similar to how `FolderTabContent` handles it)
+- Add an unsaved-changes guard: track `isDirty` state and show a "Save / Discard" confirmation (`AlertDialog`) if the user tries to close the folder detail dialog while editing
 
-**Fix**:
-- Remove `onPointerDownOutside` prevention from `FolderItemEditDialog` (it's unnecessary for a simple edit form)
-- Ensure the parent scrollable div re-renders properly by keying off the `editingItem` state change
-- Add `overscrollBehavior: 'contain'` is already present; add explicit re-enable of scroll after dialog close
+### 2. Calendar Planning -- Scheduling Options Upgrade
 
-## 4. Remove Folder-Level Weekly Scheduling
+**File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
 
-**Current state**: `FolderBuilder.tsx` lines 147-166 render "Frequency (Days Per Week)" day picker buttons at the folder level. The `frequency_days` field is saved to the folder.
+Add a scheduling mode selector to the builder (for both standalone and folder-item contexts). Three options:
 
-**Fix**:
-- Remove the entire "Frequency (Days Per Week)" section from `FolderBuilder.tsx`
-- Stop saving `frequency_days` in the `handleSave` function (always pass `null`)
-- Scheduling remains available at the individual activity/item level via `FolderItemEditDialog` and `CustomActivityBuilderDialog`
+- **Specific Date**: Calendar date picker places the activity on an exact date. Store as `specific_dates` array on `custom_activity_templates` (or on `activity_folder_items` when inside a folder)
+- **Days of the Week**: Existing `recurring_days` / `recurring_active` flow (unchanged)
+- **No Schedule**: Activity is created but not auto-placed; user places it manually later
 
-## 5. Full Edit Access for Activity Cards Inside Folders
+Implementation:
+- Add a `scheduleMode` state: `'none' | 'weekly' | 'specific_date'`
+- When `scheduleMode === 'specific_date'`, show a multi-date calendar picker (reuse the pattern from `FolderItemEditDialog` lines 139-174)
+- When `scheduleMode === 'weekly'`, show the existing day-picker
+- When `scheduleMode === 'none'`, hide scheduling controls
+- On save, map `scheduleMode` to the correct fields (`recurring_days`, `recurring_active`, `specific_dates`)
 
-**Current state**: Clicking the pencil icon on a folder item opens `FolderItemEditDialog` -- a lite form with only title, type, description, days, duration, and notes. It lacks icon, color, exercises, meals, custom fields, intensity, etc.
+**File: `src/components/folders/FolderDetailDialog.tsx`**
 
-**Fix**:
-- Replace `FolderItemEditDialog` usage with `CustomActivityBuilderDialog` in edit mode
-- When the pencil icon is clicked, open the full builder pre-populated with the item's `template_snapshot` data
-- On save, update the `activity_folder_items` row with the full updated data (title, exercises, template_snapshot, etc.)
-- Keep `FolderItemEditDialog` file for now (no deletion) but stop using it in `FolderDetailDialog`
+When creating/editing folder items via `CustomActivityBuilderDialog`, pass `specific_dates` and `assigned_days` from the item's data into the builder template, and persist them back on save.
 
----
+**Database**: The `custom_activity_templates` table needs a `specific_dates` column (text array) if it doesn't already exist. The `activity_folder_items` table already has `specific_dates` and `assigned_days`.
 
-## Technical Details
+### 3. Vertical Scroll Bug -- Folder Edit View
 
-### Files Modified
+**File: `src/components/folders/FolderDetailDialog.tsx`**
+
+Root cause: The "Edit Folder" flow opens a nested `<Dialog>` inside the already-open folder detail `<Dialog>`. When the nested dialog closes, the parent dialog's scroll state breaks.
+
+Fix:
+- Replace the nested Dialog approach with inline rendering: when "Edit Folder" is clicked, replace the items list with the `FolderBuilder` component inside the same scrollable container
+- This eliminates the nested dialog entirely, preventing scroll lock
+- The folder detail dialog's `overflow-y-auto` on the content div (line 262) continues to work normally
+
+### 4. Stability and Integration
+
+- Ensure the `FolderBuilder` used inline resets properly when toggling between view and edit modes
+- Ensure `CustomActivityBuilderDialog` scheduling options work identically whether the activity is standalone or inside a folder
+- The `handleEditItemSave` function already persists `template_snapshot` with full data -- extend it to include `assigned_days` and `specific_dates`
+
+## Technical Summary
 
 | File | Changes |
 |------|---------|
-| `src/components/folders/FolderTabContent.tsx` | Add `AlertDialog` for delete confirmation; pass `onEditFolder`/`onDeleteFolder` to `FolderDetailDialog` |
-| `src/components/folders/FolderDetailDialog.tsx` | Add fixed footer with 4 action buttons; accept new props `onEditFolder`/`onDeleteFolder`; replace `FolderItemEditDialog` with `CustomActivityBuilderDialog` for editing items; add delete confirmation dialog |
-| `src/components/folders/FolderBuilder.tsx` | Remove "Frequency (Days Per Week)" section (lines 147-166); set `frequency_days: null` in save |
-| `src/components/folders/FolderItemEditDialog.tsx` | Remove `onPointerDownOutside` to fix scroll lock |
-
-### New Props on FolderDetailDialog
-
-```text
-onEditFolder?: (folder: ActivityFolder, updates: Partial<ActivityFolder>) => Promise<void>;
-onDeleteFolder?: (folderId: string) => Promise<void>;
-```
-
-### Folder Detail Footer Layout
-
-```text
-+--------------------------------------------------+
-| [+ Create]  [Import]  [Edit Folder]  [Delete]   |
-+--------------------------------------------------+
-```
-
-All four buttons horizontal, left-aligned, in a `flex gap-2` footer pinned below the scroll area. Delete button styled with `variant="destructive"` and triggers an `AlertDialog`.
-
-### Activity Item Full Edit Flow
-
-When pencil icon is clicked on a folder item:
-1. Build a `CustomActivityTemplate` object from the item's `template_snapshot` + top-level fields
-2. Open `CustomActivityBuilderDialog` with `editingTemplate` prop
-3. On save, update the database row with new title, exercises, and full `template_snapshot`
-4. Update local `items` state with the result
+| `src/components/folders/FolderDetailDialog.tsx` | Replace nested edit dialog with inline `FolderBuilder`; add unsaved-changes guard; persist `assigned_days`/`specific_dates` on folder item save |
+| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | Add `scheduleMode` selector with 3 options (Specific Date, Weekly, No Schedule); add multi-date picker UI; pass schedule data on save |
+| `src/types/customActivity.ts` | Add `specific_dates?: string[]` to `CustomActivityTemplate` type if not present |
+| Database migration | Add `specific_dates` column to `custom_activity_templates` if needed |
 
