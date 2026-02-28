@@ -58,6 +58,11 @@ interface CustomActivityBuilderDialogProps {
   lockedFields?: LockableField[];
   isFromCoach?: boolean;
   coachName?: string;
+  // Cycle system props (for folder context)
+  folderCycleType?: string | null;
+  folderCycleLengthWeeks?: number | null;
+  initialCycleWeek?: number | null;
+  onCycleWeekChange?: (week: number | null) => void;
 }
 
 const INTENSITY_OPTIONS: IntensityLevel[] = ['light', 'moderate', 'high', 'max'];
@@ -83,9 +88,14 @@ export function CustomActivityBuilderDialog({
   lockedFields = [],
   isFromCoach = false,
   coachName,
+  folderCycleType,
+  folderCycleLengthWeeks,
+  initialCycleWeek,
+  onCycleWeekChange,
 }: CustomActivityBuilderDialogProps) {
   const { t } = useTranslation();
   const isEditing = !!template;
+  const [cycleWeek, setCycleWeek] = useState<number | null>(initialCycleWeek || null);
 
   // Helper to check if a field is locked
   const isFieldLocked = (field: LockableField): boolean => lockedFields.includes(field);
@@ -867,6 +877,35 @@ export function CustomActivityBuilderDialog({
                     </div>
                   )}
                 </div>
+
+                {/* Rotation Week Selector - only in rotating folder context */}
+                {folderCycleType === 'custom_rotation' && folderCycleLengthWeeks && (
+                  <div className="space-y-2 p-4 rounded-lg border bg-muted/30">
+                    <Label className="text-sm font-bold flex items-center gap-2">
+                      <Layers className="h-4 w-4" />
+                      Rotation Week
+                    </Label>
+                    <Select
+                      value={cycleWeek?.toString() || 'all'}
+                      onValueChange={(v) => {
+                        const val = v === 'all' ? null : Number(v);
+                        setCycleWeek(val);
+                        onCycleWeekChange?.(val);
+                      }}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Every Week</SelectItem>
+                        {Array.from({ length: folderCycleLengthWeeks }, (_, i) => (
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>Week {i + 1}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Choose which rotation week this activity belongs to. "Every Week" means it shows regardless of the current cycle week.
+                    </p>
+                  </div>
+                )}
 
                 {/* Reminder Settings - Only show when recurring is active */}
                 {recurringActive && (

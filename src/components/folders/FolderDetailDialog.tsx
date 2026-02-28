@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { ActivityFolder, ActivityFolderItem, DAY_LABELS } from '@/types/activityFolder';
+import { ActivityFolder, ActivityFolderItem, DAY_LABELS, getCurrentCycleWeek } from '@/types/activityFolder';
 import { supabase } from '@/integrations/supabase/client';
 import { FolderItemPerformanceLogger } from './FolderItemPerformanceLogger';
 import { FolderBuilder } from './FolderBuilder';
@@ -47,6 +47,8 @@ export function FolderDetailDialog({
   const [importPickerOpen, setImportPickerOpen] = useState(false);
   const [editFolderOpen, setEditFolderOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [showCurrentWeekOnly, setShowCurrentWeekOnly] = useState(true);
+  const [pendingCycleWeek, setPendingCycleWeek] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open || !folder) return;
@@ -86,8 +88,16 @@ export function FolderDetailDialog({
 
   if (!folder) return null;
 
+  const isRotating = folder.cycle_type === 'custom_rotation' && folder.start_date && folder.cycle_length_weeks;
+  const currentCycleWeek = isRotating ? getCurrentCycleWeek(folder.start_date!, folder.cycle_length_weeks!) : null;
+
+  // Filter items by cycle week if rotating and showCurrentWeekOnly
+  const displayItems = isRotating && showCurrentWeekOnly
+    ? items.filter(i => i.cycle_week === null || i.cycle_week === undefined || i.cycle_week === currentCycleWeek)
+    : items;
+
   const completedCount = Object.values(completions).filter(Boolean).length;
-  const totalTrackable = items.filter(i => i.completion_tracking).length;
+  const totalTrackable = displayItems.filter(i => i.completion_tracking).length;
   const pct = totalTrackable > 0 ? Math.round((completedCount / totalTrackable) * 100) : 0;
 
   const handleToggle = async (itemId: string) => {
@@ -169,6 +179,7 @@ export function FolderDetailDialog({
         exercises: data.exercises || null,
         assigned_days: data.recurring_active ? (data.recurring_days || []) : null,
         specific_dates: (data as any).specific_dates?.length > 0 ? (data as any).specific_dates : null,
+        cycle_week: pendingCycleWeek !== undefined ? pendingCycleWeek : editingItem.cycle_week,
         template_snapshot: {
           icon: data.icon,
           color: data.color,
@@ -278,6 +289,20 @@ export function FolderDetailDialog({
             </div>
           )}
 
+          {/* Cycle Week Banner */}
+          {isRotating && currentCycleWeek !== null && (
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-primary/10">
+              <div className="flex items-center gap-2">
+                <Badge className="text-xs">Week {currentCycleWeek} of {folder.cycle_length_weeks}</Badge>
+                <span className="text-xs text-muted-foreground">Rotating Program</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-[10px] text-muted-foreground">Current week only</Label>
+                <Switch checked={showCurrentWeekOnly} onCheckedChange={setShowCurrentWeekOnly} />
+              </div>
+            </div>
+          )}
+
           {/* Progress */}
           {totalTrackable > 0 && (
             <div className="space-y-1">
@@ -291,13 +316,13 @@ export function FolderDetailDialog({
 
           {/* Items */}
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Items ({items.length})</h4>
+            <h4 className="text-sm font-semibold">Items ({displayItems.length}{isRotating && !showCurrentWeekOnly ? ` / ${items.length} total` : ''})</h4>
             {loading ? (
               <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No items yet.</p>
+            ) : displayItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{isRotating && showCurrentWeekOnly ? 'No items for the current rotation week.' : 'No items yet.'}</p>
             ) : (
-              items.map(item => (
+              displayItems.map(item => (
                 <div key={item.id} className="p-3 rounded-lg border bg-card space-y-1">
                   <div className="flex items-start gap-3">
                     {item.completion_tracking && onToggleCompletion && (
@@ -411,10 +436,14 @@ export function FolderDetailDialog({
       {editingItem && (
         <CustomActivityBuilderDialog
           open={!!editingItem}
-          onOpenChange={(open) => { if (!open) setEditingItem(null); }}
+          onOpenChange={(open) => { if (!open) { setEditingItem(null); setPendingCycleWeek(null); } }}
           selectedSport={(folder.sport as 'baseball' | 'softball') || 'baseball'}
           template={buildTemplateFromItem(editingItem)}
           onSave={handleEditItemSave}
+          folderCycleType={folder.cycle_type}
+          folderCycleLengthWeeks={folder.cycle_length_weeks}
+          initialCycleWeek={editingItem.cycle_week}
+          onCycleWeekChange={setPendingCycleWeek}
         />
       )}
 
@@ -422,8 +451,11 @@ export function FolderDetailDialog({
       {builderOpen && folder && onAddItem && (
         <CustomActivityBuilderDialog
           open={builderOpen}
-          onOpenChange={setBuilderOpen}
+          onOpenChange={(open) => { setBuilderOpen(open); if (!open) setPendingCycleWeek(null); }}
           selectedSport={(folder.sport as 'baseball' | 'softball') || 'baseball'}
+          folderCycleType={folder.cycle_type}
+          folderCycleLengthWeeks={folder.cycle_length_weeks}
+          onCycleWeekChange={setPendingCycleWeek}
           onSave={async (data) => {
             const folderItem: Partial<ActivityFolderItem> = {
               title: data.title,
@@ -433,6 +465,7 @@ export function FolderDetailDialog({
               exercises: data.exercises as any,
               assigned_days: data.recurring_active ? (data.recurring_days || []) : null,
               specific_dates: (data as any).specific_dates?.length > 0 ? (data as any).specific_dates : null,
+              cycle_week: pendingCycleWeek,
               template_snapshot: {
                 icon: data.icon,
                 color: data.color,

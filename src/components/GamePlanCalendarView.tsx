@@ -187,12 +187,17 @@ export function GamePlanCalendarView({
                         <div className="p-1.5 rounded bg-primary/20">
                           <Icon className="h-3.5 w-3.5 text-primary" />
                         </div>
-                        <span className={cn(
+                       <span className={cn(
                           "text-xs font-medium truncate",
                           task.completed && "line-through text-muted-foreground"
                         )}>
                           {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
                         </span>
+                        {(task as any).cycleWeek && (
+                          <span className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                            Wk {(task as any).cycleWeek}
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
