@@ -1,71 +1,108 @@
 
 
-# Folder and Activity Scheduling Fixes
+# Bring Back & Optimize Cycle System — Full E2E Plan
 
-## Overview
+## What Is the Cycle System?
 
-Four fixes: explicit Save button for folder edits, upgraded scheduling with specific date + weekly + no-schedule options, scroll bug fix in folder edit dialog, and stability improvements.
+The cycle system enables **multi-week rotating programs** within a folder. Instead of showing the same activities every week, a folder can rotate through different sets of activities on a repeating schedule.
+
+**Example**: A 4-week off-season program where:
+- Week 1: Heavy compound lifts
+- Week 2: Explosive power drills
+- Week 3: Endurance circuits
+- Week 4: Active recovery / deload
+
+After Week 4, it loops back to Week 1 automatically. The system calculates which week you're in based on the folder's start date.
+
+## Current State
+
+The database and types already support `cycle_type`, `cycle_length_weeks` (on folders) and `cycle_week` (on items). The `getCurrentCycleWeek()` utility function exists. However:
+
+- The Game Plan does NOT filter items by their cycle week -- all items show regardless
+- The folder detail view displays "Wk 2" labels but doesn't filter by current week
+- The UI for setting cycle type exists in FolderBuilder but lacks any explanation
+- There's no visual indicator showing "You are in Week X of Y"
 
 ## Changes
 
-### 1. Explicit Save Button for Folder Edit View
+### 1. Add Clear User-Facing Explanations to FolderBuilder
 
-**File: `src/components/folders/FolderDetailDialog.tsx`** (lines 474-488)
+**File: `src/components/folders/FolderBuilder.tsx`**
 
-Currently, the "Edit Folder" button opens a nested Dialog with `FolderBuilder` inside. `FolderBuilder` already has its own Save/Cancel buttons, so folder edits are NOT auto-saving -- changes persist only when "Update Folder" is clicked.
+Upgrade the Cycle Type section with:
+- Rename options to clearer labels: "Same Every Week" (weekly) and "Rotating Program" (custom_rotation)
+- Add inline help text below the selector explaining what each mode does
+- When "Rotating Program" is selected, show: "Activities tagged with the current rotation week will appear on your Game Plan. The system auto-advances each week based on your start date."
+- Make Start Date required when Rotating Program is selected (needed to calculate current week)
 
-However, the nested Dialog wrapping is causing issues (scroll lock, confusing UX). The fix:
+### 2. Add Cycle Week Indicator to Folder Detail View
 
-- Remove the nested `<Dialog>` wrapper around `FolderBuilder` when editing
-- Instead, swap the folder detail view to show the `FolderBuilder` inline (similar to how `FolderTabContent` handles it)
-- Add an unsaved-changes guard: track `isDirty` state and show a "Save / Discard" confirmation (`AlertDialog`) if the user tries to close the folder detail dialog while editing
+**File: `src/components/folders/FolderDetailDialog.tsx`**
 
-### 2. Calendar Planning -- Scheduling Options Upgrade
+When a folder uses `custom_rotation`:
+- Show a prominent badge/banner: "Week 2 of 4" (calculated via `getCurrentCycleWeek`)
+- Add a toggle: "Show all weeks" vs "Show current week only" so users can see the full program or just today's items
+- Group items visually by their `cycle_week` label when showing all weeks
+
+### 3. Wire Cycle Week Filtering into the Game Plan
+
+**File: `src/hooks/useGamePlan.ts`** (lines 610-617)
+
+Update the `todayItems` filter to also respect cycle weeks:
+- For folders with `cycle_type === 'custom_rotation'`, calculate the current week using `getCurrentCycleWeek(folder.start_date, folder.cycle_length_weeks)`
+- Only include items where `item.cycle_week === currentWeek` (or `cycle_week` is null, meaning "show every week")
+- Items without a `cycle_week` in a rotating folder always appear (backwards compatible)
+
+```text
+// Pseudocode for enhanced filter:
+const todayItems = allItems.filter(item => {
+  const folder = folderMap.get(item.folder_id);
+  
+  // Cycle week filter for rotating programs
+  if (folder.cycle_type === 'custom_rotation' && folder.start_date && folder.cycle_length_weeks) {
+    const currentWeek = getCurrentCycleWeek(folder.start_date, folder.cycle_length_weeks);
+    if (item.cycle_week !== null && item.cycle_week !== currentWeek) return false;
+  }
+
+  // Existing day/date filter (unchanged)
+  ...
+});
+```
+
+### 4. Add Cycle Week Selector to Activity Builder (Folder Context)
 
 **File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
 
-Add a scheduling mode selector to the builder (for both standalone and folder-item contexts). Three options:
-
-- **Specific Date**: Calendar date picker places the activity on an exact date. Store as `specific_dates` array on `custom_activity_templates` (or on `activity_folder_items` when inside a folder)
-- **Days of the Week**: Existing `recurring_days` / `recurring_active` flow (unchanged)
-- **No Schedule**: Activity is created but not auto-placed; user places it manually later
-
-Implementation:
-- Add a `scheduleMode` state: `'none' | 'weekly' | 'specific_date'`
-- When `scheduleMode === 'specific_date'`, show a multi-date calendar picker (reuse the pattern from `FolderItemEditDialog` lines 139-174)
-- When `scheduleMode === 'weekly'`, show the existing day-picker
-- When `scheduleMode === 'none'`, hide scheduling controls
-- On save, map `scheduleMode` to the correct fields (`recurring_days`, `recurring_active`, `specific_dates`)
+When the builder is opened from within a rotating-program folder:
+- Pass `cycleType` and `cycleLengthWeeks` as optional props
+- Show a "Rotation Week" dropdown (Wk 1, Wk 2, etc.) so the user can tag which week this activity belongs to
+- Save the value as `cycle_week` on the folder item
 
 **File: `src/components/folders/FolderDetailDialog.tsx`**
 
-When creating/editing folder items via `CustomActivityBuilderDialog`, pass `specific_dates` and `assigned_days` from the item's data into the builder template, and persist them back on save.
+Pass `folder.cycle_type` and `folder.cycle_length_weeks` to the builder dialog when creating/editing items.
 
-**Database**: The `custom_activity_templates` table needs a `specific_dates` column (text array) if it doesn't already exist. The `activity_folder_items` table already has `specific_dates` and `assigned_days`.
+### 5. Display Cycle Week on Calendar View
 
-### 3. Vertical Scroll Bug -- Folder Edit View
+**File: `src/components/GamePlanCalendarView.tsx`**
 
-**File: `src/components/folders/FolderDetailDialog.tsx`**
-
-Root cause: The "Edit Folder" flow opens a nested `<Dialog>` inside the already-open folder detail `<Dialog>`. When the nested dialog closes, the parent dialog's scroll state breaks.
-
-Fix:
-- Replace the nested Dialog approach with inline rendering: when "Edit Folder" is clicked, replace the items list with the `FolderBuilder` component inside the same scrollable container
-- This eliminates the nested dialog entirely, preventing scroll lock
-- The folder detail dialog's `overflow-y-auto` on the content div (line 262) continues to work normally
-
-### 4. Stability and Integration
-
-- Ensure the `FolderBuilder` used inline resets properly when toggling between view and edit modes
-- Ensure `CustomActivityBuilderDialog` scheduling options work identically whether the activity is standalone or inside a folder
-- The `handleEditItemSave` function already persists `template_snapshot` with full data -- extend it to include `assigned_days` and `specific_dates`
+For folder tasks from rotating programs, show a small "Wk X" badge next to the activity name in the calendar scheduled activities list.
 
 ## Technical Summary
 
 | File | Changes |
 |------|---------|
-| `src/components/folders/FolderDetailDialog.tsx` | Replace nested edit dialog with inline `FolderBuilder`; add unsaved-changes guard; persist `assigned_days`/`specific_dates` on folder item save |
-| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | Add `scheduleMode` selector with 3 options (Specific Date, Weekly, No Schedule); add multi-date picker UI; pass schedule data on save |
-| `src/types/customActivity.ts` | Add `specific_dates?: string[]` to `CustomActivityTemplate` type if not present |
-| Database migration | Add `specific_dates` column to `custom_activity_templates` if needed |
+| `src/components/folders/FolderBuilder.tsx` | Rename cycle options to user-friendly labels; add inline explanation text; require start date for rotating programs |
+| `src/components/folders/FolderDetailDialog.tsx` | Add "Week X of Y" banner for rotating folders; add current-week filter toggle; pass cycle props to builder |
+| `src/hooks/useGamePlan.ts` | Filter folder items by current cycle week for `custom_rotation` folders |
+| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | Add optional cycle week selector when used inside a rotating folder |
+| `src/components/GamePlanCalendarView.tsx` | Show "Wk X" badge on rotating-program folder tasks |
+| `src/types/activityFolder.ts` | No changes needed -- `getCurrentCycleWeek` and types already exist |
+
+## User Experience Summary
+
+- **Creating a folder**: User picks "Rotating Program", sets cycle to 4 weeks, sets a start date. Inline text explains: "Your activities will rotate through 4 weeks automatically."
+- **Adding activities**: When adding an activity to a rotating folder, user picks which week it belongs to (Wk 1, 2, 3, or 4). Leaving it blank means "show every week."
+- **Viewing the folder**: A banner says "You're in Week 2 of 4." Items are grouped by week. Toggle to see all or just current week.
+- **Game Plan**: Only the current rotation week's activities appear automatically. No manual intervention needed.
 
