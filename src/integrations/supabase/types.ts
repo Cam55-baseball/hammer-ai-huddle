@@ -832,6 +832,7 @@ export type Database = {
           reminder_enabled: boolean | null
           reminder_minutes: number | null
           reminder_time: string | null
+          specific_dates: string[] | null
           sport: string
           title: string
           updated_at: string | null
@@ -867,6 +868,7 @@ export type Database = {
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
           reminder_time?: string | null
+          specific_dates?: string[] | null
           sport?: string
           title: string
           updated_at?: string | null
@@ -902,6 +904,7 @@ export type Database = {
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
           reminder_time?: string | null
+          specific_dates?: string[] | null
           sport?: string
           title?: string
           updated_at?: string | null

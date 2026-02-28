@@ -129,6 +129,7 @@ export interface CustomActivityTemplate {
   display_on_game_plan?: boolean;
   display_days?: number[];
   display_time?: string;
+  specific_dates?: string[];
   created_at: string;
   updated_at: string;
   // Soft delete fields

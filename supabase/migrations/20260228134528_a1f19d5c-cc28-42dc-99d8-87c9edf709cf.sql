@@ -1,0 +1,1 @@
+ALTER TABLE public.custom_activity_templates ADD COLUMN IF NOT EXISTS specific_dates text[] DEFAULT NULL;

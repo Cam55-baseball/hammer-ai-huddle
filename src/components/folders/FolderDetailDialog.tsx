@@ -167,6 +167,8 @@ export function FolderDetailDialog({
         item_type: data.activity_type || editingItem.item_type,
         duration_minutes: data.duration_minutes || null,
         exercises: data.exercises || null,
+        assigned_days: data.recurring_active ? (data.recurring_days || []) : null,
+        specific_dates: (data as any).specific_dates?.length > 0 ? (data as any).specific_dates : null,
         template_snapshot: {
           icon: data.icon,
           color: data.color,
@@ -227,10 +229,11 @@ export function FolderDetailDialog({
       display_nickname: snapshot.display_nickname || null,
       custom_logo_url: snapshot.custom_logo_url || null,
       is_favorited: false,
-      display_days: null,
+      display_days: item.assigned_days || null,
       display_time: null,
-      recurring_active: false,
-      recurring_days: null,
+      recurring_active: !!(item.assigned_days && item.assigned_days.length > 0),
+      recurring_days: item.assigned_days || null,
+      specific_dates: item.specific_dates || undefined,
       reminder_enabled: false,
       reminder_minutes: null,
       reminder_time: null,
@@ -428,6 +431,8 @@ export function FolderDetailDialog({
               item_type: data.activity_type || 'exercise',
               duration_minutes: data.duration_minutes || null,
               exercises: data.exercises as any,
+              assigned_days: data.recurring_active ? (data.recurring_days || []) : null,
+              specific_dates: (data as any).specific_dates?.length > 0 ? (data as any).specific_dates : null,
               template_snapshot: {
                 icon: data.icon,
                 color: data.color,
@@ -471,10 +476,12 @@ export function FolderDetailDialog({
         />
       )}
 
-      {/* Edit Folder Dialog */}
+      {/* Inline Folder Edit - replaces nested dialog to fix scroll lock */}
       {editFolderOpen && onEditFolder && (
-        <Dialog open={editFolderOpen} onOpenChange={setEditFolderOpen}>
-          <DialogContent>
+        <Dialog open={editFolderOpen} onOpenChange={(open) => {
+          if (!open) setEditFolderOpen(false);
+        }}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <FolderBuilder
               initialData={folder}
               onSave={async (updates) => {

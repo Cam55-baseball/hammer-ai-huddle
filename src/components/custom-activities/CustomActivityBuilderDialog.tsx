@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus, Loader2, Lock, Layers } from 'lucide-react';
+import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus, Loader2, Lock, Layers, CalendarDays } from 'lucide-react';
 import { LogoUploadButton } from './LogoUploadButton';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
@@ -28,6 +29,9 @@ import { CNSLoadIndicator } from '@/components/elite-workout/intelligence/CNSLoa
 import { WorkoutBlock, ViewMode } from '@/types/eliteWorkout';
 import { calculateWorkoutCNS } from '@/utils/loadCalculation';
 import { CustomActivityTemplate, ActivityType, IntensityLevel, Exercise, MealData, CustomField, RunningInterval, EmbeddedRunningSession } from '@/types/customActivity';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 type LockableField = 
@@ -58,6 +62,7 @@ interface CustomActivityBuilderDialogProps {
 
 const INTENSITY_OPTIONS: IntensityLevel[] = ['light', 'moderate', 'high', 'max'];
 const DISTANCE_UNITS = ['feet', 'yards', 'meters', 'miles', 'kilometers'] as const;
+type ScheduleMode = 'none' | 'weekly' | 'specific_date';
 
 const createEmptyRunningSession = (): EmbeddedRunningSession => ({
   id: crypto.randomUUID(),
@@ -124,6 +129,10 @@ export function CustomActivityBuilderDialog({
   // Schedule for today toggle (only for new activities)
   const [scheduleForToday, setScheduleForToday] = useState(false);
   
+  // Schedule mode state
+  const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('none');
+  const [specificDates, setSpecificDates] = useState<Date[]>([]);
+  
   // Elite Workout Block System state
   const [useBlockSystem, setUseBlockSystem] = useState(false);
   const [workoutBlocks, setWorkoutBlocks] = useState<WorkoutBlock[]>([]);
@@ -146,6 +155,17 @@ export function CustomActivityBuilderDialog({
       setIsFavorited(template.is_favorited);
       setRecurringDays(template.recurring_days || []);
       setRecurringActive(template.recurring_active);
+      // Initialize schedule mode from template
+      if (template.specific_dates && template.specific_dates.length > 0) {
+        setScheduleMode('specific_date');
+        setSpecificDates(template.specific_dates.map(d => new Date(d + 'T00:00:00')));
+      } else if (template.recurring_active) {
+        setScheduleMode('weekly');
+        setSpecificDates([]);
+      } else {
+        setScheduleMode('none');
+        setSpecificDates([]);
+      }
       setDisplayNickname(template.display_nickname || '');
       setCustomLogoUrl(template.custom_logo_url || '');
       setReminderEnabled(template.reminder_enabled || false);
@@ -204,6 +224,8 @@ export function CustomActivityBuilderDialog({
       setIsFavorited(false);
       setRecurringDays([]);
       setRecurringActive(false);
+      setScheduleMode('none');
+      setSpecificDates([]);
       setDisplayNickname('');
       setCustomLogoUrl('');
       setReminderEnabled(false);
@@ -235,6 +257,8 @@ export function CustomActivityBuilderDialog({
       setIsFavorited(false);
       setRecurringDays([]);
       setRecurringActive(false);
+      setScheduleMode('none');
+      setSpecificDates([]);
       setDisplayNickname('');
       setCustomLogoUrl('');
       setReminderEnabled(false);
@@ -314,8 +338,9 @@ export function CustomActivityBuilderDialog({
         pace_value: paceValue || paceGoal || undefined,
         intervals: [] as RunningInterval[],
         is_favorited: isFavorited,
-        recurring_days: recurringDays,
-        recurring_active: recurringActive,
+        recurring_days: scheduleMode === 'weekly' ? recurringDays : [],
+        recurring_active: scheduleMode === 'weekly' && recurringActive,
+        specific_dates: scheduleMode === 'specific_date' ? specificDates.map(d => format(d, 'yyyy-MM-dd')) : undefined,
         sport: selectedSport,
         embedded_running_sessions: runningSessions,
         display_nickname: displayNickname.trim() || undefined,
@@ -773,7 +798,75 @@ export function CustomActivityBuilderDialog({
                   <CustomFieldsBuilder fields={customFields} onChange={setCustomFields} />
                 </div>
 
-                <RecurringDayPicker selectedDays={recurringDays} onDaysChange={setRecurringDays} isActive={recurringActive} onActiveChange={setRecurringActive} />
+                {/* Schedule Mode Selector */}
+                <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+                  <Label className="text-sm font-bold flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    {t('customActivity.scheduling.title', 'Scheduling')}
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['none', 'weekly', 'specific_date'] as ScheduleMode[]).map(mode => (
+                      <Button
+                        key={mode}
+                        type="button"
+                        variant={scheduleMode === mode ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          setScheduleMode(mode);
+                          if (mode === 'weekly') setRecurringActive(true);
+                          else setRecurringActive(false);
+                        }}
+                        className="text-xs"
+                      >
+                        {mode === 'none' ? t('customActivity.scheduling.noSchedule', 'No Schedule')
+                          : mode === 'weekly' ? t('customActivity.scheduling.weekly', 'Weekly')
+                          : t('customActivity.scheduling.specificDate', 'Specific Date')}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {scheduleMode === 'weekly' && (
+                    <RecurringDayPicker selectedDays={recurringDays} onDaysChange={setRecurringDays} isActive={recurringActive} onActiveChange={setRecurringActive} />
+                  )}
+
+                  {scheduleMode === 'specific_date' && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">
+                        {t('customActivity.scheduling.pickDates', 'Select one or more dates')}
+                      </Label>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {specificDates.map((d, i) => (
+                          <Badge key={i} variant="secondary" className="gap-1 text-xs">
+                            {format(d, 'MMM d, yyyy')}
+                            <button type="button" onClick={() => setSpecificDates(prev => prev.filter((_, idx) => idx !== i))} className="ml-0.5">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-1">
+                            <CalendarDays className="h-3.5 w-3.5" />
+                            {t('customActivity.scheduling.addDate', 'Add Date')}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={undefined}
+                            onSelect={(date) => {
+                              if (date && !specificDates.some(d => d.toDateString() === date.toDateString())) {
+                                setSpecificDates(prev => [...prev, date].sort((a, b) => a.getTime() - b.getTime()));
+                              }
+                            }}
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                </div>
 
                 {/* Reminder Settings - Only show when recurring is active */}
                 {recurringActive && (
