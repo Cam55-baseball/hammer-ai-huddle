@@ -269,7 +269,7 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
       {/* Edit Dialog */}
       {editingFolder && (
         <Dialog open={!!editingFolder} onOpenChange={(open) => { if (!open) setEditingFolder(null); }}>
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <FolderBuilder
               initialData={editingFolder}
               onSave={async (updates) => {

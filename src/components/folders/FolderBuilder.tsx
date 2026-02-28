@@ -148,7 +148,7 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
 
         {/* How should activities repeat? */}
         <div className="space-y-3">
-          <Label className="text-sm font-semibold">How should activities repeat?</Label>
+          <Label className="text-sm font-semibold">Cycle Plan: How should activities repeat?</Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Same Every Week card */}
             <button
@@ -220,6 +220,7 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
                       <p>Jan 20–26 = Week 3</p>
                       <p className="text-primary">Jan 27+ = back to Week 1 ↻</p>
                     </div>
+                    <p className="text-xs font-medium text-foreground/80 mt-1">The cycle loops forever until you set an end date or archive the folder.</p>
                   </div>
                 </div>
               </div>
