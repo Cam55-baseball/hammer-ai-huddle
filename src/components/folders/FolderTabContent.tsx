@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useActivityFolders } from '@/hooks/useActivityFolders';
 import { useReceivedFolders } from '@/hooks/useReceivedFolders';
 import { usePlayerFolders } from '@/hooks/usePlayerFolders';
@@ -53,6 +54,7 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
   const [publishFolder, setPublishFolder] = useState<ActivityFolder | null>(null);
   const [publishCategory, setPublishCategory] = useState('general');
   const [publishDescription, setPublishDescription] = useState('');
+  const [deletingFolder, setDeletingFolder] = useState<{ folder: ActivityFolder; type: 'coach' | 'player' } | null>(null);
 
   const handleCoachCreate = async (folder: Partial<ActivityFolder>) => {
     const result = await coachFolders.createFolder(folder);
@@ -85,6 +87,34 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
     setPublishCategory('general');
     setPublishDescription('');
     coachFolders.refetch();
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingFolder) return;
+    if (deletingFolder.type === 'coach') {
+      await coachFolders.deleteFolder(deletingFolder.folder.id);
+    } else {
+      await playerFolders.deleteFolder(deletingFolder.folder.id);
+    }
+    setDeletingFolder(null);
+  };
+
+  const handleEditFolder = async (folder: ActivityFolder, updates: Partial<ActivityFolder>) => {
+    if (folder.owner_type === 'player') {
+      await playerFolders.updateFolder(folder.id, updates);
+    } else {
+      await coachFolders.updateFolder(folder.id, updates);
+    }
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    // Determine which hook to use based on detail context
+    if (detailFolder?.owner_type === 'player') {
+      await playerFolders.deleteFolder(folderId);
+    } else {
+      await coachFolders.deleteFolder(folderId);
+    }
+    setDetailFolder(null);
   };
 
   return (
@@ -130,7 +160,7 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
                   onOpen={() => openDetail(f, true)}
                   onSend={() => setAssignFolder(f)}
                   onEdit={() => setEditingFolder(f)}
-                  onDelete={() => coachFolders.deleteFolder(f.id)}
+                  onDelete={() => setDeletingFolder({ folder: f, type: 'coach' })}
                   onArchive={() => coachFolders.updateFolder(f.id, { status: 'archived' })}
                   onPublishTemplate={() => setPublishFolder(f)}
                 />
@@ -203,7 +233,7 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
                 folder={f}
                 onOpen={() => openDetail(f, true)}
                 onEdit={() => setEditingFolder(f)}
-                onDelete={() => playerFolders.deleteFolder(f.id)}
+                onDelete={() => setDeletingFolder({ folder: f, type: 'player' })}
               />
             ))}
           </div>
@@ -220,6 +250,8 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
         onAddItem={detailIsOwner ? (detailFolder?.owner_type === 'player' ? playerFolders.addItem : coachFolders.addItem) : undefined}
         onDeleteItem={detailIsOwner ? (detailFolder?.owner_type === 'player' ? playerFolders.deleteItem : coachFolders.deleteItem) : undefined}
         onToggleCompletion={receivedFolders.toggleCompletion}
+        onEditFolder={handleEditFolder}
+        onDeleteFolder={handleDeleteFolder}
       />
 
       {/* Assign Dialog */}
@@ -289,6 +321,24 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingFolder} onOpenChange={(open) => { if (!open) setDeletingFolder(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingFolder?.folder.name}"? This action cannot be undone and all items inside will be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

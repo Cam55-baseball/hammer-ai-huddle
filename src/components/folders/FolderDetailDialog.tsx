@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,16 +9,15 @@ import { Label } from '@/components/ui/label';
 import { ActivityFolder, ActivityFolderItem, DAY_LABELS } from '@/types/activityFolder';
 import { supabase } from '@/integrations/supabase/client';
 import { FolderItemPerformanceLogger } from './FolderItemPerformanceLogger';
-import { FolderItemEditDialog } from './FolderItemEditDialog';
+import { FolderBuilder } from './FolderBuilder';
 import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
 import { ActivityPickerDialog } from './ActivityPickerDialog';
 import { CustomActivityTemplate, Exercise } from '@/types/customActivity';
-import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil, Plus, Library } from 'lucide-react';
+import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil, Plus, Library, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface FolderDetailDialogProps {
   open: boolean;
@@ -28,11 +28,13 @@ interface FolderDetailDialogProps {
   onAddItem?: (folderId: string, item: Partial<ActivityFolderItem>) => Promise<ActivityFolderItem | null>;
   onDeleteItem?: (itemId: string) => Promise<void>;
   onToggleCompletion?: (itemId: string, entryDate: string, assignmentId?: string) => Promise<void>;
+  onEditFolder?: (folder: ActivityFolder, updates: Partial<ActivityFolder>) => Promise<void>;
+  onDeleteFolder?: (folderId: string) => Promise<void>;
 }
 
 export function FolderDetailDialog({
   open, onOpenChange, folder, isOwner, assignmentId,
-  onAddItem, onDeleteItem, onToggleCompletion,
+  onAddItem, onDeleteItem, onToggleCompletion, onEditFolder, onDeleteFolder,
 }: FolderDetailDialogProps) {
   const [items, setItems] = useState<ActivityFolderItem[]>([]);
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
@@ -43,6 +45,8 @@ export function FolderDetailDialog({
   const [editingItem, setEditingItem] = useState<ActivityFolderItem | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
   const [importPickerOpen, setImportPickerOpen] = useState(false);
+  const [editFolderOpen, setEditFolderOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !folder) return;
@@ -125,7 +129,6 @@ export function FolderDetailDialog({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
 
-      // Get primary coach
       const { data: mpi } = await supabase
         .from('athlete_mpi_settings')
         .select('primary_coach_id')
@@ -155,20 +158,108 @@ export function FolderDetailDialog({
     }
   };
 
+  const handleEditItemSave = async (data: any) => {
+    if (!editingItem) return null;
+    try {
+      const updates: any = {
+        title: data.title,
+        description: data.description || null,
+        item_type: data.activity_type || editingItem.item_type,
+        duration_minutes: data.duration_minutes || null,
+        exercises: data.exercises || null,
+        template_snapshot: {
+          icon: data.icon,
+          color: data.color,
+          activity_type: data.activity_type,
+          title: data.title,
+          description: data.description,
+          intensity: data.intensity,
+          meals: data.meals,
+          custom_fields: data.custom_fields,
+          intervals: data.intervals,
+          embedded_running_sessions: data.embedded_running_sessions,
+          duration_minutes: data.duration_minutes,
+          exercises: data.exercises,
+          display_nickname: data.display_nickname,
+          custom_logo_url: data.custom_logo_url,
+        },
+      };
+
+      const { error } = await supabase
+        .from('activity_folder_items')
+        .update(updates)
+        .eq('id', editingItem.id);
+
+      if (error) throw error;
+
+      setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...updates } : i));
+      setEditingItem(null);
+      toast.success('Item updated');
+      return editingItem;
+    } catch (err) {
+      console.error('Error updating folder item:', err);
+      toast.error('Failed to update item');
+      return null;
+    }
+  };
+
+  // Build a template object from folder item for the full builder
+  const buildTemplateFromItem = (item: ActivityFolderItem): CustomActivityTemplate | null => {
+    const snapshot = (item.template_snapshot || {}) as any;
+    return {
+      id: item.id,
+      user_id: '',
+      created_at: '',
+      updated_at: '',
+      sport: folder.sport || 'baseball',
+      title: item.title,
+      description: item.description || '',
+      activity_type: snapshot.activity_type || item.item_type || 'exercise',
+      icon: snapshot.icon || 'dumbbell',
+      color: snapshot.color || '#8b5cf6',
+      exercises: (snapshot.exercises || item.exercises || []) as Exercise[],
+      meals: snapshot.meals || null,
+      custom_fields: snapshot.custom_fields || null,
+      duration_minutes: item.duration_minutes || snapshot.duration_minutes || undefined,
+      intensity: snapshot.intensity || undefined,
+      intervals: snapshot.intervals || null,
+      embedded_running_sessions: snapshot.embedded_running_sessions || null,
+      display_nickname: snapshot.display_nickname || null,
+      custom_logo_url: snapshot.custom_logo_url || null,
+      is_favorited: false,
+      display_days: null,
+      display_time: null,
+      recurring_active: false,
+      recurring_days: null,
+      reminder_enabled: false,
+      reminder_minutes: null,
+      reminder_time: null,
+      display_on_game_plan: true,
+      distance_value: snapshot.distance_value || undefined,
+      distance_unit: snapshot.distance_unit || 'miles',
+      pace_value: snapshot.pace_value || undefined,
+    } as CustomActivityTemplate;
+  };
+
+  const handleConfirmFolderDelete = async () => {
+    if (onDeleteFolder) {
+      await onDeleteFolder(folder.id);
+    }
+    setConfirmDeleteOpen(false);
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden p-0">
+        <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5" style={{ color: folder.color }} />
             {folder.name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-3 pr-1" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+        <div className="flex-1 overflow-y-auto space-y-3 px-6 pb-2" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
           {folder.description && (
             <p className="text-sm text-muted-foreground">{folder.description}</p>
           )}
@@ -282,35 +373,45 @@ export function FolderDetailDialog({
               ))
             )}
           </div>
+        </div>
 
-          {/* Add Item (owner only) */}
-          {isOwner && onAddItem && (
-            <div className="border-t pt-3 mt-2 space-y-2">
-              <div className="flex gap-2">
+        {/* Fixed Footer with Action Buttons */}
+        {isOwner && (
+          <div className="flex-shrink-0 flex gap-2 px-6 py-3 border-t bg-background flex-wrap">
+            {onAddItem && (
+              <>
                 <Button size="sm" className="gap-1" onClick={() => setBuilderOpen(true)}>
-                  <Plus className="h-4 w-4" /> Create Activity
+                  <Plus className="h-3.5 w-3.5" /> Create
                 </Button>
                 {folder.sport && (
                   <Button size="sm" variant="outline" className="gap-1" onClick={() => setImportPickerOpen(true)}>
                     <Library className="h-3.5 w-3.5" /> Import
                   </Button>
                 )}
-              </div>
-            </div>
-          )}
-        </div>
+              </>
+            )}
+            {onEditFolder && (
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => setEditFolderOpen(true)}>
+                <Edit className="h-3.5 w-3.5" /> Edit Folder
+              </Button>
+            )}
+            {onDeleteFolder && (
+              <Button size="sm" variant="destructive" className="gap-1" onClick={() => setConfirmDeleteOpen(true)}>
+                <Trash2 className="h-3.5 w-3.5" /> Delete
+              </Button>
+            )}
+          </div>
+        )}
       </DialogContent>
+
+      {/* Full Activity Builder for editing existing folder items */}
       {editingItem && (
-        <FolderItemEditDialog
+        <CustomActivityBuilderDialog
           open={!!editingItem}
           onOpenChange={(open) => { if (!open) setEditingItem(null); }}
-          item={editingItem}
-          onSaved={(updated) => {
-            setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
-            setEditingItem(null);
-          }}
-          cycleType={folder.cycle_type || undefined}
-          cycleLengthWeeks={folder.cycle_length_weeks || undefined}
+          selectedSport={(folder.sport as 'baseball' | 'softball') || 'baseball'}
+          template={buildTemplateFromItem(editingItem)}
+          onSave={handleEditItemSave}
         />
       )}
 
@@ -369,6 +470,41 @@ export function FolderDetailDialog({
           }}
         />
       )}
+
+      {/* Edit Folder Dialog */}
+      {editFolderOpen && onEditFolder && (
+        <Dialog open={editFolderOpen} onOpenChange={setEditFolderOpen}>
+          <DialogContent>
+            <FolderBuilder
+              initialData={folder}
+              onSave={async (updates) => {
+                await onEditFolder(folder, updates);
+                setEditFolderOpen(false);
+                return folder;
+              }}
+              onCancel={() => setEditFolderOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Folder Confirmation */}
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{folder.name}"? This action cannot be undone and all items inside will be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmFolderDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
