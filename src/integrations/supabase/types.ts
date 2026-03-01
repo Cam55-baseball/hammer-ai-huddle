@@ -5338,6 +5338,7 @@ export type Database = {
       }
       verified_stat_profiles: {
         Row: {
+          admin_notes: string | null
           admin_verified: boolean | null
           confidence_weight: number | null
           created_at: string
@@ -5346,8 +5347,10 @@ export type Database = {
           identity_match: boolean | null
           last_synced_at: string | null
           league: string
+          profile_type: string | null
           profile_url: string
           rejection_reason: string | null
+          removal_requested: boolean
           screenshot_path: string | null
           sport: string
           sync_frequency: string | null
@@ -5359,6 +5362,7 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          admin_notes?: string | null
           admin_verified?: boolean | null
           confidence_weight?: number | null
           created_at?: string
@@ -5367,8 +5371,10 @@ export type Database = {
           identity_match?: boolean | null
           last_synced_at?: string | null
           league: string
+          profile_type?: string | null
           profile_url: string
           rejection_reason?: string | null
+          removal_requested?: boolean
           screenshot_path?: string | null
           sport: string
           sync_frequency?: string | null
@@ -5380,6 +5386,7 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          admin_notes?: string | null
           admin_verified?: boolean | null
           confidence_weight?: number | null
           created_at?: string
@@ -5388,8 +5395,10 @@ export type Database = {
           identity_match?: boolean | null
           last_synced_at?: string | null
           league?: string
+          profile_type?: string | null
           profile_url?: string
           rejection_reason?: string | null
+          removal_requested?: boolean
           screenshot_path?: string | null
           sport?: string
           sync_frequency?: string | null

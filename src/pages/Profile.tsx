@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ContractStatusCard } from "@/components/professional/ContractStatusCard";
 import { VerifiedStatSubmission } from "@/components/professional/VerifiedStatSubmission";
 import { SportBadge } from "@/components/professional/SportBadge";
+import { PublicVerifiedStats } from "@/components/professional/PublicVerifiedStats";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 
@@ -1799,6 +1800,13 @@ export default function Profile() {
                 })}
               </div>
             </div>
+          </Card>
+        )}
+
+        {/* Public Verified Stats - visible to everyone */}
+        {profile && (
+          <Card className="p-4 mb-6">
+            <PublicVerifiedStats userId={viewingUserId || user.id} />
           </Card>
         )}
 
