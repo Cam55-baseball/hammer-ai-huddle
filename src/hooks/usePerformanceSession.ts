@@ -186,8 +186,8 @@ export function usePerformanceSession() {
         });
       }
 
-      // Trigger calculate-session edge function
-      if (authSession?.access_token) {
+      // Trigger calculate-session edge function (only for non-retroactive; retroactive call above already handles this date)
+      if (data.session_date >= today && authSession?.access_token) {
         await supabase.functions.invoke('calculate-session', {
           headers: { Authorization: `Bearer ${authSession.access_token}` },
           body: { session_id: session.id },

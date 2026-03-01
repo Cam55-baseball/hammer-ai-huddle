@@ -212,21 +212,7 @@ export function AdvancedRepFields({
                   cols={4}
                 />
               </div>
-              {/* Tier 2: MPI-impacting (visible by default) */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
-                <SelectGrid
-                  options={[
-                    { value: 'ground', label: 'Ground' },
-                    { value: 'line', label: 'Line' },
-                    { value: 'fly', label: 'Fly' },
-                    { value: 'barrel', label: 'Barrel' },
-                  ]}
-                  value={value.batted_ball_type}
-                  onChange={v => update('batted_ball_type', v)}
-                  cols={4}
-                />
-              </div>
+              {/* Tier 2: MPI-impacting fields */}
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Swing Intent</Label>
                 <SelectGrid
