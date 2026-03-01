@@ -1,184 +1,93 @@
 
 
-# Final Production Lock — Engine Contract + Duplicate Purge + Bug Fixes
+# Fix: Personalized Activity Save Logic + Game Plan Rendering
 
-This is the last stabilization pass before release. Three categories: bugs to fix, duplicates to eliminate, and a hardcoded ENGINE CONTRACT document that locks every logic decision.
+## Problem
 
----
-
-## Bugs Found
-
-### 1. Duplicate "Batted Ball Type" render in AdvancedRepFields
-**File**: `src/components/practice/AdvancedRepFields.tsx` Lines 201-229
-The Batted Ball Type SelectGrid is rendered TWICE — once at L201-214 and again at L216-229 (labeled "Tier 2"). The second instance must be removed.
-
-### 2. Nightly audit log missing athlete count and duration
-**File**: `supabase/functions/nightly-mpi-process/index.ts` L777-784
-The plan specified logging `athletes_processed` and `duration_ms`, but the current code only logs `timestamp`. A `startTime` variable must be captured at function entry and the total processed count accumulated across sports.
-
-### 3. Retroactive double-call in usePerformanceSession
-**File**: `src/hooks/usePerformanceSession.ts` L180-195
-When a session is retroactive (`session_date < today`), the code calls `calculate-session` TWICE: once with `{ retroactive: true, date }` (L183-186) and again with `{ session_id }` (L191-194). The second call recalculates the just-inserted session redundantly since the retroactive call already recalculates ALL sessions for that date (including the new one). The second call should be wrapped in an `else` so only non-retroactive sessions trigger a single calculation.
+Personalized Hammer AI workouts (and any activity with no custom fields) can fail to render properly on the Game Plan. Root causes identified across 4 files:
 
 ---
 
-## Duplicates Found
+## Root Cause 1: `specific_dates` Never Persisted
 
-### 1. `getReleasePenalty` — exists in TWO places
-- `src/data/contractStatusRules.ts` (client-side, never used by edge function)
-- `supabase/functions/nightly-mpi-process/index.ts` L55 (authoritative, actually runs)
+**File**: `src/hooks/useCustomActivities.ts` (L144-172)
 
-**Decision**: Keep both. The client-side copy serves UI display logic (showing release penalty rules to users). The edge function copy is the authoritative calculation. They use identical logic. No removal needed — this is intentional separation between display and computation contexts.
+The `createTemplate` insert object includes `display_days`, `display_time`, `display_on_game_plan` but is **missing `specific_dates`**. Activities scheduled for specific dates silently lose their schedule on save, causing them to either show every day or not at all depending on fallback logic.
 
-### 2. `parseVeloBandUpper` and `isHighVelocityBand` — exists in TWO edge functions
-- `supabase/functions/calculate-session/index.ts` L29-40
-- `supabase/functions/nightly-mpi-process/index.ts` L110-121
-
-**Decision**: Keep both. Edge functions cannot share imports (each is an independent Deno module). Identical logic is correct and intentional. No action needed.
-
-### 3. No other duplicate calculations, triggers, probability calculations, streak logic, or overload logic found. All other systems have single sources of truth.
+**Fix**: Add `specific_dates: data.specific_dates || null` to the insert object in `createTemplate`. Also add `specific_dates` to the `updateTemplate` update object.
 
 ---
 
-## Implementation Plan
+## Root Cause 2: Initial Game Plan Query Missing `deleted_at` Filter
 
-### Step 1: Fix duplicate Batted Ball Type render
-**File**: `src/components/practice/AdvancedRepFields.tsx`
-Remove the duplicate SelectGrid block at lines 215-229 (the one with the "Tier 2" comment). The original at L201-214 stays.
+**File**: `src/hooks/useGamePlan.ts` (L492-496)
 
-### Step 2: Fix retroactive double-call
-**File**: `src/hooks/usePerformanceSession.ts`
-Change L189-195 from unconditional to:
-```typescript
-// Only call for non-retroactive sessions (retroactive call above already handles this date)
-if (data.session_date >= today && authSession?.access_token) {
-  await supabase.functions.invoke('calculate-session', {
-    headers: { Authorization: `Bearer ${authSession.access_token}` },
-    body: { session_id: session.id },
-  });
+The initial fetch query does NOT filter `deleted_at IS NULL`:
+```
+.from('custom_activity_templates')
+.select('*')
+.eq('user_id', user.id)
+.eq('sport', selectedSport)
+// MISSING: .is('deleted_at', null)
+```
+
+The lightweight `refreshCustomActivities` (L760) **does** have this filter. This means on first load, soft-deleted activities can appear as ghost entries.
+
+**Fix**: Add `.is('deleted_at', null)` to the initial templates query at L496.
+
+---
+
+## Root Cause 3: Game Plan Does Not Check `specific_dates` for Custom Activities
+
+**File**: `src/hooks/useGamePlan.ts` (L524-556)
+
+The filter checks `display_on_game_plan`, `calendar_skipped_items`, `recurring_days`, and `display_days` -- but never checks `specific_dates`. Only folder items (L620-625) evaluate specific dates.
+
+**Fix**: After the existing `display_on_game_plan` check (L526), add:
+```
+const specificDates = (template.specific_dates as string[] | null) || [];
+if (specificDates.length > 0) {
+  if (!specificDates.includes(today) && !todayLog) return;
 }
 ```
 
-### Step 3: Fix nightly audit log completeness
-**File**: `supabase/functions/nightly-mpi-process/index.ts`
-- Add `const startTime = Date.now();` after L127 (after creating supabase client)
-- Add a `let totalProcessed = 0;` counter, increment it inside the scores loop
-- Update L779-783 to include `athletes_processed: totalProcessed, duration_ms: Date.now() - startTime`
-
-### Step 4: Create ENGINE CONTRACT v1.0
-**File**: `src/data/ENGINE_CONTRACT.ts` (new file)
-A single source-of-truth constants file that documents every locked logic decision as exported constants. This is NOT documentation — it is code that can be referenced. Contains:
-
-```typescript
-export const ENGINE_CONTRACT = {
-  version: '1.0',
-  locked: true,
-
-  // Retroactive window
-  RETROACTIVE_MAX_DAYS: 7,
-
-  // MPI composite weights
-  MPI_WEIGHTS: { bqi: 0.25, fqi: 0.15, pei: 0.20, decision: 0.20, competitive: 0.20 },
-
-  // Game session weight multiplier
-  GAME_SESSION_WEIGHT: 1.5,
-
-  // Scout blend weight
-  SCOUT_BLEND_WEIGHT: 0.20,
-
-  // Overload dampening thresholds
-  OVERLOAD_THRESHOLDS: [
-    { days: 28, multiplier: 0.80 },
-    { days: 21, multiplier: 0.85 },
-    { days: 14, multiplier: 0.90 },
-  ],
-
-  // Absent-day dampening
-  ABSENT_DAMPENING: { days7_threshold: 2, mult7: 0.95, days14_threshold: 4, mult14: 0.85 },
-
-  // Consistency recovery threshold
-  CONSISTENCY_RECOVERY_PCT: 80,
-
-  // Release penalties
-  RELEASE_PENALTIES: [
-    { release: 1, pct: 12 }, { release: 2, pct: 18 },
-    { release: 3, pct: 25 }, { release: 4, pct: 30 },
-  ],
-
-  // Contract modifiers
-  CONTRACT_MODIFIERS: {
-    active: 1.0, free_agent: 0.95, released: 'penalty_table',
-    injured_list: 0.9, retired: 0,
-  },
-
-  // Pro probability
-  PRO_PROB_CAP_NON_VERIFIED: 99,
-  PRO_PROB_CAP_VERIFIED: 100,
-
-  // HoF requirements
-  HOF_MIN_SEASONS: 5,
-  HOF_MIN_PRO_PROB: 100,
-  HOF_BASEBALL_LEAGUES: ['mlb'],
-  HOF_SOFTBALL_LEAGUES: ['mlb', 'ausl'],
-
-  // Velocity thresholds
-  HIGH_VELOCITY_BASEBALL_MPH: 100,
-  HIGH_VELOCITY_SOFTBALL_MPH: 70,
-
-  // BP distance power thresholds
-  BP_DISTANCE_POWER_BASEBALL_FT: 300,
-  BP_DISTANCE_POWER_SOFTBALL_FT: 150,
-
-  // Governance flag impact
-  INTEGRITY_PENALTIES: { critical: -15, warning: -5, info: -2 },
-
-  // Injury hold
-  INJURY_HOLD_LOOKBACK_DAYS: 7,
-
-  // Session edit/delete windows
-  SESSION_EDIT_WINDOW_HOURS: 48,
-  SESSION_DELETE_WINDOW_HOURS: 24,
-
-  // Verified stat boost source
-  VERIFIED_STAT_REQUIRE_ADMIN: true,
-  VERIFIED_STAT_IMMUTABLE_AFTER_APPROVAL: true,
-
-  // Nightly process schedule
-  NIGHTLY_CRON_UTC: '05:00',
-  NIGHTLY_SESSION_WINDOW_DAYS: 90,
-
-  // Governance abuse thresholds
-  RETROACTIVE_ABUSE_THRESHOLD: 3, // 3+ retro sessions in 7 days
-  VOLUME_SPIKE_MULTIPLIER: 3, // 3x average = spike
-  GRADE_INFLATION_DELTA: 12, // player - coach > 12 = flag
-  GAME_INFLATION_DELTA: 15, // game grade - practice avg > 15 = flag
-} as const;
-```
-
-### Step 5: Deploy edge functions
-Deploy `calculate-session` and `nightly-mpi-process` after fixes.
+Apply the same logic in `refreshCustomActivities` (L782-806).
 
 ---
+
+## Root Cause 4: Empty Activity Detail Dialog — No Interactive Elements
+
+**File**: `src/components/CustomActivityDetailDialog.tsx` (L344-354)
+
+When an activity has zero checkable items (no exercises, no custom fields, no meals, no intervals), `getAllCheckableIds` returns `[]`. The detail dialog renders:
+- No progress badge (hidden by `totalCheckableCount > 0` guard)
+- No checkboxes
+- Only duration/intensity badges and a footer button
+
+Users perceive this as "broken" because there is nothing to tap. Adding even one blank custom field adds a checkbox, making the card feel functional.
+
+**Fix**: When `totalCheckableCount === 0`, render a "Quick Complete" empty state inside the dialog body:
+- A centered message: "No sub-tasks to track"
+- A prominent full-width "Mark Complete" button
+- The progress badge shows a checkmark icon instead of "0/0"
+
+This ensures activities with only a title + type still have a clear, tappable completion path.
+
+---
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/hooks/useCustomActivities.ts` | Add `specific_dates` to `createTemplate` insert + `updateTemplate` update |
+| `src/hooks/useGamePlan.ts` | Add `deleted_at` filter to initial query; add `specific_dates` check to both filter blocks |
+| `src/components/CustomActivityDetailDialog.tsx` | Add empty-state "Quick Complete" UI when zero checkable items |
 
 ## Execution Order
 
-| Step | What | Dependencies |
-|------|------|-------------|
-| 1 | Fix duplicate Batted Ball Type in AdvancedRepFields | None |
-| 2 | Fix retroactive double-call in usePerformanceSession | None |
-| 3 | Fix nightly audit log | None |
-| 4 | Create ENGINE_CONTRACT.ts | None |
-| 5 | Deploy edge functions | Steps 2, 3 |
+1. Fix `useCustomActivities.ts` -- persist `specific_dates` (independent)
+2. Fix `useGamePlan.ts` -- `deleted_at` filter + `specific_dates` check (independent)
+3. Fix `CustomActivityDetailDialog.tsx` -- empty state UX (independent)
 
-Steps 1-4 are independent and can execute in parallel. Step 5 is final.
-
----
-
-## What This Closes
-
-- 0 duplicate UI renders
-- 0 redundant edge function calls per session
-- Complete nightly monitoring with athlete count + duration
-- Single source of truth for every engine constant
-- No new features. Pure stabilization.
+All 3 are independent and execute in parallel. No database migration needed -- `specific_dates` column already exists in the schema.
 
