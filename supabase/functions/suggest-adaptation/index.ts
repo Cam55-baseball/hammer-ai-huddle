@@ -30,29 +30,55 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
+
+    // --- Subscription entitlement check ---
+    const { data: ownerRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'owner')
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!ownerRole) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, subscribed_modules')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      const hasActiveModule = subscription?.status === 'active'
+        && (subscription?.subscribed_modules?.length ?? 0) > 0;
+
+      if (!hasActiveModule) {
+        return new Response(
+          JSON.stringify({ error: 'Subscription required to use AI features' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    // --- End entitlement check ---
+
     const body = await req.json();
     const { readiness_score, pain_areas, planned_workout, sleep_quality, energy_level, soreness_level } = body;
 
     console.log('[suggest-adaptation] Analyzing for user:', userId);
-    console.log('[suggest-adaptation] Readiness:', readiness_score, 'Pain areas:', pain_areas);
 
     const suggestions: AdaptationSuggestion[] = [];
 
-    // Readiness-based suggestions
     if (readiness_score !== undefined) {
       if (readiness_score < 50) {
         suggestions.push({
@@ -71,7 +97,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Sleep-based suggestions
     if (sleep_quality !== undefined && sleep_quality < 3) {
       suggestions.push({
         priority: 'high',
@@ -81,7 +106,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Energy-based suggestions
     if (energy_level !== undefined && energy_level < 3) {
       suggestions.push({
         priority: 'medium',
@@ -91,7 +115,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Soreness-based suggestions
     if (soreness_level !== undefined && soreness_level > 3) {
       suggestions.push({
         priority: 'high',
@@ -101,7 +124,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Pain-based suggestions
     if (pain_areas && pain_areas.length > 0) {
       for (const area of pain_areas) {
         const lowerArea = area.toLowerCase();
@@ -111,7 +133,7 @@ Deno.serve(async (req) => {
             priority: 'high',
             type: 'swap_exercise',
             message: `Back discomfort reported - modify loading patterns`,
-            action: 'Replace axial loading exercises (squats, deadlifts) with unilateral alternatives',
+            action: 'Replace axial loading exercises with unilateral alternatives',
           });
         }
         
@@ -135,7 +157,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Workout-specific analysis
     if (planned_workout?.blocks) {
       const blocks = planned_workout.blocks;
       const hasHighCNS = blocks.some((b: any) => 
@@ -164,11 +185,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Sort by priority
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     suggestions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-
-    console.log('[suggest-adaptation] Generated suggestions:', suggestions.length);
 
     return new Response(JSON.stringify({
       success: true,

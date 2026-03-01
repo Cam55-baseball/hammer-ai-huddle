@@ -4,6 +4,8 @@ import { Exercise } from '@/types/customActivity';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { AggregatedGoals } from './useAthleteGoalsAggregated';
+import { useSubscription } from './useSubscription';
+import { useOwnerAccess } from './useOwnerAccess';
 
 interface WarmupExercise {
   id: string;
@@ -35,9 +37,17 @@ export function useWarmupGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [warmupResult, setWarmupResult] = useState<WarmupResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { modules } = useSubscription();
+  const { isOwner } = useOwnerAccess();
 
   const generateWarmup = useCallback(async (options: GenerateWarmupOptions) => {
     const { exercises, sport = 'baseball', personalize = false, goals, warmupContext } = options;
+
+    // Client-side subscription guard
+    if (!isOwner && modules.length === 0) {
+      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock AI-powered workouts'));
+      return null;
+    }
     
     // For warmup activity type with personalization, we don't require exercises
     const isWarmupActivity = warmupContext !== undefined;
@@ -86,7 +96,7 @@ export function useWarmupGenerator() {
     } finally {
       setIsGenerating(false);
     }
-  }, [t]);
+  }, [t, modules, isOwner]);
 
   const clearWarmup = useCallback(() => {
     setWarmupResult(null);

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,6 +43,56 @@ serve(async (req) => {
   }
 
   try {
+    // --- Auth + Subscription entitlement check ---
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check if user is owner (bypass subscription check)
+    const { data: ownerRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!ownerRole) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, subscribed_modules')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const hasActiveModule = subscription?.status === 'active'
+        && (subscription?.subscribed_modules?.length ?? 0) > 0;
+
+      if (!hasActiveModule) {
+        return new Response(
+          JSON.stringify({ error: 'Subscription required to use AI features' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    // --- End entitlement check ---
+
     const { exercises, sport = 'baseball', personalize = false, goals, warmupContext } = await req.json() as { 
       exercises: Exercise[]; 
       sport?: string;
@@ -71,27 +122,21 @@ serve(async (req) => {
       
       analysis.exerciseTypes.add(type);
       
-      // Upper body detection
       if (['press', 'curl', 'row', 'pull', 'push', 'shoulder', 'chest', 'back', 'arm'].some(k => name.includes(k))) {
         analysis.hasUpperBody = true;
       }
-      // Lower body detection
       if (['squat', 'lunge', 'deadlift', 'leg', 'hip', 'glute', 'calf'].some(k => name.includes(k))) {
         analysis.hasLowerBody = true;
       }
-      // Core detection
       if (['plank', 'core', 'ab', 'rotation', 'twist', 'pallof'].some(k => name.includes(k)) || type === 'core') {
         analysis.hasCore = true;
       }
-      // Throwing detection
       if (['throw', 'toss', 'pitch', 'band', 'j-band', 'arm care', 'external', 'internal'].some(k => name.includes(k)) || type === 'baseball') {
         analysis.hasThrowing = true;
       }
-      // Hitting detection
       if (['swing', 'bat', 'tee', 'soft toss', 'med ball rotational'].some(k => name.includes(k))) {
         analysis.hasHitting = true;
       }
-      // Plyometrics detection
       if (['jump', 'bound', 'plyo', 'explosive', 'box'].some(k => name.includes(k)) || type === 'plyometric') {
         analysis.hasPlyometrics = true;
       }
@@ -263,7 +308,6 @@ Generate a 5-8 exercise warmup that prepares them specifically for this workout.
     const aiResponse = await response.json();
     console.log("AI Response:", JSON.stringify(aiResponse, null, 2));
 
-    // Extract warmup from tool call
     interface WarmupResult {
       warmupExercises: WarmupExercise[];
       reasoning: string;
@@ -281,7 +325,6 @@ Generate a 5-8 exercise warmup that prepares them specifically for this workout.
       }
     }
 
-    // Fallback warmup if AI doesn't return any
     if (!result.warmupExercises || result.warmupExercises.length === 0) {
       const fallbackExercises: WarmupExercise[] = [
         { id: 'warmup-1', name: 'Jumping Jacks', type: 'cardio', category: 'general', duration: 60, rest: 0 },

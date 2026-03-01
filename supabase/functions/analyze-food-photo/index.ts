@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,12 +7,58 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // --- Auth + Subscription entitlement check ---
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: ownerRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!ownerRole) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, subscribed_modules')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const hasActiveModule = subscription?.status === 'active'
+        && (subscription?.subscribed_modules?.length ?? 0) > 0;
+
+      if (!hasActiveModule) {
+        return new Response(
+          JSON.stringify({ error: 'Subscription required to use AI features' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    // --- End entitlement check ---
+
     const { imageBase64 } = await req.json();
 
     if (!imageBase64) {
@@ -73,16 +120,8 @@ Be thorough but realistic. If the image shows no food or is too unclear, indicat
           {
             role: 'user',
             content: [
-              { 
-                type: 'text', 
-                text: 'Identify all foods in this meal photo. Estimate portions and provide nutrition data for each item. If no food is visible or the image is too unclear, indicate that.' 
-              },
-              { 
-                type: 'image_url', 
-                image_url: { 
-                  url: `data:image/jpeg;base64,${imageBase64}` 
-                } 
-              }
+              { type: 'text', text: 'Identify all foods in this meal photo. Estimate portions and provide nutrition data for each item.' },
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
             ]
           }
         ],
@@ -97,63 +136,25 @@ Be thorough but realistic. If the image shows no food or is too unclear, indicat
                 properties: {
                   foods: {
                     type: 'array',
-                    description: 'List of identified food items',
                     items: {
                       type: 'object',
                       properties: {
-                        name: { 
-                          type: 'string', 
-                          description: 'Name of the food item (e.g., "Scrambled Eggs", "Grilled Chicken Breast")' 
-                        },
-                        quantity: { 
-                          type: 'number', 
-                          description: 'Estimated quantity (e.g., 2 for two eggs)' 
-                        },
-                        unit: { 
-                          type: 'string', 
-                          description: 'Unit of measurement (e.g., "large", "oz", "cup", "slice")' 
-                        },
-                        calories: { 
-                          type: 'number', 
-                          description: 'Estimated calories for the portion shown' 
-                        },
-                        protein: { 
-                          type: 'number', 
-                          description: 'Estimated protein in grams' 
-                        },
-                        carbs: { 
-                          type: 'number', 
-                          description: 'Estimated carbohydrates in grams' 
-                        },
-                        fats: { 
-                          type: 'number', 
-                          description: 'Estimated fats in grams' 
-                        },
-                        confidence: { 
-                          type: 'string', 
-                          enum: ['high', 'medium', 'low'],
-                          description: 'Confidence level in the identification' 
-                        }
+                        name: { type: 'string' },
+                        quantity: { type: 'number' },
+                        unit: { type: 'string' },
+                        calories: { type: 'number' },
+                        protein: { type: 'number' },
+                        carbs: { type: 'number' },
+                        fats: { type: 'number' },
+                        confidence: { type: 'string', enum: ['high', 'medium', 'low'] }
                       },
                       required: ['name', 'quantity', 'unit', 'calories', 'protein', 'carbs', 'fats', 'confidence']
                     }
                   },
-                  mealDescription: {
-                    type: 'string',
-                    description: 'Brief overall description of the meal (e.g., "Balanced breakfast with protein and carbs")'
-                  },
-                  portionNotes: {
-                    type: 'string',
-                    description: 'Any notes about portion estimation or uncertainties'
-                  },
-                  noFoodDetected: {
-                    type: 'boolean',
-                    description: 'Set to true if no food is visible in the image'
-                  },
-                  imageQualityIssue: {
-                    type: 'string',
-                    description: 'Description of any image quality issues (blurry, dark, etc.) or null if image is clear'
-                  }
+                  mealDescription: { type: 'string' },
+                  portionNotes: { type: 'string' },
+                  noFoodDetected: { type: 'boolean' },
+                  imageQualityIssue: { type: 'string' }
                 },
                 required: ['foods', 'mealDescription', 'noFoodDetected']
               }
@@ -169,45 +170,30 @@ Be thorough but realistic. If the image shows no food or is too unclear, indicat
       console.error('AI gateway error:', response.status, errorText);
       
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
-      
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
-      
-      return new Response(
-        JSON.stringify({ error: 'Failed to analyze image' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Failed to analyze image' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
-    console.log('AI response received');
-
-    // Extract the tool call result
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall || toolCall.function.name !== 'identify_foods') {
-      console.error('Unexpected AI response format:', JSON.stringify(data));
-      return new Response(
-        JSON.stringify({ error: 'Failed to parse food identification result' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Failed to parse food identification result' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const result = JSON.parse(toolCall.function.arguments);
-    console.log(`Identified ${result.foods?.length || 0} food items`);
-
-    return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
     console.error('Error in analyze-food-photo:', error);

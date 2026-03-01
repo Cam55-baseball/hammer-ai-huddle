@@ -13,6 +13,9 @@ import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
 import { RoadmapBlockedBadge } from '@/components/analytics/RoadmapBlockedBadge';
 import { HeatMapDashboard } from '@/components/heatmaps/HeatMapDashboard';
 import { useRoadmapProgress } from '@/hooks/useRoadmapProgress';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { CheckCircle2, Circle, Loader2, Lock } from 'lucide-react';
 
 function RoadmapSection() {
@@ -69,6 +72,10 @@ function RoadmapSection() {
 }
 
 export default function ProgressDashboard() {
+  const { modules } = useSubscription();
+  const { isOwner } = useOwnerAccess();
+  const hasAdvancedAccess = isOwner || modules.length > 0;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -79,40 +86,50 @@ export default function ProgressDashboard() {
 
         <DataBuildingGate>
           <div className="space-y-6">
-            {/* Row 1: Score cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <MPIScoreCard />
-                <MPIBreakdownCard />
-              </div>
-              <ProProbabilityCard />
-              <RankMovementBadge />
-            </div>
+            {hasAdvancedAccess ? (
+              <>
+                {/* Row 1: Score cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <MPIScoreCard />
+                    <MPIBreakdownCard />
+                  </div>
+                  <ProProbabilityCard />
+                  <RankMovementBadge />
+                </div>
 
-            {/* Row 2: HoF + Integrity */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <HoFCountdown />
-              <IntegrityScoreBar />
-            </div>
+                {/* Row 2: HoF + Integrity */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <HoFCountdown />
+                  <IntegrityScoreBar />
+                </div>
 
-            {/* Row 3: AI Prompts */}
-            <AIPromptCard />
+                {/* Row 3: AI Prompts */}
+                <AIPromptCard />
 
-            {/* Row 4: Delta Trend */}
-            <DeltaTrendChart />
+                {/* Row 4: Delta Trend */}
+                <DeltaTrendChart />
 
-            {/* Row 5: Roadmap */}
-            <RoadmapSection />
+                {/* Row 5: Roadmap */}
+                <RoadmapSection />
 
-            {/* Row 6: Heat Maps */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Performance Heat Maps</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <HeatMapDashboard />
-              </CardContent>
-            </Card>
+                {/* Row 6: Heat Maps */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Performance Heat Maps</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <HeatMapDashboard />
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <UpgradePrompt 
+                featureName="Advanced Performance Insights"
+                featureDescription="Unlock your MPI score, pro probability, heat maps, trend analysis, and full development roadmap."
+                variant="full"
+              />
+            )}
           </div>
         </DataBuildingGate>
       </div>
