@@ -170,6 +170,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
                 <PitchLocationGrid
                   value={current.pitch_location}
                   onSelect={v => updateCurrent('pitch_location', v)}
+                  allow5x5
                 />
               </div>
 
@@ -253,6 +254,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
                   <PitchLocationGrid
                     value={current.pitch_location}
                     onSelect={v => updateCurrent('pitch_location', v)}
+                    allow5x5
                   />
                 </motion.div>
               )}

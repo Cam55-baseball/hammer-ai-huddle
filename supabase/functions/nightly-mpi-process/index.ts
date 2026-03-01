@@ -142,7 +142,7 @@ serve(async (req) => {
       const proMap = new Map((proStatuses ?? []).map(p => [p.user_id, p]));
 
       const { data: verifiedProfiles } = await supabase.from('verified_stat_profiles')
-        .select('*').in('user_id', userIds).eq('verified', true);
+        .select('*').in('user_id', userIds).eq('verified', true).eq('admin_verified', true);
       const verifiedMap = new Map<string, any[]>();
       for (const vp of verifiedProfiles ?? []) {
         if (!verifiedMap.has(vp.user_id)) verifiedMap.set(vp.user_id, []);
@@ -232,9 +232,35 @@ serve(async (req) => {
           else if (cs === 'released') contractMod = 1.0 - getReleasePenalty(proStatus.release_count || 0) / 100;
           else if (cs === 'injured_list') contractMod = 0.9;
           else if (cs === 'retired') contractMod = 0; // freeze
+
+          // Auto-manage roster_verified on release/re-sign
+          if (cs === 'released' && proStatus.roster_verified === true) {
+            await supabase.from('athlete_professional_status')
+              .update({ roster_verified: false })
+              .eq('user_id', uid).eq('sport', sport);
+            proStatus.roster_verified = false;
+          }
+          if (cs === 'active' && proStatus.roster_verified === false && ['mlb', 'ausl'].includes(proStatus.current_league?.toLowerCase() ?? '')) {
+            await supabase.from('athlete_professional_status')
+              .update({ roster_verified: true })
+              .eq('user_id', uid).eq('sport', sport);
+            proStatus.roster_verified = true;
+          }
         }
         if (contractMod > 0) adjusted *= contractMod;
-        else adjusted = adjusted; // frozen - keep last score
+        // Retired: truly freeze — fetch last MPI and use that score
+        if (contractMod === 0) {
+          const { data: lastMpi } = await supabase.from('mpi_scores')
+            .select('adjusted_global_score')
+            .eq('user_id', uid).eq('sport', sport)
+            .order('calculation_date', { ascending: false })
+            .limit(1).maybeSingle();
+          if (lastMpi) {
+            // Skip this athlete entirely — MPI frozen
+            continue;
+          }
+          // No previous MPI, let first score through
+        }
 
         // ── Scout evaluation blending ──
         const scoutGrades = scoutMap.get(uid);
@@ -269,29 +295,45 @@ serve(async (req) => {
 
         let dampingMultiplier = 1.0;
         let injuryHoldActive = false;
+        
+        // Build set of logged dates
+        const loggedDates = new Set((dailyLogs ?? []).map(l => l.entry_date));
+        
         if (dailyLogs && dailyLogs.length > 0) {
           const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
           injuryHoldActive = dailyLogs.some(l => l.injury_mode === true && l.entry_date >= sevenDaysAgo);
-
-          const now = Date.now();
-          let missed7 = 0, missed14 = 0;
-          for (const log of dailyLogs) {
-            const logDate = new Date(log.entry_date).getTime();
-            const daysAgo = (now - logDate) / 86400000;
-            if (log.day_status === 'missed') {
-              if (daysAgo <= 7) missed7++;
-              if (daysAgo <= 14) missed14++;
-            }
-          }
-          if (missed14 >= 4) dampingMultiplier = 0.85;
-          else if (missed7 >= 2) dampingMultiplier = 0.95;
-
-          // Consistency recovery lift
-          const injuryDays = dailyLogs.filter(l => l.injury_mode).length;
-          const loggedDays = dailyLogs.filter(l => l.day_status !== 'missed').length;
-          const consistencyScore = loggedDays / Math.max(1, 30 - injuryDays) * 100;
-          if (consistencyScore >= 80) dampingMultiplier = 1.0;
         }
+
+        // Count absent days (no row at all) + explicit missed days
+        const now = new Date();
+        let absent7 = 0, absent14 = 0;
+        for (let i = 1; i <= 14; i++) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0];
+          const log = (dailyLogs ?? []).find(l => l.entry_date === dateStr);
+          const isAbsent = !log || log.day_status === 'missed';
+          if (isAbsent && i <= 7) absent7++;
+          if (isAbsent) absent14++;
+        }
+        if (absent14 >= 4) dampingMultiplier = 0.85;
+        else if (absent7 >= 2) dampingMultiplier = 0.95;
+
+        // Consistency recovery lift (count logged days in 30-day window)
+        let totalLoggedDays = 0;
+        let injuryDays = 0;
+        for (let i = 1; i <= 30; i++) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0];
+          const log = (dailyLogs ?? []).find(l => l.entry_date === dateStr);
+          if (log) {
+            if (log.day_status !== 'missed') totalLoggedDays++;
+            if (log.injury_mode) injuryDays++;
+          }
+        }
+        const consistencyScore = totalLoggedDays / Math.max(1, 30 - injuryDays) * 100;
+        if (consistencyScore >= 80) dampingMultiplier = 1.0;
 
         if (injuryHoldActive) continue; // Freeze MPI -- skip this athlete
 
