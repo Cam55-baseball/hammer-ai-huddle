@@ -1,206 +1,290 @@
 
+# Phase 1 Completion Spec -- Implementation Plan
 
-# Folder Reordering, Cycle Clarity, Coach Permissions, CNS Integration, and Nutrition Fix
+## Confirmed Critical Gaps
 
-## Overview
+After code inspection, these issues are verified:
 
-Nine changes grouped into five workstreams: (A) arrow reordering controls, (B) collapsible weekly section improvements, (C) player-to-coach editing workflow with granular permissions, (D) CNS load integration for all activities, and (E) nutrition/weight input bug fix.
+1. **Double release penalty** -- Lines 229 and 289 of `nightly-mpi-process/index.ts` both apply release penalty (once to MPI score, once to pro probability independently)
+2. **HoF counts AUSL for baseball** -- Line 301: `(proStatus.mlb_seasons_completed || 0) + (proStatus.ausl_seasons_completed || 0)` with no sport filter
+3. **No daily status/rest engine** -- No table exists. Only `calendar_skipped_items` with binary skip days
+4. **No granular drill types** -- No machine BP, front toss, or distance tracking in drill definitions
+5. **Coach immutability trigger** -- Function `prevent_override_modification` exists but is NOT attached to any table (no triggers in DB)
+
+## Implementation Order (5 Streams)
 
 ---
 
-## A. Up/Down Arrow Reordering Controls
+### Stream 1: MPI Integrity Fixes (Immediate)
 
-**File: `src/components/folders/FolderDetailDialog.tsx`**
+**A. Fix double release penalty** in `supabase/functions/nightly-mpi-process/index.ts`
 
-Add Move Up / Move Down arrow buttons alongside the existing drag handle on each item card.
+Remove lines 288-289 (the second application of contract penalties to proProbability). The penalty is already applied to the MPI score via `contractMod` at line 233. Pro probability is derived FROM the score, so applying it again is compounding.
 
-**Changes to `renderItemCard` (line 330):**
-- Add `ChevronUp` and `ChevronDown` icon buttons next to the `GripVertical` drag handle
-- `handleMoveUp(itemId, weekKey?)` and `handleMoveDown(itemId, weekKey?)` functions that:
-  - Swap `order_index` with the adjacent item in the same group (or flat list)
-  - Update local state immediately
-  - Persist both swapped `order_index` values to `activity_folder_items`
-- Disable Up arrow on first item, Down arrow on last item
-- Works in both flat list mode and within collapsible weekly sections (scoped to the same week group)
-
-**New handlers:**
+Change:
 ```text
-handleMoveItem(itemId, direction: 'up' | 'down', weekKey?: string)
-  - Get the relevant item list (grouped or flat)
-  - Find current index, swap with neighbor
-  - Update state + persist order_index for both items
+// Lines 287-289: Remove the second penalty application
+let proProbability = calcProProb(finalScore);
+// DELETE: if (proStatus?.contract_status === 'free_agent') proProbability *= 0.95;
+// DELETE: if (proStatus?.contract_status === 'released') proProbability *= (1 - getReleasePenalty(...));
 ```
 
+**B. Fix HoF MLB-only enforcement** in same file
+
+Line 301 currently sums MLB + AUSL seasons. For baseball, only count MLB:
+```text
+const totalProSeasons = sport === 'baseball'
+  ? (proStatus.mlb_seasons_completed || 0)
+  : (proStatus.mlb_seasons_completed || 0) + (proStatus.ausl_seasons_completed || 0);
+```
+
+Also fix `src/hooks/useHoFEligibility.ts` (line 12) and `src/data/hofRequirements.ts` to match.
+
+**C. Attach coach immutability trigger**
+
+Database migration to attach existing `prevent_override_modification` function:
+```sql
+CREATE TRIGGER prevent_coach_override_modification
+  BEFORE UPDATE OR DELETE ON public.coach_grade_overrides
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_override_modification();
+```
+
+**D. Align scout weighting** -- real-time hook should average all scout grades (matching nightly). Verify `useMPIScores` or equivalent hook uses averaged scout data, not just latest.
+
 ---
 
-## B. Collapsible Weekly Sections Enhancement
+### Stream 2: Rest + Load Engine (New Architecture)
 
-**File: `src/components/folders/FolderDetailDialog.tsx`**
-
-**B1. "Add Activity" button per week section**
-
-Inside `renderCollapsibleWeekSection` (line 425), add a small `+ Add` button in each week header or at the bottom of each section. When clicked:
-- Set `pendingCycleWeek` to that week number (or null for "Every Week")
-- Open the builder dialog (`setBuilderOpen(true)`)
-- The new item auto-tags to that week
-
-**B2. Title already correct** -- "Cycle Plan: How should activities repeat?" is already in `FolderBuilder.tsx` line 151. No change needed.
-
----
-
-## C. Player-to-Coach Editing Workflow and Granular Permissions
-
-This requires both database changes and UI work.
-
-### C1. Database Migration
-
-New table `folder_coach_permissions` for granular per-folder coach access:
+**A. Database Migration -- `athlete_daily_log` table**
 
 ```sql
-CREATE TABLE public.folder_coach_permissions (
+CREATE TABLE public.athlete_daily_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  folder_id uuid REFERENCES public.activity_folders(id) ON DELETE CASCADE NOT NULL,
-  coach_user_id uuid NOT NULL,
-  permission_level text NOT NULL DEFAULT 'edit',
-  granted_by uuid NOT NULL,
-  granted_at timestamptz NOT NULL DEFAULT now(),
-  revoked_at timestamptz,
-  UNIQUE (folder_id, coach_user_id)
+  user_id uuid NOT NULL,
+  entry_date date NOT NULL,
+  day_status text NOT NULL DEFAULT 'full_training',
+    -- full_training, game_only, light_work, recovery_only,
+    -- travel_day, injury_hold, voluntary_rest, missed
+  rest_reason text,
+    -- recovery, travel, game_day_only, minor_soreness, personal,
+    -- coach_directed, weather, injury
+  coach_override boolean DEFAULT false,
+  coach_override_by uuid,
+  injury_mode boolean DEFAULT false,
+  injury_body_region text,
+  injury_expected_days integer,
+  game_logged boolean DEFAULT false,
+  cns_load_actual numeric DEFAULT 0,
+  consistency_impact numeric DEFAULT 0,
+  momentum_impact numeric DEFAULT 0,
+  notes text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, entry_date)
 );
 
-ALTER TABLE public.folder_coach_permissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.athlete_daily_log ENABLE ROW LEVEL SECURITY;
 
--- Players can manage permissions on their own folders
-CREATE POLICY "Players manage own folder permissions"
-  ON public.folder_coach_permissions FOR ALL TO authenticated
-  USING (granted_by = auth.uid())
-  WITH CHECK (granted_by = auth.uid());
-
--- Coaches can read permissions granted to them
-CREATE POLICY "Coaches read own permissions"
-  ON public.folder_coach_permissions FOR SELECT TO authenticated
-  USING (coach_user_id = auth.uid() AND revoked_at IS NULL);
+CREATE POLICY "Users manage own daily log"
+  ON public.athlete_daily_log FOR ALL TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
 ```
 
-Add `is_head_coach` boolean to `athlete_mpi_settings` or use existing `primary_coach_id` as the head coach identifier (already exists). The head coach (primary_coach_id) gets automatic access to ALL folders -- enforced in code, not via separate permission rows.
+**B. Consistency Index calculation** -- New utility `src/utils/consistencyIndex.ts`
 
-### C2. "Send to Coach for Edit" Button
+- Query last 30 days from `athlete_daily_log`
+- Calculate: logged_days / 30 (excluding injury_hold days from denominator)
+- Track consecutive logged streak and consecutive missed streak
+- Output: `{ consistencyScore: number, loggedStreak: number, missedStreak: number }`
 
-**File: `src/components/folders/FolderDetailDialog.tsx`**
+**C. Development Dampening logic** -- Added to nightly MPI process
 
-Replace the current simple toggle (lines 467-475) with an expanded permission panel:
+- 2+ missed in 7 days: multiply development velocity by 0.95
+- 4+ missed in 14 days: multiply by 0.85
+- Injury hold: freeze MPI (no growth or decline)
+- Once consistency improves above 80%, dampening lifts automatically
 
-- Keep the existing toggle for primary coach (head coach = automatic access)
-- Add a new section: "Grant Access to Assistant Coaches"
-  - Dropdown to select from available coaches (query `user_roles` for coaches linked to the player's team/org, or a simple user search)
-  - List of currently granted coaches with a "Revoke" button
-  - Each granted coach shows their name and permission status
+**D. Dual Streak System** -- Stored in `athlete_daily_log` queries
 
-### C3. Coach Editing Enforcement
+- Performance Streak: broken only by unmarked skip (status = 'missed')
+- Discipline Streak: broken by no input at all (no row for date)
+- Both preserved by rest days, game days, coach-directed rest
 
-**File: `src/components/folders/FolderDetailDialog.tsx`**
+**E. Push Schedule Logic** -- New component `src/components/calendar/RestDayScheduler.tsx`
 
-Currently `isOwner` gates all edit actions. Add a new derived variable:
+When marking rest day:
+- Show options: Move planned work forward, drop session, auto-reschedule
+- Detect mandatory events (coach-scheduled, games) and protect them
+- Recalculate CNS load for affected days
+- Show overload warning if stacking occurs
 
+**F. Retroactive Logging** -- Allow editing past 7 days in `athlete_daily_log`
+
+- On retroactive entry, trigger recalculation of consistency index
+- Update heat map snapshots for affected dates
+- Recalculate weekly load balance
+
+**G. Abuse Protection** -- Flag in governance system
+
+- 5+ sessions in one day: flag "volume_spike"
+- 14 consecutive heavy sessions: flag "overload_risk"
+- Frequent "voluntary_rest" (5+ in 14 days): internal flag for admin review
+
+**H. Calendar UX** -- Update `CalendarDaySheet.tsx`
+
+Add day-status selector at top of each day view:
 ```text
-const canEdit = isOwner || isGrantedCoach;
+[ Complete Plan ] [ Light Work ] [ Take Rest Day ] [ Log Game ] [ Mark Missed ]
 ```
-
-Where `isGrantedCoach` checks:
-1. Is the current user the folder's `coach_edit_user_id` (head coach via existing toggle)?
-2. OR does a row exist in `folder_coach_permissions` for this folder + current user with no `revoked_at`?
-
-Replace all `isOwner` guards for edit/add/delete/reorder with `canEdit`.
-
-### C4. Full Card Editability
-
-**File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
-
-The builder already supports full editing (add/remove/reorder exercises, adjust sets/reps/intensity, modify notes). No fields are locked for personalized cards. This is already working correctly -- the plan confirms no lock mechanism exists post-creation.
-
-Add "Duplicate" and "Move to Week" actions to the item card menu:
-- **Duplicate**: Copy the item with a new ID and append to the same week
-- **Move to Week**: Quick-select to change `cycle_week` (already exists as inline tag selector)
+Single tap. Evening reminder if no input.
 
 ---
 
-## D. CNS Load for ALL Activity Types
+### Stream 3: Micro-Level Session Logging
 
-**File: `src/utils/loadCalculation.ts`**
+**A. Expand drill definitions** in `src/data/baseball/drillDefinitions.ts` and `src/data/softball/drillDefinitions.ts`
 
-The existing `calculateExerciseCNS` already handles strength, plyometric, baseball, core, cardio, and flexibility. But the `default` case (line 55) and some types need adjustment:
+Add missing practice types:
+- `machine_bp` -- Machine Batting Practice (separate from live BP)
+- `front_toss` -- Front Toss
+- `flip_drill` -- Flips/Short Toss
+- `tee_work` -- Tee Work (already exists as `tee_work`)
+- `live_bp` -- Live BP (overhand)
 
-**Changes:**
-- Ensure `flexibility` has a minimum CNS of 5 (already set) -- but enforce it's never 0
-- Add explicit handling for custom activity types: `practice`, `skill_work`, `mobility`, `recovery`, `warmup`
-- Add a `custom` fallback that estimates CNS from `duration_minutes` if no exercises exist
+**B. New data fields** for `DrillBlock` interface in `usePerformanceSession.ts`
 
-**New function: `calculateCustomActivityCNS`**
-
-```text
-export function calculateCustomActivityCNS(template: CustomActivityTemplate): number {
-  // If the activity has exercises, use standard calculation
-  if (template.exercises?.length > 0) {
-    return template.exercises.reduce((sum, ex) => sum + calculateExerciseCNS(ex as any), 0);
-  }
-  // Duration-based estimation for activities without exercise blocks
-  const durationMinutes = template.duration_minutes || 30;
-  const intensityMultiplier = template.intensity === 'max' ? 1.5
-    : template.intensity === 'high' ? 1.2
-    : template.intensity === 'moderate' ? 1.0
-    : 0.7;
-  const typeBase = TYPE_CNS_BASES[template.activity_type] || 15;
-  return Math.round(typeBase * (durationMinutes / 30) * intensityMultiplier);
-}
+Add optional fields:
+```typescript
+bp_distance_ft?: number;
+machine_velocity_band?: string; // '40-50' | '50-60' | '60-70' | '70-80' | '80+'
+batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel';
+spin_direction?: 'topspin' | 'backspin' | 'sidespin';
+swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
+goal_of_rep?: string;
+actual_outcome?: string;
+execution_score?: number; // 1-10 per rep
 ```
 
-With `TYPE_CNS_BASES`:
-```text
-workout: 30, running: 25, practice: 25, short_practice: 20,
-warmup: 10, recovery: 5, meal: 0, free_session: 15
+Fielding additions:
+```typescript
+throw_included?: boolean;
+footwork_grade?: number; // 20-80
+exchange_time_band?: 'fast' | 'average' | 'slow';
+throw_accuracy?: number; // 20-80
+throw_spin_quality?: 'carry' | 'tail' | 'cut' | 'neutral';
 ```
 
-**Integration point**: The Game Plan daily load calculation (which calls `calculateDayLoadMetrics`) must also sum CNS from completed custom activities. This is handled in the `calculate-load` edge function -- add custom activity data to its input.
+Pitching additions:
+```typescript
+velocity_band?: string;
+spin_rate_band?: string;
+spin_efficiency_pct?: number;
+pitch_command_grade?: number; // 20-80
+```
+
+**C. Quick Log vs Advanced Log UI** -- `src/components/practice/PracticeSessionLogger.tsx`
+
+- Quick Log (default): Type, drill, volume, grade slider = under 30 seconds
+- Advanced toggle: reveals all micro fields above
+- Smart defaults: pre-fill from last session of same type
+- Last-session memory: store in localStorage per drill type
+
+**D. Performance data stored in `drill_blocks` JSONB** -- no schema change needed, fields are already flexible JSONB
 
 ---
 
-## E. Nutrition and Weight Input Bug Fix
+### Stream 4: Heat Map Architecture Expansion
 
-**File: `src/components/nutrition-hub/TDEESetupWizard.tsx`**
+**A. Upgrade to 5x5 grid option** -- `src/components/micro-layer/PitchLocationGrid.tsx`
 
-After reviewing the code, the weight input uses `type="number"` with `parseInt`-style validation. Issues found:
+- Add toggle: 3x3 (standard) vs 5x5 (advanced)
+- 5x5 stores `{ row: 0-4, col: 0-4 }` -- backward compatible
+- Gate 5x5 behind advanced data density level
 
-1. **Line 69**: `parseFloat(weightLbs) > 0` -- correct for decimals
-2. **Line 80**: Validation `parseFloat(weightLbs) >= 80 && parseFloat(weightLbs) <= 400` -- this rejects weights under 80 lbs (problematic for young athletes aged 5-13 who may weigh 40-79 lbs)
-3. **Line 111**: `weight: weightLbs` saves as string, not number -- the `profiles.weight` column type needs verification. If it's numeric, this could cause silent failures.
+**B. Practice vs Game separation** in nightly heat map computation
 
-**Fixes:**
-- Change weight validation range from `80-400` to `30-500` to support youth athletes
-- Ensure `weight` is saved as a number: `weight: parseFloat(weightLbs)` on line 111
-- Add `step="0.1"` to the weight input to explicitly allow decimal values
-- Add visible validation error messages (currently the "Next" button just disables with no explanation)
+- Add `session_type` filter when computing heat map snapshots
+- Store separate snapshots: `pitch_location_practice`, `pitch_location_game`
+- Display tabs in analytics: "Practice" | "Game" | "Combined"
 
-**File: `src/components/vault/VaultFocusQuizDialog.tsx`**
+**C. Add missing heat map types** to nightly process
 
-Weight inputs in the Vault check-in (lines 863-867, 1250-1254, 1519-1523) already use `parseFloat` for saving. Verify these also accept decimals and don't produce NaN. Add `step="0.1"` to those inputs as well.
+Currently computes 3: `pitch_location`, `swing_chase`, `barrel_zone`
+Add: `throw_accuracy`, `miss_tendency`, `whiff_zone`, `error_location`, `command_heat`
+
+**D. Blind zone detection** -- New utility
+
+- Compare zone-level contact % against player's global average
+- If any zone is 20%+ below average: flag as blind zone
+- Feed into roadmap recommendations
+- Store in `heat_map_snapshots` as `blind_zones: [{row, col, deficit_pct}]`
+
+**E. Add `in_zone` field** to micro layer data capture for chase tracking accuracy
 
 ---
 
-## Technical Summary
+### Stream 5: Governance + Verified Stats Layer
 
-| File | Changes |
-|------|---------|
-| `FolderDetailDialog.tsx` | Add up/down arrow buttons; add per-week "Add Activity" button; expand coach permission panel; replace `isOwner` with `canEdit`; add duplicate item action |
-| `FolderBuilder.tsx` | No changes needed (title already correct) |
-| `loadCalculation.ts` | Add `calculateCustomActivityCNS` function; add type bases for all activity types |
-| `TDEESetupWizard.tsx` | Fix weight range (30-500), save as number, add step="0.1", add validation messages |
-| `VaultFocusQuizDialog.tsx` | Add step="0.1" to weight inputs |
-| **DB Migration** | Create `folder_coach_permissions` table with RLS policies |
+**A. Admin verification dashboard** -- New page `src/pages/AdminVerification.tsx`
+
+- Queue of pending `verified_stat_links` submissions
+- Each entry shows: player name, link URL, claimed source, submitted date
+- Admin actions: Approve (with confidence weight 0-100%), Reject (with reason), Request More Info
+- Audit trail: all actions logged to `audit_log` table
+
+**B. Database additions**
+
+```sql
+ALTER TABLE public.verified_stat_links
+  ADD COLUMN IF NOT EXISTS admin_verified boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS verified_by uuid,
+  ADD COLUMN IF NOT EXISTS verified_at timestamptz,
+  ADD COLUMN IF NOT EXISTS confidence_weight numeric DEFAULT 100,
+  ADD COLUMN IF NOT EXISTS rejection_reason text;
+```
+
+**C. Boost adjustment** -- Nightly MPI process uses `confidence_weight` to scale verified stat boost
+
+Currently: flat boost per link type.
+Change: `boost * (confidence_weight / 100)` so admin can reduce boost for uncertain links.
+
+**D. Revocation** -- If admin rejects a previously approved link, boost is removed on next nightly run.
+
+---
+
+## File Change Summary
+
+| File | Change Type |
+|------|------------|
+| `supabase/functions/nightly-mpi-process/index.ts` | Fix double penalty, fix HoF MLB-only, add consistency dampening, add confidence-weighted boosts |
+| `src/hooks/useHoFEligibility.ts` | Fix to use MLB-only seasons for baseball |
+| `src/data/hofRequirements.ts` | Add sport-aware season counting |
+| `src/data/baseball/drillDefinitions.ts` | Add machine_bp, front_toss, flip_drill |
+| `src/data/softball/drillDefinitions.ts` | Add equivalent softball drill types |
+| `src/hooks/usePerformanceSession.ts` | Expand DrillBlock interface with micro fields |
+| `src/components/micro-layer/PitchLocationGrid.tsx` | Add 5x5 grid option |
+| `src/components/micro-layer/MicroLayerInput.tsx` | Add new fielding/pitching micro fields |
+| `src/components/practice/PracticeSessionLogger.tsx` | Add Quick/Advanced toggle, smart defaults |
+| `src/components/calendar/CalendarDaySheet.tsx` | Add day-status selector |
+| `src/utils/consistencyIndex.ts` | New: consistency calculation |
+| `src/utils/loadCalculation.ts` | Add rest-day CNS recalculation |
+| `src/pages/AdminVerification.tsx` | New: admin verification dashboard |
+| **DB Migration** | Create `athlete_daily_log`, alter `verified_stat_links`, attach coach override trigger |
+
+## Implementation Priority
+
+1. **Stream 1** first (MPI integrity) -- math fixes, low risk, high trust impact
+2. **Stream 2** next (Rest engine) -- foundational, everything else depends on it
+3. **Stream 3** then (Micro logging) -- depth layer, builds on existing architecture
+4. **Stream 4** after (Heat maps) -- data quality improvement
+5. **Stream 5** last (Governance) -- admin tooling, lower user-facing urgency
 
 ## What This Does NOT Change
 
-- The existing drag-and-drop system (remains for advanced users)
-- The cycle calculation logic (`getCurrentCycleWeek` -- already correct)
-- The folder builder UI (already has the correct title and visual cards)
-- The edge function architecture (calculate-load, detect-overlaps, suggest-adaptation)
-
+- Existing Quick Log UX (preserved, only enhanced with optional advanced toggle)
+- Database schema for `performance_sessions` (drill_blocks is already JSONB, new fields are additive)
+- Existing tier multipliers, age curves, position weights
+- Edge function architecture (calculate-load, detect-overlaps, suggest-adaptation remain)
+- Folder/cycle system (recently rebuilt, working correctly)
+- Sport separation logic (already enforced at schema level)
