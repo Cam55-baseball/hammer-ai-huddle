@@ -1,290 +1,295 @@
 
-# Phase 1 Completion Spec -- Implementation Plan
 
-## Confirmed Critical Gaps
+# Phase 1 Integrity Lockdown -- Integration Wiring Plan
 
-After code inspection, these issues are verified:
+## Status Update
 
-1. **Double release penalty** -- Lines 229 and 289 of `nightly-mpi-process/index.ts` both apply release penalty (once to MPI score, once to pro probability independently)
-2. **HoF counts AUSL for baseball** -- Line 301: `(proStatus.mlb_seasons_completed || 0) + (proStatus.ausl_seasons_completed || 0)` with no sport filter
-3. **No daily status/rest engine** -- No table exists. Only `calendar_skipped_items` with binary skip days
-4. **No granular drill types** -- No machine BP, front toss, or distance tracking in drill definitions
-5. **Coach immutability trigger** -- Function `prevent_override_modification` exists but is NOT attached to any table (no triggers in DB)
+One item from the original list is already resolved:
+- **Coach Grade Immutability Trigger**: CONFIRMED ATTACHED. Three triggers exist on `coach_grade_overrides` (`prevent_override_update`, `prevent_override_delete`, `prevent_coach_override_modification`). No action needed.
 
-## Implementation Order (5 Streams)
+The remaining 6 gaps are confirmed and addressed below.
 
 ---
 
-### Stream 1: MPI Integrity Fixes (Immediate)
+## Task 1: Wire Confidence Weight into Nightly MPI
 
-**A. Fix double release penalty** in `supabase/functions/nightly-mpi-process/index.ts`
+**File:** `supabase/functions/nightly-mpi-process/index.ts`
 
-Remove lines 288-289 (the second application of contract penalties to proProbability). The penalty is already applied to the MPI score via `contractMod` at line 233. Pro probability is derived FROM the score, so applying it again is compounding.
+**Current state:** Lines 216-221 apply flat `competitiveBoost` per verified stat profile, ignoring `confidence_weight` column.
 
-Change:
+**Change:** When iterating verified profiles (line 217), read `confidence_weight` (defaults to 100) and scale the boost:
+
 ```text
-// Lines 287-289: Remove the second penalty application
-let proProbability = calcProProb(finalScore);
-// DELETE: if (proStatus?.contract_status === 'free_agent') proProbability *= 0.95;
-// DELETE: if (proStatus?.contract_status === 'released') proProbability *= (1 - getReleasePenalty(...));
+// Line 219 currently:
+if (boost) verifiedBoostTotal += boost.competitiveBoost;
+
+// Change to:
+if (boost) {
+  const weight = (vp.confidence_weight ?? 100) / 100;
+  verifiedBoostTotal += boost.competitiveBoost * weight;
+}
 ```
 
-**B. Fix HoF MLB-only enforcement** in same file
-
-Line 301 currently sums MLB + AUSL seasons. For baseball, only count MLB:
+Also update the verified profiles query (line 144) to include `confidence_weight`:
 ```text
-const totalProSeasons = sport === 'baseball'
-  ? (proStatus.mlb_seasons_completed || 0)
-  : (proStatus.mlb_seasons_completed || 0) + (proStatus.ausl_seasons_completed || 0);
+.select('*')  // already selects all columns, so confidence_weight is included
 ```
 
-Also fix `src/hooks/useHoFEligibility.ts` (line 12) and `src/data/hofRequirements.ts` to match.
-
-**C. Attach coach immutability trigger**
-
-Database migration to attach existing `prevent_override_modification` function:
-```sql
-CREATE TRIGGER prevent_coach_override_modification
-  BEFORE UPDATE OR DELETE ON public.coach_grade_overrides
-  FOR EACH ROW EXECUTE FUNCTION public.prevent_override_modification();
-```
-
-**D. Align scout weighting** -- real-time hook should average all scout grades (matching nightly). Verify `useMPIScores` or equivalent hook uses averaged scout data, not just latest.
+**Complexity:** Low (3 lines changed in edge function)
 
 ---
 
-### Stream 2: Rest + Load Engine (New Architecture)
+## Task 2: Wire Consistency Dampening + Injury Hold into Nightly MPI
 
-**A. Database Migration -- `athlete_daily_log` table**
+**File:** `supabase/functions/nightly-mpi-process/index.ts`
 
-```sql
-CREATE TABLE public.athlete_daily_log (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  entry_date date NOT NULL,
-  day_status text NOT NULL DEFAULT 'full_training',
-    -- full_training, game_only, light_work, recovery_only,
-    -- travel_day, injury_hold, voluntary_rest, missed
-  rest_reason text,
-    -- recovery, travel, game_day_only, minor_soreness, personal,
-    -- coach_directed, weather, injury
-  coach_override boolean DEFAULT false,
-  coach_override_by uuid,
-  injury_mode boolean DEFAULT false,
-  injury_body_region text,
-  injury_expected_days integer,
-  game_logged boolean DEFAULT false,
-  cns_load_actual numeric DEFAULT 0,
-  consistency_impact numeric DEFAULT 0,
-  momentum_impact numeric DEFAULT 0,
-  notes text,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  UNIQUE(user_id, entry_date)
-);
+**Current state:** `consistencyIndex.ts` exists with full logic but the nightly process never calls it. Injury hold status is stored in `athlete_daily_log` but never checked.
 
-ALTER TABLE public.athlete_daily_log ENABLE ROW LEVEL SECURITY;
+**Changes (inside the athlete loop, after line 260, before finalScore calculation):**
 
-CREATE POLICY "Users manage own daily log"
-  ON public.athlete_daily_log FOR ALL TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-```
+1. Query `athlete_daily_log` for each athlete (last 30 days)
+2. Calculate consistency inline (the edge function runs in Deno, cannot import from `src/`):
+   - Count missed days in last 7 and 14 days
+   - Check if any recent entry has `injury_mode = true`
+3. Apply dampening multiplier to `adjusted` score before finalScore
+4. If injury hold is active: skip MPI upsert entirely (freeze -- no growth or decline)
 
-**B. Consistency Index calculation** -- New utility `src/utils/consistencyIndex.ts`
-
-- Query last 30 days from `athlete_daily_log`
-- Calculate: logged_days / 30 (excluding injury_hold days from denominator)
-- Track consecutive logged streak and consecutive missed streak
-- Output: `{ consistencyScore: number, loggedStreak: number, missedStreak: number }`
-
-**C. Development Dampening logic** -- Added to nightly MPI process
-
-- 2+ missed in 7 days: multiply development velocity by 0.95
-- 4+ missed in 14 days: multiply by 0.85
-- Injury hold: freeze MPI (no growth or decline)
-- Once consistency improves above 80%, dampening lifts automatically
-
-**D. Dual Streak System** -- Stored in `athlete_daily_log` queries
-
-- Performance Streak: broken only by unmarked skip (status = 'missed')
-- Discipline Streak: broken by no input at all (no row for date)
-- Both preserved by rest days, game days, coach-directed rest
-
-**E. Push Schedule Logic** -- New component `src/components/calendar/RestDayScheduler.tsx`
-
-When marking rest day:
-- Show options: Move planned work forward, drop session, auto-reschedule
-- Detect mandatory events (coach-scheduled, games) and protect them
-- Recalculate CNS load for affected days
-- Show overload warning if stacking occurs
-
-**F. Retroactive Logging** -- Allow editing past 7 days in `athlete_daily_log`
-
-- On retroactive entry, trigger recalculation of consistency index
-- Update heat map snapshots for affected dates
-- Recalculate weekly load balance
-
-**G. Abuse Protection** -- Flag in governance system
-
-- 5+ sessions in one day: flag "volume_spike"
-- 14 consecutive heavy sessions: flag "overload_risk"
-- Frequent "voluntary_rest" (5+ in 14 days): internal flag for admin review
-
-**H. Calendar UX** -- Update `CalendarDaySheet.tsx`
-
-Add day-status selector at top of each day view:
 ```text
-[ Complete Plan ] [ Light Work ] [ Take Rest Day ] [ Log Game ] [ Mark Missed ]
+// After integrity score calculation, before finalScore:
+const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+const { data: dailyLogs } = await supabase.from('athlete_daily_log')
+  .select('entry_date, day_status, injury_mode')
+  .eq('user_id', uid)
+  .gte('entry_date', thirtyDaysAgo);
+
+let dampingMultiplier = 1.0;
+let injuryHoldActive = false;
+if (dailyLogs && dailyLogs.length > 0) {
+  // Check injury hold
+  injuryHoldActive = dailyLogs.some(l => l.injury_mode === true &&
+    l.entry_date >= new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]);
+
+  // Count missed in last 7 and 14 days
+  const now = Date.now();
+  let missed7 = 0, missed14 = 0;
+  for (const log of dailyLogs) {
+    const logDate = new Date(log.entry_date).getTime();
+    const daysAgo = (now - logDate) / 86400000;
+    if (log.day_status === 'missed') {
+      if (daysAgo <= 7) missed7++;
+      if (daysAgo <= 14) missed14++;
+    }
+  }
+  if (missed14 >= 4) dampingMultiplier = 0.85;
+  else if (missed7 >= 2) dampingMultiplier = 0.95;
+
+  // Calculate consistency score
+  const injuryDays = dailyLogs.filter(l => l.injury_mode).length;
+  const loggedDays = dailyLogs.filter(l => l.day_status !== 'missed').length;
+  const consistencyScore = loggedDays / Math.max(1, 30 - injuryDays) * 100;
+  if (consistencyScore >= 80) dampingMultiplier = 1.0; // recovery lift
+}
+
+if (injuryHoldActive) continue; // Freeze MPI -- skip this athlete
+
+const finalScore = adjusted * (integrityScore / 100) * dampingMultiplier;
 ```
-Single tap. Evening reminder if no input.
+
+This replaces the existing `const finalScore = adjusted * (integrityScore / 100);` at line 261.
+
+**Complexity:** Medium (20 lines added to edge function, replaces 1 line)
 
 ---
 
-### Stream 3: Micro-Level Session Logging
+## Task 3: Build Advanced Logging UI
 
-**A. Expand drill definitions** in `src/data/baseball/drillDefinitions.ts` and `src/data/softball/drillDefinitions.ts`
+**Files:**
+- New: `src/components/practice/AdvancedRepFields.tsx`
+- Modified: `src/components/practice/RepScorer.tsx`
+- Modified: `src/pages/PracticeHub.tsx`
 
-Add missing practice types:
-- `machine_bp` -- Machine Batting Practice (separate from live BP)
-- `front_toss` -- Front Toss
-- `flip_drill` -- Flips/Short Toss
-- `tee_work` -- Tee Work (already exists as `tee_work`)
-- `live_bp` -- Live BP (overhand)
+**Current state:** RepScorer captures only pitch_location, contact_quality, exit_direction (hitting) or pitch_type, location, result (pitching). DrillBlock interface has 20+ micro fields defined but no UI exposes them.
 
-**B. New data fields** for `DrillBlock` interface in `usePerformanceSession.ts`
+**Changes:**
 
-Add optional fields:
-```typescript
-bp_distance_ft?: number;
-machine_velocity_band?: string; // '40-50' | '50-60' | '60-70' | '70-80' | '80+'
-batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel';
-spin_direction?: 'topspin' | 'backspin' | 'sidespin';
-swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
-goal_of_rep?: string;
-actual_outcome?: string;
-execution_score?: number; // 1-10 per rep
-```
+### A. New `AdvancedRepFields.tsx` component
+Collapsible panel that renders additional fields based on module:
 
-Fielding additions:
-```typescript
-throw_included?: boolean;
-footwork_grade?: number; // 20-80
-exchange_time_band?: 'fast' | 'average' | 'slow';
-throw_accuracy?: number; // 20-80
-throw_spin_quality?: 'carry' | 'tail' | 'cut' | 'neutral';
-```
+**Hitting fields:**
+- `in_zone` toggle (boolean -- "Was this pitch in the zone?")
+- `batted_ball_type` selector (Ground / Line / Fly / Barrel)
+- `spin_direction` selector (Topspin / Backspin / Sidespin)
+- `swing_intent` selector (Mechanical / Game Intent / Situational / HR Derby)
+- `execution_score` slider (1-10)
 
-Pitching additions:
-```typescript
-velocity_band?: string;
-spin_rate_band?: string;
-spin_efficiency_pct?: number;
-pitch_command_grade?: number; // 20-80
-```
+**Machine BP specific (shown when drill_type === 'machine_bp'):**
+- `machine_velocity_band` selector (40-50 / 50-60 / 60-70 / 70-80 / 80+)
+- `bp_distance_ft` number input
 
-**C. Quick Log vs Advanced Log UI** -- `src/components/practice/PracticeSessionLogger.tsx`
+**Pitching fields:**
+- `velocity_band` selector
+- `spin_efficiency_pct` slider (0-100)
+- `pitch_command_grade` slider (20-80)
+- `in_zone` toggle
 
-- Quick Log (default): Type, drill, volume, grade slider = under 30 seconds
-- Advanced toggle: reveals all micro fields above
-- Smart defaults: pre-fill from last session of same type
-- Last-session memory: store in localStorage per drill type
+**Fielding fields:**
+- `throw_included` toggle
+- `footwork_grade` slider (20-80)
+- `exchange_time_band` selector (Fast / Average / Slow)
+- `throw_accuracy` slider (20-80)
+- `throw_spin_quality` selector (Carry / Tail / Cut / Neutral)
 
-**D. Performance data stored in `drill_blocks` JSONB** -- no schema change needed, fields are already flexible JSONB
+### B. Modify RepScorer.tsx
+- Add `[Advanced]` toggle button below the main rep input
+- When toggled, render `AdvancedRepFields` inline
+- Merge advanced field values into `ScoredRep` before commit
+- Expand `ScoredRep` interface with all micro fields
 
----
+### C. Smart Defaults (Last-Session Memory)
+- On session save, store last-used values per drill_type in localStorage
+- On new session, pre-fill from stored values
+- Key format: `lastSession_${module}_${drillType}`
 
-### Stream 4: Heat Map Architecture Expansion
+### D. Machine BP distance input
+- When drill type is `machine_bp`, show velocity band + distance input at top of RepScorer
 
-**A. Upgrade to 5x5 grid option** -- `src/components/micro-layer/PitchLocationGrid.tsx`
-
-- Add toggle: 3x3 (standard) vs 5x5 (advanced)
-- 5x5 stores `{ row: 0-4, col: 0-4 }` -- backward compatible
-- Gate 5x5 behind advanced data density level
-
-**B. Practice vs Game separation** in nightly heat map computation
-
-- Add `session_type` filter when computing heat map snapshots
-- Store separate snapshots: `pitch_location_practice`, `pitch_location_game`
-- Display tabs in analytics: "Practice" | "Game" | "Combined"
-
-**C. Add missing heat map types** to nightly process
-
-Currently computes 3: `pitch_location`, `swing_chase`, `barrel_zone`
-Add: `throw_accuracy`, `miss_tendency`, `whiff_zone`, `error_location`, `command_heat`
-
-**D. Blind zone detection** -- New utility
-
-- Compare zone-level contact % against player's global average
-- If any zone is 20%+ below average: flag as blind zone
-- Feed into roadmap recommendations
-- Store in `heat_map_snapshots` as `blind_zones: [{row, col, deficit_pct}]`
-
-**E. Add `in_zone` field** to micro layer data capture for chase tracking accuracy
+**Complexity:** High (new component + modifications to RepScorer + localStorage integration)
 
 ---
 
-### Stream 5: Governance + Verified Stats Layer
+## Task 4: Heat Map Completion
 
-**A. Admin verification dashboard** -- New page `src/pages/AdminVerification.tsx`
+**File:** `supabase/functions/nightly-mpi-process/index.ts` (lines 381-472)
 
-- Queue of pending `verified_stat_links` submissions
-- Each entry shows: player name, link URL, claimed source, submitted date
-- Admin actions: Approve (with confidence weight 0-100%), Reject (with reason), Request More Info
-- Audit trail: all actions logged to `audit_log` table
+**Current state:**
+- Lines 392-394: Hardcoded 3x3 grids `[[0,0,0],[0,0,0],[0,0,0]]`
+- Lines 407-408: Clamps coordinates to `Math.min(2, Math.max(0, ...))` -- destroys 5x5 data
+- Only 3 map types computed: `pitch_location`, `swing_chase`, `barrel_zone`
+- No practice vs game separation
 
-**B. Database additions**
+**Changes:**
 
-```sql
-ALTER TABLE public.verified_stat_links
-  ADD COLUMN IF NOT EXISTS admin_verified boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS verified_by uuid,
-  ADD COLUMN IF NOT EXISTS verified_at timestamptz,
-  ADD COLUMN IF NOT EXISTS confidence_weight numeric DEFAULT 100,
-  ADD COLUMN IF NOT EXISTS rejection_reason text;
-```
+### A. Dynamic grid size
+- Detect max coordinate from data to determine grid size (3 or 5)
+- Initialize grids dynamically: `Array.from({length: gridSize}, () => Array(gridSize).fill(0))`
+- Remove `Math.min(2, ...)` clamp -- use `Math.min(gridSize-1, ...)`
+- Store `grid_size` alongside grid_data for downstream consumers
 
-**C. Boost adjustment** -- Nightly MPI process uses `confidence_weight` to scale verified stat boost
+### B. Practice vs Game separation
+- Add `session_type` to the session query (already selected)
+- Run aggregation twice: once filtered to practice types, once to game types
+- Store with `context_filter: 'practice'` and `context_filter: 'game'` (existing column)
+- Keep `context_filter: 'all'` as combined
 
-Currently: flat boost per link type.
-Change: `boost * (confidence_weight / 100)` so admin can reduce boost for uncertain links.
+### C. Add 5 missing map types
+After the existing 3 maps, add computation for:
 
-**D. Revocation** -- If admin rejects a previously approved link, boost is removed on next nightly run.
+1. **`throw_accuracy`**: From fielding reps with `throw_accuracy` grade, bin by location
+2. **`error_location`**: From fielding reps with result 'error', bin by play position zone
+3. **`command_heat`**: From pitching reps, zones where pitch landed vs intended
+4. **`miss_tendency`**: From pitching reps, zones where misses cluster
+5. **`whiff_zone`**: From hitting reps where `contact_quality === 'miss'`, bin by pitch location
+
+### D. Blind zone influence on roadmap
+- After computing blind zones, query `roadmap_milestones` for zone-awareness requirements
+- If blind zones detected in critical areas, adjust roadmap recommendation weighting
+- Store blind zone data in `heat_map_snapshots.blind_zones` (already exists)
+
+**Complexity:** High (rewrite heat map section of nightly process, ~80 lines)
 
 ---
 
-## File Change Summary
+## Task 5: Rest Engine Completion
 
-| File | Change Type |
-|------|------------|
-| `supabase/functions/nightly-mpi-process/index.ts` | Fix double penalty, fix HoF MLB-only, add consistency dampening, add confidence-weighted boosts |
-| `src/hooks/useHoFEligibility.ts` | Fix to use MLB-only seasons for baseball |
-| `src/data/hofRequirements.ts` | Add sport-aware season counting |
-| `src/data/baseball/drillDefinitions.ts` | Add machine_bp, front_toss, flip_drill |
-| `src/data/softball/drillDefinitions.ts` | Add equivalent softball drill types |
-| `src/hooks/usePerformanceSession.ts` | Expand DrillBlock interface with micro fields |
-| `src/components/micro-layer/PitchLocationGrid.tsx` | Add 5x5 grid option |
-| `src/components/micro-layer/MicroLayerInput.tsx` | Add new fielding/pitching micro fields |
-| `src/components/practice/PracticeSessionLogger.tsx` | Add Quick/Advanced toggle, smart defaults |
-| `src/components/calendar/CalendarDaySheet.tsx` | Add day-status selector |
-| `src/utils/consistencyIndex.ts` | New: consistency calculation |
-| `src/utils/loadCalculation.ts` | Add rest-day CNS recalculation |
-| `src/pages/AdminVerification.tsx` | New: admin verification dashboard |
-| **DB Migration** | Create `athlete_daily_log`, alter `verified_stat_links`, attach coach override trigger |
+**Files:**
+- New: `src/components/calendar/RestDayScheduler.tsx`
+- Modified: `supabase/functions/nightly-mpi-process/index.ts`
+- Modified: `src/hooks/useDailyLog.ts`
+- New: `src/components/dashboard/DualStreakDisplay.tsx`
 
-## Implementation Priority
+### A. Auto-write CNS load to daily log
+**File:** `src/hooks/usePerformanceSession.ts`
 
-1. **Stream 1** first (MPI integrity) -- math fixes, low risk, high trust impact
-2. **Stream 2** next (Rest engine) -- foundational, everything else depends on it
-3. **Stream 3** then (Micro logging) -- depth layer, builds on existing architecture
-4. **Stream 4** after (Heat maps) -- data quality improvement
-5. **Stream 5** last (Governance) -- admin tooling, lower user-facing urgency
+After saving a session successfully (line 109), also upsert into `athlete_daily_log`:
+```text
+await supabase.from('athlete_daily_log').upsert({
+  user_id: user.id,
+  entry_date: data.session_date,
+  day_status: data.session_type === 'game' ? 'game_only' : 'full_training',
+  game_logged: ['game', 'live_scrimmage'].includes(data.session_type),
+  cns_load_actual: calculateSessionCNS(data.drill_blocks),
+}, { onConflict: 'user_id,entry_date' });
+```
 
-## What This Does NOT Change
+### B. Overload detection
+**File:** `src/hooks/useDailyLog.ts`
 
-- Existing Quick Log UX (preserved, only enhanced with optional advanced toggle)
-- Database schema for `performance_sessions` (drill_blocks is already JSONB, new fields are additive)
-- Existing tier multipliers, age curves, position weights
-- Edge function architecture (calculate-load, detect-overlaps, suggest-adaptation remain)
-- Folder/cycle system (recently rebuilt, working correctly)
-- Sport separation logic (already enforced at schema level)
+Add query to check:
+- Sessions logged today (if 5+, flag `volume_spike`)
+- Last 14 daily logs -- if all `full_training` or `game_only` with no recovery, flag `overload_risk`
+
+Surface flags as toast warnings when user saves a session.
+
+### C. Push Schedule Logic
+**File:** New `src/components/calendar/RestDayScheduler.tsx`
+
+Dialog shown when user marks a day as rest that had planned activities:
+- Detect planned activities for that day (from calendar events)
+- Detect mandatory events (coach-scheduled, games) -- these cannot move
+- Present options:
+  - "Move to next open day" -- find nearest day without conflicts
+  - "Push everything forward 1 day" -- shift non-mandatory items
+  - "Drop this session" -- remove from schedule
+- On confirm, update calendar events and recalculate CNS for affected days
+
+### D. Retroactive MPI recalculation trigger
+When a user logs/edits an entry for a past date (within 7 days), call `calculate-session` edge function to reprocess affected data. Add a check in `useDailyLog.upsert`:
+
+```text
+if (entry.entry_date < today) {
+  // Trigger recalculation for retroactive entry
+  await supabase.functions.invoke('calculate-session', {
+    body: { retroactive: true, date: entry.entry_date }
+  });
+}
+```
+
+### E. Dual Streak Display
+**File:** New `src/components/dashboard/DualStreakDisplay.tsx`
+
+Small card component showing:
+- Performance Streak (flame icon + count)
+- Discipline Streak (check icon + count)
+
+Query `athlete_daily_log` and use `computeStreaks()` from `consistencyIndex.ts`. Display on dashboard and PracticeHub.
+
+**Complexity:** High (new components + session save integration + schedule logic)
+
+---
+
+## Task 6: Redeploy Edge Function
+
+After all changes to `nightly-mpi-process/index.ts`, redeploy the edge function.
+
+---
+
+## Execution Order
+
+| Step | Task | Dependencies | Est. Lines Changed |
+|------|------|-------------|-------------------|
+| 1 | Confidence weight wiring | None | ~5 |
+| 2 | Consistency dampening + injury hold | None | ~25 |
+| 3 | Heat map grid fix + new types | None | ~80 |
+| 4 | CNS auto-write to daily log | None | ~15 |
+| 5 | Advanced logging UI | None | ~200 (new file) |
+| 6 | Overload detection | Task 4 | ~30 |
+| 7 | Push schedule logic | None | ~150 (new file) |
+| 8 | Dual streak display | None | ~60 (new file) |
+| 9 | Retroactive recalc trigger | Task 2 | ~10 |
+| 10 | Deploy edge function | Tasks 1-3 | Deploy only |
+
+Steps 1-4 can be done in parallel (all independent).
+Steps 5-8 can be done in parallel.
+Step 9 depends on step 2.
+Step 10 is final.
+
