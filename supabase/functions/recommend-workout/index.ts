@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -66,9 +67,6 @@ interface RecoveryWarning {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-/**
- * Normalize exercises field from templates that may use flat arrays or block-based format
- */
 function extractExercisesFromTemplate(exercisesField: any): any[] {
   if (!exercisesField) return [];
   if (Array.isArray(exercisesField)) return exercisesField;
@@ -80,15 +78,11 @@ function extractExercisesFromTemplate(exercisesField: any): any[] {
   return [];
 }
 
-/**
- * Analyze recovery context and determine warning level
- */
 function analyzeRecoveryStatus(context: RecoveryContext | undefined): RecoveryWarning | null {
   if (!context) return null;
 
   const { sleepQuality, stressLevel, physicalReadiness, perceivedRecovery, painAreas, painScales } = context;
   
-  // Calculate average pain if scales exist
   let avgPainLevel = 0;
   if (painScales && Object.keys(painScales).length > 0) {
     avgPainLevel = Object.values(painScales).reduce((sum, v) => sum + v, 0) / Object.keys(painScales).length;
@@ -98,34 +92,25 @@ function analyzeRecoveryStatus(context: RecoveryContext | undefined): RecoveryWa
   const suggestions: string[] = [];
   let severity: 'moderate' | 'high' = 'moderate';
 
-  // Check sleep quality (1-5 scale, lower is worse)
   if (sleepQuality !== null && sleepQuality <= 2) {
     issues.push('poor sleep quality');
     suggestions.push('Consider lighter volume or active recovery');
     if (sleepQuality === 1) severity = 'high';
   }
-
-  // Check stress level (1-5 scale, higher is worse)
   if (stressLevel !== null && stressLevel >= 4) {
     issues.push('elevated stress levels');
     suggestions.push('Focus on low-intensity movements to avoid overtraining');
     if (stressLevel === 5) severity = 'high';
   }
-
-  // Check physical readiness (1-5 scale, lower is worse)
   if (physicalReadiness !== null && physicalReadiness <= 2) {
     issues.push('low physical readiness');
     suggestions.push('Prioritize mobility work and dynamic stretching');
     if (physicalReadiness === 1) severity = 'high';
   }
-
-  // Check perceived recovery (1-5 scale, lower is worse)
   if (perceivedRecovery !== null && perceivedRecovery <= 2) {
     issues.push('incomplete recovery from previous training');
     suggestions.push('Allow additional rest between sets');
   }
-
-  // Check pain areas
   if (painAreas.length >= 3) {
     issues.push(`multiple pain areas detected (${painAreas.length} areas)`);
     suggestions.push('Consider a recovery-focused session or targeted mobility work');
@@ -134,8 +119,6 @@ function analyzeRecoveryStatus(context: RecoveryContext | undefined): RecoveryWa
     issues.push(`${painAreas.length} pain area(s) reported`);
     suggestions.push('Avoid exercises that stress painful areas');
   }
-
-  // Check pain intensity
   if (avgPainLevel >= 7) {
     issues.push('high pain intensity detected');
     suggestions.push('Strongly recommend rest or gentle recovery work only');
@@ -148,16 +131,12 @@ function analyzeRecoveryStatus(context: RecoveryContext | undefined): RecoveryWa
     show: true,
     severity,
     reason: `Based on your check-in: ${issues.join(', ')}.`,
-    suggestions: [...new Set(suggestions)], // Remove duplicates
+    suggestions: [...new Set(suggestions)],
   };
 }
 
-/**
- * Format pain areas for AI prompt
- */
 function formatPainAreasForPrompt(painAreas: string[], painScales: Record<string, number> | null): string {
   if (!painAreas.length) return 'None reported';
-  
   return painAreas.map(area => {
     const formattedName = area.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     const intensity = painScales?.[area];
@@ -171,6 +150,53 @@ serve(async (req) => {
   }
 
   try {
+    // --- Auth + Subscription entitlement check ---
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: ownerRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!ownerRole) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, subscribed_modules')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const hasActiveModule = subscription?.status === 'active'
+        && (subscription?.subscribed_modules?.length ?? 0) > 0;
+
+      if (!hasActiveModule) {
+        return new Response(
+          JSON.stringify({ error: 'Subscription required to use AI features' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    // --- End entitlement check ---
+
     const { activityLogs, recoveryContext } = await req.json() as { 
       activityLogs: ActivityLog[];
       recoveryContext?: RecoveryContext;
@@ -180,31 +206,19 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log('[recommend-workout] Processing request with recovery context:', 
-      recoveryContext ? 'present' : 'not provided');
-
-    // Analyze recovery status for warnings
     const recoveryWarning = analyzeRecoveryStatus(recoveryContext);
     
-    // Analyze activity patterns
     const workoutLogs = activityLogs.filter(log => 
       log.custom_activity_templates?.activity_type === 'workout' && log.completed
     );
 
     const exerciseFrequency: Record<string, { count: number; lastDate: string }> = {};
-    const muscleGroups: Record<string, number> = {
-      upper: 0,
-      lower: 0,
-      core: 0,
-      cardio: 0,
-    };
+    const muscleGroups: Record<string, number> = { upper: 0, lower: 0, core: 0, cardio: 0 };
 
     workoutLogs.forEach(log => {
       const exercises = extractExercisesFromTemplate(log.custom_activity_templates?.exercises);
       exercises.forEach((ex: any) => {
-        if (!exerciseFrequency[ex.name]) {
-          exerciseFrequency[ex.name] = { count: 0, lastDate: '' };
-        }
+        if (!exerciseFrequency[ex.name]) exerciseFrequency[ex.name] = { count: 0, lastDate: '' };
         exerciseFrequency[ex.name].count++;
         exerciseFrequency[ex.name].lastDate = log.entry_date;
 
@@ -220,7 +234,6 @@ serve(async (req) => {
       ? Math.floor((Date.now() - new Date(workoutLogs[0].entry_date).getTime()) / (1000 * 60 * 60 * 24))
       : null;
 
-    // Build recovery-aware system prompt
     const systemPrompt = `You are an elite fitness coach AI that creates personalized, recovery-aware workout recommendations for baseball/softball athletes.
 
 CRITICAL CONTEXT - RECOVERY STATUS:
@@ -253,11 +266,6 @@ Provide standard progressive recommendations based on training history.
 
 SUPERSET GUIDANCE:
 When appropriate AND recovery status allows, group 2-3 complementary exercises into supersets.
-Good superset pairings:
-- Push/Pull (e.g., Bench Press + Rows)
-- Upper/Lower (e.g., Shoulder Press + Lunges)
-- Strength/Core (e.g., Deadlifts + Planks)
-DO NOT use supersets if recovery is compromised or pain areas are involved.
 
 PAIN AREA EXERCISE RESTRICTIONS:
 ${recoveryContext?.painAreas?.length ? `
@@ -265,24 +273,20 @@ The athlete has reported pain in these areas. DO NOT recommend exercises that di
 ${recoveryContext.painAreas.map(area => `- ${area.replace(/_/g, ' ')}`).join('\n')}
 ` : 'No pain restrictions.'}
 
-Always respond using the recommend_workouts function. Include 2-3 recommendations total, with recovery options if warranted.`;
+Always respond using the recommend_workouts function. Include 2-3 recommendations total.`;
 
     const userPrompt = `Based on my workout history and current recovery status, please recommend 2-3 workouts:
 
 TRAINING HISTORY (Last 30 Days):
 - Total workouts completed: ${workoutLogs.length}
-- Days since last workout: ${daysSinceLastWorkout ?? 'N/A (no recent workouts)'}
+- Days since last workout: ${daysSinceLastWorkout ?? 'N/A'}
 - Muscle group distribution: Upper=${muscleGroups.upper}, Lower=${muscleGroups.lower}, Core=${muscleGroups.core}, Cardio=${muscleGroups.cardio}
 - Most frequent exercises: ${Object.entries(exerciseFrequency).sort((a, b) => b[1].count - a[1].count).slice(0, 5).map(([name, data]) => `${name} (${data.count}x)`).join(', ') || 'None recorded'}
 
-${recoveryWarning ? `
-⚠️ RECOVERY ALERT: ${recoveryWarning.reason}
-AI Suggestions: ${recoveryWarning.suggestions.join('. ')}
-` : ''}
+${recoveryWarning ? `⚠️ RECOVERY ALERT: ${recoveryWarning.reason}\nAI Suggestions: ${recoveryWarning.suggestions.join('. ')}` : ''}
 
-Please create personalized workout recommendations that respect my current recovery state and pain areas.`;
+Please create personalized workout recommendations that respect my current recovery state.`;
 
-    // Call Lovable AI for recommendations
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -309,13 +313,9 @@ Please create personalized workout recommendations that respect my current recov
                     items: {
                       type: "object",
                       properties: {
-                        id: { type: "string", description: "Unique ID for the recommendation" },
-                        name: { type: "string", description: "Descriptive workout name" },
-                        focus: { 
-                          type: "string", 
-                          enum: ["strength", "cardio", "recovery", "balanced"],
-                          description: "Primary focus of the workout"
-                        },
+                        id: { type: "string" },
+                        name: { type: "string" },
+                        focus: { type: "string", enum: ["strength", "cardio", "recovery", "balanced"] },
                         exercises: {
                           type: "array",
                           items: {
@@ -334,16 +334,10 @@ Please create personalized workout recommendations that respect my current recov
                             required: ["id", "name", "type"]
                           }
                         },
-                        reasoning: { 
-                          type: "string", 
-                          description: "Brief explanation including recovery considerations and any pain area accommodations" 
-                        },
-                        estimatedDuration: { type: "number", description: "Estimated duration in minutes" },
-                        confidence: { type: "number", description: "Confidence score 0-1" },
-                        isLighterAlternative: { 
-                          type: "boolean", 
-                          description: "True if this is a lighter version for poor recovery days" 
-                        }
+                        reasoning: { type: "string" },
+                        estimatedDuration: { type: "number" },
+                        confidence: { type: "number" },
+                        isLighterAlternative: { type: "boolean" }
                       },
                       required: ["id", "name", "focus", "exercises", "reasoning", "estimatedDuration", "confidence"]
                     }
@@ -363,67 +357,48 @@ Please create personalized workout recommendations that respect my current recov
       console.error("[recommend-workout] AI gateway error:", response.status, errorText);
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ 
-          error: "Rate limits exceeded, please try again later.",
-          recommendations: [],
-          recoveryWarning: recoveryWarning || undefined,
-        }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later.", recommendations: [], recoveryWarning: recoveryWarning || undefined }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
       if (response.status === 402) {
-        return new Response(JSON.stringify({ 
-          error: "Payment required, please add funds to your Lovable AI workspace.",
-          recommendations: [],
-          recoveryWarning: recoveryWarning || undefined,
-        }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace.", recommendations: [], recoveryWarning: recoveryWarning || undefined }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const aiResponse = await response.json();
-    console.log("[recommend-workout] AI Response received, parsing...");
 
-    // Extract recommendations from tool call
     let recommendations: WorkoutRecommendation[] = [];
-    
     const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       try {
         const parsed = JSON.parse(toolCall.function.arguments);
         recommendations = parsed.recommendations || [];
       } catch (e) {
-        console.error("[recommend-workout] Failed to parse tool call arguments:", e);
+        console.error("[recommend-workout] Failed to parse:", e);
       }
     }
 
-    // Fallback recommendations if AI doesn't return any
     if (recommendations.length === 0) {
-      // Recovery-aware fallback based on context
       if (recoveryWarning?.severity === 'high') {
-        recommendations = [
-          {
-            id: "recovery-focus-1",
-            name: "Gentle Recovery Flow",
-            focus: "recovery",
-            exercises: [
-              { id: "foam-roll-1", name: "Full Body Foam Rolling", type: "flexibility", durationSeconds: 300 },
-              { id: "cat-cow-1", name: "Cat-Cow Stretches", type: "flexibility", sets: 2, reps: 10 },
-              { id: "hip-circles-1", name: "Hip Circles", type: "flexibility", sets: 2, reps: 10 },
-              { id: "light-walk-1", name: "Light Walking", type: "cardio", durationSeconds: 600 },
-            ],
-            reasoning: "Based on your check-in, your body needs recovery. This gentle session promotes blood flow without adding training stress.",
-            estimatedDuration: 25,
-            confidence: 0.9,
-            isLighterAlternative: true,
-          },
-        ];
+        recommendations = [{
+          id: "recovery-focus-1",
+          name: "Gentle Recovery Flow",
+          focus: "recovery",
+          exercises: [
+            { id: "foam-roll-1", name: "Full Body Foam Rolling", type: "flexibility", durationSeconds: 300 },
+            { id: "cat-cow-1", name: "Cat-Cow Stretches", type: "flexibility", sets: 2, reps: 10 },
+            { id: "hip-circles-1", name: "Hip Circles", type: "flexibility", sets: 2, reps: 10 },
+            { id: "light-walk-1", name: "Light Walking", type: "cardio", durationSeconds: 600 },
+          ],
+          reasoning: "Based on your check-in, your body needs recovery.",
+          estimatedDuration: 25,
+          confidence: 0.9,
+          isLighterAlternative: true,
+        }];
       } else {
         recommendations = [
           {
@@ -436,38 +411,17 @@ Please create personalized workout recommendations that respect my current recov
               { id: "rows-1", name: "Barbell Rows", type: "strength", sets: 3, reps: 10, restSeconds: 90 },
               { id: "lunges-1", name: "Lunges", type: "strength", sets: 3, reps: 12, restSeconds: 60 },
             ],
-            reasoning: "A balanced full-body workout to build overall strength and muscle.",
+            reasoning: "A balanced full-body workout to build overall strength.",
             estimatedDuration: 45,
-            confidence: 0.8,
-          },
-          {
-            id: "default-2",
-            name: "HIIT Cardio Blast",
-            focus: "cardio",
-            exercises: [
-              { id: "burpees-1", name: "Burpees", type: "cardio", durationSeconds: 45, restSeconds: 15 },
-              { id: "mountain-1", name: "Mountain Climbers", type: "cardio", durationSeconds: 45, restSeconds: 15 },
-              { id: "jacks-1", name: "Jumping Jacks", type: "cardio", durationSeconds: 45, restSeconds: 15 },
-              { id: "highknees-1", name: "High Knees", type: "cardio", durationSeconds: 45, restSeconds: 15 },
-            ],
-            reasoning: "High-intensity interval training to boost cardiovascular fitness and burn calories.",
-            estimatedDuration: 25,
             confidence: 0.8,
           },
         ];
       }
     }
 
-    // Separate lighter alternatives from main recommendations
-    const lighterAlternatives = recommendations.filter(r => r.isLighterAlternative);
-    const mainRecommendations = recommendations.filter(r => !r.isLighterAlternative);
-
-    console.log(`[recommend-workout] Returning ${mainRecommendations.length} recommendations, ${lighterAlternatives.length} lighter alternatives`);
-
     return new Response(JSON.stringify({ 
-      recommendations: mainRecommendations.length > 0 ? mainRecommendations : recommendations,
-      lighterAlternatives: lighterAlternatives.length > 0 ? lighterAlternatives : undefined,
-      recoveryWarning: recoveryWarning || undefined,
+      recommendations, 
+      recoveryWarning: recoveryWarning || undefined 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -475,7 +429,7 @@ Please create personalized workout recommendations that respect my current recov
     console.error("[recommend-workout] Error:", error);
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : "Unknown error",
-      recommendations: []
+      recommendations: [],
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

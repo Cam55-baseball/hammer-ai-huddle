@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { AggregatedGoals } from './useAthleteGoalsAggregated';
 import { EnhancedExercise, BlockType, BlockIntent, CNSDemand, VelocityIntent } from '@/types/eliteWorkout';
+import { useSubscription } from './useSubscription';
+import { useOwnerAccess } from './useOwnerAccess';
 
 interface GeneratedExercise {
   id: string;
@@ -38,6 +40,8 @@ export function useBlockWorkoutGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<BlockWorkoutResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { modules } = useSubscription();
+  const { isOwner } = useOwnerAccess();
 
   const generateExercises = useCallback(async (options: GenerateBlockWorkoutOptions) => {
     const { 
@@ -49,6 +53,12 @@ export function useBlockWorkoutGenerator() {
       existingExercises = [],
       sport = 'baseball' 
     } = options;
+
+    // Client-side subscription guard
+    if (!isOwner && modules.length === 0) {
+      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock AI-powered workouts'));
+      return null;
+    }
     
     if (!blockFocus) {
       toast.error(t('eliteWorkout.generator.selectFocus', 'Please select a focus for this block'));
@@ -97,7 +107,7 @@ export function useBlockWorkoutGenerator() {
     } finally {
       setIsGenerating(false);
     }
-  }, [t]);
+  }, [t, modules, isOwner]);
 
   const clearResult = useCallback(() => {
     setResult(null);

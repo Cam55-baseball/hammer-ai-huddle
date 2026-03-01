@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, RefreshCw, Plus, AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { toast } from 'sonner';
 
 interface MacroGaps {
   calories: number;
@@ -35,6 +38,8 @@ interface AIMealSuggestionsProps {
 
 export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSuggestionsProps) {
   const { t } = useTranslation();
+  const { modules } = useSubscription();
+  const { isOwner } = useOwnerAccess();
   const [suggestions, setSuggestions] = useState<MealSuggestion[]>([]);
   const [macroAnalysis, setMacroAnalysis] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -54,6 +59,10 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
   }, [consumed.calories]);
 
   const fetchSuggestions = async () => {
+    if (!isOwner && modules.length === 0) {
+      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock AI-powered features'));
+      return;
+    }
     setLoading(true);
     setError(null);
 

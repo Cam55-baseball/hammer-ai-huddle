@@ -35,6 +35,34 @@ serve(async (req) => {
       );
     }
 
+    // --- Subscription entitlement check ---
+    const { data: ownerRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!ownerRole) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, subscribed_modules')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const hasActiveModule = subscription?.status === 'active'
+        && (subscription?.subscribed_modules?.length ?? 0) > 0;
+
+      if (!hasActiveModule) {
+        return new Response(
+          JSON.stringify({ error: 'Subscription required to use AI features' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    // --- End entitlement check ---
+
     const { remainingMacros, recentFoods } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

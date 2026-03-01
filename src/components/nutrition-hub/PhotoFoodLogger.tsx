@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { MealTypeSelector, MEAL_TYPES } from './MealTypeSelector';
 import { RecipeIngredient } from '@/hooks/useRecipes';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 
 interface IdentifiedFood {
   name: string;
@@ -32,6 +34,8 @@ export function PhotoFoodLogger({ onFoodsLogged }: PhotoFoodLoggerProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { modules } = useSubscription();
+  const { isOwner } = useOwnerAccess();
   
   const [state, setState] = useState<LoggerState>('idle');
   const [identifiedFoods, setIdentifiedFoods] = useState<IdentifiedFood[]>([]);
@@ -133,6 +137,10 @@ export function PhotoFoodLogger({ onFoodsLogged }: PhotoFoodLoggerProps) {
   };
 
   const handleFileSelect = async (file: File) => {
+    if (!isOwner && modules.length === 0) {
+      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock AI-powered features'));
+      return;
+    }
     if (!file.type.startsWith('image/')) {
       toast.error(t('nutrition.photo.invalidFile', 'Please select an image file'));
       return;

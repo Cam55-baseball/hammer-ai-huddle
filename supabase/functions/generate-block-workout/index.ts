@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,7 +29,6 @@ interface GeneratedExercise {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-// Block type descriptions for AI context
 const BLOCK_DESCRIPTIONS: Record<string, string> = {
   activation: 'Wake up muscles and nervous system - low intensity prep exercises to increase blood flow and neural readiness',
   elastic_prep: 'Prepare tendons and fascia for bouncy work - progressive elastic loading to prime the stretch-shortening cycle',
@@ -42,55 +42,37 @@ const BLOCK_DESCRIPTIONS: Record<string, string> = {
   custom: 'Custom training block - exercises based on specified goals',
 };
 
-// Focus option descriptions for better AI generation
 const FOCUS_DESCRIPTIONS: Record<string, string> = {
-  // Activation
   full_body: 'Full body activation targeting all major muscle groups',
   lower_body: 'Lower body focus - glutes, quads, hamstrings, hip flexors',
   upper_body: 'Upper body focus - shoulders, chest, back, arms',
   core_hips: 'Core and hip complex - deep stabilizers and hip mobility',
   sport_specific: 'Sport-specific activation patterns for baseball/softball',
-  
-  // Elastic Prep
   bouncy_reactive: 'Bouncy/reactive elasticity - quick ground contacts, pogo jumps',
   rotational: 'Rotational elasticity - med ball throws, rotational hops',
   linear: 'Linear elasticity - forward/backward jumping patterns',
   multi_directional: 'Multi-directional elasticity - lateral and diagonal patterns',
-  
-  // CNS Primer
   light_spark: 'Light CNS spark - gentle awakening, 60-70% effort',
   moderate_wakeup: 'Moderate wake-up - 75-85% effort, moderate volume',
   full_send: 'Full send primer - 90-100% effort, very low volume',
-  
-  // Strength Output
   max_strength: 'Maximum strength - heavy loads (85%+), low reps (1-5)',
   hypertrophy: 'Hypertrophy focus - moderate loads (65-80%), higher reps (8-12)',
   power: 'Power development - moderate loads (50-70%) with maximum velocity',
   strength_endurance: 'Strength endurance - lighter loads, higher reps (15-20+)',
-  
-  // Power/Speed
   explosive_power: 'Explosive power - maximal force production in minimal time',
   speed_strength: 'Speed-strength - lighter loads moved as fast as possible',
   reactive_power: 'Reactive power - utilizing stretch-shortening cycle',
   rotational_power: 'Rotational power - baseball/softball specific rotation patterns',
-  
-  // Capacity
   aerobic_base: 'Aerobic base building - sustained low-moderate intensity',
   lactate_tolerance: 'Lactate tolerance - repeated high-intensity efforts',
   work_capacity: 'General work capacity - ability to handle training volume',
   hiit: 'High-intensity interval training - short bursts with rest periods',
-  
-  // Skill Transfer
   throwing_mechanics: 'Throwing mechanics transfer - arm action, hip-shoulder separation',
   hitting_mechanics: 'Hitting mechanics transfer - rotational power, bat path',
   defensive_agility: 'Defensive agility - first step quickness, lateral movement',
   base_running: 'Base running - acceleration, change of direction, reads',
-  
-  // Decompression
   hips_spine: 'Hips and spine decompression - psoas, QL, spinal mobility',
   shoulders_thoracic: 'Shoulders and thoracic spine - rotator cuff, t-spine rotation',
-  
-  // Recovery
   active_recovery: 'Active recovery - light movement to promote blood flow',
   mobility_focus: 'Mobility-focused recovery - joint range of motion',
   breathwork: 'Breathwork and parasympathetic - down-regulation techniques',
@@ -103,6 +85,55 @@ serve(async (req) => {
   }
 
   try {
+    // --- Auth + Subscription entitlement check ---
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: ownerRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!ownerRole) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, subscribed_modules')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const hasActiveModule = subscription?.status === 'active'
+        && (subscription?.subscribed_modules?.length ?? 0) > 0;
+
+      if (!hasActiveModule) {
+        return new Response(
+          JSON.stringify({ error: 'Subscription required to use AI features' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    // --- End entitlement check ---
+
     const { 
       blockType, 
       blockIntent, 
@@ -126,14 +157,10 @@ serve(async (req) => {
     }
 
     console.log("Generating block workout:", { blockType, blockIntent, blockFocus, personalize, sport });
-    if (personalize && goals) {
-      console.log("Athlete goals:", goals);
-    }
 
     const blockDescription = BLOCK_DESCRIPTIONS[blockType] || BLOCK_DESCRIPTIONS.custom;
     const focusDescription = FOCUS_DESCRIPTIONS[blockFocus] || blockFocus;
 
-    // Build personalization context
     let personalizedContext = '';
     if (personalize && goals) {
       personalizedContext = `
@@ -153,12 +180,10 @@ Customize exercises to:
 5. Consider position-specific needs (${goals.position || 'general athlete'})`;
     }
 
-    // Existing exercises to avoid duplicates
     const existingContext = existingExercises.length > 0 
       ? `\nEXISTING EXERCISES IN BLOCK (avoid duplicates): ${existingExercises.join(', ')}`
       : '';
 
-    // Call Lovable AI for exercise generation
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -223,39 +248,21 @@ Return 3-6 exercises that are optimal for this block type and focus.`
                     items: {
                       type: "object",
                       properties: {
-                        id: { type: "string", description: "Unique ID for the exercise" },
-                        name: { type: "string", description: "Exercise name" },
-                        sets: { type: "number", description: "Number of sets" },
-                        reps: { type: "number", description: "Number of reps (or duration in seconds for timed exercises)" },
-                        rest: { type: "number", description: "Rest time in seconds" },
-                        tempo: { type: "string", description: "Tempo notation (e.g., '3-1-2-0')" },
-                        velocity_intent: { 
-                          type: "string", 
-                          enum: ["slow", "moderate", "fast", "ballistic"],
-                          description: "Intended movement velocity"
-                        },
-                        cns_demand: { 
-                          type: "string", 
-                          enum: ["low", "medium", "high"],
-                          description: "Central nervous system demand level"
-                        },
-                        coaching_cues: {
-                          type: "array",
-                          items: { type: "string" },
-                          description: "1-2 brief coaching cues for the exercise"
-                        }
+                        id: { type: "string" },
+                        name: { type: "string" },
+                        sets: { type: "number" },
+                        reps: { type: "number" },
+                        rest: { type: "number" },
+                        tempo: { type: "string" },
+                        velocity_intent: { type: "string", enum: ["slow", "moderate", "fast", "ballistic"] },
+                        cns_demand: { type: "string", enum: ["low", "medium", "high"] },
+                        coaching_cues: { type: "array", items: { type: "string" } }
                       },
                       required: ["id", "name", "sets", "reps"]
                     }
                   },
-                  reasoning: { 
-                    type: "string", 
-                    description: "Brief explanation of exercise selection, mentioning personalization if applicable" 
-                  },
-                  estimatedDuration: { 
-                    type: "number", 
-                    description: "Estimated duration in minutes for this block" 
-                  }
+                  reasoning: { type: "string" },
+                  estimatedDuration: { type: "number" }
                 },
                 required: ["exercises", "reasoning", "estimatedDuration"]
               }
@@ -271,32 +278,20 @@ Return 3-6 exercises that are optimal for this block type and focus.`
       console.error("AI gateway error:", response.status, errorText);
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ 
-          error: "Rate limits exceeded, please try again later.",
-          exercises: [] 
-        }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Rate limits exceeded, please try again later.", exercises: [] }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
       if (response.status === 402) {
-        return new Response(JSON.stringify({ 
-          error: "Payment required, please add funds to your Lovable AI workspace.",
-          exercises: [] 
-        }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Payment required, please add funds to your Lovable AI workspace.", exercises: [] }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const aiResponse = await response.json();
-    console.log("AI Response:", JSON.stringify(aiResponse, null, 2));
 
-    // Extract exercises from tool call
     interface BlockWorkoutResult {
       exercises: GeneratedExercise[];
       reasoning: string;
@@ -314,41 +309,12 @@ Return 3-6 exercises that are optimal for this block type and focus.`
       }
     }
 
-    // Fallback exercises if AI doesn't return any
     if (!result.exercises || result.exercises.length === 0) {
       result = {
         exercises: [
-          { 
-            id: 'fallback-1', 
-            name: 'Goblet Squat', 
-            sets: 3, 
-            reps: 10, 
-            rest: 60,
-            tempo: '3-1-2-0',
-            velocity_intent: 'moderate',
-            cns_demand: 'medium',
-            coaching_cues: ['Chest up', 'Knees track over toes']
-          },
-          { 
-            id: 'fallback-2', 
-            name: 'Push-Up', 
-            sets: 3, 
-            reps: 12, 
-            rest: 45,
-            velocity_intent: 'moderate',
-            cns_demand: 'low',
-            coaching_cues: ['Core tight', 'Full range of motion']
-          },
-          { 
-            id: 'fallback-3', 
-            name: 'Band Pull-Apart', 
-            sets: 2, 
-            reps: 15, 
-            rest: 30,
-            velocity_intent: 'moderate',
-            cns_demand: 'low',
-            coaching_cues: ['Squeeze shoulder blades', 'Control the return']
-          },
+          { id: 'fallback-1', name: 'Goblet Squat', sets: 3, reps: 10, rest: 60, tempo: '3-1-2-0', velocity_intent: 'moderate', cns_demand: 'medium', coaching_cues: ['Chest up', 'Knees track over toes'] },
+          { id: 'fallback-2', name: 'Push-Up', sets: 3, reps: 12, rest: 45, velocity_intent: 'moderate', cns_demand: 'low', coaching_cues: ['Core tight', 'Full range of motion'] },
+          { id: 'fallback-3', name: 'Band Pull-Apart', sets: 2, reps: 15, rest: 30, velocity_intent: 'moderate', cns_demand: 'low', coaching_cues: ['Squeeze shoulder blades', 'Control the return'] },
         ],
         reasoning: `Default exercise selection for ${blockType} block with ${blockFocus} focus.`,
         estimatedDuration: 12,
