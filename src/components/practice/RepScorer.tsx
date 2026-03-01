@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
+import { AdvancedRepFields, type AdvancedFields } from '@/components/practice/AdvancedRepFields';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { cn } from '@/lib/utils';
 import { Plus, Trash2, Check } from 'lucide-react';
@@ -16,10 +17,27 @@ export interface ScoredRep {
   pitch_result?: string;
   swing_decision?: string;
   intent?: string;
+  // Advanced micro fields
+  in_zone?: boolean;
+  batted_ball_type?: string;
+  spin_direction?: string;
+  swing_intent?: string;
+  execution_score?: number;
+  machine_velocity_band?: string;
+  bp_distance_ft?: number;
+  velocity_band?: string;
+  spin_efficiency_pct?: number;
+  pitch_command_grade?: number;
+  throw_included?: boolean;
+  footwork_grade?: number;
+  exchange_time_band?: string;
+  throw_accuracy?: number;
+  throw_spin_quality?: string;
 }
 
 interface RepScorerProps {
   module: string;
+  drillType?: string;
   reps: ScoredRep[];
   onRepsChange: (reps: ScoredRep[]) => void;
 }
@@ -45,19 +63,21 @@ const pitchResultOptions = [
   { value: 'out', label: '✅ Out', color: 'bg-primary/20 text-primary border-primary/30' },
 ];
 
-export function RepScorer({ module, reps, onRepsChange }: RepScorerProps) {
+export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerProps) {
   const { pitchTypes } = useSportConfig();
   const [current, setCurrent] = useState<ScoredRep>({});
+  const [advancedFields, setAdvancedFields] = useState<AdvancedFields>({});
   const [step, setStep] = useState(0);
 
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
 
   const commitRep = useCallback(() => {
-    onRepsChange([...reps, current]);
+    const merged = { ...current, ...advancedFields };
+    onRepsChange([...reps, merged]);
     setCurrent({});
     setStep(0);
-  }, [current, reps, onRepsChange]);
+  }, [current, advancedFields, reps, onRepsChange]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
@@ -72,8 +92,7 @@ export function RepScorer({ module, reps, onRepsChange }: RepScorerProps) {
       if (field === 'pitch_location' && step === 0) setStep(1);
       if (field === 'contact_quality' && step === 1) {
         if (value === 'miss') {
-          // Auto-commit misses
-          onRepsChange([...reps, updated]);
+          onRepsChange([...reps, { ...updated, ...advancedFields }]);
           setCurrent({});
           setStep(0);
           return;
@@ -81,8 +100,7 @@ export function RepScorer({ module, reps, onRepsChange }: RepScorerProps) {
         setStep(2);
       }
       if (field === 'exit_direction' && step === 2) {
-        // Auto-commit
-        onRepsChange([...reps, updated]);
+        onRepsChange([...reps, { ...updated, ...advancedFields }]);
         setCurrent({});
         setStep(0);
         return;
@@ -92,8 +110,7 @@ export function RepScorer({ module, reps, onRepsChange }: RepScorerProps) {
       if (field === 'pitch_type' && step === 0) setStep(1);
       if (field === 'pitch_location' && step === 1) setStep(2);
       if (field === 'pitch_result' && step === 2) {
-        // Auto-commit
-        onRepsChange([...reps, updated]);
+        onRepsChange([...reps, { ...updated, ...advancedFields }]);
         setCurrent({});
         setStep(0);
         return;
@@ -274,6 +291,14 @@ export function RepScorer({ module, reps, onRepsChange }: RepScorerProps) {
               </Button>
             </div>
           )}
+
+          {/* Advanced micro fields */}
+          <AdvancedRepFields
+            module={module}
+            drillType={drillType}
+            value={advancedFields}
+            onChange={setAdvancedFields}
+          />
 
           {/* Manual commit for edge cases */}
           {(isHitting || isPitching) && Object.keys(current).length > 0 && (
