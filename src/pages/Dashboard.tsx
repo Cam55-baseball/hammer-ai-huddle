@@ -25,6 +25,7 @@ import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
+import { DualStreakDisplay } from "@/components/dashboard/DualStreakDisplay";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import { Activity, Lightbulb, TrendingUp } from "lucide-react";
 import { getGradeLabel } from "@/lib/gradeLabel";
@@ -493,6 +494,7 @@ export default function Dashboard() {
 
         {/* Practice Intelligence Summary */}
         <PracticeIntelligenceCard />
+        <DualStreakDisplay />
 
         {/* Module Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">

@@ -117,6 +117,15 @@ export function usePerformanceSession() {
         .is('deleted_at', null);
       if (todaySessions && todaySessions.length >= 5) {
         toast({ title: '⚠️ Volume Spike', description: '5+ sessions today. Consider recovery.', variant: 'destructive' });
+        // Write governance flag for overload
+        await supabase.from('governance_flags').insert({
+          user_id: user.id,
+          flag_type: 'volume_spike',
+          severity: 'warning',
+          status: 'pending',
+          source_session_id: session.id,
+          details: { sessions_today: todaySessions.length, date: data.session_date },
+        });
       }
 
       // Check 14-day overload
@@ -130,6 +139,15 @@ export function usePerformanceSession() {
         const allHeavy = recentLogs.every(l => ['full_training', 'game_only'].includes(l.day_status));
         if (allHeavy) {
           toast({ title: '⚠️ Overload Risk', description: '14 consecutive heavy days. Schedule recovery.', variant: 'destructive' });
+          // Write governance flag for overload risk
+          await supabase.from('governance_flags').insert({
+            user_id: user.id,
+            flag_type: 'overload_risk',
+            severity: 'warning',
+            status: 'pending',
+            source_session_id: session.id,
+            details: { consecutive_heavy_days: 14, date: data.session_date },
+          });
         }
       }
 

@@ -38,6 +38,7 @@ import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDia
 import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { DayStatusSelector } from './DayStatusSelector';
+import { RestDayScheduler } from './RestDayScheduler';
 import { toast } from 'sonner';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 
@@ -291,6 +292,7 @@ export function CalendarDaySheet({
   const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [restSchedulerOpen, setRestSchedulerOpen] = useState(false);
 
   // Combined loading state for lock data
   const isLockDataLoading = gamePlanLockLoading || dayOrdersLoading;
@@ -720,6 +722,16 @@ export function CalendarDaySheet({
           {/* Day Status Selector — Rest/Load Engine */}
           <div className="mt-3 mb-2 px-1">
             <DayStatusSelector date={format(date, 'yyyy-MM-dd')} />
+            {activeEvents.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2 text-xs w-full"
+                onClick={() => setRestSchedulerOpen(true)}
+              >
+                Need a rest day? Reschedule events →
+              </Button>
+            )}
           </div>
 
           <Separator />
@@ -898,6 +910,14 @@ export function CalendarDaySheet({
           }}
         />
       )}
+      
+      {/* Rest Day Scheduler */}
+      <RestDayScheduler
+        open={restSchedulerOpen}
+        onOpenChange={setRestSchedulerOpen}
+        date={format(date, 'yyyy-MM-dd')}
+        events={activeEvents.map(e => ({ id: e.id, title: e.title, event_type: e.type }))}
+      />
     </>
   );
 }
