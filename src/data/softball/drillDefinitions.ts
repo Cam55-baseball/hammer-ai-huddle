@@ -10,10 +10,13 @@ export const softballDrills: DrillDefinition[] = [
   { id: 'release_point', name: 'Release Point Consistency', module: 'pitching', description: 'Underhand release point repetition training', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['softballs'] },
   { id: 'power_line', name: 'Power Line Drill', module: 'pitching', description: 'Stride alignment specific to softball mechanics', defaultReps: 15, intensity: 'medium', equipmentNeeded: ['softballs', 'tape/chalk'] },
   // Hitting (includes slap)
-  { id: 'bp_rounds', name: 'BP Rounds', module: 'hitting', description: 'Standard batting practice rounds', defaultReps: 20, intensity: 'high', equipmentNeeded: ['bat', 'softballs', 'cage/field'] },
+  { id: 'bp_rounds', name: 'BP Rounds (Live)', module: 'hitting', description: 'Standard batting practice — overhand live pitching', defaultReps: 20, intensity: 'high', equipmentNeeded: ['bat', 'softballs', 'cage/field'] },
+  { id: 'machine_bp', name: 'Machine BP', module: 'hitting', description: 'Batting practice off pitching machine', defaultReps: 25, intensity: 'high', equipmentNeeded: ['bat', 'softballs', 'machine'] },
+  { id: 'front_toss', name: 'Front Toss', module: 'hitting', description: 'Underhand front toss for timing and load', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'softballs', 'L-screen'] },
+  { id: 'flip_drill', name: 'Flips / Short Toss', module: 'hitting', description: 'Side flips for inside/outside pitch work', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'softballs'] },
   { id: 'tee_work', name: 'Tee Work', module: 'hitting', description: 'Hitting off a batting tee for swing mechanics', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'tee', 'softballs'] },
   { id: 'slap_progression', name: 'Slap Hitting Progression', module: 'hitting', description: 'Soft slap, power slap, drag bunt sequence training', defaultReps: 20, intensity: 'medium', equipmentNeeded: ['bat', 'softballs'] },
-  { id: 'live_abs', name: 'Live At-Bats', module: 'hitting', description: 'Live at-bats against a pitcher', defaultReps: 10, intensity: 'high', equipmentNeeded: ['bat', 'helmet', 'softballs'] },
+  { id: 'live_abs', name: 'Live At-Bats', module: 'hitting', description: 'Live at-bats against a pitcher (game intent)', defaultReps: 10, intensity: 'high', equipmentNeeded: ['bat', 'helmet', 'softballs'] },
   { id: 'reaction_speed', name: 'Reaction Speed Drill', module: 'hitting', description: 'Shorter distance reaction training for faster pitch recognition', defaultReps: 15, intensity: 'high', equipmentNeeded: ['bat', 'softballs'] },
   // Throwing
   { id: 'long_toss', name: 'Long Toss', module: 'throwing', description: 'Progressive distance throwing for arm strength', defaultReps: 20, intensity: 'medium', equipmentNeeded: ['softballs'] },

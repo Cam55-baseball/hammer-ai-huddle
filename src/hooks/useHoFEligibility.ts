@@ -1,15 +1,20 @@
 import { useProfessionalStatus } from '@/hooks/useProfessionalStatus';
 import { useMPIScores } from '@/hooks/useMPIScores';
 import { hofRequirements } from '@/data/hofRequirements';
+import { useSportTheme } from '@/contexts/SportThemeContext';
 
 export function useHoFEligibility() {
   const { data: proStatus } = useProfessionalStatus();
   const { data: mpi } = useMPIScores();
+  const { sport } = useSportTheme();
 
   const proProbability = mpi?.pro_probability ?? 0;
   const mlbSeasons = proStatus?.mlb_seasons_completed ?? 0;
   const auslSeasons = proStatus?.ausl_seasons_completed ?? 0;
-  const totalProSeasons = mlbSeasons + auslSeasons;
+  // Baseball: only MLB seasons count toward HoF. Softball: MLB + AUSL both count.
+  const totalProSeasons = sport === 'baseball'
+    ? mlbSeasons
+    : mlbSeasons + auslSeasons;
 
   const isProVerified = proProbability >= 100;
   const meetsSeasonRequirement = totalProSeasons >= hofRequirements.minConsecutiveSeasons;

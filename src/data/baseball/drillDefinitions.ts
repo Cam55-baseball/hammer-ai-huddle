@@ -17,9 +17,12 @@ export const baseballDrills: DrillDefinition[] = [
   { id: 'pitch_tunneling', name: 'Pitch Tunneling Drill', module: 'pitching', description: 'Sequencing pitches through the same tunnel point', defaultReps: 25, intensity: 'high', equipmentNeeded: ['baseballs', 'mound'] },
   { id: 'velocity_day', name: 'Velocity Day', module: 'pitching', description: 'Max intent fastball sessions with gun readings', defaultReps: 15, intensity: 'high', equipmentNeeded: ['baseballs', 'mound', 'radar gun'] },
   // Hitting
-  { id: 'bp_rounds', name: 'BP Rounds', module: 'hitting', description: 'Standard batting practice rounds', defaultReps: 20, intensity: 'high', equipmentNeeded: ['bat', 'baseballs', 'cage/field'] },
+  { id: 'bp_rounds', name: 'BP Rounds (Live)', module: 'hitting', description: 'Standard batting practice — overhand live pitching', defaultReps: 20, intensity: 'high', equipmentNeeded: ['bat', 'baseballs', 'cage/field'] },
+  { id: 'machine_bp', name: 'Machine BP', module: 'hitting', description: 'Batting practice off pitching machine', defaultReps: 25, intensity: 'high', equipmentNeeded: ['bat', 'baseballs', 'machine'] },
+  { id: 'front_toss', name: 'Front Toss', module: 'hitting', description: 'Underhand front toss for timing and load', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs', 'L-screen'] },
+  { id: 'flip_drill', name: 'Flips / Short Toss', module: 'hitting', description: 'Side flips for inside/outside pitch work', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs'] },
   { id: 'tee_work', name: 'Tee Work', module: 'hitting', description: 'Hitting off a batting tee for swing mechanics', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'tee', 'baseballs'] },
-  { id: 'live_abs', name: 'Live At-Bats', module: 'hitting', description: 'Live at-bats against a pitcher', defaultReps: 10, intensity: 'high', equipmentNeeded: ['bat', 'helmet', 'baseballs'] },
+  { id: 'live_abs', name: 'Live At-Bats', module: 'hitting', description: 'Live at-bats against a pitcher (game intent)', defaultReps: 10, intensity: 'high', equipmentNeeded: ['bat', 'helmet', 'baseballs'] },
   { id: 'soft_toss', name: 'Soft Toss', module: 'hitting', description: 'Front or side toss for timing and bat path', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs'] },
   // Fielding
   { id: 'ground_ball_work', name: 'Ground Ball Work', module: 'fielding', description: 'Fielding ground balls with proper footwork', defaultReps: 20, intensity: 'medium', equipmentNeeded: ['glove', 'baseballs'] },

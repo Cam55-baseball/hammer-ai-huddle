@@ -37,6 +37,7 @@ import { useCalendarActivityDetail } from '@/hooks/useCalendarActivityDetail';
 import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDialog';
 import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
+import { DayStatusSelector } from './DayStatusSelector';
 import { toast } from 'sonner';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 
@@ -716,7 +717,14 @@ export function CalendarDaySheet({
           
           <Separator />
           
-          <ScrollArea className="h-[calc(100vh-180px)] mt-4 pr-4">
+          {/* Day Status Selector — Rest/Load Engine */}
+          <div className="mt-3 mb-2 px-1">
+            <DayStatusSelector date={format(date, 'yyyy-MM-dd')} />
+          </div>
+
+          <Separator />
+          
+          <ScrollArea className="h-[calc(100vh-260px)] mt-4 pr-4">
             {!hasActiveEvents && skippedEvents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Calendar className="h-12 w-12 text-muted-foreground/50 mb-3" />

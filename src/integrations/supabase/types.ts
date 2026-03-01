@@ -243,6 +243,66 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_daily_log: {
+        Row: {
+          cns_load_actual: number | null
+          coach_override: boolean | null
+          coach_override_by: string | null
+          consistency_impact: number | null
+          created_at: string | null
+          day_status: string
+          entry_date: string
+          game_logged: boolean | null
+          id: string
+          injury_body_region: string | null
+          injury_expected_days: number | null
+          injury_mode: boolean | null
+          momentum_impact: number | null
+          notes: string | null
+          rest_reason: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cns_load_actual?: number | null
+          coach_override?: boolean | null
+          coach_override_by?: string | null
+          consistency_impact?: number | null
+          created_at?: string | null
+          day_status?: string
+          entry_date: string
+          game_logged?: boolean | null
+          id?: string
+          injury_body_region?: string | null
+          injury_expected_days?: number | null
+          injury_mode?: boolean | null
+          momentum_impact?: number | null
+          notes?: string | null
+          rest_reason?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cns_load_actual?: number | null
+          coach_override?: boolean | null
+          coach_override_by?: string | null
+          consistency_impact?: number | null
+          created_at?: string | null
+          day_status?: string
+          entry_date?: string
+          game_logged?: boolean | null
+          id?: string
+          injury_body_region?: string | null
+          injury_expected_days?: number | null
+          injury_mode?: boolean | null
+          momentum_impact?: number | null
+          notes?: string | null
+          rest_reason?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       athlete_events: {
         Row: {
           created_at: string | null
@@ -5278,6 +5338,8 @@ export type Database = {
       }
       verified_stat_profiles: {
         Row: {
+          admin_verified: boolean | null
+          confidence_weight: number | null
           created_at: string
           external_metrics: Json | null
           id: string
@@ -5285,6 +5347,7 @@ export type Database = {
           last_synced_at: string | null
           league: string
           profile_url: string
+          rejection_reason: string | null
           screenshot_path: string | null
           sport: string
           sync_frequency: string | null
@@ -5296,6 +5359,8 @@ export type Database = {
           verified_by: string | null
         }
         Insert: {
+          admin_verified?: boolean | null
+          confidence_weight?: number | null
           created_at?: string
           external_metrics?: Json | null
           id?: string
@@ -5303,6 +5368,7 @@ export type Database = {
           last_synced_at?: string | null
           league: string
           profile_url: string
+          rejection_reason?: string | null
           screenshot_path?: string | null
           sport: string
           sync_frequency?: string | null
@@ -5314,6 +5380,8 @@ export type Database = {
           verified_by?: string | null
         }
         Update: {
+          admin_verified?: boolean | null
+          confidence_weight?: number | null
           created_at?: string
           external_metrics?: Json | null
           id?: string
@@ -5321,6 +5389,7 @@ export type Database = {
           last_synced_at?: string | null
           league?: string
           profile_url?: string
+          rejection_reason?: string | null
           screenshot_path?: string | null
           sport?: string
           sync_frequency?: string | null

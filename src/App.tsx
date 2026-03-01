@@ -90,6 +90,7 @@ const ExplosiveConditioning = lazyWithRetry(() => import("./pages/ExplosiveCondi
 const PracticeHub = lazyWithRetry(() => import("./pages/PracticeHub"));
 const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressDashboard"));
 const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDashboard"));
+const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"));
 
 const queryClient = new QueryClient();
 
@@ -158,6 +159,7 @@ const App = () => {
               <Route path="/practice" element={<PracticeHub />} />
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<OrganizationDashboard />} />
+              <Route path="/admin-verification" element={<AdminVerification />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
