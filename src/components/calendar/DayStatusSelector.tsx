@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import {
   useDailyLog,
@@ -16,10 +17,25 @@ interface DayStatusSelectorProps {
   date: string; // YYYY-MM-DD
 }
 
+const BODY_REGIONS = [
+  { value: 'arm', label: 'Arm' },
+  { value: 'shoulder', label: 'Shoulder' },
+  { value: 'elbow', label: 'Elbow' },
+  { value: 'back', label: 'Back' },
+  { value: 'knee', label: 'Knee' },
+  { value: 'ankle', label: 'Ankle' },
+  { value: 'hip', label: 'Hip' },
+  { value: 'hand_wrist', label: 'Hand/Wrist' },
+  { value: 'head', label: 'Head' },
+  { value: 'other', label: 'Other' },
+];
+
 export function DayStatusSelector({ date }: DayStatusSelectorProps) {
   const { entry, upsert, saving } = useDailyLog(date);
   const [showReasonPicker, setShowReasonPicker] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<DayStatus | null>(null);
+  const [injuryRegion, setInjuryRegion] = useState<string | undefined>();
+  const [injuryDays, setInjuryDays] = useState<number>(7);
 
   const currentStatus = entry?.day_status as DayStatus | undefined;
   const needsReason = (s: DayStatus) =>
@@ -36,19 +52,26 @@ export function DayStatusSelector({ date }: DayStatusSelectorProps) {
 
   const handleReasonSelect = async (reason: RestReason) => {
     if (!pendingStatus) return;
-    await upsert({
+    const payload: any = {
       entry_date: date,
       day_status: pendingStatus,
       rest_reason: reason,
       injury_mode: pendingStatus === 'injury_hold',
-    });
+    };
+    if (pendingStatus === 'injury_hold') {
+      if (injuryRegion) payload.injury_body_region = injuryRegion;
+      payload.injury_expected_days = injuryDays;
+    }
+    await upsert(payload);
     setShowReasonPicker(false);
     setPendingStatus(null);
+    setInjuryRegion(undefined);
+    setInjuryDays(7);
   };
 
   if (showReasonPicker) {
     return (
-      <div className="space-y-2 p-3 rounded-lg border bg-muted/30">
+      <div className="space-y-3 p-3 rounded-lg border bg-muted/30">
         <p className="text-xs font-medium text-muted-foreground">Why?</p>
         <div className="flex flex-wrap gap-1.5">
           {REST_REASON_OPTIONS.map(r => (
@@ -64,6 +87,36 @@ export function DayStatusSelector({ date }: DayStatusSelectorProps) {
             </Button>
           ))}
         </div>
+
+        {/* Injury metadata fields */}
+        {pendingStatus === 'injury_hold' && (
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Body Region</Label>
+              <Select value={injuryRegion} onValueChange={setInjuryRegion}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BODY_REGIONS.map(r => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">
+                Expected Recovery: {injuryDays} days
+              </Label>
+              <Slider
+                min={1} max={90} step={1}
+                value={[injuryDays]}
+                onValueChange={([v]) => setInjuryDays(v)}
+              />
+            </div>
+          </div>
+        )}
+
         <Button
           variant="ghost"
           size="sm"
@@ -90,6 +143,11 @@ export function DayStatusSelector({ date }: DayStatusSelectorProps) {
           {entry?.rest_reason && (
             <Badge variant="outline" className="text-[10px] h-4">
               {REST_REASON_OPTIONS.find(r => r.value === entry.rest_reason)?.label}
+            </Badge>
+          )}
+          {entry?.injury_body_region && (
+            <Badge variant="outline" className="text-[10px] h-4">
+              {BODY_REGIONS.find(r => r.value === entry.injury_body_region)?.label}
             </Badge>
           )}
         </div>

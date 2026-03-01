@@ -4,10 +4,12 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Settings2 } from 'lucide-react';
+import { ChevronDown, Settings2, Copy, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useSportConfig } from '@/hooks/useSportConfig';
 
 export interface AdvancedFields {
   in_zone?: boolean;
@@ -32,6 +34,10 @@ interface AdvancedRepFieldsProps {
   drillType?: string;
   value: AdvancedFields;
   onChange: (fields: AdvancedFields) => void;
+  batchMode?: boolean;
+  batchCount?: number;
+  onBatchModeChange?: (on: boolean) => void;
+  onBatchCountChange?: (count: number) => void;
 }
 
 const STORAGE_KEY_PREFIX = 'lastSession_';
@@ -77,8 +83,19 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
   </div>
 );
 
-export function AdvancedRepFields({ module, drillType, value, onChange }: AdvancedRepFieldsProps) {
+// One-tap presets
+const HITTING_PRESETS: Array<{ label: string; icon: string; fields: Partial<AdvancedFields> }> = [
+  { label: 'Game BP', icon: '⚾', fields: { swing_intent: 'game_intent', in_zone: true } },
+  { label: 'Machine', icon: '🤖', fields: { swing_intent: 'mechanical' } },
+  { label: 'Damage', icon: '💥', fields: { swing_intent: 'hr_derby', in_zone: true } },
+];
+
+export function AdvancedRepFields({
+  module, drillType, value, onChange,
+  batchMode, batchCount, onBatchModeChange, onBatchCountChange,
+}: AdvancedRepFieldsProps) {
   const [open, setOpen] = useState(false);
+  const { machineVelocityBands, pitchingVelocityBands, bpDistanceRange } = useSportConfig();
 
   // Load smart defaults on mount
   useEffect(() => {
@@ -90,6 +107,10 @@ export function AdvancedRepFields({ module, drillType, value, onChange }: Advanc
 
   const update = (field: keyof AdvancedFields, val: any) => {
     onChange({ ...value, [field]: val });
+  };
+
+  const applyPreset = (preset: Partial<AdvancedFields>) => {
+    onChange({ ...value, ...preset });
   };
 
   const isHitting = module === 'hitting';
@@ -115,6 +136,27 @@ export function AdvancedRepFields({ module, drillType, value, onChange }: Advanc
           animate={{ opacity: 1, y: 0 }}
           className="space-y-3 pt-2 pb-1 px-1"
         >
+          {/* Batch Apply Mode */}
+          {onBatchModeChange && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border border-border">
+              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="text-xs flex-1">Batch Apply</Label>
+              <Switch
+                checked={batchMode ?? false}
+                onCheckedChange={onBatchModeChange}
+              />
+              {batchMode && onBatchCountChange && (
+                <Input
+                  type="number"
+                  min={2} max={20}
+                  value={batchCount ?? 5}
+                  onChange={e => onBatchCountChange(Math.max(2, Math.min(20, Number(e.target.value))))}
+                  className="h-7 w-14 text-xs text-center"
+                />
+              )}
+            </div>
+          )}
+
           {/* In-zone toggle (hitting + pitching) */}
           {(isHitting || isPitching) && (
             <div className="flex items-center justify-between">
@@ -129,6 +171,25 @@ export function AdvancedRepFields({ module, drillType, value, onChange }: Advanc
           {/* Hitting fields */}
           {isHitting && (
             <>
+              {/* One-tap presets */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Quick Presets</Label>
+                <div className="flex gap-1.5">
+                  {HITTING_PRESETS.map(p => (
+                    <Button
+                      key={p.label}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-[11px] h-7 gap-1 flex-1"
+                      onClick={() => applyPreset(p.fields)}
+                    >
+                      <span>{p.icon}</span>{p.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
                 <SelectGrid
@@ -186,26 +247,22 @@ export function AdvancedRepFields({ module, drillType, value, onChange }: Advanc
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Machine Velocity Band</Label>
                     <SelectGrid
-                      options={[
-                        { value: '40-50', label: '40-50' },
-                        { value: '50-60', label: '50-60' },
-                        { value: '60-70', label: '60-70' },
-                        { value: '70-80', label: '70-80' },
-                        { value: '80+', label: '80+' },
-                      ]}
+                      options={machineVelocityBands}
                       value={value.machine_velocity_band}
                       onChange={v => update('machine_velocity_band', v)}
-                      cols={5}
+                      cols={4}
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">BP Distance (ft)</Label>
-                    <Input
-                      type="number"
-                      placeholder="60"
-                      value={value.bp_distance_ft ?? ''}
-                      onChange={e => update('bp_distance_ft', e.target.value ? Number(e.target.value) : undefined)}
-                      className="h-8 text-sm"
+                    <Label className="text-xs text-muted-foreground mb-1 block">
+                      BP Distance: {value.bp_distance_ft ?? bpDistanceRange.min} ft
+                    </Label>
+                    <Slider
+                      min={bpDistanceRange.min}
+                      max={bpDistanceRange.max}
+                      step={10}
+                      value={[value.bp_distance_ft ?? bpDistanceRange.min]}
+                      onValueChange={([v]) => update('bp_distance_ft', v)}
                     />
                   </div>
                 </>
@@ -219,12 +276,7 @@ export function AdvancedRepFields({ module, drillType, value, onChange }: Advanc
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Velocity Band</Label>
                 <SelectGrid
-                  options={[
-                    { value: '60-70', label: '60-70' },
-                    { value: '70-80', label: '70-80' },
-                    { value: '80-90', label: '80-90' },
-                    { value: '90+', label: '90+' },
-                  ]}
+                  options={pitchingVelocityBands}
                   value={value.velocity_band}
                   onChange={v => update('velocity_band', v)}
                   cols={4}

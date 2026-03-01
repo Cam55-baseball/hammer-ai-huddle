@@ -248,7 +248,6 @@ export type Database = {
           cns_load_actual: number | null
           coach_override: boolean | null
           coach_override_by: string | null
-          consistency_impact: number | null
           created_at: string | null
           day_status: string
           entry_date: string
@@ -257,7 +256,6 @@ export type Database = {
           injury_body_region: string | null
           injury_expected_days: number | null
           injury_mode: boolean | null
-          momentum_impact: number | null
           notes: string | null
           rest_reason: string | null
           updated_at: string | null
@@ -267,7 +265,6 @@ export type Database = {
           cns_load_actual?: number | null
           coach_override?: boolean | null
           coach_override_by?: string | null
-          consistency_impact?: number | null
           created_at?: string | null
           day_status?: string
           entry_date: string
@@ -276,7 +273,6 @@ export type Database = {
           injury_body_region?: string | null
           injury_expected_days?: number | null
           injury_mode?: boolean | null
-          momentum_impact?: number | null
           notes?: string | null
           rest_reason?: string | null
           updated_at?: string | null
@@ -286,7 +282,6 @@ export type Database = {
           cns_load_actual?: number | null
           coach_override?: boolean | null
           coach_override_by?: string | null
-          consistency_impact?: number | null
           created_at?: string | null
           day_status?: string
           entry_date?: string
@@ -295,7 +290,6 @@ export type Database = {
           injury_body_region?: string | null
           injury_expected_days?: number | null
           injury_mode?: boolean | null
-          momentum_impact?: number | null
           notes?: string | null
           rest_reason?: string | null
           updated_at?: string | null
@@ -2367,6 +2361,8 @@ export type Database = {
           calendar_event_id: string | null
           coach_grade: number | null
           coach_id: string | null
+          coach_override_applied: boolean | null
+          coach_override_id: string | null
           composite_indexes: Json | null
           created_at: string
           data_density_level: number | null
@@ -2400,6 +2396,8 @@ export type Database = {
           calendar_event_id?: string | null
           coach_grade?: number | null
           coach_id?: string | null
+          coach_override_applied?: boolean | null
+          coach_override_id?: string | null
           composite_indexes?: Json | null
           created_at?: string
           data_density_level?: number | null
@@ -2433,6 +2431,8 @@ export type Database = {
           calendar_event_id?: string | null
           coach_grade?: number | null
           coach_id?: string | null
+          coach_override_applied?: boolean | null
+          coach_override_id?: string | null
           composite_indexes?: Json | null
           created_at?: string
           data_density_level?: number | null
