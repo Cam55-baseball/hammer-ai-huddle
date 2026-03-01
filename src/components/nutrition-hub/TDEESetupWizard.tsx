@@ -77,7 +77,7 @@ export function TDEESetupWizard({ onComplete, onDataSaved, initialData }: TDEESe
       case 0: return !!sex;
       case 1: return !!dateOfBirth && age >= 13 && age <= 100;
       case 2: return totalHeightInches >= 48 && totalHeightInches <= 96;
-      case 3: return parseFloat(weightLbs) >= 80 && parseFloat(weightLbs) <= 400;
+      case 3: return parseFloat(weightLbs) >= 30 && parseFloat(weightLbs) <= 500;
       case 4: return !!activityLevel;
       default: return true;
     }
@@ -108,7 +108,7 @@ export function TDEESetupWizard({ onComplete, onDataSaved, initialData }: TDEESe
           sex: sex,
           date_of_birth: dateOfBirth,
           height_inches: totalHeightInches,
-          weight: weightLbs,
+          weight: String(parseFloat(weightLbs)),
           activity_level: activityLevel,
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
@@ -229,12 +229,16 @@ export function TDEESetupWizard({ onComplete, onDataSaved, initialData }: TDEESe
               <Input
                 id="weight"
                 type="number"
+                step="0.1"
                 value={weightLbs}
                 onChange={(e) => setWeightLbs(e.target.value)}
                 placeholder="180"
-                min={80}
-                max={400}
+                min={30}
+                max={500}
               />
+              {weightLbs && (parseFloat(weightLbs) < 30 || parseFloat(weightLbs) > 500) && (
+                <p className="text-xs text-destructive">Weight must be between 30 and 500 lbs</p>
+              )}
             </div>
           </div>
         );

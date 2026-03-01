@@ -995,6 +995,44 @@ export type Database = {
           },
         ]
       }
+      folder_coach_permissions: {
+        Row: {
+          coach_user_id: string
+          folder_id: string
+          granted_at: string
+          granted_by: string
+          id: string
+          permission_level: string
+          revoked_at: string | null
+        }
+        Insert: {
+          coach_user_id: string
+          folder_id: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          permission_level?: string
+          revoked_at?: string | null
+        }
+        Update: {
+          coach_user_id?: string
+          folder_id?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          permission_level?: string
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_coach_permissions_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "activity_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       folder_item_completions: {
         Row: {
           completed: boolean | null

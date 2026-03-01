@@ -497,6 +497,50 @@ export function calculateDayLoadMetrics(
 // FORMATTING HELPERS
 // =====================================================
 
+// =====================================================
+// CNS LOAD FOR CUSTOM ACTIVITIES (ALL TYPES)
+// =====================================================
+
+const TYPE_CNS_BASES: Record<string, number> = {
+  workout: 30,
+  running: 25,
+  practice: 25,
+  short_practice: 20,
+  warmup: 10,
+  recovery: 5,
+  meal: 0,
+  free_session: 15,
+  exercise: 25,
+  skill_work: 20,
+  mobility: 8,
+  conditioning: 30,
+  plyometrics: 40,
+  speed: 35,
+  flexibility: 5,
+};
+
+export function calculateCustomActivityCNS(template: {
+  exercises?: any[] | null;
+  duration_minutes?: number | null;
+  intensity?: string | null;
+  activity_type?: string;
+}): number {
+  // If the activity has exercises, use standard calculation
+  if (template.exercises && Array.isArray(template.exercises) && template.exercises.length > 0) {
+    const total = template.exercises.reduce((sum: number, ex: any) => sum + calculateExerciseCNS(ex), 0);
+    return Math.max(total, 5); // Never zero
+  }
+  // Duration-based estimation for activities without exercise blocks
+  const durationMinutes = template.duration_minutes || 30;
+  const intensityMultiplier = template.intensity === 'max' ? 1.5
+    : template.intensity === 'high' ? 1.2
+    : template.intensity === 'moderate' ? 1.0
+    : 0.7;
+  const typeBase = TYPE_CNS_BASES[template.activity_type || 'free_session'] || 15;
+  const result = Math.round(typeBase * (durationMinutes / 30) * intensityMultiplier);
+  return Math.max(result, typeBase === 0 ? 0 : 3); // Minimum 3 unless meal
+}
+
 export function formatCNSLoad(load: number): { label: string; color: string } {
   const safeLoad = safeNumber(load);
   
