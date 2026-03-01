@@ -211,12 +211,15 @@ serve(async (req) => {
         const posWeight = positionWeights[(athlete.primary_position || '').toUpperCase()] ?? 1.0;
         adjusted *= posWeight;
 
-        // ── Verified stat boost ──
+        // ── Verified stat boost (scaled by confidence_weight) ──
         let verifiedBoostTotal = 0;
         const vps = verifiedMap.get(uid) ?? [];
         for (const vp of vps) {
           const boost = verifiedStatBoosts[vp.profile_type];
-          if (boost) verifiedBoostTotal += boost.competitiveBoost;
+          if (boost) {
+            const weight = (vp.confidence_weight ?? 100) / 100;
+            verifiedBoostTotal += boost.competitiveBoost * weight;
+          }
         }
         adjusted += verifiedBoostTotal;
 
@@ -257,8 +260,43 @@ serve(async (req) => {
         integrityScore += verifiedSessionCount * 0.5;
         integrityScore = Math.max(0, Math.min(100, integrityScore));
 
-        // Apply integrity
-        const finalScore = adjusted * (integrityScore / 100);
+        // ── Consistency dampening + injury hold ──
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+        const { data: dailyLogs } = await supabase.from('athlete_daily_log')
+          .select('entry_date, day_status, injury_mode')
+          .eq('user_id', uid)
+          .gte('entry_date', thirtyDaysAgo);
+
+        let dampingMultiplier = 1.0;
+        let injuryHoldActive = false;
+        if (dailyLogs && dailyLogs.length > 0) {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+          injuryHoldActive = dailyLogs.some(l => l.injury_mode === true && l.entry_date >= sevenDaysAgo);
+
+          const now = Date.now();
+          let missed7 = 0, missed14 = 0;
+          for (const log of dailyLogs) {
+            const logDate = new Date(log.entry_date).getTime();
+            const daysAgo = (now - logDate) / 86400000;
+            if (log.day_status === 'missed') {
+              if (daysAgo <= 7) missed7++;
+              if (daysAgo <= 14) missed14++;
+            }
+          }
+          if (missed14 >= 4) dampingMultiplier = 0.85;
+          else if (missed7 >= 2) dampingMultiplier = 0.95;
+
+          // Consistency recovery lift
+          const injuryDays = dailyLogs.filter(l => l.injury_mode).length;
+          const loggedDays = dailyLogs.filter(l => l.day_status !== 'missed').length;
+          const consistencyScore = loggedDays / Math.max(1, 30 - injuryDays) * 100;
+          if (consistencyScore >= 80) dampingMultiplier = 1.0;
+        }
+
+        if (injuryHoldActive) continue; // Freeze MPI -- skip this athlete
+
+        // Apply integrity + dampening
+        const finalScore = adjusted * (integrityScore / 100) * dampingMultiplier;
 
         // ── Game-practice ratio ──
         const gameSessions = sessions.filter(s => ['game', 'live_scrimmage'].includes(s.session_type));
@@ -387,87 +425,153 @@ serve(async (req) => {
           .not('micro_layer_data', 'is', null);
         if (!recentSessions || recentSessions.length === 0) continue;
 
-        // Aggregation buckets
-        const maps: Record<string, { grid: number[][]; total: number }> = {
-          pitch_location: { grid: [[0,0,0],[0,0,0],[0,0,0]], total: 0 },
-          swing_chase: { grid: [[0,0,0],[0,0,0],[0,0,0]], total: 0 },
-          barrel_zone: { grid: [[0,0,0],[0,0,0],[0,0,0]], total: 0 },
-        };
-        // Split buckets
-        const splitMaps: Record<string, Record<string, { grid: number[][]; total: number }>> = {};
+        // Helper: create grid of given size
+        const makeGrid = (size: number) => Array.from({length: size}, () => Array(size).fill(0));
+
+        // Detect grid size from data (support 3x3 or 5x5)
+        let detectedGridSize = 3;
+        for (const sess of recentSessions) {
+          const microData = Array.isArray(sess.micro_layer_data) ? sess.micro_layer_data : [];
+          for (const rep of microData as any[]) {
+            if (rep.pitch_location) {
+              if (rep.pitch_location.row > 2 || rep.pitch_location.col > 2) { detectedGridSize = 5; break; }
+            }
+          }
+          if (detectedGridSize === 5) break;
+        }
+        const gs = detectedGridSize;
+
+        // All 8 map types
+        const mapTypes = ['pitch_location', 'swing_chase', 'barrel_zone', 'whiff_zone', 'command_heat', 'miss_tendency', 'throw_accuracy', 'error_location'];
+        const contextFilters = ['all', 'practice', 'game'] as const;
+        type CtxMap = Record<string, { grid: number[][]; total: number }>;
+        const ctxMaps: Record<string, CtxMap> = {};
+        for (const ctx of contextFilters) {
+          ctxMaps[ctx] = {};
+          for (const mt of mapTypes) ctxMaps[ctx][mt] = { grid: makeGrid(gs), total: 0 };
+        }
+
+        const practiceTypes = ['solo_practice', 'team_practice', 'bullpen', 'cage_session', 'lesson'];
+        const gameTypes = ['game', 'live_scrimmage'];
 
         for (const sess of recentSessions) {
           const microData = Array.isArray(sess.micro_layer_data) ? sess.micro_layer_data : [];
-          const batSide = sess.batting_side_used || 'all';
-          const throwHand = sess.throwing_hand_used || 'all';
+          const sessType = (sess as any).session_type || '';
+          const ctxKey = gameTypes.includes(sessType) ? 'game' : practiceTypes.includes(sessType) ? 'practice' : 'practice';
 
           for (const rep of microData as any[]) {
-            // Pitch location
-            if (rep.pitch_location && typeof rep.pitch_location.row === 'number') {
-              const r = Math.min(2, Math.max(0, rep.pitch_location.row));
-              const c = Math.min(2, Math.max(0, rep.pitch_location.col));
-              maps.pitch_location.grid[r][c]++;
-              maps.pitch_location.total++;
+            const loc = rep.pitch_location;
+            if (loc && typeof loc.row === 'number') {
+              const r = Math.min(gs - 1, Math.max(0, loc.row));
+              const c = Math.min(gs - 1, Math.max(0, loc.col));
 
-              // Split by batting side
-              const splitKey = `bat_${batSide}`;
-              if (!splitMaps[splitKey]) splitMaps[splitKey] = { pitch_location: { grid: [[0,0,0],[0,0,0],[0,0,0]], total: 0 } };
-              if (!splitMaps[splitKey].pitch_location) splitMaps[splitKey].pitch_location = { grid: [[0,0,0],[0,0,0],[0,0,0]], total: 0 };
-              splitMaps[splitKey].pitch_location.grid[r][c]++;
-              splitMaps[splitKey].pitch_location.total++;
-            }
+              // pitch_location
+              ctxMaps.all.pitch_location.grid[r][c]++; ctxMaps.all.pitch_location.total++;
+              ctxMaps[ctxKey].pitch_location.grid[r][c]++; ctxMaps[ctxKey].pitch_location.total++;
 
-            // Swing chase (swing at ball outside zone)
-            if (rep.swing_result && rep.pitch_location) {
-              const r = Math.min(2, Math.max(0, rep.pitch_location.row));
-              const c = Math.min(2, Math.max(0, rep.pitch_location.col));
-              if (rep.in_zone === false && rep.swing_result !== 'take') {
-                maps.swing_chase.grid[r][c]++;
-                maps.swing_chase.total++;
+              // swing_chase
+              if (rep.in_zone === false && rep.swing_result && rep.swing_result !== 'take') {
+                ctxMaps.all.swing_chase.grid[r][c]++; ctxMaps.all.swing_chase.total++;
+                ctxMaps[ctxKey].swing_chase.grid[r][c]++; ctxMaps[ctxKey].swing_chase.total++;
+              }
+
+              // barrel_zone
+              if (rep.contact_quality === 'barrel') {
+                ctxMaps.all.barrel_zone.grid[r][c]++; ctxMaps.all.barrel_zone.total++;
+                ctxMaps[ctxKey].barrel_zone.grid[r][c]++; ctxMaps[ctxKey].barrel_zone.total++;
+              }
+
+              // whiff_zone (miss by pitch location)
+              if (rep.contact_quality === 'miss') {
+                ctxMaps.all.whiff_zone.grid[r][c]++; ctxMaps.all.whiff_zone.total++;
+                ctxMaps[ctxKey].whiff_zone.grid[r][c]++; ctxMaps[ctxKey].whiff_zone.total++;
+              }
+
+              // command_heat (pitching: where pitch landed)
+              if (rep.pitch_result && ['strike', 'out'].includes(rep.pitch_result)) {
+                ctxMaps.all.command_heat.grid[r][c]++; ctxMaps.all.command_heat.total++;
+                ctxMaps[ctxKey].command_heat.grid[r][c]++; ctxMaps[ctxKey].command_heat.total++;
+              }
+
+              // miss_tendency (pitching: ball/miss zones)
+              if (rep.pitch_result === 'ball') {
+                ctxMaps.all.miss_tendency.grid[r][c]++; ctxMaps.all.miss_tendency.total++;
+                ctxMaps[ctxKey].miss_tendency.grid[r][c]++; ctxMaps[ctxKey].miss_tendency.total++;
               }
             }
 
-            // Barrel zone
-            if (rep.contact_quality === 'barrel' && rep.pitch_location) {
-              const r = Math.min(2, Math.max(0, rep.pitch_location.row));
-              const c = Math.min(2, Math.max(0, rep.pitch_location.col));
-              maps.barrel_zone.grid[r][c]++;
-              maps.barrel_zone.total++;
+            // throw_accuracy (fielding reps with throw_accuracy grade)
+            if (typeof rep.throw_accuracy === 'number' && loc) {
+              const r = Math.min(gs - 1, Math.max(0, loc.row));
+              const c = Math.min(gs - 1, Math.max(0, loc.col));
+              ctxMaps.all.throw_accuracy.grid[r][c] += rep.throw_accuracy;
+              ctxMaps.all.throw_accuracy.total++;
+              ctxMaps[ctxKey].throw_accuracy.grid[r][c] += rep.throw_accuracy;
+              ctxMaps[ctxKey].throw_accuracy.total++;
+            }
+
+            // error_location (fielding errors)
+            if (rep.contact_quality === 'error' && loc) {
+              const r = Math.min(gs - 1, Math.max(0, loc.row));
+              const c = Math.min(gs - 1, Math.max(0, loc.col));
+              ctxMaps.all.error_location.grid[r][c]++;
+              ctxMaps.all.error_location.total++;
+              ctxMaps[ctxKey].error_location.grid[r][c]++;
+              ctxMaps[ctxKey].error_location.total++;
             }
           }
         }
 
-        // Upsert all map types
-        for (const [mapType, data] of Object.entries(maps)) {
-          if (data.total === 0) continue;
-          const blindZones: Array<{row: number; col: number}> = [];
-          for (let r = 0; r < 3; r++) {
-            for (let c = 0; c < 3; c++) {
-              if (data.grid[r][c] / data.total < 0.05) blindZones.push({ row: r, col: c });
-            }
-          }
-          await supabase.from('heat_map_snapshots').upsert({
-            user_id: userId, sport, map_type: mapType, time_window: '30d',
-            grid_data: data.grid, blind_zones: blindZones,
-            total_data_points: data.total, split_key: 'all', context_filter: 'all',
-          }, { onConflict: 'user_id,sport,map_type,time_window,split_key,context_filter' } as any);
-        }
-
-        // Upsert split heat maps
-        for (const [splitKey, mapTypes] of Object.entries(splitMaps)) {
-          for (const [mapType, data] of Object.entries(mapTypes)) {
+        // Upsert all context x map type combinations
+        for (const ctx of contextFilters) {
+          for (const [mapType, data] of Object.entries(ctxMaps[ctx])) {
             if (data.total === 0) continue;
-            const blindZones: Array<{row: number; col: number}> = [];
-            for (let r = 0; r < 3; r++) {
-              for (let c = 0; c < 3; c++) {
-                if (data.grid[r][c] / data.total < 0.05) blindZones.push({ row: r, col: c });
+            const blindZones: Array<{row: number; col: number; deficit_pct?: number}> = [];
+            const avgPerCell = data.total / (gs * gs);
+            for (let r = 0; r < gs; r++) {
+              for (let c = 0; c < gs; c++) {
+                const cellPct = data.grid[r][c] / data.total;
+                if (cellPct < 0.05) {
+                  const deficit = avgPerCell > 0 ? ((avgPerCell - data.grid[r][c]) / avgPerCell) * 100 : 100;
+                  blindZones.push({ row: r, col: c, deficit_pct: Math.round(deficit) });
+                }
               }
             }
             await supabase.from('heat_map_snapshots').upsert({
               user_id: userId, sport, map_type: mapType, time_window: '30d',
-              grid_data: data.grid, blind_zones: blindZones,
-              total_data_points: data.total, split_key: splitKey, context_filter: 'all',
+              grid_data: { grid: data.grid, grid_size: gs },
+              blind_zones: blindZones,
+              total_data_points: data.total, split_key: 'all', context_filter: ctx,
             }, { onConflict: 'user_id,sport,map_type,time_window,split_key,context_filter' } as any);
+          }
+        }
+
+        // Blind zone influence on roadmap
+        const allBlindZones = Object.entries(ctxMaps.all)
+          .filter(([_, d]) => d.total > 0)
+          .flatMap(([mt, d]) => {
+            const zones: any[] = [];
+            for (let r = 0; r < gs; r++) {
+              for (let c = 0; c < gs; c++) {
+                if (d.grid[r][c] / d.total < 0.03) zones.push({ map_type: mt, row: r, col: c });
+              }
+            }
+            return zones;
+          });
+        if (allBlindZones.length > 0) {
+          const { data: roadmapMilestones } = await supabase.from('roadmap_milestones')
+            .select('id, requirements').eq('sport', sport);
+          if (roadmapMilestones) {
+            for (const ms of roadmapMilestones) {
+              const req = ms.requirements || {};
+              if (req.zone_awareness) {
+                await supabase.from('athlete_roadmap_progress').upsert({
+                  user_id: userId, milestone_id: ms.id,
+                  status: 'blocked', blocked_reason: `${allBlindZones.length} blind zones detected`,
+                  progress_pct: Math.max(0, 100 - allBlindZones.length * 10),
+                }, { onConflict: 'user_id,milestone_id' } as any);
+              }
+            }
           }
         }
       }

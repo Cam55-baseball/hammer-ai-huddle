@@ -95,6 +95,53 @@ export function usePerformanceSession() {
 
       if (error) throw error;
 
+      // Auto-write daily log entry with CNS load
+      const cnsLoad = data.drill_blocks.reduce((sum: number, db: DrillBlock) => {
+        const baseLoad = db.volume * (db.execution_grade / 80) * 2;
+        return sum + baseLoad;
+      }, 0);
+      await supabase.from('athlete_daily_log').upsert({
+        user_id: user.id,
+        entry_date: data.session_date,
+        day_status: ['game', 'live_scrimmage'].includes(data.session_type) ? 'game_only' : 'full_training',
+        game_logged: ['game', 'live_scrimmage'].includes(data.session_type),
+        cns_load_actual: Math.round(cnsLoad),
+      }, { onConflict: 'user_id,entry_date' } as any);
+
+      // Overload detection
+      const { data: todaySessions } = await supabase
+        .from('performance_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('session_date', data.session_date)
+        .is('deleted_at', null);
+      if (todaySessions && todaySessions.length >= 5) {
+        toast({ title: '⚠️ Volume Spike', description: '5+ sessions today. Consider recovery.', variant: 'destructive' });
+      }
+
+      // Check 14-day overload
+      const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
+      const { data: recentLogs } = await supabase
+        .from('athlete_daily_log')
+        .select('day_status')
+        .eq('user_id', user.id)
+        .gte('entry_date', fourteenDaysAgo);
+      if (recentLogs && recentLogs.length >= 14) {
+        const allHeavy = recentLogs.every(l => ['full_training', 'game_only'].includes(l.day_status));
+        if (allHeavy) {
+          toast({ title: '⚠️ Overload Risk', description: '14 consecutive heavy days. Schedule recovery.', variant: 'destructive' });
+        }
+      }
+
+      // Retroactive recalculation
+      const today = new Date().toISOString().split('T')[0];
+      if (data.session_date < today) {
+        await supabase.functions.invoke('calculate-session', {
+          headers: authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {},
+          body: { retroactive: true, date: data.session_date },
+        });
+      }
+
       // Trigger calculate-session edge function
       if (authSession?.access_token) {
         await supabase.functions.invoke('calculate-session', {
