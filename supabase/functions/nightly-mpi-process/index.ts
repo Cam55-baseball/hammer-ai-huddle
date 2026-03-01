@@ -125,6 +125,8 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const nightlyStartTime = Date.now();
+    let totalProcessed = 0;
     console.log('[nightly-mpi] Starting nightly MPI process...');
 
     // Step 1: Auto-resolve info-level governance flags older than 7 days
@@ -472,6 +474,7 @@ serve(async (req) => {
         }, { onConflict: 'user_id,sport,calculation_date' });
       }
 
+      totalProcessed += scores.length;
       console.log(`[nightly-mpi] ${sport}: Ranked ${scores.length} eligible athletes`);
 
       // ── Heat map snapshots ──
@@ -775,12 +778,15 @@ serve(async (req) => {
     }
 
     // Phase 2: Audit log entry for nightly completion
-    const endTime = Date.now();
     await supabase.from('audit_log').insert({
       user_id: '00000000-0000-0000-0000-000000000000',
       action: 'nightly_mpi_complete',
       table_name: 'mpi_scores',
-      metadata: { timestamp: new Date().toISOString() },
+      metadata: {
+        timestamp: new Date().toISOString(),
+        athletes_processed: totalProcessed,
+        duration_ms: Date.now() - nightlyStartTime,
+      },
     });
 
     console.log('[nightly-mpi] Complete.');
