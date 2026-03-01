@@ -2,6 +2,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { MPIScoreCard } from '@/components/analytics/MPIScoreCard';
+import { MPIBreakdownCard } from '@/components/analytics/MPIBreakdownCard';
 import { ProProbabilityCard } from '@/components/analytics/ProProbabilityCard';
 import { RankMovementBadge } from '@/components/analytics/RankMovementBadge';
 import { HoFCountdown } from '@/components/analytics/HoFCountdown';
@@ -80,7 +81,10 @@ export default function ProgressDashboard() {
           <div className="space-y-6">
             {/* Row 1: Score cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <MPIScoreCard />
+              <div>
+                <MPIScoreCard />
+                <MPIBreakdownCard />
+              </div>
               <ProProbabilityCard />
               <RankMovementBadge />
             </div>

@@ -11,6 +11,8 @@ const VELOCITY_BAND_REGEX = /^(\d+-\d+|\d+\+|<\d+)$/;
 const VALID_SWING_INTENTS = ['mechanical', 'game_intent', 'situational', 'hr_derby'];
 const VALID_BATTED_BALL_TYPES = ['ground', 'line', 'fly', 'barrel'];
 const VALID_SPIN_DIRECTIONS = ['topspin', 'backspin', 'sidespin'];
+const VALID_THROW_SPIN_QUALITIES = ['carry', 'tail', 'cut', 'neutral'];
+const VALID_EXCHANGE_TIME_BANDS = ['fast', 'average', 'slow'];
 
 function validateMicroRep(rep: any): any {
   const cleaned = { ...rep };
@@ -19,10 +21,11 @@ function validateMicroRep(rep: any): any {
   if (cleaned.spin_direction && !VALID_SPIN_DIRECTIONS.includes(cleaned.spin_direction)) delete cleaned.spin_direction;
   if (cleaned.machine_velocity_band && !VELOCITY_BAND_REGEX.test(cleaned.machine_velocity_band)) delete cleaned.machine_velocity_band;
   if (cleaned.velocity_band && !VELOCITY_BAND_REGEX.test(cleaned.velocity_band)) delete cleaned.velocity_band;
+  if (cleaned.throw_spin_quality && !VALID_THROW_SPIN_QUALITIES.includes(cleaned.throw_spin_quality)) delete cleaned.throw_spin_quality;
+  if (cleaned.exchange_time_band && !VALID_EXCHANGE_TIME_BANDS.includes(cleaned.exchange_time_band)) delete cleaned.exchange_time_band;
   return cleaned;
 }
 
-// Parse the numeric upper bound from a velocity band string (e.g. "100-110" -> 110, "75+" -> 75, "<60" -> 60)
 function parseVeloBandUpper(band: string): number {
   if (band.endsWith('+')) return parseInt(band.replace('+', ''), 10);
   if (band.startsWith('<')) return parseInt(band.replace('<', ''), 10);
@@ -30,29 +33,24 @@ function parseVeloBandUpper(band: string): number {
   return parseInt(parts[parts.length - 1], 10);
 }
 
-// Determine if a velocity band is "high" for its sport context
 function isHighVelocityBand(band: string, sport: string): boolean {
   const upper = parseVeloBandUpper(band);
   if (sport === 'softball') return upper >= 70 || band.endsWith('+');
-  // baseball
   return upper >= 100 || band === '110+';
 }
 
 async function processSession(supabase: any, userId: string, sessionId: string) {
-  // Fetch the session
   const { data: session, error: sessionError } = await supabase
     .from('performance_sessions').select('*')
     .eq('id', sessionId).eq('user_id', userId).single();
   if (sessionError || !session) throw new Error('Session not found');
 
-  // Fetch user MPI settings
   const { data: mpiSettings } = await supabase
     .from('athlete_mpi_settings').select('*')
     .eq('user_id', userId).maybeSingle();
 
   const sport = mpiSettings?.sport || session.sport || 'baseball';
 
-  // Calculate composite indexes from drill blocks
   const drillBlocks = session.drill_blocks || [];
   let totalExecution = 0, totalReps = 0, intentTagged = 0;
 
@@ -76,7 +74,7 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   const decisionMultiplier = isGame ? 1.18 : isRehab ? 0.3 : 1.0;
   const volumeMultiplier = isGame ? 0.7 : isRehab ? 0.3 : 1.0;
 
-  // ── Micro-layer data aggregation (Block 3) ──
+  // ── Micro-layer data aggregation ──
   const rawMicroReps = Array.isArray(session.micro_layer_data) ? session.micro_layer_data : [];
   const microReps = rawMicroReps.map(validateMicroRep);
 
@@ -106,21 +104,105 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   const throwAccGrades = microReps.filter((r: any) => r.throw_accuracy).map((r: any) => r.throw_accuracy);
   const avgThrowAcc = throwAccGrades.length > 0 ? throwAccGrades.reduce((a: number, b: number) => a + b, 0) / throwAccGrades.length : null;
 
-  // BQI: blend drill grade with micro data
+  // ── NEW: 11 micro-layer field aggregation (Phase 2) ──
+  // spin_direction -> BQI modifier
+  const spinDirs = microReps.filter((r: any) => r.spin_direction).map((r: any) => r.spin_direction);
+  let spinDirectionMod = 0;
+  if (spinDirs.length > 0) {
+    const spinMap: Record<string, number> = { backspin: 3, sidespin: 1, topspin: -2 };
+    spinDirectionMod = spinDirs.reduce((sum: number, sd: string) => sum + (spinMap[sd] ?? 0), 0) / spinDirs.length;
+  }
+
+  // throw_spin_quality -> FQI modifier
+  const throwSpins = microReps.filter((r: any) => r.throw_spin_quality).map((r: any) => r.throw_spin_quality);
+  let throwSpinMod = 0;
+  if (throwSpins.length > 0) {
+    const tsMap: Record<string, number> = { carry: 5, tail: 2, cut: 2, neutral: 0 };
+    throwSpinMod = throwSpins.reduce((sum: number, ts: string) => sum + (tsMap[ts] ?? 0), 0) / throwSpins.length;
+  }
+
+  // footwork_grade -> FQI sub-weight (20-80 scale)
+  const footworkGrades = microReps.filter((r: any) => r.footwork_grade != null).map((r: any) => r.footwork_grade);
+  const avgFootworkGrade = footworkGrades.length > 0 ? footworkGrades.reduce((a: number, b: number) => a + b, 0) / footworkGrades.length : null;
+
+  // exchange_time_band -> FQI modifier
+  const exchangeTimes = microReps.filter((r: any) => r.exchange_time_band).map((r: any) => r.exchange_time_band);
+  let exchangeTimeMod = 0;
+  if (exchangeTimes.length > 0) {
+    const etMap: Record<string, number> = { fast: 5, average: 0, slow: -5 };
+    exchangeTimeMod = exchangeTimes.reduce((sum: number, et: string) => sum + (etMap[et] ?? 0), 0) / exchangeTimes.length;
+  }
+
+  // clean_field_pct -> FQI consistency modifier (direct from drill blocks)
+  const cleanFieldPcts = drillBlocks.filter((b: any) => b.clean_field_pct != null).map((b: any) => b.clean_field_pct);
+  const avgCleanFieldPct = cleanFieldPcts.length > 0 ? cleanFieldPcts.reduce((a: number, b: number) => a + b, 0) / cleanFieldPcts.length : null;
+
+  // whiff_pct -> BQI penalty
+  const whiffPcts = drillBlocks.filter((b: any) => b.whiff_pct != null).map((b: any) => b.whiff_pct);
+  const avgWhiffPct = whiffPcts.length > 0 ? whiffPcts.reduce((a: number, b: number) => a + b, 0) / whiffPcts.length : null;
+
+  // chase_pct -> Decision penalty
+  const chasePcts = drillBlocks.filter((b: any) => b.chase_pct != null).map((b: any) => b.chase_pct);
+  const avgChasePct = chasePcts.length > 0 ? chasePcts.reduce((a: number, b: number) => a + b, 0) / chasePcts.length : null;
+
+  // in_zone_contact_pct -> BQI bonus
+  const izContactPcts = drillBlocks.filter((b: any) => b.in_zone_contact_pct != null).map((b: any) => b.in_zone_contact_pct);
+  const avgIzContactPct = izContactPcts.length > 0 ? izContactPcts.reduce((a: number, b: number) => a + b, 0) / izContactPcts.length : null;
+
+  // zone_pct -> PEI command precision
+  const zonePcts = drillBlocks.filter((b: any) => b.zone_pct != null).map((b: any) => b.zone_pct);
+  const avgZonePct = zonePcts.length > 0 ? zonePcts.reduce((a: number, b: number) => a + b, 0) / zonePcts.length : null;
+
+  // pitch_whiff_pct -> PEI effectiveness
+  const pitchWhiffPcts = drillBlocks.filter((b: any) => b.pitch_whiff_pct != null).map((b: any) => b.pitch_whiff_pct);
+  const avgPitchWhiffPct = pitchWhiffPcts.length > 0 ? pitchWhiffPcts.reduce((a: number, b: number) => a + b, 0) / pitchWhiffPcts.length : null;
+
+  // pitch_chase_pct -> PEI deception
+  const pitchChasePcts = drillBlocks.filter((b: any) => b.pitch_chase_pct != null).map((b: any) => b.pitch_chase_pct);
+  const avgPitchChasePct = pitchChasePcts.length > 0 ? pitchChasePcts.reduce((a: number, b: number) => a + b, 0) / pitchChasePcts.length : null;
+
+  // ── BQI: blend drill grade with micro data ──
   let bqiRaw = normalizedScore * competitiveMultiplier;
   if (avgExecScore !== null) bqiRaw = bqiRaw * 0.7 + avgExecScore * 0.3;
   if (barrelPct !== null) bqiRaw += barrelPct * 0.1;
+  if (spinDirectionMod !== 0) bqiRaw += spinDirectionMod;        // Phase 2: spin_direction
+  if (avgWhiffPct !== null) bqiRaw -= avgWhiffPct * 0.1;         // Phase 2: whiff_pct penalty
+  if (avgIzContactPct !== null) bqiRaw += avgIzContactPct * 0.1; // Phase 2: in_zone_contact bonus
   bqiRaw *= velocityDifficultyMult;
 
-  // FQI: blend with throw accuracy
+  // ── FQI: blend with throw accuracy + Phase 2 fields ──
   let fqiRaw = normalizedScore * 0.9;
-  if (avgThrowAcc !== null) fqiRaw = fqiRaw * 0.6 + ((avgThrowAcc - 20) / 60) * 100 * 0.4;
+  // Existing: throw_accuracy at 40%
+  if (avgThrowAcc !== null) {
+    const normalizedThrowAcc = ((avgThrowAcc - 20) / 60) * 100;
+    // Phase 2: footwork_grade at 20%, clean_field_pct at 15%, throw_accuracy at 40%, base at 25%
+    let fqiBase = normalizedScore * 0.25;
+    fqiBase += normalizedThrowAcc * 0.40;
+    if (avgFootworkGrade !== null) fqiBase += ((avgFootworkGrade - 20) / 60) * 100 * 0.20;
+    else fqiBase += normalizedScore * 0.20;
+    if (avgCleanFieldPct !== null) fqiBase += avgCleanFieldPct * 0.15;
+    else fqiBase += normalizedScore * 0.15;
+    fqiRaw = fqiBase;
+  } else {
+    // No throw_accuracy: use footwork/clean_field if available
+    if (avgFootworkGrade !== null) fqiRaw = fqiRaw * 0.8 + ((avgFootworkGrade - 20) / 60) * 100 * 0.2;
+    if (avgCleanFieldPct !== null) fqiRaw = fqiRaw * 0.85 + avgCleanFieldPct * 0.15;
+  }
+  if (throwSpinMod !== 0) fqiRaw += throwSpinMod;          // Phase 2: throw_spin_quality
+  if (exchangeTimeMod !== 0) fqiRaw += exchangeTimeMod;    // Phase 2: exchange_time_band
 
-  // PEI: blend with command grade
+  // ── PEI: blend with command grade + Phase 2 fields ──
   let peiRaw = normalizedScore * 1.05;
   if (avgCommandGrade !== null) peiRaw = peiRaw * 0.6 + ((avgCommandGrade - 20) / 60) * 100 * 0.4;
+  if (avgZonePct !== null) peiRaw += avgZonePct * 0.1;              // Phase 2: zone_pct
+  if (avgPitchWhiffPct !== null) peiRaw += avgPitchWhiffPct * 0.08; // Phase 2: pitch_whiff_pct
+  if (avgPitchChasePct !== null) peiRaw += avgPitchChasePct * 0.05; // Phase 2: pitch_chase_pct
 
-  // BP distance power trend (Block 12)
+  // ── Decision: apply chase_pct penalty ──
+  let decisionRaw = normalizedScore * decisionMultiplier;
+  if (avgChasePct !== null) decisionRaw -= avgChasePct * 0.15; // Phase 2: chase_pct penalty
+
+  // BP distance power trend
   const distanceReps = microReps.filter((r: any) => r.bp_distance_ft);
   let bpPowerTrend: string | null = null;
   if (distanceReps.length >= 5) {
@@ -141,10 +223,10 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   }
 
   const compositeIndexes: Record<string, any> = {
-    bqi: Math.min(100, bqiRaw),
-    fqi: Math.min(100, fqiRaw),
-    pei: Math.min(100, peiRaw),
-    decision: Math.min(100, normalizedScore * decisionMultiplier),
+    bqi: Math.min(100, Math.max(0, bqiRaw)),
+    fqi: Math.min(100, Math.max(0, fqiRaw)),
+    pei: Math.min(100, Math.max(0, peiRaw)),
+    decision: Math.min(100, Math.max(0, decisionRaw)),
     competitive_execution: Math.min(100, normalizedScore * competitiveMultiplier),
     volume_adjusted: totalReps * volumeMultiplier,
     // Micro aggregates for downstream analytics
@@ -154,11 +236,17 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     velocity_difficulty_mult: velocityDifficultyMult,
     bp_power_trend: bpPowerTrend,
     pro_readiness_velocity: proReadinessVelocity,
+    // Phase 2: store micro aggregates for roadmap gates
+    avg_whiff_pct: avgWhiffPct,
+    avg_chase_pct: avgChasePct,
+    avg_iz_contact_pct: avgIzContactPct,
+    avg_zone_pct: avgZonePct,
+    avg_footwork_grade: avgFootworkGrade,
+    avg_clean_field_pct: avgCleanFieldPct,
   };
 
   const effectiveGrade = session.coach_grade ?? session.player_grade ?? avgExecution;
 
-  // Update session
   const { error: updateError } = await supabase
     .from('performance_sessions').update({
       composite_indexes: compositeIndexes,
@@ -318,7 +406,6 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     }
   }
 
-  // Insert governance flags
   if (flags.length > 0) {
     await supabase.from('governance_flags').insert(flags);
   }
@@ -345,7 +432,6 @@ serve(async (req) => {
     const body = await req.json();
     const { session_id, retroactive, date } = body;
 
-    // ── Block 2: Retroactive recalculation path ──
     if (retroactive && date && !session_id) {
       const { data: dateSessions } = await supabase
         .from('performance_sessions').select('id')

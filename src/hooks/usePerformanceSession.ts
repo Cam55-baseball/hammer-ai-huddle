@@ -68,6 +68,14 @@ export function usePerformanceSession() {
     micro_layer_data?: any;
   }) => {
     if (!user) throw new Error('Not authenticated');
+
+    // Section 2: 7-day retroactive validation
+    const daysDiff = Math.floor((Date.now() - new Date(data.session_date).getTime()) / 86400000);
+    if (daysDiff > 7) {
+      toast({ title: 'Too far back', description: 'Sessions can only be logged up to 7 days in the past.', variant: 'destructive' });
+      throw new Error('Retroactive limit exceeded');
+    }
+
     setSaving(true);
     try {
       const { data: session, error } = await supabase
@@ -95,18 +103,36 @@ export function usePerformanceSession() {
 
       if (error) throw error;
 
-      // Auto-write daily log entry with CNS load
+      // Section 4: Smart daily log write — preserve manual day_status
+      const isGame = ['game', 'live_scrimmage'].includes(data.session_type);
       const cnsLoad = data.drill_blocks.reduce((sum: number, db: DrillBlock) => {
         const baseLoad = db.volume * (db.execution_grade / 80) * 2;
         return sum + baseLoad;
       }, 0);
-      await supabase.from('athlete_daily_log').upsert({
-        user_id: user.id,
-        entry_date: data.session_date,
-        day_status: ['game', 'live_scrimmage'].includes(data.session_type) ? 'game_only' : 'full_training',
-        game_logged: ['game', 'live_scrimmage'].includes(data.session_type),
-        cns_load_actual: Math.round(cnsLoad),
-      }, { onConflict: 'user_id,entry_date' } as any);
+
+      const { data: existingLog } = await supabase
+        .from('athlete_daily_log')
+        .select('id, game_logged')
+        .eq('user_id', user.id)
+        .eq('entry_date', data.session_date)
+        .maybeSingle();
+
+      if (existingLog) {
+        // Only update CNS load + game_logged, preserve manual day_status
+        await supabase.from('athlete_daily_log').update({
+          cns_load_actual: Math.round(cnsLoad),
+          game_logged: isGame || existingLog.game_logged,
+        }).eq('id', existingLog.id);
+      } else {
+        // No manual entry exists, create with auto day_status
+        await supabase.from('athlete_daily_log').insert({
+          user_id: user.id,
+          entry_date: data.session_date,
+          day_status: isGame ? 'game_only' : 'full_training',
+          game_logged: isGame,
+          cns_load_actual: Math.round(cnsLoad),
+        });
+      }
 
       // Overload detection
       const { data: todaySessions } = await supabase
