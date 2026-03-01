@@ -57,7 +57,6 @@ function getReleasePenalty(count: number): number {
   return releasePenalties.find(r => r.n === count)?.pct ?? 30;
 }
 
-// Tiered pro probability
 const tierThresholds = [
   { minS: 80, maxS: 100, minP: 75, maxP: 99 },
   { minS: 65, maxS: 79.99, minP: 45, maxP: 74 },
@@ -107,6 +106,20 @@ function stdDev(arr: number[]): number {
   return Math.sqrt(sq);
 }
 
+// Parse numeric upper bound from velocity band for sport-relative comparison
+function parseVeloBandUpper(band: string): number {
+  if (band.endsWith('+')) return parseInt(band.replace('+', ''), 10);
+  if (band.startsWith('<')) return parseInt(band.replace('<', ''), 10);
+  const parts = band.split('-');
+  return parseInt(parts[parts.length - 1], 10);
+}
+
+function isHighVelocityBand(band: string, sport: string): boolean {
+  const upper = parseVeloBandUpper(band);
+  if (sport === 'softball') return upper >= 70 || band.endsWith('+');
+  return upper >= 100 || band === '110+';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -135,7 +148,6 @@ serve(async (req) => {
         .select('*').eq('sport', sport).eq('admin_ranking_excluded', false);
       if (!athletes || athletes.length === 0) continue;
 
-      // Batch-fetch professional statuses & verified profiles
       const userIds = athletes.map(a => a.user_id);
       const { data: proStatuses } = await supabase.from('athlete_professional_status')
         .select('*').in('user_id', userIds).eq('sport', sport);
@@ -149,7 +161,6 @@ serve(async (req) => {
         verifiedMap.get(vp.user_id)!.push(vp);
       }
 
-      // Batch-fetch scout evaluations
       const { data: scoutEvals } = await supabase.from('scout_evaluations')
         .select('*').in('athlete_id', userIds)
         .order('created_at', { ascending: false });
@@ -166,40 +177,44 @@ serve(async (req) => {
         gamePracticeRatio: number | null; deltaMaturity: number | null;
         fatigueCorrFlag: boolean; hofActive: boolean; hofProb: number | null;
         proProbability: number; proProbCapped: boolean;
+        consecutiveHeavy: number;
       }> = [];
 
       for (const athlete of athletes) {
         const uid = athlete.user_id;
 
-        // Fetch 90-day sessions
         const { data: sessions } = await supabase.from('performance_sessions')
           .select('composite_indexes, session_type, effective_grade, player_grade, coach_grade, fatigue_state_at_session')
           .eq('user_id', uid).eq('sport', sport).is('deleted_at', null)
           .gte('session_date', new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]);
         if (!sessions || sessions.length === 0) continue;
 
-        // ── Raw composite averages ──
-        let totalBqi = 0, totalFqi = 0, totalPei = 0, totalDecision = 0, totalCompetitive = 0;
+        // ── Block 9: Game-weighted composite averages (1.5x for game sessions) ──
+        let totalWeight = 0;
+        let wBqi = 0, wFqi = 0, wPei = 0, wDecision = 0, wCompetitive = 0;
         for (const s of sessions) {
           const ix = s.composite_indexes || {};
-          totalBqi += ix.bqi || 0; totalFqi += ix.fqi || 0; totalPei += ix.pei || 0;
-          totalDecision += ix.decision || 0; totalCompetitive += ix.competitive_execution || 0;
+          const isGameSession = ['game', 'live_scrimmage'].includes(s.session_type);
+          const weight = isGameSession ? 1.5 : 1.0;
+          wBqi += (ix.bqi || 0) * weight;
+          wFqi += (ix.fqi || 0) * weight;
+          wPei += (ix.pei || 0) * weight;
+          wDecision += (ix.decision || 0) * weight;
+          wCompetitive += (ix.competitive_execution || 0) * weight;
+          totalWeight += weight;
         }
         const count = sessions.length;
         const composites = {
-          bqi: totalBqi / count, fqi: totalFqi / count, pei: totalPei / count,
-          decision: totalDecision / count, competitive: totalCompetitive / count,
+          bqi: wBqi / totalWeight, fqi: wFqi / totalWeight, pei: wPei / totalWeight,
+          decision: wDecision / totalWeight, competitive: wCompetitive / totalWeight,
         };
 
-        // Raw score = weighted composite
         const rawScore = composites.bqi * 0.25 + composites.fqi * 0.15 + composites.pei * 0.20 +
           composites.decision * 0.20 + composites.competitive * 0.20;
 
-        // ── Tier multiplier ──
         const tierMult = tierMultipliers[athlete.league_tier] || 1.0;
         let adjusted = rawScore * tierMult;
 
-        // ── Age curve ──
         let age: number | null = null;
         if (athlete.date_of_birth) {
           const dob = new Date(athlete.date_of_birth);
@@ -207,11 +222,9 @@ serve(async (req) => {
           adjusted *= getAgeMult(sport, age);
         }
 
-        // ── Position weight ──
         const posWeight = positionWeights[(athlete.primary_position || '').toUpperCase()] ?? 1.0;
         adjusted *= posWeight;
 
-        // ── Verified stat boost (scaled by confidence_weight) ──
         let verifiedBoostTotal = 0;
         const vps = verifiedMap.get(uid) ?? [];
         for (const vp of vps) {
@@ -223,7 +236,6 @@ serve(async (req) => {
         }
         adjusted += verifiedBoostTotal;
 
-        // ── Contract status modifier ──
         const proStatus = proMap.get(uid);
         let contractMod = 1.0;
         if (proStatus) {
@@ -231,9 +243,8 @@ serve(async (req) => {
           if (cs === 'free_agent') contractMod = 0.95;
           else if (cs === 'released') contractMod = 1.0 - getReleasePenalty(proStatus.release_count || 0) / 100;
           else if (cs === 'injured_list') contractMod = 0.9;
-          else if (cs === 'retired') contractMod = 0; // freeze
+          else if (cs === 'retired') contractMod = 0;
 
-          // Auto-manage roster_verified on release/re-sign
           if (cs === 'released' && proStatus.roster_verified === true) {
             await supabase.from('athlete_professional_status')
               .update({ roster_verified: false })
@@ -248,29 +259,21 @@ serve(async (req) => {
           }
         }
         if (contractMod > 0) adjusted *= contractMod;
-        // Retired: truly freeze — fetch last MPI and use that score
         if (contractMod === 0) {
           const { data: lastMpi } = await supabase.from('mpi_scores')
             .select('adjusted_global_score')
             .eq('user_id', uid).eq('sport', sport)
             .order('calculation_date', { ascending: false })
             .limit(1).maybeSingle();
-          if (lastMpi) {
-            // Skip this athlete entirely — MPI frozen
-            continue;
-          }
-          // No previous MPI, let first score through
+          if (lastMpi) continue;
         }
 
-        // ── Scout evaluation blending ──
         const scoutGrades = scoutMap.get(uid);
         if (scoutGrades && scoutGrades.length > 0) {
           const avgScout = scoutGrades.reduce((a, b) => a + b, 0) / scoutGrades.length;
-          // Blend: 80% data-driven, 20% scout
           adjusted = adjusted * 0.8 + avgScout * 0.2;
         }
 
-        // ── Integrity score with rebuild ──
         const { data: flags } = await supabase.from('governance_flags')
           .select('flag_type, severity').eq('user_id', uid).eq('status', 'pending');
         let integrityScore = 100;
@@ -281,30 +284,25 @@ serve(async (req) => {
             else integrityScore -= 2;
           }
         }
-        // Rebuild: +0.5 per verified session (has coach grade)
         const verifiedSessionCount = sessions.filter(s => s.coach_grade != null).length;
         integrityScore += verifiedSessionCount * 0.5;
         integrityScore = Math.max(0, Math.min(100, integrityScore));
 
-        // ── Consistency dampening + injury hold ──
         const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
         const { data: dailyLogs } = await supabase.from('athlete_daily_log')
-          .select('entry_date, day_status, injury_mode')
+          .select('entry_date, day_status, injury_mode, cns_load_actual')
           .eq('user_id', uid)
           .gte('entry_date', thirtyDaysAgo);
 
         let dampingMultiplier = 1.0;
         let injuryHoldActive = false;
-        
-        // Build set of logged dates
-        const loggedDates = new Set((dailyLogs ?? []).map(l => l.entry_date));
-        
+
         if (dailyLogs && dailyLogs.length > 0) {
           const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
           injuryHoldActive = dailyLogs.some(l => l.injury_mode === true && l.entry_date >= sevenDaysAgo);
         }
 
-        // Count absent days (no row at all) + explicit missed days
+        // Count absent days
         const now = new Date();
         let absent7 = 0, absent14 = 0;
         for (let i = 1; i <= 14; i++) {
@@ -319,7 +317,7 @@ serve(async (req) => {
         if (absent14 >= 4) dampingMultiplier = 0.85;
         else if (absent7 >= 2) dampingMultiplier = 0.95;
 
-        // Consistency recovery lift (count logged days in 30-day window)
+        // Consistency recovery lift
         let totalLoggedDays = 0;
         let injuryDays = 0;
         for (let i = 1; i <= 30; i++) {
@@ -335,23 +333,43 @@ serve(async (req) => {
         const consistencyScore = totalLoggedDays / Math.max(1, 30 - injuryDays) * 100;
         if (consistencyScore >= 80) dampingMultiplier = 1.0;
 
-        if (injuryHoldActive) continue; // Freeze MPI -- skip this athlete
+        // ── Block 4: Graduated overload dampening ──
+        let consecutiveHeavy = 0;
+        for (let i = 1; i <= 30; i++) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0];
+          const log = (dailyLogs ?? []).find(l => l.entry_date === dateStr);
+          if (log && ['full_training', 'game_only'].includes(log.day_status)) {
+            consecutiveHeavy++;
+          } else {
+            break;
+          }
+        }
+        if (consecutiveHeavy >= 28) dampingMultiplier = Math.min(dampingMultiplier, 0.80);
+        else if (consecutiveHeavy >= 21) dampingMultiplier = Math.min(dampingMultiplier, 0.85);
+        else if (consecutiveHeavy >= 14) dampingMultiplier = Math.min(dampingMultiplier, 0.90);
 
-        // Apply integrity + dampening
+        // CNS load average check
+        const cnsLogs = (dailyLogs ?? []).filter(l => l.cns_load_actual != null && l.entry_date >= new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]);
+        if (cnsLogs.length >= 5) {
+          const avgCNS = cnsLogs.reduce((s, l) => s + (l.cns_load_actual || 0), 0) / cnsLogs.length;
+          if (avgCNS > 80) dampingMultiplier = Math.min(dampingMultiplier, 0.90);
+        }
+
+        if (injuryHoldActive) continue;
+
         const finalScore = adjusted * (integrityScore / 100) * dampingMultiplier;
 
-        // ── Game-practice ratio ──
         const gameSessions = sessions.filter(s => ['game', 'live_scrimmage'].includes(s.session_type));
         const practiceSessions = sessions.filter(s => !['game', 'live_scrimmage'].includes(s.session_type));
         const gamePracticeRatio = practiceSessions.length > 0 ? gameSessions.length / practiceSessions.length : null;
 
-        // ── Delta maturity index ──
         const deltas = sessions
           .filter(s => s.player_grade != null && s.coach_grade != null)
           .map(s => (s.player_grade as number) - (s.coach_grade as number));
         const deltaMaturity = deltas.length >= 3 ? Math.round(stdDev(deltas) * 100) / 100 : null;
 
-        // ── Fatigue correlation flag ──
         let fatigueCorr = false;
         const fatigueSessions = sessions.filter(s => {
           const fs = s.fatigue_state_at_session as any;
@@ -362,19 +380,13 @@ serve(async (req) => {
           fatigueCorr = highGradeFatigue.length / fatigueSessions.length > 0.6;
         }
 
-        // ── Pro probability (tiered) ──
-        // Contract penalties are already applied to finalScore via contractMod (line 233).
-        // Do NOT apply again here — that would be double-penalizing.
         let proProbability = calcProProb(finalScore);
-        // Cap at 99% for non-verified MLB/AUSL
         const isVerifiedPro = proStatus?.roster_verified === true &&
           ['mlb', 'ausl'].includes(proStatus?.current_league?.toLowerCase() ?? '');
         if (!isVerifiedPro) proProbability = Math.min(99, proProbability);
         else proProbability = Math.min(100, proProbability);
         const proProbCapped = proProbability >= 99;
 
-        // ── HoF tracking ──
-        // Baseball: only MLB seasons count. Softball: MLB + AUSL both count.
         let hofActive = false;
         let hofProb: number | null = null;
         if (proStatus && proProbability >= 100) {
@@ -383,13 +395,11 @@ serve(async (req) => {
             : (proStatus.mlb_seasons_completed || 0) + (proStatus.ausl_seasons_completed || 0);
           if (totalProSeasons >= 5) {
             hofActive = true;
-            // HoF probability based on consistency + longevity
             const consistencyBonus = deltaMaturity != null && deltaMaturity < 5 ? 10 : 0;
             hofProb = Math.min(99, (totalProSeasons * 3) + (finalScore * 0.3) + consistencyBonus);
           }
         }
 
-        // ── Eligibility gates ──
         const gradedSessions = sessions.filter(s => s.player_grade && s.coach_grade);
         const hasCoach = !!athlete.primary_coach_id;
         const coachValidationMet = hasCoach ? gradedSessions.length >= count * 0.4 : true;
@@ -409,9 +419,8 @@ serve(async (req) => {
         scores.push({
           userId: uid, score: finalScore, sessionsCount: count, segment, integrityScore, composites,
           verifiedBoost: verifiedBoostTotal, contractMod: contractMod,
-          gamePracticeRatio: gamePracticeRatio, deltaMaturity: deltaMaturity,
-          fatigueCorrFlag: fatigueCorr, hofActive, hofProb,
-          proProbability, proProbCapped: proProbCapped,
+          gamePracticeRatio, deltaMaturity, fatigueCorrFlag: fatigueCorr,
+          hofActive, hofProb, proProbability, proProbCapped, consecutiveHeavy,
         });
       }
 
@@ -424,7 +433,6 @@ serve(async (req) => {
         const rank = i + 1;
         const percentile = totalPool > 1 ? ((totalPool - rank) / (totalPool - 1)) * 100 : 100;
 
-        // Trend
         const { data: prevMpi } = await supabase.from('mpi_scores')
           .select('adjusted_global_score').eq('user_id', s.userId).eq('sport', sport)
           .lt('calculation_date', today).order('calculation_date', { ascending: false })
@@ -458,19 +466,18 @@ serve(async (req) => {
 
       console.log(`[nightly-mpi] ${sport}: Ranked ${scores.length} eligible athletes`);
 
-      // ── Heat map snapshots (pitch_location + swing_chase + barrel_zone) ──
+      // ── Heat map snapshots ──
       for (const { userId } of scores) {
+        // Block 1: Add session_type to select
         const { data: recentSessions } = await supabase.from('performance_sessions')
-          .select('micro_layer_data, module, batting_side_used, throwing_hand_used')
+          .select('micro_layer_data, module, batting_side_used, throwing_hand_used, session_type')
           .eq('user_id', userId).eq('sport', sport).is('deleted_at', null)
           .gte('session_date', new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0])
           .not('micro_layer_data', 'is', null);
         if (!recentSessions || recentSessions.length === 0) continue;
 
-        // Helper: create grid of given size
         const makeGrid = (size: number) => Array.from({length: size}, () => Array(size).fill(0));
 
-        // Detect grid size from data (support 3x3 or 5x5)
         let detectedGridSize = 3;
         for (const sess of recentSessions) {
           const microData = Array.isArray(sess.micro_layer_data) ? sess.micro_layer_data : [];
@@ -483,8 +490,12 @@ serve(async (req) => {
         }
         const gs = detectedGridSize;
 
-        // All 8 map types
-        const mapTypes = ['pitch_location', 'swing_chase', 'barrel_zone', 'whiff_zone', 'command_heat', 'miss_tendency', 'throw_accuracy', 'error_location'];
+        // Block 13: 12 map types (8 original + 4 new)
+        const mapTypes = [
+          'pitch_location', 'swing_chase', 'barrel_zone', 'whiff_zone',
+          'command_heat', 'miss_tendency', 'throw_accuracy', 'error_location',
+          'velocity_performance', 'intent_performance', 'exit_direction', 'bp_distance_power',
+        ];
         const contextFilters = ['all', 'practice', 'game'] as const;
         type CtxMap = Record<string, { grid: number[][]; total: number }>;
         const ctxMaps: Record<string, CtxMap> = {};
@@ -493,12 +504,14 @@ serve(async (req) => {
           for (const mt of mapTypes) ctxMaps[ctx][mt] = { grid: makeGrid(gs), total: 0 };
         }
 
-        const practiceTypes = ['solo_practice', 'team_practice', 'bullpen', 'cage_session', 'lesson'];
+        const practiceTypes = ['solo_practice', 'team_practice', 'bullpen', 'cage_session', 'lesson', 'machine_bp', 'live_bp'];
         const gameTypes = ['game', 'live_scrimmage'];
 
         for (const sess of recentSessions) {
           const microData = Array.isArray(sess.micro_layer_data) ? sess.micro_layer_data : [];
-          const sessType = (sess as any).session_type || '';
+          const sessType = (sess as any).session_type;
+          // Block 1: Reject records with missing session_type
+          if (!sessType) continue;
           const ctxKey = gameTypes.includes(sessType) ? 'game' : practiceTypes.includes(sessType) ? 'practice' : 'practice';
 
           for (const rep of microData as any[]) {
@@ -523,26 +536,51 @@ serve(async (req) => {
                 ctxMaps[ctxKey].barrel_zone.grid[r][c]++; ctxMaps[ctxKey].barrel_zone.total++;
               }
 
-              // whiff_zone (miss by pitch location)
+              // whiff_zone
               if (rep.contact_quality === 'miss') {
                 ctxMaps.all.whiff_zone.grid[r][c]++; ctxMaps.all.whiff_zone.total++;
                 ctxMaps[ctxKey].whiff_zone.grid[r][c]++; ctxMaps[ctxKey].whiff_zone.total++;
               }
 
-              // command_heat (pitching: where pitch landed)
+              // command_heat
               if (rep.pitch_result && ['strike', 'out'].includes(rep.pitch_result)) {
                 ctxMaps.all.command_heat.grid[r][c]++; ctxMaps.all.command_heat.total++;
                 ctxMaps[ctxKey].command_heat.grid[r][c]++; ctxMaps[ctxKey].command_heat.total++;
               }
 
-              // miss_tendency (pitching: ball/miss zones)
+              // miss_tendency
               if (rep.pitch_result === 'ball') {
                 ctxMaps.all.miss_tendency.grid[r][c]++; ctxMaps.all.miss_tendency.total++;
                 ctxMaps[ctxKey].miss_tendency.grid[r][c]++; ctxMaps[ctxKey].miss_tendency.total++;
               }
+
+              // Block 13: velocity_performance — high-velocity success by zone (sport-relative)
+              if (rep.machine_velocity_band && isHighVelocityBand(rep.machine_velocity_band, sport) &&
+                  rep.contact_quality && ['barrel', 'hard'].includes(rep.contact_quality)) {
+                ctxMaps.all.velocity_performance.grid[r][c]++; ctxMaps.all.velocity_performance.total++;
+                ctxMaps[ctxKey].velocity_performance.grid[r][c]++; ctxMaps[ctxKey].velocity_performance.total++;
+              }
+
+              // Block 13: intent_performance — game_intent barrels by zone
+              if (rep.swing_intent === 'game_intent' && rep.contact_quality === 'barrel') {
+                ctxMaps.all.intent_performance.grid[r][c]++; ctxMaps.all.intent_performance.total++;
+                ctxMaps[ctxKey].intent_performance.grid[r][c]++; ctxMaps[ctxKey].intent_performance.total++;
+              }
+
+              // Block 13: exit_direction distribution by zone
+              if (rep.exit_direction) {
+                ctxMaps.all.exit_direction.grid[r][c]++; ctxMaps.all.exit_direction.total++;
+                ctxMaps[ctxKey].exit_direction.grid[r][c]++; ctxMaps[ctxKey].exit_direction.total++;
+              }
+
+              // Block 13: bp_distance_power — high-distance hits by zone
+              if (rep.bp_distance_ft && rep.bp_distance_ft > (sport === 'softball' ? 150 : 300)) {
+                ctxMaps.all.bp_distance_power.grid[r][c]++; ctxMaps.all.bp_distance_power.total++;
+                ctxMaps[ctxKey].bp_distance_power.grid[r][c]++; ctxMaps[ctxKey].bp_distance_power.total++;
+              }
             }
 
-            // throw_accuracy (fielding reps with throw_accuracy grade)
+            // throw_accuracy
             if (typeof rep.throw_accuracy === 'number' && loc) {
               const r = Math.min(gs - 1, Math.max(0, loc.row));
               const c = Math.min(gs - 1, Math.max(0, loc.col));
@@ -552,7 +590,7 @@ serve(async (req) => {
               ctxMaps[ctxKey].throw_accuracy.total++;
             }
 
-            // error_location (fielding errors)
+            // error_location
             if (rep.contact_quality === 'error' && loc) {
               const r = Math.min(gs - 1, Math.max(0, loc.row));
               const c = Math.min(gs - 1, Math.max(0, loc.col));
@@ -618,36 +656,75 @@ serve(async (req) => {
         }
       }
 
-      // ── Roadmap progress ──
+      // ── Roadmap progress (Block 10: micro-metric gates + overload freeze) ──
       const { data: milestones } = await supabase.from('roadmap_milestones').select('*').eq('sport', sport);
       if (milestones && milestones.length > 0) {
-        for (const { userId, sessionsCount, score, integrityScore } of scores) {
+        for (const s of scores) {
+          // Block 10: Freeze roadmap during overload
+          if (s.consecutiveHeavy >= 14) continue;
+
           const { data: mpiSettings } = await supabase.from('athlete_mpi_settings')
-            .select('streak_current').eq('user_id', userId).maybeSingle();
+            .select('streak_current').eq('user_id', s.userId).maybeSingle();
           const { data: prevMpi } = await supabase.from('mpi_scores')
-            .select('trend_direction').eq('user_id', userId).eq('sport', sport)
+            .select('trend_direction').eq('user_id', s.userId).eq('sport', sport)
             .eq('calculation_date', today).maybeSingle();
+
+          // Fetch latest composite_indexes for micro-metric gates
+          const { data: latestSession } = await supabase.from('performance_sessions')
+            .select('composite_indexes')
+            .eq('user_id', s.userId).eq('sport', sport).is('deleted_at', null)
+            .order('session_date', { ascending: false })
+            .limit(1).maybeSingle();
+          const latestIx = latestSession?.composite_indexes || {};
 
           for (const milestone of milestones) {
             const req = milestone.requirements || {};
             let met = false, progress = 0;
+
             if (req.min_sessions) {
-              progress = Math.min(100, (sessionsCount / req.min_sessions) * 100);
-              met = sessionsCount >= req.min_sessions;
+              progress = Math.min(100, (s.sessionsCount / req.min_sessions) * 100);
+              met = s.sessionsCount >= req.min_sessions;
             } else if (req.min_streak) {
               const streak = mpiSettings?.streak_current || 0;
               progress = Math.min(100, (streak / req.min_streak) * 100);
               met = streak >= req.min_streak;
             } else if (req.min_mpi) {
-              progress = Math.min(100, (score / req.min_mpi) * 100);
-              met = score >= req.min_mpi;
+              progress = Math.min(100, (s.score / req.min_mpi) * 100);
+              met = s.score >= req.min_mpi;
             } else if (req.trend) {
               met = prevMpi?.trend_direction === req.trend;
               progress = met ? 100 : 0;
             }
 
+            // Block 10: Micro-metric gates
+            if (req.min_barrel_pct) {
+              const avgBarrel = latestIx.barrel_pct ?? 0;
+              progress = Math.min(100, (avgBarrel / req.min_barrel_pct) * 100);
+              met = avgBarrel >= req.min_barrel_pct;
+            }
+            if (req.max_blind_zones) {
+              // Use blind zone count from latest heat map
+              const { data: heatSnap } = await supabase.from('heat_map_snapshots')
+                .select('blind_zones')
+                .eq('user_id', s.userId).eq('sport', sport).eq('context_filter', 'all')
+                .order('computed_at', { ascending: false }).limit(1).maybeSingle();
+              const blindZoneCount = Array.isArray(heatSnap?.blind_zones) ? heatSnap.blind_zones.length : 0;
+              met = blindZoneCount <= req.max_blind_zones;
+              progress = met ? 100 : Math.max(0, 100 - (blindZoneCount - req.max_blind_zones) * 20);
+            }
+            if (req.velocity_band_mastery) {
+              const velMult = latestIx.velocity_difficulty_mult ?? 1.0;
+              met = velMult >= req.velocity_band_mastery;
+              progress = Math.min(100, (velMult / req.velocity_band_mastery) * 100);
+            }
+            if (req.zone_power_minimum) {
+              const hardPct = latestIx.hard_contact_pct ?? 0;
+              met = hardPct >= req.zone_power_minimum;
+              progress = Math.min(100, (hardPct / req.zone_power_minimum) * 100);
+            }
+
             await supabase.from('athlete_roadmap_progress').upsert({
-              user_id: userId, milestone_id: milestone.id,
+              user_id: s.userId, milestone_id: milestone.id,
               status: met ? 'completed' : 'in_progress',
               progress_pct: Math.round(progress),
               completed_at: met ? new Date().toISOString() : null,

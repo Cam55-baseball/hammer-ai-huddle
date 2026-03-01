@@ -14,13 +14,13 @@ interface PitchingMicroInputProps {
   onCommandZoneChange: (val: { row: number; col: number }) => void;
 }
 
-const velocityBands = ['<60', '60-70', '70-80', '80-90', '90+'] as const;
+
 
 export function PitchingMicroInput({
   pitchType, velocityBand, spinRate, commandZone,
   onPitchTypeChange, onVelocityBandChange, onSpinRateChange, onCommandZoneChange,
 }: PitchingMicroInputProps) {
-  const { pitchTypes } = useSportConfig();
+  const { pitchTypes, pitchingVelocityBands } = useSportConfig();
 
   return (
     <div className="space-y-3">
@@ -42,8 +42,8 @@ export function PitchingMicroInput({
           <Select value={velocityBand} onValueChange={onVelocityBandChange}>
             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Velocity" /></SelectTrigger>
             <SelectContent>
-              {velocityBands.map(v => (
-                <SelectItem key={v} value={v}>{v} mph</SelectItem>
+              {pitchingVelocityBands.map(v => (
+                <SelectItem key={v.value} value={v.value}>{v.label} mph</SelectItem>
               ))}
             </SelectContent>
           </Select>

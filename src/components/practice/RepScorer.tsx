@@ -68,16 +68,27 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
   const [current, setCurrent] = useState<ScoredRep>({});
   const [advancedFields, setAdvancedFields] = useState<AdvancedFields>({});
   const [step, setStep] = useState(0);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchCount, setBatchCount] = useState(5);
 
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
 
+  const addReps = useCallback((merged: ScoredRep) => {
+    if (batchMode && batchCount > 1) {
+      const batch = Array.from({ length: batchCount }, () => ({ ...merged }));
+      onRepsChange([...reps, ...batch]);
+    } else {
+      onRepsChange([...reps, merged]);
+    }
+  }, [batchMode, batchCount, reps, onRepsChange]);
+
   const commitRep = useCallback(() => {
     const merged = { ...current, ...advancedFields };
-    onRepsChange([...reps, merged]);
+    addReps(merged);
     setCurrent({});
     setStep(0);
-  }, [current, advancedFields, reps, onRepsChange]);
+  }, [current, advancedFields, addReps]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
@@ -92,7 +103,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
       if (field === 'pitch_location' && step === 0) setStep(1);
       if (field === 'contact_quality' && step === 1) {
         if (value === 'miss') {
-          onRepsChange([...reps, { ...updated, ...advancedFields }]);
+          addReps({ ...updated, ...advancedFields });
           setCurrent({});
           setStep(0);
           return;
@@ -100,7 +111,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
         setStep(2);
       }
       if (field === 'exit_direction' && step === 2) {
-        onRepsChange([...reps, { ...updated, ...advancedFields }]);
+        addReps({ ...updated, ...advancedFields });
         setCurrent({});
         setStep(0);
         return;
@@ -110,7 +121,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
       if (field === 'pitch_type' && step === 0) setStep(1);
       if (field === 'pitch_location' && step === 1) setStep(2);
       if (field === 'pitch_result' && step === 2) {
-        onRepsChange([...reps, { ...updated, ...advancedFields }]);
+        addReps({ ...updated, ...advancedFields });
         setCurrent({});
         setStep(0);
         return;
@@ -155,6 +166,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-muted-foreground">
               Rep #{reps.length + 1}
+              {batchMode && <span className="text-primary ml-1">(×{batchCount})</span>}
             </p>
             {reps.length > 0 && (
               <Badge variant="outline" className="text-xs">
@@ -300,6 +312,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
             drillType={drillType}
             value={advancedFields}
             onChange={setAdvancedFields}
+            batchMode={batchMode}
+            batchCount={batchCount}
+            onBatchModeChange={setBatchMode}
+            onBatchCountChange={setBatchCount}
           />
 
           {/* Manual commit for edge cases */}

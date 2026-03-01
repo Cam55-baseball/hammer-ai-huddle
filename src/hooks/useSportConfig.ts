@@ -10,6 +10,7 @@ import { baseballPitchTypeWeights } from '@/data/baseball/pitchTypeWeights';
 import { baseballAgeCurves } from '@/data/baseball/ageCurves';
 import { baseballTierMultipliers } from '@/data/baseball/tierMultipliers';
 import { baseballProBaselines } from '@/data/baseball/probabilityBaselines';
+import { baseballMachineVelocityBands, baseballPitchingVelocityBands } from '@/data/baseball/velocityBands';
 
 // Softball data
 import { softballPitchTypes } from '@/data/softball/pitchTypes';
@@ -20,6 +21,7 @@ import { softballPitchTypeWeights } from '@/data/softball/pitchTypeWeights';
 import { softballAgeCurves } from '@/data/softball/ageCurves';
 import { softballTierMultipliers } from '@/data/softball/tierMultipliers';
 import { softballProBaselines } from '@/data/softball/probabilityBaselines';
+import { softballMachineVelocityBands, softballPitchingVelocityBands } from '@/data/softball/velocityBands';
 
 export function useSportConfig() {
   const { sport } = useSportTheme();
@@ -37,6 +39,9 @@ export function useSportConfig() {
       ageCurves: isSoftball ? softballAgeCurves : baseballAgeCurves,
       tierMultipliers: isSoftball ? softballTierMultipliers : baseballTierMultipliers,
       probabilityBaselines: isSoftball ? softballProBaselines : baseballProBaselines,
+      machineVelocityBands: isSoftball ? softballMachineVelocityBands : baseballMachineVelocityBands,
+      pitchingVelocityBands: isSoftball ? softballPitchingVelocityBands : baseballPitchingVelocityBands,
+      bpDistanceRange: isSoftball ? { min: 30, max: 250 } : { min: 30, max: 450 },
     };
   }, [sport]);
 }

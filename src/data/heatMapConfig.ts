@@ -15,6 +15,11 @@ export const heatMapTypes: HeatMapTypeConfig[] = [
   { id: 'pitch_command', label: 'Pitch Command', gridSize: { rows: 3, cols: 3 }, colorScale: ['#f0fdfa', '#14b8a6', '#134e4a'], blindZoneThreshold: 5 },
   { id: 'miss_cluster', label: 'Miss Cluster', gridSize: { rows: 5, cols: 5 }, colorScale: ['#fdf2f8', '#ec4899', '#831843'], blindZoneThreshold: 2 },
   { id: 'situational_performance', label: 'Situational', gridSize: { rows: 4, cols: 4 }, colorScale: ['#fffbeb', '#f97316', '#7c2d12'], blindZoneThreshold: 3 },
+  // New sport-aware maps
+  { id: 'velocity_performance', label: 'Velocity Performance', gridSize: { rows: 3, cols: 3 }, colorScale: ['#fef2f2', '#ef4444', '#7f1d1d'], blindZoneThreshold: 5 },
+  { id: 'intent_performance', label: 'Intent Success', gridSize: { rows: 3, cols: 3 }, colorScale: ['#f0fdf4', '#22c55e', '#14532d'], blindZoneThreshold: 5 },
+  { id: 'exit_direction', label: 'Exit Direction', gridSize: { rows: 3, cols: 3 }, colorScale: ['#faf5ff', '#a855f7', '#581c87'], blindZoneThreshold: 5 },
+  { id: 'bp_distance_power', label: 'BP Distance Power', gridSize: { rows: 3, cols: 3 }, colorScale: ['#fff7ed', '#f97316', '#9a3412'], blindZoneThreshold: 5 },
 ];
 
 export const timeWindows = ['7d', '30d', 'season', 'career'] as const;
