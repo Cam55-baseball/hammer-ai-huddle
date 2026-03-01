@@ -389,6 +389,40 @@ export function CustomActivityDetailDialog({
               )}
             </div>
 
+            {/* Quick Complete empty state — no sub-tasks to track */}
+            {totalCheckableCount === 0 && (
+              <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/40 border border-border/50 text-center space-y-4">
+                <div 
+                  className="p-3 rounded-full"
+                  style={{ backgroundColor: `${customColor}20` }}
+                >
+                  <Check className="h-6 w-6" style={{ color: customColor }} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-foreground">
+                    {t('customActivity.detail.noSubTasks', 'No sub-tasks to track')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('customActivity.detail.tapComplete', 'Tap the button below when you\'re done')}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    onComplete();
+                    onOpenChange(false);
+                  }}
+                  className="w-full gap-2 font-bold"
+                  style={{ backgroundColor: customColor }}
+                >
+                  <Check className="h-4 w-4" />
+                  {task.completed 
+                    ? t('customActivity.detail.markedComplete') 
+                    : t('customActivity.detail.markComplete')
+                  }
+                </Button>
+              </div>
+            )}
+
             {/* Traditional Exercises Section */}
             {template.exercises && Array.isArray(template.exercises) && (template.exercises as Exercise[]).length > 0 && (
               <div className="space-y-2">

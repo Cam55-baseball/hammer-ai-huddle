@@ -169,6 +169,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         display_on_game_plan: data.display_on_game_plan ?? true,
         display_days: data.display_days as unknown as number[],
         display_time: data.display_time,
+        specific_dates: data.specific_dates || null,
       };
 
       console.log('[useCustomActivities] Creating template with data:', {
@@ -272,6 +273,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       if (data.display_on_game_plan !== undefined) updateData.display_on_game_plan = data.display_on_game_plan;
       if (data.display_days !== undefined) updateData.display_days = data.display_days;
       if (data.display_time !== undefined) updateData.display_time = data.display_time;
+      if (data.specific_dates !== undefined) updateData.specific_dates = data.specific_dates;
 
       console.log('[useCustomActivities] Updating template:', id, updateData);
       
