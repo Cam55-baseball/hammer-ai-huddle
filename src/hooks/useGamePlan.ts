@@ -493,7 +493,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .from('custom_activity_templates')
         .select('*')
         .eq('user_id', user.id)
-        .eq('sport', selectedSport);
+        .eq('sport', selectedSport)
+        .is('deleted_at', null);
 
       // Fetch today's logs
       const { data: logsData } = await supabase
@@ -536,6 +537,12 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         // If explicitly skipped for today via calendar settings, only show if already logged
         if (isSkippedToday && !todayLog) {
           return; // Skip this activity entirely
+        }
+
+        // Check specific_dates scheduling — if set, only show on those dates
+        const specificDates = (template.specific_dates as string[] | null) || [];
+        if (specificDates.length > 0) {
+          if (!specificDates.includes(today) && !todayLog) return;
         }
         
         // Fallback to template settings if no skip record exists
@@ -789,6 +796,12 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       const todayLog = logs.find(l => l.template_id === template.id);
 
       if (isSkippedToday && !todayLog) return;
+
+      // Check specific_dates scheduling
+      const specificDates = (template.specific_dates as string[] | null) || [];
+      if (specificDates.length > 0) {
+        if (!specificDates.includes(today) && !todayLog) return;
+      }
 
       const scheduledDays = template.recurring_active
         ? (template.recurring_days as number[]) || []
