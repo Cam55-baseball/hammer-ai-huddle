@@ -283,10 +283,9 @@ serve(async (req) => {
         }
 
         // ── Pro probability (tiered) ──
+        // Contract penalties are already applied to finalScore via contractMod (line 233).
+        // Do NOT apply again here — that would be double-penalizing.
         let proProbability = calcProProb(finalScore);
-        // Apply contract penalties
-        if (proStatus?.contract_status === 'free_agent') proProbability *= 0.95;
-        if (proStatus?.contract_status === 'released') proProbability *= (1 - getReleasePenalty(proStatus.release_count || 0) / 100);
         // Cap at 99% for non-verified MLB/AUSL
         const isVerifiedPro = proStatus?.roster_verified === true &&
           ['mlb', 'ausl'].includes(proStatus?.current_league?.toLowerCase() ?? '');
@@ -295,10 +294,13 @@ serve(async (req) => {
         const proProbCapped = proProbability >= 99;
 
         // ── HoF tracking ──
+        // Baseball: only MLB seasons count. Softball: MLB + AUSL both count.
         let hofActive = false;
         let hofProb: number | null = null;
         if (proStatus && proProbability >= 100) {
-          const totalProSeasons = (proStatus.mlb_seasons_completed || 0) + (proStatus.ausl_seasons_completed || 0);
+          const totalProSeasons = sport === 'baseball'
+            ? (proStatus.mlb_seasons_completed || 0)
+            : (proStatus.mlb_seasons_completed || 0) + (proStatus.ausl_seasons_completed || 0);
           if (totalProSeasons >= 5) {
             hofActive = true;
             // HoF probability based on consistency + longevity

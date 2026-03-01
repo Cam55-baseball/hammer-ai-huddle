@@ -14,6 +14,34 @@ export interface DrillBlock {
   notes?: string;
   batter_side?: string;
   pitcher_hand?: string;
+  // Hitting micro fields
+  bp_distance_ft?: number;
+  machine_velocity_band?: string; // '40-50' | '50-60' | '60-70' | '70-80' | '80+'
+  batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel';
+  spin_direction?: 'topspin' | 'backspin' | 'sidespin';
+  swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
+  goal_of_rep?: string;
+  actual_outcome?: string;
+  execution_score?: number; // 1-10 per rep
+  hard_contact_pct?: number;
+  whiff_pct?: number;
+  chase_pct?: number;
+  in_zone_contact_pct?: number;
+  // Fielding micro fields
+  throw_included?: boolean;
+  footwork_grade?: number; // 20-80
+  exchange_time_band?: 'fast' | 'average' | 'slow';
+  throw_accuracy?: number; // 20-80
+  throw_spin_quality?: 'carry' | 'tail' | 'cut' | 'neutral';
+  clean_field_pct?: number;
+  // Pitching micro fields
+  velocity_band?: string;
+  spin_rate_band?: string;
+  spin_efficiency_pct?: number;
+  pitch_command_grade?: number; // 20-80
+  zone_pct?: number;
+  pitch_whiff_pct?: number;
+  pitch_chase_pct?: number;
 }
 
 export function usePerformanceSession() {
