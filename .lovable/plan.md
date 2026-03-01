@@ -1,191 +1,283 @@
 
 
-# Integrated Full System Correction + Sport-Aware Velocity Bands
+# Phase 1 Final Production Lock -- Full Audit + Verified Stat System Rebuild
 
-This plan merges the approved 13-block Full System Correction Spec with proper sport-separated velocity ranges. Baseball goes up to 110+. Softball gets league-equivalent bands matching its actual velocity ceiling (~75 mph elite).
-
----
-
-## Velocity Band Definitions
-
-### Baseball
-**Machine velocity bands (hitting/machine BP):**
-40-50, 50-60, 60-70, 70-80, 80-90, 90-100, 100-110, 110+
-
-**Pitching velocity bands:**
-<60, 60-70, 70-80, 80-90, 90-100, 100-110, 110+
-
-### Softball
-**Machine velocity bands (hitting/machine BP):**
-30-35, 35-40, 40-45, 45-50, 50-55, 55-60, 60-65, 65-70, 70-75, 75+
-
-**Pitching velocity bands:**
-<40, 40-45, 45-50, 50-55, 55-60, 60-65, 65-70, 70-75, 75+
+This plan addresses every remaining gap identified across all previous audits, completes the Verified Stat Link system with anti-gaming protections, and confirms sport-specific branching is correct end-to-end.
 
 ---
 
-## Architecture Change: Sport-Aware Velocity Data
+## AUDIT RESULTS: Current State
 
-### New data files for velocity bands
+### Already Operational (No Changes Needed)
+- MiLB capped at 99% (nightly L386)
+- MLB-only seasons for baseball HoF (nightly L393-394)
+- AUSL+MLB seasons for softball HoF (nightly L395)
+- HoF requires 5 seasons at 100% (nightly L396)
+- Release drops probability and auto-unsets roster_verified (nightly L248-253)
+- Re-sign restores roster_verified (nightly L254-258)
+- Retired player freeze via contractMod=0 with last MPI lookup (nightly L262-269)
+- Game sessions weighted 1.5x in composites (nightly L192-210)
+- session_type included in heat map query (nightly L473)
+- Practice vs game separation enforced with missing session_type rejection (nightly L514)
+- 12 heat map types including velocity/intent/exit/bp_distance (nightly L494-498)
+- 5x5 grid supported end-to-end (nightly L481-491)
+- Blind zone detection feeds roadmap blocking (nightly L629-656)
+- Graduated overload dampening: 14d=0.90, 21d=0.85, 28d=0.80 (nightly L337-351)
+- CNS load average check (nightly L353-358)
+- Roadmap frozen during overload (nightly L664)
+- execution_score blended into BQI at 30% (calculate-session L111)
+- batted_ball_type computes barrel% (calculate-session L88-91)
+- machine_velocity_band modifies difficulty weight (calculate-session L93-99)
+- pitch_command_grade feeds PEI at 40% (calculate-session L120-121)
+- throw_accuracy feeds FQI at 40% (calculate-session L116-117)
+- BP distance power trend computed (calculate-session L123-131)
+- Coach override immutability (3 triggers active)
+- Scout evaluation immutability (2 triggers active)
+- Verified stat immutability after admin approval (2 triggers active)
+- Coach override write-back trigger (apply_coach_override_to_session)
+- JSONB validation for swing_intent, batted_ball_type, velocity_band (calculate-session L10-23)
+- Retroactive recalculation path (calculate-session L349-368)
+- Batch apply mode in RepScorer (L71-84)
+- Sport-aware velocity bands (baseball to 110+, softball to 75+)
+- DualStreakDisplay mounted on Dashboard
+- RestDayScheduler mounted in CalendarDaySheet
+- Absent-day dampening (nightly L305-318)
+- Overload governance flags written (usePerformanceSession)
+- Roadmap micro-metric gates: barrel_pct, blind_zones, velocity_mastery, zone_power (nightly L699-724)
+- Dead fields consistency_impact and momentum_impact removed (migration)
 
-**`src/data/baseball/velocityBands.ts`**
-```typescript
-export const baseballMachineVelocityBands = [
-  { value: '40-50', label: '40-50' },
-  { value: '50-60', label: '50-60' },
-  { value: '60-70', label: '60-70' },
-  { value: '70-80', label: '70-80' },
-  { value: '80-90', label: '80-90' },
-  { value: '90-100', label: '90-100' },
-  { value: '100-110', label: '100-110' },
-  { value: '110+', label: '110+' },
-];
+### Gaps Found -- Require Fixes
 
-export const baseballPitchingVelocityBands = [
-  { value: '<60', label: '<60' },
-  { value: '60-70', label: '60-70' },
-  { value: '70-80', label: '70-80' },
-  { value: '80-90', label: '80-90' },
-  { value: '90-100', label: '90-100' },
-  { value: '100-110', label: '100-110' },
-  { value: '110+', label: '110+' },
-];
+**1. Verified Stat Submission: No Domain Validation**
+- Current: User types any URL string into a free-text input. No whitelist. No domain check. No identity matching.
+- Schema has `identity_match` boolean and `screenshot_path` string columns but neither is ever written or used.
+- `profile_type` is not set by the submission UI -- `league` is used as the lookup key in nightly, but `verifiedStatBoosts` map uses keys like `mlb`, `ncaa_d1`, etc. The submission form sends a free-text `league` value that may not match any boost key. SPEC VIOLATION.
+
+**2. Verified Stats Not Displayed on Public Profile**
+- Profile page shows verified stat submission form (own profile only) but does NOT display verified stats to other viewers (scouts, coaches viewing an athlete). No public verification badge section exists.
+
+**3. Verified Stat Removal Has No Recalculation Trigger**
+- No UI or mechanism for a user to request removal. No admin revocation flow that triggers MPI/probability recalculation.
+
+**4. Admin Verification: No Identity Match Layer**
+- Admin sees the link and player name but has no structured identity match checklist (name, DOB, school, position, team matching against profile data).
+
+**5. Verified Stat Screenshot Upload Not Wired**
+- `screenshot_path` column exists in schema but no file upload UI exists in VerifiedStatSubmission.
+
+**6. No Preset Profiles for Common Stat Sites**
+- Baseball Reference, MLB Savant, MiLB.com, NCAA pages, Perfect Game, AUSL, etc. are not pre-defined. User must type the league manually, risking mismatch with `verifiedStatBoosts` keys.
+
+---
+
+## IMPLEMENTATION PLAN
+
+### Block A: Verified Stat Submission Rebuild
+
+**File: `src/components/professional/VerifiedStatSubmission.tsx`**
+
+Replace the free-text league input with a structured site picker. Define allowed stat sites per sport:
+
+```
+Baseball: Baseball Reference (mlb), MLB Savant (mlb), MiLB (milb), NCAA D1 (ncaa_d1), NCAA D2 (ncaa_d2), NCAA D3 (ncaa_d3), NAIA (naia), Perfect Game (youth/travel), Indie Pro (indie_pro), Foreign Pro (foreign_pro)
+
+Softball: AUSL (ausl), NCAA D1 Softball (ncaa_d1), NCAA D2 Softball (ncaa_d2), NCAA D3 Softball (ncaa_d3), NAIA Softball (naia), Indie Pro Softball (indie_pro)
 ```
 
-**`src/data/softball/velocityBands.ts`**
-```typescript
-export const softballMachineVelocityBands = [
-  { value: '30-35', label: '30-35' },
-  { value: '35-40', label: '35-40' },
-  { value: '40-45', label: '40-45' },
-  { value: '45-50', label: '45-50' },
-  { value: '50-55', label: '50-55' },
-  { value: '55-60', label: '55-60' },
-  { value: '60-65', label: '60-65' },
-  { value: '65-70', label: '65-70' },
-  { value: '70-75', label: '70-75' },
-  { value: '75+', label: '75+' },
-];
+Each option maps to a `profile_type` key that exactly matches `verifiedStatBoosts` keys. The `league` field is auto-set from the selection. No free-text league entry.
 
-export const softballPitchingVelocityBands = [
-  { value: '<40', label: '<40' },
-  { value: '40-45', label: '40-45' },
-  { value: '45-50', label: '45-50' },
-  { value: '50-55', label: '50-55' },
-  { value: '55-60', label: '55-60' },
-  { value: '60-65', label: '60-65' },
-  { value: '65-70', label: '65-70' },
-  { value: '70-75', label: '70-75' },
-  { value: '75+', label: '75+' },
-];
+Add URL domain validation:
+- Baseball Reference: must contain `baseball-reference.com`
+- MLB Savant: must contain `baseballsavant.mlb.com`
+- MiLB: must contain `milb.com`
+- NCAA: must contain `.ncaa.` or known college athletic domains
+- Perfect Game: must contain `perfectgame.org`
+- AUSL: accepted domains TBD (configurable)
+
+Reject URLs that don't match the selected site's domain pattern.
+
+Add optional screenshot upload using the existing `vault-photos` storage bucket. Write path to `screenshot_path` column.
+
+**File: `src/hooks/useVerifiedStats.ts`**
+
+Update mutation to send `profile_type` (from site picker), validate URL domain client-side before insert, and handle screenshot upload.
+
+### Block B: Admin Verification Identity Match
+
+**File: `src/pages/AdminVerification.tsx`**
+
+Expand the VerificationCard to show an identity match checklist. Query the athlete's profile data alongside the submission:
+
+```
+.select('*, profiles:user_id(full_name, date_of_birth, position, team_affiliation, state, experience_level)')
 ```
 
-### Wire into `useSportConfig`
+Display a structured checklist showing profile data vs. what the external link should show:
+- Full Name: [profile name] -- Admin checks match
+- DOB: [profile DOB] -- Admin checks match
+- Position: [profile position] -- Admin checks match
+- Team: [profile team] -- Admin checks match
+- State: [profile state] -- Admin checks match
 
-Add `machineVelocityBands` and `pitchingVelocityBands` to the hook's returned config object, selecting baseball or softball data based on sport context. This follows the existing pattern used for pitchTypes, drills, etc.
+Admin toggles each match (minimum 3 of 5 must match to proceed with approval). When approved, set `identity_match = true` in the update.
 
----
+If screenshot was uploaded, display it inline (fetch from storage bucket).
 
-## File Changes (Merged with Full System Correction Spec)
+Add an "Admin Notes" text field for the admin to record verification reasoning (stored in a new `admin_notes` column or in existing `rejection_reason` for rejections).
 
-### 1. `src/data/baseball/velocityBands.ts` -- NEW
-Baseball machine + pitching velocity band definitions (8 and 7 bands respectively, up to 110+).
+### Block C: Public Profile Verified Stat Display
 
-### 2. `src/data/softball/velocityBands.ts` -- NEW
-Softball machine + pitching velocity band definitions (10 and 9 bands respectively, up to 75+).
+**File: `src/pages/Profile.tsx`**
 
-### 3. `src/hooks/useSportConfig.ts` -- MODIFY
-Import both velocity band files. Add `machineVelocityBands` and `pitchingVelocityBands` to the returned config object.
+Add a "Verified Stats" section visible to ALL viewers (own profile and other viewers). Query `verified_stat_profiles` for the viewed user where `verified = true AND admin_verified = true`.
 
-### 4. `src/components/practice/AdvancedRepFields.tsx` -- MODIFY
-- Add `useSportConfig()` hook
-- **Machine velocity section**: Replace hardcoded 5-option list with `machineVelocityBands` from sport config. Use 4-column grid layout.
-- **Pitching velocity section**: Replace hardcoded 4-option list with `pitchingVelocityBands` from sport config. Use 4-column grid layout.
-- **Batch Apply Mode** (Block 8): Add toggle + count input: "Apply to next X reps"
-- **One-Tap Presets**: Add preset buttons ("Game BP", "Machine Drill", "Damage Mode")
-- **BP Distance**: Replace `<Input type="number">` with `<Slider>` (range 30-450 ft baseball, 30-250 ft softball, step 10)
+Display each verified profile as a card:
+- Site name (derived from `profile_type` -> label mapping from `verifiedStatBoosts`)
+- Clickable URL (opens in new tab)
+- Verification badge (green checkmark)
+- Date verified (`verified_at`)
+- Confidence weight displayed as percentage
+- Sport badge
 
-### 5. `src/components/micro-layer/PitchingMicroInput.tsx` -- MODIFY
-- Already uses `useSportConfig()` for pitch types
-- Replace hardcoded `velocityBands` constant with `pitchingVelocityBands` from `useSportConfig()`
-- Renders dynamically based on sport
+This section appears for the viewed user regardless of who is viewing (public transparency). Uses `profiles_public`-style RLS -- we need an RLS policy allowing anyone authenticated to SELECT verified stats where `verified = true AND admin_verified = true`.
 
-### 6. `supabase/functions/calculate-session/index.ts` -- MODIFY (Blocks 2, 3, 11, 12)
-**Retroactive recalculation path** (Block 2): When `retroactive: true` + `date` is passed, query all sessions for that user on that date and recalculate each.
+### Block D: Admin Revocation Flow
 
-**Micro field wiring** (Block 3):
-- `execution_score` blended into BQI at 30% weight
-- `batted_ball_type` aggregated for barrel%, line drive%, hard contact%
-- `machine_velocity_band` difficulty multiplier: bands are now sport-specific strings but the multiplier logic works by parsing the high end numerically (e.g. `110+` -> max tier, `75+` -> max tier for softball). Both sports' top bands get equivalent difficulty boost.
-- `pitch_command_grade` blended into PEI at 40% weight
-- `throw_accuracy` blended into FQI at 40% weight
+**File: `src/pages/AdminVerification.tsx`**
 
-**JSONB validation** (Block 11): No hardcoded valid band lists. Instead, validate that velocity band strings match the pattern `\d+-\d+` or `\d+\+` or `<\d+`. Rejects arbitrary strings without needing sport-specific enums in the edge function.
+Add a second tab or section: "Verified Profiles" showing all currently-verified profiles (not just pending). Each shows a "Revoke" button.
 
-**Machine BP intelligence** (Block 12): BP distance trend + high-velocity success rate computation. "High velocity" defined as top-2 bands for either sport (baseball: 100-110, 110+; softball: 70-75, 75+).
+Revocation flow:
+1. Admin clicks Revoke, enters reason
+2. Sets `verified = false`, `admin_verified = false`, `confidence_weight = 0`, `rejection_reason = revoke reason`
+3. The immutability trigger allows this because it only blocks changes when `admin_verified` stays `true` -- setting it to `false` is permitted
+4. Audit log entry created
+5. Next nightly run: profile no longer in verified query (filtered by `verified = true AND admin_verified = true`), so boost drops to 0 automatically
 
-### 7. `supabase/functions/nightly-mpi-process/index.ts` -- MODIFY (Blocks 1, 4, 9, 10, 13)
-**Block 1**: Add `session_type` to heat map query select. Reject records with missing session_type.
+No special recalculation trigger needed -- nightly process naturally excludes revoked profiles.
 
-**Block 4**: Graduated overload dampening (14d=0.90, 21d=0.85, 28d=0.80). Also check `cns_load_actual` average over 7 days.
+### Block E: Database Migration
 
-**Block 9**: Game sessions weighted 1.5x in composite averages.
+**New migration for:**
 
-**Block 10**: Roadmap micro-metric gates: `min_barrel_pct`, `max_blind_zones`, `velocity_band_mastery`, `zone_power_minimum`. Freeze roadmap during overload.
+1. Add RLS policy for public verified stat viewing:
+```sql
+CREATE POLICY "Anyone can view verified stats"
+  ON public.verified_stat_profiles FOR SELECT
+  TO authenticated
+  USING (verified = true AND admin_verified = true);
+```
+(This supplements existing policy that allows users to see their own stats regardless of status)
 
-**Block 13**: 4 new heat map types. `velocity_performance` map: high-velocity success is sport-relative (top-2 bands per sport, not hardcoded baseball numbers).
+2. Add `admin_notes` column if not exists:
+```sql
+ALTER TABLE public.verified_stat_profiles
+  ADD COLUMN IF NOT EXISTS admin_notes text;
+```
 
-### 8. Database Migrations (Blocks 5, 6, 7)
+3. Add `profile_type` column if not exists (check schema -- currently `league` is used but `profile_type` is referenced in nightly):
+Looking at the schema types, `profile_type` is NOT a column. The nightly process reads `vp.profile_type` but the table has `league` not `profile_type`. This is a SILENT FAILURE -- the nightly boost lookup always returns undefined because `profile_type` doesn't exist as a column.
 
-**Block 5 -- Verified stat immutability trigger**: Prevent URL/profile_type changes after `admin_verified = true`. Prevent deletion of admin-verified profiles.
+**CRITICAL FIX:**
+```sql
+ALTER TABLE public.verified_stat_profiles
+  ADD COLUMN IF NOT EXISTS profile_type text;
+```
 
-**Block 6 -- Coach override write-back trigger**: `AFTER INSERT ON coach_grade_overrides` -> updates `performance_sessions.coach_grade`, sets `coach_override_applied = true`. Add two columns to `performance_sessions`: `coach_override_applied boolean DEFAULT false`, `coach_override_id uuid`.
+The submission form must write both `league` (display label) and `profile_type` (boost key). The nightly process already reads `profile_type` correctly.
 
-**Block 7 -- Dead field cleanup**:
-- DROP `consistency_impact` and `momentum_impact` from `athlete_daily_log` (never written, never read)
-- Keep `cns_load_actual` (now wired to overload detection in Block 4)
-- Keep `rest_reason` (wire to analytics)
-- Keep `injury_body_region` and `injury_expected_days` (wire to DayStatusSelector UI for injury metadata)
+### Block F: Nightly Process -- profile_type Fix Confirmation
 
-### 9. `src/components/calendar/DayStatusSelector.tsx` -- MODIFY (Block 7b)
-When user selects `injury_hold`, show optional body region picker (dropdown: arm, shoulder, elbow, back, knee, ankle, hip, hand/wrist, head, other) and expected days input (slider 1-90). Write to `injury_body_region` and `injury_expected_days` on `athlete_daily_log`.
+**File: `supabase/functions/nightly-mpi-process/index.ts` L231**
 
-### 10. `src/components/practice/RepScorer.tsx` -- MODIFY (Block 8)
-- Accept `batchCount` and `batchMode` from AdvancedRepFields
-- When batch mode on and rep committed, auto-duplicate rep with same advanced fields for `batchCount` repetitions
-- Reduces 10-rep advanced session from 130+ taps to ~20 taps
+Currently: `const boost = verifiedStatBoosts[vp.profile_type];`
+
+This reads `profile_type` from the query result. After adding the column in Block E, this will work. No code change needed in nightly -- just the column must exist and be populated.
+
+### Block G: User Removal Request
+
+**File: `src/components/professional/VerifiedStatSubmission.tsx`**
+
+For verified profiles owned by the user, show a "Request Removal" button (not direct delete -- deletion is blocked by immutability trigger when admin_verified=true).
+
+Removal request: Insert into a new or existing support/request mechanism, or simply set a `removal_requested` flag. For simplicity, add a `removal_requested boolean DEFAULT false` column and show these in the admin queue with a "Removal Requested" badge.
+
+Admin can then revoke (Block D flow), which removes the boost.
+
+### Block H: Remaining Dead Field Cleanup
+
+Fields confirmed still unused after all previous fixes:
+- `athlete_daily_log.rest_reason` -- Written by UI, never read. Keep for future analytics display.
+- `athlete_daily_log.game_logged` -- Written, never read. Keep (redundant but harmless).
+- `verified_stat_profiles.verified_by` -- Written by admin, never read by computation. Keep for audit trail.
+- `verified_stat_profiles.verified_at` -- Written by admin, now displayed on public profile (Block C). ACTIVATED.
+- `verified_stat_profiles.rejection_reason` -- Written by admin, used in revocation display. Keep.
+
+No additional deletions needed. All remaining fields either serve audit/display purposes or are now wired.
 
 ---
 
 ## Execution Order
 
-| Step | Description | Dependencies |
-|------|-------------|-------------|
-| 1 | Create velocity band data files (baseball + softball) | None |
-| 2 | Wire velocity bands into `useSportConfig` | Step 1 |
-| 3 | Update `AdvancedRepFields` with sport-aware bands + batch mode + presets + slider for BP distance | Steps 1-2 |
-| 4 | Update `PitchingMicroInput` with sport-aware bands | Steps 1-2 |
-| 5 | Database migrations (immutability trigger, coach write-back, dead field cleanup) | None |
-| 6 | Fix heat map `session_type` select + new map types (sport-aware velocity logic) | None |
-| 7 | Wire micro fields into `calculate-session` composites + retroactive path + validation | None |
-| 8 | Overload dampening + CNS read + game weighting in nightly MPI | None |
-| 9 | Roadmap micro-metric gates + overload freeze | Steps 7-8 |
-| 10 | Wire injury metadata in DayStatusSelector | Step 5 |
-| 11 | Batch apply mode in RepScorer | Step 3 |
-| 12 | Deploy both edge functions | Steps 6-9 |
+| Step | Block | Description |
+|------|-------|-------------|
+| 1 | E | Database migration: add `profile_type`, `admin_notes`, `removal_requested` columns + public viewing RLS policy |
+| 2 | A | Rebuild VerifiedStatSubmission with site picker, domain validation, screenshot upload, profile_type mapping |
+| 3 | B | Expand AdminVerification with identity match checklist, screenshot display, admin notes |
+| 4 | C | Add public verified stat display section to Profile page |
+| 5 | D | Add admin revocation flow (verified profiles tab + revoke action) |
+| 6 | G | Add user removal request button on verified profiles |
+| 7 | F | Deploy edge functions (nightly already reads profile_type correctly, calculate-session unchanged) |
 
-Steps 1-2 are sequential. Steps 3-4 depend on 1-2 but are parallel to each other. Steps 5-8 are all independent and parallel. Steps 9-11 have noted dependencies. Step 12 is final.
+Steps 2-4 are independent of each other after Step 1. Steps 5-6 depend on Step 1 only.
 
 ---
 
-## Post-Correction Velocity Summary
+## Anti-Gaming Enforcement Summary
 
-| Context | Baseball | Softball |
-|---------|----------|----------|
-| Machine BP bands | 40-50 through 110+ (8 bands) | 30-35 through 75+ (10 bands) |
-| Pitching velocity bands | <60 through 110+ (7 bands) | <40 through 75+ (9 bands) |
-| "High velocity" for difficulty multiplier | 100-110, 110+ | 70-75, 75+ |
-| BP distance slider range | 30-450 ft | 30-250 ft |
-| Difficulty boost ceiling | +15% at top bands | +15% at top bands (equivalent weighting) |
+| Attack Vector | Protection |
+|--------------|-----------|
+| Submit fake URL | Domain validation rejects non-matching URLs |
+| Submit someone else's profile | Identity match checklist (3/5 fields must match) |
+| Edit verified link after approval | Immutability trigger blocks URL/profile_type changes |
+| Delete verified profile | Deletion trigger blocks delete when admin_verified=true |
+| Self-verify | Only admins can set verified=true (RLS enforced) |
+| Hide verification status | Public display on profile (transparent to all) |
+| Game boost by resubmitting | Duplicate URL check (unique constraint on user_id + profile_url) |
+| Inflate confidence weight | Only admin-controlled (0-100 slider) |
 
-Both sports receive equivalent analytical treatment at their respective velocity ceilings. No cross-sport data mixing. All velocity UI is driven by `useSportConfig()` -- zero hardcoded bands remain in components.
+---
+
+## Sport-Specific Branching Confirmation
+
+| System | Baseball | Softball | Verified |
+|--------|----------|----------|----------|
+| Velocity bands | 40-50 to 110+ | 30-35 to 75+ | Yes (data files + useSportConfig) |
+| BP distance range | 30-450 ft | 30-250 ft | Yes (useSportConfig.bpDistanceRange) |
+| Pro leagues | mlb, milb, indie_pro | ausl, indie_pro | Yes (probabilityBaselines) |
+| HoF seasons | MLB only | MLB + AUSL | Yes (nightly L393-395) |
+| HoF leagues | mlb | ausl | Yes (hofRequirements) |
+| High velocity threshold | 100+ mph | 70+ mph | Yes (isHighVelocityBand) |
+| BP distance power threshold | >300 ft | >150 ft | Yes (nightly L577) |
+| Tier multipliers | Separate file | Separate file | Yes |
+| Age curves | Separate file | Separate file | Yes |
+| Pitch types | Separate file | Separate file | Yes |
+| Drill definitions | Separate file | Separate file | Yes |
+| Position weights | Separate file | Separate file | Yes |
+
+All sport-specific branching is correctly implemented and reads from separate data files via `useSportConfig`.
+
+---
+
+## What This Closes
+
+After implementation:
+- 0 cosmetic verified stat fields (all wired or displayed)
+- 0 gaming vectors (domain validation + identity match + immutability + public display)
+- profile_type column exists and maps to boost keys (CRITICAL fix -- currently silent failure)
+- Verified stats visible on public profiles
+- Admin has structured identity verification
+- User can request removal
+- Admin can revoke with audit trail
+- All sport-specific logic verified end-to-end
+
