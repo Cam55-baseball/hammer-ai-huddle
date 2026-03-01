@@ -178,6 +178,7 @@ serve(async (req) => {
         fatigueCorrFlag: boolean; hofActive: boolean; hofProb: number | null;
         proProbability: number; proProbCapped: boolean;
         consecutiveHeavy: number;
+        tierMult: number; ageCurveMult: number; posWeight: number;
       }> = [];
 
       for (const athlete of athletes) {
@@ -216,10 +217,12 @@ serve(async (req) => {
         let adjusted = rawScore * tierMult;
 
         let age: number | null = null;
+        let ageCurveMult = 1.0;
         if (athlete.date_of_birth) {
           const dob = new Date(athlete.date_of_birth);
           age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 86400000));
-          adjusted *= getAgeMult(sport, age);
+          ageCurveMult = getAgeMult(sport, age);
+          adjusted *= ageCurveMult;
         }
 
         const posWeight = positionWeights[(athlete.primary_position || '').toUpperCase()] ?? 1.0;
@@ -421,6 +424,7 @@ serve(async (req) => {
           verifiedBoost: verifiedBoostTotal, contractMod: contractMod,
           gamePracticeRatio, deltaMaturity, fatigueCorrFlag: fatigueCorr,
           hofActive, hofProb, proProbability, proProbCapped, consecutiveHeavy,
+          tierMult, ageCurveMult, posWeight,
         });
       }
 
@@ -461,6 +465,10 @@ serve(async (req) => {
           fatigue_correlation_flag: s.fatigueCorrFlag,
           hof_tracking_active: s.hofActive,
           hof_probability: s.hofProb,
+          // Phase 2: transparency columns
+          tier_multiplier: s.tierMult,
+          age_curve_multiplier: s.ageCurveMult,
+          position_weight: s.posWeight,
         }, { onConflict: 'user_id,sport,calculation_date' });
       }
 
@@ -723,6 +731,38 @@ serve(async (req) => {
               progress = Math.min(100, (hardPct / req.zone_power_minimum) * 100);
             }
 
+            // Phase 2: 6 new micro-metric roadmap gates
+            if (req.max_whiff_pct != null) {
+              const whiffPct = latestIx.avg_whiff_pct ?? 100;
+              met = whiffPct <= req.max_whiff_pct;
+              progress = met ? 100 : Math.max(0, 100 - (whiffPct - req.max_whiff_pct) * 5);
+            }
+            if (req.max_chase_pct != null) {
+              const chasePct = latestIx.avg_chase_pct ?? 100;
+              met = chasePct <= req.max_chase_pct;
+              progress = met ? 100 : Math.max(0, 100 - (chasePct - req.max_chase_pct) * 5);
+            }
+            if (req.min_iz_contact_pct != null) {
+              const izPct = latestIx.avg_iz_contact_pct ?? 0;
+              met = izPct >= req.min_iz_contact_pct;
+              progress = Math.min(100, (izPct / req.min_iz_contact_pct) * 100);
+            }
+            if (req.min_zone_pct != null) {
+              const zonePct = latestIx.avg_zone_pct ?? 0;
+              met = zonePct >= req.min_zone_pct;
+              progress = Math.min(100, (zonePct / req.min_zone_pct) * 100);
+            }
+            if (req.min_footwork_grade != null) {
+              const fwg = latestIx.avg_footwork_grade ?? 20;
+              met = fwg >= req.min_footwork_grade;
+              progress = Math.min(100, ((fwg - 20) / (req.min_footwork_grade - 20)) * 100);
+            }
+            if (req.min_clean_field_pct != null) {
+              const cfp = latestIx.avg_clean_field_pct ?? 0;
+              met = cfp >= req.min_clean_field_pct;
+              progress = Math.min(100, (cfp / req.min_clean_field_pct) * 100);
+            }
+
             await supabase.from('athlete_roadmap_progress').upsert({
               user_id: s.userId, milestone_id: milestone.id,
               status: met ? 'completed' : 'in_progress',
@@ -733,6 +773,15 @@ serve(async (req) => {
         }
       }
     }
+
+    // Phase 2: Audit log entry for nightly completion
+    const endTime = Date.now();
+    await supabase.from('audit_log').insert({
+      user_id: '00000000-0000-0000-0000-000000000000',
+      action: 'nightly_mpi_complete',
+      table_name: 'mpi_scores',
+      metadata: { timestamp: new Date().toISOString() },
+    });
 
     console.log('[nightly-mpi] Complete.');
     return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString() }), {

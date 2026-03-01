@@ -1906,6 +1906,7 @@ export type Database = {
       mpi_scores: {
         Row: {
           adjusted_global_score: number | null
+          age_curve_multiplier: number | null
           calculation_date: string
           composite_bqi: number | null
           composite_competitive: number | null
@@ -1924,11 +1925,12 @@ export type Database = {
           hof_tracking_active: boolean | null
           id: string
           integrity_score: number | null
-          mlb_season_count: number | null
+          position_weight: number | null
           pro_probability: number | null
           pro_probability_capped: boolean | null
           segment_pool: string | null
           sport: string
+          tier_multiplier: number | null
           total_athletes_in_pool: number | null
           trend_delta_30d: number | null
           trend_direction: string | null
@@ -1937,6 +1939,7 @@ export type Database = {
         }
         Insert: {
           adjusted_global_score?: number | null
+          age_curve_multiplier?: number | null
           calculation_date: string
           composite_bqi?: number | null
           composite_competitive?: number | null
@@ -1955,11 +1958,12 @@ export type Database = {
           hof_tracking_active?: boolean | null
           id?: string
           integrity_score?: number | null
-          mlb_season_count?: number | null
+          position_weight?: number | null
           pro_probability?: number | null
           pro_probability_capped?: boolean | null
           segment_pool?: string | null
           sport: string
+          tier_multiplier?: number | null
           total_athletes_in_pool?: number | null
           trend_delta_30d?: number | null
           trend_direction?: string | null
@@ -1968,6 +1972,7 @@ export type Database = {
         }
         Update: {
           adjusted_global_score?: number | null
+          age_curve_multiplier?: number | null
           calculation_date?: string
           composite_bqi?: number | null
           composite_competitive?: number | null
@@ -1986,11 +1991,12 @@ export type Database = {
           hof_tracking_active?: boolean | null
           id?: string
           integrity_score?: number | null
-          mlb_season_count?: number | null
+          position_weight?: number | null
           pro_probability?: number | null
           pro_probability_capped?: boolean | null
           segment_pool?: string | null
           sport?: string
+          tier_multiplier?: number | null
           total_athletes_in_pool?: number | null
           trend_delta_30d?: number | null
           trend_direction?: string | null
@@ -5342,10 +5348,8 @@ export type Database = {
           admin_verified: boolean | null
           confidence_weight: number | null
           created_at: string
-          external_metrics: Json | null
           id: string
           identity_match: boolean | null
-          last_synced_at: string | null
           league: string
           profile_type: string | null
           profile_url: string
@@ -5353,7 +5357,6 @@ export type Database = {
           removal_requested: boolean
           screenshot_path: string | null
           sport: string
-          sync_frequency: string | null
           team_name: string | null
           updated_at: string
           user_id: string
@@ -5366,10 +5369,8 @@ export type Database = {
           admin_verified?: boolean | null
           confidence_weight?: number | null
           created_at?: string
-          external_metrics?: Json | null
           id?: string
           identity_match?: boolean | null
-          last_synced_at?: string | null
           league: string
           profile_type?: string | null
           profile_url: string
@@ -5377,7 +5378,6 @@ export type Database = {
           removal_requested?: boolean
           screenshot_path?: string | null
           sport: string
-          sync_frequency?: string | null
           team_name?: string | null
           updated_at?: string
           user_id: string
@@ -5390,10 +5390,8 @@ export type Database = {
           admin_verified?: boolean | null
           confidence_weight?: number | null
           created_at?: string
-          external_metrics?: Json | null
           id?: string
           identity_match?: boolean | null
-          last_synced_at?: string | null
           league?: string
           profile_type?: string | null
           profile_url?: string
@@ -5401,7 +5399,6 @@ export type Database = {
           removal_requested?: boolean
           screenshot_path?: string | null
           sport?: string
-          sync_frequency?: string | null
           team_name?: string | null
           updated_at?: string
           user_id?: string

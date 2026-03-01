@@ -95,7 +95,15 @@ export function AdvancedRepFields({
   batchMode, batchCount, onBatchModeChange, onBatchCountChange,
 }: AdvancedRepFieldsProps) {
   const [open, setOpen] = useState(false);
+  const [tier3Open, setTier3Open] = useState(false);
   const { machineVelocityBands, pitchingVelocityBands, bpDistanceRange } = useSportConfig();
+
+  // Default batch ON when advanced fields are opened
+  useEffect(() => {
+    if (open && onBatchModeChange && !batchMode) {
+      onBatchModeChange(true);
+    }
+  }, [open]);
 
   // Load smart defaults on mount
   useEffect(() => {
@@ -204,16 +212,19 @@ export function AdvancedRepFields({
                   cols={4}
                 />
               </div>
+              {/* Tier 2: MPI-impacting (visible by default) */}
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Spin Direction</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
                 <SelectGrid
                   options={[
-                    { value: 'topspin', label: 'Top' },
-                    { value: 'backspin', label: 'Back' },
-                    { value: 'sidespin', label: 'Side' },
+                    { value: 'ground', label: 'Ground' },
+                    { value: 'line', label: 'Line' },
+                    { value: 'fly', label: 'Fly' },
+                    { value: 'barrel', label: 'Barrel' },
                   ]}
-                  value={value.spin_direction}
-                  onChange={v => update('spin_direction', v)}
+                  value={value.batted_ball_type}
+                  onChange={v => update('batted_ball_type', v)}
+                  cols={4}
                 />
               </div>
               <div>
@@ -267,6 +278,34 @@ export function AdvancedRepFields({
                   </div>
                 </>
               )}
+
+              {/* Tier 3: Coaching-only fields (collapsed) */}
+              <Collapsible open={tier3Open} onOpenChange={setTier3Open}>
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors w-full justify-center py-1"
+                  >
+                    <Zap className="h-2.5 w-2.5" />
+                    {tier3Open ? 'Hide' : 'Show'} Coaching Fields
+                    <ChevronDown className={cn('h-2.5 w-2.5 transition-transform', tier3Open && 'rotate-180')} />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-3 pt-1">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Spin Direction</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'topspin', label: 'Top' },
+                        { value: 'backspin', label: 'Back' },
+                        { value: 'sidespin', label: 'Side' },
+                      ]}
+                      value={value.spin_direction}
+                      onChange={v => update('spin_direction', v)}
+                    />
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </>
           )}
 
