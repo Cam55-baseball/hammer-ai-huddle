@@ -22,13 +22,48 @@ export function useVerifiedStats() {
   });
 
   const submitProfile = useMutation({
-    mutationFn: async (input: { sport: string; league: string; team_name?: string; profile_url: string }) => {
+    mutationFn: async (input: {
+      sport: string;
+      league: string;
+      profile_type: string;
+      team_name?: string;
+      profile_url: string;
+      screenshot_path?: string;
+    }) => {
       if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase.from('verified_stat_profiles').insert({ user_id: user.id, ...input });
+      const { error } = await supabase.from('verified_stat_profiles').insert({
+        user_id: user.id,
+        sport: input.sport,
+        league: input.league,
+        profile_type: input.profile_type,
+        team_name: input.team_name,
+        profile_url: input.profile_url,
+        screenshot_path: input.screenshot_path,
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['verified-stats'] }),
   });
 
   return { ...query, submitProfile };
+}
+
+/** Fetch verified stats for any user (public view) */
+export function usePublicVerifiedStats(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['public-verified-stats', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('verified_stat_profiles')
+        .select('id, league, profile_type, profile_url, verified_at, confidence_weight, sport, team_name')
+        .eq('user_id', userId)
+        .eq('verified', true)
+        .eq('admin_verified', true)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
 }
