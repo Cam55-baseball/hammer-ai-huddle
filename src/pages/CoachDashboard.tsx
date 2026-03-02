@@ -11,12 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package } from 'lucide-react';
+import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package, Building2, Users, ArrowRight } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
 import { BulkSendDialog } from '@/components/coach/BulkSendDialog';
 import { SessionFeed } from '@/components/coach/SessionFeed';
+import { useOrganization } from '@/hooks/useOrganization';
 import { CollaborativeWorkspace } from '@/components/coach/CollaborativeWorkspace';
 import { 
   Command,
@@ -357,6 +358,9 @@ export default function CoachDashboard() {
   }
 
   const followingCount = following.length;
+  const { myOrgs, members } = useOrganization();
+  const activeOrg = myOrgs.data?.[0];
+  const memberCount = members.data?.length ?? 0;
 
   return (
     <DashboardLayout>
@@ -370,6 +374,34 @@ export default function CoachDashboard() {
             {t('coach.dashboardDescription', 'Manage your players and send them training activities')}
           </p>
         </div>
+
+        {/* Organization Quick Link */}
+        {activeOrg ? (
+          <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate('/organization')}>
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-sm">Your Organization: <span className="text-primary">{activeOrg.name}</span></p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Users className="h-3 w-3" /> {memberCount} player{memberCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="gap-1">
+                View Roster <ArrowRight className="h-3 w-3" />
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-dashed cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => navigate('/organization')}>
+            <CardContent className="flex items-center gap-3 p-4">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Create an Organization to manage your team roster and invite players</p>
+              <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs value={sportFilter} onValueChange={(value) => setSportFilter(value as 'all' | 'baseball' | 'softball')} className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-3 mx-auto">
