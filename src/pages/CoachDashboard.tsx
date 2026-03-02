@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
 import { BulkSendDialog } from '@/components/coach/BulkSendDialog';
+import { SessionFeed } from '@/components/coach/SessionFeed';
 import { 
   Command,
   CommandEmpty,
@@ -31,6 +32,8 @@ interface Player {
   avatar_url: string | null;
   followStatus?: 'none' | 'pending' | 'accepted';
   sport?: 'baseball' | 'softball' | 'both' | null;
+  relationship_type?: string;
+  initiated_by?: string;
 }
 
 export default function CoachDashboard() {
@@ -499,6 +502,17 @@ export default function CoachDashboard() {
         </Card>
 
         <PlayerNotesSection players={following} />
+
+        {/* Session Feed for linked players */}
+        {(() => {
+          const linkedPlayers = following.filter(p => p.relationship_type === 'linked');
+          const linkedIds = linkedPlayers.map(p => p.id);
+          const nameMap: Record<string, string> = {};
+          linkedPlayers.forEach(p => { nameMap[p.id] = p.full_name; });
+          return linkedIds.length > 0 ? (
+            <SessionFeed linkedPlayerIds={linkedIds} playerNames={nameMap} />
+          ) : null;
+        })()}
 
         <SentActivitiesHistory />
 

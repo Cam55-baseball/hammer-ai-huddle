@@ -145,6 +145,9 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
 
+  // Commit animation state
+  const [showCommitCheck, setShowCommitCheck] = useState(false);
+
   // Handedness gate
   const [handedness, setHandedness] = useState<'L' | 'R' | undefined>();
 
@@ -194,7 +197,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     const rep: ScoredRep = {
       ...current,
       rep_source: repSource,
-      // Session-level values
       session_distance_ft: sessionConfig?.pitch_distance_ft,
       session_velocity_band: sessionConfig?.velocity_band,
       session_rep_source: sessionConfig?.rep_source,
@@ -205,6 +207,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       ...(isBaserunning && { throwing_hand: handedness }),
     };
     onRepsChange([...reps, rep]);
+    // Show commit animation
+    setShowCommitCheck(true);
+    setTimeout(() => setShowCommitCheck(false), 700);
     // Reset current but keep execution_score for speed
     setCurrent({ execution_score: current.execution_score });
     setShowOverrides(false);
@@ -367,6 +372,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   <TeeDepthGrid
                     value={current.depth_zone}
                     onChange={v => updateField('depth_zone', v)}
+                    sport={sport as 'baseball' | 'softball'}
+                    batterSide={handedness}
                   />
                 )}
               </div>
@@ -654,15 +661,36 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           )}
 
           {/* CONFIRM REP */}
-          <Button
-            onClick={commitRep}
-            disabled={!canConfirm}
-            className="w-full"
-            size="sm"
-          >
-            <Check className="h-4 w-4 mr-1" />
-            Confirm Rep
-          </Button>
+          <div className="relative">
+            <Button
+              onClick={commitRep}
+              disabled={!canConfirm}
+              className="w-full"
+              size="sm"
+            >
+              <Check className="h-4 w-4 mr-1" />
+              Confirm Rep
+            </Button>
+            <AnimatePresence>
+              {showCommitCheck && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 flex items-center justify-center bg-green-500/20 rounded-md pointer-events-none"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1.2 }}
+                    transition={{ delay: 0.1, duration: 0.3 }}
+                  >
+                    <Check className="h-8 w-8 text-green-600" />
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           {!canConfirm && (
             <p className="text-[10px] text-destructive text-center">
               {!hasRepSource ? 'Configure session rep source first' :
