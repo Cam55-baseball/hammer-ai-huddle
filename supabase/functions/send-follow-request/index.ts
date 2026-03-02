@@ -9,6 +9,8 @@ const corsHeaders = {
 
 const requestSchema = z.object({
   player_id: z.string().uuid("Invalid player ID format"),
+  initiated_by: z.enum(["coach", "player"]).default("coach"),
+  relationship_type: z.enum(["follow", "linked"]).default("follow"),
 });
 
 serve(async (req) => {
@@ -33,23 +35,37 @@ serve(async (req) => {
       throw new Error("Invalid user");
     }
 
-    // Verify user is a scout or coach
-    const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .in("role", ["scout", "coach"])
-      .maybeSingle();
-
-    if (!userRole) {
-      throw new Error("User is not a scout or coach");
-    }
-
-    console.log("User role verified:", userRole.role);
-
     // Validate input
     const body = await req.json();
-    const { player_id } = requestSchema.parse(body);
+    const { player_id, initiated_by, relationship_type } = requestSchema.parse(body);
+
+    // Verify role based on direction
+    if (initiated_by === 'coach') {
+      const { data: userRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["scout", "coach"])
+        .maybeSingle();
+
+      if (!userRole) {
+        throw new Error("User is not a scout or coach");
+      }
+      console.log("Coach/scout role verified:", userRole.role);
+    } else {
+      // Player-initiated: verify target is a coach
+      const { data: targetRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", player_id)
+        .in("role", ["scout", "coach"])
+        .maybeSingle();
+
+      if (!targetRole) {
+        throw new Error("Target user is not a coach");
+      }
+      console.log("Target coach role verified:", targetRole.role);
+    }
 
     // Check if player exists
     const { data: playerProfile } = await supabase
@@ -62,14 +78,14 @@ serve(async (req) => {
       throw new Error("Player not found");
     }
 
-    // Insert follow request
+    // Insert follow request - direction depends on initiated_by
+    const insertData = initiated_by === 'coach'
+      ? { scout_id: user.id, player_id: player_id, status: "pending", initiated_by, relationship_type }
+      : { scout_id: player_id, player_id: user.id, status: "pending", initiated_by, relationship_type };
+
     const { data, error } = await supabase
       .from("scout_follows")
-      .insert({
-        scout_id: user.id,
-        player_id: player_id,
-        status: "pending"
-      })
+      .insert(insertData)
       .select()
       .single();
 

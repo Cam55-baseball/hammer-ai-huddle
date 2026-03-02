@@ -3148,25 +3148,34 @@ export type Database = {
       }
       scout_follows: {
         Row: {
+          confirmed_at: string | null
           created_at: string | null
           id: string
+          initiated_by: string | null
           player_id: string
+          relationship_type: string | null
           scout_id: string
           status: string
           updated_at: string | null
         }
         Insert: {
+          confirmed_at?: string | null
           created_at?: string | null
           id?: string
+          initiated_by?: string | null
           player_id: string
+          relationship_type?: string | null
           scout_id: string
           status?: string
           updated_at?: string | null
         }
         Update: {
+          confirmed_at?: string | null
           created_at?: string | null
           id?: string
+          initiated_by?: string | null
           player_id?: string
+          relationship_type?: string | null
           scout_id?: string
           status?: string
           updated_at?: string | null
@@ -5876,6 +5885,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_linked_coach: {
+        Args: { p_coach_id: string; p_player_id: string }
         Returns: boolean
       }
       manual_archive_scout_applications: {

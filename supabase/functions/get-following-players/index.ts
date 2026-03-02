@@ -61,7 +61,7 @@ serve(async (req) => {
     // Get accepted follows
     const { data: follows, error: followsError } = await supabaseAdmin
       .from('scout_follows')
-      .select('player_id')
+      .select('player_id, relationship_type, initiated_by')
       .eq('scout_id', user.id)
       .eq('status', 'accepted');
 
@@ -107,12 +107,20 @@ serve(async (req) => {
       }
     }
 
+    // Build a map of player_id to follow data
+    const followMap = new Map<string, { relationship_type: string; initiated_by: string }>();
+    for (const f of follows) {
+      followMap.set(f.player_id, { relationship_type: f.relationship_type ?? 'follow', initiated_by: f.initiated_by ?? 'coach' });
+    }
+
     const results = (profiles || []).map(profile => ({
       id: profile.id,
       full_name: profile.full_name,
       avatar_url: profile.avatar_url,
       followStatus: 'accepted' as const,
-      sport: determineSport(subscriptionMap.get(profile.id) || null)
+      sport: determineSport(subscriptionMap.get(profile.id) || null),
+      relationship_type: followMap.get(profile.id)?.relationship_type ?? 'follow',
+      initiated_by: followMap.get(profile.id)?.initiated_by ?? 'coach',
     }));
 
     return new Response(
