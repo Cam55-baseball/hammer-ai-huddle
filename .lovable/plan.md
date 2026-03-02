@@ -1,44 +1,31 @@
 
 
-# Fix: Crown Icon Not Appearing After Setting Head Coach
+# Fix: Allow Coach Role to Use Hammer Workout Recommendations
 
 ## Problem
-
-When clicking "Set Head Coach", the mutation uses `.update()` on `athlete_mpi_settings`. If the logged-in user doesn't have a row in that table yet, the update matches 0 rows, succeeds silently, and nothing changes -- so the crown never appears.
+The `recommend-workout` edge function returns 403 "Subscription required" for coach-profile users. The entitlement check only bypasses the subscription requirement for `owner` and `admin` roles, but coaches have the `coach` role -- which falls through to the subscription check, and coaches typically don't have personal subscriptions with modules.
 
 ## Solution
-
-Change the mutation in `ConnectionsTab.tsx` from `.update()` to `.upsert()` so it creates the settings row if one doesn't exist.
+Add `coach` to the privileged roles list in the entitlement check. Coaches need AI features to build activities/folders for their players.
 
 ## Changes
 
-### File: `src/components/connections/ConnectionsTab.tsx`
+### File: `supabase/functions/recommend-workout/index.ts` (line 177)
 
-Update the `setHeadCoachMutation` (around line 56-61):
+Update the `.in('role', ...)` array to include `'coach'`:
 
-**Before:**
 ```typescript
-const { error } = await supabase
-  .from('athlete_mpi_settings')
-  .update({ primary_coach_id: coachId })
-  .eq('user_id', user!.id);
+// Before
+.in('role', ['owner', 'admin'])
+
+// After
+.in('role', ['owner', 'admin', 'coach'])
 ```
 
-**After:**
-```typescript
-const { error } = await supabase
-  .from('athlete_mpi_settings')
-  .upsert(
-    { user_id: user!.id, primary_coach_id: coachId },
-    { onConflict: 'user_id' }
-  );
-```
+This is a single-line change. After editing, the function will be redeployed automatically.
 
-This ensures:
-- If the user already has a settings row, it updates `primary_coach_id`
-- If no row exists, it creates one with the `primary_coach_id` set
-- The crown icon and "Head Coach" badge then appear immediately after the query re-fetches
+## Why This Is Safe
+- Coaches are authenticated users with an assigned role
+- The role check still requires `status = 'active'`
+- This aligns with the existing pattern in `check-subscription` where owner access is already granted (coaches should have similar AI feature access for building training programs)
 
-### No other files change
-
-The crown/badge UI code is already correct -- it just never triggers because `headCoachId` stays `null`.
