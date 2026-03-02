@@ -1,62 +1,67 @@
 
 
-# Upgrade CoachSelector to Show All Connected Coaches
+# Highlight Coach-Tagged Sessions in the Session Feed
 
-## Problem
-Currently, the CoachSelector only shows 3 options: Head Coach (if designated), External Coach, and Self-Directed. Players cannot choose from their other connected coaches -- only the head coach or type in an external name.
-
-## Solution
-Rebuild the CoachSelector to:
-1. Fetch all active linked coaches from `scout_follows` (where player_id = current user, status = 'accepted', relationship_type = 'linked')
-2. Show a selectable list of all connected coaches, with the Head Coach highlighted and auto-selected when "Coach-Led" or "Lesson" is chosen
-3. Keep the "External Coach" (free-text) and "Self-Directed" options
+## Overview
+When a player logs a coach-led session and selects a specific coach, that coach's ID is stored in `performance_sessions.coach_id`. Currently the Session Feed doesn't fetch or use this field. This change will:
+1. Add a new "My Sessions" filter to prioritize sessions where the coach was the tagged leader
+2. Show a visual "Coach-Led" badge on sessions where the current coach was specifically tagged
+3. Sort coach-tagged sessions to the top by default
 
 ## Changes
 
-### `src/components/practice/CoachSelector.tsx`
-- Add a query to fetch all connected coaches from `scout_follows` joined with profile names (via `profiles_public` or the `get-coach-connections` edge function)
-- Replace the current single "assigned" option with a list of all connected coaches
-- Mark the Head Coach with a badge (e.g., crown icon or "Head Coach" label)
-- Auto-select the Head Coach by default when the component mounts (if one is designated)
-- Allow selecting any other connected coach from the list
-- Keep "External Coach" (with text input) and "Self-Directed" as additional options
-- Update the `CoachSelection` type to always include `coach_id` and `coach_name` when a connected coach is selected (type stays `'assigned'`)
+### `src/components/coach/SessionFeed.tsx`
 
-### `src/components/practice/SessionConfigPanel.tsx`
-- When `coachSessionType` changes to `'coached'` or `'lesson'`, auto-populate `coachSelection` with the Head Coach if one exists
-- When switching back to `'solo'`, reset to `{ type: 'none' }`
+**Query update:**
+- Add `coach_id` to the selected columns in the Supabase query
+- Add it to the `SessionSummary` interface
+
+**New filter:**
+- Add a third filter dropdown: "Role" with options: "All Sessions", "My Sessions" (where `coach_id` matches the logged-in coach)
+- When "My Sessions" is selected, add `.eq('coach_id', user.id)` to the query
+
+**Visual indicator:**
+- On each session row, if `coach_id` matches the current user, show a "Coach-Led" badge (using a distinct color like amber/primary) alongside existing badges
+- Coach-tagged sessions get a subtle left border accent (e.g., `border-l-2 border-l-primary`) for quick scanning
+
+**Default sort:**
+- When no role filter is active ("All Sessions"), sort results so coach-tagged sessions appear first, then the rest by date
+
+### `src/components/coach/SessionDetailView.tsx`
+
+- Add `coach_id` to the session interface
+- In the detail header metadata, show "You led this session" text when `coach_id` matches the current user
 
 ## Technical Details
 
-**Fetching connected coaches (in CoachSelector):**
+**Updated query in SessionFeed:**
 ```tsx
-const { data: connectedCoaches } = useQuery({
-  queryKey: ['connected-coaches', user?.id],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from('scout_follows')
-      .select('scout_id')
-      .eq('player_id', user!.id)
-      .eq('status', 'accepted')
-      .eq('relationship_type', 'linked');
-    if (!data?.length) return [];
-    const coachIds = data.map(d => d.scout_id);
-    const { data: profiles } = await supabase
-      .from('profiles_public')
-      .select('id, full_name')
-      .in('id', coachIds);
-    return profiles ?? [];
-  },
-  enabled: !!user,
+// Add coach_id to select
+.select('id, user_id, coach_id, module, session_type, ...')
+
+// New role filter
+if (roleFilter === 'my_sessions') {
+  query = query.eq('coach_id', user.id);
+}
+```
+
+**Sorting coach-tagged sessions first (client-side):**
+```tsx
+const sorted = [...data].sort((a, b) => {
+  const aTagged = a.coach_id === user.id ? 0 : 1;
+  const bTagged = b.coach_id === user.id ? 0 : 1;
+  if (aTagged !== bTagged) return aTagged - bTagged;
+  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 });
 ```
 
-**Auto-select Head Coach in SessionConfigPanel:**
-When `coachSessionType` switches to `'coached'` or `'lesson'`, check if `mpiSettings.primary_coach_id` exists and set `coachSelection` to `{ type: 'assigned', coach_id: headCoachId, coach_name: headCoachName }`.
+**Visual badge on each row:**
+```tsx
+{s.coach_id === user?.id && (
+  <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">
+    Coach-Led
+  </Badge>
+)}
+```
 
-**UI layout:**
-- Connected coaches shown as selectable cards/chips with name and optional Head Coach badge
-- Scrollable if many coaches
-- "External Coach" and "Self-Directed" remain as separate options below the coach list
-
-No database changes needed -- `scout_follows` RLS already allows players to read their own rows.
+No database changes needed -- `coach_id` already exists on `performance_sessions`.
