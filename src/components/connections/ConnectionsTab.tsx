@@ -47,7 +47,7 @@ export function ConnectionsTab() {
         .eq('user_id', user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data?.primary_coach_id as string | null;
+      return data?.primary_coach_id ?? null;
     },
     enabled: !!user,
   });
@@ -236,7 +236,7 @@ export function ConnectionsTab() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {isLinked && !isHeadCoach && (
+                      {!isHeadCoach && (
                         <Button
                           size="sm"
                           variant="ghost"
