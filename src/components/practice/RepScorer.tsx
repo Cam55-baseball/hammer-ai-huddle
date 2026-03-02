@@ -378,6 +378,22 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 )}
               </div>
 
+              {/* Swing Decision - always visible (most valuable self-assessment) */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'barreled', label: '🔥 Barreled', color: 'bg-green-500/20 text-green-700 border-green-300' },
+                    { value: 'good_take', label: '✅ Good Take', color: 'bg-primary/20 text-primary border-primary/30' },
+                    { value: 'should_have_swung', label: '😤 Should\'ve Swung', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
+                    { value: 'chased', label: '❌ Chased', color: 'bg-red-500/20 text-red-700 border-red-300' },
+                  ]}
+                  value={current.swing_decision}
+                  onChange={v => updateField('swing_decision', v)}
+                  cols={4}
+                />
+              </div>
+
               {mode === 'advanced' && (
                 <>
                   <div>
@@ -494,6 +510,20 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Hit Spot? - always visible for pitching quick mode */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Hit Spot?</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'yes', label: '✅ Yes', color: 'bg-green-500/20 text-green-700 border-green-300' },
+                    { value: 'no', label: '❌ No', color: 'bg-red-500/20 text-red-700 border-red-300' },
+                  ]}
+                  value={current.in_zone ? 'yes' : current.in_zone === false ? 'no' : undefined}
+                  onChange={v => updateField('in_zone', v === 'yes')}
+                  cols={2}
+                />
               </div>
 
               {mode === 'advanced' && (
@@ -634,27 +664,39 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             <BaserunningRepFields value={current} onChange={updateField} />
           )}
 
-          {/* Goal / Outcome (advanced only) */}
+          {/* Goal / Outcome (advanced only) - structured presets */}
           {mode === 'advanced' && (
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
-                <input
-                  type="text"
-                  value={current.goal_of_rep ?? ''}
-                  onChange={e => updateField('goal_of_rep', e.target.value)}
-                  placeholder="e.g., Line drive up middle"
-                  className="w-full rounded-md border border-border bg-muted/20 px-2 py-1.5 text-xs"
+                <SelectGrid
+                  options={[
+                    { value: 'oppo_drive', label: 'Oppo Drive' },
+                    { value: 'pull_power', label: 'Pull Power' },
+                    { value: 'up_middle', label: 'Up Middle' },
+                    { value: 'adjust_offspeed', label: 'Adj. Off-Speed' },
+                    { value: 'two_strike', label: '2-Strike Battle' },
+                    { value: 'custom', label: 'Custom' },
+                  ]}
+                  value={current.goal_of_rep}
+                  onChange={v => updateField('goal_of_rep', v)}
+                  cols={3}
                 />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Actual Outcome</Label>
-                <input
-                  type="text"
-                  value={current.actual_outcome ?? ''}
-                  onChange={e => updateField('actual_outcome', e.target.value)}
-                  placeholder="e.g., Ground out to SS"
-                  className="w-full rounded-md border border-border bg-muted/20 px-2 py-1.5 text-xs"
+                <SelectGrid
+                  options={[
+                    { value: 'oppo_drive', label: 'Oppo Drive' },
+                    { value: 'pull_power', label: 'Pull Power' },
+                    { value: 'up_middle', label: 'Up Middle' },
+                    { value: 'ground_out', label: 'Ground Out' },
+                    { value: 'fly_out', label: 'Fly Out' },
+                    { value: 'custom', label: 'Custom' },
+                  ]}
+                  value={current.actual_outcome}
+                  onChange={v => updateField('actual_outcome', v)}
+                  cols={3}
                 />
               </div>
             </div>

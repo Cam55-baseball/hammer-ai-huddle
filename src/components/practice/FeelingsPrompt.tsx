@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 export interface FeelingState {
   body: number; // 1-5
   mind: number; // 1-5
+  sleep: number; // 1-5
   note?: string;
 }
 
@@ -14,76 +15,92 @@ interface FeelingsPromptProps {
 }
 
 const bodyOptions = [
-  { value: 1, emoji: '🤕', label: 'Hurting' },
-  { value: 2, emoji: '😓', label: 'Tired' },
-  { value: 3, emoji: '😐', label: 'OK' },
-  { value: 4, emoji: '💪', label: 'Good' },
-  { value: 5, emoji: '🔥', label: 'Great' },
+  { value: 1, emoji: '🤕', label: 'Pain / Limited ROM' },
+  { value: 2, emoji: '😓', label: 'Heavy / Fatigued' },
+  { value: 3, emoji: '🏋️', label: 'Functional' },
+  { value: 4, emoji: '💪', label: 'Fresh / Responsive' },
+  { value: 5, emoji: '🔥', label: 'Peak Readiness' },
 ];
 
 const mindOptions = [
-  { value: 1, emoji: '😵', label: 'Struggling' },
-  { value: 2, emoji: '😶‍🌫️', label: 'Distracted' },
-  { value: 3, emoji: '😐', label: 'Neutral' },
-  { value: 4, emoji: '🎯', label: 'Focused' },
-  { value: 5, emoji: '🔒', label: 'Locked In' },
+  { value: 1, emoji: '😵', label: 'Overwhelmed' },
+  { value: 2, emoji: '😶‍🌫️', label: 'Low Focus' },
+  { value: 3, emoji: '😐', label: 'Baseline' },
+  { value: 4, emoji: '🎯', label: 'Engaged' },
+  { value: 5, emoji: '🔒', label: 'Flow State' },
 ];
+
+const sleepOptions = [
+  { value: 1, emoji: '😴', label: '<5 hrs / broken' },
+  { value: 2, emoji: '🥱', label: '5–6 hrs' },
+  { value: 3, emoji: '😌', label: '6–7 hrs' },
+  { value: 4, emoji: '😊', label: '7–8 hrs' },
+  { value: 5, emoji: '⭐', label: '8+ hrs / deep' },
+];
+
+function ReadinessRow({
+  label,
+  options,
+  selectedValue,
+  onSelect,
+}: {
+  label: string;
+  options: { value: number; emoji: string; label: string }[];
+  selectedValue: number;
+  onSelect: (v: number) => void;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-medium text-muted-foreground mb-2 block">{label}</label>
+      <div className="grid grid-cols-5 gap-2">
+        {options.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onSelect(opt.value)}
+            className={cn(
+              'flex flex-col items-center gap-1 rounded-lg border p-2 transition-all',
+              selectedValue === opt.value
+                ? 'bg-primary/10 border-primary ring-2 ring-primary scale-105'
+                : 'bg-muted/20 border-border hover:bg-muted'
+            )}
+          >
+            <span className="text-xl">{opt.emoji}</span>
+            <span className="text-[10px] font-medium leading-tight text-center">{opt.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function FeelingsPrompt({ value, onChange }: FeelingsPromptProps) {
   return (
     <Card>
       <CardContent className="py-4 space-y-4">
-        {/* Body */}
-        <div>
-          <label className="text-xs font-medium text-muted-foreground mb-2 block">
-            How is your body feeling right now?
-          </label>
-          <div className="grid grid-cols-5 gap-2">
-            {bodyOptions.map(opt => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => onChange({ ...value, body: opt.value })}
-                className={cn(
-                  'flex flex-col items-center gap-1 rounded-lg border p-2 transition-all',
-                  value.body === opt.value
-                    ? 'bg-primary/10 border-primary ring-2 ring-primary scale-105'
-                    : 'bg-muted/20 border-border hover:bg-muted'
-                )}
-              >
-                <span className="text-xl">{opt.emoji}</span>
-                <span className="text-[10px] font-medium">{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <p className="text-sm font-semibold text-foreground">Pre-Session Readiness</p>
 
-        {/* Mind */}
-        <div>
-          <label className="text-xs font-medium text-muted-foreground mb-2 block">
-            Mentally, where are you at?
-          </label>
-          <div className="grid grid-cols-5 gap-2">
-            {mindOptions.map(opt => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => onChange({ ...value, mind: opt.value })}
-                className={cn(
-                  'flex flex-col items-center gap-1 rounded-lg border p-2 transition-all',
-                  value.mind === opt.value
-                    ? 'bg-primary/10 border-primary ring-2 ring-primary scale-105'
-                    : 'bg-muted/20 border-border hover:bg-muted'
-                )}
-              >
-                <span className="text-xl">{opt.emoji}</span>
-                <span className="text-[10px] font-medium">{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <ReadinessRow
+          label="How is your body feeling right now?"
+          options={bodyOptions}
+          selectedValue={value.body}
+          onSelect={v => onChange({ ...value, body: v })}
+        />
 
-        {/* Optional note */}
+        <ReadinessRow
+          label="Mentally, where are you at?"
+          options={mindOptions}
+          selectedValue={value.mind}
+          onSelect={v => onChange({ ...value, mind: v })}
+        />
+
+        <ReadinessRow
+          label="How did you sleep last night?"
+          options={sleepOptions}
+          selectedValue={value.sleep}
+          onSelect={v => onChange({ ...value, sleep: v })}
+        />
+
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1 block">
             Anything specific to note? <span className="opacity-50">(optional)</span>
