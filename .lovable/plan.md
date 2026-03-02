@@ -1,59 +1,54 @@
 
 
-# Add "Share with Coach" Button in Folder Detail + Shared Indicator on Folder Cards
+# Allow Players to Revoke Head Coach Folder Access
 
-## Overview
-Two features:
-1. A "Share with Coach" button inside the folder detail view so players can grant coach access directly (no Connections tab detour).
-2. A visual share indicator on player folder cards showing when a coach has been granted access.
+## Problem
+Currently, the Head Coach gets automatic, non-revocable access to all folders. The UI shows "Auto" / "Auto - Full Access" with no toggles. Players cannot restrict access on a per-folder basis.
+
+## Solution
+Make the Head Coach appear as a normal coach in the permission UI, pre-checked with Edit access by default, but fully toggleable. The database function `can_edit_folder_item` will be updated to respect explicit revocations.
 
 ## Changes
 
-### 1. New Component: `src/components/folders/FolderShareDialog.tsx`
-A small dialog that lets the player pick a linked coach and grant View or Edit access. Reuses the same `folder_coach_permissions` table logic from `FolderPermissionMatrix`.
+### 1. Database Migration: Update `can_edit_folder_item` function
+Modify the head coach check to also verify no explicit revocation exists in `folder_coach_permissions`:
 
-- On open, fetch linked coaches from `scout_follows` (same query pattern as `FolderPermissionMatrix`)
-- Also fetch existing permissions for this folder
-- Show each coach with View/Edit radio options and a "Revoke" action for existing permissions
-- Head Coach shows as "Auto - Full Access" (non-toggleable)
-- Insert/update/revoke permissions via `folder_coach_permissions` table
-
-### 2. File: `src/components/folders/FolderDetailDialog.tsx`
-- Import the new `FolderShareDialog` and `Share2` icon from lucide-react
-- Add `shareDialogOpen` state
-- Add a "Share" button in the fixed footer (next to Edit Folder), visible only when `isOwner` is true
-- Render `<FolderShareDialog>` at the bottom of the component
-
-### 3. File: `src/components/folders/FolderCard.tsx`
-- Accept a new optional prop `sharedWithCoaches?: number` (count of coaches with active permissions)
-- When > 0, render a small `Share2` icon with count in the metadata row at the bottom of the card (next to dates/item count)
-- Style: `<Share2 className="h-3 w-3" /> Shared (2)` in muted text
-
-### 4. File: `src/components/folders/FolderTabContent.tsx`
-- Fetch `folder_coach_permissions` for all player folders on mount (single query)
-- Build a map of `folderId -> count of active permissions`
-- Pass `sharedWithCoaches={permissionCounts[f.id] || 0}` to each player `FolderCard`
-
-## Technical Details
-
-**FolderShareDialog** query flow:
-```
-1. Fetch scout_follows WHERE player_id = user.id, status = 'accepted', relationship_type = 'linked'
-2. Fetch profiles for those coach IDs
-3. Fetch folder_coach_permissions for this folder WHERE revoked_at IS NULL
-4. Fetch athlete_mpi_settings to identify head coach
-5. Render coach list with permission toggles
+```sql
+-- Head coach (primary_coach_id) UNLESS explicitly revoked for this folder
+OR (
+  EXISTS (
+    SELECT 1 FROM public.athlete_mpi_settings ams
+    WHERE ams.user_id = af.owner_id
+      AND ams.primary_coach_id = p_user_id
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM public.folder_coach_permissions fcp
+    WHERE fcp.folder_id = af.id
+      AND fcp.coach_user_id = p_user_id
+      AND fcp.revoked_at IS NOT NULL
+  )
+)
 ```
 
-**FolderCard shared indicator** (bottom metadata row):
-```tsx
-{sharedWithCoaches > 0 && (
-  <span className="flex items-center gap-1">
-    <Share2 className="h-3 w-3" />
-    Shared ({sharedWithCoaches})
-  </span>
-)}
-```
+### 2. `FolderPermissionMatrix.tsx`
+- Remove the special "Auto" badge rendering for the head coach
+- Remove the `colSpan` difference (head coach gets 1 column, others get 2)
+- Render the head coach with the same View/Edit checkboxes as other coaches
+- Pre-check both View and Edit if no explicit permission record exists (auto-access)
+- Keep the "Head Coach" name badge for identification
 
-No database changes needed -- all existing tables and RLS policies support this.
+### 3. `FolderShareDialog.tsx`
+- Remove the `isHeadCoach` guard that prevents toggling
+- Remove the "Auto - Full Access" badge
+- Render the head coach with the same View/Edit/None radio controls
+- Default to "edit" when no explicit permission record exists
+- Keep the "Head Coach" badge label for identification
+
+### 4. `FolderDetailDialog.tsx`
+- Update the head coach auto-access check (around line 132-140) to also verify no revocation exists in `folder_coach_permissions` for the current folder
+
+## Technical Notes
+- When a player revokes the head coach, a `folder_coach_permissions` row is created with `revoked_at` set (same revocation mechanism used for other coaches)
+- When a player re-grants access, the revoked row is updated or a new row is inserted
+- The Head Coach badge remains visible so players know which coach is designated, even if access is revoked for a specific folder
 
