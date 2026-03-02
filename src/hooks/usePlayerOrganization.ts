@@ -24,6 +24,8 @@ export function usePlayerOrganization() {
 
   return {
     membership: query.data,
+    organizationId: query.data?.organization_id as string | undefined,
+    roleInOrg: (query.data?.role_in_org as string) ?? 'player',
     orgName: (query.data as any)?.organizations?.name as string | undefined,
     isLoading: query.isLoading,
   };
