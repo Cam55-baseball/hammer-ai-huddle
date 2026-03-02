@@ -1,31 +1,44 @@
 
 
-# Fix: Allow Coach Role to Use Hammer Workout Recommendations
+# Fix: Show Distance and Pace Goal in Activity Detail View
 
 ## Problem
-The `recommend-workout` edge function returns 403 "Subscription required" for coach-profile users. The entitlement check only bypasses the subscription requirement for `owner` and `admin` roles, but coaches have the `coach` role -- which falls through to the subscription check, and coaches typically don't have personal subscriptions with modules.
+
+When you create a running activity with a distance and pace goal, those values are saved on the template's top-level fields (`distance_value`, `distance_unit`, `pace_value`). However, the Activity Detail dialog only displays distance/pace from `embedded_running_sessions` (a separate sub-section for multi-segment runs). Simple running activities that use the top-level fields have their details silently ignored.
 
 ## Solution
-Add `coach` to the privileged roles list in the entitlement check. Coaches need AI features to build activities/folders for their players.
+
+Add a "Running Details" section to `CustomActivityDetailDialog.tsx` that renders the template's top-level `distance_value`, `distance_unit`, and `pace_value` fields -- the same way `VaultDayRecapCard` already does.
 
 ## Changes
 
-### File: `supabase/functions/recommend-workout/index.ts` (line 177)
+### File: `src/components/CustomActivityDetailDialog.tsx`
 
-Update the `.in('role', ...)` array to include `'coach'`:
+After the "Duration and Intensity" badges section (around line 390), add a new block that checks for `template.distance_value` or `template.pace_value` and renders them:
 
-```typescript
-// Before
-.in('role', ['owner', 'admin'])
-
-// After
-.in('role', ['owner', 'admin', 'coach'])
+```tsx
+{/* Running Distance & Pace Goal */}
+{(template.distance_value || template.pace_value) && (
+  <div className="flex flex-wrap gap-3">
+    {template.distance_value && (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+        <Footprints className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium">
+          {template.distance_value} {template.distance_unit || 'miles'}
+        </span>
+      </div>
+    )}
+    {template.pace_value && (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+        <Target className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium">
+          Goal: {template.pace_value}
+        </span>
+      </div>
+    )}
+  </div>
+)}
 ```
 
-This is a single-line change. After editing, the function will be redeployed automatically.
-
-## Why This Is Safe
-- Coaches are authenticated users with an assigned role
-- The role check still requires `status = 'active'`
-- This aligns with the existing pattern in `check-subscription` where owner access is already granted (coaches should have similar AI feature access for building training programs)
+This uses the `Footprints` and `Target` icons already imported in the file, keeping the visual style consistent with the existing duration/intensity badges. No other files need changes.
 
