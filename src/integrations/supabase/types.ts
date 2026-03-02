@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_card_versions: {
+        Row: {
+          created_at: string
+          edited_by: string
+          editor_role: string
+          folder_item_id: string
+          id: string
+          snapshot_json: Json
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          edited_by: string
+          editor_role?: string
+          folder_item_id: string
+          id?: string
+          snapshot_json?: Json
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          edited_by?: string
+          editor_role?: string
+          folder_item_id?: string
+          id?: string
+          snapshot_json?: Json
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_card_versions_folder_item_id_fkey"
+            columns: ["folder_item_id"]
+            isOneToOne: false
+            referencedRelation: "activity_folder_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_edit_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          folder_item_id: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          folder_item_id: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          folder_item_id?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_edit_logs_folder_item_id_fkey"
+            columns: ["folder_item_id"]
+            isOneToOne: false
+            referencedRelation: "activity_folder_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_folder_items: {
         Row: {
           assigned_days: number[] | null
@@ -27,6 +100,8 @@ export type Database = {
           folder_id: string
           id: string
           item_type: string | null
+          locked_at: string | null
+          locked_by: string | null
           notes: string | null
           order_index: number | null
           specific_dates: string[] | null
@@ -45,6 +120,8 @@ export type Database = {
           folder_id: string
           id?: string
           item_type?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_index?: number | null
           specific_dates?: string[] | null
@@ -63,6 +140,8 @@ export type Database = {
           folder_id?: string
           id?: string
           item_type?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
           notes?: string | null
           order_index?: number | null
           specific_dates?: string[] | null
@@ -5874,6 +5953,10 @@ export type Database = {
     }
     Functions: {
       archive_old_scout_applications: { Args: never; Returns: undefined }
+      can_edit_folder_item: {
+        Args: { p_folder_item_id: string; p_user_id: string }
+        Returns: boolean
+      }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       folder_allows_coach_edit: {

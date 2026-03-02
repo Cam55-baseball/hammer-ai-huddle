@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Users, UserPlus, Clock, CheckCircle, XCircle, Link2Off } from 'lucide-react';
 import { CoachSearchConnect } from './CoachSearchConnect';
+import { FolderPermissionMatrix } from './FolderPermissionMatrix';
 
 interface CoachConnection {
   id: string;
@@ -203,6 +204,8 @@ export function ConnectionsTab() {
           )}
         </CardContent>
       </Card>
+      {/* Folder Permissions Matrix */}
+      {activeCoaches.length > 0 && <FolderPermissionMatrix />}
     </div>
   );
 }
