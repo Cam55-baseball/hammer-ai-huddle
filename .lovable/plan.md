@@ -1,52 +1,59 @@
 
 
-# Fix: Coach-Initiated Connections Should Be Treated as Linked
+# Add "Share with Coach" Button in Folder Detail + Shared Indicator on Folder Cards
 
-## Problem
-Your coaches initiated the connection from their side, which created `scout_follows` records with `relationship_type = 'follow'`. However, the Folder Permission Matrix and Send-to-Coach dialogs only query for `relationship_type = 'linked'`, so they show "No linked coaches" even though you have two accepted coach connections.
-
-When a player accepts a coach-initiated follow request, the relationship should be upgradeable to "linked" -- or accepted follow connections should be treated equivalently.
-
-## Solution
-Two changes:
-
-1. **Auto-upgrade to 'linked' on accept**: When a player accepts a coach-initiated connection request, set `relationship_type` to `'linked'` (not just update the status). This makes sense because accepting a coach connection implies granting them linked-level access.
-
-2. **Fix existing data**: Update the two existing accepted `follow` connections to `linked` so they appear immediately.
+## Overview
+Two features:
+1. A "Share with Coach" button inside the folder detail view so players can grant coach access directly (no Connections tab detour).
+2. A visual share indicator on player folder cards showing when a coach has been granted access.
 
 ## Changes
 
-### 1. File: `src/components/connections/ConnectionsTab.tsx` (~line 81)
-In the `respondMutation`, when the player accepts a request, also set `relationship_type: 'linked'`:
+### 1. New Component: `src/components/folders/FolderShareDialog.tsx`
+A small dialog that lets the player pick a linked coach and grant View or Edit access. Reuses the same `folder_coach_permissions` table logic from `FolderPermissionMatrix`.
 
-```typescript
-const { error } = await supabase
-  .from('scout_follows')
-  .update({
-    status: accept ? 'accepted' : 'rejected',
-    confirmed_at: accept ? new Date().toISOString() : null,
-    relationship_type: accept ? 'linked' : undefined,  // upgrade on accept
-  })
-  .eq('id', connectionId)
-  .eq('player_id', user!.id);
+- On open, fetch linked coaches from `scout_follows` (same query pattern as `FolderPermissionMatrix`)
+- Also fetch existing permissions for this folder
+- Show each coach with View/Edit radio options and a "Revoke" action for existing permissions
+- Head Coach shows as "Auto - Full Access" (non-toggleable)
+- Insert/update/revoke permissions via `folder_coach_permissions` table
+
+### 2. File: `src/components/folders/FolderDetailDialog.tsx`
+- Import the new `FolderShareDialog` and `Share2` icon from lucide-react
+- Add `shareDialogOpen` state
+- Add a "Share" button in the fixed footer (next to Edit Folder), visible only when `isOwner` is true
+- Render `<FolderShareDialog>` at the bottom of the component
+
+### 3. File: `src/components/folders/FolderCard.tsx`
+- Accept a new optional prop `sharedWithCoaches?: number` (count of coaches with active permissions)
+- When > 0, render a small `Share2` icon with count in the metadata row at the bottom of the card (next to dates/item count)
+- Style: `<Share2 className="h-3 w-3" /> Shared (2)` in muted text
+
+### 4. File: `src/components/folders/FolderTabContent.tsx`
+- Fetch `folder_coach_permissions` for all player folders on mount (single query)
+- Build a map of `folderId -> count of active permissions`
+- Pass `sharedWithCoaches={permissionCounts[f.id] || 0}` to each player `FolderCard`
+
+## Technical Details
+
+**FolderShareDialog** query flow:
+```
+1. Fetch scout_follows WHERE player_id = user.id, status = 'accepted', relationship_type = 'linked'
+2. Fetch profiles for those coach IDs
+3. Fetch folder_coach_permissions for this folder WHERE revoked_at IS NULL
+4. Fetch athlete_mpi_settings to identify head coach
+5. Render coach list with permission toggles
 ```
 
-Note: We need to handle the `undefined` case -- only include `relationship_type` when accepting. We'll build the update object conditionally.
-
-### 2. Database Migration
-Update existing accepted follow-type connections to `linked`:
-
-```sql
-UPDATE public.scout_follows
-SET relationship_type = 'linked'
-WHERE status = 'accepted'
-  AND relationship_type = 'follow';
+**FolderCard shared indicator** (bottom metadata row):
+```tsx
+{sharedWithCoaches > 0 && (
+  <span className="flex items-center gap-1">
+    <Share2 className="h-3 w-3" />
+    Shared ({sharedWithCoaches})
+  </span>
+)}
 ```
 
-This fixes the two existing records so they show up immediately in the Folder Permission Matrix and Send-to-Coach dialogs.
-
-## Why This Is the Right Fix
-- A player accepting a coach's request is an explicit trust signal -- upgrading to `linked` is appropriate
-- The player-initiated "Find Coach" flow already creates `linked` connections, so this creates consistency
-- The `FolderPermissionMatrix` and `SendCardToCoachDialog` correctly require `linked` status for security reasons (linked coaches get deeper data access), so we should fix the data/flow rather than loosening the filter
+No database changes needed -- all existing tables and RLS policies support this.
 
