@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import { FolderTemplateLibrary } from './FolderTemplateLibrary';
 import { ActivityFolder, FolderAssignment } from '@/types/activityFolder';
 import { FolderPlus, FolderOpen, Inbox, BookCopy } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FolderTabContentProps {
   selectedSport: 'baseball' | 'softball';
@@ -55,6 +56,25 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
   const [publishCategory, setPublishCategory] = useState('general');
   const [publishDescription, setPublishDescription] = useState('');
   const [deletingFolder, setDeletingFolder] = useState<{ folder: ActivityFolder; type: 'coach' | 'player' } | null>(null);
+  const [permissionCounts, setPermissionCounts] = useState<Record<string, number>>({});
+
+  // Fetch permission counts for player folders
+  useEffect(() => {
+    if (playerFolders.loading || playerFolders.folders.length === 0) return;
+    const folderIds = playerFolders.folders.map(f => f.id);
+    supabase
+      .from('folder_coach_permissions')
+      .select('folder_id')
+      .in('folder_id', folderIds)
+      .is('revoked_at', null)
+      .then(({ data }) => {
+        const counts: Record<string, number> = {};
+        (data || []).forEach((row: any) => {
+          counts[row.folder_id] = (counts[row.folder_id] || 0) + 1;
+        });
+        setPermissionCounts(counts);
+      });
+  }, [playerFolders.loading, playerFolders.folders]);
 
   const handleCoachCreate = async (folder: Partial<ActivityFolder>) => {
     const result = await coachFolders.createFolder(folder);
@@ -235,6 +255,7 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
                   onEdit={() => setEditingFolder(f)}
                   onDelete={() => setDeletingFolder({ folder: f, type: 'player' })}
                   showMenu={false}
+                  sharedWithCoaches={permissionCounts[f.id] || 0}
                 />
             ))}
           </div>

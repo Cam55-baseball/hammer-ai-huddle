@@ -15,7 +15,8 @@ import { FolderBuilder } from './FolderBuilder';
 import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
 import { ActivityPickerDialog } from './ActivityPickerDialog';
 import { CustomActivityTemplate, Exercise } from '@/types/customActivity';
-import { FolderOpen, Clock, FileText, Trash2, CalendarDays, ChevronDown, ChevronRight, ChevronUp, Pencil, Plus, Library, Edit, GripVertical, Copy } from 'lucide-react';
+import { FolderOpen, Clock, FileText, Trash2, CalendarDays, ChevronDown, ChevronRight, ChevronUp, Pencil, Plus, Library, Edit, GripVertical, Copy, Share2 } from 'lucide-react';
+import { FolderShareDialog } from './FolderShareDialog';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
@@ -73,6 +74,7 @@ export function FolderDetailDialog({
   const [pendingCycleWeek, setPendingCycleWeek] = useState<number | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [isGrantedCoach, setIsGrantedCoach] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const canEdit = isOwner || isGrantedCoach;
 
@@ -724,6 +726,11 @@ export function FolderDetailDialog({
                 <Edit className="h-3.5 w-3.5" /> Edit Folder
               </Button>
             )}
+            {isOwner && folder.owner_type === 'player' && (
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => setShareDialogOpen(true)}>
+                <Share2 className="h-3.5 w-3.5" /> Share
+              </Button>
+            )}
             {onDeleteFolder && isOwner && (
               <Button size="sm" variant="destructive" className="gap-1" onClick={() => setConfirmDeleteOpen(true)}>
                 <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -817,6 +824,16 @@ export function FolderDetailDialog({
             />
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Share with Coach Dialog */}
+      {folder && (
+        <FolderShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          folderId={folder.id}
+          folderName={folder.name}
+        />
       )}
 
       {/* Delete Folder Confirmation */}

@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ActivityFolder } from '@/types/activityFolder';
-import { FolderOpen, Calendar, Send, MoreVertical, Trash2, Archive, Edit, BookCopy, Pencil } from 'lucide-react';
+import { FolderOpen, Calendar, Send, MoreVertical, Trash2, Archive, Edit, BookCopy, Pencil, Share2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 
@@ -16,6 +16,7 @@ interface FolderCardProps {
   onPublishTemplate?: (folder: ActivityFolder) => void;
   showMenu?: boolean;
   itemCount?: number;
+  sharedWithCoaches?: number;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -25,7 +26,7 @@ const STATUS_STYLES: Record<string, string> = {
   archived: 'bg-muted text-muted-foreground',
 };
 
-export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive, onPublishTemplate, showMenu = true, itemCount }: FolderCardProps) {
+export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive, onPublishTemplate, showMenu = true, itemCount, sharedWithCoaches }: FolderCardProps) {
   return (
     <Card
       className="cursor-pointer hover:shadow-md transition-shadow border-l-4"
@@ -114,6 +115,12 @@ export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive
           )}
           {itemCount !== undefined && (
             <span>{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+          )}
+          {sharedWithCoaches !== undefined && sharedWithCoaches > 0 && (
+            <span className="flex items-center gap-1">
+              <Share2 className="h-3 w-3" />
+              Shared ({sharedWithCoaches})
+            </span>
           )}
         </div>
       </CardContent>
