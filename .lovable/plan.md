@@ -1,44 +1,52 @@
 
 
-# Fix: Show Distance and Pace Goal in Activity Detail View
+# Fix: Coach-Initiated Connections Should Be Treated as Linked
 
 ## Problem
+Your coaches initiated the connection from their side, which created `scout_follows` records with `relationship_type = 'follow'`. However, the Folder Permission Matrix and Send-to-Coach dialogs only query for `relationship_type = 'linked'`, so they show "No linked coaches" even though you have two accepted coach connections.
 
-When you create a running activity with a distance and pace goal, those values are saved on the template's top-level fields (`distance_value`, `distance_unit`, `pace_value`). However, the Activity Detail dialog only displays distance/pace from `embedded_running_sessions` (a separate sub-section for multi-segment runs). Simple running activities that use the top-level fields have their details silently ignored.
+When a player accepts a coach-initiated follow request, the relationship should be upgradeable to "linked" -- or accepted follow connections should be treated equivalently.
 
 ## Solution
+Two changes:
 
-Add a "Running Details" section to `CustomActivityDetailDialog.tsx` that renders the template's top-level `distance_value`, `distance_unit`, and `pace_value` fields -- the same way `VaultDayRecapCard` already does.
+1. **Auto-upgrade to 'linked' on accept**: When a player accepts a coach-initiated connection request, set `relationship_type` to `'linked'` (not just update the status). This makes sense because accepting a coach connection implies granting them linked-level access.
+
+2. **Fix existing data**: Update the two existing accepted `follow` connections to `linked` so they appear immediately.
 
 ## Changes
 
-### File: `src/components/CustomActivityDetailDialog.tsx`
+### 1. File: `src/components/connections/ConnectionsTab.tsx` (~line 81)
+In the `respondMutation`, when the player accepts a request, also set `relationship_type: 'linked'`:
 
-After the "Duration and Intensity" badges section (around line 390), add a new block that checks for `template.distance_value` or `template.pace_value` and renders them:
-
-```tsx
-{/* Running Distance & Pace Goal */}
-{(template.distance_value || template.pace_value) && (
-  <div className="flex flex-wrap gap-3">
-    {template.distance_value && (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
-        <Footprints className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">
-          {template.distance_value} {template.distance_unit || 'miles'}
-        </span>
-      </div>
-    )}
-    {template.pace_value && (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
-        <Target className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">
-          Goal: {template.pace_value}
-        </span>
-      </div>
-    )}
-  </div>
-)}
+```typescript
+const { error } = await supabase
+  .from('scout_follows')
+  .update({
+    status: accept ? 'accepted' : 'rejected',
+    confirmed_at: accept ? new Date().toISOString() : null,
+    relationship_type: accept ? 'linked' : undefined,  // upgrade on accept
+  })
+  .eq('id', connectionId)
+  .eq('player_id', user!.id);
 ```
 
-This uses the `Footprints` and `Target` icons already imported in the file, keeping the visual style consistent with the existing duration/intensity badges. No other files need changes.
+Note: We need to handle the `undefined` case -- only include `relationship_type` when accepting. We'll build the update object conditionally.
+
+### 2. Database Migration
+Update existing accepted follow-type connections to `linked`:
+
+```sql
+UPDATE public.scout_follows
+SET relationship_type = 'linked'
+WHERE status = 'accepted'
+  AND relationship_type = 'follow';
+```
+
+This fixes the two existing records so they show up immediately in the Folder Permission Matrix and Send-to-Coach dialogs.
+
+## Why This Is the Right Fix
+- A player accepting a coach's request is an explicit trust signal -- upgrading to `linked` is appropriate
+- The player-initiated "Find Coach" flow already creates `linked` connections, so this creates consistency
+- The `FolderPermissionMatrix` and `SendCardToCoachDialog` correctly require `linked` status for security reasons (linked coaches get deeper data access), so we should fix the data/flow rather than loosening the filter
 
