@@ -94,6 +94,17 @@ export const ENGINE_CONTRACT = {
   GRADE_INFLATION_DELTA: 12,
   GAME_INFLATION_DELTA: 15,
 
+  // Pitch distance difficulty modeling
+  PITCH_DISTANCE_REFERENCE_FT: 60,
+  PITCH_DISTANCE_MODIFIER_PER_FT: 0.005,
+
+  // Season weighting
+  SEASON_WEIGHTS: { in_season: 1.0, preseason: 0.85, off_season: 0.70 } as const,
+
+  // Coach verification bonus
+  COACH_VERIFIED_INTEGRITY_BONUS: 3,
+  COACH_VERIFIED_WEIGHT_BONUS: 1.05,
+
   // Micro-field composite influence weights
   MICRO_WEIGHTS: {
     // BQI modifiers

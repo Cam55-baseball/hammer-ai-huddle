@@ -41,7 +41,7 @@ export function useSportConfig() {
       probabilityBaselines: isSoftball ? softballProBaselines : baseballProBaselines,
       machineVelocityBands: isSoftball ? softballMachineVelocityBands : baseballMachineVelocityBands,
       pitchingVelocityBands: isSoftball ? softballPitchingVelocityBands : baseballPitchingVelocityBands,
-      bpDistanceRange: isSoftball ? { min: 30, max: 250 } : { min: 30, max: 450 },
+      bpDistanceRange: { min: 15, max: 80 },  // pitch release distance (ft), both sports
     };
   }, [sport]);
 }
