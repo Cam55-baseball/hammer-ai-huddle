@@ -17,6 +17,7 @@ import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory'
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
 import { BulkSendDialog } from '@/components/coach/BulkSendDialog';
 import { SessionFeed } from '@/components/coach/SessionFeed';
+import { CollaborativeWorkspace } from '@/components/coach/CollaborativeWorkspace';
 import { 
   Command,
   CommandEmpty,
@@ -513,6 +514,9 @@ export default function CoachDashboard() {
             <SessionFeed linkedPlayerIds={linkedIds} playerNames={nameMap} />
           ) : null;
         })()}
+
+        {/* Collaborative Workspace */}
+        <CollaborativeWorkspace />
 
         <SentActivitiesHistory />
 

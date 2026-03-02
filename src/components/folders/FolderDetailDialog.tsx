@@ -129,18 +129,30 @@ export function FolderDetailDialog({
         // Check coach permissions
         if (!isOwner && folder) {
           const userId = userData.user.id;
-          const isHeadCoach = folder.coach_edit_allowed && folder.coach_edit_user_id === userId;
-          if (isHeadCoach) {
+          // Check head coach auto-access (primary_coach_id)
+          const { data: headCoachCheck } = await supabase
+            .from('athlete_mpi_settings')
+            .select('primary_coach_id')
+            .eq('user_id', folder.owner_id)
+            .eq('primary_coach_id', userId)
+            .maybeSingle();
+
+          if (headCoachCheck) {
             setIsGrantedCoach(true);
           } else {
-            const { data: permData } = await supabase
-              .from('folder_coach_permissions')
-              .select('id')
-              .eq('folder_id', folder.id)
-              .eq('coach_user_id', userId)
-              .is('revoked_at', null)
-              .maybeSingle();
-            setIsGrantedCoach(!!permData);
+            const isLegacyCoach = folder.coach_edit_allowed && folder.coach_edit_user_id === userId;
+            if (isLegacyCoach) {
+              setIsGrantedCoach(true);
+            } else {
+              const { data: permData } = await supabase
+                .from('folder_coach_permissions')
+                .select('id')
+                .eq('folder_id', folder.id)
+                .eq('coach_user_id', userId)
+                .is('revoked_at', null)
+                .maybeSingle();
+              setIsGrantedCoach(!!permData);
+            }
           }
         }
       }
@@ -255,6 +267,49 @@ export function FolderDetailDialog({
   const handleEditItemSave = async (data: any) => {
     if (!editingItem) return null;
     try {
+      // Snapshot current state as a version before updating
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        // Get current max version
+        const { data: maxVer } = await supabase
+          .from('activity_card_versions')
+          .select('version_number')
+          .eq('folder_item_id', editingItem.id)
+          .order('version_number', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const nextVersion = (maxVer?.version_number || 0) + 1;
+
+        // Save current state as version
+        await supabase.from('activity_card_versions').insert({
+          folder_item_id: editingItem.id,
+          edited_by: userData.user.id,
+          editor_role: isOwner ? 'player' : 'coach',
+          version_number: nextVersion,
+          snapshot_json: {
+            title: editingItem.title,
+            description: editingItem.description,
+            item_type: editingItem.item_type,
+            duration_minutes: editingItem.duration_minutes,
+            exercises: editingItem.exercises,
+            assigned_days: editingItem.assigned_days,
+            specific_dates: editingItem.specific_dates,
+            cycle_week: editingItem.cycle_week,
+            template_snapshot: editingItem.template_snapshot,
+            notes: editingItem.notes,
+          },
+        });
+
+        // Log the edit action
+        await supabase.from('activity_edit_logs').insert({
+          folder_item_id: editingItem.id,
+          user_id: userData.user.id,
+          action_type: 'modified_fields',
+          metadata: { previous_title: editingItem.title, new_title: data.title },
+        });
+      }
+
       const updates: any = {
         title: data.title,
         description: data.description || null,
