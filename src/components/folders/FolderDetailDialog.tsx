@@ -131,29 +131,35 @@ export function FolderDetailDialog({
         // Check coach permissions
         if (!isOwner && folder) {
           const userId = userData.user.id;
-          // Check head coach auto-access (primary_coach_id)
-          const { data: headCoachCheck } = await supabase
-            .from('athlete_mpi_settings')
-            .select('primary_coach_id')
-            .eq('user_id', folder.owner_id)
-            .eq('primary_coach_id', userId)
+          
+          // Check explicit folder permission first
+          const { data: permData } = await supabase
+            .from('folder_coach_permissions')
+            .select('id, permission_level, revoked_at')
+            .eq('folder_id', folder.id)
+            .eq('coach_user_id', userId)
+            .order('granted_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
-          if (headCoachCheck) {
-            setIsGrantedCoach(true);
+          if (permData) {
+            // Explicit record exists: granted only if not revoked
+            setIsGrantedCoach(!permData.revoked_at);
           } else {
-            const isLegacyCoach = folder.coach_edit_allowed && folder.coach_edit_user_id === userId;
-            if (isLegacyCoach) {
+            // No explicit record: check head coach auto-access
+            const { data: headCoachCheck } = await supabase
+              .from('athlete_mpi_settings')
+              .select('primary_coach_id')
+              .eq('user_id', folder.owner_id)
+              .eq('primary_coach_id', userId)
+              .maybeSingle();
+
+            if (headCoachCheck) {
               setIsGrantedCoach(true);
             } else {
-              const { data: permData } = await supabase
-                .from('folder_coach_permissions')
-                .select('id')
-                .eq('folder_id', folder.id)
-                .eq('coach_user_id', userId)
-                .is('revoked_at', null)
-                .maybeSingle();
-              setIsGrantedCoach(!!permData);
+              // Legacy coach_edit mechanism
+              const isLegacyCoach = folder.coach_edit_allowed && folder.coach_edit_user_id === userId;
+              setIsGrantedCoach(!!isLegacyCoach);
             }
           }
         }

@@ -81,7 +81,8 @@ export function FolderShareDialog({ open, onOpenChange, folderId, folderName }: 
           id: p.id,
           name: p.full_name || 'Unknown Coach',
           isHeadCoach: p.id === headCoachId,
-          currentPermission: p.id === headCoachId ? 'edit' : (perm?.level as 'view' | 'edit') || 'none',
+          // Head coach defaults to 'edit' if no explicit permission record exists
+          currentPermission: perm ? (perm.level as 'view' | 'edit') : (p.id === headCoachId ? 'edit' : 'none'),
           permissionId: perm?.id,
         };
       });
@@ -98,7 +99,6 @@ export function FolderShareDialog({ open, onOpenChange, folderId, folderName }: 
   };
 
   const handlePermissionChange = async (coach: CoachEntry, newLevel: 'view' | 'edit' | 'none') => {
-    if (coach.isHeadCoach) return;
     setSaving(coach.id);
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -111,17 +111,28 @@ export function FolderShareDialog({ open, onOpenChange, folderId, folderName }: 
             .from('folder_coach_permissions')
             .update({ revoked_at: new Date().toISOString() })
             .eq('id', coach.permissionId);
+        } else if (coach.isHeadCoach) {
+          // Head coach with no explicit record: insert a revoked record
+          await supabase
+            .from('folder_coach_permissions')
+            .insert({
+              folder_id: folderId,
+              coach_user_id: coach.id,
+              granted_by: userData.user.id,
+              permission_level: 'edit',
+              revoked_at: new Date().toISOString(),
+            });
         }
         toast.success(`Revoked access for ${coach.name}`);
       } else if (coach.permissionId) {
         // Update existing
         await supabase
           .from('folder_coach_permissions')
-          .update({ permission_level: newLevel })
+          .update({ permission_level: newLevel, revoked_at: null })
           .eq('id', coach.permissionId);
         toast.success(`Updated to ${newLevel} access`);
       } else {
-        // Insert new
+        // Insert new (covers head coach getting explicit record too)
         await supabase
           .from('folder_coach_permissions')
           .insert({
@@ -174,10 +185,7 @@ export function FolderShareDialog({ open, onOpenChange, folderId, folderName }: 
                   )}
                 </div>
 
-                {coach.isHeadCoach ? (
-                  <Badge variant="outline" className="text-[10px] whitespace-nowrap">Auto – Full Access</Badge>
-                ) : (
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                     <RadioGroup
                       value={coach.currentPermission}
                       onValueChange={(val) => handlePermissionChange(coach, val as 'view' | 'edit' | 'none')}
@@ -205,7 +213,6 @@ export function FolderShareDialog({ open, onOpenChange, folderId, folderName }: 
                       </Button>
                     )}
                   </div>
-                )}
               </div>
             ))}
           </div>

@@ -136,6 +136,8 @@ export function FolderPermissionMatrix() {
 
     try {
       const existing = getPermission(folderId, coachId);
+      const coach = coaches.find(c => c.id === coachId);
+      const isHeadCoachWithoutRecord = coach?.is_head_coach && !existing;
 
       if (existing) {
         if (existing.level === level) {
@@ -157,6 +159,42 @@ export function FolderPermissionMatrix() {
           ));
           toast.success(`Updated to ${level} access`);
         }
+      } else if (isHeadCoachWithoutRecord && level === 'view') {
+        // Head coach clicking "view" means downgrade from auto-edit to view: insert explicit view record
+        const { data, error } = await supabase
+          .from('folder_coach_permissions')
+          .insert({
+            folder_id: folderId,
+            coach_user_id: coachId,
+            granted_by: user.id,
+            permission_level: 'view',
+          })
+          .select('id')
+          .single();
+        if (error) throw error;
+        setPermissions(prev => [...prev, {
+          folder_id: folderId,
+          coach_id: coachId,
+          level: 'view',
+          permission_id: data.id,
+        }]);
+        toast.success('Downgraded to view access');
+      } else if (isHeadCoachWithoutRecord && level === 'edit') {
+        // Head coach unchecking edit means revoke: insert a revoked record
+        const { data, error } = await supabase
+          .from('folder_coach_permissions')
+          .insert({
+            folder_id: folderId,
+            coach_user_id: coachId,
+            granted_by: user.id,
+            permission_level: 'edit',
+            revoked_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
+        if (error) throw error;
+        // Don't add to active permissions since it's revoked
+        toast.success('Permission revoked');
       } else {
         // Insert new
         const { data, error } = await supabase
@@ -232,7 +270,7 @@ export function FolderPermissionMatrix() {
               <tr className="border-b">
                 <th className="text-left py-2 pr-3 font-medium text-muted-foreground">Folder</th>
                 {coaches.map(c => (
-                  <th key={c.id} className="text-center py-2 px-2 font-medium" colSpan={c.is_head_coach ? 1 : 2}>
+                  <th key={c.id} className="text-center py-2 px-2 font-medium" colSpan={2}>
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="truncate max-w-[80px]">{c.full_name}</span>
                       {c.is_head_coach && (
@@ -244,9 +282,7 @@ export function FolderPermissionMatrix() {
               </tr>
               <tr className="border-b">
                 <th></th>
-                {coaches.map(c => c.is_head_coach ? (
-                  <th key={c.id} className="text-center py-1 text-[10px] text-muted-foreground">Full Access</th>
-                ) : (
+                {coaches.map(c => (
                   <th key={`${c.id}-labels`} className="text-center py-1" colSpan={2}>
                     <div className="flex justify-center gap-3 text-[10px] text-muted-foreground">
                       <span>View</span>
@@ -266,26 +302,21 @@ export function FolderPermissionMatrix() {
                     </div>
                   </td>
                   {coaches.map(c => {
-                    if (c.is_head_coach) {
-                      return (
-                        <td key={c.id} className="text-center py-2">
-                          <Badge variant="secondary" className="text-[8px]">Auto</Badge>
-                        </td>
-                      );
-                    }
                     const perm = getPermission(folder.id, c.id);
+                    // Head coach defaults to edit access if no explicit permission record exists
+                    const effectiveLevel = perm ? perm.level : (c.is_head_coach ? 'edit' : undefined);
                     const viewKey = `${folder.id}-${c.id}-view`;
                     const editKey = `${folder.id}-${c.id}-edit`;
                     return (
                       <td key={c.id} className="text-center py-2" colSpan={2}>
                         <div className="flex justify-center gap-3">
                           <Checkbox
-                            checked={perm?.level === 'view' || perm?.level === 'edit'}
+                            checked={effectiveLevel === 'view' || effectiveLevel === 'edit'}
                             disabled={toggling === viewKey}
                             onCheckedChange={() => handleToggle(folder.id, c.id, 'view')}
                           />
                           <Checkbox
-                            checked={perm?.level === 'edit'}
+                            checked={effectiveLevel === 'edit'}
                             disabled={toggling === editKey}
                             onCheckedChange={() => handleToggle(folder.id, c.id, 'edit')}
                           />
