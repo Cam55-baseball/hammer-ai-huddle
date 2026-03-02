@@ -1,34 +1,30 @@
 
 
-# Integrate ConnectionsTab into the App
+# Fix Head Coach Button Visibility and Query Error
 
 ## Problem
-
-The `ConnectionsTab` component (with Head Coach selection, Find Coach, pending requests, folder permissions matrix) was built but never added to any page or route. The `/my-followers` page is an older, simpler followers list that doesn't use it.
-
-## Solution
-
-Replace the content of the `/my-followers` page with the `ConnectionsTab` component so all the coach connection management features are accessible from the existing sidebar navigation.
+1. The "Set Head Coach" button only appears for coaches with `relationship_type === 'linked'`, but the user's coaches are "Following" type -- so the button never shows.
+2. The head-coach query throws `Query data cannot be undefined` when no `athlete_mpi_settings` row exists for the user.
 
 ## Changes
 
-### File: `src/pages/MyFollowers.tsx`
+### File: `src/components/connections/ConnectionsTab.tsx`
 
-- Import and render `ConnectionsTab` instead of the current manual followers list
-- Keep the `DashboardLayout` wrapper and page header
-- Remove the old manual follower fetching, removal dialog, and realtime subscription code (all of this is handled inside `ConnectionsTab`)
-- The page becomes a thin wrapper:
+**Fix 1 -- Show "Set Head Coach" for all active coaches, not just linked ones:**
+- Remove the `isLinked &&` condition on line 239 so the button appears for any active coach regardless of relationship type.
+- Keep the "Linked" / "Following" badge for informational purposes.
 
-```text
-DashboardLayout
-  Page Header ("My Connections" / subtitle)
-  ConnectionsTab  <-- renders everything: Find Coach, pending requests,
-                      active coaches with Head Coach toggle, folder permissions
-```
+**Fix 2 -- Prevent undefined query result:**
+- In the head-coach query (line 50), return `null` instead of `undefined` when no row is found:
+  ```typescript
+  return data?.primary_coach_id ?? null;
+  ```
+  This ensures the query always returns a defined value (`string | null`), fixing the React Query warning.
 
-- Optionally rename the page title from "My Followers" to "My Connections" to reflect the broader scope (finding coaches, setting head coach, managing permissions)
+### No other files change
 
-### No other files need changes
-- The sidebar already links to `/my-followers` with the Users icon
-- `ConnectionsTab` is self-contained with its own queries, mutations, and sub-components
+## Summary
+| File | Change |
+|------|--------|
+| `src/components/connections/ConnectionsTab.tsx` | Remove `isLinked` gate on "Set Head Coach" button; ensure query returns `null` not `undefined` |
 
