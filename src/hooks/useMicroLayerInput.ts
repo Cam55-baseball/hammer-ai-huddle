@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 export interface MicroLayerData {
-  pitch_location?: { row: number; col: number }; // 3x3 or 5x5 grid
+  pitch_location?: { row: number; col: number };
   swing_decision?: 'correct' | 'incorrect';
   contact_quality?: 'miss' | 'foul' | 'weak' | 'hard' | 'barrel';
   exit_direction?: 'pull' | 'middle' | 'oppo' | 'slap_side';
@@ -12,23 +12,38 @@ export interface MicroLayerData {
   velocity_band?: string;
   spin_rate?: number;
   pitcher_style_tag?: 'riseball' | 'dropball' | 'speed' | 'spin';
-  // Stream 3: additional micro fields
-  in_zone?: boolean; // true if pitch is in strike zone — for chase tracking
+  in_zone?: boolean;
   batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel';
   spin_direction?: 'topspin' | 'backspin' | 'sidespin';
   swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
-  execution_score?: number; // 1-10
+  execution_score?: number;
   // Fielding micro
   play_type?: 'ground_ball' | 'fly_ball' | 'line_drive' | 'bunt' | 'pop_up';
   fielding_result?: 'clean' | 'error' | 'assist';
-  throw_accuracy_grade?: number; // 20-80
-  footwork_grade?: number; // 20-80
+  throw_accuracy_grade?: number;
+  footwork_grade?: number;
   exchange_time_band?: 'fast' | 'average' | 'slow';
   throw_spin_quality?: 'carry' | 'tail' | 'cut' | 'neutral';
   // Pitching micro
   spin_efficiency_pct?: number;
-  pitch_command_grade?: number; // 20-80
+  pitch_command_grade?: number;
   miss_direction?: 'arm_side' | 'glove_side' | 'up' | 'down';
+  // Catching micro
+  pop_time_band?: 'fast' | 'average' | 'slow';
+  transfer_grade?: number;
+  block_success?: boolean;
+  // Baserunning micro
+  jump_grade?: number;
+  read_grade?: number;
+  time_to_base_band?: 'fast' | 'average' | 'slow';
+  // Rep context
+  rep_source?: string;
+  thrower_hand?: 'L' | 'R';
+  throwing_hand?: 'L' | 'R';
+  goal_of_rep?: string;
+  actual_outcome?: string;
+  bp_distance_ft?: number;
+  machine_velocity_band?: string;
 }
 
 export function useMicroLayerInput() {

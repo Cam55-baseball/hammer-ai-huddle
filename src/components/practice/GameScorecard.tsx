@@ -197,6 +197,7 @@ export function GameScorecard({ module, atBats, onAtBatsChange }: GameScorecardP
                   setCurrentPitch(prev => ({ ...prev, pitch_location: v }));
                   setStep(1);
                 }}
+                batterSide="R"
               />
 
               {/* Result buttons */}

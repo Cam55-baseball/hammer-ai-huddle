@@ -24,6 +24,7 @@ const modules = [
   { id: 'pitching', icon: Flame, label: 'Pitching' },
   { id: 'throwing', icon: Wind, label: 'Throwing' },
   { id: 'fielding', icon: Shield, label: 'Fielding' },
+  { id: 'catching', icon: Shield, label: 'Catching' },
   { id: 'baserunning', icon: Zap, label: 'Baserunning' },
   { id: 'mental', icon: Brain, label: 'Mental' },
 ];
@@ -55,6 +56,7 @@ export default function PracticeHub() {
 
   const isGameType = sessionType === 'game' || sessionType === 'live_scrimmage';
   const isHittingOrPitching = activeModule === 'hitting' || activeModule === 'pitching';
+  const isCatching = activeModule === 'catching';
 
   const handleSelectType = (type: string) => {
     setSessionType(type);
@@ -174,7 +176,7 @@ export default function PracticeHub() {
         </div>
 
         <Tabs value={activeModule} onValueChange={setActiveModule} className="space-y-4">
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full">
             {modules.map(mod => (
               <TabsTrigger key={mod.id} value={mod.id} className="flex items-center gap-1.5 text-xs md:text-sm">
                 <mod.icon className="h-4 w-4" />
