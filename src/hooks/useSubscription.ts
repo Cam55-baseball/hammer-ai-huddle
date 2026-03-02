@@ -243,15 +243,51 @@ export const useSubscription = () => {
   }, [getModuleDetails]);
 
   useEffect(() => {
-    checkSubscription(false);
-    
-    // Dynamic polling: 5 seconds when fast polling, 60 seconds normally
-    const pollingInterval = fastPolling ? 5000 : 60000;
-    const interval = setInterval(() => {
-      checkSubscription(true);
-    }, pollingInterval);
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let mounted = true;
 
-    return () => clearInterval(interval);
+    const startPolling = () => {
+      if (interval) clearInterval(interval);
+      const pollingInterval = fastPolling ? 5000 : 60000;
+      interval = setInterval(() => {
+        if (mounted) checkSubscription(true);
+      }, pollingInterval);
+    };
+
+    // Initial check
+    checkSubscription(false).then(() => {
+      if (mounted) startPolling();
+    });
+
+    // Listen for auth state changes to stop polling on sign-out
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        if (interval) clearInterval(interval);
+        if (mounted) {
+          setSubscriptionData({
+            subscribed: false,
+            modules: [],
+            module_details: {},
+            subscription_end: null,
+            loading: false,
+            initialized: true,
+            has_discount: false,
+            discount_percent: null,
+          });
+        }
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (mounted) {
+          checkSubscription(false);
+          startPolling();
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      if (interval) clearInterval(interval);
+      authSub.unsubscribe();
+    };
   }, [checkSubscription, fastPolling]);
 
   // IMPORTANT: keep this stable so pages can safely depend on it in useEffect
