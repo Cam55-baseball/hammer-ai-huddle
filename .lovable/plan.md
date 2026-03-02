@@ -1,198 +1,226 @@
 
-
-# E2E System Completion -- Session Config, BP Distance, Tee Depth, Coach Linking
+# E2E Directive -- Tee Visual + Bidirectional Coach Linking System
 
 ## Overview
 
-This overhaul introduces a **Session Configuration Layer** that captures session-level metadata (rep source, pitch distance, velocity band, coach, season, environment) BEFORE rep logging begins. It also adds a **Tee Depth Grid**, corrects BP Distance to mean pitch release distance (15-80 ft), and enhances coach linking with verified session badges.
+This plan covers three major areas: (1) Tee depth visual overhaul with real home plate rendering, (2) bidirectional coach-player relationship system replacing the current one-way follow model, and (3) rep confirmation UX polish with visual feedback.
 
 ---
 
-## Phase 1: Session Configuration Panel
-
-### Problem
-Currently, rep source, season context, coach, and distance are scattered across per-rep fields and a hidden "More Options" drawer. There is no unified session config step.
-
-### Solution
-Create a new `SessionConfigPanel.tsx` component and insert a new flow step between session type selection and rep logging.
-
-**New flow:**
-```text
-Step 1: Select Session Type (existing)
-Step 2: Configure Session (NEW)
-Step 3: Log Reps (existing RepScorer)
-```
-
-**File: `src/components/practice/SessionConfigPanel.tsx`** (NEW)
-
-This component collects:
-- Rep Source (from existing RepSourceSelector, moved here as session-level default)
-- Pitch Distance: slider 15-80 ft (replaces old 30-450/250 range which was batted ball distance)
-- Velocity Band (conditional, using existing sport bands)
-- Coach selector (moved from "More Options" to here -- Solo / Coach-Led / Lesson)
-- Season Type (In-Season / Offseason / Preseason -- moved from "More Options")
-- Environment: Practice / Game / Lesson
-- Indoor / Outdoor toggle
-
-All values stored as `SessionConfig` interface and passed down to RepScorer.
-
-**File: `src/pages/PracticeHub.tsx`** -- Modified
-- Add new flow step: `'select_type' | 'configure_session' | 'build_session'`
-- After session type selection, navigate to `configure_session` step
-- After config confirmed, navigate to `build_session`
-- Display session config summary bar at top of rep logging view (distance, velocity, rep source, coach, season)
-- Move `CoachSelector` and `SeasonContextToggle` OUT of "More Options" into the config panel
-- Remove redundant "More Options" section (voice notes remain as optional during rep logging)
-
-**File: `src/hooks/useSportConfig.ts`** -- Modified
-- Change `bpDistanceRange` to `{ min: 15, max: 80 }` for both sports (pitch release distance, not batted ball distance)
-
----
-
-## Phase 2: Rep-Level Override Architecture
-
-**File: `src/components/practice/RepScorer.tsx`** -- Modified
-
-- Remove `RepSourceSelector` from per-rep input (it moves to session config)
-- Pre-populate each rep with session-level values (rep_source, pitch distance, velocity band)
-- Add optional per-rep override fields (collapsible "Override" section):
-  - Distance override (15-80 ft slider)
-  - Velocity band override
-  - Pitch type override (if applicable)
-- When override is used, store BOTH `session_distance` and `override_distance` on the ScoredRep
-- If no override, rep inherits session values
-
-**Updated `ScoredRep` interface additions:**
-```text
-session_distance_ft?: number;     // from session config
-override_distance_ft?: number;    // per-rep override (nullable)
-session_velocity_band?: string;   // from session config
-override_velocity_band?: string;  // per-rep override (nullable)
-session_rep_source?: string;      // from session config
-environment?: string;             // indoor/outdoor
-```
-
----
-
-## Phase 3: Tee Depth Grid
-
-**File: `src/components/practice/TeeDepthGrid.tsx`** (NEW)
-
-When session rep source = `tee`:
-- Render a 5-position vertical depth selector:
-  - Position 1: "Front +2" (2 squares in front of plate)
-  - Position 2: "Front +1" (1 square in front)
-  - Position 3: "Plate" (center line)
-  - Position 4: "Back -1" (1 square behind)
-  - Position 5: "Back -2" (2 squares behind)
-- Visually: vertical column of 5 tappable squares with "PLATE" line highlighted
-- Selected square highlights with primary color
-- Stored as `depth_zone: number` (1-5) on ScoredRep
-
-**File: `src/components/practice/RepScorer.tsx`** -- Modified
-- When session `rep_source === 'tee'` and module is hitting:
-  - Show `TeeDepthGrid` alongside `PitchLocationGrid`
-  - Layout: horizontal zone (5x5) on left, depth column (5x1) on right
-  - Both are per-rep selections
-  - `depth_zone` required for tee reps (validation added to `canConfirm`)
-
-**ScoredRep addition:**
-```text
-depth_zone?: number;  // 1-5, required when rep_source === 'tee'
-```
-
-**Heat map integration:**
-- `depth_zone` data feeds into existing `micro_layer_data` JSONB
-- No schema change needed -- stored in JSONB
-
----
-
-## Phase 4: Coach Linking Enhancement
+## Part 1: Tee Depth Grid with Home Plate Visual
 
 ### Current State
-`CoachSelector` allows selecting: assigned coach, external coach, or self-directed. But there is no "Coach-Led Session" vs "Lesson" distinction, no coach verification badge, and no real-time coach visibility.
+`TeeDepthGrid.tsx` is a plain column of 5 abstract buttons labeled F2/F1/Plate/B1/B2. No home plate visual. No handedness awareness.
 
-### Solution
+### Changes
 
-**File: `src/components/practice/SessionConfigPanel.tsx`** -- Coach section
-- Replace simple coach selector with session-aware options:
-  - **Solo Session** (self-directed, no coach)
-  - **Coach-Led Session** (attached coach supervises)
-  - **Lesson with [Coach Name]** (if primary coach linked)
-- When Coach-Led or Lesson selected:
-  - `coach_id` attached to session
-  - Session metadata includes `coach_session_type: 'coached' | 'lesson'`
+**File: `src/components/practice/TeeDepthGrid.tsx`** -- Full rewrite
 
-**File: `src/hooks/usePerformanceSession.ts`** -- Modified
-- Accept new session config fields: `pitch_distance_ft`, `velocity_band`, `environment`, `indoor_outdoor`, `coach_session_type`
-- Store these in the `performance_sessions` insert (using existing JSONB columns where needed)
-- `pitch_distance_ft` and `velocity_band` stored in `fatigue_state_at_session` JSONB alongside existing fields (no schema migration needed)
+Render a top-down view showing:
+- A white pentagon home plate SVG centered at depth position 3 (Plate)
+- 5 depth rows extending vertically: 2 in front of plate (toward pitcher), plate line, 2 behind plate (toward catcher)
+- Each depth row is a tappable rectangular zone
+- The plate pentagon is rendered as an inline SVG overlay at the center row
+- Labels: "Toward Pitcher" at top, "Toward Catcher" at bottom
+- Selected depth square highlights with primary color ring
+- Sport prop controls plate shape:
+  - Baseball: standard 17-inch pentagon
+  - Softball: proportional softball plate (slightly different visual)
 
-**Coach Verified Badge:**
-- When a session has `coach_id` AND `coach_override_applied === true`, display a "Coach Verified" badge on session cards
-- This uses existing `coach_override_applied` column -- no new column needed
+Accept new props:
+- `sport: 'baseball' | 'softball'`
+- `batterSide: 'L' | 'R'` -- mirrors horizontal orientation labels (though depth itself is front-to-back, the layout context flips to match the batter's perspective)
+
+**File: `src/components/practice/RepScorer.tsx`** -- Update TeeDepthGrid usage
+- Pass `sport` and `batterSide={handedness}` to TeeDepthGrid
+- Layout remains: PitchLocationGrid (5x5 horizontal) on left, TeeDepthGrid (5x1 depth with plate) on right
+- Both selections mandatory for tee reps
 
 ---
 
-## Phase 5: MPI Integration for Distance + Season + Coach
+## Part 2: Rep Confirmation Visual Feedback
 
-**File: `src/data/ENGINE_CONTRACT.ts`** -- Modified (add new constants)
-```text
-// Pitch distance difficulty modeling
-PITCH_DISTANCE_REFERENCE_FT: 60,  // standard pitching distance
-PITCH_DISTANCE_MODIFIER_PER_FT: 0.005,  // +/- per ft from reference
+### Current State
+Rep confirmation exists (Confirm Rep button), but no visual feedback animation after commit.
 
-// Season weighting
-SEASON_WEIGHTS: { in_season: 1.0, preseason: 0.85, off_season: 0.70 },
+### Changes
 
-// Coach verification bonus
-COACH_VERIFIED_INTEGRITY_BONUS: 3,
-COACH_VERIFIED_WEIGHT_BONUS: 1.05,
+**File: `src/components/practice/RepScorer.tsx`**
+- After `commitRep()` succeeds, show a brief animated checkmark overlay (framer-motion scale-in/out, ~600ms)
+- Rep count badge updates with a subtle pulse animation
+- Session summary line updates live showing latest rep stats
+- The existing "Rep will be recorded manually once you confirm all required fields" text stays
+
+---
+
+## Part 3: Bidirectional Coach-Player Relationship System
+
+### Current State
+- `scout_follows` table exists with `scout_id`, `player_id`, `status` columns
+- RLS policies allow coaches and scouts to create follows; players can accept/reject
+- `CoachDashboard.tsx` uses edge functions (`get-following-players`, `search-players`, `send-follow-request`, `unfollow-player`) for the current one-way follow system
+- No `coach_player_relationships` table exists
+- No player-initiated coach connection flow exists
+- Coach linking in sessions uses `athlete_mpi_settings.primary_coach_id` (manual field, no mutual consent)
+
+### Solution: Upgrade `scout_follows` to full bidirectional relationship
+
+Rather than creating a brand new table, we upgrade the existing `scout_follows` table with new columns to support bidirectional linking. This avoids breaking the existing coach dashboard and edge functions.
+
+**Database Migration:**
+
+```sql
+-- Add bidirectional fields to scout_follows
+ALTER TABLE public.scout_follows
+  ADD COLUMN IF NOT EXISTS initiated_by text DEFAULT 'coach',
+  ADD COLUMN IF NOT EXISTS confirmed_at timestamptz,
+  ADD COLUMN IF NOT EXISTS relationship_type text DEFAULT 'follow';
+  -- relationship_type: 'follow' (view-only) or 'linked' (full access)
 ```
 
-These constants are consumed by the `calculate-session` and `nightly-mpi-process` edge functions. The edge functions already read session metadata from `fatigue_state_at_session` JSONB -- no additional schema changes needed.
+New RLS policy for player-initiated requests:
+```sql
+-- Players can create follow requests (player-initiated linking)
+CREATE POLICY "Players can create link requests"
+ON public.scout_follows FOR INSERT
+WITH CHECK (
+  auth.uid() = player_id
+  AND initiated_by = 'player'
+);
+```
+
+**Relationship Types:**
+- `follow` = public visibility only (existing behavior, lighter)
+- `linked` = full permission access (sessions, micro data, overrides, notes)
+
+### New Component: `src/components/connections/ConnectionsTab.tsx`
+
+Dedicated "Connections" section accessible from player profile/settings:
+- **My Coaches**: list of active linked coaches with "Revoke" option
+- **Pending Requests**: incoming coach link requests to accept/reject, outgoing player requests pending coach acceptance
+- **Search Coach**: search by name to send link request
+
+### New Component: `src/components/connections/CoachSearchConnect.tsx`
+
+Player-side coach search:
+- Search coaches by name (queries `profiles_public` filtered by coach role)
+- Send link request (creates `scout_follows` row with `initiated_by = 'player'`, `relationship_type = 'linked'`, `status = 'pending'`)
+- Coach receives in their dashboard under "Pending Invites"
+
+### Updated Edge Functions
+
+**`supabase/functions/send-follow-request/index.ts`** -- Modified
+- Accept optional `initiated_by` and `relationship_type` params
+- Support player-to-coach direction (player sends, coach confirms)
+- Validate that target user has appropriate role (coach role for player-initiated)
+
+**`supabase/functions/get-following-players/index.ts`** -- Modified
+- Return `relationship_type` and `initiated_by` fields
+- Filter by `status = 'accepted'` for active relationships
+
+**New: `supabase/functions/get-coach-connections/index.ts`**
+- Player-facing: returns all coach relationships (active, pending) for the authenticated player
+- Used by ConnectionsTab
+
+### Permission Enforcement
+
+**File: `src/components/practice/SessionConfigPanel.tsx`** -- Modified
+- When coach session type is 'coached' or 'lesson':
+  - Only show coaches with `relationship_type = 'linked'` AND `status = 'accepted'`
+  - Do not allow selecting coaches who only have `follow` relationship
+
+**Coach Dashboard session visibility:**
+- Coaches with `relationship_type = 'linked'` can see full session data (micro-layer, heat maps, all reps)
+- Coaches with `relationship_type = 'follow'` can see basic session logged info only (count, date, type)
+- No relationship = no visibility
 
 ---
 
-## Phase 6: Data Integrity Validations
+## Part 4: Coach Dashboard Upgrade
 
-**File: `src/components/practice/RepScorer.tsx`** -- Validation updates
-- Cannot commit rep without execution score (already enforced)
-- Session rep source applied to all reps by default
-- Tee reps require `depth_zone` selection
-- No rep saved without session config completed
-- No universal fallback values -- undefined stored when not provided
+### File: `src/pages/CoachDashboard.tsx` -- Modified
 
-**File: `src/pages/PracticeHub.tsx`** -- Flow enforcement
-- Cannot reach rep logging step without completing session config
-- Session config panel validates: rep source selected, distance set (defaults to 60ft)
-- Game sessions still require opponent name/level
+Add new sections:
+- **Pending Invites tab**: shows player-initiated link requests for coach to accept/reject
+- **Session Feed**: chronological list of linked player sessions (not just follow list)
+  - Filterable by: player, season type, rep source, date range
+  - Click session to expand and see: config, distance, velocity, rep source, all reps, tee depth rendered visually
+- **Player MPI Trend**: small sparkline per player showing recent MPI movement
+- **Coach Actions on Session**:
+  - Add note (text input, saved to `player_notes`)
+  - Submit override grade (20-80 scale, immutable via existing trigger)
+  - Mark as verified (sets `coach_override_applied = true`)
+
+### New: `src/components/coach/SessionFeed.tsx`
+
+Component that fetches `performance_sessions` for all linked players and renders a filterable feed:
+- Uses existing `performance_sessions` table
+- RLS: coaches access via a new security definer function that checks active linked relationship
+- Each session card shows: date, module, rep source, distance, rep count, session type, coach verified badge
+
+### New: `src/components/coach/SessionDetailView.tsx`
+
+Expanded session view for coaches:
+- Full rep list with execution scores
+- Tee depth grid rendered (read-only) showing selected positions
+- 5x5 pitch location grid rendered with rep positions highlighted
+- Override grade input (if not already overridden)
+- Notes input
 
 ---
 
-## Phase 7: UX -- Session Config Summary Bar
+## Part 5: Security & RLS
 
-**File: `src/components/practice/SessionConfigBar.tsx`** (NEW)
+### New Security Definer Function
+```sql
+CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.scout_follows
+    WHERE scout_id = p_coach_id
+      AND player_id = p_player_id
+      AND status = 'accepted'
+      AND relationship_type = 'linked'
+  )
+$$;
+```
 
-A compact, always-visible bar at the top of the rep logging view showing:
-- Coach name (or "Solo")
-- Distance (e.g., "55 ft")
-- Velocity band (if set)
-- Rep source (e.g., "Machine BP")
-- Season type badge
-- Indoor/Outdoor badge
-- "Edit Config" button to go back to config step
+### New RLS Policy for Session Visibility
+```sql
+-- Linked coaches can view their players' sessions
+CREATE POLICY "Linked coaches can view player sessions"
+ON public.performance_sessions FOR SELECT
+USING (
+  auth.uid() = user_id
+  OR public.is_linked_coach(auth.uid(), user_id)
+  OR public.has_role(auth.uid(), 'owner')
+);
+```
 
 ---
 
-## Database Changes
+## Part 6: MPI Integration
 
-**No schema migration required.** All new fields are stored in existing JSONB columns:
-- `fatigue_state_at_session` JSONB: stores `pitch_distance_ft`, `velocity_band`, `environment`, `indoor_outdoor`, `coach_session_type`
-- `micro_layer_data` JSONB: stores per-rep data including `depth_zone`, `override_distance_ft`, `override_velocity_band`
-- `drill_blocks` JSONB: stores `rep_source` from session config
+Already implemented via `ENGINE_CONTRACT.ts`:
+- `COACH_VERIFIED_INTEGRITY_BONUS: 3`
+- `COACH_VERIFIED_WEIGHT_BONUS: 1.05`
 
-The `performance_sessions` table already has `coach_id`, `season_context`, `module`, `batting_side_used`, `throwing_hand_used` columns.
+Additional validation: the `apply_coach_override_to_session` trigger already writes back to `performance_sessions`. We add a check that the coach has an active linked relationship before allowing the override insert.
+
+### Updated RLS on `coach_grade_overrides`:
+```sql
+-- Only linked coaches can submit overrides
+CREATE POLICY "Linked coaches can insert overrides"
+ON public.coach_grade_overrides FOR INSERT
+WITH CHECK (
+  public.is_linked_coach(auth.uid(), (
+    SELECT user_id FROM public.performance_sessions WHERE id = session_id
+  ))
+);
+```
 
 ---
 
@@ -201,31 +229,41 @@ The `performance_sessions` table already has `coach_id`, `season_context`, `modu
 ### New Files
 | File | Purpose |
 |------|---------|
-| `src/components/practice/SessionConfigPanel.tsx` | Session-level config (distance, velocity, coach, season, environment) |
-| `src/components/practice/TeeDepthGrid.tsx` | 5-position vertical depth selector for tee reps |
-| `src/components/practice/SessionConfigBar.tsx` | Always-visible session config summary during rep logging |
+| `src/components/connections/ConnectionsTab.tsx` | Player view: linked coaches, pending requests, revoke |
+| `src/components/connections/CoachSearchConnect.tsx` | Player search to find and request coach |
+| `src/components/coach/SessionFeed.tsx` | Chronological session feed for coach dashboard |
+| `src/components/coach/SessionDetailView.tsx` | Expanded session view with rep details |
+| `supabase/functions/get-coach-connections/index.ts` | Player-facing coach relationship API |
 
 ### Modified Files
 | File | Change |
 |------|--------|
-| `src/pages/PracticeHub.tsx` | 3-step flow, move coach/season to config step, session config state |
-| `src/components/practice/RepScorer.tsx` | Remove session-level fields, add per-rep overrides, tee depth integration |
-| `src/hooks/useSportConfig.ts` | Change bpDistanceRange to 15-80 ft (pitch release distance) |
-| `src/hooks/usePerformanceSession.ts` | Accept and persist session config fields in JSONB |
-| `src/data/ENGINE_CONTRACT.ts` | Add distance modifier, season weights, coach verification constants |
-| `src/components/practice/GameScorecard.tsx` | Accept session config for handedness/distance context |
+| `src/components/practice/TeeDepthGrid.tsx` | Full rewrite with home plate SVG, sport/handedness props |
+| `src/components/practice/RepScorer.tsx` | Pass sport/handedness to TeeDepthGrid, add commit animation |
+| `src/components/practice/SessionConfigPanel.tsx` | Filter coach list to linked-only for coached/lesson sessions |
+| `src/pages/CoachDashboard.tsx` | Add pending invites, session feed, player MPI trend |
+| `supabase/functions/send-follow-request/index.ts` | Support bidirectional + relationship_type |
+| `supabase/functions/get-following-players/index.ts` | Return relationship_type field |
 
-### No Database Migration Needed
-All data fits in existing JSONB columns on `performance_sessions`.
+### Database Changes
+- Add columns to `scout_follows`: `initiated_by`, `confirmed_at`, `relationship_type`
+- New RLS policy: players can create link requests
+- New security definer function: `is_linked_coach()`
+- New RLS policy on `performance_sessions` for linked coach read access
+- New RLS policy on `coach_grade_overrides` for linked coach insert
+
+### No New Tables Created
+The existing `scout_follows` table is extended rather than creating a parallel `coach_player_relationships` table, avoiding data duplication and preserving all existing edge functions.
 
 ---
 
 ## Execution Order
 
-1. Create `SessionConfigPanel.tsx` + `SessionConfigBar.tsx` + `TeeDepthGrid.tsx` (independent, parallel)
-2. Modify `PracticeHub.tsx` to add 3-step flow and wire config state (depends on step 1)
-3. Modify `RepScorer.tsx` to accept session config, remove session-level fields, add overrides + tee depth (depends on step 1)
-4. Update `useSportConfig.ts` distance range (independent)
-5. Update `usePerformanceSession.ts` to persist config (independent)
-6. Update `ENGINE_CONTRACT.ts` with new constants (independent)
-
+1. Database migration (add columns + RLS + security definer function)
+2. TeeDepthGrid rewrite with plate visual (independent)
+3. RepScorer commit animation (independent)
+4. Edge function updates for bidirectional linking
+5. ConnectionsTab + CoachSearchConnect components
+6. CoachDashboard upgrade (session feed, detail view, pending invites)
+7. SessionConfigPanel linked-coach filter
+8. Integration testing
