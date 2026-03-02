@@ -170,15 +170,14 @@ serve(async (req) => {
       });
     }
 
-    const { data: ownerRole } = await supabase
+    const { data: privilegedRoles } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .eq('role', 'owner')
-      .eq('status', 'active')
-      .maybeSingle();
+      .in('role', ['owner', 'admin'])
+      .eq('status', 'active');
 
-    if (!ownerRole) {
+    if (!privilegedRoles || privilegedRoles.length === 0) {
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('status, subscribed_modules')
