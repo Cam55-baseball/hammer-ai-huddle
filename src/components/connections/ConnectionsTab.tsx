@@ -76,12 +76,16 @@ export function ConnectionsTab() {
 
   const respondMutation = useMutation({
     mutationFn: async ({ connectionId, accept }: { connectionId: string; accept: boolean }) => {
+      const updatePayload: Record<string, unknown> = {
+        status: accept ? 'accepted' : 'rejected',
+        confirmed_at: accept ? new Date().toISOString() : null,
+      };
+      if (accept) {
+        updatePayload.relationship_type = 'linked';
+      }
       const { error } = await supabase
         .from('scout_follows')
-        .update({
-          status: accept ? 'accepted' : 'rejected',
-          confirmed_at: accept ? new Date().toISOString() : null,
-        })
+        .update(updatePayload)
         .eq('id', connectionId)
         .eq('player_id', user!.id);
       if (error) throw error;
