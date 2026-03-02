@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,6 +34,21 @@ export function FolderPermissionMatrix() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
+
+  // Subscribe to head coach changes for reactivity
+  const { data: headCoachId } = useQuery({
+    queryKey: ['head-coach', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('athlete_mpi_settings')
+        .select('primary_coach_id')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.primary_coach_id as string | null;
+    },
+    enabled: !!user,
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -69,15 +85,6 @@ export function FolderPermissionMatrix() {
           .select('id, full_name')
           .in('id', coachIds);
 
-        // Get head coach
-        const { data: mpi } = await supabase
-          .from('athlete_mpi_settings')
-          .select('primary_coach_id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        const headCoachId = mpi?.primary_coach_id;
-
         setCoaches((profiles || []).map(p => ({
           id: p.id,
           full_name: p.full_name || 'Unknown',
@@ -108,7 +115,15 @@ export function FolderPermissionMatrix() {
       }
     };
     load();
-  }, [user]);
+  }, [user, headCoachId]);
+
+  // Update is_head_coach flag when headCoachId changes without full reload
+  useEffect(() => {
+    setCoaches(prev => prev.map(c => ({
+      ...c,
+      is_head_coach: c.id === headCoachId,
+    })));
+  }, [headCoachId]);
 
   const getPermission = (folderId: string, coachId: string) => {
     return permissions.find(p => p.folder_id === folderId && p.coach_id === coachId);

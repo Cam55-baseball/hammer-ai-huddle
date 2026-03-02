@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserPlus, Clock, CheckCircle, XCircle, Link2Off } from 'lucide-react';
+import { Users, UserPlus, Clock, CheckCircle, XCircle, Link2Off, Crown } from 'lucide-react';
 import { CoachSearchConnect } from './CoachSearchConnect';
 import { FolderPermissionMatrix } from './FolderPermissionMatrix';
 
@@ -36,6 +36,40 @@ export function ConnectionsTab() {
       return (data?.results ?? []) as CoachConnection[];
     },
     enabled: !!user,
+  });
+
+  const { data: headCoachId } = useQuery({
+    queryKey: ['head-coach', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('athlete_mpi_settings')
+        .select('primary_coach_id')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.primary_coach_id as string | null;
+    },
+    enabled: !!user,
+  });
+
+  const setHeadCoachMutation = useMutation({
+    mutationFn: async (coachId: string | null) => {
+      const { error } = await supabase
+        .from('athlete_mpi_settings')
+        .update({ primary_coach_id: coachId })
+        .eq('user_id', user!.id);
+      if (error) throw error;
+    },
+    onSuccess: (_, coachId) => {
+      queryClient.invalidateQueries({ queryKey: ['head-coach'] });
+      queryClient.invalidateQueries({ queryKey: ['coach-connections'] });
+      queryClient.invalidateQueries({ queryKey: ['athlete-mpi-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['folder-permission-matrix'] });
+      toast({ title: coachId ? 'Head Coach updated' : 'Head Coach removed' });
+    },
+    onError: () => {
+      toast({ title: 'Error', description: 'Failed to update Head Coach', variant: 'destructive' });
+    },
   });
 
   const respondMutation = useMutation({
@@ -173,33 +207,69 @@ export function ConnectionsTab() {
             </p>
           ) : (
             <div className="space-y-2">
-              {activeCoaches.map(c => (
-                <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {c.coach_avatar ? (
-                      <img src={c.coach_avatar} alt="" className="h-8 w-8 rounded-full object-cover" />
-                    ) : (
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Users className="h-4 w-4 text-primary" />
+              {activeCoaches.map(c => {
+                const isHeadCoach = c.coach_id === headCoachId;
+                const isLinked = c.relationship_type === 'linked';
+                return (
+                  <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {c.coach_avatar ? (
+                        <img src={c.coach_avatar} alt="" className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-sm flex items-center gap-1.5">
+                          {c.coach_name}
+                          {isHeadCoach && (
+                            <Badge className="text-[10px] h-4 px-1.5 bg-amber-500/15 text-amber-600 border-amber-500/30 hover:bg-amber-500/20">
+                              <Crown className="h-2.5 w-2.5 mr-0.5" />
+                              Head Coach
+                            </Badge>
+                          )}
+                        </p>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {isLinked ? 'Linked' : 'Following'}
+                        </Badge>
                       </div>
-                    )}
-                    <div>
-                      <p className="font-medium text-sm">{c.coach_name}</p>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {c.relationship_type === 'linked' ? 'Linked' : 'Following'}
-                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {isLinked && !isHeadCoach && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
+                          onClick={() => setHeadCoachMutation.mutate(c.coach_id)}
+                          disabled={setHeadCoachMutation.isPending}
+                        >
+                          <Crown className="h-3.5 w-3.5 mr-1" /> Set Head Coach
+                        </Button>
+                      )}
+                      {isHeadCoach && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => setHeadCoachMutation.mutate(null)}
+                          disabled={setHeadCoachMutation.isPending}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => revokeMutation.mutate(c.id)}
+                      >
+                        <Link2Off className="h-3.5 w-3.5 mr-1" /> Revoke
+                      </Button>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => revokeMutation.mutate(c.id)}
-                  >
-                    <Link2Off className="h-3.5 w-3.5 mr-1" /> Revoke
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
