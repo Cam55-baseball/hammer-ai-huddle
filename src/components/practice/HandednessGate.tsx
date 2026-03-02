@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 
 interface HandednessGateProps {
   module: string;
@@ -19,6 +21,26 @@ const labels: Record<string, { prompt: string; left: string; right: string }> = 
 
 export function HandednessGate({ module, value, onChange }: HandednessGateProps) {
   const config = labels[module] ?? labels.hitting;
+  const { getHandedness, saveHandedness } = useSessionDefaults(module);
+
+  // Auto-select from saved preference
+  useEffect(() => {
+    if (!value) {
+      const saved = getHandedness();
+      if (saved) {
+        onChange(saved);
+      }
+    }
+  }, []);
+
+  const handleSelect = (side: 'L' | 'R') => {
+    saveHandedness(side);
+    onChange(side);
+  };
+
+  // If value is already set (from saved default), don't show the gate
+  // The gate is only shown when value is undefined AND no saved default
+  if (value) return null;
 
   return (
     <Card>
@@ -29,12 +51,10 @@ export function HandednessGate({ module, value, onChange }: HandednessGateProps)
             <button
               key={side}
               type="button"
-              onClick={() => onChange(side)}
+              onClick={() => handleSelect(side)}
               className={cn(
                 'rounded-lg border-2 p-4 text-center font-semibold transition-all',
-                value === side
-                  ? 'bg-primary/15 border-primary text-primary scale-105'
-                  : 'bg-muted/20 border-border hover:bg-muted/40 text-foreground'
+                'bg-muted/20 border-border hover:bg-muted/40 text-foreground'
               )}
             >
               <span className="text-2xl block mb-1">{side === 'L' ? '🫲' : '🫱'}</span>
@@ -42,11 +62,9 @@ export function HandednessGate({ module, value, onChange }: HandednessGateProps)
             </button>
           ))}
         </div>
-        {!value && (
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            Select {config.prompt.toLowerCase()} to begin logging
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          Select {config.prompt.toLowerCase()} to begin logging
+        </p>
       </CardContent>
     </Card>
   );

@@ -16,7 +16,7 @@ import { SessionConfigPanel, type SessionConfig } from '@/components/practice/Se
 import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
 import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
-import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const modules = [
@@ -29,7 +29,7 @@ const modules = [
   { id: 'mental', icon: Brain, label: 'Mental' },
 ];
 
-type FlowStep = 'select_type' | 'configure_session' | 'build_session';
+type FlowStep = 'select_type' | 'readiness' | 'configure_session' | 'build_session';
 
 export default function PracticeHub() {
   const { t } = useTranslation();
@@ -45,26 +45,30 @@ export default function PracticeHub() {
   const [notes, setNotes] = useState('');
   const [opponentName, setOpponentName] = useState('');
   const [opponentLevel, setOpponentLevel] = useState('');
-  const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3 });
+  const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3, sleep: 3 });
 
   // Rep-based scoring
   const [reps, setReps] = useState<ScoredRep[]>([]);
   // Game scoring
   const [atBats, setAtBats] = useState<AtBat[]>([]);
 
-  const isGameType = sessionType === 'game' || sessionType === 'live_scrimmage';
+  const isGameType = sessionType === 'game' || sessionType === 'live_abs';
   const isHittingOrPitching = activeModule === 'hitting' || activeModule === 'pitching';
 
   const handleSelectType = (type: string) => {
     setSessionType(type);
-    setStep('configure_session');
+    setStep('readiness');
     setReps([]);
     setAtBats([]);
     setNotes('');
     setOpponentName('');
     setOpponentLevel('');
-    setFeelings({ body: 3, mind: 3 });
+    setFeelings({ body: 3, mind: 3, sleep: 3 });
     setSessionConfig(null);
+  };
+
+  const handleReadinessConfirm = () => {
+    setStep('configure_session');
   };
 
   const handleConfigConfirm = (config: SessionConfig) => {
@@ -76,6 +80,8 @@ export default function PracticeHub() {
     if (step === 'build_session') {
       setStep('configure_session');
     } else if (step === 'configure_session') {
+      setStep('readiness');
+    } else if (step === 'readiness') {
       setStep('select_type');
       setSessionType(null);
     } else {
@@ -158,6 +164,7 @@ export default function PracticeHub() {
         fatigue_state: {
           body: feelings.body,
           mind: feelings.mind,
+          sleep: feelings.sleep,
           note: feelings.note,
           coach_type: sessionConfig.coach_selection.type,
           coach_session_type: sessionConfig.coach_session_type,
@@ -220,7 +227,26 @@ export default function PracticeHub() {
                 </>
               )}
 
-              {/* Step 2: Configure Session */}
+              {/* Step 2: Pre-Session Readiness */}
+              {step === 'readiness' && sessionType && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="sm" onClick={handleBack}>
+                      <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                    </Button>
+                    <h2 className="text-lg font-semibold capitalize">{sessionType.replace(/_/g, ' ')}</h2>
+                  </div>
+
+                  <FeelingsPrompt value={feelings} onChange={setFeelings} />
+
+                  <Button onClick={handleReadinessConfirm} className="w-full" size="lg">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Continue to Setup
+                  </Button>
+                </>
+              )}
+
+              {/* Step 3: Configure Session */}
               {step === 'configure_session' && sessionType && (
                 <>
                   <div className="flex items-center gap-3">
@@ -252,7 +278,7 @@ export default function PracticeHub() {
                 </>
               )}
 
-              {/* Step 3: Log Reps */}
+              {/* Step 4: Log Reps */}
               {step === 'build_session' && sessionType && sessionConfig && (
                 <>
                   <div className="flex items-center gap-3">
@@ -264,9 +290,6 @@ export default function PracticeHub() {
 
                   {/* Session config summary bar */}
                   <SessionConfigBar config={sessionConfig} onEdit={() => setStep('configure_session')} />
-
-                  {/* Feelings prompt */}
-                  <FeelingsPrompt value={feelings} onChange={setFeelings} />
 
                   {/* Main scoring area */}
                   {isGameType && isHittingOrPitching ? (

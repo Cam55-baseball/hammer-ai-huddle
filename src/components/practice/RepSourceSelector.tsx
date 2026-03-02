@@ -7,26 +7,74 @@ interface RepSourceSelectorProps {
   onChange: (source: string) => void;
 }
 
-const MODULE_SOURCES: Record<string, Array<{ value: string; label: string }>> = {
-  hitting: [
-    { value: 'machine_bp', label: 'Machine BP' },
-    { value: 'flip', label: 'Flip' },
-    { value: 'live_bp', label: 'Live BP' },
-    { value: 'regular_bp', label: 'Regular BP' },
-    { value: 'game', label: 'Game' },
-    { value: 'tee', label: 'Tee' },
-    { value: 'front_toss', label: 'Front Toss' },
-    { value: 'coach_pitch', label: 'Coach Pitch' },
-    { value: 'soft_toss', label: 'Soft Toss' },
-    { value: 'other', label: 'Other' },
-  ],
-  pitching: [
-    { value: 'bullpen', label: 'Bullpen' },
-    { value: 'flat_ground', label: 'Flat Ground' },
-    { value: 'game', label: 'Game' },
-    { value: 'live_bp', label: 'Live BP' },
-    { value: 'other', label: 'Other' },
-  ],
+interface SourceItem {
+  value: string;
+  label: string;
+  desc?: string;
+}
+
+interface SourceGroup {
+  group: string;
+  items: SourceItem[];
+}
+
+const HITTING_SOURCES: SourceGroup[] = [
+  {
+    group: 'Machine',
+    items: [
+      { value: 'machine_bp', label: 'Machine BP', desc: 'Pitching machine at set speed' },
+      { value: 'tee', label: 'Tee', desc: 'Stationary ball on tee' },
+    ],
+  },
+  {
+    group: 'Thrown',
+    items: [
+      { value: 'front_toss', label: 'Front Toss', desc: 'Underhand from short distance' },
+      { value: 'soft_toss', label: 'Soft Toss', desc: 'Side-angle underhand' },
+      { value: 'flip', label: 'Flip', desc: 'Quick toss from close range' },
+      { value: 'coach_pitch', label: 'Coach Pitch', desc: 'Coach throws overhand' },
+    ],
+  },
+  {
+    group: 'Live',
+    items: [
+      { value: 'live_bp', label: 'Live BP', desc: 'Pitcher from mound/circle' },
+      { value: 'regular_bp', label: 'Regular BP', desc: 'Standard batting practice' },
+      { value: 'game', label: 'Game', desc: 'In-game at-bats' },
+    ],
+  },
+  {
+    group: 'Other',
+    items: [
+      { value: 'other', label: 'Other', desc: 'Custom rep source' },
+    ],
+  },
+];
+
+const PITCHING_SOURCES: SourceGroup[] = [
+  {
+    group: 'Mound',
+    items: [
+      { value: 'bullpen', label: 'Bullpen', desc: 'Full mound/circle work' },
+      { value: 'flat_ground', label: 'Flat Ground', desc: 'Level surface throwing' },
+    ],
+  },
+  {
+    group: 'Live',
+    items: [
+      { value: 'live_bp', label: 'Live BP', desc: 'Pitching to live batters' },
+      { value: 'game', label: 'Game', desc: 'In-game pitching' },
+    ],
+  },
+  {
+    group: 'Other',
+    items: [
+      { value: 'other', label: 'Other', desc: 'Custom rep source' },
+    ],
+  },
+];
+
+const FLAT_SOURCES: Record<string, SourceItem[]> = {
   fielding: [
     { value: 'fungo', label: 'Fungo' },
     { value: 'live', label: 'Live' },
@@ -57,16 +105,72 @@ export const HIDES_VELOCITY = ['tee', 'front_toss', 'coach_pitch', 'soft_toss', 
 // Rep sources where pitch type is required
 export const REQUIRES_PITCH_TYPE = ['live_bp', 'game', 'bullpen', 'flat_ground'];
 
-export function RepSourceSelector({ module, value, onChange }: RepSourceSelectorProps) {
-  const sources = MODULE_SOURCES[module] ?? MODULE_SOURCES.hitting;
+function GroupedSelector({ groups, value, onChange }: { groups: SourceGroup[]; value?: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-3">
+      {groups.map(g => (
+        <div key={g.group}>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1 block">
+            {g.group}
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {g.items.map(src => (
+              <button
+                key={src.value}
+                type="button"
+                onClick={() => onChange(src.value)}
+                title={src.desc}
+                className={cn(
+                  'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                  value === src.value
+                    ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                    : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                )}
+              >
+                {src.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
+export function RepSourceSelector({ module, value, onChange }: RepSourceSelectorProps) {
+  if (module === 'hitting') {
+    return (
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">
+          Rep Source <span className="text-destructive">*</span>
+        </Label>
+        <GroupedSelector groups={HITTING_SOURCES} value={value} onChange={onChange} />
+        {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
+      </div>
+    );
+  }
+
+  if (module === 'pitching') {
+    return (
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">
+          Rep Source <span className="text-destructive">*</span>
+        </Label>
+        <GroupedSelector groups={PITCHING_SOURCES} value={value} onChange={onChange} />
+        {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
+      </div>
+    );
+  }
+
+  // Flat list for other modules
+  const sources = FLAT_SOURCES[module] ?? FLAT_SOURCES.fielding;
   return (
     <div>
       <Label className="text-xs text-muted-foreground mb-1.5 block">
         Rep Source <span className="text-destructive">*</span>
       </Label>
       <div className="flex flex-wrap gap-1.5">
-        {sources.map((src) => (
+        {sources.map(src => (
           <button
             key={src.value}
             type="button"
@@ -82,9 +186,7 @@ export function RepSourceSelector({ module, value, onChange }: RepSourceSelector
           </button>
         ))}
       </div>
-      {!value && (
-        <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>
-      )}
+      {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
     </div>
   );
 }

@@ -28,12 +28,6 @@ const repSourceLabels: Record<string, string> = {
 };
 
 export function SessionConfigBar({ config, onEdit }: SessionConfigBarProps) {
-  const coachLabel = config.coach_session_type === 'solo'
-    ? 'Solo'
-    : config.coach_session_type === 'lesson'
-      ? 'Lesson'
-      : 'Coach-Led';
-
   return (
     <div className="flex items-center gap-2 flex-wrap bg-muted/30 rounded-lg border px-3 py-2">
       <Badge variant="outline" className="text-[10px]">
@@ -50,11 +44,8 @@ export function SessionConfigBar({ config, onEdit }: SessionConfigBarProps) {
       <Badge variant="outline" className="text-[10px]">
         {config.season_context.replace(/_/g, ' ')}
       </Badge>
-      <Badge variant="outline" className="text-[10px]">
-        {coachLabel}
-      </Badge>
       <Badge variant="outline" className="text-[10px] capitalize">
-        {config.indoor_outdoor}
+        {config.environment}
       </Badge>
       <Button variant="ghost" size="sm" className="h-6 px-1.5 ml-auto" onClick={onEdit}>
         <Pencil className="h-3 w-3" />

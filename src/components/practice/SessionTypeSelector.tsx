@@ -1,16 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { useSportTerminology } from '@/hooks/useSportTerminology';
-import { Target, Flame, Users, Gamepad2, BarChart3, CircleDot, Swords, HeartPulse } from 'lucide-react';
+import { Target, Users, Flame, Gamepad2, Swords } from 'lucide-react';
 
 const sessionTypes = [
-  { id: 'personal_practice', label: 'Personal Practice', icon: Target, description: 'Solo skill work' },
-  { id: 'team_practice', label: 'Team Practice', icon: Users, description: 'Organized team session' },
-  { id: 'coach_lesson', label: 'Coach Lesson', icon: Flame, description: 'With instructor' },
+  { id: 'solo_work', label: 'Solo Work', icon: Target, description: 'Self-directed skill work' },
+  { id: 'team_session', label: 'Team Session', icon: Users, description: 'Organized team training' },
+  { id: 'lesson', label: 'Lesson', icon: Flame, description: '1-on-1 or small group instruction' },
   { id: 'game', label: 'Game', icon: Gamepad2, description: 'Competition' },
-  { id: 'post_game_analysis', label: 'Post-Game Analysis', icon: BarChart3, description: 'Film & review' },
-  { id: 'bullpen', label: 'Bullpen', icon: CircleDot, description: 'Mound/circle work' },
-  { id: 'live_scrimmage', label: 'Live Scrimmage', icon: Swords, description: 'Intra-squad' },
-  { id: 'rehab_session', label: 'Rehab Session', icon: HeartPulse, description: 'Recovery work' },
+  { id: 'live_abs', label: 'Live At-Bats', icon: Swords, description: 'Intra-squad or simulated game reps' },
 ];
 
 interface SessionTypeSelectorProps {
@@ -19,13 +15,10 @@ interface SessionTypeSelectorProps {
 }
 
 export function SessionTypeSelector({ value, onChange }: SessionTypeSelectorProps) {
-  const { term } = useSportTerminology();
-
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
       {sessionTypes.map(st => {
         const isSelected = value === st.id;
-        const label = st.id === 'bullpen' ? term('sessionTypes', 'bullpen') : st.label;
         return (
           <Card
             key={st.id}
@@ -36,7 +29,7 @@ export function SessionTypeSelector({ value, onChange }: SessionTypeSelectorProp
           >
             <CardContent className="flex flex-col items-center gap-2 py-4 px-3 text-center">
               <st.icon className={`h-6 w-6 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
-              <span className="text-sm font-medium">{label}</span>
+              <span className="text-sm font-medium">{st.label}</span>
               <span className="text-xs text-muted-foreground">{st.description}</span>
             </CardContent>
           </Card>

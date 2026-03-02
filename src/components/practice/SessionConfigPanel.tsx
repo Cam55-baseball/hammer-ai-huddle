@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
 import { RepSourceSelector } from './RepSourceSelector';
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
@@ -32,28 +32,40 @@ interface SessionConfigPanelProps {
   onBack: () => void;
 }
 
-const environmentOptions = [
-  { value: 'practice', label: 'Practice' },
-  { value: 'game', label: 'Game' },
-  { value: 'lesson', label: 'Lesson' },
-];
+// Auto-derive environment from session type
+function deriveEnvironment(sessionType: string): 'practice' | 'game' | 'lesson' {
+  if (sessionType === 'game' || sessionType === 'live_abs') return 'game';
+  if (sessionType === 'lesson') return 'lesson';
+  return 'practice';
+}
+
+// Auto-derive coach session type from session type
+function deriveCoachSessionType(sessionType: string): 'solo' | 'coached' | 'lesson' {
+  if (sessionType === 'lesson') return 'lesson';
+  if (sessionType === 'team_session') return 'coached';
+  return 'solo';
+}
 
 export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: SessionConfigPanelProps) {
   const { machineVelocityBands, pitchingVelocityBands } = useSportConfig();
   const { user } = useAuth();
+  const { getDefaults, saveDefaults } = useSessionDefaults(module);
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
 
-  const [repSource, setRepSource] = useState<string>('');
-  const [pitchDistance, setPitchDistance] = useState(60);
-  const [velocityBand, setVelocityBand] = useState<string | undefined>();
-  const [seasonContext, setSeasonContext] = useState('in_season');
-  const [environment, setEnvironment] = useState<'practice' | 'game' | 'lesson'>(
-    sessionType === 'game' || sessionType === 'live_scrimmage' ? 'game' : 'practice'
-  );
-  const [indoorOutdoor, setIndoorOutdoor] = useState<'indoor' | 'outdoor'>('outdoor');
+  // Load smart defaults
+  const defaults = getDefaults();
+
+  const [repSource, setRepSource] = useState<string>(defaults.rep_source ?? '');
+  const [pitchDistance, setPitchDistance] = useState(defaults.pitch_distance_ft ?? 60);
+  const [velocityBand, setVelocityBand] = useState<string | undefined>(defaults.velocity_band);
+  const [seasonContext, setSeasonContext] = useState(defaults.season_context ?? 'in_season');
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
-  const [coachSessionType, setCoachSessionType] = useState<'solo' | 'coached' | 'lesson'>('solo');
+
+  // Auto-derived values
+  const environment = deriveEnvironment(sessionType);
+  const coachSessionType = deriveCoachSessionType(sessionType);
+  const showCoachSelector = sessionType === 'team_session' || sessionType === 'lesson';
 
   // Fetch head coach info for auto-select
   const { data: mpiSettings } = useQuery({
@@ -84,9 +96,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
     enabled: !!mpiSettings?.primary_coach_id,
   });
 
-  // Auto-select head coach when switching to coached/lesson, reset on solo
+  // Auto-select head coach when coach is relevant
   useEffect(() => {
-    if (coachSessionType === 'solo') {
+    if (!showCoachSelector) {
       setCoachSelection({ type: 'none' });
     } else if (mpiSettings?.primary_coach_id && headCoachName) {
       setCoachSelection({
@@ -95,20 +107,29 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         coach_name: headCoachName,
       });
     }
-  }, [coachSessionType, mpiSettings?.primary_coach_id, headCoachName]);
+  }, [showCoachSelector, mpiSettings?.primary_coach_id, headCoachName]);
 
   const velocityBands = isHitting ? machineVelocityBands : pitchingVelocityBands;
   const canConfirm = !!repSource;
 
   const handleConfirm = () => {
     if (!canConfirm) return;
+
+    // Save defaults for next session
+    saveDefaults({
+      rep_source: repSource,
+      pitch_distance_ft: pitchDistance,
+      velocity_band: velocityBand,
+      season_context: seasonContext,
+    });
+
     onConfirm({
       rep_source: repSource,
       pitch_distance_ft: pitchDistance,
       velocity_band: velocityBand,
       season_context: seasonContext,
       environment,
-      indoor_outdoor: indoorOutdoor,
+      indoor_outdoor: 'outdoor', // no longer asked, default outdoor
       coach_selection: coachSelection,
       coach_session_type: coachSessionType,
     });
@@ -173,62 +194,13 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           <SeasonContextToggle value={seasonContext} onChange={setSeasonContext} />
         </div>
 
-        {/* Coach */}
-        <div className="space-y-3">
-          <Label className="text-xs text-muted-foreground block">Session Type</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {(['solo', 'coached', 'lesson'] as const).map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setCoachSessionType(t)}
-                className={cn(
-                  'rounded-md border p-2.5 text-xs font-medium transition-all text-center',
-                  coachSessionType === t
-                    ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                    : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                )}
-              >
-                {t === 'solo' ? 'Solo' : t === 'coached' ? 'Coach-Led' : 'Lesson'}
-              </button>
-            ))}
-          </div>
-          {coachSessionType !== 'solo' && (
+        {/* Coach - only when relevant */}
+        {showCoachSelector && (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground block">Coach</Label>
             <CoachSelector value={coachSelection} onChange={setCoachSelection} />
-          )}
-        </div>
-
-        {/* Environment */}
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Environment</Label>
-          <div className="flex rounded-lg border overflow-hidden">
-            {environmentOptions.map(e => (
-              <button
-                key={e.value}
-                type="button"
-                onClick={() => setEnvironment(e.value as any)}
-                className={cn(
-                  'flex-1 px-3 py-2 text-xs font-medium transition-all',
-                  environment === e.value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted/20 hover:bg-muted text-muted-foreground'
-                )}
-              >
-                {e.label}
-              </button>
-            ))}
           </div>
-        </div>
-
-        {/* Indoor/Outdoor */}
-        <div className="flex items-center justify-between">
-          <Label className="text-xs text-muted-foreground">Indoor</Label>
-          <Switch
-            checked={indoorOutdoor === 'outdoor'}
-            onCheckedChange={v => setIndoorOutdoor(v ? 'outdoor' : 'indoor')}
-          />
-          <Label className="text-xs text-muted-foreground">Outdoor</Label>
-        </div>
+        )}
 
         {/* Confirm */}
         <Button onClick={handleConfirm} disabled={!canConfirm} className="w-full" size="lg">
