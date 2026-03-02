@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 interface SessionSummary {
   id: string;
   user_id: string;
+  coach_id: string | null;
   player_name: string;
   module: string;
   session_type: string;
@@ -35,9 +36,10 @@ export function SessionFeed({ linkedPlayerIds, playerNames }: SessionFeedProps) 
   const [selectedSession, setSelectedSession] = useState<SessionSummary | null>(null);
   const [playerFilter, setPlayerFilter] = useState<string>('all');
   const [moduleFilter, setModuleFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
 
   const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ['coach-session-feed', linkedPlayerIds, playerFilter, moduleFilter],
+    queryKey: ['coach-session-feed', linkedPlayerIds, playerFilter, moduleFilter, roleFilter],
     queryFn: async () => {
       if (linkedPlayerIds.length === 0) return [];
 
@@ -45,7 +47,7 @@ export function SessionFeed({ linkedPlayerIds, playerNames }: SessionFeedProps) 
 
       let query = supabase
         .from('performance_sessions')
-        .select('id, user_id, module, session_type, session_date, season_context, coach_override_applied, drill_blocks, fatigue_state_at_session, micro_layer_data, created_at')
+        .select('id, user_id, coach_id, module, session_type, session_date, season_context, coach_override_applied, drill_blocks, fatigue_state_at_session, micro_layer_data, created_at')
         .in('user_id', targetIds)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -54,13 +56,29 @@ export function SessionFeed({ linkedPlayerIds, playerNames }: SessionFeedProps) 
         query = query.eq('module', moduleFilter);
       }
 
+      if (roleFilter === 'my_sessions') {
+        query = query.eq('coach_id', user!.id);
+      }
+
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data || []).map(s => ({
+      const mapped = (data || []).map(s => ({
         ...s,
         player_name: playerNames[s.user_id] ?? 'Unknown',
       })) as SessionSummary[];
+
+      // Sort coach-tagged sessions first when viewing all
+      if (roleFilter === 'all') {
+        mapped.sort((a, b) => {
+          const aTagged = a.coach_id === user?.id ? 0 : 1;
+          const bTagged = b.coach_id === user?.id ? 0 : 1;
+          if (aTagged !== bTagged) return aTagged - bTagged;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      }
+
+      return mapped;
     },
     enabled: linkedPlayerIds.length > 0,
   });
@@ -104,6 +122,15 @@ export function SessionFeed({ linkedPlayerIds, playerNames }: SessionFeedProps) 
               ))}
             </SelectContent>
           </Select>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue placeholder="All sessions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sessions</SelectItem>
+              <SelectItem value="my_sessions">My Sessions</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>
@@ -123,12 +150,17 @@ export function SessionFeed({ linkedPlayerIds, playerNames }: SessionFeedProps) 
                 <button
                   key={s.id}
                   onClick={() => setSelectedSession(s)}
-                  className="w-full text-left p-3 border rounded-lg hover:bg-accent/50 transition-colors flex items-center justify-between"
+                  className={`w-full text-left p-3 border rounded-lg hover:bg-accent/50 transition-colors flex items-center justify-between ${s.coach_id === user?.id ? 'border-l-2 border-l-primary' : ''}`}
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-sm">{s.player_name}</span>
                       <Badge variant="outline" className="text-[10px]">{s.module}</Badge>
+                      {s.coach_id === user?.id && (
+                        <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">
+                          Coach-Led
+                        </Badge>
+                      )}
                       {s.coach_override_applied && (
                         <Badge variant="secondary" className="text-[10px] gap-0.5">
                           <ShieldCheck className="h-3 w-3" /> Verified
