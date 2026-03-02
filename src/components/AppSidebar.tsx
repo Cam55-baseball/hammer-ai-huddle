@@ -159,7 +159,7 @@ export function AppSidebar() {
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
-    ...(!isScout ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
+    ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     { title: t('navigation.rankings'), url: "/rankings", icon: Trophy },
     { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },
     { title: t('navigation.nutritionTips', 'Nutrition Tips'), url: "/nutrition", icon: Apple },

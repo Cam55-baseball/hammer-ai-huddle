@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Pencil, FolderOpen, Clock, Loader2, Users, FileText } from 'lucide-react';
+import { Pencil, FolderOpen, Clock, Loader2, Users, FileText, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import { FolderDetailDialog } from '@/components/folders/FolderDetailDialog';
+import { ActivityFolder } from '@/types/activityFolder';
 
 interface SharedCard {
   id: string;
@@ -37,6 +39,17 @@ export function CollaborativeWorkspace() {
   const [loading, setLoading] = useState(true);
   const [playerFilter, setPlayerFilter] = useState<string>('all');
   const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<ActivityFolder | null>(null);
+
+  useEffect(() => {
+    if (!selectedFolderId) { setSelectedFolder(null); return; }
+    supabase.from('activity_folders').select('*')
+      .eq('id', selectedFolderId).single()
+      .then(({ data }) => {
+        if (data) setSelectedFolder(data as unknown as ActivityFolder);
+      });
+  }, [selectedFolderId]);
 
   useEffect(() => {
     if (!user) return;
@@ -195,7 +208,11 @@ export function CollaborativeWorkspace() {
             <ScrollArea className="max-h-80">
               <div className="space-y-2">
                 {filteredCards.map(card => (
-                  <div key={card.id} className="p-3 rounded-lg border space-y-1">
+                  <div
+                    key={card.id}
+                    className="p-3 rounded-lg border space-y-1 cursor-pointer transition-colors hover:bg-accent/50"
+                    onClick={() => setSelectedFolderId(card.folder_id)}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="font-medium text-sm truncate">{card.title}</span>
@@ -203,9 +220,12 @@ export function CollaborativeWorkspace() {
                           <Badge variant="outline" className="text-[10px] flex-shrink-0">{card.item_type}</Badge>
                         )}
                       </div>
-                      {card.duration_minutes && (
-                        <span className="text-[10px] text-muted-foreground flex-shrink-0">{card.duration_minutes}min</span>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {card.duration_minutes && (
+                          <span className="text-[10px] text-muted-foreground">{card.duration_minutes}min</span>
+                        )}
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                       <span className="flex items-center gap-1">
@@ -252,6 +272,13 @@ export function CollaborativeWorkspace() {
           </CardContent>
         </Card>
       )}
+
+      <FolderDetailDialog
+        open={!!selectedFolder}
+        onOpenChange={(open) => { if (!open) { setSelectedFolderId(null); setSelectedFolder(null); } }}
+        folder={selectedFolder}
+        isOwner={false}
+      />
     </div>
   );
 }
