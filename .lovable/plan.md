@@ -1,54 +1,60 @@
 
 
-# Allow Players to Revoke Head Coach Folder Access
+# Add Folder Links in Collaborative Workspace + MyFollowers Visibility for Coaches
 
-## Problem
-Currently, the Head Coach gets automatic, non-revocable access to all folders. The UI shows "Auto" / "Auto - Full Access" with no toggles. Players cannot restrict access on a per-folder basis.
-
-## Solution
-Make the Head Coach appear as a normal coach in the permission UI, pre-checked with Edit access by default, but fully toggleable. The database function `can_edit_folder_item` will be updated to respect explicit revocations.
+## Overview
+Two changes:
+1. Make each item in the Collaborative Workspace clickable to open the full `FolderDetailDialog` for that folder.
+2. Hide the "My Followers" sidebar link for users with the coach role, since they manage connections from their own dashboard.
 
 ## Changes
 
-### 1. Database Migration: Update `can_edit_folder_item` function
-Modify the head coach check to also verify no explicit revocation exists in `folder_coach_permissions`:
+### 1. `src/components/coach/CollaborativeWorkspace.tsx`
+- Import `FolderDetailDialog` and the `ActivityFolder` type
+- Add state for `selectedFolderId` (string | null)
+- When a shared card row is clicked, set `selectedFolderId` to that card's `folder_id`
+- Fetch the full folder data (`activity_folders` row) when `selectedFolderId` is set, cast it to `ActivityFolder`
+- Render `<FolderDetailDialog>` with `isOwner={false}` (coach is viewing, not owning)
+- Make each card row visually clickable (cursor-pointer, hover state)
+- Also add a small "Open Folder" button/icon on each row for clarity
 
-```sql
--- Head coach (primary_coach_id) UNLESS explicitly revoked for this folder
-OR (
-  EXISTS (
-    SELECT 1 FROM public.athlete_mpi_settings ams
-    WHERE ams.user_id = af.owner_id
-      AND ams.primary_coach_id = p_user_id
-  )
-  AND NOT EXISTS (
-    SELECT 1 FROM public.folder_coach_permissions fcp
-    WHERE fcp.folder_id = af.id
-      AND fcp.coach_user_id = p_user_id
-      AND fcp.revoked_at IS NOT NULL
-  )
-)
+### 2. `src/components/AppSidebar.tsx`
+- Import `useScoutAccess` (already provides `isCoach`)
+- Hide the "My Followers" link when `isCoach` is true (coaches manage connections from their dashboard)
+- Current logic: `!isScout ? show : hide` -- update to `!isScout && !isCoach ? show : hide`
+
+## Technical Details
+
+**CollaborativeWorkspace folder opening:**
+```tsx
+// State
+const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+const [selectedFolder, setSelectedFolder] = useState<ActivityFolder | null>(null);
+
+// When selectedFolderId changes, fetch full folder
+useEffect(() => {
+  if (!selectedFolderId) { setSelectedFolder(null); return; }
+  supabase.from('activity_folders').select('*')
+    .eq('id', selectedFolderId).single()
+    .then(({ data }) => setSelectedFolder(data as unknown as ActivityFolder));
+}, [selectedFolderId]);
+
+// Each card row becomes clickable
+<div onClick={() => setSelectedFolderId(card.folder_id)} className="cursor-pointer hover:bg-accent/50 ...">
+
+// Render dialog
+<FolderDetailDialog
+  open={!!selectedFolder}
+  onOpenChange={(open) => { if (!open) { setSelectedFolderId(null); setSelectedFolder(null); }}}
+  folder={selectedFolder}
+  isOwner={false}
+/>
 ```
 
-### 2. `FolderPermissionMatrix.tsx`
-- Remove the special "Auto" badge rendering for the head coach
-- Remove the `colSpan` difference (head coach gets 1 column, others get 2)
-- Render the head coach with the same View/Edit checkboxes as other coaches
-- Pre-check both View and Edit if no explicit permission record exists (auto-access)
-- Keep the "Head Coach" name badge for identification
+**Sidebar update:**
+```tsx
+...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
+```
 
-### 3. `FolderShareDialog.tsx`
-- Remove the `isHeadCoach` guard that prevents toggling
-- Remove the "Auto - Full Access" badge
-- Render the head coach with the same View/Edit/None radio controls
-- Default to "edit" when no explicit permission record exists
-- Keep the "Head Coach" badge label for identification
-
-### 4. `FolderDetailDialog.tsx`
-- Update the head coach auto-access check (around line 132-140) to also verify no revocation exists in `folder_coach_permissions` for the current folder
-
-## Technical Notes
-- When a player revokes the head coach, a `folder_coach_permissions` row is created with `revoked_at` set (same revocation mechanism used for other coaches)
-- When a player re-grants access, the revoked row is updated or a new row is inserted
-- The Head Coach badge remains visible so players know which coach is designated, even if access is revoked for a specific folder
+No database changes needed.
 
