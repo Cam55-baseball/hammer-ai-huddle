@@ -1,83 +1,62 @@
 
 
-# Fix: Coach Cannot See Shared Folders in Collaborative Workspace
+# Upgrade CoachSelector to Show All Connected Coaches
 
-## Root Cause
-The RLS (Row Level Security) policies on `activity_folders` and `activity_folder_items` only check the **legacy** `folder_allows_coach_edit()` function, which looks at the old `coach_edit_allowed` and `coach_edit_user_id` columns. They do NOT check the newer `folder_coach_permissions` table or the head coach (`athlete_mpi_settings.primary_coach_id`) relationship.
+## Problem
+Currently, the CoachSelector only shows 3 options: Head Coach (if designated), External Coach, and Self-Directed. Players cannot choose from their other connected coaches -- only the head coach or type in an external name.
 
-The Collaborative Workspace code correctly reads folder IDs from `folder_coach_permissions`, but when it then queries `activity_folders` and `activity_folder_items` to get the actual data, RLS blocks those rows because the coach doesn't match any allowed policy.
+## Solution
+Rebuild the CoachSelector to:
+1. Fetch all active linked coaches from `scout_follows` (where player_id = current user, status = 'accepted', relationship_type = 'linked')
+2. Show a selectable list of all connected coaches, with the Head Coach highlighted and auto-selected when "Coach-Led" or "Lesson" is chosen
+3. Keep the "External Coach" (free-text) and "Self-Directed" options
 
-## Solution: Database Migration
+## Changes
 
-Update the SELECT RLS policies on both `activity_folders` and `activity_folder_items` to also grant access when:
-1. The coach has an active (non-revoked) record in `folder_coach_permissions`
-2. The coach is the head coach (via `athlete_mpi_settings.primary_coach_id`) and not explicitly revoked
+### `src/components/practice/CoachSelector.tsx`
+- Add a query to fetch all connected coaches from `scout_follows` joined with profile names (via `profiles_public` or the `get-coach-connections` edge function)
+- Replace the current single "assigned" option with a list of all connected coaches
+- Mark the Head Coach with a badge (e.g., crown icon or "Head Coach" label)
+- Auto-select the Head Coach by default when the component mounts (if one is designated)
+- Allow selecting any other connected coach from the list
+- Keep "External Coach" (with text input) and "Self-Directed" as additional options
+- Update the `CoachSelection` type to always include `coach_id` and `coach_name` when a connected coach is selected (type stays `'assigned'`)
 
-### Changes
-
-**1. New SELECT policy on `activity_folders`** -- "Coaches with folder permissions can view"
-
-Allows a coach to SELECT a folder if they have a non-revoked `folder_coach_permissions` entry OR are the head coach (without explicit revocation).
-
-```sql
-CREATE POLICY "Coaches with folder permissions can view"
-ON public.activity_folders FOR SELECT TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.folder_coach_permissions fcp
-    WHERE fcp.folder_id = activity_folders.id
-      AND fcp.coach_user_id = auth.uid()
-      AND fcp.revoked_at IS NULL
-  )
-  OR (
-    EXISTS (
-      SELECT 1 FROM public.athlete_mpi_settings ams
-      WHERE ams.user_id = activity_folders.owner_id
-        AND ams.primary_coach_id = auth.uid()
-    )
-    AND NOT EXISTS (
-      SELECT 1 FROM public.folder_coach_permissions fcp
-      WHERE fcp.folder_id = activity_folders.id
-        AND fcp.coach_user_id = auth.uid()
-        AND fcp.revoked_at IS NOT NULL
-    )
-  )
-);
-```
-
-**2. New SELECT policy on `activity_folder_items`** -- "Coaches with folder permissions can view items"
-
-Same logic, joined through the folder:
-
-```sql
-CREATE POLICY "Coaches with folder permissions can view items"
-ON public.activity_folder_items FOR SELECT TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.folder_coach_permissions fcp
-    WHERE fcp.folder_id = activity_folder_items.folder_id
-      AND fcp.coach_user_id = auth.uid()
-      AND fcp.revoked_at IS NULL
-  )
-  OR EXISTS (
-    SELECT 1 FROM public.activity_folders af
-    JOIN public.athlete_mpi_settings ams ON ams.user_id = af.owner_id
-    WHERE af.id = activity_folder_items.folder_id
-      AND ams.primary_coach_id = auth.uid()
-      AND NOT EXISTS (
-        SELECT 1 FROM public.folder_coach_permissions fcp2
-        WHERE fcp2.folder_id = af.id
-          AND fcp2.coach_user_id = auth.uid()
-          AND fcp2.revoked_at IS NOT NULL
-      )
-  )
-);
-```
-
-## No Code Changes Needed
-The `CollaborativeWorkspace.tsx` component logic is already correct. The only issue is the database policies blocking the data from being returned.
+### `src/components/practice/SessionConfigPanel.tsx`
+- When `coachSessionType` changes to `'coached'` or `'lesson'`, auto-populate `coachSelection` with the Head Coach if one exists
+- When switching back to `'solo'`, reset to `{ type: 'none' }`
 
 ## Technical Details
-- These are additive SELECT policies (Postgres OR's PERMISSIVE policies together), so existing access for owners, assigned players, and templates remains unaffected.
-- The head coach revocation check mirrors the logic already in the `can_edit_folder_item` database function.
 
+**Fetching connected coaches (in CoachSelector):**
+```tsx
+const { data: connectedCoaches } = useQuery({
+  queryKey: ['connected-coaches', user?.id],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('scout_follows')
+      .select('scout_id')
+      .eq('player_id', user!.id)
+      .eq('status', 'accepted')
+      .eq('relationship_type', 'linked');
+    if (!data?.length) return [];
+    const coachIds = data.map(d => d.scout_id);
+    const { data: profiles } = await supabase
+      .from('profiles_public')
+      .select('id, full_name')
+      .in('id', coachIds);
+    return profiles ?? [];
+  },
+  enabled: !!user,
+});
+```
+
+**Auto-select Head Coach in SessionConfigPanel:**
+When `coachSessionType` switches to `'coached'` or `'lesson'`, check if `mpiSettings.primary_coach_id` exists and set `coachSelection` to `{ type: 'assigned', coach_id: headCoachId, coach_name: headCoachName }`.
+
+**UI layout:**
+- Connected coaches shown as selectable cards/chips with name and optional Head Coach badge
+- Scrollable if many coaches
+- "External Coach" and "Self-Directed" remain as separate options below the coach list
+
+No database changes needed -- `scout_follows` RLS already allows players to read their own rows.
