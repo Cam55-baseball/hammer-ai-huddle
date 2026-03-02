@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -37,6 +40,7 @@ const environmentOptions = [
 
 export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: SessionConfigPanelProps) {
   const { machineVelocityBands, pitchingVelocityBands } = useSportConfig();
+  const { user } = useAuth();
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
 
@@ -50,6 +54,48 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [indoorOutdoor, setIndoorOutdoor] = useState<'indoor' | 'outdoor'>('outdoor');
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [coachSessionType, setCoachSessionType] = useState<'solo' | 'coached' | 'lesson'>('solo');
+
+  // Fetch head coach info for auto-select
+  const { data: mpiSettings } = useQuery({
+    queryKey: ['mpi-settings-coach-panel', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('athlete_mpi_settings')
+        .select('primary_coach_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: headCoachName } = useQuery({
+    queryKey: ['head-coach-name-panel', mpiSettings?.primary_coach_id],
+    queryFn: async () => {
+      if (!mpiSettings?.primary_coach_id) return null;
+      const { data } = await supabase
+        .from('profiles_public')
+        .select('full_name')
+        .eq('id', mpiSettings.primary_coach_id)
+        .maybeSingle();
+      return data?.full_name ?? 'Coach';
+    },
+    enabled: !!mpiSettings?.primary_coach_id,
+  });
+
+  // Auto-select head coach when switching to coached/lesson, reset on solo
+  useEffect(() => {
+    if (coachSessionType === 'solo') {
+      setCoachSelection({ type: 'none' });
+    } else if (mpiSettings?.primary_coach_id && headCoachName) {
+      setCoachSelection({
+        type: 'assigned',
+        coach_id: mpiSettings.primary_coach_id,
+        coach_name: headCoachName,
+      });
+    }
+  }, [coachSessionType, mpiSettings?.primary_coach_id, headCoachName]);
 
   const velocityBands = isHitting ? machineVelocityBands : pitchingVelocityBands;
   const canConfirm = !!repSource;

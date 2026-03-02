@@ -1,16 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { User, UserX, UserPlus } from 'lucide-react';
+import { User, UserPlus, UserX, Crown } from 'lucide-react';
 
 export interface CoachSelection {
   type: 'assigned' | 'external' | 'none';
   coach_id?: string;
   coach_name?: string;
   external_name?: string;
+}
+
+interface ConnectedCoach {
+  id: string;
+  full_name: string;
+  is_head_coach: boolean;
 }
 
 interface CoachSelectorProps {
@@ -35,71 +42,101 @@ export function CoachSelector({ value, onChange }: CoachSelectorProps) {
     enabled: !!user,
   });
 
-  const { data: coachName } = useQuery({
-    queryKey: ['coach-name', mpiSettings?.primary_coach_id],
+  const { data: connectedCoaches = [] } = useQuery({
+    queryKey: ['connected-coaches', user?.id, mpiSettings?.primary_coach_id],
     queryFn: async () => {
-      if (!mpiSettings?.primary_coach_id) return null;
-      const { data } = await supabase
+      if (!user) return [];
+      const { data: follows } = await supabase
+        .from('scout_follows')
+        .select('scout_id')
+        .eq('player_id', user.id)
+        .eq('status', 'accepted')
+        .eq('relationship_type', 'linked');
+      if (!follows?.length) return [];
+      const coachIds = follows.map(f => f.scout_id);
+      const { data: profiles } = await supabase
         .from('profiles_public')
-        .select('full_name')
-        .eq('id', mpiSettings.primary_coach_id)
-        .maybeSingle();
-      return data?.full_name ?? 'Coach';
+        .select('id, full_name')
+        .in('id', coachIds);
+      if (!profiles) return [];
+      const headCoachId = mpiSettings?.primary_coach_id;
+      return profiles.map(p => ({
+        id: p.id,
+        full_name: p.full_name ?? 'Coach',
+        is_head_coach: p.id === headCoachId,
+      })).sort((a, b) => (b.is_head_coach ? 1 : 0) - (a.is_head_coach ? 1 : 0)) as ConnectedCoach[];
     },
-    enabled: !!mpiSettings?.primary_coach_id,
+    enabled: !!user,
   });
 
-  const options = [
-    ...(mpiSettings?.primary_coach_id ? [{
-      type: 'assigned' as const,
-      label: coachName ?? 'Your Coach',
-      icon: User,
-      description: 'Primary coach',
-    }] : []),
-    {
-      type: 'external' as const,
-      label: 'External Coach',
-      icon: UserPlus,
-      description: 'Coach not on app',
-    },
-    {
-      type: 'none' as const,
-      label: 'Self-Directed',
-      icon: UserX,
-      description: 'No coach',
-    },
-  ];
+  const hasCoaches = connectedCoaches.length > 0;
 
   return (
     <div className="space-y-2">
       <label className="text-xs font-medium text-muted-foreground">Coach</label>
-      <div className="grid grid-cols-3 gap-2">
-        {options.map(opt => (
-          <button
-            key={opt.type}
-            type="button"
-            onClick={() => {
-              if (opt.type === 'assigned') {
-                onChange({ type: 'assigned', coach_id: mpiSettings?.primary_coach_id, coach_name: coachName ?? undefined });
-              } else if (opt.type === 'external') {
-                onChange({ type: 'external', external_name: value.external_name ?? '' });
-              } else {
-                onChange({ type: 'none' });
-              }
-            }}
-            className={cn(
-              'flex flex-col items-center gap-1 rounded-lg border p-3 transition-all text-center',
-              value.type === opt.type
-                ? 'bg-primary/10 border-primary ring-2 ring-primary'
-                : 'bg-muted/20 border-border hover:bg-muted'
-            )}
-          >
-            <opt.icon className="h-4 w-4" />
-            <span className="text-xs font-medium">{opt.label}</span>
-            <span className="text-[10px] text-muted-foreground">{opt.description}</span>
-          </button>
-        ))}
+
+      {/* Connected coaches list */}
+      {hasCoaches && (
+        <ScrollArea className={connectedCoaches.length > 3 ? 'max-h-36' : ''}>
+          <div className="space-y-1.5">
+            {connectedCoaches.map(coach => (
+              <button
+                key={coach.id}
+                type="button"
+                onClick={() => onChange({ type: 'assigned', coach_id: coach.id, coach_name: coach.full_name })}
+                className={cn(
+                  'w-full flex items-center gap-2.5 rounded-lg border p-2.5 transition-all text-left',
+                  value.type === 'assigned' && value.coach_id === coach.id
+                    ? 'bg-primary/10 border-primary ring-2 ring-primary'
+                    : 'bg-muted/20 border-border hover:bg-muted'
+                )}
+              >
+                <User className="h-4 w-4 shrink-0" />
+                <span className="text-xs font-medium truncate flex-1">{coach.full_name}</span>
+                {coach.is_head_coach && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
+                    <Crown className="h-2.5 w-2.5" />
+                    Head
+                  </Badge>
+                )}
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
+      )}
+
+      {/* External + Self-Directed */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onChange({ type: 'external', external_name: value.external_name ?? '' })}
+          className={cn(
+            'flex flex-col items-center gap-1 rounded-lg border p-3 transition-all text-center',
+            value.type === 'external'
+              ? 'bg-primary/10 border-primary ring-2 ring-primary'
+              : 'bg-muted/20 border-border hover:bg-muted'
+          )}
+        >
+          <UserPlus className="h-4 w-4" />
+          <span className="text-xs font-medium">External Coach</span>
+          <span className="text-[10px] text-muted-foreground">Not on app</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange({ type: 'none' })}
+          className={cn(
+            'flex flex-col items-center gap-1 rounded-lg border p-3 transition-all text-center',
+            value.type === 'none'
+              ? 'bg-primary/10 border-primary ring-2 ring-primary'
+              : 'bg-muted/20 border-border hover:bg-muted'
+          )}
+        >
+          <UserX className="h-4 w-4" />
+          <span className="text-xs font-medium">Self-Directed</span>
+          <span className="text-[10px] text-muted-foreground">No coach</span>
+        </button>
       </div>
+
       {value.type === 'external' && (
         <Input
           placeholder="Coach / trainer name"
