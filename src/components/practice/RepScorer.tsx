@@ -7,13 +7,15 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { HandednessGate } from './HandednessGate';
-import { RepSourceSelector, REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE } from './RepSourceSelector';
+import { TeeDepthGrid } from './TeeDepthGrid';
+import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE } from './RepSourceSelector';
 import { CatchingRepFields } from './CatchingRepFields';
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { cn } from '@/lib/utils';
-import { Trash2, Check, Zap, Settings2 } from 'lucide-react';
+import { Trash2, Check, Zap, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { SessionConfig } from './SessionConfigPanel';
 
 export interface ScoredRep {
   // Mandatory
@@ -22,6 +24,14 @@ export interface ScoredRep {
   batter_side?: 'L' | 'R';
   pitcher_hand?: 'L' | 'R';
   throwing_hand?: 'L' | 'R';
+  // Session-level (inherited)
+  session_distance_ft?: number;
+  session_velocity_band?: string;
+  session_rep_source?: string;
+  environment?: string;
+  // Per-rep overrides
+  override_distance_ft?: number;
+  override_velocity_band?: string;
   // Existing category-dependent
   pitch_location?: { row: number; col: number };
   contact_quality?: string;
@@ -30,6 +40,7 @@ export interface ScoredRep {
   pitch_result?: string;
   swing_decision?: string;
   intent?: string;
+  depth_zone?: number; // 1-5, required for tee
   // Advanced micro
   in_zone?: boolean;
   batted_ball_type?: string;
@@ -66,6 +77,7 @@ interface RepScorerProps {
   drillType?: string;
   reps: ScoredRep[];
   onRepsChange: (reps: ScoredRep[]) => void;
+  sessionConfig?: SessionConfig;
 }
 
 const LOGGING_MODE_KEY = 'repLogMode';
@@ -130,7 +142,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
   </div>
 );
 
-export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerProps) {
+export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
 
   // Handedness gate
@@ -149,6 +161,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
 
   // Current rep being built
   const [current, setCurrent] = useState<ScoredRep>({});
+  const [showOverrides, setShowOverrides] = useState(false);
 
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
@@ -156,14 +169,20 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
   const isCatching = module === 'catching';
   const isBaserunning = module === 'baserunning';
 
+  // Session-level defaults
+  const repSource = sessionConfig?.rep_source ?? current.rep_source;
+  const isTee = repSource === 'tee';
+
   const updateField = (field: string, val: any) => {
     setCurrent(prev => ({ ...prev, [field]: val }));
   };
 
   // Validation
-  const repSource = current.rep_source;
   const execScore = current.execution_score;
-  const canConfirm = !!repSource && execScore != null && execScore >= 1;
+  const hasRepSource = !!repSource;
+  const needsDepthZone = isTee && isHitting;
+  const canConfirm = hasRepSource && execScore != null && execScore >= 1
+    && (!needsDepthZone || current.depth_zone != null);
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
@@ -174,15 +193,22 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
     if (!canConfirm) return;
     const rep: ScoredRep = {
       ...current,
+      rep_source: repSource,
+      // Session-level values
+      session_distance_ft: sessionConfig?.pitch_distance_ft,
+      session_velocity_band: sessionConfig?.velocity_band,
+      session_rep_source: sessionConfig?.rep_source,
+      environment: sessionConfig?.environment,
       ...(isHitting && { batter_side: handedness }),
       ...(isPitching && { pitcher_hand: handedness }),
       ...((isFielding || isCatching) && { throwing_hand: handedness }),
       ...(isBaserunning && { throwing_hand: handedness }),
     };
     onRepsChange([...reps, rep]);
-    // Reset current but keep rep_source and execution_score for speed
-    setCurrent({ rep_source: current.rep_source, execution_score: current.execution_score });
-  }, [current, handedness, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isBaserunning]);
+    // Reset current but keep execution_score for speed
+    setCurrent({ execution_score: current.execution_score });
+    setShowOverrides(false);
+  }, [current, handedness, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isBaserunning, repSource, sessionConfig]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
@@ -215,7 +241,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
                   <span className="text-xs font-medium">#{i + 1}</span>
                   {rep.contact_quality && <span className="text-xs">{rep.contact_quality}</span>}
                   {rep.pitch_result && <span className="text-xs">{rep.pitch_result}</span>}
-                  {rep.rep_source && <span className="text-xs opacity-60">{rep.rep_source}</span>}
+                  {rep.execution_score && <span className="text-xs opacity-60">E{rep.execution_score}</span>}
                   <Trash2 className="h-3 w-3 opacity-0 group-hover:opacity-100 text-destructive" />
                 </Badge>
               </motion.div>
@@ -250,13 +276,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
             )}
           </div>
 
-          {/* Rep confirmation message */}
           <p className="text-[10px] text-muted-foreground text-center">
             Rep will be recorded manually once you confirm all required fields.
           </p>
-
-          {/* Mandatory: Rep Source */}
-          <RepSourceSelector module={module} value={current.rep_source} onChange={v => updateField('rep_source', v)} />
 
           {/* Mandatory: Execution Score */}
           <div>
@@ -294,48 +316,60 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
             </div>
           )}
 
-          {/* Velocity band (conditional) */}
-          {!hidesVelocity && (needsVelocity || mode === 'advanced') && isHitting && (
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">
-                Velocity Band {needsVelocity && <span className="text-destructive">*</span>}
-              </Label>
-              <SelectGrid
-                options={machineVelocityBands}
-                value={current.machine_velocity_band}
-                onChange={v => updateField('machine_velocity_band', v)}
-                cols={4}
-              />
-            </div>
-          )}
-
-          {/* BP Distance (for machine BP) */}
-          {repSource === 'machine_bp' && (
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">
-                BP Distance: {current.bp_distance_ft ?? bpDistanceRange.min} ft
-              </Label>
-              <Slider
-                min={bpDistanceRange.min}
-                max={bpDistanceRange.max}
-                step={10}
-                value={[current.bp_distance_ft ?? bpDistanceRange.min]}
-                onValueChange={([v]) => updateField('bp_distance_ft', v)}
-              />
+          {/* Per-rep override section */}
+          <button
+            type="button"
+            onClick={() => setShowOverrides(!showOverrides)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showOverrides ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            Override session defaults
+          </button>
+          {showOverrides && (
+            <div className="space-y-3 pl-2 border-l-2 border-primary/20">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">
+                  Override Distance: {current.override_distance_ft ?? 'Session default'} ft
+                </Label>
+                <Slider
+                  min={15} max={80} step={1}
+                  value={[current.override_distance_ft ?? sessionConfig?.pitch_distance_ft ?? 60]}
+                  onValueChange={([v]) => updateField('override_distance_ft', v)}
+                />
+              </div>
+              {(isHitting || isPitching) && !hidesVelocity && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Override Velocity Band</Label>
+                  <SelectGrid
+                    options={isHitting ? machineVelocityBands : pitchingVelocityBands}
+                    value={current.override_velocity_band}
+                    onChange={v => updateField('override_velocity_band', v)}
+                    cols={4}
+                  />
+                </div>
+              )}
             </div>
           )}
 
           {/* ===== HITTING FIELDS ===== */}
           {isHitting && (
             <>
-              {(mode === 'advanced' || mode === 'quick') && (
-                <PitchLocationGrid
-                  value={current.pitch_location}
-                  onSelect={v => updateField('pitch_location', v)}
-                  batterSide={handedness}
-                  sport={sport as 'baseball' | 'softball'}
-                />
-              )}
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <PitchLocationGrid
+                    value={current.pitch_location}
+                    onSelect={v => updateField('pitch_location', v)}
+                    batterSide={handedness}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
+                </div>
+                {isTee && (
+                  <TeeDepthGrid
+                    value={current.depth_zone}
+                    onChange={v => updateField('depth_zone', v)}
+                  />
+                )}
+              </div>
 
               {mode === 'advanced' && (
                 <>
@@ -631,7 +665,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange }: RepScorerPr
           </Button>
           {!canConfirm && (
             <p className="text-[10px] text-destructive text-center">
-              Complete required fields (rep source + execution score) to confirm rep
+              {!hasRepSource ? 'Configure session rep source first' :
+                needsDepthZone && !current.depth_zone ? 'Select tee depth zone' :
+                  'Set execution score (1-10) to confirm rep'}
             </p>
           )}
         </CardContent>

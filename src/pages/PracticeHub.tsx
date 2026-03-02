@@ -12,11 +12,11 @@ import { GameSessionFields } from '@/components/practice/GameSessionFields';
 import { RepScorer, type ScoredRep } from '@/components/practice/RepScorer';
 import { GameScorecard, type AtBat } from '@/components/practice/GameScorecard';
 import { FeelingsPrompt, type FeelingState } from '@/components/practice/FeelingsPrompt';
-import { CoachSelector, type CoachSelection } from '@/components/practice/CoachSelector';
-import { SeasonContextToggle } from '@/components/practice/SeasonContextToggle';
+import { SessionConfigPanel, type SessionConfig } from '@/components/practice/SessionConfigPanel';
+import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
 import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
-import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, Save, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const modules = [
@@ -29,7 +29,7 @@ const modules = [
   { id: 'mental', icon: Brain, label: 'Mental' },
 ];
 
-type FlowStep = 'select_type' | 'build_session';
+type FlowStep = 'select_type' | 'configure_session' | 'build_session';
 
 export default function PracticeHub() {
   const { t } = useTranslation();
@@ -41,13 +41,11 @@ export default function PracticeHub() {
   const [activeModule, setActiveModule] = useState('hitting');
   const [step, setStep] = useState<FlowStep>('select_type');
   const [sessionType, setSessionType] = useState<string | null>(null);
+  const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [notes, setNotes] = useState('');
   const [opponentName, setOpponentName] = useState('');
   const [opponentLevel, setOpponentLevel] = useState('');
-  const [seasonContext, setSeasonContext] = useState('in_season');
-  const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3 });
-  const [showExtras, setShowExtras] = useState(false);
 
   // Rep-based scoring
   const [reps, setReps] = useState<ScoredRep[]>([]);
@@ -56,28 +54,39 @@ export default function PracticeHub() {
 
   const isGameType = sessionType === 'game' || sessionType === 'live_scrimmage';
   const isHittingOrPitching = activeModule === 'hitting' || activeModule === 'pitching';
-  const isCatching = activeModule === 'catching';
 
   const handleSelectType = (type: string) => {
     setSessionType(type);
-    setStep('build_session');
+    setStep('configure_session');
     setReps([]);
     setAtBats([]);
     setNotes('');
     setOpponentName('');
     setOpponentLevel('');
     setFeelings({ body: 3, mind: 3 });
+    setSessionConfig(null);
+  };
+
+  const handleConfigConfirm = (config: SessionConfig) => {
+    setSessionConfig(config);
+    setStep('build_session');
   };
 
   const handleBack = () => {
-    setStep('select_type');
-    setSessionType(null);
+    if (step === 'build_session') {
+      setStep('configure_session');
+    } else if (step === 'configure_session') {
+      setStep('select_type');
+      setSessionType(null);
+    } else {
+      setStep('select_type');
+      setSessionType(null);
+    }
   };
 
   // Convert reps/atBats into drill blocks for the backend
   const buildDrillBlocks = (): DrillBlock[] => {
     if (isGameType && atBats.length > 0) {
-      // Each at-bat becomes a drill block
       return atBats.map((ab, i) => ({
         id: crypto.randomUUID(),
         drill_type: 'game_ab',
@@ -90,13 +99,12 @@ export default function PracticeHub() {
     }
 
     if (reps.length > 0) {
-      // Group reps into a single drill block
       const qualityMap: Record<string, number> = { barrel: 70, hard: 60, weak: 40, foul: 30, miss: 20 };
       const resultMap: Record<string, number> = { strike: 60, out: 55, ball: 35, hit: 70 };
-      
+
       let totalGrade = 0;
       const outcomeTags: string[] = [];
-      
+
       for (const rep of reps) {
         if (rep.contact_quality) {
           totalGrade += qualityMap[rep.contact_quality] ?? 50;
@@ -123,7 +131,7 @@ export default function PracticeHub() {
   };
 
   const handleSave = async () => {
-    if (!sessionType) return;
+    if (!sessionType || !sessionConfig) return;
     if (isGameType && (!opponentName || !opponentLevel)) {
       toast({ title: 'Missing fields', description: 'Game sessions require opponent name and level.', variant: 'destructive' });
       return;
@@ -140,25 +148,32 @@ export default function PracticeHub() {
         sport: sportKey,
         session_type: sessionType,
         session_date: new Date().toISOString().split('T')[0],
-        season_context: seasonContext,
+        season_context: sessionConfig.season_context,
         drill_blocks: drillBlocks,
         notes: notes || undefined,
         opponent_name: isGameType ? opponentName : undefined,
         opponent_level: isGameType ? opponentLevel : undefined,
         module: activeModule,
-        coach_id: coachSelection.type === 'assigned' ? coachSelection.coach_id : undefined,
+        coach_id: sessionConfig.coach_selection.type === 'assigned' ? sessionConfig.coach_selection.coach_id : undefined,
         fatigue_state: {
           body: feelings.body,
           mind: feelings.mind,
           note: feelings.note,
-          coach_type: coachSelection.type,
-          external_coach_name: coachSelection.type === 'external' ? coachSelection.external_name : undefined,
+          coach_type: sessionConfig.coach_selection.type,
+          coach_session_type: sessionConfig.coach_session_type,
+          external_coach_name: sessionConfig.coach_selection.type === 'external' ? sessionConfig.coach_selection.external_name : undefined,
+          pitch_distance_ft: sessionConfig.pitch_distance_ft,
+          velocity_band: sessionConfig.velocity_band,
+          environment: sessionConfig.environment,
+          indoor_outdoor: sessionConfig.indoor_outdoor,
+          rep_source: sessionConfig.rep_source,
         },
         micro_layer_data: reps.length > 0 ? reps : isGameType ? atBats.flatMap(ab => ab.pitches) : undefined,
       });
       // Reset
       setStep('select_type');
       setSessionType(null);
+      setSessionConfig(null);
       setReps([]);
       setAtBats([]);
       setNotes('');
@@ -187,6 +202,7 @@ export default function PracticeHub() {
 
           {modules.map(mod => (
             <TabsContent key={mod.id} value={mod.id} className="space-y-4">
+              {/* Step 1: Select Type */}
               {step === 'select_type' && (
                 <>
                   <Card>
@@ -200,12 +216,12 @@ export default function PracticeHub() {
                       <SessionTypeSelector value={sessionType} onChange={handleSelectType} />
                     </CardContent>
                   </Card>
-
                   <RecentSessionsList sport={sportKey} moduleLabel={mod.label} />
                 </>
               )}
 
-              {step === 'build_session' && sessionType && (
+              {/* Step 2: Configure Session */}
+              {step === 'configure_session' && sessionType && (
                 <>
                   <div className="flex items-center gap-3">
                     <Button variant="ghost" size="sm" onClick={handleBack}>
@@ -214,10 +230,6 @@ export default function PracticeHub() {
                     <h2 className="text-lg font-semibold capitalize">{sessionType.replace(/_/g, ' ')}</h2>
                   </div>
 
-                  {/* Feelings prompt - always first */}
-                  <FeelingsPrompt value={feelings} onChange={setFeelings} />
-
-                  {/* Game fields */}
                   {isGameType && (
                     <Card>
                       <CardContent className="pt-4">
@@ -231,6 +243,31 @@ export default function PracticeHub() {
                     </Card>
                   )}
 
+                  <SessionConfigPanel
+                    module={activeModule}
+                    sessionType={sessionType}
+                    onConfirm={handleConfigConfirm}
+                    onBack={handleBack}
+                  />
+                </>
+              )}
+
+              {/* Step 3: Log Reps */}
+              {step === 'build_session' && sessionType && sessionConfig && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="sm" onClick={handleBack}>
+                      <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                    </Button>
+                    <h2 className="text-lg font-semibold capitalize">{sessionType.replace(/_/g, ' ')}</h2>
+                  </div>
+
+                  {/* Session config summary bar */}
+                  <SessionConfigBar config={sessionConfig} onEdit={() => setStep('configure_session')} />
+
+                  {/* Feelings prompt */}
+                  <FeelingsPrompt value={feelings} onChange={setFeelings} />
+
                   {/* Main scoring area */}
                   {isGameType && isHittingOrPitching ? (
                     <GameScorecard
@@ -238,38 +275,17 @@ export default function PracticeHub() {
                       atBats={atBats}
                       onAtBatsChange={setAtBats}
                     />
-                  ) : isHittingOrPitching ? (
-                    <RepScorer
-                      module={activeModule}
-                      reps={reps}
-                      onRepsChange={setReps}
-                    />
                   ) : (
                     <RepScorer
                       module={activeModule}
                       reps={reps}
                       onRepsChange={setReps}
+                      sessionConfig={sessionConfig}
                     />
                   )}
 
-                  {/* Expandable extras */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-muted-foreground"
-                    onClick={() => setShowExtras(!showExtras)}
-                  >
-                    {showExtras ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
-                    {showExtras ? 'Less Options' : 'More Options'}
-                  </Button>
-
-                  {showExtras && (
-                    <div className="space-y-4">
-                      <CoachSelector value={coachSelection} onChange={setCoachSelection} />
-                      <SeasonContextToggle value={seasonContext} onChange={setSeasonContext} />
-                      <VoiceNoteInput value={notes} onChange={setNotes} />
-                    </div>
-                  )}
+                  {/* Voice notes */}
+                  <VoiceNoteInput value={notes} onChange={setNotes} />
 
                   <Button
                     className="w-full"
