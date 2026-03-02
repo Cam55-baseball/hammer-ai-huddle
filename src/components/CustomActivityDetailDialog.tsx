@@ -389,6 +389,28 @@ export function CustomActivityDetailDialog({
               )}
             </div>
 
+            {/* Running Distance & Pace Goal */}
+            {(template.distance_value || template.pace_value) && (
+              <div className="flex flex-wrap gap-3">
+                {template.distance_value && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+                    <Footprints className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      {template.distance_value} {template.distance_unit || 'miles'}
+                    </span>
+                  </div>
+                )}
+                {template.pace_value && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      Goal: {template.pace_value}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Quick Complete empty state — no sub-tasks to track */}
             {totalCheckableCount === 0 && (
               <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/40 border border-border/50 text-center space-y-4">
