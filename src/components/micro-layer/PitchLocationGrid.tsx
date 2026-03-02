@@ -1,66 +1,81 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PitchLocationGridProps {
   value?: { row: number; col: number };
   onSelect: (loc: { row: number; col: number }) => void;
-  allow5x5?: boolean;
+  batterSide?: 'L' | 'R';
+  sport?: 'baseball' | 'softball';
 }
 
-export function PitchLocationGrid({ value, onSelect, allow5x5 = false }: PitchLocationGridProps) {
-  const [gridSize, setGridSize] = useState<3 | 5>(3);
-  const size = allow5x5 ? gridSize : 3;
-  const cellSize = size === 5 ? 'h-7 w-7' : 'h-10 w-10';
+// Zone labels for 5x5 grid — rows 0-4, cols 0-4
+// Inner zone = rows 1-3, cols 1-3 (the strike zone)
+// Outer = everything else (chase/waste zones)
+const ZONE_LABELS_R: string[][] = [
+  ['High-In', 'High-In', 'High', 'High-Away', 'High-Away'],
+  ['Up-In', 'Up-In', 'Up-Mid', 'Up-Away', 'Up-Away'],
+  ['Mid-In', 'Mid-In', 'Mid-Mid', 'Mid-Away', 'Mid-Away'],
+  ['Down-In', 'Down-In', 'Down-Mid', 'Down-Away', 'Down-Away'],
+  ['Low-In', 'Low-In', 'Low', 'Low-Away', 'Low-Away'],
+];
+
+function mirrorCol(col: number): number {
+  return 4 - col;
+}
+
+export function PitchLocationGrid({ value, onSelect, batterSide = 'R', sport = 'baseball' }: PitchLocationGridProps) {
+  const isLefty = batterSide === 'L';
+
+  const getLabel = useMemo(() => (row: number, col: number) => {
+    const effectiveCol = isLefty ? mirrorCol(col) : col;
+    return ZONE_LABELS_R[row]?.[effectiveCol] ?? '';
+  }, [isLefty]);
+
+  const isInnerZone = (row: number, col: number) => row >= 1 && row <= 3 && col >= 1 && col <= 3;
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-muted-foreground">Pitch Location</label>
-        {allow5x5 && (
-          <div className="flex gap-1">
-            <Button
-              type="button"
-              variant={gridSize === 3 ? 'default' : 'ghost'}
-              size="sm"
-              className="h-5 text-[10px] px-1.5"
-              onClick={() => setGridSize(3)}
-            >
-              3×3
-            </Button>
-            <Button
-              type="button"
-              variant={gridSize === 5 ? 'default' : 'ghost'}
-              size="sm"
-              className="h-5 text-[10px] px-1.5"
-              onClick={() => setGridSize(5)}
-            >
-              5×5
-            </Button>
-          </div>
-        )}
+        <label className="text-xs font-medium text-muted-foreground">
+          Pitch Location {isLefty ? '(LHH View)' : '(RHH View)'}
+        </label>
+        <span className="text-[10px] text-muted-foreground">{sport === 'softball' ? 'Softball Zone' : '5×5'}</span>
       </div>
-      <div className={cn('grid gap-1 w-fit', size === 5 ? 'grid-cols-5' : 'grid-cols-3')}>
-        {Array.from({ length: size }, (_, row) =>
-          Array.from({ length: size }, (_, col) => {
-            const selected = value?.row === row && value?.col === col;
-            return (
-              <button
-                key={`${row}-${col}`}
-                type="button"
-                onClick={() => onSelect({ row, col })}
-                className={cn(
-                  'rounded border transition-colors',
-                  cellSize,
-                  selected
-                    ? 'bg-primary border-primary text-primary-foreground'
-                    : 'bg-muted/30 border-border hover:bg-muted'
-                )}
-              />
-            );
-          })
-        )}
-      </div>
+      <TooltipProvider delayDuration={200}>
+        <div className="grid grid-cols-5 gap-0.5 w-fit">
+          {Array.from({ length: 5 }, (_, row) =>
+            Array.from({ length: 5 }, (_, col) => {
+              const displayCol = isLefty ? mirrorCol(col) : col;
+              const selected = value?.row === row && value?.col === col;
+              const inner = isInnerZone(row, col);
+              const label = getLabel(row, col);
+
+              return (
+                <Tooltip key={`${row}-${col}`}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => onSelect({ row, col })}
+                      className={cn(
+                        'h-9 w-9 rounded-sm border transition-all text-[9px] font-medium',
+                        selected
+                          ? 'bg-primary border-primary text-primary-foreground ring-2 ring-primary scale-110 z-10 relative'
+                          : inner
+                            ? 'bg-green-500/15 border-green-400/50 hover:bg-green-500/25 text-green-700 dark:text-green-300'
+                            : 'bg-muted/20 border-border/40 hover:bg-muted/40 text-muted-foreground'
+                      )}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs px-2 py-1">
+                    {label}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })
+          )}
+        </div>
+      </TooltipProvider>
     </div>
   );
 }
