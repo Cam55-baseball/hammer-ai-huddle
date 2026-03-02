@@ -56,8 +56,10 @@ export function ConnectionsTab() {
     mutationFn: async (coachId: string | null) => {
       const { error } = await supabase
         .from('athlete_mpi_settings')
-        .update({ primary_coach_id: coachId })
-        .eq('user_id', user!.id);
+        .upsert(
+          { user_id: user!.id, primary_coach_id: coachId, sport: 'baseball' },
+          { onConflict: 'user_id' }
+        );
       if (error) throw error;
     },
     onSuccess: (_, coachId) => {
