@@ -16,6 +16,7 @@ interface SessionDetailViewProps {
   session: {
     id: string;
     user_id: string;
+    coach_id: string | null;
     player_name: string;
     module: string;
     session_type: string;
@@ -84,6 +85,9 @@ export function SessionDetailView({ session, onBack }: SessionDetailViewProps) {
             {fatigue?.pitch_distance_ft && <span>• {fatigue.pitch_distance_ft}ft</span>}
             {fatigue?.velocity_band && <span>• {fatigue.velocity_band}</span>}
             {fatigue?.environment && <span>• {fatigue.environment}</span>}
+            {session.coach_id === user?.id && (
+              <span className="text-primary font-medium">• You led this session</span>
+            )}
           </div>
         </CardHeader>
 
