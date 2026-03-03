@@ -1,39 +1,45 @@
 
 
-# Post-Session Summary Screen
+# Optimize Session Configuration by Session Type
 
 ## Problem
-After a session is saved (whether self-logged or coach-submitted), the player sees a toast and the form resets. There's no summary showing what was computed — no composite scores, no AI prompts.
+The `SessionConfigPanel` shows the same rep source options and config fields regardless of session type. This creates illogical combinations — e.g., a **Lesson** in hitting shows "Game" as a rep source, or a **Game** session shows "Tee" and "Soft Toss." Each session type has a distinct real-world context that should constrain which options are presented.
 
-## Solution
-Add a `PostSessionSummary` component and a new flow step `session_summary` that displays immediately after a successful save.
+## Logic Rules
 
-### New File: `src/components/practice/PostSessionSummary.tsx`
-A card-based summary screen showing:
-- **Session metadata**: module, type, date, coach name (if coach-led)
-- **Composite scores**: BQI, FQI, PEI, Decision, Competitive Execution — fetched from the saved session's `composite_indexes` (polled once after a short delay since `calculate-session` runs async)
-- **AI Development Prompts**: pulled from `useAIPrompts` hook, showing the carousel inline
-- **Streak info**: current streak from `athlete_mpi_settings`
-- **"Done" button**: resets flow back to `select_type`
+The five session types each imply a specific training context:
 
-The component will:
-1. Accept `sessionId` as prop
-2. Use a query to fetch the session's `composite_indexes` with a 2-second initial delay + retry until populated
-3. Display scores as a simple grid of labeled values with color coding (red < 40, yellow 40-65, green > 65)
-4. Show AI prompts from `useAIPrompts`
+| Session Type | Valid Hitting Sources | Valid Pitching Sources | Notes |
+|---|---|---|---|
+| **Solo Work** | Tee, Soft Toss, Machine BP | Flat Ground | No live pitcher, no game. No coach needed. |
+| **Team Session** | Machine BP, Front Toss, Flip, Coach Pitch, Live BP, Regular BP | Bullpen, Flat Ground, Live BP | Organized practice — no tee (solo drill), no game. |
+| **Lesson** | Tee, Soft Toss, Front Toss, Flip, Coach Pitch, Machine BP | Bullpen, Flat Ground | Instructional — no game, no live BP (not a scrimmage). |
+| **Game** | Game (auto-selected, single option) | Game (auto-selected) | Only game reps. No practice sources. Season context locked to in-season. |
+| **Live At-Bats** | Live BP, Regular BP | Live BP | Simulated game — only live sources. |
 
-### Changes to `src/pages/PracticeHub.tsx`
-- Add `'session_summary'` to the `FlowStep` type
-- Store the returned session ID after `createSession` succeeds
-- Instead of resetting to `select_type` on success, transition to `session_summary`
-- Render `PostSessionSummary` when step is `session_summary`
-- On "Done" click, reset all state as currently done
+Additional per-session-type field rules:
+- **Game**: Auto-set rep source to `game`, hide rep source selector entirely. Show `GameSessionFields` (opponent name/level). Hide velocity band (captured per-rep). Season locked to `in_season`.
+- **Solo Work**: Hide coach selector (already done). Hide league level (solo drill, irrelevant).
+- **Live At-Bats**: Hide season context (implied in-season or scrimmage). Auto-lock season to `in_season`.
+- **Lesson / Team Session**: Show coach selector (already done). All other fields normal.
 
-### Changes to `src/hooks/usePerformanceSession.ts`
-- No changes needed — `createSession` already returns the session object with `id`
+For **Throwing**, **Fielding**, **Catching**, **Baserunning** modules — same principle: filter out `game` source unless session type is `game`, and for `game` session type auto-select it.
 
-| File | Change |
-|------|--------|
-| `src/components/practice/PostSessionSummary.tsx` | New component — score display, AI prompts, done button |
-| `src/pages/PracticeHub.tsx` | Add `session_summary` step, store session ID, render summary |
+## Changes
+
+### `src/components/practice/RepSourceSelector.tsx`
+- Accept new `sessionType` prop
+- Add filtering function `filterSourcesBySessionType(groups, sessionType)` that removes inappropriate items based on the mapping above
+- For `game` session type, return only the `game` source item (pre-selected)
+
+### `src/components/practice/SessionConfigPanel.tsx`
+- Pass `sessionType` to `RepSourceSelector`
+- For `game` session type: auto-set `repSource` to `'game'`, lock season to `in_season`, integrate `GameSessionFields` for opponent info
+- For `live_abs`: auto-lock season to `in_season`, hide season toggle
+- For `solo_work`: hide league level selector
+- Add `opponent_name` and `opponent_level` to `SessionConfig` interface
+- Store opponent state, pass through on confirm
+
+### `src/components/practice/SessionConfigPanel.tsx` (SessionConfig interface)
+- Add optional `opponent_name?: string` and `opponent_level?: string` fields
 
