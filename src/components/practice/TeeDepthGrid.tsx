@@ -101,7 +101,7 @@ export function TeeDepthGrid({ value, onChange, sport = 'baseball', batterSide =
       <TooltipProvider delayDuration={200}>
         <svg
           viewBox={`${-xOffset} -2 ${viewW} ${TOTAL_H + 4}`}
-          className="w-24 h-auto"
+          className="w-44 h-auto"
           aria-label="Home plate depth zones"
         >
           {/* Pentagon outline (the actual plate) */}
@@ -154,7 +154,7 @@ export function TeeDepthGrid({ value, onChange, sport = 'baseball', batterSide =
                       y={cy + 1}
                       textAnchor="middle"
                       dominantBaseline="central"
-                      fontSize={pos.onPlate ? '11' : '9'}
+                      fontSize={pos.onPlate ? '14' : '11'}
                       fontWeight={selected ? '700' : '500'}
                       fill={
                         selected
