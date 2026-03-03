@@ -34,18 +34,18 @@ export function useSessionDefaults(module: string) {
 
   const getHandedness = useCallback((): 'L' | 'R' | undefined => {
     try {
-      const raw = localStorage.getItem('session_handedness');
+      const raw = localStorage.getItem(`session_handedness_${module}`);
       return raw as 'L' | 'R' | undefined;
     } catch {
       return undefined;
     }
-  }, []);
+  }, [module]);
 
   const saveHandedness = useCallback((hand: 'L' | 'R') => {
     try {
-      localStorage.setItem('session_handedness', hand);
+      localStorage.setItem(`session_handedness_${module}`, hand);
     } catch {}
-  }, []);
+  }, [module]);
 
   return { getDefaults, saveDefaults, getHandedness, saveHandedness };
 }
