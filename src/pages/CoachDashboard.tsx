@@ -43,6 +43,7 @@ export default function CoachDashboard() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { myOrgs, members } = useOrganization();
   const [following, setFollowing] = useState<Player[]>([]);
   const [searchResults, setSearchResults] = useState<Player[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -358,7 +359,6 @@ export default function CoachDashboard() {
   }
 
   const followingCount = following.length;
-  const { myOrgs, members } = useOrganization();
   const activeOrg = myOrgs.data?.[0];
   const memberCount = members.data?.length ?? 0;
 
