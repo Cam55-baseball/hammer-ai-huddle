@@ -1,0 +1,1 @@
+ALTER TABLE public.coach_notifications ADD COLUMN template_snapshot jsonb;

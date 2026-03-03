@@ -35,6 +35,7 @@ import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
 import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
 import { SendCardToCoachDialog } from '@/components/custom-activities/SendCardToCoachDialog';
+import { Json } from '@/integrations/supabase/types';
 import { GamePlanCalendarView } from '@/components/GamePlanCalendarView';
 import { useVault } from '@/hooks/useVault';
 import { useAuth } from '@/hooks/useAuth';
@@ -205,6 +206,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [folderCheckboxStates, setFolderCheckboxStates] = useState<Record<string, boolean>>({});
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [sendToCoachTitle, setSendToCoachTitle] = useState('');
+  const [sendToCoachTemplateData, setSendToCoachTemplateData] = useState<Json | null>(null);
 
   // Initialize folder checkbox states when dialog opens
   useEffect(() => {
@@ -1104,6 +1106,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             onClick={(e) => {
               e.stopPropagation();
               setSendToCoachTitle(task.taskType === 'custom' ? task.titleKey : '');
+              setSendToCoachTemplateData(task.customActivityData?.template as unknown as Json || null);
               setSendToCoachOpen(true);
             }}
             title="Send to Coach for Edit"
@@ -2639,6 +2642,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         folderId=""
         folderName="Custom Activities"
         itemTitle={sendToCoachTitle}
+        templateData={sendToCoachTemplateData}
       />
 
       {/* Pulsing animation for incomplete tasks */}
