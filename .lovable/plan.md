@@ -1,62 +1,37 @@
 
 
-# Add Notification Badge for Shared Cards on Coach Dashboard
+# Fix: Allow Coach to View Shared Custom Activities
 
 ## Problem
-When a player sends a custom activity to a coach for editing, there's no persistent record or notification. The standalone flow just shows a toast on the player's side — nothing reaches the coach. The coach has no way to know a card was shared.
+When a player shares a standalone custom activity, only a notification with a title string is stored in `coach_notifications`. The coach sees the notification but has no way to view the actual activity content -- there's no template data stored and no UI to display it.
 
-## Approach
+## Solution
 
-### 1. Create a `coach_notifications` database table
-A new table to store notifications for coaches, triggered when a player shares a card:
+### 1. Database Migration
+Add a `template_snapshot` JSONB column to `coach_notifications` to store the full activity template data when shared:
 
 ```sql
-create table public.coach_notifications (
-  id uuid primary key default gen_random_uuid(),
-  coach_user_id uuid references auth.users(id) on delete cascade not null,
-  sender_user_id uuid references auth.users(id) on delete cascade not null,
-  notification_type text not null default 'card_shared',
-  title text not null,
-  message text,
-  is_read boolean not null default false,
-  created_at timestamptz not null default now()
-);
-
-alter table public.coach_notifications enable row level security;
-
--- Coaches can read their own notifications
-create policy "Coaches can read own notifications"
-  on public.coach_notifications for select to authenticated
-  using (coach_user_id = auth.uid());
-
--- Coaches can update (mark read) their own notifications
-create policy "Coaches can update own notifications"
-  on public.coach_notifications for update to authenticated
-  using (coach_user_id = auth.uid());
-
--- Players can insert notifications for coaches
-create policy "Authenticated users can insert notifications"
-  on public.coach_notifications for insert to authenticated
-  with check (sender_user_id = auth.uid());
+ALTER TABLE public.coach_notifications ADD COLUMN template_snapshot jsonb;
 ```
 
 ### 2. Update `SendCardToCoachDialog.tsx`
-When a player selects a coach (both standalone and folder-based), insert a row into `coach_notifications` with the item title and sender info.
+- Accept a new optional `templateData` prop (the full `CustomActivityTemplate` object)
+- Pass the template snapshot into the `coach_notifications` insert so the coach has the full activity data
 
-### 3. Add notification badge to `CollaborativeWorkspace.tsx`
-- Query `coach_notifications` for unread count where `notification_type = 'card_shared'`
-- Display a badge with the unread count on the "Collaborative Workspace" card header
-- Show recent notifications as a small list above the shared cards
-- Add a "Mark all read" button
+### 3. Update callers to pass template data
+- **`GamePlanCard.tsx`**: Pass the template object when opening `SendCardToCoachDialog`
+- **`CustomActivityDetailDialog.tsx`**: Pass the template object when opening `SendCardToCoachDialog`
 
-### 4. Add notification count to `CoachScoutGamePlanCard.tsx`
-- Add a new `TaskRow` for "Shared Cards" showing unread notification count, with accent styling when > 0
-- Links to `/coach-dashboard` (where the Collaborative Workspace lives)
+### 4. Update `CollaborativeWorkspace.tsx`
+- Include `template_snapshot` in the notifications query
+- When a notification with `template_snapshot` is clicked, open a read-only `CustomActivityDetailDialog` showing the full activity
+- Add click handling on notification items to view the shared activity
 
 | File | Change |
 |------|--------|
-| Database migration | Create `coach_notifications` table with RLS |
-| `src/components/custom-activities/SendCardToCoachDialog.tsx` | Insert notification row on share |
-| `src/components/coach/CollaborativeWorkspace.tsx` | Show unread badge + notification list |
-| `src/components/CoachScoutGamePlanCard.tsx` | Add "Shared Cards" TaskRow with unread count |
+| DB migration | Add `template_snapshot jsonb` column to `coach_notifications` |
+| `SendCardToCoachDialog.tsx` | Accept + store `templateData` in notification insert |
+| `GamePlanCard.tsx` | Pass template data to `SendCardToCoachDialog` |
+| `CustomActivityDetailDialog.tsx` | Pass template data to `SendCardToCoachDialog` |
+| `CollaborativeWorkspace.tsx` | Query template_snapshot, add click-to-view on notifications |
 
