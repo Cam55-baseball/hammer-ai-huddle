@@ -1,4 +1,4 @@
-import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
 
 const gradeLabels: Record<number, string> = {
   1: 'Needs Work',
@@ -25,6 +25,7 @@ interface ExecutionSliderProps {
 export function ExecutionSlider({ value, onChange }: ExecutionSliderProps) {
   const sliderValue = scoutGradeToSlider(value);
   const label = gradeLabels[sliderValue] ?? 'Solid';
+  const steps = [1, 2, 3, 4, 5];
 
   return (
     <div>
@@ -32,17 +33,43 @@ export function ExecutionSlider({ value, onChange }: ExecutionSliderProps) {
         <label className="text-xs font-medium text-muted-foreground">Execution</label>
         <span className="text-sm font-semibold text-primary">{label} ({value})</span>
       </div>
-      <Slider
-        min={1}
-        max={5}
-        step={1}
-        value={[sliderValue]}
-        onValueChange={([v]) => onChange(sliderToScoutGrade(v))}
-        className="w-full"
-      />
-      <div className="flex justify-between mt-1">
-        {[1, 2, 3, 4, 5].map(n => (
-          <span key={n} className="text-[10px] text-muted-foreground">{n}</span>
+      <div className="flex items-center gap-0">
+        {steps.map((n, i) => (
+          <div key={n} className="flex items-center">
+            <button
+              type="button"
+              onClick={() => onChange(sliderToScoutGrade(n))}
+              className={cn(
+                'relative flex flex-col items-center gap-1 group'
+              )}
+            >
+              {/* Dot */}
+              <div className={cn(
+                'w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center text-[9px] font-bold',
+                sliderValue === n
+                  ? 'bg-primary border-primary text-primary-foreground scale-125 shadow-md'
+                  : sliderValue > n
+                    ? 'bg-primary/30 border-primary/50 text-primary'
+                    : 'bg-muted border-border text-muted-foreground group-hover:border-primary/50'
+              )}>
+                {n}
+              </div>
+              {/* Label below */}
+              <span className={cn(
+                'text-[8px] leading-tight whitespace-nowrap',
+                sliderValue === n ? 'text-primary font-semibold' : 'text-muted-foreground'
+              )}>
+                {gradeLabels[n]}
+              </span>
+            </button>
+            {/* Connecting line */}
+            {i < steps.length - 1 && (
+              <div className={cn(
+                'h-0.5 w-6 sm:w-8 mx-0.5',
+                sliderValue > n ? 'bg-primary/40' : 'bg-border'
+              )} />
+            )}
+          </div>
         ))}
       </div>
     </div>

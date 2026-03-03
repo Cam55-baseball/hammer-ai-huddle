@@ -286,16 +286,39 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             Rep will be recorded manually once you confirm all required fields.
           </p>
 
-          {/* Mandatory: Execution Score */}
+          {/* Mandatory: Execution Score — number line */}
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">
-              Execution Score: {current.execution_score ?? '—'} <span className="text-destructive">*</span>
+              Execution Score <span className="text-destructive">*</span>
             </Label>
-            <Slider
-              min={1} max={10} step={1}
-              value={[current.execution_score ?? 5]}
-              onValueChange={([v]) => updateField('execution_score', v)}
-            />
+            <div className="flex items-center gap-0 overflow-x-auto py-1">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n, i, arr) => (
+                <div key={n} className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => updateField('execution_score', n)}
+                    className="relative flex flex-col items-center gap-0.5 group"
+                  >
+                    <div className={cn(
+                      'w-5 h-5 rounded-full border-2 transition-all flex items-center justify-center text-[9px] font-bold',
+                      current.execution_score === n
+                        ? 'bg-primary border-primary text-primary-foreground scale-110 shadow-md'
+                        : (current.execution_score ?? 0) > n
+                          ? 'bg-primary/30 border-primary/50 text-primary'
+                          : 'bg-muted border-border text-muted-foreground group-hover:border-primary/50'
+                    )}>
+                      {n}
+                    </div>
+                  </button>
+                  {i < arr.length - 1 && (
+                    <div className={cn(
+                      'h-0.5 w-2 sm:w-3 mx-px',
+                      (current.execution_score ?? 0) > n ? 'bg-primary/40' : 'bg-border'
+                    )} />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Thrower handedness sub-field */}

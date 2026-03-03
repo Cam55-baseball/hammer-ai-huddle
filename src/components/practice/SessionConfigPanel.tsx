@@ -154,14 +154,41 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
             <Label className="text-xs text-muted-foreground mb-1.5 block">
               Pitch Release Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
             </Label>
-            <Slider
-              min={15} max={80} step={1}
-              value={[pitchDistance]}
-              onValueChange={([v]) => setPitchDistance(v)}
-            />
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-              <span>15 ft</span>
-              <span>80 ft</span>
+            <div className="flex items-center gap-0 overflow-x-auto py-1">
+              {[15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80].map((ft, i, arr) => (
+                <div key={ft} className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setPitchDistance(ft)}
+                    className={cn(
+                      'relative flex flex-col items-center gap-0.5 group',
+                    )}
+                  >
+                    <div className={cn(
+                      'w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center',
+                      pitchDistance === ft
+                        ? 'bg-primary border-primary scale-125 shadow-md'
+                        : pitchDistance > ft
+                          ? 'bg-primary/30 border-primary/50'
+                          : 'bg-muted border-border group-hover:border-primary/50'
+                    )} />
+                    {ft % 10 === 0 && (
+                      <span className={cn(
+                        'text-[8px]',
+                        pitchDistance === ft ? 'text-primary font-semibold' : 'text-muted-foreground'
+                      )}>
+                        {ft}
+                      </span>
+                    )}
+                  </button>
+                  {i < arr.length - 1 && (
+                    <div className={cn(
+                      'h-0.5 w-2 mx-px',
+                      pitchDistance > ft ? 'bg-primary/40' : 'bg-border'
+                    )} />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
