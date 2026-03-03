@@ -5974,6 +5974,14 @@ export type Database = {
         Args: { p_coach_id: string; p_player_id: string }
         Returns: boolean
       }
+      is_org_coach_or_owner: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_org_owner: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
       manual_archive_scout_applications: {
         Args: never
         Returns: {

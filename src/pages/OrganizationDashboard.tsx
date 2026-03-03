@@ -11,6 +11,7 @@ import { TeamRosterView } from '@/components/organization/TeamRosterView';
 import { TeamHeatMapOverlay } from '@/components/organization/TeamHeatMapOverlay';
 import { InviteCodeCard } from '@/components/organization/InviteCodeCard';
 import { JoinOrganization } from '@/components/organization/JoinOrganization';
+import { TeamAnnouncements } from '@/components/organization/TeamAnnouncements';
 import { Building2 } from 'lucide-react';
 
 export default function OrganizationDashboard() {
@@ -36,6 +37,7 @@ export default function OrganizationDashboard() {
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="announcements">Announcements</TabsTrigger>
               <TabsTrigger value="roster">Roster</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="invite">Invite</TabsTrigger>
@@ -50,6 +52,10 @@ export default function OrganizationDashboard() {
                 activeMemberCount={teamStats?.activeMemberCount ?? memberList.length}
                 flaggedCount={teamStats?.flaggedCount ?? 0}
               />
+            </TabsContent>
+
+            <TabsContent value="announcements">
+              <TeamAnnouncements orgId={activeOrg.id} />
             </TabsContent>
 
             <TabsContent value="roster">
