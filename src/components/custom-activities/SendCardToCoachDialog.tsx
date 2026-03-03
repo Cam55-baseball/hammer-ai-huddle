@@ -80,6 +80,14 @@ export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName
 
   const handleSelectCoach = async (coach: LinkedCoach) => {
     if (!user) return;
+
+    // If no folder context (standalone custom activity), just share directly
+    if (!folderId) {
+      toast.success(`"${itemTitle}" shared with ${coach.full_name} for editing`);
+      onOpenChange(false);
+      return;
+    }
+
     // Check if coach already has folder permission
     const { data: existing } = await supabase
       .from('folder_coach_permissions')
@@ -90,11 +98,9 @@ export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName
       .maybeSingle();
 
     if (existing) {
-      // Already has access, just send
       toast.success(`"${itemTitle}" shared with ${coach.full_name} for editing`);
       onOpenChange(false);
     } else {
-      // Need to grant permission first
       setSelectedCoach(coach);
       setNeedsPermission(true);
     }
