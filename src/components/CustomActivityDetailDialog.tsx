@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send, ChevronDown } from 'lucide-react';
+import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send, ChevronDown, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
@@ -17,6 +17,7 @@ import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerf
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
+import { SendCardToCoachDialog } from '@/components/custom-activities/SendCardToCoachDialog';
 
 // Helper to get all checkable item IDs from a template
 export const getAllCheckableIds = (template: CustomActivityTemplate): string[] => {
@@ -205,6 +206,7 @@ export function CustomActivityDetailDialog({
   const [tempReminder, setTempReminder] = useState<number | null>(taskReminder);
   const [savingFieldIds, setSavingFieldIds] = useState<Set<string>>(new Set());
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [localFieldValues, setLocalFieldValues] = useState<Record<string, string>>({});
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const { canSendActivities, loading: accessLoading } = useScoutAccess();
@@ -1026,17 +1028,27 @@ export function CustomActivityDetailDialog({
                 </Button>
               </div>
               {onSkipTask && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSkipTask();
-                    onOpenChange(false);
-                  }}
-                  className="w-full gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400 dark:border-amber-400/50"
-                >
-                  <X className="h-4 w-4" />
-                  {t('gamePlan.skipForToday', 'Skip for Today')}
-                </Button>
+                <div className="flex gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      onSkipTask();
+                      onOpenChange(false);
+                    }}
+                    className="flex-1 gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400 dark:border-amber-400/50"
+                  >
+                    <X className="h-4 w-4" />
+                    {t('gamePlan.skipForToday', 'Skip for Today')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSendToCoachOpen(true)}
+                    className="flex-1 gap-2 border-blue-500/50 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:border-blue-400/50"
+                  >
+                    <GraduationCap className="h-4 w-4" />
+                    {t('gamePlan.sendToCoach', 'Send to Coach')}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -1048,6 +1060,15 @@ export function CustomActivityDetailDialog({
         open={sendDialogOpen} 
         onOpenChange={setSendDialogOpen} 
         template={template} 
+      />
+
+      {/* Send to Coach Dialog */}
+      <SendCardToCoachDialog
+        open={sendToCoachOpen}
+        onOpenChange={setSendToCoachOpen}
+        folderId=""
+        folderName=""
+        itemTitle={template?.title || ''}
       />
     </Dialog>
   );
