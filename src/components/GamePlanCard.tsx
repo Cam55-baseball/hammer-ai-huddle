@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
@@ -34,6 +34,7 @@ import { FolderItemEditDialog } from '@/components/folders/FolderItemEditDialog'
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
 import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
+import { SendCardToCoachDialog } from '@/components/custom-activities/SendCardToCoachDialog';
 import { GamePlanCalendarView } from '@/components/GamePlanCalendarView';
 import { useVault } from '@/hooks/useVault';
 import { useAuth } from '@/hooks/useAuth';
@@ -202,6 +203,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [selectedFolderTask, setSelectedFolderTask] = useState<GamePlanTask | null>(null);
   const [folderItemEditOpen, setFolderItemEditOpen] = useState(false);
   const [folderCheckboxStates, setFolderCheckboxStates] = useState<Record<string, boolean>>({});
+  const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
+  const [sendToCoachTitle, setSendToCoachTitle] = useState('');
 
   // Initialize folder checkbox states when dialog opens
   useEffect(() => {
@@ -1091,6 +1094,23 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         >
           <Pencil className="h-4 w-4" />
         </Button>
+
+        {/* Send to Coach button - only for custom activities */}
+        {isCustom && !task.completed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSendToCoachTitle(task.taskType === 'custom' ? task.titleKey : '');
+              setSendToCoachOpen(true);
+            }}
+            title="Send to Coach for Edit"
+          >
+            <GraduationCap className="h-4 w-4" />
+          </Button>
+        )}
         
         {/* Status indicator - clickable for custom activities with prominent styling */}
         <button
@@ -2612,6 +2632,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </>
         );
       })()}
+      {/* Send to Coach Dialog */}
+      <SendCardToCoachDialog
+        open={sendToCoachOpen}
+        onOpenChange={setSendToCoachOpen}
+        folderId=""
+        folderName="Custom Activities"
+        itemTitle={sendToCoachTitle}
+      />
+
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
         @keyframes game-plan-pulse-custom {
