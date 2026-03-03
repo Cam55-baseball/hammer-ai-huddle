@@ -1,23 +1,47 @@
 
 
-# Fix: Preview Not Loading
+# Pitch Labels, Menu Optimization, and Session Locking
 
-## Diagnosis
+## 1. Use Full Pitch Names Instead of Abbreviations
 
-The console logs show "Dynamic import failed (attempt 1/3)" errors, which are transient module loading failures during hot module reload after recent code changes. The retry logic (3 attempts) usually recovers, but sometimes the dev server gets into a stale state.
+**Problem**: Hitting pitch type buttons show `pt.abbreviation` (e.g., "FF", "FT", "FC", "SL") which are unrecognizable to most users. Pitching section already uses `pt.name` but is capped at 8 items.
 
-All recently edited files (`TeeDepthGrid.tsx`, `PitchLocationGrid.tsx`, `RepSourceSelector.tsx`, `RepScorer.tsx`, `SessionConfigPanel.tsx`, `ExecutionSlider.tsx`) are syntactically valid with no import/export mismatches. The dashboard page and its imports are also clean.
+**File: `src/components/practice/RepScorer.tsx`**
 
-## Root Cause
+- **Line 405**: Change `{pt.abbreviation ?? pt.name}` to `{pt.name}` for hitting pitch type buttons
+- **Line 393**: Remove `.slice(0, 10)` limit -- show all pitch types
+- **Line 532**: Remove `.slice(0, 8)` limit on pitching pitch types -- show all
+- Both hitting and pitching will display full readable names: "4-Seam Fastball", "Slider", "Riseball", etc.
 
-This is a **stale module cache issue** from the Vite dev server after multiple rapid file changes. It is not a code bug.
+## 2. Optimize Practice Hub Menu UI
 
-## Fix
+**Problem**: 7 category tabs (`grid-cols-4 md:grid-cols-7`) overflow on mobile, creating clutter.
 
-**No code changes needed.** A simple page refresh in the preview should resolve this. If you're still seeing a blank preview:
+**File: `src/pages/PracticeHub.tsx`**
 
-1. Try clicking the **Refresh button** (the circular arrow icon in the dashboard header)
-2. If that doesn't work, try appending `?_cb=1` to the preview URL to bust the cache
+- Replace the 7-column TabsList grid with a horizontally scrollable row using `overflow-x-auto` and `flex` instead of `grid`
+- Use compact pill-style triggers: icon only on mobile, icon + label on desktop
+- Reduce visual weight with smaller padding and tighter spacing
+- Add `whitespace-nowrap` to prevent wrapping
 
-If the issue persists after refresh, I can add a small no-op comment to `src/pages/Dashboard.tsx` to force a fresh rebuild of the module graph.
+## 3. Lock Category Tabs During Active Session
+
+**Problem**: Users can freely switch between Hitting/Pitching/Fielding tabs mid-session, which would discard their in-progress work without warning.
+
+**File: `src/pages/PracticeHub.tsx`**
+
+- Disable tab switching when `step !== 'select_type'` (i.e., user is in readiness, config, or logging steps)
+- Add `pointer-events-none opacity-50` to the TabsList when a session is active
+- The existing "Back" button flow already handles exiting cleanly -- users must back out to step 1 or save before switching categories
+
+**Implementation**: Wrap the `onValueChange` handler to check if a session is in progress. If so, block the change (tabs appear visually disabled).
+
+---
+
+## Files Summary
+
+| File | Changes |
+|------|---------|
+| `src/components/practice/RepScorer.tsx` | Use `pt.name` for all pitch type labels; remove slice limits |
+| `src/pages/PracticeHub.tsx` | Scrollable tab bar; lock tabs during active session |
 
