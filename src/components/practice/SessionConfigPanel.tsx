@@ -7,10 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
 import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSourceSelector';
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
+import { useSportTheme } from '@/contexts/SportThemeContext';
+import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
+import { softballLeagueDistances } from '@/data/softball/leagueDistances';
 import { cn } from '@/lib/utils';
 import { Settings2, ArrowRight } from 'lucide-react';
 
@@ -23,6 +27,8 @@ export interface SessionConfig {
   indoor_outdoor: 'indoor' | 'outdoor';
   coach_selection: CoachSelection;
   coach_session_type?: 'solo' | 'coached' | 'lesson';
+  league_level?: string;
+  target_reps?: number;
 }
 
 interface SessionConfigPanelProps {
@@ -48,10 +54,14 @@ function deriveCoachSessionType(sessionType: string): 'solo' | 'coached' | 'less
 
 export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: SessionConfigPanelProps) {
   const { machineVelocityBands, pitchingVelocityBands } = useSportConfig();
+  const { sport } = useSportTheme();
   const { user } = useAuth();
   const { getDefaults, saveDefaults } = useSessionDefaults(module);
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
+  const isBaserunning = module === 'baserunning';
+
+  const leagueDistances = sport === 'softball' ? softballLeagueDistances : baseballLeagueDistances;
 
   // Load smart defaults
   const defaults = getDefaults();
@@ -61,6 +71,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [velocityBand, setVelocityBand] = useState<string | undefined>(defaults.velocity_band);
   const [seasonContext, setSeasonContext] = useState(defaults.season_context ?? 'in_season');
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
+  const [leagueLevel, setLeagueLevel] = useState<string | undefined>();
+  const [targetReps, setTargetReps] = useState<number>(10);
 
   // Auto-derived values
   const environment = deriveEnvironment(sessionType);
@@ -112,10 +124,17 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const velocityBands = isHitting ? machineVelocityBands : pitchingVelocityBands;
   const canConfirm = !!repSource;
 
+  const handleLeagueLevelChange = (level: string) => {
+    setLeagueLevel(level);
+    const dist = leagueDistances.find(d => d.level === level);
+    if (dist) {
+      setPitchDistance(Math.round(dist.mound_ft));
+    }
+  };
+
   const handleConfirm = () => {
     if (!canConfirm) return;
 
-    // Save defaults for next session
     saveDefaults({
       rep_source: repSource,
       pitch_distance_ft: pitchDistance,
@@ -129,9 +148,11 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       velocity_band: velocityBand,
       season_context: seasonContext,
       environment,
-      indoor_outdoor: 'outdoor', // no longer asked, default outdoor
+      indoor_outdoor: 'outdoor',
       coach_selection: coachSelection,
       coach_session_type: coachSessionType,
+      league_level: leagueLevel,
+      target_reps: isBaserunning ? targetReps : undefined,
     });
   };
 
@@ -217,11 +238,69 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           </div>
         )}
 
+        {/* League Level */}
+        {(isHitting || isPitching) && (
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">League / Level</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {leagueDistances.map(ld => (
+                <button
+                  key={ld.level}
+                  type="button"
+                  onClick={() => handleLeagueLevelChange(ld.level)}
+                  className={cn(
+                    'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                    leagueLevel === ld.level
+                      ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                      : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                  )}
+                >
+                  {ld.label}
+                </button>
+              ))}
+            </div>
+            {leagueLevel && (() => {
+              const sel = leagueDistances.find(d => d.level === leagueLevel);
+              return sel ? (
+                <Badge variant="outline" className="mt-1.5 text-[10px]">
+                  Standard: {sel.mound_label} mound, {sel.bases_ft}' bases
+                </Badge>
+              ) : null;
+            })()}
+          </div>
+        )}
+
         {/* Season Context */}
         <div>
           <Label className="text-xs text-muted-foreground mb-1.5 block">Season</Label>
           <SeasonContextToggle value={seasonContext} onChange={setSeasonContext} />
         </div>
+
+        {/* Target Reps — baserunning only */}
+        {isBaserunning && (
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">
+              Target Reps: <span className="font-semibold text-foreground">{targetReps}</span>
+            </Label>
+            <div className="flex items-center gap-2">
+              {[5, 10, 15, 20, 25, 30].map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setTargetReps(n)}
+                  className={cn(
+                    'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                    targetReps === n
+                      ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                      : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Coach - only when relevant */}
         {showCoachSelector && (

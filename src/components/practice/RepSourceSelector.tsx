@@ -74,6 +74,41 @@ const PITCHING_SOURCES: SourceGroup[] = [
   },
 ];
 
+const THROWING_SOURCES: SourceGroup[] = [
+  {
+    group: 'Long Toss',
+    items: [
+      { value: 'long_toss', label: 'Long Toss', desc: 'Progressive distance throws' },
+    ],
+  },
+  {
+    group: 'Flat Ground',
+    items: [
+      { value: 'flat_ground_throw', label: 'Flat Ground', desc: 'Mechanical work on level surface' },
+    ],
+  },
+  {
+    group: 'PFP / Position',
+    items: [
+      { value: 'pfp', label: 'PFP', desc: 'Pitcher fielding practice' },
+      { value: 'position_work', label: 'Position Work', desc: 'Position-specific throws' },
+    ],
+  },
+  {
+    group: 'Live',
+    items: [
+      { value: 'live', label: 'Live', desc: 'Live throwing situations' },
+      { value: 'game', label: 'Game', desc: 'In-game throws' },
+    ],
+  },
+  {
+    group: 'Other',
+    items: [
+      { value: 'other', label: 'Other', desc: 'Custom throw source' },
+    ],
+  },
+];
+
 const FLAT_SOURCES: Record<string, SourceItem[]> = {
   fielding: [
     { value: 'fungo', label: 'Fungo' },
@@ -161,6 +196,18 @@ export function RepSourceSelector({ module, value, onChange }: RepSourceSelector
           Rep Source <span className="text-destructive">*</span>
         </Label>
         <GroupedSelector groups={PITCHING_SOURCES} value={value} onChange={onChange} />
+        {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
+      </div>
+    );
+  }
+
+  if (module === 'throwing') {
+    return (
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">
+          Rep Source <span className="text-destructive">*</span>
+        </Label>
+        <GroupedSelector groups={THROWING_SOURCES} value={value} onChange={onChange} />
         {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
       </div>
     );
