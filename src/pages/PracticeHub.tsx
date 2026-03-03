@@ -204,7 +204,7 @@ export default function PracticeHub() {
             step !== 'select_type' && "pointer-events-none opacity-50"
           )}>
             {modules.map(mod => (
-              <TabsTrigger key={mod.id} value={mod.id} className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
+              <TabsTrigger key={mod.id} value={mod.id} className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 shrink-0 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:font-bold data-[state=active]:bg-primary/10">
                 <mod.icon className="h-4 w-4" />
                 <span className="hidden sm:inline text-xs">{mod.label}</span>
               </TabsTrigger>
