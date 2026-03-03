@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 
 interface RepSourceSelectorProps {
   module: string;
+  sessionType?: string;
   value?: string;
   onChange: (source: string) => void;
 }
@@ -144,6 +145,66 @@ export const HIDES_PITCH_TYPE = ['tee', 'soft_toss'];
 // Rep sources where pitch distance is hidden
 export const HIDES_PITCH_DISTANCE = ['tee', 'soft_toss'];
 
+// ── Session-type → valid source filtering ──────────────────────────
+
+const VALID_HITTING_SOURCES: Record<string, string[]> = {
+  solo_work: ['tee', 'soft_toss', 'machine_bp'],
+  team_session: ['machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
+  lesson: ['tee', 'soft_toss', 'front_toss', 'flip', 'coach_pitch', 'machine_bp'],
+  game: ['game'],
+  live_abs: ['live_bp', 'regular_bp'],
+};
+
+const VALID_PITCHING_SOURCES: Record<string, string[]> = {
+  solo_work: ['flat_ground'],
+  team_session: ['bullpen', 'flat_ground', 'live_bp'],
+  lesson: ['bullpen', 'flat_ground'],
+  game: ['game'],
+  live_abs: ['live_bp'],
+};
+
+const VALID_THROWING_SOURCES: Record<string, string[]> = {
+  solo_work: ['long_toss', 'flat_ground_throw'],
+  team_session: ['long_toss', 'flat_ground_throw', 'pfp', 'position_work', 'live'],
+  lesson: ['long_toss', 'flat_ground_throw', 'pfp', 'position_work'],
+  game: ['game'],
+  live_abs: ['live'],
+};
+
+/** For flat modules (fielding, catching, baserunning): game only for game session type */
+function filterFlatSources(sources: SourceItem[], sessionType?: string): SourceItem[] {
+  if (!sessionType) return sources;
+  if (sessionType === 'game') return sources.filter(s => s.value === 'game');
+  return sources.filter(s => s.value !== 'game');
+}
+
+function filterGroupedSources(groups: SourceGroup[], validValues: string[]): SourceGroup[] {
+  return groups
+    .map(g => ({
+      ...g,
+      items: g.items.filter(item => validValues.includes(item.value)),
+    }))
+    .filter(g => g.items.length > 0);
+}
+
+function getFilteredGroups(module: string, sessionType?: string, groups?: SourceGroup[]): SourceGroup[] | null {
+  if (!groups) return null;
+  if (!sessionType) return groups;
+
+  const validMap =
+    module === 'hitting' ? VALID_HITTING_SOURCES :
+    module === 'pitching' ? VALID_PITCHING_SOURCES :
+    module === 'throwing' ? VALID_THROWING_SOURCES :
+    null;
+
+  if (!validMap) return groups;
+  const valid = validMap[sessionType];
+  if (!valid) return groups;
+  return filterGroupedSources(groups, valid);
+}
+
+// ── UI Components ──────────────────────────────────────────────────
+
 function GroupedSelector({ groups, value, onChange }: { groups: SourceGroup[]; value?: string; onChange: (v: string) => void }) {
   return (
     <div className="space-y-3">
@@ -176,45 +237,31 @@ function GroupedSelector({ groups, value, onChange }: { groups: SourceGroup[]; v
   );
 }
 
-export function RepSourceSelector({ module, value, onChange }: RepSourceSelectorProps) {
-  if (module === 'hitting') {
-    return (
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">
-          Rep Source <span className="text-destructive">*</span>
-        </Label>
-        <GroupedSelector groups={HITTING_SOURCES} value={value} onChange={onChange} />
-        {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
-      </div>
-    );
-  }
+export function RepSourceSelector({ module, sessionType, value, onChange }: RepSourceSelectorProps) {
+  // Grouped modules
+  if (module === 'hitting' || module === 'pitching' || module === 'throwing') {
+    const baseGroups =
+      module === 'hitting' ? HITTING_SOURCES :
+      module === 'pitching' ? PITCHING_SOURCES :
+      THROWING_SOURCES;
 
-  if (module === 'pitching') {
-    return (
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1.5 block">
-          Rep Source <span className="text-destructive">*</span>
-        </Label>
-        <GroupedSelector groups={PITCHING_SOURCES} value={value} onChange={onChange} />
-        {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
-      </div>
-    );
-  }
+    const filtered = getFilteredGroups(module, sessionType, baseGroups) ?? baseGroups;
 
-  if (module === 'throwing') {
     return (
       <div>
         <Label className="text-xs text-muted-foreground mb-1.5 block">
           Rep Source <span className="text-destructive">*</span>
         </Label>
-        <GroupedSelector groups={THROWING_SOURCES} value={value} onChange={onChange} />
+        <GroupedSelector groups={filtered} value={value} onChange={onChange} />
         {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
       </div>
     );
   }
 
   // Flat list for other modules
-  const sources = FLAT_SOURCES[module] ?? FLAT_SOURCES.fielding;
+  const baseSources = FLAT_SOURCES[module] ?? FLAT_SOURCES.fielding;
+  const sources = filterFlatSources(baseSources, sessionType);
+
   return (
     <div>
       <Label className="text-xs text-muted-foreground mb-1.5 block">
