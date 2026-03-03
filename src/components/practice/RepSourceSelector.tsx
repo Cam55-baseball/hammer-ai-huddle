@@ -102,8 +102,12 @@ export const REQUIRES_THROWER_HAND = ['flip', 'live_bp', 'regular_bp', 'coach_pi
 export const REQUIRES_VELOCITY = ['machine_bp'];
 // Rep sources where velocity band is hidden
 export const HIDES_VELOCITY = ['tee', 'front_toss', 'coach_pitch', 'soft_toss', 'flip'];
-// Rep sources where pitch type is required
-export const REQUIRES_PITCH_TYPE = ['live_bp', 'game', 'bullpen', 'flat_ground'];
+// Rep sources where pitch type is required (hitting + pitching)
+export const REQUIRES_PITCH_TYPE = ['machine_bp', 'live_bp', 'regular_bp', 'game', 'coach_pitch', 'front_toss', 'bullpen', 'flat_ground'];
+// Rep sources where pitch type is hidden entirely
+export const HIDES_PITCH_TYPE = ['tee', 'soft_toss'];
+// Rep sources where pitch distance is hidden
+export const HIDES_PITCH_DISTANCE = ['tee', 'soft_toss'];
 
 function GroupedSelector({ groups, value, onChange }: { groups: SourceGroup[]; value?: string; onChange: (v: string) => void }) {
   return (

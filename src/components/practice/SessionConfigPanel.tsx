@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { RepSourceSelector } from './RepSourceSelector';
+import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSourceSelector';
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
@@ -148,24 +148,26 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         {/* Rep Source */}
         <RepSourceSelector module={module} value={repSource} onChange={setRepSource} />
 
-        {/* Pitch Distance */}
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">
-            Pitch Release Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
-          </Label>
-          <Slider
-            min={15} max={80} step={1}
-            value={[pitchDistance]}
-            onValueChange={([v]) => setPitchDistance(v)}
-          />
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-            <span>15 ft</span>
-            <span>80 ft</span>
+        {/* Pitch Distance — hidden for tee/soft toss */}
+        {!HIDES_PITCH_DISTANCE.includes(repSource) && (
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">
+              Pitch Release Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
+            </Label>
+            <Slider
+              min={15} max={80} step={1}
+              value={[pitchDistance]}
+              onValueChange={([v]) => setPitchDistance(v)}
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+              <span>15 ft</span>
+              <span>80 ft</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Velocity Band */}
-        {(isHitting || isPitching) && (
+        {/* Velocity Band — hidden for tee/soft toss/etc */}
+        {(isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource) && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">Velocity Band</Label>
             <div className="flex flex-wrap gap-1.5">
