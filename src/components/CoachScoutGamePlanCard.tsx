@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Users, Eye, Video, Trophy, StickyNote, FolderCheck,
-  ArrowRight, Zap, UserCheck, PenLine
+  ArrowRight, Zap, UserCheck, PenLine, Send
 } from 'lucide-react';
 import { useScoutGamePlan } from '@/hooks/useScoutGamePlan';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +27,7 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
   const [todayNotesCount, setTodayNotesCount] = useState(0);
   const [pendingAssignments, setPendingAssignments] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [sharedCardsCount, setSharedCardsCount] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
 
   const today = new Date().toLocaleDateString('en-US', {
@@ -62,6 +63,12 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
                   .select('id', { count: 'exact', head: true })
                   .eq('sender_id', user.id)
                   .eq('status', 'pending'),
+                supabase
+                  .from('coach_notifications')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('coach_user_id', user.id)
+                  .eq('is_read', false)
+                  .eq('notification_type', 'card_shared'),
               ]
             : []),
         ]);
@@ -70,6 +77,9 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
         setFollowingCount(followRes.count ?? 0);
         if (isCoach && rest[0]) {
           setPendingAssignments(rest[0].count ?? 0);
+        }
+        if (isCoach && rest[1]) {
+          setSharedCardsCount(rest[1].count ?? 0);
         }
       } catch (e) {
         console.error('[CoachScoutGamePlanCard] fetch error:', e);
@@ -85,7 +95,7 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
   const hubLabel = isCoach ? 'Coach Hub' : 'Scout Hub';
 
   // Calculate completed tasks
-  const tasksTotal = totalUnreviewed + (isCoach ? pendingAssignments : 0);
+  const tasksTotal = totalUnreviewed + (isCoach ? pendingAssignments : 0) + (isCoach ? sharedCardsCount : 0);
   const allClear = tasksTotal === 0 && todayNotesCount > 0;
 
   const loading = reviewsLoading || dataLoading;
@@ -278,6 +288,22 @@ export function CoachScoutGamePlanCard({ isCoach, isScout }: CoachScoutGamePlanC
               }
               onClick={() => navigate('/coach-dashboard')}
               accent={pendingAssignments > 0}
+            />
+          )}
+
+          {/* Shared Cards (Coach only) */}
+          {isCoach && (
+            <TaskRow
+              icon={Send}
+              label="Shared Cards"
+              count={sharedCardsCount}
+              subtitle={
+                sharedCardsCount > 0
+                  ? `${sharedCardsCount} new card${sharedCardsCount !== 1 ? 's' : ''} from players`
+                  : 'No new shared cards'
+              }
+              onClick={() => navigate('/coach-dashboard')}
+              accent={sharedCardsCount > 0}
             />
           )}
 
