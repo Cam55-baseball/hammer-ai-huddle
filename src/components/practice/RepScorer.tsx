@@ -610,24 +610,27 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <PitchLocationGrid
-                    value={current.pitch_location}
-                    onSelect={v => updateField('pitch_location', v)}
-                    batterSide={handedness}
-                    sport={sport as 'baseball' | 'softball'}
-                  />
-                </div>
-                {isTee && (
+              {isTee ? (
+                <div className="flex justify-center">
                   <TeeDepthGrid
                     value={current.depth_zone}
                     onChange={v => updateField('depth_zone', v)}
                     sport={sport as 'baseball' | 'softball'}
                     batterSide={handedness}
                   />
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <PitchLocationGrid
+                      value={current.pitch_location}
+                      onSelect={v => updateField('pitch_location', v)}
+                      batterSide={handedness}
+                      sport={sport as 'baseball' | 'softball'}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Swing Decision - always visible (most valuable self-assessment) */}
               <div>
