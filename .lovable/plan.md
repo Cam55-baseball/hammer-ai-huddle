@@ -1,22 +1,31 @@
 
 
-# Hide Pitch Location Grid for Tee Sessions & Enlarge Plate
+# Send to Coach for Edit: Not Functional (Orphaned Component)
 
-## Problem
-When a player selects Tee as the rep source, the `PitchLocationGrid` (5×5 strike zone) still appears during rep logging. This is illogical — there is no pitch being thrown. Only the `TeeDepthGrid` (home plate depth zones) should be shown. Additionally, the plate SVG is too small (`w-24`) for comfortable mobile use.
+## Finding
 
-## Changes
+The "Send to Coach for Edit" feature is **not working** because the `CustomActivityCard.tsx` component (which contains the graduation cap button and `SendCardToCoachDialog`) is **never imported or used anywhere** in the application.
 
-### `src/components/practice/RepScorer.tsx`
-- Around line 613-630, wrap the `PitchLocationGrid` in a `!isTee` conditional so it only renders when the rep source is not `tee`
-- When `isTee`, render only the `TeeDepthGrid` without the side-by-side layout (remove the `flex gap-3` wrapper, let the plate take full width)
+The Game Plan section renders custom activities through `GamePlanCard.tsx`, which has no send-to-coach functionality at all. `CustomActivityCard.tsx` is orphaned/dead code.
 
-### `src/components/practice/TeeDepthGrid.tsx`
-- Increase SVG width class from `w-24` to `w-44` (or similar) so the plate is significantly larger and easier to tap
-- Adjust label sizing slightly for the larger visual
+## Fix
 
+Integrate the send-to-coach capability into the actual Game Plan card rendering in `GamePlanCard.tsx`:
+
+### `src/components/GamePlanCard.tsx`
+- Import `SendCardToCoachDialog` and `GraduationCap` icon
+- Add a graduation cap button to each custom activity card row (near the existing edit/complete buttons)
+- Wire it to open `SendCardToCoachDialog` with the template's title
+- Only show the button for custom activity tasks (not built-in daily check-ins or folder items)
+
+### Additional consideration
+- The `SendCardToCoachDialog` currently passes `folderId=""` which is empty -- the dialog uses this to check `folder_coach_permissions`, meaning the permission check will likely fail or behave unexpectedly with an empty folder ID. This needs to be either:
+  - Skipped when there's no folder (standalone custom activities don't live in folders)
+  - Or the dialog should handle the "no folder" case by just sharing the template data directly without folder permission logic
+
+### Files to edit
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | Conditionally hide `PitchLocationGrid` when `isTee`; adjust layout |
-| `src/components/practice/TeeDepthGrid.tsx` | Increase plate SVG size from `w-24` to `w-44` |
+| `src/components/GamePlanCard.tsx` | Add graduation cap button + SendCardToCoachDialog for custom activity tasks |
+| `src/components/custom-activities/SendCardToCoachDialog.tsx` | Handle the case where `folderId` is empty (skip folder permission check, just share) |
 
