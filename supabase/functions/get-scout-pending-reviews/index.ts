@@ -21,12 +21,21 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the user from the auth header
+    // Validate user with anon client + auth header
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+
+    const user = claimsData?.claims ? { id: claimsData.claims.sub as string } : null;
+    const userError = claimsError;
+
+    // Use service role for data queries
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     if (userError || !user) {
       console.error('[get-scout-pending-reviews] Auth error:', userError);
