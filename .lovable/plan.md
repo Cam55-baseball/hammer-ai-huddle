@@ -1,41 +1,22 @@
 
 
-# Updated Plan: Coach-Player Information Loop
+# Hide Pitch Location Grid for Tee Sessions & Enlarge Plate
 
-Removes coach-to-player feedback messaging (player notes stay private) and session verification notifications (stays as-is). Focuses on **team announcements** and **enhanced player org view** only.
+## Problem
+When a player selects Tee as the rep source, the `PitchLocationGrid` (5×5 strike zone) still appears during rep logging. This is illogical — there is no pitch being thrown. Only the `TeeDepthGrid` (home plate depth zones) should be shown. Additionally, the plate SVG is too small (`w-24`) for comfortable mobile use.
 
----
+## Changes
 
-## 1. Team Announcements (new table + UI)
+### `src/components/practice/RepScorer.tsx`
+- Around line 613-630, wrap the `PitchLocationGrid` in a `!isTee` conditional so it only renders when the rep source is not `tee`
+- When `isTee`, render only the `TeeDepthGrid` without the side-by-side layout (remove the `flex gap-3` wrapper, let the plate take full width)
 
-**Database migration** — create `team_announcements` table:
-- `id` (uuid PK), `organization_id` (FK → organizations), `author_id` (FK → auth.users), `title` (text), `body` (text), `pinned` (boolean default false), `created_at` (timestamptz)
-- RLS: org members can SELECT; org owner/coaches can INSERT/UPDATE/DELETE
+### `src/components/practice/TeeDepthGrid.tsx`
+- Increase SVG width class from `w-24` to `w-44` (or similar) so the plate is significantly larger and easier to tap
+- Adjust label sizing slightly for the larger visual
 
-**Coach UI** — new `TeamAnnouncements.tsx` component:
-- Compose form (title + body + pin toggle) for coaches
-- List of existing announcements with edit/delete
-- Add as a new "Announcements" tab in `OrganizationDashboard.tsx`
-
-**Player UI** — surface pinned/recent announcements at the top of `PlayerOrganizationView.tsx`
-
-## 2. Enhanced Player Organization View
-
-Update `PlayerOrganizationView.tsx` to show:
-- **Team Average MPI** vs player's own (data from existing `useTeamStats`)
-- **Pinned Announcements** from `team_announcements`
-- **Recent Sessions** with coach-led badge (query `performance_sessions` where `coach_id IS NOT NULL`)
-
-No feedback inbox, no verification badges — keeps things clean and focused on team context.
-
----
-
-## Files
-
-| Action | File |
-|--------|------|
-| **Migration** | Create `team_announcements` table + RLS |
-| **New** | `src/components/organization/TeamAnnouncements.tsx` |
-| **Edit** | `src/pages/OrganizationDashboard.tsx` — add Announcements tab |
-| **Edit** | `src/components/organization/PlayerOrganizationView.tsx` — add announcements + team MPI comparison |
+| File | Change |
+|------|--------|
+| `src/components/practice/RepScorer.tsx` | Conditionally hide `PitchLocationGrid` when `isTee`; adjust layout |
+| `src/components/practice/TeeDepthGrid.tsx` | Increase plate SVG size from `w-24` to `w-44` |
 
