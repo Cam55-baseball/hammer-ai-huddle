@@ -1,45 +1,41 @@
 
 
-# Optimize Session Configuration by Session Type
+# Updated Plan: Coach-Player Information Loop
 
-## Problem
-The `SessionConfigPanel` shows the same rep source options and config fields regardless of session type. This creates illogical combinations — e.g., a **Lesson** in hitting shows "Game" as a rep source, or a **Game** session shows "Tee" and "Soft Toss." Each session type has a distinct real-world context that should constrain which options are presented.
+Removes coach-to-player feedback messaging (player notes stay private) and session verification notifications (stays as-is). Focuses on **team announcements** and **enhanced player org view** only.
 
-## Logic Rules
+---
 
-The five session types each imply a specific training context:
+## 1. Team Announcements (new table + UI)
 
-| Session Type | Valid Hitting Sources | Valid Pitching Sources | Notes |
-|---|---|---|---|
-| **Solo Work** | Tee, Soft Toss, Machine BP | Flat Ground | No live pitcher, no game. No coach needed. |
-| **Team Session** | Machine BP, Front Toss, Flip, Coach Pitch, Live BP, Regular BP | Bullpen, Flat Ground, Live BP | Organized practice — no tee (solo drill), no game. |
-| **Lesson** | Tee, Soft Toss, Front Toss, Flip, Coach Pitch, Machine BP | Bullpen, Flat Ground | Instructional — no game, no live BP (not a scrimmage). |
-| **Game** | Game (auto-selected, single option) | Game (auto-selected) | Only game reps. No practice sources. Season context locked to in-season. |
-| **Live At-Bats** | Live BP, Regular BP | Live BP | Simulated game — only live sources. |
+**Database migration** — create `team_announcements` table:
+- `id` (uuid PK), `organization_id` (FK → organizations), `author_id` (FK → auth.users), `title` (text), `body` (text), `pinned` (boolean default false), `created_at` (timestamptz)
+- RLS: org members can SELECT; org owner/coaches can INSERT/UPDATE/DELETE
 
-Additional per-session-type field rules:
-- **Game**: Auto-set rep source to `game`, hide rep source selector entirely. Show `GameSessionFields` (opponent name/level). Hide velocity band (captured per-rep). Season locked to `in_season`.
-- **Solo Work**: Hide coach selector (already done). Hide league level (solo drill, irrelevant).
-- **Live At-Bats**: Hide season context (implied in-season or scrimmage). Auto-lock season to `in_season`.
-- **Lesson / Team Session**: Show coach selector (already done). All other fields normal.
+**Coach UI** — new `TeamAnnouncements.tsx` component:
+- Compose form (title + body + pin toggle) for coaches
+- List of existing announcements with edit/delete
+- Add as a new "Announcements" tab in `OrganizationDashboard.tsx`
 
-For **Throwing**, **Fielding**, **Catching**, **Baserunning** modules — same principle: filter out `game` source unless session type is `game`, and for `game` session type auto-select it.
+**Player UI** — surface pinned/recent announcements at the top of `PlayerOrganizationView.tsx`
 
-## Changes
+## 2. Enhanced Player Organization View
 
-### `src/components/practice/RepSourceSelector.tsx`
-- Accept new `sessionType` prop
-- Add filtering function `filterSourcesBySessionType(groups, sessionType)` that removes inappropriate items based on the mapping above
-- For `game` session type, return only the `game` source item (pre-selected)
+Update `PlayerOrganizationView.tsx` to show:
+- **Team Average MPI** vs player's own (data from existing `useTeamStats`)
+- **Pinned Announcements** from `team_announcements`
+- **Recent Sessions** with coach-led badge (query `performance_sessions` where `coach_id IS NOT NULL`)
 
-### `src/components/practice/SessionConfigPanel.tsx`
-- Pass `sessionType` to `RepSourceSelector`
-- For `game` session type: auto-set `repSource` to `'game'`, lock season to `in_season`, integrate `GameSessionFields` for opponent info
-- For `live_abs`: auto-lock season to `in_season`, hide season toggle
-- For `solo_work`: hide league level selector
-- Add `opponent_name` and `opponent_level` to `SessionConfig` interface
-- Store opponent state, pass through on confirm
+No feedback inbox, no verification badges — keeps things clean and focused on team context.
 
-### `src/components/practice/SessionConfigPanel.tsx` (SessionConfig interface)
-- Add optional `opponent_name?: string` and `opponent_level?: string` fields
+---
+
+## Files
+
+| Action | File |
+|--------|------|
+| **Migration** | Create `team_announcements` table + RLS |
+| **New** | `src/components/organization/TeamAnnouncements.tsx` |
+| **Edit** | `src/pages/OrganizationDashboard.tsx` — add Announcements tab |
+| **Edit** | `src/components/organization/PlayerOrganizationView.tsx` — add announcements + team MPI comparison |
 
