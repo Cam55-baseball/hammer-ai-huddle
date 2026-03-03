@@ -321,16 +321,19 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             </div>
           </div>
 
-          {/* Thrower handedness sub-field */}
+          {/* Pitcher handedness sub-field (hitting reps) */}
           {needsThrowerHand && (
             <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Thrower Hand <span className="text-destructive">*</span></Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Pitcher Hand (L/R) <span className="text-destructive">*</span></Label>
               <div className="grid grid-cols-2 gap-2">
                 {(['L', 'R'] as const).map(h => (
                   <button
                     key={h}
                     type="button"
-                    onClick={() => updateField('thrower_hand', h)}
+                    onClick={() => {
+                      updateField('thrower_hand', h);
+                      updateField('pitcher_hand', h);
+                    }}
                     className={cn(
                       'rounded-md border p-2 text-xs font-medium transition-all',
                       current.thrower_hand === h
@@ -356,16 +359,18 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           </button>
           {showOverrides && (
             <div className="space-y-3 pl-2 border-l-2 border-primary/20">
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">
-                  Override Distance: {current.override_distance_ft ?? 'Session default'} ft
-                </Label>
-                <Slider
-                  min={15} max={80} step={1}
-                  value={[current.override_distance_ft ?? sessionConfig?.pitch_distance_ft ?? 60]}
-                  onValueChange={([v]) => updateField('override_distance_ft', v)}
-                />
-              </div>
+              {(isHitting || isPitching) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    Override Distance: {current.override_distance_ft ?? 'Session default'} ft
+                  </Label>
+                  <Slider
+                    min={15} max={80} step={1}
+                    value={[current.override_distance_ft ?? sessionConfig?.pitch_distance_ft ?? 60]}
+                    onValueChange={([v]) => updateField('override_distance_ft', v)}
+                  />
+                </div>
+              )}
               {(isHitting || isPitching) && !hidesVelocity && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Override Velocity Band</Label>
@@ -542,6 +547,30 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         )}
                       >
                         {pt.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Hitter Side for live pitching reps */}
+              {['live_bp', 'game'].includes(repSource) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Hitter Side (L/R)</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['L', 'R'] as const).map(h => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => updateField('batter_side', h)}
+                        className={cn(
+                          'rounded-md border p-2 text-xs font-medium transition-all',
+                          current.batter_side === h
+                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                            : 'bg-muted/30 border-border hover:bg-muted'
+                        )}
+                      >
+                        {h === 'L' ? 'Left' : 'Right'}
                       </button>
                     ))}
                   </div>
