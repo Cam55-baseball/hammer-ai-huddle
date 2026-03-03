@@ -17,6 +17,7 @@ import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
 import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
 import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 const modules = [
@@ -197,12 +198,15 @@ export default function PracticeHub() {
           <p className="text-muted-foreground">Log sessions, track progress, and build your MPI score</p>
         </div>
 
-        <Tabs value={activeModule} onValueChange={setActiveModule} className="space-y-4">
-          <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full">
+        <Tabs value={activeModule} onValueChange={(val) => { if (step === 'select_type') setActiveModule(val); }} className="space-y-4">
+          <TabsList className={cn(
+            "flex w-full overflow-x-auto gap-1 p-1 whitespace-nowrap",
+            step !== 'select_type' && "pointer-events-none opacity-50"
+          )}>
             {modules.map(mod => (
-              <TabsTrigger key={mod.id} value={mod.id} className="flex items-center gap-1.5 text-xs md:text-sm">
+              <TabsTrigger key={mod.id} value={mod.id} className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 shrink-0">
                 <mod.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{mod.label}</span>
+                <span className="hidden sm:inline text-xs">{mod.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>

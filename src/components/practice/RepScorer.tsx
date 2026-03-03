@@ -390,7 +390,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     Pitch Type <span className="text-destructive">*</span>
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
-                    {pitchTypes.slice(0, 10).map(pt => (
+                    {pitchTypes.map(pt => (
                       <button
                         key={pt.id}
                         type="button"
@@ -402,7 +402,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                             : 'bg-muted/30 border-border hover:bg-muted'
                         )}
                       >
-                        {pt.abbreviation ?? pt.name}
+                        {pt.name}
                       </button>
                     ))}
                     {repSource === 'machine_bp' && (
@@ -529,7 +529,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     Pitch Type {needsPitchType && <span className="text-destructive">*</span>}
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
-                    {pitchTypes.slice(0, 8).map(pt => (
+                    {pitchTypes.map(pt => (
                       <button
                         key={pt.id}
                         type="button"
