@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { HandednessGate } from './HandednessGate';
 import { TeeDepthGrid } from './TeeDepthGrid';
-import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE } from './RepSourceSelector';
+import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
 import { CatchingRepFields } from './CatchingRepFields';
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { useSportConfig } from '@/hooks/useSportConfig';
@@ -191,6 +191,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
   const hidesVelocity = repSource && HIDES_VELOCITY.includes(repSource);
   const needsPitchType = repSource && REQUIRES_PITCH_TYPE.includes(repSource);
+  const hidesPitchType = repSource && HIDES_PITCH_TYPE.includes(repSource);
 
   const commitRep = useCallback(() => {
     if (!canConfirm) return;
@@ -359,6 +360,46 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           {/* ===== HITTING FIELDS ===== */}
           {isHitting && (
             <>
+              {/* Pitch Type for hitting (context-aware) */}
+              {!hidesPitchType && needsPitchType && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    Pitch Type <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {pitchTypes.slice(0, 10).map(pt => (
+                      <button
+                        key={pt.id}
+                        type="button"
+                        onClick={() => updateField('pitch_type', pt.id)}
+                        className={cn(
+                          'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                          current.pitch_type === pt.id
+                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                            : 'bg-muted/30 border-border hover:bg-muted'
+                        )}
+                      >
+                        {pt.abbreviation ?? pt.name}
+                      </button>
+                    ))}
+                    {repSource === 'machine_bp' && (
+                      <button
+                        type="button"
+                        onClick={() => updateField('pitch_type', 'preset_pattern')}
+                        className={cn(
+                          'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                          current.pitch_type === 'preset_pattern'
+                            ? 'bg-accent border-accent-foreground/30 text-accent-foreground ring-1 ring-accent'
+                            : 'bg-muted/30 border-border hover:bg-muted'
+                        )}
+                      >
+                        🔄 Preset
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <div className="flex-1">
                   <PitchLocationGrid
