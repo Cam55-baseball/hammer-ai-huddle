@@ -6,11 +6,11 @@ import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSourceSelector';
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
+import { GameSessionFields } from './GameSessionFields';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
@@ -29,6 +29,8 @@ export interface SessionConfig {
   coach_session_type?: 'solo' | 'coached' | 'lesson';
   league_level?: string;
   target_reps?: number;
+  opponent_name?: string;
+  opponent_level?: string;
 }
 
 interface SessionConfigPanelProps {
@@ -61,23 +63,36 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const isPitching = module === 'pitching';
   const isBaserunning = module === 'baserunning';
 
+  const isGame = sessionType === 'game';
+  const isLiveAbs = sessionType === 'live_abs';
+  const isSoloWork = sessionType === 'solo_work';
+
   const leagueDistances = sport === 'softball' ? softballLeagueDistances : baseballLeagueDistances;
 
   // Load smart defaults
   const defaults = getDefaults();
 
-  const [repSource, setRepSource] = useState<string>(defaults.rep_source ?? '');
+  const [repSource, setRepSource] = useState<string>(isGame ? 'game' : (defaults.rep_source ?? ''));
   const [pitchDistance, setPitchDistance] = useState(defaults.pitch_distance_ft ?? 60);
   const [velocityBand, setVelocityBand] = useState<string | undefined>(defaults.velocity_band);
-  const [seasonContext, setSeasonContext] = useState(defaults.season_context ?? 'in_season');
+  const [seasonContext, setSeasonContext] = useState(
+    isGame || isLiveAbs ? 'in_season' : (defaults.season_context ?? 'in_season')
+  );
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [leagueLevel, setLeagueLevel] = useState<string | undefined>();
   const [targetReps, setTargetReps] = useState<number>(10);
+  const [opponentName, setOpponentName] = useState('');
+  const [opponentLevel, setOpponentLevel] = useState('');
 
   // Auto-derived values
   const environment = deriveEnvironment(sessionType);
   const coachSessionType = deriveCoachSessionType(sessionType);
   const showCoachSelector = sessionType === 'team_session' || sessionType === 'lesson';
+  const showSeasonContext = !isGame && !isLiveAbs;
+  const showLeagueLevel = (isHitting || isPitching) && !isSoloWork;
+  const showVelocityBand = (isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource) && !isGame;
+  const showPitchDistance = (isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource) && !isGame;
+  const showRepSourceSelector = !isGame;
 
   // Fetch head coach info for auto-select
   const { data: mpiSettings } = useQuery({
@@ -153,6 +168,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       coach_session_type: coachSessionType,
       league_level: leagueLevel,
       target_reps: isBaserunning ? targetReps : undefined,
+      opponent_name: isGame ? opponentName : undefined,
+      opponent_level: isGame ? opponentLevel : undefined,
     });
   };
 
@@ -166,11 +183,23 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         <p className="text-xs text-muted-foreground">Set session-level defaults before logging reps</p>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Rep Source */}
-        <RepSourceSelector module={module} value={repSource} onChange={setRepSource} />
+        {/* Rep Source — hidden for game (auto-set) */}
+        {showRepSourceSelector && (
+          <RepSourceSelector module={module} sessionType={sessionType} value={repSource} onChange={setRepSource} />
+        )}
 
-        {/* Pitch Distance — only for hitting/pitching, hidden for tee/soft toss */}
-        {(isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource) && (
+        {/* Game-specific: opponent info */}
+        {isGame && (
+          <GameSessionFields
+            opponentName={opponentName}
+            opponentLevel={opponentLevel}
+            onNameChange={setOpponentName}
+            onLevelChange={setOpponentLevel}
+          />
+        )}
+
+        {/* Pitch Distance — only for hitting/pitching, hidden for tee/soft toss and game */}
+        {showPitchDistance && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">
               Pitch Release Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
@@ -214,8 +243,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           </div>
         )}
 
-        {/* Velocity Band — hidden for tee/soft toss/etc */}
-        {(isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource) && (
+        {/* Velocity Band — hidden for tee/soft toss/etc and game */}
+        {showVelocityBand && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">Velocity Band</Label>
             <div className="flex flex-wrap gap-1.5">
@@ -238,8 +267,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           </div>
         )}
 
-        {/* League Level */}
-        {(isHitting || isPitching) && (
+        {/* League Level — hidden for solo work and game */}
+        {showLeagueLevel && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">League / Level</Label>
             <div className="flex flex-wrap gap-1.5">
@@ -270,11 +299,13 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           </div>
         )}
 
-        {/* Season Context */}
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Season</Label>
-          <SeasonContextToggle value={seasonContext} onChange={setSeasonContext} />
-        </div>
+        {/* Season Context — hidden for game and live at-bats */}
+        {showSeasonContext && (
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Season</Label>
+            <SeasonContextToggle value={seasonContext} onChange={setSeasonContext} />
+          </div>
+        )}
 
         {/* Target Reps — baserunning only */}
         {isBaserunning && (
