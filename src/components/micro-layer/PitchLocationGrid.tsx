@@ -77,20 +77,10 @@ export function PitchLocationGrid({ value, onSelect, batterSide = 'R', sport = '
         </div>
       </TooltipProvider>
 
-      {/* Home plate pentagon anchor below grid */}
-      <div className="flex justify-center mt-1">
-        <svg viewBox="0 0 80 50" className="w-16 h-auto opacity-60" aria-label="Home plate">
-          <polygon
-            points="0,0 80,0 80,28 40,50 0,28"
-            fill="none"
-            stroke="hsl(var(--foreground))"
-            strokeWidth="1.5"
-          />
-          <text x="40" y="20" textAnchor="middle" dominantBaseline="central" fontSize="7" fill="hsl(var(--muted-foreground))">
-            Plate
-          </text>
-        </svg>
-      </div>
+      {/* Viewpoint label */}
+      <p className="text-[10px] text-muted-foreground text-center mt-1.5 font-medium tracking-wide">
+        👁️ Catcher's View — looking toward pitcher
+      </p>
     </div>
   );
 }
