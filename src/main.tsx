@@ -4,6 +4,9 @@ import App from "./App.tsx";
 import "./index.css";
 import { registerSW } from "./registerSW";
 
+// Force rebuild timestamp
+console.log('[app] initialized', Date.now());
+
 createRoot(document.getElementById("root")!).render(<App />);
 
 registerSW();
