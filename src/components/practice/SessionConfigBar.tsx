@@ -6,6 +6,8 @@ import type { SessionConfig } from './SessionConfigPanel';
 interface SessionConfigBarProps {
   config: SessionConfig;
   onEdit: () => void;
+  module?: string;
+  handedness?: 'L' | 'R';
 }
 
 const repSourceLabels: Record<string, string> = {
@@ -27,9 +29,24 @@ const repSourceLabels: Record<string, string> = {
   other: 'Other',
 };
 
-export function SessionConfigBar({ config, onEdit }: SessionConfigBarProps) {
+const handednessLabels: Record<string, Record<string, string>> = {
+  hitting: { L: 'LHH', R: 'RHH' },
+  pitching: { L: 'LHP', R: 'RHP' },
+};
+const defaultHandLabels: Record<string, string> = { L: 'Left', R: 'Right' };
+
+export function SessionConfigBar({ config, onEdit, module, handedness }: SessionConfigBarProps) {
+  const handLabel = module && handedness
+    ? (handednessLabels[module]?.[handedness] ?? defaultHandLabels[handedness])
+    : undefined;
+
   return (
     <div className="flex items-center gap-2 flex-wrap bg-muted/30 rounded-lg border px-3 py-2">
+      {handLabel && (
+        <Badge variant="outline" className="text-[10px] font-bold">
+          {handLabel}
+        </Badge>
+      )}
       <Badge variant="outline" className="text-[10px]">
         {repSourceLabels[config.rep_source] ?? config.rep_source}
       </Badge>

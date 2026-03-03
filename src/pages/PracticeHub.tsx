@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,6 +19,7 @@ import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
 import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 
 const modules = [
   { id: 'hitting', icon: Target, label: 'Hitting' },
@@ -40,6 +41,8 @@ export default function PracticeHub() {
   const { toast } = useToast();
 
   const [activeModule, setActiveModule] = useState('hitting');
+  const { getHandedness } = useSessionDefaults(activeModule);
+  const currentHandedness = useMemo(() => getHandedness(), [activeModule, getHandedness]);
   const [step, setStep] = useState<FlowStep>('select_type');
   const [sessionType, setSessionType] = useState<string | null>(null);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
@@ -293,7 +296,7 @@ export default function PracticeHub() {
                   </div>
 
                   {/* Session config summary bar */}
-                  <SessionConfigBar config={sessionConfig} onEdit={() => setStep('configure_session')} />
+                  <SessionConfigBar config={sessionConfig} onEdit={() => setStep('configure_session')} module={activeModule} handedness={currentHandedness} />
 
                   {/* Baserunning target reps progress */}
                   {activeModule === 'baserunning' && sessionConfig.target_reps && (
