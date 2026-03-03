@@ -1,26 +1,39 @@
 
 
-# Pitching Handedness Gate Fix
+# Post-Session Summary Screen
 
 ## Problem
-Handedness is stored in a single global localStorage key (`session_handedness`) shared across all modules. If a user selects handedness in hitting, it auto-applies to pitching, skipping the "Pitcher Arm" gate entirely. Pitching arm side should be asked independently.
+After a session is saved (whether self-logged or coach-submitted), the player sees a toast and the form resets. There's no summary showing what was computed — no composite scores, no AI prompts.
 
 ## Solution
+Add a `PostSessionSummary` component and a new flow step `session_summary` that displays immediately after a successful save.
 
-**File: `src/hooks/useSessionDefaults.ts`**
-- Change `getHandedness` and `saveHandedness` to use a **module-scoped** key: `session_handedness_{module}` instead of the global `session_handedness`.
-- This ensures hitting handedness and pitching handedness are stored and recalled independently.
+### New File: `src/components/practice/PostSessionSummary.tsx`
+A card-based summary screen showing:
+- **Session metadata**: module, type, date, coach name (if coach-led)
+- **Composite scores**: BQI, FQI, PEI, Decision, Competitive Execution — fetched from the saved session's `composite_indexes` (polled once after a short delay since `calculate-session` runs async)
+- **AI Development Prompts**: pulled from `useAIPrompts` hook, showing the carousel inline
+- **Streak info**: current streak from `athlete_mpi_settings`
+- **"Done" button**: resets flow back to `select_type`
 
-**File: `src/components/practice/HandednessGate.tsx`**
-- No changes needed — it already has pitching-specific labels ("Pitcher Arm: Left-Handed / Right-Handed").
+The component will:
+1. Accept `sessionId` as prop
+2. Use a query to fetch the session's `composite_indexes` with a 2-second initial delay + retry until populated
+3. Display scores as a simple grid of labeled values with color coding (red < 40, yellow 40-65, green > 65)
+4. Show AI prompts from `useAIPrompts`
 
-**File: `src/components/practice/SessionConfigBar.tsx`**
-- Add the current handedness to the config bar display so users can see what arm/side they selected during logging (e.g., badge showing "RHP" or "LHH").
+### Changes to `src/pages/PracticeHub.tsx`
+- Add `'session_summary'` to the `FlowStep` type
+- Store the returned session ID after `createSession` succeeds
+- Instead of resetting to `select_type` on success, transition to `session_summary`
+- Render `PostSessionSummary` when step is `session_summary`
+- On "Done" click, reset all state as currently done
 
-This is a minimal change — just scoping the localStorage key per module so pitching always gets its own prompt.
+### Changes to `src/hooks/usePerformanceSession.ts`
+- No changes needed — `createSession` already returns the session object with `id`
 
 | File | Change |
 |------|--------|
-| `src/hooks/useSessionDefaults.ts` | Scope handedness key per module |
-| `src/components/practice/SessionConfigBar.tsx` | Show handedness badge |
+| `src/components/practice/PostSessionSummary.tsx` | New component — score display, AI prompts, done button |
+| `src/pages/PracticeHub.tsx` | Add `session_summary` step, store session ID, render summary |
 
