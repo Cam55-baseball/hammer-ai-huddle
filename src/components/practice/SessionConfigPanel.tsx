@@ -148,8 +148,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         {/* Rep Source */}
         <RepSourceSelector module={module} value={repSource} onChange={setRepSource} />
 
-        {/* Pitch Distance — hidden for tee/soft toss */}
-        {!HIDES_PITCH_DISTANCE.includes(repSource) && (
+        {/* Pitch Distance — only for hitting/pitching, hidden for tee/soft toss */}
+        {(isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource) && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">
               Pitch Release Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
