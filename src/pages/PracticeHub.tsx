@@ -16,6 +16,7 @@ import { SessionConfigPanel, type SessionConfig } from '@/components/practice/Se
 import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
 import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
+import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
 import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +32,7 @@ const modules = [
   { id: 'mental', icon: Brain, label: 'Mental' },
 ];
 
-type FlowStep = 'select_type' | 'readiness' | 'configure_session' | 'build_session';
+type FlowStep = 'select_type' | 'readiness' | 'configure_session' | 'build_session' | 'session_summary';
 
 export default function PracticeHub() {
   const { t } = useTranslation();
@@ -55,6 +56,8 @@ export default function PracticeHub() {
   const [reps, setReps] = useState<ScoredRep[]>([]);
   // Game scoring
   const [atBats, setAtBats] = useState<AtBat[]>([]);
+  // Post-session summary
+  const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
   const isGameType = sessionType === 'game' || sessionType === 'live_abs';
   const isGameScorecardModule = ['hitting', 'pitching', 'fielding'].includes(activeModule);
@@ -92,6 +95,16 @@ export default function PracticeHub() {
       setStep('select_type');
       setSessionType(null);
     }
+  };
+
+  const handleSummaryDone = () => {
+    setStep('select_type');
+    setSessionType(null);
+    setSessionConfig(null);
+    setReps([]);
+    setAtBats([]);
+    setNotes('');
+    setSavedSessionId(null);
   };
 
   // Convert reps/atBats into drill blocks for the backend
@@ -154,7 +167,7 @@ export default function PracticeHub() {
     }
 
     try {
-      await createSession({
+      const result = await createSession({
         sport: sportKey,
         session_type: sessionType,
         session_date: new Date().toISOString().split('T')[0],
@@ -181,13 +194,9 @@ export default function PracticeHub() {
         },
         micro_layer_data: reps.length > 0 ? reps : isGameType ? atBats.flatMap(ab => ab.pitches) : undefined,
       });
-      // Reset
-      setStep('select_type');
-      setSessionType(null);
-      setSessionConfig(null);
-      setReps([]);
-      setAtBats([]);
-      setNotes('');
+      // Transition to summary instead of resetting
+      setSavedSessionId(result.id);
+      setStep('session_summary');
     } catch {
       // Error toast handled by hook
     }
@@ -343,6 +352,15 @@ export default function PracticeHub() {
                     Save Session ({isGameType ? `${atBats.length} ABs` : `${reps.length} reps`})
                   </Button>
                 </>
+              )}
+              {/* Step 5: Post-Session Summary */}
+              {step === 'session_summary' && savedSessionId && sessionType && (
+                <PostSessionSummary
+                  sessionId={savedSessionId}
+                  module={activeModule}
+                  sessionType={sessionType}
+                  onDone={handleSummaryDone}
+                />
               )}
             </TabsContent>
           ))}
