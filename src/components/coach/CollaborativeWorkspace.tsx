@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Pencil, FolderOpen, Clock, Loader2, Users, FileText, ExternalLink, Bell, CheckCheck } from 'lucide-react';
+import { Pencil, FolderOpen, Clock, Loader2, Users, FileText, ExternalLink, Bell, CheckCheck, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { FolderDetailDialog } from '@/components/folders/FolderDetailDialog';
 import { ActivityFolder } from '@/types/activityFolder';
 import { toast } from 'sonner';
+import { CustomActivityTemplate } from '@/types/customActivity';
+import { Json } from '@/integrations/supabase/types';
+import { SharedTemplateReadOnlyView } from './SharedTemplateReadOnlyView';
 
 interface CoachNotification {
   id: string;
@@ -20,6 +24,7 @@ interface CoachNotification {
   is_read: boolean;
   created_at: string;
   sender_name?: string;
+  template_snapshot?: Json | null;
 }
 interface SharedCard {
   id: string;
@@ -53,6 +58,7 @@ export function CollaborativeWorkspace() {
   const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<ActivityFolder | null>(null);
+  const [viewingTemplate, setViewingTemplate] = useState<CustomActivityTemplate | null>(null);
 
   useEffect(() => {
     if (!selectedFolderId) { setSelectedFolder(null); return; }
@@ -69,7 +75,7 @@ export function CollaborativeWorkspace() {
     const fetchNotifications = async () => {
       const { data } = await supabase
         .from('coach_notifications')
-        .select('id, sender_user_id, title, message, is_read, created_at')
+        .select('id, sender_user_id, title, message, is_read, created_at, template_snapshot')
         .eq('coach_user_id', user.id)
         .eq('notification_type', 'card_shared')
         .order('created_at', { ascending: false })
@@ -275,13 +281,24 @@ export function CollaborativeWorkspace() {
                 <Bell className="h-3 w-3" /> New Shares
               </p>
               {notifications.filter(n => !n.is_read).slice(0, 5).map(n => (
-                <div key={n.id} className="flex items-center gap-2 text-xs p-2 rounded-md bg-primary/5 border border-primary/20">
+                <div
+                  key={n.id}
+                  className={`flex items-center gap-2 text-xs p-2 rounded-md bg-primary/5 border border-primary/20 ${n.template_snapshot ? 'cursor-pointer hover:bg-primary/10 transition-colors' : ''}`}
+                  onClick={() => {
+                    if (n.template_snapshot) {
+                      setViewingTemplate(n.template_snapshot as unknown as CustomActivityTemplate);
+                    }
+                  }}
+                >
                   <Bell className="h-3 w-3 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <span className="font-medium">{n.sender_name}</span>
                     <span className="text-muted-foreground"> shared </span>
                     <span className="font-medium">"{n.title}"</span>
                   </div>
+                  {n.template_snapshot && (
+                    <Eye className="h-3 w-3 text-primary flex-shrink-0" />
+                  )}
                   <span className="text-[10px] text-muted-foreground flex-shrink-0">
                     {format(new Date(n.created_at), 'MMM d')}
                   </span>
@@ -371,6 +388,21 @@ export function CollaborativeWorkspace() {
         folder={selectedFolder}
         isOwner={false}
       />
+
+      {/* Read-only view of shared custom activity template */}
+      {viewingTemplate && (
+        <Dialog open={!!viewingTemplate} onOpenChange={(open) => { if (!open) setViewingTemplate(null); }}>
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Eye className="h-4 w-4" />
+                {viewingTemplate.title || 'Shared Activity'}
+              </DialogTitle>
+            </DialogHeader>
+            <SharedTemplateReadOnlyView template={viewingTemplate} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

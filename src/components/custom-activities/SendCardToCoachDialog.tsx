@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Json } from '@/integrations/supabase/types';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,9 +25,10 @@ interface SendCardToCoachDialogProps {
   folderId: string;
   folderName: string;
   itemTitle: string;
+  templateData?: Json | null;
 }
 
-export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName, itemTitle }: SendCardToCoachDialogProps) {
+export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName, itemTitle, templateData }: SendCardToCoachDialogProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [coaches, setCoaches] = useState<LinkedCoach[]>([]);
@@ -87,6 +89,7 @@ export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName
         notification_type: 'card_shared',
         title: itemTitle,
         message: folderId ? `Shared from folder "${folderName}"` : 'Shared standalone activity',
+        template_snapshot: templateData || null,
       });
     } catch (err) {
       console.error('Error inserting coach notification:', err);

@@ -854,6 +854,7 @@ export type Database = {
           message: string | null
           notification_type: string
           sender_user_id: string
+          template_snapshot: Json | null
           title: string
         }
         Insert: {
@@ -864,6 +865,7 @@ export type Database = {
           message?: string | null
           notification_type?: string
           sender_user_id: string
+          template_snapshot?: Json | null
           title: string
         }
         Update: {
@@ -874,6 +876,7 @@ export type Database = {
           message?: string | null
           notification_type?: string
           sender_user_id?: string
+          template_snapshot?: Json | null
           title?: string
         }
         Relationships: []

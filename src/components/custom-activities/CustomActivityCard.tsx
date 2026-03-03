@@ -6,6 +6,7 @@ import { getActivityIcon } from './IconPicker';
 import { ShareTemplateDialog } from './ShareTemplateDialog';
 import { SendToPlayerDialog } from './SendToPlayerDialog';
 import { SendCardToCoachDialog } from './SendCardToCoachDialog';
+import { Json } from '@/integrations/supabase/types';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { cn } from '@/lib/utils';
 import { hexToRgba } from '@/hooks/useUserColors';
@@ -267,6 +268,7 @@ export function CustomActivityCard({ activity, onToggleComplete, onEdit }: Custo
         folderId=""
         folderName="Custom Activities"
         itemTitle={displayName}
+        templateData={template as unknown as Json}
       />
     </>
   );
