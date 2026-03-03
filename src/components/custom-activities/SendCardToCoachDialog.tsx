@@ -78,11 +78,27 @@ export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName
     fetchLinkedCoaches();
   }, [open, user]);
 
+  const insertNotification = async (coach: LinkedCoach) => {
+    if (!user) return;
+    try {
+      await supabase.from('coach_notifications').insert({
+        coach_user_id: coach.scout_id,
+        sender_user_id: user.id,
+        notification_type: 'card_shared',
+        title: itemTitle,
+        message: folderId ? `Shared from folder "${folderName}"` : 'Shared standalone activity',
+      });
+    } catch (err) {
+      console.error('Error inserting coach notification:', err);
+    }
+  };
+
   const handleSelectCoach = async (coach: LinkedCoach) => {
     if (!user) return;
 
     // If no folder context (standalone custom activity), just share directly
     if (!folderId) {
+      await insertNotification(coach);
       toast.success(`"${itemTitle}" shared with ${coach.full_name} for editing`);
       onOpenChange(false);
       return;
@@ -98,6 +114,7 @@ export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName
       .maybeSingle();
 
     if (existing) {
+      await insertNotification(coach);
       toast.success(`"${itemTitle}" shared with ${coach.full_name} for editing`);
       onOpenChange(false);
     } else {
@@ -119,6 +136,7 @@ export function SendCardToCoachDialog({ open, onOpenChange, folderId, folderName
           permission_level: 'edit',
         });
       if (error) throw error;
+      await insertNotification(selectedCoach);
       toast.success(`Folder access granted & "${itemTitle}" shared with ${selectedCoach.full_name}`);
       setNeedsPermission(false);
       setSelectedCoach(null);

@@ -845,6 +845,39 @@ export type Database = {
           },
         ]
       }
+      coach_notifications: {
+        Row: {
+          coach_user_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          notification_type: string
+          sender_user_id: string
+          title: string
+        }
+        Insert: {
+          coach_user_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          notification_type?: string
+          sender_user_id: string
+          title: string
+        }
+        Update: {
+          coach_user_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          notification_type?: string
+          sender_user_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       coupon_metadata: {
         Row: {
           coupon_code: string

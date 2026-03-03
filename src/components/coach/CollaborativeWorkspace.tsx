@@ -6,11 +6,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Pencil, FolderOpen, Clock, Loader2, Users, FileText, ExternalLink } from 'lucide-react';
+import { Pencil, FolderOpen, Clock, Loader2, Users, FileText, ExternalLink, Bell, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { FolderDetailDialog } from '@/components/folders/FolderDetailDialog';
 import { ActivityFolder } from '@/types/activityFolder';
+import { toast } from 'sonner';
 
+interface CoachNotification {
+  id: string;
+  sender_user_id: string;
+  title: string;
+  message: string | null;
+  is_read: boolean;
+  created_at: string;
+  sender_name?: string;
+}
 interface SharedCard {
   id: string;
   title: string;
@@ -36,6 +46,8 @@ export function CollaborativeWorkspace() {
   const { user } = useAuth();
   const [sharedCards, setSharedCards] = useState<SharedCard[]>([]);
   const [recentEdits, setRecentEdits] = useState<EditLogEntry[]>([]);
+  const [notifications, setNotifications] = useState<CoachNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [playerFilter, setPlayerFilter] = useState<string>('all');
   const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
@@ -50,6 +62,51 @@ export function CollaborativeWorkspace() {
         if (data) setSelectedFolder(data as unknown as ActivityFolder);
       });
   }, [selectedFolderId]);
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!user) return;
+    const fetchNotifications = async () => {
+      const { data } = await supabase
+        .from('coach_notifications')
+        .select('id, sender_user_id, title, message, is_read, created_at')
+        .eq('coach_user_id', user.id)
+        .eq('notification_type', 'card_shared')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (data && data.length > 0) {
+        const senderIds = [...new Set(data.map(n => n.sender_user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', senderIds);
+        const nameMap: Record<string, string> = {};
+        (profiles || []).forEach(p => { nameMap[p.id] = p.full_name || 'Unknown'; });
+
+        const mapped = data.map(n => ({ ...n, sender_name: nameMap[n.sender_user_id] || 'Unknown' }));
+        setNotifications(mapped);
+        setUnreadCount(mapped.filter(n => !n.is_read).length);
+      } else {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    };
+    fetchNotifications();
+  }, [user]);
+
+  const handleMarkAllRead = async () => {
+    if (!user) return;
+    const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+    await supabase
+      .from('coach_notifications')
+      .update({ is_read: true })
+      .in('id', unreadIds);
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    setUnreadCount(0);
+    toast.success('All notifications marked as read');
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -181,8 +238,20 @@ export function CollaborativeWorkspace() {
             <CardTitle className="text-sm flex items-center gap-2">
               <Pencil className="h-4 w-4 text-primary" />
               Collaborative Workspace
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4 min-w-4 flex items-center justify-center">
+                  {unreadCount}
+                </Badge>
+              )}
             </CardTitle>
-            {players.length > 1 && (
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={handleMarkAllRead}>
+                  <CheckCheck className="h-3 w-3" />
+                  Mark all read
+                </Button>
+              )}
+              {players.length > 1 && (
               <Select value={playerFilter} onValueChange={setPlayerFilter}>
                 <SelectTrigger className="h-7 w-[140px] text-xs">
                   <SelectValue placeholder="All Players" />
@@ -194,10 +263,33 @@ export function CollaborativeWorkspace() {
                   ))}
                 </SelectContent>
               </Select>
-            )}
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          {/* Recent notifications */}
+          {notifications.filter(n => !n.is_read).length > 0 && (
+            <div className="mb-3 space-y-1.5">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                <Bell className="h-3 w-3" /> New Shares
+              </p>
+              {notifications.filter(n => !n.is_read).slice(0, 5).map(n => (
+                <div key={n.id} className="flex items-center gap-2 text-xs p-2 rounded-md bg-primary/5 border border-primary/20">
+                  <Bell className="h-3 w-3 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium">{n.sender_name}</span>
+                    <span className="text-muted-foreground"> shared </span>
+                    <span className="font-medium">"{n.title}"</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                    {format(new Date(n.created_at), 'MMM d')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {filteredCards.length === 0 ? (
             <div className="text-center py-6 text-muted-foreground">
               <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
