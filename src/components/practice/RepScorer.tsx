@@ -11,6 +11,7 @@ import { TeeDepthGrid } from './TeeDepthGrid';
 import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
 import { CatchingRepFields } from './CatchingRepFields';
 import { BaserunningRepFields } from './BaserunningRepFields';
+import { ThrowingRepFields } from './ThrowingRepFields';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { cn } from '@/lib/utils';
 import { Trash2, Check, Zap, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
@@ -72,6 +73,18 @@ export interface ScoredRep {
   fielding_result?: string;
   // Machine mode
   machine_mode?: 'single' | 'mix';
+  // Throwing
+  throw_distance_band?: string;
+  throw_accuracy_tag?: string;
+  arm_feel?: string;
+  carry_grade?: number;
+  // Hitting advanced
+  approach_quality?: string;
+  count_situation?: string;
+  adjustment_tag?: string;
+  // Baserunning
+  drill_type?: string;
+  baserunning_goal?: string;
 }
 
 interface RepScorerProps {
@@ -181,6 +194,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isFielding = module === 'fielding';
   const isCatching = module === 'catching';
   const isBaserunning = module === 'baserunning';
+  const isThrowing = module === 'throwing';
 
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
@@ -218,6 +232,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       ...(isPitching && { pitcher_hand: handedness }),
       ...((isFielding || isCatching) && { throwing_hand: handedness }),
       ...(isBaserunning && { throwing_hand: handedness }),
+      ...(isThrowing && { throwing_hand: handedness }),
       // Apply machine single-mode presets
       ...(isHitting && isMachine && machineMode === 'single' && {
         pitch_type: machinePitchType,
@@ -235,7 +250,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     // Reset current but keep execution_score for speed
     setCurrent({ execution_score: current.execution_score });
     setShowOverrides(false);
-  }, [current, handedness, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isBaserunning, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand]);
+  }, [current, handedness, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isBaserunning, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
@@ -687,6 +702,50 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                       cols={4}
                     />
                   </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Approach Quality</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'patient', label: 'Patient' },
+                        { value: 'aggressive', label: 'Aggressive' },
+                        { value: 'neutral', label: 'Neutral' },
+                      ]}
+                      value={current.approach_quality}
+                      onChange={v => updateField('approach_quality', v)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Count Situation</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'first_pitch', label: '1st Pitch' },
+                        { value: 'ahead', label: 'Ahead' },
+                        { value: 'even', label: 'Even' },
+                        { value: 'behind', label: 'Behind' },
+                      ]}
+                      value={current.count_situation}
+                      onChange={v => updateField('count_situation', v)}
+                      cols={4}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Adjustment Tag</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'stayed_back', label: 'Stayed Back' },
+                        { value: 'got_on_top', label: 'Got On Top' },
+                        { value: 'shortened_up', label: 'Shortened' },
+                        { value: 'extended', label: 'Extended' },
+                        { value: 'none', label: 'None' },
+                      ]}
+                      value={current.adjustment_tag}
+                      onChange={v => updateField('adjustment_tag', v)}
+                      cols={3}
+                    />
+                  </div>
                 </>
               )}
             </>
@@ -922,7 +981,12 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
           {/* ===== BASERUNNING FIELDS ===== */}
           {isBaserunning && (
-            <BaserunningRepFields value={current} onChange={updateField} />
+            <BaserunningRepFields value={current} onChange={updateField} sport={sport} />
+          )}
+
+          {/* ===== THROWING FIELDS ===== */}
+          {isThrowing && (
+            <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
           )}
 
           {/* Goal / Outcome (advanced only) - structured presets */}

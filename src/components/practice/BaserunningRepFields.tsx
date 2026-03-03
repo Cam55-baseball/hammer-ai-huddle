@@ -6,14 +6,16 @@ import type { ScoredRep } from './RepScorer';
 interface BaserunningRepFieldsProps {
   value: Partial<ScoredRep>;
   onChange: (field: string, val: any) => void;
+  sport?: string;
 }
 
-const SelectGrid = ({ options, value, onChange }: {
+const SelectGrid = ({ options, value, onChange, cols = 3 }: {
   options: { value: string; label: string }[];
   value?: string;
   onChange: (v: string) => void;
+  cols?: number;
 }) => (
-  <div className="grid grid-cols-3 gap-1.5">
+  <div className={cn('grid gap-1.5', `grid-cols-${cols}`)}>
     {options.map(opt => (
       <button
         key={opt.value}
@@ -32,9 +34,61 @@ const SelectGrid = ({ options, value, onChange }: {
   </div>
 );
 
-export function BaserunningRepFields({ value, onChange }: BaserunningRepFieldsProps) {
+const baseballDrills = [
+  { value: 'home_to_1st', label: 'Home→1st' },
+  { value: '1st_to_3rd', label: '1st→3rd' },
+  { value: '2nd_to_home', label: '2nd→Home' },
+  { value: 'steal_2nd', label: 'Steal 2nd' },
+  { value: 'steal_3rd', label: 'Steal 3rd' },
+  { value: 'delayed_steal', label: 'Delayed Steal' },
+  { value: 'hit_and_run', label: 'Hit & Run' },
+  { value: 'tag_up', label: 'Tag Up' },
+  { value: 'lead_work', label: 'Lead Work' },
+];
+
+const softballDrills = [
+  { value: 'home_to_1st', label: 'Home→1st' },
+  { value: '1st_to_3rd', label: '1st→3rd' },
+  { value: '2nd_to_home', label: '2nd→Home' },
+  { value: 'steal_2nd', label: 'Steal 2nd' },
+  { value: 'slap_and_run', label: 'Slap & Run' },
+  { value: 'bunt_and_run', label: 'Bunt & Run' },
+  { value: 'tag_up', label: 'Tag Up' },
+  { value: 'leadoff', label: 'Lead-off' },
+];
+
+const goalOptions = [
+  { value: 'safe', label: '✅ Safe' },
+  { value: 'practice_read', label: '👀 Practice Read' },
+  { value: 'work_on_jump', label: '⚡ Jump Work' },
+  { value: 'speed_work', label: '🏃 Speed Work' },
+  { value: 'situational', label: '🎯 Situational' },
+];
+
+export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepFieldsProps) {
+  const drills = sport === 'softball' ? softballDrills : baseballDrills;
+
   return (
     <div className="space-y-3">
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type</Label>
+        <SelectGrid
+          options={drills}
+          value={value.drill_type}
+          onChange={v => onChange('drill_type', v)}
+        />
+      </div>
+
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
+        <SelectGrid
+          options={goalOptions}
+          value={value.baserunning_goal}
+          onChange={v => onChange('baserunning_goal', v)}
+          cols={3}
+        />
+      </div>
+
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">
           Jump Grade: {value.jump_grade ?? 50}

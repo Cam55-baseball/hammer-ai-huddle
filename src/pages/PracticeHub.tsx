@@ -54,7 +54,7 @@ export default function PracticeHub() {
   const [atBats, setAtBats] = useState<AtBat[]>([]);
 
   const isGameType = sessionType === 'game' || sessionType === 'live_abs';
-  const isHittingOrPitching = activeModule === 'hitting' || activeModule === 'pitching';
+  const isGameScorecardModule = ['hitting', 'pitching', 'fielding'].includes(activeModule);
 
   const handleSelectType = (type: string) => {
     setSessionType(type);
@@ -295,12 +295,28 @@ export default function PracticeHub() {
                   {/* Session config summary bar */}
                   <SessionConfigBar config={sessionConfig} onEdit={() => setStep('configure_session')} />
 
+                  {/* Baserunning target reps progress */}
+                  {activeModule === 'baserunning' && sessionConfig.target_reps && (
+                    <div className="flex items-center gap-3 px-1">
+                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${Math.min(100, (reps.length / sessionConfig.target_reps) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {reps.length}/{sessionConfig.target_reps}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Main scoring area */}
-                  {isGameType && isHittingOrPitching ? (
+                  {isGameType && isGameScorecardModule ? (
                     <GameScorecard
                       module={activeModule}
                       atBats={atBats}
                       onAtBatsChange={setAtBats}
+                      sport={sportKey}
                     />
                   ) : (
                     <RepScorer
