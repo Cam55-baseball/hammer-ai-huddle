@@ -64,12 +64,14 @@ export interface ScoredRep {
   read_grade?: number;
   time_to_base_band?: string;
   // Rep context
-  thrower_hand?: 'L' | 'R';
+  thrower_hand?: 'L' | 'R' | 'N';
   goal_of_rep?: string;
   actual_outcome?: string;
   // Fielding
   play_type?: string;
   fielding_result?: string;
+  // Machine mode
+  machine_mode?: 'single' | 'mix';
 }
 
 interface RepScorerProps {
@@ -142,6 +144,9 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
   </div>
 );
 
+// Sources that require pitching velo to be always visible (not just advanced)
+const PITCHING_ALWAYS_VELO = ['live_bp', 'game'];
+
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
 
@@ -166,6 +171,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const [current, setCurrent] = useState<ScoredRep>({});
   const [showOverrides, setShowOverrides] = useState(false);
 
+  // Machine mode state (1 Pitch vs Mix)
+  const [machineMode, setMachineMode] = useState<'single' | 'mix'>('single');
+  const [machinePitchType, setMachinePitchType] = useState<string | undefined>();
+  const [machineVeloBand, setMachineVeloBand] = useState<string | undefined>();
+
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isFielding = module === 'fielding';
@@ -175,6 +185,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
   const isTee = repSource === 'tee';
+  const isMachine = repSource === 'machine_bp';
 
   const updateField = (field: string, val: any) => {
     setCurrent(prev => ({ ...prev, [field]: val }));
@@ -193,6 +204,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsPitchType = repSource && REQUIRES_PITCH_TYPE.includes(repSource);
   const hidesPitchType = repSource && HIDES_PITCH_TYPE.includes(repSource);
 
+  // For machine in single mode, apply pre-set values to every rep
   const commitRep = useCallback(() => {
     if (!canConfirm) return;
     const rep: ScoredRep = {
@@ -206,6 +218,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       ...(isPitching && { pitcher_hand: handedness }),
       ...((isFielding || isCatching) && { throwing_hand: handedness }),
       ...(isBaserunning && { throwing_hand: handedness }),
+      // Apply machine single-mode presets
+      ...(isHitting && isMachine && machineMode === 'single' && {
+        pitch_type: machinePitchType,
+        velocity_band: machineVeloBand,
+        machine_mode: 'single' as const,
+      }),
+      ...(isHitting && isMachine && machineMode === 'mix' && {
+        machine_mode: 'mix' as const,
+      }),
     };
     onRepsChange([...reps, rep]);
     // Show commit animation
@@ -214,7 +235,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     // Reset current but keep execution_score for speed
     setCurrent({ execution_score: current.execution_score });
     setShowOverrides(false);
-  }, [current, handedness, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isBaserunning, repSource, sessionConfig]);
+  }, [current, handedness, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isBaserunning, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
@@ -267,6 +288,100 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           onCheckedChange={(v) => setMode(v ? 'advanced' : 'quick')}
         />
       </div>
+
+      {/* Machine Mode selector (1 Pitch vs Mix) — only for machine hitting */}
+      {isHitting && isMachine && (
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Machine Mode</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setMachineMode('single')}
+                className={cn(
+                  'rounded-md border p-2.5 text-xs font-medium transition-all text-center',
+                  machineMode === 'single'
+                    ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                    : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                )}
+              >
+                🎯 1 Pitch
+              </button>
+              <button
+                type="button"
+                onClick={() => setMachineMode('mix')}
+                className={cn(
+                  'rounded-md border p-2.5 text-xs font-medium transition-all text-center',
+                  machineMode === 'mix'
+                    ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                    : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                )}
+              >
+                🔀 Mix
+              </button>
+            </div>
+          </div>
+
+          {/* 1 Pitch pre-set fields (session-level, applied to all reps) */}
+          {machineMode === 'single' && (
+            <div className="space-y-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+              <p className="text-[10px] text-muted-foreground">Pre-set pitch type & velocity — applied to all reps</p>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Pitch Type</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {pitchTypes.map(pt => (
+                    <button
+                      key={pt.id}
+                      type="button"
+                      onClick={() => setMachinePitchType(pt.id)}
+                      className={cn(
+                        'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                        machinePitchType === pt.id
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted'
+                      )}
+                    >
+                      {pt.name}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setMachinePitchType('preset_pattern')}
+                    className={cn(
+                      'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                      machinePitchType === 'preset_pattern'
+                        ? 'bg-accent border-accent-foreground/30 text-accent-foreground ring-1 ring-accent'
+                        : 'bg-muted/30 border-border hover:bg-muted'
+                    )}
+                  >
+                    🔄 Preset
+                  </button>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Velocity Band</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {machineVelocityBands.map((vb: { value: string; label: string }) => (
+                    <button
+                      key={vb.value}
+                      type="button"
+                      onClick={() => setMachineVeloBand(machineVeloBand === vb.value ? undefined : vb.value)}
+                      className={cn(
+                        'rounded-md border px-2 py-1 text-[11px] font-medium transition-all',
+                        machineVeloBand === vb.value
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {vb.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Current rep input */}
       <Card className="border-dashed border-primary/30">
@@ -321,8 +436,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             </div>
           </div>
 
-          {/* Pitcher handedness sub-field (hitting reps) */}
-          {needsThrowerHand && (
+          {/* Pitcher handedness sub-field (hitting reps — non-machine) */}
+          {needsThrowerHand && !isMachine && (
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Pitcher Hand (L/R) <span className="text-destructive">*</span></Label>
               <div className="grid grid-cols-2 gap-2">
@@ -342,6 +457,34 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     )}
                   >
                     {h === 'L' ? 'Left' : 'Right'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Machine throwing hand: RH / LH / Neutral */}
+          {isHitting && isMachine && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Machine Throwing Hand</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { value: 'R' as const, label: 'RH' },
+                  { value: 'L' as const, label: 'LH' },
+                  { value: 'N' as const, label: 'Neutral' },
+                ]).map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateField('thrower_hand', opt.value)}
+                    className={cn(
+                      'rounded-md border p-2 text-xs font-medium transition-all',
+                      current.thrower_hand === opt.value
+                        ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                        : 'bg-muted/30 border-border hover:bg-muted'
+                    )}
+                  >
+                    {opt.label}
                   </button>
                 ))}
               </div>
@@ -388,8 +531,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           {/* ===== HITTING FIELDS ===== */}
           {isHitting && (
             <>
-              {/* Pitch Type for hitting (context-aware) */}
-              {!hidesPitchType && needsPitchType && (
+              {/* Pitch Type for hitting — hidden when machine is in "single" mode (pre-set above) */}
+              {!hidesPitchType && needsPitchType && !(isMachine && machineMode === 'single') && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
                     Pitch Type <span className="text-destructive">*</span>
@@ -424,6 +567,30 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         🔄 Preset
                       </button>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Per-rep velocity band for machine Mix mode */}
+              {isMachine && machineMode === 'mix' && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Velocity Band</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {machineVelocityBands.map((vb: { value: string; label: string }) => (
+                      <button
+                        key={vb.value}
+                        type="button"
+                        onClick={() => updateField('velocity_band', current.velocity_band === vb.value ? undefined : vb.value)}
+                        className={cn(
+                          'rounded-md border px-2 py-1 text-[11px] font-medium transition-all',
+                          current.velocity_band === vb.value
+                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                            : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {vb.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -577,6 +744,19 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
+              {/* Per-rep velocity band — always visible for live_bp/game, advanced-only for others */}
+              {!hidesVelocity && (PITCHING_ALWAYS_VELO.includes(repSource) || mode === 'advanced') && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Velocity Band</Label>
+                  <SelectGrid
+                    options={pitchingVelocityBands}
+                    value={current.velocity_band}
+                    onChange={v => updateField('velocity_band', v)}
+                    cols={4}
+                  />
+                </div>
+              )}
+
               <PitchLocationGrid
                 value={current.pitch_location}
                 onSelect={v => updateField('pitch_location', v)}
@@ -621,18 +801,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
               {mode === 'advanced' && (
                 <>
-                  {!hidesVelocity && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground mb-1 block">Velocity Band</Label>
-                      <SelectGrid
-                        options={pitchingVelocityBands}
-                        value={current.velocity_band}
-                        onChange={v => updateField('velocity_band', v)}
-                        cols={4}
-                      />
-                    </div>
-                  )}
-
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
                       Pitch Command: {current.pitch_command_grade ?? 50}
