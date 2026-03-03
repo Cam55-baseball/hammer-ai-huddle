@@ -1,37 +1,31 @@
 
 
-# Fix: Allow Coach to View Shared Custom Activities
+# Fix: Make Shared Activities Viewable in Collaborative Workspace
 
 ## Problem
-When a player shares a standalone custom activity, only a notification with a title string is stored in `coach_notifications`. The coach sees the notification but has no way to view the actual activity content -- there's no template data stored and no UI to display it.
+There are two issues preventing the coach from viewing shared activities:
+
+1. **Notifications only show when unread** -- the "New Shares" section filters to `!n.is_read`, so once marked as read (or if the coach scrolls past), the shared activity disappears entirely with no way to access it again.
+
+2. **The "Roll Out" activity was likely shared before the `template_snapshot` column was added** -- meaning it has `null` for `template_snapshot`, and the click handler does nothing when that's null.
+
+The main shared cards list (`filteredCards`) only shows `activity_folder_items` from folders. Standalone custom activities shared via "Send to Coach" are only stored as notifications and never appear in that list.
 
 ## Solution
 
-### 1. Database Migration
-Add a `template_snapshot` JSONB column to `coach_notifications` to store the full activity template data when shared:
+### 1. Show ALL shared notifications (read + unread) as a dedicated section
+Replace the unread-only filter with a full "Shared Activities" section that shows all notifications with `template_snapshot`. Unread ones get highlighted styling, but read ones remain visible and clickable.
 
-```sql
-ALTER TABLE public.coach_notifications ADD COLUMN template_snapshot jsonb;
-```
+### 2. `CollaborativeWorkspace.tsx` changes
+- Remove the `!n.is_read` filter from the notification rendering section
+- Show all notifications that have a `template_snapshot` as clickable items in a persistent "Shared Activities" section (below "New Shares" for unread ones without snapshots)
+- Keep unread styling (highlight border) but always render the item
+- Add an eye icon and click handler for all notifications with snapshots
 
-### 2. Update `SendCardToCoachDialog.tsx`
-- Accept a new optional `templateData` prop (the full `CustomActivityTemplate` object)
-- Pass the template snapshot into the `coach_notifications` insert so the coach has the full activity data
-
-### 3. Update callers to pass template data
-- **`GamePlanCard.tsx`**: Pass the template object when opening `SendCardToCoachDialog`
-- **`CustomActivityDetailDialog.tsx`**: Pass the template object when opening `SendCardToCoachDialog`
-
-### 4. Update `CollaborativeWorkspace.tsx`
-- Include `template_snapshot` in the notifications query
-- When a notification with `template_snapshot` is clicked, open a read-only `CustomActivityDetailDialog` showing the full activity
-- Add click handling on notification items to view the shared activity
+### 3. Handle legacy notifications without snapshots
+For the "Roll Out" notification that was created before `template_snapshot` existed, add a fallback: when a notification is clicked and has no snapshot, show a toast explaining the activity data isn't available and suggest the player re-share it.
 
 | File | Change |
 |------|--------|
-| DB migration | Add `template_snapshot jsonb` column to `coach_notifications` |
-| `SendCardToCoachDialog.tsx` | Accept + store `templateData` in notification insert |
-| `GamePlanCard.tsx` | Pass template data to `SendCardToCoachDialog` |
-| `CustomActivityDetailDialog.tsx` | Pass template data to `SendCardToCoachDialog` |
-| `CollaborativeWorkspace.tsx` | Query template_snapshot, add click-to-view on notifications |
+| `src/components/coach/CollaborativeWorkspace.tsx` | Show all notifications (not just unread) as clickable items; add fallback for missing snapshots |
 
