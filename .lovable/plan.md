@@ -1,24 +1,26 @@
 
 
-# Better Active Tab Highlighting for Practice Hub Modules
+# Pitching Handedness Gate Fix
 
 ## Problem
-The active module tab (e.g., "Throwing") blends in with the other tabs. The default Radix tab styling only applies a subtle background/shadow change which is hard to distinguish.
+Handedness is stored in a single global localStorage key (`session_handedness`) shared across all modules. If a user selects handedness in hitting, it auto-applies to pitching, skipping the "Pitcher Arm" gate entirely. Pitching arm side should be asked independently.
 
 ## Solution
-Add stronger visual distinction to the active `TabsTrigger` in `PracticeHub.tsx`:
 
-**File: `src/pages/PracticeHub.tsx`** — Line 207
+**File: `src/hooks/useSessionDefaults.ts`**
+- Change `getHandedness` and `saveHandedness` to use a **module-scoped** key: `session_handedness_{module}` instead of the global `session_handedness`.
+- This ensures hitting handedness and pitching handedness are stored and recalled independently.
 
-Update the `TabsTrigger` className to include active-state styling:
-- Add a colored bottom border or ring on the active tab using `data-[state=active]:border-b-2 data-[state=active]:border-primary`
-- Make the active icon use the primary color: `data-[state=active]:text-primary`
-- Increase font weight on active: `data-[state=active]:font-bold`
-- Add a subtle primary background tint: `data-[state=active]:bg-primary/10`
+**File: `src/components/practice/HandednessGate.tsx`**
+- No changes needed — it already has pitching-specific labels ("Pitcher Arm: Left-Handed / Right-Handed").
 
-This is a single-line className change — no new files or components needed.
+**File: `src/components/practice/SessionConfigBar.tsx`**
+- Add the current handedness to the config bar display so users can see what arm/side they selected during logging (e.g., badge showing "RHP" or "LHH").
+
+This is a minimal change — just scoping the localStorage key per module so pitching always gets its own prompt.
 
 | File | Change |
 |------|--------|
-| `src/pages/PracticeHub.tsx` | Enhanced `TabsTrigger` active state classes |
+| `src/hooks/useSessionDefaults.ts` | Scope handedness key per module |
+| `src/components/practice/SessionConfigBar.tsx` | Show handedness badge |
 
