@@ -1,47 +1,41 @@
 
 
-# Pitch Labels, Menu Optimization, and Session Locking
+# Handedness Selectors, Pitcher/Hitter Side, and Pitch Distance Scoping
 
-## 1. Use Full Pitch Names Instead of Abbreviations
+## 1. Hitting Reps: Rename "Thrower Hand" → "Pitcher Hand" with L/R
 
-**Problem**: Hitting pitch type buttons show `pt.abbreviation` (e.g., "FF", "FT", "FC", "SL") which are unrecognizable to most users. Pitching section already uses `pt.name` but is capped at 8 items.
+**File: `src/components/practice/RepScorer.tsx`** — Lines 324-346
 
-**File: `src/components/practice/RepScorer.tsx`**
+The `needsThrowerHand` check already covers BP, flips, game, coach pitch, etc. The label says "Thrower Hand" which is unclear. Changes:
+- Rename label from "Thrower Hand" to "Pitcher Hand (L/R)"
+- Store value in both `thrower_hand` and `pitcher_hand` fields on the rep for clarity
+- This selector is already gated by `REQUIRES_THROWER_HAND` which covers: `flip`, `live_bp`, `regular_bp`, `coach_pitch`, `soft_toss`, `front_toss`, `game`
 
-- **Line 405**: Change `{pt.abbreviation ?? pt.name}` to `{pt.name}` for hitting pitch type buttons
-- **Line 393**: Remove `.slice(0, 10)` limit -- show all pitch types
-- **Line 532**: Remove `.slice(0, 8)` limit on pitching pitch types -- show all
-- Both hitting and pitching will display full readable names: "4-Seam Fastball", "Slider", "Riseball", etc.
+## 2. Pitching Reps: Add "Hitter Side" L/R Selector
 
-## 2. Optimize Practice Hub Menu UI
+**File: `src/components/practice/RepScorer.tsx`** — Pitching section (~line 523)
 
-**Problem**: 7 category tabs (`grid-cols-4 md:grid-cols-7`) overflow on mobile, creating clutter.
+Currently pitching has no hitter side selector. For live BP and game reps, knowing the batter's stance matters. Changes:
+- Add a "Hitter Side" L/R toggle in the pitching section
+- Show it when `repSource` is in `['live_bp', 'game']` (sources where a live batter is present)
+- Store as `batter_side` on the rep (field already exists in `ScoredRep` interface)
 
-**File: `src/pages/PracticeHub.tsx`**
+## 3. Pitch Release Distance: Only Show for Hitting and Pitching
 
-- Replace the 7-column TabsList grid with a horizontally scrollable row using `overflow-x-auto` and `flex` instead of `grid`
-- Use compact pill-style triggers: icon only on mobile, icon + label on desktop
-- Reduce visual weight with smaller padding and tighter spacing
-- Add `whitespace-nowrap` to prevent wrapping
+**File: `src/components/practice/SessionConfigPanel.tsx`** — Line 151-192
 
-## 3. Lock Category Tabs During Active Session
+Currently pitch distance shows for ALL modules (fielding, catching, baserunning) which makes no sense. Changes:
+- Wrap the pitch distance section with `(isHitting || isPitching) &&` guard
+- Same for velocity band section — already has `(isHitting || isPitching)` guard, confirmed correct
+- Override distance in RepScorer (line 358-367) also needs the same `(isHitting || isPitching)` guard
 
-**Problem**: Users can freely switch between Hitting/Pitching/Fielding tabs mid-session, which would discard their in-progress work without warning.
-
-**File: `src/pages/PracticeHub.tsx`**
-
-- Disable tab switching when `step !== 'select_type'` (i.e., user is in readiness, config, or logging steps)
-- Add `pointer-events-none opacity-50` to the TabsList when a session is active
-- The existing "Back" button flow already handles exiting cleanly -- users must back out to step 1 or save before switching categories
-
-**Implementation**: Wrap the `onValueChange` handler to check if a session is in progress. If so, block the change (tabs appear visually disabled).
-
----
+**File: `src/components/practice/RepScorer.tsx`** — Lines 358-367 (override section)
+- Guard the override distance slider with `(isHitting || isPitching)`
 
 ## Files Summary
 
 | File | Changes |
 |------|---------|
-| `src/components/practice/RepScorer.tsx` | Use `pt.name` for all pitch type labels; remove slice limits |
-| `src/pages/PracticeHub.tsx` | Scrollable tab bar; lock tabs during active session |
+| `src/components/practice/RepScorer.tsx` | Rename "Thrower Hand" → "Pitcher Hand" for hitting; add "Hitter Side" L/R for pitching live reps; guard override distance to hitting/pitching only |
+| `src/components/practice/SessionConfigPanel.tsx` | Guard pitch distance to hitting/pitching modules only |
 
