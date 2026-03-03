@@ -274,19 +274,25 @@ export function CollaborativeWorkspace() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Recent notifications */}
-          {notifications.filter(n => !n.is_read).length > 0 && (
+          {/* Shared Activities - persistent section showing all notifications */}
+          {notifications.length > 0 && (
             <div className="mb-3 space-y-1.5">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                <Bell className="h-3 w-3" /> New Shares
+                <Bell className="h-3 w-3" /> Shared Activities
               </p>
-              {notifications.filter(n => !n.is_read).slice(0, 5).map(n => (
+              {notifications.map(n => (
                 <div
                   key={n.id}
-                  className={`flex items-center gap-2 text-xs p-2 rounded-md bg-primary/5 border border-primary/20 ${n.template_snapshot ? 'cursor-pointer hover:bg-primary/10 transition-colors' : ''}`}
+                  className={`flex items-center gap-2 text-xs p-2 rounded-md cursor-pointer hover:bg-primary/10 transition-colors ${
+                    !n.is_read
+                      ? 'bg-primary/5 border border-primary/20'
+                      : 'bg-muted/30 border border-border'
+                  }`}
                   onClick={() => {
                     if (n.template_snapshot) {
                       setViewingTemplate(n.template_snapshot as unknown as CustomActivityTemplate);
+                    } else {
+                      toast.info('This activity was shared before full data capture was available. Ask the player to re-share it.');
                     }
                   }}
                 >
@@ -296,9 +302,7 @@ export function CollaborativeWorkspace() {
                     <span className="text-muted-foreground"> shared </span>
                     <span className="font-medium">"{n.title}"</span>
                   </div>
-                  {n.template_snapshot && (
-                    <Eye className="h-3 w-3 text-primary flex-shrink-0" />
-                  )}
+                  <Eye className="h-3 w-3 text-primary flex-shrink-0" />
                   <span className="text-[10px] text-muted-foreground flex-shrink-0">
                     {format(new Date(n.created_at), 'MMM d')}
                   </span>
