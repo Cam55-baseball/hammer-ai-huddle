@@ -10,8 +10,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Building2, Users, Shield, Calendar, LogOut, Trophy } from 'lucide-react';
+import { Building2, Users, Shield, Calendar, LogOut, Trophy, Megaphone, Pin, TrendingUp, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTeamStats } from '@/hooks/useTeamStats';
 
 interface Props {
   organizationId: string;
@@ -23,6 +24,7 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [leaving, setLeaving] = useState(false);
+  const { data: teamStats } = useTeamStats(organizationId);
 
   // Org details
   const { data: org } = useQuery({
@@ -99,6 +101,40 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
     enabled: !!user,
   });
 
+  // Announcements
+  const { data: announcements = [] } = useQuery({
+    queryKey: ['team-announcements', organizationId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('team_announcements')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .order('pinned', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data as { id: string; title: string; body: string; pinned: boolean; created_at: string }[];
+    },
+  });
+
+  // Recent coach-led sessions
+  const { data: coachSessions = [] } = useQuery({
+    queryKey: ['player-coach-sessions', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('performance_sessions')
+        .select('id, session_date, module, session_type')
+        .eq('user_id', user.id)
+        .not('coach_id', 'is', null)
+        .order('session_date', { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
   const teammatesExcludingSelf = teammates?.filter(t => t.user_id !== user?.id) ?? [];
   const totalMembers = teammates?.length ?? 0;
 
@@ -121,6 +157,9 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
       setLeaving(false);
     }
   };
+
+  const myIntegrity = myScore?.integrity_score != null ? Math.round(myScore.integrity_score) : null;
+  const teamAvg = teamStats?.avgIntegrity ?? null;
 
   return (
     <div className="space-y-6">
@@ -147,7 +186,32 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
         </CardContent>
       </Card>
 
-      {/* Your Status */}
+      {/* Pinned / Recent Announcements */}
+      {announcements.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-primary" /> Team Announcements
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {announcements.map(a => (
+              <div key={a.id} className={`rounded-lg border p-3 ${a.pinned ? 'border-primary/30 bg-primary/5' : 'border-border'}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  {a.pinned && <Pin className="h-3 w-3 text-primary" />}
+                  <p className="text-sm font-medium">{a.title}</p>
+                </div>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{a.body}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {format(new Date(a.created_at), 'MMM d, yyyy')}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Your Status + Team Comparison */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -155,17 +219,32 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Shield className="h-3 w-3" /> Integrity Score
+                <Shield className="h-3 w-3" /> Your Integrity
               </p>
               <p className="text-lg font-bold">
-                {myScore?.integrity_score != null ? `${Math.round(myScore.integrity_score)}%` : '—'}
+                {myIntegrity != null ? `${myIntegrity}%` : '—'}
               </p>
               {myScore?.calculation_date && (
                 <p className="text-xs text-muted-foreground">
                   as of {format(new Date(myScore.calculation_date), 'MMM d, yyyy')}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" /> Team Average
+              </p>
+              <p className="text-lg font-bold">
+                {teamAvg != null && teamAvg > 0 ? `${teamAvg}%` : '—'}
+              </p>
+              {myIntegrity != null && teamAvg != null && teamAvg > 0 && (
+                <p className={`text-xs font-medium ${myIntegrity >= teamAvg ? 'text-green-600' : 'text-amber-600'}`}>
+                  {myIntegrity >= teamAvg
+                    ? `+${myIntegrity - teamAvg}% above avg`
+                    : `${myIntegrity - teamAvg}% below avg`}
                 </p>
               )}
             </div>
@@ -187,6 +266,32 @@ export function PlayerOrganizationView({ organizationId, roleInOrg, orgName }: P
           </div>
         </CardContent>
       </Card>
+
+      {/* Coach-Led Sessions */}
+      {coachSessions.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <UserCheck className="h-4 w-4 text-primary" /> Recent Coach-Led Sessions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {coachSessions.map(s => (
+                <div key={s.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <div>
+                    <p className="text-sm font-medium">{s.module ?? 'Session'}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{s.session_type?.replace('_', ' ')}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(s.session_date), 'MMM d, yyyy')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Teammates */}
       <Card>
