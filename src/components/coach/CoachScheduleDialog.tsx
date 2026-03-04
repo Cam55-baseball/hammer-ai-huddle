@@ -17,6 +17,8 @@ import { useScheduledPracticeSessions, CreateScheduledSession } from '@/hooks/us
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/integrations/supabase/client';
+import { CoachSelector, CoachSelection } from '@/components/practice/CoachSelector';
+import { GameSessionFields } from '@/components/practice/GameSessionFields';
 
 const MODULES = [
   { value: 'hitting', label: 'Hitting' },
@@ -67,9 +69,19 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
   const [recurringActive, setRecurringActive] = useState(false);
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
   const [sport, setSport] = useState('baseball');
+  const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
+  const [teamName, setTeamName] = useState('');
+  const [opponentName, setOpponentName] = useState('');
+  const [opponentLevel, setOpponentLevel] = useState('');
 
   const activeOrg = myOrgs.data?.[0];
   const orgMembers = members.data ?? [];
+
+  useEffect(() => {
+    if ((sessionType === 'team_session' || sessionType === 'game') && activeOrg?.name) {
+      setTeamName(activeOrg.name);
+    }
+  }, [sessionType, activeOrg?.name]);
 
   const title = `${MODULES.find(m => m.value === module)?.label ?? module} ${SESSION_TYPES.find(s => s.value === sessionType)?.label ?? sessionType}`;
 
@@ -103,20 +115,31 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
+    const resolvedCoachId = sessionType === 'lesson' && coachSelection.type === 'assigned'
+      ? coachSelection.coach_id
+      : user.id;
+
+    const resolvedDescription = sessionType === 'lesson' && coachSelection.type === 'external' && coachSelection.external_name
+      ? [description, `Coach: ${coachSelection.external_name}`].filter(Boolean).join(' — ')
+      : description;
+
     const baseSession: Omit<CreateScheduledSession, 'user_id'> = {
       session_module: module,
       session_type: sessionType,
       title,
-      description: description || undefined,
+      description: resolvedDescription || undefined,
       scheduled_date: dateStr,
       start_time: startTime || undefined,
       end_time: endTime || undefined,
       recurring_active: recurringActive,
       recurring_days: recurringDays,
       sport,
-      coach_id: user.id,
+      coach_id: resolvedCoachId,
       assignment_scope: scope,
       organization_id: scope === 'organization' ? activeOrg?.id : undefined,
+      team_name: (sessionType === 'team_session' || sessionType === 'game') ? teamName || undefined : undefined,
+      opponent_name: sessionType === 'game' ? opponentName || undefined : undefined,
+      opponent_level: sessionType === 'game' ? opponentLevel || undefined : undefined,
     };
 
     const result = await createBulkSessions(playerIds, baseSession);
@@ -128,6 +151,10 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
       setDescription('');
       setRecurringActive(false);
       setRecurringDays([]);
+      setCoachSelection({ type: 'none' });
+      setTeamName('');
+      setOpponentName('');
+      setOpponentLevel('');
     }
   };
 
@@ -168,7 +195,41 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
             </Select>
           </div>
 
-          {/* Sport */}
+          {/* Contextual Fields */}
+          {sessionType === 'lesson' && (
+            <CoachSelector value={coachSelection} onChange={setCoachSelection} />
+          )}
+
+          {sessionType === 'team_session' && (
+            <div className="space-y-1.5">
+              <Label>Team / Organization</Label>
+              <Input
+                placeholder="Enter team name"
+                value={teamName}
+                onChange={e => setTeamName(e.target.value)}
+              />
+            </div>
+          )}
+
+          {sessionType === 'game' && (
+            <>
+              <GameSessionFields
+                opponentName={opponentName}
+                opponentLevel={opponentLevel}
+                onNameChange={setOpponentName}
+                onLevelChange={setOpponentLevel}
+              />
+              <div className="space-y-1.5">
+                <Label>Team You Are Playing For</Label>
+                <Input
+                  placeholder="Enter team name"
+                  value={teamName}
+                  onChange={e => setTeamName(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
           <div className="space-y-1.5">
             <Label>Sport</Label>
             <Select value={sport} onValueChange={setSport}>
