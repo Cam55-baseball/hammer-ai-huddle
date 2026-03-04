@@ -1,11 +1,14 @@
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface RepSourceSelectorProps {
   module: string;
   sessionType?: string;
   value?: string;
   onChange: (source: string) => void;
+  customSource?: string;
+  onCustomSourceChange?: (v: string) => void;
 }
 
 interface SourceItem {
@@ -238,7 +241,7 @@ function GroupedSelector({ groups, value, onChange }: { groups: SourceGroup[]; v
   );
 }
 
-export function RepSourceSelector({ module, sessionType, value, onChange }: RepSourceSelectorProps) {
+export function RepSourceSelector({ module, sessionType, value, onChange, customSource, onCustomSourceChange }: RepSourceSelectorProps) {
   // Grouped modules
   if (module === 'hitting' || module === 'pitching' || module === 'throwing') {
     const baseGroups =
@@ -285,6 +288,14 @@ export function RepSourceSelector({ module, sessionType, value, onChange }: RepS
           </button>
         ))}
       </div>
+      {value === 'other' && onCustomSourceChange && (
+        <Input
+          value={customSource ?? ''}
+          onChange={(e) => onCustomSourceChange(e.target.value)}
+          placeholder="Describe your rep source..."
+          className="mt-2"
+        />
+      )}
       {!value && <p className="text-[10px] text-destructive mt-1">Select a rep source to continue</p>}
     </div>
   );

@@ -21,6 +21,7 @@ import { Settings2, ArrowRight } from 'lucide-react';
 
 export interface SessionConfig {
   rep_source: string;
+  custom_rep_source?: string;
   pitch_distance_ft: number;
   velocity_band?: string;
   season_context: string;
@@ -85,6 +86,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [opponentName, setOpponentName] = useState('');
   const [opponentLevel, setOpponentLevel] = useState('');
   const [fieldingPosition, setFieldingPosition] = useState<string | undefined>();
+  const [customRepSource, setCustomRepSource] = useState('');
 
   // Auto-derived values
   const environment = deriveEnvironment(sessionType);
@@ -161,6 +163,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
 
     onConfirm({
       rep_source: repSource,
+      custom_rep_source: repSource === 'other' ? customRepSource || undefined : undefined,
       pitch_distance_ft: pitchDistance,
       velocity_band: velocityBand,
       season_context: seasonContext,
@@ -187,7 +190,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       <CardContent className="space-y-5">
         {/* Rep Source — hidden for game (auto-set) */}
         {showRepSourceSelector && (
-          <RepSourceSelector module={module} sessionType={sessionType} value={repSource} onChange={setRepSource} />
+          <RepSourceSelector module={module} sessionType={sessionType} value={repSource} onChange={setRepSource} customSource={customRepSource} onCustomSourceChange={setCustomRepSource} />
         )}
 
         {/* Game-specific: opponent info */}
