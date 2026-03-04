@@ -1,114 +1,176 @@
 
 
-# Implementation Plan: Subscription Data Freeze, Baserunning Cleanup, Fielding Position, and Hitter Side Auto-Flip
+# Implementation Plan: Video Tagging, Pitching Sources, Fielding Quality, Hitting Spin, and UI Cleanup
 
-## 1. Subscription Data Freeze Logic
-
-### Problem
-No mechanism currently exists to freeze/archive module data when a subscription is canceled. The `subscriptions` table has `status` but no per-module freeze state, and the UI has no read-only mode for expired modules.
-
-### Database Migration
-Add a `module_data_status` JSONB column to the `subscriptions` table to track per-module freeze state:
-```sql
-ALTER TABLE public.subscriptions 
-  ADD COLUMN module_data_status jsonb DEFAULT '{}'::jsonb;
-
--- Example stored value: {"baseball_hitting": "active", "baseball_pitching": "frozen"}
-```
-
-### New Hook: `useModuleAccessState.ts`
-Centralizes access logic combining subscription status with freeze state:
-- `getModuleState(module, sport)` returns `'active' | 'frozen' | 'archived' | 'none'`
-- `isFrozen(module, sport)` — true if module data exists but subscription lapsed
-- `isReadOnly(module, sport)` — true for frozen/archived states
-
-### Edge Function: `check-subscription` Update
-When a module is found in `subscribed_modules` but Stripe shows it canceled:
-- Set that module's `module_data_status` entry to `'frozen'`
-- On re-subscribe, automatically set back to `'active'`
-- Never delete performance data
-
-### UI Changes
-- **Practice Hub**: When module is frozen, show a banner "This module is in read-only mode. Re-subscribe to resume logging." and disable the rep logging flow.
-- **Dashboard module cards**: Show a "frozen" badge with last-active date; clicking navigates to read-only analytics.
-- **Analytics pages**: Remain fully viewable (read-only) — no data gating on historical trends.
-- **Coach dashboards / Org data**: Unaffected by player subscription status.
-
-### Data Integrity Rules
-- `performance_sessions` rows are NEVER hard-deleted on unsubscribe
-- Position history preserved in `athlete_mpi_settings` (already has position fields)
-- Re-subscription reconnects to existing data via `user_id` — no duplication
+## Overview
+Five interconnected changes: (1) video upload system for practice sessions, (2) new pitching practice type, (3) fielding quality metrics, (4) hitting spin direction expansion, (5) practice hub UI streamlining.
 
 ---
 
-## 2. Remove Target Reps + Dominant Side from Baserunning
+## 1. Universal Video Upload + Rep Tagging
 
-### Files Changed
+### Database Migration
+Create a `session_videos` table:
+```sql
+CREATE TABLE public.session_videos (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  session_id uuid REFERENCES public.performance_sessions(id) ON DELETE CASCADE NOT NULL,
+  storage_path text NOT NULL,
+  filename text,
+  duration_ms integer,
+  tagged_rep_indexes integer[] DEFAULT '{}',
+  metadata jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.session_videos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own session videos"
+  ON public.session_videos FOR ALL TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Coaches can view athlete videos"
+  ON public.session_videos FOR SELECT TO authenticated
+  USING (
+    public.is_linked_coach(auth.uid(), user_id)
+    OR public.is_org_coach_or_owner(auth.uid(), (
+      SELECT om.organization_id FROM public.organization_members om WHERE om.user_id = session_videos.user_id LIMIT 1
+    ))
+  );
+```
+
+### New Component: `SessionVideoUploader.tsx`
+- Upload button and camera record button using `<input type="file" accept="video/*" capture="environment">`
+- Upload to `videos` storage bucket under `session-clips/{user_id}/{session_id}/`
+- After upload, show thumbnail with rep tagging interface (multi-select checkboxes for logged reps)
+- Save entries to `session_videos` table with `tagged_rep_indexes`
+- Display uploaded videos as a scrollable strip below the rep feed
+
+### Integration Points
+- Add `SessionVideoUploader` to `PracticeHub.tsx` in the `build_session` step, between the rep scorer and voice notes
+- Pass `reps` array for tagging, `sessionId` after save (or use optimistic local state)
+- Videos persist through Data Freeze Mode (no deletion on unsubscribe — same RLS, read-only enforced at UI level)
+
+---
+
+## 2. Pitching: Add "Flat Ground vs Hitter"
+
+### RepSourceSelector.tsx
+Add to `PITCHING_SOURCES` under the "Mound" group:
+```ts
+{ value: 'flat_ground_vs_hitter', label: 'Flat Ground vs Hitter', desc: 'Flat ground with live hitter' }
+```
+
+Add to `VALID_PITCHING_SOURCES`:
+- `solo_work`: add `'flat_ground_vs_hitter'`
+- `team_session`: add `'flat_ground_vs_hitter'`
+
+Add `'flat_ground_vs_hitter'` to:
+- `REQUIRES_PITCH_TYPE` (needs pitch type tracking)
+- `REQUIRES_THROWER_HAND` is N/A for pitching but add hitter side support
+
+### RepScorer.tsx (Pitching section)
+When `repSource === 'flat_ground_vs_hitter'`:
+- Show Hitter Side (L/R) selector (same as `live_bp`/`game`)
+- Show pitch result options including `'hit'` and `'out'`
+- Show contact type selector: `{ value: 'swing_miss', label: 'Swing & Miss' }, { value: 'foul', label: 'Foul' }, { value: 'weak_contact', label: 'Weak Contact' }, { value: 'hard_contact', label: 'Hard Contact' }`
+
+Update `PITCHING_ALWAYS_VELO` to include `'flat_ground_vs_hitter'`.
+
+### Edge Function: `calculate-session/index.ts`
+Add `'flat_ground_vs_hitter'` as a recognized rep source. Keep it separate from bullpen analytics — it should be tagged as `evaluation_type: 'hybrid'` in composite index calculations.
+
+---
+
+## 3. Fielding: Performance Quality Questions
+
+### ScoredRep Interface (`RepScorer.tsx`)
+Add three new fields:
+```ts
+route_efficiency?: 'routine' | 'plus' | 'elite';
+play_probability?: 'routine' | 'plus' | 'elite';
+receiving_quality?: 'poor' | 'average' | 'elite';
+```
+
+### RepScorer.tsx (Fielding section)
+Add three `SelectGrid` blocks after the existing "Fielding Result" field (always visible, not advanced-only):
+
+1. **Route Efficiency**: Routine / Plus / Elite
+2. **Play Probability**: Routine / Plus / Elite  
+3. **Receiving Quality**: Poor / Average / Elite
+
+### ENGINE_CONTRACT.ts
+Add FQI modifiers:
+```ts
+route_efficiency: { routine: 0, plus: 3, elite: 6 },
+play_probability: { routine: 0, plus: 3, elite: 6 },
+receiving_quality: { poor: -3, average: 0, elite: 5 },
+```
+
+### Edge Function Update
+Add the three new fields to `validateMicroRep` validation and to the FQI calculation in `calculate-session/index.ts`.
+
+---
+
+## 4. Hitting: Spin Direction Expansion
+
+### Current State
+Spin direction exists in pitching advanced mode only with options: `topspin`, `backspin`, `sidespin`.
+
+### Changes
+
+**RepScorer.tsx** — Move spin direction to the **hitting** section (advanced mode). Add it after "Batted Ball Type":
+```ts
+options: [
+  { value: 'topspin', label: 'Topspin' },
+  { value: 'backspin', label: 'Backspin' },
+  { value: 'knuckle', label: 'Knuckle' },
+  { value: 'backspin_tail', label: 'Backspin Tail' },
+]
+```
+
+Keep it in pitching too with same expanded options.
+
+**Edge Function** — Update `VALID_SPIN_DIRECTIONS` to include `'knuckle'` and `'backspin_tail'`.
+
+**ENGINE_CONTRACT.ts** — Update `spin_direction` weights:
+```ts
+spin_direction: { topspin: -2, backspin: 3, knuckle: 0, backspin_tail: 4 }
+```
+
+---
+
+## 5. Practice Hub UI Cleanup
+
+### Layout Restructuring in `PracticeHub.tsx` (build_session step)
+Reorganize the session logging view into a cleaner structure:
+
+**Top**: `SessionConfigBar` (existing — config summary HUD)
+
+**Main Area**: Rep scorer with progressive reveal (existing quick/advanced toggle)
+
+**Bottom Sticky**: 
+- Quick action bar with "Add Video" button and rep counter summary
+- The "Save Session" button
+
+### Remove Clutter
+- The "Voice Notes" section should collapse into the "Override session defaults" accordion to reduce visual noise
+- Remove duplicate label text where icons already convey meaning
+
+---
+
+## File Change Summary
 
 | File | Change |
 |------|--------|
-| `SessionConfigPanel.tsx` | Remove the "Target Reps" section (lines 310-334) and `target_reps` from `handleConfirm` |
-| `SessionConfig` interface | Remove `target_reps` field |
-| `PracticeHub.tsx` | Remove the baserunning target reps progress bar (lines 297-309) |
-| `HandednessGate.tsx` | Remove the `baserunning` entry from `labels` map (line 18) |
-| `RepScorer.tsx` | Remove `isBaserunning && { throwing_hand: handedness }` from `commitRep` (line 234) |
-
-No database changes needed — `target_reps` is only in the UI config, not persisted. The `throwing_hand` field on baserunning reps simply stops being set.
-
----
-
-## 3. Add Position Selection to Fielding Sessions
-
-### ScoredRep Interface Update (`RepScorer.tsx`)
-Add `fielding_position?: string` to the `ScoredRep` interface.
-
-### New Component: `FieldingPositionSelector.tsx`
-A grid selector with positions: P, C, 1B, 2B, 3B, SS, LF, CF, RF. Uses the same `SelectGrid` pattern as other rep fields. Displayed at the top of the fielding fields section (before Play Type).
-
-### RepScorer Changes
-- Add `fielding_position` to the fielding section, required before confirming a rep
-- Include `fielding_position` in `commitRep` so it tags every rep
-- Add validation: `canConfirm` requires `fielding_position` when `isFielding`
-
-### SessionConfigPanel Changes
-Add a session-level default position selector for fielding sessions so athletes can set their primary position once and override per-rep if needed.
-
----
-
-## 4. Hitter Side Auto-Flip Pitch Location Chart
-
-### Current State
-`PitchLocationGrid` already accepts `batterSide` and mirrors zone labels for LHH. `RepScorer` already passes `handedness` as `batterSide`. This is **already implemented correctly**.
-
-### What Needs Adding: Switch Hitter Support
-- Check `athlete_mpi_settings.is_switch_hitter` via `useSwitchHitterProfile`
-- When `is_switch_hitter` is true AND module is hitting, show a per-rep toggle (L/R) in `RepScorer` instead of using the gate-locked value
-- Each rep records the actual `batter_side` used for that at-bat
-- `PitchLocationGrid`, `TeeDepthGrid`, and spray chart overlays already respond to `batterSide` prop — just need the toggle wired up
-
-### RepScorer Changes
-- Import `useSwitchHitterProfile`
-- When `isSwitchHitter && isHitting`: render a compact L/R toggle above the pitch location grid
-- Override `handedness` for the current rep with the selected side
-- Store absolute coordinates in DB (already the case); UI rendering mirrors based on side
-
-### Data Storage
-Pitch location is already stored as absolute `{row, col}` coordinates. The `batter_side` field on each rep ensures analytics can segment L vs R at-bats. No DB schema change needed.
-
----
-
-## Summary of All File Changes
-
-| File | Changes |
-|------|---------|
-| DB Migration | Add `module_data_status jsonb` to `subscriptions` |
-| `check-subscription` edge function | Set frozen/active status on module transitions |
-| `src/hooks/useModuleAccessState.ts` (new) | Centralized freeze/read-only logic |
-| `src/pages/PracticeHub.tsx` | Remove baserunning progress bar; add frozen module banner |
-| `src/components/practice/SessionConfigPanel.tsx` | Remove target reps; add fielding position default |
-| `src/components/practice/HandednessGate.tsx` | Remove baserunning entry |
-| `src/components/practice/RepScorer.tsx` | Remove baserunning handedness; add fielding position field + validation; add switch hitter toggle |
-| `src/components/practice/FieldingPositionSelector.tsx` (new) | Position grid component |
-| `src/hooks/useSwitchHitterProfile.ts` | Already exists; will be imported into RepScorer |
-| Dashboard / Analytics pages | Add frozen badge + read-only mode checks |
+| DB Migration | Create `session_videos` table with RLS |
+| `src/components/practice/SessionVideoUploader.tsx` (new) | Video upload/record + rep tagging UI |
+| `src/components/practice/RepSourceSelector.tsx` | Add `flat_ground_vs_hitter` to pitching sources |
+| `src/components/practice/RepScorer.tsx` | Add fielding quality fields, hitting spin direction, flat ground vs hitter pitching fields |
+| `src/pages/PracticeHub.tsx` | Integrate video uploader, streamline layout |
+| `src/data/ENGINE_CONTRACT.ts` | Add fielding quality weights, expand spin direction weights |
+| `supabase/functions/calculate-session/index.ts` | Validate new fields, add FQI modifiers, hybrid eval type |
+| `src/hooks/usePerformanceSession.ts` | Update micro rep type to include new fields |
+| `src/hooks/useMicroLayerInput.ts` | Update MicroLayerData type for new fields |
 
