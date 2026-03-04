@@ -159,11 +159,54 @@ export function useScheduledPracticeSessions() {
     }
   }, [user, toast]);
 
+  const createBulkSessions = useCallback(async (
+    playerIds: string[],
+    baseSession: Omit<CreateScheduledSession, 'user_id'>
+  ): Promise<boolean> => {
+    if (!user || playerIds.length === 0) return false;
+    setLoading(true);
+
+    try {
+      const rows = playerIds.map(playerId => ({
+        user_id: playerId,
+        created_by: user.id,
+        session_module: baseSession.session_module,
+        session_type: baseSession.session_type,
+        title: baseSession.title,
+        description: baseSession.description || null,
+        scheduled_date: baseSession.scheduled_date,
+        start_time: baseSession.start_time || null,
+        end_time: baseSession.end_time || null,
+        recurring_active: baseSession.recurring_active || false,
+        recurring_days: baseSession.recurring_days || [],
+        sport: baseSession.sport,
+        organization_id: baseSession.organization_id || null,
+        team_id: baseSession.team_id || null,
+        assignment_scope: baseSession.assignment_scope || 'individual',
+        coach_id: baseSession.coach_id || user.id,
+      }));
+
+      const { error } = await supabase
+        .from('scheduled_practice_sessions' as any)
+        .insert(rows as any);
+
+      if (error) throw error;
+      toast({ title: 'Sessions scheduled', description: `${playerIds.length} player(s) assigned` });
+      return true;
+    } catch (error: any) {
+      toast({ title: 'Error scheduling sessions', description: error.message, variant: 'destructive' });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, toast]);
+
   return {
     loading,
     fetchForDate,
     fetchForDateRange,
     createSession,
+    createBulkSessions,
     updateStatus,
     deleteSession,
   };
