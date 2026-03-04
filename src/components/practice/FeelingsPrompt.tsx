@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 export interface FeelingState {
   body: number; // 1-5
   mind: number; // 1-5
-  sleep: number; // 1-5
   note?: string;
 }
 
@@ -28,14 +27,6 @@ const mindOptions = [
   { value: 3, emoji: '😐', label: 'Baseline' },
   { value: 4, emoji: '🎯', label: 'Engaged' },
   { value: 5, emoji: '🔒', label: 'Flow State' },
-];
-
-const sleepOptions = [
-  { value: 1, emoji: '😴', label: '<5 hrs / broken' },
-  { value: 2, emoji: '🥱', label: '5–6 hrs' },
-  { value: 3, emoji: '😌', label: '6–7 hrs' },
-  { value: 4, emoji: '😊', label: '7–8 hrs' },
-  { value: 5, emoji: '⭐', label: '8+ hrs / deep' },
 ];
 
 function ReadinessRow({
@@ -94,12 +85,6 @@ export function FeelingsPrompt({ value, onChange }: FeelingsPromptProps) {
           onSelect={v => onChange({ ...value, mind: v })}
         />
 
-        <ReadinessRow
-          label="How did you sleep last night?"
-          options={sleepOptions}
-          selectedValue={value.sleep}
-          onSelect={v => onChange({ ...value, sleep: v })}
-        />
 
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1 block">
