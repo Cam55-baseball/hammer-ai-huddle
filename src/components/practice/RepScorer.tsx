@@ -12,7 +12,9 @@ import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITC
 import { CatchingRepFields } from './CatchingRepFields';
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { ThrowingRepFields } from './ThrowingRepFields';
+import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
+import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { cn } from '@/lib/utils';
 import { Trash2, Check, Zap, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -71,6 +73,7 @@ export interface ScoredRep {
   // Fielding
   play_type?: string;
   fielding_result?: string;
+  fielding_position?: string;
   // Machine mode
   machine_mode?: 'single' | 'mix';
   // Throwing
@@ -162,12 +165,19 @@ const PITCHING_ALWAYS_VELO = ['live_bp', 'game'];
 
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
+  const { isSwitchHitter } = useSwitchHitterProfile();
 
   // Commit animation state
   const [showCommitCheck, setShowCommitCheck] = useState(false);
 
   // Handedness gate
   const [handedness, setHandedness] = useState<'L' | 'R' | undefined>();
+
+  // Switch hitter per-rep side override
+  const [switchSide, setSwitchSide] = useState<'L' | 'R'>('R');
+
+  // Fielding position per-rep (defaults from session config)
+  const [repFieldingPosition, setRepFieldingPosition] = useState<string | undefined>(sessionConfig?.fielding_position);
 
   // Logging mode
   const [mode, setMode] = useState<'quick' | 'advanced'>(() => {
@@ -196,6 +206,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isBaserunning = module === 'baserunning';
   const isThrowing = module === 'throwing';
 
+  // For switch hitters in hitting, use toggle side; otherwise use gate handedness
+  const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
+
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
   const isTee = repSource === 'tee';
@@ -209,8 +222,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const execScore = current.execution_score;
   const hasRepSource = !!repSource;
   const needsDepthZone = isTee && isHitting;
+  const needsFieldingPosition = isFielding && !repFieldingPosition;
   const canConfirm = hasRepSource && execScore != null && execScore >= 1
-    && (!needsDepthZone || current.depth_zone != null);
+    && (!needsDepthZone || current.depth_zone != null)
+    && !needsFieldingPosition;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
@@ -228,11 +243,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       session_velocity_band: sessionConfig?.velocity_band,
       session_rep_source: sessionConfig?.rep_source,
       environment: sessionConfig?.environment,
-      ...(isHitting && { batter_side: handedness }),
+      ...(isHitting && { batter_side: effectiveBatterSide }),
       ...(isPitching && { pitcher_hand: handedness }),
       ...((isFielding || isCatching) && { throwing_hand: handedness }),
-      ...(isBaserunning && { throwing_hand: handedness }),
       ...(isThrowing && { throwing_hand: handedness }),
+      ...(isFielding && { fielding_position: repFieldingPosition }),
       // Apply machine single-mode presets
       ...(isHitting && isMachine && machineMode === 'single' && {
         pitch_type: machinePitchType,
@@ -250,14 +265,14 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     // Reset current but keep execution_score for speed
     setCurrent({ execution_score: current.execution_score });
     setShowOverrides(false);
-  }, [current, handedness, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isBaserunning, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand]);
+  }, [current, handedness, effectiveBatterSide, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand, repFieldingPosition]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
   }, [reps, onRepsChange]);
 
-  // If no handedness selected, show gate
-  if (!handedness) {
+  // If no handedness selected, show gate (skip for baserunning — no side needed)
+  if (!handedness && !isBaserunning) {
     return <HandednessGate module={module} value={handedness} onChange={setHandedness} />;
   }
 
@@ -610,13 +625,37 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
+              {/* Switch hitter per-rep toggle */}
+              {isHitting && isSwitchHitter && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Batter Side</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['L', 'R'] as const).map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSwitchSide(s)}
+                        className={cn(
+                          'rounded-md border p-2 text-xs font-medium transition-all',
+                          switchSide === s
+                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                            : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {s === 'L' ? '🫲 Left' : '🫱 Right'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {isTee && (
                 <div className="flex justify-center">
                   <TeeDepthGrid
                     value={current.depth_zone}
                     onChange={v => updateField('depth_zone', v)}
                     sport={sport as 'baseball' | 'softball'}
-                    batterSide={handedness}
+                    batterSide={effectiveBatterSide}
                   />
                 </div>
               )}
@@ -626,7 +665,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   <PitchLocationGrid
                     value={current.pitch_location}
                     onSelect={v => updateField('pitch_location', v)}
-                    batterSide={handedness}
+                    batterSide={effectiveBatterSide}
                     sport={sport as 'baseball' | 'softball'}
                   />
                 </div>
@@ -902,6 +941,13 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           {/* ===== FIELDING FIELDS ===== */}
           {isFielding && (
             <>
+              <FieldingPositionSelector
+                value={repFieldingPosition}
+                onChange={setRepFieldingPosition}
+                label="Position"
+                required
+              />
+
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Play Type</Label>
                 <SelectGrid
@@ -1064,6 +1110,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           {!canConfirm && (
             <p className="text-[10px] text-destructive text-center">
               {!hasRepSource ? 'Configure session rep source first' :
+                needsFieldingPosition ? 'Select fielding position' :
                 needsDepthZone && !current.depth_zone ? 'Select tee depth zone' :
                   'Set execution score (1-10) to confirm rep'}
             </p>

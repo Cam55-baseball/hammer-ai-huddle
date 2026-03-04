@@ -15,7 +15,6 @@ const labels: Record<string, { prompt: string; left: string; right: string }> = 
   fielding: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
   catching: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
   throwing: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
-  baserunning: { prompt: 'Dominant Side', left: 'Left', right: 'Right' },
   mental: { prompt: 'Handedness', left: 'Left', right: 'Right' },
 };
 

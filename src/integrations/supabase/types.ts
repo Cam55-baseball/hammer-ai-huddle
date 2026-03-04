@@ -3774,6 +3774,7 @@ export type Database = {
           grandfathered_price: string | null
           has_pending_cancellations: boolean | null
           id: string
+          module_data_status: Json | null
           module_subscription_mapping: Json | null
           plan: string
           status: string
@@ -3794,6 +3795,7 @@ export type Database = {
           grandfathered_price?: string | null
           has_pending_cancellations?: boolean | null
           id?: string
+          module_data_status?: Json | null
           module_subscription_mapping?: Json | null
           plan?: string
           status?: string
@@ -3814,6 +3816,7 @@ export type Database = {
           grandfathered_price?: string | null
           has_pending_cancellations?: boolean | null
           id?: string
+          module_data_status?: Json | null
           module_subscription_mapping?: Json | null
           plan?: string
           status?: string
