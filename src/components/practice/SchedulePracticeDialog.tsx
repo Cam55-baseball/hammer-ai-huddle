@@ -12,6 +12,7 @@ import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
 import { CoachSelector, CoachSelection } from '@/components/practice/CoachSelector';
 import { GameSessionFields } from '@/components/practice/GameSessionFields';
 import { cn } from '@/lib/utils';
+import { formatTime12h } from '@/lib/formatTime';
 
 const MODULES = [
   { value: 'hitting', label: 'Hitting' },
@@ -241,7 +242,7 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
           {/* Preview */}
           <div className="rounded-md bg-muted/50 p-3 text-sm">
             <span className="font-medium">{generateTitle()}</span>
-            <span className="text-muted-foreground"> · {date} {startTime && `at ${startTime}`}</span>
+            <span className="text-muted-foreground"> · {date} {startTime && `at ${formatTime12h(startTime)}`}</span>
           </div>
 
           <Button onClick={handleSubmit} disabled={loading} className="w-full gap-2">

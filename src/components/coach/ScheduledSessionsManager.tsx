@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CalendarIcon, Pencil, Trash2, Filter } from 'lucide-react';
 import { useScheduledPracticeSessions, ScheduledPracticeSession } from '@/hooks/useScheduledPracticeSessions';
 import { format } from 'date-fns';
+import { formatTime12h } from '@/lib/formatTime';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -158,7 +159,7 @@ export function ScheduledSessionsManager({ onSchedule }: ScheduledSessionsManage
                     <TableCell className="capitalize">{s.session_type.replace(/_/g, ' ')}</TableCell>
                     <TableCell>{s.scheduled_date}</TableCell>
                     <TableCell>
-                      {s.start_time ? `${s.start_time}${s.end_time ? ` – ${s.end_time}` : ''}` : '—'}
+                      {s.start_time ? `${formatTime12h(s.start_time)}${s.end_time ? ` – ${formatTime12h(s.end_time)}` : ''}` : '—'}
                     </TableCell>
                     <TableCell className="capitalize">{s.assignment_scope}</TableCell>
                     <TableCell>
