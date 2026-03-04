@@ -20,6 +20,7 @@ import { SessionFeed } from '@/components/coach/SessionFeed';
 import { useOrganization } from '@/hooks/useOrganization';
 import { CollaborativeWorkspace } from '@/components/coach/CollaborativeWorkspace';
 import { CoachScheduleDialog } from '@/components/coach/CoachScheduleDialog';
+import { ScheduledSessionsManager } from '@/components/coach/ScheduledSessionsManager';
 import { 
   Command,
   CommandEmpty,
@@ -552,6 +553,9 @@ export default function CoachDashboard() {
             <SessionFeed linkedPlayerIds={linkedIds} playerNames={nameMap} />
           ) : null;
         })()}
+
+        {/* Scheduled Sessions Management */}
+        <ScheduledSessionsManager />
 
         {/* Collaborative Workspace */}
         <CollaborativeWorkspace />
