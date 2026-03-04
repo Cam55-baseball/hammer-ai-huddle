@@ -201,6 +201,37 @@ export function useScheduledPracticeSessions() {
     }
   }, [user, toast]);
 
+  const fetchCoachSessions = useCallback(async (): Promise<ScheduledPracticeSession[]> => {
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('scheduled_practice_sessions' as any)
+      .select('*')
+      .eq('created_by', user.id)
+      .order('scheduled_date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching coach sessions:', error);
+      return [];
+    }
+    return (data || []) as unknown as ScheduledPracticeSession[];
+  }, [user]);
+
+  const updateSession = useCallback(async (id: string, updates: Partial<Pick<ScheduledPracticeSession, 'scheduled_date' | 'start_time' | 'end_time' | 'description' | 'recurring_active' | 'recurring_days'>>) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('scheduled_practice_sessions' as any)
+      .update(updates as any)
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: 'Error updating session', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Session updated' });
+    }
+  }, [user, toast]);
+
   return {
     loading,
     fetchForDate,
@@ -209,5 +240,7 @@ export function useScheduledPracticeSessions() {
     createBulkSessions,
     updateStatus,
     deleteSession,
+    fetchCoachSessions,
+    updateSession,
   };
 }
