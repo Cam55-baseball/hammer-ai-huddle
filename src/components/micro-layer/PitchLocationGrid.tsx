@@ -42,6 +42,9 @@ export function PitchLocationGrid({ value, onSelect, batterSide = 'R', sport = '
         </label>
         <span className="text-[10px] text-muted-foreground">{sport === 'softball' ? 'Softball Zone' : '5×5'}</span>
       </div>
+      <p className="text-[10px] text-muted-foreground text-center mt-1.5 font-medium tracking-wide">
+        👁️ Catcher's View — looking toward pitcher
+      </p>
       <TooltipProvider delayDuration={200}>
         <div className="grid grid-cols-5 gap-0.5 w-fit">
           {Array.from({ length: 5 }, (_, row) =>
@@ -79,10 +82,6 @@ export function PitchLocationGrid({ value, onSelect, batterSide = 'R', sport = '
         </div>
       </TooltipProvider>
 
-      {/* Viewpoint label */}
-      <p className="text-[10px] text-muted-foreground text-center mt-1.5 font-medium tracking-wide">
-        👁️ Catcher's View — looking toward pitcher
-      </p>
     </div>
   );
 }
