@@ -1,42 +1,47 @@
 
 
-# Add Player Scheduled Sessions Management + Schedule from Game Plan & Calendar
+# Contextual Session Configuration Fields for Practice Hub Scheduling
 
 ## Overview
 
-Three additions: (1) A player-facing "My Scheduled Sessions" management component, (2) a Schedule button on the Game Plan header, and (3) a Schedule button on the Calendar header.
+Add dynamic configuration fields to `SchedulePracticeDialog` that appear based on session type: Coach selector for Lessons, Team/Org field for Team Sessions, and Opponent + Team fields for Games.
 
-## 1. New Component: `src/components/practice/PlayerScheduledSessions.tsx`
+## Database Migration
 
-Adapted from the coach `ScheduledSessionsManager` but scoped to the player's own sessions (`user_id = auth.uid()`). Features:
-- Collapsible card section showing upcoming sessions (filterable to "Upcoming" / "All")
-- Each row: Title, Date, Time, Status badge, Edit and Cancel action buttons
-- Edit dialog: modify date, times, description, recurring settings
-- Cancel: confirmation alert then sets status to `cancelled`
+Add three new nullable columns to `scheduled_practice_sessions`:
 
-## 2. Hook Update: `useScheduledPracticeSessions.ts`
+```sql
+ALTER TABLE public.scheduled_practice_sessions
+  ADD COLUMN opponent_name text,
+  ADD COLUMN opponent_level text,
+  ADD COLUMN team_name text;
+```
 
-Add `fetchPlayerSessions()` — fetches sessions where `user_id = auth.uid()`, ordered by `scheduled_date` ascending (upcoming first). This is distinct from `fetchCoachSessions` which uses `created_by`.
+No RLS changes needed — existing policies cover these columns automatically.
 
-## 3. Game Plan Integration: `src/components/GamePlanCard.tsx`
+## Component Changes: `src/components/practice/SchedulePracticeDialog.tsx`
 
-Add the `SchedulePracticeDialog` import and render it in the action buttons row (line ~1277), alongside existing sort/lock buttons. This gives players quick access to schedule a practice session directly from the Game Plan.
+Add state variables and conditionally render fields after the Session Type selector:
 
-## 4. Calendar Integration: `src/components/calendar/CalendarView.tsx`
+- **When `sessionType === 'lesson'`**: Render the existing `CoachSelector` component. Store selection as `coach_id` (linked coach) or in `description` (external coach name).
 
-Add the `SchedulePracticeDialog` next to the existing "Add Event" button (line ~208). When a session is scheduled, call `refetch()` to refresh calendar events.
+- **When `sessionType === 'team_session'`**: Show a "Team / Organization" input. If `usePlayerOrganization` returns an org, auto-populate with org name and store `organization_id`. If not, show a free-text input stored in `team_name`.
 
-## 5. Practice Hub Integration: `src/pages/PracticeHub.tsx`
+- **When `sessionType === 'game'`**: Show `GameSessionFields` (opponent name + level) plus a "Team You Are Playing For" field. Auto-populate team from org if linked, otherwise free-text. Store in `opponent_name`, `opponent_level`, `team_name`, and `organization_id`.
 
-Add the `PlayerScheduledSessions` component below the header area, giving players visibility into their upcoming scheduled sessions right where they do their practice work.
+New state: `coachSelection`, `opponentName`, `opponentLevel`, `teamName`. Import `CoachSelector`, `GameSessionFields`, `usePlayerOrganization`.
 
-## Files to Create/Modify
+Update `handleSubmit` to pass these fields through to `createSession`.
+
+## Hook Update: `useScheduledPracticeSessions.ts`
+
+Extend `CreateScheduledSession` interface with optional `opponent_name`, `opponent_level`, `team_name` fields. Pass them through in the `createSession` insert call.
+
+## Files to Modify
 
 | File | Action |
 |------|--------|
-| `src/components/practice/PlayerScheduledSessions.tsx` | **Create** — Player session management view |
-| `src/hooks/useScheduledPracticeSessions.ts` | **Modify** — Add `fetchPlayerSessions` |
-| `src/components/GamePlanCard.tsx` | **Modify** — Add SchedulePracticeDialog button |
-| `src/components/calendar/CalendarView.tsx` | **Modify** — Add SchedulePracticeDialog button |
-| `src/pages/PracticeHub.tsx` | **Modify** — Add PlayerScheduledSessions component |
+| Database migration | Add `opponent_name`, `opponent_level`, `team_name` columns |
+| `src/components/practice/SchedulePracticeDialog.tsx` | Add conditional fields for lesson/team/game |
+| `src/hooks/useScheduledPracticeSessions.ts` | Extend interface and insert logic |
 
