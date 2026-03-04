@@ -30,7 +30,8 @@ export interface ScoredRep {
   // Session-level (inherited)
   session_distance_ft?: number;
   session_velocity_band?: string;
-  session_rep_source?: string;
+   session_rep_source?: string;
+   custom_rep_source?: string;
   environment?: string;
   // Per-rep overrides
   override_distance_ft?: number;
@@ -247,6 +248,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       session_distance_ft: sessionConfig?.pitch_distance_ft,
       session_velocity_band: sessionConfig?.velocity_band,
       session_rep_source: sessionConfig?.rep_source,
+      custom_rep_source: sessionConfig?.custom_rep_source,
       environment: sessionConfig?.environment,
       ...(isHitting && { batter_side: effectiveBatterSide }),
       ...(isPitching && { pitcher_hand: handedness }),
