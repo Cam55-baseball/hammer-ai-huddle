@@ -882,7 +882,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               <PitchLocationGrid
                 value={current.pitch_location}
                 onSelect={v => updateField('pitch_location', v)}
-                batterSide={handedness}
+                batterSide={(current.batter_side as 'L' | 'R') || 'R'}
                 sport={sport as 'baseball' | 'softball'}
               />
 
