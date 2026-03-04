@@ -11,6 +11,7 @@ import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSo
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
 import { GameSessionFields } from './GameSessionFields';
+import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
@@ -28,9 +29,9 @@ export interface SessionConfig {
   coach_selection: CoachSelection;
   coach_session_type?: 'solo' | 'coached' | 'lesson';
   league_level?: string;
-  target_reps?: number;
   opponent_name?: string;
   opponent_level?: string;
+  fielding_position?: string;
 }
 
 interface SessionConfigPanelProps {
@@ -62,6 +63,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isBaserunning = module === 'baserunning';
+  const isFielding = module === 'fielding';
 
   const isGame = sessionType === 'game';
   const isLiveAbs = sessionType === 'live_abs';
@@ -80,9 +82,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   );
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [leagueLevel, setLeagueLevel] = useState<string | undefined>();
-  const [targetReps, setTargetReps] = useState<number>(10);
   const [opponentName, setOpponentName] = useState('');
   const [opponentLevel, setOpponentLevel] = useState('');
+  const [fieldingPosition, setFieldingPosition] = useState<string | undefined>();
 
   // Auto-derived values
   const environment = deriveEnvironment(sessionType);
@@ -167,9 +169,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       coach_selection: coachSelection,
       coach_session_type: coachSessionType,
       league_level: leagueLevel,
-      target_reps: isBaserunning ? targetReps : undefined,
       opponent_name: isGame ? opponentName : undefined,
       opponent_level: isGame ? opponentLevel : undefined,
+      fielding_position: isFielding ? fieldingPosition : undefined,
     });
   };
 
@@ -198,7 +200,16 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           />
         )}
 
-        {/* Pitch Distance — only for hitting/pitching, hidden for tee/soft toss and game */}
+        {/* Fielding position — required for fielding sessions */}
+        {isFielding && (
+          <FieldingPositionSelector
+            value={fieldingPosition}
+            onChange={setFieldingPosition}
+            label="Session Position"
+            required
+          />
+        )}
+
         {showPitchDistance && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">
@@ -307,31 +318,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           </div>
         )}
 
-        {/* Target Reps — baserunning only */}
-        {isBaserunning && (
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">
-              Target Reps: <span className="font-semibold text-foreground">{targetReps}</span>
-            </Label>
-            <div className="flex items-center gap-2">
-              {[5, 10, 15, 20, 25, 30].map(n => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setTargetReps(n)}
-                  className={cn(
-                    'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
-                    targetReps === n
-                      ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                      : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                  )}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Coach - only when relevant */}
         {showCoachSelector && (
