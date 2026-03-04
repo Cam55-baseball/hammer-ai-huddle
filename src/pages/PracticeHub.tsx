@@ -50,7 +50,7 @@ export default function PracticeHub() {
   const [notes, setNotes] = useState('');
   const [opponentName, setOpponentName] = useState('');
   const [opponentLevel, setOpponentLevel] = useState('');
-  const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3, sleep: 3 });
+  const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3 });
 
   // Rep-based scoring
   const [reps, setReps] = useState<ScoredRep[]>([]);
@@ -70,7 +70,7 @@ export default function PracticeHub() {
     setNotes('');
     setOpponentName('');
     setOpponentLevel('');
-    setFeelings({ body: 3, mind: 3, sleep: 3 });
+    setFeelings({ body: 3, mind: 3 });
     setSessionConfig(null);
   };
 
@@ -181,7 +181,7 @@ export default function PracticeHub() {
         fatigue_state: {
           body: feelings.body,
           mind: feelings.mind,
-          sleep: feelings.sleep,
+          
           note: feelings.note,
           coach_type: sessionConfig.coach_selection.type,
           coach_session_type: sessionConfig.coach_session_type,
@@ -271,19 +271,6 @@ export default function PracticeHub() {
                     </Button>
                     <h2 className="text-lg font-semibold capitalize">{sessionType.replace(/_/g, ' ')}</h2>
                   </div>
-
-                  {isGameType && (
-                    <Card>
-                      <CardContent className="pt-4">
-                        <GameSessionFields
-                          opponentName={opponentName}
-                          opponentLevel={opponentLevel}
-                          onNameChange={setOpponentName}
-                          onLevelChange={setOpponentLevel}
-                        />
-                      </CardContent>
-                    </Card>
-                  )}
 
                   <SessionConfigPanel
                     module={activeModule}

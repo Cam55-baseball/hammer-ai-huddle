@@ -148,7 +148,7 @@ export const HIDES_PITCH_DISTANCE = ['tee', 'soft_toss'];
 // ── Session-type → valid source filtering ──────────────────────────
 
 const VALID_HITTING_SOURCES: Record<string, string[]> = {
-  solo_work: ['tee', 'soft_toss', 'machine_bp'],
+  solo_work: ['tee', 'soft_toss', 'machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
   team_session: ['machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
   lesson: ['tee', 'soft_toss', 'front_toss', 'flip', 'coach_pitch', 'machine_bp'],
   game: ['game'],
