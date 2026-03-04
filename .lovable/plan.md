@@ -1,31 +1,31 @@
 
 
-# Fix: Make Shared Activities Viewable in Collaborative Workspace
+# Hitting Session & Practice Hub Fixes
 
-## Problem
-There are two issues preventing the coach from viewing shared activities:
+## Changes
 
-1. **Notifications only show when unread** -- the "New Shares" section filters to `!n.is_read`, so once marked as read (or if the coach scrolls past), the shared activity disappears entirely with no way to access it again.
+### 1. Expand Solo Work hitting sources (`RepSourceSelector.tsx`)
+The `VALID_HITTING_SOURCES.solo_work` array currently only allows `['tee', 'soft_toss', 'machine_bp']`. Update to include all thrown and live sources:
+```
+solo_work: ['tee', 'soft_toss', 'machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp']
+```
 
-2. **The "Roll Out" activity was likely shared before the `template_snapshot` column was added** -- meaning it has `null` for `template_snapshot`, and the click handler does nothing when that's null.
+### 2. Restore pitch location for Tee reps (`RepScorer.tsx`)
+Currently lines 613-633 show an either/or: Tee shows `TeeDepthGrid` only, non-Tee shows `PitchLocationGrid`. Fix: when rep source is Tee, show **both** the `TeeDepthGrid` AND the `PitchLocationGrid` (the 5×5 grid) so users can log pitch location alongside tee depth.
 
-The main shared cards list (`filteredCards`) only shows `activity_folder_items` from folders. Standalone custom activities shared via "Send to Coach" are only stored as notifications and never appear in that list.
+### 3. Remove sleep question from readiness (`FeelingsPrompt.tsx`)
+- Remove the entire `ReadinessRow` block for "How did you sleep last night?" (lines 97-102)
+- Remove `sleepOptions` array (lines 33-39)
+- Remove `sleep` from the `FeelingState` interface
+- Update all references to `FeelingState.sleep` (initialization in `PracticeHub.tsx` where `feelings` state is created with `sleep: 3`)
 
-## Solution
-
-### 1. Show ALL shared notifications (read + unread) as a dedicated section
-Replace the unread-only filter with a full "Shared Activities" section that shows all notifications with `template_snapshot`. Unread ones get highlighted styling, but read ones remain visible and clickable.
-
-### 2. `CollaborativeWorkspace.tsx` changes
-- Remove the `!n.is_read` filter from the notification rendering section
-- Show all notifications that have a `template_snapshot` as clickable items in a persistent "Shared Activities" section (below "New Shares" for unread ones without snapshots)
-- Keep unread styling (highlight border) but always render the item
-- Add an eye icon and click handler for all notifications with snapshots
-
-### 3. Handle legacy notifications without snapshots
-For the "Roll Out" notification that was created before `template_snapshot` existed, add a fallback: when a notification is clicked and has no snapshot, show a toast explaining the activity data isn't available and suggest the player re-share it.
+### 4. Remove duplicate opponent fields in Game sessions (`PracticeHub.tsx`)
+Lines 275-286 render `GameSessionFields` in Step 3 (Configure Session) **before** `SessionConfigPanel` — but `SessionConfigPanel` also renders its own `GameSessionFields` at line 192-198. Remove the outer one in `PracticeHub.tsx` (lines 275-286) to eliminate the duplication.
 
 | File | Change |
 |------|--------|
-| `src/components/coach/CollaborativeWorkspace.tsx` | Show all notifications (not just unread) as clickable items; add fallback for missing snapshots |
+| `src/components/practice/RepSourceSelector.tsx` | Add thrown + live sources to `solo_work` |
+| `src/components/practice/RepScorer.tsx` | Show PitchLocationGrid alongside TeeDepthGrid for Tee |
+| `src/components/practice/FeelingsPrompt.tsx` | Remove sleep question + `sleep` from interface |
+| `src/pages/PracticeHub.tsx` | Remove duplicate GameSessionFields, update FeelingState init |
 
