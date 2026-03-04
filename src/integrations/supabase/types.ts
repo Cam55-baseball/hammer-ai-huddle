@@ -3171,6 +3171,83 @@ export type Database = {
           },
         ]
       }
+      scheduled_practice_sessions: {
+        Row: {
+          assignment_scope: string | null
+          coach_id: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          end_time: string | null
+          id: string
+          organization_id: string | null
+          recurring_active: boolean | null
+          recurring_days: number[] | null
+          scheduled_date: string
+          session_module: string
+          session_type: string
+          sport: string
+          start_time: string | null
+          status: string | null
+          team_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assignment_scope?: string | null
+          coach_id?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          organization_id?: string | null
+          recurring_active?: boolean | null
+          recurring_days?: number[] | null
+          scheduled_date: string
+          session_module: string
+          session_type: string
+          sport?: string
+          start_time?: string | null
+          status?: string | null
+          team_id?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assignment_scope?: string | null
+          coach_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          organization_id?: string | null
+          recurring_active?: boolean | null
+          recurring_days?: number[] | null
+          scheduled_date?: string
+          session_module?: string
+          session_type?: string
+          sport?: string
+          start_time?: string | null
+          status?: string | null
+          team_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_practice_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scout_applications: {
         Row: {
           applying_as: string | null
