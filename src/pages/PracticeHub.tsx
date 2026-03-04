@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,8 @@ import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
 import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader';
 import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
+import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
+import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
 import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -42,11 +45,15 @@ export default function PracticeHub() {
   const { createSession, saving } = usePerformanceSession();
   const { toast } = useToast();
 
-  const [activeModule, setActiveModule] = useState('hitting');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { updateStatus } = useScheduledPracticeSessions();
+
+  const [activeModule, setActiveModule] = useState(searchParams.get('module') || 'hitting');
   const { getHandedness } = useSessionDefaults(activeModule);
   const currentHandedness = useMemo(() => getHandedness(), [activeModule, getHandedness]);
   const [step, setStep] = useState<FlowStep>('select_type');
   const [sessionType, setSessionType] = useState<string | null>(null);
+  const [scheduledId, setScheduledId] = useState<string | null>(searchParams.get('scheduled') || null);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [notes, setNotes] = useState('');
   const [opponentName, setOpponentName] = useState('');
@@ -59,6 +66,19 @@ export default function PracticeHub() {
   const [atBats, setAtBats] = useState<AtBat[]>([]);
   // Post-session summary
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
+
+  // Deep-link: auto-start from URL params
+  useEffect(() => {
+    const urlType = searchParams.get('type');
+    const urlModule = searchParams.get('module');
+    if (urlModule && urlType && step === 'select_type') {
+      setActiveModule(urlModule);
+      handleSelectType(urlType);
+      // Clear params to avoid re-triggering
+      setSearchParams({}, { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isGameType = sessionType === 'game' || sessionType === 'live_abs';
   const isGameScorecardModule = ['hitting', 'pitching', 'fielding'].includes(activeModule);
@@ -106,6 +126,7 @@ export default function PracticeHub() {
     setAtBats([]);
     setNotes('');
     setSavedSessionId(null);
+    setScheduledId(null);
   };
 
   // Convert reps/atBats into drill blocks for the backend
@@ -198,6 +219,10 @@ export default function PracticeHub() {
       // Transition to summary instead of resetting
       setSavedSessionId(result.id);
       setStep('session_summary');
+      // Mark scheduled session as completed
+      if (scheduledId) {
+        await updateStatus(scheduledId, 'completed');
+      }
     } catch {
       // Error toast handled by hook
     }
@@ -206,9 +231,12 @@ export default function PracticeHub() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Practice Intelligence</h1>
-          <p className="text-muted-foreground">Log sessions, track progress, and build your MPI score</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Practice Intelligence</h1>
+            <p className="text-muted-foreground">Log sessions, track progress, and build your MPI score</p>
+          </div>
+          <SchedulePracticeDialog defaultModule={activeModule} />
         </div>
 
         <Tabs value={activeModule} onValueChange={(val) => { if (step === 'select_type') setActiveModule(val); }} className="space-y-4">

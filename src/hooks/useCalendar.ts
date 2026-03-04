@@ -48,7 +48,7 @@ export interface CalendarEvent {
   startTime?: string | null;
   endTime?: string | null;
   allDay?: boolean;
-  type: 'game_plan' | 'custom_activity' | 'athlete_event' | 'program' | 'meal' | 'manual';
+  type: 'game_plan' | 'custom_activity' | 'athlete_event' | 'program' | 'meal' | 'manual' | 'scheduled_practice';
   source: string;
   color?: string;
   icon?: LucideIcon;
@@ -221,6 +221,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         subModuleProgressRes,
         mealPlansRes,
         dayOrdersRes,
+        scheduledPracticeRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
@@ -281,6 +282,12 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr) as any),
+        
+        // Scheduled practice sessions
+        (supabase
+          .from('scheduled_practice_sessions' as any)
+          .select('*')
+          .neq('status', 'cancelled') as any),
       ]);
 
       // Build date-specific order map
@@ -653,6 +660,54 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           };
           calEvent.orderKey = getOrderKey(calEvent);
           aggregatedEvents[dateKey].push(calEvent);
+        });
+      }
+
+      // Process scheduled practice sessions
+      if (scheduledPracticeRes?.data) {
+        const PRACTICE_MODULE_ICONS: Record<string, LucideIcon> = {
+          hitting: Target,
+          pitching: Flame,
+          throwing: Zap,
+          fielding: Activity,
+          catching: Activity,
+          baserunning: Zap,
+          mental: Brain,
+        };
+
+        (scheduledPracticeRes.data as any[]).forEach(session => {
+          // For each day in range, check if this session applies
+          daysInRange.forEach(day => {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const dayOfWeek = getDay(day);
+            
+            let applies = false;
+            if (session.scheduled_date === dateKey) applies = true;
+            if (session.recurring_active && session.recurring_days?.includes(dayOfWeek) && session.scheduled_date <= dateKey) applies = true;
+            
+            if (!applies) return;
+            if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
+
+            const calEvent: CalendarEvent = {
+              id: `ps-${session.id}-${dateKey}`,
+              date: dateKey,
+              title: session.title,
+              description: session.description || undefined,
+              startTime: session.start_time,
+              endTime: session.end_time,
+              type: 'scheduled_practice',
+              source: session.id,
+              color: '#14b8a6', // teal
+              icon: PRACTICE_MODULE_ICONS[session.session_module] || Target,
+              completed: session.status === 'completed' && session.scheduled_date === dateKey,
+              link: `/practice?module=${session.session_module}&type=${session.session_type}&scheduled=${session.id}`,
+              editable: false,
+              deletable: true,
+              sport: session.sport,
+            };
+            calEvent.orderKey = `ps:${session.id}`;
+            aggregatedEvents[dateKey].push(calEvent);
+          });
         });
       }
 

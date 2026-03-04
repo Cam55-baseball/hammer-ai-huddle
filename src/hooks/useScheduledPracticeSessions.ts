@@ -1,0 +1,170 @@
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+
+export interface ScheduledPracticeSession {
+  id: string;
+  user_id: string;
+  created_by: string;
+  session_module: string;
+  session_type: string;
+  title: string;
+  description?: string;
+  scheduled_date: string;
+  start_time?: string;
+  end_time?: string;
+  recurring_active: boolean;
+  recurring_days: number[];
+  sport: string;
+  organization_id?: string;
+  team_id?: string;
+  assignment_scope: string;
+  coach_id?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateScheduledSession {
+  session_module: string;
+  session_type: string;
+  title: string;
+  description?: string;
+  scheduled_date: string;
+  start_time?: string;
+  end_time?: string;
+  recurring_active?: boolean;
+  recurring_days?: number[];
+  sport: string;
+  // Coach fields
+  user_id?: string; // target player (defaults to self)
+  organization_id?: string;
+  team_id?: string;
+  assignment_scope?: string;
+  coach_id?: string;
+}
+
+export function useScheduledPracticeSessions() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const fetchForDateRange = useCallback(async (startDate: string, endDate: string): Promise<ScheduledPracticeSession[]> => {
+    if (!user) return [];
+    
+    const { data, error } = await supabase
+      .from('scheduled_practice_sessions' as any)
+      .select('*')
+      .gte('scheduled_date', startDate)
+      .lte('scheduled_date', endDate)
+      .neq('status', 'cancelled');
+
+    if (error) {
+      console.error('Error fetching scheduled sessions:', error);
+      return [];
+    }
+    return (data || []) as unknown as ScheduledPracticeSession[];
+  }, [user]);
+
+  const fetchForDate = useCallback(async (date: string): Promise<ScheduledPracticeSession[]> => {
+    if (!user) return [];
+
+    // Fetch exact date matches + recurring sessions
+    const { data, error } = await supabase
+      .from('scheduled_practice_sessions' as any)
+      .select('*')
+      .neq('status', 'cancelled');
+
+    if (error) {
+      console.error('Error fetching scheduled sessions:', error);
+      return [];
+    }
+
+    const all = (data || []) as unknown as ScheduledPracticeSession[];
+    const dayOfWeek = new Date(date + 'T12:00:00').getDay();
+
+    return all.filter(s => {
+      if (s.scheduled_date === date) return true;
+      if (s.recurring_active && s.recurring_days?.includes(dayOfWeek)) {
+        // Only include if scheduled_date <= date (recurring started before or on this date)
+        return s.scheduled_date <= date;
+      }
+      return false;
+    });
+  }, [user]);
+
+  const createSession = useCallback(async (input: CreateScheduledSession): Promise<ScheduledPracticeSession | null> => {
+    if (!user) return null;
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('scheduled_practice_sessions' as any)
+        .insert({
+          user_id: input.user_id || user.id,
+          created_by: user.id,
+          session_module: input.session_module,
+          session_type: input.session_type,
+          title: input.title,
+          description: input.description || null,
+          scheduled_date: input.scheduled_date,
+          start_time: input.start_time || null,
+          end_time: input.end_time || null,
+          recurring_active: input.recurring_active || false,
+          recurring_days: input.recurring_days || [],
+          sport: input.sport,
+          organization_id: input.organization_id || null,
+          team_id: input.team_id || null,
+          assignment_scope: input.assignment_scope || 'individual',
+          coach_id: input.coach_id || null,
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      toast({ title: 'Session scheduled', description: input.title });
+      return data as unknown as ScheduledPracticeSession;
+    } catch (error: any) {
+      toast({ title: 'Error scheduling session', description: error.message, variant: 'destructive' });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, toast]);
+
+  const updateStatus = useCallback(async (id: string, status: 'scheduled' | 'completed' | 'cancelled') => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('scheduled_practice_sessions' as any)
+      .update({ status } as any)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating scheduled session status:', error);
+    }
+  }, [user]);
+
+  const deleteSession = useCallback(async (id: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('scheduled_practice_sessions' as any)
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: 'Error deleting session', description: error.message, variant: 'destructive' });
+    }
+  }, [user, toast]);
+
+  return {
+    loading,
+    fetchForDate,
+    fetchForDateRange,
+    createSession,
+    updateStatus,
+    deleteSession,
+  };
+}

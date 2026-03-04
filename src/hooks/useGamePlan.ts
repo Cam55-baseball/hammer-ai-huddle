@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target, Eye, Heart, Zap, Trophy, Timer, Utensils, Coffee, Salad, Bike, Users, Clipboard, Pencil } from 'lucide-react';
+import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target, Eye, Heart, Zap, Trophy, Timer, Utensils, Coffee, Salad, Bike, Users, Clipboard, Pencil, Shield, Wind } from 'lucide-react';
 import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
@@ -55,8 +55,8 @@ export interface GamePlanTask {
   icon: LucideIcon;
   link: string;
   module?: 'hitting' | 'pitching' | 'throwing';
-  taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking' | 'mental-fuel' | 'custom';
-  section: 'checkin' | 'training' | 'tracking' | 'custom';
+  taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking' | 'mental-fuel' | 'custom' | 'practice';
+  section: 'checkin' | 'training' | 'tracking' | 'custom' | 'practice';
   badge?: string;
   specialStyle?: 'mental-fuel-plus' | 'tex-vision' | 'custom';
   customActivityData?: CustomActivityWithLog;
@@ -68,6 +68,11 @@ export interface GamePlanTask {
     itemId: string;
     placement: string;
     isOwner: boolean;
+  };
+  scheduledSessionData?: {
+    id: string;
+    startTime?: string;
+    endTime?: string;
   };
 }
 
@@ -96,6 +101,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [isStrengthDay, setIsStrengthDay] = useState(false);
   const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
   const [folderTasks, setFolderTasks] = useState<FolderGamePlanTask[]>([]);
+  const [scheduledSessions, setScheduledSessions] = useState<any[]>([]);
 
   const [activeProgramStatuses, setActiveProgramStatuses] = useState<Record<string, string>>({});
 
@@ -669,6 +675,24 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         setFolderTasks(builtFolderTasks);
       } else {
         setFolderTasks([]);
+      }
+
+      // === FETCH SCHEDULED PRACTICE SESSIONS FOR TODAY ===
+      const { data: scheduledData } = await supabase
+        .from('scheduled_practice_sessions' as any)
+        .select('*')
+        .neq('status', 'cancelled');
+
+      if (scheduledData) {
+        const todayScheduled = (scheduledData as any[]).filter(s => {
+          if (s.status === 'cancelled') return false;
+          if (s.scheduled_date === today) return true;
+          if (s.recurring_active && s.recurring_days?.includes(todayDayOfWeek) && s.scheduled_date <= today) return true;
+          return false;
+        });
+        setScheduledSessions(todayScheduled);
+      } else {
+        setScheduledSessions([]);
       }
 
 
@@ -1313,6 +1337,35 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         itemId: ft.item.id,
         placement: ft.placement,
         isOwner: ft.isOwner,
+      },
+    });
+  });
+
+  // Add scheduled practice sessions as tasks
+  const PRACTICE_MODULE_ICONS: Record<string, LucideIcon> = {
+    hitting: Target,
+    pitching: Flame,
+    throwing: Wind,
+    fielding: Shield,
+    catching: Shield,
+    baserunning: Zap,
+    mental: Brain,
+  };
+
+  scheduledSessions.forEach((session: any) => {
+    tasks.push({
+      id: `ps-${session.id}`,
+      titleKey: session.title,
+      descriptionKey: session.start_time ? `${session.start_time}${session.end_time ? ' – ' + session.end_time : ''}` : 'Scheduled Practice',
+      completed: session.status === 'completed',
+      icon: PRACTICE_MODULE_ICONS[session.session_module] || Target,
+      link: `/practice?module=${session.session_module}&type=${session.session_type}&scheduled=${session.id}`,
+      taskType: 'practice',
+      section: 'practice',
+      scheduledSessionData: {
+        id: session.id,
+        startTime: session.start_time,
+        endTime: session.end_time,
       },
     });
   });
