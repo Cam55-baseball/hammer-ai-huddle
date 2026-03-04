@@ -201,6 +201,22 @@ export function useScheduledPracticeSessions() {
     }
   }, [user, toast]);
 
+  const fetchPlayerSessions = useCallback(async (): Promise<ScheduledPracticeSession[]> => {
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from('scheduled_practice_sessions' as any)
+      .select('*')
+      .eq('user_id', user.id)
+      .order('scheduled_date', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching player sessions:', error);
+      return [];
+    }
+    return (data || []) as unknown as ScheduledPracticeSession[];
+  }, [user]);
+
   const fetchCoachSessions = useCallback(async (): Promise<ScheduledPracticeSession[]> => {
     if (!user) return [];
 
@@ -240,6 +256,7 @@ export function useScheduledPracticeSessions() {
     createBulkSessions,
     updateStatus,
     deleteSession,
+    fetchPlayerSessions,
     fetchCoachSessions,
     updateSession,
   };

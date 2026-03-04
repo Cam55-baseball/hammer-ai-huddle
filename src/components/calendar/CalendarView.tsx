@@ -25,6 +25,7 @@ import { useCalendar, CalendarEvent } from '@/hooks/useCalendar';
 import { CalendarDaySheet } from './CalendarDaySheet';
 import { AddCalendarEventDialog } from './AddCalendarEventDialog';
 import { PendingCoachActivitiesSection } from './PendingCoachActivitiesSection';
+import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
@@ -205,16 +206,19 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               </div>
             </div>
             
-            <Button
-              onClick={() => {
-                setAddEventDate(new Date());
-                setAddEventOpen(true);
-              }}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              {t('calendar.addEvent', 'Add Event')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <SchedulePracticeDialog />
+              <Button
+                onClick={() => {
+                  setAddEventDate(new Date());
+                  setAddEventOpen(true);
+                }}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                {t('calendar.addEvent', 'Add Event')}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
