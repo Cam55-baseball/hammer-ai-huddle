@@ -1,47 +1,31 @@
 
 
-# Contextual Session Configuration Fields for Practice Hub Scheduling
+# Add Contextual Session Fields to Coach Schedule Dialog
 
-## Overview
+## Problem
 
-Add dynamic configuration fields to `SchedulePracticeDialog` that appear based on session type: Coach selector for Lessons, Team/Org field for Team Sessions, and Opponent + Team fields for Games.
+The Coach Dashboard's `CoachScheduleDialog` supports selecting "Lesson", "Team Session", and "Game" as session types, but it doesn't show the dynamic configuration fields that were recently added to the player's `SchedulePracticeDialog` — no coach selector for lessons, no team/org auto-population for team sessions, and no opponent fields for games.
 
-## Database Migration
+## Solution
 
-Add three new nullable columns to `scheduled_practice_sessions`:
+Mirror the contextual fields from `SchedulePracticeDialog` into `CoachScheduleDialog`:
 
-```sql
-ALTER TABLE public.scheduled_practice_sessions
-  ADD COLUMN opponent_name text,
-  ADD COLUMN opponent_level text,
-  ADD COLUMN team_name text;
-```
+### Changes to `src/components/coach/CoachScheduleDialog.tsx`
 
-No RLS changes needed — existing policies cover these columns automatically.
+1. **Import** `CoachSelector`, `GameSessionFields`, and `usePlayerOrganization`
+2. **Add state**: `coachSelection`, `teamName`, `opponentName`, `opponentLevel`
+3. **Conditional rendering** after the Session Type selector:
+   - **Lesson** → `CoachSelector` (the scheduling coach can designate which coach is leading the lesson)
+   - **Team Session** → Team/Organization text input (auto-populated from org if available)
+   - **Game** → `GameSessionFields` (opponent name + level) + Team field
+4. **Auto-populate** team name from `activeOrg?.name` via `useEffect` when session type changes
+5. **Pass new fields** (`coach_id`, `team_name`, `opponent_name`, `opponent_level`) through to `createBulkSessions` in `handleSubmit`
 
-## Component Changes: `src/components/practice/SchedulePracticeDialog.tsx`
-
-Add state variables and conditionally render fields after the Session Type selector:
-
-- **When `sessionType === 'lesson'`**: Render the existing `CoachSelector` component. Store selection as `coach_id` (linked coach) or in `description` (external coach name).
-
-- **When `sessionType === 'team_session'`**: Show a "Team / Organization" input. If `usePlayerOrganization` returns an org, auto-populate with org name and store `organization_id`. If not, show a free-text input stored in `team_name`.
-
-- **When `sessionType === 'game'`**: Show `GameSessionFields` (opponent name + level) plus a "Team You Are Playing For" field. Auto-populate team from org if linked, otherwise free-text. Store in `opponent_name`, `opponent_level`, `team_name`, and `organization_id`.
-
-New state: `coachSelection`, `opponentName`, `opponentLevel`, `teamName`. Import `CoachSelector`, `GameSessionFields`, `usePlayerOrganization`.
-
-Update `handleSubmit` to pass these fields through to `createSession`.
-
-## Hook Update: `useScheduledPracticeSessions.ts`
-
-Extend `CreateScheduledSession` interface with optional `opponent_name`, `opponent_level`, `team_name` fields. Pass them through in the `createSession` insert call.
-
-## Files to Modify
+### Files to Modify
 
 | File | Action |
 |------|--------|
-| Database migration | Add `opponent_name`, `opponent_level`, `team_name` columns |
-| `src/components/practice/SchedulePracticeDialog.tsx` | Add conditional fields for lesson/team/game |
-| `src/hooks/useScheduledPracticeSessions.ts` | Extend interface and insert logic |
+| `src/components/coach/CoachScheduleDialog.tsx` | Add contextual fields matching player dialog |
+
+No database or hook changes needed — the columns and interface fields already exist from the previous migration.
 
