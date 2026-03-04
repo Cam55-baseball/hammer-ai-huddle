@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,9 @@ import { Switch } from '@/components/ui/switch';
 import { CalendarIcon, Plus } from 'lucide-react';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
+import { CoachSelector, CoachSelection } from '@/components/practice/CoachSelector';
+import { GameSessionFields } from '@/components/practice/GameSessionFields';
 import { cn } from '@/lib/utils';
 
 const MODULES = [
@@ -38,6 +41,7 @@ interface SchedulePracticeDialogProps {
 export function SchedulePracticeDialog({ defaultModule, onScheduled }: SchedulePracticeDialogProps) {
   const { sport } = useSportTheme();
   const { createSession, loading } = useScheduledPracticeSessions();
+  const { organizationId, orgName } = usePlayerOrganization();
   const [open, setOpen] = useState(false);
 
   const [module, setModule] = useState(defaultModule || 'hitting');
@@ -50,6 +54,19 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
   const [endTime, setEndTime] = useState('17:00');
   const [recurring, setRecurring] = useState(false);
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
+
+  // Contextual fields
+  const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
+  const [teamName, setTeamName] = useState('');
+  const [opponentName, setOpponentName] = useState('');
+  const [opponentLevel, setOpponentLevel] = useState('');
+
+  // Auto-populate team name from org when session type changes
+  useEffect(() => {
+    if ((sessionType === 'team_session' || sessionType === 'game') && orgName) {
+      setTeamName(orgName);
+    }
+  }, [sessionType, orgName]);
 
   const generateTitle = () => {
     const modLabel = MODULES.find(m => m.value === module)?.label || module;
@@ -64,16 +81,28 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
   };
 
   const handleSubmit = async () => {
+    // Build description for external coach
+    let description: string | undefined;
+    if (sessionType === 'lesson' && coachSelection.type === 'external' && coachSelection.external_name) {
+      description = `Coach: ${coachSelection.external_name}`;
+    }
+
     const result = await createSession({
       session_module: module,
       session_type: sessionType,
       title: generateTitle(),
+      description,
       scheduled_date: date,
       start_time: startTime || undefined,
       end_time: endTime || undefined,
       recurring_active: recurring,
       recurring_days: recurring ? recurringDays : [],
       sport: sport || 'baseball',
+      coach_id: sessionType === 'lesson' && coachSelection.type === 'assigned' ? coachSelection.coach_id : undefined,
+      organization_id: (sessionType === 'team_session' || sessionType === 'game') && organizationId ? organizationId : undefined,
+      team_name: (sessionType === 'team_session' || sessionType === 'game') ? teamName || undefined : undefined,
+      opponent_name: sessionType === 'game' ? opponentName || undefined : undefined,
+      opponent_level: sessionType === 'game' ? opponentLevel || undefined : undefined,
     });
 
     if (result) {
@@ -90,7 +119,7 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
           Schedule
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Schedule Practice Session</DialogTitle>
         </DialogHeader>
@@ -121,6 +150,49 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
               </SelectContent>
             </Select>
           </div>
+
+          {/* Conditional: Lesson → Coach Selector */}
+          {sessionType === 'lesson' && (
+            <CoachSelector value={coachSelection} onChange={setCoachSelection} />
+          )}
+
+          {/* Conditional: Team Session → Team/Org field */}
+          {sessionType === 'team_session' && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Team / Organization</Label>
+              <Input
+                placeholder={organizationId ? orgName : 'Enter your team name'}
+                value={teamName}
+                onChange={e => setTeamName(e.target.value)}
+              />
+              {organizationId && (
+                <p className="text-[10px] text-muted-foreground">Auto-populated from your organization</p>
+              )}
+            </div>
+          )}
+
+          {/* Conditional: Game → Opponent + Team fields */}
+          {sessionType === 'game' && (
+            <>
+              <GameSessionFields
+                opponentName={opponentName}
+                opponentLevel={opponentLevel}
+                onNameChange={setOpponentName}
+                onLevelChange={setOpponentLevel}
+              />
+              <div className="space-y-1.5">
+                <Label className="text-xs">Team You Are Playing For</Label>
+                <Input
+                  placeholder={organizationId ? orgName : 'Enter your team name'}
+                  value={teamName}
+                  onChange={e => setTeamName(e.target.value)}
+                />
+                {organizationId && (
+                  <p className="text-[10px] text-muted-foreground">Auto-populated from your organization</p>
+                )}
+              </div>
+            </>
+          )}
 
           {/* Date */}
           <div className="space-y-1.5">

@@ -43,6 +43,10 @@ export interface CreateScheduledSession {
   team_id?: string;
   assignment_scope?: string;
   coach_id?: string;
+  // Contextual fields
+  opponent_name?: string;
+  opponent_level?: string;
+  team_name?: string;
 }
 
 export function useScheduledPracticeSessions() {
@@ -118,6 +122,9 @@ export function useScheduledPracticeSessions() {
           team_id: input.team_id || null,
           assignment_scope: input.assignment_scope || 'individual',
           coach_id: input.coach_id || null,
+          opponent_name: input.opponent_name || null,
+          opponent_level: input.opponent_level || null,
+          team_name: input.team_name || null,
         } as any)
         .select()
         .single();
