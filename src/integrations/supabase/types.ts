@@ -3429,6 +3429,50 @@ export type Database = {
           },
         ]
       }
+      session_videos: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          filename: string | null
+          id: string
+          metadata: Json | null
+          session_id: string
+          storage_path: string
+          tagged_rep_indexes: number[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          filename?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id: string
+          storage_path: string
+          tagged_rep_indexes?: number[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          filename?: string | null
+          id?: string
+          metadata?: Json | null
+          session_id?: string
+          storage_path?: string
+          tagged_rep_indexes?: number[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_videos_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_activity_templates: {
         Row: {
           created_at: string | null

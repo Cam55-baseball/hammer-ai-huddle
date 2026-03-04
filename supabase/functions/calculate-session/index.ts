@@ -10,9 +10,13 @@ const corsHeaders = {
 const VELOCITY_BAND_REGEX = /^(\d+-\d+|\d+\+|<\d+)$/;
 const VALID_SWING_INTENTS = ['mechanical', 'game_intent', 'situational', 'hr_derby'];
 const VALID_BATTED_BALL_TYPES = ['ground', 'line', 'fly', 'barrel'];
-const VALID_SPIN_DIRECTIONS = ['topspin', 'backspin', 'sidespin'];
+const VALID_SPIN_DIRECTIONS = ['topspin', 'backspin', 'sidespin', 'knuckle', 'backspin_tail'];
 const VALID_THROW_SPIN_QUALITIES = ['carry', 'tail', 'cut', 'neutral'];
 const VALID_EXCHANGE_TIME_BANDS = ['fast', 'average', 'slow'];
+const VALID_ROUTE_EFFICIENCY = ['routine', 'plus', 'elite'];
+const VALID_PLAY_PROBABILITY = ['routine', 'plus', 'elite'];
+const VALID_RECEIVING_QUALITY = ['poor', 'average', 'elite'];
+const VALID_CONTACT_TYPES = ['swing_miss', 'foul', 'weak_contact', 'hard_contact'];
 
 function validateMicroRep(rep: any): any {
   const cleaned = { ...rep };
@@ -23,6 +27,10 @@ function validateMicroRep(rep: any): any {
   if (cleaned.velocity_band && !VELOCITY_BAND_REGEX.test(cleaned.velocity_band)) delete cleaned.velocity_band;
   if (cleaned.throw_spin_quality && !VALID_THROW_SPIN_QUALITIES.includes(cleaned.throw_spin_quality)) delete cleaned.throw_spin_quality;
   if (cleaned.exchange_time_band && !VALID_EXCHANGE_TIME_BANDS.includes(cleaned.exchange_time_band)) delete cleaned.exchange_time_band;
+  if (cleaned.route_efficiency && !VALID_ROUTE_EFFICIENCY.includes(cleaned.route_efficiency)) delete cleaned.route_efficiency;
+  if (cleaned.play_probability && !VALID_PLAY_PROBABILITY.includes(cleaned.play_probability)) delete cleaned.play_probability;
+  if (cleaned.receiving_quality && !VALID_RECEIVING_QUALITY.includes(cleaned.receiving_quality)) delete cleaned.receiving_quality;
+  if (cleaned.contact_type && !VALID_CONTACT_TYPES.includes(cleaned.contact_type)) delete cleaned.contact_type;
   return cleaned;
 }
 
@@ -109,7 +117,7 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   const spinDirs = microReps.filter((r: any) => r.spin_direction).map((r: any) => r.spin_direction);
   let spinDirectionMod = 0;
   if (spinDirs.length > 0) {
-    const spinMap: Record<string, number> = { backspin: 3, sidespin: 1, topspin: -2 };
+    const spinMap: Record<string, number> = { backspin: 3, sidespin: 1, topspin: -2, knuckle: 0, backspin_tail: 4 };
     spinDirectionMod = spinDirs.reduce((sum: number, sd: string) => sum + (spinMap[sd] ?? 0), 0) / spinDirs.length;
   }
 
@@ -191,6 +199,23 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   if (throwSpinMod !== 0) fqiRaw += throwSpinMod;          // Phase 2: throw_spin_quality
   if (exchangeTimeMod !== 0) fqiRaw += exchangeTimeMod;    // Phase 2: exchange_time_band
 
+  // ── Phase 3: Fielding quality modifiers ──
+  const routeEffReps = microReps.filter((r: any) => r.route_efficiency).map((r: any) => r.route_efficiency);
+  if (routeEffReps.length > 0) {
+    const reMap: Record<string, number> = { routine: 0, plus: 3, elite: 6 };
+    fqiRaw += routeEffReps.reduce((sum: number, v: string) => sum + (reMap[v] ?? 0), 0) / routeEffReps.length;
+  }
+  const playProbReps = microReps.filter((r: any) => r.play_probability).map((r: any) => r.play_probability);
+  if (playProbReps.length > 0) {
+    const ppMap: Record<string, number> = { routine: 0, plus: 3, elite: 6 };
+    fqiRaw += playProbReps.reduce((sum: number, v: string) => sum + (ppMap[v] ?? 0), 0) / playProbReps.length;
+  }
+  const recQualReps = microReps.filter((r: any) => r.receiving_quality).map((r: any) => r.receiving_quality);
+  if (recQualReps.length > 0) {
+    const rqMap: Record<string, number> = { poor: -3, average: 0, elite: 5 };
+    fqiRaw += recQualReps.reduce((sum: number, v: string) => sum + (rqMap[v] ?? 0), 0) / recQualReps.length;
+  }
+
   // ── PEI: blend with command grade + Phase 2 fields ──
   let peiRaw = normalizedScore * 1.05;
   if (avgCommandGrade !== null) peiRaw = peiRaw * 0.6 + ((avgCommandGrade - 20) / 60) * 100 * 0.4;
@@ -243,6 +268,8 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     avg_zone_pct: avgZonePct,
     avg_footwork_grade: avgFootworkGrade,
     avg_clean_field_pct: avgCleanFieldPct,
+    // Phase 3: flat_ground_vs_hitter hybrid tagging
+    evaluation_type: microReps.some((r: any) => r.rep_source === 'flat_ground_vs_hitter') ? 'hybrid' : undefined,
   };
 
   const effectiveGrade = session.coach_grade ?? session.player_grade ?? avgExecution;

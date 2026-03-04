@@ -108,7 +108,7 @@ export const ENGINE_CONTRACT = {
   // Micro-field composite influence weights
   MICRO_WEIGHTS: {
     // BQI modifiers
-    spin_direction: { topspin: -2, backspin: 3, sidespin: 1 },
+    spin_direction: { topspin: -2, backspin: 3, sidespin: 1, knuckle: 0, backspin_tail: 4 },
     whiff_pct_penalty: 0.1,
     in_zone_contact_bonus: 0.1,
     // FQI blends
@@ -122,6 +122,10 @@ export const ENGINE_CONTRACT = {
     pitch_chase_bonus: 0.05,
     // Decision modifiers
     chase_pct_penalty: 0.15,
+    // FQI fielding quality modifiers
+    route_efficiency: { routine: 0, plus: 3, elite: 6 },
+    play_probability: { routine: 0, plus: 3, elite: 6 },
+    receiving_quality: { poor: -3, average: 0, elite: 5 },
   },
 } as const;
 
