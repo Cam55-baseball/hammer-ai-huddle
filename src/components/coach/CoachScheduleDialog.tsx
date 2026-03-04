@@ -17,7 +17,7 @@ import { useScheduledPracticeSessions, CreateScheduledSession } from '@/hooks/us
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/integrations/supabase/client';
-import { CoachSelector, CoachSelection } from '@/components/practice/CoachSelector';
+
 import { GameSessionFields } from '@/components/practice/GameSessionFields';
 
 const MODULES = [
@@ -69,7 +69,6 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
   const [recurringActive, setRecurringActive] = useState(false);
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
   const [sport, setSport] = useState('baseball');
-  const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [teamName, setTeamName] = useState('');
   const [opponentName, setOpponentName] = useState('');
   const [opponentLevel, setOpponentLevel] = useState('');
@@ -115,19 +114,13 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
-    const resolvedCoachId = sessionType === 'lesson' && coachSelection.type === 'assigned'
-      ? coachSelection.coach_id
-      : user.id;
-
-    const resolvedDescription = sessionType === 'lesson' && coachSelection.type === 'external' && coachSelection.external_name
-      ? [description, `Coach: ${coachSelection.external_name}`].filter(Boolean).join(' — ')
-      : description;
+    const resolvedCoachId = user.id;
 
     const baseSession: Omit<CreateScheduledSession, 'user_id'> = {
       session_module: module,
       session_type: sessionType,
       title,
-      description: resolvedDescription || undefined,
+      description: description || undefined,
       scheduled_date: dateStr,
       start_time: startTime || undefined,
       end_time: endTime || undefined,
@@ -151,7 +144,6 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
       setDescription('');
       setRecurringActive(false);
       setRecurringDays([]);
-      setCoachSelection({ type: 'none' });
       setTeamName('');
       setOpponentName('');
       setOpponentLevel('');
@@ -196,10 +188,6 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
           </div>
 
           {/* Contextual Fields */}
-          {sessionType === 'lesson' && (
-            <CoachSelector value={coachSelection} onChange={setCoachSelection} />
-          )}
-
           {sessionType === 'team_session' && (
             <div className="space-y-1.5">
               <Label>Team / Organization</Label>
