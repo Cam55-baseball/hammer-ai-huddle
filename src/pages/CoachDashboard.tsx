@@ -376,10 +376,6 @@ export default function CoachDashboard() {
           <p className="text-muted-foreground mt-2">
             {t('coach.dashboardDescription', 'Manage your players and send them training activities')}
           </p>
-          <Button onClick={() => setScheduleDialogOpen(true)} className="mt-3 gap-2">
-            <CalendarIcon className="h-4 w-4" />
-            Schedule Practice
-          </Button>
         </div>
 
         {/* Organization Quick Link */}
@@ -555,7 +551,7 @@ export default function CoachDashboard() {
         })()}
 
         {/* Scheduled Sessions Management */}
-        <ScheduledSessionsManager />
+        <ScheduledSessionsManager onSchedule={() => setScheduleDialogOpen(true)} />
 
         {/* Collaborative Workspace */}
         <CollaborativeWorkspace />

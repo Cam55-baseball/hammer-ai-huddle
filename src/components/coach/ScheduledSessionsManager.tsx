@@ -22,7 +22,11 @@ const statusVariant = (status: string) => {
   }
 };
 
-export function ScheduledSessionsManager() {
+interface ScheduledSessionsManagerProps {
+  onSchedule?: () => void;
+}
+
+export function ScheduledSessionsManager({ onSchedule }: ScheduledSessionsManagerProps) {
   const { fetchCoachSessions, updateSession, updateStatus, deleteSession } = useScheduledPracticeSessions();
   const [sessions, setSessions] = useState<ScheduledPracticeSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +107,13 @@ export function ScheduledSessionsManager() {
           <CalendarIcon className="h-5 w-5" />
           Scheduled Sessions
         </CardTitle>
-        <div className="flex gap-1">
+        <div className="flex items-center gap-2">
+          {onSchedule && (
+            <Button onClick={onSchedule} size="sm" className="gap-1.5">
+              <CalendarIcon className="h-4 w-4" />
+              Schedule Practice
+            </Button>
+          )}
           <Button
             variant={filter === 'upcoming' ? 'default' : 'outline'}
             size="sm"
