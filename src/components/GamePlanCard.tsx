@@ -28,6 +28,7 @@ import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
+import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
 import { FolderItemEditDialog } from '@/components/folders/FolderItemEditDialog';
@@ -1275,6 +1276,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           
           {/* Action buttons row */}
           <div className="flex items-center gap-1 flex-wrap">
+            <SchedulePracticeDialog />
             {/* Sort mode toggle */}
             <Button
               variant="ghost"

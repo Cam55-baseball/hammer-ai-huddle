@@ -20,6 +20,7 @@ import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
 import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader';
 import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
+import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSessions';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
 import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -238,6 +239,8 @@ export default function PracticeHub() {
           </div>
           <SchedulePracticeDialog defaultModule={activeModule} />
         </div>
+
+        <PlayerScheduledSessions />
 
         <Tabs value={activeModule} onValueChange={(val) => { if (step === 'select_type') setActiveModule(val); }} className="space-y-4">
           <TabsList className={cn(
