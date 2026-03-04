@@ -1012,9 +1012,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
                 <SelectGrid
                   options={[
-                    { value: 'routine', label: 'Routine' },
-                    { value: 'plus', label: 'Plus' },
-                    { value: 'elite', label: 'Elite' },
+                    { value: 'routine', label: '✅ Routine' },
+                    { value: 'plus', label: '🔥 Plus' },
+                    { value: 'elite', label: '👑 Elite' },
                   ]}
                   value={current.route_efficiency}
                   onChange={v => updateField('route_efficiency', v)}
@@ -1025,9 +1025,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 <Label className="text-xs text-muted-foreground mb-1 block">Play Probability</Label>
                 <SelectGrid
                   options={[
-                    { value: 'routine', label: 'Routine' },
-                    { value: 'plus', label: 'Plus' },
-                    { value: 'elite', label: 'Elite' },
+                    { value: 'routine', label: '✅ Routine' },
+                    { value: 'plus', label: '🔥 Plus' },
+                    { value: 'elite', label: '👑 Elite' },
                   ]}
                   value={current.play_probability}
                   onChange={v => updateField('play_probability', v)}
@@ -1038,9 +1038,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 <Label className="text-xs text-muted-foreground mb-1 block">Receiving Quality</Label>
                 <SelectGrid
                   options={[
-                    { value: 'poor', label: 'Poor' },
-                    { value: 'average', label: 'Average' },
-                    { value: 'elite', label: 'Elite' },
+                    { value: 'poor', label: '❌ Poor' },
+                    { value: 'average', label: '✅ Average' },
+                    { value: 'elite', label: '👑 Elite' },
                   ]}
                   value={current.receiving_quality}
                   onChange={v => updateField('receiving_quality', v)}
