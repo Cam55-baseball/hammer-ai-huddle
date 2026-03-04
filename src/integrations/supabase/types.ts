@@ -3180,6 +3180,8 @@ export type Database = {
           description: string | null
           end_time: string | null
           id: string
+          opponent_level: string | null
+          opponent_name: string | null
           organization_id: string | null
           recurring_active: boolean | null
           recurring_days: number[] | null
@@ -3190,6 +3192,7 @@ export type Database = {
           start_time: string | null
           status: string | null
           team_id: string | null
+          team_name: string | null
           title: string
           updated_at: string | null
           user_id: string
@@ -3202,6 +3205,8 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          opponent_level?: string | null
+          opponent_name?: string | null
           organization_id?: string | null
           recurring_active?: boolean | null
           recurring_days?: number[] | null
@@ -3212,6 +3217,7 @@ export type Database = {
           start_time?: string | null
           status?: string | null
           team_id?: string | null
+          team_name?: string | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -3224,6 +3230,8 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          opponent_level?: string | null
+          opponent_name?: string | null
           organization_id?: string | null
           recurring_active?: boolean | null
           recurring_days?: number[] | null
@@ -3234,6 +3242,7 @@ export type Database = {
           start_time?: string | null
           status?: string | null
           team_id?: string | null
+          team_name?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string
