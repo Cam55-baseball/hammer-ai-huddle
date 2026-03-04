@@ -58,14 +58,16 @@ export function PitchLocationGrid({ value, onSelect, batterSide = 'R', sport = '
                       type="button"
                       onClick={() => onSelect({ row, col })}
                       className={cn(
-                        'h-9 w-9 rounded-sm border transition-all text-[9px] font-medium',
+                        'h-12 w-12 rounded-sm border transition-all text-[7px] leading-tight font-medium flex items-center justify-center text-center',
                         selected
                           ? 'bg-primary border-primary text-primary-foreground ring-2 ring-primary scale-110 z-10 relative'
                           : inner
                             ? 'bg-green-500/15 border-green-400/50 hover:bg-green-500/25 text-green-700 dark:text-green-300'
                             : 'bg-muted/20 border-border/40 hover:bg-muted/40 text-muted-foreground'
                       )}
-                    />
+                    >
+                      {label}
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs px-2 py-1">
                     {label}
