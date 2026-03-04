@@ -1,38 +1,42 @@
 
 
-# Scheduled Sessions Management View for Coach Dashboard
+# Add Player Scheduled Sessions Management + Schedule from Game Plan & Calendar
 
 ## Overview
 
-Add a new `ScheduledSessionsManager` component to the Coach Dashboard that displays all sessions the coach has scheduled, with ability to edit and cancel them.
+Three additions: (1) A player-facing "My Scheduled Sessions" management component, (2) a Schedule button on the Game Plan header, and (3) a Schedule button on the Calendar header.
 
-## New Component: `src/components/coach/ScheduledSessionsManager.tsx`
+## 1. New Component: `src/components/practice/PlayerScheduledSessions.tsx`
 
-A Card-based section showing a table/list of all sessions where `created_by = current user`. Features:
+Adapted from the coach `ScheduledSessionsManager` but scoped to the player's own sessions (`user_id = auth.uid()`). Features:
+- Collapsible card section showing upcoming sessions (filterable to "Upcoming" / "All")
+- Each row: Title, Date, Time, Status badge, Edit and Cancel action buttons
+- Edit dialog: modify date, times, description, recurring settings
+- Cancel: confirmation alert then sets status to `cancelled`
 
-- **Fetch**: Query `scheduled_practice_sessions` where `created_by = auth.uid()`, ordered by `scheduled_date` desc
-- **Display columns**: Title, Module, Type, Date, Time, Scope, Status, Actions
-- **Status badges**: `scheduled` (blue), `completed` (green), `cancelled` (red)
-- **Actions per row**:
-  - **Cancel** button → sets status to `cancelled` (with confirmation dialog)
-  - **Edit** button → opens an inline edit dialog to update date, time, description, recurring settings
-- **Filters**: Toggle between "Upcoming" (scheduled, date >= today) and "All" views
+## 2. Hook Update: `useScheduledPracticeSessions.ts`
 
-## Hook Update: `src/hooks/useScheduledPracticeSessions.ts`
+Add `fetchPlayerSessions()` — fetches sessions where `user_id = auth.uid()`, ordered by `scheduled_date` ascending (upcoming first). This is distinct from `fetchCoachSessions` which uses `created_by`.
 
-Add two methods:
-- `fetchCoachSessions()` — fetches all sessions where `created_by = user.id`, no date filter
-- `updateSession(id, updates)` — partial update for date, time, description, recurring fields
+## 3. Game Plan Integration: `src/components/GamePlanCard.tsx`
 
-## Integration: `src/pages/CoachDashboard.tsx`
+Add the `SchedulePracticeDialog` import and render it in the action buttons row (line ~1277), alongside existing sort/lock buttons. This gives players quick access to schedule a practice session directly from the Game Plan.
 
-Insert the `ScheduledSessionsManager` component between the Session Feed and Collaborative Workspace sections (around line 557), placing it logically after player management.
+## 4. Calendar Integration: `src/components/calendar/CalendarView.tsx`
 
-## Files
+Add the `SchedulePracticeDialog` next to the existing "Add Event" button (line ~208). When a session is scheduled, call `refetch()` to refresh calendar events.
+
+## 5. Practice Hub Integration: `src/pages/PracticeHub.tsx`
+
+Add the `PlayerScheduledSessions` component below the header area, giving players visibility into their upcoming scheduled sessions right where they do their practice work.
+
+## Files to Create/Modify
 
 | File | Action |
 |------|--------|
-| `src/components/coach/ScheduledSessionsManager.tsx` | **Create** |
-| `src/hooks/useScheduledPracticeSessions.ts` | **Modify** — add `fetchCoachSessions` and `updateSession` |
-| `src/pages/CoachDashboard.tsx` | **Modify** — import and render `ScheduledSessionsManager` |
+| `src/components/practice/PlayerScheduledSessions.tsx` | **Create** — Player session management view |
+| `src/hooks/useScheduledPracticeSessions.ts` | **Modify** — Add `fetchPlayerSessions` |
+| `src/components/GamePlanCard.tsx` | **Modify** — Add SchedulePracticeDialog button |
+| `src/components/calendar/CalendarView.tsx` | **Modify** — Add SchedulePracticeDialog button |
+| `src/pages/PracticeHub.tsx` | **Modify** — Add PlayerScheduledSessions component |
 
