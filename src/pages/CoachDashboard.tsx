@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package, Building2, Users, ArrowRight } from 'lucide-react';
+import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package, Building2, Users, ArrowRight, CalendarIcon } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
@@ -19,6 +19,7 @@ import { BulkSendDialog } from '@/components/coach/BulkSendDialog';
 import { SessionFeed } from '@/components/coach/SessionFeed';
 import { useOrganization } from '@/hooks/useOrganization';
 import { CollaborativeWorkspace } from '@/components/coach/CollaborativeWorkspace';
+import { CoachScheduleDialog } from '@/components/coach/CoachScheduleDialog';
 import { 
   Command,
   CommandEmpty,
@@ -57,6 +58,7 @@ export default function CoachDashboard() {
   const [ownerLoading, setOwnerLoading] = useState(true);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [bulkSendDialogOpen, setBulkSendDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     positions: [] as string[],
     throwingHands: [] as string[],
@@ -373,6 +375,10 @@ export default function CoachDashboard() {
           <p className="text-muted-foreground mt-2">
             {t('coach.dashboardDescription', 'Manage your players and send them training activities')}
           </p>
+          <Button onClick={() => setScheduleDialogOpen(true)} className="mt-3 gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Schedule Practice
+          </Button>
         </div>
 
         {/* Organization Quick Link */}
@@ -680,6 +686,16 @@ export default function CoachDashboard() {
           onOpenChange={setBulkSendDialogOpen}
           selectedPlayerIds={selectedPlayers}
           selectedPlayerNames={following.filter(p => selectedPlayers.includes(p.id)).map(p => p.full_name)}
+        />
+
+        <CoachScheduleDialog
+          open={scheduleDialogOpen}
+          onOpenChange={setScheduleDialogOpen}
+          linkedPlayers={following.filter(p => p.followStatus === 'accepted').map(p => ({
+            id: p.id,
+            full_name: p.full_name,
+            avatar_url: p.avatar_url,
+          }))}
         />
       </div>
     </DashboardLayout>
