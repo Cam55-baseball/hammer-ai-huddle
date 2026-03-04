@@ -74,6 +74,9 @@ export interface ScoredRep {
   play_type?: string;
   fielding_result?: string;
   fielding_position?: string;
+  route_efficiency?: 'routine' | 'plus' | 'elite';
+  play_probability?: 'routine' | 'plus' | 'elite';
+  receiving_quality?: 'poor' | 'average' | 'elite';
   // Machine mode
   machine_mode?: 'single' | 'mix';
   // Throwing
@@ -85,6 +88,8 @@ export interface ScoredRep {
   approach_quality?: string;
   count_situation?: string;
   adjustment_tag?: string;
+  // Pitching contact type (flat ground vs hitter)
+  contact_type?: string;
   // Baserunning
   drill_type?: string;
   baserunning_goal?: string;
@@ -161,7 +166,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 );
 
 // Sources that require pitching velo to be always visible (not just advanced)
-const PITCHING_ALWAYS_VELO = ['live_bp', 'game'];
+const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
@@ -745,6 +750,22 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
+                  {/* Spin Direction (hitting advanced) */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Ball Spin Direction</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'topspin', label: 'Topspin' },
+                        { value: 'backspin', label: 'Backspin' },
+                        { value: 'knuckle', label: 'Knuckle' },
+                        { value: 'backspin_tail', label: 'Backspin Tail' },
+                      ]}
+                      value={current.spin_direction}
+                      onChange={v => updateField('spin_direction', v)}
+                      cols={4}
+                    />
+                  </div>
+
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Approach Quality</Label>
                     <SelectGrid
@@ -822,7 +843,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               )}
 
               {/* Hitter Side for live pitching reps */}
-              {['live_bp', 'game'].includes(repSource) && (
+              {['live_bp', 'game', 'flat_ground_vs_hitter'].includes(repSource) && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Hitter Side (L/R)</Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -886,7 +907,24 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               </div>
 
-              {/* Hit Spot? - always visible for pitching quick mode */}
+              {/* Contact Type for flat ground vs hitter */}
+              {repSource === 'flat_ground_vs_hitter' && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Contact Type</Label>
+                  <SelectGrid
+                    options={[
+                      { value: 'swing_miss', label: 'Swing & Miss', color: 'bg-green-500/20 text-green-700 border-green-300' },
+                      { value: 'foul', label: 'Foul', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
+                      { value: 'weak_contact', label: 'Weak Contact', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
+                      { value: 'hard_contact', label: 'Hard Contact', color: 'bg-red-500/20 text-red-700 border-red-300' },
+                    ]}
+                    value={current.contact_type}
+                    onChange={v => updateField('contact_type', v)}
+                    cols={4}
+                  />
+                </div>
+              )}
+
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Hit Spot?</Label>
                 <SelectGrid
@@ -925,12 +963,14 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     <Label className="text-xs text-muted-foreground mb-1 block">Spin Direction</Label>
                     <SelectGrid
                       options={[
-                        { value: 'topspin', label: 'Top' },
-                        { value: 'backspin', label: 'Back' },
-                        { value: 'sidespin', label: 'Side' },
+                        { value: 'topspin', label: 'Topspin' },
+                        { value: 'backspin', label: 'Backspin' },
+                        { value: 'knuckle', label: 'Knuckle' },
+                        { value: 'backspin_tail', label: 'Backspin Tail' },
                       ]}
                       value={current.spin_direction}
                       onChange={v => updateField('spin_direction', v)}
+                      cols={4}
                     />
                   </div>
                 </>
@@ -967,8 +1007,49 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
+              {/* Fielding Quality — always visible */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'routine', label: 'Routine' },
+                    { value: 'plus', label: 'Plus' },
+                    { value: 'elite', label: 'Elite' },
+                  ]}
+                  value={current.route_efficiency}
+                  onChange={v => updateField('route_efficiency', v)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Play Probability</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'routine', label: 'Routine' },
+                    { value: 'plus', label: 'Plus' },
+                    { value: 'elite', label: 'Elite' },
+                  ]}
+                  value={current.play_probability}
+                  onChange={v => updateField('play_probability', v)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Receiving Quality</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'poor', label: 'Poor' },
+                    { value: 'average', label: 'Average' },
+                    { value: 'elite', label: 'Elite' },
+                  ]}
+                  value={current.receiving_quality}
+                  onChange={v => updateField('receiving_quality', v)}
+                />
+              </div>
+
               {mode === 'advanced' && (
                 <>
+
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
                       Throw Accuracy: {current.throw_accuracy ?? 50}

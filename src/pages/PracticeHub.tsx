@@ -16,6 +16,7 @@ import { SessionConfigPanel, type SessionConfig } from '@/components/practice/Se
 import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
 import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
+import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader';
 import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
 import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -312,18 +313,33 @@ export default function PracticeHub() {
                     />
                   )}
 
-                  {/* Voice notes */}
-                  <VoiceNoteInput value={notes} onChange={setNotes} />
+                  {/* Video uploader + Voice notes in collapsible section */}
+                  <SessionVideoUploader reps={reps} sessionId={savedSessionId ?? undefined} />
 
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={handleSave}
-                    disabled={saving || (reps.length === 0 && atBats.length === 0)}
-                  >
-                    {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                    Save Session ({isGameType ? `${atBats.length} ABs` : `${reps.length} reps`})
-                  </Button>
+                  <details className="group">
+                    <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                      Voice Notes & Overrides
+                    </summary>
+                    <div className="mt-2">
+                      <VoiceNoteInput value={notes} onChange={setNotes} />
+                    </div>
+                  </details>
+
+                  {/* Sticky bottom action bar */}
+                  <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border py-3 -mx-4 px-4 mt-4 flex items-center gap-3">
+                    <div className="flex-1 text-xs text-muted-foreground">
+                      {isGameType ? `${atBats.length} ABs` : `${reps.length} reps`} logged
+                    </div>
+                    <Button
+                      size="lg"
+                      onClick={handleSave}
+                      disabled={saving || (reps.length === 0 && atBats.length === 0)}
+                      className="gap-2"
+                    >
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      Save Session
+                    </Button>
+                  </div>
                 </>
               )}
               {/* Step 5: Post-Session Summary */}
