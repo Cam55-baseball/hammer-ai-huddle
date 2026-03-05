@@ -22,6 +22,7 @@ export interface LineupPlayer {
   name: string;
   position: string;
   batting_order: number;
+  player_user_id?: string;
 }
 
 export interface GamePlay {
