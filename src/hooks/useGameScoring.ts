@@ -23,6 +23,16 @@ export interface LineupPlayer {
   position: string;
   batting_order: number;
   player_user_id?: string;
+  substituted_at_inning?: number;
+  replaced_by?: string;
+}
+
+export interface Substitution {
+  slot: number;
+  outPlayer: LineupPlayer;
+  inPlayer: LineupPlayer;
+  inning: number;
+  half: string;
 }
 
 export interface GamePlay {

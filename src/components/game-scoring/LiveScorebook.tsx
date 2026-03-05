@@ -8,9 +8,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AtBatPanel } from './AtBatPanel';
 import { PitcherTracker } from './PitcherTracker';
 import { DiamondVisual } from './DiamondVisual';
+import { SubstitutionDialog } from './SubstitutionDialog';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import { cn } from '@/lib/utils';
-import type { GamePlay, LineupPlayer } from '@/hooks/useGameScoring';
+import { ArrowRightLeft } from 'lucide-react';
+import type { GamePlay, LineupPlayer, Substitution } from '@/hooks/useGameScoring';
 
 interface LiveScorebookProps {
   gameId: string;
@@ -30,6 +32,40 @@ const OUTCOME_ABBREVIATIONS: Record<string, string> = {
   fielders_choice: 'FC', double_play: 'DP', sac_fly: 'SF', sac_bunt: 'SAC', error: 'E',
 };
 
+// Build display rows from lineup + substitutions
+interface DisplayRow {
+  player: LineupPlayer;
+  slot: number;
+  isSubbedOut: boolean;
+  isSubstitute: boolean;
+  subbedAtInning?: number;
+}
+
+function buildDisplayRows(lineup: LineupPlayer[], substitutions: Substitution[]): DisplayRow[] {
+  const rows: DisplayRow[] = [];
+  for (let slot = 0; slot < lineup.length; slot++) {
+    const subsForSlot = substitutions.filter(s => s.slot === slot);
+    if (subsForSlot.length === 0) {
+      rows.push({ player: lineup[slot], slot, isSubbedOut: false, isSubstitute: false });
+    } else {
+      // Original player (subbed out)
+      rows.push({ player: lineup[slot], slot, isSubbedOut: true, isSubstitute: false, subbedAtInning: subsForSlot[0].inning });
+      // Chain of subs — all but last are subbed out too
+      for (let i = 0; i < subsForSlot.length; i++) {
+        const isLast = i === subsForSlot.length - 1;
+        rows.push({
+          player: subsForSlot[i].inPlayer,
+          slot,
+          isSubbedOut: !isLast,
+          isSubstitute: true,
+          subbedAtInning: !isLast ? subsForSlot[i + 1]?.inning : undefined,
+        });
+      }
+    }
+  }
+  return rows;
+}
+
 export function LiveScorebook({
   gameId, sport, totalInnings, lineup, startingPitcherName, onPlayRecorded, allPlays, onComplete,
 }: LiveScorebookProps) {
@@ -42,11 +78,28 @@ export function LiveScorebook({
   const [outs, setOuts] = useState(0);
   const [activeAtBat, setActiveAtBat] = useState(true);
 
+  // Substitution state
+  const [activeLineup, setActiveLineup] = useState<LineupPlayer[]>(() => [...lineup]);
+  const [substitutions, setSubstitutions] = useState<Substitution[]>([]);
+  const [subDialogOpen, setSubDialogOpen] = useState(false);
+  const [subTarget, setSubTarget] = useState<{ slot: number; player: LineupPlayer } | null>(null);
+
   const { pitcherStats, batterStats, teamScore } = useGameAnalytics(allPlays);
   const currentPitcherStats = pitcherStats.find(p => p.name === currentPitcher);
 
   const innings = Array.from({ length: totalInnings }, (_, i) => i + 1);
-  const currentBatter = lineup[currentBatterIndex % lineup.length];
+  const currentBatter = activeLineup[currentBatterIndex % activeLineup.length];
+
+  // All players currently active (for filtering bench)
+  const activePlayerIds = new Set(activeLineup.map(p => p.player_user_id).filter(Boolean) as string[]);
+
+  // All unique players for pitcher selector
+  const allPlayersForPitcher = [
+    ...lineup,
+    ...substitutions.map(s => s.inPlayer),
+  ].filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i);
+
+  const displayRows = buildDisplayRows(lineup, substitutions);
 
   // Get at-bat results for scorebook grid
   const getAtBatResult = (batterName: string, inning: number) => {
@@ -56,20 +109,46 @@ export function LiveScorebook({
     return plays.length > 0 ? plays[plays.length - 1] : null;
   };
 
+  const handleSubstitution = (slot: number, player: LineupPlayer) => {
+    setSubTarget({ slot, player });
+    setSubDialogOpen(true);
+  };
+
+  const confirmSubstitution = (inPlayerData: { name: string; position: string; player_user_id?: string }) => {
+    if (!subTarget) return;
+    const { slot, player: outPlayer } = subTarget;
+
+    const inPlayer: LineupPlayer = {
+      id: crypto.randomUUID(),
+      name: inPlayerData.name,
+      position: inPlayerData.position,
+      batting_order: outPlayer.batting_order,
+      player_user_id: inPlayerData.player_user_id,
+    };
+
+    const sub: Substitution = { slot, outPlayer, inPlayer, inning: currentInning, half: currentHalf };
+    setSubstitutions(prev => [...prev, sub]);
+    setActiveLineup(prev => {
+      const next = [...prev];
+      next[slot] = inPlayer;
+      return next;
+    });
+
+    setSubDialogOpen(false);
+    setSubTarget(null);
+  };
+
   const handleAtBatComplete = useCallback((plays: GamePlay[]) => {
     onPlayRecorded(plays);
 
-    // Determine outcome
     const lastPlay = plays[plays.length - 1];
     const outcome = lastPlay?.at_bat_outcome;
 
-    // Update outs
     const isOut = ['ground_out', 'fly_out', 'line_out', 'pop_out', 'strikeout', 'strikeout_looking', 'fielders_choice'].includes(outcome || '');
     const isDP = outcome === 'double_play';
     const newOuts = outs + (isDP ? 2 : isOut ? 1 : 0);
 
     if (newOuts >= 3) {
-      // Half inning over
       setOuts(0);
       setRunners({});
       if (currentHalf === 'bottom') {
@@ -83,19 +162,10 @@ export function LiveScorebook({
       }
     } else {
       setOuts(newOuts);
-      // Simple runner advancement logic
       if (['single', 'walk', 'hbp', 'error', 'fielders_choice'].includes(outcome || '')) {
-        setRunners(prev => ({
-          first: true,
-          second: prev.first || false,
-          third: prev.second || false,
-        }));
+        setRunners(prev => ({ first: true, second: prev.first || false, third: prev.second || false }));
       } else if (outcome === 'double') {
-        setRunners(prev => ({
-          first: false,
-          second: true,
-          third: prev.first || false,
-        }));
+        setRunners(prev => ({ first: false, second: true, third: prev.first || false }));
       } else if (outcome === 'triple') {
         setRunners({ first: false, second: false, third: true });
       } else if (outcome === 'home_run') {
@@ -103,7 +173,6 @@ export function LiveScorebook({
       }
     }
 
-    // Advance to next batter
     setCurrentBatterIndex(prev => prev + 1);
     setActiveAtBat(true);
   }, [outs, currentHalf, currentInning, totalInnings, onPlayRecorded]);
@@ -143,7 +212,7 @@ export function LiveScorebook({
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-1.5 font-medium text-muted-foreground sticky left-0 bg-card z-10 min-w-[120px]">Batter</th>
+                      <th className="text-left p-1.5 font-medium text-muted-foreground sticky left-0 bg-card z-10 min-w-[140px]">Batter</th>
                       <th className="p-1 font-medium text-muted-foreground min-w-[40px]">Pos</th>
                       {innings.map(i => (
                         <th key={i} className={cn(
@@ -157,23 +226,32 @@ export function LiveScorebook({
                       <th className="p-1 font-medium text-muted-foreground">RBI</th>
                       <th className="p-1 font-medium text-muted-foreground">BB</th>
                       <th className="p-1 font-medium text-muted-foreground">K</th>
+                      <th className="p-1 font-medium text-muted-foreground w-8"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {lineup.map((player, idx) => {
-                      const pStats = batterStats.find(b => b.name === player.name);
+                    {displayRows.map((row, rowIdx) => {
+                      const pStats = batterStats.find(b => b.name === row.player.name);
+                      const isCurrentBatter = !row.isSubbedOut && row.slot === currentBatterIndex % activeLineup.length;
                       return (
-                        <tr key={player.id} className={cn(
+                        <tr key={`${row.slot}-${row.player.id}`} className={cn(
                           'border-b',
-                          idx === currentBatterIndex % lineup.length && 'bg-primary/5'
+                          isCurrentBatter && 'bg-primary/5',
+                          row.isSubbedOut && 'opacity-50'
                         )}>
                           <td className="p-1.5 font-medium sticky left-0 bg-card z-10">
-                            <span className="text-muted-foreground mr-1">{idx + 1}.</span>
-                            {player.name}
+                            {!row.isSubstitute ? (
+                              <span className="text-muted-foreground mr-1">{row.slot + 1}.</span>
+                            ) : (
+                              <span className="text-muted-foreground mr-1 ml-3">↳</span>
+                            )}
+                            <span className={cn(row.isSubbedOut && 'line-through text-muted-foreground')}>
+                              {row.player.name}
+                            </span>
                           </td>
-                          <td className="p-1 text-center text-muted-foreground">{player.position}</td>
+                          <td className="p-1 text-center text-muted-foreground">{row.player.position}</td>
                           {innings.map(i => {
-                            const result = getAtBatResult(player.name, i);
+                            const result = getAtBatResult(row.player.name, i);
                             return (
                               <td key={i} className={cn(
                                 'p-1 text-center font-bold',
@@ -200,6 +278,19 @@ export function LiveScorebook({
                           <td className="p-1 text-center tabular-nums">{pStats?.rbi || 0}</td>
                           <td className="p-1 text-center tabular-nums">{pStats?.walks || 0}</td>
                           <td className="p-1 text-center tabular-nums">{pStats?.strikeouts || 0}</td>
+                          <td className="p-1 text-center">
+                            {!row.isSubbedOut && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                title="Substitute player"
+                                onClick={() => handleSubstitution(row.slot, row.player)}
+                              >
+                                <ArrowRightLeft className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -247,7 +338,9 @@ export function LiveScorebook({
             <Select value={currentPitcher} onValueChange={setCurrentPitcher}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {lineup.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
+                {allPlayersForPitcher.map(p => (
+                  <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -257,6 +350,17 @@ export function LiveScorebook({
           </Button>
         </div>
       </div>
+
+      {/* Substitution dialog */}
+      {subTarget && (
+        <SubstitutionDialog
+          open={subDialogOpen}
+          onOpenChange={setSubDialogOpen}
+          outPlayer={subTarget.player}
+          activePlayerIds={activePlayerIds}
+          onConfirm={confirmSubstitution}
+        />
+      )}
     </div>
   );
 }
