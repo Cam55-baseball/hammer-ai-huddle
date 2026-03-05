@@ -358,6 +358,10 @@ export default function PracticeHub() {
                       reps={reps}
                       onRepsChange={setReps}
                       sessionConfig={sessionConfig}
+                      goalOfRep={sessionGoalOfRep}
+                      onGoalOfRepChange={setSessionGoalOfRep}
+                      actualOutcome={sessionActualOutcome}
+                      onActualOutcomeChange={setSessionActualOutcome}
                     />
                   )}
 
@@ -373,24 +377,6 @@ export default function PracticeHub() {
                     </div>
                   </details>
 
-                  {/* Session-level AI structured fields — Goal of Rep & Actual Outcome */}
-                   <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/5">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Session AI Fields (Optional)</p>
-                    <AITextBoxField
-                      label="Goal of Rep"
-                      value={sessionGoalOfRep}
-                      onChange={setSessionGoalOfRep}
-                      minChars={0}
-                      placeholder="What was your goal for this session's reps? (optional)..."
-                    />
-                    <AITextBoxField
-                      label="Actual Outcome"
-                      value={sessionActualOutcome}
-                      onChange={setSessionActualOutcome}
-                      minChars={0}
-                      placeholder="What actually happened during the session? (optional)..."
-                    />
-                  </div>
 
                   {/* Sticky bottom action bar */}
                   <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border py-3 -mx-4 px-4 mt-4 flex items-center gap-3">
