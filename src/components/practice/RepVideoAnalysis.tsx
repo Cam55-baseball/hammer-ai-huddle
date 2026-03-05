@@ -6,7 +6,8 @@ import { Slider } from '@/components/ui/slider';
 import { Play, Pause, SkipBack, SkipForward, Pencil, Ruler, Circle, Minus, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ANALYZABLE_MODULES = ['hitting', 'pitching', 'throwing'];
+const ANALYZABLE_MODULES = ['hitting', 'pitching', 'throwing', 'fielding', 'catching'];
+const THROW_MECHANICS_MODULES = ['fielding', 'catching'];
 
 interface RepVideoAnalysisProps {
   videoUrl: string;
@@ -90,7 +91,7 @@ export function RepVideoAnalysis({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Analyze Rep #{repIndex + 1}
+            {THROW_MECHANICS_MODULES.includes(module) ? 'Analyze Throw Mechanics' : 'Analyze'} — Rep #{repIndex + 1}
             <Badge variant="secondary" className="text-xs capitalize">{module}</Badge>
           </DialogTitle>
         </DialogHeader>

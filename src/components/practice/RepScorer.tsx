@@ -14,6 +14,9 @@ import { CatchingRepFields } from './CatchingRepFields';
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { ThrowingRepFields } from './ThrowingRepFields';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
+import { FieldingThrowFields } from './FieldingThrowFields';
+import { InfieldRepTypeFields, INFIELD_POSITIONS } from './InfieldRepTypeFields';
+import { PlayDirectionSelector } from './PlayDirectionSelector';
 import { AITextBoxField } from './AITextBoxField';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
@@ -117,6 +120,19 @@ export interface ScoredRep {
   ai_custom_rep_description?: string; // Any module other/custom (non-catching)
   abs_guess?: { row: number; col: number };
   pitcher_spot_intent?: { row: number; col: number };
+  // Throw tracking (fielding, catching, throwing)
+  throw_accuracy_direction?: 'wide_left' | 'on_target' | 'dot' | 'wide_right';
+  throw_arrival_quality?: 'long_hop' | 'short_hop' | 'perfect' | 'high';
+  throw_strength?: 'strong' | 'good' | 'weak';
+  // Catcher-specific
+  catcher_pop_time_sec?: number;
+  catcher_transfer_time_sec?: number;
+  catcher_throw_base?: '2B' | '3B' | '1B';
+  // Infield rep type
+  infield_rep_type?: string;
+  infield_rep_execution?: 'incomplete' | 'complete' | 'elite';
+  // Play direction
+  play_direction?: 'right' | 'left' | 'back' | 'in' | 'straight_up';
 }
 
 interface RepScorerProps {
@@ -1226,20 +1242,61 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {mode === 'advanced' && (
-                <>
+              {/* Play Direction — all positions */}
+              <PlayDirectionSelector value={current} onChange={updateField} />
 
+              {/* Infield Rep Type — P, 1B, 2B, 3B, SS only */}
+              {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
+                <InfieldRepTypeFields value={current} onChange={updateField} />
+              )}
+
+              {/* Catcher-specific fields */}
+              {repFieldingPosition === 'C' && (
+                <div className="space-y-3">
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">
-                      Throw Accuracy: {current.throw_accuracy ?? 50}
-                    </Label>
-                    <Slider
-                      min={20} max={80} step={5}
-                      value={[current.throw_accuracy ?? 50]}
-                      onValueChange={([v]) => updateField('throw_accuracy', v)}
+                    <Label className="text-xs text-muted-foreground mb-1 block">Pop Time (sec)</Label>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 1.95"
+                      value={current.catcher_pop_time_sec ?? ''}
+                      onChange={e => updateField('catcher_pop_time_sec', e.target.value ? Number(e.target.value) : undefined)}
+                      className="h-8 text-xs"
+                      min={0}
+                      step="0.01"
                     />
                   </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Transfer Time (sec)</Label>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 0.75"
+                      value={current.catcher_transfer_time_sec ?? ''}
+                      onChange={e => updateField('catcher_transfer_time_sec', e.target.value ? Number(e.target.value) : undefined)}
+                      className="h-8 text-xs"
+                      min={0}
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Throw Base</Label>
+                    <SelectGrid
+                      options={[
+                        { value: '2B', label: '2B' },
+                        { value: '3B', label: '3B' },
+                        { value: '1B', label: '1B Pickoff' },
+                      ]}
+                      value={current.catcher_throw_base}
+                      onChange={v => updateField('catcher_throw_base', v)}
+                    />
+                  </div>
+                </div>
+              )}
 
+              {/* Throw tracking — all fielding reps (replaces old advanced-only slider) */}
+              <FieldingThrowFields value={current} onChange={updateField} />
+
+              {mode === 'advanced' && (
+                <>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
                       Footwork Grade: {current.footwork_grade ?? 50}
