@@ -13,6 +13,7 @@ import { CatchingRepFields } from './CatchingRepFields';
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { ThrowingRepFields } from './ThrowingRepFields';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
+import { AITextBoxField } from './AITextBoxField';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { cn } from '@/lib/utils';
@@ -30,8 +31,8 @@ export interface ScoredRep {
   // Session-level (inherited)
   session_distance_ft?: number;
   session_velocity_band?: string;
-   session_rep_source?: string;
-   custom_rep_source?: string;
+  session_rep_source?: string;
+  custom_rep_source?: string;
   environment?: string;
   // Per-rep overrides
   override_distance_ft?: number;
@@ -94,6 +95,12 @@ export interface ScoredRep {
   // Baserunning
   drill_type?: string;
   baserunning_goal?: string;
+  // === NEW AI-structured fields ===
+  ai_drill_description?: string;      // Catching other/drill
+  ai_drill_clarification?: string;    // Any module drill (non-catching)
+  ai_custom_rep_description?: string; // Any module other/custom (non-catching)
+  abs_guess?: { row: number; col: number };
+  pitcher_spot_intent?: { row: number; col: number };
 }
 
 interface RepScorerProps {
@@ -224,6 +231,31 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     setCurrent(prev => ({ ...prev, [field]: val }));
   };
 
+  // === AI field validation ===
+  const isDrill = repSource === 'drill';
+  const isOther = repSource === 'other';
+
+  // Catching + (drill|other) → ai_drill_description required (≥15)
+  const needsCatchingAIDrillDesc = isCatching && (isDrill || isOther);
+  const catchingAIDrillDescValid = !needsCatchingAIDrillDesc || (current.ai_drill_description?.length ?? 0) >= 15;
+
+  // Non-catching + drill → ai_drill_clarification required (≥15)
+  const needsDrillClarification = !isCatching && isDrill;
+  const drillClarificationValid = !needsDrillClarification || (current.ai_drill_clarification?.length ?? 0) >= 15;
+
+  // Non-catching + other → ai_custom_rep_description required (≥15)
+  const needsCustomRepDesc = !isCatching && isOther;
+  const customRepDescValid = !needsCustomRepDesc || (current.ai_custom_rep_description?.length ?? 0) >= 15;
+
+  // ABS Guess: required when pitch_location is set for hitting/pitching/catching
+  const hasPitchLocation = !!current.pitch_location;
+  const needsAbsGuess = hasPitchLocation && (isHitting || isPitching || isCatching);
+  const absGuessValid = !needsAbsGuess || !!current.abs_guess;
+
+  // Pitcher Intent: required for pitching before pitch_location can be set (optional per spec — required when pitch_location is set)
+  const needsPitcherIntent = isPitching;
+  const pitcherIntentValid = !needsPitcherIntent || !!current.pitcher_spot_intent;
+
   // Validation
   const execScore = current.execution_score;
   const hasRepSource = !!repSource;
@@ -231,7 +263,12 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsFieldingPosition = isFielding && !repFieldingPosition;
   const canConfirm = hasRepSource && execScore != null && execScore >= 1
     && (!needsDepthZone || current.depth_zone != null)
-    && !needsFieldingPosition;
+    && !needsFieldingPosition
+    && catchingAIDrillDescValid
+    && drillClarificationValid
+    && customRepDescValid
+    && absGuessValid
+    && pitcherIntentValid;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
@@ -282,6 +319,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   if (!handedness && !isBaserunning) {
     return <HandednessGate module={module} value={handedness} onChange={setHandedness} />;
   }
+
+  // Whether the pitcher intent grid should be locked (after pitch location is logged)
+  const pitcherIntentLocked = isPitching && !!current.pitch_location;
 
   return (
     <div className="space-y-3">
@@ -437,6 +477,38 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           <p className="text-[10px] text-muted-foreground text-center">
             Rep will be recorded manually once you confirm all required fields.
           </p>
+
+          {/* === AI DRILL / CUSTOM FIELDS (per-rep, directly under rep source context) === */}
+          {needsCatchingAIDrillDesc && (
+            <AITextBoxField
+              label="AI Drill Description"
+              value={current.ai_drill_description ?? ''}
+              onChange={v => updateField('ai_drill_description', v)}
+              minChars={15}
+              required
+              placeholder="Describe the drill for AI tracking (min 15 characters)..."
+            />
+          )}
+          {needsDrillClarification && (
+            <AITextBoxField
+              label="AI Drill Clarification"
+              value={current.ai_drill_clarification ?? ''}
+              onChange={v => updateField('ai_drill_clarification', v)}
+              minChars={15}
+              required
+              placeholder="Clarify the drill for AI tracking (min 15 characters)..."
+            />
+          )}
+          {needsCustomRepDesc && (
+            <AITextBoxField
+              label="AI Custom Rep Description"
+              value={current.ai_custom_rep_description ?? ''}
+              onChange={v => updateField('ai_custom_rep_description', v)}
+              minChars={15}
+              required
+              placeholder="Describe this custom rep source for AI tracking (min 15 characters)..."
+            />
+          )}
 
           {/* Mandatory: Execution Score — number line */}
           <div>
@@ -678,6 +750,21 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               </div>
 
+              {/* ABS Guess — required after pitch location is logged (Hitting) */}
+              {hasPitchLocation && isHitting && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
+                  </Label>
+                  <PitchLocationGrid
+                    value={current.abs_guess}
+                    onSelect={v => updateField('abs_guess', v)}
+                    batterSide={effectiveBatterSide}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
+                </div>
+              )}
+
               {/* Swing Decision - always visible (most valuable self-assessment) */}
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
@@ -881,12 +968,44 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              <PitchLocationGrid
-                value={current.pitch_location}
-                onSelect={v => updateField('pitch_location', v)}
-                batterSide={(current.batter_side as 'L' | 'R') || 'R'}
-                sport={sport as 'baseball' | 'softball'}
-              />
+              {/* Pitcher Spot Intent — BEFORE pitch location, required for pitching */}
+              <div className={cn(pitcherIntentLocked && 'pointer-events-none opacity-60')}>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">
+                  Pitcher Spot Intent (Pre-Pitch Target) <span className="text-destructive">*</span>
+                  {pitcherIntentLocked && <span className="ml-1 text-[10px] text-muted-foreground">(locked)</span>}
+                </Label>
+                <PitchLocationGrid
+                  value={current.pitcher_spot_intent}
+                  onSelect={v => updateField('pitcher_spot_intent', v)}
+                  batterSide={(current.batter_side as 'L' | 'R') || 'R'}
+                  sport={sport as 'baseball' | 'softball'}
+                />
+              </div>
+
+              {/* Actual Pitch Location — only shown after intent is set */}
+              {current.pitcher_spot_intent && (
+                <PitchLocationGrid
+                  value={current.pitch_location}
+                  onSelect={v => updateField('pitch_location', v)}
+                  batterSide={(current.batter_side as 'L' | 'R') || 'R'}
+                  sport={sport as 'baseball' | 'softball'}
+                />
+              )}
+
+              {/* ABS Guess — required after pitch location is logged (Pitching) */}
+              {hasPitchLocation && isPitching && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
+                  </Label>
+                  <PitchLocationGrid
+                    value={current.abs_guess}
+                    onSelect={v => updateField('abs_guess', v)}
+                    batterSide={(current.batter_side as 'L' | 'R') || 'R'}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
+                </div>
+              )}
 
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Result</Label>
@@ -1108,7 +1227,23 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
           {/* ===== CATCHING FIELDS ===== */}
           {isCatching && (
-            <CatchingRepFields value={current} onChange={updateField} />
+            <>
+              <CatchingRepFields value={current} onChange={updateField} />
+              {/* ABS Guess — required after pitch location is logged (Catching) */}
+              {hasPitchLocation && isCatching && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
+                  </Label>
+                  <PitchLocationGrid
+                    value={current.abs_guess}
+                    onSelect={v => updateField('abs_guess', v)}
+                    batterSide={effectiveBatterSide}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {/* ===== BASERUNNING FIELDS ===== */}
@@ -1119,44 +1254,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           {/* ===== THROWING FIELDS ===== */}
           {isThrowing && (
             <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
-          )}
-
-          {/* Goal / Outcome (advanced only) - structured presets */}
-          {mode === 'advanced' && (
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
-                <SelectGrid
-                  options={[
-                    { value: 'oppo_drive', label: 'Oppo Drive' },
-                    { value: 'pull_power', label: 'Pull Power' },
-                    { value: 'up_middle', label: 'Up Middle' },
-                    { value: 'adjust_offspeed', label: 'Adj. Off-Speed' },
-                    { value: 'two_strike', label: '2-Strike Battle' },
-                    { value: 'custom', label: 'Custom' },
-                  ]}
-                  value={current.goal_of_rep}
-                  onChange={v => updateField('goal_of_rep', v)}
-                  cols={3}
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Actual Outcome</Label>
-                <SelectGrid
-                  options={[
-                    { value: 'oppo_drive', label: 'Oppo Drive' },
-                    { value: 'pull_power', label: 'Pull Power' },
-                    { value: 'up_middle', label: 'Up Middle' },
-                    { value: 'ground_out', label: 'Ground Out' },
-                    { value: 'fly_out', label: 'Fly Out' },
-                    { value: 'custom', label: 'Custom' },
-                  ]}
-                  value={current.actual_outcome}
-                  onChange={v => updateField('actual_outcome', v)}
-                  cols={3}
-                />
-              </div>
-            </div>
           )}
 
           {/* CONFIRM REP */}
@@ -1195,6 +1292,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               {!hasRepSource ? 'Configure session rep source first' :
                 needsFieldingPosition ? 'Select fielding position' :
                 needsDepthZone && !current.depth_zone ? 'Select tee depth zone' :
+                !catchingAIDrillDescValid ? 'AI Drill Description requires min 15 characters' :
+                !drillClarificationValid ? 'AI Drill Clarification requires min 15 characters' :
+                !customRepDescValid ? 'AI Custom Rep Description requires min 15 characters' :
+                !pitcherIntentValid ? 'Select Pitcher Spot Intent before logging pitch' :
+                !absGuessValid ? 'Select ABS Guess zone' :
                   'Set execution score (1-10) to confirm rep'}
             </p>
           )}
