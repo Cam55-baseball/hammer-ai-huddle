@@ -22,8 +22,9 @@ import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSessions';
 import { AITextBoxField } from '@/components/practice/AITextBoxField';
+import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
-import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
+import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
@@ -72,6 +73,8 @@ export default function PracticeHub() {
   // Session-level AI fields (Requirement 4)
   const [sessionGoalOfRep, setSessionGoalOfRep] = useState('');
   const [sessionActualOutcome, setSessionActualOutcome] = useState('');
+  // Video+Log mode toggle
+  const [videoLogMode, setVideoLogMode] = useState(false);
 
   // Deep-link: auto-start from URL params
   useEffect(() => {
@@ -348,6 +351,31 @@ export default function PracticeHub() {
                   <SessionConfigBar config={sessionConfig} onEdit={() => setStep('configure_session')} module={activeModule} handedness={currentHandedness} />
 
 
+                  {/* Logging mode toggle — Standard vs Video+Log */}
+                  {!isGameType && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant={videoLogMode ? 'ghost' : 'default'}
+                        size="sm"
+                        onClick={() => setVideoLogMode(false)}
+                        className="text-xs gap-1"
+                      >
+                        Standard Logging
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={videoLogMode ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setVideoLogMode(true)}
+                        className="text-xs gap-1"
+                      >
+                        <Video className="h-3.5 w-3.5" />
+                        Video + Log
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Main scoring area */}
                   {isGameType && isGameScorecardModule ? (
                     <GameScorecard
@@ -355,6 +383,13 @@ export default function PracticeHub() {
                       atBats={atBats}
                       onAtBatsChange={setAtBats}
                       sport={sportKey}
+                    />
+                  ) : videoLogMode ? (
+                    <VideoRepLogger
+                      module={activeModule}
+                      reps={reps}
+                      onRepsChange={setReps}
+                      sessionConfig={sessionConfig}
                     />
                   ) : (
                     <RepScorer

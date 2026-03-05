@@ -1,4 +1,5 @@
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import type { ScoredRep } from './RepScorer';
@@ -69,13 +70,20 @@ const spinQualityOptions = [
   { value: 'carry', label: 'Carry' },
   { value: 'tail', label: 'Tail' },
   { value: 'cut', label: 'Cut' },
+  { value: 'sink', label: 'Sink' },
   { value: 'neutral', label: 'Neutral' },
 ];
 
-const exchangeOptions = [
-  { value: 'fast', label: 'Fast' },
-  { value: 'average', label: 'Avg' },
-  { value: 'slow', label: 'Slow' },
+const selfCatchQualityOptions = [
+  { value: 'bad', label: '❌ Bad' },
+  { value: 'decent', label: '👍 Decent' },
+  { value: 'good', label: '✅ Good' },
+];
+
+const effortLevelOptions = [
+  { value: 'low', label: '🟢 Low' },
+  { value: 'medium', label: '🟡 Medium' },
+  { value: 'high', label: '🔴 High' },
 ];
 
 export function ThrowingRepFields({ value, onChange, mode, sport }: ThrowingRepFieldsProps) {
@@ -94,6 +102,20 @@ export function ThrowingRepFields({ value, onChange, mode, sport }: ThrowingRepF
         />
       </div>
 
+      {/* Exact Throw Distance (optional override) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Exact Throw Distance (Feet)</Label>
+        <Input
+          type="number"
+          placeholder="Optional — overrides band"
+          value={value.exact_throw_distance_ft ?? ''}
+          onChange={e => onChange('exact_throw_distance_ft', e.target.value ? Number(e.target.value) : undefined)}
+          className="h-8 text-xs"
+          min={0}
+          step="any"
+        />
+      </div>
+
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Accuracy</Label>
         <SelectGrid
@@ -109,6 +131,44 @@ export function ThrowingRepFields({ value, onChange, mode, sport }: ThrowingRepF
           options={armFeelOptions}
           value={value.arm_feel}
           onChange={v => onChange('arm_feel', v)}
+        />
+      </div>
+
+      {/* Self-Catch Quality (Required) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Self-Catch Quality <span className="text-destructive">*</span>
+        </Label>
+        <SelectGrid
+          options={selfCatchQualityOptions}
+          value={value.self_catch_quality}
+          onChange={v => onChange('self_catch_quality', v)}
+        />
+      </div>
+
+      {/* Effort Level (Required) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Effort Level <span className="text-destructive">*</span>
+        </Label>
+        <SelectGrid
+          options={effortLevelOptions}
+          value={value.effort_level}
+          onChange={v => onChange('effort_level', v)}
+        />
+      </div>
+
+      {/* Exact Velocity (optional override) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Exact Velocity (MPH)</Label>
+        <Input
+          type="number"
+          placeholder="Optional — overrides velocity band"
+          value={value.exact_velocity_mph ?? ''}
+          onChange={e => onChange('exact_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
+          className="h-8 text-xs"
+          min={0}
+          step="any"
         />
       </div>
 
@@ -132,16 +192,7 @@ export function ThrowingRepFields({ value, onChange, mode, sport }: ThrowingRepF
               options={spinQualityOptions}
               value={value.throw_spin_quality}
               onChange={v => onChange('throw_spin_quality', v)}
-              cols={4}
-            />
-          </div>
-
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Exchange Time</Label>
-            <SelectGrid
-              options={exchangeOptions}
-              value={value.exchange_time_band}
-              onChange={v => onChange('exchange_time_band', v)}
+              cols={5}
             />
           </div>
 

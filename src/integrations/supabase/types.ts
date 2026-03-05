@@ -3522,6 +3522,7 @@ export type Database = {
           filename: string | null
           id: string
           metadata: Json | null
+          rep_markers: Json | null
           session_id: string
           storage_path: string
           tagged_rep_indexes: number[] | null
@@ -3533,6 +3534,7 @@ export type Database = {
           filename?: string | null
           id?: string
           metadata?: Json | null
+          rep_markers?: Json | null
           session_id: string
           storage_path: string
           tagged_rep_indexes?: number[] | null
@@ -3544,6 +3546,7 @@ export type Database = {
           filename?: string | null
           id?: string
           metadata?: Json | null
+          rep_markers?: Json | null
           session_id?: string
           storage_path?: string
           tagged_rep_indexes?: number[] | null
