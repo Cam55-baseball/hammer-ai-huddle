@@ -134,6 +134,14 @@ export interface ScoredRep {
   infield_rep_execution?: 'incomplete' | 'complete' | 'elite';
   // Play direction
   play_direction?: 'right' | 'left' | 'back' | 'in' | 'straight_up';
+  // Fielding play type (play at base, slow roller, chopper)
+  fielding_play_type?: string;
+  // Catch type (all fielding positions)
+  catch_type?: 'backhand' | 'forehand' | 'underhand' | 'overhand';
+  // Hit type hardness (fielding difficulty)
+  hit_type_hardness?: 'soft' | 'average' | 'hard';
+  // Tag play quality (infielders)
+  tag_play_quality?: 'elite' | 'complete' | 'incomplete';
   // Live AB hitter tracking (pitching module only)
   live_ab_swing_result?: 'take' | 'swing_miss' | 'foul' | 'in_play';
   live_ab_ball_result?: string;
@@ -905,7 +913,21 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
-                  {/* Spin Direction removed from hitting — pitcher-only metric */}
+                  {/* Spin Direction — restored for hitting (hitter contact analytics) */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Spin Direction</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'topspin', label: 'Topspin' },
+                        { value: 'backspin', label: 'Backspin' },
+                        { value: 'knuckle', label: 'Knuckle' },
+                        { value: 'backspin_tail', label: 'Backspin Tail' },
+                      ]}
+                      value={current.spin_direction}
+                      onChange={v => updateField('spin_direction', v)}
+                      cols={4}
+                    />
+                  </div>
 
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Approach Quality</Label>
@@ -1232,8 +1254,22 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 required
               />
 
+              {/* Hit Type Hardness — feeds difficulty weighting */}
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Play Type</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">Hit Type</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'soft', label: '🟢 Soft' },
+                    { value: 'average', label: '🟡 Average' },
+                    { value: 'hard', label: '🔴 Hard' },
+                  ]}
+                  value={current.hit_type_hardness}
+                  onChange={v => updateField('hit_type_hardness', v)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
                 <SelectGrid
                   options={playTypeOptions}
                   value={current.play_type}
@@ -1291,12 +1327,48 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {/* Play Direction — all positions */}
-              <PlayDirectionSelector value={current} onChange={updateField} />
+              {/* Catch Type — all positions */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Catch Type</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'backhand', label: '🤚 Backhand' },
+                    { value: 'forehand', label: '✋ Forehand' },
+                    { value: 'underhand', label: '⬇️ Underhand' },
+                    { value: 'overhand', label: '⬆️ Overhand' },
+                  ]}
+                  value={current.catch_type}
+                  onChange={v => updateField('catch_type', v)}
+                  cols={4}
+                />
+              </div>
+
+              {/* Play Direction + Play Type (infielders get play type) */}
+              <PlayDirectionSelector
+                value={current}
+                onChange={updateField}
+                showPlayType={!!repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition)}
+              />
 
               {/* Infield Rep Type — P, 1B, 2B, 3B, SS only */}
               {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
-                <InfieldRepTypeFields value={current} onChange={updateField} />
+                <>
+                  <InfieldRepTypeFields value={current} onChange={updateField} />
+
+                  {/* Tag Play Quality — infielders only */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Tag Play Quality</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'elite', label: '👑 Elite' },
+                        { value: 'complete', label: '✅ Complete' },
+                        { value: 'incomplete', label: '❌ Incomplete' },
+                      ]}
+                      value={current.tag_play_quality}
+                      onChange={v => updateField('tag_play_quality', v)}
+                    />
+                  </div>
+                </>
               )}
 
               {/* Catcher-specific fields */}

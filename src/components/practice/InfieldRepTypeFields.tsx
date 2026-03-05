@@ -35,7 +35,6 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 const repTypeOptions = [
   { value: 'double_play', label: '🔄 Double Play' },
   { value: 'backhand', label: '🤚 Backhand' },
-  { value: 'slow_roller', label: '🐢 Slow Roller' },
   { value: 'clean_pick', label: '🧤 Clean Pick' },
 ];
 

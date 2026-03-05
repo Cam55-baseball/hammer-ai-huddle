@@ -225,7 +225,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         {showPitchDistance && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">
-              Pitch Release Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
+              Pitch Mound Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
             </Label>
             <div className="flex items-center gap-0 overflow-x-auto py-1">
               {[15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80].map((ft, i, arr) => (

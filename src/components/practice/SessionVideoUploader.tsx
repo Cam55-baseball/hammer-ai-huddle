@@ -125,7 +125,6 @@ export function SessionVideoUploader({ reps, sessionId, readOnly, module }: Sess
         ref={fileInputRef}
         type="file"
         accept="video/*"
-        capture="environment"
         multiple
         className="hidden"
         onChange={handleFileSelect}
