@@ -21,7 +21,7 @@ const MODULES = [
   { value: 'fielding', label: 'Fielding' },
   { value: 'catching', label: 'Catching' },
   { value: 'baserunning', label: 'Baserunning' },
-  { value: 'mental', label: 'Mental' },
+  
 ];
 
 const SESSION_TYPES = [
