@@ -24,7 +24,7 @@ import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSe
 import { AITextBoxField } from '@/components/practice/AITextBoxField';
 import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
-import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2, Video } from 'lucide-react';
+import { Target, Flame, Wind, Shield, Zap, ArrowLeft, ArrowRight, Save, Loader2, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
@@ -36,7 +36,7 @@ const modules = [
   { id: 'fielding', icon: Shield, label: 'Fielding' },
   { id: 'catching', icon: Shield, label: 'Catching' },
   { id: 'baserunning', icon: Zap, label: 'Baserunning' },
-  { id: 'mental', icon: Brain, label: 'Mental' },
+  
 ];
 
 type FlowStep = 'select_type' | 'readiness' | 'configure_session' | 'build_session' | 'session_summary';
