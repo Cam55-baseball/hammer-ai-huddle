@@ -305,6 +305,7 @@ export function LiveScorebook({
           {activeAtBat && currentBatter && currentHalf === 'bottom' && (
             <div className="mt-4">
               <AtBatPanel
+                key={`${currentInning}-${currentHalf}-${currentBatterIndex}`}
                 batterName={currentBatter.name}
                 batterOrder={currentBatter.batting_order}
                 pitcherName={currentPitcher}
