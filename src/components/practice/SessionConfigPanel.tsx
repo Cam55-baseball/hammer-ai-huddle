@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +16,7 @@ import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
 import { softballLeagueDistances } from '@/data/softball/leagueDistances';
+import { getCompetitionLevelsByCategory } from '@/data/competitionWeighting';
 import { cn } from '@/lib/utils';
 import { Settings2, ArrowRight } from 'lucide-react';
 
@@ -30,6 +31,7 @@ export interface SessionConfig {
   coach_selection: CoachSelection;
   coach_session_type?: 'solo' | 'coached' | 'lesson';
   league_level?: string;
+  competition_level?: string;
   opponent_name?: string;
   opponent_level?: string;
   fielding_position?: string;
@@ -87,6 +89,12 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [opponentLevel, setOpponentLevel] = useState('');
   const [fieldingPosition, setFieldingPosition] = useState<string | undefined>();
   const [customRepSource, setCustomRepSource] = useState('');
+  const [competitionLevel, setCompetitionLevel] = useState<string | undefined>();
+
+  const competitionCategories = useMemo(() => {
+    return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
+  }, [sport]);
+  const showCompetitionLevel = isGame || isLiveAbs;
 
   // Auto-derived values
   const environment = deriveEnvironment(sessionType);
@@ -172,6 +180,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       coach_selection: coachSelection,
       coach_session_type: coachSessionType,
       league_level: leagueLevel,
+      competition_level: competitionLevel,
       opponent_name: isGame ? opponentName : undefined,
       opponent_level: isGame ? opponentLevel : undefined,
       fielding_position: isFielding ? fieldingPosition : undefined,
@@ -318,6 +327,37 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">Season</Label>
             <SeasonContextToggle value={seasonContext} onChange={setSeasonContext} />
+          </div>
+        )}
+
+        {/* Competition Level — for game and live at-bats */}
+        {showCompetitionLevel && (
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1.5 block">Competition Level</Label>
+            <div className="space-y-1.5">
+              {competitionCategories.map(cat => (
+                <div key={cat.category}>
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">{cat.label}</span>
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    {cat.levels.map(l => (
+                      <button
+                        key={l.key}
+                        type="button"
+                        onClick={() => setCompetitionLevel(competitionLevel === l.key ? undefined : l.key)}
+                        className={cn(
+                          'rounded-md border px-2 py-1 text-[10px] font-medium transition-all',
+                          competitionLevel === l.key
+                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                            : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

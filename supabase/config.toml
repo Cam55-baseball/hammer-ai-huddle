@@ -173,3 +173,6 @@ verify_jwt = false
 
 [functions.update-library-session]
 verify_jwt = false
+
+[functions.classify-league]
+verify_jwt = true

@@ -105,6 +105,16 @@ export const ENGINE_CONTRACT = {
   COACH_VERIFIED_INTEGRITY_BONUS: 3,
   COACH_VERIFIED_WEIGHT_BONUS: 1.05,
 
+  // Competition weighting
+  COMPETITION_WEIGHT_ENABLED: true,
+  AGE_PLAY_UP_BONUS_CAP: 0.12,
+  AGE_PLAY_UP_BONUS_PER_YEAR: 0.03,
+  SUMMER_LEAGUE_AI_CLASSIFY: true,
+
+  // Video limits
+  VIDEO_MAX_CLIP_DURATION_SEC: 300,
+  VIDEO_MAX_FILE_SIZE_MB: 500,
+
   // Micro-field composite influence weights
   MICRO_WEIGHTS: {
     // BQI modifiers

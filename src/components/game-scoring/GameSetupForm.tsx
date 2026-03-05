@@ -4,10 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Loader2 } from 'lucide-react';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
 import { softballLeagueDistances } from '@/data/softball/leagueDistances';
+import { getCompetitionLevelsByCategory, findKnownSummerLeague } from '@/data/competitionWeighting';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import type { GameSetup, LineupPlayer } from '@/hooks/useGameScoring';
 
 const POSITIONS_BASEBALL = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
@@ -25,9 +29,11 @@ interface GameSetupFormProps {
 
 export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const { sport, isSoftball } = useSportTheme();
+  const { toast } = useToast();
   const distances = isSoftball ? softballLeagueDistances : baseballLeagueDistances;
   const positions = isSoftball ? POSITIONS_SOFTBALL : POSITIONS_BASEBALL;
   const defaultInnings = isSoftball ? 7 : 9;
+  const competitionCategories = useMemo(() => getCompetitionLevelsByCategory(sport as 'baseball' | 'softball'), [sport]);
 
   const [teamName, setTeamName] = useState('');
   const [opponentName, setOpponentName] = useState('');
@@ -42,6 +48,9 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
     { id: crypto.randomUUID(), name: '', position: '', batting_order: 1 },
   ]);
   const [startingPitcher, setStartingPitcher] = useState('');
+  const [competitionLevel, setCompetitionLevel] = useState<string>('');
+  const [summerLeagueName, setSummerLeagueName] = useState('');
+  const [classifyingLeague, setClassifyingLeague] = useState(false);
 
   const handleLeagueChange = (level: string) => {
     setLeagueLevel(level);
@@ -74,6 +83,31 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
     return teamName.trim() && opponentName.trim() && gameType && leagueLevel
       && lineup.filter(p => p.name.trim()).length >= 1;
   }, [teamName, opponentName, gameType, leagueLevel, lineup]);
+
+  const classifySummerLeague = async () => {
+    if (!summerLeagueName.trim()) return;
+    // Check known leagues first
+    const known = findKnownSummerLeague(sport as 'baseball' | 'softball', summerLeagueName);
+    if (known) {
+      toast({ title: 'League found', description: `${known.name}: ${known.difficulty_multiplier}x multiplier` });
+      return;
+    }
+    setClassifyingLeague(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('classify-league', {
+        body: { league_name: summerLeagueName, sport, country: '' },
+      });
+      if (error) throw error;
+      toast({
+        title: 'League classified',
+        description: `${summerLeagueName}: ${data.difficulty_multiplier}x (${data.confidence} confidence)`,
+      });
+    } catch {
+      toast({ title: 'Classification failed', variant: 'destructive' });
+    } finally {
+      setClassifyingLeague(false);
+    }
+  };
 
   const handleSubmit = () => {
     if (!isValid) return;
@@ -157,6 +191,59 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
               <Input value={venue} onChange={e => setVenue(e.target.value)} placeholder="Field / Stadium" />
             </div>
           </div>
+
+          {/* Competition Level */}
+          <div>
+            <Label>Competition Level</Label>
+            <div className="space-y-2 mt-1.5">
+              {competitionCategories.map(cat => (
+                <div key={cat.category}>
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{cat.label}</span>
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    {cat.levels.map(l => (
+                      <button
+                        key={l.key}
+                        type="button"
+                        onClick={() => setCompetitionLevel(l.key)}
+                        className={cn(
+                          'rounded-md border px-2 py-1 text-xs font-medium transition-all',
+                          competitionLevel === l.key
+                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                            : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {l.label}
+                        <span className="ml-1 text-[9px] opacity-60">{l.competition_weight_multiplier}x</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Summer League Classification */}
+          {competitionLevel === 'summer_generic' && (
+            <div>
+              <Label>Summer League Name</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={summerLeagueName}
+                  onChange={e => setSummerLeagueName(e.target.value)}
+                  placeholder="e.g. Cape Cod League"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={classifySummerLeague}
+                  disabled={classifyingLeague || !summerLeagueName.trim()}
+                >
+                  {classifyingLeague ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Classify'}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

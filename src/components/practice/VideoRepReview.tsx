@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Play, Pause, Upload, Video, Check, ChevronRight } from 'lucide-react';
+import { Play, Pause, Upload, Video, Check, ChevronRight, Microscope } from 'lucide-react';
 import { VideoRepMarker, type RepMarker } from './VideoRepMarker';
 import { RepScorer, type ScoredRep } from './RepScorer';
+import { isAnalyzableModule, RepVideoAnalysis } from './RepVideoAnalysis';
 import type { SessionConfig } from './SessionConfigPanel';
 
 interface VideoRepReviewProps {
@@ -25,7 +26,9 @@ export function VideoRepReview({ module, sessionConfig, onComplete }: VideoRepRe
   const [markers, setMarkers] = useState<RepMarker[]>([]);
   const [reps, setReps] = useState<ScoredRep[]>([]);
   const [activeRepIndex, setActiveRepIndex] = useState<number | null>(null);
+  const [analyzeState, setAnalyzeState] = useState<{ repIndex: number } | null>(null);
 
+  const canAnalyze = isAnalyzableModule(module);
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -143,10 +146,39 @@ export function VideoRepReview({ module, sessionConfig, onComplete }: VideoRepRe
               />
 
               {reps.length > 0 && (
-                <Button onClick={handleFinalize} className="w-full gap-2">
-                  <Check className="h-4 w-4" />
-                  Finalize {reps.length} Tagged Reps
-                </Button>
+                <div className="space-y-2">
+                  {canAnalyze && (
+                    <div className="flex flex-wrap gap-1">
+                      {reps.map((_, i) => (
+                        <Button
+                          key={i}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setAnalyzeState({ repIndex: i })}
+                          className="gap-1 text-xs"
+                        >
+                          <Microscope className="h-3 w-3" />
+                          Analyze #{i + 1}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                  <Button onClick={handleFinalize} className="w-full gap-2">
+                    <Check className="h-4 w-4" />
+                    Finalize {reps.length} Tagged Reps
+                  </Button>
+                </div>
+              )}
+
+              {/* Analysis dialog */}
+              {analyzeState && videoSrc && (
+                <RepVideoAnalysis
+                  videoUrl={videoSrc}
+                  module={module}
+                  repIndex={analyzeState.repIndex}
+                  open={!!analyzeState}
+                  onOpenChange={(open) => !open && setAnalyzeState(null)}
+                />
               )}
             </>
           )}
