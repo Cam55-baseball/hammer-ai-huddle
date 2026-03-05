@@ -1,138 +1,176 @@
 
 
-# Practice Session Logging — AI Fields, ABS Guess, Pitcher Intent, and Drill Descriptions
+# Multi-Module Session Updates: Throwing, Baserunning, Coach Access, Velocity, and Video Rep Tagging
 
-This is a large, multi-part implementation across the rep logging system. Here is the exact plan for each requirement.
-
----
-
-## Overview of Changes
-
-Six distinct features across multiple files, touching `RepScorer.tsx`, `RepSourceSelector.tsx`, `SessionConfigPanel.tsx`, `PracticeHub.tsx`, `CatchingRepFields.tsx`, and a new `AITextBoxField.tsx` component.
+This is a large implementation spanning 5 major areas. Here is the exact plan.
 
 ---
 
-## 1. Reusable AI Text Box Component
+## 1. THROWING SESSION OPTIMIZATION
 
-**New file**: `src/components/practice/AITextBoxField.tsx`
+**File: `src/components/practice/ThrowingRepFields.tsx`**
 
-A reusable multi-line textarea with:
-- Configurable label, min character count, required flag
-- Character count display and warning when under minimum
-- Structured field (not notes) — value stored on the rep/session object directly
+- **Remove** Exchange Time field (lines 139-146) and `exchangeOptions` constant (lines 75-79)
+- **Add** "Self-Catch Quality" required SelectGrid: Bad / Decent / Good
+- **Add** "Exact Throw Distance (Feet)" optional numeric Input below distance band
+- **Add** "Sink" to `spinQualityOptions` array, update cols to 5
+- **Add** "Effort Level" required SelectGrid: Low / Medium / High
+- **Add** "Exact Velocity (MPH)" optional numeric Input
 
-Used by requirements 1, 4, 5, and 6.
+**File: `src/components/practice/RepScorer.tsx`** (ScoredRep interface)
 
----
-
-## 2. Catching "Other" / "Drill" → Required AI Drill Description (Requirement 1)
-
-**File**: `src/components/practice/RepScorer.tsx`
-
-- When `module === 'catching'` AND `repSource === 'other' || repSource === 'drill'`, render `AITextBoxField` with label "AI Drill Description", min 15 chars, required
-- Store as `ai_drill_description` on `ScoredRep`
-- Add to `canConfirm` validation: if catching + (other|drill), `ai_drill_description` must be >= 15 chars
-- Include in committed rep data
+- Remove `exchange_time_band` from ScoredRep
+- Add: `self_catch_quality?: string`, `exact_throw_distance_ft?: number`, `effort_level?: string`, `exact_velocity_mph?: number`
+- Update `canConfirm` validation: when throwing, require `self_catch_quality` and `effort_level`
 
 ---
 
-## 3. ABS Guess Field (Requirement 2)
+## 2. BASERUNNING SESSION OPTIMIZATION
 
-**File**: `src/components/practice/RepScorer.tsx`
+**File: `src/components/practice/BaserunningRepFields.tsx`**
 
-Applies to: Hitting, Pitching, and Catching sessions when `pitch_location` is logged.
+- **Add** "Exact Time to Base (Seconds)" optional numeric Input below time band
+- **Add** "Exact Steps to Base" optional integer Input (new field)
+- **Add** "Custom" option to drill type lists (both baseball and softball)
+- **Add** conditional `AITextBoxField` for "AI Drill Type Description" when `drill_type === 'custom'`, min 15 chars, required
 
-- Add `abs_guess` field to `ScoredRep` (type `{ row: number; col: number }`)
-- After the existing `PitchLocationGrid` for pitch location, render a second `PitchLocationGrid` with label "ABS Guess (Select 5×5 Zone)"
-- Required when `current.pitch_location` has been set — add to `canConfirm` validation
-- Both grids use identical 5×5 UI
-- Store both `pitch_location` and `abs_guess` on the rep
+**File: `src/components/practice/RepScorer.tsx`** (ScoredRep interface)
 
----
-
-## 4. Pitcher Spot Intent — Pre-Pitch Target (Requirement 3)
-
-**File**: `src/components/practice/RepScorer.tsx`
-
-Applies to: Pitching sessions only.
-
-- Add `pitcher_spot_intent` field to `ScoredRep` (type `{ row: number; col: number }`)
-- Render a `PitchLocationGrid` labeled "Pitcher Spot Intent (Pre-Pitch Target)" BEFORE the actual pitch location grid
-- Required before pitch location can be selected (conditional rendering: show pitch location grid only after intent is set)
-- Once pitch location is logged, intent grid becomes read-only (locked) — visually dimmed with `pointer-events-none opacity-60`
-- Store `pitcher_spot_intent` separately from `pitch_location`
+- Add: `exact_time_to_base_sec?: number`, `exact_steps_to_base?: number`, `ai_baserunning_drill_description?: string`
+- Update `canConfirm`: if baserunning + drill_type === 'custom', require `ai_baserunning_drill_description` >= 15 chars
+- Pass `sessionConfig` to `BaserunningRepFields` so it can render the AITextBoxField
 
 ---
 
-## 5. Goal of Rep & Actual Outcome — Session-Level Required AI Text Boxes (Requirement 4)
+## 3. COACH DATA ACCESS — REMOVE RESTRICTIONS
 
-**Files**: `src/pages/PracticeHub.tsx`, `src/components/practice/RepScorer.tsx`
+**File: `src/pages/CoachDashboard.tsx`** and related coach components
 
-Current state: These are per-rep SelectGrid presets in advanced mode only. The user wants them as **session-level required multi-line text boxes** shown at session save time.
-
-Changes:
-- **Remove** the existing per-rep `goal_of_rep` / `actual_outcome` SelectGrid from `RepScorer.tsx` (lines 1124-1160)
-- **Add** two `AITextBoxField` components in `PracticeHub.tsx` in the `build_session` step, placed above the "Save Session" button
-- Label: "Goal of Rep" and "Actual Outcome", both required, min 20 chars (optional enforcement per spec: "Minimum: 20 characters (optional)")
-- Store as `session_goal_of_rep` and `session_actual_outcome` in state
-- Pass into `createSession` call via `fatigue_state` or a new top-level field
-- Block "Save Session" button if either field is empty
-- These are structured AI fields, not notes
+- Audit all subscription/module gating logic for coach views of player analytics
+- Remove any `isSubscribed` or module purchase checks when coaches view compiled player data
+- Ensure the rule: if data exists, coaches see full analytics with no prerequisite gating
+- This is primarily a UI-level change — remove conditional rendering that hides analytics behind subscription checks for coach role
 
 ---
 
-## 6. "Drill" Rep Source in ALL Practice Sessions → AI Drill Clarification (Requirement 5)
+## 4. EXACT PITCH VELOCITY INPUT (Pitcher, At Bats, Live BP, Machine Mix)
 
-**File**: `src/components/practice/RepScorer.tsx`
+**File: `src/components/practice/RepScorer.tsx`**
 
-- When `repSource === 'drill'` (any module, not just catching), render `AITextBoxField` labeled "AI Drill Clarification", min 15 chars, required
-- Store as `ai_drill_clarification` on `ScoredRep`
-- Add to `canConfirm` validation
-- Note: For catching, requirement 1 already covers this with "AI Drill Description" — use that label for catching, "AI Drill Clarification" for all other modules
-
----
-
-## 7. "Custom" / "Other" Rep Source in Practice → AI Custom Rep Description (Requirement 6)
-
-**File**: `src/components/practice/RepScorer.tsx`
-
-- When `repSource === 'other'` (any module), render `AITextBoxField` labeled "AI Custom Rep Description", min 15 chars, required
-- Store as `ai_custom_rep_description` on `ScoredRep`
-- Add to `canConfirm` validation
-- For catching "other", requirement 1's "AI Drill Description" applies — use that for catching, this for other modules
-- Replace the existing simple `Input` for custom source in `RepSourceSelector` with the session config level only (keep for naming), and add the per-rep AI field in `RepScorer`
+- Add `exact_pitch_velocity_mph?: number` to ScoredRep
+- In pitching fields section: add optional numeric Input "Exact Pitch Velocity (MPH)" below velocity band (visible for live_bp, game, flat_ground_vs_hitter, and advanced mode)
+- In hitting fields section: add same field when rep source is live_bp, live_abs, or game (competitive contexts)
+- Field is always optional, never blocks saving
 
 ---
 
-## Updated `ScoredRep` Interface
+## 5. VIDEO + REAL-TIME REP LOGGING SYSTEM
 
-New fields added:
+This is the largest feature. It introduces a split-screen video player with synchronized rep marking.
+
+### A) New Component: `VideoRepLogger.tsx`
+
+Split-screen layout:
+- **Left panel**: Video player (uploaded/recorded) with playback controls, speed adjustment
+- **Right panel**: Rep logging form (existing RepScorer logic)
+- User can watch video and log reps simultaneously
+
+### B) Rep Marker System — New Component: `VideoRepMarker.tsx`
+
+- Start/End time buttons that capture `video.currentTime`
+- Creates a `RepTimeSpan` object: `{ video_id, start_time_sec, end_time_sec }`
+- Visual timeline bar showing all rep markers on the video scrubber
+- Click a marker to jump to that rep's clip
+
+### C) Post-Session Self-Tagging Mode
+
+- After a full session video is uploaded, user enters "Review & Tag" mode
+- Full video plays; user creates rep markers retroactively
+- Each marker opens a rep data entry form (same fields as RepScorer per module)
+- Reps are saved with video binding data
+
+### D) Database Migration
+
+Add columns to `session_videos` table:
+```sql
+ALTER TABLE session_videos ADD COLUMN rep_markers JSONB DEFAULT '[]';
+```
+
+Each rep marker stored as:
+```json
+{
+  "rep_index": 0,
+  "start_time_sec": 12.5,
+  "end_time_sec": 15.8,
+  "locked": false
+}
+```
+
+Update ScoredRep interface:
+- Add `video_id?: string`, `video_start_sec?: number`, `video_end_sec?: number`
+
+### E) Rep-to-Video Binding
+
+- Each rep stores video_id + start/end timestamps
+- Reps are retrievable, sortable, filterable by video
+- On dashboard, rep badges link to their video clip segment
+- Once session is finalized, rep-video bindings are locked (non-editable except by coach)
+
+### F) Integration into PracticeHub
+
+- Add a toggle/tab in `build_session` step: "Standard Logging" vs "Video + Log"
+- When "Video + Log" is selected, render `VideoRepLogger` instead of standalone `RepScorer`
+- Session save includes all video-bound rep data
+
+---
+
+## Updated ScoredRep Interface (All New Fields)
+
 ```typescript
-ai_drill_description?: string;      // Catching other/drill
-ai_drill_clarification?: string;    // Any module drill
-ai_custom_rep_description?: string; // Any module other/custom
-abs_guess?: { row: number; col: number };
-pitcher_spot_intent?: { row: number; col: number };
+// Throwing
+self_catch_quality?: string;
+exact_throw_distance_ft?: number;
+effort_level?: string;
+exact_velocity_mph?: number;
+
+// Baserunning
+exact_time_to_base_sec?: number;
+exact_steps_to_base?: number;
+ai_baserunning_drill_description?: string;
+
+// Velocity (pitcher/hitting competitive)
+exact_pitch_velocity_mph?: number;
+
+// Video binding
+video_id?: string;
+video_start_sec?: number;
+video_end_sec?: number;
 ```
 
 ---
 
-## Updated Validation (`canConfirm`)
+## Files to Create
 
-The existing validation will be extended:
-- If catching + (other|drill): `ai_drill_description` >= 15 chars
-- If non-catching + drill: `ai_drill_clarification` >= 15 chars
-- If non-catching + other: `ai_custom_rep_description` >= 15 chars
-- If pitch_location is set (hitting/pitching/catching): `abs_guess` must be set
-- If pitching: `pitcher_spot_intent` must be set before pitch_location
-
----
+| File | Purpose |
+|------|---------|
+| `src/components/practice/VideoRepLogger.tsx` | Split-screen video + rep logging |
+| `src/components/practice/VideoRepMarker.tsx` | Timeline marker UI for start/end times |
+| `src/components/practice/VideoRepReview.tsx` | Post-session review & retroactive tagging |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/practice/AITextBoxField.tsx` | **New** — Reusable AI text box component |
-| `src/components/practice/RepScorer.tsx` | Add new ScoredRep fields, AI text boxes, ABS Guess grid, Pitcher Intent grid, validation updates |
-| `src/pages/PracticeHub.tsx` | Add session-level Goal of Rep & Actual Outcome fields, block save if empty |
+| `src/components/practice/ThrowingRepFields.tsx` | Remove exchange time, add self-catch quality, exact distance, sink spin, effort level, exact velocity |
+| `src/components/practice/BaserunningRepFields.tsx` | Add exact time, exact steps, custom drill type + AI text box |
+| `src/components/practice/RepScorer.tsx` | New ScoredRep fields, validation updates, exact velocity for pitching/hitting |
+| `src/pages/PracticeHub.tsx` | Video+Log mode toggle, integrate VideoRepLogger |
+| `src/pages/CoachDashboard.tsx` | Remove analytics access restrictions for coaches |
+| `src/components/practice/SessionVideoUploader.tsx` | Support rep_markers JSONB storage |
+
+## Database Migration
+
+```sql
+ALTER TABLE session_videos ADD COLUMN IF NOT EXISTS rep_markers JSONB DEFAULT '[]';
+```
 
