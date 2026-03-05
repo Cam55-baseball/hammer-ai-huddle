@@ -19,7 +19,7 @@ import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader
 import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSessions';
-import { AITextBoxField } from '@/components/practice/AITextBoxField';
+
 import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
 import { Target, Flame, Wind, Shield, Zap, ArrowLeft, ArrowRight, Save, Loader2, Video } from 'lucide-react';
@@ -64,9 +64,6 @@ export default function PracticeHub() {
   // Post-session summary
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
-  // Session-level AI fields (Requirement 4)
-  const [sessionGoalOfRep, setSessionGoalOfRep] = useState('');
-  const [sessionActualOutcome, setSessionActualOutcome] = useState('');
   // Video+Log mode toggle
   const [videoLogMode, setVideoLogMode] = useState(false);
 
@@ -97,8 +94,6 @@ export default function PracticeHub() {
     setNotes('');
     setFeelings({ body: 3, mind: 3 });
     setSessionConfig(null);
-    setSessionGoalOfRep('');
-    setSessionActualOutcome('');
   };
 
   const handleReadinessConfirm = () => {
@@ -133,8 +128,6 @@ export default function PracticeHub() {
     setNotes('');
     setSavedSessionId(null);
     setScheduledId(null);
-    setSessionGoalOfRep('');
-    setSessionActualOutcome('');
   };
 
   // Convert reps into drill blocks for the backend
@@ -203,9 +196,6 @@ export default function PracticeHub() {
           environment: sessionConfig.environment,
           indoor_outdoor: sessionConfig.indoor_outdoor,
           rep_source: sessionConfig.rep_source,
-          // Session-level AI structured fields
-          session_goal_of_rep: sessionGoalOfRep,
-          session_actual_outcome: sessionActualOutcome,
         },
         micro_layer_data: reps.length > 0 ? reps : undefined,
       });
@@ -358,10 +348,6 @@ export default function PracticeHub() {
                       reps={reps}
                       onRepsChange={setReps}
                       sessionConfig={sessionConfig}
-                      goalOfRep={sessionGoalOfRep}
-                      onGoalOfRepChange={setSessionGoalOfRep}
-                      actualOutcome={sessionActualOutcome}
-                      onActualOutcomeChange={setSessionActualOutcome}
                     />
                   )}
 
