@@ -7,8 +7,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Video, Upload, X, Film, Loader2 } from 'lucide-react';
+import { Video, X, Film, Loader2, Microscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { validateVideoFile } from '@/data/videoLimits';
+import { isAnalyzableModule, RepVideoAnalysis } from './RepVideoAnalysis';
 import type { ScoredRep } from './RepScorer';
 
 interface LocalVideo {
@@ -25,29 +27,40 @@ interface SessionVideoUploaderProps {
   reps: ScoredRep[];
   sessionId?: string;
   readOnly?: boolean;
+  module?: string;
 }
 
-export function SessionVideoUploader({ reps, sessionId, readOnly }: SessionVideoUploaderProps) {
+export function SessionVideoUploader({ reps, sessionId, readOnly, module }: SessionVideoUploaderProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [videos, setVideos] = useState<LocalVideo[]>([]);
   const [taggingVideoId, setTaggingVideoId] = useState<string | null>(null);
+  const [analyzeState, setAnalyzeState] = useState<{ videoUrl: string; repIndex: number } | null>(null);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    const newVideos: LocalVideo[] = Array.from(files).map(file => ({
-      id: crypto.randomUUID(),
-      file,
-      previewUrl: URL.createObjectURL(file),
-      uploading: false,
-      uploaded: false,
-      taggedRepIndexes: [],
-    }));
+
+    const newVideos: LocalVideo[] = [];
+    for (const file of Array.from(files)) {
+      const validation = validateVideoFile(file);
+      if (!validation.valid) {
+        toast({ title: 'Invalid file', description: validation.error, variant: 'destructive' });
+        continue;
+      }
+      newVideos.push({
+        id: crypto.randomUUID(),
+        file,
+        previewUrl: URL.createObjectURL(file),
+        uploading: false,
+        uploaded: false,
+        taggedRepIndexes: [],
+      });
+    }
     setVideos(prev => [...prev, ...newVideos]);
     e.target.value = '';
-  }, []);
+  }, [toast]);
 
   const removeVideo = useCallback((id: string) => {
     setVideos(prev => {
@@ -96,14 +109,13 @@ export function SessionVideoUploader({ reps, sessionId, readOnly }: SessionVideo
     }
   }, [videos, user, toast]);
 
-  // Expose upload function for parent to call after session save
-  // We use a ref-based approach — parent calls this via ref or we auto-upload on sessionId change
-  // For simplicity, auto-upload when sessionId becomes available
   const [lastUploadedSessionId, setLastUploadedSessionId] = useState<string | null>(null);
   if (sessionId && sessionId !== lastUploadedSessionId && videos.some(v => !v.uploaded)) {
     setLastUploadedSessionId(sessionId);
     uploadAllVideos(sessionId);
   }
+
+  const canAnalyze = module ? isAnalyzableModule(module) : false;
 
   if (readOnly) return null;
 
@@ -172,13 +184,25 @@ export function SessionVideoUploader({ reps, sessionId, readOnly }: SessionVideo
                 const vid = videos.find(v => v.id === taggingVideoId);
                 const isTagged = vid?.taggedRepIndexes.includes(i) ?? false;
                 return (
-                  <label key={i} className="flex items-center gap-1 cursor-pointer">
-                    <Checkbox
-                      checked={isTagged}
-                      onCheckedChange={() => toggleRepTag(taggingVideoId, i)}
-                    />
-                    <span className="text-xs">#{i + 1}</span>
-                  </label>
+                  <div key={i} className="flex items-center gap-1">
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <Checkbox
+                        checked={isTagged}
+                        onCheckedChange={() => toggleRepTag(taggingVideoId, i)}
+                      />
+                      <span className="text-xs">#{i + 1}</span>
+                    </label>
+                    {/* Analyze button — only for hitting/pitching/throwing */}
+                    {isTagged && canAnalyze && vid?.previewUrl && (
+                      <button
+                        onClick={() => setAnalyzeState({ videoUrl: vid.previewUrl, repIndex: i })}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        title="Analyze rep"
+                      >
+                        <Microscope className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -205,6 +229,17 @@ export function SessionVideoUploader({ reps, sessionId, readOnly }: SessionVideo
           </Badge>
         )}
       </div>
+
+      {/* Analysis dialog */}
+      {analyzeState && module && (
+        <RepVideoAnalysis
+          videoUrl={analyzeState.videoUrl}
+          module={module}
+          repIndex={analyzeState.repIndex}
+          open={!!analyzeState}
+          onOpenChange={(open) => !open && setAnalyzeState(null)}
+        />
+      )}
     </div>
   );
 }

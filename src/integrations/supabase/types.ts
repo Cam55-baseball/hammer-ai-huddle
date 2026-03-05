@@ -1781,6 +1781,36 @@ export type Database = {
         }
         Relationships: []
       }
+      league_classifications: {
+        Row: {
+          ai_classified: boolean | null
+          country: string | null
+          created_at: string | null
+          difficulty_multiplier: number
+          id: string
+          league_name: string
+          sport: string
+        }
+        Insert: {
+          ai_classified?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          difficulty_multiplier?: number
+          id?: string
+          league_name: string
+          sport: string
+        }
+        Update: {
+          ai_classified?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          difficulty_multiplier?: number
+          id?: string
+          league_name?: string
+          sport?: string
+        }
+        Relationships: []
+      }
       lesson_trainers: {
         Row: {
           created_at: string
@@ -2645,12 +2675,15 @@ export type Database = {
       }
       performance_sessions: {
         Row: {
+          age_play_up_bonus: number | null
           batting_side_used: string | null
           calendar_event_id: string | null
           coach_grade: number | null
           coach_id: string | null
           coach_override_applied: boolean | null
           coach_override_id: string | null
+          competition_level: string | null
+          competition_weight: number | null
           composite_indexes: Json | null
           created_at: string
           data_density_level: number | null
@@ -2680,12 +2713,15 @@ export type Database = {
           voice_notes: string[] | null
         }
         Insert: {
+          age_play_up_bonus?: number | null
           batting_side_used?: string | null
           calendar_event_id?: string | null
           coach_grade?: number | null
           coach_id?: string | null
           coach_override_applied?: boolean | null
           coach_override_id?: string | null
+          competition_level?: string | null
+          competition_weight?: number | null
           composite_indexes?: Json | null
           created_at?: string
           data_density_level?: number | null
@@ -2715,12 +2751,15 @@ export type Database = {
           voice_notes?: string[] | null
         }
         Update: {
+          age_play_up_bonus?: number | null
           batting_side_used?: string | null
           calendar_event_id?: string | null
           coach_grade?: number | null
           coach_id?: string | null
           coach_override_applied?: boolean | null
           coach_override_id?: string | null
+          competition_level?: string | null
+          competition_weight?: number | null
           composite_indexes?: Json | null
           created_at?: string
           data_density_level?: number | null
@@ -3906,6 +3945,7 @@ export type Database = {
           session_number: number
           sleep_rating: number | null
           sport: string
+          steps_per_rep: Json | null
           user_id: string
         }
         Insert: {
@@ -3924,6 +3964,7 @@ export type Database = {
           session_number: number
           sleep_rating?: number | null
           sport: string
+          steps_per_rep?: Json | null
           user_id: string
         }
         Update: {
@@ -3942,6 +3983,7 @@ export type Database = {
           session_number?: number
           sleep_rating?: number | null
           sport?: string
+          steps_per_rep?: Json | null
           user_id?: string
         }
         Relationships: []

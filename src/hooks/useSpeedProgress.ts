@@ -36,6 +36,7 @@ export interface SpeedSession {
   is_break_day: boolean;
   readiness_score: number | null;
   notes: string | null;
+  steps_per_rep: Record<string, number[]>;
   created_at: string;
 }
 
@@ -100,6 +101,7 @@ export function useSpeedProgress(sport: SportType) {
         distances: s.distances || {},
         pain_areas: s.pain_areas || [],
         drill_log: s.drill_log || [],
+        steps_per_rep: s.steps_per_rep || {},
       })) as SpeedSession[];
 
       setSessions(sessData);
@@ -272,6 +274,7 @@ export function useSpeedProgress(sport: SportType) {
     rpe: number;
     isBreakDay: boolean;
     notes?: string;
+    stepsPerRep?: Record<string, number[]>;
   }) => {
     if (!user) return null;
 
@@ -296,6 +299,7 @@ export function useSpeedProgress(sport: SportType) {
           is_break_day: sessionData.isBreakDay,
           readiness_score: readiness,
           notes: sessionData.notes || null,
+          steps_per_rep: sessionData.stepsPerRep || {},
         })
         .select()
         .single();
@@ -416,6 +420,49 @@ export function useSpeedProgress(sport: SportType) {
     return (goals?.weeks_without_improvement || 0) >= PLATEAU_THRESHOLD_SESSIONS;
   }, [goals]);
 
+  // ─── Stride Analytics ─────────────────────────────────────────────────
+
+  const strideAnalytics = useMemo(() => {
+    const result: Record<string, { avgSteps: number; avgStrideLength: number; avgStepFrequency: number }> = {};
+    const distConfigs = getDistancesForSport(sport);
+
+    for (const dist of distConfigs) {
+      const key = dist.key;
+      const sessionsWithSteps = sessions.filter(
+        s => !s.is_break_day && s.steps_per_rep?.[key]?.length && s.distances[key]
+      );
+      if (sessionsWithSteps.length === 0) continue;
+
+      let totalSteps = 0;
+      let totalTime = 0;
+      let count = 0;
+      const distYards = dist.yards;
+
+      for (const s of sessionsWithSteps) {
+        const steps = s.steps_per_rep[key];
+        const times = Array.isArray(s.distances[key]) ? s.distances[key] as number[] : [s.distances[key] as number];
+        for (let i = 0; i < Math.min(steps.length, times.length); i++) {
+          if (steps[i] > 0 && times[i] > 0) {
+            totalSteps += steps[i];
+            totalTime += times[i];
+            count++;
+          }
+        }
+      }
+
+      if (count > 0) {
+        const avgSteps = totalSteps / count;
+        const avgTime = totalTime / count;
+        result[key] = {
+          avgSteps,
+          avgStrideLength: (distYards * 3) / avgSteps, // feet per step
+          avgStepFrequency: avgSteps / avgTime, // steps per second
+        };
+      }
+    }
+    return result;
+  }, [sessions, sport]);
+
   // ─── Streaks ────────────────────────────────────────────────────────
 
   const streakData = useMemo(() => {
@@ -425,7 +472,6 @@ export function useSpeedProgress(sport: SportType) {
     let longest = 0;
     const total = sessions.length;
 
-    // Calculate streak based on consecutive session dates
     const sortedDates = [...new Set(sessions.map(s => s.session_date))].sort().reverse();
     const today = new Date().toISOString().split('T')[0];
 
@@ -435,7 +481,7 @@ export function useSpeedProgress(sport: SportType) {
       expected.setDate(expected.getDate() - i);
 
       const diff = Math.abs(date.getTime() - expected.getTime()) / (1000 * 60 * 60 * 24);
-      if (diff <= 2) { // Allow 2-day gap for rest days
+      if (diff <= 2) {
         current++;
       } else {
         break;
@@ -467,6 +513,7 @@ export function useSpeedProgress(sport: SportType) {
     sessionDrills,
     isPlateaued,
     streakData,
+    strideAnalytics,
 
     // Actions
     initializeJourney,
