@@ -17,9 +17,10 @@ import type { GameSetup, LineupPlayer } from '@/hooks/useGameScoring';
 const POSITIONS_BASEBALL = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 const POSITIONS_SOFTBALL = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DP', 'FLEX'];
 const GAME_TYPES = [
-  { value: 'league', label: 'League' },
-  { value: 'tournament', label: 'Tournament' },
+  { value: 'regular_season', label: 'Regular Season' },
+  { value: 'intrasquad', label: 'Intrasquad' },
   { value: 'scrimmage', label: 'Scrimmage' },
+  { value: 'showcase_tournament', label: 'Showcase / Tournament' },
 ];
 
 interface GameSetupFormProps {
@@ -37,7 +38,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
 
   const [teamName, setTeamName] = useState('');
   const [opponentName, setOpponentName] = useState('');
-  const [gameType, setGameType] = useState<string>('league');
+  const [gameType, setGameType] = useState<string>('regular_season');
   const [leagueLevel, setLeagueLevel] = useState<string>('');
   const [baseDist, setBaseDist] = useState<number>(90);
   const [moundDist, setMoundDist] = useState<number>(60.5);

@@ -10,7 +10,6 @@ import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessio
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
 import { CoachSelector, CoachSelection } from '@/components/practice/CoachSelector';
-import { GameSessionFields } from '@/components/practice/GameSessionFields';
 import { cn } from '@/lib/utils';
 import { formatTime12h } from '@/lib/formatTime';
 
@@ -28,7 +27,6 @@ const SESSION_TYPES = [
   { value: 'solo_work', label: 'Solo Work' },
   { value: 'team_session', label: 'Team Session' },
   { value: 'lesson', label: 'Lesson' },
-  { value: 'game', label: 'Game' },
   { value: 'live_abs', label: 'Live At-Bats' },
 ];
 
@@ -59,12 +57,10 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
   // Contextual fields
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [teamName, setTeamName] = useState('');
-  const [opponentName, setOpponentName] = useState('');
-  const [opponentLevel, setOpponentLevel] = useState('');
 
   // Auto-populate team name from org when session type changes
   useEffect(() => {
-    if ((sessionType === 'team_session' || sessionType === 'game') && orgName) {
+    if (sessionType === 'team_session' && orgName) {
       setTeamName(orgName);
     }
   }, [sessionType, orgName]);
@@ -100,10 +96,8 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
       recurring_days: recurring ? recurringDays : [],
       sport: sport || 'baseball',
       coach_id: sessionType === 'lesson' && coachSelection.type === 'assigned' ? coachSelection.coach_id : undefined,
-      organization_id: (sessionType === 'team_session' || sessionType === 'game') && organizationId ? organizationId : undefined,
-      team_name: (sessionType === 'team_session' || sessionType === 'game') ? teamName || undefined : undefined,
-      opponent_name: sessionType === 'game' ? opponentName || undefined : undefined,
-      opponent_level: sessionType === 'game' ? opponentLevel || undefined : undefined,
+      organization_id: sessionType === 'team_session' && organizationId ? organizationId : undefined,
+      team_name: sessionType === 'team_session' ? teamName || undefined : undefined,
     });
 
     if (result) {
@@ -172,28 +166,6 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
             </div>
           )}
 
-          {/* Conditional: Game → Opponent + Team fields */}
-          {sessionType === 'game' && (
-            <>
-              <GameSessionFields
-                opponentName={opponentName}
-                opponentLevel={opponentLevel}
-                onNameChange={setOpponentName}
-                onLevelChange={setOpponentLevel}
-              />
-              <div className="space-y-1.5">
-                <Label className="text-xs">Team You Are Playing For</Label>
-                <Input
-                  placeholder={organizationId ? orgName : 'Enter your team name'}
-                  value={teamName}
-                  onChange={e => setTeamName(e.target.value)}
-                />
-                {organizationId && (
-                  <p className="text-[10px] text-muted-foreground">Auto-populated from your organization</p>
-                )}
-              </div>
-            </>
-          )}
 
           {/* Date */}
           <div className="space-y-1.5">

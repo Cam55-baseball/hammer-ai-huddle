@@ -18,7 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/hooks/useOrganization';
 import { supabase } from '@/integrations/supabase/client';
 
-import { GameSessionFields } from '@/components/practice/GameSessionFields';
+
 
 const MODULES = [
   { value: 'hitting', label: 'Hitting' },
@@ -32,7 +32,6 @@ const MODULES = [
 const SESSION_TYPES = [
   { value: 'team_session', label: 'Team Session' },
   { value: 'lesson', label: 'Lesson' },
-  { value: 'game', label: 'Game' },
   { value: 'solo_work', label: 'Solo Work' },
   { value: 'live_abs', label: 'Live ABs' },
 ];
@@ -70,14 +69,12 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
   const [recurringDays, setRecurringDays] = useState<number[]>([]);
   const [sport, setSport] = useState('baseball');
   const [teamName, setTeamName] = useState('');
-  const [opponentName, setOpponentName] = useState('');
-  const [opponentLevel, setOpponentLevel] = useState('');
 
   const activeOrg = myOrgs.data?.[0];
   const orgMembers = members.data ?? [];
 
   useEffect(() => {
-    if ((sessionType === 'team_session' || sessionType === 'game') && activeOrg?.name) {
+    if (sessionType === 'team_session' && activeOrg?.name) {
       setTeamName(activeOrg.name);
     }
   }, [sessionType, activeOrg?.name]);
@@ -130,9 +127,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
       coach_id: resolvedCoachId,
       assignment_scope: scope,
       organization_id: scope === 'organization' ? activeOrg?.id : undefined,
-      team_name: (sessionType === 'team_session' || sessionType === 'game') ? teamName || undefined : undefined,
-      opponent_name: sessionType === 'game' ? opponentName || undefined : undefined,
-      opponent_level: sessionType === 'game' ? opponentLevel || undefined : undefined,
+      team_name: sessionType === 'team_session' ? teamName || undefined : undefined,
     };
 
     const result = await createBulkSessions(playerIds, baseSession);
@@ -145,8 +140,6 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
       setRecurringActive(false);
       setRecurringDays([]);
       setTeamName('');
-      setOpponentName('');
-      setOpponentLevel('');
     }
   };
 
@@ -199,24 +192,6 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
             </div>
           )}
 
-          {sessionType === 'game' && (
-            <>
-              <GameSessionFields
-                opponentName={opponentName}
-                opponentLevel={opponentLevel}
-                onNameChange={setOpponentName}
-                onLevelChange={setOpponentLevel}
-              />
-              <div className="space-y-1.5">
-                <Label>Team You Are Playing For</Label>
-                <Input
-                  placeholder="Enter team name"
-                  value={teamName}
-                  onChange={e => setTeamName(e.target.value)}
-                />
-              </div>
-            </>
-          )}
 
           <div className="space-y-1.5">
             <Label>Sport</Label>

@@ -1,11 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Target, Users, Flame, Gamepad2, Swords } from 'lucide-react';
+import { Target, Users, Flame, Swords } from 'lucide-react';
 
 const sessionTypes = [
   { id: 'solo_work', label: 'Solo Work', icon: Target, description: 'Self-directed skill work' },
   { id: 'team_session', label: 'Team Session', icon: Users, description: 'Organized team training' },
   { id: 'lesson', label: 'Lesson', icon: Flame, description: '1-on-1 or small group instruction' },
-  { id: 'game', label: 'Game', icon: Gamepad2, description: 'Competition' },
   { id: 'live_abs', label: 'Live At-Bats', icon: Swords, description: 'Intra-squad or simulated game reps' },
 ];
 
