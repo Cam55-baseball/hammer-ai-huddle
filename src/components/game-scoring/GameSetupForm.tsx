@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, ArrowRight, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Loader2, GripVertical } from 'lucide-react';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
 import { softballLeagueDistances } from '@/data/softball/leagueDistances';
@@ -13,6 +13,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { GameSetup, LineupPlayer } from '@/hooks/useGameScoring';
+import { useCoachPlayerPool } from '@/hooks/useCoachPlayerPool';
+import { PlayerSearchCombobox } from './PlayerSearchCombobox';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const POSITIONS_BASEBALL = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 const POSITIONS_SOFTBALL = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DP', 'FLEX'];
@@ -28,6 +33,57 @@ interface GameSetupFormProps {
   saving?: boolean;
 }
 
+function SortableLineupRow({
+  player,
+  index,
+  positions,
+  onUpdate,
+  onRemove,
+  canRemove,
+}: {
+  player: LineupPlayer;
+  index: number;
+  positions: string[];
+  onUpdate: (id: string, field: keyof LineupPlayer, value: string | number) => void;
+  onRemove: (id: string) => void;
+  canRemove: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: player.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2">
+      <button type="button" className="cursor-grab touch-none text-muted-foreground hover:text-foreground" {...attributes} {...listeners}>
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <span className="text-xs font-bold text-muted-foreground w-6 text-center">{index + 1}</span>
+      <Input
+        className="flex-1"
+        placeholder="Player name"
+        value={player.name}
+        onChange={e => onUpdate(player.id, 'name', e.target.value)}
+        readOnly={!!player.player_user_id}
+      />
+      <Select value={player.position} onValueChange={v => onUpdate(player.id, 'position', v)}>
+        <SelectTrigger className="w-20"><SelectValue placeholder="Pos" /></SelectTrigger>
+        <SelectContent>
+          {positions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      {canRemove && (
+        <Button variant="ghost" size="icon" onClick={() => onRemove(player.id)}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const { sport, isSoftball } = useSportTheme();
   const { toast } = useToast();
@@ -35,6 +91,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const positions = isSoftball ? POSITIONS_SOFTBALL : POSITIONS_BASEBALL;
   const defaultInnings = isSoftball ? 7 : 9;
   const competitionCategories = useMemo(() => getCompetitionLevelsByCategory(sport as 'baseball' | 'softball'), [sport]);
+  const { data: poolPlayers = [], isLoading: poolLoading } = useCoachPlayerPool();
 
   const [teamName, setTeamName] = useState('');
   const [opponentName, setOpponentName] = useState('');
@@ -45,13 +102,18 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const [gameDate, setGameDate] = useState(new Date().toISOString().split('T')[0]);
   const [venue, setVenue] = useState('');
   const [totalInnings, setTotalInnings] = useState(defaultInnings);
-  const [lineup, setLineup] = useState<LineupPlayer[]>([
-    { id: crypto.randomUUID(), name: '', position: '', batting_order: 1 },
-  ]);
+  const [lineup, setLineup] = useState<LineupPlayer[]>([]);
   const [startingPitcher, setStartingPitcher] = useState('');
   const [competitionLevel, setCompetitionLevel] = useState<string>('');
   const [summerLeagueName, setSummerLeagueName] = useState('');
   const [classifyingLeague, setClassifyingLeague] = useState(false);
+
+  const selectedPlayerIds = useMemo(() => new Set(lineup.filter(p => p.player_user_id).map(p => p.player_user_id!)), [lineup]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
 
   const handleLeagueChange = (level: string) => {
     setLeagueLevel(level);
@@ -62,13 +124,24 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
     }
   };
 
-  const addPlayer = () => {
+  const addCustomPlayer = () => {
     if (lineup.length >= 15) return;
     setLineup(prev => [...prev, {
       id: crypto.randomUUID(),
       name: '',
       position: '',
       batting_order: prev.length + 1,
+    }]);
+  };
+
+  const addPoolPlayer = (poolPlayer: { id: string; name: string; position: string | null }) => {
+    if (lineup.length >= 15) return;
+    setLineup(prev => [...prev, {
+      id: crypto.randomUUID(),
+      name: poolPlayer.name,
+      position: poolPlayer.position ?? '',
+      batting_order: prev.length + 1,
+      player_user_id: poolPlayer.id,
     }]);
   };
 
@@ -80,6 +153,16 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
     setLineup(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setLineup(prev => {
+      const oldIdx = prev.findIndex(p => p.id === active.id);
+      const newIdx = prev.findIndex(p => p.id === over.id);
+      return arrayMove(prev, oldIdx, newIdx).map((p, i) => ({ ...p, batting_order: i + 1 }));
+    });
+  };
+
   const isValid = useMemo(() => {
     return teamName.trim() && opponentName.trim() && gameType && leagueLevel
       && lineup.filter(p => p.name.trim()).length >= 1;
@@ -87,7 +170,6 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
 
   const classifySummerLeague = async () => {
     if (!summerLeagueName.trim()) return;
-    // Check known leagues first
     const known = findKnownSummerLeague(sport as 'baseball' | 'softball', summerLeagueName);
     if (known) {
       toast({ title: 'League found', description: `${known.name}: ${known.difficulty_multiplier}x multiplier` });
@@ -253,43 +335,50 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
           <CardTitle className="text-lg">Starting Lineup</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {lineup.map((player, idx) => (
-            <div key={player.id} className="flex items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground w-6 text-center">{idx + 1}</span>
-              <Input
-                className="flex-1"
-                placeholder="Player name"
-                value={player.name}
-                onChange={e => updatePlayer(player.id, 'name', e.target.value)}
-              />
-              <Select value={player.position} onValueChange={v => updatePlayer(player.id, 'position', v)}>
-                <SelectTrigger className="w-20"><SelectValue placeholder="Pos" /></SelectTrigger>
-                <SelectContent>
-                  {positions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {lineup.length > 1 && (
-                <Button variant="ghost" size="icon" onClick={() => removePlayer(player.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              )}
-            </div>
-          ))}
-          <Button variant="outline" size="sm" onClick={addPlayer} className="w-full">
-            <Plus className="h-4 w-4 mr-1" /> Add Player
+          {/* Add from roster */}
+          <PlayerSearchCombobox
+            players={poolPlayers}
+            selectedIds={selectedPlayerIds}
+            onSelect={addPoolPlayer}
+            isLoading={poolLoading}
+          />
+
+          {/* Sortable lineup */}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={lineup.map(p => p.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {lineup.map((player, idx) => (
+                  <SortableLineupRow
+                    key={player.id}
+                    player={player}
+                    index={idx}
+                    positions={positions}
+                    onUpdate={updatePlayer}
+                    onRemove={removePlayer}
+                    canRemove={lineup.length > 0}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+
+          <Button variant="outline" size="sm" onClick={addCustomPlayer} className="w-full">
+            <Plus className="h-4 w-4 mr-1" /> Add Custom Player
           </Button>
 
-          <div className="pt-2">
-            <Label>Starting Pitcher</Label>
-            <Select value={startingPitcher} onValueChange={setStartingPitcher}>
-              <SelectTrigger><SelectValue placeholder="Select pitcher" /></SelectTrigger>
-              <SelectContent>
-                {lineup.filter(p => p.name.trim()).map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {lineup.filter(p => p.name.trim()).length > 0 && (
+            <div className="pt-2">
+              <Label>Starting Pitcher</Label>
+              <Select value={startingPitcher} onValueChange={setStartingPitcher}>
+                <SelectTrigger><SelectValue placeholder="Select pitcher" /></SelectTrigger>
+                <SelectContent>
+                  {lineup.filter(p => p.name.trim()).map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardContent>
       </Card>
 
