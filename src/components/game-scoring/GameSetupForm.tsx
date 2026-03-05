@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { GameSetup, LineupPlayer } from '@/hooks/useGameScoring';
 import { useCoachPlayerPool } from '@/hooks/useCoachPlayerPool';
+import { useOrganization } from '@/hooks/useOrganization';
+import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
 import { PlayerSearchCombobox } from './PlayerSearchCombobox';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -92,6 +94,8 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const defaultInnings = isSoftball ? 7 : 9;
   const competitionCategories = useMemo(() => getCompetitionLevelsByCategory(sport as 'baseball' | 'softball'), [sport]);
   const { data: poolPlayers = [], isLoading: poolLoading } = useCoachPlayerPool();
+  const { myOrgs } = useOrganization();
+  const { orgName } = usePlayerOrganization();
 
   const [teamName, setTeamName] = useState('');
   const [opponentName, setOpponentName] = useState('');
@@ -107,6 +111,14 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const [competitionLevel, setCompetitionLevel] = useState<string>('');
   const [summerLeagueName, setSummerLeagueName] = useState('');
   const [classifyingLeague, setClassifyingLeague] = useState(false);
+
+  // Auto-populate team name from organization
+  useEffect(() => {
+    const autoName = myOrgs.data?.[0]?.name || orgName;
+    if (autoName && !teamName) {
+      setTeamName(autoName);
+    }
+  }, [myOrgs.data, orgName]); // intentionally omit teamName to avoid overriding user edits
 
   const selectedPlayerIds = useMemo(() => new Set(lineup.filter(p => p.player_user_id).map(p => p.player_user_id!)), [lineup]);
 
