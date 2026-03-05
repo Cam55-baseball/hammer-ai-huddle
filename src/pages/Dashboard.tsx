@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw, ShoppingBag, ExternalLink, Building2 } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw, ShoppingBag, ExternalLink, Building2, Gamepad2 } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
@@ -495,6 +495,23 @@ export default function Dashboard() {
 
         {/* Practice Intelligence Summary */}
         <PracticeIntelligenceCard />
+
+        {/* Game Hub Card */}
+        <Card className="p-4 sm:p-6 border-primary/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/game-scoring')}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Gamepad2 className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg">Game Hub</h3>
+              <p className="text-sm text-muted-foreground">Score games, track plays, and review game summaries</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate('/game-scoring'); }}>
+              Open
+            </Button>
+          </div>
+        </Card>
+
         <DualStreakDisplay />
 
         {/* Module Cards */}
