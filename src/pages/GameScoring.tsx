@@ -77,6 +77,8 @@ export default function GameScoring() {
             onPlayRecorded={handlePlayRecorded}
             allPlays={allPlays}
             onComplete={handleComplete}
+            teamName={gameData.team_name}
+            opponentName={gameData.opponent_name}
           />
         )}
 
