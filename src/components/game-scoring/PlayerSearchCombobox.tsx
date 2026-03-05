@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, UserPlus, Users, Link2 } from 'lucide-react';
+import { Check, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -12,6 +12,24 @@ interface PlayerSearchComboboxProps {
   selectedIds: Set<string>;
   onSelect: (player: PoolPlayer) => void;
   isLoading?: boolean;
+}
+
+function PlayerRow({ player, isSelected }: { player: PoolPlayer; isSelected: boolean }) {
+  return (
+    <div className="flex items-center gap-2 w-full min-w-0">
+      <Avatar className="h-6 w-6 shrink-0">
+        <AvatarImage src={player.avatar_url ?? undefined} />
+        <AvatarFallback className="text-[10px]">{player.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+      <span className="flex-1 truncate">{player.name}</span>
+      {player.position && (
+        <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">
+          {player.position}
+        </span>
+      )}
+      {isSelected && <Check className="h-4 w-4 shrink-0 text-primary" />}
+    </div>
+  );
 }
 
 export function PlayerSearchCombobox({ players, selectedIds, onSelect, isLoading }: PlayerSearchComboboxProps) {
@@ -28,7 +46,7 @@ export function PlayerSearchCombobox({ players, selectedIds, onSelect, isLoading
           {isLoading ? 'Loading players...' : 'Add from Roster'}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-0" align="start">
+      <PopoverContent className="w-80 p-0" align="start">
         <Command>
           <CommandInput placeholder="Search players..." />
           <CommandList>
@@ -41,16 +59,9 @@ export function PlayerSearchCombobox({ players, selectedIds, onSelect, isLoading
                     value={p.name}
                     disabled={selectedIds.has(p.id)}
                     onSelect={() => { onSelect(p); }}
+                    className={cn('py-2', selectedIds.has(p.id) && 'opacity-50')}
                   >
-                    <Avatar className="h-6 w-6 mr-2">
-                      <AvatarImage src={p.avatar_url ?? undefined} />
-                      <AvatarFallback className="text-[10px]">{p.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span className="flex-1 truncate">{p.name}</span>
-                    {p.position && (
-                      <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{p.position}</span>
-                    )}
-                    {selectedIds.has(p.id) && <Check className="h-4 w-4 ml-1 text-primary" />}
+                    <PlayerRow player={p} isSelected={selectedIds.has(p.id)} />
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -63,16 +74,9 @@ export function PlayerSearchCombobox({ players, selectedIds, onSelect, isLoading
                     value={p.name}
                     disabled={selectedIds.has(p.id)}
                     onSelect={() => { onSelect(p); }}
+                    className={cn('py-2', selectedIds.has(p.id) && 'opacity-50')}
                   >
-                    <Avatar className="h-6 w-6 mr-2">
-                      <AvatarImage src={p.avatar_url ?? undefined} />
-                      <AvatarFallback className="text-[10px]">{p.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span className="flex-1 truncate">{p.name}</span>
-                    {p.position && (
-                      <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{p.position}</span>
-                    )}
-                    {selectedIds.has(p.id) && <Check className="h-4 w-4 ml-1 text-primary" />}
+                    <PlayerRow player={p} isSelected={selectedIds.has(p.id)} />
                   </CommandItem>
                 ))}
               </CommandGroup>
