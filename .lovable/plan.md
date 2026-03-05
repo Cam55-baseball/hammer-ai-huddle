@@ -1,34 +1,19 @@
 
 
-# Make Goal of Rep & Actual Outcome Per-Rep
+# Auto-Populate "Team Playing For" from Organization
 
 ## Problem
-Currently these fields use session-level state (`sessionGoalOfRep` / `sessionActualOutcome`) shared across all reps. They should be per-rep — each rep gets its own goal and outcome, stored on the `ScoredRep` object.
-
-## Key Observation
-`ScoredRep` already has `goal_of_rep` and `actual_outcome` fields (lines 78-79). They're just not wired up.
+When a coach who owns an organization opens Game Setup, the "Team Playing For" field is blank. It should auto-populate with their organization name.
 
 ## Changes
 
-### 1. `src/components/practice/RepScorer.tsx`
-- **Remove** the four external props (`goalOfRep`, `onGoalOfRepChange`, `actualOutcome`, `onActualOutcomeChange`) from the interface
-- Wire the two `AITextBoxField` components to the internal `current` state via `updateField`:
-  - `value={current.goal_of_rep ?? ''}` / `onChange={(v) => updateField('goal_of_rep', v)}`
-  - `value={current.actual_outcome ?? ''}` / `onChange={(v) => updateField('actual_outcome', v)}`
-- Remove the conditional rendering (`{onGoalOfRepChange && ...}`) — always show them
-- The fields will automatically be included in `commitRep` via the `...current` spread and cleared on reset
+### `src/components/game-scoring/GameSetupForm.tsx`
+- Import `useOrganization` hook
+- Call `useOrganization()` to get `myOrgs.data`
+- Also import `usePlayerOrganization` for coaches who are members (not owners)
+- In a `useEffect`, if the user has an org (either as owner via `myOrgs.data[0]?.name` or as member via `orgName`), set `teamName` to that value — only if `teamName` is still empty (don't override user edits)
+- Priority: owner org name first, then member org name
 
-### 2. `src/pages/PracticeHub.tsx`
-- Remove `sessionGoalOfRep` / `sessionActualOutcome` state variables and all references (setState calls, reset calls, passing as props to RepScorer)
-- Remove the `session_goal_of_rep` / `session_actual_outcome` from the session metadata object — the data now lives on each rep
-- Remove unused `AITextBoxField` import if still present
-
-### 3. `src/components/practice/VideoRepLogger.tsx`
-- Remove goal/outcome props if they were added (from the earlier plan); no longer needed since RepScorer handles it internally
-
-### 4. `src/components/practice/VideoRepReview.tsx`
-- No changes needed — its RepScorer will automatically get the per-rep fields
-
-## Result
-Each rep independently captures its own goal and outcome. Values clear after each "Confirm Rep" along with the other per-rep fields. The data is stored directly on the `ScoredRep` object for downstream analysis.
+### Summary
+Single file change. Add a `useEffect` that seeds `teamName` from the user's organization on mount. The field remains editable so users can override it.
 
