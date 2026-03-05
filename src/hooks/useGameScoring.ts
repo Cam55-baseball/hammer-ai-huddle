@@ -6,7 +6,7 @@ export interface GameSetup {
   sport: 'baseball' | 'softball';
   team_name: string;
   opponent_name: string;
-  game_type: 'league' | 'tournament' | 'scrimmage';
+  game_type: 'regular_season' | 'intrasquad' | 'scrimmage' | 'showcase_tournament';
   league_level: string;
   base_distance_ft: number;
   mound_distance_ft: number;

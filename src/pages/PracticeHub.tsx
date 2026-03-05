@@ -9,9 +9,7 @@ import { useSportTerminology } from '@/hooks/useSportTerminology';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { usePerformanceSession, type DrillBlock } from '@/hooks/usePerformanceSession';
 import { SessionTypeSelector } from '@/components/practice/SessionTypeSelector';
-import { GameSessionFields } from '@/components/practice/GameSessionFields';
 import { RepScorer, type ScoredRep } from '@/components/practice/RepScorer';
-import { GameScorecard, type AtBat } from '@/components/practice/GameScorecard';
 import { FeelingsPrompt, type FeelingState } from '@/components/practice/FeelingsPrompt';
 import { SessionConfigPanel, type SessionConfig } from '@/components/practice/SessionConfigPanel';
 import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
@@ -59,14 +57,10 @@ export default function PracticeHub() {
   const [scheduledId, setScheduledId] = useState<string | null>(searchParams.get('scheduled') || null);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(null);
   const [notes, setNotes] = useState('');
-  const [opponentName, setOpponentName] = useState('');
-  const [opponentLevel, setOpponentLevel] = useState('');
   const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3 });
 
   // Rep-based scoring
   const [reps, setReps] = useState<ScoredRep[]>([]);
-  // Game scoring
-  const [atBats, setAtBats] = useState<AtBat[]>([]);
   // Post-session summary
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
@@ -89,8 +83,8 @@ export default function PracticeHub() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isGameType = sessionType === 'game' || sessionType === 'live_abs';
-  const isGameScorecardModule = ['hitting', 'pitching', 'fielding'].includes(activeModule);
+  const isGameType = sessionType === 'live_abs';
+  
 
   // Session-level AI field validation
   // Goal of Rep and Actual Outcome are optional — no longer block save
@@ -100,10 +94,7 @@ export default function PracticeHub() {
     setSessionType(type);
     setStep('readiness');
     setReps([]);
-    setAtBats([]);
     setNotes('');
-    setOpponentName('');
-    setOpponentLevel('');
     setFeelings({ body: 3, mind: 3 });
     setSessionConfig(null);
     setSessionGoalOfRep('');
@@ -138,7 +129,7 @@ export default function PracticeHub() {
     setSessionType(null);
     setSessionConfig(null);
     setReps([]);
-    setAtBats([]);
+    
     setNotes('');
     setSavedSessionId(null);
     setScheduledId(null);
@@ -146,20 +137,8 @@ export default function PracticeHub() {
     setSessionActualOutcome('');
   };
 
-  // Convert reps/atBats into drill blocks for the backend
+  // Convert reps into drill blocks for the backend
   const buildDrillBlocks = (): DrillBlock[] => {
-    if (isGameType && atBats.length > 0) {
-      return atBats.map((ab, i) => ({
-        id: crypto.randomUUID(),
-        drill_type: 'game_ab',
-        intent: 'competitive',
-        volume: ab.pitches.length,
-        execution_grade: ['1B', '2B', '3B', 'HR'].includes(ab.outcome) ? 65 : ab.outcome === 'BB' ? 55 : 35,
-        outcome_tags: [ab.outcome],
-        notes: `AB${i + 1}: ${ab.outcome} (${ab.pitches.length} pitches)`,
-      }));
-    }
-
     if (reps.length > 0) {
       const qualityMap: Record<string, number> = { barrel: 70, hard: 60, weak: 40, foul: 30, miss: 20 };
       const resultMap: Record<string, number> = { strike: 60, out: 55, ball: 35, hit: 70 };
@@ -194,14 +173,10 @@ export default function PracticeHub() {
 
   const handleSave = async () => {
     if (!sessionType || !sessionConfig) return;
-    if (isGameType && (!opponentName || !opponentLevel)) {
-      toast({ title: 'Missing fields', description: 'Game sessions require opponent name and level.', variant: 'destructive' });
-      return;
-    }
 
     const drillBlocks = buildDrillBlocks();
-    if (drillBlocks.length === 0 && reps.length === 0 && atBats.length === 0) {
-      toast({ title: 'No data', description: 'Score at least one rep or at-bat.', variant: 'destructive' });
+    if (drillBlocks.length === 0 && reps.length === 0) {
+      toast({ title: 'No data', description: 'Score at least one rep.', variant: 'destructive' });
       return;
     }
 
@@ -213,8 +188,6 @@ export default function PracticeHub() {
         season_context: sessionConfig.season_context,
         drill_blocks: drillBlocks,
         notes: notes || undefined,
-        opponent_name: isGameType ? opponentName : undefined,
-        opponent_level: isGameType ? opponentLevel : undefined,
         module: activeModule,
         coach_id: sessionConfig.coach_selection.type === 'assigned' ? sessionConfig.coach_selection.coach_id : undefined,
         fatigue_state: {
@@ -234,7 +207,7 @@ export default function PracticeHub() {
           session_goal_of_rep: sessionGoalOfRep,
           session_actual_outcome: sessionActualOutcome,
         },
-        micro_layer_data: reps.length > 0 ? reps : isGameType ? atBats.flatMap(ab => ab.pitches) : undefined,
+        micro_layer_data: reps.length > 0 ? reps : undefined,
       });
       // Transition to summary instead of resetting
       setSavedSessionId(result.id);
@@ -372,14 +345,7 @@ export default function PracticeHub() {
                   )}
 
                   {/* Main scoring area */}
-                  {isGameType && isGameScorecardModule ? (
-                    <GameScorecard
-                      module={activeModule}
-                      atBats={atBats}
-                      onAtBatsChange={setAtBats}
-                      sport={sportKey}
-                    />
-                  ) : videoLogMode ? (
+                  {videoLogMode ? (
                     <VideoRepLogger
                       module={activeModule}
                       reps={reps}
@@ -429,12 +395,12 @@ export default function PracticeHub() {
                   {/* Sticky bottom action bar */}
                   <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border py-3 -mx-4 px-4 mt-4 flex items-center gap-3">
                     <div className="flex-1 text-xs text-muted-foreground">
-                      {isGameType ? `${atBats.length} ABs` : `${reps.length} reps`} logged
+                      {`${reps.length} reps`} logged
                     </div>
                     <Button
                       size="lg"
                       onClick={handleSave}
-                      disabled={saving || (reps.length === 0 && atBats.length === 0)}
+                      disabled={saving || reps.length === 0}
                       className="gap-2"
                     >
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

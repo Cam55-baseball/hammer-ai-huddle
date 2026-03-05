@@ -149,13 +149,13 @@ const FLAT_SOURCES: Record<string, SourceItem[]> = {
 };
 
 // Rep sources that require thrower handedness selection
-export const REQUIRES_THROWER_HAND = ['flip', 'live_bp', 'regular_bp', 'coach_pitch', 'soft_toss', 'front_toss', 'game'];
+export const REQUIRES_THROWER_HAND = ['flip', 'live_bp', 'regular_bp', 'coach_pitch', 'soft_toss', 'front_toss'];
 // Rep sources where velocity band is required
 export const REQUIRES_VELOCITY = ['machine_bp'];
 // Rep sources where velocity band is hidden
 export const HIDES_VELOCITY = ['tee', 'front_toss', 'coach_pitch', 'soft_toss', 'flip'];
 // Rep sources where pitch type is required (hitting + pitching)
-export const REQUIRES_PITCH_TYPE = ['machine_bp', 'live_bp', 'regular_bp', 'game', 'coach_pitch', 'front_toss', 'bullpen', 'flat_ground', 'flat_ground_vs_hitter'];
+export const REQUIRES_PITCH_TYPE = ['machine_bp', 'live_bp', 'regular_bp', 'coach_pitch', 'front_toss', 'bullpen', 'flat_ground', 'flat_ground_vs_hitter'];
 // Rep sources where pitch type is hidden entirely
 export const HIDES_PITCH_TYPE = ['tee', 'soft_toss'];
 // Rep sources where pitch distance is hidden
@@ -167,7 +167,6 @@ const VALID_HITTING_SOURCES: Record<string, string[]> = {
   solo_work: ['tee', 'soft_toss', 'machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
   team_session: ['machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
   lesson: ['tee', 'soft_toss', 'front_toss', 'flip', 'coach_pitch', 'machine_bp'],
-  game: ['game'],
   live_abs: ['tee', 'soft_toss', 'machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
 };
 
@@ -175,7 +174,6 @@ const VALID_PITCHING_SOURCES: Record<string, string[]> = {
   solo_work: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
   team_session: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
   lesson: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  game: ['game'],
   live_abs: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
 };
 
@@ -183,14 +181,12 @@ const VALID_THROWING_SOURCES: Record<string, string[]> = {
   solo_work: ['long_toss', 'flat_ground_throw'],
   team_session: ['long_toss', 'flat_ground_throw', 'pfp', 'position_work', 'live'],
   lesson: ['long_toss', 'flat_ground_throw', 'pfp', 'position_work'],
-  game: ['game'],
   live_abs: ['live'],
 };
 
-/** For flat modules (fielding, catching, baserunning): game only for game session type */
+/** For flat modules (fielding, catching, baserunning): filter out game source (games tracked in Game Hub) */
 function filterFlatSources(sources: SourceItem[], sessionType?: string): SourceItem[] {
-  if (!sessionType) return sources;
-  if (sessionType === 'game') return sources.filter(s => s.value === 'game');
+  if (!sessionType) return sources.filter(s => s.value !== 'game');
   return sources.filter(s => s.value !== 'game');
 }
 

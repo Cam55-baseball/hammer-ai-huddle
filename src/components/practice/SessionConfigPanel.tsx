@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSourceSelector';
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
-import { GameSessionFields } from './GameSessionFields';
+
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSportTheme } from '@/contexts/SportThemeContext';
@@ -46,7 +46,7 @@ interface SessionConfigPanelProps {
 
 // Auto-derive environment from session type
 function deriveEnvironment(sessionType: string): 'practice' | 'game' | 'lesson' {
-  if (sessionType === 'game' || sessionType === 'live_abs') return 'game';
+  if (sessionType === 'live_abs') return 'game';
   if (sessionType === 'lesson') return 'lesson';
   return 'practice';
 }
@@ -68,7 +68,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const isBaserunning = module === 'baserunning';
   const isFielding = module === 'fielding';
 
-  const isGame = sessionType === 'game';
   const isLiveAbs = sessionType === 'live_abs';
   const isSoloWork = sessionType === 'solo_work';
 
@@ -77,16 +76,14 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   // Load smart defaults
   const defaults = getDefaults();
 
-  const [repSource, setRepSource] = useState<string>(isGame ? 'game' : (defaults.rep_source ?? ''));
+  const [repSource, setRepSource] = useState<string>(defaults.rep_source ?? '');
   const [pitchDistance, setPitchDistance] = useState(defaults.pitch_distance_ft ?? 60);
   const [velocityBand, setVelocityBand] = useState<string | undefined>(defaults.velocity_band);
   const [seasonContext, setSeasonContext] = useState(
-    isGame || isLiveAbs ? 'in_season' : (defaults.season_context ?? 'in_season')
+    isLiveAbs ? 'in_season' : (defaults.season_context ?? 'in_season')
   );
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [leagueLevel, setLeagueLevel] = useState<string | undefined>();
-  const [opponentName, setOpponentName] = useState('');
-  const [opponentLevel, setOpponentLevel] = useState('');
   const [fieldingPosition, setFieldingPosition] = useState<string | undefined>();
   const [customRepSource, setCustomRepSource] = useState('');
   const [competitionLevel, setCompetitionLevel] = useState<string | undefined>();
@@ -94,17 +91,17 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const competitionCategories = useMemo(() => {
     return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
   }, [sport]);
-  const showCompetitionLevel = isGame || isLiveAbs;
+  const showCompetitionLevel = isLiveAbs;
 
   // Auto-derived values
   const environment = deriveEnvironment(sessionType);
   const coachSessionType = deriveCoachSessionType(sessionType);
   const showCoachSelector = sessionType === 'team_session' || sessionType === 'lesson';
-  const showSeasonContext = !isGame && !isLiveAbs;
+  const showSeasonContext = !isLiveAbs;
   const showLeagueLevel = (isHitting || isPitching) && !isSoloWork;
-  const showVelocityBand = (isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource) && !isGame;
-  const showPitchDistance = (isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource) && !isGame;
-  const showRepSourceSelector = !isGame;
+  const showVelocityBand = (isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource);
+  const showPitchDistance = (isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource);
+  const showRepSourceSelector = true;
 
   // Fetch head coach info for auto-select
   const { data: mpiSettings } = useQuery({
@@ -181,8 +178,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       coach_session_type: coachSessionType,
       league_level: leagueLevel,
       competition_level: competitionLevel,
-      opponent_name: isGame ? opponentName : undefined,
-      opponent_level: isGame ? opponentLevel : undefined,
       fielding_position: isFielding ? fieldingPosition : undefined,
     });
   };
@@ -202,15 +197,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           <RepSourceSelector module={module} sessionType={sessionType} value={repSource} onChange={setRepSource} customSource={customRepSource} onCustomSourceChange={setCustomRepSource} />
         )}
 
-        {/* Game-specific: opponent info */}
-        {isGame && (
-          <GameSessionFields
-            opponentName={opponentName}
-            opponentLevel={opponentLevel}
-            onNameChange={setOpponentName}
-            onLevelChange={setOpponentLevel}
-          />
-        )}
 
         {/* Fielding position — required for fielding sessions */}
         {isFielding && (
