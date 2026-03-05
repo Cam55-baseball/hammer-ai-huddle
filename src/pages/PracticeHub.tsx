@@ -93,9 +93,8 @@ export default function PracticeHub() {
   const isGameScorecardModule = ['hitting', 'pitching', 'fielding'].includes(activeModule);
 
   // Session-level AI field validation
-  const goalOfRepValid = sessionGoalOfRep.length > 0;
-  const actualOutcomeValid = sessionActualOutcome.length > 0;
-  const sessionAIFieldsValid = goalOfRepValid && actualOutcomeValid;
+  // Goal of Rep and Actual Outcome are optional — no longer block save
+  const sessionAIFieldsValid = true;
 
   const handleSelectType = (type: string) => {
     setSessionType(type);
@@ -197,10 +196,6 @@ export default function PracticeHub() {
     if (!sessionType || !sessionConfig) return;
     if (isGameType && (!opponentName || !opponentLevel)) {
       toast({ title: 'Missing fields', description: 'Game sessions require opponent name and level.', variant: 'destructive' });
-      return;
-    }
-    if (!sessionAIFieldsValid) {
-      toast({ title: 'Missing AI fields', description: 'Goal of Rep and Actual Outcome are required before saving.', variant: 'destructive' });
       return;
     }
 
@@ -413,23 +408,21 @@ export default function PracticeHub() {
                   </details>
 
                   {/* Session-level AI structured fields — Goal of Rep & Actual Outcome */}
-                  <div className="space-y-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
-                    <p className="text-[10px] font-medium text-primary uppercase tracking-wide">Session AI Fields (Required)</p>
+                   <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/5">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Session AI Fields (Optional)</p>
                     <AITextBoxField
                       label="Goal of Rep"
                       value={sessionGoalOfRep}
                       onChange={setSessionGoalOfRep}
-                      minChars={20}
-                      required
-                      placeholder="What was your goal for this session's reps? (min 20 characters)..."
+                      minChars={0}
+                      placeholder="What was your goal for this session's reps? (optional)..."
                     />
                     <AITextBoxField
                       label="Actual Outcome"
                       value={sessionActualOutcome}
                       onChange={setSessionActualOutcome}
-                      minChars={20}
-                      required
-                      placeholder="What actually happened during the session? (min 20 characters)..."
+                      minChars={0}
+                      placeholder="What actually happened during the session? (optional)..."
                     />
                   </div>
 
@@ -437,14 +430,11 @@ export default function PracticeHub() {
                   <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border py-3 -mx-4 px-4 mt-4 flex items-center gap-3">
                     <div className="flex-1 text-xs text-muted-foreground">
                       {isGameType ? `${atBats.length} ABs` : `${reps.length} reps`} logged
-                      {!sessionAIFieldsValid && (
-                        <span className="text-destructive ml-2">• Fill Goal & Outcome</span>
-                      )}
                     </div>
                     <Button
                       size="lg"
                       onClick={handleSave}
-                      disabled={saving || (reps.length === 0 && atBats.length === 0) || !sessionAIFieldsValid}
+                      disabled={saving || (reps.length === 0 && atBats.length === 0)}
                       className="gap-2"
                     >
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
