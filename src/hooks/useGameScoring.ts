@@ -15,6 +15,8 @@ export interface GameSetup {
   total_innings: number;
   lineup: LineupPlayer[];
   starting_pitcher_id: string;
+  game_mode?: 'team' | 'single_player';
+  is_practice_game?: boolean;
 }
 
 export interface LineupPlayer {
@@ -92,6 +94,8 @@ export function useGameScoring() {
           total_innings: setup.total_innings,
           lineup: setup.lineup as any,
           starting_pitcher_id: setup.starting_pitcher_id || null,
+          game_mode: setup.game_mode || 'team',
+          is_practice_game: setup.is_practice_game || false,
         })
         .select('id')
         .single();

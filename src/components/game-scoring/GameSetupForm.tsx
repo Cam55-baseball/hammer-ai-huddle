@@ -111,6 +111,10 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const [competitionLevel, setCompetitionLevel] = useState<string>('');
   const [summerLeagueName, setSummerLeagueName] = useState('');
   const [classifyingLeague, setClassifyingLeague] = useState(false);
+  const [gameMode, setGameMode] = useState<'team' | 'single_player'>('team');
+  const [singlePlayerName, setSinglePlayerName] = useState('');
+  const [singlePlayerPosition, setSinglePlayerPosition] = useState('');
+  const [isPracticeGame, setIsPracticeGame] = useState(false);
 
   // Auto-populate team name from organization
   useEffect(() => {
@@ -176,9 +180,12 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   };
 
   const isValid = useMemo(() => {
+    if (gameMode === 'single_player') {
+      return teamName.trim() && opponentName.trim() && gameType && leagueLevel && singlePlayerName.trim();
+    }
     return teamName.trim() && opponentName.trim() && gameType && leagueLevel
       && lineup.filter(p => p.name.trim()).length >= 1;
-  }, [teamName, opponentName, gameType, leagueLevel, lineup]);
+  }, [teamName, opponentName, gameType, leagueLevel, lineup, gameMode, singlePlayerName]);
 
   const classifySummerLeague = async () => {
     if (!summerLeagueName.trim()) return;
@@ -206,6 +213,14 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
 
   const handleSubmit = () => {
     if (!isValid) return;
+    const finalLineup = gameMode === 'single_player'
+      ? [{
+          id: crypto.randomUUID(),
+          name: singlePlayerName.trim(),
+          position: singlePlayerPosition || 'DH',
+          batting_order: 1,
+        }]
+      : lineup.filter(p => p.name.trim());
     onSubmit({
       sport: sport as 'baseball' | 'softball',
       team_name: teamName,
@@ -217,8 +232,10 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
       game_date: gameDate,
       venue,
       total_innings: totalInnings,
-      lineup: lineup.filter(p => p.name.trim()),
-      starting_pitcher_id: startingPitcher,
+      lineup: finalLineup,
+      starting_pitcher_id: gameMode === 'single_player' ? '' : startingPitcher,
+      game_mode: gameMode,
+      is_practice_game: isPracticeGame,
     });
   };
 
@@ -342,57 +359,131 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
         </CardContent>
       </Card>
 
+      {/* Game Mode selector */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Starting Lineup</CardTitle>
+          <CardTitle className="text-lg">Game Mode</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Add from roster */}
-          <PlayerSearchCombobox
-            players={poolPlayers}
-            selectedIds={selectedPlayerIds}
-            onSelect={addPoolPlayer}
-            isLoading={poolLoading}
-          />
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setGameMode('team')}
+              className={cn(
+                'rounded-lg border-2 p-4 text-center transition-all',
+                gameMode === 'team' ? 'border-primary bg-primary/10' : 'border-border hover:border-muted-foreground'
+              )}
+            >
+              <div className="text-sm font-bold">Team Game</div>
+              <div className="text-[10px] text-muted-foreground mt-1">Full roster lineup</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setGameMode('single_player')}
+              className={cn(
+                'rounded-lg border-2 p-4 text-center transition-all',
+                gameMode === 'single_player' ? 'border-primary bg-primary/10' : 'border-border hover:border-muted-foreground'
+              )}
+            >
+              <div className="text-sm font-bold">Single Player</div>
+              <div className="text-[10px] text-muted-foreground mt-1">Log your own game</div>
+            </button>
+          </div>
 
-          {/* Sortable lineup */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={lineup.map(p => p.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {lineup.map((player, idx) => (
-                  <SortableLineupRow
-                    key={player.id}
-                    player={player}
-                    index={idx}
-                    positions={positions}
-                    onUpdate={updatePlayer}
-                    onRemove={removePlayer}
-                    canRemove={lineup.length > 0}
-                  />
-                ))}
+          {gameMode === 'single_player' && (
+            <div className="mt-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsPracticeGame(false)}
+                  className={cn(
+                    'rounded-md border px-3 py-2 text-xs font-medium transition-all',
+                    !isPracticeGame ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                  )}
+                >Real Game</button>
+                <button
+                  type="button"
+                  onClick={() => setIsPracticeGame(true)}
+                  className={cn(
+                    'rounded-md border px-3 py-2 text-xs font-medium transition-all',
+                    isPracticeGame ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                  )}
+                >Practice Game</button>
               </div>
-            </SortableContext>
-          </DndContext>
-
-          <Button variant="outline" size="sm" onClick={addCustomPlayer} className="w-full">
-            <Plus className="h-4 w-4 mr-1" /> Add Custom Player
-          </Button>
-
-          {lineup.filter(p => p.name.trim()).length > 0 && (
-            <div className="pt-2">
-              <Label>Starting Pitcher</Label>
-              <Select value={startingPitcher} onValueChange={setStartingPitcher}>
-                <SelectTrigger><SelectValue placeholder="Select pitcher" /></SelectTrigger>
-                <SelectContent>
-                  {lineup.filter(p => p.name.trim()).map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Player Name <span className="text-destructive">*</span></Label>
+                  <Input value={singlePlayerName} onChange={e => setSinglePlayerName(e.target.value)} placeholder="Your name" />
+                </div>
+                <div>
+                  <Label>Position</Label>
+                  <Select value={singlePlayerPosition} onValueChange={setSinglePlayerPosition}>
+                    <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
+                    <SelectContent>
+                      {positions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Team lineup — only for team mode */}
+      {gameMode === 'team' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Starting Lineup</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Add from roster */}
+            <PlayerSearchCombobox
+              players={poolPlayers}
+              selectedIds={selectedPlayerIds}
+              onSelect={addPoolPlayer}
+              isLoading={poolLoading}
+            />
+
+            {/* Sortable lineup */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={lineup.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {lineup.map((player, idx) => (
+                    <SortableLineupRow
+                      key={player.id}
+                      player={player}
+                      index={idx}
+                      positions={positions}
+                      onUpdate={updatePlayer}
+                      onRemove={removePlayer}
+                      canRemove={lineup.length > 0}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+
+            <Button variant="outline" size="sm" onClick={addCustomPlayer} className="w-full">
+              <Plus className="h-4 w-4 mr-1" /> Add Custom Player
+            </Button>
+
+            {lineup.filter(p => p.name.trim()).length > 0 && (
+              <div className="pt-2">
+                <Label>Starting Pitcher</Label>
+                <Select value={startingPitcher} onValueChange={setStartingPitcher}>
+                  <SelectTrigger><SelectValue placeholder="Select pitcher" /></SelectTrigger>
+                  <SelectContent>
+                    {lineup.filter(p => p.name.trim()).map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Button onClick={handleSubmit} disabled={!isValid || saving} className="w-full" size="lg">
         {saving ? 'Creating...' : 'Start Scoring'} <ArrowRight className="ml-2 h-4 w-4" />

@@ -1480,9 +1480,11 @@ export type Database = {
           coach_insights: Json | null
           created_at: string | null
           game_date: string
+          game_mode: string | null
           game_summary: Json | null
           game_type: string
           id: string
+          is_practice_game: boolean | null
           league_level: string
           lineup: Json
           mound_distance_ft: number
@@ -1501,9 +1503,11 @@ export type Database = {
           coach_insights?: Json | null
           created_at?: string | null
           game_date?: string
+          game_mode?: string | null
           game_summary?: Json | null
           game_type: string
           id?: string
+          is_practice_game?: boolean | null
           league_level: string
           lineup?: Json
           mound_distance_ft: number
@@ -1522,9 +1526,11 @@ export type Database = {
           coach_insights?: Json | null
           created_at?: string | null
           game_date?: string
+          game_mode?: string | null
           game_summary?: Json | null
           game_type?: string
           id?: string
+          is_practice_game?: boolean | null
           league_level?: string
           lineup?: Json
           mound_distance_ft?: number
