@@ -21,6 +21,7 @@ import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader
 import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSessions';
+import { AITextBoxField } from '@/components/practice/AITextBoxField';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
 import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, ArrowRight, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -68,6 +69,10 @@ export default function PracticeHub() {
   // Post-session summary
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
+  // Session-level AI fields (Requirement 4)
+  const [sessionGoalOfRep, setSessionGoalOfRep] = useState('');
+  const [sessionActualOutcome, setSessionActualOutcome] = useState('');
+
   // Deep-link: auto-start from URL params
   useEffect(() => {
     const urlType = searchParams.get('type');
@@ -84,6 +89,11 @@ export default function PracticeHub() {
   const isGameType = sessionType === 'game' || sessionType === 'live_abs';
   const isGameScorecardModule = ['hitting', 'pitching', 'fielding'].includes(activeModule);
 
+  // Session-level AI field validation
+  const goalOfRepValid = sessionGoalOfRep.length > 0;
+  const actualOutcomeValid = sessionActualOutcome.length > 0;
+  const sessionAIFieldsValid = goalOfRepValid && actualOutcomeValid;
+
   const handleSelectType = (type: string) => {
     setSessionType(type);
     setStep('readiness');
@@ -94,6 +104,8 @@ export default function PracticeHub() {
     setOpponentLevel('');
     setFeelings({ body: 3, mind: 3 });
     setSessionConfig(null);
+    setSessionGoalOfRep('');
+    setSessionActualOutcome('');
   };
 
   const handleReadinessConfirm = () => {
@@ -128,6 +140,8 @@ export default function PracticeHub() {
     setNotes('');
     setSavedSessionId(null);
     setScheduledId(null);
+    setSessionGoalOfRep('');
+    setSessionActualOutcome('');
   };
 
   // Convert reps/atBats into drill blocks for the backend
@@ -182,6 +196,10 @@ export default function PracticeHub() {
       toast({ title: 'Missing fields', description: 'Game sessions require opponent name and level.', variant: 'destructive' });
       return;
     }
+    if (!sessionAIFieldsValid) {
+      toast({ title: 'Missing AI fields', description: 'Goal of Rep and Actual Outcome are required before saving.', variant: 'destructive' });
+      return;
+    }
 
     const drillBlocks = buildDrillBlocks();
     if (drillBlocks.length === 0 && reps.length === 0 && atBats.length === 0) {
@@ -214,6 +232,9 @@ export default function PracticeHub() {
           environment: sessionConfig.environment,
           indoor_outdoor: sessionConfig.indoor_outdoor,
           rep_source: sessionConfig.rep_source,
+          // Session-level AI structured fields
+          session_goal_of_rep: sessionGoalOfRep,
+          session_actual_outcome: sessionActualOutcome,
         },
         micro_layer_data: reps.length > 0 ? reps : isGameType ? atBats.flatMap(ab => ab.pitches) : undefined,
       });
@@ -356,15 +377,39 @@ export default function PracticeHub() {
                     </div>
                   </details>
 
+                  {/* Session-level AI structured fields — Goal of Rep & Actual Outcome */}
+                  <div className="space-y-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+                    <p className="text-[10px] font-medium text-primary uppercase tracking-wide">Session AI Fields (Required)</p>
+                    <AITextBoxField
+                      label="Goal of Rep"
+                      value={sessionGoalOfRep}
+                      onChange={setSessionGoalOfRep}
+                      minChars={20}
+                      required
+                      placeholder="What was your goal for this session's reps? (min 20 characters)..."
+                    />
+                    <AITextBoxField
+                      label="Actual Outcome"
+                      value={sessionActualOutcome}
+                      onChange={setSessionActualOutcome}
+                      minChars={20}
+                      required
+                      placeholder="What actually happened during the session? (min 20 characters)..."
+                    />
+                  </div>
+
                   {/* Sticky bottom action bar */}
                   <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border py-3 -mx-4 px-4 mt-4 flex items-center gap-3">
                     <div className="flex-1 text-xs text-muted-foreground">
                       {isGameType ? `${atBats.length} ABs` : `${reps.length} reps`} logged
+                      {!sessionAIFieldsValid && (
+                        <span className="text-destructive ml-2">• Fill Goal & Outcome</span>
+                      )}
                     </div>
                     <Button
                       size="lg"
                       onClick={handleSave}
-                      disabled={saving || (reps.length === 0 && atBats.length === 0)}
+                      disabled={saving || (reps.length === 0 && atBats.length === 0) || !sessionAIFieldsValid}
                       className="gap-2"
                     >
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
