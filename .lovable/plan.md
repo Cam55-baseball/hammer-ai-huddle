@@ -1,19 +1,25 @@
 
 
-# Auto-Populate "Team Playing For" from Organization
+# Fix AtBatPanel Reset After Finalize
 
 ## Problem
-When a coach who owns an organization opens Game Setup, the "Team Playing For" field is blank. It should auto-populate with their organization name.
+When "Finalize At-Bat" is clicked, `handleAtBatComplete` advances the batter index, but the `AtBatPanel` component keeps its internal state (pitches array, selected outcome, RBI count, etc.) because React reuses the same component instance. The panel needs to fully reset for the next hitter.
 
-## Changes
+## Solution
+Add a `key` prop to `AtBatPanel` that changes each time the batter advances. This forces React to unmount and remount the component, clearing all internal state.
 
-### `src/components/game-scoring/GameSetupForm.tsx`
-- Import `useOrganization` hook
-- Call `useOrganization()` to get `myOrgs.data`
-- Also import `usePlayerOrganization` for coaches who are members (not owners)
-- In a `useEffect`, if the user has an org (either as owner via `myOrgs.data[0]?.name` or as member via `orgName`), set `teamName` to that value — only if `teamName` is still empty (don't override user edits)
-- Priority: owner org name first, then member org name
+## Change
 
-### Summary
-Single file change. Add a `useEffect` that seeds `teamName` from the user's organization on mount. The field remains editable so users can override it.
+### `src/components/game-scoring/LiveScorebook.tsx` (line ~307)
+Add a `key` combining `currentBatterIndex`, `currentInning`, and `currentHalf`:
+
+```tsx
+<AtBatPanel
+  key={`${currentInning}-${currentHalf}-${currentBatterIndex}`}
+  batterName={currentBatter.name}
+  ...
+/>
+```
+
+Single-line addition. All internal `AtBatPanel` state (pitches, outcome, RBI, situational data, catcher data) resets automatically on remount.
 
