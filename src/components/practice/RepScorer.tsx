@@ -154,6 +154,10 @@ interface RepScorerProps {
   reps: ScoredRep[];
   onRepsChange: (reps: ScoredRep[]) => void;
   sessionConfig?: SessionConfig;
+  goalOfRep?: string;
+  onGoalOfRepChange?: (value: string) => void;
+  actualOutcome?: string;
+  onActualOutcomeChange?: (value: string) => void;
 }
 
 const LOGGING_MODE_KEY = 'repLogMode';
@@ -221,7 +225,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 // Sources that require pitching velo to be always visible (not just advanced)
 const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
-export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
+export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig, goalOfRep, onGoalOfRepChange, actualOutcome, onActualOutcomeChange }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
   const { isSwitchHitter } = useSwitchHitterProfile();
 
@@ -1490,6 +1494,28 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           {/* ===== THROWING FIELDS ===== */}
           {isThrowing && (
             <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
+          )}
+
+          {/* Goal of Rep & Actual Outcome */}
+          {onGoalOfRepChange && (
+            <AITextBoxField
+              label="Goal of Rep"
+              value={goalOfRep ?? ''}
+              onChange={onGoalOfRepChange}
+              minChars={0}
+              required={false}
+              placeholder="What was your goal for this rep? (optional)..."
+            />
+          )}
+          {onActualOutcomeChange && (
+            <AITextBoxField
+              label="Actual Outcome"
+              value={actualOutcome ?? ''}
+              onChange={onActualOutcomeChange}
+              minChars={0}
+              required={false}
+              placeholder="What actually happened? (optional)..."
+            />
           )}
 
           {/* CONFIRM REP */}
