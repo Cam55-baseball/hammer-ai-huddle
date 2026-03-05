@@ -2,6 +2,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import { FieldingThrowFields } from './FieldingThrowFields';
 import type { ScoredRep } from './RepScorer';
 
 interface ThrowingRepFieldsProps {
@@ -54,11 +55,7 @@ const softballDistanceBands = [
   { value: '150+', label: '150+ ft' },
 ];
 
-const accuracyOptions = [
-  { value: 'on_target', label: '🎯 On Target' },
-  { value: 'off_target', label: '↗️ Off Target' },
-  { value: 'wild', label: '❌ Wild' },
-];
+// Legacy accuracyOptions removed — replaced by FieldingThrowFields
 
 const armFeelOptions = [
   { value: 'fresh', label: '💪 Fresh' },
@@ -116,14 +113,8 @@ export function ThrowingRepFields({ value, onChange, mode, sport }: ThrowingRepF
         />
       </div>
 
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Accuracy</Label>
-        <SelectGrid
-          options={accuracyOptions}
-          value={value.throw_accuracy_tag}
-          onChange={v => onChange('throw_accuracy_tag', v)}
-        />
-      </div>
+      {/* Throw accuracy/arrival/strength — replaces old 3-option accuracy */}
+      <FieldingThrowFields value={value} onChange={onChange} />
 
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Arm Feel</Label>
