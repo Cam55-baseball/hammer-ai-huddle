@@ -1,193 +1,220 @@
 
 
-# Game Scoring — Standalone Elite Module
+# Multi-System Upgrade: Competition Weighting, Vault Video, Speed Steps, Rep Analysis, Sport Separation
 
-## Context
+## Scope
 
-The existing `GameScorecard.tsx` component is a simple per-module (hitting/pitching/fielding) inning tracker embedded within PracticeHub. The user wants a **standalone, full-game scoring module** that tracks ALL positions simultaneously, supports multi-player lineups, generates analytics, and feeds all existing systems.
-
-This is the largest feature requested to date. It requires new database tables, a new page, and 10+ new components.
+Six interconnected systems spanning new data files, UI components, Vault integration, and analytics engine logic.
 
 ---
 
-## Architecture
+## 1. Competition Level Weighting Engine
 
-### New Route & Page
-- `/game-scoring` → `src/pages/GameScoring.tsx`
-- Added to `App.tsx` routes and sidebar navigation
-- Completely independent from Practice Hub
+### New Data Files
 
-### Database: New Tables
+**`src/data/baseball/competitionLevels.ts`** and **`src/data/softball/competitionLevels.ts`**
 
-**`games`** — Master game record
+Each contains a full competition level taxonomy with `competition_weight_multiplier` and `league_difficulty_index` per level:
+
+- **Youth/Amateur**: little_league (0.45), rec (0.50), youth (0.55), travel (0.70), hs_jv (0.75), hs_varsity (0.82)
+- **Collegiate**: juco (0.85), naia (0.87), d3 (0.90), d2 (0.95), d1 (1.05)
+- **Summer Ball**: AI-classified (edge function), known leagues hard-coded (cape_cod: 1.08, usa_collegiate_national: 1.15 for baseball; ausl_summer: 1.10 for softball)
+- **Professional**: foreign_league (1.10), indie_pro (1.12), winter_ball (1.08), academy (1.05), rookie (1.10), low_a (1.15), high_a (1.20), aa (1.28), aaa (1.35), mlb (1.50), wbc (1.55), olympic (1.55)
+- Softball equivalent ladder separately defined
+
+**`src/data/competitionWeighting.ts`** — Shared engine logic:
+- `getCompetitionWeight(sport, level, athleteAge?, leagueAge?)` → `{ competition_weight_multiplier, age_play_up_bonus, league_difficulty_index }`
+- Age play-up bonus: `(leagueAge - athleteAge) * 0.03` capped at 0.12, only pre-collegiate
+- Performance credit formula: `rawCredit * competition_weight_multiplier * (1 + age_play_up_bonus)`
+- Deduction scaling: inverse — higher competition = less penalty. `rawDeduction * (2.0 - competition_weight_multiplier)`
+
+### Summer League AI Classification (Edge Function)
+
+**`supabase/functions/classify-league/index.ts`** — Uses Lovable AI to classify unknown summer leagues:
+- Input: league name, sport, country
+- Output: difficulty_multiplier (0.7–1.2 range)
+- Uses tool calling for structured output
+- Stores classification in a `league_classifications` table for caching
+
+### Database Migration
 ```sql
-CREATE TABLE public.games (
+CREATE TABLE public.league_classifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  sport TEXT NOT NULL DEFAULT 'baseball',
-  team_name TEXT NOT NULL,
-  opponent_name TEXT NOT NULL,
-  game_type TEXT NOT NULL, -- league, tournament, scrimmage
-  league_level TEXT NOT NULL,
-  base_distance_ft NUMERIC NOT NULL,
-  mound_distance_ft NUMERIC NOT NULL,
-  game_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  venue TEXT,
-  total_innings INTEGER NOT NULL DEFAULT 9,
-  status TEXT NOT NULL DEFAULT 'in_progress', -- in_progress, completed
-  lineup JSONB NOT NULL DEFAULT '[]',
-  starting_pitcher_id TEXT,
-  game_summary JSONB DEFAULT '{}',
-  coach_insights JSONB DEFAULT '{}',
+  sport TEXT NOT NULL,
+  league_name TEXT NOT NULL,
+  country TEXT,
+  difficulty_multiplier NUMERIC NOT NULL DEFAULT 0.85,
+  ai_classified BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+  UNIQUE(sport, league_name)
 );
-ALTER TABLE public.games ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users manage own games" ON public.games FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+ALTER TABLE public.league_classifications ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read" ON public.league_classifications FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated can insert" ON public.league_classifications FOR INSERT TO authenticated WITH CHECK (true);
 ```
 
-**`game_plays`** — Every pitch/play in the game
-```sql
-CREATE TABLE public.game_plays (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  game_id UUID NOT NULL REFERENCES public.games(id) ON DELETE CASCADE,
-  inning INTEGER NOT NULL,
-  half TEXT NOT NULL DEFAULT 'top', -- top, bottom
-  batter_order INTEGER,
-  batter_name TEXT,
-  pitcher_name TEXT,
-  pitch_number INTEGER,
-  -- Pitch data
-  pitch_type TEXT,
-  pitch_velocity_mph NUMERIC,
-  velocity_band TEXT,
-  pitch_location JSONB, -- {row, col}
-  pitch_result TEXT NOT NULL, -- ball, called_strike, swinging_strike, foul, in_play_out, in_play_hit
-  -- Batted ball
-  exit_velocity_mph NUMERIC,
-  launch_angle NUMERIC,
-  spray_direction TEXT,
-  contact_quality TEXT,
-  batted_ball_type TEXT,
-  -- At-bat outcome (set on final pitch)
-  at_bat_outcome TEXT,
-  rbi INTEGER DEFAULT 0,
-  -- Situational data (JSONB for flexible advanced toggles)
-  situational_data JSONB DEFAULT '{}',
-  -- Defensive data
-  defensive_data JSONB DEFAULT '{}',
-  -- Catcher data
-  catcher_data JSONB DEFAULT '{}',
-  -- Baserunning data
-  baserunning_data JSONB DEFAULT '{}',
-  -- Video binding
-  video_id TEXT,
-  video_start_sec NUMERIC,
-  video_end_sec NUMERIC,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-ALTER TABLE public.game_plays ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users manage own game plays" ON public.game_plays FOR ALL TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.games WHERE id = game_id AND user_id = auth.uid()))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.games WHERE id = game_id AND user_id = auth.uid()));
+### UI Integration
+- Add competition level selector in `GameSetupForm.tsx` and `SessionConfigPanel.tsx` (for game/scrimmage sessions)
+- Summer league: text input with AI classify button
+- Age play-up fields auto-calculated from profile DOB
+
+---
+
+## 2. Practice Video → Vault Storage
+
+### Changes to `SessionVideoUploader.tsx`
+- After uploading to `videos` bucket, also create a Vault entry linking the video
+- Store in `vault_practice_videos` view/query pattern: videos queryable by module, session, rep, date, position
+
+### New Hook: `useVaultVideos.ts`
+- Queries `session_videos` joined with `performance_sessions` for Vault organization
+- Provides filters: by module, date range, session_id, rep_id
+- Ensures video persists even if session log is deleted (separate confirmation required)
+
+### Vault UI Integration
+- Add "Practice Videos" tab in Vault page
+- Organized by module → session → rep → date
+- Video thumbnails with module/position badges
+
+### Video Constraints (Constants)
+```typescript
+export const VIDEO_LIMITS = {
+  MAX_CLIP_DURATION_SEC: 300, // 5 minutes per clip
+  MAX_FILE_SIZE_MB: 500,      // 500MB max
+  MAX_SESSION_DURATION_MIN: 60, // 60 min full session
+  SUPPORTED_FORMATS: ['mp4', 'mov', 'webm'],
+};
+```
+- Validate on upload in `SessionVideoUploader.tsx`
+- Display warnings for large files
+
+### Log-Video Binding Rules
+- Deleting a log prompts: "Keep video in Vault?" (default: Yes)
+- Video references `session_id` and `rep_indexes` but is NOT cascade-deleted
+
+---
+
+## 3. Speed Program Step Count Tracking
+
+### `SpeedSession` Interface Update
+- Add `steps_per_rep?: Record<string, number[]>` — keyed by distance, array of step counts per rep
+
+### Speed Lab UI (`src/pages/SpeedLab.tsx` or equivalent logging component)
+- Below each sprint distance rep time input, add optional "Steps" numeric input
+- Auto-calculate: stride_length = distance_yards * 3 / steps, step_frequency = steps / time_sec
+
+### Custom Workout Card
+- In workout builder rep logging, add optional "Steps Taken" integer input
+- Stored in `performance_data.exerciseSets[exercise].steps`
+
+### Analytics
+- `useSpeedProgress.ts` enhanced with stride efficiency metrics
+- Dashboard shows: avg steps per distance, stride length trend, step frequency trend
+
+---
+
+## 4. Rep Analysis — "Analyze" Tab on Tagged Videos
+
+### Scoping Rule
+- "Analyze" button appears ONLY when:
+  - Video is tagged to a rep AND
+  - Module is one of: `hitting`, `pitching`, `throwing`
+- Does NOT appear for catching, baserunning, fielding, or other modules
+
+### Component: `src/components/practice/RepVideoAnalysis.tsx`
+- Opens a full-screen or dialog view of the tagged video clip
+- Integrates existing `FrameAnnotationDialog` (fabric.js) for:
+  - Frame-by-frame navigation
+  - Drawing tools (lines, circles, rectangles, freehand)
+  - Body angle markers
+  - Release point tagging
+  - Bat path tracing / throw slot tracking
+- Annotations saved to `session_videos.rep_markers[i].annotations` JSONB
+- Editable after initial save
+- Visible to linked coaches via existing `is_linked_coach` check
+
+### Integration Points
+- In `VideoRepReview.tsx` and `SessionVideoUploader.tsx` — add "Analyze" button per tagged rep
+- In Vault practice videos view — "Analyze" button on eligible clips
+- In coach dashboard player video section — read-only annotation view
+
+---
+
+## 5. Baseball vs Softball Separation (Enforcement)
+
+### Already Separated Files
+The codebase already maintains separate files (`src/data/baseball/` vs `src/data/softball/`). This task ensures the NEW competition level data follows the same pattern.
+
+### New Files
+- `src/data/baseball/competitionLevels.ts` — Baseball-specific competition ladder
+- `src/data/softball/competitionLevels.ts` — Softball-specific competition ladder
+- `src/data/baseball/summerLeagues.ts` — Known baseball summer leagues with multipliers
+- `src/data/softball/summerLeagues.ts` — Known softball summer leagues with multipliers
+
+### Engine Contract Update
+Add to `ENGINE_CONTRACT.ts`:
+```typescript
+COMPETITION_WEIGHT_ENABLED: true,
+AGE_PLAY_UP_BONUS_CAP: 0.12,
+AGE_PLAY_UP_BONUS_PER_YEAR: 0.03,
+SUMMER_LEAGUE_AI_CLASSIFY: true,
 ```
 
 ---
 
-## Component Architecture
+## 6. Stress Testing & Data Integrity
 
-### Page: `GameScoring.tsx`
-Multi-step flow:
-1. **Game Setup** — Team, opponent, game type, league level (auto-populates distances), date, venue, lineup builder, starting pitcher
-2. **Live Scoring** — Traditional scorebook + advanced toggle
-3. **Game Summary** — Stats, charts, insights
+No separate component — validation logic embedded in:
+- Sport switch: competition data is sport-scoped, no cross-contamination
+- International users: AI league classification supports any country
+- Custom classification errors: cached in `league_classifications` with `ai_classified` flag for manual override
+- Longitudinal: all competition weights stored per-session, not recalculated retroactively
+- Organization overrides: existing `is_org_coach_or_owner` function gates corrections
+- Data Freeze compatible: competition weights are read-only in frozen state
 
-### Components to Create
+---
 
-| Component | Purpose |
-|-----------|---------|
-| `game-scoring/GameSetupForm.tsx` | Game creation form with all required fields, lineup builder |
-| `game-scoring/LiveScorebook.tsx` | Main scorebook interface — inning grid, lineup, pitch-by-pitch |
-| `game-scoring/PitchEntry.tsx` | Single pitch input: type, velocity, location, result |
-| `game-scoring/AtBatPanel.tsx` | Full at-bat flow with pitch sequence and outcome |
-| `game-scoring/SituationalPrompts.tsx` | Dynamic prompts: dirt ball read, steal, defensive plays, baserunning |
-| `game-scoring/CatcherMetrics.tsx` | Pop time, exchange, framing, blocking inputs |
-| `game-scoring/PitcherTracker.tsx` | Pitch count, velocity trends, percentages |
-| `game-scoring/PlayerGameCard.tsx` | Per-player stat dashboard (AVG/OBP/SLG/OPS, spray chart) |
-| `game-scoring/GameSummaryView.tsx` | Post-game analytics, heat maps, charts |
-| `game-scoring/DiamondVisual.tsx` | Base runner diamond SVG |
-| `game-scoring/SprayChart.tsx` | Batted ball spray chart visualization |
-| `game-scoring/HeatMapGrid.tsx` | 5x5 pitch/contact heat map |
+## Files to Create
 
-### Hooks to Create
-
-| Hook | Purpose |
+| File | Purpose |
 |------|---------|
-| `useGameScoring.ts` | CRUD for games table, play insertion, stat calculations |
-| `useGameAnalytics.ts` | Derived stats: AVG, OBP, SLG, OPS, WHIP, ERA, K%, BB%, spray data, heat maps |
+| `src/data/baseball/competitionLevels.ts` | Baseball competition level taxonomy + multipliers |
+| `src/data/softball/competitionLevels.ts` | Softball competition level taxonomy + multipliers |
+| `src/data/baseball/summerLeagues.ts` | Known baseball summer league multipliers |
+| `src/data/softball/summerLeagues.ts` | Known softball summer league multipliers |
+| `src/data/competitionWeighting.ts` | Shared weighting engine: credit/deduction scaling, age play-up |
+| `src/data/videoLimits.ts` | Video upload constraints |
+| `src/hooks/useVaultVideos.ts` | Vault video query/filter hook |
+| `src/components/practice/RepVideoAnalysis.tsx` | Video analysis view with annotation integration |
+| `supabase/functions/classify-league/index.ts` | AI summer league classification |
 
----
+## Files to Modify
 
-## Key Implementation Details
+| File | Changes |
+|------|---------|
+| `src/data/ENGINE_CONTRACT.ts` | Add competition weight constants |
+| `src/components/game-scoring/GameSetupForm.tsx` | Add competition level selector |
+| `src/components/practice/SessionConfigPanel.tsx` | Add competition level for game/scrimmage sessions |
+| `src/components/practice/SessionVideoUploader.tsx` | Vault integration, video limits validation, analyze button |
+| `src/components/practice/VideoRepReview.tsx` | Add "Analyze" button for hitting/pitching/throwing reps |
+| `src/hooks/useSpeedProgress.ts` | Add step count tracking and stride analytics |
+| `src/pages/SpeedLab.tsx` (or equivalent) | Steps input per sprint rep |
+| Vault page component | Add "Practice Videos" tab |
 
-### League Distance Auto-Configuration
-Reuses existing `baseballLeagueDistances` and `softballLeagueDistances` data. Selection auto-populates `base_distance_ft` and `mound_distance_ft` with manual override capability. Analytics benchmarks (steal times, pop times, throw down expectations) scale based on distances.
+## Database Migration
 
-### Traditional Scorebook Layout
-- Horizontal scrollable inning columns (1-9+ for baseball, 1-7+ for softball)
-- Vertical lineup rows (9 batters + substitutions)
-- Each cell shows at-bat result with pitch count
-- Diamond visual for base runners per at-bat
-- Running stat line (AB/H/R/RBI/BB/K)
+```sql
+-- League classifications cache
+CREATE TABLE public.league_classifications (...);
 
-### Advanced Toggle System
-Default = traditional quick-entry mode. Advanced toggle reveals:
-- 5×5 pitch location grid per pitch
-- Exact velocity input
-- Batted ball data (EV, LA, spray, contact quality)
-- Situational prompts (only when conditions are met)
+-- Add competition_level to performance_sessions
+ALTER TABLE public.performance_sessions 
+  ADD COLUMN IF NOT EXISTS competition_level TEXT,
+  ADD COLUMN IF NOT EXISTS competition_weight NUMERIC DEFAULT 1.0,
+  ADD COLUMN IF NOT EXISTS age_play_up_bonus NUMERIC DEFAULT 0;
 
-### Situational Prompt Logic (Dynamic)
-- **Dirt ball read**: Only when pitch result = ball AND runners on base
-- **Steal attempt**: Only when runner advances without hit
-- **Defensive play**: On every in-play result
-- **Baserunning advancement**: When runners move on hits/outs
-
-### Catcher Metrics
-Pop time, exchange, framing, blocking — all optional unless advanced mode is on. Feed directly to player profile analytics.
-
-### Pitcher Tracking
-Auto-calculated from pitch-by-pitch data: pitch count, velocity avg/peak, first-pitch strike %, K%, BB%, zone %, chase rate. Shown in real-time sidebar panel.
-
-### Player Profile Linking
-Every play stores player names. On game completion, system creates `performance_sessions` entries per player with `session_type: 'game'` and `module` per tracked category, linking all data to existing analytics pipeline.
-
-### Heat Maps & Charts
-Built using the existing 5×5 grid data and recharts. Spray chart uses SVG field diagram. All generated from `game_plays` data on the summary view.
-
-### Video Integration
-Reuses existing `VideoRepMarker` system. Each pitch/play can be bound to video timestamps.
-
-### Coach Stat Corrections
-Games with `status: 'completed'` allow coaches (via `is_linked_coach` check) to edit play data within 48 hours.
-
-### Baseball + Softball Compatibility
-- Inning count defaults (9 vs 7)
-- Pitch types from existing sport-specific data files
-- Distance/mound from existing league distance data
-- Terminology adapts via `useSportTerminology`
-
----
-
-## Implementation Order
-
-Due to the massive scope, implementation will be chunked:
-
-**Chunk 1**: Database migration + `GameScoring.tsx` page + `GameSetupForm` + route
-**Chunk 2**: `LiveScorebook` + `AtBatPanel` + `PitchEntry` + `DiamondVisual` + basic scoring flow
-**Chunk 3**: `SituationalPrompts` + `CatcherMetrics` + `PitcherTracker` — advanced toggle layer
-**Chunk 4**: `PlayerGameCard` + `GameSummaryView` + `SprayChart` + `HeatMapGrid` — analytics
-**Chunk 5**: Profile linking, video integration, coach corrections
-
-This plan will implement **all 5 chunks** in this pass.
+-- Add steps tracking to speed_sessions
+ALTER TABLE public.speed_sessions 
+  ADD COLUMN IF NOT EXISTS steps_per_rep JSONB DEFAULT '{}';
+```
 
