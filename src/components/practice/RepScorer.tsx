@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -95,6 +96,21 @@ export interface ScoredRep {
   // Baserunning
   drill_type?: string;
   baserunning_goal?: string;
+  // Throwing new fields
+  self_catch_quality?: string;
+  exact_throw_distance_ft?: number;
+  effort_level?: string;
+  exact_velocity_mph?: number;
+  // Baserunning new fields
+  exact_time_to_base_sec?: number;
+  exact_steps_to_base?: number;
+  ai_baserunning_drill_description?: string;
+  // Velocity (pitcher/hitting competitive)
+  exact_pitch_velocity_mph?: number;
+  // Video binding
+  video_id?: string;
+  video_start_sec?: number;
+  video_end_sec?: number;
   // === NEW AI-structured fields ===
   ai_drill_description?: string;      // Catching other/drill
   ai_drill_clarification?: string;    // Any module drill (non-catching)
@@ -256,6 +272,14 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsPitcherIntent = isPitching;
   const pitcherIntentValid = !needsPitcherIntent || !!current.pitcher_spot_intent;
 
+  // Throwing: require self_catch_quality and effort_level
+  const needsThrowingRequired = isThrowing;
+  const throwingRequiredValid = !needsThrowingRequired || (!!current.self_catch_quality && !!current.effort_level);
+
+  // Baserunning: if drill_type === 'custom', require ai_baserunning_drill_description >= 15
+  const needsBaserunningCustomDesc = isBaserunning && current.drill_type === 'custom';
+  const baserunningCustomDescValid = !needsBaserunningCustomDesc || (current.ai_baserunning_drill_description?.length ?? 0) >= 15;
+
   // Validation
   const execScore = current.execution_score;
   const hasRepSource = !!repSource;
@@ -268,7 +292,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && drillClarificationValid
     && customRepDescValid
     && absGuessValid
-    && pitcherIntentValid;
+    && pitcherIntentValid
+    && throwingRequiredValid
+    && baserunningCustomDescValid;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
@@ -704,6 +730,22 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
+              {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
+              {isHitting && repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
+                  <Input
+                    type="number"
+                    placeholder="Optional — overrides velocity band"
+                    value={current.exact_pitch_velocity_mph ?? ''}
+                    onChange={e => updateField('exact_pitch_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
+                    className="h-8 text-xs"
+                    min={0}
+                    step="any"
+                  />
+                </div>
+              )}
+
               {/* Switch hitter per-rep toggle */}
               {isHitting && isSwitchHitter && (
                 <div>
@@ -964,6 +1006,22 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     value={current.velocity_band}
                     onChange={v => updateField('velocity_band', v)}
                     cols={4}
+                  />
+                </div>
+              )}
+
+              {/* Exact Pitch Velocity (MPH) — optional, for live/game/advanced pitching */}
+              {!hidesVelocity && (PITCHING_ALWAYS_VELO.includes(repSource) || mode === 'advanced') && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
+                  <Input
+                    type="number"
+                    placeholder="Optional — overrides velocity band"
+                    value={current.exact_pitch_velocity_mph ?? ''}
+                    onChange={e => updateField('exact_pitch_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
+                    className="h-8 text-xs"
+                    min={0}
+                    step="any"
                   />
                 </div>
               )}
@@ -1297,6 +1355,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !customRepDescValid ? 'AI Custom Rep Description requires min 15 characters' :
                 !pitcherIntentValid ? 'Select Pitcher Spot Intent before logging pitch' :
                 !absGuessValid ? 'Select ABS Guess zone' :
+                !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
+                !baserunningCustomDescValid ? 'AI Drill Type Description requires min 15 characters' :
                   'Set execution score (1-10) to confirm rep'}
             </p>
           )}

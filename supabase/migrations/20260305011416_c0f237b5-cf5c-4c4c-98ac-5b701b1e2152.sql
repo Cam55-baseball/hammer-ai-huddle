@@ -1,0 +1,1 @@
+ALTER TABLE session_videos ADD COLUMN IF NOT EXISTS rep_markers JSONB DEFAULT '[]';

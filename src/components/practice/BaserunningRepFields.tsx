@@ -1,6 +1,8 @@
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import { AITextBoxField } from './AITextBoxField';
 import type { ScoredRep } from './RepScorer';
 
 interface BaserunningRepFieldsProps {
@@ -44,6 +46,7 @@ const baseballDrills = [
   { value: 'hit_and_run', label: 'Hit & Run' },
   { value: 'tag_up', label: 'Tag Up' },
   { value: 'lead_work', label: 'Lead Work' },
+  { value: 'custom', label: '✏️ Custom' },
 ];
 
 const softballDrills = [
@@ -55,6 +58,7 @@ const softballDrills = [
   { value: 'bunt_and_run', label: 'Bunt & Run' },
   { value: 'tag_up', label: 'Tag Up' },
   { value: 'leadoff', label: 'Lead-off' },
+  { value: 'custom', label: '✏️ Custom' },
 ];
 
 const goalOptions = [
@@ -78,6 +82,18 @@ export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepF
           onChange={v => onChange('drill_type', v)}
         />
       </div>
+
+      {/* AI Drill Type Description — required when drill_type is custom */}
+      {value.drill_type === 'custom' && (
+        <AITextBoxField
+          label="AI Drill Type Description"
+          value={value.ai_baserunning_drill_description ?? ''}
+          onChange={v => onChange('ai_baserunning_drill_description', v)}
+          minChars={15}
+          required
+          placeholder="Describe the custom drill for AI tracking (min 15 characters)..."
+        />
+      )}
 
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
@@ -121,6 +137,34 @@ export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepF
           ]}
           value={value.time_to_base_band}
           onChange={v => onChange('time_to_base_band', v)}
+        />
+      </div>
+
+      {/* Exact Time to Base (optional override) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Exact Time to Base (Seconds)</Label>
+        <Input
+          type="number"
+          placeholder="Optional — overrides time band"
+          value={value.exact_time_to_base_sec ?? ''}
+          onChange={e => onChange('exact_time_to_base_sec', e.target.value ? Number(e.target.value) : undefined)}
+          className="h-8 text-xs"
+          min={0}
+          step="any"
+        />
+      </div>
+
+      {/* Exact Steps to Base (optional) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Exact Steps to Base</Label>
+        <Input
+          type="number"
+          placeholder="Optional integer"
+          value={value.exact_steps_to_base ?? ''}
+          onChange={e => onChange('exact_steps_to_base', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+          className="h-8 text-xs"
+          min={0}
+          step="1"
         />
       </div>
     </div>
