@@ -156,7 +156,7 @@ const VALID_HITTING_SOURCES: Record<string, string[]> = {
   team_session: ['machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
   lesson: ['tee', 'soft_toss', 'front_toss', 'flip', 'coach_pitch', 'machine_bp'],
   game: ['game'],
-  live_abs: ['live_bp', 'regular_bp'],
+  live_abs: ['tee', 'soft_toss', 'machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
 };
 
 const VALID_PITCHING_SOURCES: Record<string, string[]> = {
@@ -164,7 +164,7 @@ const VALID_PITCHING_SOURCES: Record<string, string[]> = {
   team_session: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
   lesson: ['bullpen', 'flat_ground'],
   game: ['game'],
-  live_abs: ['live_bp'],
+  live_abs: ['live_bp', 'bullpen'],
 };
 
 const VALID_THROWING_SOURCES: Record<string, string[]> = {

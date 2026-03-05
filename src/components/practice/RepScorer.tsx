@@ -18,6 +18,7 @@ import { FieldingThrowFields } from './FieldingThrowFields';
 import { InfieldRepTypeFields, INFIELD_POSITIONS } from './InfieldRepTypeFields';
 import { PlayDirectionSelector } from './PlayDirectionSelector';
 import { AITextBoxField } from './AITextBoxField';
+import { getContextFields } from '@/data/contextAppropriatenessEngine';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { cn } from '@/lib/utils';
@@ -133,6 +134,10 @@ export interface ScoredRep {
   infield_rep_execution?: 'incomplete' | 'complete' | 'elite';
   // Play direction
   play_direction?: 'right' | 'left' | 'back' | 'in' | 'straight_up';
+  // Live AB hitter tracking (pitching module only)
+  live_ab_swing_result?: 'take' | 'swing_miss' | 'foul' | 'in_play';
+  live_ab_ball_result?: string;
+  live_ab_outcome?: string;
 }
 
 interface RepScorerProps {
@@ -258,6 +263,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
   const isTee = repSource === 'tee';
   const isMachine = repSource === 'machine_bp';
+
+  // Context appropriateness engine
+  const ctx = getContextFields(module, repFieldingPosition, sport, sessionConfig?.season_context, repSource);
 
   const updateField = (field: string, val: any) => {
     setCurrent(prev => ({ ...prev, [field]: val }));
@@ -897,21 +905,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
-                  {/* Spin Direction (hitting advanced) */}
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Ball Spin Direction</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'topspin', label: 'Topspin' },
-                        { value: 'backspin', label: 'Backspin' },
-                        { value: 'knuckle', label: 'Knuckle' },
-                        { value: 'backspin_tail', label: 'Backspin Tail' },
-                      ]}
-                      value={current.spin_direction}
-                      onChange={v => updateField('spin_direction', v)}
-                      cols={4}
-                    />
-                  </div>
+                  {/* Spin Direction removed from hitting — pitcher-only metric */}
 
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Approach Quality</Label>
@@ -1102,8 +1096,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               </div>
 
-              {/* Contact Type for flat ground vs hitter */}
-              {repSource === 'flat_ground_vs_hitter' && (
+              {/* Contact Type for pitching vs hitter (flat_ground_vs_hitter or live_bp) */}
+              {ctx.showContactType && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Contact Type</Label>
                   <SelectGrid
@@ -1118,6 +1112,61 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     cols={4}
                   />
                 </div>
+              )}
+
+              {/* Live AB Hitter Tracking — swing result, ball result, at-bat outcome */}
+              {ctx.showLiveAbHitterFields && (
+                <>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Result</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'take', label: 'Take' },
+                        { value: 'swing_miss', label: 'Swing & Miss' },
+                        { value: 'foul', label: 'Foul' },
+                        { value: 'in_play', label: 'In Play' },
+                      ]}
+                      value={current.live_ab_swing_result}
+                      onChange={v => updateField('live_ab_swing_result', v)}
+                      cols={4}
+                    />
+                  </div>
+
+                  {current.live_ab_swing_result === 'in_play' && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Ball In Play Result</Label>
+                      <SelectGrid
+                        options={[
+                          { value: 'single', label: 'Single' },
+                          { value: 'double', label: 'Double' },
+                          { value: 'triple', label: 'Triple' },
+                          { value: 'hr', label: 'HR' },
+                          { value: 'out', label: 'Out' },
+                          { value: 'fc', label: 'FC' },
+                          { value: 'error', label: 'Error' },
+                        ]}
+                        value={current.live_ab_ball_result}
+                        onChange={v => updateField('live_ab_ball_result', v)}
+                        cols={4}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">At-Bat Outcome</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'strikeout', label: 'Strikeout' },
+                        { value: 'walk', label: 'Walk' },
+                        { value: 'hbp', label: 'HBP' },
+                        { value: 'in_play', label: 'In Play' },
+                      ]}
+                      value={current.live_ab_outcome}
+                      onChange={v => updateField('live_ab_outcome', v)}
+                      cols={4}
+                    />
+                  </div>
+                </>
               )}
 
               <div>

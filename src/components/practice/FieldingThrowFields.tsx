@@ -8,7 +8,7 @@ interface FieldingThrowFieldsProps {
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; title?: string }[];
   value?: string;
   onChange: (v: string) => void;
   cols?: number;
@@ -19,6 +19,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
         key={opt.value}
         type="button"
         onClick={() => onChange(opt.value)}
+        title={opt.title}
         className={cn(
           'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
           value === opt.value
@@ -35,7 +36,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 const accuracyDirectionOptions = [
   { value: 'wide_left', label: '⬅️ Wide Left' },
   { value: 'on_target', label: '🎯 On Target' },
-  { value: 'dot', label: '💎 Dot' },
+  { value: 'dot', label: '💎 Dot', title: 'Perfect throw — ideal trajectory, on-line, no adjustment needed by receiver' },
   { value: 'wide_right', label: '➡️ Wide Right' },
 ];
 
