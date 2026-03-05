@@ -124,6 +124,18 @@ const FLAT_SOURCES: Record<string, SourceItem[]> = {
   ],
   catching: [
     { value: 'bullpen_receive', label: 'Bullpen Receive' },
+    { value: 'back_pick_1b', label: 'Back Pick → 1B' },
+    { value: 'back_pick_3b', label: 'Back Pick → 3B' },
+    { value: 'throw_down_2b', label: 'Throw Down → 2B' },
+    { value: 'throw_down_3b', label: 'Throw Down → 3B' },
+    { value: 'pop_fly_right', label: 'Pop Fly Right' },
+    { value: 'pop_fly_left', label: 'Pop Fly Left' },
+    { value: 'pop_fly_back', label: 'Pop Fly Back' },
+    { value: 'pop_fly_pitcher', label: 'Pop Fly → Pitcher' },
+    { value: 'bunt_1b', label: 'Bunt → 1B' },
+    { value: 'bunt_3b', label: 'Bunt → 3B' },
+    { value: 'bunt_pitcher', label: 'Bunt → Pitcher' },
+    { value: 'tag_play_home', label: 'Tag Play at Home' },
     { value: 'game', label: 'Game' },
     { value: 'drill', label: 'Drill' },
     { value: 'other', label: 'Other' },
@@ -160,11 +172,11 @@ const VALID_HITTING_SOURCES: Record<string, string[]> = {
 };
 
 const VALID_PITCHING_SOURCES: Record<string, string[]> = {
-  solo_work: ['flat_ground', 'flat_ground_vs_hitter'],
+  solo_work: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
   team_session: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  lesson: ['bullpen', 'flat_ground'],
+  lesson: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
   game: ['game'],
-  live_abs: ['live_bp', 'bullpen'],
+  live_abs: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
 };
 
 const VALID_THROWING_SOURCES: Record<string, string[]> = {

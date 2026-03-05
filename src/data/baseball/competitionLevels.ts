@@ -36,7 +36,8 @@ export const baseballCompetitionLevels: CompetitionLevel[] = [
   { key: 'high_a', label: 'High-A', category: 'professional', competition_weight_multiplier: 1.20, league_difficulty_index: 0.93, pre_collegiate: false },
   { key: 'aa', label: 'AA', category: 'professional', competition_weight_multiplier: 1.28, league_difficulty_index: 0.95, pre_collegiate: false },
   { key: 'aaa', label: 'AAA', category: 'professional', competition_weight_multiplier: 1.35, league_difficulty_index: 0.97, pre_collegiate: false },
-  { key: 'mlb', label: 'MLB', category: 'professional', competition_weight_multiplier: 1.50, league_difficulty_index: 1.00, pre_collegiate: false },
+  // HARD-CODED: MLB = AAA (1.35) + 0.75 = 2.10 (founder mandate — do NOT auto-recalculate)
+  { key: 'mlb', label: 'MLB', category: 'professional', competition_weight_multiplier: 2.10, league_difficulty_index: 1.00, pre_collegiate: false },
   { key: 'wbc', label: 'WBC', category: 'professional', competition_weight_multiplier: 1.55, league_difficulty_index: 1.00, pre_collegiate: false },
   { key: 'olympic', label: 'Olympic', category: 'professional', competition_weight_multiplier: 1.55, league_difficulty_index: 1.00, pre_collegiate: false },
 ];

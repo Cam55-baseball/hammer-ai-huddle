@@ -93,7 +93,6 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
         ref={fileInputRef}
         type="file"
         accept="video/*"
-        capture="environment"
         className="hidden"
         onChange={handleFileSelect}
       />

@@ -39,6 +39,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 const baseballDrills = [
   { value: 'home_to_1st', label: 'Home→1st' },
   { value: '1st_to_3rd', label: '1st→3rd' },
+  { value: '1st_to_home', label: '1st→Home' },
   { value: '2nd_to_home', label: '2nd→Home' },
   { value: 'steal_2nd', label: 'Steal 2nd' },
   { value: 'steal_3rd', label: 'Steal 3rd' },
@@ -52,6 +53,7 @@ const baseballDrills = [
 const softballDrills = [
   { value: 'home_to_1st', label: 'Home→1st' },
   { value: '1st_to_3rd', label: '1st→3rd' },
+  { value: '1st_to_home', label: '1st→Home' },
   { value: '2nd_to_home', label: '2nd→Home' },
   { value: 'steal_2nd', label: 'Steal 2nd' },
   { value: 'slap_and_run', label: 'Slap & Run' },

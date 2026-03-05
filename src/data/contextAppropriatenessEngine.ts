@@ -52,8 +52,8 @@ export function getContextFields(
   const isThrowing = module === 'throwing';
 
   return {
-    // Spin direction is a pitcher metric — NOT shown in hitting
-    showSpinDirection: isPitching,
+    // Spin direction available for both pitching and hitting (hitter contact analytics)
+    showSpinDirection: isPitching || isHitting,
 
     // Contact type for pitching when facing a hitter
     showContactType: isPitching && (repSource === 'flat_ground_vs_hitter' || repSource === 'live_bp'),
