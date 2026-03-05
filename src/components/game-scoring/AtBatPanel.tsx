@@ -32,6 +32,9 @@ const AT_BAT_OUTCOMES = [
   { value: 'error', label: 'E' },
 ];
 
+const FIELDER_POSITIONS_BASEBALL = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'];
+const FIELDER_POSITIONS_SOFTBALL = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DP', 'FLEX'];
+
 interface AtBatPanelProps {
   batterName: string;
   batterOrder: number;
@@ -57,6 +60,7 @@ export function AtBatPanel({
   const [defensiveData, setDefensiveData] = useState<Record<string, any>>({});
   const [baserunningData, setBaserunningData] = useState<Record<string, any>>({});
   const [showCatcher, setShowCatcher] = useState(false);
+  const [fielderPosition, setFielderPosition] = useState('');
 
   const balls = pitches.filter(p => p.pitch_result === 'ball').length;
   const strikes = pitches.filter(p => ['called_strike', 'swinging_strike', 'foul'].includes(p.pitch_result)).length;
@@ -147,10 +151,31 @@ export function AtBatPanel({
       {/* Advanced situational prompts */}
       {advancedMode && pitches.length > 0 && (
         <>
+          {/* Fielder Position selector */}
+          <div>
+            <Label className="text-xs font-medium">Fielder Position</Label>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {(sport === 'softball' ? FIELDER_POSITIONS_SOFTBALL : FIELDER_POSITIONS_BASEBALL).map(pos => (
+                <button
+                  key={pos}
+                  type="button"
+                  onClick={() => setFielderPosition(pos)}
+                  className={cn(
+                    'px-2 py-1 rounded text-xs font-medium border transition-all',
+                    fielderPosition === pos ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                  )}
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
+          </div>
           <SituationalPrompts
             pitchResult={lastPitch?.pitch_result || ''}
             runnersOn={!!runnersOn}
             isInPlay={!!isInPlay}
+            sport={sport}
+            fielderPosition={fielderPosition || undefined}
             onUpdate={(d) => {
               setSituationalData(prev => ({ ...prev, ...d }));
               setDefensiveData(prev => ({ ...prev, ...d }));
