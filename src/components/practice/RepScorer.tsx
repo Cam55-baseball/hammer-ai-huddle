@@ -154,10 +154,6 @@ interface RepScorerProps {
   reps: ScoredRep[];
   onRepsChange: (reps: ScoredRep[]) => void;
   sessionConfig?: SessionConfig;
-  goalOfRep?: string;
-  onGoalOfRepChange?: (value: string) => void;
-  actualOutcome?: string;
-  onActualOutcomeChange?: (value: string) => void;
 }
 
 const LOGGING_MODE_KEY = 'repLogMode';
@@ -225,7 +221,7 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 // Sources that require pitching velo to be always visible (not just advanced)
 const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
-export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig, goalOfRep, onGoalOfRepChange, actualOutcome, onActualOutcomeChange }: RepScorerProps) {
+export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
   const { isSwitchHitter } = useSwitchHitterProfile();
 
@@ -1496,27 +1492,23 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
           )}
 
-          {/* Goal of Rep & Actual Outcome */}
-          {onGoalOfRepChange && (
-            <AITextBoxField
-              label="Goal of Rep"
-              value={goalOfRep ?? ''}
-              onChange={onGoalOfRepChange}
-              minChars={0}
-              required={false}
-              placeholder="What was your goal for this rep? (optional)..."
-            />
-          )}
-          {onActualOutcomeChange && (
-            <AITextBoxField
-              label="Actual Outcome"
-              value={actualOutcome ?? ''}
-              onChange={onActualOutcomeChange}
-              minChars={0}
-              required={false}
-              placeholder="What actually happened? (optional)..."
-            />
-          )}
+          {/* Goal of Rep & Actual Outcome (per-rep) */}
+          <AITextBoxField
+            label="Goal of Rep"
+            value={current.goal_of_rep ?? ''}
+            onChange={(v) => updateField('goal_of_rep', v)}
+            minChars={0}
+            required={false}
+            placeholder="What was your goal for this rep? (optional)..."
+          />
+          <AITextBoxField
+            label="Actual Outcome"
+            value={current.actual_outcome ?? ''}
+            onChange={(v) => updateField('actual_outcome', v)}
+            minChars={0}
+            required={false}
+            placeholder="What actually happened? (optional)..."
+          />
 
           {/* CONFIRM REP */}
           <div className="relative">
