@@ -91,6 +91,7 @@ const PracticeHub = lazyWithRetry(() => import("./pages/PracticeHub"));
 const ProgressDashboard = lazyWithRetry(() => import("./pages/ProgressDashboard"));
 const OrganizationDashboard = lazyWithRetry(() => import("./pages/OrganizationDashboard"));
 const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"));
+const GameScoring = lazyWithRetry(() => import("./pages/GameScoring"));
 
 const queryClient = new QueryClient();
 
@@ -160,6 +161,7 @@ const App = () => {
               <Route path="/progress" element={<ProgressDashboard />} />
               <Route path="/organization" element={<OrganizationDashboard />} />
               <Route path="/admin-verification" element={<AdminVerification />} />
+              <Route path="/game-scoring" element={<GameScoring />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>

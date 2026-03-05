@@ -1373,6 +1373,173 @@ export type Database = {
         }
         Relationships: []
       }
+      game_plays: {
+        Row: {
+          at_bat_outcome: string | null
+          baserunning_data: Json | null
+          batted_ball_type: string | null
+          batter_name: string | null
+          batter_order: number | null
+          catcher_data: Json | null
+          contact_quality: string | null
+          created_at: string | null
+          defensive_data: Json | null
+          exit_velocity_mph: number | null
+          game_id: string
+          half: string
+          id: string
+          inning: number
+          launch_angle: number | null
+          pitch_location: Json | null
+          pitch_number: number | null
+          pitch_result: string
+          pitch_type: string | null
+          pitch_velocity_mph: number | null
+          pitcher_name: string | null
+          rbi: number | null
+          situational_data: Json | null
+          spray_direction: string | null
+          velocity_band: string | null
+          video_end_sec: number | null
+          video_id: string | null
+          video_start_sec: number | null
+        }
+        Insert: {
+          at_bat_outcome?: string | null
+          baserunning_data?: Json | null
+          batted_ball_type?: string | null
+          batter_name?: string | null
+          batter_order?: number | null
+          catcher_data?: Json | null
+          contact_quality?: string | null
+          created_at?: string | null
+          defensive_data?: Json | null
+          exit_velocity_mph?: number | null
+          game_id: string
+          half?: string
+          id?: string
+          inning: number
+          launch_angle?: number | null
+          pitch_location?: Json | null
+          pitch_number?: number | null
+          pitch_result: string
+          pitch_type?: string | null
+          pitch_velocity_mph?: number | null
+          pitcher_name?: string | null
+          rbi?: number | null
+          situational_data?: Json | null
+          spray_direction?: string | null
+          velocity_band?: string | null
+          video_end_sec?: number | null
+          video_id?: string | null
+          video_start_sec?: number | null
+        }
+        Update: {
+          at_bat_outcome?: string | null
+          baserunning_data?: Json | null
+          batted_ball_type?: string | null
+          batter_name?: string | null
+          batter_order?: number | null
+          catcher_data?: Json | null
+          contact_quality?: string | null
+          created_at?: string | null
+          defensive_data?: Json | null
+          exit_velocity_mph?: number | null
+          game_id?: string
+          half?: string
+          id?: string
+          inning?: number
+          launch_angle?: number | null
+          pitch_location?: Json | null
+          pitch_number?: number | null
+          pitch_result?: string
+          pitch_type?: string | null
+          pitch_velocity_mph?: number | null
+          pitcher_name?: string | null
+          rbi?: number | null
+          situational_data?: Json | null
+          spray_direction?: string | null
+          velocity_band?: string | null
+          video_end_sec?: number | null
+          video_id?: string | null
+          video_start_sec?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_plays_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          base_distance_ft: number
+          coach_insights: Json | null
+          created_at: string | null
+          game_date: string
+          game_summary: Json | null
+          game_type: string
+          id: string
+          league_level: string
+          lineup: Json
+          mound_distance_ft: number
+          opponent_name: string
+          sport: string
+          starting_pitcher_id: string | null
+          status: string
+          team_name: string
+          total_innings: number
+          updated_at: string | null
+          user_id: string
+          venue: string | null
+        }
+        Insert: {
+          base_distance_ft: number
+          coach_insights?: Json | null
+          created_at?: string | null
+          game_date?: string
+          game_summary?: Json | null
+          game_type: string
+          id?: string
+          league_level: string
+          lineup?: Json
+          mound_distance_ft: number
+          opponent_name: string
+          sport?: string
+          starting_pitcher_id?: string | null
+          status?: string
+          team_name: string
+          total_innings?: number
+          updated_at?: string | null
+          user_id: string
+          venue?: string | null
+        }
+        Update: {
+          base_distance_ft?: number
+          coach_insights?: Json | null
+          created_at?: string | null
+          game_date?: string
+          game_summary?: Json | null
+          game_type?: string
+          id?: string
+          league_level?: string
+          lineup?: Json
+          mound_distance_ft?: number
+          opponent_name?: string
+          sport?: string
+          starting_pitcher_id?: string | null
+          status?: string
+          team_name?: string
+          total_innings?: number
+          updated_at?: string | null
+          user_id?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
       governance_flags: {
         Row: {
           admin_action: string | null
