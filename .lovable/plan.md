@@ -1,69 +1,55 @@
 
 
-# Auto-Populate Lineup from Linked Players & Drag-and-Drop Reordering
+# Add Player Substitution Mid-Game in Live Scorebook
 
 ## Overview
 
-Replace the manual text-entry lineup builder in GameSetupForm with a player search/select system that pulls from two sources: (1) coach's linked players via `scout_follows` and (2) organization roster via `organization_members`. Add drag-and-drop batting order reordering using the already-installed `@dnd-kit` library.
+Add a substitution system to the LiveScorebook that lets coaches swap players in/out during a game. A substituted player's row stays in the scorebook (showing their stats up to the sub), and the replacement takes their batting order spot going forward.
 
-## Data Sources
+## Design
 
-Two queries will feed the player pool:
-
-1. **Linked Players** — `scout_follows` where `scout_id = currentUser` and `status = 'accepted'`, joined with `profiles_public` for name/position/avatar
-2. **Organization Roster** — `organization_members` where `organization_id` matches the coach's org (via `usePlayerOrganization`), joined with `profiles_public`
-
-Results are merged and deduplicated by user ID, providing a unified player pool.
+- Each lineup slot tracks a history of players (original + substitutes) so the scorebook can display both the original and the sub in the correct batting order position
+- A "Substitute" button on each player row opens a dialog to pick a replacement from the bench (players from the coach's player pool not currently in the active lineup, plus manual entry)
+- Substituted players are visually distinguished (dimmed/strikethrough) and the new player appears below them in the same batting order slot
+- The `currentBatterIndex` logic uses the **active lineup** (latest player in each slot) to determine who bats next
 
 ## Changes
 
-### 1. New hook: `src/hooks/useCoachPlayerPool.ts`
-- Fetches linked players from `scout_follows` (accepted, relationship_type = 'linked') + their profiles from `profiles_public`
-- Fetches org members from `organization_members` (active) + their profiles from `profiles_public`
-- Merges, deduplicates by player ID, returns `{ id, name, position, avatar_url, source: 'linked' | 'roster' | 'both' }[]`
-- Uses `useAuth` for current user, `usePlayerOrganization` for org context
-- Returns `{ players, isLoading }` via `useQuery`
+### 1. New component: `src/components/game-scoring/SubstitutionDialog.tsx`
+- Dialog with player search (reuses `useCoachPlayerPool`) + manual name entry
+- Shows bench players (pool players not in active lineup)
+- On confirm, returns the replacement player info + position
+- Records the inning/half of substitution
 
-### 2. New component: `src/components/game-scoring/PlayerSearchCombobox.tsx`
-- Combobox using the existing `Command` component (cmdk-based) inside a `Popover`
-- Shows searchable list of players from the pool, grouped by source ("Linked Players" / "Team Roster")
-- Each item shows player name, position badge, and avatar
-- On select, adds the player to the lineup
-- Already-added players are shown as disabled/checked
-- Fallback: "Add custom player" option at bottom for manual name entry (non-roster players)
+### 2. Update: `src/components/game-scoring/LiveScorebook.tsx`
+- Add `activeLineup` state: `LineupPlayer[]` initialized from `lineup` prop — mutable version that tracks current players in each batting order slot
+- Add `substitutions` state: array of `{ slot: number, outPlayer: LineupPlayer, inPlayer: LineupPlayer, inning: number, half: string }`
+- Add a substitute button (icon) on each player row in the scorebook table
+- On substitution: update `activeLineup[slot]` to the new player, push to `substitutions` array
+- Scorebook grid renders both the subbed-out player (dimmed, with stats up to that point) and the sub (active) in the same slot
+- `currentBatter` uses `activeLineup` instead of `lineup`
+- Pitcher selector also includes substituted-in players
+- Pass `activeLineup` to `AtBatPanel` for batter name
 
-### 3. Update: `src/components/game-scoring/GameSetupForm.tsx`
-- Import `useCoachPlayerPool`, `PlayerSearchCombobox`, and `@dnd-kit` components
-- Replace the plain `Input` for player name with `PlayerSearchCombobox`
-- Add "Add from Roster" button that opens combobox to batch-add players
-- Wrap lineup items in `DndContext` + `SortableContext` from `@dnd-kit/sortable`
-- Each lineup row becomes a `SortableItem` with a drag handle (GripVertical icon)
-- On drag end, reorder lineup and recalculate `batting_order` values
-- Keep manual "Add Player" button for typing custom names (guests/opponents for intrasquad)
-- Update `LineupPlayer` usage: when selected from pool, store `player_user_id` alongside `name`
+### 3. Update: `src/hooks/useGameScoring.ts`
+- Add optional `substituted_at_inning?: number` and `replaced_by?: string` to `LineupPlayer` for tracking
 
-### 4. Update: `src/hooks/useGameScoring.ts`
-- Add optional `player_user_id?: string` to `LineupPlayer` interface to link lineup entries to real user accounts
-
-## Component Structure
+## Scorebook Display
 
 ```text
-GameSetupForm
-├── Game Details Card (unchanged)
-└── Starting Lineup Card
-    ├── PlayerSearchCombobox (Add from roster)
-    ├── DndContext + SortableContext
-    │   └── SortableLineupRow[] (drag handle + name + position + remove)
-    ├── "Add Custom Player" button
-    └── Starting Pitcher Select
+Batting Order | Batter          | Pos | 1  | 2  | 3  | ...
+1             | John (subbed)   | SS  | 1B | GO |    |
+              | → Mike          | SS  |    |    | 2B |
+2             | Sarah           | CF  | K  | BB | HR |
 ```
 
-## Files Summary
+Subbed-out players show a dimmed row with their pre-sub results. The replacement appears indented below in the same slot.
+
+## Files
 
 | File | Action |
 |------|--------|
-| `src/hooks/useCoachPlayerPool.ts` | Create — fetch linked + org players |
-| `src/components/game-scoring/PlayerSearchCombobox.tsx` | Create — searchable combobox |
-| `src/components/game-scoring/GameSetupForm.tsx` | Update — integrate combobox + dnd-kit |
-| `src/hooks/useGameScoring.ts` | Update — add `player_user_id` to `LineupPlayer` |
+| `src/components/game-scoring/SubstitutionDialog.tsx` | Create — dialog to pick replacement player |
+| `src/components/game-scoring/LiveScorebook.tsx` | Update — activeLineup state, sub button, dual-row rendering |
+| `src/hooks/useGameScoring.ts` | Update — add substitution fields to LineupPlayer |
 
