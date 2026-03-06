@@ -113,7 +113,7 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
 
     const resolvedCoachId = user.id;
 
-    const baseSession: Omit<CreateScheduledSession, 'user_id'> = {
+    const baseSession: Omit<CreateScheduledSession, 'user_id'> & { status?: string; requires_approval?: boolean } = {
       session_module: module,
       session_type: sessionType,
       title,
@@ -128,6 +128,8 @@ export function CoachScheduleDialog({ open, onOpenChange, linkedPlayers, onCreat
       assignment_scope: scope,
       organization_id: scope === 'organization' ? activeOrg?.id : undefined,
       team_name: sessionType === 'team_session' ? teamName || undefined : undefined,
+      status: 'pending_approval',
+      requires_approval: true,
     };
 
     const result = await createBulkSessions(playerIds, baseSession);

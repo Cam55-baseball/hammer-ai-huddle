@@ -191,6 +191,8 @@ export function useScheduledPracticeSessions() {
         team_id: baseSession.team_id || null,
         assignment_scope: baseSession.assignment_scope || 'individual',
         coach_id: baseSession.coach_id || user.id,
+        status: (baseSession as any).status || 'scheduled',
+        requires_approval: (baseSession as any).requires_approval || false,
       }));
 
       const { error } = await supabase

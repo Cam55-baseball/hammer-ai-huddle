@@ -206,10 +206,12 @@ export function AdvancedRepFields({
                     { value: 'line', label: 'Line' },
                     { value: 'fly', label: 'Fly' },
                     { value: 'barrel', label: 'Barrel' },
+                    { value: 'slow_roller', label: '🐢 Slow Roller' },
+                    { value: 'chopper', label: '⬆️ Chopper' },
                   ]}
                   value={value.batted_ball_type}
                   onChange={v => update('batted_ball_type', v)}
-                  cols={4}
+                  cols={3}
                 />
               </div>
               {/* Tier 2: MPI-impacting fields */}

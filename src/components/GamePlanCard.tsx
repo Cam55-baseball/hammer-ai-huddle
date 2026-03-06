@@ -28,6 +28,7 @@ import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
+import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
@@ -1753,6 +1754,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   </div>
                 </div>
               )}
+
+              {/* Pending Session Approvals */}
+              <PendingSessionApprovals />
 
               {/* Custom Activities Section - Always visible */}
               <div className="space-y-2">

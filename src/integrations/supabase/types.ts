@@ -3397,6 +3397,7 @@ export type Database = {
           organization_id: string | null
           recurring_active: boolean | null
           recurring_days: number[] | null
+          requires_approval: boolean | null
           scheduled_date: string
           session_module: string
           session_type: string
@@ -3422,6 +3423,7 @@ export type Database = {
           organization_id?: string | null
           recurring_active?: boolean | null
           recurring_days?: number[] | null
+          requires_approval?: boolean | null
           scheduled_date: string
           session_module: string
           session_type: string
@@ -3447,6 +3449,7 @@ export type Database = {
           organization_id?: string | null
           recurring_active?: boolean | null
           recurring_days?: number[] | null
+          requires_approval?: boolean | null
           scheduled_date?: string
           session_module?: string
           session_type?: string

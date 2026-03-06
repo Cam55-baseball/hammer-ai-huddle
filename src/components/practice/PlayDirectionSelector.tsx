@@ -13,8 +13,7 @@ const playTypeOptions = [
   { value: 'play_at_2b', label: 'Play at 2B' },
   { value: 'play_at_3b', label: 'Play at 3B' },
   { value: 'play_at_home', label: 'Play at Home' },
-  { value: 'slow_roller', label: '🐢 Slow Roller' },
-  { value: 'chopper', label: '⬆️ Chopper' },
+  { value: 'clean_pick', label: '🧤 Clean Pick' },
 ];
 
 const directionOptions = [
