@@ -64,6 +64,7 @@ export function SpeedSessionFlow({
   const [checkInData, setCheckInData] = useState<{ sleepRating: number; bodyFeel: string; painAreas: string[] } | null>(null);
   const [completedDrills, setCompletedDrills] = useState<Record<string, boolean>>({});
   const [distanceTimes, setDistanceTimes] = useState<Record<string, number[]>>({});
+  const [distanceSteps, setDistanceSteps] = useState<Record<string, number[]>>({});
   const [timingMethods, setTimingMethods] = useState<Record<string, 'self' | 'partner'>>({});
   const [rpe, setRpe] = useState(5);
   const [bodyFeelAfter, setBodyFeelAfter] = useState('');
