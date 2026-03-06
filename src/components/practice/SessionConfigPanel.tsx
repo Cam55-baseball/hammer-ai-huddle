@@ -90,6 +90,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [fieldingPosition, setFieldingPosition] = useState<string | undefined>();
   const [customRepSource, setCustomRepSource] = useState('');
   const [competitionLevel, setCompetitionLevel] = useState<string | undefined>();
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [linkedSessionId, setLinkedSessionId] = useState<string | undefined>();
 
   const competitionCategories = useMemo(() => {
     return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
