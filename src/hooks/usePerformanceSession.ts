@@ -66,6 +66,8 @@ export function usePerformanceSession() {
     coach_id?: string;
     fatigue_state?: any;
     micro_layer_data?: any;
+    link_code?: string;
+    linked_session_id?: string;
   }) => {
     if (!user) throw new Error('Not authenticated');
 
