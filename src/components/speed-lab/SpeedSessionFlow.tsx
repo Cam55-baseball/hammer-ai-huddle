@@ -149,6 +149,14 @@ export function SpeedSessionFlow({
     });
   };
 
+  const handleDistanceStepsChange = (key: string, repIndex: number, val: number) => {
+    setDistanceSteps(prev => {
+      const current = [...(prev[key] || [])];
+      current[repIndex] = val;
+      return { ...prev, [key]: current };
+    });
+  };
+
   const handleTimingMethod = (key: string, method: 'self' | 'partner') => {
     setTimingMethods(prev => ({ ...prev, [key]: method }));
   };
