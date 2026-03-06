@@ -38,6 +38,7 @@ interface SpeedSessionFlowProps {
     painAreas: string[];
     drillLog: string[];
     distances: Record<string, number[]>;
+    steps?: Record<string, number[]>;
     rpe: number;
     isBreakDay: boolean;
     notes?: string;
