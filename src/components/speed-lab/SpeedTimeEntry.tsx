@@ -140,7 +140,7 @@ export function SpeedTimeEntry({
                         step="1"
                         min="0"
                         max="99"
-                        placeholder={t('speedLab.logResults.steps', 'Steps')}
+                        placeholder={t('speedLab.logResults.stepsTaken', 'Steps Taken')}
                         value={repSteps || ''}
                         onChange={(e) => {
                           const val = parseInt(e.target.value, 10);

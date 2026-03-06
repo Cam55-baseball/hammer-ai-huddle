@@ -103,7 +103,7 @@ export default function SpeedLab() {
         personalBests={personalBests}
         sport={selectedSport}
         onComplete={async (data) => {
-          const session = await saveSession(data);
+          const session = await saveSession({ ...data, stepsPerRep: data.steps });
           // Persist partner timing metadata
           if (session && data.timingMethods) {
             for (const [distance, method] of Object.entries(data.timingMethods)) {
