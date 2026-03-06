@@ -1260,7 +1260,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
               {/* Hit Type Hardness — feeds difficulty weighting */}
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Hit Type</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">Exit Velocity</Label>
                 <SelectGrid
                   options={[
                     { value: 'soft', label: '🟢 Soft' },
