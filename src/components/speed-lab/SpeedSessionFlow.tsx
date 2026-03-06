@@ -190,6 +190,7 @@ export function SpeedSessionFlow({
       painAreas: checkInData.painAreas,
       drillLog,
       distances: distanceTimes,
+      steps: Object.keys(distanceSteps).length > 0 ? distanceSteps : undefined,
       rpe,
       isBreakDay: false,
       timingMethods: Object.keys(timingMethods).length > 0 ? timingMethods : undefined,
