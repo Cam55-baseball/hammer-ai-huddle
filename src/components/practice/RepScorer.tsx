@@ -81,7 +81,7 @@ export interface ScoredRep {
   play_type?: string;
   fielding_result?: string;
   fielding_position?: string;
-  route_efficiency?: 'routine' | 'plus' | 'elite';
+  route_efficiency?: 'poor' | 'average' | 'elite';
   play_probability?: 'routine' | 'plus' | 'elite';
   receiving_quality?: 'poor' | 'average' | 'elite';
   // Machine mode
