@@ -186,6 +186,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       league_level: leagueLevel,
       competition_level: competitionLevel,
       fielding_position: isFielding ? fieldingPosition : undefined,
+      link_code: linkCode ?? undefined,
+      linked_session_id: linkedSessionId,
     });
   };
 
