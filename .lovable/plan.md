@@ -1,82 +1,62 @@
 
 
-# Game Hub: Fielding/Relay Logging, Field Diagram & Single Player Mode
+# Scheduling Coach Links, Approval Workflow, and Fielding Taxonomy Restructure
 
-## Overview
-Four additions to the Game Hub: (1) Relay play type for infielders/outfielders with contextual questions, (2) Wall play evaluation for outfielders, (3) Interactive field position diagram, (4) Single-player game mode.
+## Part A: Player-Coach Linking on Scheduled Sessions + Approval Workflow
 
-## 1. Fielding Play Type Expansion — SituationalPrompts.tsx
+### Problem
+Currently, players can schedule sessions and optionally select a connected coach (via CoachSelector), but there's no approval workflow. Coaches can schedule for players (via CoachScheduleDialog), but sessions land directly as `scheduled` — no accept/reject. Neither side gets notifications about pending sessions.
 
-Currently the "Defensive Play" card in `SituationalPrompts.tsx` shows generic grading (first step, route, transfer, throw accuracy). We need to expand it with position-aware play type options.
+### Solution
 
-**Changes to `AtBatPanel.tsx`:**
-- Add a `fielderPosition` prop (or let the user select it in the defensive section) so the situational prompts know if an infielder or outfielder is involved.
-- Pass position context down to `SituationalPrompts`.
+**Database**: Add a `requires_approval` boolean and expand the `status` column to support `pending_approval` / `accepted` / `rejected` states on `scheduled_practice_sessions`.
 
-**Changes to `SituationalPrompts.tsx`:**
-- Inside the "Defensive Play" card (shown when `isInPlay`), add:
-  - **Play Type selector** with position-aware options:
-    - Infield: `Ground Ball`, `Line Drive`, `Pop Up`, `Bunt`, `Relay`
-    - Outfield: `Fly Ball`, `Line Drive`, `Ground Ball`, `Wall Play`, `Relay`
-  - When **Relay** selected (infield): show "Got to correct lineup spot for relay?" → Yes / No
-  - When **Relay** selected (outfield): show "Hit cutoff?" → Complete / Incomplete / Elite
-  - When **Wall Play** selected (outfield): show "Played ball off of the wall?" → Poor / Well / Elite
-- All values stored in the existing `defensive_data` JSON object on the play.
+**Player scheduling** (`SchedulePracticeDialog.tsx`): Already has CoachSelector. When a coach is linked, the session is created normally. No change needed here — the player is scheduling for themselves.
 
-## 2. Play Event Field Diagram — New Component
+**Coach scheduling** (`CoachScheduleDialog.tsx`): When a coach schedules for players, set `status = 'pending_approval'` instead of `'scheduled'`. This triggers the approval workflow.
 
-**New file: `src/components/game-scoring/FieldPositionDiagram.tsx`**
-- Render an SVG baseball/softball diamond with outfield arc, foul lines, infield dirt, bases, and warning track.
-- Sport-aware: softball uses shorter distances visually.
-- Two draggable dots:
-  - **Red dot** = player starting position
-  - **Green dot** = ball reception point
-- Use native pointer events for drag (no extra library needed — `onPointerDown/Move/Up`).
-- Outputs `{ playerPos: {x, y}, ballPos: {x, y} }` as normalized 0-1 coordinates.
-- Responsive: scales to container width, works on mobile.
-- Marked as **optional** — wrapped in a collapsible "Add Play Diagram" toggle.
+**New component** `PendingSessionApprovals.tsx`: Modeled after `PendingCoachActivitiesSection.tsx`. Shows pending coach-scheduled sessions with Accept/Reject buttons. Placed in Practice Hub and Game Plan. Accepting changes status to `scheduled`; rejecting changes to `rejected`.
 
-**Integration in `SituationalPrompts.tsx`:**
-- Add the diagram inside the Defensive Play card as an optional expandable section.
-- Store coordinates in `defensive_data.field_diagram`.
+**Notification badge**: Add a pending count badge to the Practice Hub nav and Game Plan cards so users know sessions await action.
 
-## 3. Single Player Game Mode — GameSetupForm.tsx & GameScoring.tsx
+**Game Plan integration**: Add a card/section showing pending session approvals on the player's Game Plan dashboard.
 
-**Changes to `GameSetupForm.tsx`:**
-- After the existing game details card, add a **Game Mode** selector: `Team Game` | `Single Player Game`.
-- When `Single Player Game` is selected:
-  - Hide the full lineup builder (roster search, sortable list, starting pitcher).
-  - Show a single player name + position input (auto-filled from logged-in user's profile if available).
-  - Add a **Game Type** sub-selector: `Real Game` | `Practice Game`.
-  - Keep opponent name, team name, league level, distances, venue, date.
-- On submit, create a 1-player lineup automatically with `batting_order: 1`.
+## Part B: Fielding Taxonomy Restructure (Practice Hub)
 
-**Changes to `GameSetup` interface in `useGameScoring.ts`:**
-- Add optional `game_mode?: 'team' | 'single_player'` field.
-- Add optional `is_practice_game?: boolean` field.
-- These get stored in the `games` table (already uses JSONB-flexible columns or we add them via migration).
+### Changes to `PlayDirectionSelector.tsx` (Play Type)
+- **Remove** `slow_roller` and `chopper` from `playTypeOptions`
+- **Add** `clean_pick` to `playTypeOptions` (moved from Rep Type)
 
-**Changes to `LiveScorebook.tsx`:**
-- In single-player mode, the scorebook grid shows just the one player row.
-- At-bat panel cycles the same player each time (batter index always maps to index 0).
-- All analytics (spray chart, heat map, player stats) work identically — they key off `batter_name` which still exists.
+### Changes to `AdvancedRepFields.tsx` and `RepScorer.tsx` (Batted Ball Type)
+- **Add** `slow_roller` and `chopper` to batted ball type options (alongside ground, line, fly, barrel)
 
-## 4. Database Migration
+### Changes to `InfieldRepTypeFields.tsx` (Rep Type)
+- **Remove** `double_play` (single generic option) and `clean_pick`
+- **Add** specific double play variants:
+  - `dp_flip` — DP Flip
+  - `dp_throw` — DP Throw
+  - `dp_turn_2b` — DP Turn at 2B
+  - `dp_unassisted_2b` — Unassisted DP at 2B
+  - `dp_unassisted_1b` — Unassisted DP at 1B
+  - `dp_unassisted_3b` — Unassisted DP at 3B
+  - `dp_turn_3b` — DP Turn at 3B
 
-Add two columns to the `games` table:
-```sql
-ALTER TABLE public.games ADD COLUMN IF NOT EXISTS game_mode text DEFAULT 'team';
-ALTER TABLE public.games ADD COLUMN IF NOT EXISTS is_practice_game boolean DEFAULT false;
-```
+### Edge function update
+- Add `slow_roller` and `chopper` to `VALID_BATTED_BALL_TYPES` in `calculate-session/index.ts`
 
 ## Files Changed
+
 | File | Change |
 |------|--------|
-| `src/components/game-scoring/SituationalPrompts.tsx` | Add play type selector (relay, wall play) with position-aware conditional questions |
-| `src/components/game-scoring/AtBatPanel.tsx` | Add fielder position selector, pass to SituationalPrompts |
-| `src/components/game-scoring/FieldPositionDiagram.tsx` | **New** — Interactive SVG field with draggable dots |
-| `src/components/game-scoring/GameSetupForm.tsx` | Add Team/Single Player mode toggle, conditional UI |
-| `src/hooks/useGameScoring.ts` | Add `game_mode` and `is_practice_game` to GameSetup interface and insert |
-| `src/components/game-scoring/LiveScorebook.tsx` | Handle single-player mode (1-player lineup cycling) |
-| DB migration | Add `game_mode` and `is_practice_game` columns to `games` table |
+| DB migration | Add `requires_approval` column to `scheduled_practice_sessions` |
+| `src/hooks/useScheduledPracticeSessions.ts` | Add `fetchPendingSessions()`, `acceptSession()`, `rejectSession()` methods |
+| `src/components/coach/CoachScheduleDialog.tsx` | Set status to `pending_approval` on create |
+| `src/components/practice/PendingSessionApprovals.tsx` | **New** — Accept/Reject UI for coach-assigned sessions |
+| `src/pages/PracticeHub.tsx` | Add PendingSessionApprovals above scheduled sessions |
+| `src/pages/GamePlan.tsx` | Add pending sessions card |
+| `src/components/practice/PlayDirectionSelector.tsx` | Remove slow_roller/chopper, add clean_pick |
+| `src/components/practice/InfieldRepTypeFields.tsx` | Replace double_play + clean_pick with 7 specific DP variants + backhand |
+| `src/components/practice/AdvancedRepFields.tsx` | Add slow_roller/chopper to batted ball type |
+| `src/components/practice/RepScorer.tsx` | Add slow_roller/chopper to batted ball type |
+| `supabase/functions/calculate-session/index.ts` | Add slow_roller/chopper to valid batted ball types |
 
