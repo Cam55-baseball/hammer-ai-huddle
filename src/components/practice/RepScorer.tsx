@@ -1295,11 +1295,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
                 <SelectGrid
-                  options={[
-                    { value: 'routine', label: '✅ Routine' },
-                    { value: 'plus', label: '🔥 Plus' },
-                    { value: 'elite', label: '👑 Elite' },
-                  ]}
+                   options={[
+                     { value: 'poor', label: '❌ Poor' },
+                     { value: 'average', label: '🟡 Average' },
+                     { value: 'elite', label: '👑 Elite' },
+                   ]}
                   value={current.route_efficiency}
                   onChange={v => updateField('route_efficiency', v)}
                 />

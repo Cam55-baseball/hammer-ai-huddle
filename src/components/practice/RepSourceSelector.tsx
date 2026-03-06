@@ -166,8 +166,8 @@ export const HIDES_PITCH_DISTANCE = ['tee', 'soft_toss'];
 const VALID_HITTING_SOURCES: Record<string, string[]> = {
   solo_work: ['tee', 'soft_toss', 'machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
   team_session: ['machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
-  lesson: ['tee', 'soft_toss', 'front_toss', 'flip', 'coach_pitch', 'machine_bp'],
-  live_abs: ['tee', 'soft_toss', 'machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
+  lesson: ['tee', 'soft_toss', 'front_toss', 'flip', 'coach_pitch', 'machine_bp', 'live_bp', 'regular_bp'],
+  live_abs: ['machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
 };
 
 const VALID_PITCHING_SOURCES: Record<string, string[]> = {

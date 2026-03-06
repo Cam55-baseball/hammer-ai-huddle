@@ -207,7 +207,8 @@ export function AdvancedRepFields({
                     { value: 'fly', label: 'Fly' },
                     { value: 'barrel', label: 'Barrel' },
                     { value: 'slow_roller', label: '🐢 Slow Roller' },
-                    { value: 'chopper', label: '⬆️ Chopper' },
+                    { value: 'one_hopper', label: '⬆️ One Hopper' },
+                    { value: 'chopper', label: '🔄 Chopper' },
                   ]}
                   value={value.batted_ball_type}
                   onChange={v => update('batted_ball_type', v)}

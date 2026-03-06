@@ -17,7 +17,7 @@ export interface DrillBlock {
   // Hitting micro fields
   bp_distance_ft?: number;
   machine_velocity_band?: string; // '40-50' | '50-60' | '60-70' | '70-80' | '80+'
-  batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel';
+  batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel' | 'slow_roller' | 'one_hopper' | 'chopper';
   spin_direction?: 'topspin' | 'backspin' | 'sidespin';
   swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
   goal_of_rep?: string;
