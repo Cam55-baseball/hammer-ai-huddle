@@ -185,6 +185,9 @@ const playTypeOptions = [
   { value: 'line_drive', label: 'Line Drive' },
   { value: 'bunt', label: 'Bunt' },
   { value: 'pop_up', label: 'Pop Up' },
+  { value: 'slow_roller', label: 'Slow Roller' },
+  { value: 'one_hopper', label: 'One Hopper' },
+  { value: 'chopper', label: 'Chopper' },
 ];
 
 const fieldingResultOptions = [
