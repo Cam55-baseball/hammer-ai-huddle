@@ -96,8 +96,12 @@ export function SpeedTimeEntry({
               {Array.from({ length: reps }, (_, repIdx) => {
                 const isTimerActive = activeTimer?.distanceKey === dist.key && activeTimer?.repIndex === repIdx;
                 const repTime = repTimes[repIdx] || 0;
+                const repSteps = (stepsValues[dist.key] || [])[repIdx] || 0;
                 const isBest = bestTimeInSession !== null && repTime > 0 && repTime === bestTimeInSession;
                 const isNewPB = pb > 0 && repTime > 0 && repTime < pb;
+
+                const strideEfficiency = repTime > 0 && repSteps > 0 && dist.yards ? (dist.yards / repSteps) : null;
+                const stepFrequency = repTime > 0 && repSteps > 0 ? (repSteps / repTime) : null;
 
                 if (isTimerActive && partnerMode) {
                   return (
@@ -111,40 +115,66 @@ export function SpeedTimeEntry({
                 }
 
                 return (
-                  <div key={repIdx} className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground w-12 shrink-0">
-                      {t('speedLab.logResults.rep', 'Rep {{number}}', { number: repIdx + 1 })}
-                    </span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="30"
-                      placeholder="0.00"
-                      value={repTime || ''}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        if (!isNaN(val) && val >= 0) onChange(dist.key, repIdx, val);
-                        else if (e.target.value === '') onChange(dist.key, repIdx, 0);
-                      }}
-                      className="text-lg font-mono h-10 text-center flex-1"
-                    />
-                    <span className="text-xs text-muted-foreground w-6">sec</span>
-                    {isBest && repTime > 0 && (
-                      <Star className="h-4 w-4 text-amber-500 fill-amber-500 shrink-0" />
-                    )}
-                    {isNewPB && (
-                      <Badge className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 shrink-0">
-                        {t('speedLab.logResults.newPB', 'New PB!')}
-                      </Badge>
-                    )}
-                    {partnerMode && !isTimerActive && (
-                      <button
-                        onClick={() => setActiveTimer({ distanceKey: dist.key, repIndex: repIdx })}
-                        className="px-2 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shrink-0"
-                      >
-                        ⏱
-                      </button>
+                  <div key={repIdx} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-12 shrink-0">
+                        {t('speedLab.logResults.rep', 'Rep {{number}}', { number: repIdx + 1 })}
+                      </span>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="30"
+                        placeholder="0.00"
+                        value={repTime || ''}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val >= 0) onChange(dist.key, repIdx, val);
+                          else if (e.target.value === '') onChange(dist.key, repIdx, 0);
+                        }}
+                        className="text-lg font-mono h-10 text-center flex-1"
+                      />
+                      <span className="text-xs text-muted-foreground w-6">sec</span>
+                      <Input
+                        type="number"
+                        step="1"
+                        min="0"
+                        max="99"
+                        placeholder={t('speedLab.logResults.steps', 'Steps')}
+                        value={repSteps || ''}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val >= 0) onStepsChange(dist.key, repIdx, val);
+                          else if (e.target.value === '') onStepsChange(dist.key, repIdx, 0);
+                        }}
+                        className="text-sm font-mono h-10 text-center w-16 shrink-0"
+                      />
+                      {isBest && repTime > 0 && (
+                        <Star className="h-4 w-4 text-amber-500 fill-amber-500 shrink-0" />
+                      )}
+                      {isNewPB && (
+                        <Badge className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 shrink-0">
+                          {t('speedLab.logResults.newPB', 'New PB!')}
+                        </Badge>
+                      )}
+                      {partnerMode && !isTimerActive && (
+                        <button
+                          onClick={() => setActiveTimer({ distanceKey: dist.key, repIndex: repIdx })}
+                          className="px-2 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shrink-0"
+                        >
+                          ⏱
+                        </button>
+                      )}
+                    </div>
+                    {strideEfficiency !== null && stepFrequency !== null && (
+                      <div className="flex gap-2 ml-14">
+                        <Badge variant="outline" className="text-[9px] px-1.5">
+                          {strideEfficiency.toFixed(2)} yd/step
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px] px-1.5">
+                          {stepFrequency.toFixed(1)} steps/sec
+                        </Badge>
+                      </div>
                     )}
                   </div>
                 );

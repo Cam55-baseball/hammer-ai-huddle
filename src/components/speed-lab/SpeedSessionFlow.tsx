@@ -308,8 +308,10 @@ export function SpeedSessionFlow({
               distances={distances}
               sprintReps={sprintReps}
               values={distanceTimes}
+              stepsValues={distanceSteps}
               personalBests={personalBests}
               onChange={handleDistanceTimeChange}
+              onStepsChange={handleDistanceStepsChange}
               onTimingMethod={handleTimingMethod}
             />
 
