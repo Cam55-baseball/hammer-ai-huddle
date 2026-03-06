@@ -22,6 +22,8 @@ export interface ContextFieldVisibility {
   // Pitching contact/hitter tracking
   showContactType: boolean;
   showLiveAbHitterFields: boolean;
+  // Pitcher hitter outcome details (swing decision, contact quality, exit direction, etc.)
+  showPitcherHitterOutcomes: boolean;
   // Position-gated fielding
   showCatcherFields: boolean;
   showInfieldRepType: boolean;
