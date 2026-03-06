@@ -173,10 +173,10 @@ const VALID_HITTING_SOURCES: Record<string, string[]> = {
 };
 
 const VALID_PITCHING_SOURCES: Record<string, string[]> = {
-  solo_work: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  team_session: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  lesson: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  live_abs: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
+  solo_work: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
+  team_session: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
+  lesson: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
+  live_abs: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
 };
 
 const VALID_THROWING_SOURCES: Record<string, string[]> = {
