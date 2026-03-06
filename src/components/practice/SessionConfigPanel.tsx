@@ -107,6 +107,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const showVelocityBand = (isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource);
   const showPitchDistance = (isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource);
   const showRepSourceSelector = true;
+  const HITTER_FACING_SOURCES = ['live_bp', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game', 'game'];
+  const showLinkPanel = isLiveAbs || (isPitching && HITTER_FACING_SOURCES.includes(repSource)) || (isHitting && ['live_bp', 'game'].includes(repSource));
 
   // Fetch head coach info for auto-select
   const { data: mpiSettings } = useQuery({
