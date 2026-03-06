@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       logStep("ERROR: No authorization header");
       return new Response(
         JSON.stringify({ error: "No authorization header provided" }),
@@ -33,43 +33,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Decode verified JWT locally to avoid extra network calls
-    const decodeJwt = (token: string) => {
-      try {
-        const parts = token.split('.');
-        if (parts.length !== 3) return null;
-        let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        // Pad base64 string
-        while (base64.length % 4 !== 0) base64 += '=';
-        const json = atob(base64);
-        return JSON.parse(json);
-      } catch (_) {
-        return null;
-      }
+    // Use a user-scoped Supabase client to validate the token
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      logStep("ERROR: Authentication failed", { error: claimsError?.message });
+      return new Response(
+        JSON.stringify({ error: "Authentication failed", message: claimsError?.message || "Invalid or expired token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const claims = claimsData.claims;
+    const user = {
+      id: claims.sub as string,
+      email: (claims.email || null) as string | null,
     };
 
-    const bearer = authHeader.replace(/^Bearer\s+/i, '');
-    const claims = decodeJwt(bearer);
-    
-    // Validate JWT claims exist
-    if (!claims || !claims.sub) {
-      logStep("ERROR: Authentication failed while decoding JWT");
-      return new Response(
-        JSON.stringify({ error: "Authentication failed", message: "Invalid or expired token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    // Check if token is expired
-    if (claims.exp && claims.exp < Math.floor(Date.now() / 1000)) {
-      logStep("ERROR: Token has expired", { exp: claims.exp, now: Math.floor(Date.now() / 1000) });
-      return new Response(
-        JSON.stringify({ error: "Authentication failed", message: "Token has expired" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const user = { id: claims.sub as string, email: (claims.email || claims.user_metadata?.email || null) as string | null };
     if (!user.id || !user.email) {
       logStep("ERROR: User not authenticated or email missing");
       return new Response(
