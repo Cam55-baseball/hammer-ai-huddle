@@ -58,10 +58,13 @@ export function getContextFields(
     showSpinDirection: isPitching || isHitting,
 
     // Contact type for pitching when facing a hitter
-    showContactType: isPitching && (repSource === 'flat_ground_vs_hitter' || repSource === 'live_bp'),
+    showContactType: isPitching && ['flat_ground_vs_hitter', 'live_bp', 'bullpen_vs_hitter', 'sim_game'].includes(repSource ?? ''),
 
     // Live AB hitter tracking (swing result, ball result, at-bat outcome)
     showLiveAbHitterFields: isPitching && repSource === 'live_bp',
+
+    // Pitcher hitter outcome details (full hitting micro-layer for pitcher intelligence)
+    showPitcherHitterOutcomes: isPitching && ['live_bp', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game', 'game'].includes(repSource ?? ''),
 
     // Catcher-specific fields (pop time, transfer, throw base)
     showCatcherFields: (isFielding && position === 'C') || isCatching,

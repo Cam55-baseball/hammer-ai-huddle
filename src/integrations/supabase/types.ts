@@ -1850,6 +1850,63 @@ export type Database = {
         }
         Relationships: []
       }
+      live_ab_links: {
+        Row: {
+          created_at: string | null
+          creator_session_id: string | null
+          creator_user_id: string
+          expires_at: string | null
+          id: string
+          joiner_session_id: string | null
+          joiner_user_id: string | null
+          link_code: string
+          sport: string
+          status: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_session_id?: string | null
+          creator_user_id: string
+          expires_at?: string | null
+          id?: string
+          joiner_session_id?: string | null
+          joiner_user_id?: string | null
+          link_code: string
+          sport: string
+          status?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_session_id?: string | null
+          creator_user_id?: string
+          expires_at?: string | null
+          id?: string
+          joiner_session_id?: string | null
+          joiner_user_id?: string | null
+          link_code?: string
+          sport?: string
+          status?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_ab_links_creator_session_id_fkey"
+            columns: ["creator_session_id"]
+            isOneToOne: false
+            referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_ab_links_joiner_session_id_fkey"
+            columns: ["joiner_session_id"]
+            isOneToOne: false
+            referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_templates: {
         Row: {
           created_at: string | null
@@ -2702,6 +2759,8 @@ export type Database = {
           intent_compliance_pct: number | null
           is_locked: boolean | null
           is_retroactive: boolean | null
+          link_code: string | null
+          linked_session_id: string | null
           micro_layer_data: Json | null
           module: string | null
           notes: string | null
@@ -2740,6 +2799,8 @@ export type Database = {
           intent_compliance_pct?: number | null
           is_locked?: boolean | null
           is_retroactive?: boolean | null
+          link_code?: string | null
+          linked_session_id?: string | null
           micro_layer_data?: Json | null
           module?: string | null
           notes?: string | null
@@ -2778,6 +2839,8 @@ export type Database = {
           intent_compliance_pct?: number | null
           is_locked?: boolean | null
           is_retroactive?: boolean | null
+          link_code?: string | null
+          linked_session_id?: string | null
           micro_layer_data?: Json | null
           module?: string | null
           notes?: string | null
@@ -2794,7 +2857,15 @@ export type Database = {
           user_id?: string
           voice_notes?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "performance_sessions_linked_session_id_fkey"
+            columns: ["linked_session_id"]
+            isOneToOne: false
+            referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       physio_adult_tracking: {
         Row: {
