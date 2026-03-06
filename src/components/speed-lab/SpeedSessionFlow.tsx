@@ -38,6 +38,7 @@ interface SpeedSessionFlowProps {
     painAreas: string[];
     drillLog: string[];
     distances: Record<string, number[]>;
+    steps?: Record<string, number[]>;
     rpe: number;
     isBreakDay: boolean;
     notes?: string;
@@ -63,6 +64,7 @@ export function SpeedSessionFlow({
   const [checkInData, setCheckInData] = useState<{ sleepRating: number; bodyFeel: string; painAreas: string[] } | null>(null);
   const [completedDrills, setCompletedDrills] = useState<Record<string, boolean>>({});
   const [distanceTimes, setDistanceTimes] = useState<Record<string, number[]>>({});
+  const [distanceSteps, setDistanceSteps] = useState<Record<string, number[]>>({});
   const [timingMethods, setTimingMethods] = useState<Record<string, 'self' | 'partner'>>({});
   const [rpe, setRpe] = useState(5);
   const [bodyFeelAfter, setBodyFeelAfter] = useState('');
@@ -147,6 +149,14 @@ export function SpeedSessionFlow({
     });
   };
 
+  const handleDistanceStepsChange = (key: string, repIndex: number, val: number) => {
+    setDistanceSteps(prev => {
+      const current = [...(prev[key] || [])];
+      current[repIndex] = val;
+      return { ...prev, [key]: current };
+    });
+  };
+
   const handleTimingMethod = (key: string, method: 'self' | 'partner') => {
     setTimingMethods(prev => ({ ...prev, [key]: method }));
   };
@@ -180,6 +190,7 @@ export function SpeedSessionFlow({
       painAreas: checkInData.painAreas,
       drillLog,
       distances: distanceTimes,
+      steps: Object.keys(distanceSteps).length > 0 ? distanceSteps : undefined,
       rpe,
       isBreakDay: false,
       timingMethods: Object.keys(timingMethods).length > 0 ? timingMethods : undefined,
@@ -297,8 +308,10 @@ export function SpeedSessionFlow({
               distances={distances}
               sprintReps={sprintReps}
               values={distanceTimes}
+              stepsValues={distanceSteps}
               personalBests={personalBests}
               onChange={handleDistanceTimeChange}
+              onStepsChange={handleDistanceStepsChange}
               onTimingMethod={handleTimingMethod}
             />
 
