@@ -365,6 +365,21 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           </div>
         )}
 
+        {/* Live AB Link Panel */}
+        {showLinkPanel && (
+          <LiveAbLinkPanel
+            linkCode={linkCode}
+            onLinkEstablished={(code, sessionId) => {
+              setLinkCode(code);
+              if (sessionId) setLinkedSessionId(sessionId);
+            }}
+            onUnlink={() => {
+              setLinkCode(null);
+              setLinkedSessionId(undefined);
+            }}
+          />
+        )}
+
         {/* Confirm */}
         <Button onClick={handleConfirm} disabled={!canConfirm} className="w-full" size="lg">
           <ArrowRight className="h-4 w-4 mr-2" />
