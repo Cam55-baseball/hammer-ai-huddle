@@ -13,8 +13,10 @@ interface SpeedTimeEntryProps {
   distances: DistanceConfig[];
   sprintReps: Record<string, number>;
   values: Record<string, number[]>;
+  stepsValues: Record<string, number[]>;
   personalBests: Record<string, number>;
   onChange: (key: string, repIndex: number, value: number) => void;
+  onStepsChange: (key: string, repIndex: number, value: number) => void;
   onTimingMethod?: (key: string, method: 'self' | 'partner') => void;
 }
 
