@@ -19,6 +19,7 @@ import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader
 import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSessions';
+import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 
 import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
@@ -222,6 +223,7 @@ export default function PracticeHub() {
           <SchedulePracticeDialog defaultModule={activeModule} />
         </div>
 
+        <PendingSessionApprovals />
         <PlayerScheduledSessions />
 
         <Tabs value={activeModule} onValueChange={(val) => { if (step === 'select_type') setActiveModule(val); }} className="space-y-4">

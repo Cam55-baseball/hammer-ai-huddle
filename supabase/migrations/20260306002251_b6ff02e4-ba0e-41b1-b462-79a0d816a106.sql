@@ -1,0 +1,1 @@
+ALTER TABLE public.scheduled_practice_sessions ADD COLUMN IF NOT EXISTS requires_approval boolean DEFAULT false;

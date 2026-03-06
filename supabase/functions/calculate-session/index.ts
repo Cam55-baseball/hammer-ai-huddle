@@ -9,7 +9,7 @@ const corsHeaders = {
 // JSONB field validation patterns
 const VELOCITY_BAND_REGEX = /^(\d+-\d+|\d+\+|<\d+)$/;
 const VALID_SWING_INTENTS = ['mechanical', 'game_intent', 'situational', 'hr_derby'];
-const VALID_BATTED_BALL_TYPES = ['ground', 'line', 'fly', 'barrel'];
+const VALID_BATTED_BALL_TYPES = ['ground', 'line', 'fly', 'barrel', 'slow_roller', 'chopper'];
 const VALID_SPIN_DIRECTIONS = ['topspin', 'backspin', 'sidespin', 'knuckle', 'backspin_tail'];
 const VALID_THROW_SPIN_QUALITIES = ['carry', 'tail', 'cut', 'neutral'];
 const VALID_EXCHANGE_TIME_BANDS = ['fast', 'average', 'slow'];

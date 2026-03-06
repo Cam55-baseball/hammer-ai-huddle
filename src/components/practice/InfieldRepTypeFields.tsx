@@ -33,9 +33,14 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 );
 
 const repTypeOptions = [
-  { value: 'double_play', label: '🔄 Double Play' },
   { value: 'backhand', label: '🤚 Backhand' },
-  { value: 'clean_pick', label: '🧤 Clean Pick' },
+  { value: 'dp_flip', label: '🔄 DP Flip' },
+  { value: 'dp_throw', label: '🔄 DP Throw' },
+  { value: 'dp_turn_2b', label: '🔄 DP Turn 2B' },
+  { value: 'dp_unassisted_2b', label: '🔄 Unassist 2B' },
+  { value: 'dp_unassisted_1b', label: '🔄 Unassist 1B' },
+  { value: 'dp_unassisted_3b', label: '🔄 Unassist 3B' },
+  { value: 'dp_turn_3b', label: '🔄 DP Turn 3B' },
 ];
 
 const executionOptions = [
@@ -51,12 +56,23 @@ export function InfieldRepTypeFields({ value, onChange }: InfieldRepTypeFieldsPr
     <div className="space-y-3">
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Rep Type</Label>
-        <SelectGrid
-          options={repTypeOptions}
-          value={value.infield_rep_type}
-          onChange={v => onChange('infield_rep_type', v)}
-          cols={4}
-        />
+        <div className={cn('grid gap-1.5 grid-cols-3')}>
+          {repTypeOptions.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange('infield_rep_type', opt.value)}
+              className={cn(
+                'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                value.infield_rep_type === opt.value
+                  ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                  : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
