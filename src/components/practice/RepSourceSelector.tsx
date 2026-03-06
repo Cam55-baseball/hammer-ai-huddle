@@ -62,12 +62,14 @@ const PITCHING_SOURCES: SourceGroup[] = [
       { value: 'bullpen', label: 'Bullpen', desc: 'Full mound/circle work' },
       { value: 'flat_ground', label: 'Flat Ground', desc: 'Level surface throwing' },
       { value: 'flat_ground_vs_hitter', label: 'Flat Ground vs Hitter', desc: 'Flat ground with live hitter' },
+      { value: 'bullpen_vs_hitter', label: 'Bullpen vs Hitter', desc: 'Bullpen with live hitter' },
     ],
   },
   {
     group: 'Live',
     items: [
       { value: 'live_bp', label: 'Live BP', desc: 'Pitching to live batters' },
+      { value: 'sim_game', label: 'Simulated Game', desc: 'Simulated game reps' },
       { value: 'game', label: 'Game', desc: 'In-game pitching' },
     ],
   },
@@ -155,7 +157,7 @@ export const REQUIRES_VELOCITY = ['machine_bp'];
 // Rep sources where velocity band is hidden
 export const HIDES_VELOCITY = ['tee', 'front_toss', 'coach_pitch', 'soft_toss', 'flip'];
 // Rep sources where pitch type is required (hitting + pitching)
-export const REQUIRES_PITCH_TYPE = ['machine_bp', 'live_bp', 'regular_bp', 'coach_pitch', 'front_toss', 'bullpen', 'flat_ground', 'flat_ground_vs_hitter'];
+export const REQUIRES_PITCH_TYPE = ['machine_bp', 'live_bp', 'regular_bp', 'coach_pitch', 'front_toss', 'bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game'];
 // Rep sources where pitch type is hidden entirely
 export const HIDES_PITCH_TYPE = ['tee', 'soft_toss'];
 // Rep sources where pitch distance is hidden
@@ -171,10 +173,10 @@ const VALID_HITTING_SOURCES: Record<string, string[]> = {
 };
 
 const VALID_PITCHING_SOURCES: Record<string, string[]> = {
-  solo_work: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  team_session: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  lesson: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
-  live_abs: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'live_bp'],
+  solo_work: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
+  team_session: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
+  lesson: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
+  live_abs: ['bullpen', 'flat_ground', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'live_bp', 'sim_game'],
 };
 
 const VALID_THROWING_SOURCES: Record<string, string[]> = {

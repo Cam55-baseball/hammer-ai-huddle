@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSourceSelector';
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
+import { LiveAbLinkPanel } from './LiveAbLinkPanel';
 
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
@@ -35,6 +36,8 @@ export interface SessionConfig {
   opponent_name?: string;
   opponent_level?: string;
   fielding_position?: string;
+  link_code?: string;
+  linked_session_id?: string;
 }
 
 interface SessionConfigPanelProps {
@@ -87,6 +90,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [fieldingPosition, setFieldingPosition] = useState<string | undefined>();
   const [customRepSource, setCustomRepSource] = useState('');
   const [competitionLevel, setCompetitionLevel] = useState<string | undefined>();
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [linkedSessionId, setLinkedSessionId] = useState<string | undefined>();
 
   const competitionCategories = useMemo(() => {
     return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
@@ -102,6 +107,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const showVelocityBand = (isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource);
   const showPitchDistance = (isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource);
   const showRepSourceSelector = true;
+  const HITTER_FACING_SOURCES = ['live_bp', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game', 'game'];
+  const showLinkPanel = isLiveAbs || (isPitching && HITTER_FACING_SOURCES.includes(repSource)) || (isHitting && ['live_bp', 'game'].includes(repSource));
 
   // Fetch head coach info for auto-select
   const { data: mpiSettings } = useQuery({
@@ -179,6 +186,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       league_level: leagueLevel,
       competition_level: competitionLevel,
       fielding_position: isFielding ? fieldingPosition : undefined,
+      link_code: linkCode ?? undefined,
+      linked_session_id: linkedSessionId,
     });
   };
 
@@ -354,6 +363,21 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
             <Label className="text-xs text-muted-foreground block">Coach</Label>
             <CoachSelector value={coachSelection} onChange={setCoachSelection} />
           </div>
+        )}
+
+        {/* Live AB Link Panel */}
+        {showLinkPanel && (
+          <LiveAbLinkPanel
+            linkCode={linkCode}
+            onLinkEstablished={(code, sessionId) => {
+              setLinkCode(code);
+              if (sessionId) setLinkedSessionId(sessionId);
+            }}
+            onUnlink={() => {
+              setLinkCode(null);
+              setLinkedSessionId(undefined);
+            }}
+          />
         )}
 
         {/* Confirm */}
