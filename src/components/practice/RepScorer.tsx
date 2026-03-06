@@ -1195,7 +1195,98 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </>
               )}
 
-              <div>
+              {/* ===== PITCHER HITTER OUTCOME DETAILS ===== */}
+              {ctx.showPitcherHitterOutcomes && (
+                <div className="space-y-3 p-3 rounded-lg border border-accent/30 bg-accent/5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Hitter Outcome Details</p>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'correct', label: '✅ Correct' },
+                        { value: 'incorrect', label: '❌ Incorrect' },
+                      ]}
+                      value={current.swing_decision}
+                      onChange={v => updateField('swing_decision', v)}
+                      cols={2}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality</Label>
+                    <SelectGrid
+                      options={contactOptions}
+                      value={current.contact_quality}
+                      onChange={v => updateField('contact_quality', v)}
+                      cols={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Exit Direction</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'pull', label: 'Pull' },
+                        { value: 'middle', label: 'Middle' },
+                        { value: 'oppo', label: 'Oppo' },
+                        { value: 'slap_side', label: 'Slap Side' },
+                      ]}
+                      value={current.exit_direction}
+                      onChange={v => updateField('exit_direction', v)}
+                      cols={4}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'ground', label: 'Ground' },
+                        { value: 'line', label: 'Line' },
+                        { value: 'fly', label: 'Fly' },
+                        { value: 'barrel', label: 'Barrel' },
+                        { value: 'one_hopper', label: 'One Hopper' },
+                      ]}
+                      value={current.batted_ball_type}
+                      onChange={v => updateField('batted_ball_type', v)}
+                      cols={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Spin Direction</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'topspin', label: 'Topspin' },
+                        { value: 'backspin', label: 'Backspin' },
+                        { value: 'knuckle', label: 'Knuckle' },
+                        { value: 'backspin_tail', label: 'Backspin Tail' },
+                      ]}
+                      value={current.spin_direction}
+                      onChange={v => updateField('spin_direction', v)}
+                      cols={4}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Adjustment Tag</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'stayed_back', label: 'Stayed Back' },
+                        { value: 'got_on_top', label: 'Got On Top' },
+                        { value: 'shortened_up', label: 'Shortened' },
+                        { value: 'extended', label: 'Extended' },
+                        { value: 'none', label: 'None' },
+                      ]}
+                      value={current.adjustment_tag}
+                      onChange={v => updateField('adjustment_tag', v)}
+                      cols={3}
+                    />
+                  </div>
+                </div>
+              )}
+
                 <Label className="text-xs text-muted-foreground mb-1 block">Hit Spot?</Label>
                 <SelectGrid
                   options={[
