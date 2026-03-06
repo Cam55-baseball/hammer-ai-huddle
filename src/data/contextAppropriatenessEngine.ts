@@ -64,7 +64,7 @@ export function getContextFields(
     // Catcher-specific fields (pop time, transfer, throw base)
     showCatcherFields: (isFielding && position === 'C') || isCatching,
 
-    // Infield rep type (double play, backhand, slow roller, clean pick)
+    // Infield rep type (double play, clean pick)
     showInfieldRepType: isFielding && !!position && INFIELD_POSITIONS.includes(position),
 
     // Play direction (all fielding positions)

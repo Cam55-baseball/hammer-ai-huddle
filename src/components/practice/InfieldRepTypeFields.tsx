@@ -33,7 +33,6 @@ const SelectGrid = ({ options, value, onChange, cols = 3 }: {
 );
 
 const repTypeOptions = [
-  { value: 'backhand', label: '🤚 Backhand' },
   { value: 'dp_flip', label: '🔄 DP Flip' },
   { value: 'dp_throw', label: '🔄 DP Throw' },
   { value: 'dp_turn_2b', label: '🔄 DP Turn 2B' },
