@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSourceSelector';
 import { SeasonContextToggle } from './SeasonContextToggle';
 import { CoachSelector, type CoachSelection } from './CoachSelector';
+import { LiveAbLinkPanel } from './LiveAbLinkPanel';
 
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
