@@ -13,7 +13,7 @@ export interface MicroLayerData {
   spin_rate?: number;
   pitcher_style_tag?: 'riseball' | 'dropball' | 'speed' | 'spin';
   in_zone?: boolean;
-  batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel';
+  batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel' | 'slow_roller' | 'one_hopper' | 'chopper';
   spin_direction?: 'topspin' | 'backspin' | 'sidespin';
   swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
   execution_score?: number;

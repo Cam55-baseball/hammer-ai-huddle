@@ -1,86 +1,47 @@
 
 
-# Phase 1 UX Data Optimization — Practice Session Input Adjustments
+# Fix: Coach Schedule Dialog RLS Error
 
-## 1. Remove Tee from Live ABs Hitting Sources
+## Root Cause
 
-**File:** `src/components/practice/RepSourceSelector.tsx` (line 170)
+The coach has two accepted relationships:
+- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
+- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
 
-Remove `'tee'` and `'soft_toss'` from `VALID_HITTING_SOURCES.live_abs`. These are stationary/mechanical drills that don't belong in a live at-bat context.
+The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
 
-```
-live_abs: ['machine_bp', 'front_toss', 'flip', 'coach_pitch', 'live_bp', 'regular_bp'],
-```
+## Solution
 
-## 2. Restore Live BP & Regular BP in Lesson Hitting Sessions
+**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
 
-**File:** `src/components/practice/RepSourceSelector.tsx` (line 169)
+**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
 
-Add `'live_bp'` and `'regular_bp'` to `VALID_HITTING_SOURCES.lesson`:
+I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
 
-```
-lesson: ['tee', 'soft_toss', 'front_toss', 'flip', 'coach_pitch', 'machine_bp', 'live_bp', 'regular_bp'],
-```
+### Changes
 
-## 3. Add Additional Batted Ball Types to Fielding
+| File | Change |
+|------|--------|
+| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
+| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
 
-**File:** `src/components/practice/RepScorer.tsx` (lines 182-188)
+### Technical Detail
 
-Add `slow_roller`, `one_hopper`, and `chopper` to `playTypeOptions`:
-
-```typescript
-const playTypeOptions = [
-  { value: 'ground_ball', label: 'Ground Ball' },
-  { value: 'fly_ball', label: 'Fly Ball' },
-  { value: 'line_drive', label: 'Line Drive' },
-  { value: 'bunt', label: 'Bunt' },
-  { value: 'pop_up', label: 'Pop Up' },
-  { value: 'slow_roller', label: 'Slow Roller' },
-  { value: 'one_hopper', label: 'One Hopper' },
-  { value: 'chopper', label: 'Chopper' },
-];
-```
-
-Also update the hitting `Batted Ball Type` options in RepScorer (lines 904-908) and AdvancedRepFields (lines 204-210) to include `one_hopper` alongside the existing `slow_roller` and `chopper`.
-
-## 4. Adjust Route Efficiency Scale
-
-**File:** `src/components/practice/RepScorer.tsx` (lines 1294-1298)
-
-Change from `routine / plus / elite` to `poor / average / elite`:
-
-```typescript
-options={[
-  { value: 'poor', label: '❌ Poor' },
-  { value: 'average', label: '🟡 Average' },
-  { value: 'elite', label: '👑 Elite' },
-]}
+**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
+```sql
+CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.scout_follows
+    WHERE scout_id = p_coach_id
+      AND player_id = p_player_id
+      AND status = 'accepted'
+      AND relationship_type IN ('linked', 'follow')
+  )
+$$;
 ```
 
-Update the `ScoredRep` type (line 84) accordingly:
-```typescript
-route_efficiency?: 'poor' | 'average' | 'elite';
-```
-
-## 5. Add Batted Ball Exit Velocity Classification to Fielding
-
-The existing `hit_type_hardness` field (lines 1257-1268, labeled "Hit Type") already captures Soft/Average/Hard — this IS the batted ball exit velocity classification. The fix is to **rename the label** from "Hit Type" to "Exit Velocity" for clarity.
-
-**File:** `src/components/practice/RepScorer.tsx` (line 1259)
-
-Change label from `"Hit Type"` to `"Exit Velocity"`.
-
-This field already exists on the `ScoredRep` interface as `hit_type_hardness` with values `'soft' | 'average' | 'hard'` — no new field needed, just a label rename for data clarity.
-
-## Summary of Files to Modify
-
-| File | Changes |
-|------|---------|
-| `RepSourceSelector.tsx` | Remove tee from live_abs; add live_bp/regular_bp to lesson |
-| `RepScorer.tsx` | Add 3 batted ball types to fielding; update route efficiency scale; rename "Hit Type" label; add one_hopper to hitting batted ball options |
-| `AdvancedRepFields.tsx` | Add one_hopper to hitting batted ball options |
-| `useMicroLayerInput.ts` | Update batted_ball_type type to include new values |
-| `usePerformanceSession.ts` | Update batted_ball_type type to include new values |
-
-No database changes needed — all fields store as strings in existing JSONB columns. No new fields created. All data flows through the existing PIE pipeline via `drill_blocks` and `micro_layer_data`.
+Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
 

@@ -81,7 +81,7 @@ export interface ScoredRep {
   play_type?: string;
   fielding_result?: string;
   fielding_position?: string;
-  route_efficiency?: 'routine' | 'plus' | 'elite';
+  route_efficiency?: 'poor' | 'average' | 'elite';
   play_probability?: 'routine' | 'plus' | 'elite';
   receiving_quality?: 'poor' | 'average' | 'elite';
   // Machine mode
@@ -185,6 +185,9 @@ const playTypeOptions = [
   { value: 'line_drive', label: 'Line Drive' },
   { value: 'bunt', label: 'Bunt' },
   { value: 'pop_up', label: 'Pop Up' },
+  { value: 'slow_roller', label: 'Slow Roller' },
+  { value: 'one_hopper', label: 'One Hopper' },
+  { value: 'chopper', label: 'Chopper' },
 ];
 
 const fieldingResultOptions = [
@@ -906,6 +909,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'line', label: 'Line' },
                         { value: 'fly', label: 'Fly' },
                         { value: 'barrel', label: 'Barrel' },
+                        { value: 'one_hopper', label: 'One Hopper' },
                       ]}
                       value={current.batted_ball_type}
                       onChange={v => updateField('batted_ball_type', v)}
@@ -1256,7 +1260,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
               {/* Hit Type Hardness — feeds difficulty weighting */}
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Hit Type</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">Exit Velocity</Label>
                 <SelectGrid
                   options={[
                     { value: 'soft', label: '🟢 Soft' },
@@ -1291,11 +1295,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
                 <SelectGrid
-                  options={[
-                    { value: 'routine', label: '✅ Routine' },
-                    { value: 'plus', label: '🔥 Plus' },
-                    { value: 'elite', label: '👑 Elite' },
-                  ]}
+                   options={[
+                     { value: 'poor', label: '❌ Poor' },
+                     { value: 'average', label: '🟡 Average' },
+                     { value: 'elite', label: '👑 Elite' },
+                   ]}
                   value={current.route_efficiency}
                   onChange={v => updateField('route_efficiency', v)}
                 />
