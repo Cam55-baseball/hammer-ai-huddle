@@ -62,12 +62,14 @@ const PITCHING_SOURCES: SourceGroup[] = [
       { value: 'bullpen', label: 'Bullpen', desc: 'Full mound/circle work' },
       { value: 'flat_ground', label: 'Flat Ground', desc: 'Level surface throwing' },
       { value: 'flat_ground_vs_hitter', label: 'Flat Ground vs Hitter', desc: 'Flat ground with live hitter' },
+      { value: 'bullpen_vs_hitter', label: 'Bullpen vs Hitter', desc: 'Bullpen with live hitter' },
     ],
   },
   {
     group: 'Live',
     items: [
       { value: 'live_bp', label: 'Live BP', desc: 'Pitching to live batters' },
+      { value: 'sim_game', label: 'Simulated Game', desc: 'Simulated game reps' },
       { value: 'game', label: 'Game', desc: 'In-game pitching' },
     ],
   },
