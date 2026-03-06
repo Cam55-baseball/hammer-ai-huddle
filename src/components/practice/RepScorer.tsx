@@ -909,6 +909,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'line', label: 'Line' },
                         { value: 'fly', label: 'Fly' },
                         { value: 'barrel', label: 'Barrel' },
+                        { value: 'one_hopper', label: 'One Hopper' },
                       ]}
                       value={current.batted_ball_type}
                       onChange={v => updateField('batted_ball_type', v)}
