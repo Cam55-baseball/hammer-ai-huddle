@@ -24,8 +24,10 @@ export function SpeedTimeEntry({
   distances,
   sprintReps,
   values,
+  stepsValues,
   personalBests,
   onChange,
+  onStepsChange,
   onTimingMethod,
 }: SpeedTimeEntryProps) {
   const { t } = useTranslation();
