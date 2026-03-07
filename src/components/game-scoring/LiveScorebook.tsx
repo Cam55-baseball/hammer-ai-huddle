@@ -449,15 +449,43 @@ export function LiveScorebook({
         {/* Sidebar — pitcher tracker */}
         <div className="space-y-4">
           <div>
-            <Label className="text-xs">Current Pitcher</Label>
-            <Select value={currentPitcher} onValueChange={setCurrentPitcher}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {allPlayersForPitcher.map(p => (
-                  <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">{isSinglePlayer ? 'Opponent Pitcher' : 'Current Pitcher'}</Label>
+            {isSinglePlayer ? (
+              <div className="relative">
+                <Input
+                  value={currentPitcher}
+                  onChange={e => { setCurrentPitcher(e.target.value); setShowPitcherSuggestions(true); }}
+                  onFocus={() => setShowPitcherSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowPitcherSuggestions(false), 200)}
+                  placeholder="Enter pitcher name"
+                  className="h-8 text-xs"
+                />
+                {showPitcherSuggestions && filteredPitcherSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 rounded-md border border-border bg-popover shadow-md max-h-32 overflow-y-auto">
+                    <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Recent Pitchers</div>
+                    {filteredPitcherSuggestions.map(name => (
+                      <button
+                        key={name}
+                        type="button"
+                        className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent transition-colors"
+                        onMouseDown={() => { setCurrentPitcher(name); setShowPitcherSuggestions(false); }}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Select value={currentPitcher} onValueChange={setCurrentPitcher}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {allPlayersForPitcher.map(p => (
+                    <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <PitcherTracker stats={currentPitcherStats} />
           <Button variant="outline" onClick={onComplete} className="w-full">
