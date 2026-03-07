@@ -1596,7 +1596,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'pop_fly', label: 'Pop Fly' },
                         { value: 'bunt_1b', label: 'Bunt → 1B' },
                         { value: 'bunt_3b', label: 'Bunt → 3B' },
-                        { value: 'bunt_pitcher', label: 'Bunt → Pitcher' },
+                        
                         { value: 'tag_play_home', label: 'Tag Play at Home' },
                         { value: 'live_catching', label: 'Live Catching' },
                       ]}
