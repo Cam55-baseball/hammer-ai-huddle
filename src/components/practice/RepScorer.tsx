@@ -18,11 +18,13 @@ import { FieldingThrowFields } from './FieldingThrowFields';
 import { InfieldRepTypeFields, INFIELD_POSITIONS } from './InfieldRepTypeFields';
 import { PlayDirectionSelector } from './PlayDirectionSelector';
 import { AITextBoxField } from './AITextBoxField';
+import { FieldPositionDiagram } from '@/components/game-scoring/FieldPositionDiagram';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getContextFields } from '@/data/contextAppropriatenessEngine';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { cn } from '@/lib/utils';
-import { Trash2, Check, Zap, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, Check, Zap, Settings2, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SessionConfig } from './SessionConfigPanel';
 
