@@ -280,10 +280,13 @@ export function LiveScorebook({
     if (newOuts >= 3) {
       setOuts(0);
       setRunners({});
+      // After 3 outs, switch halves
       if (currentHalf === 'bottom') {
+        // Bottom just ended → advance inning, go to top
         setCurrentInning(prev => prev + 1);
         setCurrentHalf('top');
       } else {
+        // Top just ended → go to bottom (same inning)
         setCurrentHalf('bottom');
       }
     } else {
