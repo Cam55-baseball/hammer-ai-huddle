@@ -55,6 +55,9 @@ interface AtBatPanelProps {
   runners: { first?: boolean; second?: boolean; third?: boolean };
   batterPosition?: string;
   gameMode?: string;
+  batterHand?: 'right' | 'left' | 'switch';
+  pitcherHand?: 'R' | 'L';
+  videoTimestamp?: number;
   onComplete: (plays: GamePlay[]) => void;
 }
 
