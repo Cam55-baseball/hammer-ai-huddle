@@ -18,7 +18,7 @@ const MODULES = [
   { value: 'pitching', label: 'Pitching' },
   { value: 'throwing', label: 'Throwing' },
   { value: 'fielding', label: 'Fielding' },
-  { value: 'catching', label: 'Catching' },
+  
   { value: 'baserunning', label: 'Baserunning' },
   
 ];

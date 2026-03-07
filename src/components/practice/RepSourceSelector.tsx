@@ -124,11 +124,6 @@ const FLAT_SOURCES: Record<string, SourceItem[]> = {
     { value: 'game', label: 'Game' },
     { value: 'other', label: 'Other' },
   ],
-  catching: [
-    { value: 'bullpen_receive', label: 'Bullpen Receive' },
-    { value: 'drill', label: 'Drill' },
-    { value: 'other', label: 'Other' },
-  ],
   baserunning: [
     { value: 'drill', label: 'Drill' },
     { value: 'live', label: 'Live' },

@@ -38,7 +38,7 @@ const ANALYSIS_LABELS: Record<string, string> = {
   pitching: 'Analyze Pitching Mechanics',
   throwing: 'Analyze Throwing Mechanics',
   fielding: 'Analyze Throw Mechanics',
-  catching: 'Analyze Throw Mechanics',
+  
 };
 
 export function SessionVideoUploader({ reps, sessionId, readOnly, module }: SessionVideoUploaderProps) {
