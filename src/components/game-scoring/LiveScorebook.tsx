@@ -208,7 +208,7 @@ export function LiveScorebook({
 
   const getAtBatResult = (batterName: string, inning: number) => {
     const plays = allPlays.filter(p =>
-      p.batter_name === batterName && p.inning === inning && p.half === 'bottom' && p.at_bat_outcome
+      p.batter_name === batterName && p.inning === inning && p.half === playerBattingHalf && p.at_bat_outcome
     );
     return plays.length > 0 ? plays[plays.length - 1] : null;
   };
