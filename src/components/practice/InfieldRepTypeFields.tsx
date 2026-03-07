@@ -48,7 +48,7 @@ const executionOptions = [
   { value: 'elite', label: '👑 Elite' },
 ];
 
-export const INFIELD_POSITIONS = ['1B', '2B', '3B', 'SS'];
+export const INFIELD_POSITIONS = ['P', '1B', '2B', '3B', 'SS'];
 
 export function InfieldRepTypeFields({ value, onChange }: InfieldRepTypeFieldsProps) {
   return (
