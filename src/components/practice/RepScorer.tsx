@@ -10,7 +10,7 @@ import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { HandednessGate } from './HandednessGate';
 import { TeeDepthGrid } from './TeeDepthGrid';
 import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
-import { CatchingRepFields } from './CatchingRepFields';
+// CatchingRepFields removed — catcher defense now handled within fielding module
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { ThrowingRepFields } from './ThrowingRepFields';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
@@ -149,11 +149,14 @@ export interface ScoredRep {
   live_ab_ball_result?: string;
   live_ab_outcome?: string;
   // === Outfield-specific ===
-  outfield_play_type?: string;
+  relay_play?: boolean;
   relay_hit_cutoff?: 'complete' | 'incomplete' | 'elite';
+  wall_play?: boolean;
   wall_play_quality?: 'poor' | 'well' | 'elite';
   // === Infield relay ===
-  relay_lineup_spot?: 'off_line' | 'inline';
+  relay_lineup_spot?: 'off_line' | 'lined_up';
+  // === Diving play (all defensive) ===
+  diving_play?: boolean;
   // === Catcher defense (fielding module) ===
   catcher_rep_type?: string;
   pop_fly_direction?: 'backstop' | '3b_side' | '1b_side' | 'pitcher_area';
@@ -279,7 +282,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isFielding = module === 'fielding';
-  const isCatching = module === 'catching';
+  const isCatching = false; // catching module removed — catcher defense is under fielding
   const isBaserunning = module === 'baserunning';
   const isThrowing = module === 'throwing';
 
@@ -1399,7 +1402,28 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {/* Route Efficiency */}
+              {/* Diving Play — all defensive positions */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Diving Play</Label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                    <button
+                      key={String(opt.value)}
+                      type="button"
+                      onClick={() => updateField('diving_play', opt.value)}
+                      className={cn(
+                        'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                        current.diving_play === opt.value
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
                 <SelectGrid
@@ -1465,22 +1489,29 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               {/* ===== OUTFIELD-SPECIFIC FIELDS ===== */}
               {repFieldingPosition && ['LF', 'CF', 'RF'].includes(repFieldingPosition) && (
                 <>
+                  {/* Relay Play Yes/No */}
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Outfield Play Type</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'fly_ball', label: 'Fly Ball' },
-                        { value: 'line_drive', label: 'Line Drive' },
-                        { value: 'ground_ball', label: 'Ground Ball' },
-                        { value: 'wall_play', label: 'Wall Play' },
-                        { value: 'relay', label: 'Relay' },
-                      ]}
-                      value={current.outfield_play_type}
-                      onChange={v => updateField('outfield_play_type', v)}
-                    />
+                    <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('relay_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.relay_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {current.outfield_play_type === 'relay' && (
+                  {current.relay_play === true && (
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1 block">Hit Cutoff Man?</Label>
                       <SelectGrid
@@ -1495,9 +1526,31 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     </div>
                   )}
 
-                  {current.outfield_play_type === 'wall_play' && (
+                  {/* Wall Play Yes/No */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Played Ball Off the Wall</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('wall_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.wall_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {current.wall_play === true && (
                     <div>
-                      <Label className="text-xs text-muted-foreground mb-1 block">Played Ball Off Wall</Label>
+                      <Label className="text-xs text-muted-foreground mb-1 block">How Well Was the Ball Played Off the Wall</Label>
                       <SelectGrid
                         options={[
                           { value: 'poor', label: '❌ Poor' },
@@ -1531,14 +1584,35 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
-                  {/* Infield Relay */}
-                  {current.infield_rep_type === 'relay' && (
+                  {/* Infield Relay Yes/No */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('relay_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.relay_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {current.relay_play === true && (
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1 block">Got to Correct Lineup Spot?</Label>
                       <SelectGrid
                         options={[
                           { value: 'off_line', label: '❌ Off Line' },
-                          { value: 'inline', label: '✅ Inline' },
+                          { value: 'lined_up', label: '✅ Lined Up' },
                         ]}
                         value={current.relay_lineup_spot}
                         onChange={v => updateField('relay_lineup_spot', v)}
@@ -1564,7 +1638,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'pop_fly', label: 'Pop Fly' },
                         { value: 'bunt_1b', label: 'Bunt → 1B' },
                         { value: 'bunt_3b', label: 'Bunt → 3B' },
-                        { value: 'bunt_pitcher', label: 'Bunt → Pitcher' },
+                        
                         { value: 'tag_play_home', label: 'Tag Play at Home' },
                         { value: 'live_catching', label: 'Live Catching' },
                       ]}
@@ -1729,6 +1803,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 <CollapsibleContent className="pt-2">
                   <FieldPositionDiagram
                     sport={sport as 'baseball' | 'softball'}
+                    position={repFieldingPosition}
                     onUpdate={({ playerPos, ballPos }) => {
                       updateField('field_diagram_player_pos', playerPos);
                       updateField('field_diagram_ball_pos', ballPos);

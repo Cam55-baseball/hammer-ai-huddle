@@ -13,7 +13,6 @@ const labels: Record<string, { prompt: string; left: string; right: string }> = 
   hitting: { prompt: 'Batter Stance', left: 'Left-Handed', right: 'Right-Handed' },
   pitching: { prompt: 'Pitcher Arm', left: 'Left-Handed', right: 'Right-Handed' },
   fielding: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
-  catching: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
   throwing: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
   
 };

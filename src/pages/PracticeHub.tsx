@@ -33,7 +33,6 @@ const modules = [
   { id: 'pitching', icon: Flame, label: 'Pitching' },
   { id: 'throwing', icon: Wind, label: 'Throwing' },
   { id: 'fielding', icon: Shield, label: 'Fielding' },
-  { id: 'catching', icon: Shield, label: 'Catching' },
   { id: 'baserunning', icon: Zap, label: 'Baserunning' },
   
 ];
