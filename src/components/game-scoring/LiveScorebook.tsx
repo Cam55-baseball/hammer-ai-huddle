@@ -132,7 +132,6 @@ export function LiveScorebook({
   const [currentHalf, setCurrentHalf] = useState<'top' | 'bottom'>('top');
   const [currentBatterIndex, setCurrentBatterIndex] = useState(0);
   const [pitcherHand, setPitcherHand] = useState<'R' | 'L'>('R');
-  const [currentBatterIndex, setCurrentBatterIndex] = useState(0);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [currentPitcher, setCurrentPitcher] = useState(isSinglePlayer ? '' : startingPitcherName);
   const [recentPitchers, setRecentPitchers] = useState<string[]>([]);
