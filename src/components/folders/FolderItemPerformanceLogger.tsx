@@ -168,13 +168,22 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
             )}
 
             {mode === 'flexible' && (
-              <Input
-                type="number"
-                placeholder="Dist"
-                value={set.distance ?? ''}
-                onChange={e => updateSet(index, 'distance', e.target.value ? Number(e.target.value) : undefined)}
-                className="h-7 w-14 text-xs px-1.5"
-              />
+              <>
+                <Input
+                  type="number"
+                  placeholder="Dist"
+                  value={set.distance ?? ''}
+                  onChange={e => updateSet(index, 'distance', e.target.value ? Number(e.target.value) : undefined)}
+                  className="h-7 w-14 text-xs px-1.5"
+                />
+                <Input
+                  type="number"
+                  placeholder="Steps"
+                  value={set.steps ?? ''}
+                  onChange={e => updateSet(index, 'steps', e.target.value ? Number(e.target.value) : undefined)}
+                  className="h-7 w-14 text-xs px-1.5"
+                />
+              </>
             )}
 
             {sets.length > 1 && (
