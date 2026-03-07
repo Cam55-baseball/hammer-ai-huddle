@@ -430,17 +430,15 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                   {singlePlayerName || 'You'}
                 </div>
               </div>
-                <div>
-                  <Label>Position</Label>
-                  <Select value={singlePlayerPosition} onValueChange={setSinglePlayerPosition}>
-                    <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
-                    <SelectContent>
-                      {positions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label>Position</Label>
+                <Select value={singlePlayerPosition} onValueChange={setSinglePlayerPosition}>
+                  <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
+                  <SelectContent>
+                    {positions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
           )}
         </CardContent>
       </Card>
