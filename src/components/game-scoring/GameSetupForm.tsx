@@ -430,6 +430,22 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                   )}
                 >Practice Game</button>
               </div>
+
+              {/* Home / Away selector */}
+              <div>
+                <Label className="text-xs font-medium">Home or Away?</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button type="button" onClick={() => setHomeOrAway('home')}
+                    className={cn('rounded-md border px-3 py-2 text-xs font-medium transition-all',
+                      homeOrAway === 'home' ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                    )}>🏠 Home</button>
+                  <button type="button" onClick={() => setHomeOrAway('away')}
+                    className={cn('rounded-md border px-3 py-2 text-xs font-medium transition-all',
+                      homeOrAway === 'away' ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                    )}>✈️ Away</button>
+                </div>
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground">Logging Game For</Label>
                 <div className="mt-1 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm font-medium">
@@ -445,6 +461,28 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Batter Hand */}
+              <div>
+                <Label className="text-xs font-medium">Batting Hand</Label>
+                <div className="grid grid-cols-3 gap-1.5 mt-1">
+                  {[{ v: 'right' as const, l: 'Right' }, { v: 'left' as const, l: 'Left' }, { v: 'switch' as const, l: 'Switch' }].map(h => (
+                    <button key={h.v} type="button" onClick={() => setBatterHand(h.v)}
+                      className={cn('rounded-md border px-2 py-1.5 text-xs font-medium transition-all',
+                        batterHand === h.v ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                      )}>{h.l}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Video + Logging Mode */}
+              <div className="flex items-center gap-2 pt-1">
+                <Switch checked={videoMode} onCheckedChange={setVideoMode} />
+                <Label className="text-xs font-medium">🎥 Video + Logging Mode</Label>
+              </div>
+              {videoMode && (
+                <p className="text-[10px] text-muted-foreground">Upload game film during scoring to log plays from video</p>
+              )}
             </div>
           )}
         </CardContent>
