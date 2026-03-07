@@ -50,7 +50,7 @@ export interface ScoredRep {
   pitch_result?: string;
   swing_decision?: string;
   intent?: string;
-  depth_zone?: number; // 1-5, required for tee
+  depth_zone?: number;
   // Advanced micro
   in_zone?: boolean;
   batted_ball_type?: string;
@@ -95,7 +95,7 @@ export interface ScoredRep {
   approach_quality?: string;
   count_situation?: string;
   adjustment_tag?: string;
-  // Pitching contact type (flat ground vs hitter)
+  // Pitching contact type
   contact_type?: string;
   // Baserunning
   drill_type?: string;
@@ -109,19 +109,19 @@ export interface ScoredRep {
   exact_time_to_base_sec?: number;
   exact_steps_to_base?: number;
   ai_baserunning_drill_description?: string;
-  // Velocity (pitcher/hitting competitive)
+  // Velocity
   exact_pitch_velocity_mph?: number;
   // Video binding
   video_id?: string;
   video_start_sec?: number;
   video_end_sec?: number;
-  // === NEW AI-structured fields ===
-  ai_drill_description?: string;      // Catching other/drill
-  ai_drill_clarification?: string;    // Any module drill (non-catching)
-  ai_custom_rep_description?: string; // Any module other/custom (non-catching)
+  // AI-structured fields
+  ai_drill_description?: string;
+  ai_drill_clarification?: string;
+  ai_custom_rep_description?: string;
   abs_guess?: { row: number; col: number };
   pitcher_spot_intent?: { row: number; col: number };
-  // Throw tracking (fielding, catching, throwing)
+  // Throw tracking
   throw_accuracy_direction?: 'wide_left' | 'on_target' | 'dot' | 'wide_right';
   throw_arrival_quality?: 'long_hop' | 'short_hop' | 'perfect' | 'high';
   throw_strength?: 'strong' | 'good' | 'weak';
@@ -134,18 +134,32 @@ export interface ScoredRep {
   infield_rep_execution?: 'incomplete' | 'complete' | 'elite';
   // Play direction
   play_direction?: 'right' | 'left' | 'back' | 'in' | 'straight_up';
-  // Fielding play type (play at base, slow roller, chopper)
+  // Fielding play type
   fielding_play_type?: string;
-  // Catch type (all fielding positions)
+  // Catch type
   catch_type?: 'backhand' | 'forehand' | 'underhand' | 'overhand';
-  // Hit type hardness (fielding difficulty)
+  // Hit type hardness
   hit_type_hardness?: 'soft' | 'average' | 'hard';
   // Tag play quality (infielders)
   tag_play_quality?: 'elite' | 'complete' | 'incomplete';
-  // Live AB hitter tracking (pitching module only)
+  // Live AB hitter tracking
   live_ab_swing_result?: 'take' | 'swing_miss' | 'foul' | 'in_play';
   live_ab_ball_result?: string;
   live_ab_outcome?: string;
+  // === Outfield-specific ===
+  outfield_play_type?: string;
+  relay_hit_cutoff?: 'complete' | 'incomplete' | 'elite';
+  wall_play_quality?: 'poor' | 'well' | 'elite';
+  // === Infield relay ===
+  relay_lineup_spot?: 'off_line' | 'inline';
+  // === Catcher defense (fielding module) ===
+  catcher_rep_type?: string;
+  pop_fly_direction?: 'backstop' | '3b_side' | '1b_side' | 'pitcher_area';
+  tag_completion?: 'completed' | 'missed' | 'late';
+  catcher_actual_pitch_location?: { row: number; col: number };
+  // === Field diagram ===
+  field_diagram_player_pos?: { x: number; y: number };
+  field_diagram_ball_pos?: { x: number; y: number };
 }
 
 interface RepScorerProps {
