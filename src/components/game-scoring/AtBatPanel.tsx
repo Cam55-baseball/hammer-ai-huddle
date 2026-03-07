@@ -177,6 +177,34 @@ export function AtBatPanel({
         </div>
       </div>
 
+      {/* Opponent input */}
+      <div className="relative">
+        <Label className="text-xs font-medium">{opponentLabel}</Label>
+        <Input
+          value={opponentName}
+          onChange={e => { setOpponentName(e.target.value); setShowSuggestions(true); }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          placeholder="Enter name"
+          className="h-8 text-xs mt-0.5"
+        />
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 rounded-md border border-border bg-popover shadow-md max-h-32 overflow-y-auto">
+            <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Recent Opponents</div>
+            {filteredSuggestions.map(name => (
+              <button
+                key={name}
+                type="button"
+                className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent transition-colors"
+                onMouseDown={() => { setOpponentName(name); setShowSuggestions(false); }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Pitch sequence badges */}
       {pitches.length > 0 && (
         <div className="flex flex-wrap gap-1">
