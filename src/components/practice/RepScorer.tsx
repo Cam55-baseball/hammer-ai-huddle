@@ -149,11 +149,14 @@ export interface ScoredRep {
   live_ab_ball_result?: string;
   live_ab_outcome?: string;
   // === Outfield-specific ===
-  outfield_play_type?: string;
+  relay_play?: boolean;
   relay_hit_cutoff?: 'complete' | 'incomplete' | 'elite';
+  wall_play?: boolean;
   wall_play_quality?: 'poor' | 'well' | 'elite';
   // === Infield relay ===
-  relay_lineup_spot?: 'off_line' | 'inline';
+  relay_lineup_spot?: 'off_line' | 'lined_up';
+  // === Diving play (all defensive) ===
+  diving_play?: boolean;
   // === Catcher defense (fielding module) ===
   catcher_rep_type?: string;
   pop_fly_direction?: 'backstop' | '3b_side' | '1b_side' | 'pitcher_area';
