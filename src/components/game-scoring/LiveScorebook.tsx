@@ -109,12 +109,36 @@ function calculateRunsScored(
 export function LiveScorebook({
   gameId, sport, totalInnings, lineup, startingPitcherName,
   onPlayRecorded, allPlays, onComplete, teamName, opponentName,
+  gameMode, playerPosition,
 }: LiveScorebookProps) {
+  const { user } = useAuth();
+  const isSinglePlayer = gameMode === 'single_player';
   const [currentInning, setCurrentInning] = useState(1);
   const [currentHalf, setCurrentHalf] = useState<'top' | 'bottom'>('bottom');
   const [currentBatterIndex, setCurrentBatterIndex] = useState(0);
   const [advancedMode, setAdvancedMode] = useState(false);
-  const [currentPitcher, setCurrentPitcher] = useState(startingPitcherName);
+  const [currentPitcher, setCurrentPitcher] = useState(isSinglePlayer ? '' : startingPitcherName);
+  const [recentPitchers, setRecentPitchers] = useState<string[]>([]);
+  const [showPitcherSuggestions, setShowPitcherSuggestions] = useState(false);
+
+  // Fetch recent opponent pitchers for autocomplete (single player mode)
+  useEffect(() => {
+    if (!isSinglePlayer || !user) return;
+    supabase
+      .from('game_opponents')
+      .select('opponent_name')
+      .eq('user_id', user.id)
+      .eq('opponent_type', 'pitcher')
+      .order('last_faced_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) setRecentPitchers(data.map((d: any) => d.opponent_name));
+      });
+  }, [isSinglePlayer, user]);
+
+  const filteredPitcherSuggestions = currentPitcher.trim()
+    ? recentPitchers.filter(n => n.toLowerCase().includes(currentPitcher.toLowerCase()))
+    : recentPitchers;
   const [runners, setRunners] = useState<{ first?: boolean; second?: boolean; third?: boolean }>({});
   const [outs, setOuts] = useState(0);
   const [activeAtBat, setActiveAtBat] = useState(true);
