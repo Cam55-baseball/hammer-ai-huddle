@@ -71,6 +71,9 @@ export function AtBatPanel({
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const isPitcher = batterPosition === 'P';
+  const isSinglePlayer = gameMode === 'single_player';
+  // In single player mode, non-pitchers don't need opponent input here (set at scorebook level)
+  const showOpponentInput = isPitcher || !isSinglePlayer;
   const opponentLabel = isPitcher ? 'Facing Hitter' : 'Opponent Pitcher';
   const opponentType = isPitcher ? 'hitter' : 'pitcher';
 
