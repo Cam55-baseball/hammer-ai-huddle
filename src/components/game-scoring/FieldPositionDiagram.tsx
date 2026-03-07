@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react';
-import { cn } from '@/lib/utils';
 
 interface Point {
   x: number;
@@ -14,7 +13,6 @@ interface FieldPositionDiagramProps {
 
 const DOT_RADIUS = 12;
 
-// Typical defensive position zones (normalized 0-1 coordinates)
 const POSITION_ZONES: Record<string, { x: number; y: number }> = {
   'P':  { x: 0.50, y: 0.58 },
   'C':  { x: 0.50, y: 0.92 },
@@ -27,10 +25,18 @@ const POSITION_ZONES: Record<string, { x: number; y: number }> = {
   'RF': { x: 0.72, y: 0.35 },
 };
 
+// Field colors
+const GRASS_DARK = '#3d7a1e';
+const GRASS_LIGHT = '#4a8c2a';
+const GRASS_STRIPE = '#439225';
+const DIRT = '#c4956a';
+const DIRT_DARK = '#b8845a';
+const CHALK = 'rgba(255,255,255,0.7)';
+const FENCE = '#2d5a1a';
+
 export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositionDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Initialize player dot at typical position zone if available
   const initialPlayerPos = position && POSITION_ZONES[position]
     ? POSITION_ZONES[position]
     : { x: 0.50, y: 0.60 };
@@ -69,114 +75,119 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
     }
   }, [dragging, playerPos, ballPos, onUpdate]);
 
-  // ── Field geometry ──────────────────────────────────────────────
-  // All units in SVG viewBox (500x500)
   const W = 500;
-  const cx = W / 2; // 250
-
-  // Home plate near bottom
+  const cx = W / 2;
   const homeY = W - 50;
   const homeX = cx;
-
-  // Scale factor: baseball 90ft basepaths, softball 60ft
-  // We'll map baseball 90ft = 150 SVG units, softball 60ft = 120 SVG units
   const baseDist = sport === 'softball' ? 120 : 150;
+  const diagDist = baseDist * Math.SQRT1_2;
 
-  // Diamond corners (45-degree rotated square)
-  const diagDist = baseDist * Math.SQRT1_2; // basepath projected on each axis
-  const home:   Point = { x: homeX, y: homeY };
-  const first:  Point = { x: homeX + diagDist, y: homeY - diagDist };
+  const home: Point = { x: homeX, y: homeY };
+  const first: Point = { x: homeX + diagDist, y: homeY - diagDist };
   const second: Point = { x: homeX, y: homeY - baseDist };
-  const third:  Point = { x: homeX - diagDist, y: homeY - diagDist };
+  const third: Point = { x: homeX - diagDist, y: homeY - diagDist };
 
-  // Mound: baseball 60.5/90 ≈ 0.672, softball 43/60 ≈ 0.717
   const moundRatio = sport === 'softball' ? 0.717 : 0.672;
   const moundY = homeY - baseDist * moundRatio;
 
-  // Outfield fence arc
-  // baseball ~320ft (3.56x basepath), softball ~220ft (3.67x basepath)
   const outfieldRadius = sport === 'softball' ? baseDist * 3.2 : baseDist * 3.0;
-
-  // Foul line endpoints (extend to edge of viewBox, 45 degrees)
   const foulLineLen = W * 0.65;
   const foulRight: Point = { x: homeX + foulLineLen * Math.SQRT1_2, y: homeY - foulLineLen * Math.SQRT1_2 };
-  const foulLeft:  Point = { x: homeX - foulLineLen * Math.SQRT1_2, y: homeY - foulLineLen * Math.SQRT1_2 };
+  const foulLeft: Point = { x: homeX - foulLineLen * Math.SQRT1_2, y: homeY - foulLineLen * Math.SQRT1_2 };
 
-  // Infield dirt arc center & radius
   const dirtCenter: Point = { x: cx, y: homeY - baseDist * 0.5 };
   const dirtRadius = baseDist * 0.62;
-
-  // Warning track arc (slightly beyond outfield arc visible area)
   const warningR = outfieldRadius * 0.78;
 
-  // Home plate pentagon
-  const hp = home;
   const hpSize = 8;
   const homePlatePoints = [
-    `${hp.x},${hp.y - hpSize}`,
-    `${hp.x + hpSize * 0.7},${hp.y - hpSize * 0.3}`,
-    `${hp.x + hpSize * 0.7},${hp.y + hpSize * 0.3}`,
-    `${hp.x - hpSize * 0.7},${hp.y + hpSize * 0.3}`,
-    `${hp.x - hpSize * 0.7},${hp.y - hpSize * 0.3}`,
+    `${home.x},${home.y - hpSize}`,
+    `${home.x + hpSize * 0.7},${home.y - hpSize * 0.3}`,
+    `${home.x + hpSize * 0.7},${home.y + hpSize * 0.3}`,
+    `${home.x - hpSize * 0.7},${home.y + hpSize * 0.3}`,
+    `${home.x - hpSize * 0.7},${home.y - hpSize * 0.3}`,
   ].join(' ');
 
-  // Position zone highlight
   const zonePos = position && POSITION_ZONES[position];
+
+  // Grass stripe pattern
+  const stripeWidth = 28;
+  const stripeCount = Math.ceil(W / stripeWidth);
 
   return (
     <div className="w-full max-w-[480px] mx-auto">
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${W}`}
-        className="w-full touch-none select-none"
+        className="w-full touch-none select-none rounded-xl overflow-hidden"
+        style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.15))' }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       >
-        {/* Background */}
-        <rect width={W} height={W} className="fill-green-800/15 dark:fill-green-900/25" rx={10} />
+        <defs>
+          <filter id="dotShadow">
+            <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.4" />
+          </filter>
+        </defs>
 
-        {/* Outfield grass fill (arc wedge from home) */}
+        {/* Background - darker green (foul territory) */}
+        <rect width={W} height={W} fill={GRASS_DARK} rx={12} />
+
+        {/* Fair territory grass (lighter green wedge) */}
         <path
           d={`M ${homeX} ${homeY} L ${foulLeft.x} ${foulLeft.y} A ${outfieldRadius} ${outfieldRadius} 0 0 1 ${foulRight.x} ${foulRight.y} Z`}
-          className="fill-green-700/12 dark:fill-green-800/15"
+          fill={GRASS_LIGHT}
         />
+
+        {/* Mowing stripes on fair territory */}
+        <clipPath id="fairClip">
+          <path d={`M ${homeX} ${homeY} L ${foulLeft.x} ${foulLeft.y} A ${outfieldRadius} ${outfieldRadius} 0 0 1 ${foulRight.x} ${foulRight.y} Z`} />
+        </clipPath>
+        <g clipPath="url(#fairClip)">
+          {Array.from({ length: stripeCount }, (_, i) => (
+            i % 2 === 0 ? (
+              <rect key={i} x={i * stripeWidth} y={0} width={stripeWidth} height={W} fill={GRASS_STRIPE} opacity={0.3} />
+            ) : null
+          ))}
+        </g>
 
         {/* Warning track arc */}
         <path
           d={`M ${homeX - warningR * Math.SQRT1_2} ${homeY - warningR * Math.SQRT1_2} A ${warningR} ${warningR} 0 0 1 ${homeX + warningR * Math.SQRT1_2} ${homeY - warningR * Math.SQRT1_2}`}
           fill="none"
-          className="stroke-amber-700/15"
-          strokeWidth={10}
+          stroke={DIRT_DARK}
+          strokeWidth={12}
+          opacity={0.5}
         />
 
-        {/* Outfield fence arc */}
+        {/* Outfield fence */}
         <path
           d={`M ${foulLeft.x} ${foulLeft.y} A ${outfieldRadius} ${outfieldRadius} 0 0 1 ${foulRight.x} ${foulRight.y}`}
           fill="none"
-          className="stroke-green-600/35 dark:stroke-green-500/25"
-          strokeWidth={2.5}
+          stroke={FENCE}
+          strokeWidth={3.5}
         />
 
-        {/* Foul lines */}
-        <line x1={home.x} y1={home.y} x2={foulLeft.x} y2={foulLeft.y} className="stroke-foreground/15" strokeWidth={1.5} />
-        <line x1={home.x} y1={home.y} x2={foulRight.x} y2={foulRight.y} className="stroke-foreground/15" strokeWidth={1.5} />
+        {/* Foul lines (chalk) */}
+        <line x1={home.x} y1={home.y} x2={foulLeft.x} y2={foulLeft.y} stroke={CHALK} strokeWidth={2} />
+        <line x1={home.x} y1={home.y} x2={foulRight.x} y2={foulRight.y} stroke={CHALK} strokeWidth={2} />
 
-        {/* Infield dirt circle */}
-        <circle cx={dirtCenter.x} cy={dirtCenter.y} r={dirtRadius} className="fill-amber-700/12 dark:fill-amber-800/15" />
+        {/* Infield dirt */}
+        <circle cx={dirtCenter.x} cy={dirtCenter.y} r={dirtRadius} fill={DIRT} />
 
-        {/* Infield grass (smaller circle inside dirt) */}
-        <circle cx={dirtCenter.x} cy={dirtCenter.y} r={dirtRadius * 0.55} className="fill-green-700/10 dark:fill-green-800/12" />
+        {/* Infield grass cutout */}
+        <circle cx={dirtCenter.x} cy={dirtCenter.y} r={dirtRadius * 0.55} fill={GRASS_LIGHT} />
 
-        {/* Diamond basepaths */}
+        {/* Basepaths (chalk) */}
         <polygon
           points={`${home.x},${home.y} ${first.x},${first.y} ${second.x},${second.y} ${third.x},${third.y}`}
           fill="none"
-          className="stroke-foreground/25"
-          strokeWidth={1.5}
+          stroke={CHALK}
+          strokeWidth={2}
         />
 
-        {/* Bases */}
+        {/* Bases (white) */}
         {[first, second, third].map((b, i) => (
           <rect
             key={i}
@@ -184,17 +195,18 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
             y={b.y - 5}
             width={10}
             height={10}
-            className="fill-foreground/50"
+            fill="white"
             transform={`rotate(45 ${b.x} ${b.y})`}
           />
         ))}
 
-        {/* Home plate (pentagon) */}
-        <polygon points={homePlatePoints} className="fill-foreground/40" />
+        {/* Home plate */}
+        <polygon points={homePlatePoints} fill="white" />
 
-        {/* Pitcher's mound */}
-        <circle cx={cx} cy={moundY} r={7} className="fill-amber-600/25 dark:fill-amber-500/18" />
-        <rect x={cx - 4} y={moundY - 1.5} width={8} height={3} className="fill-foreground/30" rx={1} />
+        {/* Pitcher's mound dirt */}
+        <circle cx={cx} cy={moundY} r={8} fill={DIRT} />
+        {/* Rubber */}
+        <rect x={cx - 4} y={moundY - 1.5} width={8} height={3} fill="white" opacity={0.85} rx={1} />
 
         {/* Position zone highlight */}
         {zonePos && (
@@ -202,7 +214,8 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
             cx={zonePos.x * W}
             cy={zonePos.y * W}
             r={24}
-            className="fill-primary/10 stroke-primary/20"
+            fill="rgba(250,204,21,0.15)"
+            stroke="rgba(250,204,21,0.4)"
             strokeWidth={1.5}
             strokeDasharray="4 3"
           />
@@ -215,7 +228,10 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
             x={coord.x * W}
             y={coord.y * W - 16}
             textAnchor="middle"
-            className="fill-foreground/30 text-[9px] font-medium select-none pointer-events-none"
+            fill="rgba(255,255,255,0.6)"
+            fontSize="9"
+            fontWeight="600"
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
           >
             {pos}
           </text>
@@ -225,40 +241,46 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
         <line
           x1={playerPos.x * W} y1={playerPos.y * W}
           x2={ballPos.x * W} y2={ballPos.y * W}
-          className="stroke-foreground/15"
-          strokeWidth={1}
+          stroke="rgba(255,255,255,0.25)"
+          strokeWidth={1.5}
           strokeDasharray="5 3"
         />
 
-        {/* Player position dot (red) */}
+        {/* Player dot (red) */}
         <circle
           cx={playerPos.x * W}
           cy={playerPos.y * W}
           r={DOT_RADIUS}
-          className="fill-red-500 stroke-white cursor-grab active:cursor-grabbing"
+          fill="#ef4444"
+          stroke="white"
           strokeWidth={2.5}
+          filter="url(#dotShadow)"
+          className="cursor-grab active:cursor-grabbing"
           onPointerDown={handlePointerDown('player')}
         />
-        <text x={playerPos.x * W} y={playerPos.y * W + DOT_RADIUS + 14} textAnchor="middle" className="fill-red-500 text-[10px] font-bold select-none pointer-events-none">
+        <text x={playerPos.x * W} y={playerPos.y * W + DOT_RADIUS + 14} textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="700" style={{ pointerEvents: 'none', userSelect: 'none' }}>
           Player
         </text>
 
-        {/* Ball reception dot (green) */}
+        {/* Ball dot (green) */}
         <circle
           cx={ballPos.x * W}
           cy={ballPos.y * W}
           r={DOT_RADIUS}
-          className="fill-green-400 stroke-white cursor-grab active:cursor-grabbing"
+          fill="#22c55e"
+          stroke="white"
           strokeWidth={2.5}
+          filter="url(#dotShadow)"
+          className="cursor-grab active:cursor-grabbing"
           onPointerDown={handlePointerDown('ball')}
         />
-        <text x={ballPos.x * W} y={ballPos.y * W + DOT_RADIUS + 14} textAnchor="middle" className="fill-green-400 text-[10px] font-bold select-none pointer-events-none">
+        <text x={ballPos.x * W} y={ballPos.y * W + DOT_RADIUS + 14} textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="700" style={{ pointerEvents: 'none', userSelect: 'none' }}>
           Ball
         </text>
       </svg>
       <div className="flex justify-between mt-1.5 text-[10px] text-muted-foreground">
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> Player Start</span>
-        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block" /> Ball Received</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" /> Ball Received</span>
       </div>
     </div>
   );
