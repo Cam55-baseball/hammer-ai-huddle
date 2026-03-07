@@ -32,6 +32,9 @@ interface LiveScorebookProps {
   opponentName: string;
   gameMode?: string;
   playerPosition?: string;
+  homeOrAway?: 'home' | 'away';
+  batterHand?: 'right' | 'left' | 'switch';
+  videoMode?: boolean;
 }
 
 const OUTCOME_ABBREVIATIONS: Record<string, string> = {
