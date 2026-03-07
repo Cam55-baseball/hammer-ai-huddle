@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +15,8 @@ import { OpponentScoringPanel } from './OpponentScoringPanel';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import { cn } from '@/lib/utils';
 import { ArrowRightLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import type { GamePlay, LineupPlayer, Substitution } from '@/hooks/useGameScoring';
 
 interface LiveScorebookProps {
@@ -27,6 +30,8 @@ interface LiveScorebookProps {
   onComplete: () => void;
   teamName: string;
   opponentName: string;
+  gameMode?: string;
+  playerPosition?: string;
 }
 
 const OUTCOME_ABBREVIATIONS: Record<string, string> = {
@@ -104,12 +109,36 @@ function calculateRunsScored(
 export function LiveScorebook({
   gameId, sport, totalInnings, lineup, startingPitcherName,
   onPlayRecorded, allPlays, onComplete, teamName, opponentName,
+  gameMode, playerPosition,
 }: LiveScorebookProps) {
+  const { user } = useAuth();
+  const isSinglePlayer = gameMode === 'single_player';
   const [currentInning, setCurrentInning] = useState(1);
   const [currentHalf, setCurrentHalf] = useState<'top' | 'bottom'>('bottom');
   const [currentBatterIndex, setCurrentBatterIndex] = useState(0);
   const [advancedMode, setAdvancedMode] = useState(false);
-  const [currentPitcher, setCurrentPitcher] = useState(startingPitcherName);
+  const [currentPitcher, setCurrentPitcher] = useState(isSinglePlayer ? '' : startingPitcherName);
+  const [recentPitchers, setRecentPitchers] = useState<string[]>([]);
+  const [showPitcherSuggestions, setShowPitcherSuggestions] = useState(false);
+
+  // Fetch recent opponent pitchers for autocomplete (single player mode)
+  useEffect(() => {
+    if (!isSinglePlayer || !user) return;
+    supabase
+      .from('game_opponents')
+      .select('opponent_name')
+      .eq('user_id', user.id)
+      .eq('opponent_type', 'pitcher')
+      .order('last_faced_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) setRecentPitchers(data.map((d: any) => d.opponent_name));
+      });
+  }, [isSinglePlayer, user]);
+
+  const filteredPitcherSuggestions = currentPitcher.trim()
+    ? recentPitchers.filter(n => n.toLowerCase().includes(currentPitcher.toLowerCase()))
+    : recentPitchers;
   const [runners, setRunners] = useState<{ first?: boolean; second?: boolean; third?: boolean }>({});
   const [outs, setOuts] = useState(0);
   const [activeAtBat, setActiveAtBat] = useState(true);
@@ -396,7 +425,7 @@ export function LiveScorebook({
                 key={`${currentInning}-${currentHalf}-${currentBatterIndex}`}
                 batterName={currentBatter.name}
                 batterOrder={currentBatter.batting_order}
-                pitcherName={currentPitcher}
+                pitcherName={currentPitcher || 'Opponent Pitcher'}
                 inning={currentInning}
                 half={currentHalf}
                 gameId={gameId}
@@ -404,6 +433,8 @@ export function LiveScorebook({
                 advancedMode={advancedMode}
                 runners={runners}
                 onComplete={handleAtBatComplete}
+                gameMode={gameMode}
+                batterPosition={currentBatter.position}
               />
             </div>
           )}
@@ -420,15 +451,43 @@ export function LiveScorebook({
         {/* Sidebar — pitcher tracker */}
         <div className="space-y-4">
           <div>
-            <Label className="text-xs">Current Pitcher</Label>
-            <Select value={currentPitcher} onValueChange={setCurrentPitcher}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {allPlayersForPitcher.map(p => (
-                  <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">{isSinglePlayer ? 'Opponent Pitcher' : 'Current Pitcher'}</Label>
+            {isSinglePlayer ? (
+              <div className="relative">
+                <Input
+                  value={currentPitcher}
+                  onChange={e => { setCurrentPitcher(e.target.value); setShowPitcherSuggestions(true); }}
+                  onFocus={() => setShowPitcherSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowPitcherSuggestions(false), 200)}
+                  placeholder="Enter pitcher name"
+                  className="h-8 text-xs"
+                />
+                {showPitcherSuggestions && filteredPitcherSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 rounded-md border border-border bg-popover shadow-md max-h-32 overflow-y-auto">
+                    <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Recent Pitchers</div>
+                    {filteredPitcherSuggestions.map(name => (
+                      <button
+                        key={name}
+                        type="button"
+                        className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent transition-colors"
+                        onMouseDown={() => { setCurrentPitcher(name); setShowPitcherSuggestions(false); }}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Select value={currentPitcher} onValueChange={setCurrentPitcher}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {allPlayersForPitcher.map(p => (
+                    <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <PitcherTracker stats={currentPitcherStats} />
           <Button variant="outline" onClick={onComplete} className="w-full">
