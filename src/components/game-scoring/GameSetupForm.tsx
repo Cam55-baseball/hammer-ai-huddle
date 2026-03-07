@@ -439,6 +439,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
           )}
         </CardContent>
       </Card>
