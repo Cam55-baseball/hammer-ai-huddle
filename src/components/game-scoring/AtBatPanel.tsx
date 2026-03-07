@@ -230,6 +230,7 @@ export function AtBatPanel({
         defensive_data: defData,
         catcher_data: catcherData,
         baserunning_data: baserunningData,
+        ...(videoTimestamp !== undefined ? { video_start_sec: videoTimestamp } : {}),
       } : {}),
     }));
     onComplete(plays);
