@@ -406,7 +406,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
 
           {gameMode === 'single_player' && (
             <div className="mt-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3">
                 <button
                   type="button"
                   onClick={() => setIsPracticeGame(false)}
