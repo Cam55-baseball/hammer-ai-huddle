@@ -480,6 +480,13 @@ export function AtBatPanel({
               </>
             )}
 
+            {/* Detail nudge — gentle prompt to add more data */}
+            {outcome && !advancedMode && !swingDecision && !madeDefensivePlay && (
+              <p className="text-[10px] text-muted-foreground italic text-center">
+                💡 Tap "Advanced" for elite detail: swing decision, adjustments, & more
+              </p>
+            )}
+
             <Button onClick={handleFinalize} disabled={!outcome} size="sm" className="w-full">
               Finalize At-Bat
             </Button>
