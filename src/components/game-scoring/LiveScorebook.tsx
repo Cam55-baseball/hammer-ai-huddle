@@ -323,6 +323,13 @@ export function LiveScorebook({
         opponentErrors={0}
       />
 
+      {/* Video + Logging Mode */}
+      {videoMode && (
+        <GameVideoPlayer
+          onTimestamp={(sec) => setVideoTimestamp(sec)}
+        />
+      )}
+
       {/* Game status bar */}
       <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
         <div className="flex items-center gap-4">
