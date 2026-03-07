@@ -191,6 +191,8 @@ export function AtBatPanel({
     if (swingDecision) eliteData.swing_decision = swingDecision;
     if (adjustmentTag) eliteData.adjustment_tag = adjustmentTag;
     if (approachNotes) eliteData.approach_notes = approachNotes;
+    if (batterHand) eliteData.batter_hand = batterHand;
+    if (pitcherHand) eliteData.pitcher_hand = pitcherHand;
 
     const defData: Record<string, any> = { ...defensiveData };
     if (madeDefensivePlay) {
