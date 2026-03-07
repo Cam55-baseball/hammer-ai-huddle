@@ -1258,6 +1258,7 @@ export type Database = {
           created_at: string | null
           id: string
           last_faced_at: string | null
+          matchup_context: string | null
           opponent_name: string
           opponent_type: string
           times_faced: number | null
@@ -1267,6 +1268,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_faced_at?: string | null
+          matchup_context?: string | null
           opponent_name: string
           opponent_type?: string
           times_faced?: number | null
@@ -1276,6 +1278,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_faced_at?: string | null
+          matchup_context?: string | null
           opponent_name?: string
           opponent_type?: string
           times_faced?: number | null

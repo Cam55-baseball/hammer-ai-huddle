@@ -49,6 +49,14 @@ interface DisplayRow {
   subbedAtInning?: number;
 }
 
+interface LastABSummary {
+  batterName: string;
+  outcome: string;
+  pitchCount: number;
+  pitcherName: string;
+  rbi: number;
+}
+
 function buildDisplayRows(lineup: LineupPlayer[], substitutions: Substitution[]): DisplayRow[] {
   const rows: DisplayRow[] = [];
   for (let slot = 0; slot < lineup.length; slot++) {
@@ -85,22 +93,21 @@ function calculateRunsScored(
 
   switch (outcome) {
     case 'home_run':
-      return 1 + totalOnBase; // batter + all runners
+      return 1 + totalOnBase;
     case 'triple':
-      return onSecond + onThird; // runners on 2nd & 3rd score
+      return onSecond + onThird;
     case 'double':
-      return onThird + onSecond; // runners on 2nd & 3rd score
+      return onThird + onSecond;
     case 'single':
     case 'error':
-      return onThird; // runner on 3rd scores
+      return onThird;
     case 'sac_fly':
-      return onThird; // runner on 3rd scores
+      return onThird;
     case 'walk':
     case 'hbp':
-      // Only scores if bases loaded (forced run)
       return (onFirst && onSecond && onThird) ? 1 : 0;
     case 'fielders_choice':
-      return onThird; // typically runner on 3rd scores
+      return onThird;
     default:
       return 0;
   }
@@ -120,6 +127,7 @@ export function LiveScorebook({
   const [currentPitcher, setCurrentPitcher] = useState(isSinglePlayer ? '' : startingPitcherName);
   const [recentPitchers, setRecentPitchers] = useState<string[]>([]);
   const [showPitcherSuggestions, setShowPitcherSuggestions] = useState(false);
+  const [lastAB, setLastAB] = useState<LastABSummary | null>(null);
 
   // Fetch recent opponent pitchers for autocomplete (single player mode)
   useEffect(() => {
@@ -143,13 +151,10 @@ export function LiveScorebook({
   const [outs, setOuts] = useState(0);
   const [activeAtBat, setActiveAtBat] = useState(true);
 
-  // Inning-by-inning run tracking: "T1", "B1", "T2", "B2", etc.
   const [inningRuns, setInningRuns] = useState<Record<string, number>>({});
-  // Opponent hits/errors per inning for linescore
   const [opponentHitsPerInning, setOpponentHitsPerInning] = useState<Record<number, number>>({});
   const [teamErrorsPerInning, setTeamErrorsPerInning] = useState<Record<number, number>>({});
 
-  // Substitution state
   const [activeLineup, setActiveLineup] = useState<LineupPlayer[]>(() => [...lineup]);
   const [substitutions, setSubstitutions] = useState<Substitution[]>([]);
   const [subDialogOpen, setSubDialogOpen] = useState(false);
@@ -170,7 +175,6 @@ export function LiveScorebook({
 
   const displayRows = buildDisplayRows(lineup, substitutions);
 
-  // Derived score totals
   const totalTeamRuns = useMemo(() =>
     innings.reduce((sum, i) => sum + (inningRuns[`B${i}`] ?? 0), 0),
     [inningRuns, innings]
@@ -234,19 +238,25 @@ export function LiveScorebook({
     const lastPlay = plays[plays.length - 1];
     const outcome = lastPlay?.at_bat_outcome;
 
-    // Auto-calculate runs scored from outcome + current base state
     const runsScored = calculateRunsScored(outcome, runners);
 
-    // Update inning runs
     if (runsScored > 0) {
       const key = `B${currentInning}`;
       setInningRuns(prev => ({ ...prev, [key]: (prev[key] ?? 0) + runsScored }));
     }
 
-    // Auto-populate RBI on the play (override whatever was manually set)
     if (lastPlay && runsScored > 0) {
       lastPlay.rbi = runsScored;
     }
+
+    // Store last AB summary
+    setLastAB({
+      batterName: lastPlay?.batter_name || currentBatter?.name || '',
+      outcome: outcome || '',
+      pitchCount: plays.length,
+      pitcherName: currentPitcher || 'Unknown',
+      rbi: lastPlay?.rbi || 0,
+    });
 
     onPlayRecorded(plays);
 
@@ -278,7 +288,7 @@ export function LiveScorebook({
 
     setCurrentBatterIndex(prev => prev + 1);
     setActiveAtBat(true);
-  }, [outs, currentHalf, currentInning, runners, onPlayRecorded]);
+  }, [outs, currentHalf, currentInning, runners, onPlayRecorded, currentPitcher, currentBatter]);
 
   return (
     <div className="space-y-4">
@@ -319,6 +329,64 @@ export function LiveScorebook({
           </div>
         </div>
       </div>
+
+      {/* Single player: prominent pitcher input */}
+      {isSinglePlayer && currentHalf === 'bottom' && (
+        <div className="bg-muted/20 border rounded-lg p-3 space-y-1.5">
+          <Label className="text-xs font-semibold">Who's pitching to you?</Label>
+          <div className="relative">
+            <Input
+              value={currentPitcher}
+              onChange={e => { setCurrentPitcher(e.target.value); setShowPitcherSuggestions(true); }}
+              onFocus={() => setShowPitcherSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowPitcherSuggestions(false), 200)}
+              placeholder="Enter pitcher name"
+              className="h-9 text-sm"
+            />
+            {showPitcherSuggestions && filteredPitcherSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 rounded-md border border-border bg-popover shadow-md max-h-32 overflow-y-auto">
+                <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Recent Pitchers</div>
+                {filteredPitcherSuggestions.map(name => (
+                  <button
+                    key={name}
+                    type="button"
+                    className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent transition-colors"
+                    onMouseDown={() => { setCurrentPitcher(name); setShowPitcherSuggestions(false); }}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {!currentPitcher.trim() && (
+            <p className="text-[10px] text-muted-foreground">Enter the pitcher's name for scouting data</p>
+          )}
+        </div>
+      )}
+
+      {/* Last At-Bat summary */}
+      {lastAB && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-muted/20 rounded-lg border text-xs">
+          <span className="font-medium">Last AB:</span>
+          <span className="font-bold">{lastAB.batterName}</span>
+          <span className={cn(
+            'px-1.5 py-0.5 rounded font-bold',
+            ['single', 'double', 'triple', 'home_run'].includes(lastAB.outcome)
+              ? 'bg-green-500/20 text-green-700 dark:text-green-300'
+              : ['walk', 'hbp'].includes(lastAB.outcome)
+                ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
+                : 'bg-muted text-muted-foreground'
+          )}>
+            {OUTCOME_ABBREVIATIONS[lastAB.outcome] || lastAB.outcome}
+          </span>
+          <span className="text-muted-foreground">({lastAB.pitchCount} pitches)</span>
+          <span className="text-muted-foreground">vs {lastAB.pitcherName}</span>
+          {lastAB.rbi > 0 && (
+            <span className="text-primary font-bold">{lastAB.rbi} RBI</span>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main scorebook grid */}
@@ -450,35 +518,9 @@ export function LiveScorebook({
 
         {/* Sidebar — pitcher tracker */}
         <div className="space-y-4">
-          <div>
-            <Label className="text-xs">{isSinglePlayer ? 'Opponent Pitcher' : 'Current Pitcher'}</Label>
-            {isSinglePlayer ? (
-              <div className="relative">
-                <Input
-                  value={currentPitcher}
-                  onChange={e => { setCurrentPitcher(e.target.value); setShowPitcherSuggestions(true); }}
-                  onFocus={() => setShowPitcherSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowPitcherSuggestions(false), 200)}
-                  placeholder="Enter pitcher name"
-                  className="h-8 text-xs"
-                />
-                {showPitcherSuggestions && filteredPitcherSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 rounded-md border border-border bg-popover shadow-md max-h-32 overflow-y-auto">
-                    <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Recent Pitchers</div>
-                    {filteredPitcherSuggestions.map(name => (
-                      <button
-                        key={name}
-                        type="button"
-                        className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent transition-colors"
-                        onMouseDown={() => { setCurrentPitcher(name); setShowPitcherSuggestions(false); }}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
+          {!isSinglePlayer && (
+            <div>
+              <Label className="text-xs">Current Pitcher</Label>
               <Select value={currentPitcher} onValueChange={setCurrentPitcher}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -487,8 +529,8 @@ export function LiveScorebook({
                   ))}
                 </SelectContent>
               </Select>
-            )}
-          </div>
+            </div>
+          )}
           <PitcherTracker stats={currentPitcherStats} />
           <Button variant="outline" onClick={onComplete} className="w-full">
             End Game
