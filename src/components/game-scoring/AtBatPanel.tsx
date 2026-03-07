@@ -124,7 +124,27 @@ export function AtBatPanel({
   const runnersOn = runners.first || runners.second || runners.third;
 
   const handlePitch = (pitch: PitchData) => {
-    setPitches(prev => [...prev, pitch]);
+    setPitches(prev => {
+      const updated = [...prev, pitch];
+      // Auto-strikeout detection
+      const newStrikes = updated.filter(p => ['called_strike', 'swinging_strike', 'foul'].includes(p.pitch_result)).length;
+      const newBalls = updated.filter(p => p.pitch_result === 'ball').length;
+      // Count only non-foul strikes for strikeout (fouls don't count after 2 strikes)
+      const swingingStrikes = updated.filter(p => p.pitch_result === 'swinging_strike').length;
+      const calledStrikes = updated.filter(p => p.pitch_result === 'called_strike').length;
+      const fouls = updated.filter(p => p.pitch_result === 'foul').length;
+      // Actual strike count: called + swinging + min(fouls, 2 - called - swinging that got to 2)
+      const realStrikes = calledStrikes + swingingStrikes + Math.min(fouls, Math.max(0, 2 - calledStrikes - swingingStrikes));
+
+      if (calledStrikes + swingingStrikes >= 3 || (realStrikes >= 3 && (pitch.pitch_result === 'swinging_strike' || pitch.pitch_result === 'called_strike'))) {
+        // Auto-set strikeout
+        const isLooking = pitch.pitch_result === 'called_strike';
+        setOutcome(isLooking ? 'strikeout_looking' : 'strikeout');
+      } else if (newBalls >= 4) {
+        setOutcome('walk');
+      }
+      return updated;
+    });
   };
 
   const upsertOpponent = async (name: string, type: string) => {
