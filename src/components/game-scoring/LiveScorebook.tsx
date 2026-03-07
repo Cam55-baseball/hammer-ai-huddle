@@ -138,6 +138,7 @@ export function LiveScorebook({
   const [recentPitchers, setRecentPitchers] = useState<string[]>([]);
   const [showPitcherSuggestions, setShowPitcherSuggestions] = useState(false);
   const [lastAB, setLastAB] = useState<LastABSummary | null>(null);
+  const [videoTimestamp, setVideoTimestamp] = useState<number | undefined>(undefined);
 
   // Fetch recent opponent pitchers for autocomplete (single player mode)
   useEffect(() => {
