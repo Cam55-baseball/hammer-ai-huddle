@@ -254,6 +254,9 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
       starting_pitcher_id: gameMode === 'single_player' ? '' : startingPitcher,
       game_mode: gameMode,
       is_practice_game: isPracticeGame,
+      home_or_away: homeOrAway,
+      batter_hand: gameMode === 'single_player' ? batterHand : undefined,
+      video_mode: videoMode,
     });
   };
 
