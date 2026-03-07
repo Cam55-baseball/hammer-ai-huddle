@@ -10,7 +10,7 @@ import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { HandednessGate } from './HandednessGate';
 import { TeeDepthGrid } from './TeeDepthGrid';
 import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
-import { CatchingRepFields } from './CatchingRepFields';
+// CatchingRepFields removed — catcher defense now handled within fielding module
 import { BaserunningRepFields } from './BaserunningRepFields';
 import { ThrowingRepFields } from './ThrowingRepFields';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
