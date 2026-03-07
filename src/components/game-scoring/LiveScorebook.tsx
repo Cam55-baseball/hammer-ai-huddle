@@ -119,12 +119,19 @@ function calculateRunsScored(
 export function LiveScorebook({
   gameId, sport, totalInnings, lineup, startingPitcherName,
   onPlayRecorded, allPlays, onComplete, teamName, opponentName,
-  gameMode, playerPosition,
+  gameMode, playerPosition, homeOrAway = 'home', batterHand, videoMode,
 }: LiveScorebookProps) {
   const { user } = useAuth();
   const isSinglePlayer = gameMode === 'single_player';
+
+  // Determine which half the player bats in based on home/away
+  const playerBattingHalf: 'top' | 'bottom' = homeOrAway === 'away' ? 'top' : 'bottom';
+  const opponentBattingHalf: 'top' | 'bottom' = homeOrAway === 'away' ? 'bottom' : 'top';
+
   const [currentInning, setCurrentInning] = useState(1);
-  const [currentHalf, setCurrentHalf] = useState<'top' | 'bottom'>('bottom');
+  const [currentHalf, setCurrentHalf] = useState<'top' | 'bottom'>('top');
+  const [currentBatterIndex, setCurrentBatterIndex] = useState(0);
+  const [pitcherHand, setPitcherHand] = useState<'R' | 'L'>('R');
   const [currentBatterIndex, setCurrentBatterIndex] = useState(0);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [currentPitcher, setCurrentPitcher] = useState(isSinglePlayer ? '' : startingPitcherName);
