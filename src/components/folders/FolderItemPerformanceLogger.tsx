@@ -12,6 +12,7 @@ interface SetRow {
   reps?: number;
   time?: number;
   distance?: number;
+  steps?: number;
   unit?: string;
 }
 
