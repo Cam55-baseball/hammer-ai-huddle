@@ -513,8 +513,8 @@ export function LiveScorebook({
             </CardContent>
           </Card>
 
-          {/* Active at-bat */}
-          {activeAtBat && currentBatter && currentHalf === 'bottom' && (
+          {/* Active at-bat — show when it's the player's batting half */}
+          {activeAtBat && currentBatter && currentHalf === playerBattingHalf && (
             <div className="mt-4">
               <AtBatPanel
                 key={`${currentInning}-${currentHalf}-${currentBatterIndex}`}
@@ -530,11 +530,14 @@ export function LiveScorebook({
                 onComplete={handleAtBatComplete}
                 gameMode={gameMode}
                 batterPosition={currentBatter.position}
+                batterHand={batterHand}
+                pitcherHand={pitcherHand}
               />
             </div>
           )}
 
-          {currentHalf === 'top' && (
+          {/* Opponent's batting half */}
+          {currentHalf === opponentBattingHalf && (
             <OpponentScoringPanel
               inning={currentInning}
               opponentName={opponentName}
