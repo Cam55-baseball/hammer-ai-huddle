@@ -425,9 +425,11 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                 >Practice Game</button>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Player Name <span className="text-destructive">*</span></Label>
-                  <Input value={singlePlayerName} onChange={e => setSinglePlayerName(e.target.value)} placeholder="Your name" />
+                <div className="col-span-2">
+                  <Label className="text-xs text-muted-foreground">Logging Game For</Label>
+                  <div className="mt-1 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm font-medium">
+                    {singlePlayerName || 'You'}
+                  </div>
                 </div>
                 <div>
                   <Label>Position</Label>
