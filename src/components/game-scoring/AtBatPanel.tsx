@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { SituationalPrompts } from './SituationalPrompts';
 import { CatcherMetrics } from './CatcherMetrics';
 import { DiamondVisual } from './DiamondVisual';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import type { GamePlay } from '@/hooks/useGameScoring';
 
 const AT_BAT_OUTCOMES = [
@@ -45,13 +47,15 @@ interface AtBatPanelProps {
   sport: 'baseball' | 'softball';
   advancedMode: boolean;
   runners: { first?: boolean; second?: boolean; third?: boolean };
+  batterPosition?: string;
   onComplete: (plays: GamePlay[]) => void;
 }
 
 export function AtBatPanel({
   batterName, batterOrder, pitcherName, inning, half, gameId, sport,
-  advancedMode, runners, onComplete,
+  advancedMode, runners, batterPosition, onComplete,
 }: AtBatPanelProps) {
+  const { user } = useAuth();
   const [pitches, setPitches] = useState<PitchData[]>([]);
   const [outcome, setOutcome] = useState('');
   const [rbi, setRbi] = useState(0);
@@ -61,6 +65,32 @@ export function AtBatPanel({
   const [baserunningData, setBaserunningData] = useState<Record<string, any>>({});
   const [showCatcher, setShowCatcher] = useState(false);
   const [fielderPosition, setFielderPosition] = useState('');
+  const [opponentName, setOpponentName] = useState('');
+  const [recentOpponents, setRecentOpponents] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const isPitcher = batterPosition === 'P';
+  const opponentLabel = isPitcher ? 'Facing Hitter' : 'Opponent Pitcher';
+  const opponentType = isPitcher ? 'hitter' : 'pitcher';
+
+  // Fetch recent opponents
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('game_opponents' as any)
+      .select('opponent_name')
+      .eq('user_id', user.id)
+      .eq('opponent_type', opponentType)
+      .order('last_faced_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) setRecentOpponents((data as any[]).map((d: any) => d.opponent_name));
+      });
+  }, [user, opponentType]);
+
+  const filteredSuggestions = opponentName.trim()
+    ? recentOpponents.filter(n => n.toLowerCase().includes(opponentName.toLowerCase()))
+    : recentOpponents;
 
   const balls = pitches.filter(p => p.pitch_result === 'ball').length;
   const strikes = pitches.filter(p => ['called_strike', 'swinging_strike', 'foul'].includes(p.pitch_result)).length;
@@ -72,8 +102,34 @@ export function AtBatPanel({
     setPitches(prev => [...prev, pitch]);
   };
 
+  const upsertOpponent = async () => {
+    if (!user || !opponentName.trim()) return;
+    try {
+      const { data: existing } = await supabase
+        .from('game_opponents' as any)
+        .select('id, times_faced')
+        .eq('user_id', user.id)
+        .eq('opponent_name', opponentName.trim())
+        .eq('opponent_type', opponentType)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from('game_opponents' as any).update({
+          times_faced: ((existing as any).times_faced || 0) + 1,
+          last_faced_at: new Date().toISOString(),
+        }).eq('id', (existing as any).id);
+      } else {
+        await supabase.from('game_opponents' as any).insert({
+          user_id: user.id,
+          opponent_name: opponentName.trim(),
+          opponent_type: opponentType,
+        });
+      }
+    } catch {}
+  };
+
   const handleFinalize = () => {
     if (!outcome) return;
+    upsertOpponent();
     const plays: GamePlay[] = pitches.map((p, i) => ({
       game_id: gameId,
       inning,
@@ -92,11 +148,10 @@ export function AtBatPanel({
       spray_direction: p.spray_direction,
       contact_quality: p.contact_quality,
       batted_ball_type: p.batted_ball_type,
-      // Only set outcome on last pitch
       ...(i === pitches.length - 1 ? {
         at_bat_outcome: outcome,
         rbi,
-        situational_data: situationalData,
+        situational_data: { ...situationalData, opponent_name: opponentName.trim() || undefined },
         defensive_data: defensiveData,
         catcher_data: catcherData,
         baserunning_data: baserunningData,
@@ -120,6 +175,34 @@ export function AtBatPanel({
             <div className="text-[10px] text-muted-foreground">{pitches.length} pitches</div>
           </div>
         </div>
+      </div>
+
+      {/* Opponent input */}
+      <div className="relative">
+        <Label className="text-xs font-medium">{opponentLabel}</Label>
+        <Input
+          value={opponentName}
+          onChange={e => { setOpponentName(e.target.value); setShowSuggestions(true); }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          placeholder="Enter name"
+          className="h-8 text-xs mt-0.5"
+        />
+        {showSuggestions && filteredSuggestions.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 rounded-md border border-border bg-popover shadow-md max-h-32 overflow-y-auto">
+            <div className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Recent Opponents</div>
+            {filteredSuggestions.map(name => (
+              <button
+                key={name}
+                type="button"
+                className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent transition-colors"
+                onMouseDown={() => { setOpponentName(name); setShowSuggestions(false); }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Pitch sequence badges */}

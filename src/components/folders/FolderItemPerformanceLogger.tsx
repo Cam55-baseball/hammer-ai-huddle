@@ -123,73 +123,75 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
 
       <div className="space-y-1.5">
         {sets.map((set, index) => (
-          <div key={index} className="flex items-center gap-1.5">
-            <span className="text-[10px] text-muted-foreground w-4 text-center shrink-0">{set.set}</span>
+          <div key={index} className="space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-muted-foreground w-4 text-center shrink-0">{set.set}</span>
 
-            {(mode === 'weight_reps' || mode === 'flexible') && (
-              <>
-                <Input
-                  type="number"
-                  placeholder="Wt"
-                  value={set.weight ?? ''}
-                  onChange={e => updateSet(index, 'weight', e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-7 w-16 text-xs px-1.5"
-                />
-                <Select value={set.unit || 'lbs'} onValueChange={v => updateSet(index, 'unit', v)}>
-                  <SelectTrigger className="h-7 w-14 text-[10px] px-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lbs">lbs</SelectItem>
-                    <SelectItem value="kg">kg</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  placeholder="Reps"
-                  value={set.reps ?? ''}
-                  onChange={e => updateSet(index, 'reps', e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-7 w-14 text-xs px-1.5"
-                />
-              </>
-            )}
+              {(mode === 'weight_reps' || mode === 'flexible') && (
+                <>
+                  <Input
+                    type="number"
+                    placeholder="Wt"
+                    value={set.weight ?? ''}
+                    onChange={e => updateSet(index, 'weight', e.target.value ? Number(e.target.value) : undefined)}
+                    className="h-7 w-16 text-xs px-1.5 min-w-0"
+                  />
+                  <Select value={set.unit || 'lbs'} onValueChange={v => updateSet(index, 'unit', v)}>
+                    <SelectTrigger className="h-7 w-14 text-[10px] px-1 min-w-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lbs">lbs</SelectItem>
+                      <SelectItem value="kg">kg</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder="Reps"
+                    value={set.reps ?? ''}
+                    onChange={e => updateSet(index, 'reps', e.target.value ? Number(e.target.value) : undefined)}
+                    className="h-7 w-14 text-xs px-1.5 min-w-0"
+                  />
+                </>
+              )}
 
-            {(mode === 'duration' || mode === 'flexible') && (
-              <div className="flex items-center gap-1">
-                <Input
-                  type="number"
-                  placeholder={mode === 'duration' ? 'Min' : 'Time'}
-                  value={set.time ?? ''}
-                  onChange={e => updateSet(index, 'time', e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-7 w-14 text-xs px-1.5"
-                />
-                <span className="text-[10px] text-muted-foreground">min</span>
-              </div>
-            )}
+              {(mode === 'duration' || mode === 'flexible') && (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    placeholder={mode === 'duration' ? 'Min' : 'Time'}
+                    value={set.time ?? ''}
+                    onChange={e => updateSet(index, 'time', e.target.value ? Number(e.target.value) : undefined)}
+                    className="h-7 w-14 text-xs px-1.5 min-w-0"
+                  />
+                  <span className="text-[10px] text-muted-foreground">min</span>
+                </div>
+              )}
+
+              {sets.length > 1 && (
+                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeSet(index)}>
+                  <Trash2 className="h-3 w-3 text-destructive" />
+                </Button>
+              )}
+            </div>
 
             {mode === 'flexible' && (
-              <>
+              <div className="flex items-center gap-1.5 flex-wrap pl-5">
                 <Input
                   type="number"
                   placeholder="Dist"
                   value={set.distance ?? ''}
                   onChange={e => updateSet(index, 'distance', e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-7 w-14 text-xs px-1.5"
+                  className="h-7 w-14 text-xs px-1.5 min-w-0"
                 />
                 <Input
                   type="number"
                   placeholder="Steps"
                   value={set.steps ?? ''}
                   onChange={e => updateSet(index, 'steps', e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-7 w-14 text-xs px-1.5"
+                  className="h-7 w-14 text-xs px-1.5 min-w-0"
                 />
-              </>
-            )}
-
-            {sets.length > 1 && (
-              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeSet(index)}>
-                <Trash2 className="h-3 w-3 text-destructive" />
-              </Button>
+              </div>
             )}
           </div>
         ))}

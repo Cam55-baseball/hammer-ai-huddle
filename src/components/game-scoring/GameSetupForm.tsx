@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -115,6 +115,21 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const [singlePlayerName, setSinglePlayerName] = useState('');
   const [singlePlayerPosition, setSinglePlayerPosition] = useState('');
   const [isPracticeGame, setIsPracticeGame] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  // Auto-populate player name from profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+      const { data } = await supabase.from('profiles').select('full_name').eq('id', authUser.id).single();
+      if (data?.full_name) {
+        setSinglePlayerName(data.full_name);
+        setProfileLoaded(true);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   // Auto-populate team name from organization
   useEffect(() => {
@@ -181,7 +196,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
 
   const isValid = useMemo(() => {
     if (gameMode === 'single_player') {
-      return teamName.trim() && opponentName.trim() && gameType && leagueLevel && singlePlayerName.trim();
+      return teamName.trim() && opponentName.trim() && gameType && leagueLevel;
     }
     return teamName.trim() && opponentName.trim() && gameType && leagueLevel
       && lineup.filter(p => p.name.trim()).length >= 1;
@@ -191,7 +206,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
     if (!summerLeagueName.trim()) return;
     const known = findKnownSummerLeague(sport as 'baseball' | 'softball', summerLeagueName);
     if (known) {
-      toast({ title: 'League found', description: `${known.name}: ${known.difficulty_multiplier}x multiplier` });
+      toast({ title: 'League found', description: `${known.name} recognized` });
       return;
     }
     setClassifyingLeague(true);
@@ -202,7 +217,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
       if (error) throw error;
       toast({
         title: 'League classified',
-        description: `${summerLeagueName}: ${data.difficulty_multiplier}x (${data.confidence} confidence)`,
+        description: `${summerLeagueName} classified (${data.confidence} confidence)`,
       });
     } catch {
       toast({ title: 'Classification failed', variant: 'destructive' });
@@ -325,7 +340,6 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                         )}
                       >
                         {l.label}
-                        <span className="ml-1 text-[9px] opacity-60">{l.competition_weight_multiplier}x</span>
                       </button>
                     ))}
                   </div>
@@ -410,20 +424,20 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                   )}
                 >Practice Game</button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Player Name <span className="text-destructive">*</span></Label>
-                  <Input value={singlePlayerName} onChange={e => setSinglePlayerName(e.target.value)} placeholder="Your name" />
+              <div>
+                <Label className="text-xs text-muted-foreground">Logging Game For</Label>
+                <div className="mt-1 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm font-medium">
+                  {singlePlayerName || 'You'}
                 </div>
-                <div>
-                  <Label>Position</Label>
-                  <Select value={singlePlayerPosition} onValueChange={setSinglePlayerPosition}>
-                    <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
-                    <SelectContent>
-                      {positions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              </div>
+              <div>
+                <Label>Position</Label>
+                <Select value={singlePlayerPosition} onValueChange={setSinglePlayerPosition}>
+                  <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
+                  <SelectContent>
+                    {positions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

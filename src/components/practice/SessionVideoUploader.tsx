@@ -4,10 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Video, X, Film, Loader2, Microscope } from 'lucide-react';
+import { Video, X, Film, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { validateVideoFile } from '@/data/videoLimits';
 import { isAnalyzableModule, RepVideoAnalysis } from './RepVideoAnalysis';
@@ -21,6 +23,7 @@ interface LocalVideo {
   uploaded: boolean;
   storagePath?: string;
   taggedRepIndexes: number[];
+  repNotes: string;
 }
 
 interface SessionVideoUploaderProps {
@@ -29,6 +32,14 @@ interface SessionVideoUploaderProps {
   readOnly?: boolean;
   module?: string;
 }
+
+const ANALYSIS_LABELS: Record<string, string> = {
+  hitting: 'Analyze Hitting Mechanics',
+  pitching: 'Analyze Pitching Mechanics',
+  throwing: 'Analyze Throwing Mechanics',
+  fielding: 'Analyze Throw Mechanics',
+  catching: 'Analyze Throw Mechanics',
+};
 
 export function SessionVideoUploader({ reps, sessionId, readOnly, module }: SessionVideoUploaderProps) {
   const { user } = useAuth();
@@ -56,6 +67,7 @@ export function SessionVideoUploader({ reps, sessionId, readOnly, module }: Sess
         uploading: false,
         uploaded: false,
         taggedRepIndexes: [],
+        repNotes: '',
       });
     }
     setVideos(prev => [...prev, ...newVideos]);
@@ -81,6 +93,10 @@ export function SessionVideoUploader({ reps, sessionId, readOnly, module }: Sess
     }));
   }, []);
 
+  const updateRepNotes = useCallback((videoId: string, notes: string) => {
+    setVideos(prev => prev.map(v => v.id === videoId ? { ...v, repNotes: notes } : v));
+  }, []);
+
   const uploadAllVideos = useCallback(async (sid: string) => {
     if (!user) return;
     const toUpload = videos.filter(v => !v.uploaded);
@@ -100,7 +116,7 @@ export function SessionVideoUploader({ reps, sessionId, readOnly, module }: Sess
         storage_path: path,
         filename: video.file.name,
         tagged_rep_indexes: video.taggedRepIndexes,
-        metadata: {},
+        metadata: { notes: video.repNotes || undefined },
       });
       if (dbError) {
         toast({ title: 'Save failed', description: dbError.message, variant: 'destructive' });
@@ -116,8 +132,11 @@ export function SessionVideoUploader({ reps, sessionId, readOnly, module }: Sess
   }
 
   const canAnalyze = module ? isAnalyzableModule(module) : false;
+  const analyzeLabel = module ? (ANALYSIS_LABELS[module] || 'Analyze Mechanics') : 'Analyze Mechanics';
 
   if (readOnly) return null;
+
+  const taggingVideo = videos.find(v => v.id === taggingVideoId);
 
   return (
     <div className="space-y-2">
@@ -154,7 +173,6 @@ export function SessionVideoUploader({ reps, sessionId, readOnly, module }: Sess
                   <X className="h-2.5 w-2.5 text-destructive-foreground" />
                 </button>
               )}
-              {/* Tag button */}
               {reps.length > 0 && !v.uploaded && (
                 <button
                   onClick={() => setTaggingVideoId(taggingVideoId === v.id ? null : v.id)}
@@ -173,38 +191,70 @@ export function SessionVideoUploader({ reps, sessionId, readOnly, module }: Sess
         </div>
       )}
 
-      {/* Rep tagging panel */}
-      {taggingVideoId && reps.length > 0 && (
+      {/* Tabbed rep tagging panel */}
+      {taggingVideoId && reps.length > 0 && taggingVideo && (
         <Card className="border-primary/20">
           <CardContent className="py-3 space-y-2">
-            <Label className="text-xs text-muted-foreground">Tag reps to this video</Label>
-            <div className="flex flex-wrap gap-2">
-              {reps.map((_, i) => {
-                const vid = videos.find(v => v.id === taggingVideoId);
-                const isTagged = vid?.taggedRepIndexes.includes(i) ?? false;
-                return (
-                  <div key={i} className="flex items-center gap-1">
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <Checkbox
-                        checked={isTagged}
-                        onCheckedChange={() => toggleRepTag(taggingVideoId, i)}
-                      />
-                      <span className="text-xs">#{i + 1}</span>
-                    </label>
-                    {/* Analyze button — only for hitting/pitching/throwing */}
-                    {isTagged && canAnalyze && vid?.previewUrl && (
-                      <button
-                        onClick={() => setAnalyzeState({ videoUrl: vid.previewUrl, repIndex: i })}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        title="Analyze rep"
-                      >
-                        <Microscope className="h-3.5 w-3.5" />
-                      </button>
+            <Tabs defaultValue="tags">
+              <TabsList className="h-8 w-full">
+                <TabsTrigger value="tags" className="text-xs flex-1">Tags</TabsTrigger>
+                <TabsTrigger value="notes" className="text-xs flex-1">Notes</TabsTrigger>
+                {canAnalyze && (
+                  <TabsTrigger value="analyze" className="text-xs flex-1">Analyze</TabsTrigger>
+                )}
+              </TabsList>
+
+              <TabsContent value="tags" className="mt-2">
+                <Label className="text-xs text-muted-foreground">Tag reps to this video</Label>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {reps.map((_, i) => {
+                    const isTagged = taggingVideo.taggedRepIndexes.includes(i);
+                    return (
+                      <label key={i} className="flex items-center gap-1 cursor-pointer">
+                        <Checkbox
+                          checked={isTagged}
+                          onCheckedChange={() => toggleRepTag(taggingVideoId, i)}
+                        />
+                        <span className="text-xs">#{i + 1}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-2">
+                <Label className="text-xs text-muted-foreground">Rep notes</Label>
+                <Textarea
+                  value={taggingVideo.repNotes}
+                  onChange={e => updateRepNotes(taggingVideoId, e.target.value)}
+                  placeholder="Add notes about this rep..."
+                  className="mt-1.5 text-xs min-h-[60px]"
+                />
+              </TabsContent>
+
+              {canAnalyze && (
+                <TabsContent value="analyze" className="mt-2">
+                  <Label className="text-xs text-muted-foreground">Video Analysis</Label>
+                  <div className="mt-1.5 space-y-2">
+                    {taggingVideo.taggedRepIndexes.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Tag at least one rep first to analyze.</p>
+                    ) : (
+                      taggingVideo.taggedRepIndexes.map(repIdx => (
+                        <Button
+                          key={repIdx}
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-xs justify-start gap-2"
+                          onClick={() => setAnalyzeState({ videoUrl: taggingVideo.previewUrl, repIndex: repIdx })}
+                        >
+                          Rep #{repIdx + 1} — {analyzeLabel}
+                        </Button>
+                      ))
                     )}
                   </div>
-                );
-              })}
-            </div>
+                </TabsContent>
+              )}
+            </Tabs>
           </CardContent>
         </Card>
       )}
