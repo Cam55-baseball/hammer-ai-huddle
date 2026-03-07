@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { SituationalPrompts } from './SituationalPrompts';
 import { CatcherMetrics } from './CatcherMetrics';
 import { DiamondVisual } from './DiamondVisual';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import type { GamePlay } from '@/hooks/useGameScoring';
 
 const AT_BAT_OUTCOMES = [
