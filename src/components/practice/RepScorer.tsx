@@ -1803,6 +1803,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 <CollapsibleContent className="pt-2">
                   <FieldPositionDiagram
                     sport={sport as 'baseball' | 'softball'}
+                    position={repFieldingPosition}
                     onUpdate={({ playerPos, ballPos }) => {
                       updateField('field_diagram_player_pos', playerPos);
                       updateField('field_diagram_ball_pos', ballPos);
