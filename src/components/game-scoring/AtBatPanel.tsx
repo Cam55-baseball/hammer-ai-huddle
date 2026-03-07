@@ -53,8 +53,9 @@ interface AtBatPanelProps {
 
 export function AtBatPanel({
   batterName, batterOrder, pitcherName, inning, half, gameId, sport,
-  advancedMode, runners, onComplete,
+  advancedMode, runners, batterPosition, onComplete,
 }: AtBatPanelProps) {
+  const { user } = useAuth();
   const [pitches, setPitches] = useState<PitchData[]>([]);
   const [outcome, setOutcome] = useState('');
   const [rbi, setRbi] = useState(0);
@@ -64,11 +65,32 @@ export function AtBatPanel({
   const [baserunningData, setBaserunningData] = useState<Record<string, any>>({});
   const [showCatcher, setShowCatcher] = useState(false);
   const [fielderPosition, setFielderPosition] = useState('');
+  const [opponentName, setOpponentName] = useState('');
+  const [recentOpponents, setRecentOpponents] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const balls = pitches.filter(p => p.pitch_result === 'ball').length;
-  const strikes = pitches.filter(p => ['called_strike', 'swinging_strike', 'foul'].includes(p.pitch_result)).length;
-  const lastPitch = pitches[pitches.length - 1];
-  const isInPlay = lastPitch && ['in_play_out', 'in_play_hit'].includes(lastPitch.pitch_result);
+  const isPitcher = batterPosition === 'P';
+  const opponentLabel = isPitcher ? 'Facing Hitter' : 'Opponent Pitcher';
+  const opponentType = isPitcher ? 'hitter' : 'pitcher';
+
+  // Fetch recent opponents
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('game_opponents' as any)
+      .select('opponent_name')
+      .eq('user_id', user.id)
+      .eq('opponent_type', opponentType)
+      .order('last_faced_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) setRecentOpponents((data as any[]).map((d: any) => d.opponent_name));
+      });
+  }, [user, opponentType]);
+
+  const filteredSuggestions = opponentName.trim()
+    ? recentOpponents.filter(n => n.toLowerCase().includes(opponentName.toLowerCase()))
+    : recentOpponents;
   const runnersOn = runners.first || runners.second || runners.third;
 
   const handlePitch = (pitch: PitchData) => {
