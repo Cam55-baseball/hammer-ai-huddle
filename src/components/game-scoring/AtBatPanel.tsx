@@ -235,13 +235,27 @@ export function AtBatPanel({
 
   return (
     <div className="space-y-3">
-      {/* Batter info + count */}
+      {/* Batter info + count + handedness badges */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold">{batterName}</h3>
-          <span className="text-xs text-muted-foreground">
-            vs {pitcherName || 'Opponent Pitcher'}
-          </span>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold">{batterName}</h3>
+            {batterHand && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted border border-border">
+                {batterHand === 'switch' ? 'S' : batterHand === 'left' ? 'L' : 'R'}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">
+              vs {pitcherName || 'Opponent Pitcher'}
+            </span>
+            {pitcherHand && (
+              <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-muted border border-border">
+                {pitcherHand}HP
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <DiamondVisual runners={runners} size="sm" />
