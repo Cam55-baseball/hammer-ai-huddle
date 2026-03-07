@@ -196,7 +196,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
 
   const isValid = useMemo(() => {
     if (gameMode === 'single_player') {
-      return teamName.trim() && opponentName.trim() && gameType && leagueLevel && singlePlayerName.trim();
+      return teamName.trim() && opponentName.trim() && gameType && leagueLevel;
     }
     return teamName.trim() && opponentName.trim() && gameType && leagueLevel
       && lineup.filter(p => p.name.trim()).length >= 1;
