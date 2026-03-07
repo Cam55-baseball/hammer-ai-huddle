@@ -1563,14 +1563,35 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
-                  {/* Infield Relay */}
-                  {current.infield_rep_type === 'relay' && (
+                  {/* Infield Relay Yes/No */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('relay_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.relay_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {current.relay_play === true && (
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1 block">Got to Correct Lineup Spot?</Label>
                       <SelectGrid
                         options={[
                           { value: 'off_line', label: '❌ Off Line' },
-                          { value: 'inline', label: '✅ Inline' },
+                          { value: 'lined_up', label: '✅ Lined Up' },
                         ]}
                         value={current.relay_lineup_spot}
                         onChange={v => updateField('relay_lineup_spot', v)}
