@@ -55,12 +55,15 @@ interface AtBatPanelProps {
   runners: { first?: boolean; second?: boolean; third?: boolean };
   batterPosition?: string;
   gameMode?: string;
+  batterHand?: 'right' | 'left' | 'switch';
+  pitcherHand?: 'R' | 'L';
+  videoTimestamp?: number;
   onComplete: (plays: GamePlay[]) => void;
 }
 
 export function AtBatPanel({
   batterName, batterOrder, pitcherName, inning, half, gameId, sport,
-  advancedMode, runners, batterPosition, gameMode, onComplete,
+  advancedMode, runners, batterPosition, gameMode, batterHand, pitcherHand, videoTimestamp, onComplete,
 }: AtBatPanelProps) {
   const { user } = useAuth();
   const [pitches, setPitches] = useState<PitchData[]>([]);
@@ -121,7 +124,27 @@ export function AtBatPanel({
   const runnersOn = runners.first || runners.second || runners.third;
 
   const handlePitch = (pitch: PitchData) => {
-    setPitches(prev => [...prev, pitch]);
+    setPitches(prev => {
+      const updated = [...prev, pitch];
+      // Auto-strikeout detection
+      const newStrikes = updated.filter(p => ['called_strike', 'swinging_strike', 'foul'].includes(p.pitch_result)).length;
+      const newBalls = updated.filter(p => p.pitch_result === 'ball').length;
+      // Count only non-foul strikes for strikeout (fouls don't count after 2 strikes)
+      const swingingStrikes = updated.filter(p => p.pitch_result === 'swinging_strike').length;
+      const calledStrikes = updated.filter(p => p.pitch_result === 'called_strike').length;
+      const fouls = updated.filter(p => p.pitch_result === 'foul').length;
+      // Actual strike count: called + swinging + min(fouls, 2 - called - swinging that got to 2)
+      const realStrikes = calledStrikes + swingingStrikes + Math.min(fouls, Math.max(0, 2 - calledStrikes - swingingStrikes));
+
+      if (calledStrikes + swingingStrikes >= 3 || (realStrikes >= 3 && (pitch.pitch_result === 'swinging_strike' || pitch.pitch_result === 'called_strike'))) {
+        // Auto-set strikeout
+        const isLooking = pitch.pitch_result === 'called_strike';
+        setOutcome(isLooking ? 'strikeout_looking' : 'strikeout');
+      } else if (newBalls >= 4) {
+        setOutcome('walk');
+      }
+      return updated;
+    });
   };
 
   const upsertOpponent = async (name: string, type: string) => {
@@ -168,6 +191,8 @@ export function AtBatPanel({
     if (swingDecision) eliteData.swing_decision = swingDecision;
     if (adjustmentTag) eliteData.adjustment_tag = adjustmentTag;
     if (approachNotes) eliteData.approach_notes = approachNotes;
+    if (batterHand) eliteData.batter_hand = batterHand;
+    if (pitcherHand) eliteData.pitcher_hand = pitcherHand;
 
     const defData: Record<string, any> = { ...defensiveData };
     if (madeDefensivePlay) {
@@ -205,6 +230,7 @@ export function AtBatPanel({
         defensive_data: defData,
         catcher_data: catcherData,
         baserunning_data: baserunningData,
+        ...(videoTimestamp !== undefined ? { video_start_sec: videoTimestamp } : {}),
       } : {}),
     }));
     onComplete(plays);
@@ -212,13 +238,27 @@ export function AtBatPanel({
 
   return (
     <div className="space-y-3">
-      {/* Batter info + count */}
+      {/* Batter info + count + handedness badges */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold">{batterName}</h3>
-          <span className="text-xs text-muted-foreground">
-            vs {pitcherName || 'Opponent Pitcher'}
-          </span>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold">{batterName}</h3>
+            {batterHand && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted border border-border">
+                {batterHand === 'switch' ? 'S' : batterHand === 'left' ? 'L' : 'R'}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">
+              vs {pitcherName || 'Opponent Pitcher'}
+            </span>
+            {pitcherHand && (
+              <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-muted border border-border">
+                {pitcherHand}HP
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <DiamondVisual runners={runners} size="sm" />
@@ -439,6 +479,13 @@ export function AtBatPanel({
                 </div>
                 {showCatcher && <CatcherMetrics onUpdate={setCatcherData} />}
               </>
+            )}
+
+            {/* Detail nudge — gentle prompt to add more data */}
+            {outcome && !advancedMode && !swingDecision && !madeDefensivePlay && (
+              <p className="text-[10px] text-muted-foreground italic text-center">
+                💡 Tap "Advanced" for elite detail: swing decision, adjustments, & more
+              </p>
             )}
 
             <Button onClick={handleFinalize} disabled={!outcome} size="sm" className="w-full">

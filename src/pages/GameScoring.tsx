@@ -81,6 +81,9 @@ export default function GameScoring() {
             opponentName={gameData.opponent_name}
             gameMode={gameData.game_mode}
             playerPosition={gameData.lineup[0]?.position}
+            homeOrAway={gameData.home_or_away}
+            batterHand={gameData.batter_hand}
+            videoMode={gameData.video_mode}
           />
         )}
 

@@ -12,6 +12,7 @@ import { DiamondVisual } from './DiamondVisual';
 import { SubstitutionDialog } from './SubstitutionDialog';
 import { LinescoreBar } from './LinescoreBar';
 import { OpponentScoringPanel } from './OpponentScoringPanel';
+import { GameVideoPlayer } from './GameVideoPlayer';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import { cn } from '@/lib/utils';
 import { ArrowRightLeft } from 'lucide-react';
@@ -32,6 +33,9 @@ interface LiveScorebookProps {
   opponentName: string;
   gameMode?: string;
   playerPosition?: string;
+  homeOrAway?: 'home' | 'away';
+  batterHand?: 'right' | 'left' | 'switch';
+  videoMode?: boolean;
 }
 
 const OUTCOME_ABBREVIATIONS: Record<string, string> = {
@@ -116,18 +120,25 @@ function calculateRunsScored(
 export function LiveScorebook({
   gameId, sport, totalInnings, lineup, startingPitcherName,
   onPlayRecorded, allPlays, onComplete, teamName, opponentName,
-  gameMode, playerPosition,
+  gameMode, playerPosition, homeOrAway = 'home', batterHand, videoMode,
 }: LiveScorebookProps) {
   const { user } = useAuth();
   const isSinglePlayer = gameMode === 'single_player';
+
+  // Determine which half the player bats in based on home/away
+  const playerBattingHalf: 'top' | 'bottom' = homeOrAway === 'away' ? 'top' : 'bottom';
+  const opponentBattingHalf: 'top' | 'bottom' = homeOrAway === 'away' ? 'bottom' : 'top';
+
   const [currentInning, setCurrentInning] = useState(1);
-  const [currentHalf, setCurrentHalf] = useState<'top' | 'bottom'>('bottom');
+  const [currentHalf, setCurrentHalf] = useState<'top' | 'bottom'>('top');
   const [currentBatterIndex, setCurrentBatterIndex] = useState(0);
+  const [pitcherHand, setPitcherHand] = useState<'R' | 'L'>('R');
   const [advancedMode, setAdvancedMode] = useState(false);
   const [currentPitcher, setCurrentPitcher] = useState(isSinglePlayer ? '' : startingPitcherName);
   const [recentPitchers, setRecentPitchers] = useState<string[]>([]);
   const [showPitcherSuggestions, setShowPitcherSuggestions] = useState(false);
   const [lastAB, setLastAB] = useState<LastABSummary | null>(null);
+  const [videoTimestamp, setVideoTimestamp] = useState<number | undefined>(undefined);
 
   // Fetch recent opponent pitchers for autocomplete (single player mode)
   useEffect(() => {
@@ -175,13 +186,15 @@ export function LiveScorebook({
 
   const displayRows = buildDisplayRows(lineup, substitutions);
 
+  const teamRunPrefix = playerBattingHalf === 'bottom' ? 'B' : 'T';
+  const oppRunPrefix = opponentBattingHalf === 'bottom' ? 'B' : 'T';
   const totalTeamRuns = useMemo(() =>
-    innings.reduce((sum, i) => sum + (inningRuns[`B${i}`] ?? 0), 0),
-    [inningRuns, innings]
+    innings.reduce((sum, i) => sum + (inningRuns[`${teamRunPrefix}${i}`] ?? 0), 0),
+    [inningRuns, innings, teamRunPrefix]
   );
   const totalOppRuns = useMemo(() =>
-    innings.reduce((sum, i) => sum + (inningRuns[`T${i}`] ?? 0), 0),
-    [inningRuns, innings]
+    innings.reduce((sum, i) => sum + (inningRuns[`${oppRunPrefix}${i}`] ?? 0), 0),
+    [inningRuns, innings, oppRunPrefix]
   );
   const totalTeamHits = useMemo(() => batterStats.reduce((sum, b) => sum + b.hits, 0), [batterStats]);
   const totalOppHits = useMemo(() =>
@@ -195,7 +208,7 @@ export function LiveScorebook({
 
   const getAtBatResult = (batterName: string, inning: number) => {
     const plays = allPlays.filter(p =>
-      p.batter_name === batterName && p.inning === inning && p.half === 'bottom' && p.at_bat_outcome
+      p.batter_name === batterName && p.inning === inning && p.half === playerBattingHalf && p.at_bat_outcome
     );
     return plays.length > 0 ? plays[plays.length - 1] : null;
   };
@@ -227,12 +240,15 @@ export function LiveScorebook({
   };
 
   const handleOpponentRecordAndSwitch = useCallback((runs: number, hits: number, errors: number) => {
-    const key = `T${currentInning}`;
+    // Opponent runs key: use the half prefix for opponent batting
+    const oppPrefix = opponentBattingHalf === 'top' ? 'T' : 'B';
+    const key = `${oppPrefix}${currentInning}`;
     setInningRuns(prev => ({ ...prev, [key]: (prev[key] ?? 0) + runs }));
     setOpponentHitsPerInning(prev => ({ ...prev, [currentInning]: (prev[currentInning] ?? 0) + hits }));
     setTeamErrorsPerInning(prev => ({ ...prev, [currentInning]: (prev[currentInning] ?? 0) + errors }));
-    setCurrentHalf('bottom');
-  }, [currentInning]);
+    // Switch to player's batting half
+    setCurrentHalf(playerBattingHalf);
+  }, [currentInning, opponentBattingHalf, playerBattingHalf]);
 
   const handleAtBatComplete = useCallback((plays: GamePlay[]) => {
     const lastPlay = plays[plays.length - 1];
@@ -241,7 +257,8 @@ export function LiveScorebook({
     const runsScored = calculateRunsScored(outcome, runners);
 
     if (runsScored > 0) {
-      const key = `B${currentInning}`;
+      const teamPrefix = playerBattingHalf === 'bottom' ? 'B' : 'T';
+      const key = `${teamPrefix}${currentInning}`;
       setInningRuns(prev => ({ ...prev, [key]: (prev[key] ?? 0) + runsScored }));
     }
 
@@ -267,10 +284,13 @@ export function LiveScorebook({
     if (newOuts >= 3) {
       setOuts(0);
       setRunners({});
+      // After 3 outs, switch halves
       if (currentHalf === 'bottom') {
+        // Bottom just ended → advance inning, go to top
         setCurrentInning(prev => prev + 1);
         setCurrentHalf('top');
       } else {
+        // Top just ended → go to bottom (same inning)
         setCurrentHalf('bottom');
       }
     } else {
@@ -305,6 +325,13 @@ export function LiveScorebook({
         opponentErrors={0}
       />
 
+      {/* Video + Logging Mode */}
+      {videoMode && (
+        <GameVideoPlayer
+          onTimestamp={(sec) => setVideoTimestamp(sec)}
+        />
+      )}
+
       {/* Game status bar */}
       <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
         <div className="flex items-center gap-4">
@@ -330,10 +357,21 @@ export function LiveScorebook({
         </div>
       </div>
 
-      {/* Single player: prominent pitcher input */}
-      {isSinglePlayer && currentHalf === 'bottom' && (
+      {/* Single player: prominent pitcher input — show during player's batting half */}
+      {isSinglePlayer && currentHalf === playerBattingHalf && (
         <div className="bg-muted/20 border rounded-lg p-3 space-y-1.5">
-          <Label className="text-xs font-semibold">Who's pitching to you?</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold">Who's pitching to you?</Label>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">Throws:</span>
+              {(['R', 'L'] as const).map(h => (
+                <button key={h} type="button" onClick={() => setPitcherHand(h)}
+                  className={cn('px-2 py-0.5 rounded text-[10px] font-bold border transition-all',
+                    pitcherHand === h ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                  )}>{h}HP</button>
+              ))}
+            </div>
+          </div>
           <div className="relative">
             <Input
               value={currentPitcher}
@@ -486,8 +524,8 @@ export function LiveScorebook({
             </CardContent>
           </Card>
 
-          {/* Active at-bat */}
-          {activeAtBat && currentBatter && currentHalf === 'bottom' && (
+          {/* Active at-bat — show when it's the player's batting half */}
+          {activeAtBat && currentBatter && currentHalf === playerBattingHalf && (
             <div className="mt-4">
               <AtBatPanel
                 key={`${currentInning}-${currentHalf}-${currentBatterIndex}`}
@@ -503,11 +541,15 @@ export function LiveScorebook({
                 onComplete={handleAtBatComplete}
                 gameMode={gameMode}
                 batterPosition={currentBatter.position}
+                batterHand={batterHand}
+                pitcherHand={pitcherHand}
+                videoTimestamp={videoTimestamp}
               />
             </div>
           )}
 
-          {currentHalf === 'top' && (
+          {/* Opponent's batting half */}
+          {currentHalf === opponentBattingHalf && (
             <OpponentScoringPanel
               inning={currentInning}
               opponentName={opponentName}

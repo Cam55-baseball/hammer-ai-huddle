@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, ArrowRight, Loader2, GripVertical } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
 import { softballLeagueDistances } from '@/data/softball/leagueDistances';
@@ -116,6 +117,9 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const [singlePlayerPosition, setSinglePlayerPosition] = useState('');
   const [isPracticeGame, setIsPracticeGame] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [homeOrAway, setHomeOrAway] = useState<'home' | 'away'>('home');
+  const [batterHand, setBatterHand] = useState<'right' | 'left' | 'switch'>('right');
+  const [videoMode, setVideoMode] = useState(false);
 
   // Auto-populate player name from profile
   useEffect(() => {
@@ -251,6 +255,9 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
       starting_pitcher_id: gameMode === 'single_player' ? '' : startingPitcher,
       game_mode: gameMode,
       is_practice_game: isPracticeGame,
+      home_or_away: homeOrAway,
+      batter_hand: gameMode === 'single_player' ? batterHand : undefined,
+      video_mode: videoMode,
     });
   };
 
@@ -308,7 +315,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Game Date</Label>
               <Input type="date" value={gameDate} onChange={e => setGameDate(e.target.value)} />
@@ -424,6 +431,22 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                   )}
                 >Practice Game</button>
               </div>
+
+              {/* Home / Away selector */}
+              <div>
+                <Label className="text-xs font-medium">Home or Away?</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button type="button" onClick={() => setHomeOrAway('home')}
+                    className={cn('rounded-md border px-3 py-2 text-xs font-medium transition-all',
+                      homeOrAway === 'home' ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                    )}>🏠 Home</button>
+                  <button type="button" onClick={() => setHomeOrAway('away')}
+                    className={cn('rounded-md border px-3 py-2 text-xs font-medium transition-all',
+                      homeOrAway === 'away' ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                    )}>✈️ Away</button>
+                </div>
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground">Logging Game For</Label>
                 <div className="mt-1 rounded-md border border-border bg-muted/30 px-3 py-2 text-sm font-medium">
@@ -439,6 +462,28 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Batter Hand */}
+              <div>
+                <Label className="text-xs font-medium">Batting Hand</Label>
+                <div className="grid grid-cols-3 gap-1.5 mt-1">
+                  {[{ v: 'right' as const, l: 'Right' }, { v: 'left' as const, l: 'Left' }, { v: 'switch' as const, l: 'Switch' }].map(h => (
+                    <button key={h.v} type="button" onClick={() => setBatterHand(h.v)}
+                      className={cn('rounded-md border px-2 py-1.5 text-xs font-medium transition-all',
+                        batterHand === h.v ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                      )}>{h.l}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Video + Logging Mode */}
+              <div className="flex items-center gap-2 pt-1">
+                <Switch checked={videoMode} onCheckedChange={setVideoMode} />
+                <Label className="text-xs font-medium">🎥 Video + Logging Mode</Label>
+              </div>
+              {videoMode && (
+                <p className="text-[10px] text-muted-foreground">Upload game film during scoring to log plays from video</p>
+              )}
             </div>
           )}
         </CardContent>

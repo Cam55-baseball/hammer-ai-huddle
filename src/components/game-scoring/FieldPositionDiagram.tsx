@@ -208,6 +208,19 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
           />
         )}
 
+        {/* Position labels */}
+        {Object.entries(POSITION_ZONES).map(([pos, coord]) => (
+          <text
+            key={pos}
+            x={coord.x * W}
+            y={coord.y * W - 16}
+            textAnchor="middle"
+            className="fill-foreground/30 text-[9px] font-medium select-none pointer-events-none"
+          >
+            {pos}
+          </text>
+        ))}
+
         {/* Connecting line */}
         <line
           x1={playerPos.x * W} y1={playerPos.y * W}

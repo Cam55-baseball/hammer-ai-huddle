@@ -17,6 +17,9 @@ export interface GameSetup {
   starting_pitcher_id: string;
   game_mode?: 'team' | 'single_player';
   is_practice_game?: boolean;
+  home_or_away?: 'home' | 'away';
+  batter_hand?: 'right' | 'left' | 'switch';
+  video_mode?: boolean;
 }
 
 export interface LineupPlayer {
