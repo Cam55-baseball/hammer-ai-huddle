@@ -48,6 +48,7 @@ interface AtBatPanelProps {
   advancedMode: boolean;
   runners: { first?: boolean; second?: boolean; third?: boolean };
   batterPosition?: string;
+  gameMode?: string;
   onComplete: (plays: GamePlay[]) => void;
 }
 
