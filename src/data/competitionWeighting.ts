@@ -76,7 +76,7 @@ export function getCompetitionLevelsByCategory(sport: 'baseball' | 'softball') {
   const categories = ['youth', 'collegiate', 'summer', 'professional'] as const;
   return categories.map(cat => ({
     category: cat,
-    label: cat === 'youth' ? 'Youth / Amateur' : cat === 'collegiate' ? 'Collegiate' : cat === 'summer' ? 'Summer Ball' : 'Professional',
+    label: cat === 'youth' ? 'Youth / Amateur' : cat === 'collegiate' ? 'Collegiate' : cat === 'summer' ? 'College Summer Ball' : 'Professional',
     levels: levels.filter(l => l.category === cat),
   }));
 }

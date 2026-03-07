@@ -24,7 +24,9 @@ export const baseballCompetitionLevels: CompetitionLevel[] = [
   { key: 'd1', label: 'D1', category: 'collegiate', competition_weight_multiplier: 1.05, league_difficulty_index: 0.92, pre_collegiate: false },
 
   // Summer Ball (known leagues in summerLeagues.ts, AI-classified fallback)
-  { key: 'summer_generic', label: 'Summer League', category: 'summer', competition_weight_multiplier: 0.85, league_difficulty_index: 0.70, pre_collegiate: false },
+  { key: 'summer_generic', label: 'College Summer Ball', category: 'summer', competition_weight_multiplier: 0.85, league_difficulty_index: 0.70, pre_collegiate: false },
+  { key: 'cape_cod', label: 'Cape Cod League', category: 'summer', competition_weight_multiplier: 1.15, league_difficulty_index: 0.92, pre_collegiate: false },
+  { key: 'collegiate_olympic', label: 'Collegiate Olympic', category: 'summer', competition_weight_multiplier: 1.20, league_difficulty_index: 0.94, pre_collegiate: false },
 
   // Professional
   { key: 'foreign_league', label: 'Foreign League', category: 'professional', competition_weight_multiplier: 1.10, league_difficulty_index: 0.88, pre_collegiate: false },

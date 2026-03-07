@@ -202,7 +202,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
       if (error) throw error;
       toast({
         title: 'League classified',
-        description: `${summerLeagueName}: ${data.difficulty_multiplier}x (${data.confidence} confidence)`,
+        description: `${summerLeagueName} classified (${data.confidence} confidence)`,
       });
     } catch {
       toast({ title: 'Classification failed', variant: 'destructive' });
