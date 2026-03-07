@@ -91,6 +91,11 @@ export function AtBatPanel({
   const filteredSuggestions = opponentName.trim()
     ? recentOpponents.filter(n => n.toLowerCase().includes(opponentName.toLowerCase()))
     : recentOpponents;
+
+  const balls = pitches.filter(p => p.pitch_result === 'ball').length;
+  const strikes = pitches.filter(p => ['called_strike', 'swinging_strike', 'foul'].includes(p.pitch_result)).length;
+  const lastPitch = pitches[pitches.length - 1];
+  const isInPlay = lastPitch && ['in_play_out', 'in_play_hit'].includes(lastPitch.pitch_result);
   const runnersOn = runners.first || runners.second || runners.third;
 
   const handlePitch = (pitch: PitchData) => {
