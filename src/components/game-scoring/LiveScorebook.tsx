@@ -236,12 +236,15 @@ export function LiveScorebook({
   };
 
   const handleOpponentRecordAndSwitch = useCallback((runs: number, hits: number, errors: number) => {
-    const key = `T${currentInning}`;
+    // Opponent runs key: use the half prefix for opponent batting
+    const oppPrefix = opponentBattingHalf === 'top' ? 'T' : 'B';
+    const key = `${oppPrefix}${currentInning}`;
     setInningRuns(prev => ({ ...prev, [key]: (prev[key] ?? 0) + runs }));
     setOpponentHitsPerInning(prev => ({ ...prev, [currentInning]: (prev[currentInning] ?? 0) + hits }));
     setTeamErrorsPerInning(prev => ({ ...prev, [currentInning]: (prev[currentInning] ?? 0) + errors }));
-    setCurrentHalf('bottom');
-  }, [currentInning]);
+    // Switch to player's batting half
+    setCurrentHalf(playerBattingHalf);
+  }, [currentInning, opponentBattingHalf, playerBattingHalf]);
 
   const handleAtBatComplete = useCallback((plays: GamePlay[]) => {
     const lastPlay = plays[plays.length - 1];
