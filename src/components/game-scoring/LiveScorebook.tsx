@@ -186,13 +186,15 @@ export function LiveScorebook({
 
   const displayRows = buildDisplayRows(lineup, substitutions);
 
+  const teamRunPrefix = playerBattingHalf === 'bottom' ? 'B' : 'T';
+  const oppRunPrefix = opponentBattingHalf === 'bottom' ? 'B' : 'T';
   const totalTeamRuns = useMemo(() =>
-    innings.reduce((sum, i) => sum + (inningRuns[`B${i}`] ?? 0), 0),
-    [inningRuns, innings]
+    innings.reduce((sum, i) => sum + (inningRuns[`${teamRunPrefix}${i}`] ?? 0), 0),
+    [inningRuns, innings, teamRunPrefix]
   );
   const totalOppRuns = useMemo(() =>
-    innings.reduce((sum, i) => sum + (inningRuns[`T${i}`] ?? 0), 0),
-    [inningRuns, innings]
+    innings.reduce((sum, i) => sum + (inningRuns[`${oppRunPrefix}${i}`] ?? 0), 0),
+    [inningRuns, innings, oppRunPrefix]
   );
   const totalTeamHits = useMemo(() => batterStats.reduce((sum, b) => sum + b.hits, 0), [batterStats]);
   const totalOppHits = useMemo(() =>
