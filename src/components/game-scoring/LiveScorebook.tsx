@@ -346,10 +346,21 @@ export function LiveScorebook({
         </div>
       </div>
 
-      {/* Single player: prominent pitcher input */}
-      {isSinglePlayer && currentHalf === 'bottom' && (
+      {/* Single player: prominent pitcher input — show during player's batting half */}
+      {isSinglePlayer && currentHalf === playerBattingHalf && (
         <div className="bg-muted/20 border rounded-lg p-3 space-y-1.5">
-          <Label className="text-xs font-semibold">Who's pitching to you?</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold">Who's pitching to you?</Label>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">Throws:</span>
+              {(['R', 'L'] as const).map(h => (
+                <button key={h} type="button" onClick={() => setPitcherHand(h)}
+                  className={cn('px-2 py-0.5 rounded text-[10px] font-bold border transition-all',
+                    pitcherHand === h ? 'bg-primary text-primary-foreground ring-1 ring-primary' : 'bg-muted/30 hover:bg-muted/50'
+                  )}>{h}HP</button>
+              ))}
+            </div>
+          </div>
           <div className="relative">
             <Input
               value={currentPitcher}
