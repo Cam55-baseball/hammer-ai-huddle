@@ -12,6 +12,7 @@ import { DiamondVisual } from './DiamondVisual';
 import { SubstitutionDialog } from './SubstitutionDialog';
 import { LinescoreBar } from './LinescoreBar';
 import { OpponentScoringPanel } from './OpponentScoringPanel';
+import { GameVideoPlayer } from './GameVideoPlayer';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import { cn } from '@/lib/utils';
 import { ArrowRightLeft } from 'lucide-react';
