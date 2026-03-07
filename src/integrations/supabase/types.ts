@@ -1253,6 +1253,36 @@ export type Database = {
           },
         ]
       }
+      game_opponents: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_faced_at: string | null
+          opponent_name: string
+          opponent_type: string
+          times_faced: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_faced_at?: string | null
+          opponent_name: string
+          opponent_type?: string
+          times_faced?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_faced_at?: string | null
+          opponent_name?: string
+          opponent_type?: string
+          times_faced?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       game_plan_locked_days: {
         Row: {
           created_at: string | null
