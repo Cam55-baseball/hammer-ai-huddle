@@ -191,7 +191,7 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
     if (!summerLeagueName.trim()) return;
     const known = findKnownSummerLeague(sport as 'baseball' | 'softball', summerLeagueName);
     if (known) {
-      toast({ title: 'League found', description: `${known.name}: ${known.difficulty_multiplier}x multiplier` });
+      toast({ title: 'League found', description: `${known.name} recognized` });
       return;
     }
     setClassifyingLeague(true);
