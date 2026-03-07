@@ -253,7 +253,8 @@ export function LiveScorebook({
     const runsScored = calculateRunsScored(outcome, runners);
 
     if (runsScored > 0) {
-      const key = `B${currentInning}`;
+      const teamPrefix = playerBattingHalf === 'bottom' ? 'B' : 'T';
+      const key = `${teamPrefix}${currentInning}`;
       setInningRuns(prev => ({ ...prev, [key]: (prev[key] ?? 0) + runsScored }));
     }
 
