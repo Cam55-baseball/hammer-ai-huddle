@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     // --- Practice sessions query ---
     let practiceQuery = supabase
       .from('performance_sessions')
-      .select('id, user_id, sport, session_type, session_date, module, drill_blocks, notes, composite_indexes, coach_grade, created_at, session_context')
+      .select('id, user_id, sport, session_type, session_date, module, drill_blocks, notes, composite_indexes, coach_grade, created_at, season_context')
       .eq('user_id', targetUserId)
       .is('deleted_at', null)
       .order('session_date', { ascending: false });
