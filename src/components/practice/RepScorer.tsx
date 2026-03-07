@@ -282,7 +282,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isFielding = module === 'fielding';
-  const isCatching = module === 'catching';
+  const isCatching = false; // catching module removed — catcher defense is under fielding
   const isBaserunning = module === 'baserunning';
   const isThrowing = module === 'throwing';
 
