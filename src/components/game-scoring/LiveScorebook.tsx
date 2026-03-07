@@ -541,6 +541,7 @@ export function LiveScorebook({
                 batterPosition={currentBatter.position}
                 batterHand={batterHand}
                 pitcherHand={pitcherHand}
+                videoTimestamp={videoTimestamp}
               />
             </div>
           )}
