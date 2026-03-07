@@ -325,7 +325,6 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
                         )}
                       >
                         {l.label}
-                        <span className="ml-1 text-[9px] opacity-60">{l.competition_weight_multiplier}x</span>
                       </button>
                     ))}
                   </div>
