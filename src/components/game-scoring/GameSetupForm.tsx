@@ -115,6 +115,21 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const [singlePlayerName, setSinglePlayerName] = useState('');
   const [singlePlayerPosition, setSinglePlayerPosition] = useState('');
   const [isPracticeGame, setIsPracticeGame] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  // Auto-populate player name from profile
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+      const { data } = await supabase.from('profiles').select('full_name').eq('id', authUser.id).single();
+      if (data?.full_name) {
+        setSinglePlayerName(data.full_name);
+        setProfileLoaded(true);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   // Auto-populate team name from organization
   useEffect(() => {
