@@ -2,6 +2,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 const INFIELD_POSITIONS = [
+  { value: 'P', label: 'P' },
   { value: '1B', label: '1B' },
   { value: '2B', label: '2B' },
   { value: 'SS', label: 'SS' },
@@ -41,7 +42,7 @@ export function FieldingPositionSelector({ value, onChange, label = 'Position', 
         {/* Infield */}
         <div>
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-1 block">Infield</span>
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-5 gap-1.5">
             {INFIELD_POSITIONS.map(pos => (
               <button key={pos.value} type="button" onClick={() => onChange(pos.value)} className={btnClass(pos.value)}>
                 {pos.label}
