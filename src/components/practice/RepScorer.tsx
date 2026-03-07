@@ -1402,7 +1402,28 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {/* Route Efficiency */}
+              {/* Diving Play — all defensive positions */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Diving Play</Label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                    <button
+                      key={String(opt.value)}
+                      type="button"
+                      onClick={() => updateField('diving_play', opt.value)}
+                      className={cn(
+                        'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                        current.diving_play === opt.value
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
                 <SelectGrid
