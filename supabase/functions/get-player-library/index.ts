@@ -53,7 +53,10 @@ Deno.serve(async (req) => {
 
     const isScout = !!scoutRole;
 
-    let query = supabase
+    const targetUserId = playerId || user.id;
+
+    // --- Video sessions query ---
+    let videoQuery = supabase
       .from('videos')
       .select(`
         *,
@@ -63,11 +66,9 @@ Deno.serve(async (req) => {
       .order('session_date', { ascending: false });
 
     if (playerId) {
-      // Viewing another player's library
-      query = query.eq('user_id', playerId);
+      videoQuery = videoQuery.eq('user_id', playerId);
       
       if (!isOwner) {
-        // Scouts can only see shared sessions from accepted follows
         const { data: followData } = await supabase
           .from('scout_follows')
           .select('status')
@@ -83,37 +84,53 @@ Deno.serve(async (req) => {
           );
         }
         
-        query = query.eq('shared_with_scouts', true);
+        videoQuery = videoQuery.eq('shared_with_scouts', true);
       }
     } else {
-      // Viewing own library
-      query = query.eq('user_id', user.id);
+      videoQuery = videoQuery.eq('user_id', user.id);
     }
 
-    const { data, error } = await query;
+    const { data: videoData, error: videoError } = await videoQuery;
 
-    if (error) {
-      console.error('[get-player-library] Error:', error);
-      throw error;
+    if (videoError) {
+      console.error('[get-player-library] Video error:', videoError);
+      throw videoError;
     }
 
-    // For scouts viewing other players, filter out private data
-    let responseData = data;
+    // --- Practice sessions query ---
+    let practiceQuery = supabase
+      .from('performance_sessions')
+      .select('id, user_id, sport, session_type, session_date, module, drill_blocks, notes, composite_indexes, coach_grade, created_at, session_context')
+      .eq('user_id', targetUserId)
+      .is('deleted_at', null)
+      .order('session_date', { ascending: false });
+
+    const { data: practiceData, error: practiceError } = await practiceQuery;
+
+    if (practiceError) {
+      console.error('[get-player-library] Practice error:', practiceError);
+      throw practiceError;
+    }
+
+    // Tag sources
+    let videoResults = (videoData || []).map(v => ({ ...v, source: 'video' }));
+    const practiceResults = (practiceData || []).map(p => ({ ...p, source: 'practice' }));
+
+    // For scouts viewing other players, filter out private video data
     if (isScout && !isOwner && playerId && playerId !== user.id) {
-      responseData = data.map(session => {
+      videoResults = videoResults.map(session => {
         const { efficiency_score, ...rest } = session;
-        
-        // Also filter out ai_analysis if analysis_public is false
         if (!session.analysis_public) {
           const { ai_analysis, ...restWithoutAnalysis } = rest;
           return restWithoutAnalysis;
         }
-        
         return rest;
       });
     }
 
-    console.log('[get-player-library] Success:', { count: responseData?.length });
+    const responseData = { videos: videoResults, practices: practiceResults };
+
+    console.log('[get-player-library] Success:', { videos: videoResults.length, practices: practiceResults.length });
 
     return new Response(
       JSON.stringify(responseData),

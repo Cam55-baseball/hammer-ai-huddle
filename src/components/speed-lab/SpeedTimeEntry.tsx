@@ -115,52 +115,69 @@ export function SpeedTimeEntry({
                 }
 
                 return (
-                  <div key={repIdx} className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground w-12 shrink-0">
+                  <div key={repIdx} className="space-y-1.5">
+                    <div className="flex items-center gap-1 ml-12">
+                      <span className="text-xs text-muted-foreground font-medium">
                         {t('speedLab.logResults.rep', 'Rep {{number}}', { number: repIdx + 1 })}
                       </span>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="30"
-                        placeholder="0.00"
-                        value={repTime || ''}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (!isNaN(val) && val >= 0) onChange(dist.key, repIdx, val);
-                          else if (e.target.value === '') onChange(dist.key, repIdx, 0);
-                        }}
-                        className="text-lg font-mono h-10 text-center flex-1"
-                      />
-                      <span className="text-xs text-muted-foreground w-6">sec</span>
-                      <Input
-                        type="number"
-                        step="1"
-                        min="0"
-                        max="99"
-                        placeholder={t('speedLab.logResults.stepsTaken', 'Steps Taken')}
-                        value={repSteps || ''}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val) && val >= 0) onStepsChange(dist.key, repIdx, val);
-                          else if (e.target.value === '') onStepsChange(dist.key, repIdx, 0);
-                        }}
-                        className="text-sm font-mono h-10 text-center w-16 shrink-0"
-                      />
                       {isBest && repTime > 0 && (
-                        <Star className="h-4 w-4 text-amber-500 fill-amber-500 shrink-0" />
+                        <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                       )}
                       {isNewPB && (
-                        <Badge className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 shrink-0">
+                        <Badge className="text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5">
                           {t('speedLab.logResults.newPB', 'New PB!')}
                         </Badge>
                       )}
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <span className="text-xs text-muted-foreground w-12 shrink-0" />
+                      {/* Time input with label */}
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          {t('speedLab.logResults.timeLabel', 'Time (sec)')}
+                        </Label>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="30"
+                            placeholder="0.00"
+                            value={repTime || ''}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val) && val >= 0) onChange(dist.key, repIdx, val);
+                              else if (e.target.value === '') onChange(dist.key, repIdx, 0);
+                            }}
+                            className="text-lg font-mono h-10 text-center"
+                          />
+                          <span className="text-xs text-muted-foreground w-6 shrink-0">sec</span>
+                        </div>
+                      </div>
+                      {/* Steps input with label */}
+                      <div className="w-20 shrink-0 space-y-1">
+                        <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          {t('speedLab.logResults.stepsLabel', 'Steps Taken')}
+                        </Label>
+                        <Input
+                          type="number"
+                          step="1"
+                          min="0"
+                          max="99"
+                          placeholder="—"
+                          value={repSteps || ''}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 0) onStepsChange(dist.key, repIdx, val);
+                            else if (e.target.value === '') onStepsChange(dist.key, repIdx, 0);
+                          }}
+                          className="text-sm font-mono h-10 text-center"
+                        />
+                      </div>
                       {partnerMode && !isTimerActive && (
                         <button
                           onClick={() => setActiveTimer({ distanceKey: dist.key, repIndex: repIdx })}
-                          className="px-2 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shrink-0"
+                          className="px-2 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shrink-0 mb-0.5"
                         >
                           ⏱
                         </button>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck, Dumbbell, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,6 +49,44 @@ interface LibrarySession {
   shared_with_scouts: boolean;
   ai_analysis?: any;
   annotation_count?: Array<{ count: number }>;
+  source: 'video';
+}
+
+interface PracticeSession {
+  id: string;
+  user_id: string;
+  sport: string;
+  session_type: string;
+  session_date: string;
+  module: string;
+  drill_blocks: any;
+  notes: string | null;
+  composite_indexes: any;
+  coach_grade: number | null;
+  created_at: string;
+  session_context: any;
+  source: 'practice';
+}
+
+type ClubItem = LibrarySession | PracticeSession;
+
+function isPractice(item: ClubItem): item is PracticeSession {
+  return item.source === 'practice';
+}
+
+function extractRepTags(drillBlocks: any): string[] {
+  if (!Array.isArray(drillBlocks)) return [];
+  const tags = new Set<string>();
+  for (const block of drillBlocks) {
+    if (Array.isArray(block?.outcome_tags)) {
+      block.outcome_tags.forEach((t: string) => tags.add(t));
+    }
+  }
+  return Array.from(tags);
+}
+
+function getDrillCount(drillBlocks: any): number {
+  return Array.isArray(drillBlocks) ? drillBlocks.length : 0;
 }
 
 export default function PlayersClub() {
@@ -57,9 +96,11 @@ export default function PlayersClub() {
   const [searchParams] = useSearchParams();
   const viewingPlayerId = searchParams.get('playerId');
 
-  const [sessions, setSessions] = useState<LibrarySession[]>([]);
+  const [videos, setVideos] = useState<LibrarySession[]>([]);
+  const [practices, setPractices] = useState<PracticeSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'video' | 'practice'>('all');
   const [sportFilter, setSportFilter] = useState<string>('all');
   const [moduleFilter, setModuleFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,7 +141,14 @@ export default function PlayersClub() {
 
       if (error) throw error;
 
-      setSessions(data || []);
+      // Handle both old (array) and new (object with videos/practices) response formats
+      if (Array.isArray(data)) {
+        setVideos(data.map((d: any) => ({ ...d, source: 'video' as const })));
+        setPractices([]);
+      } else {
+        setVideos(data?.videos || []);
+        setPractices(data?.practices || []);
+      }
     } catch (error: any) {
       console.error('Error fetching library:', error);
       toast.error(error.message || t('playersClub.loadFailed', 'Failed to load library'));
@@ -150,14 +198,14 @@ export default function PlayersClub() {
 
   const handleToggleShare = async (sessionId: string, currentSharedStatus: boolean) => {
     try {
-      const session = sessions.find(s => s.id === sessionId);
-      if (!session) return;
+      const vid = videos.find(s => s.id === sessionId);
+      if (!vid) return;
 
       const { error } = await supabase.functions.invoke('update-library-session', {
         body: {
           sessionId,
-          title: session.library_title,
-          notes: session.library_notes,
+          title: vid.library_title,
+          notes: vid.library_notes,
           sharedWithScouts: !currentSharedStatus
         }
       });
@@ -172,14 +220,22 @@ export default function PlayersClub() {
     }
   };
 
-  const filteredSessions = sessions.filter(session => {
-    const matchesSport = sportFilter === 'all' || session.sport === sportFilter;
-    const matchesModule = moduleFilter === 'all' || session.module === moduleFilter;
-    const matchesSearch = !searchQuery || 
-      session.library_title?.toLowerCase().includes(searchQuery.toLowerCase());
+  const allItems: ClubItem[] = useMemo(() => {
+    let items: ClubItem[] = [];
+    if (sourceFilter === 'all' || sourceFilter === 'video') items = [...items, ...videos];
+    if (sourceFilter === 'all' || sourceFilter === 'practice') items = [...items, ...practices];
     
-    return matchesSport && matchesModule && matchesSearch;
-  });
+    return items
+      .filter(item => {
+        const matchesSport = sportFilter === 'all' || item.sport === sportFilter;
+        const matchesModule = moduleFilter === 'all' || item.module === moduleFilter;
+        const matchesSearch = !searchQuery || 
+          (!isPractice(item) && item.library_title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (isPractice(item) && (item.session_type?.toLowerCase().includes(searchQuery.toLowerCase()) || item.module?.toLowerCase().includes(searchQuery.toLowerCase())));
+        return matchesSport && matchesModule && matchesSearch;
+      })
+      .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime());
+  }, [videos, practices, sourceFilter, sportFilter, moduleFilter, searchQuery]);
 
   const getAnnotationCount = (session: LibrarySession) => {
     if (!session.annotation_count || !Array.isArray(session.annotation_count)) return 0;
@@ -187,6 +243,172 @@ export default function PlayersClub() {
   };
 
   const isOwnLibrary = !viewingPlayerId || viewingPlayerId === user?.id;
+
+  const renderPracticeCard = (ps: PracticeSession) => {
+    const drillCount = getDrillCount(ps.drill_blocks);
+    const tags = extractRepTags(ps.drill_blocks);
+
+    return (
+      <Card key={ps.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+        <CardContent className="p-4 space-y-3">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <Dumbbell className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold line-clamp-1 capitalize">
+                {ps.session_type?.replace(/_/g, ' ') || ps.module}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {new Date(ps.session_date).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Badges */}
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className="capitalize">{ps.sport}</Badge>
+            <Badge variant="outline" className="capitalize">{ps.module}</Badge>
+            {drillCount > 0 && (
+              <Badge variant="secondary">{drillCount} drill{drillCount !== 1 ? 's' : ''}</Badge>
+            )}
+            {ps.coach_grade != null && (
+              <Badge variant="secondary">Grade: {ps.coach_grade}</Badge>
+            )}
+          </div>
+
+          {/* Rep Tags */}
+          {tags.length > 0 && (
+            <div className="flex gap-1.5 flex-wrap">
+              <Tag className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+              {tags.map(tag => (
+                <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 capitalize">
+                  {tag.replace(/_/g, ' ')}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Notes */}
+          {ps.notes && (
+            <p className="text-xs text-muted-foreground line-clamp-2">{ps.notes}</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderVideoCard = (session: LibrarySession) => {
+    return (
+      <Card key={session.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+        <CardContent className="p-0">
+          {/* Thumbnail */}
+          <div className="relative h-48 bg-muted">
+            {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
+              <BlurhashImage
+                blurhash={session.blurhash}
+                src={session.thumbnail_webp_url || session.thumbnail_url!}
+                alt={t('playersClub.sessionThumbnail', 'Session thumbnail')}
+                className="w-full h-full object-cover"
+              />
+            ) : session.thumbnail_sizes || session.thumbnail_webp_url ? (
+              <picture>
+                {session.thumbnail_sizes?.small && (
+                  <source media="(max-width: 640px)" srcSet={session.thumbnail_sizes.small} type="image/webp" />
+                )}
+                {session.thumbnail_sizes?.medium && (
+                  <source media="(max-width: 1024px)" srcSet={session.thumbnail_sizes.medium} type="image/webp" />
+                )}
+                {session.thumbnail_sizes?.large && (
+                  <source srcSet={session.thumbnail_sizes.large} type="image/webp" />
+                )}
+                <img
+                  src={session.thumbnail_url || session.thumbnail_webp_url}
+                  alt={t('playersClub.session', 'Session')}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </picture>
+            ) : session.thumbnail_url ? (
+              <img src={session.thumbnail_url} alt={t('playersClub.session', 'Session')} className="w-full h-full object-cover" loading="lazy" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <BookMarked className="h-16 w-16 text-muted-foreground" />
+              </div>
+            )}
+            {getAnnotationCount(session) > 0 && (
+              <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
+                <BookmarkCheck className="h-3 w-3 mr-1" />
+                {t('playersClub.annotated')}
+              </Badge>
+            )}
+            {session.shared_with_scouts && (
+              <Badge className="absolute top-2 right-2" variant="secondary">
+                <Share2 className="h-3 w-3 mr-1" />
+                {t('playersClub.shared')}
+              </Badge>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="p-4 space-y-3">
+            <div>
+              <h3 className="font-semibold line-clamp-1">
+                {session.library_title || `${session.sport} ${session.module}`}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {new Date(session.session_date).toLocaleDateString()}
+              </p>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              <Badge variant="outline" className="capitalize">{session.sport}</Badge>
+              <Badge variant="outline" className="capitalize">{session.module}</Badge>
+              {session.efficiency_score !== undefined && (
+                <Badge variant="secondary">{session.efficiency_score}%</Badge>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setSelectedSession(session)}
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                {t('common.view', 'View')}
+              </Button>
+              {isOwnLibrary && (
+                <>
+                  <Button size="sm" variant="outline" onClick={() => handleDownload(session.id)}>
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={session.shared_with_scouts ? 'secondary' : 'outline'}
+                    onClick={() => handleToggleShare(session.id, session.shared_with_scouts)}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSessionToDelete(session.id);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <DashboardLayout>
@@ -224,6 +446,15 @@ export default function PlayersClub() {
           </div>
         </div>
 
+        {/* Source Filter Tabs */}
+        <Tabs value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="video">Videos</TabsTrigger>
+            <TabsTrigger value="practice">Practice Sessions</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-stretch sm:items-center">
           <Input
@@ -252,6 +483,9 @@ export default function PlayersClub() {
               <SelectItem value="hitting">{t('dashboard.modules.hitting')}</SelectItem>
               <SelectItem value="pitching">{t('dashboard.modules.pitching')}</SelectItem>
               <SelectItem value="throwing">{t('dashboard.modules.throwing')}</SelectItem>
+              <SelectItem value="fielding">Fielding</SelectItem>
+              <SelectItem value="speed">Speed</SelectItem>
+              <SelectItem value="strength">Strength</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -263,7 +497,7 @@ export default function PlayersClub() {
               <Skeleton key={i} className="h-64" />
             ))}
           </div>
-        ) : filteredSessions.length === 0 ? (
+        ) : allItems.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <BookMarked className="h-16 w-16 text-muted-foreground mb-4" />
@@ -277,214 +511,60 @@ export default function PlayersClub() {
           </Card>
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
-            {filteredSessions.map((session) => (
-              <VideoCardLazy key={session.id}>
-                {viewMode === 'list' ? (
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-row">
-                    <CardContent className="p-0 flex flex-row w-full">
-                      {/* Thumbnail - Fixed width for list view */}
-                      <div className="relative w-32 sm:w-40 h-24 sm:h-28 flex-shrink-0 bg-muted">
-                        {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
-                          <BlurhashImage
-                            blurhash={session.blurhash}
-                            src={session.thumbnail_webp_url || session.thumbnail_url!}
-                            alt={t('playersClub.sessionThumbnail', 'Session thumbnail')}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : session.thumbnail_url ? (
-                          <img 
-                            src={session.thumbnail_url} 
-                            alt={t('playersClub.sessionThumbnail', 'Session thumbnail')}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-muted">
-                            <BookMarked className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content - Horizontal layout */}
-                      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
-                        <div className="space-y-1">
-                          <h3 className="font-semibold text-base sm:text-lg line-clamp-1">
-                            {session.library_title || t('playersClub.untitledSession')}
-                          </h3>
-                          <div className="flex flex-wrap gap-2 items-center text-xs text-muted-foreground">
-                            <Badge variant="outline" className="capitalize text-xs">
-                              {session.sport}
-                            </Badge>
-                            <Badge variant="outline" className="capitalize text-xs">
-                              {session.module}
-                            </Badge>
-                            {session.efficiency_score !== undefined && (
-                              <Badge variant="secondary" className="text-xs">
-                                {session.efficiency_score}%
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(session.session_date).toLocaleDateString()}
-                          </span>
-                          {isOwnLibrary && (
-                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedSession(session);
-                                }}
-                                className="h-8 px-2"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDownload(session.id);
-                                }}
-                                className="h-8 px-2"
-                              >
-                                <Download className="h-3 w-3" />
-                              </Button>
+            {allItems.map((item) => (
+              <VideoCardLazy key={item.id}>
+                {isPractice(item) ? renderPracticeCard(item) : (
+                  viewMode === 'list' ? (
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-row">
+                      <CardContent className="p-0 flex flex-row w-full">
+                        <div className="relative w-32 sm:w-40 h-24 sm:h-28 flex-shrink-0 bg-muted">
+                          {item.blurhash && (item.thumbnail_webp_url || item.thumbnail_url) ? (
+                            <BlurhashImage
+                              blurhash={item.blurhash}
+                              src={item.thumbnail_webp_url || item.thumbnail_url!}
+                              alt={t('playersClub.sessionThumbnail', 'Session thumbnail')}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : item.thumbnail_url ? (
+                            <img src={item.thumbnail_url} alt={t('playersClub.sessionThumbnail', 'Session thumbnail')} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
+                              <BookMarked className="h-8 w-8 text-muted-foreground" />
                             </div>
                           )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <CardContent className="p-0">
-                    {/* Thumbnail with responsive images and blurhash */}
-                    <div className="relative h-48 bg-muted">
-                      {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
-                        <BlurhashImage
-                          blurhash={session.blurhash}
-                          src={session.thumbnail_webp_url || session.thumbnail_url!}
-                          alt={t('playersClub.sessionThumbnail', 'Session thumbnail')}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : session.thumbnail_sizes || session.thumbnail_webp_url ? (
-                        <picture>
-                          {/* Load appropriate size based on viewport */}
-                          {session.thumbnail_sizes?.small && (
-                            <source
-                              media="(max-width: 640px)"
-                              srcSet={session.thumbnail_sizes.small}
-                              type="image/webp"
-                            />
-                          )}
-                          {session.thumbnail_sizes?.medium && (
-                            <source
-                              media="(max-width: 1024px)"
-                              srcSet={session.thumbnail_sizes.medium}
-                              type="image/webp"
-                            />
-                          )}
-                          {session.thumbnail_sizes?.large && (
-                            <source
-                              srcSet={session.thumbnail_sizes.large}
-                              type="image/webp"
-                            />
-                          )}
-                          {/* Fallback for browsers without WebP support */}
-                          <img
-                            src={session.thumbnail_url || session.thumbnail_webp_url}
-                            alt={t('playersClub.session', 'Session')}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        </picture>
-                      ) : session.thumbnail_url ? (
-                        <img src={session.thumbnail_url} alt={t('playersClub.session', 'Session')} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <BookMarked className="h-16 w-16 text-muted-foreground" />
+                        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                          <div className="space-y-1">
+                            <h3 className="font-semibold text-base sm:text-lg line-clamp-1">
+                              {item.library_title || t('playersClub.untitledSession')}
+                            </h3>
+                            <div className="flex flex-wrap gap-2 items-center text-xs text-muted-foreground">
+                              <Badge variant="outline" className="capitalize text-xs">{item.sport}</Badge>
+                              <Badge variant="outline" className="capitalize text-xs">{item.module}</Badge>
+                              {item.efficiency_score !== undefined && (
+                                <Badge variant="secondary" className="text-xs">{item.efficiency_score}%</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(item.session_date).toLocaleDateString()}
+                            </span>
+                            {isOwnLibrary && (
+                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setSelectedSession(item); }} className="h-8 px-2">
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDownload(item.id); }} className="h-8 px-2">
+                                  <Download className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      {/* Annotation indicator */}
-                      {getAnnotationCount(session) > 0 && (
-                        <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
-                          <BookmarkCheck className="h-3 w-3 mr-1" />
-                          {t('playersClub.annotated')}
-                        </Badge>
-                      )}
-                      {session.shared_with_scouts && (
-                        <Badge className="absolute top-2 right-2" variant="secondary">
-                          <Share2 className="h-3 w-3 mr-1" />
-                          {t('playersClub.shared')}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 space-y-3">
-                      <div>
-                        <h3 className="font-semibold line-clamp-1">
-                          {session.library_title || `${session.sport} ${session.module}`}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(session.session_date).toLocaleDateString()}
-                        </p>
-                      </div>
-
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="outline" className="capitalize">{session.sport}</Badge>
-                        <Badge variant="outline" className="capitalize">{session.module}</Badge>
-                        {session.efficiency_score !== undefined && (
-                          <Badge variant="secondary">{session.efficiency_score}%</Badge>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => setSelectedSession(session)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          {t('common.view', 'View')}
-                        </Button>
-                        {isOwnLibrary && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDownload(session.id)}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={session.shared_with_scouts ? 'secondary' : 'outline'}
-                              onClick={() => handleToggleShare(session.id, session.shared_with_scouts)}
-                            >
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSessionToDelete(session.id);
-                                setDeleteDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  ) : renderVideoCard(item)
                 )}
               </VideoCardLazy>
             ))}
