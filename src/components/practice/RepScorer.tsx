@@ -1468,22 +1468,29 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               {/* ===== OUTFIELD-SPECIFIC FIELDS ===== */}
               {repFieldingPosition && ['LF', 'CF', 'RF'].includes(repFieldingPosition) && (
                 <>
+                  {/* Relay Play Yes/No */}
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Outfield Play Type</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'fly_ball', label: 'Fly Ball' },
-                        { value: 'line_drive', label: 'Line Drive' },
-                        { value: 'ground_ball', label: 'Ground Ball' },
-                        { value: 'wall_play', label: 'Wall Play' },
-                        { value: 'relay', label: 'Relay' },
-                      ]}
-                      value={current.outfield_play_type}
-                      onChange={v => updateField('outfield_play_type', v)}
-                    />
+                    <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('relay_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.relay_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {current.outfield_play_type === 'relay' && (
+                  {current.relay_play === true && (
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1 block">Hit Cutoff Man?</Label>
                       <SelectGrid
@@ -1498,9 +1505,31 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     </div>
                   )}
 
-                  {current.outfield_play_type === 'wall_play' && (
+                  {/* Wall Play Yes/No */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Played Ball Off the Wall</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('wall_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.wall_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {current.wall_play === true && (
                     <div>
-                      <Label className="text-xs text-muted-foreground mb-1 block">Played Ball Off Wall</Label>
+                      <Label className="text-xs text-muted-foreground mb-1 block">How Well Was the Ball Played Off the Wall</Label>
                       <SelectGrid
                         options={[
                           { value: 'poor', label: '❌ Poor' },
