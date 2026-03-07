@@ -102,8 +102,34 @@ export function AtBatPanel({
     setPitches(prev => [...prev, pitch]);
   };
 
+  const upsertOpponent = async () => {
+    if (!user || !opponentName.trim()) return;
+    try {
+      const { data: existing } = await supabase
+        .from('game_opponents' as any)
+        .select('id, times_faced')
+        .eq('user_id', user.id)
+        .eq('opponent_name', opponentName.trim())
+        .eq('opponent_type', opponentType)
+        .maybeSingle();
+      if (existing) {
+        await supabase.from('game_opponents' as any).update({
+          times_faced: ((existing as any).times_faced || 0) + 1,
+          last_faced_at: new Date().toISOString(),
+        }).eq('id', (existing as any).id);
+      } else {
+        await supabase.from('game_opponents' as any).insert({
+          user_id: user.id,
+          opponent_name: opponentName.trim(),
+          opponent_type: opponentType,
+        });
+      }
+    } catch {}
+  };
+
   const handleFinalize = () => {
     if (!outcome) return;
+    upsertOpponent();
     const plays: GamePlay[] = pitches.map((p, i) => ({
       game_id: gameId,
       inning,
@@ -122,11 +148,10 @@ export function AtBatPanel({
       spray_direction: p.spray_direction,
       contact_quality: p.contact_quality,
       batted_ball_type: p.batted_ball_type,
-      // Only set outcome on last pitch
       ...(i === pitches.length - 1 ? {
         at_bat_outcome: outcome,
         rbi,
-        situational_data: situationalData,
+        situational_data: { ...situationalData, opponent_name: opponentName.trim() || undefined },
         defensive_data: defensiveData,
         catcher_data: catcherData,
         baserunning_data: baserunningData,
