@@ -116,6 +116,9 @@ export function GameSetupForm({ onSubmit, saving }: GameSetupFormProps) {
   const [singlePlayerPosition, setSinglePlayerPosition] = useState('');
   const [isPracticeGame, setIsPracticeGame] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [homeOrAway, setHomeOrAway] = useState<'home' | 'away'>('home');
+  const [batterHand, setBatterHand] = useState<'right' | 'left' | 'switch'>('right');
+  const [videoMode, setVideoMode] = useState(false);
 
   // Auto-populate player name from profile
   useEffect(() => {
