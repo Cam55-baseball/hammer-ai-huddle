@@ -2,6 +2,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 const INFIELD_POSITIONS = [
+  { value: 'P', label: 'P' },
   { value: '1B', label: '1B' },
   { value: '2B', label: '2B' },
   { value: 'SS', label: 'SS' },
