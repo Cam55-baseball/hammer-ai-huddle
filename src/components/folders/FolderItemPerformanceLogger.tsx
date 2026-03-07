@@ -110,7 +110,7 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
     }
   };
 
-  const hasSomeData = sets.some(s => s.weight || s.reps || s.time || s.distance);
+  const hasSomeData = sets.some(s => s.weight || s.reps || s.time || s.distance || s.steps);
 
   return (
     <div className="space-y-2 mt-2">

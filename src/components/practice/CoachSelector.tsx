@@ -77,7 +77,7 @@ export function CoachSelector({ value, onChange }: CoachSelectorProps) {
 
       {/* Connected coaches list */}
       {hasCoaches && (
-        <ScrollArea className={connectedCoaches.length > 3 ? 'max-h-64' : ''}>
+        <ScrollArea className={connectedCoaches.length > 3 ? 'h-48' : ''}>
           <div className="space-y-1.5">
             {connectedCoaches.map(coach => (
               <button
