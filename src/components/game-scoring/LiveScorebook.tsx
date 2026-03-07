@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +15,8 @@ import { OpponentScoringPanel } from './OpponentScoringPanel';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import { cn } from '@/lib/utils';
 import { ArrowRightLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import type { GamePlay, LineupPlayer, Substitution } from '@/hooks/useGameScoring';
 
 interface LiveScorebookProps {
@@ -27,6 +30,8 @@ interface LiveScorebookProps {
   onComplete: () => void;
   teamName: string;
   opponentName: string;
+  gameMode?: string;
+  playerPosition?: string;
 }
 
 const OUTCOME_ABBREVIATIONS: Record<string, string> = {
