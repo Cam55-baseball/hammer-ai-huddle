@@ -63,7 +63,7 @@ interface AtBatPanelProps {
 
 export function AtBatPanel({
   batterName, batterOrder, pitcherName, inning, half, gameId, sport,
-  advancedMode, runners, batterPosition, gameMode, onComplete,
+  advancedMode, runners, batterPosition, gameMode, batterHand, pitcherHand, videoTimestamp, onComplete,
 }: AtBatPanelProps) {
   const { user } = useAuth();
   const [pitches, setPitches] = useState<PitchData[]>([]);
