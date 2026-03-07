@@ -79,6 +79,8 @@ export default function GameScoring() {
             onComplete={handleComplete}
             teamName={gameData.team_name}
             opponentName={gameData.opponent_name}
+            gameMode={gameData.game_mode}
+            playerPosition={gameData.lineup[0]?.position}
           />
         )}
 

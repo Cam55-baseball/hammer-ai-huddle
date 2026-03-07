@@ -425,7 +425,7 @@ export function LiveScorebook({
                 key={`${currentInning}-${currentHalf}-${currentBatterIndex}`}
                 batterName={currentBatter.name}
                 batterOrder={currentBatter.batting_order}
-                pitcherName={currentPitcher}
+                pitcherName={currentPitcher || 'Opponent Pitcher'}
                 inning={currentInning}
                 half={currentHalf}
                 gameId={gameId}
@@ -433,6 +433,8 @@ export function LiveScorebook({
                 advancedMode={advancedMode}
                 runners={runners}
                 onComplete={handleAtBatComplete}
+                gameMode={gameMode}
+                batterPosition={currentBatter.position}
               />
             </div>
           )}
