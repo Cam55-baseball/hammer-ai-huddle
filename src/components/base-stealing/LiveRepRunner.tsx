@@ -175,11 +175,17 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
     });
   }, []);
 
-  // Countdown effect — start recording at countdown=3
+  // Countdown effect — start recording at countdown=3 with safeguard
   useEffect(() => {
     if (phase !== 'countdown') return;
     if (countdown === 3) {
-      startRecording();
+      const success = startRecording();
+      if (!success) {
+        // Recording failed — abort rep
+        setCameraError('Recording failed to start. Please check camera permissions and try again.');
+        setPhase('idle');
+        return;
+      }
     }
     if (countdown <= 0) {
       setPhase('waiting_signal');
