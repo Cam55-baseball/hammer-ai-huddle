@@ -3,16 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, XCircle, Zap, Plus, Save } from 'lucide-react';
+import { CheckCircle, XCircle, Zap, Plus, Save, Trash2 } from 'lucide-react';
+import { RepReviewPlayer } from './RepReviewPlayer';
 import type { RepResult } from './LiveRepRunner';
 
 interface PostRepInputProps {
   result: RepResult;
   onNextRep: (updated: RepResult) => void;
   onEndSession: (updated: RepResult) => void;
+  onDeleteRep: () => void;
 }
 
-export function PostRepInput({ result, onNextRep, onEndSession }: PostRepInputProps) {
+export function PostRepInput({ result, onNextRep, onEndSession, onDeleteRep }: PostRepInputProps) {
   const [stepsTaken, setStepsTaken] = useState('');
   const [timeToBase, setTimeToBase] = useState('');
   const [baseDist, setBaseDist] = useState('');
@@ -46,7 +48,7 @@ export function PostRepInput({ result, onNextRep, onEndSession }: PostRepInputPr
               <span className="font-medium">{result.signalValue}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Reaction:</span>{' '}
+              <span className="text-muted-foreground">Decision Time:</span>{' '}
               <span className="font-medium">{result.decisionTimeSec}s</span>
             </div>
             <div>
@@ -61,6 +63,16 @@ export function PostRepInput({ result, onNextRep, onEndSession }: PostRepInputPr
           </div>
         </CardContent>
       </Card>
+
+      {/* Video review */}
+      {result.videoBlob && (
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground font-medium mb-2">Rep Video Review</p>
+            <RepReviewPlayer videoBlob={result.videoBlob} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Optional data */}
       <Card>
@@ -92,6 +104,9 @@ export function PostRepInput({ result, onNextRep, onEndSession }: PostRepInputPr
           <Save className="h-4 w-4" /> Save & End
         </Button>
       </div>
+      <Button variant="ghost" className="w-full gap-2 text-destructive hover:text-destructive" onClick={onDeleteRep}>
+        <Trash2 className="h-4 w-4" /> Delete Rep
+      </Button>
     </div>
   );
 }

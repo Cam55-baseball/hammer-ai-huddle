@@ -39,7 +39,7 @@ export function RepReviewPlayer({ videoBlob }: RepReviewPlayerProps) {
   };
 
   const cycleSpeed = () => {
-    const speeds = [0.25, 0.5, 1];
+    const speeds = [0.25, 0.5, 0.75, 1];
     const next = speeds[(speeds.indexOf(speed) + 1) % speeds.length];
     setSpeed(next);
     if (videoRef.current) videoRef.current.playbackRate = next;

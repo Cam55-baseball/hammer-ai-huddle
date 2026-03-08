@@ -20,7 +20,6 @@ export default function BaseStealingTrainer() {
   const { createSession, saving } = usePerformanceSession();
   const { toast } = useToast();
 
-  // Baseball only gate
   useEffect(() => {
     if (sport && sport !== 'baseball') {
       navigate('/practice');
@@ -53,7 +52,6 @@ export default function BaseStealingTrainer() {
   };
 
   const handleEndFromRep = () => {
-    // End without current rep (from live runner)
     if (reps.length > 0) {
       setPhase('summary');
     }
@@ -63,6 +61,12 @@ export default function BaseStealingTrainer() {
     setReps(prev => [...prev, enriched]);
     setCurrentResult(null);
     setPhase('summary');
+  };
+
+  const handleDeleteRep = () => {
+    // Discard current result, go back to live_rep without incrementing
+    setCurrentResult(null);
+    setPhase('live_rep');
   };
 
   const handleSave = async () => {
@@ -111,7 +115,6 @@ export default function BaseStealingTrainer() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto py-4 space-y-4">
-        {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => phase === 'setup' ? navigate(-1) : setPhase('setup')}>
             <ArrowLeft className="h-5 w-5" />
@@ -122,7 +125,6 @@ export default function BaseStealingTrainer() {
           </div>
         </div>
 
-        {/* Phases */}
         {phase === 'setup' && <SessionSetup onStart={handleStart} />}
 
         {phase === 'live_rep' && config && (
@@ -139,6 +141,7 @@ export default function BaseStealingTrainer() {
             result={currentResult}
             onNextRep={handleNextRep}
             onEndSession={handleEndSession}
+            onDeleteRep={handleDeleteRep}
           />
         )}
 

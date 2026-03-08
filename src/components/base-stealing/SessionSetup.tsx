@@ -4,9 +4,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Info, SwitchCamera } from 'lucide-react';
+import { Camera, Info } from 'lucide-react';
 
 const STEP_OPTIONS = Array.from({ length: 29 }, (_, i) => {
   const val = (i + 2) / 2;
@@ -14,6 +13,7 @@ const STEP_OPTIONS = Array.from({ length: 29 }, (_, i) => {
 });
 
 const SHORT_STEP_OPTIONS = [
+  { value: '0', label: '0' },
   { value: '1', label: '1' },
   { value: '1.5', label: '1.5' },
   { value: '2', label: '2' },
@@ -29,7 +29,7 @@ export interface LeadConfig {
   holderPosition: string;
   signalMode: 'colors' | 'numbers';
   difficulty: 'easy' | 'medium' | 'hard';
-  cameraFacing: 'environment' | 'user';
+  cameraFacing: 'user';
 }
 
 interface SessionSetupProps {
@@ -47,7 +47,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
     holderPosition: 'nobody',
     signalMode: 'colors',
     difficulty: 'medium',
-    cameraFacing: 'environment',
+    cameraFacing: 'user',
   });
 
   const update = <K extends keyof LeadConfig>(key: K, value: LeadConfig[K]) =>
@@ -63,34 +63,22 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
 
   return (
     <div className="space-y-6 max-w-lg mx-auto">
-      {/* Camera guide */}
+      {/* Camera guide — front camera only */}
       <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="pt-5 space-y-4">
+        <CardContent className="pt-5 space-y-2">
           <div className="flex gap-3 items-start">
             <Camera className="h-5 w-5 text-primary mt-0.5 shrink-0" />
             <div className="space-y-1">
-              <p className="text-sm font-semibold">Camera Position</p>
+              <p className="text-sm font-semibold">Front Camera Setup</p>
               <p className="text-xs text-muted-foreground">
-                Position your camera to capture <strong>3 steps</strong> in each direction from your lead position. 
-                Analysis only needs 2 steps, but capturing 3 ensures accuracy.
+                Your front camera will be used so you can confirm you're in frame before starting.
+                Position your device so the camera captures <strong>at least 3 steps</strong> of movement in each direction from your lead position.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You'll see a live preview before each rep to verify your position.
               </p>
             </div>
           </div>
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <SwitchCamera className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-xs font-medium">Front Camera</Label>
-            </div>
-            <Switch
-              checked={config.cameraFacing === 'user'}
-              onCheckedChange={(checked) => update('cameraFacing', checked ? 'user' : 'environment')}
-            />
-          </div>
-          {config.cameraFacing === 'user' && (
-            <p className="text-xs text-muted-foreground pl-6">
-              You'll see a live preview to confirm you're in frame before starting.
-            </p>
-          )}
         </CardContent>
       </Card>
 

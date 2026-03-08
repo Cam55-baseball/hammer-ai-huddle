@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 type SignalMode = 'colors' | 'numbers';
 
 interface ReactionSignalProps {
   mode: SignalMode;
   onSignalFired: (signal: { type: 'go' | 'return'; value: string; firedAt: number }) => void;
-  delay: number; // ms before signal fires
+  onUserReact: (decision: 'go' | 'return') => void;
+  delay: number;
   active: boolean;
 }
 
-const GO_COLORS = ['#22c55e']; // green
-const RETURN_COLORS = ['#ef4444', '#eab308', '#3b82f6']; // red, yellow, blue
+const GO_COLORS = ['#22c55e'];
+const RETURN_COLORS = ['#ef4444', '#eab308', '#3b82f6'];
 
 const COLOR_LABELS: Record<string, string> = {
   '#22c55e': 'GREEN',
@@ -20,7 +22,7 @@ const COLOR_LABELS: Record<string, string> = {
   '#3b82f6': 'BLUE',
 };
 
-export function ReactionSignal({ mode, onSignalFired, delay, active }: ReactionSignalProps) {
+export function ReactionSignal({ mode, onSignalFired, onUserReact, delay, active }: ReactionSignalProps) {
   const [signal, setSignal] = useState<{ type: 'go' | 'return'; value: string; color?: string } | null>(null);
 
   useEffect(() => {
@@ -35,7 +37,6 @@ export function ReactionSignal({ mode, onSignalFired, delay, active }: ReactionS
       let color: string | undefined;
 
       if (mode === 'colors') {
-        // ~40% go, ~60% return
         const isGo = Math.random() < 0.4;
         type = isGo ? 'go' : 'return';
         const pool = isGo ? GO_COLORS : RETURN_COLORS;
@@ -63,7 +64,7 @@ export function ReactionSignal({ mode, onSignalFired, delay, active }: ReactionS
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center"
           style={{ backgroundColor: signal.color || '#22c55e' }}
         >
           <motion.span
@@ -74,8 +75,27 @@ export function ReactionSignal({ mode, onSignalFired, delay, active }: ReactionS
           >
             {signal.value}
           </motion.span>
-          <div className="absolute bottom-12 text-white/80 text-xl font-bold tracking-widest">
-            {signal.type === 'go' ? 'GO!' : 'BACK!'}
+
+          {/* Reaction buttons overlaid on the signal */}
+          <div className="absolute bottom-16 left-0 right-0 flex gap-6 justify-center px-6">
+            <Button
+              size="lg"
+              className="flex-1 max-w-[180px] py-8 text-xl font-black bg-white/20 hover:bg-white/30 text-white border-2 border-white/50 backdrop-blur-sm"
+              onClick={() => onUserReact('go')}
+            >
+              GO
+            </Button>
+            <Button
+              size="lg"
+              className="flex-1 max-w-[180px] py-8 text-xl font-black bg-white/20 hover:bg-white/30 text-white border-2 border-white/50 backdrop-blur-sm"
+              onClick={() => onUserReact('return')}
+            >
+              BACK
+            </Button>
+          </div>
+
+          <div className="absolute top-12 text-white/60 text-sm font-medium tracking-widest">
+            TAP YOUR DECISION
           </div>
         </motion.div>
       )}
