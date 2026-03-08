@@ -313,11 +313,22 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
       {phase === 'idle' && (
         <div className="text-center space-y-4">
           <p className="text-lg font-medium">Rep #{repNumber}</p>
+          {cameraError && (
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+              {cameraError}
+            </div>
+          )}
+          {!cameraReady && !cameraError && (
+            <div className="flex items-center gap-2 justify-center text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Initializing camera...
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
             Confirm you're visible in the preview above, then press Start.
           </p>
           <div className="flex gap-3 justify-center">
-            <Button size="lg" onClick={handleStartRep} className="gap-2 px-8">
+            <Button size="lg" onClick={handleStartRep} className="gap-2 px-8" disabled={!cameraReady}>
               <Play className="h-5 w-5" />
               Start Rep
             </Button>
