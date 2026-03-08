@@ -109,7 +109,7 @@ export default function BaseStealingTrainer() {
 
     if (sessionId) {
       toast({ title: 'Session saved!', description: `${reps.length} reps logged.` });
-      navigate('/practice?module=baserunning');
+      setPhase('analysis');
     }
   };
 
