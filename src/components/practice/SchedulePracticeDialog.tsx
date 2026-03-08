@@ -125,7 +125,7 @@ export function SchedulePracticeDialog({ defaultModule, onScheduled }: ScheduleP
             <Select value={module} onValueChange={setModule}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {MODULES.map(m => (
+                {MODULES.filter(m => !('baseballOnly' in m && m.baseballOnly) || sport === 'baseball').map(m => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                 ))}
               </SelectContent>
