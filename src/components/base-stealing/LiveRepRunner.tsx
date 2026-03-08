@@ -138,7 +138,10 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
 
   const startRecording = useCallback(() => {
     const stream = streamRef.current;
-    if (!stream) return;
+    if (!stream) {
+      console.error('Cannot start recording — no camera stream');
+      return false;
+    }
     chunksRef.current = [];
     try {
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
@@ -147,11 +150,17 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         const blob = chunksRef.current.length > 0 ? new Blob(chunksRef.current, { type: 'video/webm' }) : null;
         blobResolveRef.current?.(blob);
         blobResolveRef.current = null;
+        setIsRecording(false);
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
       recordingStartTimeRef.current = Date.now();
-    } catch { console.warn('MediaRecorder not supported'); }
+      setIsRecording(true);
+      return true;
+    } catch (err) {
+      console.warn('MediaRecorder not supported:', err);
+      return false;
+    }
   }, []);
 
   const stopRecording = useCallback((): Promise<Blob | null> => {
