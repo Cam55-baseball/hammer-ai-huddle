@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, XCircle, Zap, Plus, Save, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, XCircle, Zap, Plus, Save, Trash2, HelpCircle } from 'lucide-react';
 import { RepReviewPlayer } from './RepReviewPlayer';
 import type { RepResult } from './LiveRepRunner';
 
@@ -13,6 +14,12 @@ interface PostRepInputProps {
   onEndSession: (updated: RepResult) => void;
   onDeleteRep: () => void;
 }
+
+const CONFIDENCE_STYLES: Record<string, { variant: 'default' | 'secondary' | 'destructive'; label: string }> = {
+  high: { variant: 'default', label: 'High Confidence' },
+  medium: { variant: 'secondary', label: 'Medium Confidence' },
+  low: { variant: 'destructive', label: 'Low Confidence' },
+};
 
 export function PostRepInput({ result, onNextRep, onEndSession, onDeleteRep }: PostRepInputProps) {
   const [stepsTaken, setStepsTaken] = useState('');
@@ -26,20 +33,36 @@ export function PostRepInput({ result, onNextRep, onEndSession, onDeleteRep }: P
     baseDistanceFt: baseDist ? Number(baseDist) : undefined,
   };
 
+  const confidenceInfo = CONFIDENCE_STYLES[result.aiConfidence || 'medium'];
+  const hasAiResult = result.decisionCorrect !== null;
+
   return (
     <div className="max-w-md mx-auto space-y-5">
       {/* Result summary */}
-      <Card className={result.decisionCorrect ? 'border-green-500/50' : 'border-red-500/50'}>
+      <Card className={hasAiResult ? (result.decisionCorrect ? 'border-green-500/50' : 'border-red-500/50') : 'border-muted'}>
         <CardContent className="pt-5 space-y-3">
-          <div className="flex items-center gap-2">
-            {result.decisionCorrect ? (
-              <CheckCircle className="h-6 w-6 text-green-500" />
-            ) : (
-              <XCircle className="h-6 w-6 text-red-500" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {hasAiResult ? (
+                result.decisionCorrect ? (
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                ) : (
+                  <XCircle className="h-6 w-6 text-red-500" />
+                )
+              ) : (
+                <HelpCircle className="h-6 w-6 text-muted-foreground" />
+              )}
+              <span className="text-lg font-bold">
+                {hasAiResult
+                  ? result.decisionCorrect ? 'Correct Decision!' : 'Wrong Decision'
+                  : 'Analysis Unavailable'}
+              </span>
+            </div>
+            {result.aiConfidence && (
+              <Badge variant={confidenceInfo.variant} className="text-xs">
+                {confidenceInfo.label}
+              </Badge>
             )}
-            <span className="text-lg font-bold">
-              {result.decisionCorrect ? 'Correct Decision!' : 'Wrong Decision'}
-            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm">
@@ -47,10 +70,12 @@ export function PostRepInput({ result, onNextRep, onEndSession, onDeleteRep }: P
               <span className="text-muted-foreground">Signal:</span>{' '}
               <span className="font-medium">{result.signalValue}</span>
             </div>
-            <div>
-              <span className="text-muted-foreground">Decision Time:</span>{' '}
-              <span className="font-medium">{result.decisionTimeSec}s</span>
-            </div>
+            {result.decisionTimeSec !== null && (
+              <div>
+                <span className="text-muted-foreground">Decision Time:</span>{' '}
+                <span className="font-medium">{result.decisionTimeSec}s</span>
+              </div>
+            )}
             <div>
               <span className="text-muted-foreground">Expected:</span>{' '}
               <span className="font-medium uppercase">{result.signalType}</span>
@@ -61,6 +86,12 @@ export function PostRepInput({ result, onNextRep, onEndSession, onDeleteRep }: P
               </div>
             )}
           </div>
+
+          {result.aiReasoning && (
+            <p className="text-xs text-muted-foreground italic border-t border-border pt-2">
+              AI: {result.aiReasoning}
+            </p>
+          )}
         </CardContent>
       </Card>
 
