@@ -254,9 +254,21 @@ export default function PracticeHub() {
                     <CardContent>
                       <SessionTypeSelector value={sessionType} onChange={handleSelectType} />
                     </CardContent>
-                  </Card>
-                  <RecentSessionsList sport={sportKey} moduleLabel={mod.label} />
-                </>
+                   </Card>
+                   {/* Base Stealing quick-link — baseball only */}
+                   {mod.id === 'baserunning' && sportKey === 'baseball' && (
+                     <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate('/base-stealing')}>
+                       <CardContent className="py-4 flex items-center gap-3">
+                         <Zap className="h-5 w-5 text-primary" />
+                         <div>
+                           <p className="font-semibold text-sm">Base Stealing Trainer</p>
+                           <p className="text-xs text-muted-foreground">Reaction timing & explosive acceleration drills</p>
+                         </div>
+                       </CardContent>
+                     </Card>
+                   )}
+                   <RecentSessionsList sport={sportKey} moduleLabel={mod.label} />
+                 </>
               )}
 
               {/* Step 2: Pre-Session Readiness */}

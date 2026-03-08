@@ -51,7 +51,9 @@ export default function CompletePlayer() {
 
         {/* Selection Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {tiles.map((tile) => {
+          {tiles
+            .filter(tile => !('baseballOnly' in tile && tile.baseballOnly) || selectedSport === 'baseball')
+            .map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
 
