@@ -28,10 +28,7 @@ export function ReactionSignal({ mode, onSignalFired, onSignalDismissed, delay, 
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!active) {
-      setSignal(null);
-      return;
-    }
+    if (!active) return;
 
     const timer = setTimeout(() => {
       let type: 'go' | 'return';
