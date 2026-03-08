@@ -21,7 +21,6 @@ export interface RepResult {
   decisionCorrect: boolean | null;
   eliteJump: boolean;
   videoBlob: Blob | null;
-  // post-rep entries
   stepsTaken?: number;
   timeToBaseSec?: number;
   baseDistanceFt?: number;
@@ -34,90 +33,125 @@ interface LiveRepRunnerProps {
   onEndSession: () => void;
 }
 
-type Phase = 'idle' | 'countdown' | 'waiting_signal' | 'signal_active' | 'rep_done';
+type Phase = 'idle' | 'countdown' | 'waiting_signal' | 'signal_active' | 'finishing';
 
 export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }: LiveRepRunnerProps) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [countdown, setCountdown] = useState(10);
   const [randomDelay, setRandomDelay] = useState(0);
   const signalFiredRef = useRef<{ type: 'go' | 'return'; value: string; firedAt: number } | null>(null);
+  const reactionRef = useRef<{ decision: 'go' | 'return'; timestamp: number } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const blobResolveRef = useRef<((blob: Blob | null) => void) | null>(null);
 
-  // Start camera stream
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: config.cameraFacing || 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+  // Start camera on mount for preview
+  useEffect(() => {
+    let cancelled = false;
+    const initCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        if (cancelled) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch {
+        console.warn('Camera not available');
       }
-      // Start recording
-      chunksRef.current = [];
+    };
+    initCamera();
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    };
+  }, []);
+
+  // Start recording (called when countdown finishes)
+  const startRecording = useCallback(() => {
+    const stream = streamRef.current;
+    if (!stream) return;
+    chunksRef.current = [];
+    try {
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
+      recorder.onstop = () => {
+        const blob = chunksRef.current.length > 0
+          ? new Blob(chunksRef.current, { type: 'video/webm' })
+          : null;
+        blobResolveRef.current?.(blob);
+        blobResolveRef.current = null;
+      };
       recorder.start();
       mediaRecorderRef.current = recorder;
     } catch {
-      console.warn('Camera not available');
+      console.warn('MediaRecorder not supported');
     }
   }, []);
 
-  const stopCamera = useCallback(() => {
-    mediaRecorderRef.current?.stop();
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
+  // Stop recording and return blob via promise
+  const stopRecording = useCallback((): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const recorder = mediaRecorderRef.current;
+      if (!recorder || recorder.state === 'inactive') {
+        resolve(chunksRef.current.length > 0 ? new Blob(chunksRef.current, { type: 'video/webm' }) : null);
+        return;
+      }
+      blobResolveRef.current = resolve;
+      recorder.stop();
+    });
   }, []);
 
   // Countdown effect
   useEffect(() => {
     if (phase !== 'countdown') return;
     if (countdown <= 0) {
+      startRecording();
       setPhase('waiting_signal');
       return;
     }
     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, countdown]);
+  }, [phase, countdown, startRecording]);
 
   // Start rep
-  const handleStartRep = async () => {
+  const handleStartRep = () => {
     const maxDelay = DIFFICULTY_MAX_DELAY[config.difficulty] || 3000;
     setRandomDelay(Math.random() * maxDelay);
     setCountdown(10);
     signalFiredRef.current = null;
-    await startCamera();
+    reactionRef.current = null;
     setPhase('countdown');
   };
 
   const handleSignalFired = useCallback((signal: { type: 'go' | 'return'; value: string; firedAt: number }) => {
     signalFiredRef.current = signal;
-    // Auto-dismiss signal after 2s and transition to rep_done
-    setTimeout(() => {
-      setPhase('rep_done');
-      stopCamera();
-    }, 2000);
-  }, [stopCamera]);
+  }, []);
 
-  const handleReactionConfirm = (userDecision: 'go' | 'return') => {
+  const handleUserReact = useCallback(async (decision: 'go' | 'return') => {
     const now = Date.now();
     const sig = signalFiredRef.current;
     if (!sig) return;
 
-    const decisionTimeSec = (now - sig.firedAt) / 1000;
-    const decisionCorrect = userDecision === sig.type;
-    const eliteJump = sig.type === 'go' && decisionTimeSec < 0.2;
+    reactionRef.current = { decision, timestamp: now };
+    setPhase('finishing');
 
-    const videoBlob = chunksRef.current.length > 0
-      ? new Blob(chunksRef.current, { type: 'video/webm' })
-      : null;
+    const videoBlob = await stopRecording();
+
+    const decisionTimeSec = Math.round(((now - sig.firedAt) / 1000) * 100) / 100;
+    const decisionCorrect = decision === sig.type;
+    const eliteJump = sig.type === 'go' && decisionTimeSec < 0.2;
 
     onRepComplete({
       repNumber,
@@ -126,22 +160,35 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
       delayBeforeSignalMs: randomDelay,
       signalFiredAt: sig.firedAt,
       reactionConfirmedAt: now,
-      decisionTimeSec: Math.round(decisionTimeSec * 100) / 100,
+      decisionTimeSec,
       decisionCorrect,
       eliteJump,
       videoBlob,
     });
-  };
+  }, [stopRecording, onRepComplete, repNumber, randomDelay]);
+
+  const showPreview = phase === 'idle';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-      {/* Hidden camera preview */}
-      <video ref={videoRef} autoPlay muted playsInline className={phase === 'idle' && config.cameraFacing === 'user' && streamRef.current ? 'w-full max-w-sm rounded-lg border border-border mx-auto mb-4' : 'opacity-0 absolute w-0 h-0'} />
+      {/* Camera preview — visible only during idle for framing */}
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        className={showPreview
+          ? 'w-full max-w-sm rounded-lg border border-border mx-auto'
+          : 'opacity-0 absolute w-0 h-0 pointer-events-none'
+        }
+      />
 
       {phase === 'idle' && (
-        <div className="text-center space-y-6">
+        <div className="text-center space-y-4">
           <p className="text-lg font-medium">Rep #{repNumber}</p>
-          <p className="text-sm text-muted-foreground">Press start when ready. A 10-second countdown will begin.</p>
+          <p className="text-sm text-muted-foreground">
+            Confirm you're visible in the preview above, then press Start.
+          </p>
           <div className="flex gap-3 justify-center">
             <Button size="lg" onClick={handleStartRep} className="gap-2 px-8">
               <Play className="h-5 w-5" />
@@ -181,33 +228,15 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
             delay={randomDelay}
             active
             onSignalFired={handleSignalFired}
+            onUserReact={handleUserReact}
           />
         </>
       )}
 
-      {phase === 'signal_active' && (
-        <p className="text-muted-foreground text-sm">Signal displayed...</p>
-      )}
-
-      {phase === 'rep_done' && (
-        <div className="text-center space-y-6">
-          <p className="text-lg font-semibold">What did you do?</p>
-          <div className="flex gap-4 justify-center">
-            <Button
-              size="lg"
-              className="px-10 py-6 text-lg bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => handleReactionConfirm('go')}
-            >
-              GO (Stole)
-            </Button>
-            <Button
-              size="lg"
-              className="px-10 py-6 text-lg bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => handleReactionConfirm('return')}
-            >
-              BACK (Returned)
-            </Button>
-          </div>
+      {phase === 'finishing' && (
+        <div className="text-center space-y-2">
+          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-muted-foreground">Processing rep...</p>
         </div>
       )}
     </div>
