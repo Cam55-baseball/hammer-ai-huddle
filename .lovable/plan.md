@@ -1,64 +1,47 @@
 
 
-# Bug: Full-Screen Signal Overlay Sticks Forever
+# Fix: Coach Schedule Dialog RLS Error
 
 ## Root Cause
 
-In `ReactionSignal.tsx`, the `useEffect` (line 30-65) manages both the **delay timer** (to fire the signal) and the **dismiss timer** (to clear it after 3s). The problem:
+The coach has two accepted relationships:
+- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
+- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
 
-1. Signal fires → `onSignalFired` called → parent sets phase to `signal_active`
-2. Parent re-renders → `active` prop changes from `true` to `false`
-3. The effect's **cleanup function runs** (lines 61-64), clearing **both** timers — including the dismiss timer
-4. Effect re-runs with `active=false`, returns early on line 31
-5. Result: `setSignal(null)` never fires. The full-screen overlay stays forever.
+The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
 
-The dismiss timer is being killed by the effect cleanup before it can fire.
+## Solution
 
-## Fix
+**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
 
-### `ReactionSignal.tsx`
-Separate the dismiss timer from the signal-firing effect so it survives the `active` prop change:
+**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
 
-- Use a **separate `useRef`** to track whether the dismiss timer is already running
-- In the cleanup, only clear the **delay timer**, not the dismiss timer if it's active
-- OR (cleaner): move dismiss logic into a separate `useEffect` that triggers when `signal` state becomes non-null
+I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
 
-**Chosen approach**: Use a ref flag to protect the dismiss timer from being cleared by the main effect cleanup.
-
-```tsx
-useEffect(() => {
-  if (!active) return;
-
-  const timer = setTimeout(() => {
-    // ... generate signal, call onSignalFired ...
-    
-    dismissTimerRef.current = setTimeout(() => {
-      setSignal(null);
-      onSignalDismissed();
-    }, SIGNAL_DISPLAY_MS);
-  }, delay);
-
-  return () => {
-    clearTimeout(timer);
-    // Only clear dismiss timer if signal hasn't fired yet
-    if (!signal) {
-      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
-    }
-  };
-}, [active, delay, mode]); // Remove onSignalFired/onSignalDismissed from deps
-```
-
-**Key changes**:
-1. Remove `onSignalFired` and `onSignalDismissed` from the dependency array (use refs instead) — this prevents the effect from re-running when parent re-renders with new callback references
-2. Store callbacks in refs so they're always current but don't trigger effect re-runs
-3. This ensures the dismiss timer survives the `active` → `false` transition
-
-### `LiveRepRunner.tsx`
-No changes needed — the rendering logic already keeps `ReactionSignal` mounted during both `waiting_signal` and `signal_active` phases (line 365).
-
-## Files Modified
+### Changes
 
 | File | Change |
 |------|--------|
-| `ReactionSignal.tsx` | Store `onSignalFired`/`onSignalDismissed` in refs; remove from effect deps so dismiss timer isn't killed on re-render |
+| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
+| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
+
+### Technical Detail
+
+**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
+```sql
+CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.scout_follows
+    WHERE scout_id = p_coach_id
+      AND player_id = p_player_id
+      AND status = 'accepted'
+      AND relationship_type IN ('linked', 'follow')
+  )
+$$;
+```
+
+Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
 
