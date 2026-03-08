@@ -21,6 +21,48 @@ export function RepReviewPlayer({ videoBlob }: RepReviewPlayerProps) {
     return () => URL.revokeObjectURL(u);
   }, [videoBlob]);
 
+  // Handle WebM duration workaround and first-frame rendering
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !url) return;
+
+    video.load();
+
+    const handleDurationChange = () => {
+      const d = video.duration;
+      if (d && isFinite(d) && d > 0) {
+        setDuration(d);
+      }
+    };
+
+    const handleLoadedData = () => {
+      // Seek to 0 to force first frame render (fixes black screen)
+      video.currentTime = 0;
+
+      // If duration is Infinity (common with WebM blobs), use workaround
+      if (!isFinite(video.duration)) {
+        // Seek to a very large time to force browser to calculate real duration
+        video.currentTime = 1e10;
+        video.addEventListener('seeked', function onSeekLarge() {
+          video.removeEventListener('seeked', onSeekLarge);
+          if (isFinite(video.duration) && video.duration > 0) {
+            setDuration(video.duration);
+          }
+          // Seek back to start
+          video.currentTime = 0;
+        }, { once: true });
+      }
+    };
+
+    video.addEventListener('durationchange', handleDurationChange);
+    video.addEventListener('loadeddata', handleLoadedData);
+
+    return () => {
+      video.removeEventListener('durationchange', handleDurationChange);
+      video.removeEventListener('loadeddata', handleLoadedData);
+    };
+  }, [url]);
+
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (playing) {
@@ -50,9 +92,13 @@ export function RepReviewPlayer({ videoBlob }: RepReviewPlayerProps) {
       <video
         ref={videoRef}
         src={url}
+        preload="auto"
         className="w-full rounded-lg bg-black max-h-48"
         onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime || 0)}
-        onLoadedMetadata={() => setDuration(videoRef.current?.duration || 0)}
+        onLoadedMetadata={() => {
+          const d = videoRef.current?.duration || 0;
+          if (isFinite(d) && d > 0) setDuration(d);
+        }}
         onEnded={() => setPlaying(false)}
         playsInline
       />

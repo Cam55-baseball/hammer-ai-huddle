@@ -35,15 +35,16 @@ After seeing the signal, the athlete either:
 - Moved BACKWARD (back to the current base) = "return"
 
 Your job:
-1. Determine which direction the athlete moved after the signal appeared.
-2. Identify which frame index shows the FIRST visible body movement (weight shift, first step, lean).
+1. First, determine if ANY actual body movement occurred after the signal.
+2. If movement occurred, determine the direction and which frame shows the first visible movement.
+3. If NO movement is detected (the athlete stays still, or the video shows no person/no reaction), you MUST set movementDetected to false.
 
 Rules:
 - Only analyze frames AFTER the signal frame index (${signalFrameIndex}).
 - Look for subtle weight shifts, hip rotation, shoulder lean, or foot movement.
-- If no clear movement is visible, default to the most likely direction based on body posture.
+- If no clear movement is visible, set movementDetected to false and confidence to "low".
+- If there is no person visible in the frames, set movementDetected to false.
 - The movementStartFrameIndex must be >= ${signalFrameIndex} and < ${totalFrames}.`;
-
     const userContent: any[] = [
       {
         type: "text",
@@ -83,14 +84,18 @@ Rules:
               parameters: {
                 type: "object",
                 properties: {
+                  movementDetected: {
+                    type: "boolean",
+                    description: "Whether any actual body movement was detected in the frames after the signal. Set to false if no person is visible, no reaction occurred, or the athlete remained completely still.",
+                  },
                   direction: {
                     type: "string",
                     enum: ["go", "return"],
-                    description: "The direction the athlete moved: 'go' for forward/steal, 'return' for backward/back to base.",
+                    description: "The direction the athlete moved: 'go' for forward/steal, 'return' for backward/back to base. Only meaningful if movementDetected is true.",
                   },
                   movementStartFrameIndex: {
                     type: "integer",
-                    description: "The 0-indexed frame number where the first visible body movement occurs after the signal.",
+                    description: "The 0-indexed frame number where the first visible body movement occurs after the signal. Only meaningful if movementDetected is true.",
                   },
                   confidence: {
                     type: "string",
@@ -99,10 +104,10 @@ Rules:
                   },
                   reasoning: {
                     type: "string",
-                    description: "Brief explanation of what movement cues were detected.",
+                    description: "Brief explanation of what movement cues were detected, or why no movement was found.",
                   },
                 },
-                required: ["direction", "movementStartFrameIndex", "confidence", "reasoning"],
+                required: ["movementDetected", "direction", "movementStartFrameIndex", "confidence", "reasoning"],
                 additionalProperties: false,
               },
             },
