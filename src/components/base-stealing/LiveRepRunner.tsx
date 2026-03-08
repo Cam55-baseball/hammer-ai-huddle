@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ReactionSignal } from './ReactionSignal';
-import { Play } from 'lucide-react';
+import { Play, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import type { LeadConfig } from './SessionSetup';
 
 const DIFFICULTY_MAX_DELAY: Record<string, number> = {
@@ -9,6 +10,10 @@ const DIFFICULTY_MAX_DELAY: Record<string, number> = {
   medium: 3000,
   hard: 5000,
 };
+
+const SIGNAL_DISPLAY_MS = 3000;
+const POST_SIGNAL_BUFFER_MS = 2000;
+const FRAME_COUNT = 8;
 
 export interface RepResult {
   repNumber: number;
@@ -24,6 +29,8 @@ export interface RepResult {
   stepsTaken?: number;
   timeToBaseSec?: number;
   baseDistanceFt?: number;
+  aiConfidence?: 'high' | 'medium' | 'low';
+  aiReasoning?: string;
 }
 
 interface LiveRepRunnerProps {
@@ -33,21 +40,74 @@ interface LiveRepRunnerProps {
   onEndSession: () => void;
 }
 
-type Phase = 'idle' | 'countdown' | 'waiting_signal' | 'signal_active' | 'finishing';
+type Phase = 'idle' | 'countdown' | 'waiting_signal' | 'signal_active' | 'post_signal_buffer' | 'analyzing' | 'finishing';
+
+/** Extract frames from a video blob between startSec and endSec */
+async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, count: number): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { reject(new Error('No canvas context')); return; }
+
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Frame extraction timeout')); }, 20000);
+
+    const cleanup = () => {
+      clearTimeout(timeout);
+      if (video.src) URL.revokeObjectURL(video.src);
+    };
+
+    video.addEventListener('loadedmetadata', async () => {
+      canvas.width = Math.min(video.videoWidth, 640);
+      canvas.height = Math.round(canvas.width * (video.videoHeight / video.videoWidth));
+
+      const duration = video.duration;
+      const clampedStart = Math.max(0, Math.min(startSec, duration));
+      const clampedEnd = Math.min(endSec, duration);
+      const interval = (clampedEnd - clampedStart) / (count - 1);
+      const frames: string[] = [];
+
+      try {
+        for (let i = 0; i < count; i++) {
+          const t = clampedStart + i * interval;
+          video.currentTime = t;
+          await new Promise<void>((res) => {
+            video.addEventListener('seeked', () => res(), { once: true });
+          });
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          if (dataUrl && dataUrl.length > 100) frames.push(dataUrl);
+        }
+        cleanup();
+        resolve(frames);
+      } catch (e) {
+        cleanup();
+        reject(e);
+      }
+    }, { once: true });
+
+    video.addEventListener('error', () => { cleanup(); reject(new Error('Video load error')); }, { once: true });
+    video.preload = 'metadata';
+    video.muted = true;
+    video.playsInline = true;
+    video.src = URL.createObjectURL(videoBlob);
+  });
+}
 
 export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }: LiveRepRunnerProps) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [countdown, setCountdown] = useState(10);
   const [randomDelay, setRandomDelay] = useState(0);
+  const [analyzingMsg, setAnalyzingMsg] = useState('Analyzing your reaction...');
   const signalFiredRef = useRef<{ type: 'go' | 'return'; value: string; firedAt: number } | null>(null);
-  const reactionRef = useRef<{ decision: 'go' | 'return'; timestamp: number } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const blobResolveRef = useRef<((blob: Blob | null) => void) | null>(null);
+  const recordingStartTimeRef = useRef<number>(0);
 
-  // Start camera on mount for preview
+  // Start camera on mount
   useEffect(() => {
     let cancelled = false;
     const initCamera = async () => {
@@ -56,51 +116,33 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
           video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false,
         });
-        if (cancelled) {
-          stream.getTracks().forEach(t => t.stop());
-          return;
-        }
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch {
-        console.warn('Camera not available');
-      }
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      } catch { console.warn('Camera not available'); }
     };
     initCamera();
-    return () => {
-      cancelled = true;
-      streamRef.current?.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
-    };
+    return () => { cancelled = true; streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = null; };
   }, []);
 
-  // Start recording (called when countdown finishes)
   const startRecording = useCallback(() => {
     const stream = streamRef.current;
     if (!stream) return;
     chunksRef.current = [];
     try {
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       recorder.onstop = () => {
-        const blob = chunksRef.current.length > 0
-          ? new Blob(chunksRef.current, { type: 'video/webm' })
-          : null;
+        const blob = chunksRef.current.length > 0 ? new Blob(chunksRef.current, { type: 'video/webm' }) : null;
         blobResolveRef.current?.(blob);
         blobResolveRef.current = null;
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
-    } catch {
-      console.warn('MediaRecorder not supported');
-    }
+      recordingStartTimeRef.current = Date.now();
+    } catch { console.warn('MediaRecorder not supported'); }
   }, []);
 
-  // Stop recording and return blob via promise
   const stopRecording = useCallback((): Promise<Blob | null> => {
     return new Promise((resolve) => {
       const recorder = mediaRecorderRef.current;
@@ -113,11 +155,13 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
     });
   }, []);
 
-  // Countdown effect
+  // Countdown effect — start recording at countdown=3
   useEffect(() => {
     if (phase !== 'countdown') return;
-    if (countdown <= 0) {
+    if (countdown === 3) {
       startRecording();
+    }
+    if (countdown <= 0) {
       setPhase('waiting_signal');
       return;
     }
@@ -125,53 +169,108 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
     return () => clearTimeout(t);
   }, [phase, countdown, startRecording]);
 
-  // Start rep
   const handleStartRep = () => {
     const maxDelay = DIFFICULTY_MAX_DELAY[config.difficulty] || 3000;
     setRandomDelay(Math.random() * maxDelay);
     setCountdown(10);
     signalFiredRef.current = null;
-    reactionRef.current = null;
     setPhase('countdown');
   };
 
   const handleSignalFired = useCallback((signal: { type: 'go' | 'return'; value: string; firedAt: number }) => {
     signalFiredRef.current = signal;
+    setPhase('signal_active');
   }, []);
 
-  const handleUserReact = useCallback(async (decision: 'go' | 'return') => {
-    const now = Date.now();
-    const sig = signalFiredRef.current;
-    if (!sig) return;
+  const handleSignalDismissed = useCallback(() => {
+    // Signal auto-dismissed after 3s, wait 2s more buffer then stop
+    setPhase('post_signal_buffer');
+    setTimeout(async () => {
+      const sig = signalFiredRef.current;
+      if (!sig) return;
 
-    reactionRef.current = { decision, timestamp: now };
-    setPhase('finishing');
+      const videoBlob = await stopRecording();
+      setPhase('analyzing');
 
-    const videoBlob = await stopRecording();
+      if (!videoBlob) {
+        // No video — can't analyze, create result with nulls
+        onRepComplete({
+          repNumber, signalType: sig.type, signalValue: sig.value,
+          delayBeforeSignalMs: randomDelay, signalFiredAt: sig.firedAt,
+          reactionConfirmedAt: null, decisionTimeSec: null, decisionCorrect: null,
+          eliteJump: false, videoBlob: null, aiConfidence: 'low',
+          aiReasoning: 'No video captured for analysis.',
+        });
+        return;
+      }
 
-    const decisionTimeSec = Math.round(((now - sig.firedAt) / 1000) * 100) / 100;
-    const decisionCorrect = decision === sig.type;
-    const eliteJump = sig.type === 'go' && decisionTimeSec < 0.2;
+      try {
+        setAnalyzingMsg('Extracting frames...');
+        // Calculate where signal appeared relative to recording start
+        const recStart = recordingStartTimeRef.current;
+        const signalOffsetSec = (sig.firedAt - recStart) / 1000;
+        const extractStart = Math.max(0, signalOffsetSec - 0.2);
+        const extractEnd = signalOffsetSec + SIGNAL_DISPLAY_MS / 1000 + 1;
 
-    onRepComplete({
-      repNumber,
-      signalType: sig.type,
-      signalValue: sig.value,
-      delayBeforeSignalMs: randomDelay,
-      signalFiredAt: sig.firedAt,
-      reactionConfirmedAt: now,
-      decisionTimeSec,
-      decisionCorrect,
-      eliteJump,
-      videoBlob,
-    });
+        const frames = await extractFrames(videoBlob, extractStart, extractEnd, FRAME_COUNT);
+
+        if (frames.length < 3) throw new Error('Too few frames extracted');
+
+        // Signal frame is approximately index 1 (we start 0.2s before signal)
+        const signalFrameIndex = Math.min(1, frames.length - 1);
+
+        setAnalyzingMsg('AI analyzing movement...');
+        const { data, error } = await supabase.functions.invoke('analyze-base-stealing-rep', {
+          body: {
+            frames,
+            signalFrameIndex,
+            signalType: sig.type,
+            signalValue: sig.value,
+            totalFrames: frames.length,
+          },
+        });
+
+        if (error) throw error;
+
+        const aiDirection: 'go' | 'return' = data.direction;
+        const movementFrame: number = data.movementStartFrameIndex;
+        const confidence: 'high' | 'medium' | 'low' = data.confidence || 'medium';
+        const reasoning: string = data.reasoning || '';
+
+        // Calculate reaction time from frame indices
+        const frameDurationSec = (extractEnd - extractStart) / (FRAME_COUNT - 1);
+        const framesDelta = Math.max(0, movementFrame - signalFrameIndex);
+        const decisionTimeSec = Math.round(framesDelta * frameDurationSec * 100) / 100;
+        const decisionCorrect = aiDirection === sig.type;
+        const eliteJump = sig.type === 'go' && decisionTimeSec < 0.2;
+
+        onRepComplete({
+          repNumber, signalType: sig.type, signalValue: sig.value,
+          delayBeforeSignalMs: randomDelay, signalFiredAt: sig.firedAt,
+          reactionConfirmedAt: sig.firedAt + decisionTimeSec * 1000,
+          decisionTimeSec, decisionCorrect, eliteJump, videoBlob,
+          aiConfidence: confidence, aiReasoning: reasoning,
+        });
+      } catch (err) {
+        console.error('AI analysis failed:', err);
+        setAnalyzingMsg('Analysis failed — saving rep without AI data');
+        setTimeout(() => {
+          onRepComplete({
+            repNumber, signalType: sig.type, signalValue: sig.value,
+            delayBeforeSignalMs: randomDelay, signalFiredAt: sig.firedAt,
+            reactionConfirmedAt: null, decisionTimeSec: null, decisionCorrect: null,
+            eliteJump: false, videoBlob, aiConfidence: 'low',
+            aiReasoning: 'AI analysis failed. Review video manually.',
+          });
+        }, 1500);
+      }
+    }, POST_SIGNAL_BUFFER_MS);
   }, [stopRecording, onRepComplete, repNumber, randomDelay]);
 
   const showPreview = phase === 'idle';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-      {/* Camera preview — visible only during idle for framing */}
       <video
         ref={videoRef}
         autoPlay
@@ -228,15 +327,22 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
             delay={randomDelay}
             active
             onSignalFired={handleSignalFired}
-            onUserReact={handleUserReact}
+            onSignalDismissed={handleSignalDismissed}
           />
         </>
       )}
 
-      {phase === 'finishing' && (
+      {phase === 'signal_active' && (
         <div className="text-center space-y-2">
-          <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground">Processing rep...</p>
+          <div className="h-16 w-16 rounded-full border-4 border-primary/30 animate-pulse mx-auto" />
+          <p className="text-sm text-muted-foreground">React!</p>
+        </div>
+      )}
+
+      {(phase === 'post_signal_buffer' || phase === 'analyzing' || phase === 'finishing') && (
+        <div className="text-center space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-sm text-muted-foreground">{analyzingMsg}</p>
         </div>
       )}
     </div>
