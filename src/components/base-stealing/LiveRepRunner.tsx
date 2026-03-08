@@ -13,7 +13,7 @@ const DIFFICULTY_MAX_DELAY: Record<string, number> = {
 
 const SIGNAL_DISPLAY_MS = 3000;
 const POST_SIGNAL_BUFFER_MS = 2000;
-const FRAME_COUNT = 8;
+const FRAME_COUNT = 20;
 
 export interface RepResult {
   repNumber: number;
@@ -31,6 +31,7 @@ export interface RepResult {
   baseDistanceFt?: number;
   aiConfidence?: 'high' | 'medium' | 'low';
   aiReasoning?: string;
+  firstTwoStepsSec?: number;
 }
 
 interface LiveRepRunnerProps {
@@ -280,15 +281,27 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         // Calculate where signal appeared relative to recording start
         const recStart = recordingStartTimeRef.current;
         const signalOffsetSec = (sig.firedAt - recStart) / 1000;
-        const extractStart = Math.max(0, signalOffsetSec - 0.2);
-        const extractEnd = signalOffsetSec + SIGNAL_DISPLAY_MS / 1000 + 1;
+        // Tight 3s window: 0.5s before signal to 2.5s after
+        const extractStart = Math.max(0, signalOffsetSec - 0.5);
+        const extractEnd = signalOffsetSec + 2.5;
 
         const frames = await extractFrames(videoBlob, extractStart, extractEnd, FRAME_COUNT);
 
         if (frames.length < 3) throw new Error('Too few frames extracted');
 
-        // Signal frame is approximately index 1 (we start 0.2s before signal)
-        const signalFrameIndex = Math.min(1, frames.length - 1);
+        // Compute exact timestamps for each extracted frame (ms relative to signal)
+        const interval = frames.length > 1 ? (extractEnd - extractStart) / (frames.length - 1) : 0;
+        const frameTimestampsMs = frames.map((_, i) => {
+          const frameSec = extractStart + i * interval;
+          return Math.round((frameSec - signalOffsetSec) * 1000); // ms relative to signal (negative = before)
+        });
+
+        // Signal frame is the one closest to 0ms
+        const signalFrameIndex = frameTimestampsMs.reduce((best, ms, i) =>
+          Math.abs(ms) < Math.abs(frameTimestampsMs[best]) ? i : best, 0);
+
+        console.log('[FRAME EXTRACTION] Frame timestamps (ms from signal):', frameTimestampsMs);
+        console.log('[FRAME EXTRACTION] Signal frame index:', signalFrameIndex);
 
         setAnalyzingMsg('AI analyzing movement...');
         const { data, error } = await supabase.functions.invoke('analyze-base-stealing-rep', {
@@ -298,6 +311,7 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
             signalType: sig.type,
             signalValue: sig.value,
             totalFrames: frames.length,
+            frameTimestampsMs,
           },
         });
 
@@ -305,11 +319,10 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
 
         const movementDetected: boolean = data.movementDetected !== false;
         const aiDirection: 'go' | 'return' = data.direction;
-        const movementFrame: number = data.movementStartFrameIndex;
         const confidence: 'high' | 'medium' | 'low' = data.confidence || 'medium';
         const reasoning: string = data.reasoning || '';
 
-        // If no movement detected or low confidence with no movement, treat as unanalyzable
+        // If no movement detected, treat as unanalyzable
         if (!movementDetected || (confidence === 'low' && !movementDetected)) {
           onRepComplete({
             repNumber, signalType: sig.type, signalValue: sig.value,
@@ -321,12 +334,33 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
           return;
         }
 
-        // Calculate reaction time from frame indices
-        const frameDurationSec = (extractEnd - extractStart) / (FRAME_COUNT - 1);
-        const framesDelta = Math.max(0, movementFrame - signalFrameIndex);
-        const decisionTimeSec = Math.round(framesDelta * frameDurationSec * 100) / 100;
+        // Use AI's ms-precision estimate if available, fall back to frame-based calc
+        let decisionTimeSec: number;
+        if (data.estimatedReactionMs != null && data.estimatedReactionMs > 0) {
+          decisionTimeSec = Math.round(data.estimatedReactionMs) / 1000;
+        } else {
+          // Fallback: frame-based calculation
+          const movementFrame: number = data.movementStartFrameIndex;
+          const framesDelta = Math.max(0, movementFrame - signalFrameIndex);
+          decisionTimeSec = Math.round(framesDelta * interval * 100) / 100;
+        }
+        decisionTimeSec = Math.round(decisionTimeSec * 100) / 100; // 0.01s precision
+
         const decisionCorrect = aiDirection === sig.type;
         const eliteJump = sig.type === 'go' && decisionTimeSec < 0.2;
+
+        // First two steps time (go/steal reps only)
+        let firstTwoStepsSec: number | undefined;
+        if (sig.type === 'go' && data.firstTwoStepsCompleteFrameIndex != null) {
+          const stepsFrameIdx = data.firstTwoStepsCompleteFrameIndex;
+          if (stepsFrameIdx >= 0 && stepsFrameIdx < frameTimestampsMs.length) {
+            const stepsMs = frameTimestampsMs[stepsFrameIdx];
+            if (stepsMs > 0) {
+              firstTwoStepsSec = Math.round(stepsMs) / 1000;
+              firstTwoStepsSec = Math.round(firstTwoStepsSec * 100) / 100;
+            }
+          }
+        }
 
         onRepComplete({
           repNumber, signalType: sig.type, signalValue: sig.value,
@@ -334,6 +368,7 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
           reactionConfirmedAt: sig.firedAt + decisionTimeSec * 1000,
           decisionTimeSec, decisionCorrect, eliteJump, videoBlob,
           aiConfidence: confidence, aiReasoning: reasoning,
+          firstTwoStepsSec,
         });
       } catch (err) {
         console.error('AI analysis failed:', err);

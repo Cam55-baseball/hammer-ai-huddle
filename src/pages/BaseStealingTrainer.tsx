@@ -95,6 +95,7 @@ export default function BaseStealingTrainer() {
       steps_taken: r.stepsTaken,
       time_to_base_sec: r.timeToBaseSec,
       base_distance_ft: r.baseDistanceFt,
+      first_two_steps_sec: r.firstTwoStepsSec ?? null,
     }));
 
     const sessionId = await createSession({
