@@ -1,47 +1,45 @@
 
 
-# Fix: Coach Schedule Dialog RLS Error
+# Fix: Black Video Playback + False AI Results
 
-## Root Cause
+## Issue 1: Black Screen in Rep Video Review
 
-The coach has two accepted relationships:
-- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
-- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
+**Root cause**: WebM blobs recorded by `MediaRecorder` often report `duration` as `Infinity` or `NaN` because the container metadata doesn't include duration until the file is finalized. The `RepReviewPlayer` checks `duration > 0` to show controls — if duration is `Infinity`, the controls may render but seeking won't work. More critically, some browsers won't render the first frame without explicitly seeking or playing.
 
-The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
+**Fix in `RepReviewPlayer.tsx`**:
+- Add `preload="auto"` to the video element
+- After setting `src`, call `video.load()` to force the browser to parse the blob
+- Handle `Infinity` duration by listening for `durationchange` and using a workaround: seek to a very large time to force the browser to calculate actual duration, then seek back
+- Add an `onLoadedData` handler that seeks to 0 to render the first frame (fixes black screen)
 
-## Solution
+## Issue 2: AI Returns False Positive for No-Movement Videos
 
-**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
+**Root cause**: The AI edge function always returns a direction (`go` or `return`) even when confidence is `low` and no actual movement was detected. The network response confirms: `"confidence":"low"`, `"reasoning":"No clear body movement is visible"` — yet the system displayed "Correct Decision!" because the random direction happened to match.
 
-**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
+**Fix — two layers**:
 
-I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
+### A. Edge function (`analyze-base-stealing-rep/index.ts`)
+Add a `movementDetected` boolean to the tool schema so the AI can explicitly report "I see no movement." When confidence is `low` and no movement is detected, the function should return a clear flag.
 
-### Changes
+Add to the function parameters:
+```
+movementDetected: { type: "boolean", description: "Whether any actual body movement was detected in the frames" }
+```
+
+### B. Client-side (`LiveRepRunner.tsx`)
+After receiving AI results, check:
+- If `confidence === 'low'` AND `movementDetected === false` (or reasoning indicates no movement), treat as "unable to analyze"
+- Set `decisionCorrect: null`, `decisionTimeSec: null`
+- Set `aiReasoning` to explain that no movement was detected
+
+### C. Display (`PostRepInput.tsx`)
+Already handles the `decisionCorrect === null` case with "Analysis Unavailable" — no changes needed there.
+
+## Files Modified
 
 | File | Change |
 |------|--------|
-| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
-| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
-
-### Technical Detail
-
-**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
-```sql
-CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.scout_follows
-    WHERE scout_id = p_coach_id
-      AND player_id = p_player_id
-      AND status = 'accepted'
-      AND relationship_type IN ('linked', 'follow')
-  )
-$$;
-```
-
-Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
+| `RepReviewPlayer.tsx` | Fix WebM playback: add `preload="auto"`, force first frame render, handle `Infinity` duration |
+| `analyze-base-stealing-rep/index.ts` | Add `movementDetected` boolean to AI tool schema |
+| `LiveRepRunner.tsx` | Check `movementDetected` flag; when false with low confidence, return null analysis instead of false positive |
 
