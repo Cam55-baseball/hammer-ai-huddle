@@ -78,29 +78,28 @@ export default function BaseStealingTrainer() {
         `${reps.filter(r => r.decisionCorrect).length}/${reps.length} correct`,
         ...(reps.some(r => r.eliteJump) ? ['elite_jump'] : []),
       ],
-      micro_layer_data: reps.map(r => ({
-        signal_type: r.signalType,
-        signal_value: r.signalValue,
-        decision_time_sec: r.decisionTimeSec,
-        decision_correct: r.decisionCorrect,
-        elite_jump: r.eliteJump,
-        delay_before_signal_sec: r.delayBeforeSignalMs / 1000,
-        steps_taken: r.stepsTaken,
-        time_to_base_sec: r.timeToBaseSec,
-        base_distance_ft: r.baseDistanceFt,
-      })),
     }];
 
+    const microLayerData = reps.map(r => ({
+      signal_type: r.signalType,
+      signal_value: r.signalValue,
+      decision_time_sec: r.decisionTimeSec,
+      decision_correct: r.decisionCorrect,
+      elite_jump: r.eliteJump,
+      delay_before_signal_sec: r.delayBeforeSignalMs / 1000,
+      steps_taken: r.stepsTaken,
+      time_to_base_sec: r.timeToBaseSec,
+      base_distance_ft: r.baseDistanceFt,
+    }));
+
     const sessionId = await createSession({
+      sport: sport || 'baseball',
+      session_type: 'base_stealing',
+      session_date: new Date().toISOString().split('T')[0],
       module: 'baserunning',
-      sessionType: 'base_stealing',
-      reps: [],
       notes: `Base Stealing: ${config.targetBase}, Difficulty: ${config.difficulty}, Signal: ${config.signalMode}`,
-      feelings: { body: 3, mind: 3 },
-      config: {
-        lead_config: config,
-      },
-      drillBlocks,
+      drill_blocks: drillBlocks,
+      micro_layer_data: microLayerData,
     });
 
     if (sessionId) {

@@ -163,6 +163,7 @@ const App = () => {
               <Route path="/organization" element={<OrganizationDashboard />} />
               <Route path="/admin-verification" element={<AdminVerification />} />
               <Route path="/game-scoring" element={<GameScoring />} />
+              <Route path="/base-stealing" element={<BaseStealingTrainer />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>

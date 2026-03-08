@@ -18,9 +18,8 @@ const MODULES = [
   { value: 'pitching', label: 'Pitching' },
   { value: 'throwing', label: 'Throwing' },
   { value: 'fielding', label: 'Fielding' },
-  
   { value: 'baserunning', label: 'Baserunning' },
-  
+  { value: 'base_stealing', label: 'Base Stealing', baseballOnly: true },
 ];
 
 const SESSION_TYPES = [
