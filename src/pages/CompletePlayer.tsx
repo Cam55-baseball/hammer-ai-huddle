@@ -13,6 +13,15 @@ const tiles = [
     getRoute: (sport: string) => `/analyze/throwing?sport=${sport}`,
   },
   {
+    key: "base-stealing",
+    icon: Zap,
+    labelKey: "baseStealing.title",
+    labelFallback: "Base Stealing",
+    description: "Reaction training for explosive steals",
+    getRoute: () => "/base-stealing",
+    baseballOnly: true,
+  },
+  {
     key: "speed-lab",
     icon: Zap,
     labelKey: "speedLab.title",
