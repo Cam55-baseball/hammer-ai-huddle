@@ -4,7 +4,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Info } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Camera, Info, SwitchCamera } from 'lucide-react';
 
 const STEP_OPTIONS = Array.from({ length: 29 }, (_, i) => {
   const val = (i + 2) / 2;
@@ -27,6 +29,7 @@ export interface LeadConfig {
   holderPosition: string;
   signalMode: 'colors' | 'numbers';
   difficulty: 'easy' | 'medium' | 'hard';
+  cameraFacing: 'environment' | 'user';
 }
 
 interface SessionSetupProps {
@@ -44,6 +47,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
     holderPosition: 'nobody',
     signalMode: 'colors',
     difficulty: 'medium',
+    cameraFacing: 'environment',
   });
 
   const update = <K extends keyof LeadConfig>(key: K, value: LeadConfig[K]) =>
@@ -53,21 +57,40 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
     ? ['1B', 'Nobody']
     : config.targetBase === '3rd'
     ? ['2B', 'SS', 'Nobody']
+    : config.targetBase === 'home'
+    ? ['3B', 'Nobody']
     : ['Nobody'];
 
   return (
     <div className="space-y-6 max-w-lg mx-auto">
       {/* Camera guide */}
       <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="pt-5 flex gap-3 items-start">
-          <Camera className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-          <div className="space-y-1">
-            <p className="text-sm font-semibold">Camera Position</p>
-            <p className="text-xs text-muted-foreground">
-              Position your camera to capture <strong>3 steps</strong> in each direction from your lead position. 
-              Analysis only needs 2 steps, but capturing 3 ensures accuracy.
-            </p>
+        <CardContent className="pt-5 space-y-4">
+          <div className="flex gap-3 items-start">
+            <Camera className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold">Camera Position</p>
+              <p className="text-xs text-muted-foreground">
+                Position your camera to capture <strong>3 steps</strong> in each direction from your lead position. 
+                Analysis only needs 2 steps, but capturing 3 ensures accuracy.
+              </p>
+            </div>
           </div>
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <SwitchCamera className="h-4 w-4 text-muted-foreground" />
+              <Label className="text-xs font-medium">Front Camera</Label>
+            </div>
+            <Switch
+              checked={config.cameraFacing === 'user'}
+              onCheckedChange={(checked) => update('cameraFacing', checked ? 'user' : 'environment')}
+            />
+          </div>
+          {config.cameraFacing === 'user' && (
+            <p className="text-xs text-muted-foreground pl-6">
+              You'll see a live preview to confirm you're in frame before starting.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -184,6 +207,53 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
             <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>Higher difficulty increases the randomization of signal timing, making reactions harder to anticipate.</span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Signal Explanation */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Reaction Signal Rules</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {config.signalMode === 'colors' ? (
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 rounded-full bg-green-500 shrink-0" />
+                <span className="text-sm font-medium">Green</span>
+                <Badge variant="secondary" className="ml-auto text-xs">Steal / Go</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 rounded-full bg-red-500 shrink-0" />
+                <span className="text-sm font-medium">Red</span>
+                <Badge variant="outline" className="ml-auto text-xs">Return</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 rounded-full bg-yellow-500 shrink-0" />
+                <span className="text-sm font-medium">Yellow</span>
+                <Badge variant="outline" className="ml-auto text-xs">Return</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 rounded-full bg-blue-500 shrink-0" />
+                <span className="text-sm font-medium">Blue</span>
+                <Badge variant="outline" className="ml-auto text-xs">Return</Badge>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-primary">2, 4, 6, 8…</span>
+                <Badge variant="secondary" className="ml-auto text-xs">Steal / Go</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-muted-foreground">1, 3, 5, 7…</span>
+                <Badge variant="outline" className="ml-auto text-xs">Return</Badge>
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-3">
+            React as fast as possible when the signal appears. Wrong decisions count against accuracy.
+          </p>
         </CardContent>
       </Card>
 
