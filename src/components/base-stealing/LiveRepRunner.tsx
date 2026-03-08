@@ -107,6 +107,10 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
   const blobResolveRef = useRef<((blob: Blob | null) => void) | null>(null);
   const recordingStartTimeRef = useRef<number>(0);
 
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
   // Start camera on mount
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +123,14 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
-      } catch { console.warn('Camera not available'); }
+        setCameraReady(true);
+      } catch (err: any) {
+        console.warn('Camera not available:', err);
+        const msg = err?.name === 'NotAllowedError'
+          ? 'Camera permission denied. Please allow camera access to use Base Stealing Lab.'
+          : 'Camera not available. Please check your device.';
+        setCameraError(msg);
+      }
     };
     initCamera();
     return () => { cancelled = true; streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = null; };
