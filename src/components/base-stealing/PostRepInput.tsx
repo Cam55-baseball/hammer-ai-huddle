@@ -23,10 +23,10 @@ const CONFIDENCE_STYLES: Record<string, { variant: 'default' | 'secondary' | 'de
   low: { variant: 'destructive', label: 'Low Confidence' },
 };
 
-export function PostRepInput({ result, onNextRep, onEndSession, onDeleteRep }: PostRepInputProps) {
+export function PostRepInput({ result, config, onNextRep, onEndSession, onDeleteRep }: PostRepInputProps) {
   const [stepsTaken, setStepsTaken] = useState('');
   const [timeToBase, setTimeToBase] = useState('');
-  const [baseDist, setBaseDist] = useState('');
+  const [baseDist, setBaseDist] = useState(config.baseDistanceFt || '');
 
   const enriched: RepResult = {
     ...result,
