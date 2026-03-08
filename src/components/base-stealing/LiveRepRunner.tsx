@@ -107,6 +107,10 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
   const blobResolveRef = useRef<((blob: Blob | null) => void) | null>(null);
   const recordingStartTimeRef = useRef<number>(0);
 
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
   // Start camera on mount
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +123,14 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
-      } catch { console.warn('Camera not available'); }
+        setCameraReady(true);
+      } catch (err: any) {
+        console.warn('Camera not available:', err);
+        const msg = err?.name === 'NotAllowedError'
+          ? 'Camera permission denied. Please allow camera access to use Base Stealing Lab.'
+          : 'Camera not available. Please check your device.';
+        setCameraError(msg);
+      }
     };
     initCamera();
     return () => { cancelled = true; streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = null; };
@@ -127,7 +138,10 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
 
   const startRecording = useCallback(() => {
     const stream = streamRef.current;
-    if (!stream) return;
+    if (!stream) {
+      console.error('Cannot start recording — no camera stream');
+      return false;
+    }
     chunksRef.current = [];
     try {
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
@@ -136,11 +150,17 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         const blob = chunksRef.current.length > 0 ? new Blob(chunksRef.current, { type: 'video/webm' }) : null;
         blobResolveRef.current?.(blob);
         blobResolveRef.current = null;
+        setIsRecording(false);
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
       recordingStartTimeRef.current = Date.now();
-    } catch { console.warn('MediaRecorder not supported'); }
+      setIsRecording(true);
+      return true;
+    } catch (err) {
+      console.warn('MediaRecorder not supported:', err);
+      return false;
+    }
   }, []);
 
   const stopRecording = useCallback((): Promise<Blob | null> => {
@@ -155,11 +175,17 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
     });
   }, []);
 
-  // Countdown effect — start recording at countdown=3
+  // Countdown effect — start recording at countdown=3 with safeguard
   useEffect(() => {
     if (phase !== 'countdown') return;
     if (countdown === 3) {
-      startRecording();
+      const success = startRecording();
+      if (!success) {
+        // Recording failed — abort rep
+        setCameraError('Recording failed to start. Please check camera permissions and try again.');
+        setPhase('idle');
+        return;
+      }
     }
     if (countdown <= 0) {
       setPhase('waiting_signal');
@@ -170,6 +196,8 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
   }, [phase, countdown, startRecording]);
 
   const handleStartRep = () => {
+    if (!cameraReady) return;
+    setCameraError(null);
     const maxDelay = DIFFICULTY_MAX_DELAY[config.difficulty] || 3000;
     setRandomDelay(Math.random() * maxDelay);
     setCountdown(10);
@@ -270,7 +298,14 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
   const showPreview = phase === 'idle';
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 relative">
+      {/* Recording indicator */}
+      {isRecording && (
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full z-10">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-xs font-medium text-red-500">REC</span>
+        </div>
+      )}
       <video
         ref={videoRef}
         autoPlay
@@ -285,11 +320,22 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
       {phase === 'idle' && (
         <div className="text-center space-y-4">
           <p className="text-lg font-medium">Rep #{repNumber}</p>
+          {cameraError && (
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+              {cameraError}
+            </div>
+          )}
+          {!cameraReady && !cameraError && (
+            <div className="flex items-center gap-2 justify-center text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Initializing camera...
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
             Confirm you're visible in the preview above, then press Start.
           </p>
           <div className="flex gap-3 justify-center">
-            <Button size="lg" onClick={handleStartRep} className="gap-2 px-8">
+            <Button size="lg" onClick={handleStartRep} className="gap-2 px-8" disabled={!cameraReady}>
               <Play className="h-5 w-5" />
               Start Rep
             </Button>

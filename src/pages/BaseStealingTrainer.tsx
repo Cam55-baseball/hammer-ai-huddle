@@ -5,6 +5,7 @@ import { SessionSetup, type LeadConfig } from '@/components/base-stealing/Sessio
 import { LiveRepRunner, type RepResult } from '@/components/base-stealing/LiveRepRunner';
 import { PostRepInput } from '@/components/base-stealing/PostRepInput';
 import { SessionSummary } from '@/components/base-stealing/SessionSummary';
+import { PerformanceAnalysis } from '@/components/base-stealing/PerformanceAnalysis';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { usePerformanceSession, type DrillBlock } from '@/hooks/usePerformanceSession';
@@ -12,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { useEffect } from 'react';
 
-type Phase = 'setup' | 'live_rep' | 'post_rep' | 'summary';
+type Phase = 'setup' | 'live_rep' | 'post_rep' | 'summary' | 'analysis';
 
 export default function BaseStealingTrainer() {
   const navigate = useNavigate();
@@ -108,7 +109,7 @@ export default function BaseStealingTrainer() {
 
     if (sessionId) {
       toast({ title: 'Session saved!', description: `${reps.length} reps logged.` });
-      navigate('/practice?module=baserunning');
+      setPhase('analysis');
     }
   };
 
@@ -147,6 +148,14 @@ export default function BaseStealingTrainer() {
 
         {phase === 'summary' && config && (
           <SessionSummary reps={reps} config={config} onSave={handleSave} saving={saving} />
+        )}
+
+        {phase === 'analysis' && config && (
+          <PerformanceAnalysis
+            reps={reps}
+            config={config}
+            onDone={() => navigate('/practice?module=baserunning')}
+          />
         )}
       </div>
     </DashboardLayout>
