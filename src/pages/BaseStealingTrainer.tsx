@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { useEffect } from 'react';
 
-type Phase = 'setup' | 'live_rep' | 'post_rep' | 'summary';
+type Phase = 'setup' | 'live_rep' | 'post_rep' | 'summary' | 'analysis';
 
 export default function BaseStealingTrainer() {
   const navigate = useNavigate();
