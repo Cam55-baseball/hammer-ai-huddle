@@ -101,7 +101,7 @@ export default function BaseStealingTrainer() {
       session_type: 'base_stealing',
       session_date: new Date().toISOString().split('T')[0],
       module: 'baserunning',
-      notes: `Base Stealing: ${config.targetBase}, Difficulty: ${config.difficulty}, Signal: ${config.signalMode}`,
+      notes: `Base Stealing: ${config.targetBase}, Difficulty: ${config.difficulty}, Signal: ${config.signalMode}, Base: ${config.baseDistanceFt}ft, Lead: ${config.leadDistanceFt || 'N/A'}ft`,
       drill_blocks: drillBlocks,
       micro_layer_data: microLayerData,
     });
@@ -145,8 +145,8 @@ export default function BaseStealingTrainer() {
           />
         )}
 
-        {phase === 'summary' && (
-          <SessionSummary reps={reps} onDone={handleSave} saving={saving} />
+        {phase === 'summary' && config && (
+          <SessionSummary reps={reps} config={config} onSave={handleSave} saving={saving} />
         )}
       </div>
     </DashboardLayout>

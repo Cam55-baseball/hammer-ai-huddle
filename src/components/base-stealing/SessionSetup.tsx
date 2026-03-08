@@ -19,12 +19,21 @@ const SHORT_STEP_OPTIONS = [
   { value: '2', label: '2' },
 ];
 
+const BASE_DISTANCE_OPTIONS = [
+  { value: '50', label: '50 ft' },
+  { value: '60', label: '60 ft' },
+  { value: '70', label: '70 ft' },
+  { value: '80', label: '80 ft' },
+  { value: '90', label: '90 ft' },
+];
+
 export interface LeadConfig {
   stepsTowardBase: string;
   shuffleSteps: string;
   stepsBackOutfield: string;
   stepsTowardPitcher: string;
   leadDistanceFt: string;
+  baseDistanceFt: string;
   targetBase: string;
   holderPosition: string;
   signalMode: 'colors' | 'numbers';
@@ -43,6 +52,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
     stepsBackOutfield: '1',
     stepsTowardPitcher: '1',
     leadDistanceFt: '',
+    baseDistanceFt: '90',
     targetBase: '2nd',
     holderPosition: 'nobody',
     signalMode: 'colors',
@@ -155,6 +165,15 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {holderOptions.map(o => <SelectItem key={o} value={o.toLowerCase()}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Base Distance</Label>
+              <Select value={config.baseDistanceFt} onValueChange={v => update('baseDistanceFt', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BASE_DISTANCE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
