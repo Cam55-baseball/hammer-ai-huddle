@@ -13,6 +13,15 @@ const tiles = [
     getRoute: (sport: string) => `/analyze/throwing?sport=${sport}`,
   },
   {
+    key: "base-stealing",
+    icon: Zap,
+    labelKey: "baseStealing.title",
+    labelFallback: "Base Stealing",
+    description: "Reaction training for explosive steals",
+    getRoute: () => "/base-stealing",
+    baseballOnly: true,
+  },
+  {
     key: "speed-lab",
     icon: Zap,
     labelKey: "speedLab.title",
@@ -42,7 +51,9 @@ export default function CompletePlayer() {
 
         {/* Selection Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {tiles.map((tile) => {
+          {tiles
+            .filter(tile => !('baseballOnly' in tile && tile.baseballOnly) || selectedSport === 'baseball')
+            .map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
 

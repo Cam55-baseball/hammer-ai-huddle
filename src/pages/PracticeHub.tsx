@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +42,7 @@ type FlowStep = 'select_type' | 'readiness' | 'configure_session' | 'build_sessi
 export default function PracticeHub() {
   const { t } = useTranslation();
   const { term, sport } = useSportTerminology();
+  const navigate = useNavigate();
   const { sport: sportKey } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
   const { toast } = useToast();
@@ -253,9 +254,21 @@ export default function PracticeHub() {
                     <CardContent>
                       <SessionTypeSelector value={sessionType} onChange={handleSelectType} />
                     </CardContent>
-                  </Card>
-                  <RecentSessionsList sport={sportKey} moduleLabel={mod.label} />
-                </>
+                   </Card>
+                   {/* Base Stealing quick-link — baseball only */}
+                   {mod.id === 'baserunning' && sportKey === 'baseball' && (
+                     <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate('/base-stealing')}>
+                       <CardContent className="py-4 flex items-center gap-3">
+                         <Zap className="h-5 w-5 text-primary" />
+                         <div>
+                           <p className="font-semibold text-sm">Base Stealing Trainer</p>
+                           <p className="text-xs text-muted-foreground">Reaction timing & explosive acceleration drills</p>
+                         </div>
+                       </CardContent>
+                     </Card>
+                   )}
+                   <RecentSessionsList sport={sportKey} moduleLabel={mod.label} />
+                 </>
               )}
 
               {/* Step 2: Pre-Session Readiness */}

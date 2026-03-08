@@ -1,0 +1,97 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle, XCircle, Zap, Plus, Save } from 'lucide-react';
+import type { RepResult } from './LiveRepRunner';
+
+interface PostRepInputProps {
+  result: RepResult;
+  onNextRep: (updated: RepResult) => void;
+  onEndSession: (updated: RepResult) => void;
+}
+
+export function PostRepInput({ result, onNextRep, onEndSession }: PostRepInputProps) {
+  const [stepsTaken, setStepsTaken] = useState('');
+  const [timeToBase, setTimeToBase] = useState('');
+  const [baseDist, setBaseDist] = useState('');
+
+  const enriched: RepResult = {
+    ...result,
+    stepsTaken: stepsTaken ? Number(stepsTaken) : undefined,
+    timeToBaseSec: timeToBase ? Number(timeToBase) : undefined,
+    baseDistanceFt: baseDist ? Number(baseDist) : undefined,
+  };
+
+  return (
+    <div className="max-w-md mx-auto space-y-5">
+      {/* Result summary */}
+      <Card className={result.decisionCorrect ? 'border-green-500/50' : 'border-red-500/50'}>
+        <CardContent className="pt-5 space-y-3">
+          <div className="flex items-center gap-2">
+            {result.decisionCorrect ? (
+              <CheckCircle className="h-6 w-6 text-green-500" />
+            ) : (
+              <XCircle className="h-6 w-6 text-red-500" />
+            )}
+            <span className="text-lg font-bold">
+              {result.decisionCorrect ? 'Correct Decision!' : 'Wrong Decision'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Signal:</span>{' '}
+              <span className="font-medium">{result.signalValue}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Reaction:</span>{' '}
+              <span className="font-medium">{result.decisionTimeSec}s</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Expected:</span>{' '}
+              <span className="font-medium uppercase">{result.signalType}</span>
+            </div>
+            {result.eliteJump && (
+              <div className="flex items-center gap-1 text-amber-500 font-bold">
+                <Zap className="h-4 w-4" /> Elite Jump!
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Optional data */}
+      <Card>
+        <CardContent className="pt-5 space-y-3">
+          <p className="text-xs text-muted-foreground font-medium">Optional — add rep details</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Steps Taken</Label>
+              <Input type="number" placeholder="—" value={stepsTaken} onChange={e => setStepsTaken(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Time to Base (s)</Label>
+              <Input type="number" step="0.01" placeholder="—" value={timeToBase} onChange={e => setTimeToBase(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Base Dist (ft)</Label>
+              <Input type="number" placeholder="—" value={baseDist} onChange={e => setBaseDist(e.target.value)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <Button className="flex-1 gap-2" onClick={() => onNextRep(enriched)}>
+          <Plus className="h-4 w-4" /> Next Rep
+        </Button>
+        <Button variant="outline" className="flex-1 gap-2" onClick={() => onEndSession(enriched)}>
+          <Save className="h-4 w-4" /> Save & End
+        </Button>
+      </div>
+    </div>
+  );
+}
