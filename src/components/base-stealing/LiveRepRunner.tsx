@@ -42,6 +42,53 @@ interface LiveRepRunnerProps {
 
 type Phase = 'idle' | 'countdown' | 'waiting_signal' | 'signal_active' | 'post_signal_buffer' | 'analyzing' | 'finishing';
 
+/** Resolve the real duration of a WebM blob (handles Infinity duration) */
+async function resolveVideoDuration(video: HTMLVideoElement): Promise<number> {
+  const d = video.duration;
+  if (isFinite(d) && d > 0) return d;
+
+  console.log('[FRAME EXTRACTION] Duration is Infinity, using seek workaround');
+  return new Promise<number>((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Duration resolve timeout')), 5000);
+    
+    const onDurationChange = () => {
+      if (isFinite(video.duration) && video.duration > 0) {
+        clearTimeout(timeout);
+        video.removeEventListener('durationchange', onDurationChange);
+        resolve(video.duration);
+      }
+    };
+    video.addEventListener('durationchange', onDurationChange);
+    
+    // Seek to a huge time to force the browser to calculate the real duration
+    video.currentTime = 1e10;
+    video.addEventListener('seeked', function onSeek() {
+      video.removeEventListener('seeked', onSeek);
+      if (isFinite(video.duration) && video.duration > 0) {
+        clearTimeout(timeout);
+        video.removeEventListener('durationchange', onDurationChange);
+        resolve(video.duration);
+      }
+    }, { once: true });
+  });
+}
+
+/** Seek with a per-frame timeout to avoid hanging */
+function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      video.removeEventListener('seeked', onSeeked);
+      reject(new Error(`Seek to ${time.toFixed(2)}s timed out`));
+    }, 3000);
+    const onSeeked = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    video.addEventListener('seeked', onSeeked, { once: true });
+    video.currentTime = time;
+  });
+}
+
 /** Extract frames from a video blob between startSec and endSec */
 async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, count: number): Promise<string[]> {
   return new Promise((resolve, reject) => {
@@ -50,7 +97,7 @@ async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, 
     const ctx = canvas.getContext('2d');
     if (!ctx) { reject(new Error('No canvas context')); return; }
 
-    const timeout = setTimeout(() => { cleanup(); reject(new Error('Frame extraction timeout')); }, 20000);
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('Frame extraction timeout')); }, 25000);
 
     const cleanup = () => {
       clearTimeout(timeout);
@@ -61,22 +108,34 @@ async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, 
       canvas.width = Math.min(video.videoWidth, 640);
       canvas.height = Math.round(canvas.width * (video.videoHeight / video.videoWidth));
 
-      const duration = video.duration;
+      let duration: number;
+      try {
+        duration = await resolveVideoDuration(video);
+        // Seek back to start after duration workaround
+        await seekTo(video, 0);
+      } catch {
+        // Fallback: assume 5 seconds if we can't resolve duration
+        console.warn('[FRAME EXTRACTION] Could not resolve duration, using fallback');
+        duration = 5;
+      }
+
+      console.log('[FRAME EXTRACTION] Resolved duration:', duration);
       const clampedStart = Math.max(0, Math.min(startSec, duration));
       const clampedEnd = Math.min(endSec, duration);
-      const interval = (clampedEnd - clampedStart) / (count - 1);
+      const interval = count > 1 ? (clampedEnd - clampedStart) / (count - 1) : 0;
       const frames: string[] = [];
 
       try {
         for (let i = 0; i < count; i++) {
           const t = clampedStart + i * interval;
-          video.currentTime = t;
-          await new Promise<void>((res) => {
-            video.addEventListener('seeked', () => res(), { once: true });
-          });
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          if (dataUrl && dataUrl.length > 100) frames.push(dataUrl);
+          try {
+            await seekTo(video, t);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            if (dataUrl && dataUrl.length > 100) frames.push(dataUrl);
+          } catch (seekErr) {
+            console.warn(`[FRAME EXTRACTION] Skipping frame at ${t.toFixed(2)}s:`, seekErr);
+          }
         }
         cleanup();
         resolve(frames);
@@ -87,7 +146,7 @@ async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, 
     }, { once: true });
 
     video.addEventListener('error', () => { cleanup(); reject(new Error('Video load error')); }, { once: true });
-    video.preload = 'metadata';
+    video.preload = 'auto';
     video.muted = true;
     video.playsInline = true;
     video.src = URL.createObjectURL(videoBlob);
