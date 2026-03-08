@@ -79,7 +79,7 @@ function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
   });
 }
 
-/** Extract frames from a video blob between startSec and endSec */
+/** Extract frames from a video blob between startSec and endSec — no duration clamping */
 async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, count: number): Promise<string[]> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
@@ -98,31 +98,25 @@ async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, 
       canvas.width = Math.min(video.videoWidth, 640);
       canvas.height = Math.round(canvas.width * (video.videoHeight / video.videoWidth));
 
-      let duration: number;
-      try {
-        duration = await resolveVideoDuration(video);
-        // Seek back to start after duration workaround
-        await seekTo(video, 0);
-      } catch {
-        // Fallback: assume 5 seconds if we can't resolve duration
-        console.warn('[FRAME EXTRACTION] Could not resolve duration, using fallback');
-        duration = 5;
-      }
+      // Try to resolve duration (for logging only), but don't clamp against it
+      const resolvedDuration = await resolveVideoDuration(video);
+      console.log('[FRAME EXTRACTION] Resolved duration:', resolvedDuration, '| Requested range:', startSec.toFixed(2), '-', endSec.toFixed(2));
 
-      console.log('[FRAME EXTRACTION] Resolved duration:', duration);
-      const clampedStart = Math.max(0, Math.min(startSec, duration));
-      const clampedEnd = Math.min(endSec, duration);
-      const interval = count > 1 ? (clampedEnd - clampedStart) / (count - 1) : 0;
+      // Seek directly to calculated timestamps — no clamping against duration
+      const interval = count > 1 ? (endSec - startSec) / (count - 1) : 0;
       const frames: string[] = [];
 
       try {
         for (let i = 0; i < count; i++) {
-          const t = clampedStart + i * interval;
+          const t = startSec + i * interval;
           try {
             await seekTo(video, t);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            if (dataUrl && dataUrl.length > 100) frames.push(dataUrl);
+            if (dataUrl && dataUrl.length > 100) {
+              frames.push(dataUrl);
+              console.log(`[FRAME EXTRACTION] Frame ${i + 1}/${count} captured at ${t.toFixed(2)}s`);
+            }
           } catch (seekErr) {
             console.warn(`[FRAME EXTRACTION] Skipping frame at ${t.toFixed(2)}s:`, seekErr);
           }
