@@ -1,47 +1,68 @@
 
 
-# Fix: Coach Schedule Dialog RLS Error
+# Base Stealing Lab — 4 Updates
 
-## Root Cause
+## 1. Steps Toward Base & Shuffle Steps: Allow 0
 
-The coach has two accepted relationships:
-- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
-- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
+**Bug**: `STEP_OPTIONS` starts at 1 (formula `(i+2)/2`). Steps Toward Base and Shuffle Steps use this array, so 0 is not selectable.
 
-The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
+**Fix** in `SessionSetup.tsx`:
+- Add `{ value: '0', label: '0' }` to the beginning of `STEP_OPTIONS`, or create a separate options array for these two fields that starts at 0.
+- Simplest: prepend `{ value: '0', label: '0' }` to `STEP_OPTIONS`.
 
-## Solution
+## 2. Base Distance Already Exists
 
-**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
+Base Distance setup is already implemented — `BASE_DISTANCE_OPTIONS` with 50/60/70/80/90 ft, and `config.baseDistanceFt` feeds into `SessionSummary` where metrics normalize to 90ft equivalent. This requirement is already satisfied. No changes needed.
 
-**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
+## 3. Post-Session Performance Analysis Screen
 
-I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
+After save but before returning to main menu, show a detailed performance breakdown. This will be a new component and a new phase in `BaseStealingTrainer.tsx`.
 
-### Changes
+**New file**: `src/components/base-stealing/PerformanceAnalysis.tsx`
+
+Inputs (from session reps + config):
+- Avg takeoff/decision time (from AI-detected `decisionTimeSec`)
+- Avg run time (from user-input `timeToBaseSec`)
+- Lead distance, base distance, step/shuffle data
+- Elite jump count
+
+Output display:
+- **Takeoff Grade**: Elite / Good / Average / Needs Work (based on `decisionTimeSec` vs MLB benchmarks)
+- **Acceleration Grade**: Elite / Good / Average / Needs Work (based on normalized run time vs MLB steal time benchmarks)
+- **Lead Efficiency**: Calculated from lead distance relative to base distance
+- **Steal Efficiency Score**: Composite 0-100 score combining takeoff + acceleration + decision accuracy
+- **Key Insight**: Dynamic coaching sentence (e.g., "Explosive acceleration but delayed first movement. Improving reaction time could drop your steal time by ~0.08s.")
+- **Classification labels**: "Slow Takeoff + Elite Acceleration", "Elite Takeoff + Average Speed", etc.
+
+**Modify** `BaseStealingTrainer.tsx`:
+- Add new phase `'analysis'` between `'summary'` and navigation back
+- After `handleSave` succeeds, transition to `'analysis'` phase instead of navigating away
+- Render `<PerformanceAnalysis>` with a "Done" button that navigates to `/practice?module=baserunning`
+
+## 4. Camera Recording Bug — Robustness Fix
+
+**Root cause**: The camera init is fire-and-forget — if `getUserMedia` hasn't resolved by countdown=3, `startRecording()` runs with `streamRef.current === null` and silently fails.
+
+**Fixes in `LiveRepRunner.tsx`**:
+
+1. **Track camera readiness**: Add `cameraReady` state. Set it `true` after `getUserMedia` resolves. Disable "Start Rep" button until camera is ready.
+
+2. **Guard countdown start**: Don't start countdown until `cameraReady === true`. Show "Initializing camera..." message.
+
+3. **Recording safeguard at countdown=3**: If `streamRef.current` is null when countdown hits 3, retry camera init with a short timeout. If still null, show error toast and abort rep.
+
+4. **Timeout recovery**: If `MediaRecorder` doesn't produce data within 10s of starting, trigger error state.
+
+5. **Permission failure handling**: Catch `getUserMedia` errors explicitly — show a clear error message: "Camera permission denied. Please allow camera access to use Base Stealing Lab."
+
+6. **Recording state indicator**: Show a small red recording dot when recording is active so the user has visual confirmation.
+
+## Files Summary
 
 | File | Change |
 |------|--------|
-| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
-| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
-
-### Technical Detail
-
-**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
-```sql
-CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.scout_follows
-    WHERE scout_id = p_coach_id
-      AND player_id = p_player_id
-      AND status = 'accepted'
-      AND relationship_type IN ('linked', 'follow')
-  )
-$$;
-```
-
-Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
+| `SessionSetup.tsx` | Prepend `0` to `STEP_OPTIONS` |
+| `LiveRepRunner.tsx` | Add camera readiness tracking, recording safeguards, error handling, recording indicator |
+| `BaseStealingTrainer.tsx` | Add `'analysis'` phase after save |
+| `PerformanceAnalysis.tsx` | **New** — post-session performance breakdown with grades, composite score, classification labels, coaching insight |
 
