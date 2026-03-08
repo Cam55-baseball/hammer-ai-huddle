@@ -26,11 +26,19 @@ const SIGNAL_DISPLAY_MS = 3000;
 export function ReactionSignal({ mode, onSignalFired, onSignalDismissed, delay, active }: ReactionSignalProps) {
   const [signal, setSignal] = useState<{ type: 'go' | 'return'; value: string; color?: string } | null>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSignalFiredRef = useRef(onSignalFired);
+  const onSignalDismissedRef = useRef(onSignalDismissed);
 
+  // Keep callback refs current
+  useEffect(() => { onSignalFiredRef.current = onSignalFired; }, [onSignalFired]);
+  useEffect(() => { onSignalDismissedRef.current = onSignalDismissed; }, [onSignalDismissed]);
+
+  // Fire signal after delay
   useEffect(() => {
     if (!active) return;
 
-    const timer = setTimeout(() => {
+    delayTimerRef.current = setTimeout(() => {
       let type: 'go' | 'return';
       let value: string;
       let color: string | undefined;
@@ -49,20 +57,19 @@ export function ReactionSignal({ mode, onSignalFired, onSignalDismissed, delay, 
       }
 
       setSignal({ type, value, color });
-      onSignalFired({ type, value, firedAt: Date.now() });
+      onSignalFiredRef.current({ type, value, firedAt: Date.now() });
 
-      // Auto-dismiss after 3 seconds
       dismissTimerRef.current = setTimeout(() => {
         setSignal(null);
-        onSignalDismissed();
+        onSignalDismissedRef.current();
       }, SIGNAL_DISPLAY_MS);
     }, delay);
 
     return () => {
-      clearTimeout(timer);
-      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      // Only clear the delay timer; dismiss timer must survive
+      if (delayTimerRef.current) clearTimeout(delayTimerRef.current);
     };
-  }, [active, delay, mode, onSignalFired, onSignalDismissed]);
+  }, [active, delay, mode]);
 
   return (
     <AnimatePresence>
