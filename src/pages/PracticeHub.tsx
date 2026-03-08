@@ -42,6 +42,7 @@ type FlowStep = 'select_type' | 'readiness' | 'configure_session' | 'build_sessi
 export default function PracticeHub() {
   const { t } = useTranslation();
   const { term, sport } = useSportTerminology();
+  const navigate = useNavigate();
   const { sport: sportKey } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
   const { toast } = useToast();
