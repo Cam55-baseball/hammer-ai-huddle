@@ -5,6 +5,7 @@ import { SessionSetup, type LeadConfig } from '@/components/base-stealing/Sessio
 import { LiveRepRunner, type RepResult } from '@/components/base-stealing/LiveRepRunner';
 import { PostRepInput } from '@/components/base-stealing/PostRepInput';
 import { SessionSummary } from '@/components/base-stealing/SessionSummary';
+import { PerformanceAnalysis } from '@/components/base-stealing/PerformanceAnalysis';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { usePerformanceSession, type DrillBlock } from '@/hooks/usePerformanceSession';
