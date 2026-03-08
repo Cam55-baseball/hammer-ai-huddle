@@ -42,35 +42,25 @@ interface LiveRepRunnerProps {
 
 type Phase = 'idle' | 'countdown' | 'waiting_signal' | 'signal_active' | 'post_signal_buffer' | 'analyzing' | 'finishing';
 
-/** Resolve the real duration of a WebM blob (handles Infinity duration) */
-async function resolveVideoDuration(video: HTMLVideoElement): Promise<number> {
-  const d = video.duration;
-  if (isFinite(d) && d > 0) return d;
+/** Resolve duration via brief play/pause — more reliable than seek-to-1e10 for WebM blobs */
+async function resolveVideoDuration(video: HTMLVideoElement): Promise<number | null> {
+  if (isFinite(video.duration) && video.duration > 0) return video.duration;
 
-  console.log('[FRAME EXTRACTION] Duration is Infinity, using seek workaround');
-  return new Promise<number>((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Duration resolve timeout')), 5000);
-    
-    const onDurationChange = () => {
-      if (isFinite(video.duration) && video.duration > 0) {
-        clearTimeout(timeout);
-        video.removeEventListener('durationchange', onDurationChange);
-        resolve(video.duration);
-      }
-    };
-    video.addEventListener('durationchange', onDurationChange);
-    
-    // Seek to a huge time to force the browser to calculate the real duration
-    video.currentTime = 1e10;
-    video.addEventListener('seeked', function onSeek() {
-      video.removeEventListener('seeked', onSeek);
-      if (isFinite(video.duration) && video.duration > 0) {
-        clearTimeout(timeout);
-        video.removeEventListener('durationchange', onDurationChange);
-        resolve(video.duration);
-      }
-    }, { once: true });
-  });
+  console.log('[FRAME EXTRACTION] Duration is Infinity, trying play/pause workaround');
+  try {
+    video.muted = true;
+    await video.play();
+    video.pause();
+    // After play/pause, some browsers resolve the duration
+    if (isFinite(video.duration) && video.duration > 0) {
+      console.log('[FRAME EXTRACTION] play/pause resolved duration:', video.duration);
+      return video.duration;
+    }
+  } catch (e) {
+    console.warn('[FRAME EXTRACTION] play/pause workaround failed:', e);
+  }
+  // Return null — caller should proceed without duration
+  return null;
 }
 
 /** Seek with a per-frame timeout to avoid hanging */
@@ -89,7 +79,7 @@ function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
   });
 }
 
-/** Extract frames from a video blob between startSec and endSec */
+/** Extract frames from a video blob between startSec and endSec — no duration clamping */
 async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, count: number): Promise<string[]> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
@@ -108,31 +98,25 @@ async function extractFrames(videoBlob: Blob, startSec: number, endSec: number, 
       canvas.width = Math.min(video.videoWidth, 640);
       canvas.height = Math.round(canvas.width * (video.videoHeight / video.videoWidth));
 
-      let duration: number;
-      try {
-        duration = await resolveVideoDuration(video);
-        // Seek back to start after duration workaround
-        await seekTo(video, 0);
-      } catch {
-        // Fallback: assume 5 seconds if we can't resolve duration
-        console.warn('[FRAME EXTRACTION] Could not resolve duration, using fallback');
-        duration = 5;
-      }
+      // Try to resolve duration (for logging only), but don't clamp against it
+      const resolvedDuration = await resolveVideoDuration(video);
+      console.log('[FRAME EXTRACTION] Resolved duration:', resolvedDuration, '| Requested range:', startSec.toFixed(2), '-', endSec.toFixed(2));
 
-      console.log('[FRAME EXTRACTION] Resolved duration:', duration);
-      const clampedStart = Math.max(0, Math.min(startSec, duration));
-      const clampedEnd = Math.min(endSec, duration);
-      const interval = count > 1 ? (clampedEnd - clampedStart) / (count - 1) : 0;
+      // Seek directly to calculated timestamps — no clamping against duration
+      const interval = count > 1 ? (endSec - startSec) / (count - 1) : 0;
       const frames: string[] = [];
 
       try {
         for (let i = 0; i < count; i++) {
-          const t = clampedStart + i * interval;
+          const t = startSec + i * interval;
           try {
             await seekTo(video, t);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            if (dataUrl && dataUrl.length > 100) frames.push(dataUrl);
+            if (dataUrl && dataUrl.length > 100) {
+              frames.push(dataUrl);
+              console.log(`[FRAME EXTRACTION] Frame ${i + 1}/${count} captured at ${t.toFixed(2)}s`);
+            }
           } catch (seekErr) {
             console.warn(`[FRAME EXTRACTION] Skipping frame at ${t.toFixed(2)}s:`, seekErr);
           }
