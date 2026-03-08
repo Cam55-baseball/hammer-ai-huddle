@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Zap, Plus, Save, Trash2, HelpCircle } from 'lucide-react';
 import { RepReviewPlayer } from './RepReviewPlayer';
 import type { RepResult } from './LiveRepRunner';
+import type { LeadConfig } from './SessionSetup';
 
 interface PostRepInputProps {
   result: RepResult;
+  config: LeadConfig;
   onNextRep: (updated: RepResult) => void;
   onEndSession: (updated: RepResult) => void;
   onDeleteRep: () => void;
