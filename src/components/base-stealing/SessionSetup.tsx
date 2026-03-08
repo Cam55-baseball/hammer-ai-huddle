@@ -168,6 +168,15 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Base Distance</Label>
+              <Select value={config.baseDistanceFt} onValueChange={v => update('baseDistanceFt', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BASE_DISTANCE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
