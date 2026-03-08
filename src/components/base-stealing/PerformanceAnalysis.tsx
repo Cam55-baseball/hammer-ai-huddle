@@ -161,6 +161,13 @@ export function PerformanceAnalysis({ reps, config, onDone }: PerformanceAnalysi
   const classification = classifyPerformance(takeoffGrade, accelGrade);
   const insight = generateDetailedInsight(takeoffGrade, accelGrade, leadGrade, avgDecision, avgRun, correctRate);
 
+  // Grade first two steps
+  const firstTwoStepsGrade: Grade = avgFirstTwoSteps == null ? 'Average'
+    : avgFirstTwoSteps <= 0.45 ? 'Elite'
+    : avgFirstTwoSteps <= 0.65 ? 'Good'
+    : avgFirstTwoSteps <= 0.85 ? 'Average'
+    : 'Needs Work';
+
   const grades: { label: string; grade: Grade; detail: string; icon: React.ReactNode }[] = [
     {
       label: 'Takeoff Grade',
@@ -168,6 +175,12 @@ export function PerformanceAnalysis({ reps, config, onDone }: PerformanceAnalysi
       detail: avgDecision != null ? `${avgDecision.toFixed(2)}s avg reaction` : 'No data',
       icon: <Zap className="h-4 w-4" />,
     },
+    ...(avgFirstTwoSteps != null ? [{
+      label: 'First 2 Steps',
+      grade: firstTwoStepsGrade,
+      detail: `${avgFirstTwoSteps.toFixed(2)}s avg (go reps)`,
+      icon: <Footprints className="h-4 w-4" />,
+    }] : []),
     {
       label: 'Acceleration Grade',
       grade: accelGrade,

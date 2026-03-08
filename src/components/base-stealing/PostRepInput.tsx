@@ -74,14 +74,20 @@ export function PostRepInput({ result, config, onNextRep, onEndSession, onDelete
             </div>
             {result.decisionTimeSec !== null && (
               <div>
-                <span className="text-muted-foreground">Decision Time:</span>{' '}
-                <span className="font-medium">{result.decisionTimeSec}s</span>
+                <span className="text-muted-foreground">Reaction Time:</span>{' '}
+                <span className="font-medium">{result.decisionTimeSec.toFixed(2)}s</span>
               </div>
             )}
             <div>
               <span className="text-muted-foreground">Expected:</span>{' '}
               <span className="font-medium uppercase">{result.signalType}</span>
             </div>
+            {result.signalType === 'go' && result.firstTwoStepsSec != null && (
+              <div>
+                <span className="text-muted-foreground">First 2 Steps:</span>{' '}
+                <span className="font-medium">{result.firstTwoStepsSec.toFixed(2)}s</span>
+              </div>
+            )}
             {result.eliteJump && (
               <div className="flex items-center gap-1 text-amber-500 font-bold">
                 <Zap className="h-4 w-4" /> Elite Jump!
