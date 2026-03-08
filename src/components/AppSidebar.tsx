@@ -225,6 +225,7 @@ export function AppSidebar() {
           { title: 'The Unicorn', url: "/the-unicorn", icon: Sparkles, description: "Elite merged workout system" },
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+          ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
         ]
       });
     }

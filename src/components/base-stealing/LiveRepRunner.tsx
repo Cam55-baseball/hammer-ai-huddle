@@ -136,7 +136,7 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
       {/* Hidden camera preview */}
-      <video ref={videoRef} autoPlay muted playsInline className="opacity-0 absolute w-0 h-0" />
+      <video ref={videoRef} autoPlay muted playsInline className={phase === 'idle' && config.cameraFacing === 'user' && streamRef.current ? 'w-full max-w-sm rounded-lg border border-border mx-auto mb-4' : 'opacity-0 absolute w-0 h-0'} />
 
       {phase === 'idle' && (
         <div className="text-center space-y-6">

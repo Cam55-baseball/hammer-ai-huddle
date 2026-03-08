@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, Eye, Zap, ArrowRight } from "lucide-react";
+import { Target, Dumbbell, Eye, Zap, ArrowRight, Footprints } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
@@ -11,6 +11,7 @@ const tiles = [
     label: "Hitting Analysis",
     description: "Analyze swing mechanics, bat path, and timing",
     getRoute: (sport: string) => `/analyze/hitting?sport=${sport}`,
+    baseballOnly: false,
   },
   {
     key: "throwing-analysis",
@@ -18,6 +19,7 @@ const tiles = [
     label: "Throwing Analysis",
     description: "Break down throwing mechanics and arm action",
     getRoute: (sport: string) => `/analyze/throwing?sport=${sport}`,
+    baseballOnly: false,
   },
   {
     key: "iron-bambino",
@@ -25,6 +27,7 @@ const tiles = [
     label: "Iron Bambino",
     description: "Elite strength, arm care, and velocity development",
     getRoute: () => "/production-lab",
+    baseballOnly: false,
   },
   {
     key: "speed-lab",
@@ -32,6 +35,7 @@ const tiles = [
     label: "Speed Lab",
     description: "Build elite sprint speed with CNS-tracked protocols",
     getRoute: () => "/speed-lab",
+    baseballOnly: false,
   },
   {
     key: "tex-vision",
@@ -39,6 +43,15 @@ const tiles = [
     label: "Tex Vision",
     description: "Train your eyes to track pitches like a pro",
     getRoute: () => "/tex-vision",
+    baseballOnly: false,
+  },
+  {
+    key: "base-stealing",
+    icon: Footprints,
+    label: "Base Stealing",
+    description: "Reaction training for explosive steals",
+    getRoute: () => "/base-stealing",
+    baseballOnly: true,
   },
 ] as const;
 
@@ -46,6 +59,10 @@ export default function FiveToolPlayer() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const selectedSport = localStorage.getItem("selectedSport") || "baseball";
+
+  const filteredTiles = tiles.filter(
+    (tile) => !tile.baseballOnly || selectedSport === "baseball"
+  );
 
   return (
     <DashboardLayout>
@@ -60,7 +77,7 @@ export default function FiveToolPlayer() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tiles.map((tile) => {
+          {filteredTiles.map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
 
