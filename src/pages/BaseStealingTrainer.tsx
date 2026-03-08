@@ -149,6 +149,14 @@ export default function BaseStealingTrainer() {
         {phase === 'summary' && config && (
           <SessionSummary reps={reps} config={config} onSave={handleSave} saving={saving} />
         )}
+
+        {phase === 'analysis' && config && (
+          <PerformanceAnalysis
+            reps={reps}
+            config={config}
+            onDone={() => navigate('/practice?module=baserunning')}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

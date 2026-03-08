@@ -298,7 +298,14 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
   const showPreview = phase === 'idle';
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 relative">
+      {/* Recording indicator */}
+      {isRecording && (
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-full z-10">
+          <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-xs font-medium text-red-500">REC</span>
+        </div>
+      )}
       <video
         ref={videoRef}
         autoPlay

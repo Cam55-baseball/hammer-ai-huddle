@@ -7,10 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Camera, Info } from 'lucide-react';
 
-const STEP_OPTIONS = Array.from({ length: 29 }, (_, i) => {
-  const val = (i + 2) / 2;
-  return { value: String(val), label: String(val) };
-});
+const STEP_OPTIONS = [
+  { value: '0', label: '0' },
+  ...Array.from({ length: 29 }, (_, i) => {
+    const val = (i + 2) / 2;
+    return { value: String(val), label: String(val) };
+  }),
+];
 
 const SHORT_STEP_OPTIONS = [
   { value: '0', label: '0' },
