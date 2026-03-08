@@ -145,8 +145,8 @@ export default function BaseStealingTrainer() {
           />
         )}
 
-        {phase === 'summary' && (
-          <SessionSummary reps={reps} onDone={handleSave} saving={saving} />
+        {phase === 'summary' && config && (
+          <SessionSummary reps={reps} config={config} onSave={handleSave} saving={saving} />
         )}
       </div>
     </DashboardLayout>

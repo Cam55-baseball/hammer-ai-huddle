@@ -52,6 +52,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
     stepsBackOutfield: '1',
     stepsTowardPitcher: '1',
     leadDistanceFt: '',
+    baseDistanceFt: '90',
     targetBase: '2nd',
     holderPosition: 'nobody',
     signalMode: 'colors',
