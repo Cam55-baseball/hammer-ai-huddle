@@ -260,10 +260,23 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
 
         if (error) throw error;
 
+        const movementDetected: boolean = data.movementDetected !== false;
         const aiDirection: 'go' | 'return' = data.direction;
         const movementFrame: number = data.movementStartFrameIndex;
         const confidence: 'high' | 'medium' | 'low' = data.confidence || 'medium';
         const reasoning: string = data.reasoning || '';
+
+        // If no movement detected or low confidence with no movement, treat as unanalyzable
+        if (!movementDetected || (confidence === 'low' && !movementDetected)) {
+          onRepComplete({
+            repNumber, signalType: sig.type, signalValue: sig.value,
+            delayBeforeSignalMs: randomDelay, signalFiredAt: sig.firedAt,
+            reactionConfirmedAt: null, decisionTimeSec: null, decisionCorrect: null,
+            eliteJump: false, videoBlob, aiConfidence: confidence,
+            aiReasoning: reasoning || 'No movement detected in video. Unable to analyze reaction.',
+          });
+          return;
+        }
 
         // Calculate reaction time from frame indices
         const frameDurationSec = (extractEnd - extractStart) / (FRAME_COUNT - 1);

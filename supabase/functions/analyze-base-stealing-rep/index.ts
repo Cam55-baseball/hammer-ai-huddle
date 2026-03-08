@@ -84,14 +84,18 @@ Rules:
               parameters: {
                 type: "object",
                 properties: {
+                  movementDetected: {
+                    type: "boolean",
+                    description: "Whether any actual body movement was detected in the frames after the signal. Set to false if no person is visible, no reaction occurred, or the athlete remained completely still.",
+                  },
                   direction: {
                     type: "string",
                     enum: ["go", "return"],
-                    description: "The direction the athlete moved: 'go' for forward/steal, 'return' for backward/back to base.",
+                    description: "The direction the athlete moved: 'go' for forward/steal, 'return' for backward/back to base. Only meaningful if movementDetected is true.",
                   },
                   movementStartFrameIndex: {
                     type: "integer",
-                    description: "The 0-indexed frame number where the first visible body movement occurs after the signal.",
+                    description: "The 0-indexed frame number where the first visible body movement occurs after the signal. Only meaningful if movementDetected is true.",
                   },
                   confidence: {
                     type: "string",
@@ -100,10 +104,10 @@ Rules:
                   },
                   reasoning: {
                     type: "string",
-                    description: "Brief explanation of what movement cues were detected.",
+                    description: "Brief explanation of what movement cues were detected, or why no movement was found.",
                   },
                 },
-                required: ["direction", "movementStartFrameIndex", "confidence", "reasoning"],
+                required: ["movementDetected", "direction", "movementStartFrameIndex", "confidence", "reasoning"],
                 additionalProperties: false,
               },
             },
