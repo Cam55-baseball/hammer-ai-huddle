@@ -1,56 +1,47 @@
 
 
-# Fix: Full-Screen Cue Flash + Recording at "Take Lead"
+# Fix: Coach Schedule Dialog RLS Error
 
 ## Root Cause
 
-**The full-screen signal flash disappears immediately.** When `handleSignalFired` is called, it sets `phase` to `signal_active`, which unmounts the `ReactionSignal` component (it's only rendered during `waiting_signal`). Since the overlay lives inside `ReactionSignal`'s internal state, unmounting kills the full-screen color flash instantly — the athlete never sees it.
+The coach has two accepted relationships:
+- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
+- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
 
-Recording at countdown=3 is already implemented correctly in the code, so that part just needs verification that it works E2E.
+The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
 
-## Fix
+## Solution
 
-### `LiveRepRunner.tsx` — Keep ReactionSignal mounted during signal display
+**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
 
-Render `ReactionSignal` during both `waiting_signal` AND `signal_active` phases so the full-screen overlay stays visible for the full 3 seconds:
+**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
 
-```tsx
-{(phase === 'waiting_signal' || phase === 'signal_active') && (
-  <ReactionSignal
-    mode={config.signalMode}
-    delay={randomDelay}
-    active={phase === 'waiting_signal'}
-    onSignalFired={handleSignalFired}
-    onSignalDismissed={handleSignalDismissed}
-  />
-)}
-```
+I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
 
-Key: `active` is only `true` during `waiting_signal` (so the delay timer only fires once), but the component stays mounted during `signal_active` so the internal signal state and its full-screen overlay persist until auto-dismiss.
-
-### `ReactionSignal.tsx` — Don't clear signal when `active` goes false
-
-Currently, the effect clears `signal` state when `active` becomes false (line 32-33: `if (!active) { setSignal(null); return; }`). This would kill the overlay when phase transitions to `signal_active`. Fix: only prevent *firing* a new signal when inactive, don't clear existing signal display.
-
-```tsx
-useEffect(() => {
-  if (!active) return; // Don't clear signal, just don't start new timer
-  // ... rest of timer logic
-}, [active, delay, mode, onSignalFired, onSignalDismissed]);
-```
-
-## Files Modified
+### Changes
 
 | File | Change |
 |------|--------|
-| `LiveRepRunner.tsx` | Render `ReactionSignal` during both `waiting_signal` and `signal_active` phases |
-| `ReactionSignal.tsx` | Remove `setSignal(null)` when `active` becomes false, so the overlay persists until auto-dismiss |
+| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
+| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
 
-## What's Already Working (No Changes Needed)
+### Technical Detail
 
-- Recording starts at countdown=3 ("TAKE LEAD") — already implemented
-- Edge function `analyze-base-stealing-rep` — already deployed
-- Frame extraction and AI analysis pipeline — already wired
-- PostRepInput with AI confidence badges — already implemented
-- RepReviewPlayer — already working
+**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
+```sql
+CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.scout_follows
+    WHERE scout_id = p_coach_id
+      AND player_id = p_player_id
+      AND status = 'accepted'
+      AND relationship_type IN ('linked', 'follow')
+  )
+$$;
+```
+
+Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
 

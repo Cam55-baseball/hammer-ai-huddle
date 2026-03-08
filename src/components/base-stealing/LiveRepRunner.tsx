@@ -316,27 +316,22 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         </div>
       )}
 
-      {phase === 'waiting_signal' && (
+      {(phase === 'waiting_signal' || phase === 'signal_active') && (
         <>
           <div className="text-center space-y-2">
             <div className="h-16 w-16 rounded-full border-4 border-primary/30 animate-pulse mx-auto" />
-            <p className="text-sm text-muted-foreground">Hold your lead...</p>
+            <p className="text-sm text-muted-foreground">
+              {phase === 'signal_active' ? 'React!' : 'Hold your lead...'}
+            </p>
           </div>
           <ReactionSignal
             mode={config.signalMode}
             delay={randomDelay}
-            active
+            active={phase === 'waiting_signal'}
             onSignalFired={handleSignalFired}
             onSignalDismissed={handleSignalDismissed}
           />
         </>
-      )}
-
-      {phase === 'signal_active' && (
-        <div className="text-center space-y-2">
-          <div className="h-16 w-16 rounded-full border-4 border-primary/30 animate-pulse mx-auto" />
-          <p className="text-sm text-muted-foreground">React!</p>
-        </div>
       )}
 
       {(phase === 'post_signal_buffer' || phase === 'analyzing' || phase === 'finishing') && (
