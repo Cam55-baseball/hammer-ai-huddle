@@ -1,47 +1,85 @@
 
 
-# Fix: Coach Schedule Dialog RLS Error
+# Fix: Save Session Button Not Working in Base Stealing
 
-## Root Cause
+## Root Cause Analysis
 
-The coach has two accepted relationships:
-- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
-- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
+Traced through the save flow:
+1. `SessionSummary.tsx` button calls `onSave` → `handleSave` in `BaseStealingTrainer.tsx`
+2. `handleSave` calls `createSession` from `usePerformanceSession`
+3. `createSession` has a check `if (!user) throw new Error('Not authenticated')` **BEFORE** the try/catch block
+4. **Critical**: `handleSave` has NO try/catch, so when `createSession` throws, the error is silently swallowed as an unhandled promise rejection
 
-The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
+This means if:
+- User isn't logged in → silent failure with no toast
+- Any early validation fails → silent failure
 
-## Solution
+Additionally, confirmed in database: **zero base_stealing sessions exist** — saves have never worked.
 
-**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
+## Fix Plan
 
-**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
+### 1. Add Error Handling to `handleSave` (BaseStealingTrainer.tsx)
 
-I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
+Wrap the `createSession` call in try/catch to show meaningful errors:
+- If user not authenticated → show login prompt
+- If other error → show toast with error message
 
-### Changes
+### 2. Check Authentication Earlier (BaseStealingTrainer.tsx)
 
-| File | Change |
-|------|--------|
-| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
-| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
+Add authentication gate at session start to prevent wasted training time:
+- In `handleStart`, check if user is logged in
+- If not, show toast prompting login before starting
 
-### Technical Detail
+### 3. Fix Session Return Type (BaseStealingTrainer.tsx)
 
-**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
-```sql
-CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.scout_follows
-    WHERE scout_id = p_coach_id
-      AND player_id = p_player_id
-      AND status = 'accepted'
-      AND relationship_type IN ('linked', 'follow')
-  )
-$$;
+Currently checks `if (sessionId)` but `createSession` returns the full session object, not just ID. While this works (object is truthy), rename variable for clarity.
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/BaseStealingTrainer.tsx` | Add try/catch in `handleSave`, auth check in `handleStart`, show login prompt if needed |
+| `src/hooks/usePerformanceSession.ts` | Move auth check inside try block so toast shows |
+
+## Technical Details
+
+```typescript
+// BaseStealingTrainer.tsx - handleSave fix
+const handleSave = async () => {
+  if (!config || reps.length === 0) return;
+  
+  try {
+    const session = await createSession({...});
+    if (session) {
+      toast({ title: 'Session saved!' });
+      setPhase('analysis');
+    }
+  } catch (error: any) {
+    if (error.message === 'Not authenticated') {
+      toast({ 
+        title: 'Sign in required', 
+        description: 'Please sign in to save your session.',
+        variant: 'destructive' 
+      });
+    }
+    // Error already toasted in createSession for other cases
+  }
+};
 ```
 
-Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
+```typescript
+// usePerformanceSession.ts - Move auth check inside try
+const createSession = async (data) => {
+  setSaving(true);
+  try {
+    if (!user) throw new Error('Not authenticated');
+    // ... rest of logic
+  } catch (error) {
+    toast({ title: 'Error', description: error.message });
+    throw error;
+  } finally {
+    setSaving(false);
+  }
+};
+```
 
