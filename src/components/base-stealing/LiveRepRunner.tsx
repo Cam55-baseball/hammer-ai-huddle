@@ -13,7 +13,7 @@ const DIFFICULTY_MAX_DELAY: Record<string, number> = {
 
 const SIGNAL_DISPLAY_MS = 3000;
 const POST_SIGNAL_BUFFER_MS = 2000;
-const FRAME_COUNT = 8;
+const FRAME_COUNT = 20;
 
 export interface RepResult {
   repNumber: number;
@@ -31,6 +31,7 @@ export interface RepResult {
   baseDistanceFt?: number;
   aiConfidence?: 'high' | 'medium' | 'low';
   aiReasoning?: string;
+  firstTwoStepsSec?: number;
 }
 
 interface LiveRepRunnerProps {
