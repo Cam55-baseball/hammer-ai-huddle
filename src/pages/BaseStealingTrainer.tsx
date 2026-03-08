@@ -140,6 +140,7 @@ export default function BaseStealingTrainer() {
         {phase === 'post_rep' && currentResult && (
           <PostRepInput
             result={currentResult}
+            config={config!}
             onNextRep={handleNextRep}
             onEndSession={handleEndSession}
             onDeleteRep={handleDeleteRep}
