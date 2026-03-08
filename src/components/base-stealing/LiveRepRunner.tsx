@@ -196,6 +196,8 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
   }, [phase, countdown, startRecording]);
 
   const handleStartRep = () => {
+    if (!cameraReady) return;
+    setCameraError(null);
     const maxDelay = DIFFICULTY_MAX_DELAY[config.difficulty] || 3000;
     setRandomDelay(Math.random() * maxDelay);
     setCountdown(10);
