@@ -136,6 +136,12 @@ export function PerformanceAnalysis({ reps, config, onDone }: PerformanceAnalysi
     ? runTimes.reduce((s, v) => s + v, 0) / runTimes.length
     : null;
 
+  // First two steps average (go reps only)
+  const stepTimes = reps.filter(r => r.signalType === 'go' && r.firstTwoStepsSec != null && r.firstTwoStepsSec! > 0).map(r => r.firstTwoStepsSec!);
+  const avgFirstTwoSteps = stepTimes.length > 0
+    ? stepTimes.reduce((s, v) => s + v, 0) / stepTimes.length
+    : null;
+
   const correctCount = reps.filter(r => r.decisionCorrect).length;
   const correctRate = reps.length > 0 ? correctCount / reps.length : 0;
   const eliteJumps = reps.filter(r => r.eliteJump).length;
