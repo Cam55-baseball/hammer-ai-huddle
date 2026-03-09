@@ -54,6 +54,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
     const result = await uploadVideo({
       title: title.trim(),
       description: description.trim() || undefined,
+      notes: notes.trim() || undefined,
       tags: selectedTags,
       sport: selectedSport,
       category: category || undefined,
