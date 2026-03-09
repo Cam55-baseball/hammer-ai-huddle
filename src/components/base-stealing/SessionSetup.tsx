@@ -92,7 +92,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
               <p className="text-xs text-muted-foreground">
                 {config.sessionMode === 'manual' 
                   ? 'No camera — self-enter timing data'
-                  : 'AI analyzes video for precise timing'}
+                  : 'Hammer analyzes video for precise timing'}
               </p>
             </div>
             <Switch
