@@ -262,8 +262,9 @@ export default function PlayersClub() {
         const matchesSport = sportFilter === 'all' || item.sport === sportFilter;
         const matchesModule = moduleFilter === 'all' || item.module === moduleFilter;
         const matchesSearch = !searchQuery || 
-          (!isPractice(item) && item.library_title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (isPractice(item) && (item.session_type?.toLowerCase().includes(searchQuery.toLowerCase()) || item.module?.toLowerCase().includes(searchQuery.toLowerCase())));
+          (!isPractice(item) && !isGame(item) && item.library_title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (isPractice(item) && (item.session_type?.toLowerCase().includes(searchQuery.toLowerCase()) || item.module?.toLowerCase().includes(searchQuery.toLowerCase()))) ||
+          (isGame(item) && (item.team_name?.toLowerCase().includes(searchQuery.toLowerCase()) || item.opponent_name?.toLowerCase().includes(searchQuery.toLowerCase())));
         return matchesSport && matchesModule && matchesSearch;
       })
       .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime());
