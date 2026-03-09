@@ -128,9 +128,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const responseData = { videos: videoResults, practices: practiceResults };
+    const responseData = { videos: videoResults, practices: practiceResults, games: gameResults };
 
-    console.log('[get-player-library] Success:', { videos: videoResults.length, practices: practiceResults.length });
+    console.log('[get-player-library] Success:', { videos: videoResults.length, practices: practiceResults.length, games: gameResults.length });
 
     return new Response(
       JSON.stringify(responseData),

@@ -653,7 +653,7 @@ export function VaultPerformanceTestCard({
                       </div>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
             )}
           </CardContent>
