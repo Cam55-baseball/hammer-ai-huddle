@@ -78,17 +78,19 @@ export function useVideoLibraryAdmin() {
   }, [user]);
 
   const updateVideo = useCallback(async (videoId: string, updates: Partial<UploadVideoPayload>) => {
+    const updateData: Record<string, any> = {
+      ...(updates.title && { title: updates.title }),
+      ...(updates.description !== undefined && { description: updates.description }),
+      ...(updates.notes !== undefined && { notes: updates.notes }),
+      ...(updates.tags && { tags: updates.tags }),
+      ...(updates.sport && { sport: updates.sport }),
+      ...(updates.category !== undefined && { category: updates.category }),
+      ...(updates.thumbnailUrl !== undefined && { thumbnail_url: updates.thumbnailUrl }),
+      updated_at: new Date().toISOString(),
+    };
     const { error } = await supabase
       .from('library_videos')
-      .update({
-        ...(updates.title && { title: updates.title }),
-        ...(updates.description !== undefined && { description: updates.description }),
-        ...(updates.tags && { tags: updates.tags }),
-        ...(updates.sport && { sport: updates.sport }),
-        ...(updates.category !== undefined && { category: updates.category }),
-        ...(updates.thumbnailUrl !== undefined && { thumbnail_url: updates.thumbnailUrl }),
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData as any)
       .eq('id', videoId);
 
     if (error) {
