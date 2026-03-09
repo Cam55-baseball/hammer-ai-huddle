@@ -645,6 +645,13 @@ export default function PlayersClub() {
           onClose={() => setSelectedPractice(null)}
         />
 
+        {/* Game Session Detail Dialog */}
+        <GameSessionDetailDialog
+          session={selectedGame}
+          open={!!selectedGame}
+          onClose={() => setSelectedGame(null)}
+        />
+
         {/* Session Detail Dialog */}
         {selectedSession && (
           <SessionDetailDialog
