@@ -218,7 +218,7 @@ export default function PracticeHub() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Practice Intelligence</h1>
-            <p className="text-muted-foreground">Log sessions, track progress, and build your MPI score</p>
+            <p className="text-muted-foreground">Log your practice here — pick a module below to get started</p>
           </div>
           <SchedulePracticeDialog defaultModule={activeModule} />
         </div>

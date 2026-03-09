@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { HelpDeskChat } from "@/components/HelpDeskChat";
+import { IdeaDropBox } from "@/components/IdeaDropBox";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
@@ -101,7 +102,7 @@ export default function HelpDesk() {
       ],
     },
     {
-      title: t('helpDesk.faq.vaultRecap', 'Vault & AI Recap'),
+      title: t('helpDesk.faq.vaultRecap', 'Vault & Hammer Recap'),
       icon: <BookOpen className="h-4 w-4" />,
       items: [
         {
@@ -109,8 +110,8 @@ export default function HelpDesk() {
           answer: t('helpDesk.faq.whatIsVaultAnswer', 'The Vault is your personal training library. It stores all your saved video analyses, annotations, and progress data in one place.'),
         },
         {
-          question: t('helpDesk.faq.aiRecap', 'How does the 6-week AI recap work?'),
-          answer: t('helpDesk.faq.aiRecapAnswer', 'Every 6 weeks, the AI generates a comprehensive recap analyzing your training trends, score improvements, and areas that need attention. It\'s available in The Vault.'),
+          question: t('helpDesk.faq.aiRecap', 'How does the 6-week Hammer recap work?'),
+          answer: t('helpDesk.faq.aiRecapAnswer', 'Every 6 weeks, Hammer generates a comprehensive recap analyzing your training trends, score improvements, and areas that need attention. It\'s available in The Vault.'),
         },
       ],
     },
@@ -120,7 +121,7 @@ export default function HelpDesk() {
       items: [
         {
           question: t('helpDesk.faq.nutritionHub', 'What can I do in Nutrition Hub?'),
-          answer: t('helpDesk.faq.nutritionHubAnswer', 'Nutrition Hub lets you log meals, track hydration, browse recipes, create meal templates, and get AI-powered meal suggestions tailored to your training.'),
+          answer: t('helpDesk.faq.nutritionHubAnswer', 'Nutrition Hub lets you log meals, track hydration, browse recipes, create meal templates, and get Hammer-powered meal suggestions tailored to your training.'),
         },
         {
           question: t('helpDesk.faq.mindFuel', 'What is Mind Fuel?'),
@@ -210,7 +211,7 @@ export default function HelpDesk() {
           <h2 className="text-lg font-semibold mb-3">{t('helpDesk.faqTitle', 'Frequently Asked Questions')}</h2>
           {filteredCategories.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">
-              {t('helpDesk.noResults', 'No results found. Try asking the AI assistant below.')}
+              {t('helpDesk.noResults', 'No results found. Try asking the Hammer assistant below.')}
             </p>
           ) : (
             <div className="space-y-4">
@@ -244,6 +245,9 @@ export default function HelpDesk() {
             </div>
           )}
         </div>
+
+        {/* Idea Drop Box */}
+        <IdeaDropBox />
 
         {/* Embedded Chat */}
         <div>

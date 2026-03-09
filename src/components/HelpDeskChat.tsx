@@ -111,7 +111,7 @@ export function HelpDeskChat({ embedded = false, onClose }: HelpDeskChatProps) {
         <div className="border-b p-4">
           <h3 className="flex items-center gap-2 text-lg font-semibold">
             <HelpCircle className="h-5 w-5 text-primary" />
-            {t('helpDesk.chatTitle', 'Ask the AI Assistant')}
+            {t('helpDesk.chatTitle', 'Ask the Hammer Assistant')}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
             {t('helpDesk.chatSubtitle', "Can't find your answer above? Ask me anything about the app.")}

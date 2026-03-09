@@ -122,7 +122,7 @@ export function PostSessionSummary({ sessionId, module, sessionType, onDone }: P
         </Card>
       )}
 
-      {/* AI Prompts */}
+      {/* Hammer Prompts */}
       <AIPromptCard />
 
       {/* Done */}

@@ -309,7 +309,7 @@ export function VaultPerformanceTestCard({
     return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
-  const recentTests = tests.slice(0, 5);
+  const recentTests = tests;
 
   // Show nothing if user has no module access
   if (availableModules.length === 0) {
@@ -616,7 +616,7 @@ export function VaultPerformanceTestCard({
                   <Label className="text-sm font-medium">{t('vault.performance.recentTests')}</Label>
                   <Badge variant="outline" className="text-xs">{t('vault.lockPeriod.readOnly')}</Badge>
                 </div>
-                <ScrollArea className="max-h-[200px]">
+                <ScrollArea className="max-h-[400px]">
                   <div className="space-y-2">
                     {recentTests.map((test) => (
                       <div key={test.id} className="p-3 rounded-lg bg-muted/50 border border-border">

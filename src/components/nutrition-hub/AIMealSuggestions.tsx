@@ -60,7 +60,7 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
 
   const fetchSuggestions = async () => {
     if (!isOwner && modules.length === 0) {
-      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock AI-powered features'));
+      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock Hammer-powered features'));
       return;
     }
     setLoading(true);

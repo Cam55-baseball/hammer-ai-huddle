@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck, Dumbbell, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
+import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
@@ -105,6 +106,7 @@ export default function PlayersClub() {
   const [moduleFilter, setModuleFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<LibrarySession | null>(null);
+  const [selectedPractice, setSelectedPractice] = useState<PracticeSession | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>('');
@@ -249,7 +251,7 @@ export default function PlayersClub() {
     const tags = extractRepTags(ps.drill_blocks);
 
     return (
-      <Card key={ps.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+      <Card key={ps.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedPractice(ps)}>
         <CardContent className="p-4 space-y-3">
           {/* Header */}
           <div className="flex items-center gap-2">
@@ -570,6 +572,13 @@ export default function PlayersClub() {
             ))}
           </div>
         )}
+
+        {/* Practice Session Detail Dialog */}
+        <PracticeSessionDetailDialog
+          session={selectedPractice}
+          open={!!selectedPractice}
+          onClose={() => setSelectedPractice(null)}
+        />
 
         {/* Session Detail Dialog */}
         {selectedSession && (

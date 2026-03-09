@@ -372,14 +372,14 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         });
       } catch (err) {
         console.error('AI analysis failed:', err);
-        setAnalyzingMsg('Analysis failed — saving rep without AI data');
+        setAnalyzingMsg('Analysis failed — saving rep without Hammer data');
         setTimeout(() => {
           onRepComplete({
             repNumber, signalType: sig.type, signalValue: sig.value,
             delayBeforeSignalMs: randomDelay, signalFiredAt: sig.firedAt,
             reactionConfirmedAt: null, decisionTimeSec: null, decisionCorrect: null,
             eliteJump: false, videoBlob, aiConfidence: 'low',
-            aiReasoning: 'AI analysis failed. Review video manually.',
+            aiReasoning: 'Hammer analysis failed. Review video manually.',
           });
         }, 1500);
       }

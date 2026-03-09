@@ -138,7 +138,7 @@ export function PhotoFoodLogger({ onFoodsLogged }: PhotoFoodLoggerProps) {
 
   const handleFileSelect = async (file: File) => {
     if (!isOwner && modules.length === 0) {
-      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock AI-powered features'));
+      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock Hammer-powered features'));
       return;
     }
     if (!file.type.startsWith('image/')) {

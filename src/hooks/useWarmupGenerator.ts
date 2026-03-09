@@ -45,7 +45,7 @@ export function useWarmupGenerator() {
 
     // Client-side subscription guard
     if (!isOwner && modules.length === 0) {
-      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock AI-powered workouts'));
+      toast.error(t('subscription.aiRequired', 'Upgrade your plan to unlock Hammer-powered workouts'));
       return null;
     }
     

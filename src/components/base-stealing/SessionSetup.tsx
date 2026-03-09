@@ -92,7 +92,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
               <p className="text-xs text-muted-foreground">
                 {config.sessionMode === 'manual' 
                   ? 'No camera — self-enter timing data'
-                  : 'AI analyzes video for precise timing'}
+                  : 'Hammer analyzes video for precise timing'}
               </p>
             </div>
             <Switch
@@ -139,7 +139,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
         </Card>
       )}
 
-      {/* Camera guide — AI mode only */}
+      {/* Camera guide — Hammer mode only */}
       {config.sessionMode === 'ai' && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="pt-5 space-y-2">
