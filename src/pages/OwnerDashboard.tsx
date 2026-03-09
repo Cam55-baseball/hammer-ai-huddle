@@ -908,6 +908,11 @@ const OwnerDashboard = () => {
             </Card>
           )}
 
+          {/* Video Library Manager Section */}
+          {activeSection === 'video-library' && (
+            <VideoLibraryManager />
+          )}
+
           {/* Player Search Section */}
           {activeSection === 'player-search' && (
             <div className="space-y-4">
