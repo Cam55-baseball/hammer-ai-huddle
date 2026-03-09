@@ -2,9 +2,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Zap, Target, TrendingUp, Footprints, ArrowRight } from 'lucide-react';
+import { Zap, Target, TrendingUp, Footprints, ArrowRight, Timer, Gauge, Trophy, Ruler } from 'lucide-react';
 import type { RepResult } from './LiveRepRunner';
 import type { LeadConfig } from './SessionSetup';
+import {
+  getScaledBenchmarks,
+  calcBenchmarkDifference,
+  calcStealWindow,
+  interpretStealWindow,
+  calcProjectedStealSuccess,
+  calcAccelerationEfficiency,
+  interpretAccelerationEfficiency,
+  calcLeadEfficiency,
+  buildStealProfile,
+  type Grade,
+} from '@/lib/stealAnalytics';
 
 const MLB_BENCHMARKS = {
   eliteReactionSec: 0.20,
@@ -13,11 +25,9 @@ const MLB_BENCHMARKS = {
   eliteStealTime90ft: 3.3,
   goodStealTime90ft: 3.6,
   avgStealTime90ft: 3.9,
-  eliteLeadPct: 16, // lead distance as % of base distance
+  eliteLeadPct: 16,
   goodLeadPct: 13,
 };
-
-type Grade = 'Elite' | 'Good' | 'Average' | 'Needs Work';
 
 function gradeReaction(avgSec: number | null): Grade {
   if (avgSec == null) return 'Average';
@@ -115,6 +125,18 @@ function generateDetailedInsight(
   return parts.join(' ');
 }
 
+function getSuccessColor(pct: number): string {
+  if (pct >= 80) return 'text-green-500';
+  if (pct >= 60) return 'text-amber-500';
+  return 'text-red-500';
+}
+
+function getWindowColor(window: number): string {
+  if (window >= 0.10) return 'text-green-500';
+  if (window >= 0) return 'text-amber-500';
+  return 'text-red-500';
+}
+
 interface PerformanceAnalysisProps {
   reps: RepResult[];
   config: LeadConfig;
@@ -201,6 +223,32 @@ export function PerformanceAnalysis({ reps, config, onDone }: PerformanceAnalysi
     },
   ];
 
+  // Advanced analytics
+  const benchmarks = getScaledBenchmarks(baseDist);
+  const benchmarkComparison = avgRun != null ? calcBenchmarkDifference(avgRun, baseDist) : null;
+  const firstTwoStepsBenchmarkDiff = avgFirstTwoSteps != null 
+    ? avgFirstTwoSteps - benchmarks.eliteFirstTwoSteps 
+    : null;
+
+  // Steal profile for advanced metrics
+  const stealProfile = buildStealProfile({
+    avgDecision,
+    avgFirstTwoSteps,
+    avgRun,
+    leadDist,
+    baseDist,
+  });
+
+  // Acceleration efficiency
+  const accelEfficiency = avgFirstTwoSteps != null && avgRun != null && avgRun > 0
+    ? calcAccelerationEfficiency(avgFirstTwoSteps, avgRun)
+    : null;
+
+  // Lead efficiency
+  const leadEfficiency = leadDist > 0 && baseDist > 0
+    ? calcLeadEfficiency(leadDist, baseDist)
+    : null;
+
   return (
     <div className="max-w-lg mx-auto space-y-5">
       <h2 className="text-xl font-bold text-center">Performance Analysis</h2>
@@ -252,6 +300,195 @@ export function PerformanceAnalysis({ reps, config, onDone }: PerformanceAnalysi
         </CardHeader>
         <CardContent>
           <p className="text-sm leading-relaxed">{insight}</p>
+        </CardContent>
+      </Card>
+
+      {/* Elite Benchmark Comparison */}
+      {avgRun != null && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Trophy className="h-4 w-4" /> Elite Benchmark Comparison
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Your Avg Time</p>
+                <p className="text-2xl font-bold tabular-nums">{avgRun.toFixed(2)}s</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Elite ({baseDist}ft)</p>
+                <p className="text-2xl font-bold tabular-nums text-amber-500">{benchmarks.eliteTime.toFixed(2)}s</p>
+              </div>
+            </div>
+            {benchmarkComparison && (
+              <div className={`text-sm font-medium ${benchmarkComparison.isElite ? 'text-green-500' : 'text-red-500'}`}>
+                {benchmarkComparison.label}
+              </div>
+            )}
+            {avgFirstTwoSteps != null && (
+              <div className="pt-2 border-t border-border">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">First 2 Steps</span>
+                  <span>
+                    {avgFirstTwoSteps.toFixed(2)}s vs {benchmarks.eliteFirstTwoSteps.toFixed(2)}s elite
+                    <span className={`ml-2 ${firstTwoStepsBenchmarkDiff! <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      ({firstTwoStepsBenchmarkDiff! <= 0 ? '' : '+'}{firstTwoStepsBenchmarkDiff!.toFixed(2)}s)
+                    </span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Projected Steal Success */}
+      {stealProfile.projectedSuccessAvg != null && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="h-4 w-4" /> Projected Steal Success
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-muted-foreground">vs Avg MLB Battery</span>
+                <span className={`text-sm font-bold ${getSuccessColor(stealProfile.projectedSuccessAvg)}`}>
+                  {stealProfile.projectedSuccessAvg}%
+                </span>
+              </div>
+              <Progress 
+                value={stealProfile.projectedSuccessAvg} 
+                className="h-2"
+                indicatorClassName={stealProfile.projectedSuccessAvg >= 80 ? 'bg-green-500' : stealProfile.projectedSuccessAvg >= 60 ? 'bg-amber-500' : 'bg-red-500'}
+              />
+            </div>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm text-muted-foreground">vs Elite MLB Battery</span>
+                <span className={`text-sm font-bold ${getSuccessColor(stealProfile.projectedSuccessElite!)}`}>
+                  {stealProfile.projectedSuccessElite}%
+                </span>
+              </div>
+              <Progress 
+                value={stealProfile.projectedSuccessElite!} 
+                className="h-2"
+                indicatorClassName={stealProfile.projectedSuccessElite! >= 80 ? 'bg-green-500' : stealProfile.projectedSuccessElite! >= 60 ? 'bg-amber-500' : 'bg-red-500'}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Accounts for 0.17s slide adjustment (drill is standing run)
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Steal Window */}
+      {stealProfile.stealWindowAvg != null && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Timer className="h-4 w-4" /> Steal Window
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">vs Avg Battery (3.2s)</span>
+              <div className="text-right">
+                <span className={`font-bold ${getWindowColor(stealProfile.stealWindowAvg)}`}>
+                  {stealProfile.stealWindowAvg >= 0 ? '+' : ''}{stealProfile.stealWindowAvg.toFixed(2)}s
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {interpretStealWindow(stealProfile.stealWindowAvg).label}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">vs Elite Battery (2.4s)</span>
+              <div className="text-right">
+                <span className={`font-bold ${getWindowColor(stealProfile.stealWindowElite!)}`}>
+                  {stealProfile.stealWindowElite! >= 0 ? '+' : ''}{stealProfile.stealWindowElite!.toFixed(2)}s
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {interpretStealWindow(stealProfile.stealWindowElite!).label}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Elite Steal Profile Card */}
+      <Card className="border-amber-500/40 bg-amber-500/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Gauge className="h-4 w-4 text-amber-500" /> Elite Steal Profile
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {stealProfile.takeoffGrade && (
+              <div>
+                <p className="text-xs text-muted-foreground">Takeoff Speed</p>
+                <p className={`font-semibold ${gradeColor(stealProfile.takeoffGrade)}`}>
+                  {stealProfile.takeoffGrade}
+                </p>
+              </div>
+            )}
+            {accelEfficiency && (
+              <div>
+                <p className="text-xs text-muted-foreground">Accel. Efficiency</p>
+                <p className={`font-semibold ${gradeColor(accelEfficiency.grade)}`}>
+                  {accelEfficiency.pct.toFixed(1)}%
+                </p>
+              </div>
+            )}
+            {leadEfficiency && leadEfficiency.pct > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground">Lead Efficiency</p>
+                <p className={`font-semibold ${gradeColor(leadEfficiency.grade)}`}>
+                  {leadEfficiency.pct.toFixed(1)}%
+                </p>
+              </div>
+            )}
+            {stealProfile.timeToBase != null && (
+              <div>
+                <p className="text-xs text-muted-foreground">Time to Base</p>
+                <p className="font-semibold">{stealProfile.timeToBase.toFixed(2)}s</p>
+              </div>
+            )}
+            {stealProfile.stealWindowAvg != null && (
+              <div>
+                <p className="text-xs text-muted-foreground">Steal Window</p>
+                <p className={`font-semibold ${getWindowColor(stealProfile.stealWindowAvg)}`}>
+                  {stealProfile.stealWindowAvg >= 0 ? '+' : ''}{stealProfile.stealWindowAvg.toFixed(2)}s
+                </p>
+              </div>
+            )}
+            {stealProfile.projectedSuccessAvg != null && (
+              <div>
+                <p className="text-xs text-muted-foreground">Success vs Avg</p>
+                <p className={`font-semibold ${getSuccessColor(stealProfile.projectedSuccessAvg)}`}>
+                  {stealProfile.projectedSuccessAvg}%
+                </p>
+              </div>
+            )}
+            {stealProfile.feetStolen != null && stealProfile.feetStolen > 0 && (
+              <div className="col-span-2 pt-2 border-t border-border flex items-center gap-2">
+                <Ruler className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <span className="text-muted-foreground">Feet Stolen: </span>
+                  <span className="font-semibold">{stealProfile.feetStolen}ft</span>
+                  {stealProfile.actualRunDistance && (
+                    <span className="text-muted-foreground"> (actual run: {stealProfile.actualRunDistance}ft)</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
