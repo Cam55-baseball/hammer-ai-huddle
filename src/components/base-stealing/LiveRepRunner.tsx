@@ -372,7 +372,7 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         });
       } catch (err) {
         console.error('AI analysis failed:', err);
-        setAnalyzingMsg('Analysis failed — saving rep without AI data');
+        setAnalyzingMsg('Analysis failed — saving rep without Hammer data');
         setTimeout(() => {
           onRepComplete({
             repNumber, signalType: sig.type, signalValue: sig.value,
