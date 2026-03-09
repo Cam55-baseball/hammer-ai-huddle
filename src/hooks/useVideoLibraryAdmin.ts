@@ -7,6 +7,7 @@ import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
 interface UploadVideoPayload {
   title: string;
   description?: string;
+  notes?: string;
   tags: string[];
   sport: string[];
   category?: string;
