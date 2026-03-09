@@ -1883,6 +1883,145 @@ export type Database = {
         }
         Relationships: []
       }
+      library_tags: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          parent_category: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          parent_category?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          parent_category?: string | null
+        }
+        Relationships: []
+      }
+      library_video_analytics: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          search_term: string | null
+          user_id: string | null
+          video_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          search_term?: string | null
+          user_id?: string | null
+          video_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          search_term?: string | null
+          user_id?: string | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_video_analytics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_video_likes: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_video_likes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_videos: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          likes_count: number
+          owner_id: string
+          sport: string[]
+          tags: string[]
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_type: string
+          video_url: string | null
+          views_count: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes_count?: number
+          owner_id: string
+          sport?: string[]
+          tags?: string[]
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_type?: string
+          video_url?: string | null
+          views_count?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes_count?: number
+          owner_id?: string
+          sport?: string[]
+          tags?: string[]
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_type?: string
+          video_url?: string | null
+          views_count?: number
+        }
+        Relationships: []
+      }
       live_ab_links: {
         Row: {
           created_at: string | null
