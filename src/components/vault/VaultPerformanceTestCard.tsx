@@ -616,7 +616,7 @@ export function VaultPerformanceTestCard({
                   <Label className="text-sm font-medium">{t('vault.performance.recentTests')}</Label>
                   <Badge variant="outline" className="text-xs">{t('vault.lockPeriod.readOnly')}</Badge>
                 </div>
-                <ScrollArea className="max-h-[200px]">
+                <ScrollArea className="max-h-[400px]">
                   <div className="space-y-2">
                     {recentTests.map((test) => (
                       <div key={test.id} className="p-3 rounded-lg bg-muted/50 border border-border">
