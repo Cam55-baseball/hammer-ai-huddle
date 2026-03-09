@@ -330,6 +330,39 @@ export default function PlayersClub() {
     );
   };
 
+  const renderGameCard = (game: GameSession) => {
+    const summary = game.game_summary as any;
+    return (
+      <Card key={game.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedGame(game)}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold line-clamp-1">
+                {game.team_name} vs {game.opponent_name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {new Date(game.game_date).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className="capitalize">{game.sport}</Badge>
+            <Badge variant="outline" className="capitalize">{game.game_type.replace(/_/g, ' ')}</Badge>
+            <Badge variant="secondary">{game.league_level}</Badge>
+            {summary?.team_runs !== undefined && (
+              <Badge variant="secondary">{summary.team_runs} - {summary.opponent_runs ?? '?'}</Badge>
+            )}
+          </div>
+          {game.venue && (
+            <p className="text-xs text-muted-foreground">{game.venue}</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+
   const renderVideoCard = (session: LibrarySession) => {
     return (
       <Card key={session.id} className="overflow-hidden hover:shadow-lg transition-shadow">
