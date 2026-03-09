@@ -26,6 +26,7 @@ export type OwnerSection =
   | 'admin-requests' 
   | 'scout-applications' 
   | 'videos' 
+  | 'video-library'
   | 'subscriptions' 
   | 'settings' 
   | 'player-search';
