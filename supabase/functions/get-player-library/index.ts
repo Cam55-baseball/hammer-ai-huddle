@@ -112,10 +112,25 @@ Deno.serve(async (req) => {
       throw practiceError;
     }
 
+    // --- Completed games query ---
+    let gameQuery = supabase
+      .from('games')
+      .select('id, user_id, sport, team_name, opponent_name, game_type, league_level, game_date, venue, total_innings, lineup, game_summary, game_mode, is_practice_game, status, created_at')
+      .eq('user_id', targetUserId)
+      .eq('status', 'completed')
+      .order('game_date', { ascending: false });
+
+    const { data: gameData, error: gameError } = await gameQuery;
+
+    if (gameError) {
+      console.error('[get-player-library] Game error:', gameError);
+      throw gameError;
+    }
+
     // Tag sources
     let videoResults = (videoData || []).map(v => ({ ...v, source: 'video' }));
     const practiceResults = (practiceData || []).map(p => ({ ...p, source: 'practice' }));
-
+    const gameResults = (gameData || []).map(g => ({ ...g, source: 'game' }));
     // For scouts viewing other players, filter out private video data
     if (isScout && !isOwner && playerId && playerId !== user.id) {
       videoResults = videoResults.map(session => {
