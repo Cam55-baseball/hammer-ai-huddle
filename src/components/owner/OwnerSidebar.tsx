@@ -9,7 +9,8 @@ import {
   Search,
   Menu,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Library
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export type OwnerSection =
   | 'admin-requests' 
   | 'scout-applications' 
   | 'videos' 
+  | 'video-library'
   | 'subscriptions' 
   | 'settings' 
   | 'player-search';
@@ -62,6 +64,7 @@ export const OwnerSidebar = ({
     { id: 'admin-requests', label: 'Admin Requests', icon: UserCog, badgeCount: pendingAdminRequests },
     { id: 'scout-applications', label: 'Scout Applications', icon: UserPlus, badgeCount: pendingScoutApplications },
     { id: 'videos', label: 'Recent Videos', icon: Video },
+    { id: 'video-library', label: 'Video Library', icon: Library },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'player-search', label: 'Player Search', icon: Search },

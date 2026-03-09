@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library } from "lucide-react";
+import { VideoLibraryManager } from "@/components/owner/VideoLibraryManager";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
@@ -45,6 +46,7 @@ const sectionLabels: Record<OwnerSection, string> = {
   'admin-requests': 'Admin Requests',
   'scout-applications': 'Scout Applications',
   'videos': 'Recent Videos',
+  'video-library': 'Video Library Manager',
   'subscriptions': 'Subscriptions',
   'settings': 'Settings',
   'player-search': 'Player Search',
@@ -904,6 +906,11 @@ const OwnerDashboard = () => {
                 </div>
               </div>
             </Card>
+          )}
+
+          {/* Video Library Manager Section */}
+          {activeSection === 'video-library' && (
+            <VideoLibraryManager />
           )}
 
           {/* Player Search Section */}
