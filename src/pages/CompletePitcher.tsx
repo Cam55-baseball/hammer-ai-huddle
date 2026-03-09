@@ -28,6 +28,15 @@ const tiles = [
     description: "Build elite speed and explosive power with structured conditioning",
     getRoute: () => "/explosive-conditioning",
   },
+  {
+    key: "pickoff-trainer",
+    icon: Crosshair,
+    labelKey: "pickoffTrainer.title",
+    labelFallback: "Pick-Off Trainer",
+    description: "Sharpen pick-off timing and decision-making with signal drills",
+    getRoute: () => "/pickoff-trainer",
+    baseballOnly: true,
+  },
 ] as const;
 
 export default function CompletePitcher() {
