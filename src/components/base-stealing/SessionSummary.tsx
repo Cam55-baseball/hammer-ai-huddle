@@ -188,29 +188,41 @@ export function SessionSummary({ reps, config, onSave, saving }: SessionSummaryP
       {/* Rep list */}
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-muted-foreground">Rep Details</h3>
-        {reps.map((rep, i) => (
-          <Card key={i} className="cursor-pointer" onClick={() => setExpandedRep(expandedRep === i ? null : i)}>
-            <CardContent className="py-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Rep {rep.repNumber}</span>
-                  {rep.decisionCorrect ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
-                  )}
-                  {rep.eliteJump && <Zap className="h-4 w-4 text-amber-500" />}
+        {reps.map((rep, i) => {
+          const isManualRep = rep.videoBlob === null && rep.decisionTimeSec === null;
+          return (
+            <Card 
+              key={i} 
+              className={rep.videoBlob ? 'cursor-pointer' : ''} 
+              onClick={() => rep.videoBlob && setExpandedRep(expandedRep === i ? null : i)}
+            >
+              <CardContent className="py-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Rep {rep.repNumber}</span>
+                    {rep.decisionCorrect ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : rep.decisionCorrect === false ? (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    ) : null}
+                    {rep.eliteJump && <Zap className="h-4 w-4 text-amber-500" />}
+                    {isManualRep && (
+                      <span className="text-xs text-muted-foreground">(manual)</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {rep.signalValue}
+                    {rep.decisionTimeSec != null && ` · ${rep.decisionTimeSec.toFixed(2)}s`}
+                    {isManualRep && rep.timeToBaseSec != null && ` · ${rep.timeToBaseSec.toFixed(2)}s to base`}
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {rep.signalValue} · {rep.decisionTimeSec?.toFixed(2)}s
-                </div>
-              </div>
-              {expandedRep === i && rep.videoBlob && (
-                <RepReviewPlayer videoBlob={rep.videoBlob} />
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                {expandedRep === i && rep.videoBlob && (
+                  <RepReviewPlayer videoBlob={rep.videoBlob} />
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Button className="w-full" onClick={onSave} disabled={saving}>

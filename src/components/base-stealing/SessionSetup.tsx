@@ -80,24 +80,85 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
 
   return (
     <div className="space-y-6 max-w-lg mx-auto">
-      {/* Camera guide — front camera only */}
-      <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="pt-5 space-y-2">
-          <div className="flex gap-3 items-start">
-            <Camera className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-            <div className="space-y-1">
-              <p className="text-sm font-semibold">Front Camera Setup</p>
+      {/* Session Mode Toggle */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Session Mode</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">Manual Entry Mode</Label>
               <p className="text-xs text-muted-foreground">
-                Your front camera will be used so you can confirm you're in frame before starting.
-                Position your device so the camera captures <strong>at least 3 steps</strong> of movement in each direction from your lead position.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                You'll see a live preview before each rep to verify your position.
+                {config.sessionMode === 'manual' 
+                  ? 'No camera — self-enter timing data'
+                  : 'AI analyzes video for precise timing'}
               </p>
             </div>
+            <Switch
+              checked={config.sessionMode === 'manual'}
+              onCheckedChange={(checked) => {
+                update('sessionMode', checked ? 'manual' : 'ai');
+                if (checked) setShowStopwatchInstructions(true);
+              }}
+            />
           </div>
         </CardContent>
       </Card>
+
+      {/* Stopwatch Instructions — Manual Mode Only */}
+      {config.sessionMode === 'manual' && showStopwatchInstructions && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="pt-5 space-y-2">
+            <div className="flex gap-3 items-start">
+              <Timer className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+              <div className="space-y-2 flex-1">
+                <div className="flex items-start justify-between">
+                  <p className="text-sm font-semibold">Stopwatch Instructions</p>
+                  <button 
+                    onClick={() => setShowStopwatchInstructions(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Use a <strong>stopwatch with lap function</strong> for best results:
+                </p>
+                <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1">
+                  <li>Start stopwatch on <strong>STEAL</strong> signal</li>
+                  <li>Press lap after your first 2 steps</li>
+                  <li>Stop timer when reaching the base</li>
+                </ul>
+                <p className="text-xs text-muted-foreground mt-2">
+                  This captures your first-step time and total steal time.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Camera guide — AI mode only */}
+      {config.sessionMode === 'ai' && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-5 space-y-2">
+            <div className="flex gap-3 items-start">
+              <Camera className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">Front Camera Setup</p>
+                <p className="text-xs text-muted-foreground">
+                  Your front camera will be used so you can confirm you're in frame before starting.
+                  Position your device so the camera captures <strong>at least 3 steps</strong> of movement in each direction from your lead position.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  You'll see a live preview before each rep to verify your position.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Lead Style */}
       <Card>

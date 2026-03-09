@@ -161,12 +161,21 @@ export default function BaseStealingTrainer() {
 
         {phase === 'setup' && <SessionSetup onStart={handleStart} />}
 
-        {phase === 'live_rep' && config && (
+        {phase === 'live_rep' && config && config.sessionMode === 'ai' && (
           <LiveRepRunner
             config={config}
             repNumber={repCounter}
-            onRepComplete={handleRepComplete}
+            onRepComplete={handleAIRepComplete}
             onEndSession={handleEndFromRep}
+          />
+        )}
+
+        {phase === 'live_rep' && config && config.sessionMode === 'manual' && (
+          <ManualRepRunner
+            config={config}
+            repNumber={repCounter}
+            onRepComplete={handleManualRepComplete}
+            onEndSession={handleManualEndSession}
           />
         )}
 
