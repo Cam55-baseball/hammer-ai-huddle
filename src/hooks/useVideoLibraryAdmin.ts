@@ -54,13 +54,14 @@ export function useVideoLibraryAdmin() {
           owner_id: user.id,
           title: payload.title,
           description: payload.description || null,
+          notes: payload.notes || null,
           video_url: videoUrl,
           video_type: payload.videoType,
           thumbnail_url: payload.thumbnailUrl || null,
           tags: payload.tags,
           sport: payload.sport,
           category: payload.category || null,
-        })
+        } as any)
         .select()
         .single();
 
