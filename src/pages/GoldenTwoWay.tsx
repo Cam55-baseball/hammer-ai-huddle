@@ -35,6 +35,14 @@ const tiles = [
     baseballOnly: true,
   },
   {
+    key: "softball-stealing",
+    icon: Zap,
+    label: "Softball Stealing",
+    description: "Manual stopwatch steal training with signal reactions",
+    getRoute: () => "/softball-stealing",
+    softballOnly: true,
+  },
+  {
     key: "the-unicorn",
     icon: Sparkles,
     label: "The Unicorn",

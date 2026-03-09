@@ -255,18 +255,30 @@ export default function PracticeHub() {
                       <SessionTypeSelector value={sessionType} onChange={handleSelectType} />
                     </CardContent>
                    </Card>
-                   {/* Base Stealing quick-link — baseball only */}
-                   {mod.id === 'baserunning' && sportKey === 'baseball' && (
-                     <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate('/base-stealing')}>
-                       <CardContent className="py-4 flex items-center gap-3">
-                         <Zap className="h-5 w-5 text-primary" />
-                         <div>
-                           <p className="font-semibold text-sm">Base Stealing Trainer</p>
-                           <p className="text-xs text-muted-foreground">Reaction timing & explosive acceleration drills</p>
-                         </div>
-                       </CardContent>
-                     </Card>
-                   )}
+                    {/* Base Stealing quick-link — baseball only */}
+                    {mod.id === 'baserunning' && sportKey === 'baseball' && (
+                      <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate('/base-stealing')}>
+                        <CardContent className="py-4 flex items-center gap-3">
+                          <Zap className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="font-semibold text-sm">Base Stealing Trainer</p>
+                            <p className="text-xs text-muted-foreground">Reaction timing & explosive acceleration drills</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {/* Softball Stealing quick-link — softball only */}
+                    {mod.id === 'baserunning' && sportKey === 'softball' && (
+                      <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate('/softball-stealing')}>
+                        <CardContent className="py-4 flex items-center gap-3">
+                          <Zap className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="font-semibold text-sm">Softball Stealing Trainer</p>
+                            <p className="text-xs text-muted-foreground">Manual stopwatch steal training with signal reactions</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                    <RecentSessionsList sport={sportKey} moduleLabel={mod.label} />
                  </>
               )}
