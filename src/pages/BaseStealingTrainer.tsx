@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SessionSetup, type LeadConfig } from '@/components/base-stealing/SessionSetup';
 import { LiveRepRunner, type RepResult } from '@/components/base-stealing/LiveRepRunner';
+import { ManualRepRunner } from '@/components/base-stealing/ManualRepRunner';
 import { PostRepInput } from '@/components/base-stealing/PostRepInput';
 import { SessionSummary } from '@/components/base-stealing/SessionSummary';
 import { PerformanceAnalysis } from '@/components/base-stealing/PerformanceAnalysis';
