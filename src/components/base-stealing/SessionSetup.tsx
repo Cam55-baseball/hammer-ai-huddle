@@ -139,7 +139,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
         </Card>
       )}
 
-      {/* Camera guide — AI mode only */}
+      {/* Camera guide — Hammer mode only */}
       {config.sessionMode === 'ai' && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="pt-5 space-y-2">

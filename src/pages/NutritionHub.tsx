@@ -8,7 +8,7 @@ const NutritionHub = () => {
       <SubscriptionGate 
         requiredAccess="any" 
         featureName="Nutrition Hub"
-        featureDescription="Track macros, log meals, get AI-powered nutrition insights, and monitor your body composition."
+        featureDescription="Track macros, log meals, get Hammer-powered nutrition insights, and monitor your body composition."
       >
         <NutritionHubContent />
       </SubscriptionGate>

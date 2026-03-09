@@ -379,7 +379,7 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
             delayBeforeSignalMs: randomDelay, signalFiredAt: sig.firedAt,
             reactionConfirmedAt: null, decisionTimeSec: null, decisionCorrect: null,
             eliteJump: false, videoBlob, aiConfidence: 'low',
-            aiReasoning: 'AI analysis failed. Review video manually.',
+            aiReasoning: 'Hammer analysis failed. Review video manually.',
           });
         }, 1500);
       }

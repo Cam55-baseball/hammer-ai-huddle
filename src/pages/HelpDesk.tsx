@@ -210,7 +210,7 @@ export default function HelpDesk() {
           <h2 className="text-lg font-semibold mb-3">{t('helpDesk.faqTitle', 'Frequently Asked Questions')}</h2>
           {filteredCategories.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">
-              {t('helpDesk.noResults', 'No results found. Try asking the AI assistant below.')}
+              {t('helpDesk.noResults', 'No results found. Try asking the Hammer assistant below.')}
             </p>
           ) : (
             <div className="space-y-4">

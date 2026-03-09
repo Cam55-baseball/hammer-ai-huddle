@@ -104,7 +104,7 @@ export default function ProgressDashboard() {
                   <IntegrityScoreBar />
                 </div>
 
-                {/* Row 3: AI Prompts */}
+                {/* Row 3: Hammer Prompts */}
                 <AIPromptCard />
 
                 {/* Row 4: Delta Trend */}

@@ -247,7 +247,7 @@ export function CustomFieldsBuilder({ fields, onChange }: CustomFieldsBuilderPro
             </div>
             <div className="flex items-start gap-2">
               <Hash className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span>{t('customActivity.customFields.guidance.number', "Track measurable data the AI analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185')")}</span>
+              <span>{t('customActivity.customFields.guidance.number', "Track measurable data Hammer analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185')")}</span>
             </div>
             <div className="flex items-start gap-2">
               <Type className="h-3.5 w-3.5 mt-0.5 shrink-0" />
