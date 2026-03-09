@@ -113,7 +113,7 @@ export function SoftballStealSetup({ onStart }: Props) {
           </RadioGroup>
           {signalType === 'even_odd' && (
             <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-              Even signal = <span className="font-semibold text-green-500">GO</span> &nbsp;|&nbsp; Odd signal = <span className="font-semibold text-red-500">BACK</span>
+              Even signal = <span className="font-semibold text-primary">GO</span> &nbsp;|&nbsp; Odd signal = <span className="font-semibold text-destructive">BACK</span>
             </p>
           )}
         </CardContent>
