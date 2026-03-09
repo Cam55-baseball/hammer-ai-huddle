@@ -148,10 +148,11 @@ export function ManualRepRunner({ config, repNumber, onRepComplete, onEndSession
     setPhase('countdown');
   };
 
-  const handleSaveEnd = () => {
-    const result = buildResult();
-    onRepComplete(result);
-  };
+const handleSaveEnd = () => {
+  const result = buildResult();
+  onRepComplete(result);
+  onEndSession();
+};
 
   const handleStartRep = () => {
     setCountdown(10);
