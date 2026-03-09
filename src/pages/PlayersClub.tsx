@@ -580,7 +580,7 @@ export default function PlayersClub() {
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {allItems.map((item) => (
               <VideoCardLazy key={item.id}>
-                {isPractice(item) ? renderPracticeCard(item) : (
+                {isPractice(item) ? renderPracticeCard(item) : isGame(item) ? renderGameCard(item) : (
                   viewMode === 'list' ? (
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-row">
                       <CardContent className="p-0 flex flex-row w-full">
