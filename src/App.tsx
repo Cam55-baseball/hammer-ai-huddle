@@ -131,6 +131,8 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
+              <Route path="/video-library" element={<VideoLibrary />} />
+              <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
               <Route path="/owner" element={<OwnerDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />

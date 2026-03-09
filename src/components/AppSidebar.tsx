@@ -280,6 +280,11 @@ export function AppSidebar() {
     // Players Club always visible
     items.push({ key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked });
 
+    // Video Library - visible to any subscribed user
+    if (showAll || modules.length > 0) {
+      items.push({ key: 'video-library', title: 'Video Library', url: '/video-library', icon: Library });
+    }
+
     return items;
   }, [isOwner, isAdmin, activeTier, modules, selectedSport, t]);
 

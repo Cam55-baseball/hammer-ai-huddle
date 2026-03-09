@@ -46,6 +46,7 @@ const sectionLabels: Record<OwnerSection, string> = {
   'admin-requests': 'Admin Requests',
   'scout-applications': 'Scout Applications',
   'videos': 'Recent Videos',
+  'video-library': 'Video Library Manager',
   'subscriptions': 'Subscriptions',
   'settings': 'Settings',
   'player-search': 'Player Search',
