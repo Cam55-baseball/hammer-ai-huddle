@@ -12,7 +12,7 @@ type Phase = 'setup' | 'live' | 'summary' | 'analysis';
 
 const PickoffTrainer = () => {
   const { user } = useAuth();
-  const { selectedSport } = useSportTheme();
+  const { sport } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
 
   const [phase, setPhase] = useState<Phase>('setup');
