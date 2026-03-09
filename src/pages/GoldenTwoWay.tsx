@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, Eye, Zap, ArrowRight, Sparkles } from "lucide-react";
+import { Target, Dumbbell, Eye, Zap, ArrowRight, Sparkles, Crosshair } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
@@ -63,6 +63,14 @@ const tiles = [
     label: "Tex Vision",
     description: "Train your eyes to track pitches like a pro",
     getRoute: () => "/tex-vision",
+  },
+  {
+    key: "pickoff-trainer",
+    icon: Crosshair,
+    label: "Pick-Off Trainer",
+    description: "Sharpen pick-off timing and decision-making with signal drills",
+    getRoute: () => "/pickoff-trainer",
+    baseballOnly: true,
   },
 ] as const;
 

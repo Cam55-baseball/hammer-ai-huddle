@@ -7,6 +7,7 @@ import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
 interface UploadVideoPayload {
   title: string;
   description?: string;
+  notes?: string;
   tags: string[];
   sport: string[];
   category?: string;
@@ -53,13 +54,14 @@ export function useVideoLibraryAdmin() {
           owner_id: user.id,
           title: payload.title,
           description: payload.description || null,
+          notes: payload.notes || null,
           video_url: videoUrl,
           video_type: payload.videoType,
           thumbnail_url: payload.thumbnailUrl || null,
           tags: payload.tags,
           sport: payload.sport,
           category: payload.category || null,
-        })
+        } as any)
         .select()
         .single();
 
@@ -76,17 +78,19 @@ export function useVideoLibraryAdmin() {
   }, [user]);
 
   const updateVideo = useCallback(async (videoId: string, updates: Partial<UploadVideoPayload>) => {
+    const updateData: Record<string, any> = {
+      ...(updates.title && { title: updates.title }),
+      ...(updates.description !== undefined && { description: updates.description }),
+      ...(updates.notes !== undefined && { notes: updates.notes }),
+      ...(updates.tags && { tags: updates.tags }),
+      ...(updates.sport && { sport: updates.sport }),
+      ...(updates.category !== undefined && { category: updates.category }),
+      ...(updates.thumbnailUrl !== undefined && { thumbnail_url: updates.thumbnailUrl }),
+      updated_at: new Date().toISOString(),
+    };
     const { error } = await supabase
       .from('library_videos')
-      .update({
-        ...(updates.title && { title: updates.title }),
-        ...(updates.description !== undefined && { description: updates.description }),
-        ...(updates.tags && { tags: updates.tags }),
-        ...(updates.sport && { sport: updates.sport }),
-        ...(updates.category !== undefined && { category: updates.category }),
-        ...(updates.thumbnailUrl !== undefined && { thumbnail_url: updates.thumbnailUrl }),
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData as any)
       .eq('id', videoId);
 
     if (error) {

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Heart } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, Heart, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -14,6 +15,7 @@ interface VideoDetail {
   id: string;
   title: string;
   description: string | null;
+  notes: string | null;
   video_url: string | null;
   video_type: string;
   tags: string[];
@@ -23,18 +25,26 @@ interface VideoDetail {
   created_at: string;
 }
 
+// In-memory translation cache
+const translationCache = new Map<string, { title: string; description: string; notes: string }>();
+
 const VideoLibraryPlayer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { i18n } = useTranslation();
   const [video, setVideo] = useState<VideoDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [translated, setTranslated] = useState<{ title: string; description: string; notes: string } | null>(null);
+  const [translating, setTranslating] = useState(false);
+
+  const currentLang = i18n.language?.split('-')[0] || 'en';
 
   useEffect(() => {
     if (!id) return;
-    const fetch = async () => {
+    const fetchVideo = async () => {
       const { data } = await supabase
         .from('library_videos')
         .select('*')
@@ -42,7 +52,7 @@ const VideoLibraryPlayer = () => {
         .single();
 
       if (data) {
-        setVideo(data as VideoDetail);
+        setVideo(data as unknown as VideoDetail);
         setLikesCount(data.likes_count);
       }
 
@@ -55,7 +65,6 @@ const VideoLibraryPlayer = () => {
           .maybeSingle();
         setIsLiked(!!like);
 
-        // Track view
         await supabase.from('library_video_analytics').insert({
           video_id: id,
           user_id: user.id,
@@ -64,8 +73,48 @@ const VideoLibraryPlayer = () => {
       }
       setLoading(false);
     };
-    fetch();
+    fetchVideo();
   }, [id, user]);
+
+  // Auto-translate when video loads and language is not English
+  useEffect(() => {
+    if (!video || !id || currentLang === 'en') {
+      setTranslated(null);
+      return;
+    }
+
+    const cacheKey = `${id}:${currentLang}`;
+    const cached = translationCache.get(cacheKey);
+    if (cached) {
+      setTranslated(cached);
+      return;
+    }
+
+    const translateContent = async () => {
+      setTranslating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('translate-video-content', {
+          body: {
+            title: video.title,
+            description: video.description || '',
+            notes: (video as any).notes || '',
+            targetLang: currentLang,
+          },
+        });
+
+        if (!error && data && !data.error) {
+          translationCache.set(cacheKey, data);
+          setTranslated(data);
+        }
+      } catch {
+        // Silently fail — show original content
+      } finally {
+        setTranslating(false);
+      }
+    };
+
+    translateContent();
+  }, [video, id, currentLang]);
 
   const handleLike = async () => {
     if (!user || !id) return;
@@ -79,6 +128,10 @@ const VideoLibraryPlayer = () => {
       setLikesCount(c => c + 1);
     }
   };
+
+  const displayTitle = translated?.title || video?.title || '';
+  const displayDescription = translated?.description || video?.description || '';
+  const displayNotes = translated?.notes || (video as any)?.notes || '';
 
   if (loading) {
     return (
@@ -109,20 +162,30 @@ const VideoLibraryPlayer = () => {
           <ArrowLeft className="h-4 w-4" /> Back to Library
         </Button>
 
-        <VideoPlayer videoUrl={video.video_url} videoType={video.video_type} title={video.title} />
+        <VideoPlayer videoUrl={video.video_url} videoType={video.video_type} title={displayTitle} />
 
         <div className="space-y-4">
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-xl font-bold">{video.title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold">{displayTitle}</h1>
+              {translating && <Languages className="h-4 w-4 animate-pulse text-muted-foreground" />}
+            </div>
             <Button variant="outline" size="sm" onClick={handleLike} className="shrink-0 gap-1.5">
               <Heart className={cn("h-4 w-4", isLiked && "fill-destructive text-destructive")} />
               {likesCount}
             </Button>
           </div>
 
-          {video.description && (
+          {displayDescription && (
             <Card className="p-4">
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{video.description}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{displayDescription}</p>
+            </Card>
+          )}
+
+          {displayNotes && (
+            <Card className="p-4 border-primary/20">
+              <p className="text-xs font-medium text-primary mb-1">Coach Notes</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{displayNotes}</p>
             </Card>
           )}
 

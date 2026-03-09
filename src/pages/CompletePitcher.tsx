@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, ArrowRight, Zap } from "lucide-react";
+import { Target, Dumbbell, ArrowRight, Zap, Crosshair } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
@@ -28,6 +28,15 @@ const tiles = [
     description: "Build elite speed and explosive power with structured conditioning",
     getRoute: () => "/explosive-conditioning",
   },
+  {
+    key: "pickoff-trainer",
+    icon: Crosshair,
+    labelKey: "pickoffTrainer.title",
+    labelFallback: "Pick-Off Trainer",
+    description: "Sharpen pick-off timing and decision-making with signal drills",
+    getRoute: () => "/pickoff-trainer",
+    baseballOnly: true,
+  },
 ] as const;
 
 export default function CompletePitcher() {
@@ -50,7 +59,12 @@ export default function CompletePitcher() {
 
         {/* Selection Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {tiles.map((tile) => {
+          {tiles
+            .filter(tile => {
+              if ('baseballOnly' in tile && tile.baseballOnly) return selectedSport === 'baseball';
+              return true;
+            })
+            .map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
 

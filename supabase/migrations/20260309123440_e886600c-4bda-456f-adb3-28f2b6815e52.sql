@@ -1,0 +1,1 @@
+ALTER TABLE public.library_videos ADD COLUMN IF NOT EXISTS notes text;

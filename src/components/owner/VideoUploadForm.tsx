@@ -27,6 +27,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
   const [mode, setMode] = useState<'upload' | 'link'>('link');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [notes, setNotes] = useState('');
   const [externalUrl, setExternalUrl] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [selectedSport, setSelectedSport] = useState<string[]>([]);
@@ -53,6 +54,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
     const result = await uploadVideo({
       title: title.trim(),
       description: description.trim() || undefined,
+      notes: notes.trim() || undefined,
       tags: selectedTags,
       sport: selectedSport,
       category: category || undefined,
@@ -64,6 +66,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
     if (result) {
       setTitle('');
       setDescription('');
+      setNotes('');
       setExternalUrl('');
       setVideoFile(null);
       setSelectedSport([]);
@@ -115,6 +118,11 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
       <div className="space-y-2">
         <Label>Description</Label>
         <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Short teaching explanation..." rows={3} />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Teaching Notes</Label>
+        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional coaching notes (translated for international users)..." rows={3} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

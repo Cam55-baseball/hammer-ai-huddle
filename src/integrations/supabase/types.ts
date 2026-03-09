@@ -1978,6 +1978,7 @@ export type Database = {
           description: string | null
           id: string
           likes_count: number
+          notes: string | null
           owner_id: string
           sport: string[]
           tags: string[]
@@ -1994,6 +1995,7 @@ export type Database = {
           description?: string | null
           id?: string
           likes_count?: number
+          notes?: string | null
           owner_id: string
           sport?: string[]
           tags?: string[]
@@ -2010,6 +2012,7 @@ export type Database = {
           description?: string | null
           id?: string
           likes_count?: number
+          notes?: string | null
           owner_id?: string
           sport?: string[]
           tags?: string[]

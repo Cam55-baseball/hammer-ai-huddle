@@ -51,6 +51,13 @@ export default function PracticeHub() {
   const { updateStatus } = useScheduledPracticeSessions();
 
   const [activeModule, setActiveModule] = useState(searchParams.get('module') || 'hitting');
+
+  // Reset module selection when sport changes
+  useEffect(() => {
+    if (step === 'select_type') {
+      setActiveModule('hitting');
+    }
+  }, [sportKey]);
   const { getHandedness } = useSessionDefaults(activeModule);
   const currentHandedness = useMemo(() => getHandedness(), [activeModule, getHandedness]);
   const [step, setStep] = useState<FlowStep>('select_type');
