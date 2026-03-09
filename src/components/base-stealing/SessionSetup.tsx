@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Info } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Camera, Info, Timer, X } from 'lucide-react';
 
 const STEP_OPTIONS = [
   { value: '0', label: '0' },
@@ -42,6 +43,7 @@ export interface LeadConfig {
   signalMode: 'colors' | 'numbers';
   difficulty: 'easy' | 'medium' | 'hard';
   cameraFacing: 'user';
+  sessionMode: 'ai' | 'manual';
 }
 
 interface SessionSetupProps {
@@ -49,6 +51,7 @@ interface SessionSetupProps {
 }
 
 export function SessionSetup({ onStart }: SessionSetupProps) {
+  const [showStopwatchInstructions, setShowStopwatchInstructions] = useState(true);
   const [config, setConfig] = useState<LeadConfig>({
     stepsTowardBase: '3',
     shuffleSteps: '2',
@@ -61,6 +64,7 @@ export function SessionSetup({ onStart }: SessionSetupProps) {
     signalMode: 'colors',
     difficulty: 'medium',
     cameraFacing: 'user',
+    sessionMode: 'ai',
   });
 
   const update = <K extends keyof LeadConfig>(key: K, value: LeadConfig[K]) =>
