@@ -178,6 +178,7 @@ export default function PlayersClub() {
       } else {
         setVideos(data?.videos || []);
         setPractices(data?.practices || []);
+        setGames((data?.games || []).map((g: any) => ({ ...g, session_date: g.game_date })));
       }
     } catch (error: any) {
       console.error('Error fetching library:', error);
