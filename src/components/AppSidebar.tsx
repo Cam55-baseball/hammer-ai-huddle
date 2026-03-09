@@ -207,6 +207,7 @@ export function AppSidebar() {
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
+          ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
         ]
       });
     }
@@ -226,6 +227,7 @@ export function AppSidebar() {
           { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
           { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
           ...(selectedSport === 'baseball' ? [{ title: 'Base Stealing', url: '/base-stealing', icon: Zap, description: 'Reaction training for explosive steals' }] : []),
+          ...(selectedSport === 'softball' ? [{ title: 'Softball Stealing', url: '/softball-stealing', icon: Zap, description: 'Steal training for softball' }] : []),
         ]
       });
     }
