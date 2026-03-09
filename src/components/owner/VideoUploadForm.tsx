@@ -120,6 +120,11 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
         <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Short teaching explanation..." rows={3} />
       </div>
 
+      <div className="space-y-2">
+        <Label>Teaching Notes</Label>
+        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional coaching notes (translated for international users)..." rows={3} />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Sport</Label>
