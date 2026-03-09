@@ -246,6 +246,9 @@ export default function HelpDesk() {
           )}
         </div>
 
+        {/* Idea Drop Box */}
+        <IdeaDropBox />
+
         {/* Embedded Chat */}
         <div>
           <HelpDeskChat embedded />

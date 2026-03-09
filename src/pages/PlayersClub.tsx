@@ -573,6 +573,13 @@ export default function PlayersClub() {
           </div>
         )}
 
+        {/* Practice Session Detail Dialog */}
+        <PracticeSessionDetailDialog
+          session={selectedPractice}
+          open={!!selectedPractice}
+          onClose={() => setSelectedPractice(null)}
+        />
+
         {/* Session Detail Dialog */}
         {selectedSession && (
           <SessionDetailDialog
