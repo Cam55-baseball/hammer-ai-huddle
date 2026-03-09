@@ -1,52 +1,87 @@
 
 
-# Manual E2E Testing Plan: Advanced Steal Analysis
+# Five Improvements
 
-## Implementation Verified
+## 1. Replace "AI" with "Hammer" Across the App
 
-The code review confirms all four new analytics cards are implemented in `PerformanceAnalysis.tsx`:
+**Scope:** ~33 files containing "AI" references in user-facing text. This includes:
+- Labels/badges: "AI" → "Hammer" (e.g., `<Badge>AI</Badge>` → `<Badge>Hammer</Badge>`)
+- Section titles: "Vault & AI Recap" → "Vault & Hammer Recap", "AI Meal Suggestions" → "Hammer Meal Suggestions"
+- FAQ text: "AI will analyze" → "Hammer will analyze", "AI-powered" → "Hammer-powered"
+- Help desk chat: "AI assistant" → "Hammer assistant"
+- Component names stay unchanged (internal code) — only user-visible strings change
+- Edge function system prompts and internal comments stay as-is (backend, not user-facing)
 
-1. **Elite Benchmark Comparison** (lines 306-345) - Shows avg time vs elite benchmark with difference calculation
-2. **Projected Steal Success** (lines 347-387) - Progress bars for vs Avg/Elite battery with slide adjustment note
-3. **Steal Window** (lines 389-422) - Time margin with interpretation labels
-4. **Elite Steal Profile** (lines 424-493) - Composite card with all metrics including "Feet Stolen"
+Key files: `HelpDesk.tsx`, `HelpDeskChat.tsx`, `SessionDetailDialog.tsx`, `AIMealSuggestions.tsx`, `NutritionHubContent.tsx`, `TodaysTipsReview.tsx`, `ProgressDashboard.tsx`, `VaultRecapCard.tsx`, `AIPromptCard.tsx`, `PracticeHub.tsx`, `LiveRepRunner.tsx`, `AnalyzeVideo.tsx`, sidebar labels, and all FAQ answer strings.
 
-## Testing Checklist
+## 2. Practice Intelligence Hub — "Log Your Practice Here" UX
 
-### Test 1: Manual Mode Flow
+**File:** `src/pages/PracticeHub.tsx`
 
-1. Navigate to `/practice` → Base Stealing drill
-2. In SessionSetup, select **Manual Entry** mode
-3. Configure: Base Distance = 90ft, Lead Distance = 11ft
-4. Start session and complete 2-3 reps:
-   - Run through countdown → signal → tap to dismiss
-   - Mark decision as Correct
-   - Enter: First 2 Steps = 0.45s, Time to Base = 3.10s, Steps = 12
-5. Click "Save & End Session" → Session Summary → Save
-6. **Verify on Analysis screen:**
-   - Elite Benchmark Comparison card shows 3.10s vs 3.05s elite
-   - Projected Steal Success shows % vs Avg and Elite battery
-   - Steal Window shows +/- seconds with labels
-   - Elite Steal Profile shows all metrics including "Feet Stolen: 11ft (actual run: 79ft)"
+Change the header area:
+- Title stays "Practice Intelligence"
+- Subtitle changes from "Log sessions, track progress, and build your MPI score" → **"Log your practice here — pick a module below to get started"**
+- Add a small helper banner/card below the header (before the tabs) with a clean callout: icon + "Select a module, choose your session type, and start logging reps" — dismissible
 
-### Test 2: AI Mode Flow (if camera available)
+## 3. Practice Session Detail View in Players Club
 
-1. Select **AI Video Analysis** mode
-2. Complete 2 reps with camera recording
-3. On Analysis screen, verify same cards render with AI-measured timing data
+**Problem:** Practice cards in Players Club (`renderPracticeCard`) have no `onClick` — users can see a card but cannot view drill blocks, rep data, videos, or full contents.
 
-### Expected Card Behavior
+**Solution:** Create a `PracticeSessionDetailDialog` component:
 
-| Card | Shows When |
-|------|------------|
-| Elite Benchmark | `avgRun` (Time to Base) exists |
-| Projected Steal Success | `avgRun` exists |
-| Steal Window | `avgRun` exists |
-| Elite Steal Profile | Always (gracefully hides null metrics) |
+| File | Action |
+|------|--------|
+| `src/components/PracticeSessionDetailDialog.tsx` | **Create** — Dialog showing full practice session contents |
+| `src/pages/PlayersClub.tsx` | **Edit** — Add `onClick` to practice cards, add state + dialog rendering |
 
-### Edge Cases to Test
+The dialog will display:
+- Session header: type, date, sport, module, coach grade
+- Drill blocks list: each block shows type, intent, volume, execution grade, outcome tags
+- Per-rep micro layer data (if stored): goal of rep, actual outcome, rep tags
+- Session notes
+- Session context (environment, equipment, etc.)
+- Videos associated with the session (from `session_videos` if any exist)
 
-- No Time to Base entered → Benchmark/Success/Window cards should NOT render
-- No lead distance → "Feet Stolen" row should NOT appear
-- First 2 Steps not entered → Acceleration Efficiency row hides
+## 4. Vault Performance Test — Vertical Scroll for Recent Tests
+
+**File:** `src/components/vault/VaultPerformanceTestCard.tsx`
+
+Current: `<ScrollArea className="max-h-[200px]">` — this is already a scroll area but `max-h-[200px]` is very small for viewing history.
+
+Changes:
+- Increase `max-h-[200px]` → `max-h-[400px]` for more visible entries
+- Remove the `recentTests = tests.slice(0, 5)` limit — show **all** tests with scroll
+- Add a visible vertical scrollbar indicator so users know content is scrollable
+
+## 5. User Idea Drop Box on Help Desk
+
+**Files:**
+
+| File | Action |
+|------|--------|
+| `src/pages/HelpDesk.tsx` | **Edit** — Add "Share an Idea" card section before the embedded chat |
+| `src/components/IdeaDropBox.tsx` | **Create** — Simple form: textarea + optional name + Submit button |
+| `supabase/functions/submit-idea/index.ts` | **Create** — Edge function that sends email to HammersModality@gmail.com via Resend |
+
+The "Share an Idea" card will appear between the FAQ section and the chat, with:
+- Lightbulb icon + "Got an idea? Drop it in the box!"
+- Textarea for the idea
+- Submit button that calls the edge function
+- Success toast on submission
+- The edge function sends a transactional email to HammersModality@gmail.com with the user's idea text, their profile name, and timestamp
+
+---
+
+## Files Summary
+
+| File | Action |
+|------|--------|
+| ~15 UI files | Edit — replace "AI" → "Hammer" in user-facing strings |
+| `src/pages/PracticeHub.tsx` | Edit — update subtitle + add helper banner |
+| `src/components/PracticeSessionDetailDialog.tsx` | Create — full practice session viewer |
+| `src/pages/PlayersClub.tsx` | Edit — wire practice cards to detail dialog |
+| `src/components/vault/VaultPerformanceTestCard.tsx` | Edit — expand scroll area, remove 5-item limit |
+| `src/components/IdeaDropBox.tsx` | Create — idea submission form |
+| `src/pages/HelpDesk.tsx` | Edit — add idea drop box section |
+| `supabase/functions/submit-idea/index.ts` | Create — email idea to HammersModality@gmail.com |
 
