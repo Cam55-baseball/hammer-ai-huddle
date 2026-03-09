@@ -85,7 +85,11 @@ export default function GoldenTwoWay() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {tiles
-            .filter(tile => !('baseballOnly' in tile && tile.baseballOnly) || selectedSport === 'baseball')
+            .filter(tile => {
+              if ('baseballOnly' in tile && tile.baseballOnly) return selectedSport === 'baseball';
+              if ('softballOnly' in tile && tile.softballOnly) return selectedSport === 'softball';
+              return true;
+            })
             .map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
