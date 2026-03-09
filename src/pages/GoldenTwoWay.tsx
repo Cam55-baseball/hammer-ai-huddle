@@ -64,6 +64,14 @@ const tiles = [
     description: "Train your eyes to track pitches like a pro",
     getRoute: () => "/tex-vision",
   },
+  {
+    key: "pickoff-trainer",
+    icon: Crosshair,
+    label: "Pick-Off Trainer",
+    description: "Sharpen pick-off timing and decision-making with signal drills",
+    getRoute: () => "/pickoff-trainer",
+    baseballOnly: true,
+  },
 ] as const;
 
 export default function GoldenTwoWay() {

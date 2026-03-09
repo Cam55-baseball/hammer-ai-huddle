@@ -13,7 +13,7 @@ type Phase = 'setup' | 'live_rep' | 'summary' | 'analysis';
 
 export default function SoftballStealingTrainer() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { createSession, saving } = usePerformanceSession();
   const [phase, setPhase] = useState<Phase>('setup');
   const [config, setConfig] = useState<StealSetupConfig | null>(null);
@@ -23,16 +23,28 @@ export default function SoftballStealingTrainer() {
 
   // Sport guard
   useEffect(() => {
+    if (loading) return;
     const sport = localStorage.getItem('selectedSport');
     if (sport && sport !== 'softball') {
       navigate('/dashboard');
     }
-  }, [navigate]);
+  }, [navigate, loading]);
 
   // Auth guard
   useEffect(() => {
+    if (loading) return;
     if (!user) navigate('/auth');
-  }, [user, navigate]);
+  }, [user, navigate, loading]);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const handleSetupComplete = (cfg: StealSetupConfig) => {
     setConfig(cfg);

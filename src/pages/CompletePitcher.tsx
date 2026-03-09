@@ -59,7 +59,12 @@ export default function CompletePitcher() {
 
         {/* Selection Tiles */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {tiles.map((tile) => {
+          {tiles
+            .filter(tile => {
+              if ('baseballOnly' in tile && tile.baseballOnly) return selectedSport === 'baseball';
+              return true;
+            })
+            .map((tile) => {
             const Icon = tile.icon;
             const route = tile.getRoute(selectedSport);
 
