@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { HelpDeskChat } from "@/components/HelpDeskChat";
+import { IdeaDropBox } from "@/components/IdeaDropBox";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
