@@ -15,6 +15,7 @@ import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, Boo
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
+import { GameSessionDetailDialog } from '@/components/GameSessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
