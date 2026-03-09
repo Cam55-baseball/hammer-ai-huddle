@@ -21,7 +21,7 @@ const PickoffTrainer = () => {
   const [reps, setReps] = useState<PickoffRep[]>([]);
 
   if (!user) return <Navigate to="/auth" replace />;
-  if (selectedSport !== 'baseball') return <Navigate to="/dashboard" replace />;
+  if (sport !== 'baseball') return <Navigate to="/dashboard" replace />;
 
   const handleStart = (b: string, c: string) => {
     setBase(b);
