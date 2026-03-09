@@ -1,47 +1,52 @@
 
 
-# Fix: Coach Schedule Dialog RLS Error
+# Manual E2E Testing Plan: Advanced Steal Analysis
 
-## Root Cause
+## Implementation Verified
 
-The coach has two accepted relationships:
-- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
-- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
+The code review confirms all four new analytics cards are implemented in `PerformanceAnalysis.tsx`:
 
-The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
+1. **Elite Benchmark Comparison** (lines 306-345) - Shows avg time vs elite benchmark with difference calculation
+2. **Projected Steal Success** (lines 347-387) - Progress bars for vs Avg/Elite battery with slide adjustment note
+3. **Steal Window** (lines 389-422) - Time margin with interpretation labels
+4. **Elite Steal Profile** (lines 424-493) - Composite card with all metrics including "Feet Stolen"
 
-## Solution
+## Testing Checklist
 
-**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
+### Test 1: Manual Mode Flow
 
-**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
+1. Navigate to `/practice` → Base Stealing drill
+2. In SessionSetup, select **Manual Entry** mode
+3. Configure: Base Distance = 90ft, Lead Distance = 11ft
+4. Start session and complete 2-3 reps:
+   - Run through countdown → signal → tap to dismiss
+   - Mark decision as Correct
+   - Enter: First 2 Steps = 0.45s, Time to Base = 3.10s, Steps = 12
+5. Click "Save & End Session" → Session Summary → Save
+6. **Verify on Analysis screen:**
+   - Elite Benchmark Comparison card shows 3.10s vs 3.05s elite
+   - Projected Steal Success shows % vs Avg and Elite battery
+   - Steal Window shows +/- seconds with labels
+   - Elite Steal Profile shows all metrics including "Feet Stolen: 11ft (actual run: 79ft)"
 
-I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
+### Test 2: AI Mode Flow (if camera available)
 
-### Changes
+1. Select **AI Video Analysis** mode
+2. Complete 2 reps with camera recording
+3. On Analysis screen, verify same cards render with AI-measured timing data
 
-| File | Change |
-|------|--------|
-| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
-| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
+### Expected Card Behavior
 
-### Technical Detail
+| Card | Shows When |
+|------|------------|
+| Elite Benchmark | `avgRun` (Time to Base) exists |
+| Projected Steal Success | `avgRun` exists |
+| Steal Window | `avgRun` exists |
+| Elite Steal Profile | Always (gracefully hides null metrics) |
 
-**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
-```sql
-CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.scout_follows
-    WHERE scout_id = p_coach_id
-      AND player_id = p_player_id
-      AND status = 'accepted'
-      AND relationship_type IN ('linked', 'follow')
-  )
-$$;
-```
+### Edge Cases to Test
 
-Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
+- No Time to Base entered → Benchmark/Success/Window cards should NOT render
+- No lead distance → "Feet Stolen" row should NOT appear
+- First 2 Steps not entered → Acceleration Efficiency row hides
 
