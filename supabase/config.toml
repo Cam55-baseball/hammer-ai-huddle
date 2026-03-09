@@ -179,3 +179,6 @@ verify_jwt = true
 
 [functions.analyze-base-stealing-rep]
 verify_jwt = false
+
+[functions.translate-video-content]
+verify_jwt = false
