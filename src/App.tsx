@@ -96,6 +96,7 @@ const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"
 const GameScoring = lazyWithRetry(() => import("./pages/GameScoring"));
 const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrainer"));
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
+const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 
 const queryClient = new QueryClient();
 
