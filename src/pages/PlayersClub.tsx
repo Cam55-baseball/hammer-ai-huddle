@@ -268,7 +268,7 @@ export default function PlayersClub() {
         return matchesSport && matchesModule && matchesSearch;
       })
       .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime());
-  }, [videos, practices, sourceFilter, sportFilter, moduleFilter, searchQuery]);
+  }, [videos, practices, games, sourceFilter, sportFilter, moduleFilter, searchQuery]);
 
   const getAnnotationCount = (session: LibrarySession) => {
     if (!session.annotation_count || !Array.isArray(session.annotation_count)) return 0;
