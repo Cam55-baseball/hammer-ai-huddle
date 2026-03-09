@@ -27,6 +27,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
   const [mode, setMode] = useState<'upload' | 'link'>('link');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [notes, setNotes] = useState('');
   const [externalUrl, setExternalUrl] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [selectedSport, setSelectedSport] = useState<string[]>([]);
