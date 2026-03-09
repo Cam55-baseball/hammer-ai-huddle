@@ -125,9 +125,10 @@ export default function PlayersClub() {
 
   const [videos, setVideos] = useState<LibrarySession[]>([]);
   const [practices, setPractices] = useState<PracticeSession[]>([]);
+  const [games, setGames] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'video' | 'practice'>('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'video' | 'practice' | 'game'>('all');
   const [sportFilter, setSportFilter] = useState<string>('all');
   const [moduleFilter, setModuleFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
