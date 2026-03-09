@@ -101,7 +101,7 @@ export default function HelpDesk() {
       ],
     },
     {
-      title: t('helpDesk.faq.vaultRecap', 'Vault & AI Recap'),
+      title: t('helpDesk.faq.vaultRecap', 'Vault & Hammer Recap'),
       icon: <BookOpen className="h-4 w-4" />,
       items: [
         {
