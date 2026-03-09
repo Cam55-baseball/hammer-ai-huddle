@@ -1,44 +1,47 @@
 
 
-# Manual Entry Mode for Base Stealing Drill
+# Fix: Coach Schedule Dialog RLS Error
 
-## Overview
+## Root Cause
 
-Add a completely isolated Manual Mode that bypasses all camera/AI logic. The mode toggle lives in `SessionSetup`, and a new `ManualRepRunner` component handles the simplified rep flow (countdown → signal → user confirmation → data entry).
+The coach has two accepted relationships:
+- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
+- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
 
-## File Changes
+The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
 
-| File | Changes |
-|------|---------|
-| `src/components/base-stealing/SessionSetup.tsx` | Add `sessionMode: 'ai' | 'manual'` to `LeadConfig`. Add toggle switch between AI Video Analysis and Manual Entry. Show one-time stopwatch instructions card when manual is selected. |
-| `src/components/base-stealing/ManualRepRunner.tsx` | **New file.** Handles: 10s countdown → "Take Your Lead" at 3-2-1 → randomized 1-3s delay → full-screen STEAL or BACK signal (stays visible until user taps). No camera, no recording, no AI. After user taps, shows correct/incorrect buttons, then optional inputs (First 2 Steps time, Steps to Base, Time to Base). Next Rep / Save & End buttons. Next Rep auto-starts the next countdown. |
-| `src/pages/BaseStealingTrainer.tsx` | Branch on `config.sessionMode`: render `LiveRepRunner` for AI mode, `ManualRepRunner` for manual mode. Skip AI save logic for manual — build `RepResult` directly from user inputs. |
-| `src/components/base-stealing/PostRepInput.tsx` | No changes needed — manual mode handles its own post-rep UI inline within `ManualRepRunner` for a faster, cleaner flow. |
-| `src/components/base-stealing/SessionSummary.tsx` | Minor: hide video review sections when `videoBlob` is null (already handled). Hide AI confidence badge for manual reps. |
-| `src/components/base-stealing/PerformanceAnalysis.tsx` | No changes — already works with whatever data is in `RepResult`. Manual reps will have `decisionTimeSec: null` (no reaction timing), but will have `firstTwoStepsSec`, `timeToBaseSec`, `stepsTaken`, and `decisionCorrect` from user input. |
+## Solution
 
-## ManualRepRunner Flow Detail
+**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
 
-```text
-[Start Rep] → 10s countdown → "TAKE YOUR LEAD" (3..2..1)
-  → random 1-3s delay
-  → Full-screen signal: "STEAL" (green) or "BACK" (red)
-  → Signal stays until user taps anywhere
-  → "Did you make the correct decision?" → [Correct] [Incorrect]
-  → Optional inputs (only show First 2 Steps + Time to Base for STEAL signals):
-      - Time of First 2 Steps (s)
-      - Steps to Base (#)  
-      - Time to Base (s)
-  → [Next Rep] or [Save & End]
+**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
+
+I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
+
+### Changes
+
+| File | Change |
+|------|--------|
+| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
+| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
+
+### Technical Detail
+
+**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
+```sql
+CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.scout_follows
+    WHERE scout_id = p_coach_id
+      AND player_id = p_player_id
+      AND status = 'accepted'
+      AND relationship_type IN ('linked', 'follow')
+  )
+$$;
 ```
 
-## Key Design Decisions
-
-- **Signal stays visible** until tapped (unlike AI mode's 3s auto-dismiss) — user needs to see it while physically running
-- **No reaction time measurement** — spec explicitly says "we are NOT measuring reaction decision time yet"
-- **First 2 Steps + Time to Base only shown on STEAL/go signals** — not applicable for BACK/return
-- **Steps to Base shown for both** signal types (useful for return steps too, but can be toggled per spec preference)
-- **Stopwatch instructions** shown as a dismissible card in SessionSetup when manual is toggled on
-- `RepResult` reused with `videoBlob: null`, `decisionTimeSec: null`, `aiConfidence: undefined` for manual reps
-- Manual mode sets `decisionCorrect` from the user's button tap, not AI
+Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
 

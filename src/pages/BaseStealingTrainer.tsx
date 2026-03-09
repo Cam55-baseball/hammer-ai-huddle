@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SessionSetup, type LeadConfig } from '@/components/base-stealing/SessionSetup';
 import { LiveRepRunner, type RepResult } from '@/components/base-stealing/LiveRepRunner';
+import { ManualRepRunner } from '@/components/base-stealing/ManualRepRunner';
 import { PostRepInput } from '@/components/base-stealing/PostRepInput';
 import { SessionSummary } from '@/components/base-stealing/SessionSummary';
 import { PerformanceAnalysis } from '@/components/base-stealing/PerformanceAnalysis';
@@ -49,9 +50,22 @@ export default function BaseStealingTrainer() {
     setPhase('live_rep');
   };
 
-  const handleRepComplete = useCallback((result: RepResult) => {
+  // AI mode: result goes to post_rep for enrichment
+  const handleAIRepComplete = useCallback((result: RepResult) => {
     setCurrentResult(result);
     setPhase('post_rep');
+  }, []);
+
+  // Manual mode: result is already complete, add directly
+  const handleManualRepComplete = useCallback((result: RepResult) => {
+    setReps(prev => [...prev, result]);
+    setRepCounter(c => c + 1);
+    // Stay in live_rep phase - ManualRepRunner handles its own flow
+  }, []);
+
+  // Manual mode: end session after adding last rep
+  const handleManualEndSession = useCallback(() => {
+    setPhase('summary');
   }, []);
 
   const handleNextRep = (enriched: RepResult) => {
@@ -147,12 +161,21 @@ export default function BaseStealingTrainer() {
 
         {phase === 'setup' && <SessionSetup onStart={handleStart} />}
 
-        {phase === 'live_rep' && config && (
+        {phase === 'live_rep' && config && config.sessionMode === 'ai' && (
           <LiveRepRunner
             config={config}
             repNumber={repCounter}
-            onRepComplete={handleRepComplete}
+            onRepComplete={handleAIRepComplete}
             onEndSession={handleEndFromRep}
+          />
+        )}
+
+        {phase === 'live_rep' && config && config.sessionMode === 'manual' && (
+          <ManualRepRunner
+            config={config}
+            repNumber={repCounter}
+            onRepComplete={handleManualRepComplete}
+            onEndSession={handleManualEndSession}
           />
         )}
 
