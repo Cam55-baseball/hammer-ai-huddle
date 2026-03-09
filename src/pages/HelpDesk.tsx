@@ -120,7 +120,7 @@ export default function HelpDesk() {
       items: [
         {
           question: t('helpDesk.faq.nutritionHub', 'What can I do in Nutrition Hub?'),
-          answer: t('helpDesk.faq.nutritionHubAnswer', 'Nutrition Hub lets you log meals, track hydration, browse recipes, create meal templates, and get AI-powered meal suggestions tailored to your training.'),
+          answer: t('helpDesk.faq.nutritionHubAnswer', 'Nutrition Hub lets you log meals, track hydration, browse recipes, create meal templates, and get Hammer-powered meal suggestions tailored to your training.'),
         },
         {
           question: t('helpDesk.faq.mindFuel', 'What is Mind Fuel?'),
