@@ -70,10 +70,35 @@ interface PracticeSession {
   source: 'practice';
 }
 
-type ClubItem = LibrarySession | PracticeSession;
+interface GameSession {
+  id: string;
+  user_id: string;
+  sport: string;
+  team_name: string;
+  opponent_name: string;
+  game_type: string;
+  league_level: string;
+  game_date: string;
+  venue: string | null;
+  total_innings: number;
+  lineup: any;
+  game_summary: any;
+  game_mode: string | null;
+  is_practice_game: boolean | null;
+  status: string;
+  created_at: string;
+  source: 'game';
+  session_date?: string;
+}
+
+type ClubItem = LibrarySession | PracticeSession | GameSession;
 
 function isPractice(item: ClubItem): item is PracticeSession {
   return item.source === 'practice';
+}
+
+function isGame(item: ClubItem): item is GameSession {
+  return item.source === 'game';
 }
 
 function extractRepTags(drillBlocks: any): string[] {
