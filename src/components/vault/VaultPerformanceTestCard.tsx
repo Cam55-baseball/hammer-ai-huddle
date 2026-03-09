@@ -309,7 +309,7 @@ export function VaultPerformanceTestCard({
     return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
-  const recentTests = tests.slice(0, 5);
+  const recentTests = tests;
 
   // Show nothing if user has no module access
   if (availableModules.length === 0) {
