@@ -66,6 +66,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
     if (result) {
       setTitle('');
       setDescription('');
+      setNotes('');
       setExternalUrl('');
       setVideoFile(null);
       setSelectedSport([]);
