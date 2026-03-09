@@ -260,7 +260,7 @@ export default function PlayersClub() {
     return items
       .filter(item => {
         const matchesSport = sportFilter === 'all' || item.sport === sportFilter;
-        const matchesModule = moduleFilter === 'all' || item.module === moduleFilter;
+        const matchesModule = moduleFilter === 'all' || ('module' in item && item.module === moduleFilter);
         const matchesSearch = !searchQuery || 
           (!isPractice(item) && !isGame(item) && item.library_title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (isPractice(item) && (item.session_type?.toLowerCase().includes(searchQuery.toLowerCase()) || item.module?.toLowerCase().includes(searchQuery.toLowerCase()))) ||
