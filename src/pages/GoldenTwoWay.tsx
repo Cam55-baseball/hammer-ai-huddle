@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, Eye, Zap, ArrowRight, Sparkles } from "lucide-react";
+import { Target, Dumbbell, Eye, Zap, ArrowRight, Sparkles, Crosshair } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
