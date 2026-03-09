@@ -1,35 +1,47 @@
 
 
-# Fix Plan: Vault Scroll & Game Sessions in Players Club
+# Fix: Coach Schedule Dialog RLS Error
 
-## Issue 1: Vault 6-Week Performance Test Scroll Not Working
+## Root Cause
 
-The `ScrollArea` at line 619 has `max-h-[400px]` set on the Root component via `className`, but Radix `ScrollArea` requires a **fixed height** on the root, not just `max-h`. The `Viewport` inside has `h-full w-full` but without a concrete height constraint on the root, the scroll never activates.
+The coach has two accepted relationships:
+- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
+- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
 
-**Fix:** Replace the `ScrollArea` wrapper with a standard `div` that uses `max-h-[400px] overflow-y-auto` for native scrolling, OR add an explicit `h-[400px]` style approach. The simplest reliable fix is to wrap the content in a div with `max-h-[400px] overflow-y-auto` instead of `ScrollArea`, since `max-h` on Radix ScrollArea root doesn't constrain the viewport properly.
+The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
 
-**File:** `src/components/vault/VaultPerformanceTestCard.tsx` (line 619)
+## Solution
 
-## Issue 2: Completed Games Not Showing in Players Club
+**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
 
-The `get-player-library` edge function only queries two sources:
-1. `videos` table (tagged as `source: 'video'`)
-2. `performance_sessions` table (tagged as `source: 'practice'`)
+**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
 
-It never queries the `games` table, so completed games from the Game Hub are invisible in Players Club.
+I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
 
-**Fix:** Add a third query in the edge function for the `games` table filtered by `status = 'completed'`, tag results as `source: 'game'`. Then update `PlayersClub.tsx` to:
-- Add a `GameSession` interface
-- Add `'game'` to the `sourceFilter` type and tab triggers
-- Add a "Game Sessions" tab
-- Render game cards showing team vs opponent, date, game type, score summary
-- Add a `GameSessionDetailDialog` component for viewing full game details (lineup, plays, summary)
+### Changes
 
-**Files to change:**
 | File | Change |
 |------|--------|
-| `src/components/vault/VaultPerformanceTestCard.tsx` | Fix scroll — replace `ScrollArea` with native overflow div |
-| `supabase/functions/get-player-library/index.ts` | Add `games` query for completed games |
-| `src/pages/PlayersClub.tsx` | Add GameSession type, 'game' filter tab, game card rendering, game detail dialog state |
-| `src/components/GameSessionDetailDialog.tsx` | **Create** — dialog showing game lineup, plays, summary, and video if present |
+| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
+| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
+
+### Technical Detail
+
+**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
+```sql
+CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.scout_follows
+    WHERE scout_id = p_coach_id
+      AND player_id = p_player_id
+      AND status = 'accepted'
+      AND relationship_type IN ('linked', 'follow')
+  )
+$$;
+```
+
+Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
 

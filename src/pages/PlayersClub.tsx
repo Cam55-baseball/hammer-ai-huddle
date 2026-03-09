@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck, Dumbbell, Tag } from 'lucide-react';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck, Dumbbell, Tag, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { PracticeSessionDetailDialog } from '@/components/PracticeSessionDetailDialog';
+import { GameSessionDetailDialog } from '@/components/GameSessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
@@ -69,10 +70,35 @@ interface PracticeSession {
   source: 'practice';
 }
 
-type ClubItem = LibrarySession | PracticeSession;
+interface GameSession {
+  id: string;
+  user_id: string;
+  sport: string;
+  team_name: string;
+  opponent_name: string;
+  game_type: string;
+  league_level: string;
+  game_date: string;
+  venue: string | null;
+  total_innings: number;
+  lineup: any;
+  game_summary: any;
+  game_mode: string | null;
+  is_practice_game: boolean | null;
+  status: string;
+  created_at: string;
+  source: 'game';
+  session_date?: string;
+}
+
+type ClubItem = LibrarySession | PracticeSession | GameSession;
 
 function isPractice(item: ClubItem): item is PracticeSession {
   return item.source === 'practice';
+}
+
+function isGame(item: ClubItem): item is GameSession {
+  return item.source === 'game';
 }
 
 function extractRepTags(drillBlocks: any): string[] {
@@ -99,14 +125,16 @@ export default function PlayersClub() {
 
   const [videos, setVideos] = useState<LibrarySession[]>([]);
   const [practices, setPractices] = useState<PracticeSession[]>([]);
+  const [games, setGames] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'video' | 'practice'>('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'video' | 'practice' | 'game'>('all');
   const [sportFilter, setSportFilter] = useState<string>('all');
   const [moduleFilter, setModuleFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSession, setSelectedSession] = useState<LibrarySession | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<PracticeSession | null>(null);
+  const [selectedGame, setSelectedGame] = useState<GameSession | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>('');
@@ -150,6 +178,7 @@ export default function PlayersClub() {
       } else {
         setVideos(data?.videos || []);
         setPractices(data?.practices || []);
+        setGames((data?.games || []).map((g: any) => ({ ...g, session_date: g.game_date })));
       }
     } catch (error: any) {
       console.error('Error fetching library:', error);
@@ -226,18 +255,20 @@ export default function PlayersClub() {
     let items: ClubItem[] = [];
     if (sourceFilter === 'all' || sourceFilter === 'video') items = [...items, ...videos];
     if (sourceFilter === 'all' || sourceFilter === 'practice') items = [...items, ...practices];
+    if (sourceFilter === 'all' || sourceFilter === 'game') items = [...items, ...games];
     
     return items
       .filter(item => {
         const matchesSport = sportFilter === 'all' || item.sport === sportFilter;
-        const matchesModule = moduleFilter === 'all' || item.module === moduleFilter;
+        const matchesModule = moduleFilter === 'all' || ('module' in item && item.module === moduleFilter);
         const matchesSearch = !searchQuery || 
-          (!isPractice(item) && item.library_title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (isPractice(item) && (item.session_type?.toLowerCase().includes(searchQuery.toLowerCase()) || item.module?.toLowerCase().includes(searchQuery.toLowerCase())));
+          (!isPractice(item) && !isGame(item) && item.library_title?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (isPractice(item) && (item.session_type?.toLowerCase().includes(searchQuery.toLowerCase()) || item.module?.toLowerCase().includes(searchQuery.toLowerCase()))) ||
+          (isGame(item) && (item.team_name?.toLowerCase().includes(searchQuery.toLowerCase()) || item.opponent_name?.toLowerCase().includes(searchQuery.toLowerCase())));
         return matchesSport && matchesModule && matchesSearch;
       })
       .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime());
-  }, [videos, practices, sourceFilter, sportFilter, moduleFilter, searchQuery]);
+  }, [videos, practices, games, sourceFilter, sportFilter, moduleFilter, searchQuery]);
 
   const getAnnotationCount = (session: LibrarySession) => {
     if (!session.annotation_count || !Array.isArray(session.annotation_count)) return 0;
@@ -298,6 +329,39 @@ export default function PlayersClub() {
       </Card>
     );
   };
+
+  const renderGameCard = (game: GameSession) => {
+    const summary = game.game_summary as any;
+    return (
+      <Card key={game.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedGame(game)}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold line-clamp-1">
+                {game.team_name} vs {game.opponent_name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {new Date(game.game_date).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Badge variant="outline" className="capitalize">{game.sport}</Badge>
+            <Badge variant="outline" className="capitalize">{game.game_type.replace(/_/g, ' ')}</Badge>
+            <Badge variant="secondary">{game.league_level}</Badge>
+            {summary?.team_runs !== undefined && (
+              <Badge variant="secondary">{summary.team_runs} - {summary.opponent_runs ?? '?'}</Badge>
+            )}
+          </div>
+          {game.venue && (
+            <p className="text-xs text-muted-foreground">{game.venue}</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
 
   const renderVideoCard = (session: LibrarySession) => {
     return (
@@ -454,6 +518,7 @@ export default function PlayersClub() {
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="video">Videos</TabsTrigger>
             <TabsTrigger value="practice">Practice Sessions</TabsTrigger>
+            <TabsTrigger value="game">Game Sessions</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -515,7 +580,7 @@ export default function PlayersClub() {
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {allItems.map((item) => (
               <VideoCardLazy key={item.id}>
-                {isPractice(item) ? renderPracticeCard(item) : (
+                {isPractice(item) ? renderPracticeCard(item) : isGame(item) ? renderGameCard(item) : (
                   viewMode === 'list' ? (
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-row">
                       <CardContent className="p-0 flex flex-row w-full">
@@ -578,6 +643,13 @@ export default function PlayersClub() {
           session={selectedPractice}
           open={!!selectedPractice}
           onClose={() => setSelectedPractice(null)}
+        />
+
+        {/* Game Session Detail Dialog */}
+        <GameSessionDetailDialog
+          session={selectedGame}
+          open={!!selectedGame}
+          onClose={() => setSelectedGame(null)}
         />
 
         {/* Session Detail Dialog */}
