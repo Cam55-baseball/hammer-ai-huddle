@@ -518,6 +518,7 @@ export default function PlayersClub() {
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="video">Videos</TabsTrigger>
             <TabsTrigger value="practice">Practice Sessions</TabsTrigger>
+            <TabsTrigger value="game">Game Sessions</TabsTrigger>
           </TabsList>
         </Tabs>
 
