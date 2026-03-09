@@ -69,17 +69,17 @@ export function usePerformanceSession() {
     link_code?: string;
     linked_session_id?: string;
   }) => {
-    if (!user) throw new Error('Not authenticated');
-
-    // Section 2: 7-day retroactive validation
-    const daysDiff = Math.floor((Date.now() - new Date(data.session_date).getTime()) / 86400000);
-    if (daysDiff > 7) {
-      toast({ title: 'Too far back', description: 'Sessions can only be logged up to 7 days in the past.', variant: 'destructive' });
-      throw new Error('Retroactive limit exceeded');
-    }
-
     setSaving(true);
     try {
+      if (!user) throw new Error('Not authenticated');
+
+      // Section 2: 7-day retroactive validation
+      const daysDiff = Math.floor((Date.now() - new Date(data.session_date).getTime()) / 86400000);
+      if (daysDiff > 7) {
+        toast({ title: 'Too far back', description: 'Sessions can only be logged up to 7 days in the past.', variant: 'destructive' });
+        throw new Error('Retroactive limit exceeded');
+      }
+
       const { data: session, error } = await supabase
         .from('performance_sessions')
         .insert({

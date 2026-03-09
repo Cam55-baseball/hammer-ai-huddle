@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { SessionSetup, type LeadConfig } from '@/components/base-stealing/SessionSetup';
@@ -11,13 +11,14 @@ import { ArrowLeft } from 'lucide-react';
 import { usePerformanceSession, type DrillBlock } from '@/hooks/usePerformanceSession';
 import { useToast } from '@/hooks/use-toast';
 import { useSportTheme } from '@/contexts/SportThemeContext';
-import { useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 type Phase = 'setup' | 'live_rep' | 'post_rep' | 'summary' | 'analysis';
 
 export default function BaseStealingTrainer() {
   const navigate = useNavigate();
   const { sport } = useSportTheme();
+  const { user } = useAuth();
   const { createSession, saving } = usePerformanceSession();
   const { toast } = useToast();
 
@@ -34,6 +35,14 @@ export default function BaseStealingTrainer() {
   const [repCounter, setRepCounter] = useState(1);
 
   const handleStart = (cfg: LeadConfig) => {
+    if (!user) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to start a training session.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setConfig(cfg);
     setReps([]);
     setRepCounter(1);
@@ -65,7 +74,6 @@ export default function BaseStealingTrainer() {
   };
 
   const handleDeleteRep = () => {
-    // Discard current result, go back to live_rep without incrementing
     setCurrentResult(null);
     setPhase('live_rep');
   };
@@ -98,19 +106,29 @@ export default function BaseStealingTrainer() {
       first_two_steps_sec: r.firstTwoStepsSec ?? null,
     }));
 
-    const sessionId = await createSession({
-      sport: sport || 'baseball',
-      session_type: 'base_stealing',
-      session_date: new Date().toISOString().split('T')[0],
-      module: 'baserunning',
-      notes: `Base Stealing: ${config.targetBase}, Difficulty: ${config.difficulty}, Signal: ${config.signalMode}, Base: ${config.baseDistanceFt}ft, Lead: ${config.leadDistanceFt || 'N/A'}ft`,
-      drill_blocks: drillBlocks,
-      micro_layer_data: microLayerData,
-    });
+    try {
+      const session = await createSession({
+        sport: sport || 'baseball',
+        session_type: 'base_stealing',
+        session_date: new Date().toISOString().split('T')[0],
+        module: 'baserunning',
+        notes: `Base Stealing: ${config.targetBase}, Difficulty: ${config.difficulty}, Signal: ${config.signalMode}, Base: ${config.baseDistanceFt}ft, Lead: ${config.leadDistanceFt || 'N/A'}ft`,
+        drill_blocks: drillBlocks,
+        micro_layer_data: microLayerData,
+      });
 
-    if (sessionId) {
-      toast({ title: 'Session saved!', description: `${reps.length} reps logged.` });
-      setPhase('analysis');
+      if (session) {
+        setPhase('analysis');
+      }
+    } catch (error: any) {
+      if (error.message === 'Not authenticated') {
+        toast({
+          title: 'Sign in required',
+          description: 'Please sign in to save your session.',
+          variant: 'destructive',
+        });
+      }
+      // Other errors are already toasted inside createSession
     }
   };
 
