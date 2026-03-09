@@ -171,6 +171,7 @@ const App = () => {
               <Route path="/game-scoring" element={<GameScoring />} />
               <Route path="/base-stealing" element={<BaseStealingTrainer />} />
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
+              <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
