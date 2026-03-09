@@ -109,8 +109,8 @@ export default function HelpDesk() {
           answer: t('helpDesk.faq.whatIsVaultAnswer', 'The Vault is your personal training library. It stores all your saved video analyses, annotations, and progress data in one place.'),
         },
         {
-          question: t('helpDesk.faq.aiRecap', 'How does the 6-week AI recap work?'),
-          answer: t('helpDesk.faq.aiRecapAnswer', 'Every 6 weeks, the AI generates a comprehensive recap analyzing your training trends, score improvements, and areas that need attention. It\'s available in The Vault.'),
+          question: t('helpDesk.faq.aiRecap', 'How does the 6-week Hammer recap work?'),
+          answer: t('helpDesk.faq.aiRecapAnswer', 'Every 6 weeks, Hammer generates a comprehensive recap analyzing your training trends, score improvements, and areas that need attention. It\'s available in The Vault.'),
         },
       ],
     },
