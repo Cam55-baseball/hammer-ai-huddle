@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { usePerformanceSession } from '@/hooks/usePerformanceSession';
-import { PickoffSetup } from '@/components/pickoff-trainer/PickoffSetup';
+import { PickoffSetup, type SignalType } from '@/components/pickoff-trainer/PickoffSetup';
 import { PickoffRepRunner, type PickoffRep } from '@/components/pickoff-trainer/PickoffRepRunner';
 import { PickoffSummary } from '@/components/pickoff-trainer/PickoffSummary';
 import { PickoffAnalysis } from '@/components/pickoff-trainer/PickoffAnalysis';
@@ -18,14 +18,16 @@ const PickoffTrainer = () => {
   const [phase, setPhase] = useState<Phase>('setup');
   const [base, setBase] = useState('');
   const [covering, setCovering] = useState('');
+  const [signalType, setSignalType] = useState<SignalType>('color');
   const [reps, setReps] = useState<PickoffRep[]>([]);
 
   if (!user) return <Navigate to="/auth" replace />;
   if (sport !== 'baseball') return <Navigate to="/dashboard" replace />;
 
-  const handleStart = (b: string, c: string) => {
+  const handleStart = (b: string, c: string, st: SignalType) => {
     setBase(b);
     setCovering(c);
+    setSignalType(st);
     setReps([]);
     setPhase('live');
   };
@@ -62,13 +64,15 @@ const PickoffTrainer = () => {
         outcome_tags: ['pickoff_decision'],
       }],
       player_grade: accuracyGrade,
-      notes: `Pick-off trainer: ${base} base, covering ${covering}. ${correct}/${total} correct.`,
+      notes: `Pick-off trainer: ${base} base, covering ${covering}, signal: ${signalType}. ${correct}/${total} correct.`,
       micro_layer_data: reps.map(r => ({
         base_target: r.baseTarget,
         covering_position: r.coveringPosition,
         final_signal: r.finalSignal,
         decision_correct: r.decisionCorrect,
         rep_timestamp: r.timestamp,
+        signal_type: r.signalType,
+        displayed_value: r.displayedValue,
       })),
     });
 
@@ -82,6 +86,7 @@ const PickoffTrainer = () => {
         <PickoffRepRunner
           base={base}
           covering={covering}
+          signalType={signalType}
           reps={reps}
           onRepComplete={handleRepComplete}
           onDeleteRep={handleDeleteRep}
