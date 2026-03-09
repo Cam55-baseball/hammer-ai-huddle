@@ -255,6 +255,7 @@ export default function PlayersClub() {
     let items: ClubItem[] = [];
     if (sourceFilter === 'all' || sourceFilter === 'video') items = [...items, ...videos];
     if (sourceFilter === 'all' || sourceFilter === 'practice') items = [...items, ...practices];
+    if (sourceFilter === 'all' || sourceFilter === 'game') items = [...items, ...games];
     
     return items
       .filter(item => {
