@@ -56,6 +56,8 @@ const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
+const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
+const VideoLibraryPlayer = lazyWithRetry(() => import("./pages/VideoLibraryPlayer"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 const ScoutDashboard = lazyWithRetry(() => import("./pages/ScoutDashboard"));
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
