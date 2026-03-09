@@ -96,6 +96,7 @@ const AdminVerification = lazyWithRetry(() => import("./pages/AdminVerification"
 const GameScoring = lazyWithRetry(() => import("./pages/GameScoring"));
 const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrainer"));
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
+const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 
 const queryClient = new QueryClient();
 
@@ -170,6 +171,7 @@ const App = () => {
               <Route path="/game-scoring" element={<GameScoring />} />
               <Route path="/base-stealing" element={<BaseStealingTrainer />} />
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
+              <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
