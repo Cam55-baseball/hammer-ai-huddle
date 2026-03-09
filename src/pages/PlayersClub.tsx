@@ -251,7 +251,7 @@ export default function PlayersClub() {
     const tags = extractRepTags(ps.drill_blocks);
 
     return (
-      <Card key={ps.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+      <Card key={ps.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setSelectedPractice(ps)}>
         <CardContent className="p-4 space-y-3">
           {/* Header */}
           <div className="flex items-center gap-2">
