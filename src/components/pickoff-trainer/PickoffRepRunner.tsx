@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ArrowLeft } from 'lucide-react';
 import type { SignalType } from './PickoffSetup';
 
 export interface PickoffRep {
@@ -14,9 +14,11 @@ export interface PickoffRep {
   timestamp: string;
   signalType: SignalType;
   displayedValue?: string;
+  balk?: 'yes' | 'no' | 'questionable';
+  throwClean?: 'yes' | 'no' | 'elite';
 }
 
-type RepPhase = 'idle' | 'countdown' | 'signal_window' | 'real_signal' | 'decision';
+type RepPhase = 'idle' | 'countdown' | 'signal_window' | 'real_signal' | 'decision' | 'balk_question' | 'throw_quality';
 
 const DISTRACTION_COLORS = ['bg-blue-500', 'bg-yellow-500', 'bg-purple-500'];
 const EVEN_NUMBERS = [2, 4, 6, 8, 12, 14, 16, 18, 20, 22];
@@ -35,15 +37,18 @@ interface Props {
   onRepComplete: (rep: PickoffRep) => void;
   onDeleteRep: (index: number) => void;
   onFinish: () => void;
+  onBackToSetup: () => void;
 }
 
-export function PickoffRepRunner({ base, covering, signalType, reps, onRepComplete, onDeleteRep, onFinish }: Props) {
+export function PickoffRepRunner({ base, covering, signalType, reps, onRepComplete, onDeleteRep, onFinish, onBackToSetup }: Props) {
   const [phase, setPhase] = useState<RepPhase>('idle');
   const [countdown, setCountdown] = useState(10);
   const [flashColor, setFlashColor] = useState<string | null>(null);
   const [flashNumber, setFlashNumber] = useState<number | null>(null);
   const [realSignal, setRealSignal] = useState<'pitch' | 'pickoff' | null>(null);
   const [realNumber, setRealNumber] = useState<number | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<boolean>(false);
+  const [pendingBalk, setPendingBalk] = useState<'yes' | 'no' | 'questionable' | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -61,6 +66,8 @@ export function PickoffRepRunner({ base, covering, signalType, reps, onRepComple
     setFlashNumber(null);
     setRealSignal(null);
     setRealNumber(null);
+    setPendingDecision(false);
+    setPendingBalk(null);
 
     let c = 10;
     intervalRef.current = setInterval(() => {
@@ -118,19 +125,33 @@ export function PickoffRepRunner({ base, covering, signalType, reps, onRepComple
   };
 
   const handleDecision = (correct: boolean) => {
+    setPendingDecision(correct);
+    setPhase('balk_question');
+  };
+
+  const handleBalk = (val: 'yes' | 'no' | 'questionable') => {
+    setPendingBalk(val);
+    setPhase('throw_quality');
+  };
+
+  const handleThrowClean = (val: 'yes' | 'no' | 'elite') => {
     onRepComplete({
       repNumber: reps.length + 1,
       baseTarget: base,
       coveringPosition: covering,
       finalSignal: realSignal!,
-      decisionCorrect: correct,
+      decisionCorrect: pendingDecision,
       timestamp: new Date().toISOString(),
       signalType,
       displayedValue: signalType === 'even_odd' && realNumber != null ? String(realNumber) : undefined,
+      balk: pendingBalk ?? undefined,
+      throwClean: val,
     });
     setPhase('idle');
     setRealSignal(null);
     setRealNumber(null);
+    setPendingDecision(false);
+    setPendingBalk(null);
     clearTimers();
   };
 
@@ -146,6 +167,12 @@ export function PickoffRepRunner({ base, covering, signalType, reps, onRepComple
   if (phase === 'idle') {
     return (
       <div className="max-w-lg mx-auto space-y-6 p-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={onBackToSetup}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Setup
+          </Button>
+        </div>
+
         <div className="text-center space-y-2">
           <Badge variant="outline" className="text-lg px-4 py-1">Rep {repNum}</Badge>
           <p className="text-sm text-muted-foreground">
@@ -176,6 +203,11 @@ export function PickoffRepRunner({ base, covering, signalType, reps, onRepComple
                     <Badge variant={r.decisionCorrect ? 'default' : 'destructive'} className="text-xs">
                       {r.decisionCorrect ? '✓' : '✗'}
                     </Badge>
+                    {r.balk && r.balk !== 'no' && (
+                      <Badge variant="outline" className="text-xs">
+                        Balk: {r.balk}
+                      </Badge>
+                    )}
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onDeleteRep(i)}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
@@ -275,6 +307,44 @@ export function PickoffRepRunner({ base, covering, signalType, reps, onRepComple
           </Button>
           <Button size="lg" variant="destructive" onClick={() => handleDecision(false)} className="px-8">
             ✗ Incorrect
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'balk_question') {
+    return (
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50 gap-6">
+        <h2 className="text-xl font-bold text-foreground">Did you balk?</h2>
+        <div className="flex gap-3">
+          <Button size="lg" variant="destructive" onClick={() => handleBalk('yes')} className="px-6">
+            Yes
+          </Button>
+          <Button size="lg" onClick={() => handleBalk('no')} className="px-6">
+            No
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => handleBalk('questionable')} className="px-6">
+            Questionable
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'throw_quality') {
+    return (
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50 gap-6">
+        <h2 className="text-xl font-bold text-foreground">Was the throw clean?</h2>
+        <div className="flex gap-3">
+          <Button size="lg" onClick={() => handleThrowClean('yes')} className="px-6">
+            Yes
+          </Button>
+          <Button size="lg" variant="destructive" onClick={() => handleThrowClean('no')} className="px-6">
+            No
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => handleThrowClean('elite')} className="px-6 border-primary text-primary">
+            🔥 Elite
           </Button>
         </div>
       </div>

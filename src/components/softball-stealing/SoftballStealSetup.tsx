@@ -111,10 +111,19 @@ export function SoftballStealSetup({ onStart }: Props) {
               <Label htmlFor="sig-evenodd">Even / Odd System</Label>
             </div>
           </RadioGroup>
-          {signalType === 'even_odd' && (
-            <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-              Even signal = <span className="font-semibold text-primary">GO</span> &nbsp;|&nbsp; Odd signal = <span className="font-semibold text-destructive">BACK</span>
-            </p>
+
+          {signalType === 'color' ? (
+            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded space-y-1">
+              <p><span className="font-semibold text-green-600">Green = GO</span> — steal the base immediately</p>
+              <p><span className="font-semibold text-red-600">Red = HOLD</span> — stay on base, do not steal</p>
+              <p className="mt-1 opacity-75">Random blue, yellow, and purple flashes appear as distractions — ignore them and wait for the final signal.</p>
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded space-y-1">
+              <p><span className="font-semibold text-primary">Even number = GO</span> — steal the base (2, 4, 6, 8…)</p>
+              <p><span className="font-semibold text-destructive">Odd number = HOLD</span> — stay on base (1, 3, 5, 7…)</p>
+              <p className="mt-1 opacity-75">Random numbers flash as distractions — only the final number determines your action.</p>
+            </div>
           )}
         </CardContent>
       </Card>

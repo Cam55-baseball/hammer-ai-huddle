@@ -4,14 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Target } from 'lucide-react';
+import { Target, ArrowLeft } from 'lucide-react';
 
 export type SignalType = 'color' | 'even_odd';
 
 const COVERING_OPTIONS: Record<string, { label: string; value: string }[]> = {
   '1st': [
     { label: '1B', value: '1B' },
-    { label: 'P (Self Cover)', value: 'P' },
   ],
   '2nd': [
     { label: 'SS', value: 'SS' },
@@ -25,9 +24,10 @@ const COVERING_OPTIONS: Record<string, { label: string; value: string }[]> = {
 
 interface PickoffSetupProps {
   onStart: (base: string, covering: string, signalType: SignalType) => void;
+  onBack: () => void;
 }
 
-export function PickoffSetup({ onStart }: PickoffSetupProps) {
+export function PickoffSetup({ onStart, onBack }: PickoffSetupProps) {
   const [base, setBase] = useState('');
   const [covering, setCovering] = useState('');
   const [signalType, setSignalType] = useState<SignalType>('color');
@@ -36,6 +36,12 @@ export function PickoffSetup({ onStart }: PickoffSetupProps) {
 
   return (
     <div className="max-w-lg mx-auto space-y-6 p-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+      </div>
+
       <div className="text-center space-y-2">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-2">
           <Target className="w-8 h-8 text-primary" />
