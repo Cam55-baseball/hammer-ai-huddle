@@ -12,6 +12,7 @@ const tiles = [
     description: "Analyze swing mechanics, bat path, and timing",
     getRoute: (sport: string) => `/analyze/hitting?sport=${sport}`,
     baseballOnly: false,
+    softballOnly: false,
   },
   {
     key: "throwing-analysis",
@@ -20,6 +21,7 @@ const tiles = [
     description: "Break down throwing mechanics and arm action",
     getRoute: (sport: string) => `/analyze/throwing?sport=${sport}`,
     baseballOnly: false,
+    softballOnly: false,
   },
   {
     key: "iron-bambino",
@@ -28,6 +30,7 @@ const tiles = [
     description: "Elite strength, arm care, and velocity development",
     getRoute: () => "/production-lab",
     baseballOnly: false,
+    softballOnly: false,
   },
   {
     key: "speed-lab",
@@ -36,6 +39,7 @@ const tiles = [
     description: "Build elite sprint speed with CNS-tracked protocols",
     getRoute: () => "/speed-lab",
     baseballOnly: false,
+    softballOnly: false,
   },
   {
     key: "tex-vision",
@@ -44,6 +48,7 @@ const tiles = [
     description: "Train your eyes to track pitches like a pro",
     getRoute: () => "/tex-vision",
     baseballOnly: false,
+    softballOnly: false,
   },
   {
     key: "base-stealing",
