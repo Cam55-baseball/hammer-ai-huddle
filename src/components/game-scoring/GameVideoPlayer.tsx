@@ -150,9 +150,41 @@ export function GameVideoPlayer({ onTimestamp, onVideoLoaded }: GameVideoPlayerP
               onChange={handleScrub}
               className="w-full h-2 accent-primary cursor-pointer"
             />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={togglePlay} className="h-8">
                 {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2"
+                title="Back 1 frame"
+                onClick={() => {
+                  const video = videoRef.current;
+                  if (!video) return;
+                  video.pause();
+                  setIsPlaying(false);
+                  video.currentTime = Math.max(0, video.currentTime - 0.033);
+                  setCurrentTime(video.currentTime);
+                }}
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2"
+                title="Forward 1 frame"
+                onClick={() => {
+                  const video = videoRef.current;
+                  if (!video) return;
+                  video.pause();
+                  setIsPlaying(false);
+                  video.currentTime = Math.min(duration, video.currentTime + 0.033);
+                  setCurrentTime(video.currentTime);
+                }}
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
