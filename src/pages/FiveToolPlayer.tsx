@@ -78,7 +78,7 @@ export default function FiveToolPlayer() {
   const filteredTiles = tiles.filter(
     (tile) =>
       (!tile.baseballOnly || selectedSport === "baseball") &&
-      (!(tile as any).softballOnly || selectedSport === "softball")
+      (!tile.softballOnly || selectedSport === "softball")
   );
 
   return (
