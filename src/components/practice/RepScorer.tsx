@@ -1485,6 +1485,43 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
+              {/* Glove-to-Glove Time — infielders */}
+              {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    From Glove to Glove (seconds)
+                  </Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 1.85"
+                    value={current.glove_to_glove_sec ?? ''}
+                    onChange={e => updateField('glove_to_glove_sec', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-8 text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {sport === 'baseball'
+                      ? 'Optimal: < 2.0s standard • < 1.5s for double play turns'
+                      : 'Optimal: < 1.8s standard • < 1.4s for double play turns'}
+                  </p>
+                </div>
+              )}
+
+              {/* Throwing Velocity */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Throwing Velocity (mph)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 78"
+                  value={current.throwing_velo_mph ?? ''}
+                  onChange={e => updateField('throwing_velo_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
+                  className="h-8 text-xs"
+                />
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Play Probability</Label>
                 <SelectGrid
