@@ -954,6 +954,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     </div>
                   </div>
 
+                  <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Swing Intent</Label>
                     <SelectGrid
                       options={[
