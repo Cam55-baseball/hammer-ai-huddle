@@ -32,7 +32,6 @@ function generateInsights(reps: PickoffRep[]): string[] {
     if (pAcc < poAcc - 0.2) insights.push('Pitch commitment accuracy lagging behind pick-off reads.');
   }
 
-  // Consistency trend — check if accuracy drops in second half
   if (total >= 6) {
     const half = Math.floor(total / 2);
     const firstHalf = reps.slice(0, half).filter(r => r.decisionCorrect).length / half;
@@ -42,7 +41,29 @@ function generateInsights(reps: PickoffRep[]): string[] {
     }
   }
 
-  // Base comparison
+  // Balk analysis
+  const balks = reps.filter(r => r.balk === 'yes');
+  const questionableBalks = reps.filter(r => r.balk === 'questionable');
+  if (balks.length > 0) {
+    const balkRate = Math.round((balks.length / total) * 100);
+    insights.push(`Balk rate: ${balkRate}% (${balks.length}/${total}). ${balkRate > 20 ? 'Focus on legal mechanics before throwing.' : 'Keep refining your set position.'}`);
+  }
+  if (questionableBalks.length > 0) {
+    insights.push(`${questionableBalks.length} questionable balk${questionableBalks.length > 1 ? 's' : ''} — review your set position and step-off mechanics.`);
+  }
+
+  // Throw quality analysis
+  const eliteThrows = reps.filter(r => r.throwClean === 'elite');
+  const cleanThrows = reps.filter(r => r.throwClean === 'yes');
+  const badThrows = reps.filter(r => r.throwClean === 'no');
+  if (badThrows.length > 0) {
+    const badRate = Math.round((badThrows.length / total) * 100);
+    insights.push(`${badRate}% of throws were not clean (${badThrows.length}/${total}). Work on accuracy under pressure.`);
+  }
+  if (eliteThrows.length > 0) {
+    insights.push(`${eliteThrows.length} elite throw${eliteThrows.length > 1 ? 's' : ''} this session — great arm action.`);
+  }
+
   const bases = [...new Set(reps.map(r => r.baseTarget))];
   if (bases.length > 1) {
     const byBase = bases.map(b => {
@@ -66,7 +87,10 @@ export function PickoffAnalysis({ reps }: Props) {
   const correct = reps.filter(r => r.decisionCorrect).length;
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
-  // Rolling 3-rep accuracy for chart
+  const balkCount = reps.filter(r => r.balk === 'yes').length;
+  const eliteThrows = reps.filter(r => r.throwClean === 'elite').length;
+  const cleanThrows = reps.filter(r => r.throwClean === 'yes').length;
+
   const trend: number[] = [];
   for (let i = 2; i < reps.length; i++) {
     const window = reps.slice(i - 2, i + 1);
@@ -83,6 +107,28 @@ export function PickoffAnalysis({ reps }: Props) {
           <p className="text-sm text-muted-foreground mt-1">Overall Decision Accuracy</p>
         </CardContent>
       </Card>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="bg-card">
+          <CardContent className="pt-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{balkCount}</p>
+            <p className="text-xs text-muted-foreground">Balks</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card">
+          <CardContent className="pt-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{cleanThrows + eliteThrows}</p>
+            <p className="text-xs text-muted-foreground">Clean Throws</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card">
+          <CardContent className="pt-4 text-center">
+            <p className="text-2xl font-bold text-primary">{eliteThrows}</p>
+            <p className="text-xs text-muted-foreground">Elite Throws</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {trend.length > 0 && (
         <Card className="border-border bg-card">

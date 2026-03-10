@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { usePerformanceSession } from '@/hooks/usePerformanceSession';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { PickoffSetup, type SignalType } from '@/components/pickoff-trainer/PickoffSetup';
 import { PickoffRepRunner, type PickoffRep } from '@/components/pickoff-trainer/PickoffRepRunner';
 import { PickoffSummary } from '@/components/pickoff-trainer/PickoffSummary';
@@ -14,6 +15,7 @@ const PickoffTrainer = () => {
   const { user, loading } = useAuth();
   const { sport } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
+  const navigate = useNavigate();
 
   const [phase, setPhase] = useState<Phase>('setup');
   const [base, setBase] = useState('');
@@ -80,15 +82,22 @@ const PickoffTrainer = () => {
         rep_timestamp: r.timestamp,
         signal_type: r.signalType,
         displayed_value: r.displayedValue,
+        balk: r.balk,
+        throw_clean: r.throwClean,
       })),
     });
 
     setPhase('analysis');
   };
 
+  const handleBackToSetup = () => {
+    setPhase('setup');
+    setReps([]);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {phase === 'setup' && <PickoffSetup onStart={handleStart} />}
+    <DashboardLayout>
+      {phase === 'setup' && <PickoffSetup onStart={handleStart} onBack={() => navigate('/dashboard')} />}
       {phase === 'live' && (
         <PickoffRepRunner
           base={base}
@@ -98,13 +107,14 @@ const PickoffTrainer = () => {
           onRepComplete={handleRepComplete}
           onDeleteRep={handleDeleteRep}
           onFinish={handleFinish}
+          onBackToSetup={handleBackToSetup}
         />
       )}
       {phase === 'summary' && (
         <PickoffSummary reps={reps} onSave={handleSave} saving={saving} />
       )}
       {phase === 'analysis' && <PickoffAnalysis reps={reps} />}
-    </div>
+    </DashboardLayout>
   );
 };
 

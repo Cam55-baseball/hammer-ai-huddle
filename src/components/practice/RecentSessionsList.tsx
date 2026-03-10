@@ -7,10 +7,11 @@ import { Clock, Loader2 } from 'lucide-react';
 interface RecentSessionsListProps {
   sport: string;
   moduleLabel: string;
+  module?: string;
 }
 
-export function RecentSessionsList({ sport, moduleLabel }: RecentSessionsListProps) {
-  const { data: sessions, isLoading } = useRecentSessions(sport);
+export function RecentSessionsList({ sport, moduleLabel, module }: RecentSessionsListProps) {
+  const { data: sessions, isLoading } = useRecentSessions(sport, module);
 
   return (
     <Card>

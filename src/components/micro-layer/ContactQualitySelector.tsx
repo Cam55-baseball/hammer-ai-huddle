@@ -3,7 +3,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 const options = [
   { value: 'miss', label: 'Miss' },
   { value: 'foul', label: 'Foul' },
-  { value: 'weak', label: 'Weak' },
+  { value: 'jammed', label: 'Jammed' },
+  { value: 'end_cap', label: 'End Cap' },
   { value: 'hard', label: 'Hard' },
   { value: 'barrel', label: 'Barrel' },
 ] as const;

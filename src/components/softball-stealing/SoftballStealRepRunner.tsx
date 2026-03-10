@@ -44,10 +44,18 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
   const [twoStepTime, setTwoStepTime] = useState('');
   const [timeToBase, setTimeToBase] = useState('');
   const [stepsToBase, setStepsToBase] = useState('');
+  const [pendingDecision, setPendingDecision] = useState<boolean>(true);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
+  // Reset phase when repNumber changes (fixes stuck decision buttons)
+  useEffect(() => {
+    setPhase('idle');
+    setTwoStepTime('');
+    setTimeToBase('');
+    setStepsToBase('');
+  }, [repNumber]);
+
   const generateSignalSequence = useCallback(() => {
-    // 1-2 fake signals
     const fakeCount = Math.random() > 0.5 ? 2 : 1;
     const fakes: { color: string; label: string }[] = [];
     const usedIndices = new Set<number>();
@@ -60,7 +68,6 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
     setFakeSignals(fakes);
     setCurrentFakeIdx(0);
 
-    // Real signal: ~60% GO, ~40% HOLD
     const isGo = Math.random() > 0.4;
     setRealSignal(isGo ? 'go' : 'hold');
 
@@ -105,6 +112,7 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
 
   const handleDecision = (correct: boolean) => {
     if (realSignal === 'go') {
+      setPendingDecision(correct);
       setPhase('data_entry');
     } else {
       // HOLD rep — no timing data needed
@@ -115,6 +123,7 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
         decisionCorrect: correct,
         timestamp: new Date().toISOString(),
       });
+      // phase will reset via useEffect on repNumber change
     }
   };
 
@@ -128,7 +137,7 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
       repNumber,
       signalResult: 'go',
       signalValue: realSignalDisplay,
-      decisionCorrect: true,
+      decisionCorrect: pendingDecision,
       twoStepTime: ts,
       timeToBase: ttb,
       stepsToBase: stb,
@@ -158,7 +167,7 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
 
   if (phase === 'countdown') {
     return (
-      <div className="max-w-md mx-auto text-center py-16 space-y-4">
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50">
         <p className="text-sm text-muted-foreground uppercase tracking-wider">Get Ready</p>
         <div className="text-8xl font-black text-primary tabular-nums">{countdown}</div>
       </div>
@@ -169,14 +178,11 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
     const fake = fakeSignals[currentFakeIdx];
     if (!fake) return null;
     return (
-      <div className="max-w-md mx-auto text-center py-16 space-y-4">
-        <div
-          className="w-40 h-40 rounded-full mx-auto flex items-center justify-center shadow-lg"
-          style={{ backgroundColor: fake.color }}
-        >
-          <span className="text-white text-3xl font-bold">{fake.label}</span>
-        </div>
-        <p className="text-xs text-muted-foreground">Signal...</p>
+      <div
+        className="fixed inset-0 flex items-center justify-center z-50 transition-colors duration-200"
+        style={{ backgroundColor: fake.color }}
+      >
+        <span className="text-6xl font-black text-white drop-shadow-lg">{fake.label}</span>
       </div>
     );
   }
@@ -184,23 +190,24 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
   if (phase === 'real_signal') {
     const isGo = realSignal === 'go';
     return (
-      <div className="max-w-md mx-auto text-center py-12 space-y-6">
-        <div
-          className={cn(
-            'w-48 h-48 rounded-full mx-auto flex items-center justify-center shadow-xl transition-transform scale-110',
-          )}
-          style={{ backgroundColor: isGo ? '#22c55e' : '#ef4444' }}
-        >
-          <span className="text-white text-4xl font-black">
-            {signalType === 'color' ? (isGo ? 'GO' : 'HOLD') : realSignalDisplay}
-          </span>
-        </div>
+      <div
+        className="fixed inset-0 flex flex-col items-center justify-center z-50"
+        style={{ backgroundColor: isGo ? '#22c55e' : '#ef4444' }}
+      >
+        <span className="text-7xl sm:text-9xl font-black text-white drop-shadow-lg mb-4">
+          {signalType === 'color' ? (isGo ? 'GO!' : 'HOLD!') : realSignalDisplay}
+        </span>
         {signalType === 'even_odd' && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xl font-bold text-white/90 mb-4">
             {isGo ? 'Even = GO' : 'Odd = HOLD'}
           </p>
         )}
-        <Button size="lg" className="w-full" onClick={() => setPhase('decision')}>
+        <Button
+          size="lg"
+          variant="outline"
+          className="bg-white/20 text-white border-white/40 hover:bg-white/30 text-lg px-8"
+          onClick={() => setPhase('decision')}
+        >
           Continue
         </Button>
       </div>
@@ -209,16 +216,16 @@ export function SoftballStealRepRunner({ repNumber, signalType, onRepComplete, o
 
   if (phase === 'decision') {
     return (
-      <div className="max-w-md mx-auto text-center py-12 space-y-6">
-        <p className="text-lg font-semibold">Did the runner make the correct decision?</p>
+      <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50 gap-6">
+        <p className="text-lg font-semibold text-foreground">Did the runner make the correct decision?</p>
         <p className="text-sm text-muted-foreground">
           Signal was: <span className="font-bold">{realSignal === 'go' ? 'GO' : 'HOLD'}</span>
         </p>
         <div className="flex gap-3">
-          <Button size="lg" className="flex-1" variant="default" onClick={() => handleDecision(true)}>
+          <Button size="lg" className="flex-1 px-8" variant="default" onClick={() => handleDecision(true)}>
             ✓ Correct
           </Button>
-          <Button size="lg" className="flex-1" variant="destructive" onClick={() => handleDecision(false)}>
+          <Button size="lg" className="flex-1 px-8" variant="destructive" onClick={() => handleDecision(false)}>
             ✗ Incorrect
           </Button>
         </div>

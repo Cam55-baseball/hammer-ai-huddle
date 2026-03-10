@@ -165,6 +165,13 @@ export interface ScoredRep {
   // === Field diagram ===
   field_diagram_player_pos?: { x: number; y: number };
   field_diagram_ball_pos?: { x: number; y: number };
+  // === Hitting metrics ===
+  bat_speed_mph?: number;
+  exit_velo_mph?: number;
+  hit_distance_ft?: number;
+  // === Fielding metrics ===
+  glove_to_glove_sec?: number;
+  throwing_velo_mph?: number;
 }
 
 interface RepScorerProps {
@@ -180,7 +187,8 @@ const LOGGING_MODE_KEY = 'repLogMode';
 const contactOptions = [
   { value: 'miss', label: '❌ Miss', color: 'bg-red-500/20 text-red-700 border-red-300' },
   { value: 'foul', label: '⚠️ Foul', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
-  { value: 'weak', label: '🔸 Weak', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
+  { value: 'jammed', label: '🔸 Jammed', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
+  { value: 'end_cap', label: '🔹 End Cap', color: 'bg-yellow-500/20 text-yellow-700 border-yellow-300' },
   { value: 'hard', label: '💪 Hard', color: 'bg-green-500/20 text-green-700 border-green-300' },
   { value: 'barrel', label: '🔥 Barrel', color: 'bg-primary/20 text-primary border-primary/30' },
 ];
@@ -866,14 +874,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
                 <SelectGrid
                   options={[
-                    { value: 'barreled', label: '🔥 Barreled', color: 'bg-green-500/20 text-green-700 border-green-300' },
+                    { value: 'best_a_swing', label: '🔥 Best A-Swing', color: 'bg-green-500/20 text-green-700 border-green-300' },
+                    { value: 'swung', label: '🏏 Swung', color: 'bg-blue-500/20 text-blue-700 border-blue-300' },
                     { value: 'good_take', label: '✅ Good Take', color: 'bg-primary/20 text-primary border-primary/30' },
                     { value: 'should_have_swung', label: '😤 Should\'ve Swung', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
                     { value: 'chased', label: '❌ Chased', color: 'bg-red-500/20 text-red-700 border-red-300' },
                   ]}
                   value={current.swing_decision}
                   onChange={v => updateField('swing_decision', v)}
-                  cols={4}
+                  cols={5}
                 />
               </div>
 
@@ -903,6 +912,46 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Exit Direction</Label>
                     <SelectGrid options={directionOptions} value={current.exit_direction} onChange={v => updateField('exit_direction', v)} />
+                  </div>
+
+                  {/* Hitting Metrics: Bat Speed, Exit Velo, Distance */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Bat Speed (mph)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="e.g. 68"
+                        value={current.bat_speed_mph ?? ''}
+                        onChange={e => updateField('bat_speed_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Exit Velo (mph)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="e.g. 92"
+                        value={current.exit_velo_mph ?? ''}
+                        onChange={e => updateField('exit_velo_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Distance (ft)</Label>
+                      <Input
+                        type="number"
+                        step="1"
+                        min="0"
+                        placeholder="e.g. 350"
+                        value={current.hit_distance_ft ?? ''}
+                        onChange={e => updateField('hit_distance_ft', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -1434,6 +1483,43 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                    ]}
                   value={current.route_efficiency}
                   onChange={v => updateField('route_efficiency', v)}
+                />
+              </div>
+
+              {/* Glove-to-Glove Time — infielders */}
+              {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    From Glove to Glove (seconds)
+                  </Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 1.85"
+                    value={current.glove_to_glove_sec ?? ''}
+                    onChange={e => updateField('glove_to_glove_sec', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-8 text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {sport === 'baseball'
+                      ? 'Optimal: < 2.0s standard • < 1.5s for double play turns'
+                      : 'Optimal: < 1.8s standard • < 1.4s for double play turns'}
+                  </p>
+                </div>
+              )}
+
+              {/* Throwing Velocity */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Throwing Velocity (mph)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 78"
+                  value={current.throwing_velo_mph ?? ''}
+                  onChange={e => updateField('throwing_velo_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
+                  className="h-8 text-xs"
                 />
               </div>
 
