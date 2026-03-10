@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Play, Pause, Upload, Clock } from 'lucide-react';
+import { Play, Pause, Upload, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { validateVideoFile } from '@/data/videoLimits';
 import { useToast } from '@/hooks/use-toast';
 
