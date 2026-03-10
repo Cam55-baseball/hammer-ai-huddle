@@ -914,7 +914,46 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     <SelectGrid options={directionOptions} value={current.exit_direction} onChange={v => updateField('exit_direction', v)} />
                   </div>
 
-                  <div>
+                  {/* Hitting Metrics: Bat Speed, Exit Velo, Distance */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Bat Speed (mph)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="e.g. 68"
+                        value={current.bat_speed_mph ?? ''}
+                        onChange={e => updateField('bat_speed_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Exit Velo (mph)</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="e.g. 92"
+                        value={current.exit_velo_mph ?? ''}
+                        onChange={e => updateField('exit_velo_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Distance (ft)</Label>
+                      <Input
+                        type="number"
+                        step="1"
+                        min="0"
+                        placeholder="e.g. 350"
+                        value={current.hit_distance_ft ?? ''}
+                        onChange={e => updateField('hit_distance_ft', e.target.value ? parseFloat(e.target.value) : undefined)}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+
                     <Label className="text-xs text-muted-foreground mb-1 block">Swing Intent</Label>
                     <SelectGrid
                       options={[
