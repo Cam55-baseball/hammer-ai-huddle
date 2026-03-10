@@ -180,7 +180,8 @@ const LOGGING_MODE_KEY = 'repLogMode';
 const contactOptions = [
   { value: 'miss', label: '❌ Miss', color: 'bg-red-500/20 text-red-700 border-red-300' },
   { value: 'foul', label: '⚠️ Foul', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
-  { value: 'weak', label: '🔸 Weak', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
+  { value: 'jammed', label: '🔸 Jammed', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
+  { value: 'end_cap', label: '🔹 End Cap', color: 'bg-yellow-500/20 text-yellow-700 border-yellow-300' },
   { value: 'hard', label: '💪 Hard', color: 'bg-green-500/20 text-green-700 border-green-300' },
   { value: 'barrel', label: '🔥 Barrel', color: 'bg-primary/20 text-primary border-primary/30' },
 ];
