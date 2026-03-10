@@ -52,8 +52,18 @@ const tiles = [
     description: "Reaction training for explosive steals",
     getRoute: () => "/base-stealing",
     baseballOnly: true,
+    softballOnly: false,
   },
-] as const;
+  {
+    key: "softball-stealing",
+    icon: Footprints,
+    label: "Softball Stealing",
+    description: "Signal reaction training for explosive steals",
+    getRoute: () => "/softball-stealing",
+    baseballOnly: false,
+    softballOnly: true,
+  },
+];
 
 export default function FiveToolPlayer() {
   const { t } = useTranslation();
