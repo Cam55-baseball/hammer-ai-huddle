@@ -165,6 +165,13 @@ export interface ScoredRep {
   // === Field diagram ===
   field_diagram_player_pos?: { x: number; y: number };
   field_diagram_ball_pos?: { x: number; y: number };
+  // === Hitting metrics ===
+  bat_speed_mph?: number;
+  exit_velo_mph?: number;
+  hit_distance_ft?: number;
+  // === Fielding metrics ===
+  glove_to_glove_sec?: number;
+  throwing_velo_mph?: number;
 }
 
 interface RepScorerProps {
