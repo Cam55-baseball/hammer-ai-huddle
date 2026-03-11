@@ -1,47 +1,63 @@
 
 
-# Fix: Coach Schedule Dialog RLS Error
+# Fix 4 Issues: Video Library Post Error, Video+Log Upload, Video Controls, Recent Sessions
 
-## Root Cause
+## Issue 1: Video Library Post Error (Owner Can't Insert)
 
-The coach has two accepted relationships:
-- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
-- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
+**Root Cause**: The RLS policy on `library_videos` requires `user_has_role(auth.uid(), 'owner')`, but the app owner's `user_roles` table only has a `player` role — no `owner` row exists. The insert is blocked by RLS.
 
-The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
+**Fix**: Insert an `owner` role row for this user into `user_roles`. This is a data operation, not a schema change.
 
-## Solution
+Additionally, confirm the `owner_id` column in the insert matches `user.id` (it does in current code — line 54 of `useVideoLibraryAdmin.ts`).
 
-**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
-
-**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
-
-I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
-
-### Changes
-
-| File | Change |
-|------|--------|
-| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
-| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
-
-### Technical Detail
-
-**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
+**Action**: Use the insert tool to add the owner role:
 ```sql
-CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.scout_follows
-    WHERE scout_id = p_coach_id
-      AND player_id = p_player_id
-      AND status = 'accepted'
-      AND relationship_type IN ('linked', 'follow')
-  )
-$$;
+INSERT INTO public.user_roles (user_id, role, status)
+VALUES ('2e49357d-8f7e-4c0a-9724-fd1a81a6f9df', 'owner', 'active')
+ON CONFLICT (user_id, role) DO NOTHING;
 ```
 
-Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
+## Issue 2: Video+Log Upload Malfunctioning
+
+**Root Cause**: The `VideoRepLogger.tsx` uses `URL.createObjectURL()` which works fine, but the video element has no `controls` attribute and no scrubber. The `loadedmetadata` event listener is added inside a `useEffect` that depends on `videoSrc`, but the video element may not have loaded by the time the effect runs. Additionally, there are no frame-by-frame controls.
+
+**Fix in `VideoRepLogger.tsx`**:
+- Add a range input scrubber (like `GameVideoPlayer` has)
+- Add frame-by-frame forward/back buttons (ChevronLeft/ChevronRight, ±0.033s)
+- Add `playsInline` and ensure the video element has proper event handling
+- Add a pause & seek UI for precise timestamp capture
+
+## Issue 3: Video Scrubber/Timeline for Video+Log
+
+Same as Issue 2 — the `VideoRepLogger` needs:
+- Range input scrubber (`<input type="range">`) synced to video currentTime
+- Frame-by-frame buttons (±1/30th sec)
+- Time display showing current/total
+
+**Changes to `VideoRepLogger.tsx`**:
+- Add scrubber slider between video and controls
+- Add ChevronLeft/ChevronRight frame step buttons
+- Add formatted time display
+
+## Issue 4: Recent Sessions Not Showing Contents
+
+**Root Cause**: `RecentSessionsList.tsx` displays session cards but they're not clickable/expandable. The user wants to view the actual session contents (reps, drill blocks, notes, etc).
+
+**Fix in `RecentSessionsList.tsx`**:
+- Make each session card clickable to expand/show details
+- Show drill block details (drill names, volumes, outcomes) when expanded
+- Show notes if present
+- Show composite indexes if present
+- Alternatively, navigate to a session detail view on click
+
+## Files to Edit
+
+| File | Changes |
+|------|---------|
+| `src/components/practice/VideoRepLogger.tsx` | Add scrubber slider, frame-by-frame controls, time display |
+| `src/components/practice/RecentSessionsList.tsx` | Make sessions expandable to show drill_blocks, notes, composite_indexes content |
+
+## Data Operation
+
+Insert owner role for the app owner user via the insert tool.
 
