@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Play, Pause, Upload, Video, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Pause, Upload, Video, Loader2 } from 'lucide-react';
 import { VideoRepMarker, type RepMarker } from './VideoRepMarker';
 import { RepScorer, type ScoredRep } from './RepScorer';
 import type { SessionConfig } from './SessionConfigPanel';
@@ -13,13 +15,6 @@ interface VideoRepLoggerProps {
   onRepsChange: (reps: ScoredRep[]) => void;
   sessionConfig?: SessionConfig;
 }
-
-const formatTime = (sec: number) => {
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  const ms = Math.floor((sec % 1) * 10);
-  return `${m}:${s.toString().padStart(2, '0')}.${ms}`;
-};
 
 export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: VideoRepLoggerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -59,20 +54,6 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
     if (videoRef.current) videoRef.current.playbackRate = next;
   }, [playbackRate]);
 
-  const stepFrame = useCallback((direction: 1 | -1) => {
-    if (!videoRef.current) return;
-    videoRef.current.pause();
-    setIsPlaying(false);
-    videoRef.current.currentTime = Math.max(0, Math.min(duration, videoRef.current.currentTime + direction * 0.033));
-  }, [duration]);
-
-  const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!videoRef.current) return;
-    const t = parseFloat(e.target.value);
-    videoRef.current.currentTime = t;
-    setCurrentTime(t);
-  }, []);
-
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
@@ -89,7 +70,9 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
     };
   }, [videoSrc]);
 
+  // Bind video data to reps when markers change
   const handleRepsChange = useCallback((newReps: ScoredRep[]) => {
+    // Attach marker timing data to matching reps
     const enriched = newReps.map((rep, i) => {
       const marker = markers[i];
       if (marker && marker.end_time_sec) {
@@ -131,7 +114,7 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* Video player */}
           <div className="relative rounded-lg overflow-hidden bg-black">
             <video
@@ -142,42 +125,25 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
             />
           </div>
 
-          {/* Scrubber */}
-          <input
-            type="range"
-            min={0}
-            max={duration || 1}
-            step={0.001}
-            value={currentTime}
-            onChange={handleScrub}
-            className="w-full h-2 accent-primary cursor-pointer"
-          />
-
           {/* Controls */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => stepFrame(-1)}>
-              <ChevronLeft className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={togglePlay} className="gap-1">
+              {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
             </Button>
-            <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={togglePlay}>
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => stepFrame(1)}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={changeSpeed} className="text-xs px-2 h-8">
+            <Button type="button" variant="ghost" size="sm" onClick={changeSpeed} className="text-xs">
               {playbackRate}x
             </Button>
-            <span className="text-xs text-muted-foreground ml-auto font-mono">
-              {formatTime(currentTime)} / {formatTime(duration)}
+            <span className="text-xs text-muted-foreground ml-auto">
+              {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
             </span>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="text-xs h-8"
+              className="text-xs"
             >
-              Change
+              Change Video
             </Button>
           </div>
 
@@ -192,7 +158,7 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
         </div>
       )}
 
-      {/* Rep logging form */}
+      {/* Rep logging form — always visible below video */}
       <RepScorer
         module={module}
         reps={reps}
