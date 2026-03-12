@@ -1,29 +1,47 @@
 
 
-# Fix: "Importing a module script failed" Error
+# Fix: Coach Schedule Dialog RLS Error
 
-## Diagnosis
+## Root Cause
 
-The error is **not a code bug**. All imports resolve correctly, all files are syntactically valid, and no missing modules exist.
+The coach has two accepted relationships:
+- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
+- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
 
-The error `"Importing a module script failed"` occurs because the browser has cached an old `index.html` that references JavaScript chunk filenames (e.g., `index-B3hjN48E.js`) from a previous build. After the latest code changes deployed, those chunk files were replaced with new ones (different hashes). The browser tries to load the old chunks, which no longer exist on the server, causing the import failure.
+The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
 
-The `ErrorBoundary` catches this and shows "Oops! Something went wrong" with a "Return to Home" button, but even that reload still uses the cached HTML — so the error persists.
+## Solution
 
-## Fix
+**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
 
-Add a **force-reload mechanism** to the `ErrorBoundary` when it detects a dynamic import error. Instead of just navigating, it should do a hard reload that bypasses the browser cache:
+**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
 
-**File: `src/components/ErrorBoundary.tsx`**
-- In the `handleRetry` method, use `window.location.reload()` — but the current implementation already uses cache-busting via `_cb` query param
-- The real issue: the `handleReset` method navigates to `/` with `window.location.href = '/'` which may still serve the cached HTML
-- Change `handleRetry` to use `location.reload(true)` or `fetch` with `cache: 'reload'` header to bust the HTML cache, then reload
-- Alternatively, add `Cache-Control: no-cache` meta tag to `index.html` to prevent HTML caching
+I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
 
-**Specific changes:**
-1. In `ErrorBoundary.tsx` `handleRetry`: use `caches.delete()` to clear service worker caches before reloading, then `window.location.reload()`
-2. Also unregister the stale service worker that may be serving the old HTML
-3. Add a comment in `index.html` with a cache-busting meta tag for the HTML itself
+### Changes
 
-This is a minimal fix — just improving the recovery path when chunk files are stale.
+| File | Change |
+|------|--------|
+| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
+| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
+
+### Technical Detail
+
+**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
+```sql
+CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.scout_follows
+    WHERE scout_id = p_coach_id
+      AND player_id = p_player_id
+      AND status = 'accepted'
+      AND relationship_type IN ('linked', 'follow')
+  )
+$$;
+```
+
+Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
 
