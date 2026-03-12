@@ -99,19 +99,18 @@ function calculateRunsScored(
     case 'home_run':
       return 1 + totalOnBase;
     case 'triple':
-      return onSecond + onThird;
+      return totalOnBase; // all runners score
     case 'double':
-      return onThird + onSecond;
+      return onThird + onSecond + onFirst; // runners from 1st, 2nd, 3rd all score
     case 'single':
     case 'error':
-      return onThird;
+    case 'fielders_choice':
+      return onThird + onSecond; // runners from 2nd and 3rd score
     case 'sac_fly':
       return onThird;
     case 'walk':
     case 'hbp':
       return (onFirst && onSecond && onThird) ? 1 : 0;
-    case 'fielders_choice':
-      return onThird;
     default:
       return 0;
   }

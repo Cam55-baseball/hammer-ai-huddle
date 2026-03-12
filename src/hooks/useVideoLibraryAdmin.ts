@@ -36,7 +36,7 @@ export function useVideoLibraryAdmin() {
 
         const ext = payload.videoFile.name.split('.').pop()?.toLowerCase() || 'mp4';
         const id = crypto.randomUUID();
-        const path = `library/${id}.${ext}`;
+        const path = `${user.id}/library/${id}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
           .from('videos')
