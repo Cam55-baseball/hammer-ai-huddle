@@ -38,6 +38,15 @@ export default function WhackAMoleGame({ tier, onComplete, onExit, isPaused }: W
   const [bestStreak, setBestStreak] = useState(0);
   const [feedback, setFeedback] = useState<{ id: number; type: 'hit' | 'miss' | 'wrong' } | null>(null);
 
+  // Refs for latest values (avoid stale closures in timer callback)
+  const scoreRef = useRef(0);
+  const mistakesRef = useRef(0);
+  const missesRef = useRef(0);
+  const streakRef = useRef(0);
+  const bestStreakRef = useRef(0);
+  const reactionTimesRef = useRef<number[]>([]);
+  const completedRef = useRef(false);
+
   const moleUpDuration = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1200 : 900;
   const moleInterval = tier === 'beginner' ? 1800 : tier === 'advanced' ? 1400 : 1000;
   const noGoRatio = tier === 'beginner' ? 0.2 : tier === 'advanced' ? 0.3 : 0.4;
