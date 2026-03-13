@@ -47,6 +47,12 @@ export default function ColorFlashGame({ tier, onComplete, onExit, isPaused }: C
   const flashDuration = tier === 'beginner' ? 800 : tier === 'advanced' ? 600 : 400;
   const flashInterval = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1200 : 900;
 
+  // Sync refs
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { attemptsRef.current = attempts; }, [attempts]);
+  useEffect(() => { reactionTimesRef.current = reactionTimes; }, [reactionTimes]);
+  useEffect(() => { bestStreakRef.current = bestStreak; }, [bestStreak]);
+
   // Pick new target color periodically
   useEffect(() => {
     const interval = setInterval(() => {
