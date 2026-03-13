@@ -31,6 +31,7 @@ export default function ChaosGridGame({ tier, onComplete, onExit, isPaused }: Ch
   const [round, setRound] = useState(1);
   const [phase, setPhase] = useState<'show' | 'chaos' | 'select'>('show');
   const [isComplete, setIsComplete] = useState(false);
+  const completedRef = useRef(false);
   const [showCountdown, setShowCountdown] = useState(3);
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const roundStartTime = useRef<number>(Date.now());
