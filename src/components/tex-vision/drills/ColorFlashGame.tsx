@@ -37,10 +37,21 @@ export default function ColorFlashGame({ tier, onComplete, onExit, isPaused }: C
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const flashStartTime = useRef<number>(0);
+  const completedRef = useRef(false);
+  const scoreRef = useRef(0);
+  const attemptsRef = useRef(0);
+  const reactionTimesRef = useRef<number[]>([]);
+  const bestStreakRef = useRef(0);
 
   const totalAttempts = tier === 'beginner' ? 15 : tier === 'advanced' ? 20 : 30;
   const flashDuration = tier === 'beginner' ? 800 : tier === 'advanced' ? 600 : 400;
   const flashInterval = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1200 : 900;
+
+  // Sync refs
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { attemptsRef.current = attempts; }, [attempts]);
+  useEffect(() => { reactionTimesRef.current = reactionTimes; }, [reactionTimes]);
+  useEffect(() => { bestStreakRef.current = bestStreak; }, [bestStreak]);
 
   // Pick new target color periodically
   useEffect(() => {
@@ -80,24 +91,26 @@ export default function ColorFlashGame({ tier, onComplete, onExit, isPaused }: C
 
   // Check completion
   useEffect(() => {
-    if (attempts >= totalAttempts && !isComplete) {
+    if (attempts >= totalAttempts && !completedRef.current) {
+      completedRef.current = true;
       setIsComplete(true);
-      const avgReaction = reactionTimes.length > 0
-        ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
+      const rt = reactionTimesRef.current;
+      const avgReaction = rt.length > 0
+        ? Math.round(rt.reduce((a, b) => a + b, 0) / rt.length)
         : undefined;
 
       onComplete({
-        accuracyPercent: Math.round((score / Math.max(attempts, 1)) * 100),
+        accuracyPercent: Math.max(0, Math.min(100, Math.round((scoreRef.current / Math.max(attemptsRef.current, 1)) * 100))),
         reactionTimeMs: avgReaction,
         difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
         drillMetrics: {
-          correctHits: score,
-          totalAttempts: attempts,
-          bestStreak: bestStreak,
+          correctHits: scoreRef.current,
+          totalAttempts: attemptsRef.current,
+          bestStreak: bestStreakRef.current,
         },
       });
     }
-  }, [attempts, totalAttempts, isComplete, score, reactionTimes, tier, onComplete, bestStreak]);
+  }, [attempts, totalAttempts, tier, onComplete]);
 
   const handleTap = useCallback(() => {
     if (!isFlashing || !flashedColor || isComplete) return;
@@ -127,24 +140,25 @@ export default function ColorFlashGame({ tier, onComplete, onExit, isPaused }: C
   }, [isFlashing, flashedColor, targetColor, isComplete, streak, bestStreak]);
 
   const handleTimerComplete = useCallback(() => {
-    if (!isComplete) {
-      setIsComplete(true);
-      const avgReaction = reactionTimes.length > 0
-        ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
-        : undefined;
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setIsComplete(true);
+    const rt = reactionTimesRef.current;
+    const avgReaction = rt.length > 0
+      ? Math.round(rt.reduce((a, b) => a + b, 0) / rt.length)
+      : undefined;
 
-      onComplete({
-        accuracyPercent: Math.round((score / Math.max(attempts, 1)) * 100),
-        reactionTimeMs: avgReaction,
-        difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
-        drillMetrics: {
-          correctHits: score,
-          totalAttempts: attempts,
-          bestStreak: bestStreak,
-        },
-      });
-    }
-  }, [isComplete, score, attempts, reactionTimes, tier, onComplete, bestStreak]);
+    onComplete({
+      accuracyPercent: Math.max(0, Math.min(100, Math.round((scoreRef.current / Math.max(attemptsRef.current, 1)) * 100))),
+      reactionTimeMs: avgReaction,
+      difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
+      drillMetrics: {
+        correctHits: scoreRef.current,
+        totalAttempts: attemptsRef.current,
+        bestStreak: bestStreakRef.current,
+      },
+    });
+  }, [tier, onComplete]);
 
   const targetColorData = COLORS.find(c => c.type === targetColor)!;
   const flashedColorData = flashedColor ? COLORS.find(c => c.type === flashedColor) : null;

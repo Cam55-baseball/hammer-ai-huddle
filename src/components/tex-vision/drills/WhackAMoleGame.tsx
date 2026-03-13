@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
@@ -37,6 +37,23 @@ export default function WhackAMoleGame({ tier, onComplete, onExit, isPaused }: W
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [feedback, setFeedback] = useState<{ id: number; type: 'hit' | 'miss' | 'wrong' } | null>(null);
+
+  // Refs for latest values (avoid stale closures in timer callback)
+  const scoreRef = useRef(0);
+  const mistakesRef = useRef(0);
+  const missesRef = useRef(0);
+  const streakRef = useRef(0);
+  const bestStreakRef = useRef(0);
+  const reactionTimesRef = useRef<number[]>([]);
+  const completedRef = useRef(false);
+
+  // Sync refs
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { mistakesRef.current = mistakes; }, [mistakes]);
+  useEffect(() => { missesRef.current = misses; }, [misses]);
+  useEffect(() => { streakRef.current = streak; }, [streak]);
+  useEffect(() => { bestStreakRef.current = bestStreak; }, [bestStreak]);
+  useEffect(() => { reactionTimesRef.current = reactionTimes; }, [reactionTimes]);
 
   const moleUpDuration = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1200 : 900;
   const moleInterval = tier === 'beginner' ? 1800 : tier === 'advanced' ? 1400 : 1000;
@@ -123,34 +140,41 @@ export default function WhackAMoleGame({ tier, onComplete, onExit, isPaused }: W
   }, [moles, moleAppearTime, isComplete]);
 
   const handleTimerComplete = useCallback(() => {
-    if (!isComplete) {
-      setIsComplete(true);
-      
-      const avgReaction = reactionTimes.length > 0
-        ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
-        : 0;
-      
-      const totalAttempts = score + mistakes + misses;
-      const accuracy = totalAttempts > 0 
-        ? Math.round((score / totalAttempts) * 100)
-        : 0;
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setIsComplete(true);
+    
+    const s = scoreRef.current;
+    const m = mistakesRef.current;
+    const mi = missesRef.current;
+    const rt = reactionTimesRef.current;
+    const st = streakRef.current;
+    const bs = bestStreakRef.current;
+    
+    const avgReaction = rt.length > 0
+      ? Math.round(rt.reduce((a, b) => a + b, 0) / rt.length)
+      : 0;
+    
+    const totalAttempts = s + m + mi;
+    const accuracy = totalAttempts > 0 
+      ? Math.round((s / totalAttempts) * 100)
+      : 0;
 
-      const finalBestStreak = Math.max(bestStreak, streak);
+    const finalBestStreak = Math.max(bs, st);
 
-      onComplete({
-        accuracyPercent: accuracy,
-        reactionTimeMs: avgReaction,
-        difficultyLevel: tier === 'beginner' ? 5 : tier === 'advanced' ? 7 : 9,
-        falsePositives: mistakes,
-        drillMetrics: {
-          totalHits: score,
-          totalMisses: misses,
-          noGoMistakes: mistakes,
-          bestStreak: finalBestStreak,
-        },
-      });
-    }
-  }, [isComplete, score, mistakes, misses, streak, bestStreak, reactionTimes, tier, onComplete]);
+    onComplete({
+      accuracyPercent: Math.max(0, Math.min(100, accuracy)),
+      reactionTimeMs: avgReaction,
+      difficultyLevel: tier === 'beginner' ? 5 : tier === 'advanced' ? 7 : 9,
+      falsePositives: m,
+      drillMetrics: {
+        totalHits: s,
+        totalMisses: mi,
+        noGoMistakes: m,
+        bestStreak: finalBestStreak,
+      },
+    });
+  }, [tier, onComplete]);
 
   return (
     <DrillContainer

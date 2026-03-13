@@ -136,15 +136,18 @@ export default function RapidSwitchGame({ tier, onComplete, onExit, isPaused }: 
     }, 250);
   }, [currentTask, isComplete, attempts, totalAttempts, nextTask]);
 
-  // Completion effect
+  // Completion effect - use ref guard to prevent double-fire
+  const completedRef = useRef(false);
+  
   useEffect(() => {
-    if (isComplete) {
+    if (isComplete && !completedRef.current) {
+      completedRef.current = true;
       const avgReaction = reactionTimes.length > 0
         ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
         : undefined;
 
       onComplete({
-        accuracyPercent: Math.round((score / totalAttempts) * 100),
+        accuracyPercent: Math.max(0, Math.min(100, Math.round((score / Math.max(totalAttempts, 1)) * 100))),
         reactionTimeMs: avgReaction,
         difficultyLevel: tier === 'beginner' ? 5 : tier === 'advanced' ? 8 : 10,
         drillMetrics: {

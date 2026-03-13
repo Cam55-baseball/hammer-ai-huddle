@@ -92,15 +92,18 @@ export default function StroopChallengeGame({ tier, onComplete, onExit, isPaused
     }, 300);
   }, [isComplete, mode, displayColor.name, displayWord, attempts, totalAttempts, generateNewChallenge]);
 
-  // Completion effect
+  // Completion effect - use ref guard
+  const completedRef = useRef(false);
+
   useEffect(() => {
-    if (isComplete) {
+    if (isComplete && !completedRef.current) {
+      completedRef.current = true;
       const avgReaction = reactionTimes.length > 0
         ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
         : undefined;
 
       onComplete({
-        accuracyPercent: Math.round((score / totalAttempts) * 100),
+        accuracyPercent: Math.max(0, Math.min(100, Math.round((score / Math.max(totalAttempts, 1)) * 100))),
         reactionTimeMs: avgReaction,
         difficultyLevel: tier === 'beginner' ? 3 : tier === 'advanced' ? 6 : 9,
         drillMetrics: {

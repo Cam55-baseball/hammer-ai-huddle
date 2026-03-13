@@ -13,9 +13,11 @@ interface RestDaySchedulerProps {
   onOpenChange: (open: boolean) => void;
   date: string; // YYYY-MM-DD
   events: Array<{ id: string; title: string; event_type: string }>;
+  /** Optional: game plan task IDs active on this day, to skip them too */
+  gamePlanTaskIds?: string[];
 }
 
-export function RestDayScheduler({ open, onOpenChange, date, events }: RestDaySchedulerProps) {
+export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTaskIds }: RestDaySchedulerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -24,6 +26,29 @@ export function RestDayScheduler({ open, onOpenChange, date, events }: RestDaySc
   const mandatoryTypes = ['game', 'coach_assigned', 'tryout'];
   const movableEvents = events.filter(e => !mandatoryTypes.includes(e.event_type));
   const mandatoryEvents = events.filter(e => mandatoryTypes.includes(e.event_type));
+
+  /** Skip all game plan tasks for this date */
+  const skipGamePlanTasks = async () => {
+    if (!user || !gamePlanTaskIds || gamePlanTaskIds.length === 0) return;
+    
+    const rows = gamePlanTaskIds.map(taskId => ({
+      user_id: user.id,
+      task_id: taskId,
+      skip_date: date,
+    }));
+
+    // Upsert to avoid duplicates
+    for (const row of rows) {
+      await supabase
+        .from('game_plan_skipped_tasks')
+        .upsert(row, { onConflict: 'user_id,task_id,skip_date' });
+    }
+  };
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['calendar'] });
+    queryClient.invalidateQueries({ queryKey: ['gameplan'] });
+  };
 
   const findNextOpenDay = async (): Promise<string> => {
     const d = new Date(date);
@@ -53,7 +78,9 @@ export function RestDayScheduler({ open, onOpenChange, date, events }: RestDaySc
           .update({ event_date: nextDay })
           .eq('id', evt.id);
       }
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      // Also skip game plan tasks for rest day
+      await skipGamePlanTasks();
+      invalidateAll();
       toast({ title: 'Events moved', description: `${movableEvents.length} events moved to ${nextDay}` });
       onOpenChange(false);
     } catch (e: any) {
@@ -85,7 +112,9 @@ export function RestDayScheduler({ open, onOpenChange, date, events }: RestDaySc
             .eq('id', evt.id);
         }
       }
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      // Also skip game plan tasks for rest day
+      await skipGamePlanTasks();
+      invalidateAll();
       toast({ title: 'Schedule pushed', description: 'Non-mandatory events shifted forward 1 day' });
       onOpenChange(false);
     } catch (e: any) {
@@ -102,7 +131,9 @@ export function RestDayScheduler({ open, onOpenChange, date, events }: RestDaySc
       for (const evt of movableEvents) {
         await supabase.from('calendar_events').delete().eq('id', evt.id);
       }
-      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      // Also skip game plan tasks for rest day
+      await skipGamePlanTasks();
+      invalidateAll();
       toast({ title: 'Sessions dropped', description: `${movableEvents.length} sessions removed` });
       onOpenChange(false);
     } catch (e: any) {
