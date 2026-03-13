@@ -37,6 +37,11 @@ export default function ColorFlashGame({ tier, onComplete, onExit, isPaused }: C
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const flashStartTime = useRef<number>(0);
+  const completedRef = useRef(false);
+  const scoreRef = useRef(0);
+  const attemptsRef = useRef(0);
+  const reactionTimesRef = useRef<number[]>([]);
+  const bestStreakRef = useRef(0);
 
   const totalAttempts = tier === 'beginner' ? 15 : tier === 'advanced' ? 20 : 30;
   const flashDuration = tier === 'beginner' ? 800 : tier === 'advanced' ? 600 : 400;
