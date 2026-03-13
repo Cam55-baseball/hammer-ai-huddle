@@ -91,24 +91,26 @@ export default function ColorFlashGame({ tier, onComplete, onExit, isPaused }: C
 
   // Check completion
   useEffect(() => {
-    if (attempts >= totalAttempts && !isComplete) {
+    if (attempts >= totalAttempts && !completedRef.current) {
+      completedRef.current = true;
       setIsComplete(true);
-      const avgReaction = reactionTimes.length > 0
-        ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
+      const rt = reactionTimesRef.current;
+      const avgReaction = rt.length > 0
+        ? Math.round(rt.reduce((a, b) => a + b, 0) / rt.length)
         : undefined;
 
       onComplete({
-        accuracyPercent: Math.round((score / Math.max(attempts, 1)) * 100),
+        accuracyPercent: Math.max(0, Math.min(100, Math.round((scoreRef.current / Math.max(attemptsRef.current, 1)) * 100))),
         reactionTimeMs: avgReaction,
         difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
         drillMetrics: {
-          correctHits: score,
-          totalAttempts: attempts,
-          bestStreak: bestStreak,
+          correctHits: scoreRef.current,
+          totalAttempts: attemptsRef.current,
+          bestStreak: bestStreakRef.current,
         },
       });
     }
-  }, [attempts, totalAttempts, isComplete, score, reactionTimes, tier, onComplete, bestStreak]);
+  }, [attempts, totalAttempts, tier, onComplete]);
 
   const handleTap = useCallback(() => {
     if (!isFlashing || !flashedColor || isComplete) return;
