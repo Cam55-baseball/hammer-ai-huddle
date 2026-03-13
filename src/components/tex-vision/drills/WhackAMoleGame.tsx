@@ -47,6 +47,14 @@ export default function WhackAMoleGame({ tier, onComplete, onExit, isPaused }: W
   const reactionTimesRef = useRef<number[]>([]);
   const completedRef = useRef(false);
 
+  // Sync refs
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  useEffect(() => { mistakesRef.current = mistakes; }, [mistakes]);
+  useEffect(() => { missesRef.current = misses; }, [misses]);
+  useEffect(() => { streakRef.current = streak; }, [streak]);
+  useEffect(() => { bestStreakRef.current = bestStreak; }, [bestStreak]);
+  useEffect(() => { reactionTimesRef.current = reactionTimes; }, [reactionTimes]);
+
   const moleUpDuration = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1200 : 900;
   const moleInterval = tier === 'beginner' ? 1800 : tier === 'advanced' ? 1400 : 1000;
   const noGoRatio = tier === 'beginner' ? 0.2 : tier === 'advanced' ? 0.3 : 0.4;
