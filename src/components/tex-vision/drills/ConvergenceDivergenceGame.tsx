@@ -117,18 +117,18 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit, is
   }, [phase]);
 
   const handleTimerComplete = useCallback(() => {
-    if (!isComplete) {
-      setIsComplete(true);
-      onComplete({
-        accuracyPercent: Math.round((confirmCount / Math.max(cycleCount, 1)) * 100),
-        difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
-        drillMetrics: {
-          cyclesCompleted: cycleCount,
-          convergenceConfirmed: confirmCount,
-        },
-      });
-    }
-  }, [isComplete, cycleCount, confirmCount, tier, onComplete]);
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setIsComplete(true);
+    onComplete({
+      accuracyPercent: Math.max(0, Math.min(100, Math.round((confirmCount / Math.max(cycleCount, 1)) * 100))),
+      difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
+      drillMetrics: {
+        cyclesCompleted: cycleCount,
+        convergenceConfirmed: confirmCount,
+      },
+    });
+  }, [cycleCount, confirmCount, tier, onComplete]);
 
   const getPhaseInstruction = () => {
     switch (phase) {

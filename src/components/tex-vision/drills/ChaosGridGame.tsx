@@ -137,7 +137,8 @@ export default function ChaosGridGame({ tier, onComplete, onExit, isPaused }: Ch
 
   // Completion effect
   useEffect(() => {
-    if (isComplete) {
+    if (isComplete && !completedRef.current) {
+      completedRef.current = true;
       const totalTargets = round * targetCount;
       const foundTotal = (round - 1) * targetCount + foundIds.size;
       const avgReaction = reactionTimes.length > 0
@@ -145,7 +146,7 @@ export default function ChaosGridGame({ tier, onComplete, onExit, isPaused }: Ch
         : undefined;
 
       onComplete({
-        accuracyPercent: Math.round(((foundTotal - mistakes) / Math.max(totalTargets, 1)) * 100),
+        accuracyPercent: Math.max(0, Math.min(100, Math.round(((foundTotal - mistakes) / Math.max(totalTargets, 1)) * 100))),
         reactionTimeMs: avgReaction,
         difficultyLevel: tier === 'beginner' ? 7 : tier === 'advanced' ? 9 : 10,
         drillMetrics: {
