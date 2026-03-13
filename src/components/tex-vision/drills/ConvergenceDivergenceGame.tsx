@@ -66,11 +66,14 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit, is
     }
   }, [showConfirmPrompt]);
 
+  const completedRef = useRef(false);
+
   useEffect(() => {
-    if (cycleCount >= totalCycles && !isComplete) {
+    if (cycleCount >= totalCycles && !completedRef.current) {
+      completedRef.current = true;
       setIsComplete(true);
       onComplete({
-        accuracyPercent: Math.round((confirmCount / Math.max(cycleCount, 1)) * 100),
+        accuracyPercent: Math.max(0, Math.min(100, Math.round((confirmCount / Math.max(cycleCount, 1)) * 100))),
         difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
         drillMetrics: {
           cyclesCompleted: cycleCount,
@@ -79,7 +82,7 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit, is
         },
       });
     }
-  }, [cycleCount, totalCycles, isComplete, tier, phaseDuration, confirmCount, onComplete]);
+  }, [cycleCount, totalCycles, tier, phaseDuration, confirmCount, onComplete]);
 
   useEffect(() => {
     let targetPosition: number;
