@@ -728,6 +728,21 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         });
       }
 
+      // Filter out game plan tasks that are skipped for specific dates
+      Object.keys(aggregatedEvents).forEach(dateKey => {
+        aggregatedEvents[dateKey] = aggregatedEvents[dateKey].filter(evt => {
+          // Only filter game_plan and program type events
+          if (evt.type === 'game_plan' || evt.type === 'program') {
+            const taskId = evt.source;
+            if (gamePlanSkipSet.has(`${taskId}:${dateKey}`)) return false;
+            // Also check workout task IDs
+            const workoutTaskId = getTaskIdForEvent(evt);
+            if (workoutTaskId && gamePlanSkipSet.has(`${workoutTaskId}:${dateKey}`)) return false;
+          }
+          return true;
+        });
+      });
+
       // Sort events: date-specific order takes priority, then weekly lock, then time
       Object.keys(aggregatedEvents).forEach(dateKey => {
         const date = new Date(dateKey);
