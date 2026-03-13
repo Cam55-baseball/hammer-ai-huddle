@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { Play, Pause, Upload, Video, ChevronLeft, ChevronRight, Rewind, FastForward } from 'lucide-react';
 import { VideoRepMarker, type RepMarker } from './VideoRepMarker';
 import { RepScorer, type ScoredRep } from './RepScorer';
@@ -21,6 +20,10 @@ function formatTime(sec: number): string {
   return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
 }
 
+function clampTime(t: number, dur: number): number {
+  return Math.max(0, Math.min(isFinite(dur) ? dur : 0, t));
+}
+
 export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: VideoRepLoggerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +33,8 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [markers, setMarkers] = useState<RepMarker[]>([]);
+  const [durationResolved, setDurationResolved] = useState(false);
+  const seekingRef = useRef(false);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,16 +45,23 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(false);
+    setDurationResolved(false);
     e.target.value = '';
   }, [videoSrc]);
 
   const togglePlay = useCallback(() => {
-    if (!videoRef.current) return;
-    if (videoRef.current.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (vid.paused) {
+      const playPromise = vid.play();
+      if (playPromise) {
+        playPromise.then(() => setIsPlaying(true)).catch((err) => {
+          console.warn('Play interrupted:', err.message);
+          setIsPlaying(false);
+        });
+      }
     } else {
-      videoRef.current.pause();
+      vid.pause();
       setIsPlaying(false);
     }
   }, []);
@@ -63,55 +75,87 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
   }, [playbackRate]);
 
   const stepFrame = useCallback((dir: 1 | -1) => {
-    if (!videoRef.current) return;
-    videoRef.current.pause();
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.pause();
     setIsPlaying(false);
-    videoRef.current.currentTime = Math.max(0, Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + dir * 0.033));
+    const safeDur = isFinite(vid.duration) ? vid.duration : 0;
+    vid.currentTime = clampTime(vid.currentTime + dir * 0.033, safeDur);
   }, []);
 
   const skip = useCallback((sec: number) => {
-    if (!videoRef.current) return;
-    videoRef.current.currentTime = Math.max(0, Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + sec));
+    const vid = videoRef.current;
+    if (!vid) return;
+    const safeDur = isFinite(vid.duration) ? vid.duration : 0;
+    vid.currentTime = clampTime(vid.currentTime + sec, safeDur);
   }, []);
 
   const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!videoRef.current) return;
-    const t = parseFloat(e.target.value);
-    videoRef.current.currentTime = t;
-    setCurrentTime(t);
-  }, []);
-
-  useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
-    const onTime = () => setCurrentTime(vid.currentTime);
-    const onLoaded = () => {
-      // WebM duration workaround
-      if (!isFinite(vid.duration)) {
-        vid.currentTime = 1e10;
-        const fix = () => {
-          vid.currentTime = 0;
-          setDuration(vid.duration);
-          vid.removeEventListener('timeupdate', fix);
-        };
-        vid.addEventListener('timeupdate', fix);
-      } else {
+    seekingRef.current = true;
+    const t = parseFloat(e.target.value);
+    vid.currentTime = clampTime(t, isFinite(vid.duration) ? vid.duration : duration);
+    setCurrentTime(t);
+  }, [duration]);
+
+  // Duration resolution (handles WebM Infinity issue)
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid || !videoSrc) return;
+
+    const resolveDuration = () => {
+      if (isFinite(vid.duration) && vid.duration > 0) {
         setDuration(vid.duration);
+        setDurationResolved(true);
+        return;
+      }
+      // WebM workaround: seek to a huge time to force browser to compute duration
+      vid.currentTime = 1e10;
+      const onSeek = () => {
+        vid.removeEventListener('seeked', onSeek);
+        if (isFinite(vid.duration) && vid.duration > 0) {
+          setDuration(vid.duration);
+        }
+        vid.currentTime = 0;
+        setDurationResolved(true);
+      };
+      vid.addEventListener('seeked', onSeek);
+    };
+
+    const onLoaded = () => resolveDuration();
+    const onDurationChange = () => {
+      if (isFinite(vid.duration) && vid.duration > 0) {
+        setDuration(vid.duration);
+        setDurationResolved(true);
       }
     };
-    const onEnded = () => setIsPlaying(false);
-    const onDurationChange = () => {
-      if (isFinite(vid.duration) && vid.duration > 0) setDuration(vid.duration);
+    const onTime = () => {
+      if (!seekingRef.current) {
+        setCurrentTime(vid.currentTime);
+      }
     };
-    vid.addEventListener('timeupdate', onTime);
+    const onSeeked = () => { seekingRef.current = false; };
+    const onEnded = () => setIsPlaying(false);
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
     vid.addEventListener('loadedmetadata', onLoaded);
-    vid.addEventListener('ended', onEnded);
     vid.addEventListener('durationchange', onDurationChange);
+    vid.addEventListener('timeupdate', onTime);
+    vid.addEventListener('seeked', onSeeked);
+    vid.addEventListener('ended', onEnded);
+    vid.addEventListener('play', onPlay);
+    vid.addEventListener('pause', onPause);
+
     return () => {
-      vid.removeEventListener('timeupdate', onTime);
       vid.removeEventListener('loadedmetadata', onLoaded);
-      vid.removeEventListener('ended', onEnded);
       vid.removeEventListener('durationchange', onDurationChange);
+      vid.removeEventListener('timeupdate', onTime);
+      vid.removeEventListener('seeked', onSeeked);
+      vid.removeEventListener('ended', onEnded);
+      vid.removeEventListener('play', onPlay);
+      vid.removeEventListener('pause', onPause);
     };
   }, [videoSrc]);
 
@@ -125,6 +169,8 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
     });
     onRepsChange(enriched);
   }, [onRepsChange, markers]);
+
+  const safeDuration = isFinite(duration) && duration > 0 ? duration : 0;
 
   return (
     <div className="space-y-3">
@@ -153,11 +199,12 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
             <input
               type="range"
               min={0}
-              max={duration || 1}
+              max={safeDuration || 1}
               step={0.01}
               value={currentTime}
               onChange={handleScrub}
               className="w-full h-2 accent-primary cursor-pointer"
+              disabled={!durationResolved}
             />
           </div>
 
@@ -182,7 +229,7 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
               {playbackRate}x
             </Button>
             <span className="text-xs text-muted-foreground ml-auto font-mono">
-              {formatTime(currentTime)} / {formatTime(duration)}
+              {formatTime(currentTime)} / {formatTime(safeDuration)}
             </span>
             <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} className="text-xs">
               Change
@@ -194,7 +241,7 @@ export function VideoRepLogger({ module, reps, onRepsChange, sessionConfig }: Vi
             videoRef={videoRef as React.RefObject<HTMLVideoElement>}
             markers={markers}
             onMarkersChange={setMarkers}
-            duration={duration}
+            duration={safeDuration}
             currentTime={currentTime}
           />
         </div>

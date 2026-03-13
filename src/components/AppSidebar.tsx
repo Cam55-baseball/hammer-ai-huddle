@@ -142,9 +142,17 @@ export function AppSidebar() {
         });
         
         if (!error && data) {
-          setOwnerProfile(data);
-          // Cache the result
-          setCachedTranslation(currentLanguage, data);
+          // Fallback: use original_bio/original_credentials if translated fields are empty
+          const enriched = {
+            ...data,
+            bio: data.bio || data.original_bio || null,
+            credentials: (data.credentials && data.credentials.length > 0) ? data.credentials : data.original_credentials || null,
+          };
+          setOwnerProfile(enriched);
+          // Only cache if we got meaningful data
+          if (enriched.full_name || enriched.bio) {
+            setCachedTranslation(currentLanguage, enriched);
+          }
         }
       } catch (error) {
         console.error('Error fetching owner profile:', error);
