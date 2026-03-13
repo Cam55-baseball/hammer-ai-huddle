@@ -222,6 +222,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         mealPlansRes,
         dayOrdersRes,
         scheduledPracticeRes,
+        gamePlanSkipsRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
@@ -288,7 +289,23 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .from('scheduled_practice_sessions' as any)
           .select('*')
           .neq('status', 'cancelled') as any),
+        
+        // Game Plan daily skips (syncs skip state from Game Plan → Calendar)
+        supabase
+          .from('game_plan_skipped_tasks')
+          .select('task_id, skip_date')
+          .eq('user_id', user.id)
+          .gte('skip_date', startStr)
+          .lte('skip_date', endStr),
       ]);
+
+      // Build game plan skip set: "taskId:date" for fast lookup
+      const gamePlanSkipSet = new Set<string>();
+      if (gamePlanSkipsRes.data) {
+        gamePlanSkipsRes.data.forEach((skip: { task_id: string; skip_date: string }) => {
+          gamePlanSkipSet.add(`${skip.task_id}:${skip.skip_date}`);
+        });
+      }
 
       // Build date-specific order map
       const dateOrdersMap: Record<string, CalendarDayOrder> = {};
