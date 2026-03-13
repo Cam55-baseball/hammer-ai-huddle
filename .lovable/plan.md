@@ -1,47 +1,75 @@
 
+Implementation plan (approved scope consolidated into one fix batch):
 
-# Fix: Coach Schedule Dialog RLS Error
+1) Restore Owner Bio content
+- Root cause: `get-owner-profile` uses `.maybeSingle()` on `user_roles` for `role='owner'`. There are multiple owner rows, so it falls into the null fallback response.
+- Changes:
+  - `supabase/functions/get-owner-profile/index.ts`
+    - Replace single-owner lookup with deterministic owner selection:
+      - Join owner roles to profiles
+      - Prefer owner with non-empty bio/credentials
+      - Fallback to oldest active owner
+    - Keep translation behavior unchanged.
+  - `src/components/AppSidebar.tsx`
+    - Add safe fallback to `original_bio` / `original_credentials` if translated fields are empty.
+    - Invalidate stale cached owner profile when API returns empty payload.
 
-## Root Cause
+2) Velocity bands start at 10 mph
+- Changes:
+  - `src/data/baseball/velocityBands.ts`
+  - `src/data/softball/velocityBands.ts`
+- Update both machine and pitching lists to start at `10-15`, then continue 5-mph increments upward (preserving existing upper ranges).
 
-The coach has two accepted relationships:
-- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
-- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
+3) Scheduling/rescheduling must sync Calendar + Game Plan, and show Skip/Push in Game Plan
+- Root issues found:
+  - `RestDayScheduler` currently mutates only `calendar_events` rows.
+  - Most Game Plan items are generated from schedules/templates, not `calendar_events`.
+  - `useGamePlan` skip query excludes `item_type='program'`, so workout skips can desync.
+- Changes:
+  - Introduce a shared reschedule engine (hook/utility) used by both Calendar Day Sheet and Game Plan:
+    - Handle by item type:
+      - manual/calendar rows -> move/delete `calendar_events`
+      - game_plan/program/custom template items -> write unified scheduling overrides (date-specific move/drop) and apply to both modules
+  - Update `RestDayScheduler` input model to receive full schedulable item metadata (not just `id/title/type`).
+  - Add “Skip / Move to next open day / Push forward” entry points in `GamePlanCard` (same actions as Calendar).
+  - `useGamePlan.ts`: include `program` in skip fetch and apply same override logic used by calendar aggregation.
+  - `useCalendar.ts`: apply the same override logic during event aggregation.
+- Backend (migration):
+  - Add a date-specific schedule override table (user-scoped) with RLS for owner-only rows.
+  - Read/write policies limited to authenticated user’s own records.
 
-The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
+4) Video + Log scroller reliability
+- Changes:
+  - `src/components/practice/VideoRepLogger.tsx`
+- Hardening:
+  - Keep scrubber + rewind/FF + frame-step controls, but fix reliability gaps:
+    - guard `video.play()` promise + error handling
+    - stable duration resolution for WebM/recorded blobs
+    - prevent scrubber jitter when duration is unknown/Infinity
+    - clamp seek operations and sync state on `seeking/seeked`
+  - Add native `controls` fallback for device/browser edge cases while preserving custom controls.
 
-## Solution
+5) Fix Tex Vision scoring inaccuracies
+- Root issues to address:
+  - Several drill components compute final accuracy from async state snapshots, causing occasional off-by-one/late updates.
+  - Some drills can trigger completion paths twice.
+- Changes:
+  - Add shared scoring utility (clamped, deterministic accuracy/reaction calculations).
+  - Update drill components in `src/components/tex-vision/drills/*` to:
+    - compute final score from refs/finalized counters
+    - enforce single `onComplete` emission per run
+    - standardize attempt counting semantics across drills
+  - Keep `ActiveDrillView` completion guard, and ensure all drill results conform to same scoring contract.
 
-**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
-
-**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
-
-I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
-
-### Changes
-
-| File | Change |
-|------|--------|
-| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
-| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
-
-### Technical Detail
-
-**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
-```sql
-CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.scout_follows
-    WHERE scout_id = p_coach_id
-      AND player_id = p_player_id
-      AND status = 'accepted'
-      AND relationship_type IN ('linked', 'follow')
-  )
-$$;
-```
-
-Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
-
+Validation plan (must pass before close)
+- Owner bio:
+  - Sidebar shows full owner bio/credentials again in EN + translated language.
+- Velocity bands:
+  - Session config + rep scoring selectors start at `10-15` for both sports.
+- Scheduling sync:
+  - Perform skip/move/push from Calendar and verify Game Plan reflects immediately.
+  - Perform same actions from Game Plan and verify Calendar reflects immediately.
+- Video controls:
+  - In Video + Log: play/pause, scrub, rewind/FF, frame-step all work on mobile and desktop.
+- Tex Vision:
+  - Run multiple drills and verify end-of-drill score matches visible attempt/correct counts consistently.
