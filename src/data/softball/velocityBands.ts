@@ -1,4 +1,8 @@
 export const softballMachineVelocityBands = [
+  { value: '10-15', label: '10-15' },
+  { value: '15-20', label: '15-20' },
+  { value: '20-25', label: '20-25' },
+  { value: '25-30', label: '25-30' },
   { value: '30-35', label: '30-35' },
   { value: '35-40', label: '35-40' },
   { value: '40-45', label: '40-45' },
@@ -12,7 +16,12 @@ export const softballMachineVelocityBands = [
 ];
 
 export const softballPitchingVelocityBands = [
-  { value: '<40', label: '<40' },
+  { value: '<15', label: '<15' },
+  { value: '15-20', label: '15-20' },
+  { value: '20-25', label: '20-25' },
+  { value: '25-30', label: '25-30' },
+  { value: '30-35', label: '30-35' },
+  { value: '35-40', label: '35-40' },
   { value: '40-45', label: '40-45' },
   { value: '45-50', label: '45-50' },
   { value: '50-55', label: '50-55' },

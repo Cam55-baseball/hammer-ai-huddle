@@ -74,14 +74,13 @@ serve(async (req) => {
       // No body or invalid JSON, use default English
     }
 
-    // Get the owner's user_id from user_roles
-    const { data: ownerRole, error: roleError } = await supabase
+    // Get ALL owner user_ids from user_roles (handles multiple owner rows)
+    const { data: ownerRoles, error: roleError } = await supabase
       .from("user_roles")
       .select("user_id")
-      .eq("role", "owner")
-      .maybeSingle();
+      .eq("role", "owner");
 
-    if (roleError || !ownerRole) {
+    if (roleError || !ownerRoles || ownerRoles.length === 0) {
       return new Response(
         JSON.stringify({ full_name: null, bio: null, avatar_url: null }),
         {
@@ -90,14 +89,26 @@ serve(async (req) => {
       );
     }
 
-    // Get owner's profile
-    const { data: profile, error: profileError } = await supabase
+    // Get profiles for all owner user_ids
+    const ownerUserIds = ownerRoles.map(r => r.user_id);
+    const { data: profiles, error: profileError } = await supabase
       .from("profiles")
-      .select("first_name, last_name, contact_email, bio, avatar_url, credentials, social_instagram, social_twitter, social_facebook, social_linkedin, social_youtube, social_tiktok, social_website, social_website_2, social_website_3, social_website_4, social_website_5")
-      .eq("id", ownerRole.user_id)
-      .single();
+      .select("id, first_name, last_name, contact_email, bio, avatar_url, credentials, social_instagram, social_twitter, social_facebook, social_linkedin, social_youtube, social_tiktok, social_website, social_website_2, social_website_3, social_website_4, social_website_5")
+      .in("id", ownerUserIds);
 
-    if (profileError) throw profileError;
+    if (profileError || !profiles || profiles.length === 0) {
+      return new Response(
+        JSON.stringify({ full_name: null, bio: null, avatar_url: null }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Deterministic selection: prefer owner with non-empty bio, then credentials, then first found
+    let profile = profiles.find(p => p.bio && p.bio.trim().length > 0)
+      || profiles.find(p => p.credentials && (p.credentials as string[]).length > 0)
+      || profiles[0];
 
     // Translate bio and credentials if targetLanguage is not English
     let translatedBio = profile.bio;
@@ -110,9 +121,9 @@ serve(async (req) => {
       }
 
       // Translate credentials array
-      if (profile.credentials && profile.credentials.length > 0) {
+      if (profile.credentials && (profile.credentials as string[]).length > 0) {
         translatedCredentials = await Promise.all(
-          profile.credentials.map((cred: string) => translateText(cred, targetLanguage))
+          (profile.credentials as string[]).map((cred: string) => translateText(cred, targetLanguage))
         );
       }
     }
