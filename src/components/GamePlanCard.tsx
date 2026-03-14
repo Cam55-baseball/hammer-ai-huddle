@@ -47,6 +47,7 @@ import { usePhysioGamePlanBadges } from '@/hooks/usePhysioGamePlanBadges';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
+import { useRescheduleEngine } from '@/hooks/useRescheduleEngine';
 import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates';
 import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification';
 import { useGamePlanLock, ScheduleItem as LockScheduleItem } from '@/hooks/useGamePlanLock';
