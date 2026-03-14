@@ -96,7 +96,7 @@ export function AdvancedRepFields({
 }: AdvancedRepFieldsProps) {
   const [open, setOpen] = useState(false);
   const [tier3Open, setTier3Open] = useState(false);
-  const { machineVelocityBands, pitchingVelocityBands, bpDistanceRange } = useSportConfig();
+  const { machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
 
   // Default batch ON when advanced fields are opened
   useEffect(() => {
