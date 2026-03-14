@@ -1910,10 +1910,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             <BaserunningRepFields value={current} onChange={updateField} sport={sport} />
           )}
 
-          {/* ===== THROWING FIELDS ===== */}
-          {isThrowing && (
-            <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
-          )}
+           {/* ===== THROWING FIELDS ===== */}
+           {isThrowing && (
+             <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
+           )}
+
+           {/* ===== BUNTING FIELDS ===== */}
+           {isBunting && (
+             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} />
+           )}
 
           {/* Goal of Rep & Actual Outcome (per-rep) */}
           <AITextBoxField
