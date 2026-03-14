@@ -12,6 +12,7 @@ import { TeeDepthGrid } from './TeeDepthGrid';
 import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
 // CatchingRepFields removed — catcher defense now handled within fielding module
 import { BaserunningRepFields } from './BaserunningRepFields';
+import { BuntRepFields } from './BuntRepFields';
 import { ThrowingRepFields } from './ThrowingRepFields';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { FieldingThrowFields } from './FieldingThrowFields';
