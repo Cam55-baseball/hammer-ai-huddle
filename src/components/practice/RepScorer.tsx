@@ -55,6 +55,7 @@ export interface ScoredRep {
   depth_zone?: number;
   // Advanced micro
   in_zone?: boolean;
+  hit_spot?: boolean;
   batted_ball_type?: string;
   spin_direction?: string;
   swing_intent?: string;
