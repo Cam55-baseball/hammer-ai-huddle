@@ -212,6 +212,7 @@ const playTypeOptions = [
   { value: 'fly_ball', label: 'Fly Ball' },
   { value: 'line_drive', label: 'Line Drive' },
   { value: 'bunt', label: 'Bunt' },
+  { value: 'slap', label: 'Slap' },
   { value: 'pop_up', label: 'Pop Up' },
   { value: 'slow_roller', label: 'Slow Roller' },
   { value: 'one_hopper', label: 'One Hopper' },
