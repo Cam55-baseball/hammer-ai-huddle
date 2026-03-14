@@ -2690,6 +2690,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           }
         }
       `}</style>
+
+      {/* Push Day Dialog */}
+      <GamePlanPushDayDialog
+        open={pushDayDialogOpen}
+        onOpenChange={setPushDayDialogOpen}
+        taskIds={tasks.filter(t => !t.completed).map(t => t.id)}
+      />
     </Card>
   );
 }
