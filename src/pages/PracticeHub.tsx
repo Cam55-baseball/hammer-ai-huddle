@@ -34,7 +34,7 @@ const modules = [
   { id: 'throwing', icon: Wind, label: 'Throwing' },
   { id: 'fielding', icon: Shield, label: 'Fielding' },
   { id: 'baserunning', icon: Zap, label: 'Baserunning' },
-  
+  { id: 'bunting', icon: Target, label: 'Bunting' },
 ];
 
 type FlowStep = 'select_type' | 'readiness' | 'configure_session' | 'build_session' | 'session_summary';
