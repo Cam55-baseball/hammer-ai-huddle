@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
@@ -28,6 +28,7 @@ import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
+import { GamePlanPushDayDialog } from '@/components/game-plan/GamePlanPushDayDialog';
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
@@ -46,6 +47,7 @@ import { usePhysioGamePlanBadges } from '@/hooks/usePhysioGamePlanBadges';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
+import { useRescheduleEngine } from '@/hooks/useRescheduleEngine';
 import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates';
 import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification';
 import { useGamePlanLock, ScheduleItem as LockScheduleItem } from '@/hooks/useGamePlanLock';
@@ -209,6 +211,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [sendToCoachTitle, setSendToCoachTitle] = useState('');
   const [sendToCoachTemplateData, setSendToCoachTemplateData] = useState<Json | null>(null);
+  const [pushDayDialogOpen, setPushDayDialogOpen] = useState(false);
 
   // Initialize folder checkbox states when dialog opens
   useEffect(() => {
@@ -1278,6 +1281,31 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           {/* Action buttons row */}
           <div className="flex items-center gap-1 flex-wrap">
             <SchedulePracticeDialog />
+            {/* Skip Day */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                const allTaskIds = tasks.filter(t => !t.completed).map(t => t.id);
+                if (allTaskIds.length === 0) { toast.info('No tasks to skip'); return; }
+                for (const id of allTaskIds) await handleSkipTask(id);
+                toast.success(`Skipped ${allTaskIds.length} tasks for today`);
+              }}
+              className="text-amber-400 hover:text-amber-300 h-8 px-2 gap-1 text-xs font-medium"
+            >
+              <SkipForward className="h-3.5 w-3.5" />
+              Skip Day
+            </Button>
+            {/* Push Day */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPushDayDialogOpen(true)}
+              className="text-white/70 hover:text-white h-8 px-2 gap-1 text-xs font-medium"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+              Push Day
+            </Button>
             {/* Sort mode toggle */}
             <Button
               variant="ghost"
@@ -2662,6 +2690,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           }
         }
       `}</style>
+
+      {/* Push Day Dialog */}
+      <GamePlanPushDayDialog
+        open={pushDayDialogOpen}
+        onOpenChange={setPushDayDialogOpen}
+        taskIds={tasks.filter(t => !t.completed).map(t => t.id)}
+      />
     </Card>
   );
 }

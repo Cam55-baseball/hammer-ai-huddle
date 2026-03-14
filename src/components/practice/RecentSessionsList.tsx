@@ -80,16 +80,26 @@ export function RecentSessionsList({ sport, moduleLabel, module }: RecentSession
                         </div>
                       )}
 
-                      {/* Composite indexes */}
+                      {/* Composite indexes with labels */}
                       {compositeIndexes && Object.keys(compositeIndexes).length > 0 && (
                         <div className="space-y-1">
-                          <p className="font-medium text-muted-foreground uppercase tracking-wide text-[10px]">Indexes</p>
-                          {Object.entries(compositeIndexes).map(([key, val]) => (
-                            <div key={key} className="flex items-center justify-between">
-                              <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-                              <span className="text-muted-foreground">{typeof val === 'number' ? val.toFixed(1) : String(val)}</span>
-                            </div>
-                          ))}
+                          <p className="font-medium text-muted-foreground uppercase tracking-wide text-[10px]">Performance Indexes</p>
+                          {Object.entries(compositeIndexes).map(([key, val]) => {
+                            const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                            const numVal = typeof val === 'number' ? val : parseFloat(String(val));
+                            const isElite = !isNaN(numVal) && numVal >= 75;
+                            const isAboveAvg = !isNaN(numVal) && numVal >= 50 && numVal < 75;
+                            return (
+                              <div key={key} className="flex items-center justify-between">
+                                <span className="capitalize">{label}</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-muted-foreground">{typeof val === 'number' ? val.toFixed(1) : String(val)}</span>
+                                  {isElite && <span className="text-[9px] font-bold text-green-500 bg-green-500/10 px-1 rounded">Elite</span>}
+                                  {isAboveAvg && <span className="text-[9px] font-bold text-blue-500 bg-blue-500/10 px-1 rounded">Above Avg</span>}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
 

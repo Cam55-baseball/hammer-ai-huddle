@@ -96,7 +96,7 @@ export function AdvancedRepFields({
 }: AdvancedRepFieldsProps) {
   const [open, setOpen] = useState(false);
   const [tier3Open, setTier3Open] = useState(false);
-  const { machineVelocityBands, pitchingVelocityBands, bpDistanceRange } = useSportConfig();
+  const { machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
 
   // Default batch ON when advanced fields are opened
   useEffect(() => {
@@ -205,7 +205,7 @@ export function AdvancedRepFields({
                     { value: 'ground', label: 'Ground' },
                     { value: 'line', label: 'Line' },
                     { value: 'fly', label: 'Fly' },
-                    { value: 'barrel', label: 'Barrel' },
+                    ...(sport === 'softball' ? [{ value: 'slap', label: 'Slap' }] : []),
                     { value: 'slow_roller', label: '🐢 Slow Roller' },
                     { value: 'one_hopper', label: '⬆️ One Hopper' },
                     { value: 'chopper', label: '🔄 Chopper' },

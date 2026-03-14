@@ -1,4 +1,4 @@
-import { HelpCircle } from "lucide-react";
+import { Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface TutorialButtonProps {
@@ -12,10 +12,10 @@ export function TutorialButton({ onClick }: TutorialButtonProps) {
       size="sm"
       onClick={onClick}
       className="font-bold gap-2"
-      aria-label="Open tutorial"
+      aria-label="Start Here"
     >
-      <HelpCircle className="h-4 w-4" />
-      Tutorial
+      <Rocket className="h-4 w-4" />
+      Start Here
     </Button>
   );
 }

@@ -12,6 +12,7 @@ import { TeeDepthGrid } from './TeeDepthGrid';
 import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
 // CatchingRepFields removed — catcher defense now handled within fielding module
 import { BaserunningRepFields } from './BaserunningRepFields';
+import { BuntRepFields } from './BuntRepFields';
 import { ThrowingRepFields } from './ThrowingRepFields';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { FieldingThrowFields } from './FieldingThrowFields';
@@ -55,6 +56,7 @@ export interface ScoredRep {
   depth_zone?: number;
   // Advanced micro
   in_zone?: boolean;
+  hit_spot?: boolean;
   batted_ball_type?: string;
   spin_direction?: string;
   swing_intent?: string;
@@ -211,6 +213,7 @@ const playTypeOptions = [
   { value: 'fly_ball', label: 'Fly Ball' },
   { value: 'line_drive', label: 'Line Drive' },
   { value: 'bunt', label: 'Bunt' },
+  { value: 'slap', label: 'Slap' },
   { value: 'pop_up', label: 'Pop Up' },
   { value: 'slow_roller', label: 'Slow Roller' },
   { value: 'one_hopper', label: 'One Hopper' },
@@ -293,6 +296,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isCatching = false; // catching module removed — catcher defense is under fielding
   const isBaserunning = module === 'baserunning';
   const isThrowing = module === 'throwing';
+  const isBunting = module === 'bunting';
 
   // For switch hitters in hitting, use toggle side; otherwise use gate handedness
   const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
@@ -879,6 +883,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     { value: 'good_take', label: '✅ Good Take', color: 'bg-primary/20 text-primary border-primary/30' },
                     { value: 'should_have_swung', label: '😤 Should\'ve Swung', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
                     { value: 'chased', label: '❌ Chased', color: 'bg-red-500/20 text-red-700 border-red-300' },
+                    ...(sport === 'softball' ? [{ value: 'slap', label: '👋 Slap', color: 'bg-violet-500/20 text-violet-700 border-violet-300' }] : []),
                   ]}
                   value={current.swing_decision}
                   onChange={v => updateField('swing_decision', v)}
@@ -976,7 +981,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'ground', label: 'Ground' },
                         { value: 'line', label: 'Line' },
                         { value: 'fly', label: 'Fly' },
-                        { value: 'barrel', label: 'Barrel' },
+                        ...(sport === 'softball' ? [{ value: 'slap', label: 'Slap' }] : []),
                         { value: 'one_hopper', label: 'One Hopper' },
                       ]}
                       value={current.batted_ball_type}
@@ -1313,7 +1318,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'ground', label: 'Ground' },
                         { value: 'line', label: 'Line' },
                         { value: 'fly', label: 'Fly' },
-                        { value: 'barrel', label: 'Barrel' },
+                        ...(sport === 'softball' ? [{ value: 'slap', label: 'Slap' }] : []),
                         { value: 'one_hopper', label: 'One Hopper' },
                       ]}
                       value={current.batted_ball_type}
@@ -1362,8 +1367,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     { value: 'yes', label: '✅ Yes', color: 'bg-green-500/20 text-green-700 border-green-300' },
                     { value: 'no', label: '❌ No', color: 'bg-red-500/20 text-red-700 border-red-300' },
                   ]}
-                  value={current.in_zone ? 'yes' : current.in_zone === false ? 'no' : undefined}
-                  onChange={v => updateField('in_zone', v === 'yes')}
+                  value={current.hit_spot ? 'yes' : current.hit_spot === false ? 'no' : undefined}
+                  onChange={v => updateField('hit_spot', v === 'yes')}
                   cols={2}
                 />
               </div>
@@ -1905,10 +1910,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             <BaserunningRepFields value={current} onChange={updateField} sport={sport} />
           )}
 
-          {/* ===== THROWING FIELDS ===== */}
-          {isThrowing && (
-            <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
-          )}
+           {/* ===== THROWING FIELDS ===== */}
+           {isThrowing && (
+             <ThrowingRepFields value={current} onChange={updateField} mode={mode} sport={sport} />
+           )}
+
+           {/* ===== BUNTING FIELDS ===== */}
+           {isBunting && (
+             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} />
+           )}
 
           {/* Goal of Rep & Actual Outcome (per-rep) */}
           <AITextBoxField

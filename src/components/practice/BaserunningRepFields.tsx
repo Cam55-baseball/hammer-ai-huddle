@@ -56,6 +56,8 @@ const softballDrills = [
   { value: '1st_to_home', label: '1st→Home' },
   { value: '2nd_to_home', label: '2nd→Home' },
   { value: 'steal_2nd', label: 'Steal 2nd' },
+  { value: 'steal_3rd', label: 'Steal 3rd' },
+  { value: 'steal_home', label: 'Steal Home' },
   { value: 'slap_and_run', label: 'Slap & Run' },
   { value: 'bunt_and_run', label: 'Bunt & Run' },
   { value: 'tag_up', label: 'Tag Up' },

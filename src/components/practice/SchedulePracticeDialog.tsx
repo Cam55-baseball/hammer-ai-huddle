@@ -19,6 +19,7 @@ const MODULES = [
   { value: 'throwing', label: 'Throwing' },
   { value: 'fielding', label: 'Fielding' },
   { value: 'baserunning', label: 'Baserunning' },
+  { value: 'bunting', label: 'Bunting' },
   { value: 'base_stealing', label: 'Base Stealing', baseballOnly: true },
 ];
 
