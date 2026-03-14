@@ -295,6 +295,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isCatching = false; // catching module removed — catcher defense is under fielding
   const isBaserunning = module === 'baserunning';
   const isThrowing = module === 'throwing';
+  const isBunting = module === 'bunting';
 
   // For switch hitters in hitting, use toggle side; otherwise use gate handedness
   const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
