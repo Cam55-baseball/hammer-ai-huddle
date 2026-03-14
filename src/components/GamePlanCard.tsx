@@ -210,6 +210,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [sendToCoachTitle, setSendToCoachTitle] = useState('');
   const [sendToCoachTemplateData, setSendToCoachTemplateData] = useState<Json | null>(null);
+  const [pushDayDialogOpen, setPushDayDialogOpen] = useState(false);
 
   // Initialize folder checkbox states when dialog opens
   useEffect(() => {
