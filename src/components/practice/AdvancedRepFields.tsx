@@ -205,7 +205,7 @@ export function AdvancedRepFields({
                     { value: 'ground', label: 'Ground' },
                     { value: 'line', label: 'Line' },
                     { value: 'fly', label: 'Fly' },
-                    { value: 'barrel', label: 'Barrel' },
+                    ...(sport === 'softball' ? [{ value: 'slap', label: 'Slap' }] : []),
                     { value: 'slow_roller', label: '🐢 Slow Roller' },
                     { value: 'one_hopper', label: '⬆️ One Hopper' },
                     { value: 'chopper', label: '🔄 Chopper' },
