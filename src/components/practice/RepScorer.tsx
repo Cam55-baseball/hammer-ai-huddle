@@ -1363,8 +1363,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     { value: 'yes', label: '✅ Yes', color: 'bg-green-500/20 text-green-700 border-green-300' },
                     { value: 'no', label: '❌ No', color: 'bg-red-500/20 text-red-700 border-red-300' },
                   ]}
-                  value={current.in_zone ? 'yes' : current.in_zone === false ? 'no' : undefined}
-                  onChange={v => updateField('in_zone', v === 'yes')}
+                  value={current.hit_spot ? 'yes' : current.hit_spot === false ? 'no' : undefined}
+                  onChange={v => updateField('hit_spot', v === 'yes')}
                   cols={2}
                 />
               </div>
