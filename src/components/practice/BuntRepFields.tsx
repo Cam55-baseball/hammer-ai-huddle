@@ -203,17 +203,6 @@ export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFie
         <SelectGrid options={spinTypes} value={v.bunt_spin_type} onChange={val => onChange('bunt_spin_type', val)} cols={4} />
       </div>
 
-      {/* Intent */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Intent</Label>
-        <SelectGrid options={intentOptions} value={v.bunt_intent} onChange={val => onChange('bunt_intent', val)} cols={4} />
-      </div>
-
-      {/* Outcome */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Outcome</Label>
-        <SelectGrid options={outcomeOptions} value={v.bunt_outcome} onChange={val => onChange('bunt_outcome', val)} />
-      </div>
     </div>
   );
 }
