@@ -1100,7 +1100,27 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         {pt.name}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => updateField('pitch_type', 'custom')}
+                      className={cn(
+                        'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                        current.pitch_type === 'custom'
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted'
+                      )}
+                    >
+                      ✏️ Custom
+                    </button>
                   </div>
+                  {current.pitch_type === 'custom' && (
+                    <Input
+                      value={current.custom_pitch_type ?? ''}
+                      onChange={e => updateField('custom_pitch_type', e.target.value)}
+                      placeholder="Enter custom pitch type..."
+                      className="mt-2 h-8 text-xs"
+                    />
+                  )}
                 </div>
               )}
 
