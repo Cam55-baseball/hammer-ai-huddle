@@ -105,9 +105,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const coachSessionType = deriveCoachSessionType(sessionType);
   const showCoachSelector = sessionType === 'team_session' || sessionType === 'lesson';
   const showSeasonContext = !isLiveAbs;
-  const showLeagueLevel = (isHitting || isPitching) && !isSoloWork;
-  const showVelocityBand = (isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource);
-  const showPitchDistance = (isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource);
+  const showLeagueLevel = (isHitting || isPitching || isBunting) && !isSoloWork;
+  const showVelocityBand = (isHitting || isPitching || isBunting) && !HIDES_VELOCITY.includes(repSource);
+  const showPitchDistance = (isHitting || isPitching || isBunting) && !HIDES_PITCH_DISTANCE.includes(repSource);
   const showRepSourceSelector = true;
   const HITTER_FACING_SOURCES = ['live_bp', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game', 'game'];
   const showLinkPanel = isLiveAbs || (isPitching && HITTER_FACING_SOURCES.includes(repSource)) || (isHitting && ['live_bp', 'game'].includes(repSource));
