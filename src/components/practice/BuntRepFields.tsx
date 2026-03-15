@@ -92,18 +92,6 @@ const spinTypes = [
   { value: 'cut_spin', label: 'Cut Spin' },
 ];
 
-const intentOptions = [
-  { value: 'sac', label: 'Sacrifice' },
-  { value: 'drag', label: 'Drag' },
-  { value: 'push', label: 'Push' },
-  { value: 'squeeze', label: 'Squeeze' },
-];
-
-const outcomeOptions = [
-  { value: 'successful', label: 'Successful' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'foul', label: 'Foul' },
-];
 
 export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFieldsProps) {
   const { pitchTypes } = useSportConfig();
