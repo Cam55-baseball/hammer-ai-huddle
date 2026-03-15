@@ -905,6 +905,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     { value: 'good_take', label: '✅ Good Take', color: 'bg-primary/20 text-primary border-primary/30' },
                     { value: 'should_have_swung', label: '😤 Should\'ve Swung', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
                     { value: 'chased', label: '❌ Chased', color: 'bg-red-500/20 text-red-700 border-red-300' },
+                    { value: 'bunt', label: '🤲 Bunt', color: 'bg-cyan-500/20 text-cyan-700 border-cyan-300' },
                     ...(sport === 'softball' ? [{ value: 'slap', label: '👋 Slap', color: 'bg-violet-500/20 text-violet-700 border-violet-300' }] : []),
                   ]}
                   value={current.swing_decision}
