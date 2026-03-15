@@ -68,6 +68,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const { getDefaults, saveDefaults } = useSessionDefaults(module);
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
+  const isBunting = module === 'bunting';
   const isBaserunning = module === 'baserunning';
   const isFielding = module === 'fielding';
 
