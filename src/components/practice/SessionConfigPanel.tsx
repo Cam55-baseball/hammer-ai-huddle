@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RepSourceSelector, HIDES_PITCH_DISTANCE, HIDES_VELOCITY } from './RepSourceSelector';
@@ -68,6 +69,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const { getDefaults, saveDefaults } = useSessionDefaults(module);
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
+  const isBunting = module === 'bunting';
   const isBaserunning = module === 'baserunning';
   const isFielding = module === 'fielding';
 
@@ -104,9 +106,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const coachSessionType = deriveCoachSessionType(sessionType);
   const showCoachSelector = sessionType === 'team_session' || sessionType === 'lesson';
   const showSeasonContext = !isLiveAbs;
-  const showLeagueLevel = (isHitting || isPitching) && !isSoloWork;
-  const showVelocityBand = (isHitting || isPitching) && !HIDES_VELOCITY.includes(repSource);
-  const showPitchDistance = (isHitting || isPitching) && !HIDES_PITCH_DISTANCE.includes(repSource);
+  const showLeagueLevel = (isHitting || isPitching || isBunting) && !isSoloWork;
+  const showVelocityBand = (isHitting || isPitching || isBunting) && !HIDES_VELOCITY.includes(repSource);
+  const showPitchDistance = (isHitting || isPitching || isBunting) && !HIDES_PITCH_DISTANCE.includes(repSource);
   const showRepSourceSelector = true;
   const HITTER_FACING_SOURCES = ['live_bp', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game', 'game'];
   const showLinkPanel = isLiveAbs || (isPitching && HITTER_FACING_SOURCES.includes(repSource)) || (isHitting && ['live_bp', 'game'].includes(repSource));
@@ -221,44 +223,18 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         {showPitchDistance && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1.5 block">
-              Pitch Mound Distance: <span className="font-semibold text-foreground">{pitchDistance} ft</span>
+              Pitch Mound Distance (ft)
             </Label>
-            <div className="flex items-center gap-0 overflow-x-auto py-1">
-              {[15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80].map((ft, i, arr) => (
-                <div key={ft} className="flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setPitchDistance(ft)}
-                    className={cn(
-                      'relative flex flex-col items-center gap-0.5 group',
-                    )}
-                  >
-                    <div className={cn(
-                      'w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center',
-                      pitchDistance === ft
-                        ? 'bg-primary border-primary scale-125 shadow-md'
-                        : pitchDistance > ft
-                          ? 'bg-primary/30 border-primary/50'
-                          : 'bg-muted border-border group-hover:border-primary/50'
-                    )} />
-                    {ft % 10 === 0 && (
-                      <span className={cn(
-                        'text-[8px]',
-                        pitchDistance === ft ? 'text-primary font-semibold' : 'text-muted-foreground'
-                      )}>
-                        {ft}
-                      </span>
-                    )}
-                  </button>
-                  {i < arr.length - 1 && (
-                    <div className={cn(
-                      'h-0.5 w-2 mx-px',
-                      pitchDistance > ft ? 'bg-primary/40' : 'bg-border'
-                    )} />
-                  )}
-                </div>
-              ))}
-            </div>
+            <Input
+              type="number"
+              value={pitchDistance}
+              onChange={e => setPitchDistance(e.target.value ? Number(e.target.value) : 0)}
+              placeholder="e.g. 60"
+              className="h-9 text-sm w-32"
+              min={10}
+              max={100}
+              step={1}
+            />
           </div>
         )}
 

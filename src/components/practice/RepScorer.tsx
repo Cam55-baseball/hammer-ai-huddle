@@ -174,6 +174,8 @@ export interface ScoredRep {
   // === Fielding metrics ===
   glove_to_glove_sec?: number;
   throwing_velo_mph?: number;
+  // Custom pitch type
+  custom_pitch_type?: string;
 }
 
 interface RepScorerProps {
@@ -768,7 +770,27 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         🔄 Preset
                       </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => updateField('pitch_type', 'custom')}
+                      className={cn(
+                        'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                        current.pitch_type === 'custom'
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted'
+                      )}
+                    >
+                      ✏️ Custom
+                    </button>
                   </div>
+                  {current.pitch_type === 'custom' && (
+                    <Input
+                      value={current.custom_pitch_type ?? ''}
+                      onChange={e => updateField('custom_pitch_type', e.target.value)}
+                      placeholder="Enter custom pitch type..."
+                      className="mt-2 h-8 text-xs"
+                    />
+                  )}
                 </div>
               )}
 
@@ -883,6 +905,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     { value: 'good_take', label: '✅ Good Take', color: 'bg-primary/20 text-primary border-primary/30' },
                     { value: 'should_have_swung', label: '😤 Should\'ve Swung', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
                     { value: 'chased', label: '❌ Chased', color: 'bg-red-500/20 text-red-700 border-red-300' },
+                    { value: 'bunt', label: '🤲 Bunt', color: 'bg-cyan-500/20 text-cyan-700 border-cyan-300' },
                     ...(sport === 'softball' ? [{ value: 'slap', label: '👋 Slap', color: 'bg-violet-500/20 text-violet-700 border-violet-300' }] : []),
                   ]}
                   value={current.swing_decision}
@@ -1078,7 +1101,27 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         {pt.name}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => updateField('pitch_type', 'custom')}
+                      className={cn(
+                        'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                        current.pitch_type === 'custom'
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted'
+                      )}
+                    >
+                      ✏️ Custom
+                    </button>
                   </div>
+                  {current.pitch_type === 'custom' && (
+                    <Input
+                      value={current.custom_pitch_type ?? ''}
+                      onChange={e => updateField('custom_pitch_type', e.target.value)}
+                      placeholder="Enter custom pitch type..."
+                      className="mt-2 h-8 text-xs"
+                    />
+                  )}
                 </div>
               )}
 
@@ -1224,6 +1267,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'swing_miss', label: 'Swing & Miss' },
                         { value: 'foul', label: 'Foul' },
                         { value: 'in_play', label: 'In Play' },
+                        { value: 'bunt', label: 'Bunt' },
                       ]}
                       value={current.live_ab_swing_result}
                       onChange={v => updateField('live_ab_swing_result', v)}

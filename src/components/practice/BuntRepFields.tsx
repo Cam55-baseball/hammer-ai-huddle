@@ -1,3 +1,4 @@
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
@@ -92,18 +93,6 @@ const spinTypes = [
   { value: 'cut_spin', label: 'Cut Spin' },
 ];
 
-const intentOptions = [
-  { value: 'sac', label: 'Sacrifice' },
-  { value: 'drag', label: 'Drag' },
-  { value: 'push', label: 'Push' },
-  { value: 'squeeze', label: 'Squeeze' },
-];
-
-const outcomeOptions = [
-  { value: 'successful', label: 'Successful' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'foul', label: 'Foul' },
-];
 
 export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFieldsProps) {
   const { pitchTypes } = useSportConfig();
@@ -142,7 +131,27 @@ export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFie
               {pt.name}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => onChange('pitch_type', 'custom')}
+            className={cn(
+              'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+              v.pitch_type === 'custom'
+                ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                : 'bg-muted/30 border-border hover:bg-muted'
+            )}
+          >
+            ✏️ Custom
+          </button>
         </div>
+        {v.pitch_type === 'custom' && (
+          <Input
+            value={v.custom_pitch_type ?? ''}
+            onChange={e => onChange('custom_pitch_type', e.target.value)}
+            placeholder="Enter custom pitch type..."
+            className="mt-2 h-8 text-xs"
+          />
+        )}
       </div>
 
       {/* Pitch Location */}
@@ -215,17 +224,6 @@ export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFie
         <SelectGrid options={spinTypes} value={v.bunt_spin_type} onChange={val => onChange('bunt_spin_type', val)} cols={4} />
       </div>
 
-      {/* Intent */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Intent</Label>
-        <SelectGrid options={intentOptions} value={v.bunt_intent} onChange={val => onChange('bunt_intent', val)} cols={4} />
-      </div>
-
-      {/* Outcome */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Outcome</Label>
-        <SelectGrid options={outcomeOptions} value={v.bunt_outcome} onChange={val => onChange('bunt_outcome', val)} />
-      </div>
     </div>
   );
 }
