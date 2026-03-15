@@ -43,6 +43,7 @@ const baseballDrills = [
   { value: '2nd_to_home', label: '2nd→Home' },
   { value: 'steal_2nd', label: 'Steal 2nd' },
   { value: 'steal_3rd', label: 'Steal 3rd' },
+  { value: 'steal_home', label: 'Steal Home' },
   { value: 'delayed_steal', label: 'Delayed Steal' },
   { value: 'hit_and_run', label: 'Hit & Run' },
   { value: 'tag_up', label: 'Tag Up' },

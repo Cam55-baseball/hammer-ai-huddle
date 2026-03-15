@@ -130,7 +130,27 @@ export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFie
               {pt.name}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => onChange('pitch_type', 'custom')}
+            className={cn(
+              'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+              v.pitch_type === 'custom'
+                ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                : 'bg-muted/30 border-border hover:bg-muted'
+            )}
+          >
+            ✏️ Custom
+          </button>
         </div>
+        {v.pitch_type === 'custom' && (
+          <Input
+            value={v.custom_pitch_type ?? ''}
+            onChange={e => onChange('custom_pitch_type', e.target.value)}
+            placeholder="Enter custom pitch type..."
+            className="mt-2 h-8 text-xs"
+          />
+        )}
       </div>
 
       {/* Pitch Location */}

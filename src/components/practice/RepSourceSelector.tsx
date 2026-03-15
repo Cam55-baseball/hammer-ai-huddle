@@ -188,7 +188,7 @@ function getFilteredGroups(module: string, sessionType?: string, groups?: Source
   if (!sessionType) return groups;
 
   const validMap =
-    module === 'hitting' ? VALID_HITTING_SOURCES :
+    (module === 'hitting' || module === 'bunting') ? VALID_HITTING_SOURCES :
     module === 'pitching' ? VALID_PITCHING_SOURCES :
     module === 'throwing' ? VALID_THROWING_SOURCES :
     null;
