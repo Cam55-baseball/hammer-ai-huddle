@@ -1267,6 +1267,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                         { value: 'swing_miss', label: 'Swing & Miss' },
                         { value: 'foul', label: 'Foul' },
                         { value: 'in_play', label: 'In Play' },
+                        { value: 'bunt', label: 'Bunt' },
                       ]}
                       value={current.live_ab_swing_result}
                       onChange={v => updateField('live_ab_swing_result', v)}
