@@ -174,6 +174,8 @@ export interface ScoredRep {
   // === Fielding metrics ===
   glove_to_glove_sec?: number;
   throwing_velo_mph?: number;
+  // Custom pitch type
+  custom_pitch_type?: string;
 }
 
 interface RepScorerProps {
