@@ -235,9 +235,9 @@ function GroupedSelector({ groups, value, onChange }: { groups: SourceGroup[]; v
 
 export function RepSourceSelector({ module, sessionType, value, onChange, customSource, onCustomSourceChange }: RepSourceSelectorProps) {
   // Grouped modules
-  if (module === 'hitting' || module === 'pitching' || module === 'throwing') {
+  if (module === 'hitting' || module === 'bunting' || module === 'pitching' || module === 'throwing') {
     const baseGroups =
-      module === 'hitting' ? HITTING_SOURCES :
+      (module === 'hitting' || module === 'bunting') ? HITTING_SOURCES :
       module === 'pitching' ? PITCHING_SOURCES :
       THROWING_SOURCES;
 
