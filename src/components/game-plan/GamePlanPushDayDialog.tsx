@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ArrowRight, ChevronRight, Replace } from 'lucide-react';
+import { CalendarIcon, ArrowRight, ChevronRight, Replace, Undo2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useRescheduleEngine } from '@/hooks/useRescheduleEngine';
 import { getTodayDate } from '@/utils/dateUtils';
+import { toast } from 'sonner';
 
 interface GamePlanPushDayDialogProps {
   open: boolean;
@@ -16,12 +17,25 @@ interface GamePlanPushDayDialogProps {
 }
 
 export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanPushDayDialogProps) {
-  const { pushForwardOneDay, pushToDate, replaceDay, skipDay } = useRescheduleEngine();
+  const { pushForwardOneDay, pushToDate, replaceDay, skipDay, undoLastAction } = useRescheduleEngine();
   const [processing, setProcessing] = useState(false);
   const [mode, setMode] = useState<'push' | 'date' | 'replace' | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [sourceDate, setSourceDate] = useState<Date>();
   const today = getTodayDate();
+
+  const showUndoToast = () => {
+    toast.success('Schedule updated', {
+      action: {
+        label: 'Undo',
+        onClick: async () => {
+          const result = await undoLastAction();
+          if (!result) toast.error('Unable to undo');
+        },
+      },
+      duration: 15000,
+    });
+  };
 
   const handlePushForward = async () => {
     setProcessing(true);
@@ -29,6 +43,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanP
       await skipDay(today, taskIds);
       await pushForwardOneDay(today);
       onOpenChange(false);
+      showUndoToast();
     } finally {
       setProcessing(false);
     }
@@ -42,6 +57,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanP
       await skipDay(today, taskIds);
       await pushToDate(today, target);
       onOpenChange(false);
+      showUndoToast();
     } finally {
       setProcessing(false);
     }
@@ -54,6 +70,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanP
       const source = format(sourceDate, 'yyyy-MM-dd');
       await replaceDay(today, source);
       onOpenChange(false);
+      showUndoToast();
     } finally {
       setProcessing(false);
     }

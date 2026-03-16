@@ -37,12 +37,13 @@ export default function GameScoring() {
   }, [gameId, addPlay, getPlays]);
 
   const handleComplete = useCallback(async () => {
-    if (!gameId) return;
+    if (!gameId || !gameData) return;
     const plays = await getPlays(gameId);
     setAllPlays(plays);
     await completeGame(gameId, { completed_at: new Date().toISOString() });
+    await syncGameToPlayerStats(gameId, gameData);
     setPhase('summary');
-  }, [gameId, getPlays, completeGame]);
+  }, [gameId, gameData, getPlays, completeGame, syncGameToPlayerStats]);
 
   const startingPitcherName = gameData?.lineup.find(p => p.id === gameData.starting_pitcher_id)?.name || gameData?.lineup[0]?.name || '';
 
