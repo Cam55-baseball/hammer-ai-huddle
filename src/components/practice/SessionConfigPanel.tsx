@@ -82,8 +82,11 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const defaults = getDefaults();
 
   const [repSource, setRepSource] = useState<string>(defaults.rep_source ?? '');
-  const defaultDistance = (sport === 'softball' && isPitching) ? 43 : 60;
+  const defaultDistance = sport === 'softball' ? 43 : 60.6;
   const [pitchDistance, setPitchDistance] = useState(defaults.pitch_distance_ft ?? defaultDistance);
+  const [pitchDistanceDisplay, setPitchDistanceDisplay] = useState<string>(
+    String(defaults.pitch_distance_ft ?? defaultDistance)
+  );
   const [velocityBand, setVelocityBand] = useState<string | undefined>(defaults.velocity_band);
   const [seasonContext, setSeasonContext] = useState(
     isLiveAbs ? 'in_season' : (defaults.season_context ?? 'in_season')
