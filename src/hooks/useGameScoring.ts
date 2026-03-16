@@ -192,6 +192,17 @@ export function useGameScoring() {
     if (error) return null;
     return data as any;
   }, []);
+  const listGames = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('games')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('game_date', { ascending: false });
+    if (error) return [];
+    return data as any[];
+  }, []);
 
   /** Sync game stats into performance_sessions for each player */
   const syncGameToPlayerStats = useCallback(async (gId: string, setup: GameSetup) => {
