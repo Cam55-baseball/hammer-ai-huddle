@@ -59,9 +59,12 @@ export function useRescheduleEngine() {
       .gte('event_date', fromDate)
       .order('event_date', { ascending: false });
 
+    const movedEvents: { id: string; original_date: string }[] = [];
+
     if (futureEvents) {
       for (const evt of futureEvents) {
         if (mandatoryTypes.includes(evt.event_type)) continue;
+        movedEvents.push({ id: evt.id, original_date: evt.event_date });
         const nextDate = new Date(evt.event_date);
         nextDate.setDate(nextDate.getDate() + 1);
         await supabase.from('calendar_events')
@@ -70,6 +73,7 @@ export function useRescheduleEngine() {
       }
     }
 
+    lastAction.current = { type: 'pushForward', movedEvents };
     invalidateAll();
     toast.success('Schedule pushed forward 1 day');
   }, [user, invalidateAll]);
