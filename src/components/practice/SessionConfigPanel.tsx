@@ -165,7 +165,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
     setLeagueLevel(level);
     const dist = leagueDistances.find(d => d.level === level);
     if (dist) {
-      setPitchDistance(Math.round(dist.mound_ft));
+      setPitchDistance(dist.mound_ft);
+      setPitchDistanceDisplay(String(dist.mound_ft));
     }
   };
 

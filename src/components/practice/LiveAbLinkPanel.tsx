@@ -69,12 +69,25 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
         .from('live_ab_links' as any)
         .select('*')
         .eq('link_code', code)
-        .eq('status', 'pending')
+        .in('status', ['pending', 'active'])
         .maybeSingle();
 
       if (lookupErr) throw lookupErr;
       if (!link) {
-        toast({ title: 'Invalid Code', description: 'Code not found or expired.', variant: 'destructive' });
+        toast({ title: 'Invalid Code', description: 'Code not found, expired, or already used.', variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+
+      // Check if code is expired (older than 2 hours)
+      const createdAt = new Date((link as any).created_at);
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      if (createdAt < twoHoursAgo) {
+        await supabase
+          .from('live_ab_links' as any)
+          .update({ status: 'expired' })
+          .eq('id', (link as any).id);
+        toast({ title: 'Code Expired', description: 'This link code has expired. Please generate a new one.', variant: 'destructive' });
         setLoading(false);
         return;
       }

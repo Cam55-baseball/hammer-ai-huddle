@@ -17,6 +17,8 @@ export default function GameScoring() {
   const { gameId, saving, createGame, addPlay, getPlays, completeGame } = useGameScoring();
 
   const handleSetup = useCallback(async (setup: GameSetup) => {
+    // Override global sport context to match the game being scored
+    dispatchSportChange(setup.sport);
     const id = await createGame(setup);
     if (id) {
       setGameData(setup);
