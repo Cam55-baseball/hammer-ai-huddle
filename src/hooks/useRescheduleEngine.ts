@@ -34,6 +34,8 @@ export function useRescheduleEngine() {
       skip_date: date,
     }));
 
+    lastAction.current = { type: 'skip', skippedRows: rows };
+
     for (const row of rows) {
       await supabase
         .from('game_plan_skipped_tasks')
