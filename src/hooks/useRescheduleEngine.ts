@@ -1,13 +1,22 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { getTodayDate } from '@/utils/dateUtils';
 import { toast } from 'sonner';
 
+interface UndoSnapshot {
+  type: 'skip' | 'pushForward' | 'pushToDate' | 'replace';
+  skippedRows?: { user_id: string; task_id: string; skip_date: string }[];
+  movedEvents?: { id: string; original_date: string }[];
+  deletedEvents?: any[];
+  insertedEventIds?: string[];
+}
+
 export function useRescheduleEngine() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const lastAction = useRef<UndoSnapshot | null>(null);
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['calendar'] });
