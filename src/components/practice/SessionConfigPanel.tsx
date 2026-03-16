@@ -82,8 +82,11 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const defaults = getDefaults();
 
   const [repSource, setRepSource] = useState<string>(defaults.rep_source ?? '');
-  const defaultDistance = (sport === 'softball' && isPitching) ? 43 : 60;
+  const defaultDistance = sport === 'softball' ? 43 : 60.6;
   const [pitchDistance, setPitchDistance] = useState(defaults.pitch_distance_ft ?? defaultDistance);
+  const [pitchDistanceDisplay, setPitchDistanceDisplay] = useState<string>(
+    String(defaults.pitch_distance_ft ?? defaultDistance)
+  );
   const [velocityBand, setVelocityBand] = useState<string | undefined>(defaults.velocity_band);
   const [seasonContext, setSeasonContext] = useState(
     isLiveAbs ? 'in_season' : (defaults.season_context ?? 'in_season')
@@ -162,7 +165,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
     setLeagueLevel(level);
     const dist = leagueDistances.find(d => d.level === level);
     if (dist) {
-      setPitchDistance(Math.round(dist.mound_ft));
+      setPitchDistance(dist.mound_ft);
+      setPitchDistanceDisplay(String(dist.mound_ft));
     }
   };
 
@@ -226,14 +230,26 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
               Pitch Mound Distance (ft)
             </Label>
             <Input
-              type="number"
-              value={pitchDistance}
-              onChange={e => setPitchDistance(e.target.value ? Number(e.target.value) : 0)}
-              placeholder="e.g. 60"
+              type="text"
+              inputMode="decimal"
+              value={pitchDistanceDisplay}
+              onChange={e => {
+                const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                setPitchDistanceDisplay(raw);
+                const num = parseFloat(raw);
+                if (!isNaN(num) && num >= 0) setPitchDistance(num);
+              }}
+              onBlur={() => {
+                const num = parseFloat(pitchDistanceDisplay);
+                if (isNaN(num) || num < 10) {
+                  setPitchDistance(defaultDistance);
+                  setPitchDistanceDisplay(String(defaultDistance));
+                } else {
+                  setPitchDistanceDisplay(String(num));
+                }
+              }}
+              placeholder={sport === 'softball' ? '43' : '60.6'}
               className="h-9 text-sm w-32"
-              min={10}
-              max={100}
-              step={1}
             />
           </div>
         )}

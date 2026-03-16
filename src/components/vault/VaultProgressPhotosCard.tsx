@@ -335,6 +335,86 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
                 </ScrollArea>
               </div>
             )}
+
+            {/* 12-Week Progress Comparison */}
+            {(() => {
+              if (photos.length < 2) return null;
+              const latest = photos[0];
+              const latestDate = new Date(latest.photo_date);
+              const twelveWeeksMs = 12 * 7 * 24 * 60 * 60 * 1000;
+              const comparisonPhoto = photos.find(p => {
+                const pDate = new Date(p.photo_date);
+                const diff = latestDate.getTime() - pDate.getTime();
+                return diff >= twelveWeeksMs * 0.85 && diff <= twelveWeeksMs * 1.15;
+              });
+              if (!comparisonPhoto) return null;
+
+              const delta = (current: number | null, previous: number | null) => {
+                if (current == null || previous == null) return null;
+                const diff = current - previous;
+                return diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+              };
+
+              return (
+                <div className="space-y-2 pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    <Ruler className="h-4 w-4 text-primary" />
+                    <Label className="text-sm font-medium">12-Week Comparison</Label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-muted/50 border border-border text-center">
+                      <p className="text-[10px] text-muted-foreground mb-1">
+                        {new Date(comparisonPhoto.photo_date).toLocaleDateString()}
+                      </p>
+                      {comparisonPhoto.weight_lbs && (
+                        <p className="text-sm font-semibold">{comparisonPhoto.weight_lbs} lbs</p>
+                      )}
+                      <div className="text-[10px] text-muted-foreground space-y-0.5 mt-1">
+                        {comparisonPhoto.arm_measurement && <p>Arm: {comparisonPhoto.arm_measurement}"</p>}
+                        {comparisonPhoto.chest_measurement && <p>Chest: {comparisonPhoto.chest_measurement}"</p>}
+                        {comparisonPhoto.waist_measurement && <p>Waist: {comparisonPhoto.waist_measurement}"</p>}
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-center">
+                      <p className="text-[10px] text-muted-foreground mb-1">
+                        {new Date(latest.photo_date).toLocaleDateString()}
+                      </p>
+                      {latest.weight_lbs && (
+                        <p className="text-sm font-semibold">{latest.weight_lbs} lbs</p>
+                      )}
+                      <div className="text-[10px] text-muted-foreground space-y-0.5 mt-1">
+                        {latest.arm_measurement && <p>Arm: {latest.arm_measurement}"</p>}
+                        {latest.chest_measurement && <p>Chest: {latest.chest_measurement}"</p>}
+                        {latest.waist_measurement && <p>Waist: {latest.waist_measurement}"</p>}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Deltas */}
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {delta(latest.weight_lbs, comparisonPhoto.weight_lbs) && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Weight: {delta(latest.weight_lbs, comparisonPhoto.weight_lbs)} lbs
+                      </Badge>
+                    )}
+                    {delta(latest.arm_measurement, comparisonPhoto.arm_measurement) && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Arm: {delta(latest.arm_measurement, comparisonPhoto.arm_measurement)}"
+                      </Badge>
+                    )}
+                    {delta(latest.chest_measurement, comparisonPhoto.chest_measurement) && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Chest: {delta(latest.chest_measurement, comparisonPhoto.chest_measurement)}"
+                      </Badge>
+                    )}
+                    {delta(latest.waist_measurement, comparisonPhoto.waist_measurement) && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Waist: {delta(latest.waist_measurement, comparisonPhoto.waist_measurement)}"
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

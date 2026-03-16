@@ -192,7 +192,6 @@ export function useGameScoring() {
     if (error) return null;
     return data as any;
   }, []);
-
   const listGames = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -205,5 +204,100 @@ export function useGameScoring() {
     return data as any[];
   }, []);
 
-  return { gameId, saving, createGame, addPlay, getPlays, completeGame, loadGame, listGames };
+  /** Sync game stats into performance_sessions for each player */
+  const syncGameToPlayerStats = useCallback(async (gId: string, setup: GameSetup) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const plays = await getPlays(gId);
+      if (!plays || plays.length === 0) return;
+
+      // Group hitting stats by batter
+      const batterStats: Record<string, { abs: number; hits: number; rbi: number; strikeouts: number; walks: number; }> = {};
+      // Group pitching stats by pitcher
+      const pitcherStats: Record<string, { pitches: number; strikeouts: number; walks: number; hits_allowed: number; }> = {};
+
+      for (const play of plays) {
+        // Batting stats
+        if (play.batter_name) {
+          if (!batterStats[play.batter_name]) {
+            batterStats[play.batter_name] = { abs: 0, hits: 0, rbi: 0, strikeouts: 0, walks: 0 };
+          }
+          const bs = batterStats[play.batter_name];
+          if (play.at_bat_outcome) {
+            bs.abs++;
+            if (['single', 'double', 'triple', 'home_run'].includes(play.at_bat_outcome)) bs.hits++;
+            if (play.at_bat_outcome === 'strikeout') bs.strikeouts++;
+            if (play.at_bat_outcome === 'walk' || play.at_bat_outcome === 'hbp') { bs.walks++; bs.abs--; }
+          }
+          bs.rbi += play.rbi || 0;
+        }
+
+        // Pitching stats
+        if (play.pitcher_name) {
+          if (!pitcherStats[play.pitcher_name]) {
+            pitcherStats[play.pitcher_name] = { pitches: 0, strikeouts: 0, walks: 0, hits_allowed: 0 };
+          }
+          const ps = pitcherStats[play.pitcher_name];
+          ps.pitches++;
+          if (play.at_bat_outcome === 'strikeout') ps.strikeouts++;
+          if (play.at_bat_outcome === 'walk' || play.at_bat_outcome === 'hbp') ps.walks++;
+          if (['single', 'double', 'triple', 'home_run'].includes(play.at_bat_outcome || '')) ps.hits_allowed++;
+        }
+      }
+
+      // Create performance_sessions for the logged-in user's batting stats
+      for (const [batterName, stats] of Object.entries(batterStats)) {
+        const matchingPlayer = setup.lineup.find(p => p.name === batterName);
+        if (!matchingPlayer?.player_user_id && matchingPlayer?.name !== setup.lineup[0]?.name) continue;
+
+        await supabase.from('performance_sessions').insert({
+          user_id: matchingPlayer?.player_user_id || user.id,
+          sport: setup.sport,
+          module: 'hitting',
+          session_type: 'game',
+          session_date: setup.game_date,
+          opponent_name: setup.opponent_name,
+          opponent_level: setup.league_level,
+          total_reps: stats.abs,
+          composite_indexes: {
+            game_id: gId,
+            hits: stats.hits,
+            rbi: stats.rbi,
+            strikeouts: stats.strikeouts,
+            walks: stats.walks,
+            batting_avg: stats.abs > 0 ? (stats.hits / stats.abs).toFixed(3) : '0.000',
+          } as any,
+        } as any);
+      }
+
+      // Create performance_sessions for pitching
+      for (const [pitcherName, stats] of Object.entries(pitcherStats)) {
+        const matchingPlayer = setup.lineup.find(p => p.name === pitcherName);
+        if (!matchingPlayer?.player_user_id && matchingPlayer?.name !== setup.lineup[0]?.name) continue;
+
+        await supabase.from('performance_sessions').insert({
+          user_id: matchingPlayer?.player_user_id || user.id,
+          sport: setup.sport,
+          module: 'pitching',
+          session_type: 'game',
+          session_date: setup.game_date,
+          opponent_name: setup.opponent_name,
+          opponent_level: setup.league_level,
+          total_reps: stats.pitches,
+          composite_indexes: {
+            game_id: gId,
+            strikeouts: stats.strikeouts,
+            walks: stats.walks,
+            hits_allowed: stats.hits_allowed,
+          } as any,
+        } as any);
+      }
+    } catch (err: any) {
+      console.error('[syncGameToPlayerStats] Error:', err.message);
+    }
+  }, [getPlays]);
+
+  return { gameId, saving, createGame, addPlay, getPlays, completeGame, loadGame, listGames, syncGameToPlayerStats };
 }

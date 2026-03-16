@@ -6,6 +6,7 @@ import { GameSummaryView } from '@/components/game-scoring/GameSummaryView';
 import { useGameScoring, type GameSetup, type GamePlay } from '@/hooks/useGameScoring';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { dispatchSportChange } from '@/contexts/SportThemeContext';
 
 type GamePhase = 'setup' | 'scoring' | 'summary';
 
@@ -13,9 +14,11 @@ export default function GameScoring() {
   const [phase, setPhase] = useState<GamePhase>('setup');
   const [gameData, setGameData] = useState<GameSetup | null>(null);
   const [allPlays, setAllPlays] = useState<any[]>([]);
-  const { gameId, saving, createGame, addPlay, getPlays, completeGame } = useGameScoring();
+  const { gameId, saving, createGame, addPlay, getPlays, completeGame, syncGameToPlayerStats } = useGameScoring();
 
   const handleSetup = useCallback(async (setup: GameSetup) => {
+    // Override global sport context to match the game being scored
+    dispatchSportChange(setup.sport);
     const id = await createGame(setup);
     if (id) {
       setGameData(setup);
@@ -34,12 +37,13 @@ export default function GameScoring() {
   }, [gameId, addPlay, getPlays]);
 
   const handleComplete = useCallback(async () => {
-    if (!gameId) return;
+    if (!gameId || !gameData) return;
     const plays = await getPlays(gameId);
     setAllPlays(plays);
     await completeGame(gameId, { completed_at: new Date().toISOString() });
+    await syncGameToPlayerStats(gameId, gameData);
     setPhase('summary');
-  }, [gameId, getPlays, completeGame]);
+  }, [gameId, gameData, getPlays, completeGame, syncGameToPlayerStats]);
 
   const startingPitcherName = gameData?.lineup.find(p => p.id === gameData.starting_pitcher_id)?.name || gameData?.lineup[0]?.name || '';
 
