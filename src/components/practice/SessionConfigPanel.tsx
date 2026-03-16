@@ -229,14 +229,26 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
               Pitch Mound Distance (ft)
             </Label>
             <Input
-              type="number"
-              value={pitchDistance}
-              onChange={e => setPitchDistance(e.target.value ? Number(e.target.value) : 0)}
-              placeholder="e.g. 60"
+              type="text"
+              inputMode="decimal"
+              value={pitchDistanceDisplay}
+              onChange={e => {
+                const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                setPitchDistanceDisplay(raw);
+                const num = parseFloat(raw);
+                if (!isNaN(num) && num >= 0) setPitchDistance(num);
+              }}
+              onBlur={() => {
+                const num = parseFloat(pitchDistanceDisplay);
+                if (isNaN(num) || num < 10) {
+                  setPitchDistance(defaultDistance);
+                  setPitchDistanceDisplay(String(defaultDistance));
+                } else {
+                  setPitchDistanceDisplay(String(num));
+                }
+              }}
+              placeholder={sport === 'softball' ? '43' : '60.6'}
               className="h-9 text-sm w-32"
-              min={10}
-              max={100}
-              step={1}
             />
           </div>
         )}
