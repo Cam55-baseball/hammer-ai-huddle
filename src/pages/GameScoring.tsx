@@ -6,6 +6,7 @@ import { GameSummaryView } from '@/components/game-scoring/GameSummaryView';
 import { useGameScoring, type GameSetup, type GamePlay } from '@/hooks/useGameScoring';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { dispatchSportChange } from '@/contexts/SportThemeContext';
 
 type GamePhase = 'setup' | 'scoring' | 'summary';
 
