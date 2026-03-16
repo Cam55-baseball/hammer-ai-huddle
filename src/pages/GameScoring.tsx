@@ -14,7 +14,7 @@ export default function GameScoring() {
   const [phase, setPhase] = useState<GamePhase>('setup');
   const [gameData, setGameData] = useState<GameSetup | null>(null);
   const [allPlays, setAllPlays] = useState<any[]>([]);
-  const { gameId, saving, createGame, addPlay, getPlays, completeGame } = useGameScoring();
+  const { gameId, saving, createGame, addPlay, getPlays, completeGame, syncGameToPlayerStats } = useGameScoring();
 
   const handleSetup = useCallback(async (setup: GameSetup) => {
     // Override global sport context to match the game being scored
