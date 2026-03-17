@@ -1,0 +1,1 @@
+ALTER TABLE public.vault_progress_photos ADD COLUMN IF NOT EXISTS cycle_week integer DEFAULT 0;

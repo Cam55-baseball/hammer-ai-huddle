@@ -9,8 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Camera, ChevronDown, Calendar, Upload, ImageIcon, Ruler, Scale, Lock, AlertCircle } from 'lucide-react';
+import { Camera, ChevronDown, Calendar, Upload, ImageIcon, Ruler, Scale, Lock, AlertCircle, Sparkles, Eye, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { PhotoTimelineDialog } from './PhotoTimelineDialog';
 
 interface ProgressPhoto {
   id: string;
@@ -67,6 +69,27 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
   const [waist, setWaist] = useState('');
   const [leg, setLeg] = useState('');
   const [notes, setNotes] = useState('');
+  const [showWeek6, setShowWeek6] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+  const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
+
+  // Load signed URLs for private vault-photos bucket
+  const loadSignedUrls = async () => {
+    const allPaths = photos.flatMap(p => p.photo_urls).filter(Boolean);
+    const missing = allPaths.filter(p => !signedUrlMap[p]);
+    if (missing.length === 0) return;
+    const urlMap: Record<string, string> = { ...signedUrlMap };
+    for (const path of missing) {
+      const { data } = await supabase.storage.from('vault-photos').createSignedUrl(path, 3600);
+      if (data?.signedUrl) urlMap[path] = data.signedUrl;
+    }
+    setSignedUrlMap(urlMap);
+  };
+
+  // Load signed URLs when comparison photos are visible
+  useEffect(() => {
+    if (photos.length >= 2) loadSignedUrls();
+  }, [photos.length]);
 
   // Check if entry is locked
   // Recap-unlock override: If recap was generated and no entry exists after that date, unlock the card
@@ -336,18 +359,29 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
               </div>
             )}
 
-            {/* 12-Week Progress Comparison */}
+            {/* 12-Week Milestone Prompt */}
             {(() => {
               if (photos.length < 2) return null;
               const latest = photos[0];
+              const latestCycleWeek = (latest as any).cycle_week ?? 0;
+              const isMilestone = latestCycleWeek > 0 && latestCycleWeek % 12 === 0;
               const latestDate = new Date(latest.photo_date);
               const twelveWeeksMs = 12 * 7 * 24 * 60 * 60 * 1000;
-              const comparisonPhoto = photos.find(p => {
+              
+              // Find Week 0 and Week 6 photos for comparison
+              const week0Photo = photos.find(p => {
                 const pDate = new Date(p.photo_date);
                 const diff = latestDate.getTime() - pDate.getTime();
                 return diff >= twelveWeeksMs * 0.85 && diff <= twelveWeeksMs * 1.15;
               });
-              if (!comparisonPhoto) return null;
+              const sixWeeksMs = 6 * 7 * 24 * 60 * 60 * 1000;
+              const week6Photo = photos.find(p => {
+                const pDate = new Date(p.photo_date);
+                const diff = latestDate.getTime() - pDate.getTime();
+                return diff >= sixWeeksMs * 0.8 && diff <= sixWeeksMs * 1.2;
+              });
+
+              if (!week0Photo) return null;
 
               const delta = (current: number | null, previous: number | null) => {
                 if (current == null || previous == null) return null;
@@ -356,68 +390,128 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
               };
 
               return (
-                <div className="space-y-2 pt-2 border-t">
+                <div className="space-y-3 pt-2 border-t">
+                  {/* Milestone banner */}
+                  {isMilestone && (
+                    <Alert className="bg-primary/10 border-primary/30">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <AlertDescription className="font-medium text-primary">
+                        🎉 View Your 12-Week Transformation!
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className="flex items-center gap-2">
                     <Ruler className="h-4 w-4 text-primary" />
                     <Label className="text-sm font-medium">12-Week Comparison</Label>
+                    {week6Photo && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[10px] h-6 px-2"
+                        onClick={() => setShowWeek6(!showWeek6)}
+                      >
+                        {showWeek6 ? 'Hide' : 'Show'} Week 6
+                      </Button>
+                    )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-muted/50 border border-border text-center">
-                      <p className="text-[10px] text-muted-foreground mb-1">
-                        {new Date(comparisonPhoto.photo_date).toLocaleDateString()}
-                      </p>
-                      {comparisonPhoto.weight_lbs && (
-                        <p className="text-sm font-semibold">{comparisonPhoto.weight_lbs} lbs</p>
-                      )}
-                      <div className="text-[10px] text-muted-foreground space-y-0.5 mt-1">
-                        {comparisonPhoto.arm_measurement && <p>Arm: {comparisonPhoto.arm_measurement}"</p>}
-                        {comparisonPhoto.chest_measurement && <p>Chest: {comparisonPhoto.chest_measurement}"</p>}
-                        {comparisonPhoto.waist_measurement && <p>Waist: {comparisonPhoto.waist_measurement}"</p>}
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-center">
-                      <p className="text-[10px] text-muted-foreground mb-1">
-                        {new Date(latest.photo_date).toLocaleDateString()}
-                      </p>
-                      {latest.weight_lbs && (
-                        <p className="text-sm font-semibold">{latest.weight_lbs} lbs</p>
-                      )}
-                      <div className="text-[10px] text-muted-foreground space-y-0.5 mt-1">
-                        {latest.arm_measurement && <p>Arm: {latest.arm_measurement}"</p>}
-                        {latest.chest_measurement && <p>Chest: {latest.chest_measurement}"</p>}
-                        {latest.waist_measurement && <p>Waist: {latest.waist_measurement}"</p>}
-                      </div>
-                    </div>
-                  </div>
+
+                  {/* Side-by-side photos with signed URLs */}
+                  <ComparisonPhotoGrid
+                    week0={week0Photo}
+                    week6={showWeek6 ? week6Photo ?? null : null}
+                    week12={latest}
+                    signedUrls={signedUrlMap}
+                  />
+
                   {/* Deltas */}
                   <div className="flex flex-wrap gap-2 justify-center">
-                    {delta(latest.weight_lbs, comparisonPhoto.weight_lbs) && (
+                    {delta(latest.weight_lbs, week0Photo.weight_lbs) && (
                       <Badge variant="secondary" className="text-[10px]">
-                        Weight: {delta(latest.weight_lbs, comparisonPhoto.weight_lbs)} lbs
+                        Weight: {delta(latest.weight_lbs, week0Photo.weight_lbs)} lbs
                       </Badge>
                     )}
-                    {delta(latest.arm_measurement, comparisonPhoto.arm_measurement) && (
+                    {delta(latest.arm_measurement, week0Photo.arm_measurement) && (
                       <Badge variant="secondary" className="text-[10px]">
-                        Arm: {delta(latest.arm_measurement, comparisonPhoto.arm_measurement)}"
+                        Arm: {delta(latest.arm_measurement, week0Photo.arm_measurement)}"
                       </Badge>
                     )}
-                    {delta(latest.chest_measurement, comparisonPhoto.chest_measurement) && (
+                    {delta(latest.chest_measurement, week0Photo.chest_measurement) && (
                       <Badge variant="secondary" className="text-[10px]">
-                        Chest: {delta(latest.chest_measurement, comparisonPhoto.chest_measurement)}"
+                        Chest: {delta(latest.chest_measurement, week0Photo.chest_measurement)}"
                       </Badge>
                     )}
-                    {delta(latest.waist_measurement, comparisonPhoto.waist_measurement) && (
+                    {delta(latest.waist_measurement, week0Photo.waist_measurement) && (
                       <Badge variant="secondary" className="text-[10px]">
-                        Waist: {delta(latest.waist_measurement, comparisonPhoto.waist_measurement)}"
+                        Waist: {delta(latest.waist_measurement, week0Photo.waist_measurement)}"
                       </Badge>
                     )}
                   </div>
                 </div>
               );
             })()}
+
+            {/* View Full Timeline Button */}
+            {photos.length > 0 && (
+              <div className="pt-2 border-t">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    loadSignedUrls();
+                    setTimelineOpen(true);
+                  }}
+                >
+                  <Clock className="h-4 w-4" />
+                  View Full Timeline ({photos.length} entries)
+                </Button>
+              </div>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
+
+      <PhotoTimelineDialog
+        open={timelineOpen}
+        onOpenChange={setTimelineOpen}
+        photos={photos}
+        signedUrls={signedUrlMap}
+      />
     </Card>
+  );
+}
+
+/** Side-by-side photo comparison grid with actual images */
+function ComparisonPhotoGrid({ week0, week6, week12, signedUrls }: {
+  week0: ProgressPhoto;
+  week6: ProgressPhoto | null;
+  week12: ProgressPhoto;
+  signedUrls: Record<string, string>;
+}) {
+  const cols = week6 ? 'grid-cols-3' : 'grid-cols-2';
+  const renderPhoto = (photo: ProgressPhoto, label: string) => {
+    const url = photo.photo_urls[0] ? signedUrls[photo.photo_urls[0]] : null;
+    return (
+      <div className="p-2 rounded-lg bg-muted/50 border border-border text-center space-y-1">
+        <p className="text-[10px] font-medium text-muted-foreground">{label}</p>
+        {url ? (
+          <img src={url} alt={label} className="w-full aspect-[3/4] object-cover rounded-md" />
+        ) : (
+          <div className="w-full aspect-[3/4] bg-muted rounded-md flex items-center justify-center">
+            <Camera className="h-6 w-6 text-muted-foreground" />
+          </div>
+        )}
+        <p className="text-[10px] text-muted-foreground">{new Date(photo.photo_date).toLocaleDateString()}</p>
+        {photo.weight_lbs && <Badge variant="outline" className="text-[9px]">{photo.weight_lbs} lbs</Badge>}
+      </div>
+    );
+  };
+
+  return (
+    <div className={`grid ${cols} gap-2`}>
+      {renderPhoto(week0, 'Week 0')}
+      {week6 && renderPhoto(week6, 'Week 6')}
+      {renderPhoto(week12, 'Current')}
+    </div>
   );
 }

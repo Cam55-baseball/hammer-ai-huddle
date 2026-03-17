@@ -5614,6 +5614,7 @@ export type Database = {
           body_fat_percent: number | null
           chest_measurement: number | null
           created_at: string | null
+          cycle_week: number | null
           id: string
           leg_measurement: number | null
           next_entry_date: string | null
@@ -5630,6 +5631,7 @@ export type Database = {
           body_fat_percent?: number | null
           chest_measurement?: number | null
           created_at?: string | null
+          cycle_week?: number | null
           id?: string
           leg_measurement?: number | null
           next_entry_date?: string | null
@@ -5646,6 +5648,7 @@ export type Database = {
           body_fat_percent?: number | null
           chest_measurement?: number | null
           created_at?: string | null
+          cycle_week?: number | null
           id?: string
           leg_measurement?: number | null
           next_entry_date?: string | null

@@ -27,5 +27,6 @@ export function useRecentSessions(sport: string, module?: string) {
       return data ?? [];
     },
     enabled: !!user,
+    staleTime: 60_000,
   });
 }
