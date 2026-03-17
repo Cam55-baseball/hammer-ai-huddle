@@ -1023,13 +1023,33 @@ export function useVault() {
     // Calculate next entry date (6 weeks from now)
     const nextEntryDate = new Date();
     nextEntryDate.setDate(nextEntryDate.getDate() + 42); // 6 weeks = 42 days
+
+    // Auto-compute cycle_week: find earliest photo, snap to nearest 6-week bucket
+    let cycleWeek = 0;
+    try {
+      const { data: earliest } = await supabase
+        .from('vault_progress_photos')
+        .select('photo_date')
+        .eq('user_id', user.id)
+        .order('photo_date', { ascending: true })
+        .limit(1);
+      if (earliest && earliest.length > 0) {
+        const firstDate = new Date(earliest[0].photo_date);
+        const now = new Date();
+        const weeksElapsed = Math.round((now.getTime() - firstDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        cycleWeek = Math.round(weeksElapsed / 6) * 6; // snap to nearest 6-week bucket
+      }
+    } catch (e) {
+      console.error('Error computing cycle_week:', e);
+    }
     
     const { error } = await supabase.from('vault_progress_photos').insert({
       user_id: user.id, photo_urls: photoUrls, weight_lbs: photoData.weight_lbs, body_fat_percent: photoData.body_fat_percent,
       arm_measurement: photoData.arm_measurement, chest_measurement: photoData.chest_measurement, waist_measurement: photoData.waist_measurement,
       leg_measurement: photoData.leg_measurement, notes: photoData.notes,
       next_entry_date: nextEntryDate.toISOString().split('T')[0],
-    });
+      cycle_week: cycleWeek,
+    } as any);
     if (!error) await fetchProgressPhotos();
     return { success: !error };
   }, [user, fetchProgressPhotos]);
