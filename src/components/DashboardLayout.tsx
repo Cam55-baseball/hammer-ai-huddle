@@ -100,7 +100,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           .maybeSingle();
 
         if (!error && data) {
-          setTutorialCompleted(data.tutorial_completed || false);
+          const completed = data.tutorial_completed || false;
+          setTutorialCompleted(completed);
+          // Auto-open for new users
+          if (!completed) {
+            setTutorialOpen(true);
+          }
         }
       } catch (error) {
         console.error("Error fetching tutorial status:", error);
@@ -130,10 +135,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
       <FloatingChatButton />
       {user && (
-        <TutorialModal
+        <StartHereGuide
           open={tutorialOpen}
-          onClose={() => setTutorialOpen(false)}
-          userId={user.id}
+          onOpenChange={setTutorialOpen}
         />
       )}
     </SidebarProvider>
