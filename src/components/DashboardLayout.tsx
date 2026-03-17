@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarTrigger, SidebarInset, useSidebar } from "@/com
 import { AppSidebar } from "./AppSidebar";
 import { FloatingChatButton } from "./FloatingChatButton";
 import { TutorialButton } from "./TutorialButton";
-import { TutorialModal } from "./TutorialModal";
+import { StartHereGuide } from "./StartHereGuide";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingBag, RefreshCw } from "lucide-react";
