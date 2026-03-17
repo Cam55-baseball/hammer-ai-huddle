@@ -69,6 +69,27 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
   const [waist, setWaist] = useState('');
   const [leg, setLeg] = useState('');
   const [notes, setNotes] = useState('');
+  const [showWeek6, setShowWeek6] = useState(false);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+  const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string>>({});
+
+  // Load signed URLs for private vault-photos bucket
+  const loadSignedUrls = async () => {
+    const allPaths = photos.flatMap(p => p.photo_urls).filter(Boolean);
+    const missing = allPaths.filter(p => !signedUrlMap[p]);
+    if (missing.length === 0) return;
+    const urlMap: Record<string, string> = { ...signedUrlMap };
+    for (const path of missing) {
+      const { data } = await supabase.storage.from('vault-photos').createSignedUrl(path, 3600);
+      if (data?.signedUrl) urlMap[path] = data.signedUrl;
+    }
+    setSignedUrlMap(urlMap);
+  };
+
+  // Load signed URLs when comparison photos are visible
+  useEffect(() => {
+    if (photos.length >= 2) loadSignedUrls();
+  }, [photos.length]);
 
   // Check if entry is locked
   // Recap-unlock override: If recap was generated and no entry exists after that date, unlock the card
