@@ -11,10 +11,12 @@ import { AIPromptCard } from '@/components/analytics/AIPromptCard';
 import { DeltaTrendChart } from '@/components/analytics/DeltaTrendChart';
 import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
 import { RoadmapBlockedBadge } from '@/components/analytics/RoadmapBlockedBadge';
+import { AskHammerPanel } from '@/components/analytics/AskHammerPanel';
 import { HeatMapDashboard } from '@/components/heatmaps/HeatMapDashboard';
 import { useRoadmapProgress } from '@/hooks/useRoadmapProgress';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { useMPIScores } from '@/hooks/useMPIScores';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { CheckCircle2, Circle, Loader2, Lock } from 'lucide-react';
 
