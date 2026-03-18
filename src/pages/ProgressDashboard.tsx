@@ -120,6 +120,9 @@ Calculation Date: ${mpiQuery.data.calculation_date}
                 {/* Row 3: Hammer Prompts */}
                 <AIPromptCard />
 
+                {/* Ask Hammer AI Chat */}
+                <AskHammerPanel dashboardContext={dashboardContext} />
+
                 {/* Row 4: Delta Trend */}
                 <DeltaTrendChart />
 

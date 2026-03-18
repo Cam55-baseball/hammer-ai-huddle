@@ -417,6 +417,50 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
                         {showWeek6 ? 'Hide' : 'Show'} Week 6
                       </Button>
                     )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-[10px] h-6 px-2 gap-1 ml-auto">
+                          <Download className="h-3 w-3" />
+                          Export
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          const exportPhotos = [
+                            { imageUrl: week0Photo.photo_urls[0] ? signedUrlMap[week0Photo.photo_urls[0]] : null, label: 'Week 0', date: new Date(week0Photo.photo_date).toLocaleDateString(), weight: week0Photo.weight_lbs },
+                            ...(showWeek6 && week6Photo ? [{ imageUrl: week6Photo.photo_urls[0] ? signedUrlMap[week6Photo.photo_urls[0]] : null, label: 'Week 6', date: new Date(week6Photo.photo_date).toLocaleDateString(), weight: week6Photo.weight_lbs }] : []),
+                            { imageUrl: latest.photo_urls[0] ? signedUrlMap[latest.photo_urls[0]] : null, label: 'Current', date: new Date(latest.photo_date).toLocaleDateString(), weight: latest.weight_lbs },
+                          ];
+                          const exportDeltas = [
+                            delta(latest.weight_lbs, week0Photo.weight_lbs) ? { label: 'Weight', value: `${delta(latest.weight_lbs, week0Photo.weight_lbs)} lbs` } : null,
+                            delta(latest.arm_measurement, week0Photo.arm_measurement) ? { label: 'Arm', value: `${delta(latest.arm_measurement, week0Photo.arm_measurement)}"` } : null,
+                            delta(latest.chest_measurement, week0Photo.chest_measurement) ? { label: 'Chest', value: `${delta(latest.chest_measurement, week0Photo.chest_measurement)}"` } : null,
+                            delta(latest.waist_measurement, week0Photo.waist_measurement) ? { label: 'Waist', value: `${delta(latest.waist_measurement, week0Photo.waist_measurement)}"` } : null,
+                          ].filter(Boolean) as { label: string; value: string }[];
+                          generateComparisonImage(exportPhotos, exportDeltas);
+                          toast.success('Exporting comparison image...');
+                        }}>
+                          Export as Image
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          const exportPhotos = [
+                            { imageUrl: week0Photo.photo_urls[0] ? signedUrlMap[week0Photo.photo_urls[0]] : null, label: 'Week 0', date: new Date(week0Photo.photo_date).toLocaleDateString(), weight: week0Photo.weight_lbs },
+                            ...(showWeek6 && week6Photo ? [{ imageUrl: week6Photo.photo_urls[0] ? signedUrlMap[week6Photo.photo_urls[0]] : null, label: 'Week 6', date: new Date(week6Photo.photo_date).toLocaleDateString(), weight: week6Photo.weight_lbs }] : []),
+                            { imageUrl: latest.photo_urls[0] ? signedUrlMap[latest.photo_urls[0]] : null, label: 'Current', date: new Date(latest.photo_date).toLocaleDateString(), weight: latest.weight_lbs },
+                          ];
+                          const exportDeltas = [
+                            delta(latest.weight_lbs, week0Photo.weight_lbs) ? { label: 'Weight', value: `${delta(latest.weight_lbs, week0Photo.weight_lbs)} lbs` } : null,
+                            delta(latest.arm_measurement, week0Photo.arm_measurement) ? { label: 'Arm', value: `${delta(latest.arm_measurement, week0Photo.arm_measurement)}"` } : null,
+                            delta(latest.chest_measurement, week0Photo.chest_measurement) ? { label: 'Chest', value: `${delta(latest.chest_measurement, week0Photo.chest_measurement)}"` } : null,
+                            delta(latest.waist_measurement, week0Photo.waist_measurement) ? { label: 'Waist', value: `${delta(latest.waist_measurement, week0Photo.waist_measurement)}"` } : null,
+                          ].filter(Boolean) as { label: string; value: string }[];
+                          generateComparisonPdf(exportPhotos, exportDeltas);
+                          toast.success('Exporting comparison PDF...');
+                        }}>
+                          Export as PDF
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
                   {/* Side-by-side photos with signed URLs */}

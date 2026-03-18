@@ -29,13 +29,12 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    const { messages, analysisContext } = await req.json();
+    const { messages, analysisContext, dashboardContext, stream } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
     }
 
-    // Use authenticated userId instead of accepting from request
     const userId = user.id;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -108,12 +107,20 @@ serve(async (req) => {
       analysisContextSection = `\n\nANALYSIS CONTEXT:\nThe athlete just received the following analysis. Use this context to answer their follow-up questions with specific, personalized advice:\n${analysisContext}\n`;
     }
 
-    const systemPrompt = `You are an expert biomechanics coach for baseball and softball athletes. You provide detailed, actionable advice on hitting, pitching, and throwing mechanics.
+    let dashboardContextSection = "";
+    if (dashboardContext) {
+      dashboardContextSection = `\n\nDASHBOARD CONTEXT:\nThe athlete is viewing their Progress Dashboard. Here is their current performance data — use it to ground your answers in their actual metrics:\n${dashboardContext}\n`;
+    }
+
+    const systemPrompt = `You are Hammer, an elite biomechanics coach for baseball and softball athletes. You provide detailed, actionable advice on hitting, pitching, and throwing mechanics.
 
 ${ownerBio ? `Follow the coaching philosophy below unless the user asks otherwise.\n\nCoach: ${ownerName}\nPhilosophy: ${ownerBio}\n` : ''}
 ${userContext}
 ${analysisContextSection}
-Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly.`;
+${dashboardContextSection}
+Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data when available.`;
+
+    const useStreaming = stream === true;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -127,6 +134,7 @@ Provide clear, concise responses focused on improving athletic performance. Use 
           { role: "system", content: systemPrompt },
           ...messages,
         ],
+        ...(useStreaming ? { stream: true } : {}),
       }),
     });
 
@@ -153,6 +161,12 @@ Provide clear, concise responses focused on improving athletic performance. Use 
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
       throw new Error("AI gateway error");
+    }
+
+    if (useStreaming) {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
     }
 
     const data = await response.json();
