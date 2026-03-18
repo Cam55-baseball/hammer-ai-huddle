@@ -76,7 +76,18 @@ function RoadmapSection() {
 export default function ProgressDashboard() {
   const { modules } = useSubscription();
   const { isOwner } = useOwnerAccess();
+  const mpiQuery = useMPIScores();
   const hasAdvancedAccess = isOwner || modules.length > 0;
+
+  // Build dashboard context for Ask Hammer
+  const dashboardContext = mpiQuery.data ? `
+MPI Score: ${mpiQuery.data.mpi_score ?? 'N/A'}
+Consistency: ${mpiQuery.data.consistency_score ?? 'N/A'}
+Mechanical: ${mpiQuery.data.mechanical_score ?? 'N/A'}
+Decision Making: ${mpiQuery.data.decision_making_score ?? 'N/A'}
+Power: ${mpiQuery.data.power_score ?? 'N/A'}
+Calculation Date: ${mpiQuery.data.calculation_date}
+  `.trim() : '';
 
   return (
     <DashboardLayout>
