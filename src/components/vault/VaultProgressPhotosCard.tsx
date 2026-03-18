@@ -14,6 +14,8 @@ import { Camera, ChevronDown, Calendar, Upload, ImageIcon, Ruler, Scale, Lock, A
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PhotoTimelineDialog } from './PhotoTimelineDialog';
+import { generateComparisonImage } from '@/utils/generateComparisonImage';
+import { generateComparisonPdf } from '@/utils/generateComparisonPdf';
 
 interface ProgressPhoto {
   id: string;
