@@ -11,10 +11,12 @@ import { AIPromptCard } from '@/components/analytics/AIPromptCard';
 import { DeltaTrendChart } from '@/components/analytics/DeltaTrendChart';
 import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
 import { RoadmapBlockedBadge } from '@/components/analytics/RoadmapBlockedBadge';
+import { AskHammerPanel } from '@/components/analytics/AskHammerPanel';
 import { HeatMapDashboard } from '@/components/heatmaps/HeatMapDashboard';
 import { useRoadmapProgress } from '@/hooks/useRoadmapProgress';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { useMPIScores } from '@/hooks/useMPIScores';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
 import { CheckCircle2, Circle, Loader2, Lock } from 'lucide-react';
 
@@ -74,7 +76,18 @@ function RoadmapSection() {
 export default function ProgressDashboard() {
   const { modules } = useSubscription();
   const { isOwner } = useOwnerAccess();
+  const mpiQuery = useMPIScores();
   const hasAdvancedAccess = isOwner || modules.length > 0;
+
+  // Build dashboard context for Ask Hammer
+  const dashboardContext = mpiQuery.data ? `
+MPI Score: ${mpiQuery.data.adjusted_global_score ?? 'N/A'}
+Competitive: ${mpiQuery.data.composite_competitive ?? 'N/A'}
+Decision: ${mpiQuery.data.composite_decision ?? 'N/A'}
+Power (FQI): ${mpiQuery.data.composite_fqi ?? 'N/A'}
+BQI: ${mpiQuery.data.composite_bqi ?? 'N/A'}
+Calculation Date: ${mpiQuery.data.calculation_date}
+  `.trim() : '';
 
   return (
     <DashboardLayout>
@@ -106,6 +119,9 @@ export default function ProgressDashboard() {
 
                 {/* Row 3: Hammer Prompts */}
                 <AIPromptCard />
+
+                {/* Ask Hammer AI Chat */}
+                <AskHammerPanel dashboardContext={dashboardContext} />
 
                 {/* Row 4: Delta Trend */}
                 <DeltaTrendChart />

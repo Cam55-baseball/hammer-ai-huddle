@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -47,9 +48,17 @@ export function QuickAddFavoritesDrawer({
 }: QuickAddFavoritesDrawerProps) {
   const { t } = useTranslation();
 
+  const [addingId, setAddingId] = useState<string | null>(null);
+  
   const handleAdd = async (templateId: string) => {
-    await onAddToToday(templateId);
-    onOpenChange(false);
+    if (addingId) return; // prevent double-tap
+    setAddingId(templateId);
+    try {
+      await onAddToToday(templateId);
+      onOpenChange(false);
+    } finally {
+      setAddingId(null);
+    }
   };
 
   const handleEdit = (e: React.MouseEvent, template: CustomActivityTemplate) => {
@@ -127,9 +136,13 @@ export function QuickAddFavoritesDrawer({
                       size="icon"
                       className="h-9 w-9 text-primary hover:text-primary"
                       onClick={() => handleAdd(template.id)}
-                      disabled={loading}
+                      disabled={loading || addingId === template.id}
                     >
-                      <Plus className="h-5 w-5" />
+                      {addingId === template.id ? (
+                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      ) : (
+                        <Plus className="h-5 w-5" />
+                      )}
                     </Button>
                   </div>
                 </div>
