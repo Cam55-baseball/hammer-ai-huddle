@@ -349,13 +349,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       template_id: templateId,
       entry_date: today,
       completed: false,
-      completed_at: null,
-      notes: null,
-      actual_duration_minutes: null,
-      performance_data: null,
-      start_time: null,
-      sort_order: null,
-      reminder_minutes: null,
+      performance_data: {},
       created_at: new Date().toISOString(),
     };
     setTodayLogs(prev => [...prev, optimisticLog]);
