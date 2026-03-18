@@ -136,9 +136,13 @@ export function QuickAddFavoritesDrawer({
                       size="icon"
                       className="h-9 w-9 text-primary hover:text-primary"
                       onClick={() => handleAdd(template.id)}
-                      disabled={loading}
+                      disabled={loading || addingId === template.id}
                     >
-                      <Plus className="h-5 w-5" />
+                      {addingId === template.id ? (
+                        <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      ) : (
+                        <Plus className="h-5 w-5" />
+                      )}
                     </Button>
                   </div>
                 </div>
