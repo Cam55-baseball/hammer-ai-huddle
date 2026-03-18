@@ -2145,8 +2145,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onAddToToday={async (templateId) => {
           const success = await addToToday(templateId);
           if (success) {
-            toast.success(t('customActivity.addedToToday'));
-            refetch();
+            // Small delay to let DB settle, then refetch game plan
+            await new Promise(r => setTimeout(r, 300));
+            await refetch();
           }
         }}
         onEdit={(template) => {

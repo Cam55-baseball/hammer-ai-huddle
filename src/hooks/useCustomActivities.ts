@@ -336,34 +336,62 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     return updateTemplate(id, { is_favorited: !template.is_favorited });
   };
 
-  // Add activity to today (create log entry)
+  // Add activity to today (create log entry) — with optimistic update + retry
   const addToToday = async (templateId: string): Promise<boolean> => {
     if (!user) return false;
 
     const today = getTodayDate();
-    
-    try {
-      const { error } = await supabase
-        .from('custom_activity_logs')
-        .upsert({
-          user_id: user.id,
-          template_id: templateId,
-          entry_date: today,
-          completed: false,
-        }, {
-          onConflict: 'user_id,template_id,entry_date'
-        });
 
-      if (error) throw error;
+    // Optimistic update: immediately add to todayLogs
+    const optimisticLog: CustomActivityLog = {
+      id: `optimistic-${Date.now()}`,
+      user_id: user.id,
+      template_id: templateId,
+      entry_date: today,
+      completed: false,
+      completed_at: null,
+      notes: null,
+      actual_duration_minutes: null,
+      performance_data: null,
+      start_time: null,
+      sort_order: null,
+      reminder_minutes: null,
+      created_at: new Date().toISOString(),
+    };
+    setTodayLogs(prev => [...prev, optimisticLog]);
+    toast.success(t('customActivity.addedToday'));
 
-      toast.success(t('customActivity.addedToday'));
-      await fetchTodayLogs();
-      return true;
-    } catch (error) {
-      console.error('Error adding to today:', error);
-      toast.error(t('customActivity.addError'));
-      return false;
-    }
+    const attemptUpsert = async (retryCount: number): Promise<boolean> => {
+      try {
+        const { error } = await supabase
+          .from('custom_activity_logs')
+          .upsert({
+            user_id: user.id,
+            template_id: templateId,
+            entry_date: today,
+            completed: false,
+          }, {
+            onConflict: 'user_id,template_id,entry_date'
+          });
+
+        if (error) throw error;
+        await fetchTodayLogs();
+        return true;
+      } catch (error) {
+        if (retryCount > 0) {
+          console.warn('[useCustomActivities] addToToday retry...', error);
+          await new Promise(r => setTimeout(r, 800));
+          return attemptUpsert(retryCount - 1);
+        }
+        console.error('Error adding to today:', error);
+        // Roll back optimistic update
+        setTodayLogs(prev => prev.filter(l => l.id !== optimisticLog.id));
+        toast.error(t('customActivity.addError'));
+        return false;
+      }
+    };
+
+    return attemptUpsert(1);
   };
 
   // Mark activity as complete/incomplete

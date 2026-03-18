@@ -47,9 +47,17 @@ export function QuickAddFavoritesDrawer({
 }: QuickAddFavoritesDrawerProps) {
   const { t } = useTranslation();
 
+  const [addingId, setAddingId] = useState<string | null>(null);
+  
   const handleAdd = async (templateId: string) => {
-    await onAddToToday(templateId);
-    onOpenChange(false);
+    if (addingId) return; // prevent double-tap
+    setAddingId(templateId);
+    try {
+      await onAddToToday(templateId);
+      onOpenChange(false);
+    } finally {
+      setAddingId(null);
+    }
   };
 
   const handleEdit = (e: React.MouseEvent, template: CustomActivityTemplate) => {
