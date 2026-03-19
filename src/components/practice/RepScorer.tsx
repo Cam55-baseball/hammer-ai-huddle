@@ -176,6 +176,8 @@ export interface ScoredRep {
   throwing_velo_mph?: number;
   // Custom pitch type
   custom_pitch_type?: string;
+  // Hit distance raw input
+  hit_distance_raw?: string;
 }
 
 interface RepScorerProps {

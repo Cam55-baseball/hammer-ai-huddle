@@ -39,6 +39,8 @@ export interface SessionConfig {
   fielding_position?: string;
   link_code?: string;
   linked_session_id?: string;
+  bat_size?: string;
+  bat_type?: string;
 }
 
 interface SessionConfigPanelProps {
