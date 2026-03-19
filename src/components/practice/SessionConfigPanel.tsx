@@ -198,6 +198,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       fielding_position: isFielding ? fieldingPosition : undefined,
       link_code: linkCode ?? undefined,
       linked_session_id: linkedSessionId,
+      bat_size: isHitting && batSize ? batSize : undefined,
+      bat_type: isHitting ? (batType === 'custom' ? customBatType || undefined : batType || undefined) : undefined,
     });
   };
 
