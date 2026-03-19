@@ -98,6 +98,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [competitionLevel, setCompetitionLevel] = useState<string | undefined>();
   const [linkCode, setLinkCode] = useState<string | null>(null);
   const [linkedSessionId, setLinkedSessionId] = useState<string | undefined>();
+  const [batSize, setBatSize] = useState<string>('');
+  const [batType, setBatType] = useState<string>('');
+  const [customBatType, setCustomBatType] = useState<string>('');
 
   const competitionCategories = useMemo(() => {
     return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
