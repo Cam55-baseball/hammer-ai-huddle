@@ -363,7 +363,9 @@ export function VaultPerformanceTestCard({
                   <span className="font-medium">{t('vault.lockPeriod.sectionLocked')}</span>
                   <br />
                   <span className="text-sm text-muted-foreground">
-                    {t('vault.lockPeriod.lockedUntil', { days: daysRemaining })}
+                    {daysRemaining > 0
+                      ? `Next test available: ${latestTest?.next_entry_date ? new Date(latestTest.next_entry_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''} (${daysRemaining} days remaining)`
+                      : 'Test available now'}
                   </span>
                 </AlertDescription>
               </Alert>

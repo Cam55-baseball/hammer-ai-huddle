@@ -315,6 +315,51 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           </div>
         )}
 
+        {/* Bat Size & Type — hitting only */}
+        {isHitting && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Bat Size (optional)</Label>
+              <Input
+                type="text"
+                value={batSize}
+                onChange={e => setBatSize(e.target.value)}
+                placeholder='33" / 30 oz'
+                className="h-9 text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Bat Type (optional)</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {['metal', 'wood', 'custom'].map(bt => (
+                  <button
+                    key={bt}
+                    type="button"
+                    onClick={() => setBatType(batType === bt ? '' : bt)}
+                    className={cn(
+                      'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                      batType === bt
+                        ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                        : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {bt === 'custom' ? '✏️ Custom' : bt.charAt(0).toUpperCase() + bt.slice(1)}
+                  </button>
+                ))}
+              </div>
+              {batType === 'custom' && (
+                <Input
+                  type="text"
+                  value={customBatType}
+                  onChange={e => setCustomBatType(e.target.value)}
+                  placeholder="Enter bat type..."
+                  className="mt-1.5 h-8 text-xs"
+                />
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Season Context — hidden for game and live at-bats */}
         {showSeasonContext && (
           <div>
