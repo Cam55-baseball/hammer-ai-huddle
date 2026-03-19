@@ -363,7 +363,9 @@ export function VaultPerformanceTestCard({
                   <span className="font-medium">{t('vault.lockPeriod.sectionLocked')}</span>
                   <br />
                   <span className="text-sm text-muted-foreground">
-                    {t('vault.lockPeriod.lockedUntil', { days: daysRemaining })}
+                    {daysRemaining > 0
+                      ? `Next test available: ${latestTest?.next_entry_date ? new Date(latestTest.next_entry_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''} (${daysRemaining} days remaining)`
+                      : 'Test available now'}
                   </span>
                 </AlertDescription>
               </Alert>
@@ -616,7 +618,7 @@ export function VaultPerformanceTestCard({
                   <Label className="text-sm font-medium">{t('vault.performance.recentTests')}</Label>
                   <Badge variant="outline" className="text-xs">{t('vault.lockPeriod.readOnly')}</Badge>
                 </div>
-                <div className="max-h-[400px] overflow-y-auto pr-1">
+                <ScrollArea className="max-h-[500px]">
                   <div className="space-y-2">
                     {recentTests.map((test) => (
                       <div key={test.id} className="p-3 rounded-lg bg-muted/50 border border-border">
@@ -653,7 +655,7 @@ export function VaultPerformanceTestCard({
                       </div>
                     ))}
                   </div>
-                </div>
+                </ScrollArea>
               </div>
             )}
           </CardContent>

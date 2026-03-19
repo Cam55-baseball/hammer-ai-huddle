@@ -310,7 +310,7 @@ export function VaultScoutGradesCard({
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="mt-3 rounded-lg border border-border overflow-hidden">
-                    <ScrollArea className="max-h-[300px]">
+                    <ScrollArea className="max-h-[500px]">
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-muted/50">

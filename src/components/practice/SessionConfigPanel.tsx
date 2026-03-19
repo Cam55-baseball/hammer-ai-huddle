@@ -39,6 +39,8 @@ export interface SessionConfig {
   fielding_position?: string;
   link_code?: string;
   linked_session_id?: string;
+  bat_size?: string;
+  bat_type?: string;
 }
 
 interface SessionConfigPanelProps {
@@ -98,6 +100,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [competitionLevel, setCompetitionLevel] = useState<string | undefined>();
   const [linkCode, setLinkCode] = useState<string | null>(null);
   const [linkedSessionId, setLinkedSessionId] = useState<string | undefined>();
+  const [batSize, setBatSize] = useState<string>('');
+  const [batType, setBatType] = useState<string>('');
+  const [customBatType, setCustomBatType] = useState<string>('');
 
   const competitionCategories = useMemo(() => {
     return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
@@ -195,6 +200,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       fielding_position: isFielding ? fieldingPosition : undefined,
       link_code: linkCode ?? undefined,
       linked_session_id: linkedSessionId,
+      bat_size: isHitting && batSize ? batSize : undefined,
+      bat_type: isHitting ? (batType === 'custom' ? customBatType || undefined : batType || undefined) : undefined,
     });
   };
 
@@ -307,6 +314,51 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
                 </Badge>
               ) : null;
             })()}
+          </div>
+        )}
+
+        {/* Bat Size & Type — hitting only */}
+        {isHitting && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Bat Size (optional)</Label>
+              <Input
+                type="text"
+                value={batSize}
+                onChange={e => setBatSize(e.target.value)}
+                placeholder='33" / 30 oz'
+                className="h-9 text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Bat Type (optional)</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {['metal', 'wood', 'custom'].map(bt => (
+                  <button
+                    key={bt}
+                    type="button"
+                    onClick={() => setBatType(batType === bt ? '' : bt)}
+                    className={cn(
+                      'rounded-md border px-2.5 py-1.5 text-xs font-medium transition-all',
+                      batType === bt
+                        ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                        : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {bt === 'custom' ? '✏️ Custom' : bt.charAt(0).toUpperCase() + bt.slice(1)}
+                  </button>
+                ))}
+              </div>
+              {batType === 'custom' && (
+                <Input
+                  type="text"
+                  value={customBatType}
+                  onChange={e => setCustomBatType(e.target.value)}
+                  placeholder="Enter bat type..."
+                  className="mt-1.5 h-8 text-xs"
+                />
+              )}
+            </div>
           </div>
         )}
 
