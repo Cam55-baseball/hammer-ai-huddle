@@ -1,47 +1,28 @@
 
 
-# Fix: Coach Schedule Dialog RLS Error
+# Why Hit Distance Input Is Not Visible
 
-## Root Cause
+## Finding
 
-The coach has two accepted relationships:
-- **Cam Williams** — `relationship_type: 'linked'` (works with RLS)
-- **Reagan Niederhaus** — `relationship_type: 'follow'` (blocked by RLS)
+The hit distance input field exists in `RepScorer.tsx` (line 973) but is inside the `mode === 'advanced'` block (line 919). By default, the rep scorer opens in **Quick Log** mode, which hides advanced fields like Bat Speed, Exit Velo, Distance, Contact Quality, Exit Direction, and Swing Intent.
 
-The `CoachScheduleDialog` receives all `accepted` players regardless of relationship type, but the RLS INSERT policy uses `is_linked_coach()` which requires `relationship_type = 'linked'`.
+To see the distance field, users must toggle the **Quick Log / Advanced switch** at the top of the rep scorer.
 
-## Solution
+## Decision Point
 
-**Option A (recommended)**: Update the RLS INSERT policy to also allow coaches with `follow` relationship type to schedule sessions. This is more flexible and aligns with how coaches interact with followed players.
+There are two approaches:
 
-**Option B**: Filter the `linkedPlayers` prop in `CoachDashboard.tsx` to only include `relationship_type === 'linked'` players.
+**Option A — Keep as-is (no code change)**
+The distance field stays in advanced mode. Users flip the toggle to access it. This keeps Quick Log fast and uncluttered.
 
-I recommend **both**: broaden the RLS policy AND also update the UI filter so the dialog clearly separates linked vs followed players.
+**Option B — Move hit distance to always-visible (code change)**
+Move the distance input out of the `mode === 'advanced'` block so it appears in both Quick Log and Advanced modes. This makes it immediately accessible but adds another field to the quick flow.
 
-### Changes
+## Recommendation
 
-| File | Change |
-|------|--------|
-| DB migration | Update `is_linked_coach` function OR create new INSERT policy that accepts both `linked` and `follow` relationship types |
-| `src/pages/CoachDashboard.tsx` (line 694) | Add `relationship_type` filter: `.filter(p => p.followStatus === 'accepted' && p.relationship_type === 'linked')` |
+If distance is a high-value metric that athletes frequently log, **Option B** is better — move it (along with bat speed and exit velo) outside the advanced gate, or at minimum just the distance field.
 
-### Technical Detail
-
-**RLS policy update** — modify the `is_linked_coach` function to also accept `follow`:
-```sql
-CREATE OR REPLACE FUNCTION public.is_linked_coach(p_coach_id uuid, p_player_id uuid)
-RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.scout_follows
-    WHERE scout_id = p_coach_id
-      AND player_id = p_player_id
-      AND status = 'accepted'
-      AND relationship_type IN ('linked', 'follow')
-  )
-$$;
-```
-
-Alternatively, keep `is_linked_coach` strict and only fix the UI filter — depends on whether coaches should be able to schedule for followed (non-linked) players.
+### Implementation (if Option B approved)
+- **File**: `src/components/practice/RepScorer.tsx`
+- Move the "Distance (ft)" input (lines 973-990) out of the `mode === 'advanced'` conditional (line 919) and place it after the Swing Decision section (line 917), so it's always visible for hitting sessions regardless of mode.
 
