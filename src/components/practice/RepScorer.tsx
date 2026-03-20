@@ -916,6 +916,26 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
+              {/* Hit Distance — always visible for hitting */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Distance (ft)</Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="e.g. 350, >400, 400+"
+                  value={current.hit_distance_raw ?? (current.hit_distance_ft != null ? String(current.hit_distance_ft) : '')}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    updateField('hit_distance_raw', raw || undefined);
+                    const cleaned = raw.replace(/[>+]/g, '').trim();
+                    const num = parseFloat(cleaned);
+                    updateField('hit_distance_ft', !isNaN(num) && num > 0 ? num : undefined);
+                  }}
+                  className="h-8 text-xs"
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5">Enter exact or use &gt;, + (e.g. &gt;400 or 400+)</p>
+              </div>
+
               {mode === 'advanced' && (
                 <>
                   <div>
