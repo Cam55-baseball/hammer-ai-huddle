@@ -112,6 +112,11 @@ serve(async (req) => {
       dashboardContextSection = `\n\nDASHBOARD CONTEXT:\nThe athlete is viewing their Progress Dashboard. Here is their current performance data — use it to ground your answers in their actual metrics:\n${dashboardContext}\n`;
     }
 
+    let royalTimingContextSection = "";
+    if (royalTimingContext) {
+      royalTimingContextSection = `\n\nROYAL TIMING CONTEXT:\nThe athlete is using the Royal Timing video analysis module. They are studying timing mechanics via video comparison. Provide elite-level (top 0.01%) timing analysis insight that is sport-specific and actionable. Here is their study context:\n${royalTimingContext}\n`;
+    }
+
     const systemPrompt = `You are Hammer, an elite biomechanics coach for baseball and softball athletes. You provide detailed, actionable advice on hitting, pitching, and throwing mechanics.
 
 ${ownerBio ? `Follow the coaching philosophy below unless the user asks otherwise.\n\nCoach: ${ownerName}\nPhilosophy: ${ownerBio}\n` : ''}
