@@ -3495,6 +3495,38 @@ export type Database = {
         }
         Relationships: []
       }
+      royal_timing_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "royal_timing_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "royal_timing_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       royal_timing_sessions: {
         Row: {
           ai_analysis: Json | null
@@ -3506,6 +3538,8 @@ export type Database = {
           timer_data: Json | null
           updated_at: string | null
           user_id: string
+          video_1_path: string | null
+          video_2_path: string | null
           video_urls: string[] | null
         }
         Insert: {
@@ -3518,6 +3552,8 @@ export type Database = {
           timer_data?: Json | null
           updated_at?: string | null
           user_id: string
+          video_1_path?: string | null
+          video_2_path?: string | null
           video_urls?: string[] | null
         }
         Update: {
@@ -3530,9 +3566,49 @@ export type Database = {
           timer_data?: Json | null
           updated_at?: string | null
           user_id?: string
+          video_1_path?: string | null
+          video_2_path?: string | null
           video_urls?: string[] | null
         }
         Relationships: []
+      }
+      royal_timing_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          recipient_id: string
+          sender_id: string
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          recipient_id: string
+          sender_id: string
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          recipient_id?: string
+          sender_id?: string
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "royal_timing_shares_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "royal_timing_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       running_presets: {
         Row: {
