@@ -30,6 +30,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const seekingRef = useRef(false);
+  const resolvingRef = useRef(false);
+  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
