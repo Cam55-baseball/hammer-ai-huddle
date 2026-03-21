@@ -3495,6 +3495,45 @@ export type Database = {
         }
         Relationships: []
       }
+      royal_timing_sessions: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string | null
+          findings: string | null
+          id: string
+          sport: string | null
+          subject_reason: string | null
+          timer_data: Json | null
+          updated_at: string | null
+          user_id: string
+          video_urls: string[] | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string | null
+          findings?: string | null
+          id?: string
+          sport?: string | null
+          subject_reason?: string | null
+          timer_data?: Json | null
+          updated_at?: string | null
+          user_id: string
+          video_urls?: string[] | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string | null
+          findings?: string | null
+          id?: string
+          sport?: string | null
+          subject_reason?: string | null
+          timer_data?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          video_urls?: string[] | null
+        }
+        Relationships: []
+      }
       running_presets: {
         Row: {
           category: string

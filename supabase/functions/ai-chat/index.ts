@@ -29,7 +29,7 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    const { messages, analysisContext, dashboardContext, stream } = await req.json();
+    const { messages, analysisContext, dashboardContext, royalTimingContext, stream } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
@@ -112,12 +112,18 @@ serve(async (req) => {
       dashboardContextSection = `\n\nDASHBOARD CONTEXT:\nThe athlete is viewing their Progress Dashboard. Here is their current performance data — use it to ground your answers in their actual metrics:\n${dashboardContext}\n`;
     }
 
+    let royalTimingContextSection = "";
+    if (royalTimingContext) {
+      royalTimingContextSection = `\n\nROYAL TIMING CONTEXT:\nThe athlete is using the Royal Timing video analysis module. They are studying timing mechanics via video comparison. Provide elite-level (top 0.01%) timing analysis insight that is sport-specific and actionable. Here is their study context:\n${royalTimingContext}\n`;
+    }
+
     const systemPrompt = `You are Hammer, an elite biomechanics coach for baseball and softball athletes. You provide detailed, actionable advice on hitting, pitching, and throwing mechanics.
 
 ${ownerBio ? `Follow the coaching philosophy below unless the user asks otherwise.\n\nCoach: ${ownerName}\nPhilosophy: ${ownerBio}\n` : ''}
 ${userContext}
 ${analysisContextSection}
 ${dashboardContextSection}
+${royalTimingContextSection}
 Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data when available.`;
 
     const useStreaming = stream === true;
