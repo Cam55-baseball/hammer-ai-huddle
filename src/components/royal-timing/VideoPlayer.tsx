@@ -160,13 +160,19 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
     }
   }, []);
 
-  const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScrub = useCallback((val: number) => {
     const vid = localVideoRef.current;
     if (!vid) return;
     seekingRef.current = true;
-    const t = parseFloat(e.target.value);
-    vid.currentTime = clampTime(t, isFinite(vid.duration) ? vid.duration : duration);
+    const t = clampTime(val, isFinite(vid.duration) ? vid.duration : duration);
+    vid.currentTime = t;
     setCurrentTime(t);
+    // Safety fallback — clear seeking flag even if 'seeked' never fires
+    if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
+    seekTimeoutRef.current = setTimeout(() => {
+      seekingRef.current = false;
+      seekTimeoutRef.current = null;
+    }, 300);
   }, [duration]);
 
   const frameStep = useCallback((direction: 1 | -1) => {
