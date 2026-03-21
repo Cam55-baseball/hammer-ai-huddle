@@ -250,7 +250,10 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
                 max={safeDuration || 1}
                 step={0.01}
                 value={currentTime}
-                onChange={handleScrub}
+                onInput={(e) => handleScrub(Number((e.target as HTMLInputElement).value))}
+                onChange={() => {}}
+                onMouseUp={() => { seekingRef.current = false; }}
+                onTouchEnd={() => { seekingRef.current = false; }}
                 className="w-full h-2 accent-primary cursor-pointer"
                 disabled={!durationResolved}
               />
