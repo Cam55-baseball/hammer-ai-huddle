@@ -97,6 +97,7 @@ const GameScoring = lazyWithRetry(() => import("./pages/GameScoring"));
 const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrainer"));
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
+const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
