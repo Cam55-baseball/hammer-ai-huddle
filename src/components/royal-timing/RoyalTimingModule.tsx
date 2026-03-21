@@ -22,7 +22,7 @@ type VideoMode = 'single' | 'comparison';
 
 export function RoyalTimingModule() {
   const { user } = useAuth();
-  const { selectedSport } = useSportTheme();
+  const { sport: selectedSport } = useSportTheme();
   const { toast } = useToast();
 
   const [mode, setMode] = useState<VideoMode>('single');
