@@ -12,7 +12,6 @@ interface VideoPlayerProps {
   onFileSelect: (file: File) => void;
   onRemove: () => void;
   onScreenshot: () => void;
-  onSpeedChange: (speed: number) => void;
 }
 
 function formatSec(s: number): string {
@@ -26,12 +25,12 @@ function clampTime(t: number, dur: number): number {
   return Math.max(0, Math.min(isFinite(dur) ? dur : 0, t));
 }
 
-export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot, onSpeedChange }: VideoPlayerProps) {
+export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot }: VideoPlayerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const seekingRef = useRef(false);
   const resolvingRef = useRef(false);
-  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDragging = useRef(false);
+  const seekingRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -76,7 +75,6 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         }
         vid.currentTime = 0;
         setDurationResolved(true);
-        // Small delay to let the seek-back complete before unguarding
         setTimeout(() => { resolvingRef.current = false; }, 100);
       };
       vid.addEventListener('seeked', onSeek);
@@ -90,19 +88,23 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
       }
     };
     const onTimeUpdate = () => {
-      if (!seekingRef.current) {
-        setCurrentTime(vid.currentTime);
-      }
+      // Skip UI update if user is dragging scrubber or programmatic seek in-flight
+      if (isDragging.current || seekingRef.current) return;
+      setCurrentTime(vid.currentTime);
     };
     const onSeeked = () => {
-      // Ignore seeks from the WebM duration workaround
       if (!resolvingRef.current) {
         seekingRef.current = false;
+        // Also update time display immediately after seek
+        setCurrentTime(vid.currentTime);
       }
     };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onEnded = () => setIsPlaying(false);
+    const onRateChange = () => {
+      setLocalSpeed(vid.playbackRate);
+    };
 
     vid.addEventListener('loadedmetadata', onLoadedMetadata);
     vid.addEventListener('durationchange', onDurationChange);
@@ -111,8 +113,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
     vid.addEventListener('play', onPlay);
     vid.addEventListener('pause', onPause);
     vid.addEventListener('ended', onEnded);
+    vid.addEventListener('ratechange', onRateChange);
 
-    // Apply current speed
     vid.playbackRate = localSpeed;
 
     return () => {
@@ -123,8 +125,9 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
       vid.removeEventListener('play', onPlay);
       vid.removeEventListener('pause', onPause);
       vid.removeEventListener('ended', onEnded);
+      vid.removeEventListener('ratechange', onRateChange);
     };
-  }, [videoUrl, localSpeed]);
+  }, [videoUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset state when video changes
   useEffect(() => {
@@ -132,6 +135,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
     setDuration(0);
     setDurationResolved(false);
     setIsPlaying(false);
+    isDragging.current = false;
+    seekingRef.current = false;
   }, [videoUrl]);
 
   const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -143,56 +148,58 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
   const togglePlayPause = useCallback(() => {
     const vid = localVideoRef.current;
     if (!vid) return;
-    // Always clear seeking flag so timeupdate resumes
+    // Clear any stale flags so timeupdate resumes
     seekingRef.current = false;
-    if (seekTimeoutRef.current) {
-      clearTimeout(seekTimeoutRef.current);
-      seekTimeoutRef.current = null;
-    }
+    isDragging.current = false;
     if (vid.paused) {
-      vid.play().then(() => setIsPlaying(true)).catch((err) => {
+      vid.play().catch((err) => {
         console.warn('Play interrupted:', err.message);
-        setIsPlaying(false);
       });
     } else {
       vid.pause();
-      setIsPlaying(false);
     }
   }, []);
 
-  const handleScrub = useCallback((val: number) => {
+  // Scrubber handlers using isDragging ref (separate from seekingRef)
+  const handleScrubPointerDown = useCallback(() => {
+    isDragging.current = true;
+  }, []);
+
+  const handleScrubInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
     const vid = localVideoRef.current;
     if (!vid) return;
-    seekingRef.current = true;
+    const val = Number(e.currentTarget.value);
     const t = clampTime(val, isFinite(vid.duration) ? vid.duration : duration);
     vid.currentTime = t;
     setCurrentTime(t);
-    // Safety fallback — clear seeking flag even if 'seeked' never fires
-    if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
-    seekTimeoutRef.current = setTimeout(() => {
-      seekingRef.current = false;
-      seekTimeoutRef.current = null;
-    }, 300);
   }, [duration]);
+
+  const handleScrubPointerUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
 
   const frameStep = useCallback((direction: 1 | -1) => {
     const vid = localVideoRef.current;
     if (!vid) return;
     vid.pause();
-    setIsPlaying(false);
+    seekingRef.current = true;
     const safeDur = isFinite(vid.duration) ? vid.duration : 0;
     const newTime = clampTime(vid.currentTime + direction * (1 / 30), safeDur);
     vid.currentTime = newTime;
     setCurrentTime(newTime);
+    // Safety fallback
+    setTimeout(() => { seekingRef.current = false; }, 200);
   }, []);
 
   const skip = useCallback((sec: number) => {
     const vid = localVideoRef.current;
     if (!vid) return;
+    seekingRef.current = true;
     const safeDur = isFinite(vid.duration) ? vid.duration : 0;
     const newTime = clampTime(vid.currentTime + sec, safeDur);
     vid.currentTime = newTime;
     setCurrentTime(newTime);
+    setTimeout(() => { seekingRef.current = false; }, 200);
   }, []);
 
   const handleLocalSpeed = useCallback((s: string) => {
@@ -242,7 +249,7 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
               />
             </div>
 
-            {/* Timeline scrubber */}
+            {/* Timeline scrubber — uses isDragging ref, not seekingRef */}
             <div className="px-1">
               <input
                 type="range"
@@ -250,11 +257,12 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
                 max={safeDuration || 1}
                 step={0.01}
                 value={currentTime}
-                onInput={(e) => handleScrub(Number((e.target as HTMLInputElement).value))}
+                onPointerDown={handleScrubPointerDown}
+                onInput={handleScrubInput}
+                onPointerUp={handleScrubPointerUp}
+                onLostPointerCapture={handleScrubPointerUp}
                 onChange={() => {}}
-                onMouseUp={() => { seekingRef.current = false; }}
-                onTouchEnd={() => { seekingRef.current = false; }}
-                className="w-full h-2 accent-primary cursor-pointer"
+                className="w-full h-2 accent-primary cursor-pointer touch-none"
                 disabled={!durationResolved}
               />
               <div className="flex justify-between text-xs text-muted-foreground">

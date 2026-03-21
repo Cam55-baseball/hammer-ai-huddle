@@ -204,7 +204,6 @@ export function RoyalTimingModule() {
           onFileSelect={(f) => handleFileSelect(f, 1)}
           onRemove={() => handleRemoveVideo(1)}
           onScreenshot={() => handleScreenshot(video1Ref)}
-          onSpeedChange={handleSpeedChange}
         />
         {mode === 'comparison' && (
           <VideoPlayer
@@ -215,7 +214,6 @@ export function RoyalTimingModule() {
             onFileSelect={(f) => handleFileSelect(f, 2)}
             onRemove={() => handleRemoveVideo(2)}
             onScreenshot={() => handleScreenshot(video2Ref)}
-            onSpeedChange={handleSpeedChange}
           />
         )}
       </div>
