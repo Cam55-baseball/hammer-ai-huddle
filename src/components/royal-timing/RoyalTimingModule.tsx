@@ -104,9 +104,11 @@ export function RoyalTimingModule() {
 
   const masterFrameStep = useCallback((direction: 1 | -1) => {
     const step = direction * (1 / 30);
-    if (video1Ref.current) { video1Ref.current.pause(); video1Ref.current.currentTime = Math.max(0, video1Ref.current.currentTime + step); }
-    if (mode === 'comparison' && video2Ref.current) { video2Ref.current.pause(); video2Ref.current.currentTime = Math.max(0, video2Ref.current.currentTime + step); }
-  }, [mode]);
+    [video1Ref.current, video2Ref.current].filter(Boolean).forEach(v => {
+      v!.pause();
+      v!.currentTime = Math.max(0, v!.currentTime + step);
+    });
+  }, []);
 
   const handleSpeedChange = useCallback((speed: number) => {
     setMasterSpeed(speed);
