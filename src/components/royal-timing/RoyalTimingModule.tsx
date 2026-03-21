@@ -71,8 +71,8 @@ export function RoyalTimingModule() {
 
   // Master controls
   const masterPlay = useCallback(() => {
-    video1Ref.current?.play();
-    if (mode === 'comparison') video2Ref.current?.play();
+    video1Ref.current?.play().catch(console.warn);
+    if (mode === 'comparison') video2Ref.current?.play().catch(console.warn);
   }, [mode]);
 
   const masterPause = useCallback(() => {
@@ -165,7 +165,7 @@ export function RoyalTimingModule() {
   }, [user, subjectReason, findings, askHammer, selectedSport, timer1, timer2, masterTimer, mode, video1Url, video2Url, toast]);
 
   return (
-    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-4 md:p-6 pb-24 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Crown className="h-8 w-8 text-primary" />

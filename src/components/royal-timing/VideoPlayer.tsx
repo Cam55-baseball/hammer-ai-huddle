@@ -1,10 +1,8 @@
-import { useRef, useState, useCallback, RefObject, ChangeEvent } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Camera, Upload, X } from 'lucide-react';
+import { useRef, useState, useCallback, useEffect, RefObject, ChangeEvent } from 'react';
+import { Play, Pause, SkipBack, SkipForward, Camera, Upload, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 
 interface VideoPlayerProps {
   label: string;
@@ -17,13 +15,29 @@ interface VideoPlayerProps {
   onSpeedChange: (speed: number) => void;
 }
 
+function formatSec(s: number): string {
+  if (!isFinite(s) || s < 0) return '0:00.0';
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec < 10 ? '0' : ''}${sec.toFixed(1)}`;
+}
+
+function clampTime(t: number, dur: number): number {
+  return Math.max(0, Math.min(isFinite(dur) ? dur : 0, t));
+}
+
 export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot, onSpeedChange }: VideoPlayerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const seekingRef = useRef(false);
+
+  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [durationResolved, setDurationResolved] = useState(false);
   const [localSpeed, setLocalSpeed] = useState(speed);
 
+  // Callback ref to sync local + parent refs
   const setVideoRef = useCallback((el: HTMLVideoElement | null) => {
     localVideoRef.current = el;
     if (typeof videoRef === 'object' && videoRef !== null) {
@@ -31,41 +45,132 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
     }
   }, [videoRef]);
 
+  // Sync speed prop from master controls
+  useEffect(() => {
+    setLocalSpeed(speed);
+    if (localVideoRef.current) {
+      localVideoRef.current.playbackRate = speed;
+    }
+  }, [speed]);
+
+  // Attach all video event listeners
+  useEffect(() => {
+    const vid = localVideoRef.current;
+    if (!vid || !videoUrl) return;
+
+    const resolveDuration = () => {
+      if (isFinite(vid.duration) && vid.duration > 0) {
+        setDuration(vid.duration);
+        setDurationResolved(true);
+        return;
+      }
+      // WebM workaround
+      vid.currentTime = 1e10;
+      const onSeek = () => {
+        vid.removeEventListener('seeked', onSeek);
+        if (isFinite(vid.duration) && vid.duration > 0) {
+          setDuration(vid.duration);
+        }
+        vid.currentTime = 0;
+        setDurationResolved(true);
+      };
+      vid.addEventListener('seeked', onSeek);
+    };
+
+    const onLoadedMetadata = () => resolveDuration();
+    const onDurationChange = () => {
+      if (isFinite(vid.duration) && vid.duration > 0) {
+        setDuration(vid.duration);
+        setDurationResolved(true);
+      }
+    };
+    const onTimeUpdate = () => {
+      if (!seekingRef.current) {
+        setCurrentTime(vid.currentTime);
+      }
+    };
+    const onSeeked = () => { seekingRef.current = false; };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onEnded = () => setIsPlaying(false);
+
+    vid.addEventListener('loadedmetadata', onLoadedMetadata);
+    vid.addEventListener('durationchange', onDurationChange);
+    vid.addEventListener('timeupdate', onTimeUpdate);
+    vid.addEventListener('seeked', onSeeked);
+    vid.addEventListener('play', onPlay);
+    vid.addEventListener('pause', onPause);
+    vid.addEventListener('ended', onEnded);
+
+    // Apply current speed
+    vid.playbackRate = localSpeed;
+
+    return () => {
+      vid.removeEventListener('loadedmetadata', onLoadedMetadata);
+      vid.removeEventListener('durationchange', onDurationChange);
+      vid.removeEventListener('timeupdate', onTimeUpdate);
+      vid.removeEventListener('seeked', onSeeked);
+      vid.removeEventListener('play', onPlay);
+      vid.removeEventListener('pause', onPause);
+      vid.removeEventListener('ended', onEnded);
+    };
+  }, [videoUrl, localSpeed]);
+
+  // Reset state when video changes
+  useEffect(() => {
+    setCurrentTime(0);
+    setDuration(0);
+    setDurationResolved(false);
+    setIsPlaying(false);
+  }, [videoUrl]);
+
   const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) onFileSelect(file);
     e.target.value = '';
   }, [onFileSelect]);
 
-  const handleTimeUpdate = useCallback(() => {
-    if (localVideoRef.current) setCurrentTime(localVideoRef.current.currentTime);
-  }, []);
-
-  const handleLoadedMetadata = useCallback(() => {
-    if (localVideoRef.current) {
-      if (!isFinite(localVideoRef.current.duration)) {
-        localVideoRef.current.currentTime = 1e10;
-        setTimeout(() => {
-          if (localVideoRef.current) {
-            setDuration(localVideoRef.current.duration);
-            localVideoRef.current.currentTime = 0;
-          }
-        }, 200);
-      } else {
-        setDuration(localVideoRef.current.duration);
-      }
+  const togglePlayPause = useCallback(() => {
+    const vid = localVideoRef.current;
+    if (!vid) return;
+    if (vid.paused) {
+      vid.play().then(() => setIsPlaying(true)).catch((err) => {
+        console.warn('Play interrupted:', err.message);
+        setIsPlaying(false);
+      });
+    } else {
+      vid.pause();
+      setIsPlaying(false);
     }
   }, []);
 
-  const handleScrub = useCallback((value: number[]) => {
-    if (localVideoRef.current) localVideoRef.current.currentTime = value[0];
-  }, []);
+  const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const vid = localVideoRef.current;
+    if (!vid) return;
+    seekingRef.current = true;
+    const t = parseFloat(e.target.value);
+    vid.currentTime = clampTime(t, isFinite(vid.duration) ? vid.duration : duration);
+    setCurrentTime(t);
+  }, [duration]);
 
   const frameStep = useCallback((direction: 1 | -1) => {
-    if (localVideoRef.current) {
-      localVideoRef.current.pause();
-      localVideoRef.current.currentTime += direction * (1 / 30);
-    }
+    const vid = localVideoRef.current;
+    if (!vid) return;
+    vid.pause();
+    setIsPlaying(false);
+    const safeDur = isFinite(vid.duration) ? vid.duration : 0;
+    const newTime = clampTime(vid.currentTime + direction * (1 / 30), safeDur);
+    vid.currentTime = newTime;
+    setCurrentTime(newTime);
+  }, []);
+
+  const skip = useCallback((sec: number) => {
+    const vid = localVideoRef.current;
+    if (!vid) return;
+    const safeDur = isFinite(vid.duration) ? vid.duration : 0;
+    const newTime = clampTime(vid.currentTime + sec, safeDur);
+    vid.currentTime = newTime;
+    setCurrentTime(newTime);
   }, []);
 
   const handleLocalSpeed = useCallback((s: string) => {
@@ -74,12 +179,7 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
     if (localVideoRef.current) localVideoRef.current.playbackRate = v;
   }, []);
 
-  const formatSec = (s: number) => {
-    if (!isFinite(s)) return '0:00';
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${String(sec).padStart(2, '0')}`;
-  };
+  const safeDuration = isFinite(duration) && duration > 0 ? duration : 0;
 
   return (
     <Card>
@@ -116,53 +216,50 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
                 ref={setVideoRef}
                 src={videoUrl}
                 className="w-full h-full object-contain"
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
                 playsInline
               />
             </div>
 
             {/* Timeline scrubber */}
-            <div className="space-y-1">
-              <Slider
+            <div className="px-1">
+              <input
+                type="range"
                 min={0}
-                max={duration || 1}
+                max={safeDuration || 1}
                 step={0.01}
-                value={[currentTime]}
-                onValueChange={handleScrub}
-                className="w-full"
+                value={currentTime}
+                onChange={handleScrub}
+                className="w-full h-2 accent-primary cursor-pointer"
+                disabled={!durationResolved}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{formatSec(currentTime)}</span>
-                <span>{formatSec(duration)}</span>
+                <span>{formatSec(safeDuration)}</span>
               </div>
             </div>
 
             {/* Controls */}
-            <div className="flex flex-wrap items-center gap-1">
-              <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => frameStep(-1)}>⏪</Button>
-              <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => {
-                if (localVideoRef.current) localVideoRef.current.currentTime = Math.max(0, localVideoRef.current.currentTime - 5);
-              }}>
-                <SkipBack className="h-3 w-3" />
+            <div className="flex items-center gap-1 flex-wrap">
+              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => frameStep(-1)} title="Frame back">
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button size="sm" className="h-7 px-2" onClick={() => localVideoRef.current?.play()}>
-                <Play className="h-3 w-3" />
+              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => skip(-5)} title="Rewind 5s">
+                <SkipBack className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => localVideoRef.current?.pause()}>
-                <Pause className="h-3 w-3" />
+              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={togglePlayPause}>
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
-              <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => {
-                if (localVideoRef.current) localVideoRef.current.currentTime += 5;
-              }}>
-                <SkipForward className="h-3 w-3" />
+              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => skip(5)} title="Forward 5s">
+                <SkipForward className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => frameStep(1)}>⏩</Button>
-              <Button size="sm" variant="outline" className="h-7 px-2" onClick={onScreenshot}>
-                <Camera className="h-3 w-3" />
+              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => frameStep(1)} title="Frame forward">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={onScreenshot} className="h-8 px-2">
+                <Camera className="h-4 w-4" />
               </Button>
               <Select value={String(localSpeed)} onValueChange={handleLocalSpeed}>
-                <SelectTrigger className="w-16 h-7 text-xs ml-auto">
+                <SelectTrigger className="w-16 h-8 text-xs ml-auto">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
