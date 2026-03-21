@@ -123,6 +123,7 @@ ${ownerBio ? `Follow the coaching philosophy below unless the user asks otherwis
 ${userContext}
 ${analysisContextSection}
 ${dashboardContextSection}
+${royalTimingContextSection}
 Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data when available.`;
 
     const useStreaming = stream === true;

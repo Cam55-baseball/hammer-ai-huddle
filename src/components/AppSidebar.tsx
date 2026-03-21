@@ -290,6 +290,11 @@ export function AppSidebar() {
     // Players Club always visible
     items.push({ key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked });
 
+    // Royal Timing - visible to any subscribed user
+    if (showAll || modules.length > 0) {
+      items.push({ key: 'royal-timing', title: 'Royal Timing', url: '/royal-timing', icon: Crown });
+    }
+
     // Video Library - visible to any subscribed user
     if (showAll || modules.length > 0) {
       items.push({ key: 'video-library', title: 'Video Library', url: '/video-library', icon: Library });

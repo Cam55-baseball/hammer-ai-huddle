@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { SubscriptionGate } from "@/components/SubscriptionGate";
 import { RoyalTimingModule } from "@/components/royal-timing/RoyalTimingModule";
 

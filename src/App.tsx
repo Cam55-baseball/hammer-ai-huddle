@@ -182,6 +182,7 @@ const App = () => {
               <Route path="/base-stealing" element={<BaseStealingTrainer />} />
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
               <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
+              <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>

@@ -313,7 +313,7 @@ export function RoyalTimingModule() {
           </div>
 
           <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-            <Sparkles className="h-5 w-5 text-yellow-500" />
+            <Sparkles className="h-5 w-5 text-primary" />
             <div className="flex-1">
               <Label htmlFor="ask-hammer" className="text-sm font-medium cursor-pointer">Ask Hammer</Label>
               <p className="text-xs text-muted-foreground">Get elite-level AI insight on your timing study</p>
