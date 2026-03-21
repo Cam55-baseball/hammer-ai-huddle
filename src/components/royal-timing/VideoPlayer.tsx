@@ -113,7 +113,7 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
           <>
             <div className="relative rounded-lg overflow-hidden bg-black aspect-video">
               <video
-                ref={videoRef}
+                ref={setVideoRef}
                 src={videoUrl}
                 className="w-full h-full object-contain"
                 onTimeUpdate={handleTimeUpdate}
