@@ -94,7 +94,12 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         setCurrentTime(vid.currentTime);
       }
     };
-    const onSeeked = () => { seekingRef.current = false; };
+    const onSeeked = () => {
+      // Ignore seeks from the WebM duration workaround
+      if (!resolvingRef.current) {
+        seekingRef.current = false;
+      }
+    };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onEnded = () => setIsPlaying(false);
