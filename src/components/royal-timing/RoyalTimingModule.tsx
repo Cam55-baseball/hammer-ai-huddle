@@ -71,8 +71,8 @@ export function RoyalTimingModule() {
 
   // Master controls
   const masterPlay = useCallback(() => {
-    video1Ref.current?.play();
-    if (mode === 'comparison') video2Ref.current?.play();
+    video1Ref.current?.play().catch(console.warn);
+    if (mode === 'comparison') video2Ref.current?.play().catch(console.warn);
   }, [mode]);
 
   const masterPause = useCallback(() => {
