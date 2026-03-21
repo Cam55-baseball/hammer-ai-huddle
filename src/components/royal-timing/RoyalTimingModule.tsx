@@ -77,9 +77,14 @@ export function RoyalTimingModule() {
   }, [toast]);
 
   const masterPlay = useCallback(() => {
-    video1Ref.current?.play().catch(console.warn);
-    if (mode === 'comparison') video2Ref.current?.play().catch(console.warn);
-  }, [mode]);
+    const videos = [video1Ref.current, video2Ref.current].filter(Boolean) as HTMLVideoElement[];
+    videos.forEach(v => v.pause());
+    Promise.all(videos.map(v => v.play())).catch(() => {
+      setTimeout(() => {
+        videos.forEach(v => { v.play().catch(console.warn); });
+      }, 50);
+    });
+  }, []);
 
   const masterPause = useCallback(() => {
     video1Ref.current?.pause();
