@@ -66,7 +66,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         setDurationResolved(true);
         return;
       }
-      // WebM workaround
+      // WebM workaround — guard with resolvingRef
+      resolvingRef.current = true;
       vid.currentTime = 1e10;
       const onSeek = () => {
         vid.removeEventListener('seeked', onSeek);
@@ -75,6 +76,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         }
         vid.currentTime = 0;
         setDurationResolved(true);
+        // Small delay to let the seek-back complete before unguarding
+        setTimeout(() => { resolvingRef.current = false; }, 100);
       };
       vid.addEventListener('seeked', onSeek);
     };
