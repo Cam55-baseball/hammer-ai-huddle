@@ -87,9 +87,8 @@ export function RoyalTimingModule() {
   }, []);
 
   const masterPause = useCallback(() => {
-    video1Ref.current?.pause();
-    if (mode === 'comparison') video2Ref.current?.pause();
-  }, [mode]);
+    [video1Ref.current, video2Ref.current].filter(Boolean).forEach(v => v!.pause());
+  }, []);
 
   const masterRewind = useCallback(() => {
     if (video1Ref.current) video1Ref.current.currentTime = Math.max(0, video1Ref.current.currentTime - 5);
