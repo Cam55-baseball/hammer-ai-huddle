@@ -99,7 +99,11 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         setCurrentTime(vid.currentTime);
       }
     };
-    const onPlay = () => setIsPlaying(true);
+    const onPlay = () => {
+      seekingRef.current = false;
+      isDragging.current = false;
+      setIsPlaying(true);
+    };
     const onPause = () => setIsPlaying(false);
     const onEnded = () => setIsPlaying(false);
     const onRateChange = () => {

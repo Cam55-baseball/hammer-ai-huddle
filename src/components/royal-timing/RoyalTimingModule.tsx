@@ -91,14 +91,16 @@ export function RoyalTimingModule() {
   }, []);
 
   const masterRewind = useCallback(() => {
-    if (video1Ref.current) video1Ref.current.currentTime = Math.max(0, video1Ref.current.currentTime - 5);
-    if (mode === 'comparison' && video2Ref.current) video2Ref.current.currentTime = Math.max(0, video2Ref.current.currentTime - 5);
-  }, [mode]);
+    [video1Ref.current, video2Ref.current].filter(Boolean).forEach(v => {
+      v!.currentTime = Math.max(0, v!.currentTime - 5);
+    });
+  }, []);
 
   const masterSkip = useCallback(() => {
-    if (video1Ref.current) video1Ref.current.currentTime = Math.min(video1Ref.current.duration || Infinity, video1Ref.current.currentTime + 5);
-    if (mode === 'comparison' && video2Ref.current) video2Ref.current.currentTime = Math.min(video2Ref.current.duration || Infinity, video2Ref.current.currentTime + 5);
-  }, [mode]);
+    [video1Ref.current, video2Ref.current].filter(Boolean).forEach(v => {
+      v!.currentTime = Math.min(v!.duration || Infinity, v!.currentTime + 5);
+    });
+  }, []);
 
   const masterFrameStep = useCallback((direction: 1 | -1) => {
     const step = direction * (1 / 30);
