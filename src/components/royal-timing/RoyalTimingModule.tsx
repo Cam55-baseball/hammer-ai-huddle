@@ -168,7 +168,7 @@ export function RoyalTimingModule() {
     <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Crown className="h-8 w-8 text-yellow-500" />
+        <Crown className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold text-foreground">Royal Timing</h1>
           <p className="text-sm text-muted-foreground">Video-based timing audit & comparison system</p>
