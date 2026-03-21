@@ -142,18 +142,18 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
             <div className="flex flex-wrap items-center gap-1">
               <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => frameStep(-1)}>⏪</Button>
               <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => {
-                if (videoRef.current) videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 5);
+                if (localVideoRef.current) localVideoRef.current.currentTime = Math.max(0, localVideoRef.current.currentTime - 5);
               }}>
                 <SkipBack className="h-3 w-3" />
               </Button>
-              <Button size="sm" className="h-7 px-2" onClick={() => videoRef.current?.play()}>
+              <Button size="sm" className="h-7 px-2" onClick={() => localVideoRef.current?.play()}>
                 <Play className="h-3 w-3" />
               </Button>
-              <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => videoRef.current?.pause()}>
+              <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => localVideoRef.current?.pause()}>
                 <Pause className="h-3 w-3" />
               </Button>
               <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => {
-                if (videoRef.current) videoRef.current.currentTime += 5;
+                if (localVideoRef.current) localVideoRef.current.currentTime += 5;
               }}>
                 <SkipForward className="h-3 w-3" />
               </Button>
