@@ -143,6 +143,12 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
   const togglePlayPause = useCallback(() => {
     const vid = localVideoRef.current;
     if (!vid) return;
+    // Always clear seeking flag so timeupdate resumes
+    seekingRef.current = false;
+    if (seekTimeoutRef.current) {
+      clearTimeout(seekTimeoutRef.current);
+      seekTimeoutRef.current = null;
+    }
     if (vid.paused) {
       vid.play().then(() => setIsPlaying(true)).catch((err) => {
         console.warn('Play interrupted:', err.message);
