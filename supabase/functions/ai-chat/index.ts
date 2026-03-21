@@ -29,7 +29,7 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    const { messages, analysisContext, dashboardContext, stream } = await req.json();
+    const { messages, analysisContext, dashboardContext, royalTimingContext, stream } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
