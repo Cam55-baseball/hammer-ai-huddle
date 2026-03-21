@@ -30,6 +30,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const seekingRef = useRef(false);
+  const resolvingRef = useRef(false);
+  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -64,7 +66,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         setDurationResolved(true);
         return;
       }
-      // WebM workaround
+      // WebM workaround — guard with resolvingRef
+      resolvingRef.current = true;
       vid.currentTime = 1e10;
       const onSeek = () => {
         vid.removeEventListener('seeked', onSeek);
@@ -73,6 +76,8 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         }
         vid.currentTime = 0;
         setDurationResolved(true);
+        // Small delay to let the seek-back complete before unguarding
+        setTimeout(() => { resolvingRef.current = false; }, 100);
       };
       vid.addEventListener('seeked', onSeek);
     };
@@ -89,7 +94,12 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
         setCurrentTime(vid.currentTime);
       }
     };
-    const onSeeked = () => { seekingRef.current = false; };
+    const onSeeked = () => {
+      // Ignore seeks from the WebM duration workaround
+      if (!resolvingRef.current) {
+        seekingRef.current = false;
+      }
+    };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onEnded = () => setIsPlaying(false);
@@ -133,6 +143,12 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
   const togglePlayPause = useCallback(() => {
     const vid = localVideoRef.current;
     if (!vid) return;
+    // Always clear seeking flag so timeupdate resumes
+    seekingRef.current = false;
+    if (seekTimeoutRef.current) {
+      clearTimeout(seekTimeoutRef.current);
+      seekTimeoutRef.current = null;
+    }
     if (vid.paused) {
       vid.play().then(() => setIsPlaying(true)).catch((err) => {
         console.warn('Play interrupted:', err.message);
@@ -144,13 +160,19 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
     }
   }, []);
 
-  const handleScrub = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScrub = useCallback((val: number) => {
     const vid = localVideoRef.current;
     if (!vid) return;
     seekingRef.current = true;
-    const t = parseFloat(e.target.value);
-    vid.currentTime = clampTime(t, isFinite(vid.duration) ? vid.duration : duration);
+    const t = clampTime(val, isFinite(vid.duration) ? vid.duration : duration);
+    vid.currentTime = t;
     setCurrentTime(t);
+    // Safety fallback — clear seeking flag even if 'seeked' never fires
+    if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
+    seekTimeoutRef.current = setTimeout(() => {
+      seekingRef.current = false;
+      seekTimeoutRef.current = null;
+    }, 300);
   }, [duration]);
 
   const frameStep = useCallback((direction: 1 | -1) => {
@@ -228,7 +250,10 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
                 max={safeDuration || 1}
                 step={0.01}
                 value={currentTime}
-                onChange={handleScrub}
+                onInput={(e) => handleScrub(Number((e.target as HTMLInputElement).value))}
+                onChange={() => {}}
+                onMouseUp={() => { seekingRef.current = false; }}
+                onTouchEnd={() => { seekingRef.current = false; }}
                 className="w-full h-2 accent-primary cursor-pointer"
                 disabled={!durationResolved}
               />
