@@ -1,92 +1,158 @@
 
 
-# Royal Timing — Full E2E Video Control Restoration
+# Royal Timing — Storage, Library, Sharing & Messaging System
 
-## Root Cause Analysis
+## Overview
 
-The core problem is a **split-brain architecture**: each `VideoPlayer` child manages its own local state (`isPlaying`, `currentTime`, `seekingRef`), but the parent's master controls directly mutate `videoRef.current` (play, pause, seek, speed) without the child knowing. This causes:
+Six changes: (1) persist videos to cloud storage, (2) session library UI, (3) sharing system, (4) session messaging thread, (5) Ask Hammer context expansion, (6) UI text fix.
 
-1. **Play/Pause desync**: Master calls `video1Ref.current.play()` but the child's `isPlaying` state stays `false` until a native `play` event fires — which may be delayed or missed
-2. **Scrub/seek desync**: Master frame-step and skip mutate `currentTime` directly, but the child's `seekingRef` isn't set, so `timeupdate` may overwrite the scrubber position mid-seek
-3. **Speed desync**: `onSpeedChange` prop is passed to `VideoPlayer` but never called — local speed changes don't propagate back to the parent
-4. **Timer drift**: Synced timers read `video.currentTime` via RAF, but when master controls pause the video, the timer's RAF loop may still be running with stale state
+---
 
-## Architecture Fix
+## 1. Database Migration
 
-Eliminate the split-brain by making VideoPlayer fully event-driven from the native `<video>` element. The child already has `onPlay`, `onPause`, `onSeeked`, `onTimeUpdate` listeners — these correctly handle master-initiated mutations. The issue is that some edge cases aren't covered.
+### Alter `royal_timing_sessions`
+- Add `video_1_path text`, `video_2_path text` columns (storage file paths, replacing the `video_urls` array for new sessions)
 
-## Changes
-
-### 1. `src/components/royal-timing/VideoPlayer.tsx` — Hardened event-driven state
-
-**Remove the `onSpeedChange` prop** from the interface (it's unused internally and creates confusion). Speed is already synced via the `speed` prop + `useEffect`.
-
-**Fix the scrubber**: Replace the native `<input type="range">` with a proper controlled component that:
-- Uses `onPointerDown` to set a `isDragging` ref (replaces `seekingRef` for scrub interactions)
-- Uses `onPointerMove` (when dragging) for continuous updates
-- Uses `onPointerUp` to finalize the seek and clear the dragging flag
-- This eliminates the stuck-`seekingRef` problem entirely for scrub operations
-
-**Separate concerns for `seekingRef`**: Only use it for programmatic seeks (frame-step, skip), and always clear it in the `onSeeked` handler + 300ms fallback. The scrubber uses its own `isDragging` ref.
-
-**Ensure `onTimeUpdate` respects both flags**: Skip update if `seekingRef.current || isDragging.current`.
-
-**Add `onRateChange` listener**: Sync `localSpeed` state from the native `ratechange` event so master speed changes are reflected in the UI dropdown.
-
-### 2. `src/components/royal-timing/RoyalTimingModule.tsx` — Safer master controls
-
-**Master play**: Already calls `.play().catch()` — keep as-is. The child's `onPlay` event listener will update `isPlaying`.
-
-**Master pause**: Already calls `.pause()` — keep as-is. The child's `onPause` event listener will update `isPlaying`.
-
-**Master frame-step**: After setting `currentTime`, the child's `onSeeked` handler fires and clears any seeking state. No change needed — but add a small safety: call `.pause()` on both videos and let the child's `onPause` listener handle state.
-
-**Master skip/rewind**: Same — the child's `onTimeUpdate` and `onSeeked` handlers will pick up the new position.
-
-**Master speed**: Already sets `playbackRate` directly on both refs + updates `masterSpeed` state → child's `useEffect([speed])` syncs `localSpeed`. Add the `ratechange` listener as backup.
-
-**Remove `onSpeedChange` prop** from both `<VideoPlayer>` instances (unused).
-
-### 3. `src/hooks/useRoyalTimingTimer.ts` — Stable sync
-
-The timer hook is mostly correct. One fix:
-- In the `tick` callback, when `isSynced`, also check if the video is paused — if paused, still read `currentTime` but don't schedule another RAF tick (reduces CPU waste). Actually, the current approach of always reading `currentTime` via RAF is fine since it ensures frame-step changes are reflected immediately. Keep as-is.
-
-- Fix the `tick` dependency: `isSynced` is in the dependency array of `useCallback`, which means a new `tick` function is created on every sync/unsync toggle, and the `useEffect` re-subscribes. This is correct behavior.
-
-No changes needed to the timer hook.
-
-### 4. Scrubber Implementation Detail
-
-Replace the current `<input type="range">` scrubber with a pointer-event-driven approach:
-
-```text
-onPointerDown → set isDragging = true, capture pointer
-onPointerMove → if dragging, calculate position, set video.currentTime, update state
-onPointerUp   → set isDragging = false, release pointer
+### New table: `royal_timing_shares`
+```sql
+CREATE TABLE public.royal_timing_shares (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL REFERENCES royal_timing_sessions(id) ON DELETE CASCADE,
+  sender_id uuid NOT NULL,
+  recipient_id uuid NOT NULL,
+  message text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+-- RLS: sender or recipient can read; sender can insert; linked coach/player validation
 ```
 
-This provides:
-- Continuous feedback during drag (no waiting for `onChange`)
-- Clean release semantics (no stuck flags)
-- Works on both touch and mouse
+### New table: `royal_timing_messages`
+```sql
+CREATE TABLE public.royal_timing_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL REFERENCES royal_timing_sessions(id) ON DELETE CASCADE,
+  sender_id uuid NOT NULL,
+  message text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+-- RLS: sender or session owner or share recipient can read/insert
+-- Enable realtime: ALTER PUBLICATION supabase_realtime ADD TABLE public.royal_timing_messages;
+```
 
-Alternatively, keep the `<input type="range">` but use a simpler `isDragging` ref pattern:
-- `onPointerDown` → `isDragging.current = true`
-- `onInput` → update `currentTime` and `video.currentTime`
-- `onPointerUp` → `isDragging.current = false`
-- `onTimeUpdate` → skip if `isDragging.current`
+### Storage
+Use the existing `videos` bucket. Store at path `{user_id}/royal-timing/{session_id}/{filename}`.
 
-This second approach is simpler and preserves the existing UI. Use this.
+---
 
-### 5. `VideoPlayer` prop interface cleanup
+## 2. Video Upload to Cloud Storage
 
-Remove `onSpeedChange` from the interface and all call sites. The master speed is already propagated via the `speed` prop.
+**File: `src/components/royal-timing/RoyalTimingModule.tsx`**
+
+On submit:
+1. Upload video files (stored as state `File` objects, not just blob URLs) to `videos` bucket at `{user_id}/royal-timing/{session_id}/{slot}.mp4`
+2. Get public URLs
+3. Save paths in `video_1_path` / `video_2_path` columns
+4. Keep local blob URLs for playback during the session; store `File` references alongside
+
+Refactor `handleFileSelect` to store the `File` object in addition to the blob URL.
+
+---
+
+## 3. Session Library
+
+**New file: `src/components/royal-timing/RoyalTimingLibrary.tsx`**
+
+- Fetches all `royal_timing_sessions` for the user, ordered by `created_at desc`
+- Displays: date, subject, sport, video count
+- Actions: Open (loads session into the editor), Delete, Duplicate
+- Collapsible section at the top of the Royal Timing page
+
+**New file: `src/hooks/useRoyalTimingSessions.ts`**
+- Query hook for fetching user's sessions
+- Delete mutation
+- Duplicate mutation (insert copy with new id)
+
+**Update: `src/components/royal-timing/RoyalTimingModule.tsx`**
+- Add "My Sessions" button/tab at the top
+- When loading a session: populate video URLs (from storage signed URLs), subject, findings, AI response, timer data
+- Add session state management (current session id, editing vs new)
+
+---
+
+## 4. Sharing System
+
+**New file: `src/components/royal-timing/ShareSessionDialog.tsx`**
+- Modal triggered by "Share Session" button (visible after session is saved)
+- Recipient picker: queries `scout_follows` for linked coaches/players (accepted status)
+- Optional message field
+- Inserts into `royal_timing_shares`
+
+**New file: `src/components/royal-timing/SharedWithMeSection.tsx`**
+- Section in Royal Timing Library: "Shared With Me"
+- Queries `royal_timing_shares` where `recipient_id = auth.uid()`
+- Joins session data + sender profile
+- Opens full session (read-only videos + notes + timer data)
+- Shows sender's message
+
+**RLS for shares:**
+- Sender can INSERT (with check: sender is linked to recipient via `scout_follows`)
+- Sender and recipient can SELECT their own shares
+- Only session owner can DELETE the original session
+
+---
+
+## 5. Session Messaging Thread
+
+**New file: `src/components/royal-timing/SessionMessages.tsx`**
+- Chat-style thread inside a shared/owned session
+- Realtime subscription to `royal_timing_messages` filtered by `session_id`
+- Both session owner and share recipients can post messages
+- Messages persist and load with session
+
+**Realtime**: Subscribe to `royal_timing_messages` via Supabase Realtime for live updates.
+
+---
+
+## 6. Ask Hammer Context Expansion
+
+**Update: `src/components/royal-timing/RoyalTimingModule.tsx`**
+
+When Ask Hammer is triggered on a shared session, include:
+- Original session inputs (subject, findings)
+- All messages from `royal_timing_messages` for this session
+- Timer data
+- Shared message context
+
+Pass expanded `royalTimingContext` to `ai-chat` edge function.
+
+---
+
+## 7. UI Text Fix
+
+**File: `src/components/royal-timing/RoyalTimingModule.tsx`** line 317
+
+Change:
+```
+"Get elite-level AI insight on your timing study"
+```
+To:
+```
+"Get elite-level insight on your timing study"
+```
+
+---
 
 ## Files Summary
 
 | File | Change |
 |------|--------|
-| `src/components/royal-timing/VideoPlayer.tsx` | Replace seekingRef scrub logic with isDragging ref, add ratechange listener, remove onSpeedChange prop, harden event-driven state |
-| `src/components/royal-timing/RoyalTimingModule.tsx` | Remove onSpeedChange prop from VideoPlayer instances, clamp master skip/rewind values |
+| Migration SQL | Alter `royal_timing_sessions`, create `royal_timing_shares`, `royal_timing_messages` |
+| `src/components/royal-timing/RoyalTimingModule.tsx` | Video file upload to storage, session load/save, Ask Hammer context, UI text fix |
+| `src/components/royal-timing/RoyalTimingLibrary.tsx` | New — session list with open/delete/duplicate |
+| `src/components/royal-timing/ShareSessionDialog.tsx` | New — share session to linked coach/player |
+| `src/components/royal-timing/SharedWithMeSection.tsx` | New — view sessions shared with you |
+| `src/components/royal-timing/SessionMessages.tsx` | New — realtime chat thread per session |
+| `src/hooks/useRoyalTimingSessions.ts` | New — query/mutation hooks for sessions |
+| `src/pages/RoyalTiming.tsx` | Minor layout update to include library |
 
