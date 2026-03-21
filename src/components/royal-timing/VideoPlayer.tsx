@@ -19,9 +19,17 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot, onSpeedChange }: VideoPlayerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [localSpeed, setLocalSpeed] = useState(speed);
+
+  const setVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    localVideoRef.current = el;
+    if (typeof videoRef === 'object' && videoRef !== null) {
+      (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
+    }
+  }, [videoRef]);
 
   const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,42 +38,41 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
   }, [onFileSelect]);
 
   const handleTimeUpdate = useCallback(() => {
-    if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
-  }, [videoRef]);
+    if (localVideoRef.current) setCurrentTime(localVideoRef.current.currentTime);
+  }, []);
 
   const handleLoadedMetadata = useCallback(() => {
-    if (videoRef.current) {
-      // Workaround for WebM duration=Infinity
-      if (!isFinite(videoRef.current.duration)) {
-        videoRef.current.currentTime = 1e10;
+    if (localVideoRef.current) {
+      if (!isFinite(localVideoRef.current.duration)) {
+        localVideoRef.current.currentTime = 1e10;
         setTimeout(() => {
-          if (videoRef.current) {
-            setDuration(videoRef.current.duration);
-            videoRef.current.currentTime = 0;
+          if (localVideoRef.current) {
+            setDuration(localVideoRef.current.duration);
+            localVideoRef.current.currentTime = 0;
           }
         }, 200);
       } else {
-        setDuration(videoRef.current.duration);
+        setDuration(localVideoRef.current.duration);
       }
     }
-  }, [videoRef]);
+  }, []);
 
   const handleScrub = useCallback((value: number[]) => {
-    if (videoRef.current) videoRef.current.currentTime = value[0];
-  }, [videoRef]);
+    if (localVideoRef.current) localVideoRef.current.currentTime = value[0];
+  }, []);
 
   const frameStep = useCallback((direction: 1 | -1) => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime += direction * (1 / 30);
+    if (localVideoRef.current) {
+      localVideoRef.current.pause();
+      localVideoRef.current.currentTime += direction * (1 / 30);
     }
-  }, [videoRef]);
+  }, []);
 
   const handleLocalSpeed = useCallback((s: string) => {
     const v = parseFloat(s);
     setLocalSpeed(v);
-    if (videoRef.current) videoRef.current.playbackRate = v;
-  }, [videoRef]);
+    if (localVideoRef.current) localVideoRef.current.playbackRate = v;
+  }, []);
 
   const formatSec = (s: number) => {
     if (!isFinite(s)) return '0:00';
