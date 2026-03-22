@@ -26,6 +26,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const rafRef = useRef<number | null>(null);
   const videoRef = useRef<RefObject<HTMLVideoElement> | null>(null);
   const syncOffsetRef = useRef<number>(0);
+  const hasStartedRef = useRef<boolean>(false);
 
   const tick = useCallback(() => {
     if (isSynced && videoRef.current?.current) {
