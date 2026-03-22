@@ -155,7 +155,7 @@ export function RoyalTimingModule() {
       const timerData = {
         timer1: { elapsed: timer1.elapsed, wasSynced: timer1.isSynced },
         timer2: mode === 'comparison' ? { elapsed: timer2.elapsed, wasSynced: timer2.isSynced } : null,
-        master: mode === 'comparison' ? { elapsed: masterTimer.elapsed, wasSynced: masterTimer.isSynced } : null,
+        master: null,
       };
 
       let aiAnalysis = null;
