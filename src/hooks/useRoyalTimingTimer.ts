@@ -22,10 +22,12 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const accumulatedRef = useRef<number>(0);
   const rafRef = useRef<number | null>(null);
   const videoRef = useRef<RefObject<HTMLVideoElement> | null>(null);
+  const syncOffsetRef = useRef<number>(0);
 
   const tick = useCallback(() => {
     if (isSynced && videoRef.current?.current) {
-      setElapsed(videoRef.current.current.currentTime * 1000);
+      const videoMs = videoRef.current.current.currentTime * 1000;
+      setElapsed(Math.max(0, videoMs - syncOffsetRef.current));
     } else {
       const now = performance.now();
       setElapsed(accumulatedRef.current + (now - startTimeRef.current));
@@ -35,9 +37,13 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
 
   const start = useCallback(() => {
     if (isRunning) return;
-    startTimeRef.current = performance.now();
+    if (isSynced && videoRef.current?.current) {
+      syncOffsetRef.current = videoRef.current.current.currentTime * 1000;
+    } else {
+      startTimeRef.current = performance.now();
+    }
     setIsRunning(true);
-  }, [isRunning]);
+  }, [isRunning, isSynced]);
 
   const stop = useCallback(() => {
     if (!isRunning) return;
@@ -49,6 +55,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
 
   const reset = useCallback(() => {
     accumulatedRef.current = 0;
+    syncOffsetRef.current = 0;
     startTimeRef.current = performance.now();
     setElapsed(0);
   }, []);
@@ -56,6 +63,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const clear = useCallback(() => {
     setIsRunning(false);
     accumulatedRef.current = 0;
+    syncOffsetRef.current = 0;
     setElapsed(0);
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
@@ -66,26 +74,25 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const syncToVideo = useCallback((ref: RefObject<HTMLVideoElement>) => {
     videoRef.current = ref;
     setIsSynced(true);
-    if (ref.current) {
-      setElapsed(ref.current.currentTime * 1000);
-    }
+    // Don't start tracking — timer stays at 0 until user presses Start
   }, []);
 
   const unsync = useCallback(() => {
     videoRef.current = null;
     setIsSynced(false);
+    syncOffsetRef.current = 0;
     accumulatedRef.current = elapsed;
     startTimeRef.current = performance.now();
   }, [elapsed]);
 
   useEffect(() => {
-    if (isRunning || isSynced) {
+    if (isRunning) {
       rafRef.current = requestAnimationFrame(tick);
     }
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isRunning, isSynced, tick]);
+  }, [isRunning, tick]);
 
   const formatTime = useCallback((ms: number): string => {
     const totalSeconds = Math.floor(ms / 1000);
