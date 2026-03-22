@@ -1,49 +1,33 @@
 
 
-# Royal Timing — Timer Reset Bug & Master Control UI Fix
+# Fix: InlineTimer Sync Button Overflow
 
-## 1. Timer Reset Bug (Critical)
+## Problem
 
-**Root cause**: In `start()` (line 43-44), when synced, `syncOffsetRef.current` is always overwritten with the current video time. So after pause+resume via Auto mode, `start()` resets the offset to the current video position, making elapsed = 0.
+On mobile (390px), when the Master timer is synced, the `InlineTimer` row contains too many elements in a single flex row: label, time display, "Synced" badge, Auto toggle, play/pause, reset, and sync/unsync buttons. The last button overflows outside the container (visible in the screenshot — the unlink icon is clipped outside the card).
 
-**Fix in `src/hooks/useRoyalTimingTimer.ts`**:
+## Fix
 
-- Track whether the timer has been started at least once with a `hasStartedRef` boolean ref
-- In `start()`: only set `syncOffsetRef` on the **first** start (when `hasStartedRef` is false). On subsequent starts (resume), skip the offset update so elapsed continues from where it paused
-- Reset `hasStartedRef` in `reset()` and `clear()`
+**File: `src/components/royal-timing/InlineTimer.tsx`**
 
-```ts
-// start() fix
-const start = useCallback(() => {
-  if (isRunning) return;
-  if (isSynced && videoRef.current?.current) {
-    if (!hasStartedRef.current) {
-      syncOffsetRef.current = videoRef.current.current.currentTime * 1000;
-      hasStartedRef.current = true;
-    }
-  } else {
-    startTimeRef.current = performance.now();
-  }
-  setIsRunning(true);
-}, [isRunning, isSynced]);
-```
+1. **Add `flex-wrap` and `overflow-hidden`** to the outer container so items wrap to a second line instead of overflowing
+2. **Reduce gaps**: Change `gap-2` to `gap-1` to reclaim horizontal space
+3. **Add `shrink-0`** to all buttons and badges so they don't get crushed
+4. **Remove `ml-auto`** from the button group — with wrapping, `ml-auto` can cause odd spacing. Instead, let items flow naturally
 
-## 2. Master Control UI Overflow Fix
+Alternatively (and more cleanly): when `compact` is true (which it is for the mobile master timer), **wrap the timer into two rows** — top row for label + time + synced badge, bottom row for controls (auto toggle + buttons). This guarantees no overflow at any width.
 
-**Root cause**: The `flex-wrap` on the button row (line 342) combined with the InlineTimer + speed selector causes overflow on 390px viewports.
+**Chosen approach: Two-row layout when `compact`**
 
-**Fix in `src/components/royal-timing/RoyalTimingModule.tsx`** (lines 338-373):
+When `compact` prop is true:
+- **Row 1**: Label, timer value, Synced badge
+- **Row 2**: Auto toggle (if synced), Play/Pause, Reset, Sync/Unsync — with `flex-wrap` and small gaps
 
-- Remove `flex-wrap` from the button container, use `overflow-hidden` with `min-w-0`
-- Reduce button gaps and sizes for mobile: `gap-0.5`, buttons `h-6 w-6`
-- Make the speed selector narrower: `w-14`
-- Use `justify-between` instead of `justify-center` to distribute evenly
-- Add `overflow-x-auto` as fallback if content still overflows
+When `compact` is false (desktop): keep current single-row layout but add `overflow-hidden` as safety.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/hooks/useRoyalTimingTimer.ts` | Add `hasStartedRef` to prevent offset reset on resume |
-| `src/components/royal-timing/RoyalTimingModule.tsx` | Fix master control button container overflow on mobile |
+| `src/components/royal-timing/InlineTimer.tsx` | Split into two rows when `compact`, add overflow protection |
 
