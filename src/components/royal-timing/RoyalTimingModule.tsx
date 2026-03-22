@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ type VideoMode = 'single' | 'comparison';
 
 export function RoyalTimingModule() {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { sport: selectedSport } = useSportTheme();
   const { toast } = useToast();
@@ -302,6 +304,7 @@ export function RoyalTimingModule() {
         setCurrentSessionId(sessionId);
       }
       toast({ title: 'Session saved', description: 'Your session has been saved to My Sessions.' });
+      queryClient.invalidateQueries({ queryKey: ['royal-timing-sessions'] });
     } catch (err) {
       console.error('Save error:', err);
       toast({ title: 'Error saving session', variant: 'destructive' });
