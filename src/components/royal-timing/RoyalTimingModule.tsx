@@ -304,6 +304,7 @@ export function RoyalTimingModule() {
         setCurrentSessionId(sessionId);
       }
       toast({ title: 'Session saved', description: 'Your session has been saved to My Sessions.' });
+      queryClient.invalidateQueries({ queryKey: ['royal-timing-sessions'] });
     } catch (err) {
       console.error('Save error:', err);
       toast({ title: 'Error saving session', variant: 'destructive' });
