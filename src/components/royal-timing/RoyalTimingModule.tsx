@@ -272,7 +272,7 @@ export function RoyalTimingModule() {
   }, [timer1, timer2, masterTimer]);
 
   return (
-    <div className="space-y-6 p-4 md:p-6 pb-24 max-w-7xl mx-auto">
+    <div className="space-y-4 md:space-y-6 p-3 md:p-6 pb-24 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Crown className="h-8 w-8 text-primary" />
