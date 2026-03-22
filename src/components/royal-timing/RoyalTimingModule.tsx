@@ -17,6 +17,7 @@ import { useSportTheme } from '@/contexts/SportThemeContext';
 import { useRoyalTimingTimer } from '@/hooks/useRoyalTimingTimer';
 import { VideoPlayer } from './VideoPlayer';
 import { TimerDisplay } from './TimerDisplay';
+import { InlineTimer } from './InlineTimer';
 import { RoyalTimingLibrary } from './RoyalTimingLibrary';
 import { ShareSessionDialog } from './ShareSessionDialog';
 import { SessionMessages } from './SessionMessages';
