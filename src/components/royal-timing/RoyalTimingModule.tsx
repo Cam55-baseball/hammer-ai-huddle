@@ -17,6 +17,7 @@ import { useSportTheme } from '@/contexts/SportThemeContext';
 import { useRoyalTimingTimer } from '@/hooks/useRoyalTimingTimer';
 import { VideoPlayer } from './VideoPlayer';
 import { TimerDisplay } from './TimerDisplay';
+import { InlineTimer } from './InlineTimer';
 import { RoyalTimingLibrary } from './RoyalTimingLibrary';
 import { ShareSessionDialog } from './ShareSessionDialog';
 import { SessionMessages } from './SessionMessages';
@@ -318,23 +319,27 @@ export function RoyalTimingModule() {
       {/* Video Players + Master Controls */}
       {mode === 'comparison' ? (
         <div className={`grid grid-cols-1 ${isMobile ? 'gap-2' : 'md:grid-cols-2 gap-4'}`}>
-          <VideoPlayer
-            label="Video 1"
-            videoRef={video1Ref}
-            videoUrl={video1Url}
-            speed={masterSpeed}
-            onFileSelect={(f) => handleFileSelect(f, 1)}
-            onRemove={() => handleRemoveVideo(1)}
-            onScreenshot={() => handleScreenshot(video1Ref)}
-            controlsPosition={isMobile ? 'top' : 'bottom'}
-            compact={isMobile}
-          />
+          <div className="flex flex-col gap-1">
+            <InlineTimer label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} compact={isMobile} />
+            <VideoPlayer
+              label="Video 1"
+              videoRef={video1Ref}
+              videoUrl={video1Url}
+              speed={masterSpeed}
+              onFileSelect={(f) => handleFileSelect(f, 1)}
+              onRemove={() => handleRemoveVideo(1)}
+              onScreenshot={() => handleScreenshot(video1Ref)}
+              controlsPosition={isMobile ? 'top' : 'bottom'}
+              compact={isMobile}
+            />
+          </div>
 
-          {/* Master Controls — between videos on mobile, below on desktop */}
+          {/* Master Controls — between videos on mobile */}
           {isMobile && (video1Url || video2Url) && (
             <Card className="shadow-sm">
               <CardContent className="py-2 px-3">
-                <div className="flex items-center justify-center gap-1 flex-wrap">
+                <InlineTimer label="Master" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} compact />
+                <div className="flex items-center justify-center gap-1 flex-wrap mt-1">
                   <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => masterFrameStep(-1)}>
                     <ChevronLeft className="h-3 w-3" />
                   </Button>
@@ -368,19 +373,23 @@ export function RoyalTimingModule() {
             </Card>
           )}
 
-          <VideoPlayer
-            label="Video 2"
-            videoRef={video2Ref}
-            videoUrl={video2Url}
-            speed={masterSpeed}
-            onFileSelect={(f) => handleFileSelect(f, 2)}
-            onRemove={() => handleRemoveVideo(2)}
-            onScreenshot={() => handleScreenshot(video2Ref)}
-            compact={isMobile}
-          />
+          <div className="flex flex-col gap-1">
+            <InlineTimer label="Timer 2" timer={timer2} videoRef={video2Ref} hasVideo={!!video2Url} compact={isMobile} />
+            <VideoPlayer
+              label="Video 2"
+              videoRef={video2Ref}
+              videoUrl={video2Url}
+              speed={masterSpeed}
+              onFileSelect={(f) => handleFileSelect(f, 2)}
+              onRemove={() => handleRemoveVideo(2)}
+              onScreenshot={() => handleScreenshot(video2Ref)}
+              compact={isMobile}
+            />
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 max-w-3xl mx-auto gap-1">
+          <InlineTimer label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} />
           <VideoPlayer
             label="Video 1"
             videoRef={video1Ref}
@@ -427,16 +436,12 @@ export function RoyalTimingModule() {
         </Card>
       )}
 
-      {/* Timers */}
-      <div className={`grid gap-4 ${mode === 'comparison' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 max-w-md mx-auto'}`}>
-        <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} />
-        {mode === 'comparison' && (
-          <>
-            <TimerDisplay label="Timer 2" timer={timer2} videoRef={video2Ref} hasVideo={!!video2Url} />
-            <TimerDisplay label="Master Timer" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} />
-          </>
-        )}
-      </div>
+      {/* Master Timer for desktop comparison */}
+      {!isMobile && mode === 'comparison' && (
+        <div className="max-w-md mx-auto">
+          <InlineTimer label="Master Timer" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} />
+        </div>
+      )}
 
       <Separator />
 
