@@ -337,37 +337,39 @@ export function RoyalTimingModule() {
           {/* Master Controls — between videos on mobile */}
           {isMobile && (video1Url || video2Url) && (
             <Card className="shadow-sm">
-              <CardContent className="py-2 px-3">
-                <InlineTimer label="Master" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} compact />
-                <div className="flex items-center justify-between gap-0.5 mt-1 overflow-x-auto min-w-0">
-                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={() => masterFrameStep(-1)}>
-                    <ChevronLeft className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={masterRewind}>
-                    <SkipBack className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" className="h-7 w-7 shrink-0" onClick={masterPlay}>
-                    <Play className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={masterPause}>
-                    <Pause className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={masterSkip}>
-                    <SkipForward className="h-3 w-3" />
-                  </Button>
-                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={() => masterFrameStep(1)}>
-                    <ChevronRight className="h-3 w-3" />
-                  </Button>
-                  <Select value={String(masterSpeed)} onValueChange={(v) => handleSpeedChange(parseFloat(v))}>
-                    <SelectTrigger className="w-14 h-6 text-xs shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(s => (
-                        <SelectItem key={s} value={String(s)}>{s}x</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <CardContent className="py-1 px-2">
+                <div className="flex items-center gap-0.5 overflow-hidden min-w-0">
+                  <InlineTimer label="Master" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} compact />
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => masterFrameStep(-1)}>
+                      <ChevronLeft className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={masterRewind}>
+                      <SkipBack className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button size="icon" className="h-5 w-5" onClick={masterPlay}>
+                      <Play className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={masterPause}>
+                      <Pause className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={masterSkip}>
+                      <SkipForward className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => masterFrameStep(1)}>
+                      <ChevronRight className="h-2.5 w-2.5" />
+                    </Button>
+                    <Select value={String(masterSpeed)} onValueChange={(v) => handleSpeedChange(parseFloat(v))}>
+                      <SelectTrigger className="w-12 h-5 text-[10px] shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(s => (
+                          <SelectItem key={s} value={String(s)}>{s}x</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
