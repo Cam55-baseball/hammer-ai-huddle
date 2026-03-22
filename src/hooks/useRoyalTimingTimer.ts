@@ -72,6 +72,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
     setIsRunning(false);
     accumulatedRef.current = 0;
     syncOffsetRef.current = 0;
+    hasStartedRef.current = false;
     setElapsed(0);
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
