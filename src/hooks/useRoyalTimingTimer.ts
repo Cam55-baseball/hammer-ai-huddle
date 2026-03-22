@@ -26,6 +26,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const rafRef = useRef<number | null>(null);
   const videoRef = useRef<RefObject<HTMLVideoElement> | null>(null);
   const syncOffsetRef = useRef<number>(0);
+  const hasStartedRef = useRef<boolean>(false);
 
   const tick = useCallback(() => {
     if (isSynced && videoRef.current?.current) {
@@ -41,7 +42,10 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const start = useCallback(() => {
     if (isRunning) return;
     if (isSynced && videoRef.current?.current) {
-      syncOffsetRef.current = videoRef.current.current.currentTime * 1000;
+      if (!hasStartedRef.current) {
+        syncOffsetRef.current = videoRef.current.current.currentTime * 1000;
+        hasStartedRef.current = true;
+      }
     } else {
       startTimeRef.current = performance.now();
     }
@@ -59,6 +63,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const reset = useCallback(() => {
     accumulatedRef.current = 0;
     syncOffsetRef.current = 0;
+    hasStartedRef.current = false;
     startTimeRef.current = performance.now();
     setElapsed(0);
   }, []);
@@ -67,6 +72,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
     setIsRunning(false);
     accumulatedRef.current = 0;
     syncOffsetRef.current = 0;
+    hasStartedRef.current = false;
     setElapsed(0);
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);

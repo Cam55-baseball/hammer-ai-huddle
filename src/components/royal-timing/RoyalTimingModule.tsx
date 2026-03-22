@@ -339,27 +339,27 @@ export function RoyalTimingModule() {
             <Card className="shadow-sm">
               <CardContent className="py-2 px-3">
                 <InlineTimer label="Master" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} compact />
-                <div className="flex items-center justify-center gap-1 flex-wrap mt-1">
-                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => masterFrameStep(-1)}>
+                <div className="flex items-center justify-between gap-0.5 mt-1 overflow-x-auto min-w-0">
+                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={() => masterFrameStep(-1)}>
                     <ChevronLeft className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={masterRewind}>
+                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={masterRewind}>
                     <SkipBack className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" className="h-8 px-3" onClick={masterPlay}>
-                    <Play className="h-4 w-4" />
+                  <Button size="icon" className="h-7 w-7 shrink-0" onClick={masterPlay}>
+                    <Play className="h-3.5 w-3.5" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={masterPause}>
+                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={masterPause}>
                     <Pause className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={masterSkip}>
+                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={masterSkip}>
                     <SkipForward className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => masterFrameStep(1)}>
+                  <Button size="icon" variant="outline" className="h-6 w-6 shrink-0" onClick={() => masterFrameStep(1)}>
                     <ChevronRight className="h-3 w-3" />
                   </Button>
                   <Select value={String(masterSpeed)} onValueChange={(v) => handleSpeedChange(parseFloat(v))}>
-                    <SelectTrigger className="w-16 h-7 text-xs">
+                    <SelectTrigger className="w-14 h-6 text-xs shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
