@@ -28,6 +28,7 @@ type VideoMode = 'single' | 'comparison';
 
 export function RoyalTimingModule() {
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { sport: selectedSport } = useSportTheme();
   const { toast } = useToast();
