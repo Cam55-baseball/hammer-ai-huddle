@@ -1,33 +1,46 @@
 
 
-# Fix: InlineTimer Sync Button Overflow
+# Royal Timing — Master Controls One-Line & Session Video Playback
 
-## Problem
-
-On mobile (390px), when the Master timer is synced, the `InlineTimer` row contains too many elements in a single flex row: label, time display, "Synced" badge, Auto toggle, play/pause, reset, and sync/unsync buttons. The last button overflows outside the container (visible in the screenshot — the unlink icon is clipped outside the card).
-
-## Fix
+## 1. Master Controls: Single Line on Mobile
 
 **File: `src/components/royal-timing/InlineTimer.tsx`**
 
-1. **Add `flex-wrap` and `overflow-hidden`** to the outer container so items wrap to a second line instead of overflowing
-2. **Reduce gaps**: Change `gap-2` to `gap-1` to reclaim horizontal space
-3. **Add `shrink-0`** to all buttons and badges so they don't get crushed
-4. **Remove `ml-auto`** from the button group — with wrapping, `ml-auto` can cause odd spacing. Instead, let items flow naturally
+The compact (mobile) layout currently uses two rows. Merge everything into a single row:
 
-Alternatively (and more cleanly): when `compact` is true (which it is for the mobile master timer), **wrap the timer into two rows** — top row for label + time + synced badge, bottom row for controls (auto toggle + buttons). This guarantees no overflow at any width.
+- Remove the `flex-col` two-row split in the `compact` branch
+- Render all elements in one `flex items-center` row: label, time, synced badge, auto toggle, play/pause, reset, sync — all inline
+- Shrink buttons to `h-5 w-5` with `h-2.5 w-2.5` icons
+- Use `text-sm` for timer value (down from `text-base`)
+- Remove label text entirely in compact mode (save space) or use a 1-char abbreviation
+- Use `gap-0.5` throughout
 
-**Chosen approach: Two-row layout when `compact`**
+**File: `src/components/royal-timing/RoyalTimingModule.tsx` (lines 338-373)**
 
-When `compact` prop is true:
-- **Row 1**: Label, timer value, Synced badge
-- **Row 2**: Auto toggle (if synced), Play/Pause, Reset, Sync/Unsync — with `flex-wrap` and small gaps
+- Merge the InlineTimer and the master playback buttons into a single row too
+- Shrink master playback buttons to `h-5 w-5`
+- Speed selector: `w-12 h-5 text-[10px]`
+- Single `flex items-center gap-0.5` container for everything
 
-When `compact` is false (desktop): keep current single-row layout but add `overflow-hidden` as safety.
+## 2. Session Videos Viewable in Library
+
+When a user clicks on a session in the Library, they currently just load it into the main editor. The videos stored at `video_1_path` / `video_2_path` get loaded via `getPublicUrl`. This already works — sessions with stored videos display them.
+
+**However**, the session row in the library only shows a "Video" badge but doesn't let users preview videos without fully loading the session. Add an expandable video preview to session rows:
+
+**File: `src/components/royal-timing/RoyalTimingLibrary.tsx`**
+
+- In `SessionRow`, add a clickable expand toggle (e.g., eye icon) that shows video thumbnails/players inline below the session info
+- When expanded, fetch signed URLs for `video_1_path` and `video_2_path` using `supabase.storage.from('videos').createSignedUrl()`
+- Render compact `<video>` elements (small aspect ratio, controls) for each available video
+- Use a local `useState` for expanded state per row
+- Keep the row compact when collapsed (current behavior)
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/royal-timing/InlineTimer.tsx` | Split into two rows when `compact`, add overflow protection |
+| `src/components/royal-timing/InlineTimer.tsx` | Merge compact mode into single row, shrink all elements |
+| `src/components/royal-timing/RoyalTimingModule.tsx` | Merge master timer + playback into one compact row |
+| `src/components/royal-timing/RoyalTimingLibrary.tsx` | Add expandable video preview to session rows |
 
