@@ -174,10 +174,21 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
                   >
                     {msg.message}
                   </div>
-                  <span className="text-[10px] text-muted-foreground mt-0.5">
-                    {profileCache[msg.sender_id] || (isMe ? 'You' : 'User')} ·{' '}
-                    {msg.created_at ? format(new Date(msg.created_at), 'h:mm a') : ''}
-                  </span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      {profileCache[msg.sender_id] || (isMe ? 'You' : 'User')} ·{' '}
+                      {msg.created_at ? format(new Date(msg.created_at), 'h:mm a') : ''}
+                    </span>
+                    {isMe && (
+                      <button
+                        onClick={() => handleDelete(msg.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title="Delete message"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })
