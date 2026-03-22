@@ -315,20 +315,25 @@ export function RoyalTimingModule() {
         </CardContent>
       </Card>
 
-      {/* Video Players + Master Controls */}
+      {/* Video Players + Inline Timers + Master Controls */}
       {mode === 'comparison' ? (
         <div className={`grid grid-cols-1 ${isMobile ? 'gap-2' : 'md:grid-cols-2 gap-4'}`}>
-          <VideoPlayer
-            label="Video 1"
-            videoRef={video1Ref}
-            videoUrl={video1Url}
-            speed={masterSpeed}
-            onFileSelect={(f) => handleFileSelect(f, 1)}
-            onRemove={() => handleRemoveVideo(1)}
-            onScreenshot={() => handleScreenshot(video1Ref)}
-            controlsPosition={isMobile ? 'top' : 'bottom'}
-            compact={isMobile}
-          />
+          <div className="space-y-1">
+            <VideoPlayer
+              label="Video 1"
+              videoRef={video1Ref}
+              videoUrl={video1Url}
+              speed={masterSpeed}
+              onFileSelect={(f) => handleFileSelect(f, 1)}
+              onRemove={() => handleRemoveVideo(1)}
+              onScreenshot={() => handleScreenshot(video1Ref)}
+              controlsPosition={isMobile ? 'top' : 'bottom'}
+              compact={isMobile}
+            />
+            {video1Url && (
+              <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} compact />
+            )}
+          </div>
 
           {/* Master Controls — between videos on mobile, below on desktop */}
           {isMobile && (video1Url || video2Url) && (
@@ -363,24 +368,41 @@ export function RoyalTimingModule() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => {
+                      timer1.syncToVideo(video1Ref);
+                      timer2.syncToVideo(video2Ref);
+                    }}
+                    title="Sync Both Timers"
+                  >
+                    <Link className="h-3 w-3 mr-1" /> Sync
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          <VideoPlayer
-            label="Video 2"
-            videoRef={video2Ref}
-            videoUrl={video2Url}
-            speed={masterSpeed}
-            onFileSelect={(f) => handleFileSelect(f, 2)}
-            onRemove={() => handleRemoveVideo(2)}
-            onScreenshot={() => handleScreenshot(video2Ref)}
-            compact={isMobile}
-          />
+          <div className="space-y-1">
+            <VideoPlayer
+              label="Video 2"
+              videoRef={video2Ref}
+              videoUrl={video2Url}
+              speed={masterSpeed}
+              onFileSelect={(f) => handleFileSelect(f, 2)}
+              onRemove={() => handleRemoveVideo(2)}
+              onScreenshot={() => handleScreenshot(video2Ref)}
+              compact={isMobile}
+            />
+            {video2Url && (
+              <TimerDisplay label="Timer 2" timer={timer2} videoRef={video2Ref} hasVideo={!!video2Url} compact />
+            )}
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 max-w-3xl mx-auto space-y-1">
           <VideoPlayer
             label="Video 1"
             videoRef={video1Ref}
@@ -390,6 +412,9 @@ export function RoyalTimingModule() {
             onRemove={() => handleRemoveVideo(1)}
             onScreenshot={() => handleScreenshot(video1Ref)}
           />
+          {video1Url && (
+            <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} compact={isMobile} />
+          )}
         </div>
       )}
 
@@ -422,21 +447,20 @@ export function RoyalTimingModule() {
                   </SelectContent>
                 </Select>
               </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  timer1.syncToVideo(video1Ref);
+                  timer2.syncToVideo(video2Ref);
+                }}
+              >
+                <Link className="h-4 w-4 mr-1" /> Sync Both Timers
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Timers */}
-      <div className={`grid gap-4 ${mode === 'comparison' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 max-w-md mx-auto'}`}>
-        <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} />
-        {mode === 'comparison' && (
-          <>
-            <TimerDisplay label="Timer 2" timer={timer2} videoRef={video2Ref} hasVideo={!!video2Url} />
-            <TimerDisplay label="Master Timer" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} />
-          </>
-        )}
-      </div>
 
       <Separator />
 
