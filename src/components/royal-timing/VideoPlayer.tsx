@@ -27,7 +27,7 @@ function clampTime(t: number, dur: number): number {
   return Math.max(0, Math.min(isFinite(dur) ? dur : 0, t));
 }
 
-export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot }: VideoPlayerProps) {
+export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot, controlsPosition = 'bottom', compact = false }: VideoPlayerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const resolvingRef = useRef(false);
