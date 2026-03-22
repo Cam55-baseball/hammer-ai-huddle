@@ -12,6 +12,8 @@ interface VideoPlayerProps {
   onFileSelect: (file: File) => void;
   onRemove: () => void;
   onScreenshot: () => void;
+  controlsPosition?: 'top' | 'bottom';
+  compact?: boolean;
 }
 
 function formatSec(s: number): string {
