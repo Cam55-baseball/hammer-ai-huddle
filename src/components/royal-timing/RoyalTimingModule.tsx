@@ -337,30 +337,30 @@ export function RoyalTimingModule() {
           {/* Master Controls — between videos on mobile */}
           {isMobile && (video1Url || video2Url) && (
             <Card className="shadow-sm">
-              <CardContent className="py-1 px-2">
-                <div className="flex items-center gap-0.5 overflow-hidden min-w-0">
+              <CardContent className="py-1.5 px-2">
+                <div className="flex flex-col gap-1">
                   <InlineTimer label="Master" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} compact />
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => masterFrameStep(-1)}>
-                      <ChevronLeft className="h-2.5 w-2.5" />
+                  <div className="flex items-center justify-between gap-1">
+                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => masterFrameStep(-1)}>
+                      <ChevronLeft className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={masterRewind}>
-                      <SkipBack className="h-2.5 w-2.5" />
+                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={masterRewind}>
+                      <SkipBack className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" className="h-5 w-5" onClick={masterPlay}>
-                      <Play className="h-2.5 w-2.5" />
+                    <Button size="icon" className="h-8 w-8" onClick={masterPlay}>
+                      <Play className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={masterPause}>
-                      <Pause className="h-2.5 w-2.5" />
+                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={masterPause}>
+                      <Pause className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={masterSkip}>
-                      <SkipForward className="h-2.5 w-2.5" />
+                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={masterSkip}>
+                      <SkipForward className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="icon" variant="outline" className="h-5 w-5" onClick={() => masterFrameStep(1)}>
-                      <ChevronRight className="h-2.5 w-2.5" />
+                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => masterFrameStep(1)}>
+                      <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                     <Select value={String(masterSpeed)} onValueChange={(v) => handleSpeedChange(parseFloat(v))}>
-                      <SelectTrigger className="w-12 h-5 text-[10px] shrink-0">
+                      <SelectTrigger className="w-14 h-8 text-xs shrink-0">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
