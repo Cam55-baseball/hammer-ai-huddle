@@ -4,6 +4,8 @@ interface UseRoyalTimingTimerReturn {
   elapsed: number;
   isRunning: boolean;
   isSynced: boolean;
+  autoStartStop: boolean;
+  setAutoStartStop: (val: boolean) => void;
   start: () => void;
   stop: () => void;
   reset: () => void;
@@ -17,6 +19,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const [elapsed, setElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isSynced, setIsSynced] = useState(false);
+  const [autoStartStop, setAutoStartStop] = useState(false);
 
   const startTimeRef = useRef<number>(0);
   const accumulatedRef = useRef<number>(0);
@@ -74,7 +77,6 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const syncToVideo = useCallback((ref: RefObject<HTMLVideoElement>) => {
     videoRef.current = ref;
     setIsSynced(true);
-    // Don't start tracking — timer stays at 0 until user presses Start
   }, []);
 
   const unsync = useCallback(() => {
@@ -94,6 +96,24 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
     };
   }, [isRunning, tick]);
 
+  // Auto start/stop: listen to video play/pause events
+  useEffect(() => {
+    const video = videoRef.current?.current;
+    if (!isSynced || !autoStartStop || !video) return;
+
+    const onPlay = () => { if (!isRunning) start(); };
+    const onPause = () => { if (isRunning) stop(); };
+
+    video.addEventListener('play', onPlay);
+    video.addEventListener('pause', onPause);
+    video.addEventListener('ended', onPause);
+    return () => {
+      video.removeEventListener('play', onPlay);
+      video.removeEventListener('pause', onPause);
+      video.removeEventListener('ended', onPause);
+    };
+  }, [isSynced, autoStartStop, isRunning, start, stop]);
+
   const formatTime = useCallback((ms: number): string => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -102,5 +122,5 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
   }, []);
 
-  return { elapsed, isRunning, isSynced, start, stop, reset, clear, syncToVideo, unsync, formatTime };
+  return { elapsed, isRunning, isSynced, autoStartStop, setAutoStartStop, start, stop, reset, clear, syncToVideo, unsync, formatTime };
 }

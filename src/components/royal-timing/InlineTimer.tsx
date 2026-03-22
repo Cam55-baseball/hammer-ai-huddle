@@ -2,6 +2,7 @@ import { RefObject } from 'react';
 import { Play, Pause, RotateCcw, Link, Unlink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 
 interface InlineTimerProps {
   label: string;
@@ -9,6 +10,8 @@ interface InlineTimerProps {
     elapsed: number;
     isRunning: boolean;
     isSynced: boolean;
+    autoStartStop: boolean;
+    setAutoStartStop: (val: boolean) => void;
     start: () => void;
     stop: () => void;
     reset: () => void;
@@ -32,6 +35,17 @@ export function InlineTimer({ label, timer, videoRef, hasVideo, compact = false 
 
       {timer.isSynced && (
         <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">Synced</Badge>
+      )}
+
+      {timer.isSynced && (
+        <div className="flex items-center gap-1">
+          <Switch
+            checked={timer.autoStartStop}
+            onCheckedChange={timer.setAutoStartStop}
+            className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-3 [&>span]:w-3 [&>span]:data-[state=checked]:translate-x-3"
+          />
+          <span className="text-[9px] text-muted-foreground">Auto</span>
+        </div>
       )}
 
       <div className="flex items-center gap-1 ml-auto">
