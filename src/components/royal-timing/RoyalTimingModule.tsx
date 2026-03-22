@@ -574,6 +574,23 @@ export function RoyalTimingModule() {
           )}
         </CardContent>
       </Card>
+
+      {/* Save Session Button */}
+      {!isReadOnly && (
+        <Button
+          onClick={handleSaveSession}
+          disabled={submitting || (!video1Url && !video2Url)}
+          variant="secondary"
+          className="w-full"
+          size="lg"
+        >
+          {submitting ? (
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+          ) : (
+            <><Save className="h-4 w-4 mr-2" /> {currentSessionId ? 'Update Session' : 'Save Session'}</>
+          )}
+        </Button>
+      )}
     </div>
   );
 }
