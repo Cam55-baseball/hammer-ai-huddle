@@ -1,58 +1,40 @@
 
 
-# Royal Timing — Timer UI Placement Optimization
+# Royal Timing — Timer Sync with Delayed Start
 
-## Current Layout
+## Problem
 
-Timers are rendered in a separate grid section (lines 430–439) **below all videos and master controls**. This forces users to scroll away from the video to see the timer, especially on mobile.
+Currently, when a timer is synced to a video (`syncToVideo`), the RAF loop starts immediately (line 82: `if (isRunning || isSynced)`), and the timer continuously reads `video.currentTime`. There's no concept of "synced but not yet started" — syncing forces the timer to track the video immediately.
 
-## Plan
+The user wants: sync establishes the link, but the timer stays at 0 until the user presses Start. Once started, it reads the video's current position and tracks from there.
 
-### 1. Create a compact `InlineTimer` component
+## Solution
 
-**New file: `src/components/royal-timing/InlineTimer.tsx`**
+**File: `src/hooks/useRoyalTimingTimer.ts`**
 
-A minimal, compact timer display designed to sit directly above or overlaid on its video. No Card wrapper — just a small row showing:
-- Timer value (mono font, smaller text ~`text-lg` on mobile, `text-xl` on desktop)
-- Start/Stop toggle (icon-only button)
-- Reset (icon-only)
-- Sync/Unsync toggle (icon-only)
-- Synced badge (tiny)
+Introduce a `isStarted` concept that separates "linked to video" from "actively displaying time":
 
-Same props as `TimerDisplay` — reuses the same timer hook interface. Pure UI change.
+1. **New ref: `syncOffsetRef`** — stores the video timestamp (in ms) at the moment the user presses Start. When synced and started, elapsed = `video.currentTime * 1000 - syncOffsetRef.current`.
 
-Layout: single horizontal row, compact spacing, semi-transparent background when used as overlay.
+2. **Change `syncToVideo`**: Only sets `isSynced = true` and stores the video ref. Does NOT start the RAF loop or update elapsed. Timer stays at 0.
 
-### 2. Move timers next to their videos in `RoyalTimingModule.tsx`
+3. **Change `start` (when synced)**: Captures current `video.currentTime * 1000` into `syncOffsetRef`, then sets `isRunning = true`. The RAF loop starts.
 
-**File: `src/components/royal-timing/RoyalTimingModule.tsx`**
+4. **Change `tick` (synced branch)**: Instead of `setElapsed(video.currentTime * 1000)`, compute `setElapsed(video.currentTime * 1000 - syncOffsetRef.current)`. This gives elapsed time relative to the moment Start was pressed.
 
-- Remove the separate timer grid section (lines 430–439)
-- Wrap each `VideoPlayer` + its `InlineTimer` in a small container div
-- Render `InlineTimer` directly **above** its associated VideoPlayer
-- In comparison mode: Timer 1 above Video 1, Timer 2 above Video 2
-- Master Timer: render inline with master controls (as a small readout)
-- In single mode: Timer 1 above Video 1
+5. **Change RAF trigger**: Only run RAF when `isRunning` (remove `|| isSynced` from the condition). Synced-but-not-started = no RAF = timer shows 0.
 
-This keeps each timer visually attached to its video with zero extra scrolling.
+6. **`stop` (when synced)**: Captures current elapsed into `accumulatedRef`, sets `isRunning = false`. Timer freezes at last value.
 
-### 3. Mobile sizing
+7. **`reset`**: Also resets `syncOffsetRef` to 0 and elapsed to 0.
 
-- `InlineTimer` uses smaller text (`text-base` on mobile) and icon-only buttons (`h-6 w-6`)
-- Minimal vertical padding (`py-1 px-2`)
-- No Card/CardHeader overhead — just a `div` with `rounded-md bg-muted/50`
+8. **Scrub behavior**: When synced and running, scrubbing the video naturally updates `video.currentTime`, so the timer follows (minus the offset). When synced but stopped, timer stays frozen — correct behavior.
 
-### No Logic Changes
-
-- Same timer hook instances (`timer1`, `timer2`, `masterTimer`)
-- Same sync/unsync behavior
-- Same start/stop/reset/clear functions
-- `TimerDisplay.tsx` kept as-is (unused but not deleted, in case needed elsewhere)
+**No changes to `InlineTimer.tsx` or `RoyalTimingModule.tsx`** — the UI already has separate Sync and Start buttons.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/royal-timing/InlineTimer.tsx` | New — compact inline timer row |
-| `src/components/royal-timing/RoyalTimingModule.tsx` | Move timers above their videos, remove separate timer grid, add master timer to master controls |
+| `src/hooks/useRoyalTimingTimer.ts` | Add `syncOffsetRef`, change tick/start/stop/sync logic to support delayed start |
 
