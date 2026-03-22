@@ -63,6 +63,7 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const reset = useCallback(() => {
     accumulatedRef.current = 0;
     syncOffsetRef.current = 0;
+    hasStartedRef.current = false;
     startTimeRef.current = performance.now();
     setElapsed(0);
   }, []);
