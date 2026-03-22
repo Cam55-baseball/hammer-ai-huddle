@@ -42,7 +42,10 @@ export function useRoyalTimingTimer(): UseRoyalTimingTimerReturn {
   const start = useCallback(() => {
     if (isRunning) return;
     if (isSynced && videoRef.current?.current) {
-      syncOffsetRef.current = videoRef.current.current.currentTime * 1000;
+      if (!hasStartedRef.current) {
+        syncOffsetRef.current = videoRef.current.current.currentTime * 1000;
+        hasStartedRef.current = true;
+      }
     } else {
       startTimeRef.current = performance.now();
     }
