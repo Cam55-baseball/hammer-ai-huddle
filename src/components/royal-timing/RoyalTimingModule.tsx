@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -255,6 +255,60 @@ export function RoyalTimingModule() {
       setSubmitting(false);
     }
   }, [user, subjectReason, findings, askHammer, selectedSport, timer1, timer2, masterTimer, mode, video1Url, video2Url, video1File, video2File, currentSessionId, toast]);
+
+  const handleSaveSession = useCallback(async () => {
+    if (!user) return;
+    if (!video1Url && !video2Url) {
+      toast({ title: 'No videos to save', description: 'Please load at least one video first.', variant: 'destructive' });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const timerData = {
+        timer1: { elapsed: timer1.elapsed, wasSynced: timer1.isSynced },
+        timer2: mode === 'comparison' ? { elapsed: timer2.elapsed, wasSynced: timer2.isSynced } : null,
+        master: mode === 'comparison' ? { elapsed: masterTimer.elapsed, wasSynced: masterTimer.isSynced } : null,
+      };
+      const sessionId = currentSessionId || crypto.randomUUID();
+      let video1Path: string | null = null;
+      let video2Path: string | null = null;
+      if (video1File) video1Path = await uploadVideo(video1File, sessionId, 1);
+      if (video2File) video2Path = await uploadVideo(video2File, sessionId, 2);
+
+      if (currentSessionId) {
+        const updateData: Record<string, unknown> = {
+          subject_reason: subjectReason || null,
+          findings: findings || null,
+          timer_data: timerData,
+          sport: selectedSport,
+        };
+        if (video1Path) updateData.video_1_path = video1Path;
+        if (video2Path) updateData.video_2_path = video2Path;
+        const { error } = await supabase.from('royal_timing_sessions').update(updateData).eq('id', currentSessionId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('royal_timing_sessions').insert({
+          id: sessionId,
+          user_id: user.id,
+          subject_reason: subjectReason || null,
+          findings: findings || null,
+          timer_data: timerData,
+          video_urls: [video1Url, video2Url].filter(Boolean) as string[],
+          video_1_path: video1Path,
+          video_2_path: video2Path,
+          sport: selectedSport,
+        });
+        if (error) throw error;
+        setCurrentSessionId(sessionId);
+      }
+      toast({ title: 'Session saved', description: 'Your session has been saved to My Sessions.' });
+    } catch (err) {
+      console.error('Save error:', err);
+      toast({ title: 'Error saving session', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  }, [user, subjectReason, findings, selectedSport, timer1, timer2, masterTimer, mode, video1Url, video2Url, video1File, video2File, currentSessionId, toast]);
 
   const handleNewSession = useCallback(() => {
     setCurrentSessionId(null);
@@ -520,6 +574,23 @@ export function RoyalTimingModule() {
           )}
         </CardContent>
       </Card>
+
+      {/* Save Session Button */}
+      {!isReadOnly && (
+        <Button
+          onClick={handleSaveSession}
+          disabled={submitting || (!video1Url && !video2Url)}
+          variant="secondary"
+          className="w-full"
+          size="lg"
+        >
+          {submitting ? (
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+          ) : (
+            <><Save className="h-4 w-4 mr-2" /> {currentSessionId ? 'Update Session' : 'Save Session'}</>
+          )}
+        </Button>
+      )}
     </div>
   );
 }

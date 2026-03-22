@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Send, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -76,7 +76,6 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
         (payload) => {
           const newMsg = payload.new as Message;
           setMessages((prev) => [...prev, newMsg]);
-          // Fetch name if not cached
           if (!profileCache[newMsg.sender_id]) {
             supabase
               .from('profiles')
@@ -92,6 +91,19 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
                 }
               });
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'royal_timing_messages',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const oldMsg = payload.old as { id: string };
+          setMessages((prev) => prev.filter((m) => m.id !== oldMsg.id));
         }
       )
       .subscribe();
@@ -127,6 +139,16 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
     }
   };
 
+  const handleDelete = async (msgId: string) => {
+    try {
+      const { error } = await supabase.from('royal_timing_messages').delete().eq('id', msgId);
+      if (error) throw error;
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    } catch (err) {
+      console.error('Delete message error:', err);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -152,10 +174,21 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
                   >
                     {msg.message}
                   </div>
-                  <span className="text-[10px] text-muted-foreground mt-0.5">
-                    {profileCache[msg.sender_id] || (isMe ? 'You' : 'User')} ·{' '}
-                    {msg.created_at ? format(new Date(msg.created_at), 'h:mm a') : ''}
-                  </span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      {profileCache[msg.sender_id] || (isMe ? 'You' : 'User')} ·{' '}
+                      {msg.created_at ? format(new Date(msg.created_at), 'h:mm a') : ''}
+                    </span>
+                    {isMe && (
+                      <button
+                        onClick={() => handleDelete(msg.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title="Delete message"
+                      >
+                        <Trash2 className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })
