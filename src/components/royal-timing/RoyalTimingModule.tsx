@@ -253,7 +253,7 @@ export function RoyalTimingModule() {
     } finally {
       setSubmitting(false);
     }
-  }, [user, subjectReason, findings, askHammer, selectedSport, timer1, timer2, masterTimer, mode, video1Url, video2Url, video1File, video2File, currentSessionId, toast]);
+  }, [user, subjectReason, findings, askHammer, selectedSport, timer1, timer2, mode, video1Url, video2Url, video1File, video2File, currentSessionId, toast]);
 
   const handleNewSession = useCallback(() => {
     setCurrentSessionId(null);
