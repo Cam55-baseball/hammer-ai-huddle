@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight, Link } from 'lucide-react';
+import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,7 +49,7 @@ export function RoyalTimingModule() {
 
   const timer1 = useRoyalTimingTimer();
   const timer2 = useRoyalTimingTimer();
-  // masterTimer removed — each video has its own inline timer
+  const masterTimer = useRoyalTimingTimer();
 
   const handleFileSelect = useCallback((file: File, slot: 1 | 2) => {
     const url = URL.createObjectURL(file);
@@ -155,7 +155,7 @@ export function RoyalTimingModule() {
       const timerData = {
         timer1: { elapsed: timer1.elapsed, wasSynced: timer1.isSynced },
         timer2: mode === 'comparison' ? { elapsed: timer2.elapsed, wasSynced: timer2.isSynced } : null,
-        master: null,
+        master: mode === 'comparison' ? { elapsed: masterTimer.elapsed, wasSynced: masterTimer.isSynced } : null,
       };
 
       let aiAnalysis = null;
@@ -253,7 +253,7 @@ export function RoyalTimingModule() {
     } finally {
       setSubmitting(false);
     }
-  }, [user, subjectReason, findings, askHammer, selectedSport, timer1, timer2, mode, video1Url, video2Url, video1File, video2File, currentSessionId, toast]);
+  }, [user, subjectReason, findings, askHammer, selectedSport, timer1, timer2, masterTimer, mode, video1Url, video2Url, video1File, video2File, currentSessionId, toast]);
 
   const handleNewSession = useCallback(() => {
     setCurrentSessionId(null);
@@ -267,8 +267,9 @@ export function RoyalTimingModule() {
     setVideo2File(null);
     timer1.clear();
     timer2.clear();
+    masterTimer.clear();
     setMode('single');
-  }, [timer1, timer2]);
+  }, [timer1, timer2, masterTimer]);
 
   return (
     <div className="space-y-4 md:space-y-6 p-3 md:p-6 pb-24 max-w-7xl mx-auto">
@@ -314,25 +315,20 @@ export function RoyalTimingModule() {
         </CardContent>
       </Card>
 
-      {/* Video Players + Inline Timers + Master Controls */}
+      {/* Video Players + Master Controls */}
       {mode === 'comparison' ? (
         <div className={`grid grid-cols-1 ${isMobile ? 'gap-2' : 'md:grid-cols-2 gap-4'}`}>
-          <div className="space-y-1">
-            <VideoPlayer
-              label="Video 1"
-              videoRef={video1Ref}
-              videoUrl={video1Url}
-              speed={masterSpeed}
-              onFileSelect={(f) => handleFileSelect(f, 1)}
-              onRemove={() => handleRemoveVideo(1)}
-              onScreenshot={() => handleScreenshot(video1Ref)}
-              controlsPosition={isMobile ? 'top' : 'bottom'}
-              compact={isMobile}
-            />
-            {video1Url && (
-              <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} compact />
-            )}
-          </div>
+          <VideoPlayer
+            label="Video 1"
+            videoRef={video1Ref}
+            videoUrl={video1Url}
+            speed={masterSpeed}
+            onFileSelect={(f) => handleFileSelect(f, 1)}
+            onRemove={() => handleRemoveVideo(1)}
+            onScreenshot={() => handleScreenshot(video1Ref)}
+            controlsPosition={isMobile ? 'top' : 'bottom'}
+            compact={isMobile}
+          />
 
           {/* Master Controls — between videos on mobile, below on desktop */}
           {isMobile && (video1Url || video2Url) && (
@@ -372,24 +368,19 @@ export function RoyalTimingModule() {
             </Card>
           )}
 
-          <div className="space-y-1">
-            <VideoPlayer
-              label="Video 2"
-              videoRef={video2Ref}
-              videoUrl={video2Url}
-              speed={masterSpeed}
-              onFileSelect={(f) => handleFileSelect(f, 2)}
-              onRemove={() => handleRemoveVideo(2)}
-              onScreenshot={() => handleScreenshot(video2Ref)}
-              compact={isMobile}
-            />
-            {video2Url && (
-              <TimerDisplay label="Timer 2" timer={timer2} videoRef={video2Ref} hasVideo={!!video2Url} compact />
-            )}
-          </div>
+          <VideoPlayer
+            label="Video 2"
+            videoRef={video2Ref}
+            videoUrl={video2Url}
+            speed={masterSpeed}
+            onFileSelect={(f) => handleFileSelect(f, 2)}
+            onRemove={() => handleRemoveVideo(2)}
+            onScreenshot={() => handleScreenshot(video2Ref)}
+            compact={isMobile}
+          />
         </div>
       ) : (
-        <div className="grid grid-cols-1 max-w-3xl mx-auto space-y-1">
+        <div className="grid grid-cols-1 max-w-3xl mx-auto">
           <VideoPlayer
             label="Video 1"
             videoRef={video1Ref}
@@ -399,9 +390,6 @@ export function RoyalTimingModule() {
             onRemove={() => handleRemoveVideo(1)}
             onScreenshot={() => handleScreenshot(video1Ref)}
           />
-          {video1Url && (
-            <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} compact={isMobile} />
-          )}
         </div>
       )}
 
@@ -438,6 +426,17 @@ export function RoyalTimingModule() {
           </CardContent>
         </Card>
       )}
+
+      {/* Timers */}
+      <div className={`grid gap-4 ${mode === 'comparison' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 max-w-md mx-auto'}`}>
+        <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} />
+        {mode === 'comparison' && (
+          <>
+            <TimerDisplay label="Timer 2" timer={timer2} videoRef={video2Ref} hasVideo={!!video2Url} />
+            <TimerDisplay label="Master Timer" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} />
+          </>
+        )}
+      </div>
 
       <Separator />
 
