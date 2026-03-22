@@ -1,31 +1,46 @@
 
 
-# Master Controls — Bigger Touch Targets
+# Royal Timing — Save Button & Message Deletion
 
-## Problem
+## 1. Add "Save Session" Button at Bottom
 
-Buttons in master control are `h-5 w-5` (20×20px) with `h-2.5` icons — too small for reliable mobile tapping. Apple's HIG recommends minimum 44×44pt touch targets.
+**File: `src/components/royal-timing/RoyalTimingModule.tsx`**
 
-## Fix
+Currently, the only save mechanism is the "Submit Study" button inside the Study Notes card (line 509), which requires subject/findings text. Users want a standalone save button at the very bottom that saves the full session including videos, even without notes.
 
-### 1. `src/components/royal-timing/RoyalTimingModule.tsx` (lines 338–375)
+- Add a prominent `Save Session` button **after** the Study Notes card (after line 522, before the closing `</div>`)
+- This button calls a new `handleSaveSession` function that:
+  - Creates/updates the `royal_timing_sessions` row with current video files, timer data, sport, subject, findings
+  - Uploads video files to storage (reuses `uploadVideo`)
+  - Sets `currentSessionId` on success
+  - Does NOT require subject/findings to be filled (unlike Submit Study which needs at least one)
+  - Disabled when `isReadOnly` or no videos loaded
+- The existing "Submit Study" button stays for AI analysis flow; the new button is purely for saving
 
-- Increase master playback buttons from `h-5 w-5` to `h-8 w-8` with `h-3.5 w-3.5` icons
-- Increase speed selector from `h-5 w-12` to `h-8 w-14 text-xs`
-- Increase container gap from `gap-0.5` to `gap-1`
-- Switch layout to **two rows** to fit larger buttons on 390px:
-  - **Row 1**: InlineTimer (compact, with label)
-  - **Row 2**: All 6 playback buttons + speed selector
-- Container padding stays minimal: `py-1.5 px-2`
+## 2. Message Deletion in Session Discussion
 
-### 2. `src/components/royal-timing/InlineTimer.tsx` (compact branch, lines 30–70)
+**File: `src/components/royal-timing/SessionMessages.tsx`**
 
-- Increase timer control buttons from `h-5 w-5` to `h-7 w-7` with `h-3 w-3` icons
-- Increase the Auto toggle switch proportionally
-- Keep timer text at `text-sm` (readable but not oversized)
+- Add a small trash icon button on messages sent by the current user (`isMe`)
+- On click, delete the message via `supabase.from('royal_timing_messages').delete().eq('id', msg.id)`
+- Remove the message from local state on success
+- Add confirmation or just instant delete with toast
+
+**Database migration**: Add a DELETE RLS policy on `royal_timing_messages` allowing users to delete their own messages:
+
+```sql
+CREATE POLICY "Users can delete own messages"
+  ON public.royal_timing_messages FOR DELETE TO authenticated
+  USING (auth.uid() = sender_id);
+```
+
+Also subscribe to DELETE events in the realtime channel so other participants see removals.
+
+## Files
 
 | File | Change |
 |------|--------|
-| `src/components/royal-timing/RoyalTimingModule.tsx` | Split master controls to two rows, enlarge buttons to `h-8` |
-| `src/components/royal-timing/InlineTimer.tsx` | Enlarge compact buttons to `h-7` |
+| `src/components/royal-timing/RoyalTimingModule.tsx` | Add Save Session button after Study Notes |
+| `src/components/royal-timing/SessionMessages.tsx` | Add delete button on own messages, handle realtime DELETE |
+| Migration | Add DELETE RLS policy on `royal_timing_messages` |
 
