@@ -139,6 +139,16 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
     }
   };
 
+  const handleDelete = async (msgId: string) => {
+    try {
+      const { error } = await supabase.from('royal_timing_messages').delete().eq('id', msgId);
+      if (error) throw error;
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    } catch (err) {
+      console.error('Delete message error:', err);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
