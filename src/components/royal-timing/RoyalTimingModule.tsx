@@ -315,18 +315,59 @@ export function RoyalTimingModule() {
         </CardContent>
       </Card>
 
-      {/* Video Players */}
-      <div className={`grid gap-4 ${mode === 'comparison' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 max-w-3xl mx-auto'}`}>
-        <VideoPlayer
-          label="Video 1"
-          videoRef={video1Ref}
-          videoUrl={video1Url}
-          speed={masterSpeed}
-          onFileSelect={(f) => handleFileSelect(f, 1)}
-          onRemove={() => handleRemoveVideo(1)}
-          onScreenshot={() => handleScreenshot(video1Ref)}
-        />
-        {mode === 'comparison' && (
+      {/* Video Players + Master Controls */}
+      {mode === 'comparison' ? (
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-2' : 'md:grid-cols-2 gap-4'}`}>
+          <VideoPlayer
+            label="Video 1"
+            videoRef={video1Ref}
+            videoUrl={video1Url}
+            speed={masterSpeed}
+            onFileSelect={(f) => handleFileSelect(f, 1)}
+            onRemove={() => handleRemoveVideo(1)}
+            onScreenshot={() => handleScreenshot(video1Ref)}
+            controlsPosition={isMobile ? 'top' : 'bottom'}
+            compact={isMobile}
+          />
+
+          {/* Master Controls — between videos on mobile, below on desktop */}
+          {isMobile && (video1Url || video2Url) && (
+            <Card className="shadow-sm">
+              <CardContent className="py-2 px-3">
+                <div className="flex items-center justify-center gap-1 flex-wrap">
+                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => masterFrameStep(-1)}>
+                    <ChevronLeft className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={masterRewind}>
+                    <SkipBack className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" className="h-8 px-3" onClick={masterPlay}>
+                    <Play className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={masterPause}>
+                    <Pause className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={masterSkip}>
+                    <SkipForward className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => masterFrameStep(1)}>
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                  <Select value={String(masterSpeed)} onValueChange={(v) => handleSpeedChange(parseFloat(v))}>
+                    <SelectTrigger className="w-16 h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(s => (
+                        <SelectItem key={s} value={String(s)}>{s}x</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <VideoPlayer
             label="Video 2"
             videoRef={video2Ref}
@@ -335,12 +376,25 @@ export function RoyalTimingModule() {
             onFileSelect={(f) => handleFileSelect(f, 2)}
             onRemove={() => handleRemoveVideo(2)}
             onScreenshot={() => handleScreenshot(video2Ref)}
+            compact={isMobile}
           />
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 max-w-3xl mx-auto">
+          <VideoPlayer
+            label="Video 1"
+            videoRef={video1Ref}
+            videoUrl={video1Url}
+            speed={masterSpeed}
+            onFileSelect={(f) => handleFileSelect(f, 1)}
+            onRemove={() => handleRemoveVideo(1)}
+            onScreenshot={() => handleScreenshot(video1Ref)}
+          />
+        </div>
+      )}
 
-      {/* Master Controls (Dual Mode) */}
-      {mode === 'comparison' && (video1Url || video2Url) && (
+      {/* Master Controls — desktop only in comparison mode */}
+      {!isMobile && mode === 'comparison' && (video1Url || video2Url) && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
