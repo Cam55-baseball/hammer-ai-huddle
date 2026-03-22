@@ -267,9 +267,8 @@ export function RoyalTimingModule() {
     setVideo2File(null);
     timer1.clear();
     timer2.clear();
-    masterTimer.clear();
     setMode('single');
-  }, [timer1, timer2, masterTimer]);
+  }, [timer1, timer2]);
 
   return (
     <div className="space-y-4 md:space-y-6 p-3 md:p-6 pb-24 max-w-7xl mx-auto">
