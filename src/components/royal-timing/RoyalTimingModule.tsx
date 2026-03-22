@@ -49,7 +49,7 @@ export function RoyalTimingModule() {
 
   const timer1 = useRoyalTimingTimer();
   const timer2 = useRoyalTimingTimer();
-  const masterTimer = useRoyalTimingTimer();
+  // masterTimer removed — each video has its own inline timer
 
   const handleFileSelect = useCallback((file: File, slot: 1 | 2) => {
     const url = URL.createObjectURL(file);
