@@ -436,16 +436,12 @@ export function RoyalTimingModule() {
         </Card>
       )}
 
-      {/* Timers */}
-      <div className={`grid gap-4 ${mode === 'comparison' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 max-w-md mx-auto'}`}>
-        <TimerDisplay label="Timer 1" timer={timer1} videoRef={video1Ref} hasVideo={!!video1Url} />
-        {mode === 'comparison' && (
-          <>
-            <TimerDisplay label="Timer 2" timer={timer2} videoRef={video2Ref} hasVideo={!!video2Url} />
-            <TimerDisplay label="Master Timer" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} />
-          </>
-        )}
-      </div>
+      {/* Master Timer for desktop comparison */}
+      {!isMobile && mode === 'comparison' && (
+        <div className="max-w-md mx-auto">
+          <InlineTimer label="Master Timer" timer={masterTimer} videoRef={video1Ref} hasVideo={!!video1Url} />
+        </div>
+      )}
 
       <Separator />
 
