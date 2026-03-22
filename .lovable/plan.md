@@ -1,59 +1,71 @@
 
 
-# Fix: Master Play Only Plays One Video
+# Mobile Optimization — Royal Timing Comparison View
 
-## Root Cause
+## Problem
 
-The `masterPlay` function at line 79-82 of `RoyalTimingModule.tsx` guards the second video's `.play()` behind `if (mode === 'comparison')`. This is correct, but the issue is that both `.play()` calls are fired as independent fire-and-forget promises. On some browsers, especially mobile, the second `.play()` can be rejected if the first one hasn't resolved yet — the browser treats only the first as the "user-gesture-initiated" playback.
+On mobile (390px viewport), in comparison mode the layout is: Video 1 → Video 1 controls → Video 2 → Video 2 controls → Master Controls. After pressing Master Play (at the bottom), users must scroll up to see both videos playing — defeating the purpose of comparison.
 
-Additionally, if either video's `seekingRef` is stuck `true` from a prior frame-step, the `timeupdate` handler is suppressed, making the video appear frozen even if it is actually playing.
+## Solution
 
-## Fix
+Three changes to fix the mobile comparison UX:
 
-**File: `src/components/royal-timing/RoyalTimingModule.tsx`**
-
-1. **Simultaneous play with `Promise.all`**: Replace the sequential fire-and-forget pattern with `Promise.all([v1.play(), v2.play()])` so both play requests originate from the same microtask, satisfying browser autoplay policies.
-
-2. **Clear stale flags before play**: Before calling `.play()`, reset each VideoPlayer's state by pausing first (no-op if already paused), then playing. This ensures no stale `seekingRef` or `isDragging` flag blocks the UI update.
-
-3. **Retry fallback**: If either `.play()` rejects, retry once after a short delay (50ms).
-
-4. **Remove mode guard for ref access**: Simply check if `video2Ref.current` exists rather than checking `mode`, since the ref is only set when the component is rendered.
+### 1. VideoPlayer: Add `controlsPosition` prop
 
 **File: `src/components/royal-timing/VideoPlayer.tsx`**
 
-5. **Clear flags on external play event**: In the `onPlay` event listener, also clear `seekingRef` and `isDragging` so that externally triggered plays (from master controls) always allow `timeupdate` to resume.
+Add an optional `controlsPosition?: 'top' | 'bottom'` prop (default `'bottom'`).
 
-### Code Changes
+When `'top'`: render the controls (buttons + scrubber + time display) **above** the video element, before the `<video>` tag. When `'bottom'` (default): keep current layout.
 
-**`RoyalTimingModule.tsx` — `masterPlay` (line 79-82):**
-```ts
-const masterPlay = useCallback(() => {
-  const videos = [video1Ref.current, video2Ref.current].filter(Boolean);
-  // Clear any stale state, then play all simultaneously
-  videos.forEach(v => v!.pause());
-  Promise.all(videos.map(v => v!.play())).catch(() => {
-    // Retry once on failure
-    setTimeout(() => {
-      videos.forEach(v => { v!.play().catch(console.warn); });
-    }, 50);
-  });
-}, []);
+This is a simple reorder of the existing JSX blocks within the `<CardContent>` — no logic changes needed. The card header with label stays at the top regardless.
+
+### 2. Move Master Controls between videos on mobile
+
+**File: `src/components/royal-timing/RoyalTimingModule.tsx`**
+
+Currently master controls are rendered after both VideoPlayers (line 340-372). Change this so master controls appear **between** Video 1 and Video 2 on mobile:
+
+- Extract the master controls JSX into a variable/component
+- In the comparison grid, render: Video 1 → Master Controls → Video 2
+- This places the Master Play button between both videos so both are visible when tapped
+- Reduce padding: change `space-y-6` to `space-y-4` on the outer container, and `gap-4` to `gap-3` on the video grid for mobile
+- Make master controls more compact on mobile: smaller buttons, tighter spacing
+
+### 3. Pass `controlsPosition="top"` to Video 1 on mobile
+
+**File: `src/components/royal-timing/RoyalTimingModule.tsx`**
+
+- Use the `useIsMobile()` hook
+- When mobile + comparison mode: pass `controlsPosition="top"` to Video 1
+- Video 2 keeps `controlsPosition="bottom"` (default)
+
+This results in the mobile comparison layout:
+
+```text
+┌─────────────────────┐
+│ Video 1 Controls    │  ← moved above
+│ Video 1 (player)    │
+├─────────────────────┤
+│ Master Controls     │  ← between videos
+├─────────────────────┤
+│ Video 2 (player)    │
+│ Video 2 Controls    │  ← stays below
+└─────────────────────┘
 ```
 
-**`VideoPlayer.tsx` — `onPlay` event listener:**
-```ts
-const onPlay = () => {
-  seekingRef.current = false;
-  isDragging.current = false;
-  setIsPlaying(true);
-};
-```
+Users tap Master Play in the middle and see both videos without scrolling.
 
-### Files
+### 4. Compact mobile spacing
+
+- Reduce `aspect-video` to a smaller aspect ratio on mobile for comparison mode (optional — only if needed)
+- Reduce card padding in comparison mode on mobile: `p-2` instead of default
+- Remove the separate master controls section below (line 340-372) — it's now inline
+
+## Files
 
 | File | Change |
 |------|--------|
-| `src/components/royal-timing/RoyalTimingModule.tsx` | Rewrite `masterPlay` to use `Promise.all`, remove `mode` guard, add retry |
-| `src/components/royal-timing/VideoPlayer.tsx` | Clear `seekingRef` and `isDragging` in `onPlay` handler |
+| `src/components/royal-timing/VideoPlayer.tsx` | Add `controlsPosition` prop, conditionally reorder controls vs video |
+| `src/components/royal-timing/RoyalTimingModule.tsx` | Move master controls between videos, use `useIsMobile`, pass `controlsPosition`, tighten spacing |
 
