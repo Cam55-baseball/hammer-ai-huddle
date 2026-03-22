@@ -25,6 +25,7 @@ import type { RoyalTimingSession } from '@/hooks/useRoyalTimingSessions';
 type VideoMode = 'single' | 'comparison';
 
 export function RoyalTimingModule() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const { sport: selectedSport } = useSportTheme();
   const { toast } = useToast();
