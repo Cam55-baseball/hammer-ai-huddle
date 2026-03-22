@@ -434,16 +434,6 @@ export function RoyalTimingModule() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  timer1.syncToVideo(video1Ref);
-                  timer2.syncToVideo(video2Ref);
-                }}
-              >
-                <Link className="h-4 w-4 mr-1" /> Sync Both Timers
-              </Button>
             </div>
           </CardContent>
         </Card>
