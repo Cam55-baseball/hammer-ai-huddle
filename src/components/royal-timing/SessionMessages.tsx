@@ -76,7 +76,6 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
         (payload) => {
           const newMsg = payload.new as Message;
           setMessages((prev) => [...prev, newMsg]);
-          // Fetch name if not cached
           if (!profileCache[newMsg.sender_id]) {
             supabase
               .from('profiles')
@@ -92,6 +91,19 @@ export function SessionMessages({ sessionId }: SessionMessagesProps) {
                 }
               });
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'royal_timing_messages',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const oldMsg = payload.old as { id: string };
+          setMessages((prev) => prev.filter((m) => m.id !== oldMsg.id));
         }
       )
       .subscribe();
