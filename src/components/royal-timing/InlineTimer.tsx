@@ -27,8 +27,9 @@ interface InlineTimerProps {
 export function InlineTimer({ label, timer, videoRef, hasVideo, compact = false }: InlineTimerProps) {
   if (compact) {
     return (
-      <div className="flex items-center gap-0.5 rounded-md bg-muted/50 py-0.5 px-1.5 overflow-hidden">
-        <span className="font-mono font-bold text-foreground tracking-wider text-sm shrink-0">
+    <div className="flex items-center gap-0.5 rounded-md bg-muted/50 py-0.5 px-1.5 overflow-hidden">
+      <span className="text-[9px] font-medium text-muted-foreground shrink-0">{label}</span>
+      <span className="font-mono font-bold text-foreground tracking-wider text-sm shrink-0">
           {timer.formatTime(timer.elapsed)}
         </span>
         {timer.isSynced && (
