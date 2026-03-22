@@ -12,6 +12,8 @@ interface VideoPlayerProps {
   onFileSelect: (file: File) => void;
   onRemove: () => void;
   onScreenshot: () => void;
+  controlsPosition?: 'top' | 'bottom';
+  compact?: boolean;
 }
 
 function formatSec(s: number): string {
@@ -25,7 +27,7 @@ function clampTime(t: number, dur: number): number {
   return Math.max(0, Math.min(isFinite(dur) ? dur : 0, t));
 }
 
-export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot }: VideoPlayerProps) {
+export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, onRemove, onScreenshot, controlsPosition = 'bottom', compact = false }: VideoPlayerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const resolvingRef = useRef(false);
@@ -214,9 +216,78 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
 
   const safeDuration = isFinite(duration) && duration > 0 ? duration : 0;
 
+  const videoElement = videoUrl ? (
+    <div className="relative rounded-lg overflow-hidden bg-black aspect-video">
+      <video
+        ref={setVideoRef}
+        src={videoUrl}
+        className="w-full h-full object-contain"
+        playsInline
+      />
+    </div>
+  ) : null;
+
+  const controlsElement = videoUrl ? (
+    <>
+      {/* Timeline scrubber */}
+      <div className="px-1">
+        <input
+          type="range"
+          min={0}
+          max={safeDuration || 1}
+          step={0.01}
+          value={currentTime}
+          onPointerDown={handleScrubPointerDown}
+          onInput={handleScrubInput}
+          onPointerUp={handleScrubPointerUp}
+          onLostPointerCapture={handleScrubPointerUp}
+          onChange={() => {}}
+          className="w-full h-2 accent-primary cursor-pointer touch-none"
+          disabled={!durationResolved}
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>{formatSec(currentTime)}</span>
+          <span>{formatSec(safeDuration)}</span>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center gap-1 flex-wrap">
+        <Button type="button" variant="outline" size="icon" className={compact ? "h-7 w-7" : "h-8 w-8"} onClick={() => frameStep(-1)} title="Frame back">
+          <ChevronLeft className={compact ? "h-3 w-3" : "h-4 w-4"} />
+        </Button>
+        <Button type="button" variant="outline" size="icon" className={compact ? "h-7 w-7" : "h-8 w-8"} onClick={() => skip(-5)} title="Rewind 5s">
+          <SkipBack className={compact ? "h-3 w-3" : "h-4 w-4"} />
+        </Button>
+        <Button type="button" variant="outline" size="icon" className={compact ? "h-7 w-7" : "h-8 w-8"} onClick={togglePlayPause}>
+          {isPlaying ? <Pause className={compact ? "h-3 w-3" : "h-4 w-4"} /> : <Play className={compact ? "h-3 w-3" : "h-4 w-4"} />}
+        </Button>
+        <Button type="button" variant="outline" size="icon" className={compact ? "h-7 w-7" : "h-8 w-8"} onClick={() => skip(5)} title="Forward 5s">
+          <SkipForward className={compact ? "h-3 w-3" : "h-4 w-4"} />
+        </Button>
+        <Button type="button" variant="outline" size="icon" className={compact ? "h-7 w-7" : "h-8 w-8"} onClick={() => frameStep(1)} title="Frame forward">
+          <ChevronRight className={compact ? "h-3 w-3" : "h-4 w-4"} />
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onScreenshot} className={compact ? "h-7 px-2" : "h-8 px-2"}>
+          <Camera className={compact ? "h-3 w-3" : "h-4 w-4"} />
+        </Button>
+        <Select value={String(localSpeed)} onValueChange={handleLocalSpeed}>
+          <SelectTrigger className={`w-16 text-xs ml-auto ${compact ? "h-7" : "h-8"}`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(s => (
+              <SelectItem key={s} value={String(s)}>{s}x</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </>
+  ) : null;
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card className={compact ? "shadow-sm" : ""}>
+      <CardHeader className={compact ? "pb-1 pt-2 px-3" : "pb-2"}>
         <CardTitle className="text-sm flex items-center justify-between">
           {label}
           {videoUrl && (
@@ -226,7 +297,7 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className={compact ? "space-y-2 px-3 pb-3" : "space-y-3"}>
         {!videoUrl ? (
           <div
             className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
@@ -244,68 +315,9 @@ export function VideoPlayer({ label, videoRef, videoUrl, speed, onFileSelect, on
           </div>
         ) : (
           <>
-            <div className="relative rounded-lg overflow-hidden bg-black aspect-video">
-              <video
-                ref={setVideoRef}
-                src={videoUrl}
-                className="w-full h-full object-contain"
-                playsInline
-              />
-            </div>
-
-            {/* Timeline scrubber — uses isDragging ref, not seekingRef */}
-            <div className="px-1">
-              <input
-                type="range"
-                min={0}
-                max={safeDuration || 1}
-                step={0.01}
-                value={currentTime}
-                onPointerDown={handleScrubPointerDown}
-                onInput={handleScrubInput}
-                onPointerUp={handleScrubPointerUp}
-                onLostPointerCapture={handleScrubPointerUp}
-                onChange={() => {}}
-                className="w-full h-2 accent-primary cursor-pointer touch-none"
-                disabled={!durationResolved}
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatSec(currentTime)}</span>
-                <span>{formatSec(safeDuration)}</span>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center gap-1 flex-wrap">
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => frameStep(-1)} title="Frame back">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => skip(-5)} title="Rewind 5s">
-                <SkipBack className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={togglePlayPause}>
-                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              </Button>
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => skip(5)} title="Forward 5s">
-                <SkipForward className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => frameStep(1)} title="Frame forward">
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={onScreenshot} className="h-8 px-2">
-                <Camera className="h-4 w-4" />
-              </Button>
-              <Select value={String(localSpeed)} onValueChange={handleLocalSpeed}>
-                <SelectTrigger className="w-16 h-8 text-xs ml-auto">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map(s => (
-                    <SelectItem key={s} value={String(s)}>{s}x</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {controlsPosition === 'top' && controlsElement}
+            {videoElement}
+            {controlsPosition === 'bottom' && controlsElement}
           </>
         )}
       </CardContent>
