@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Crown, Play, Pause, SkipBack, SkipForward, Camera, Timer, Loader2, Send, Sparkles, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
