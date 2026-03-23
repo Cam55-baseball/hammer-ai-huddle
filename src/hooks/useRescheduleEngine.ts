@@ -79,7 +79,13 @@ export function useRescheduleEngine() {
       }
     }
 
-    lastAction.current = { type: 'pushForward', movedEvents };
+    // Stack onto existing snapshot (compound undo for skip+push)
+    const prev = lastAction.current;
+    if (prev) {
+      lastAction.current = { ...prev, type: 'pushForward', movedEvents: [...(prev.movedEvents || []), ...movedEvents] };
+    } else {
+      lastAction.current = { type: 'pushForward', movedEvents };
+    }
     invalidateAll();
     toast.success('Schedule pushed forward 1 day');
   }, [user, invalidateAll]);
