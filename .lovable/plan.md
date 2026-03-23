@@ -1,23 +1,19 @@
 
 
-# Field Diagram — Adjust OF and SS Positions
+# Field Diagram — Move LF and RF Closer to Corners
 
 ## Change
 
-**File: `src/components/game-scoring/FieldPositionDiagram.tsx`** (lines 16-26)
-
-Update `POSITION_ZONES` coordinates:
+**File: `src/components/game-scoring/FieldPositionDiagram.tsx`** (lines 23, 25)
 
 | Position | Current | New | Reason |
 |----------|---------|-----|--------|
-| LF | (0.30, 0.30) | (0.22, 0.25) | Push toward left foul line corner |
-| CF | (0.50, 0.20) | (0.50, 0.28) | Move closer to 2B |
-| RF | (0.70, 0.30) | (0.78, 0.25) | Push toward right foul line corner |
-| SS | (0.42, 0.58) | (0.36, 0.64) | Midpoint between 2B and 3B, on the dirt |
+| LF | (0.22, 0.25) | (0.25, 0.35) | Move closer to 3B (increase x slightly toward 3B, increase y toward infield) |
+| RF | (0.78, 0.25) | (0.75, 0.35) | Move closer to 1B (decrease x slightly toward 1B, increase y toward infield) |
 
-All other positions unchanged.
+This shifts both corner outfielders down and inward toward their respective bases while keeping them in fair territory on the outfield grass.
 
 | File | Change |
 |------|--------|
-| `src/components/game-scoring/FieldPositionDiagram.tsx` | Update LF, CF, RF, SS coordinates in POSITION_ZONES |
+| `src/components/game-scoring/FieldPositionDiagram.tsx` | Update LF and RF coordinates |
 
