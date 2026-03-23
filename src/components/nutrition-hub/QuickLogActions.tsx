@@ -21,6 +21,7 @@ import { PhotoFoodLogger } from './PhotoFoodLogger';
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
   compact?: boolean;
+  onSwitchTab?: (tab: string) => void;
 }
 
 const QUICK_WATER_AMOUNTS = [8, 16, 24, 32];
