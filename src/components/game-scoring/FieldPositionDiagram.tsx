@@ -20,9 +20,9 @@ const POSITION_ZONES: Record<string, { x: number; y: number }> = {
   '2B': { x: 0.56, y: 0.50 },
   'SS': { x: 0.36, y: 0.64 },
   '3B': { x: 0.30, y: 0.70 },
-  'LF': { x: 0.22, y: 0.25 },
+  'LF': { x: 0.25, y: 0.35 },
   'CF': { x: 0.50, y: 0.28 },
-  'RF': { x: 0.78, y: 0.25 },
+  'RF': { x: 0.75, y: 0.35 },
 };
 
 // Field colors
