@@ -349,15 +349,7 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
         <Button
           variant="outline"
           className="w-full gap-2 hover:bg-purple-500/10 hover:border-purple-500/50"
-          onClick={() => {
-            // Navigate to supplements tab
-            setSearchParams({ tab: 'supplements' });
-            // Also scroll to make it visible
-            const tabsTrigger = document.querySelector('[data-value="supplements"]');
-            if (tabsTrigger) {
-              (tabsTrigger as HTMLElement).click();
-            }
-          }}
+          onClick={() => onSwitchTab?.('supplements')}
         >
           <Pill className="h-4 w-4 text-purple-500" />
           {t('nutrition.trackSupplements', 'Track Supplements')}

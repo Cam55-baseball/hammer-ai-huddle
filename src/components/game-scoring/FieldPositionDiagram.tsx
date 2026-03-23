@@ -203,6 +203,12 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
         {/* Home plate */}
         <polygon points={homePlatePoints} fill="white" />
 
+        {/* Base labels at actual base positions */}
+        <text x={first.x + 12} y={first.y + 4} textAnchor="start" fill="white" fontSize="11" fontWeight="700" style={{ pointerEvents: 'none', userSelect: 'none' }}>1B</text>
+        <text x={second.x} y={second.y - 12} textAnchor="middle" fill="white" fontSize="11" fontWeight="700" style={{ pointerEvents: 'none', userSelect: 'none' }}>2B</text>
+        <text x={third.x - 12} y={third.y + 4} textAnchor="end" fill="white" fontSize="11" fontWeight="700" style={{ pointerEvents: 'none', userSelect: 'none' }}>3B</text>
+        <text x={home.x} y={home.y + 18} textAnchor="middle" fill="white" fontSize="11" fontWeight="700" style={{ pointerEvents: 'none', userSelect: 'none' }}>HP</text>
+
         {/* Pitcher's mound dirt */}
         <circle cx={cx} cy={moundY} r={8} fill={DIRT} />
         {/* Rubber */}
@@ -221,8 +227,10 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
           />
         )}
 
-        {/* Position labels */}
-        {Object.entries(POSITION_ZONES).map(([pos, coord]) => (
+        {/* Fielding position labels (exclude base positions to avoid duplication) */}
+        {Object.entries(POSITION_ZONES)
+          .filter(([pos]) => !['1B', '2B', '3B'].includes(pos))
+          .map(([pos, coord]) => (
           <text
             key={pos}
             x={coord.x * W}
