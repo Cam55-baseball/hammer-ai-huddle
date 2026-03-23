@@ -205,8 +205,28 @@ export default function PracticeHub() {
           indoor_outdoor: sessionConfig.indoor_outdoor,
           rep_source: sessionConfig.rep_source,
         },
+        link_code: sessionConfig.link_code,
+        linked_session_id: sessionConfig.linked_session_id,
         micro_layer_data: reps.length > 0 ? reps : undefined,
       });
+
+      // Update live_ab_links with session ID for bidirectional linking
+      if (sessionConfig.link_code && result.id) {
+        const { data: linkRow } = await supabase
+          .from('live_ab_links')
+          .select('id, creator_user_id')
+          .eq('link_code', sessionConfig.link_code)
+          .maybeSingle();
+
+        if (linkRow) {
+          const isCreator = linkRow.creator_user_id === user?.id;
+          await supabase
+            .from('live_ab_links')
+            .update(isCreator ? { creator_session_id: result.id } : { joiner_session_id: result.id })
+            .eq('id', linkRow.id);
+        }
+      }
+
       // Transition to summary instead of resetting
       setSavedSessionId(result.id);
       setStep('session_summary');
