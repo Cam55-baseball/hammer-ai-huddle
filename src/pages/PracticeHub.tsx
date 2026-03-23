@@ -48,6 +48,7 @@ export default function PracticeHub() {
   const { sport: sportKey } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { updateStatus } = useScheduledPracticeSessions();
