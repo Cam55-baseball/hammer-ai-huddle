@@ -112,6 +112,9 @@ export function RecentSessionsList({ sport, moduleLabel, module }: RecentSession
                         </div>
                       )}
 
+                      {/* Session Videos */}
+                      {isOpen && <SessionVideosDisplay sessionId={s.id} />}
+
                       {drillBlocks.length === 0 && !s.notes && (!compositeIndexes || Object.keys(compositeIndexes).length === 0) && (
                         <p className="text-muted-foreground italic">No detailed data recorded for this session.</p>
                       )}

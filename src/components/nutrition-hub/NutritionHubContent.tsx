@@ -63,6 +63,7 @@ interface ParsedRecipe {
 
 export function NutritionHubContent() {
   const [activeTab, setActiveTab] = useState('today');
+  const tabsRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
