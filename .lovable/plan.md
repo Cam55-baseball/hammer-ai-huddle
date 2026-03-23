@@ -1,45 +1,30 @@
 
 
-# Fix: Partner Reps Not Appearing in Live Broadcast
+# Add Undo Button for Skip Day and Push Day
 
-## Root Cause
+## Current State
+- **Skip Day** (GamePlanCard line 1285): Skips all incomplete tasks individually via `handleSkipTask`, shows a plain success toast with no undo option.
+- **Push Day** (GamePlanPushDayDialog): Already shows an undo toast via `showUndoToast`, but the undo engine in `useRescheduleEngine` overwrites the snapshot on each call — since Push Day calls `skipDay()` then `pushForwardOneDay()` sequentially, only the push snapshot survives, losing the skip data.
 
-The `useLiveRepBroadcast` hook calls `channel.subscribe()` but does **not wait for the subscription to be confirmed** before allowing `broadcastRep()` to send messages. Supabase Realtime Broadcast silently drops messages sent before the channel reaches `SUBSCRIBED` status. This means early reps are lost, and if both users aren't perfectly synced, messages never arrive.
+## Changes
 
-## Fix (1 file)
+### 1. GamePlanCard.tsx — Add undo toast to Skip Day button
+Replace the Skip Day `onClick` handler (lines 1288-1293) to:
+- Collect all skipped task IDs
+- Perform the bulk skip
+- Show a toast with an **Undo** action button (15s duration)
+- On undo, call `handleRestoreTask` for each skipped task ID to restore the day
 
-**File: `src/hooks/useLiveRepBroadcast.ts`**
+### 2. useRescheduleEngine.ts — Fix snapshot stacking
+The `skipDay` + `pushForwardOneDay` sequence overwrites `lastAction.current`. Fix by making the snapshot **compound** — when `pushForwardOneDay` runs after a `skipDay`, merge both into one snapshot so undo reverses both the push and the skip in a single action.
 
-1. Track subscription readiness with a ref (`isSubscribed`).
-2. In `subscribe()`, use the status callback to set `isSubscribed = true` only when status is `'SUBSCRIBED'`.
-3. In `broadcastRep` / `broadcastRemoveRep`, check `isSubscribed` before sending — optionally queue and retry if not ready yet.
-4. Add `console.log` breadcrumbs for channel status changes and incoming messages to aid debugging.
+### 3. GamePlanPushDayDialog.tsx — No structural changes needed
+The existing `showUndoToast` pattern already works. Once the engine properly stacks snapshots, undo will restore both the push and the skipped tasks.
 
-```typescript
-// Key changes:
-const isSubscribed = useRef(false);
+## Files
 
-channel.subscribe((status) => {
-  if (status === 'SUBSCRIBED') {
-    isSubscribed.current = true;
-    console.log('[LiveRepBroadcast] Channel subscribed:', linkCode);
-  }
-});
-
-// In broadcastRep:
-if (!isSubscribed.current) {
-  console.warn('[LiveRepBroadcast] Channel not ready, message queued');
-  // retry after short delay
-}
-```
-
-This ensures messages are only sent once the channel is confirmed active, and incoming messages are properly received.
-
-## Technical Details
-
-| Aspect | Detail |
-|--------|--------|
-| File | `src/hooks/useLiveRepBroadcast.ts` |
-| Issue | `channel.subscribe()` is fire-and-forget; sends before SUBSCRIBED are dropped |
-| Fix | Gate sends on subscription confirmation; add retry for early sends |
+| File | Change |
+|------|--------|
+| `src/components/GamePlanCard.tsx` | Add undo action to Skip Day toast |
+| `src/hooks/useRescheduleEngine.ts` | Stack skip + push snapshots into compound undo |
 
