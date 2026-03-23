@@ -26,10 +26,8 @@ interface QuickLogActionsProps {
 
 const QUICK_WATER_AMOUNTS = [8, 16, 24, 32];
 
-export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsProps) {
+export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: QuickLogActionsProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [, setSearchParams] = useSearchParams();
   const { addWater, todayTotal, dailyGoal } = useHydration();
   
   const [waterDialogOpen, setWaterDialogOpen] = useState(false);
