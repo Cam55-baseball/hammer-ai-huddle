@@ -77,7 +77,7 @@ export function useLiveRepBroadcast({ linkCode, enabled = true }: UseLiveRepBroa
   const broadcastRep = useCallback((rep: BroadcastRep) => {
     if (!channelRef.current || !user) return;
     const msg = {
-      type: 'broadcast',
+      type: 'broadcast' as const,
       event: 'new_rep',
       payload: { userId: user.id, rep },
     };
