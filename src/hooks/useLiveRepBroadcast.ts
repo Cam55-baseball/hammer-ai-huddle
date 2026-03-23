@@ -93,7 +93,7 @@ export function useLiveRepBroadcast({ linkCode, enabled = true }: UseLiveRepBroa
   const broadcastRemoveRep = useCallback((index: number) => {
     if (!channelRef.current || !user) return;
     const msg = {
-      type: 'broadcast',
+      type: 'broadcast' as const,
       event: 'remove_rep',
       payload: { userId: user.id, index },
     };
