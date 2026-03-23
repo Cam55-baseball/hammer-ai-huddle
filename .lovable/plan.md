@@ -1,19 +1,17 @@
 
 
-# Field Diagram — Move LF and RF Closer to Corners
+# Move Vitamins & Supplements Below Track Supplements Button
 
 ## Change
 
-**File: `src/components/game-scoring/FieldPositionDiagram.tsx`** (lines 23, 25)
+**File: `src/components/nutrition-hub/NutritionHubContent.tsx`**
 
-| Position | Current | New | Reason |
-|----------|---------|-----|--------|
-| LF | (0.22, 0.25) | (0.25, 0.35) | Move closer to 3B (increase x slightly toward 3B, increase y toward infield) |
-| RF | (0.78, 0.25) | (0.75, 0.35) | Move closer to 1B (decrease x slightly toward 1B, increase y toward infield) |
+1. Move `<VitaminSupplementTracker />` from inside the `supplements` TabsContent (line 516-518) to directly after the `<QuickLogActions />` block (after line 464)
+2. Keep the supplements tab trigger in the tab bar but render empty or a message pointing up, OR remove the supplements tab entirely since the tracker now lives above
 
-This shifts both corner outfielders down and inward toward their respective bases while keeping them in fair territory on the outfield grass.
+**Approach**: Place the tracker right after QuickLogActions so it sits directly below the "Track Supplements" button visually. Remove the now-empty supplements tab to avoid confusion.
 
 | File | Change |
 |------|--------|
-| `src/components/game-scoring/FieldPositionDiagram.tsx` | Update LF and RF coordinates |
+| `src/components/nutrition-hub/NutritionHubContent.tsx` | Move `VitaminSupplementTracker` from supplements tab to after QuickLogActions; remove supplements tab |
 
