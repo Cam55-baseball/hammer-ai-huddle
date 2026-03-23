@@ -178,7 +178,8 @@ export function useRescheduleEngine() {
     const snapshot = lastAction.current;
 
     try {
-      if (snapshot.type === 'skip' && snapshot.skippedRows) {
+      // Undo skipped rows (from skip or compound skip+push)
+      if (snapshot.skippedRows) {
         for (const row of snapshot.skippedRows) {
           await supabase
             .from('game_plan_skipped_tasks')
@@ -189,7 +190,8 @@ export function useRescheduleEngine() {
         }
       }
 
-      if ((snapshot.type === 'pushForward' || snapshot.type === 'pushToDate') && snapshot.movedEvents) {
+      // Undo moved events (from push or compound skip+push)
+      if (snapshot.movedEvents) {
         for (const evt of snapshot.movedEvents) {
           await supabase.from('calendar_events')
             .update({ event_date: evt.original_date })
