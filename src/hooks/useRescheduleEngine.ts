@@ -34,7 +34,13 @@ export function useRescheduleEngine() {
       skip_date: date,
     }));
 
-    lastAction.current = { type: 'skip', skippedRows: rows };
+    // Stack onto existing snapshot if present (for compound skip+push undo)
+    const prev = lastAction.current;
+    if (prev) {
+      lastAction.current = { ...prev, skippedRows: [...(prev.skippedRows || []), ...rows] };
+    } else {
+      lastAction.current = { type: 'skip', skippedRows: rows };
+    }
 
     for (const row of rows) {
       await supabase
@@ -73,7 +79,13 @@ export function useRescheduleEngine() {
       }
     }
 
-    lastAction.current = { type: 'pushForward', movedEvents };
+    // Stack onto existing snapshot (compound undo for skip+push)
+    const prev = lastAction.current;
+    if (prev) {
+      lastAction.current = { ...prev, type: 'pushForward', movedEvents: [...(prev.movedEvents || []), ...movedEvents] };
+    } else {
+      lastAction.current = { type: 'pushForward', movedEvents };
+    }
     invalidateAll();
     toast.success('Schedule pushed forward 1 day');
   }, [user, invalidateAll]);
@@ -166,7 +178,8 @@ export function useRescheduleEngine() {
     const snapshot = lastAction.current;
 
     try {
-      if (snapshot.type === 'skip' && snapshot.skippedRows) {
+      // Undo skipped rows (from skip or compound skip+push)
+      if (snapshot.skippedRows) {
         for (const row of snapshot.skippedRows) {
           await supabase
             .from('game_plan_skipped_tasks')
@@ -177,7 +190,8 @@ export function useRescheduleEngine() {
         }
       }
 
-      if ((snapshot.type === 'pushForward' || snapshot.type === 'pushToDate') && snapshot.movedEvents) {
+      // Undo moved events (from push or compound skip+push)
+      if (snapshot.movedEvents) {
         for (const evt of snapshot.movedEvents) {
           await supabase.from('calendar_events')
             .update({ event_date: evt.original_date })
