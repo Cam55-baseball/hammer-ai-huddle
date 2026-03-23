@@ -476,7 +476,7 @@ export function NutritionHubContent() {
           <TabsTrigger value="weekly" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
           <TabsTrigger value="planning" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('mealPlanning.title', 'Planning')}</TabsTrigger>
           <TabsTrigger value="shopping" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('shoppingList.title', 'Shopping')}</TabsTrigger>
-          <TabsTrigger value="supplements" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.supplements', 'Supplements')}</TabsTrigger>
+          
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">
