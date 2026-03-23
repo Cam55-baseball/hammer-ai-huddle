@@ -463,6 +463,9 @@ export function NutritionHubContent() {
         setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       }} />
 
+      {/* Vitamins & Supplements Tracker */}
+      <VitaminSupplementTracker />
+
       {/* Weight Tracking Section */}
       <WeightTrackingSection />
 
