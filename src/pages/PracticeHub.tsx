@@ -427,16 +427,21 @@ export default function PracticeHub() {
                     <VideoRepLogger
                       module={activeModule}
                       reps={reps}
-                      onRepsChange={setReps}
+                      onRepsChange={handleRepsChange}
                       sessionConfig={sessionConfig}
                     />
                   ) : (
                     <RepScorer
                       module={activeModule}
                       reps={reps}
-                      onRepsChange={setReps}
+                      onRepsChange={handleRepsChange}
                       sessionConfig={sessionConfig}
                     />
+                  )}
+
+                  {/* Partner live reps feed — only shown for linked sessions */}
+                  {sessionConfig.link_code && (
+                    <PartnerRepsFeed reps={partnerReps} />
                   )}
 
                   {/* Video uploader + Voice notes in collapsible section */}
