@@ -23,7 +23,7 @@ export function useLiveRepBroadcast({ linkCode, enabled = true }: UseLiveRepBroa
   const [partnerReps, setPartnerReps] = useState<BroadcastRep[]>([]);
   const channelRef = useRef<any>(null);
   const isSubscribed = useRef(false);
-  const pendingQueue = useRef<Array<{ type: string; event: string; payload: any }>>([]);
+  const pendingQueue = useRef<Array<{ type: 'broadcast'; event: string; payload: any }>>([]);
 
   useEffect(() => {
     if (!enabled || !linkCode || !user) return;
