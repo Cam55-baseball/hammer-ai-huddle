@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -63,6 +63,7 @@ interface ParsedRecipe {
 
 export function NutritionHubContent() {
   const [activeTab, setActiveTab] = useState('today');
+  const tabsRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -457,13 +458,16 @@ export function NutritionHubContent() {
       <CommonFoodsGallery onSelectFood={handleGalleryFoodSelect} />
 
       {/* Quick Actions */}
-      <QuickLogActions onLogMeal={handleLogMeal} onSwitchTab={(tab) => setActiveTab(tab)} />
+      <QuickLogActions onLogMeal={handleLogMeal} onSwitchTab={(tab) => {
+        setActiveTab(tab);
+        setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }} />
 
       {/* Weight Tracking Section */}
       <WeightTrackingSection />
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs ref={tabsRef} value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full flex overflow-x-auto">
           <TabsTrigger value="today" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.today', 'Today')}</TabsTrigger>
           <TabsTrigger value="weekly" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>

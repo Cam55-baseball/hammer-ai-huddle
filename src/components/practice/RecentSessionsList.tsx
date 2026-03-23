@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getGradeLabel } from '@/lib/gradeLabel';
 import { Clock, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import { SessionVideosDisplay } from './SessionVideosDisplay';
 
 interface RecentSessionsListProps {
   sport: string;
@@ -110,6 +111,9 @@ export function RecentSessionsList({ sport, moduleLabel, module }: RecentSession
                           <p className="text-muted-foreground whitespace-pre-wrap">{s.notes}</p>
                         </div>
                       )}
+
+                      {/* Session Videos */}
+                      {isOpen && <SessionVideosDisplay sessionId={s.id} />}
 
                       {drillBlocks.length === 0 && !s.notes && (!compositeIndexes || Object.keys(compositeIndexes).length === 0) && (
                         <p className="text-muted-foreground italic">No detailed data recorded for this session.</p>

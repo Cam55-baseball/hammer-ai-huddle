@@ -14,15 +14,15 @@ interface FieldPositionDiagramProps {
 const DOT_RADIUS = 12;
 
 const POSITION_ZONES: Record<string, { x: number; y: number }> = {
-  'P':  { x: 0.50, y: 0.58 },
-  'C':  { x: 0.50, y: 0.92 },
-  '1B': { x: 0.62, y: 0.62 },
-  '2B': { x: 0.56, y: 0.52 },
-  'SS': { x: 0.44, y: 0.52 },
-  '3B': { x: 0.38, y: 0.62 },
-  'LF': { x: 0.28, y: 0.35 },
-  'CF': { x: 0.50, y: 0.25 },
-  'RF': { x: 0.72, y: 0.35 },
+  'P':  { x: 0.50, y: 0.65 },
+  'C':  { x: 0.50, y: 0.88 },
+  '1B': { x: 0.70, y: 0.70 },
+  '2B': { x: 0.56, y: 0.50 },
+  'SS': { x: 0.42, y: 0.58 },
+  '3B': { x: 0.30, y: 0.70 },
+  'LF': { x: 0.30, y: 0.30 },
+  'CF': { x: 0.50, y: 0.20 },
+  'RF': { x: 0.70, y: 0.30 },
 };
 
 // Field colors
@@ -33,6 +33,17 @@ const DIRT = '#c4956a';
 const DIRT_DARK = '#b8845a';
 const CHALK = 'rgba(255,255,255,0.7)';
 const FENCE = '#2d5a1a';
+
+function midpoint(a: Point, b: Point, t = 0.5): Point {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+function expand(center: Point, pt: Point, factor: number): Point {
+  return {
+    x: center.x + (pt.x - center.x) * factor,
+    y: center.y + (pt.y - center.y) * factor,
+  };
+}
 
 export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositionDiagramProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -95,8 +106,21 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
   const foulRight: Point = { x: homeX + foulLineLen * Math.SQRT1_2, y: homeY - foulLineLen * Math.SQRT1_2 };
   const foulLeft: Point = { x: homeX - foulLineLen * Math.SQRT1_2, y: homeY - foulLineLen * Math.SQRT1_2 };
 
-  const dirtCenter: Point = { x: cx, y: homeY - baseDist * 0.5 };
-  const dirtRadius = baseDist * 0.62;
+  // Diamond center for dirt expansion
+  const diamondCenter = midpoint(home, second);
+  const dirtExpand = 1.35;
+  const dirtHome = expand(diamondCenter, home, dirtExpand);
+  const dirtFirst = expand(diamondCenter, first, dirtExpand);
+  const dirtSecond = expand(diamondCenter, second, dirtExpand);
+  const dirtThird = expand(diamondCenter, third, dirtExpand);
+
+  // Inner grass cutout (smaller diamond inside dirt)
+  const grassExpand = 0.55;
+  const grassHome = expand(diamondCenter, home, grassExpand);
+  const grassFirst = expand(diamondCenter, first, grassExpand);
+  const grassSecond = expand(diamondCenter, second, grassExpand);
+  const grassThird = expand(diamondCenter, third, grassExpand);
+
   const warningR = outfieldRadius * 0.78;
 
   const hpSize = 8;
@@ -173,11 +197,17 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
         <line x1={home.x} y1={home.y} x2={foulLeft.x} y2={foulLeft.y} stroke={CHALK} strokeWidth={2} />
         <line x1={home.x} y1={home.y} x2={foulRight.x} y2={foulRight.y} stroke={CHALK} strokeWidth={2} />
 
-        {/* Infield dirt */}
-        <circle cx={dirtCenter.x} cy={dirtCenter.y} r={dirtRadius} fill={DIRT} />
+        {/* Infield dirt — diamond shape (rotated square) */}
+        <polygon
+          points={`${dirtHome.x},${dirtHome.y} ${dirtFirst.x},${dirtFirst.y} ${dirtSecond.x},${dirtSecond.y} ${dirtThird.x},${dirtThird.y}`}
+          fill={DIRT}
+        />
 
-        {/* Infield grass cutout */}
-        <circle cx={dirtCenter.x} cy={dirtCenter.y} r={dirtRadius * 0.55} fill={GRASS_LIGHT} />
+        {/* Infield grass cutout — smaller diamond inside dirt */}
+        <polygon
+          points={`${grassHome.x},${grassHome.y} ${grassFirst.x},${grassFirst.y} ${grassSecond.x},${grassSecond.y} ${grassThird.x},${grassThird.y}`}
+          fill={GRASS_LIGHT}
+        />
 
         {/* Basepaths (chalk) */}
         <polygon
@@ -187,7 +217,7 @@ export function FieldPositionDiagram({ sport, position, onUpdate }: FieldPositio
           strokeWidth={2}
         />
 
-        {/* Bases (white) */}
+        {/* Bases (white diamonds) */}
         {[first, second, third].map((b, i) => (
           <rect
             key={i}
