@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getGradeLabel } from '@/lib/gradeLabel';
 import { Clock, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import { SessionVideosDisplay } from './SessionVideosDisplay';
 
 interface RecentSessionsListProps {
   sport: string;
