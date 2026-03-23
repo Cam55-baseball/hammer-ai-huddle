@@ -29,6 +29,8 @@ import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Lo
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
+import { useLiveRepBroadcast } from '@/hooks/useLiveRepBroadcast';
+import { PartnerRepsFeed } from '@/components/practice/PartnerRepsFeed';
 
 const modules = [
   { id: 'hitting', icon: Target, label: 'Hitting' },
