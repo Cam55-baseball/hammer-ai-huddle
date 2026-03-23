@@ -516,9 +516,6 @@ export function NutritionHubContent() {
           <ShoppingListTab />
         </TabsContent>
         
-        <TabsContent value="supplements" className="mt-4">
-          <VitaminSupplementTracker />
-        </TabsContent>
       </Tabs>
 
       {/* Meal Logging Dialog */}
