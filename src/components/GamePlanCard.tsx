@@ -1289,7 +1289,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 const allTaskIds = tasks.filter(t => !t.completed).map(t => t.id);
                 if (allTaskIds.length === 0) { toast.info('No tasks to skip'); return; }
                 for (const id of allTaskIds) await handleSkipTask(id);
-                toast.success(`Skipped ${allTaskIds.length} tasks for today`);
+                toast.success(`Skipped ${allTaskIds.length} tasks for today`, {
+                  duration: 15000,
+                  action: {
+                    label: 'Undo',
+                    onClick: async () => {
+                      for (const id of allTaskIds) await handleRestoreTask(id);
+                      toast.success('Day restored');
+                    },
+                  },
+                });
               }}
               className="text-amber-400 hover:text-amber-300 h-8 px-2 gap-1 text-xs font-medium"
             >

@@ -34,7 +34,13 @@ export function useRescheduleEngine() {
       skip_date: date,
     }));
 
-    lastAction.current = { type: 'skip', skippedRows: rows };
+    // Stack onto existing snapshot if present (for compound skip+push undo)
+    const prev = lastAction.current;
+    if (prev) {
+      lastAction.current = { ...prev, skippedRows: [...(prev.skippedRows || []), ...rows] };
+    } else {
+      lastAction.current = { type: 'skip', skippedRows: rows };
+    }
 
     for (const row of rows) {
       await supabase
