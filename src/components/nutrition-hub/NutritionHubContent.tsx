@@ -457,7 +457,7 @@ export function NutritionHubContent() {
       <CommonFoodsGallery onSelectFood={handleGalleryFoodSelect} />
 
       {/* Quick Actions */}
-      <QuickLogActions onLogMeal={handleLogMeal} />
+      <QuickLogActions onLogMeal={handleLogMeal} onSwitchTab={(tab) => setActiveTab(tab)} />
 
       {/* Weight Tracking Section */}
       <WeightTrackingSection />
