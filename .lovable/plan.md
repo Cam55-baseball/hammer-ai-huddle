@@ -1,41 +1,46 @@
 
 
-# Fix: Practice Hub Session Linking E2E
+# Live Rep Sync Between Linked Practice Sessions
 
 ## Problem
 
-The `handleSave` function in `PracticeHub.tsx` (line 185) calls `createSession()` but **never passes `link_code` or `linked_session_id`** from `sessionConfig`, even though these values are correctly collected by `SessionConfigPanel` and stored in `sessionConfig.link_code` / `sessionConfig.linked_session_id`.
+The `useLiveAbSync` hook exists but is never used in the Practice Hub. When two users link sessions, reps are only saved locally in React state and written to the database on final save. Neither user sees the other's reps in real-time.
 
-This means:
-- The link code is generated and stored in `live_ab_links` ✅
-- The joiner can look up and activate the link ✅
-- But the saved `performance_sessions` row has `null` for both `link_code` and `linked_session_id` ❌
-- Sessions are never actually cross-referenced in history ❌
+## What needs to happen
 
-## Fix
+1. **Integrate `useLiveAbSync` into PracticeHub** — when a session is linked, subscribe to the partner's updates and broadcast local rep changes in real-time.
 
-**File: `src/pages/PracticeHub.tsx`** (line 185-209)
+2. **Create a Supabase Realtime channel for live rep broadcast** — the current hook only listens to `performance_sessions` row changes, which only update on final save. Instead, use a **Broadcast channel** (Supabase Realtime Broadcast, not postgres_changes) keyed by the link code, so reps are pushed instantly without requiring a database write.
 
-Add the two missing fields to the `createSession()` call:
+3. **Show partner reps in the UI** — display a "Partner Reps" feed alongside the user's own reps during the `build_session` step.
 
-```typescript
-const result = await createSession({
-  // ...existing fields...
-  link_code: sessionConfig.link_code,           // ADD
-  linked_session_id: sessionConfig.linked_session_id, // ADD
-  micro_layer_data: reps.length > 0 ? reps : undefined,
-});
-```
+## Technical approach
 
-Also, after save succeeds and we have `result.id`, update the `live_ab_links` row to store the session ID:
-- If the user is the **creator**: update `creator_session_id = result.id`
-- If the user is the **joiner**: update `joiner_session_id = result.id`
+### A. New hook: `useLiveRepBroadcast`
 
-This ensures bidirectional linking in the `live_ab_links` table.
+Create a new hook that uses Supabase Realtime **Broadcast** (not postgres_changes) on a channel named after the link code (`live-reps-{link_code}`).
+
+- `broadcastRep(rep)` — sends a rep event to the channel
+- `partnerReps` — state array of reps received from the partner
+- Subscribes on mount when `linkCode` is set, unsubscribes on unmount
+
+### B. PracticeHub integration
+
+- Import and call `useLiveRepBroadcast` with `sessionConfig?.link_code`
+- When `onRepsChange` fires (new rep added), broadcast the latest rep to the partner
+- Pass `partnerReps` to a new `PartnerRepsFeed` component rendered below the rep scorer
+
+### C. PartnerRepsFeed component
+
+- Small card/panel showing partner's reps as they arrive in real-time
+- Shows rep count, contact quality, pitch type, and result
+- Visually distinct from user's own reps (different border color, "Partner" label)
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/pages/PracticeHub.tsx` | Pass `link_code` and `linked_session_id` to `createSession`; update `live_ab_links` with session ID after save |
+| `src/hooks/useLiveRepBroadcast.ts` | New hook — Supabase Broadcast channel for real-time rep sync |
+| `src/pages/PracticeHub.tsx` | Integrate broadcast hook, wire up rep broadcasting and partner reps display |
+| `src/components/practice/PartnerRepsFeed.tsx` | New component — live feed of partner's reps |
 
