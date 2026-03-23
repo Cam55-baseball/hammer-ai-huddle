@@ -1,49 +1,73 @@
 
 
-# Three Fixes: Supplements Button, Field Diagram Labels, Multi-Video Upload
+# Three Fixes: Supplements Navigation, Field Diagram Geometry, Multi-Video Both Hubs
 
-## 1. Track Supplements Button Fix
+## 1. Track Supplements Button — Scroll to Tabs
 
-**Problem**: The `Tabs` component uses `defaultValue="today"` (uncontrolled). When `QuickLogActions` calls `setSearchParams({ tab: 'supplements' })` and tries `document.querySelector('[data-value="supplements"]').click()`, the query selector may not find the element because Radix uses `data-state` not `data-value`, or the element is scrolled out of view.
+**Problem**: The wiring is correct — `onSwitchTab` calls `setActiveTab('supplements')` and the `Tabs` component uses the controlled `value={activeTab}`. However, the Quick Actions card is rendered far above the Tabs section (line 460 vs 466). When the user clicks "Track Supplements", the tab value changes but the user can't see it because the page doesn't scroll down to the Tabs area.
 
 **Fix in `src/components/nutrition-hub/NutritionHubContent.tsx`**:
-- Convert `Tabs` from uncontrolled (`defaultValue`) to controlled (`value` + `onValueChange`) using a state variable `activeTab`
-- Read `tab` from URL search params on mount and set `activeTab` accordingly
-- Remove the DOM query hack from `QuickLogActions` — instead, pass `onSwitchTab` callback prop to `QuickLogActions`
+- Add a `useRef` on the `Tabs` container (e.g., `tabsRef`)
+- Pass a modified `onSwitchTab` to `QuickLogActions` that both sets `activeTab` AND calls `tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })`
 
-**Fix in `src/components/nutrition-hub/QuickLogActions.tsx`**:
-- Accept `onSwitchTab?: (tab: string) => void` prop
-- Replace the `setSearchParams` + `querySelector` hack with a simple `onSwitchTab?.('supplements')` call
+## 2. Field Diagram — Accurate Baseball/Softball Geometry
 
-## 2. Field Diagram Base Label Alignment
-
-**Problem**: The position labels (1B, 2B, 3B, SS, etc.) are rendered at `POSITION_ZONES` coordinates, which represent **fielding positions** (where players stand), not the actual base locations. The bases (white diamonds) are rendered at computed pixel coordinates (`first`, `second`, `third`, `home`) but have no labels. This makes the diagram confusing — labels don't align with bases.
+**Problem**: The current diagram uses a circular infield dirt shape, SS/2B fielding positions are too centered, and outfield positions have incorrect spacing.
 
 **Fix in `src/components/game-scoring/FieldPositionDiagram.tsx`**:
-- Add explicit base labels ("1B", "2B", "3B", "HP") positioned adjacent to the actual base diamonds using the computed `first`, `second`, `third`, `home` pixel coordinates with small offsets
-- Keep the position zone labels but rename them to show just the position abbreviation without the base designation (e.g., keep "P", "SS", "LF", "CF", "RF") — these are fielding positions
-- For the base labels, use slightly larger font and brighter white so they stand out as landmark labels
 
-## 3. Multi-Video Upload for Game Hub
+Replace the circular infield dirt with a diamond (rotated square) matching the basepaths:
+- Remove the two `<circle>` elements for infield dirt and grass cutout (lines 177-180)
+- Replace with a rotated square `<polygon>` using the `home`, `first`, `second`, `third` coordinates, expanded slightly outward to represent the dirt beyond the basepaths
+- Add an inner grass cutout as a smaller rotated square polygon
 
-**Problem**: `GameVideoPlayer` only accepts a single video file. Practice Hub already supports multiple videos via `SessionVideoUploader`, but Game Hub does not.
+Update `POSITION_ZONES` to accurate coordinates:
+```
+P:  { x: 0.50, y: 0.65 }   — on the HP-2B line
+C:  { x: 0.50, y: 0.85 }   — behind home
+1B: { x: 0.70, y: 0.70 }   — near first base
+2B: { x: 0.56, y: 0.50 }   — behind second, offset right  
+SS: { x: 0.42, y: 0.58 }   — between 2B and 3B, closer to 2B, behind dirt line
+3B: { x: 0.30, y: 0.70 }   — near third base
+LF: { x: 0.30, y: 0.30 }   — on arc between 3B foul line and CF
+CF: { x: 0.50, y: 0.20 }   — directly above HP-2B line
+RF: { x: 0.70, y: 0.30 }   — on arc between 1B foul line and CF
+```
 
-**Fix in `src/components/game-scoring/GameVideoPlayer.tsx`**:
-- Change from single `videoUrl` state to `videos: { id, file, url }[]` array
-- Accept `multiple` on the file input
-- Render a horizontal strip of video thumbnails (like `SessionVideoUploader` does)
-- Active video plays in the main player area; click a thumbnail to switch
-- Keep all existing controls (scrubber, frame-step, pause & log) working on the active video
-- Update `onVideoLoaded` to pass all URLs or the active URL
+Key geometry rules enforced:
+- Home→1B and Home→3B at 45° angles (already correct via `diagDist` math)
+- Pitcher on straight HP→2B line (already correct, `cx`)
+- All 3 OF positions on same arc distance from home
+- SS positioned between 2B and 3B, slightly closer to 2B, behind the dirt edge
 
-**Fix in `src/components/practice/SessionVideoUploader.tsx`**: Already supports multiple — no changes needed.
+## 3. Multi-Video Upload — Game Hub & Practice Hub
+
+**Game Hub** (`src/components/game-scoring/GameVideoPlayer.tsx`): Already supports multiple videos (implemented in prior change). No further changes needed for upload.
+
+**Practice Hub** (`src/components/practice/SessionVideoUploader.tsx`): Already supports multiple videos with tagging. No upload changes needed.
+
+**Viewing saved videos in both hubs:**
+
+**Game Hub — View game videos in session details:**
+- File: `src/components/practice/RecentSessionsList.tsx` — Add video display in the expanded session details. When a session has `session_type === 'game'`, query `session_videos` for that session_id and render `<video>` elements with playback controls.
+- The `session_videos` table stores `storage_path`, so use `supabase.storage.from('videos').getPublicUrl(path)` to get playable URLs.
+
+**Practice Hub — View practice videos in session details:**
+- Same file: `src/components/practice/RecentSessionsList.tsx` — For any session, query `session_videos` for matching session_id and render video players in the expanded collapsible section.
+- Add a new sub-section in `CollapsibleContent` showing thumbnails/players for each video.
+
+**Implementation approach:**
+- Create a small `SessionVideos` component that takes a `sessionId` and fetches/displays videos from `session_videos` table
+- Embed this component inside `RecentSessionsList`'s `CollapsibleContent`
+- Videos render as compact `<video>` elements with controls
+- Lazy-load: only fetch when the session row is expanded
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/nutrition-hub/NutritionHubContent.tsx` | Controlled Tabs with `activeTab` state, pass `onSwitchTab` to QuickLogActions |
-| `src/components/nutrition-hub/QuickLogActions.tsx` | Accept `onSwitchTab` prop, remove DOM query hack |
-| `src/components/game-scoring/FieldPositionDiagram.tsx` | Add base labels at actual base positions |
-| `src/components/game-scoring/GameVideoPlayer.tsx` | Support multiple video uploads with thumbnail strip and active video switching |
+| `src/components/nutrition-hub/NutritionHubContent.tsx` | Add ref to Tabs, scroll into view on tab switch |
+| `src/components/game-scoring/FieldPositionDiagram.tsx` | Replace circular dirt with diamond, update position zones, fix SS/OF placement |
+| `src/components/practice/RecentSessionsList.tsx` | Add video display in expanded session details |
+| New: `src/components/practice/SessionVideosDisplay.tsx` | Reusable component to fetch and display session videos |
 
