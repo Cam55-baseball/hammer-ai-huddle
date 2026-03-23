@@ -29,6 +29,8 @@ import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Lo
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
+import { useLiveRepBroadcast } from '@/hooks/useLiveRepBroadcast';
+import { PartnerRepsFeed } from '@/components/practice/PartnerRepsFeed';
 
 const modules = [
   { id: 'hitting', icon: Target, label: 'Hitting' },
@@ -72,6 +74,36 @@ export default function PracticeHub() {
 
   // Rep-based scoring
   const [reps, setReps] = useState<ScoredRep[]>([]);
+
+  // Live rep broadcast for linked sessions
+  const { partnerReps, broadcastRep, broadcastRemoveRep } = useLiveRepBroadcast({
+    linkCode: sessionConfig?.link_code,
+    enabled: step === 'build_session' && !!sessionConfig?.link_code,
+  });
+
+  // Wrap setReps to broadcast new reps to partner
+  const handleRepsChange = (newReps: ScoredRep[]) => {
+    if (newReps.length > reps.length) {
+      // A rep was added — broadcast the latest one
+      const latest = newReps[newReps.length - 1];
+      broadcastRep({
+        index: newReps.length - 1,
+        contact_quality: latest.contact_quality,
+        pitch_result: latest.pitch_result,
+        pitch_type: latest.pitch_type,
+        swing_decision: latest.swing_decision,
+        exit_direction: latest.exit_direction,
+        pitch_location: latest.pitch_location,
+        timestamp: Date.now(),
+      });
+    } else if (newReps.length < reps.length) {
+      // A rep was removed — find which index
+      const removedIndex = reps.findIndex((r, i) => newReps[i] !== r);
+      if (removedIndex >= 0) broadcastRemoveRep(removedIndex);
+    }
+    setReps(newReps);
+  };
+
   // Post-session summary
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
 
@@ -395,16 +427,21 @@ export default function PracticeHub() {
                     <VideoRepLogger
                       module={activeModule}
                       reps={reps}
-                      onRepsChange={setReps}
+                      onRepsChange={handleRepsChange}
                       sessionConfig={sessionConfig}
                     />
                   ) : (
                     <RepScorer
                       module={activeModule}
                       reps={reps}
-                      onRepsChange={setReps}
+                      onRepsChange={handleRepsChange}
                       sessionConfig={sessionConfig}
                     />
+                  )}
+
+                  {/* Partner live reps feed — only shown for linked sessions */}
+                  {sessionConfig.link_code && (
+                    <PartnerRepsFeed reps={partnerReps} />
                   )}
 
                   {/* Video uploader + Voice notes in collapsible section */}
