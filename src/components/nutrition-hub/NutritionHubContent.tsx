@@ -62,6 +62,7 @@ interface ParsedRecipe {
 }
 
 export function NutritionHubContent() {
+  const [activeTab, setActiveTab] = useState('today');
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -456,13 +457,13 @@ export function NutritionHubContent() {
       <CommonFoodsGallery onSelectFood={handleGalleryFoodSelect} />
 
       {/* Quick Actions */}
-      <QuickLogActions onLogMeal={handleLogMeal} />
+      <QuickLogActions onLogMeal={handleLogMeal} onSwitchTab={(tab) => setActiveTab(tab)} />
 
       {/* Weight Tracking Section */}
       <WeightTrackingSection />
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="today" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full flex overflow-x-auto">
           <TabsTrigger value="today" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.today', 'Today')}</TabsTrigger>
           <TabsTrigger value="weekly" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
