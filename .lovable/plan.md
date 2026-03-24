@@ -1,41 +1,44 @@
 
 
-# Fix Skip Day & Push Day Undo End-to-End
+# Season Status Selector for Calendar Module
 
-## Two Root Causes
+## What it does
+Adds a season context selector to the Calendar header where users can set their current season phase (In-Season, Pre-Season, Post-Season) with optional start/end dates. This setting persists in the database and can be referenced by other modules (practice sessions, game plan, etc.).
 
-### 1. Push Undo fails — separate hook instances
-`GamePlanPushDayDialog` calls `useRescheduleEngine()` internally, creating its own `useRef` for the snapshot. When the user clicks "Undo Push" in `GamePlanCard`, it calls `undoLastAction()` on a different hook instance whose snapshot is empty — hence "Unable to undo."
+## Database
 
-**Fix**: Remove `useRescheduleEngine` from the dialog. Instead, pass the engine's functions as props from `GamePlanCard` so both share the same ref.
+### Migration: Add columns to `athlete_mpi_settings`
+Add three new columns to the existing `athlete_mpi_settings` table:
+- `season_status` (text, default `'in_season'`) — one of `in_season`, `preseason`, `post_season`
+- `season_start_date` (date, nullable)
+- `season_end_date` (date, nullable)
 
-### 2. Skip Day RLS error — missing UPDATE policy
-The `game_plan_skipped_tasks` table has INSERT, SELECT, and DELETE policies but no UPDATE policy. The `upsert` call tries UPDATE on conflict, which gets blocked by RLS (403 errors visible in console).
+This avoids creating a new table and keeps season context co-located with other athlete settings.
 
-**Fix**: Add an UPDATE RLS policy on `game_plan_skipped_tasks` for authenticated users where `auth.uid() = user_id`.
+## New Component: `SeasonStatusSelector.tsx`
 
-## Changes
+A compact card/section placed below the Calendar header that shows:
+1. **Three-button toggle** — In-Season, Pre-Season, Post-Season (styled like `SeasonContextToggle`)
+2. **Optional date pickers** — Start Date and End Date fields using the Shadcn date picker pattern, shown inline or in a collapsible row
+3. **Auto-save** — Changes upsert to `athlete_mpi_settings` on selection; no separate save button needed
 
-### A. Database migration
-```sql
-CREATE POLICY "Users can update own skips"
-ON public.game_plan_skipped_tasks
-FOR UPDATE
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
-```
+## New Hook: `useSeasonStatus.ts`
 
-### B. GamePlanPushDayDialog.tsx
-- Remove the internal `useRescheduleEngine()` call
-- Accept `skipDay`, `pushForwardOneDay`, `pushToDate`, `replaceDay`, `undoLastAction` as props from parent
+- Fetches the user's `season_status`, `season_start_date`, `season_end_date` from `athlete_mpi_settings`
+- Provides an `updateSeasonStatus` mutation
+- Uses React Query for caching
 
-### C. GamePlanCard.tsx
-- Pass the reschedule engine functions to `GamePlanPushDayDialog` as props
-- This ensures the snapshot ref is shared, so "Undo Push" actually has data to revert
+## Integration into CalendarView
+
+- Import and render `<SeasonStatusSelector />` between the header card and the pending coach activities section
+- The component is self-contained (fetches/saves its own data)
+
+## Files
 
 | File | Change |
 |------|--------|
-| Migration SQL | Add UPDATE RLS policy for `game_plan_skipped_tasks` |
-| `src/components/game-plan/GamePlanPushDayDialog.tsx` | Accept engine functions as props instead of creating own instance |
-| `src/components/GamePlanCard.tsx` | Pass engine functions to dialog |
+| Migration SQL | Add `season_status`, `season_start_date`, `season_end_date` to `athlete_mpi_settings` |
+| `src/hooks/useSeasonStatus.ts` | New hook — fetch and update season status |
+| `src/components/calendar/SeasonStatusSelector.tsx` | New component — toggle + date pickers |
+| `src/components/calendar/CalendarView.tsx` | Render `SeasonStatusSelector` in the header area |
 
