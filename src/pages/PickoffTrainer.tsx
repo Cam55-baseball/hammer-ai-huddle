@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
 import { usePerformanceSession } from '@/hooks/usePerformanceSession';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { PickoffSetup, type SignalType } from '@/components/pickoff-trainer/PickoffSetup';
