@@ -224,6 +224,9 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
         </CardContent>
       </Card>
 
+      {/* Season Status */}
+      <SeasonStatusSelector />
+
       {/* Pending Coach Activities Section */}
       <PendingCoachActivitiesSection 
         selectedSport={selectedSport}
