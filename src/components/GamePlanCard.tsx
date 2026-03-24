@@ -100,7 +100,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     requestPermission: requestNotificationPermission,
     isSupported: notificationsSupported
   } = useDailySummaryNotification();
-  const { undoLastAction } = useRescheduleEngine();
+  const { skipDay, pushForwardOneDay, pushToDate, replaceDay, undoLastAction } = useRescheduleEngine();
   
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
@@ -2726,6 +2726,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onOpenChange={setPushDayDialogOpen}
         taskIds={tasks.filter(t => !t.completed).map(t => t.id)}
         onPushComplete={() => setDayPushed(true)}
+        skipDay={skipDay}
+        pushForwardOneDay={pushForwardOneDay}
+        pushToDate={pushToDate}
+        replaceDay={replaceDay}
+        undoLastAction={undoLastAction}
       />
     </Card>
   );
