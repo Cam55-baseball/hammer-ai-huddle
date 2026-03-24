@@ -14,6 +14,7 @@ interface GamePlanPushDayDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   taskIds: string[];
+  onPushComplete?: () => void;
 }
 
 export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanPushDayDialogProps) {
