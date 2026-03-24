@@ -16,6 +16,7 @@ import { LiveAbLinkPanel } from './LiveAbLinkPanel';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
 import { softballLeagueDistances } from '@/data/softball/leagueDistances';
 import { getCompetitionLevelsByCategory } from '@/data/competitionWeighting';
