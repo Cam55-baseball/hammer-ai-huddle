@@ -58,8 +58,12 @@ export function useSeasonStatus() {
       const previous = queryClient.getQueryData<SeasonData>(['season-status', user?.id]);
       queryClient.setQueryData<SeasonData>(['season-status', user?.id], (old) => ({
         season_status: old?.season_status ?? 'in_season',
-        season_start_date: old?.season_start_date ?? null,
-        season_end_date: old?.season_end_date ?? null,
+        preseason_start_date: old?.preseason_start_date ?? null,
+        preseason_end_date: old?.preseason_end_date ?? null,
+        in_season_start_date: old?.in_season_start_date ?? null,
+        in_season_end_date: old?.in_season_end_date ?? null,
+        post_season_start_date: old?.post_season_start_date ?? null,
+        post_season_end_date: old?.post_season_end_date ?? null,
         ...updates,
       }));
       return { previous };
