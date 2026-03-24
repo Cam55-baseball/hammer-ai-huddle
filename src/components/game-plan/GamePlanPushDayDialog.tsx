@@ -14,9 +14,10 @@ interface GamePlanPushDayDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   taskIds: string[];
+  onPushComplete?: () => void;
 }
 
-export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanPushDayDialogProps) {
+export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushComplete }: GamePlanPushDayDialogProps) {
   const { pushForwardOneDay, pushToDate, replaceDay, skipDay, undoLastAction } = useRescheduleEngine();
   const [processing, setProcessing] = useState(false);
   const [mode, setMode] = useState<'push' | 'date' | 'replace' | null>(null);
@@ -43,6 +44,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanP
       await skipDay(today, taskIds);
       await pushForwardOneDay(today);
       onOpenChange(false);
+      onPushComplete?.();
       showUndoToast();
     } finally {
       setProcessing(false);
@@ -57,6 +59,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanP
       await skipDay(today, taskIds);
       await pushToDate(today, target);
       onOpenChange(false);
+      onPushComplete?.();
       showUndoToast();
     } finally {
       setProcessing(false);
@@ -70,6 +73,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanP
       const source = format(sourceDate, 'yyyy-MM-dd');
       await replaceDay(today, source);
       onOpenChange(false);
+      onPushComplete?.();
       showUndoToast();
     } finally {
       setProcessing(false);
