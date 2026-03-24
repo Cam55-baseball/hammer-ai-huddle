@@ -17,7 +17,7 @@ interface GamePlanPushDayDialogProps {
   onPushComplete?: () => void;
 }
 
-export function GamePlanPushDayDialog({ open, onOpenChange, taskIds }: GamePlanPushDayDialogProps) {
+export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushComplete }: GamePlanPushDayDialogProps) {
   const { pushForwardOneDay, pushToDate, replaceDay, skipDay, undoLastAction } = useRescheduleEngine();
   const [processing, setProcessing] = useState(false);
   const [mode, setMode] = useState<'push' | 'date' | 'replace' | null>(null);
