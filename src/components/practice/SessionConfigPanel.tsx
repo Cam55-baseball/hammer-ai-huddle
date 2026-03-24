@@ -70,6 +70,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const { sport } = useSportTheme();
   const { user } = useAuth();
   const { getDefaults, saveDefaults } = useSessionDefaults(module);
+  const { seasonStatus } = useSeasonStatus();
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isBunting = module === 'bunting';
