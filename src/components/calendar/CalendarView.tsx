@@ -25,6 +25,7 @@ import { useCalendar, CalendarEvent } from '@/hooks/useCalendar';
 import { CalendarDaySheet } from './CalendarDaySheet';
 import { AddCalendarEventDialog } from './AddCalendarEventDialog';
 import { PendingCoachActivitiesSection } from './PendingCoachActivitiesSection';
+import { SeasonStatusSelector } from './SeasonStatusSelector';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { cn } from '@/lib/utils';
 
