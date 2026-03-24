@@ -33,27 +33,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use a user-scoped Supabase client to validate the token
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      logStep("ERROR: Authentication failed", { error: claimsError?.message });
+    const { data: userData, error: userError } = await serviceClient.auth.getUser(token);
+    if (userError || !userData?.user) {
+      logStep("ERROR: Authentication failed", { error: userError?.message });
       return new Response(
-        JSON.stringify({ error: "Authentication failed", message: claimsError?.message || "Invalid or expired token" }),
+        JSON.stringify({ error: "Authentication failed", message: userError?.message || "Invalid or expired token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const claims = claimsData.claims;
     const user = {
-      id: claims.sub as string,
-      email: (claims.email || null) as string | null,
+      id: userData.user.id,
+      email: userData.user.email ?? null,
     };
 
     if (!user.id || !user.email) {
