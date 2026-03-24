@@ -1,33 +1,37 @@
 
 
-# Fix Season Phase Buttons Not Working
+# Connect Season Phase to Practice Sessions & Activities
 
-## Root Cause
+## Current State
+- **Calendar**: Saves `season_status` to `athlete_mpi_settings` via `useSeasonStatus` hook
+- **Practice Hub**: Has its own `SeasonContextToggle` in `SessionConfigPanel` that independently defaults to `'in_season'`
+- **Other flows** (PickoffTrainer, etc.): Hardcode `season_context: 'in_season'`
 
-The network requests reveal the problem: the PATCH (update) returns 204 but the subsequent GET returns an **empty array** `[]`. This means:
+These are completely disconnected — the Calendar setting has no effect on sessions.
 
-1. There is no `athlete_mpi_settings` row for this user (or RLS blocks SELECT)
-2. The `.update()` call silently matches 0 rows — nothing gets written
-3. The query falls back to `'in_season'` every time, so the UI never changes
+## Changes
 
-## Fix
+### 1. `src/hooks/useSessionDefaults.ts`
+Import `useSeasonStatus` and use the saved `season_status` as the default for `season_context` instead of hardcoding `'in_season'`.
 
-### `src/hooks/useSeasonStatus.ts`
+### 2. `src/components/practice/SessionConfigPanel.tsx`
+- Import `useSeasonStatus`
+- Initialize the `seasonContext` state from the saved value instead of `defaults.season_context ?? 'in_season'`
+- The `SeasonContextToggle` remains visible so users can override per-session, but the default now matches their Calendar selection
 
-Change the mutation from `.update()` to `.upsert()` so it creates the row if it doesn't exist:
+### 3. `src/pages/PickoffTrainer.tsx`
+- Import `useSeasonStatus`
+- Use `seasonStatus` instead of hardcoded `'in_season'` when creating sessions
 
-```typescript
-const { error } = await supabase
-  .from('athlete_mpi_settings')
-  .upsert(
-    { user_id: user.id, ...updates },
-    { onConflict: 'user_id' }
-  );
-```
+### 4. Value mapping
+The Calendar uses `'in_season' | 'preseason' | 'post_season'` while `SessionConfigPanel` uses `'in_season' | 'off_season' | 'preseason'`. Map `'post_season'` → `'off_season'` for session context compatibility, or update the `SeasonContextToggle` to support `'post_season'` as a valid value.
 
-Also add **optimistic updates** to the mutation so the UI responds instantly instead of waiting for the refetch.
+## Files
 
 | File | Change |
 |------|--------|
-| `src/hooks/useSeasonStatus.ts` | Change `.update()` to `.upsert()` with `user_id` and add optimistic update |
+| `src/hooks/useSessionDefaults.ts` | Read saved season phase as default |
+| `src/components/practice/SessionConfigPanel.tsx` | Initialize from saved season phase |
+| `src/pages/PickoffTrainer.tsx` | Use saved season phase instead of hardcoded value |
+| `src/components/practice/SeasonContextToggle.tsx` | Add `post_season` option to match Calendar values |
 
