@@ -39,15 +39,31 @@ export function useSeasonStatus() {
       if (!user) throw new Error('Not authenticated');
       const { error } = await supabase
         .from('athlete_mpi_settings')
-        .update(updates)
-        .eq('user_id', user.id);
+        .upsert(
+          { user_id: user.id, sport: 'baseball', ...updates },
+          { onConflict: 'user_id' }
+        );
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['season-status', user?.id] });
+    onMutate: async (updates) => {
+      await queryClient.cancelQueries({ queryKey: ['season-status', user?.id] });
+      const previous = queryClient.getQueryData<SeasonData>(['season-status', user?.id]);
+      queryClient.setQueryData<SeasonData>(['season-status', user?.id], (old) => ({
+        season_status: old?.season_status ?? 'in_season',
+        season_start_date: old?.season_start_date ?? null,
+        season_end_date: old?.season_end_date ?? null,
+        ...updates,
+      }));
+      return { previous };
     },
-    onError: () => {
+    onError: (_err, _updates, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['season-status', user?.id], context.previous);
+      }
       toast.error('Failed to save season status');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['season-status', user?.id] });
     },
   });
 
