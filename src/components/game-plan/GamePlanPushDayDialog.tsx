@@ -73,6 +73,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushCompl
       const source = format(sourceDate, 'yyyy-MM-dd');
       await replaceDay(today, source);
       onOpenChange(false);
+      onPushComplete?.();
       showUndoToast();
     } finally {
       setProcessing(false);
