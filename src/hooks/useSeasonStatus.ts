@@ -81,8 +81,14 @@ export function useSeasonStatus() {
 
   return {
     seasonStatus: query.data?.season_status ?? 'in_season',
-    seasonStartDate: query.data?.season_start_date ?? null,
-    seasonEndDate: query.data?.season_end_date ?? null,
+    seasonDates: {
+      preseason_start_date: query.data?.preseason_start_date ?? null,
+      preseason_end_date: query.data?.preseason_end_date ?? null,
+      in_season_start_date: query.data?.in_season_start_date ?? null,
+      in_season_end_date: query.data?.in_season_end_date ?? null,
+      post_season_start_date: query.data?.post_season_start_date ?? null,
+      post_season_end_date: query.data?.post_season_end_date ?? null,
+    },
     isLoading: query.isLoading,
     updateSeasonStatus: mutation.mutate,
   };
