@@ -16,6 +16,7 @@ import { LiveAbLinkPanel } from './LiveAbLinkPanel';
 import { FieldingPositionSelector } from './FieldingPositionSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
 import { baseballLeagueDistances } from '@/data/baseball/leagueDistances';
 import { softballLeagueDistances } from '@/data/softball/leagueDistances';
 import { getCompetitionLevelsByCategory } from '@/data/competitionWeighting';
@@ -69,6 +70,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const { sport } = useSportTheme();
   const { user } = useAuth();
   const { getDefaults, saveDefaults } = useSessionDefaults(module);
+  const { seasonStatus } = useSeasonStatus();
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isBunting = module === 'bunting';
@@ -91,7 +93,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   );
   const [velocityBand, setVelocityBand] = useState<string | undefined>(defaults.velocity_band);
   const [seasonContext, setSeasonContext] = useState(
-    isLiveAbs ? 'in_season' : (defaults.season_context ?? 'in_season')
+    isLiveAbs ? 'in_season' : (defaults.season_context ?? seasonStatus)
   );
   const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
   const [leagueLevel, setLeagueLevel] = useState<string | undefined>();

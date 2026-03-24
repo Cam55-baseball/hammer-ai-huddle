@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { useSeasonStatus } from '@/hooks/useSeasonStatus';
 import { usePerformanceSession } from '@/hooks/usePerformanceSession';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { PickoffSetup, type SignalType } from '@/components/pickoff-trainer/PickoffSetup';
@@ -15,6 +16,7 @@ const PickoffTrainer = () => {
   const { user, loading } = useAuth();
   const { sport } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
+  const { seasonStatus } = useSeasonStatus();
   const navigate = useNavigate();
 
   const [phase, setPhase] = useState<Phase>('setup');
@@ -62,7 +64,7 @@ const PickoffTrainer = () => {
       sport: 'baseball',
       session_type: 'pickoff_training',
       session_date: new Date().toISOString().split('T')[0],
-      season_context: 'in_season',
+      season_context: seasonStatus,
       module: 'pitching',
       drill_blocks: [{
         id: crypto.randomUUID(),
