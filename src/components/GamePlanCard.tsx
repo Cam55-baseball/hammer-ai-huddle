@@ -100,7 +100,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     requestPermission: requestNotificationPermission,
     isSupported: notificationsSupported
   } = useDailySummaryNotification();
-  const { undoLastAction } = useRescheduleEngine();
+  const { skipDay, pushForwardOneDay, pushToDate, replaceDay, undoLastAction } = useRescheduleEngine();
   
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
