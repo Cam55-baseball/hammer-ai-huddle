@@ -472,19 +472,23 @@ export type Database = {
           date_of_birth: string | null
           games_minimum_met: boolean | null
           id: string
+          in_season_end_date: string | null
+          in_season_start_date: string | null
           integrity_threshold_met: boolean | null
           is_ambidextrous_thrower: boolean | null
           is_college_verified: boolean | null
           is_pro_verified: boolean | null
           is_switch_hitter: boolean | null
           league_tier: string | null
+          post_season_end_date: string | null
+          post_season_start_date: string | null
+          preseason_end_date: string | null
+          preseason_start_date: string | null
           primary_batting_side: string | null
           primary_coach_id: string | null
           primary_position: string | null
           primary_throwing_hand: string | null
           ranking_eligible: boolean | null
-          season_end_date: string | null
-          season_start_date: string | null
           season_status: string
           secondary_coach_ids: string[] | null
           secondary_position: string | null
@@ -506,19 +510,23 @@ export type Database = {
           date_of_birth?: string | null
           games_minimum_met?: boolean | null
           id?: string
+          in_season_end_date?: string | null
+          in_season_start_date?: string | null
           integrity_threshold_met?: boolean | null
           is_ambidextrous_thrower?: boolean | null
           is_college_verified?: boolean | null
           is_pro_verified?: boolean | null
           is_switch_hitter?: boolean | null
           league_tier?: string | null
+          post_season_end_date?: string | null
+          post_season_start_date?: string | null
+          preseason_end_date?: string | null
+          preseason_start_date?: string | null
           primary_batting_side?: string | null
           primary_coach_id?: string | null
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
-          season_end_date?: string | null
-          season_start_date?: string | null
           season_status?: string
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
@@ -540,19 +548,23 @@ export type Database = {
           date_of_birth?: string | null
           games_minimum_met?: boolean | null
           id?: string
+          in_season_end_date?: string | null
+          in_season_start_date?: string | null
           integrity_threshold_met?: boolean | null
           is_ambidextrous_thrower?: boolean | null
           is_college_verified?: boolean | null
           is_pro_verified?: boolean | null
           is_switch_hitter?: boolean | null
           league_tier?: string | null
+          post_season_end_date?: string | null
+          post_season_start_date?: string | null
+          preseason_end_date?: string | null
+          preseason_start_date?: string | null
           primary_batting_side?: string | null
           primary_coach_id?: string | null
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
-          season_end_date?: string | null
-          season_start_date?: string | null
           season_status?: string
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
