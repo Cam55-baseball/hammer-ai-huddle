@@ -16,6 +16,7 @@ const PickoffTrainer = () => {
   const { user, loading } = useAuth();
   const { sport } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
+  const { seasonStatus } = useSeasonStatus();
   const navigate = useNavigate();
 
   const [phase, setPhase] = useState<Phase>('setup');
