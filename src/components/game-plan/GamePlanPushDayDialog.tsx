@@ -59,6 +59,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushCompl
       await skipDay(today, taskIds);
       await pushToDate(today, target);
       onOpenChange(false);
+      onPushComplete?.();
       showUndoToast();
     } finally {
       setProcessing(false);
