@@ -483,6 +483,9 @@ export type Database = {
           primary_position: string | null
           primary_throwing_hand: string | null
           ranking_eligible: boolean | null
+          season_end_date: string | null
+          season_start_date: string | null
+          season_status: string
           secondary_coach_ids: string[] | null
           secondary_position: string | null
           sport: string
@@ -514,6 +517,9 @@ export type Database = {
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
+          season_end_date?: string | null
+          season_start_date?: string | null
+          season_status?: string
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
           sport: string
@@ -545,6 +551,9 @@ export type Database = {
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
+          season_end_date?: string | null
+          season_start_date?: string | null
+          season_status?: string
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
           sport?: string
