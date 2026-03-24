@@ -64,7 +64,7 @@ const PickoffTrainer = () => {
       sport: 'baseball',
       session_type: 'pickoff_training',
       session_date: new Date().toISOString().split('T')[0],
-      season_context: 'in_season',
+      season_context: seasonStatus,
       module: 'pitching',
       drill_blocks: [{
         id: crypto.randomUUID(),

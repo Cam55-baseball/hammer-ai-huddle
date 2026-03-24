@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils';
 
 const seasons = [
+  { value: 'preseason', label: 'Pre-Season' },
   { value: 'in_season', label: 'In-Season' },
-  { value: 'off_season', label: 'Off-Season' },
-  { value: 'preseason', label: 'Preseason' },
+  { value: 'post_season', label: 'Post-Season' },
 ];
 
 interface SeasonContextToggleProps {
