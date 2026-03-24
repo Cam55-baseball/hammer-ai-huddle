@@ -2726,6 +2726,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         open={pushDayDialogOpen}
         onOpenChange={setPushDayDialogOpen}
         taskIds={tasks.filter(t => !t.completed).map(t => t.id)}
+        onPushComplete={() => setDayPushed(true)}
       />
     </Card>
   );
