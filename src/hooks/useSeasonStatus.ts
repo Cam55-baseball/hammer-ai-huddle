@@ -7,8 +7,12 @@ export type SeasonStatus = 'in_season' | 'preseason' | 'post_season';
 
 interface SeasonData {
   season_status: SeasonStatus;
-  season_start_date: string | null;
-  season_end_date: string | null;
+  preseason_start_date: string | null;
+  preseason_end_date: string | null;
+  in_season_start_date: string | null;
+  in_season_end_date: string | null;
+  post_season_start_date: string | null;
+  post_season_end_date: string | null;
 }
 
 export function useSeasonStatus() {
