@@ -3,10 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ArrowRight, ChevronRight, Replace, Undo2 } from 'lucide-react';
+import { CalendarIcon, ArrowRight, ChevronRight, Replace } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useRescheduleEngine } from '@/hooks/useRescheduleEngine';
 import { getTodayDate } from '@/utils/dateUtils';
 import { toast } from 'sonner';
 
@@ -15,28 +14,22 @@ interface GamePlanPushDayDialogProps {
   onOpenChange: (open: boolean) => void;
   taskIds: string[];
   onPushComplete?: () => void;
+  skipDay: (date: string, taskIds: string[]) => Promise<void>;
+  pushForwardOneDay: (fromDate: string) => Promise<void>;
+  pushToDate: (fromDate: string, targetDate: string) => Promise<void>;
+  replaceDay: (targetDate: string, sourceDate: string) => Promise<void>;
+  undoLastAction: () => Promise<boolean>;
 }
 
-export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushComplete }: GamePlanPushDayDialogProps) {
-  const { pushForwardOneDay, pushToDate, replaceDay, skipDay, undoLastAction } = useRescheduleEngine();
+export function GamePlanPushDayDialog({
+  open, onOpenChange, taskIds, onPushComplete,
+  skipDay, pushForwardOneDay, pushToDate, replaceDay, undoLastAction
+}: GamePlanPushDayDialogProps) {
   const [processing, setProcessing] = useState(false);
   const [mode, setMode] = useState<'push' | 'date' | 'replace' | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [sourceDate, setSourceDate] = useState<Date>();
   const today = getTodayDate();
-
-  const showUndoToast = () => {
-    toast.success('Schedule updated', {
-      action: {
-        label: 'Undo',
-        onClick: async () => {
-          const result = await undoLastAction();
-          if (!result) toast.error('Unable to undo');
-        },
-      },
-      duration: 15000,
-    });
-  };
 
   const handlePushForward = async () => {
     setProcessing(true);
@@ -45,7 +38,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushCompl
       await pushForwardOneDay(today);
       onOpenChange(false);
       onPushComplete?.();
-      showUndoToast();
+      toast.success('Schedule pushed forward 1 day');
     } finally {
       setProcessing(false);
     }
@@ -60,7 +53,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushCompl
       await pushToDate(today, target);
       onOpenChange(false);
       onPushComplete?.();
-      showUndoToast();
+      toast.success(`Schedule pushed to ${target}`);
     } finally {
       setProcessing(false);
     }
@@ -74,7 +67,7 @@ export function GamePlanPushDayDialog({ open, onOpenChange, taskIds, onPushCompl
       await replaceDay(today, source);
       onOpenChange(false);
       onPushComplete?.();
-      showUndoToast();
+      toast.success(`Replaced today with ${source}'s schedule`);
     } finally {
       setProcessing(false);
     }
