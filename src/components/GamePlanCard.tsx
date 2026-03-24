@@ -1318,9 +1318,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               size="sm"
               onClick={async () => {
                 if (dayPushed) {
-                  const { undoLastAction } = useRescheduleEngine.getState?.() ?? {};
-                  // undoLastAction is already imported via the hook at top level
-                  const result = await undoLastAction?.();
+                  const result = await undoLastAction();
                   if (result === false) toast.error('Unable to undo push');
                   else toast.success('Push undone');
                   setDayPushed(false);
