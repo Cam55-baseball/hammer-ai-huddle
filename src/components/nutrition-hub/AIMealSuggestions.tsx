@@ -82,7 +82,13 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
       }
     } catch (err) {
       console.error('Error fetching suggestions:', err);
-      setError(err instanceof Error ? err.message : 'Failed to get suggestions');
+      const msg = err instanceof Error ? err.message : 'Failed to get suggestions';
+      if (msg.toLowerCase().includes('402') || msg.toLowerCase().includes('credits') || msg.toLowerCase().includes('payment required')) {
+        setCreditsDepleted(true);
+        setError('AI suggestions are temporarily unavailable. You can still log meals manually.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
