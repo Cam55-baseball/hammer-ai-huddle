@@ -60,6 +60,11 @@ export const useSubscription = () => {
     return hasModuleForSport(module, sport);
   }, [hasModuleForSport]);
 
+  const setAndCache = useCallback((data: SubscriptionData) => {
+    lastResult = data;
+    setSubscriptionData(data);
+  }, []);
+
   const doCheckSubscription = useCallback(async (silent: boolean = false) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
