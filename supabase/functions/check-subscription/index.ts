@@ -15,11 +15,13 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const serviceClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+  const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
 
   try {
     logStep("Function started");
@@ -34,40 +36,45 @@ Deno.serve(async (req) => {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await serviceClient.auth.getUser(token);
-    if (userError || !userData?.user) {
-      logStep("ERROR: Authentication failed", { error: userError?.message });
+
+    // Use getClaims for fast local JWT validation (no network call)
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false },
+    });
+
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+
+    if (claimsError || !claimsData?.claims) {
+      logStep("ERROR: Authentication failed", { error: claimsError?.message });
       return new Response(
-        JSON.stringify({ error: "Authentication failed", message: userError?.message || "Invalid or expired token" }),
+        JSON.stringify({ error: "Authentication failed", message: claimsError?.message || "Invalid or expired token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const user = {
-      id: userData.user.id,
-      email: userData.user.email ?? null,
-    };
+    const userId = claimsData.claims.sub as string;
+    const email = claimsData.claims.email as string;
 
-    if (!user.id || !user.email) {
-      logStep("ERROR: User not authenticated or email missing");
+    if (!userId) {
+      logStep("ERROR: User not authenticated");
       return new Response(
-        JSON.stringify({ error: "User not authenticated or email not available" }),
+        JSON.stringify({ error: "User not authenticated" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    logStep("User authenticated successfully", { userId: user.id, email: user.email });
+    logStep("User authenticated successfully", { userId, email });
 
     // Owner/Admin bypass
     const { data: roles } = await serviceClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .in("role", ["owner", "admin"])
       .eq("status", "active");
 
     if (roles && roles.length > 0) {
-      logStep("Owner detected - granting full access", { userId: user.id });
+      logStep("Owner detected - granting full access", { userId });
       return new Response(
         JSON.stringify({
           subscribed: true,
@@ -84,7 +91,7 @@ Deno.serve(async (req) => {
     const { data: subscription } = await serviceClient
       .from("subscriptions")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     const isActive = (subscription?.status ?? "inactive") === "active";
@@ -109,5 +116,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
-
