@@ -1,41 +1,19 @@
 
 
-# Fix AI Credits Error Handling for Nutrition Features
+# Fix: Skip Subscription Check When No Session Exists
 
-## Root Cause
+## Problem
+The `useSubscription` hook calls the `check-subscription` edge function even when the user is on the `/auth` page with no active session. This causes 401 "Auth session missing" errors and a blank screen.
 
-Both the Hammer Meal Suggestions and the Meal Title auto-analysis are failing because the **AI gateway is returning 402 (credits exhausted)**. The edge function logs confirm: `[parse-food-text] AI gateway error: 402`. This is a billing/usage issue — not a code bug.
+## Fix
 
-To restore these features, Lovable AI credits need to be added via **Settings > Workspace > Usage**.
+**`src/hooks/useSubscription.ts`** — Add an early return in `checkSubscription` right after `getSession()` returns no session, *before* calling `refreshSession()` or `invoke()`. The current code already has this guard but then proceeds to call `refreshSession()` anyway due to the flow structure. We need to ensure the function truly exits early.
 
-## What We Can Improve (Code)
+Additionally, in the `useEffect`, guard the initial call and polling so they only run when a session exists, and rely on the `SIGNED_IN` auth event to start checking.
 
-The current error handling swallows the 402 context in some paths, leaving users confused. We should make the experience more graceful:
-
-### 1. `src/components/nutrition-hub/AIMealSuggestions.tsx`
-
-The `supabase.functions.invoke` call doesn't expose HTTP status codes directly — the error comes back as a generic message. When the response body contains `"Payment required"` or `"credits"`, show a specific, user-friendly message instead of a generic error.
-
-- Parse the error/data for 402-related keywords
-- Show: "AI credits are currently unavailable. You can still log meals manually."
-- Disable the "Get Suggestions" / "Refresh" button temporarily with a tooltip
-
-### 2. `src/hooks/useSmartFoodLookup.ts`
-
-The 402 handling at line 183 already catches `"credits"` but the message `"Hammer credits required."` is vague. Improve:
-
-- Change error message to: "AI auto-fill is temporarily unavailable. Please enter nutrition info manually."
-- Set a `creditsDepleted` flag so the component can hide the AI analysis UI entirely rather than showing a broken state
-
-### 3. Nutrition Log Entry Component
-
-Find where the meal title triggers `useSmartFoodLookup` and ensure that when `status === 'error'` with a credits issue, the manual input fields are immediately shown/expanded without requiring extra user action.
-
-## Files to Change
+### Changes
 
 | File | Change |
 |------|--------|
-| `src/components/nutrition-hub/AIMealSuggestions.tsx` | Better 402 error message; disable refresh button when credits depleted |
-| `src/hooks/useSmartFoodLookup.ts` | Expose `creditsDepleted` flag; improve error message |
-| Nutrition log form component (uses `useSmartFoodLookup`) | Auto-expand manual fields when credits are depleted |
+| `src/hooks/useSubscription.ts` | 1. Move the no-session early return **before** `refreshSession()` call. 2. In the `useEffect`, skip `startPolling()` until a `SIGNED_IN` or `TOKEN_REFRESHED` event confirms a session. 3. On `SIGNED_OUT`, also clear `prevModules` to avoid stale comparisons. |
 
