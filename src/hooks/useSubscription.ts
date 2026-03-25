@@ -59,7 +59,7 @@ export const useSubscription = () => {
     return hasModuleForSport(module, sport);
   }, [hasModuleForSport]);
 
-  const checkSubscription = useCallback(async (silent: boolean = false) => {
+  const doCheckSubscription = useCallback(async (silent: boolean = false) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -99,13 +99,11 @@ export const useSubscription = () => {
           if (!refreshError && refreshData.session) {
             console.log('[useSubscription] Token refreshed successfully, retrying edge function...');
             
-            // Retry with refreshed token
             const retryResult = await supabase.functions.invoke('check-subscription');
             
             data = retryResult.data;
             error = retryResult.error;
             
-            // If still auth error after refresh, mark as failed
             if (error && isAuthError(error)) {
               authFailed = true;
             }
@@ -127,7 +125,7 @@ export const useSubscription = () => {
         (error.message?.includes('NOT_FOUND') || error.message?.includes('not found') || (error as any)?.status === 404)
       ) {
         retries++;
-        const delay = 500 * retries; // 500ms, 1000ms, 1500ms
+        const delay = 500 * retries;
         console.warn(`[useSubscription] Function not found (404). Retry ${retries}/3 after ${delay}ms...`);
         await new Promise((r) => setTimeout(r, delay));
         const retry404 = await supabase.functions.invoke('check-subscription');
@@ -135,7 +133,6 @@ export const useSubscription = () => {
         error = retry404.error;
       }
 
-      // Check if we still have a 404 after all retries - treat as non-fatal
       const is404Error = error && (
         error.message?.includes('NOT_FOUND') || 
         error.message?.includes('not found') || 
@@ -144,7 +141,6 @@ export const useSubscription = () => {
       
       if (is404Error) {
         console.warn('[useSubscription] Function still unavailable after retries, using database fallback');
-        // Fall through to the fallback logic below - don't treat as critical error
       }
 
       if (!error && data) {
@@ -161,21 +157,18 @@ export const useSubscription = () => {
           discount_percent: data.discount_percent || null,
         });
         
-        // Detect module changes and trigger callbacks
         if (prevModules.length > 0 && newModules.length > prevModules.length) {
           console.log('[useSubscription] New modules detected:', newModules);
           onChangeCallbacks.forEach(callback => callback(newModules));
         }
         setPrevModules(newModules);
       } else {
-        // Log as warning for 404s and auth failures (transient), error for other issues
         if (is404Error || authFailed) {
           console.warn('[useSubscription] Edge function unavailable or auth failed, falling back to database');
         } else if (error) {
           console.error('Error fetching subscription:', error);
         }
         
-        // Fallback to database query
         try {
           const { data: fallbackData, error: fallbackError } = await supabase
             .from('subscriptions')
@@ -235,6 +228,18 @@ export const useSubscription = () => {
       });
     }
   }, []);
+
+  // Deduplicated wrapper: ensures only one check runs at a time across all hook instances
+  const checkSubscription = useCallback(async (silent: boolean = false) => {
+    if (inflightCheck) {
+      await inflightCheck;
+      return;
+    }
+    inflightCheck = doCheckSubscription(silent).finally(() => {
+      inflightCheck = null;
+    });
+    await inflightCheck;
+  }, [doCheckSubscription]);
 
   const getModuleDetails = useCallback((module: string, sport: string) => {
     const key = `${sport}_${module}`;
