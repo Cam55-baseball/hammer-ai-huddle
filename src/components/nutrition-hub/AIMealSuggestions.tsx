@@ -137,7 +137,8 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
             variant="ghost"
             size="sm"
             onClick={fetchSuggestions}
-            disabled={loading}
+            disabled={loading || creditsDepleted}
+            title={creditsDepleted ? 'AI credits unavailable' : undefined}
           >
             <RefreshCw className={cn("h-4 w-4 mr-1", loading && "animate-spin")} />
             {loading ? t('common.loading', 'Loading...') : t('nutrition.aiSuggestions.refresh', 'Refresh')}
