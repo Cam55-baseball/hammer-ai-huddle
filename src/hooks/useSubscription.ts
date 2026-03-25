@@ -23,6 +23,7 @@ export interface SubscriptionData {
 
 // Module-level deduplication: only one check-subscription call at a time
 let inflightCheck: Promise<void> | null = null;
+let lastResult: SubscriptionData | null = null;
 
 export const useSubscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
@@ -59,12 +60,17 @@ export const useSubscription = () => {
     return hasModuleForSport(module, sport);
   }, [hasModuleForSport]);
 
+  const setAndCache = useCallback((data: SubscriptionData) => {
+    lastResult = data;
+    setSubscriptionData(data);
+  }, []);
+
   const doCheckSubscription = useCallback(async (silent: boolean = false) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        setSubscriptionData({
+        setAndCache({
           subscribed: false,
           modules: [],
           module_details: {},
@@ -146,7 +152,7 @@ export const useSubscription = () => {
       if (!error && data) {
         const newModules = data.modules || [];
         
-        setSubscriptionData({
+        setAndCache({
           subscribed: data.subscribed || false,
           modules: newModules,
           module_details: data.module_details || {},
@@ -178,7 +184,7 @@ export const useSubscription = () => {
 
           if (fallbackData && !fallbackError) {
             const isActive = fallbackData.status === 'active';
-            setSubscriptionData({
+            setAndCache({
               subscribed: isActive,
               modules: fallbackData.subscribed_modules || [],
               module_details: (fallbackData.module_subscription_mapping as unknown as Record<string, ModuleDetails>) || {},
@@ -189,7 +195,7 @@ export const useSubscription = () => {
               discount_percent: null,
             });
           } else {
-            setSubscriptionData({
+            setAndCache({
               subscribed: false,
               modules: [],
               module_details: {},
@@ -202,7 +208,7 @@ export const useSubscription = () => {
           }
         } catch (fallbackError) {
           console.error('Fallback query failed:', fallbackError);
-          setSubscriptionData({
+          setAndCache({
             subscribed: false,
             modules: [],
             module_details: {},
@@ -216,7 +222,7 @@ export const useSubscription = () => {
       }
     } catch (error) {
       console.error('Error in checkSubscription:', error);
-      setSubscriptionData({
+      setAndCache({
         subscribed: false,
         modules: [],
         module_details: {},
@@ -233,6 +239,10 @@ export const useSubscription = () => {
   const checkSubscription = useCallback(async (silent: boolean = false) => {
     if (inflightCheck) {
       await inflightCheck;
+      // Apply cached result to this instance's state
+      if (lastResult) {
+        setSubscriptionData(lastResult);
+      }
       return;
     }
     inflightCheck = doCheckSubscription(silent).finally(() => {
@@ -288,6 +298,7 @@ export const useSubscription = () => {
         if (interval) clearInterval(interval);
         if (mounted) {
           setPrevModules([]);
+          lastResult = null;
           setSubscriptionData({
             subscribed: false,
             modules: [],
