@@ -552,6 +552,7 @@ export function LiveScorebook({
             <OpponentScoringPanel
               inning={currentInning}
               opponentName={opponentName}
+              half={opponentBattingHalf}
               onRecordAndSwitch={handleOpponentRecordAndSwitch}
             />
           )}
