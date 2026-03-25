@@ -79,7 +79,7 @@ export const useSubscription = () => {
       let authFailed = false;
 
       // If we get an auth error (401), try refreshing the session and retry once
-      if (error && (error.message?.includes('Authentication') || error.message?.includes('401') || error.message?.includes('Invalid or expired token'))) {
+      if (error && (error.message?.includes('Authentication') || error.message?.includes('401') || error.message?.includes('Invalid or expired token') || error.message?.includes('session missing') || error.message?.includes('session_not_found'))) {
         console.log('[useSubscription] Auth error detected, attempting token refresh...');
         
         try {
