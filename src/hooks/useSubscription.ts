@@ -262,16 +262,24 @@ export const useSubscription = () => {
       }, pollingInterval);
     };
 
-    // Initial check
-    checkSubscription(false).then(() => {
-      if (mounted) startPolling();
+    // Only run initial check if a session already exists
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && mounted) {
+        checkSubscription(false).then(() => {
+          if (mounted) startPolling();
+        });
+      } else if (mounted) {
+        // No session — mark as initialized immediately without calling the edge function
+        setSubscriptionData(prev => ({ ...prev, loading: false, initialized: true }));
+      }
     });
 
-    // Listen for auth state changes to stop polling on sign-out
+    // Listen for auth state changes
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         if (interval) clearInterval(interval);
         if (mounted) {
+          setPrevModules([]);
           setSubscriptionData({
             subscribed: false,
             modules: [],
