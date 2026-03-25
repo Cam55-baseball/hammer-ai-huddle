@@ -66,6 +66,7 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
   const [status, setStatus] = useState<SmartFoodStatus>('idle');
   const [result, setResult] = useState<SmartFoodResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [creditsDepleted, setCreditsDepleted] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
