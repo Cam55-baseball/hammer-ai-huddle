@@ -1,19 +1,41 @@
 
 
-# Fix: Skip Subscription Check When No Session Exists
+# Fix: Deduplicate useSubscription Calls
 
 ## Problem
-The `useSubscription` hook calls the `check-subscription` edge function even when the user is on the `/auth` page with no active session. This causes 401 "Auth session missing" errors and a blank screen.
+`useSubscription()` is used in 22+ components. Each instance independently calls `checkSubscription`, creating a stampede of concurrent edge function calls. When a token is expired, multiple instances race to refresh it simultaneously, causing cascading 401 "missing sub claim" errors.
 
-## Fix
+The console logs show 20+ simultaneous "Auth error detected, attempting token refresh..." messages — all fighting over the same session.
 
-**`src/hooks/useSubscription.ts`** — Add an early return in `checkSubscription` right after `getSession()` returns no session, *before* calling `refreshSession()` or `invoke()`. The current code already has this guard but then proceeds to call `refreshSession()` anyway due to the flow structure. We need to ensure the function truly exits early.
+## Solution
+Add a **module-level deduplication lock** so that only one `checkSubscription` call runs at a time. All concurrent callers wait for the same in-flight promise.
 
-Additionally, in the `useEffect`, guard the initial call and polling so they only run when a session exists, and rely on the `SIGNED_IN` auth event to start checking.
+## Changes
 
-### Changes
+**`src/hooks/useSubscription.ts`**
 
-| File | Change |
-|------|--------|
-| `src/hooks/useSubscription.ts` | 1. Move the no-session early return **before** `refreshSession()` call. 2. In the `useEffect`, skip `startPolling()` until a `SIGNED_IN` or `TOKEN_REFRESHED` event confirms a session. 3. On `SIGNED_OUT`, also clear `prevModules` to avoid stale comparisons. |
+Add a module-scoped `inflight` promise variable outside the hook:
+
+```typescript
+let inflightCheck: Promise<void> | null = null;
+```
+
+Inside `checkSubscription`, wrap the logic so if a check is already running, subsequent callers await the same promise instead of starting new ones:
+
+```typescript
+const checkSubscription = useCallback(async (silent: boolean = false) => {
+  if (inflightCheck) {
+    await inflightCheck;
+    return;
+  }
+  inflightCheck = doCheckSubscription(silent).finally(() => {
+    inflightCheck = null;
+  });
+  await inflightCheck;
+}, []);
+```
+
+Move the current `checkSubscription` body into a `doCheckSubscription` inner function. This ensures only one edge function call + refresh cycle runs at a time across all 22+ component instances.
+
+No other files need changes.
 
