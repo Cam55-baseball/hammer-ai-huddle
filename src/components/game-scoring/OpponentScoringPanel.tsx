@@ -66,9 +66,14 @@ export function OpponentScoringPanel({ inning, opponentName, half, onRecordAndSw
           <Stepper label="Errors" value={errors} onChange={setErrors} />
         </div>
 
+        {/* Defensive Play Logger */}
+        <div className="mb-4">
+          <DefensivePlayLog plays={defensivePlays} onPlaysChange={setDefensivePlays} />
+        </div>
+
         <Button
           className="w-full"
-          onClick={() => onRecordAndSwitch(runs, hits, errors, outs)}
+          onClick={() => onRecordAndSwitch(runs, hits, errors, outs, defensivePlays)}
           variant={outs >= 3 ? 'default' : 'outline'}
         >
           {outs >= 3
