@@ -298,6 +298,7 @@ export const useSubscription = () => {
         if (interval) clearInterval(interval);
         if (mounted) {
           setPrevModules([]);
+          lastResult = null;
           setSubscriptionData({
             subscribed: false,
             modules: [],
