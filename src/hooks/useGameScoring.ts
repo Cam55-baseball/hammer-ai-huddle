@@ -250,10 +250,11 @@ export function useGameScoring() {
       // Create performance_sessions for the logged-in user's batting stats
       for (const [batterName, stats] of Object.entries(batterStats)) {
         const matchingPlayer = setup.lineup.find(p => p.name === batterName);
-        if (!matchingPlayer?.player_user_id && matchingPlayer?.name !== setup.lineup[0]?.name) continue;
+        const targetUserId = matchingPlayer?.player_user_id || user.id;
+        const isUnlinked = !matchingPlayer?.player_user_id;
 
         await supabase.from('performance_sessions').insert({
-          user_id: matchingPlayer?.player_user_id || user.id,
+          user_id: targetUserId,
           sport: setup.sport,
           module: 'hitting',
           session_type: 'game',
@@ -268,6 +269,7 @@ export function useGameScoring() {
             strikeouts: stats.strikeouts,
             walks: stats.walks,
             batting_avg: stats.abs > 0 ? (stats.hits / stats.abs).toFixed(3) : '0.000',
+            ...(isUnlinked ? { player_name: batterName, is_unlinked_player: true } : {}),
           } as any,
         } as any);
       }
@@ -275,10 +277,11 @@ export function useGameScoring() {
       // Create performance_sessions for pitching
       for (const [pitcherName, stats] of Object.entries(pitcherStats)) {
         const matchingPlayer = setup.lineup.find(p => p.name === pitcherName);
-        if (!matchingPlayer?.player_user_id && matchingPlayer?.name !== setup.lineup[0]?.name) continue;
+        const targetUserId = matchingPlayer?.player_user_id || user.id;
+        const isUnlinked = !matchingPlayer?.player_user_id;
 
         await supabase.from('performance_sessions').insert({
-          user_id: matchingPlayer?.player_user_id || user.id,
+          user_id: targetUserId,
           sport: setup.sport,
           module: 'pitching',
           session_type: 'game',
@@ -291,6 +294,7 @@ export function useGameScoring() {
             strikeouts: stats.strikeouts,
             walks: stats.walks,
             hits_allowed: stats.hits_allowed,
+            ...(isUnlinked ? { player_name: pitcherName, is_unlinked_player: true } : {}),
           } as any,
         } as any);
       }
