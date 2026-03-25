@@ -238,7 +238,7 @@ export function LiveScorebook({
     setSubTarget(null);
   };
 
-  const handleOpponentRecordAndSwitch = useCallback((runs: number, hits: number, errors: number) => {
+  const handleOpponentRecordAndSwitch = useCallback((runs: number, hits: number, errors: number, outs: number) => {
     // Opponent runs key: use the half prefix for opponent batting
     const oppPrefix = opponentBattingHalf === 'top' ? 'T' : 'B';
     const key = `${oppPrefix}${currentInning}`;
@@ -552,6 +552,7 @@ export function LiveScorebook({
             <OpponentScoringPanel
               inning={currentInning}
               opponentName={opponentName}
+              half={opponentBattingHalf}
               onRecordAndSwitch={handleOpponentRecordAndSwitch}
             />
           )}
