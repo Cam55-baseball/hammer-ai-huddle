@@ -194,9 +194,11 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
             <p className="text-sm text-muted-foreground mb-2">
               {t('nutrition.aiSuggestions.clickToGet', 'Click refresh to get Hammer-powered meal suggestions based on your remaining macros')}
             </p>
-            <Button onClick={fetchSuggestions} size="sm">
+           <Button onClick={fetchSuggestions} size="sm" disabled={creditsDepleted}>
               <Sparkles className="h-4 w-4 mr-2" />
-              {t('nutrition.aiSuggestions.getSuggestions', 'Get Suggestions')}
+              {creditsDepleted 
+                ? t('nutrition.aiSuggestions.unavailable', 'AI Unavailable')
+                : t('nutrition.aiSuggestions.getSuggestions', 'Get Suggestions')}
             </Button>
           </div>
         )}

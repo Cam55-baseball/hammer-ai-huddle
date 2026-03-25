@@ -231,5 +231,5 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
     }, DEBOUNCE_MS);
   }, [clear]);
 
-  return { status, result, error, trigger, clear };
+  return { status, result, error, creditsDepleted, trigger, clear };
 }
