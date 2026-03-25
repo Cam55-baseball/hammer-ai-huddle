@@ -23,6 +23,7 @@ export interface SubscriptionData {
 
 // Module-level deduplication: only one check-subscription call at a time
 let inflightCheck: Promise<void> | null = null;
+let lastResult: SubscriptionData | null = null;
 
 export const useSubscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
