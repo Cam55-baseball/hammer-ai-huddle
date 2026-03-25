@@ -1,41 +1,27 @@
 
 
-# Fix: Deduplicate useSubscription Calls
+# Fix: Modules Not Loading Due to Broken Deduplication
 
-## Problem
-`useSubscription()` is used in 22+ components. Each instance independently calls `checkSubscription`, creating a stampede of concurrent edge function calls. When a token is expired, multiple instances race to refresh it simultaneously, causing cascading 401 "missing sub claim" errors.
+## Root Cause
 
-The console logs show 20+ simultaneous "Auth error detected, attempting token refresh..." messages — all fighting over the same session.
+`useSubscription()` is called in 22+ components. Each call creates an independent `useState` with its own `setSubscriptionData`. The module-level `inflightCheck` deduplication means only the **first** instance that triggers `doCheckSubscription` will have its `setSubscriptionData` called. All other instances `await inflightCheck` and return early — their state is never updated, so `modules` stays `[]`.
 
 ## Solution
-Add a **module-level deduplication lock** so that only one `checkSubscription` call runs at a time. All concurrent callers wait for the same in-flight promise.
+
+Store the last successful subscription result in a **module-level shared variable**. When an instance awaits the deduplicated promise, it reads from this shared cache and calls its own `setSubscriptionData` with the cached result.
 
 ## Changes
 
 **`src/hooks/useSubscription.ts`**
 
-Add a module-scoped `inflight` promise variable outside the hook:
+1. Add a module-level `let lastResult: SubscriptionData | null = null` alongside the existing `inflightCheck`.
+2. In `doCheckSubscription`, after every `setSubscriptionData(...)` call, also assign the same value to `lastResult`.
+3. In `checkSubscription`, after awaiting an existing `inflightCheck`, read from `lastResult` and call `setSubscriptionData(lastResult)` so the waiting instance gets the data too.
+4. On `SIGNED_OUT`, clear `lastResult = null`.
 
-```typescript
-let inflightCheck: Promise<void> | null = null;
-```
+This is a minimal change — roughly 10 lines added — and preserves the deduplication benefit (single network call) while ensuring every hook instance gets the result.
 
-Inside `checkSubscription`, wrap the logic so if a check is already running, subsequent callers await the same promise instead of starting new ones:
-
-```typescript
-const checkSubscription = useCallback(async (silent: boolean = false) => {
-  if (inflightCheck) {
-    await inflightCheck;
-    return;
-  }
-  inflightCheck = doCheckSubscription(silent).finally(() => {
-    inflightCheck = null;
-  });
-  await inflightCheck;
-}, []);
-```
-
-Move the current `checkSubscription` body into a `doCheckSubscription` inner function. This ensures only one edge function call + refresh cycle runs at a time across all 22+ component instances.
-
-No other files need changes.
+| File | Change |
+|------|--------|
+| `src/hooks/useSubscription.ts` | Add `lastResult` module-level cache; populate it on every `setSubscriptionData` call; read it after awaiting `inflightCheck` |
 
