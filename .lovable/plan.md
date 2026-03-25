@@ -1,42 +1,41 @@
 
 
-# Save Stats for All Players (Including Unlinked)
+# Fix AI Credits Error Handling for Nutrition Features
 
-## Problem
-The `syncGameToPlayerStats` function currently skips unlinked players (those without a `player_user_id`) unless they happen to be the first player in the lineup. This means most roster players' game stats are silently lost.
+## Root Cause
 
-## Solution
-For unlinked players, store their stats under the **coach's user_id** with a `player_name` reference inside `composite_indexes`. This way:
-- Linked players get stats saved to their own account (existing behavior)
-- Unlinked players get stats saved under the coach's account with a name tag so the data isn't lost and can be attributed later if the player links
+Both the Hammer Meal Suggestions and the Meal Title auto-analysis are failing because the **AI gateway is returning 402 (credits exhausted)**. The edge function logs confirm: `[parse-food-text] AI gateway error: 402`. This is a billing/usage issue — not a code bug.
 
-## Changes
+To restore these features, Lovable AI credits need to be added via **Settings > Workspace > Usage**.
 
-### `src/hooks/useGameScoring.ts`
+## What We Can Improve (Code)
 
-Remove the `continue` guard that skips unlinked players. Instead:
+The current error handling swallows the 402 context in some paths, leaving users confused. We should make the experience more graceful:
 
-**For batting stats (line 251-273):**
-- If `matchingPlayer.player_user_id` exists → save under that user (existing)
-- Otherwise → save under `user.id` (coach) with `player_name: batterName` and `is_unlinked_player: true` in `composite_indexes`
+### 1. `src/components/nutrition-hub/AIMealSuggestions.tsx`
 
-**For pitching stats (line 276-296):**
-- Same logic: linked players save to their account, unlinked save under coach with name reference
+The `supabase.functions.invoke` call doesn't expose HTTP status codes directly — the error comes back as a generic message. When the response body contains `"Payment required"` or `"credits"`, show a specific, user-friendly message instead of a generic error.
 
-The `composite_indexes` object will include:
-```json
-{
-  "game_id": "...",
-  "player_name": "John Smith",
-  "is_unlinked_player": true,
-  "hits": 2,
-  ...
-}
-```
+- Parse the error/data for 402-related keywords
+- Show: "AI credits are currently unavailable. You can still log meals manually."
+- Disable the "Get Suggestions" / "Refresh" button temporarily with a tooltip
 
-This requires no database changes — `composite_indexes` is already a JSONB column.
+### 2. `src/hooks/useSmartFoodLookup.ts`
+
+The 402 handling at line 183 already catches `"credits"` but the message `"Hammer credits required."` is vague. Improve:
+
+- Change error message to: "AI auto-fill is temporarily unavailable. Please enter nutrition info manually."
+- Set a `creditsDepleted` flag so the component can hide the AI analysis UI entirely rather than showing a broken state
+
+### 3. Nutrition Log Entry Component
+
+Find where the meal title triggers `useSmartFoodLookup` and ensure that when `status === 'error'` with a credits issue, the manual input fields are immediately shown/expanded without requiring extra user action.
+
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGameScoring.ts` | Remove skip-guard for unlinked players; store stats under coach with player name reference |
+| `src/components/nutrition-hub/AIMealSuggestions.tsx` | Better 402 error message; disable refresh button when credits depleted |
+| `src/hooks/useSmartFoodLookup.ts` | Expose `creditsDepleted` flag; improve error message |
+| Nutrition log form component (uses `useSmartFoodLookup`) | Auto-expand manual fields when credits are depleted |
 
