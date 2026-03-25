@@ -70,7 +70,7 @@ export const useSubscription = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        setSubscriptionData({
+        setAndCache({
           subscribed: false,
           modules: [],
           module_details: {},
@@ -152,7 +152,7 @@ export const useSubscription = () => {
       if (!error && data) {
         const newModules = data.modules || [];
         
-        setSubscriptionData({
+        setAndCache({
           subscribed: data.subscribed || false,
           modules: newModules,
           module_details: data.module_details || {},
@@ -184,7 +184,7 @@ export const useSubscription = () => {
 
           if (fallbackData && !fallbackError) {
             const isActive = fallbackData.status === 'active';
-            setSubscriptionData({
+            setAndCache({
               subscribed: isActive,
               modules: fallbackData.subscribed_modules || [],
               module_details: (fallbackData.module_subscription_mapping as unknown as Record<string, ModuleDetails>) || {},
@@ -195,7 +195,7 @@ export const useSubscription = () => {
               discount_percent: null,
             });
           } else {
-            setSubscriptionData({
+            setAndCache({
               subscribed: false,
               modules: [],
               module_details: {},
@@ -208,7 +208,7 @@ export const useSubscription = () => {
           }
         } catch (fallbackError) {
           console.error('Fallback query failed:', fallbackError);
-          setSubscriptionData({
+          setAndCache({
             subscribed: false,
             modules: [],
             module_details: {},
@@ -222,7 +222,7 @@ export const useSubscription = () => {
       }
     } catch (error) {
       console.error('Error in checkSubscription:', error);
-      setSubscriptionData({
+      setAndCache({
         subscribed: false,
         modules: [],
         module_details: {},
