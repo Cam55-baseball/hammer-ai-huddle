@@ -45,6 +45,7 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasConsumedFood, setHasConsumedFood] = useState(false);
+  const [creditsDepleted, setCreditsDepleted] = useState(false);
 
   const remainingMacros = {
     calories: Math.max(0, targets.calories - consumed.calories),
