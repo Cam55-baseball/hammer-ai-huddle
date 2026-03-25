@@ -21,6 +21,9 @@ export interface SubscriptionData {
   discount_percent?: number | null;
 }
 
+// Module-level deduplication: only one check-subscription call at a time
+let inflightCheck: Promise<void> | null = null;
+
 export const useSubscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
     subscribed: false,
