@@ -33,6 +33,7 @@ interface UseSmartFoodLookupReturn {
   status: SmartFoodStatus;
   result: SmartFoodResult | null;
   error: string | null;
+  creditsDepleted: boolean;
   trigger: (text: string) => void;
   clear: () => void;
 }
