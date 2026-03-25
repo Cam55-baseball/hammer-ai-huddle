@@ -234,6 +234,10 @@ export const useSubscription = () => {
   const checkSubscription = useCallback(async (silent: boolean = false) => {
     if (inflightCheck) {
       await inflightCheck;
+      // Apply cached result to this instance's state
+      if (lastResult) {
+        setSubscriptionData(lastResult);
+      }
       return;
     }
     inflightCheck = doCheckSubscription(silent).finally(() => {
