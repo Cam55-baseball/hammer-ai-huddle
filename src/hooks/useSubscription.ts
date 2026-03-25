@@ -95,7 +95,7 @@ export const useSubscription = () => {
             error = retryResult.error;
             
             // If still auth error after refresh, mark as failed
-            if (error && (error.message?.includes('Authentication') || error.message?.includes('401'))) {
+            if (error && (error.message?.includes('Authentication') || error.message?.includes('401') || error.message?.includes('session missing') || error.message?.includes('session_not_found'))) {
               authFailed = true;
             }
           } else {
