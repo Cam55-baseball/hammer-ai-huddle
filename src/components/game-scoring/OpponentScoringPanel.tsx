@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Minus, Plus } from 'lucide-react';
+import { DefensivePlayLog, type DefensivePlay } from './DefensivePlayLog';
 
 interface OpponentScoringPanelProps {
   inning: number;
   opponentName: string;
   half: 'top' | 'bottom';
-  onRecordAndSwitch: (runs: number, hits: number, errors: number, outs: number) => void;
+  onRecordAndSwitch: (runs: number, hits: number, errors: number, outs: number, defensivePlays: DefensivePlay[]) => void;
 }
 
 export function OpponentScoringPanel({ inning, opponentName, half, onRecordAndSwitch }: OpponentScoringPanelProps) {
@@ -15,6 +16,7 @@ export function OpponentScoringPanel({ inning, opponentName, half, onRecordAndSw
   const [hits, setHits] = useState(0);
   const [errors, setErrors] = useState(0);
   const [outs, setOuts] = useState(0);
+  const [defensivePlays, setDefensivePlays] = useState<DefensivePlay[]>([]);
 
   const Stepper = ({ label, value, onChange, max }: { label: string; value: number; onChange: (v: number) => void; max?: number }) => (
     <div className="flex flex-col items-center gap-1">
@@ -64,9 +66,14 @@ export function OpponentScoringPanel({ inning, opponentName, half, onRecordAndSw
           <Stepper label="Errors" value={errors} onChange={setErrors} />
         </div>
 
+        {/* Defensive Play Logger */}
+        <div className="mb-4">
+          <DefensivePlayLog plays={defensivePlays} onPlaysChange={setDefensivePlays} />
+        </div>
+
         <Button
           className="w-full"
-          onClick={() => onRecordAndSwitch(runs, hits, errors, outs)}
+          onClick={() => onRecordAndSwitch(runs, hits, errors, outs, defensivePlays)}
           variant={outs >= 3 ? 'default' : 'outline'}
         >
           {outs >= 3
