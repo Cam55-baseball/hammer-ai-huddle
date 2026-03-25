@@ -45,6 +45,7 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasConsumedFood, setHasConsumedFood] = useState(false);
+  const [creditsDepleted, setCreditsDepleted] = useState(false);
 
   const remainingMacros = {
     calories: Math.max(0, targets.calories - consumed.calories),
@@ -81,7 +82,13 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
       }
     } catch (err) {
       console.error('Error fetching suggestions:', err);
-      setError(err instanceof Error ? err.message : 'Failed to get suggestions');
+      const msg = err instanceof Error ? err.message : 'Failed to get suggestions';
+      if (msg.toLowerCase().includes('402') || msg.toLowerCase().includes('credits') || msg.toLowerCase().includes('payment required')) {
+        setCreditsDepleted(true);
+        setError('AI suggestions are temporarily unavailable. You can still log meals manually.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -130,7 +137,8 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
             variant="ghost"
             size="sm"
             onClick={fetchSuggestions}
-            disabled={loading}
+            disabled={loading || creditsDepleted}
+            title={creditsDepleted ? 'AI credits unavailable' : undefined}
           >
             <RefreshCw className={cn("h-4 w-4 mr-1", loading && "animate-spin")} />
             {loading ? t('common.loading', 'Loading...') : t('nutrition.aiSuggestions.refresh', 'Refresh')}
@@ -186,9 +194,11 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
             <p className="text-sm text-muted-foreground mb-2">
               {t('nutrition.aiSuggestions.clickToGet', 'Click refresh to get Hammer-powered meal suggestions based on your remaining macros')}
             </p>
-            <Button onClick={fetchSuggestions} size="sm">
+           <Button onClick={fetchSuggestions} size="sm" disabled={creditsDepleted}>
               <Sparkles className="h-4 w-4 mr-2" />
-              {t('nutrition.aiSuggestions.getSuggestions', 'Get Suggestions')}
+              {creditsDepleted 
+                ? t('nutrition.aiSuggestions.unavailable', 'AI Unavailable')
+                : t('nutrition.aiSuggestions.getSuggestions', 'Get Suggestions')}
             </Button>
           </div>
         )}

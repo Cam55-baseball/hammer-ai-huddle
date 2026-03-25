@@ -33,6 +33,7 @@ interface UseSmartFoodLookupReturn {
   status: SmartFoodStatus;
   result: SmartFoodResult | null;
   error: string | null;
+  creditsDepleted: boolean;
   trigger: (text: string) => void;
   clear: () => void;
 }
@@ -65,6 +66,7 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
   const [status, setStatus] = useState<SmartFoodStatus>('idle');
   const [result, setResult] = useState<SmartFoodResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [creditsDepleted, setCreditsDepleted] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -177,12 +179,13 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           console.error('[useSmartFoodLookup] AI function error:', fnError);
           
           // Handle specific error codes
-          const errorMessage = fnError.message || '';
-          if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
+          const errorMessage = (fnError.message || '').toLowerCase();
+          if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
             setError('Rate limit reached. Try again in a moment.');
-          } else if (errorMessage.includes('402') || errorMessage.includes('credits')) {
-            setError('Hammer credits required.');
-          } else if (errorMessage.includes('404') || errorMessage.includes('NOT_FOUND')) {
+          } else if (errorMessage.includes('402') || errorMessage.includes('credits') || errorMessage.includes('payment required')) {
+            setCreditsDepleted(true);
+            setError('AI auto-fill is temporarily unavailable. Please enter nutrition info manually.');
+          } else if (errorMessage.includes('404') || errorMessage.includes('not_found')) {
             setError('Auto-fill temporarily unavailable.');
           } else {
             setError('Could not recognize food. Enter manually.');
@@ -228,5 +231,5 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
     }, DEBOUNCE_MS);
   }, [clear]);
 
-  return { status, result, error, trigger, clear };
+  return { status, result, error, creditsDepleted, trigger, clear };
 }
