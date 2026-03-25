@@ -179,12 +179,13 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           console.error('[useSmartFoodLookup] AI function error:', fnError);
           
           // Handle specific error codes
-          const errorMessage = fnError.message || '';
-          if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
+          const errorMessage = (fnError.message || '').toLowerCase();
+          if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
             setError('Rate limit reached. Try again in a moment.');
-          } else if (errorMessage.includes('402') || errorMessage.includes('credits')) {
-            setError('Hammer credits required.');
-          } else if (errorMessage.includes('404') || errorMessage.includes('NOT_FOUND')) {
+          } else if (errorMessage.includes('402') || errorMessage.includes('credits') || errorMessage.includes('payment required')) {
+            setCreditsDepleted(true);
+            setError('AI auto-fill is temporarily unavailable. Please enter nutrition info manually.');
+          } else if (errorMessage.includes('404') || errorMessage.includes('not_found')) {
             setError('Auto-fill temporarily unavailable.');
           } else {
             setError('Could not recognize food. Enter manually.');
