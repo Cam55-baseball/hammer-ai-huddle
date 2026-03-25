@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Minus, Plus } from 'lucide-react';
+import { DefensivePlayLog, type DefensivePlay } from './DefensivePlayLog';
 
 interface OpponentScoringPanelProps {
   inning: number;
   opponentName: string;
   half: 'top' | 'bottom';
-  onRecordAndSwitch: (runs: number, hits: number, errors: number, outs: number) => void;
+  onRecordAndSwitch: (runs: number, hits: number, errors: number, outs: number, defensivePlays: DefensivePlay[]) => void;
 }
 
 export function OpponentScoringPanel({ inning, opponentName, half, onRecordAndSwitch }: OpponentScoringPanelProps) {
