@@ -25,6 +25,7 @@ interface AthleteGoal {
   targetWeightLbs: number | null;
   targetBodyFatPercent: number | null;
   weeklyChangeRate: number;
+  customCalorieTarget: number | null;
   isActive: boolean;
 }
 
