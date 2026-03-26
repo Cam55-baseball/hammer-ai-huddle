@@ -12,6 +12,7 @@ export interface AthleteBodyGoal {
   targetWeightLbs: number | null;
   targetBodyFatPercent: number | null;
   weeklyChangeRate: number;
+  customCalorieTarget: number | null;
   startedAt: string;
   targetDate: string | null;
   isActive: boolean;
@@ -24,6 +25,7 @@ export interface CreateGoalInput {
   targetWeightLbs?: number;
   targetBodyFatPercent?: number;
   weeklyChangeRate?: number;
+  customCalorieTarget?: number | null;
   targetDate?: string;
 }
 
@@ -53,6 +55,7 @@ export function useAthleteGoals() {
         targetWeightLbs: g.target_weight_lbs,
         targetBodyFatPercent: g.target_body_fat_percent,
         weeklyChangeRate: g.weekly_change_rate || 1,
+        customCalorieTarget: g.custom_calorie_target ?? null,
         startedAt: g.started_at,
         targetDate: g.target_date,
         isActive: g.is_active || false,
@@ -92,6 +95,7 @@ export function useAthleteGoals() {
           target_weight_lbs: input.targetWeightLbs,
           target_body_fat_percent: input.targetBodyFatPercent,
           weekly_change_rate: input.weeklyChangeRate || 1,
+          custom_calorie_target: input.customCalorieTarget ?? null,
           target_date: input.targetDate,
           is_active: true
         })
@@ -108,6 +112,7 @@ export function useAthleteGoals() {
         targetWeightLbs: data.target_weight_lbs,
         targetBodyFatPercent: data.target_body_fat_percent,
         weeklyChangeRate: data.weekly_change_rate || 1,
+        customCalorieTarget: data.custom_calorie_target ?? null,
         startedAt: data.started_at,
         targetDate: data.target_date,
         isActive: data.is_active || false,
@@ -138,6 +143,7 @@ export function useAthleteGoals() {
           ...(updates.targetWeightLbs !== undefined && { target_weight_lbs: updates.targetWeightLbs }),
           ...(updates.targetBodyFatPercent !== undefined && { target_body_fat_percent: updates.targetBodyFatPercent }),
           ...(updates.weeklyChangeRate !== undefined && { weekly_change_rate: updates.weeklyChangeRate }),
+          ...(updates.customCalorieTarget !== undefined && { custom_calorie_target: updates.customCalorieTarget }),
           ...(updates.targetDate !== undefined && { target_date: updates.targetDate }),
           updated_at: new Date().toISOString()
         })

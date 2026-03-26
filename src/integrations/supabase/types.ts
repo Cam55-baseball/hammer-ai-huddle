@@ -280,6 +280,7 @@ export type Database = {
       athlete_body_goals: {
         Row: {
           created_at: string | null
+          custom_calorie_target: number | null
           goal_type: string
           id: string
           is_active: boolean | null
@@ -294,6 +295,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          custom_calorie_target?: number | null
           goal_type: string
           id?: string
           is_active?: boolean | null
@@ -308,6 +310,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          custom_calorie_target?: number | null
           goal_type?: string
           id?: string
           is_active?: boolean | null

@@ -25,6 +25,7 @@ interface AthleteGoal {
   targetWeightLbs: number | null;
   targetBodyFatPercent: number | null;
   weeklyChangeRate: number;
+  customCalorieTarget: number | null;
   isActive: boolean;
 }
 
@@ -91,6 +92,7 @@ export function useTDEE() {
           targetWeightLbs: goal.target_weight_lbs,
           targetBodyFatPercent: goal.target_body_fat_percent,
           weeklyChangeRate: goal.weekly_change_rate || 1,
+          customCalorieTarget: goal.custom_calorie_target ?? null,
           isActive: goal.is_active || false
         });
       } else {
