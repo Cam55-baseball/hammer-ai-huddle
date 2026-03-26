@@ -165,8 +165,11 @@ export function ExerciseBuilder({ exercises, onChange }: ExerciseBuilderProps) {
                     <Label className="text-xs">{t('customActivity.fields.sets')}</Label>
                     <Input
                       type="number"
-                      value={exercise.sets || ''}
-                      onChange={(e) => updateExercise(exercise.id, { sets: parseInt(e.target.value) || undefined })}
+                    value={exercise.sets ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        updateExercise(exercise.id, { sets: raw === '' ? undefined : parseInt(raw) || undefined });
+                      }}
                       className="h-9"
                       min={1}
                     />
@@ -177,8 +180,11 @@ export function ExerciseBuilder({ exercises, onChange }: ExerciseBuilderProps) {
                   <div className="space-y-1">
                     <Label className="text-xs">{t('customActivity.fields.reps')}</Label>
                     <Input
-                      value={exercise.reps || ''}
-                      onChange={(e) => updateExercise(exercise.id, { reps: e.target.value })}
+                    value={exercise.reps ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                        updateExercise(exercise.id, { reps: raw });
+                      }}
                       placeholder="10 or 8-12"
                       className="h-9"
                     />
