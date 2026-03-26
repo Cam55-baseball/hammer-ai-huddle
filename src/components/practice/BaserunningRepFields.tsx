@@ -9,6 +9,7 @@ interface BaserunningRepFieldsProps {
   value: Partial<ScoredRep>;
   onChange: (field: string, val: any) => void;
   sport?: string;
+  mode?: 'quick' | 'advanced';
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
@@ -74,7 +75,7 @@ const goalOptions = [
   { value: 'situational', label: '🎯 Situational' },
 ];
 
-export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepFieldsProps) {
+export function BaserunningRepFields({ value, onChange, sport, mode = 'quick' }: BaserunningRepFieldsProps) {
   const drills = sport === 'softball' ? softballDrills : baseballDrills;
 
   return (
@@ -145,33 +146,35 @@ export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepF
         />
       </div>
 
-      {/* Exact Time to Base (optional override) */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Exact Time to Base (Seconds)</Label>
-        <Input
-          type="number"
-          placeholder="Optional — overrides time band"
-          value={value.exact_time_to_base_sec ?? ''}
-          onChange={e => onChange('exact_time_to_base_sec', e.target.value ? Number(e.target.value) : undefined)}
-          className="h-8 text-xs"
-          min={0}
-          step="any"
-        />
-      </div>
-
-      {/* Exact Steps to Base (optional) */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Exact Steps to Base</Label>
-        <Input
-          type="number"
-          placeholder="Optional integer"
-          value={value.exact_steps_to_base ?? ''}
-          onChange={e => onChange('exact_steps_to_base', e.target.value ? parseInt(e.target.value, 10) : undefined)}
-          className="h-8 text-xs"
-          min={0}
-          step="1"
-        />
-      </div>
+      {/* Advanced-only fields */}
+      {mode === 'advanced' && (
+        <>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Exact Time to Base (Seconds)</Label>
+            <Input
+              type="number"
+              placeholder="Optional — overrides time band"
+              value={value.exact_time_to_base_sec ?? ''}
+              onChange={e => onChange('exact_time_to_base_sec', e.target.value ? Number(e.target.value) : undefined)}
+              className="h-8 text-xs"
+              min={0}
+              step="any"
+            />
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Exact Steps to Base</Label>
+            <Input
+              type="number"
+              placeholder="Optional integer"
+              value={value.exact_steps_to_base ?? ''}
+              onChange={e => onChange('exact_steps_to_base', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+              className="h-8 text-xs"
+              min={0}
+              step="1"
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
