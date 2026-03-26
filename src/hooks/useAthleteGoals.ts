@@ -112,6 +112,7 @@ export function useAthleteGoals() {
         targetWeightLbs: data.target_weight_lbs,
         targetBodyFatPercent: data.target_body_fat_percent,
         weeklyChangeRate: data.weekly_change_rate || 1,
+        customCalorieTarget: data.custom_calorie_target ?? null,
         startedAt: data.started_at,
         targetDate: data.target_date,
         isActive: data.is_active || false,
