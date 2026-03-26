@@ -420,7 +420,11 @@ export function CustomActivityBuilderDialog({
             {!isEditing && !presetActivityType && !isFieldLocked('type') && (
               <div className="space-y-2">
                 <Label className="text-sm font-bold">{t('customActivity.selectType')}</Label>
-                <ActivityTypeSelector selected={activityType} onSelect={setActivityType} />
+                <ActivityTypeSelector selected={activityType} onSelect={(type) => {
+                  setActivityType(type);
+                  if (type === 'workout') setUseBlockSystem(true);
+                  else setUseBlockSystem(false);
+                }} />
               </div>
             )}
 
