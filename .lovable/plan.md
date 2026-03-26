@@ -1,35 +1,46 @@
 
-## Fix the missing/undiscoverable advanced toggle in hitting practice logging
+Fix the quick-log gating by tightening the shared rep logger and the subcomponents that still leak optional inputs.
 
 ### What I found
-The rep logging mode control does exist in code inside `src/components/practice/RepScorer.tsx`, which is the shared logger used by hitting practice sessions. However, in the current UI it is easy to miss because:
-- it only shows the current state label (`Quick Log`) instead of clearly presenting both choices
-- the switch itself has low visual contrast in the light theme screenshot
-- it sits above the form as a subtle row, so users can mistake it for a label instead of an interactive control
+The issue is real. Quick Log is not enforcing “required fields only” consistently:
 
-Your screenshot matches this: the control is technically there, but it does not read like an obvious “Advanced” toggle.
+- `ThrowingRepFields.tsx` still shows optional fields in quick mode:
+  - exact throw distance
+  - throw tracking (`FieldingThrowFields`)
+  - arm feel
+  - exact velocity
+- `BaserunningRepFields.tsx` still shows several optional fields in quick mode:
+  - goal of rep
+  - jump grade
+  - read grade
+  - time-to-base band
+- `RepScorer.tsx` still shows at least one pitching optional field in quick mode:
+  - `Contact Type` is outside advanced gating
+- `Fielding` is mostly gated already, but I will re-audit the whole fielding block while fixing this to ensure only required fields remain in quick mode.
+- `BuntRepFields.tsx` already gates most optional fields, but I will align it with the “required-only in quick” rule so the experience is consistent.
 
-### Plan
-1. Update the shared rep logging mode control in `src/components/practice/RepScorer.tsx` so it is unmistakable in every practice module.
-2. Replace the ambiguous single switch row with a more explicit control that shows both modes clearly, such as:
-   - `Quick Log` button/tab
-   - `Advanced` button/tab
-   - short helper text under the control
-3. Keep the existing behavior and persistence:
-   - default remains `quick`
-   - selection still saves to local storage
-   - all existing field gating stays intact
-4. Ensure the control appears consistently in:
-   - standard logging
-   - video + log flows
-   - all practice modules that use `RepScorer`, including hitting solo work
-5. Optionally improve contrast on the underlying `Switch` component only if any other screens rely on it and still need better visibility.
+### Implementation plan
 
-### Files to update
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | Replace the current subtle mode row with a prominent, explicit Quick/Advanced segmented control or button group. |
-| `src/components/ui/switch.tsx` | Only if needed: improve unchecked-state contrast globally. |
+| `src/components/practice/ThrowingRepFields.tsx` | Keep only required quick fields visible: throw distance, self-catch quality, effort level. Move exact distance, throw tracking, arm feel, exact velocity, and all grading/spin fields under `mode === 'advanced'`. |
+| `src/components/practice/BaserunningRepFields.tsx` | Keep only required quick fields visible: drill type. Keep custom AI drill description visible only when required by custom drill. Move goal, jump/read grades, time band, exact time, and exact steps into advanced mode. |
+| `src/components/practice/RepScorer.tsx` | Gate pitching `Contact Type` behind advanced mode. Re-audit pitching/fielding sections so quick mode truly shows only required fields. Preserve required live-context inputs only where they are genuinely needed for validation. |
+| `src/components/practice/BuntRepFields.tsx` | Reconfirm quick mode shows only core bunt fields and move any remaining optional/detail fields to advanced if needed. Also keep behavior consistent with the shared quick/advanced contract. |
+
+### Quick mode target behavior
+After the fix, Quick Log should show only essential fields:
+
+- Throwing: throw distance, self-catch quality, effort level
+- Fielding: position, batted ball type, fielding result
+- Baserunning: drill type, plus custom AI description only when custom drill is selected
+- Bunting: only core bunt inputs
+- Pitching: only required pitch inputs, with optional analytics/detail fields hidden
+
+### Safeguards
+- Keep validation aligned with what is visible in quick mode so hidden optional fields are never required.
+- Do not change saved data shape or backend behavior.
+- Apply the fix in the shared `RepScorer` flow so it works in both standard logging and video + log.
 
 ### Result
-After this change, users in hitting practice sessions will immediately see an obvious `Advanced` option instead of a subtle switch that looks hidden.
+Quick Log will become truly minimal and usable across all practice modules, with all optional detail fields available only after switching to Advanced.
