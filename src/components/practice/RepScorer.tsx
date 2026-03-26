@@ -1245,8 +1245,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               </div>
 
-              {/* Contact Type for pitching vs hitter (flat_ground_vs_hitter or live_bp) */}
-              {ctx.showContactType && (
+              {/* Contact Type for pitching vs hitter — advanced only */}
+              {mode === 'advanced' && ctx.showContactType && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Contact Type</Label>
                   <SelectGrid

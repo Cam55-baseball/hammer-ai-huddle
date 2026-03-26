@@ -80,8 +80,11 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'quick' }:
 
   return (
     <div className="space-y-3">
+      {/* Required: Drill Type */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Drill Type <span className="text-destructive">*</span>
+        </Label>
         <SelectGrid
           options={drills}
           value={value.drill_type}
@@ -101,54 +104,54 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'quick' }:
         />
       )}
 
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
-        <SelectGrid
-          options={goalOptions}
-          value={value.baserunning_goal}
-          onChange={v => onChange('baserunning_goal', v)}
-          cols={3}
-        />
-      </div>
-
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">
-          Jump Grade: {value.jump_grade ?? 50}
-        </Label>
-        <Slider
-          min={20} max={80} step={5}
-          value={[value.jump_grade ?? 50]}
-          onValueChange={([v]) => onChange('jump_grade', v)}
-        />
-      </div>
-
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">
-          Read Grade: {value.read_grade ?? 50}
-        </Label>
-        <Slider
-          min={20} max={80} step={5}
-          value={[value.read_grade ?? 50]}
-          onValueChange={([v]) => onChange('read_grade', v)}
-        />
-      </div>
-
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Time to Base</Label>
-        <SelectGrid
-          options={[
-            { value: 'fast', label: 'Fast' },
-            { value: 'average', label: 'Average' },
-            { value: 'slow', label: 'Slow' },
-          ]}
-          value={value.time_to_base_band}
-          onChange={v => onChange('time_to_base_band', v)}
-        />
-      </div>
-
       {/* Advanced-only fields */}
       {mode === 'advanced' && (
         <>
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
+            <SelectGrid
+              options={goalOptions}
+              value={value.baserunning_goal}
+              onChange={v => onChange('baserunning_goal', v)}
+              cols={3}
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">
+              Jump Grade: {value.jump_grade ?? 50}
+            </Label>
+            <Slider
+              min={20} max={80} step={5}
+              value={[value.jump_grade ?? 50]}
+              onValueChange={([v]) => onChange('jump_grade', v)}
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">
+              Read Grade: {value.read_grade ?? 50}
+            </Label>
+            <Slider
+              min={20} max={80} step={5}
+              value={[value.read_grade ?? 50]}
+              onValueChange={([v]) => onChange('read_grade', v)}
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Time to Base</Label>
+            <SelectGrid
+              options={[
+                { value: 'fast', label: 'Fast' },
+                { value: 'average', label: 'Average' },
+                { value: 'slow', label: 'Slow' },
+              ]}
+              value={value.time_to_base_band}
+              onChange={v => onChange('time_to_base_band', v)}
+            />
+          </div>
+
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">Exact Time to Base (Seconds)</Label>
             <Input
