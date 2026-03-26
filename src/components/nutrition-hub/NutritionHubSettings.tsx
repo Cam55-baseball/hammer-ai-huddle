@@ -7,9 +7,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { Settings, ChevronRight } from 'lucide-react';
 import { useAthleteGoals } from '@/hooks/useAthleteGoals';
 import { useTDEE } from '@/hooks/useTDEE';
@@ -39,17 +41,19 @@ export function NutritionHubSettings({
 }: NutritionHubSettingsProps) {
   const { t } = useTranslation();
   const { activeGoal, createGoal } = useAthleteGoals();
-  const { biometrics, refetch: refetchTDEE } = useTDEE();
+  const { biometrics, nutritionTargets, refetch: refetchTDEE } = useTDEE();
   
   const [selectedGoal, setSelectedGoal] = useState<GoalType>(
     activeGoal?.goalType || 'maintain'
   );
+  const [customCalories, setCustomCalories] = useState<string>('');
   const [saving, setSaving] = useState(false);
 
   // Sync selected goal with active goal when dialog opens
   useEffect(() => {
     if (open && activeGoal) {
       setSelectedGoal(activeGoal.goalType);
+      setCustomCalories(activeGoal.customCalorieTarget ? String(activeGoal.customCalorieTarget) : '');
     }
   }, [open, activeGoal]);
 
@@ -60,7 +64,11 @@ export function NutritionHubSettings({
   };
 
   const handleUpdateGoal = async () => {
-    if (selectedGoal === activeGoal?.goalType) {
+    const parsedCustom = customCalories ? parseInt(customCalories) : null;
+    const goalChanged = selectedGoal !== activeGoal?.goalType;
+    const caloriesChanged = (parsedCustom ?? null) !== (activeGoal?.customCalorieTarget ?? null);
+    
+    if (!goalChanged && !caloriesChanged) {
       onOpenChange(false);
       return;
     }
@@ -71,6 +79,7 @@ export function NutritionHubSettings({
       await createGoal({
         goalType: selectedGoal,
         startingWeightLbs: biometrics?.weightLbs ?? undefined,
+        customCalorieTarget: parsedCustom && parsedCustom > 0 ? parsedCustom : null,
       });
       
       await refetchTDEE();
@@ -90,7 +99,8 @@ export function NutritionHubSettings({
     onEditProfile?.();
   };
 
-  const currentGoalOption = GOAL_OPTIONS.find(g => g.value === selectedGoal);
+  const hasCustomCalories = customCalories && parseInt(customCalories) > 0;
+  const tdeeCalories = nutritionTargets?.dailyCalories;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,11 +115,16 @@ export function NutritionHubSettings({
         <div className="space-y-6 py-4">
           {/* Current Goal Display */}
           {activeGoal && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
               {t('nutrition.settings.currentGoal')}:{' '}
               <span className="font-medium text-foreground">
                 {getGoalTypeLabel(activeGoal.goalType)}
               </span>
+              {activeGoal.customCalorieTarget && (
+                <Badge variant="secondary" className="text-xs">
+                  {activeGoal.customCalorieTarget} cal/day
+                </Badge>
+              )}
             </div>
           )}
 
@@ -152,10 +167,41 @@ export function NutritionHubSettings({
             </RadioGroup>
           </div>
 
+          {/* Custom Calorie Override */}
+          <div className="space-y-2 p-3 rounded-lg border bg-muted/30">
+            <Label className="text-sm font-medium">
+              {t('nutrition.settings.customCalories', 'Override Daily Calories')}
+              <span className="text-xs text-muted-foreground ml-1">
+                ({t('common.optional', 'optional')})
+              </span>
+            </Label>
+            <Input
+              type="number"
+              value={customCalories}
+              onChange={(e) => setCustomCalories(e.target.value)}
+              placeholder={tdeeCalories ? String(tdeeCalories) : '2000'}
+              min={500}
+              max={10000}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('nutrition.settings.customCaloriesHelp', 'Leave blank to use automatic calculation based on your profile')}
+            </p>
+            {hasCustomCalories && (
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs"
+                onClick={() => setCustomCalories('')}
+              >
+                {t('nutrition.settings.useAutoCalc', 'Use TDEE calculation instead')}
+              </Button>
+            )}
+          </div>
+
           {/* Update Button */}
           <Button
             onClick={handleUpdateGoal}
-            disabled={saving || selectedGoal === activeGoal?.goalType}
+            disabled={saving}
             className="w-full"
           >
             {saving ? t('common.loading') : t('nutrition.settings.updateGoal')}

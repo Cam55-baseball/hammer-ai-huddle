@@ -746,14 +746,19 @@ export function CustomActivityBuilderDialog({
 
                 <Separator className="my-4" />
                 
-                {/* Block System Toggle - Only for workout type */}
+                {/* Block System Toggle - Only for workout type - Prominent placement */}
                 {showBlockSystemToggle && (
-                  <div className="p-3 sm:p-4 rounded-lg border-2 border-dashed bg-muted/30 space-y-4 overflow-hidden">
+                  <div className="p-3 sm:p-4 rounded-lg border-l-4 border-l-primary bg-primary/5 space-y-4 overflow-hidden">
                     <div className="flex items-center justify-between gap-3">
                       <Label htmlFor="useBlockSystem" className="flex items-center gap-2 cursor-pointer min-w-0">
-                        <Layers className="h-4 w-4 text-primary shrink-0" />
+                        <div className="p-1.5 rounded-md bg-primary/10">
+                          <Layers className="h-4 w-4 text-primary shrink-0" />
+                        </div>
                         <div className="min-w-0">
                           <span className="font-bold">{t('eliteWorkout.useBlockSystem', 'Use Block-Based Builder')}</span>
+                          <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
+                            {t('common.recommended', 'Recommended')}
+                          </Badge>
                           <p className="text-xs text-muted-foreground mt-0.5 break-words">
                             {t('eliteWorkout.useBlockSystemDesc', 'Organize exercises into structured blocks with intelligent load tracking')}
                           </p>
@@ -778,7 +783,8 @@ export function CustomActivityBuilderDialog({
                     )}
                   </div>
                 )}
-                
+
+                <Separator className="my-4" />
                 {/* Universal sections - Available for ALL activity types */}
                 <div className="space-y-4 overflow-hidden">
                   <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">

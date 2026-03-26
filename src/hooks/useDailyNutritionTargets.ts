@@ -122,10 +122,10 @@ export function useDailyNutritionTargets(consumed?: ConsumedNutrition) {
       consumedHydration: consumedHydration,
       
       // Calculate percentages
-      caloriesPercent: Math.min(100, Math.round(((consumed?.calories || 0) / nutritionTargets.dailyCalories) * 100)),
-      proteinPercent: Math.min(100, Math.round(((consumed?.protein || 0) / nutritionTargets.macros.protein) * 100)),
-      carbsPercent: Math.min(100, Math.round(((consumed?.carbs || 0) / nutritionTargets.macros.carbs) * 100)),
-      fatsPercent: Math.min(100, Math.round(((consumed?.fats || 0) / nutritionTargets.macros.fats) * 100)),
+      caloriesPercent: Math.min(100, Math.round(((consumed?.calories || 0) / effectiveCalories) * 100)),
+      proteinPercent: Math.min(100, Math.round(((consumed?.protein || 0) / Math.round(nutritionTargets.macros.protein * calRatio)) * 100)),
+      carbsPercent: Math.min(100, Math.round(((consumed?.carbs || 0) / Math.round(nutritionTargets.macros.carbs * calRatio)) * 100)),
+      fatsPercent: Math.min(100, Math.round(((consumed?.fats || 0) / Math.round(nutritionTargets.macros.fats * calRatio)) * 100)),
       hydrationPercent: Math.min(100, Math.round((consumedHydration / hydrationGoal) * 100)),
       
       // Meta info
