@@ -204,8 +204,11 @@ function SortableExerciseCard({
                 <label className="text-xs text-muted-foreground">{t('customActivity.exercises.duration')} (s)</label>
                 <Input
                   type="number"
-                  value={editValues.duration}
-                  onChange={(e) => setEditValues(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))}
+                  value={editValues.duration === 0 ? '' : editValues.duration}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setEditValues(prev => ({ ...prev, duration: raw === '' ? 0 : parseInt(raw) || 0 }));
+                  }}
                   className="h-7 text-xs"
                   min={1}
                 />
