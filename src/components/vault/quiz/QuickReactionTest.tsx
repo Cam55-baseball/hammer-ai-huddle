@@ -157,7 +157,7 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
 
       {(phase === 'waiting' || phase === 'tap') && (
         <div
-          onClick={handleTap}
+          onPointerDown={handleTap}
           className={cn(
             "relative h-24 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-150 select-none",
             phase === 'waiting' 
