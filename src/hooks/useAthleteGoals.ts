@@ -143,6 +143,7 @@ export function useAthleteGoals() {
           ...(updates.targetWeightLbs !== undefined && { target_weight_lbs: updates.targetWeightLbs }),
           ...(updates.targetBodyFatPercent !== undefined && { target_body_fat_percent: updates.targetBodyFatPercent }),
           ...(updates.weeklyChangeRate !== undefined && { weekly_change_rate: updates.weeklyChangeRate }),
+          ...(updates.customCalorieTarget !== undefined && { custom_calorie_target: updates.customCalorieTarget }),
           ...(updates.targetDate !== undefined && { target_date: updates.targetDate }),
           updated_at: new Date().toISOString()
         })
