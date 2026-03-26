@@ -25,6 +25,7 @@ export interface CreateGoalInput {
   targetWeightLbs?: number;
   targetBodyFatPercent?: number;
   weeklyChangeRate?: number;
+  customCalorieTarget?: number | null;
   targetDate?: string;
 }
 
