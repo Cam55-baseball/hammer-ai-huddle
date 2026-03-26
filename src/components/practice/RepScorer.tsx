@@ -870,20 +870,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     </div>
                   </div>
 
-                  {/* ABS Guess — required after pitch location is logged (Hitting) */}
-                  {hasPitchLocation && isHitting && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground mb-1.5 block">
-                        ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
-                      </Label>
-                      <PitchLocationGrid
-                        value={current.abs_guess}
-                        onSelect={v => updateField('abs_guess', v)}
-                        batterSide={effectiveBatterSide}
-                        sport={sport as 'baseball' | 'softball'}
-                      />
-                    </div>
-                  )}
+              {/* ABS Guess moved to advanced block below */}
 
                   {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
                   {repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
