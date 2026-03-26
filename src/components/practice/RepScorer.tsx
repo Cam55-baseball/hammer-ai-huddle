@@ -450,17 +450,39 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
         )}
       </AnimatePresence>
 
-      {/* Mode toggle */}
-      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-3 py-2.5">
-        <div className="flex items-center gap-2">
-          {mode === 'quick' ? <Zap className="h-4 w-4 text-amber-500" /> : <Settings2 className="h-4 w-4 text-primary" />}
-          <span className="text-sm font-semibold">{mode === 'quick' ? 'Quick Log' : 'Advanced'}</span>
-          <span className="text-xs text-muted-foreground">{mode === 'quick' ? '(essential fields only)' : '(all fields visible)'}</span>
+      {/* Mode toggle — segmented control */}
+      <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-1 rounded-lg border-2 border-border bg-muted p-1">
+          <button
+            type="button"
+            onClick={() => setMode('quick')}
+            className={cn(
+              "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all",
+              mode === 'quick'
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Zap className="h-4 w-4 text-amber-500" />
+            Quick Log
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('advanced')}
+            className={cn(
+              "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all",
+              mode === 'advanced'
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Settings2 className="h-4 w-4" />
+            Advanced
+          </button>
         </div>
-        <Switch
-          checked={mode === 'advanced'}
-          onCheckedChange={(v) => setMode(v ? 'advanced' : 'quick')}
-        />
+        <p className="text-xs text-muted-foreground text-center">
+          {mode === 'quick' ? 'Showing essential fields only' : 'All optional fields visible'}
+        </p>
       </div>
 
       {/* Machine Mode selector (1 Pitch vs Mix) — only for machine hitting */}
