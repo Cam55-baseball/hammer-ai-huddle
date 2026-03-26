@@ -46,8 +46,10 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
     // Random delay before showing target
     const delay = Math.random() * (MAX_DELAY - MIN_DELAY) + MIN_DELAY;
     timeoutRef.current = setTimeout(() => {
-      startTimeRef.current = Date.now();
       setPhase('tap');
+      requestAnimationFrame(() => {
+        startTimeRef.current = performance.now();
+      });
     }, delay);
   }, []);
 
