@@ -1942,23 +1942,27 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
              <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} mode={mode} />
            )}
 
-          {/* Goal of Rep & Actual Outcome (per-rep) */}
-          <AITextBoxField
-            label="Goal of Rep"
-            value={current.goal_of_rep ?? ''}
-            onChange={(v) => updateField('goal_of_rep', v)}
-            minChars={0}
-            required={false}
-            placeholder="What was your goal for this rep? (optional)..."
-          />
-          <AITextBoxField
-            label="Actual Outcome"
-            value={current.actual_outcome ?? ''}
-            onChange={(v) => updateField('actual_outcome', v)}
-            minChars={0}
-            required={false}
-            placeholder="What actually happened? (optional)..."
-          />
+          {/* Goal of Rep & Actual Outcome — advanced only */}
+          {mode === 'advanced' && (
+            <>
+              <AITextBoxField
+                label="Goal of Rep"
+                value={current.goal_of_rep ?? ''}
+                onChange={(v) => updateField('goal_of_rep', v)}
+                minChars={0}
+                required={false}
+                placeholder="What was your goal for this rep? (optional)..."
+              />
+              <AITextBoxField
+                label="Actual Outcome"
+                value={current.actual_outcome ?? ''}
+                onChange={(v) => updateField('actual_outcome', v)}
+                minChars={0}
+                required={false}
+                placeholder="What actually happened? (optional)..."
+              />
+            </>
+          )}
 
           {/* CONFIRM REP */}
           <div className="relative">
