@@ -12,6 +12,7 @@ export interface AthleteBodyGoal {
   targetWeightLbs: number | null;
   targetBodyFatPercent: number | null;
   weeklyChangeRate: number;
+  customCalorieTarget: number | null;
   startedAt: string;
   targetDate: string | null;
   isActive: boolean;
