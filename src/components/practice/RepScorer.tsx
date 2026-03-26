@@ -451,10 +451,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       </AnimatePresence>
 
       {/* Mode toggle */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-3 py-2.5">
         <div className="flex items-center gap-2">
-          {mode === 'quick' ? <Zap className="h-3.5 w-3.5 text-amber-500" /> : <Settings2 className="h-3.5 w-3.5 text-primary" />}
-          <span className="text-xs font-medium">{mode === 'quick' ? 'Quick Log' : 'Advanced'}</span>
+          {mode === 'quick' ? <Zap className="h-4 w-4 text-amber-500" /> : <Settings2 className="h-4 w-4 text-primary" />}
+          <span className="text-sm font-semibold">{mode === 'quick' ? 'Quick Log' : 'Advanced'}</span>
+          <span className="text-xs text-muted-foreground">{mode === 'quick' ? '(essential fields only)' : '(all fields visible)'}</span>
         </div>
         <Switch
           checked={mode === 'advanced'}
