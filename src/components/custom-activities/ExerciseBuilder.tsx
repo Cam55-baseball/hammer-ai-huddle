@@ -165,8 +165,11 @@ export function ExerciseBuilder({ exercises, onChange }: ExerciseBuilderProps) {
                     <Label className="text-xs">{t('customActivity.fields.sets')}</Label>
                     <Input
                       type="number"
-                      value={exercise.sets || ''}
-                      onChange={(e) => updateExercise(exercise.id, { sets: parseInt(e.target.value) || undefined })}
+                    value={exercise.sets ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        updateExercise(exercise.id, { sets: raw === '' ? undefined : parseInt(raw) || undefined });
+                      }}
                       className="h-9"
                       min={1}
                     />
