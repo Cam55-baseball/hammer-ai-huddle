@@ -820,21 +820,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
-              {isHitting && repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
-                  <Input
-                    type="number"
-                    placeholder="Optional — overrides velocity band"
-                    value={current.exact_pitch_velocity_mph ?? ''}
-                    onChange={e => updateField('exact_pitch_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
-                    className="h-8 text-xs"
-                    min={0}
-                    step="any"
-                  />
-                </div>
-              )}
+              {/* Exact Pitch Velocity moved to advanced block below */}
 
               {/* Switch hitter per-rep toggle */}
               {isHitting && isSwitchHitter && (
