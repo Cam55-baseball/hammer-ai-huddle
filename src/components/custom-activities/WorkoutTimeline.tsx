@@ -188,8 +188,11 @@ function SortableExerciseCard({
                   <label className="text-xs text-muted-foreground">{t('customActivity.exercises.reps')}</label>
                   <Input
                     type="number"
-                    value={editValues.reps as number}
-                    onChange={(e) => setEditValues(prev => ({ ...prev, reps: parseInt(e.target.value) || 0 }))}
+                    value={editValues.reps === 0 ? '' : editValues.reps}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      setEditValues(prev => ({ ...prev, reps: raw === '' ? 0 : parseInt(raw) || 0 }));
+                    }}
                     className="h-7 text-xs"
                     min={1}
                   />
