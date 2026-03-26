@@ -1240,8 +1240,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Live AB Hitter Tracking — swing result, ball result, at-bat outcome */}
-              {ctx.showLiveAbHitterFields && (
+              {/* Live AB Hitter Tracking — advanced only */}
+              {mode === 'advanced' && ctx.showLiveAbHitterFields && (
                 <>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Swing Result</Label>
