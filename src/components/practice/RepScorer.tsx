@@ -1929,7 +1929,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
           {/* ===== BASERUNNING FIELDS ===== */}
           {isBaserunning && (
-            <BaserunningRepFields value={current} onChange={updateField} sport={sport} />
+            <BaserunningRepFields value={current} onChange={updateField} sport={sport} mode={mode} />
           )}
 
            {/* ===== THROWING FIELDS ===== */}
@@ -1939,7 +1939,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
            {/* ===== BUNTING FIELDS ===== */}
            {isBunting && (
-             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} />
+             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} mode={mode} />
            )}
 
           {/* Goal of Rep & Actual Outcome (per-rep) */}
