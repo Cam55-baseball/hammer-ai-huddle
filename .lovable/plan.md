@@ -1,50 +1,45 @@
 
 
-# Two Features: Custom Calorie Target + Block Builder Discoverability
+# Hide Optional Rep Fields Behind Advanced Toggle
 
-## 1. Custom Daily Calorie Intake in Nutrition Settings
+## Problem
+In Practice Hub rep logging, many optional fields are always visible regardless of the quick/advanced toggle. Fielding has no gating at all — all ~20 fields show. Hitting shows pitch location, hit distance, and other optional fields in quick mode. This overwhelms users who just want to log basic reps.
 
-### Problem
-Users can only choose from preset goal types (lose weight, maintain, etc.) with fixed calorie adjustments. There's no way to set a specific custom calorie target.
+## Required vs Optional Fields Per Module
 
-### Solution
-Add a `custom_calorie_target` column to `athlete_body_goals`. In `NutritionHubSettings`, add an optional "Custom Daily Calories" input that appears below the goal selector. When set, `useDailyNutritionTargets` uses this value instead of the TDEE-calculated target.
+### Hitting — Quick Mode (Required)
+- Execution Score, Pitcher/Thrower Hand, Machine mode presets, Pitch Type (when rep source requires it), Tee Depth Grid (when tee), Switch hitter side, Swing Decision
 
-### Changes
+### Hitting — Advanced (Optional, currently partially gated)
+- Pitch Location Grid + ABS Guess, Hit Distance, Exact Pitch Velocity, Contact Quality, Exit Direction, Bat Speed, Exit Velo, Swing Intent, Batted Ball Type, Spin Direction, Approach Quality, Count Situation, Adjustment Tag
 
-| File | Change |
-|------|--------|
-| **DB Migration** | `ALTER TABLE athlete_body_goals ADD COLUMN custom_calorie_target integer DEFAULT NULL;` |
-| `src/hooks/useAthleteGoals.ts` | Add `customCalorieTarget` to `AthleteBodyGoal` interface and `CreateGoalInput`. Map column in fetch/create/update. |
-| `src/hooks/useTDEE.ts` | Expose `customCalorieTarget` from the active goal. |
-| `src/hooks/useDailyNutritionTargets.ts` | If `activeGoal.customCalorieTarget` is set, override `calories` with that value and recalculate macro grams proportionally. |
-| `src/components/nutrition-hub/NutritionHubSettings.tsx` | Add a "Custom Daily Calories" number input below the goal radio group. When filled, it's saved with the goal. Show a "Use TDEE calculation" reset link to clear it. |
+### Pitching — Quick Mode (Required)
+- Execution Score, Pitch Type, Pitcher Spot Intent, Pitch Location, Pitch Result, Hit Spot, Hitter Side (live contexts)
 
-### UX
-- Below the goal radio buttons, a new section: "Override Daily Calories (optional)"
-- Number input with placeholder showing the current TDEE-calculated value
-- Helper text: "Leave blank to use automatic calculation based on your profile"
-- When a custom value is set, a small badge appears next to the goal label indicating "Custom"
+### Pitching — Advanced (Optional)
+- Velocity Band + Exact Velocity (except live_bp/game which stay required), ABS Guess, Pitch Command, In Zone, Spin Direction, Live AB hitter tracking, Pitcher Hitter Outcome details
 
----
+### Fielding — Quick Mode (Required)
+- Fielding Position, Batted Ball Type, Fielding Result, Execution Score
 
-## 2. Make Block-Based Workout Builder Easier to Find
+### Fielding — Advanced (Optional — currently NO gating exists)
+- Hit Type Hardness, Diving Play, Route Efficiency, Glove-to-Glove, Throwing Velocity, Play Probability, Receiving Quality, Catch Type, Play Direction, Relay/Wall plays, Infield rep types, Tag play quality, Catcher defense details, Throw tracking fields, Footwork Grade, Exchange Time, Throw Spin Quality, Field Position Diagram
 
-### Problem
-The block-based builder toggle is buried inside the activity builder dialog, below a separator and inside a dashed border section. Users creating workout activities may not notice it.
+### Baserunning/Throwing/Bunting
+- These delegate to sub-components; the `mode` prop is already passed to `ThrowingRepFields`. Will pass `mode` to `BaserunningRepFields` and `BuntRepFields` too.
 
-### Solution
-Make the block system toggle more prominent and auto-enable it by default for workout activities, with a clear visual callout.
-
-### Changes
+## Changes
 
 | File | Change |
 |------|--------|
-| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | **Three changes:** (1) Default `useBlockSystem` to `true` when `activityType === 'workout'`. (2) Move the block system toggle higher — place it right after the activity type selector instead of below the separator. (3) Add a highlighted callout/banner style (gradient background, icon) to make it stand out. |
+| `src/components/practice/RepScorer.tsx` | **Hitting:** Wrap Pitch Location, Hit Distance, Exact Pitch Velocity inside `mode === 'advanced'` guard (merge with existing advanced block). **Pitching:** Wrap ABS Guess, Live AB fields, Hitter Outcome details, velocity (non-live contexts) in advanced guard. **Fielding:** Wrap all fields except Position, Batted Ball Type, and Fielding Result inside `mode === 'advanced'`. Pass `mode` to `BaserunningRepFields` and `BuntRepFields`. |
+| `src/components/practice/BaserunningRepFields.tsx` | Accept `mode` prop; hide optional fields (exact time, exact steps, AI description) in quick mode. |
+| `src/components/practice/BuntRepFields.tsx` | Accept `mode` prop; hide optional/granular fields in quick mode. |
+| `src/components/practice/RepScorer.tsx` (bottom) | Move "Goal of Rep" and "Actual Outcome" text fields into advanced-only since they're optional. |
 
-### UX
-- When user selects "Workout" activity type, the block builder is ON by default
-- The toggle is positioned prominently right after activity type selection (before notes/other fields)
-- Visual styling: primary-colored left border or subtle gradient background with a Layers icon and "Block-Based Builder" label
-- Users can still toggle it off to use the simple drag-and-drop exercise builder
+## UX
+- Quick mode shows only the essential fields needed to log a rep fast
+- Advanced toggle (already exists with the switch at the top) reveals all optional fields
+- The toggle state persists in localStorage (already implemented)
+- No database changes needed
 
