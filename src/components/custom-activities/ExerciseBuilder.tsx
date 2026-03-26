@@ -180,8 +180,11 @@ export function ExerciseBuilder({ exercises, onChange }: ExerciseBuilderProps) {
                   <div className="space-y-1">
                     <Label className="text-xs">{t('customActivity.fields.reps')}</Label>
                     <Input
-                      value={exercise.reps || ''}
-                      onChange={(e) => updateExercise(exercise.id, { reps: e.target.value })}
+                    value={exercise.reps ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                        updateExercise(exercise.id, { reps: raw });
+                      }}
                       placeholder="10 or 8-12"
                       className="h-9"
                     />
