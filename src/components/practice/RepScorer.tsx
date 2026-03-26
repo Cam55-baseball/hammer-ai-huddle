@@ -871,70 +871,71 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <PitchLocationGrid
-                    value={current.pitch_location}
-                    onSelect={v => updateField('pitch_location', v)}
-                    batterSide={effectiveBatterSide}
-                    sport={sport as 'baseball' | 'softball'}
-                  />
-                </div>
-              </div>
+              {mode === 'advanced' && (
+                <>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <PitchLocationGrid
+                        value={current.pitch_location}
+                        onSelect={v => updateField('pitch_location', v)}
+                        batterSide={effectiveBatterSide}
+                        sport={sport as 'baseball' | 'softball'}
+                      />
+                    </div>
+                  </div>
 
-              {/* ABS Guess — required after pitch location is logged (Hitting) */}
-              {hasPitchLocation && isHitting && (
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1.5 block">
-                    ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
-                  </Label>
-                  <PitchLocationGrid
-                    value={current.abs_guess}
-                    onSelect={v => updateField('abs_guess', v)}
-                    batterSide={effectiveBatterSide}
-                    sport={sport as 'baseball' | 'softball'}
-                  />
-                </div>
+                  {/* ABS Guess — required after pitch location is logged (Hitting) */}
+                  {hasPitchLocation && isHitting && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">
+                        ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
+                      </Label>
+                      <PitchLocationGrid
+                        value={current.abs_guess}
+                        onSelect={v => updateField('abs_guess', v)}
+                        batterSide={effectiveBatterSide}
+                        sport={sport as 'baseball' | 'softball'}
+                      />
+                    </div>
+                  )}
+
+                  {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
+                  {repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
+                      <Input
+                        type="number"
+                        placeholder="Optional — overrides velocity band"
+                        value={current.exact_pitch_velocity_mph ?? ''}
+                        onChange={e => updateField('exact_pitch_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
+                        className="h-8 text-xs"
+                        min={0}
+                        step="any"
+                      />
+                    </div>
+                  )}
+
+                  {/* Hit Distance */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Distance (ft)</Label>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="e.g. 350, >400, 400+"
+                      value={current.hit_distance_raw ?? (current.hit_distance_ft != null ? String(current.hit_distance_ft) : '')}
+                      onChange={e => {
+                        const raw = e.target.value;
+                        updateField('hit_distance_raw', raw || undefined);
+                        const cleaned = raw.replace(/[>+]/g, '').trim();
+                        const num = parseFloat(cleaned);
+                        updateField('hit_distance_ft', !isNaN(num) && num > 0 ? num : undefined);
+                      }}
+                      className="h-8 text-xs"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Enter exact or use &gt;, + (e.g. &gt;400 or 400+)</p>
+                  </div>
+                </>
               )}
-
-              {/* Swing Decision - always visible (most valuable self-assessment) */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
-                <SelectGrid
-                  options={[
-                    { value: 'best_a_swing', label: '🔥 Best A-Swing', color: 'bg-green-500/20 text-green-700 border-green-300' },
-                    { value: 'swung', label: '🏏 Swung', color: 'bg-blue-500/20 text-blue-700 border-blue-300' },
-                    { value: 'good_take', label: '✅ Good Take', color: 'bg-primary/20 text-primary border-primary/30' },
-                    { value: 'should_have_swung', label: '😤 Should\'ve Swung', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
-                    { value: 'chased', label: '❌ Chased', color: 'bg-red-500/20 text-red-700 border-red-300' },
-                    { value: 'bunt', label: '🤲 Bunt', color: 'bg-cyan-500/20 text-cyan-700 border-cyan-300' },
-                    ...(sport === 'softball' ? [{ value: 'slap', label: '👋 Slap', color: 'bg-violet-500/20 text-violet-700 border-violet-300' }] : []),
-                  ]}
-                  value={current.swing_decision}
-                  onChange={v => updateField('swing_decision', v)}
-                  cols={5}
-                />
-              </div>
-
-              {/* Hit Distance — always visible for hitting */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Distance (ft)</Label>
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="e.g. 350, >400, 400+"
-                  value={current.hit_distance_raw ?? (current.hit_distance_ft != null ? String(current.hit_distance_ft) : '')}
-                  onChange={e => {
-                    const raw = e.target.value;
-                    updateField('hit_distance_raw', raw || undefined);
-                    const cleaned = raw.replace(/[>+]/g, '').trim();
-                    const num = parseFloat(cleaned);
-                    updateField('hit_distance_ft', !isNaN(num) && num > 0 ? num : undefined);
-                  }}
-                  className="h-8 text-xs"
-                />
-                <p className="text-[10px] text-muted-foreground mt-0.5">Enter exact or use &gt;, + (e.g. &gt;400 or 400+)</p>
-              </div>
 
               {mode === 'advanced' && (
                 <>
