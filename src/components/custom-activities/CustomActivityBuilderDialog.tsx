@@ -144,7 +144,7 @@ export function CustomActivityBuilderDialog({
   const [specificDates, setSpecificDates] = useState<Date[]>([]);
   
   // Elite Workout Block System state
-  const [useBlockSystem, setUseBlockSystem] = useState(false);
+  const [useBlockSystem, setUseBlockSystem] = useState(presetActivityType === 'workout' || false);
   const [workoutBlocks, setWorkoutBlocks] = useState<WorkoutBlock[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('execute');
 
