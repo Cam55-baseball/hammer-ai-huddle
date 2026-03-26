@@ -64,7 +64,7 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
     }
 
     if (phase === 'tap') {
-      const reactionTime = Date.now() - startTimeRef.current;
+      const reactionTime = Math.round(performance.now() - startTimeRef.current);
       setShowTime(reactionTime);
       if (navigator.vibrate) navigator.vibrate(10);
       
