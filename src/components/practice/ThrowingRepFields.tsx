@@ -88,40 +88,16 @@ export function ThrowingRepFields({ value, onChange, mode, sport }: ThrowingRepF
 
   return (
     <div className="space-y-3">
-      {/* Quick fields */}
+      {/* Quick fields — required */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Throw Distance</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Throw Distance <span className="text-destructive">*</span>
+        </Label>
         <SelectGrid
           options={distanceBands}
           value={value.throw_distance_band}
           onChange={v => onChange('throw_distance_band', v)}
           cols={3}
-        />
-      </div>
-
-      {/* Exact Throw Distance (optional override) */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Exact Throw Distance (Feet)</Label>
-        <Input
-          type="number"
-          placeholder="Optional — overrides band"
-          value={value.exact_throw_distance_ft ?? ''}
-          onChange={e => onChange('exact_throw_distance_ft', e.target.value ? Number(e.target.value) : undefined)}
-          className="h-8 text-xs"
-          min={0}
-          step="any"
-        />
-      </div>
-
-      {/* Throw accuracy/arrival/strength — replaces old 3-option accuracy */}
-      <FieldingThrowFields value={value} onChange={onChange} />
-
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Arm Feel</Label>
-        <SelectGrid
-          options={armFeelOptions}
-          value={value.arm_feel}
-          onChange={v => onChange('arm_feel', v)}
         />
       </div>
 
@@ -149,23 +125,49 @@ export function ThrowingRepFields({ value, onChange, mode, sport }: ThrowingRepF
         />
       </div>
 
-      {/* Exact Velocity (optional override) */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Exact Velocity (MPH)</Label>
-        <Input
-          type="number"
-          placeholder="Optional — overrides velocity band"
-          value={value.exact_velocity_mph ?? ''}
-          onChange={e => onChange('exact_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
-          className="h-8 text-xs"
-          min={0}
-          step="any"
-        />
-      </div>
-
       {/* Advanced fields */}
       {mode === 'advanced' && (
         <>
+          {/* Exact Throw Distance (optional override) */}
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Exact Throw Distance (Feet)</Label>
+            <Input
+              type="number"
+              placeholder="Optional — overrides band"
+              value={value.exact_throw_distance_ft ?? ''}
+              onChange={e => onChange('exact_throw_distance_ft', e.target.value ? Number(e.target.value) : undefined)}
+              className="h-8 text-xs"
+              min={0}
+              step="any"
+            />
+          </div>
+
+          {/* Throw accuracy/arrival/strength */}
+          <FieldingThrowFields value={value} onChange={onChange} />
+
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Arm Feel</Label>
+            <SelectGrid
+              options={armFeelOptions}
+              value={value.arm_feel}
+              onChange={v => onChange('arm_feel', v)}
+            />
+          </div>
+
+          {/* Exact Velocity (optional override) */}
+          <div>
+            <Label className="text-xs text-muted-foreground mb-1 block">Exact Velocity (MPH)</Label>
+            <Input
+              type="number"
+              placeholder="Optional — overrides velocity band"
+              value={value.exact_velocity_mph ?? ''}
+              onChange={e => onChange('exact_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
+              className="h-8 text-xs"
+              min={0}
+              step="any"
+            />
+          </div>
+
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">
               Carry Grade: {value.carry_grade ?? 50}

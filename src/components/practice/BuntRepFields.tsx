@@ -157,13 +157,17 @@ export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'quic
 
       {/* Bunt Direction — required */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Direction</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Bunt Direction <span className="text-destructive">*</span>
+        </Label>
         <SelectGrid options={buntDirections} value={v.bunt_direction} onChange={val => onChange('bunt_direction', val)} cols={4} />
       </div>
 
       {/* Bunt Type — required */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Type</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Bunt Type <span className="text-destructive">*</span>
+        </Label>
         <SelectGrid options={buntTypes} value={v.bunt_type} onChange={val => onChange('bunt_type', val)} />
       </div>
 
