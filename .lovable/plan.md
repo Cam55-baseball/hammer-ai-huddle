@@ -1,25 +1,35 @@
 
+## Fix the missing/undiscoverable advanced toggle in hitting practice logging
 
-# Assessment: Advanced Toggle Already Exists for All Modules
+### What I found
+The rep logging mode control does exist in code inside `src/components/practice/RepScorer.tsx`, which is the shared logger used by hitting practice sessions. However, in the current UI it is easy to miss because:
+- it only shows the current state label (`Quick Log`) instead of clearly presenting both choices
+- the switch itself has low visual contrast in the light theme screenshot
+- it sits above the form as a subtle row, so users can mistake it for a label instead of an interactive control
 
-## Finding
-After thorough investigation, the advanced toggle **already exists** in every practice hub module:
+Your screenshot matches this: the control is technically there, but it does not read like an obvious “Advanced” toggle.
 
-- **`RepScorer.tsx` (line 453-463)**: Contains a Quick Log / Advanced toggle with a `Switch` component. This component is used for ALL non-game session types (solo work, team session, lesson, live ABs) across ALL modules (hitting, pitching, fielding, catching, throwing, baserunning, bunting).
-- **`GameScorecard.tsx` (line 265-269)**: Has its own "Advanced Detail" toggle for game-type sessions.
+### Plan
+1. Update the shared rep logging mode control in `src/components/practice/RepScorer.tsx` so it is unmistakable in every practice module.
+2. Replace the ambiguous single switch row with a more explicit control that shows both modes clearly, such as:
+   - `Quick Log` button/tab
+   - `Advanced` button/tab
+   - short helper text under the control
+3. Keep the existing behavior and persistence:
+   - default remains `quick`
+   - selection still saves to local storage
+   - all existing field gating stays intact
+4. Ensure the control appears consistently in:
+   - standard logging
+   - video + log flows
+   - all practice modules that use `RepScorer`, including hitting solo work
+5. Optionally improve contrast on the underlying `Switch` component only if any other screens rely on it and still need better visibility.
 
-The toggle was added previously and the field gating (hiding optional fields in quick mode) was implemented in the last approved plan across hitting, pitching, fielding, baserunning, and bunting modules.
-
-## What might be happening
-1. **Cached preview**: The browser may be showing an older version. A hard refresh (Ctrl+Shift+R) should reveal the toggle.
-2. **Toggle visibility**: The toggle sits between the rep badges and the first field. If no reps are logged yet, it appears at the very top of the form — but it's small (text-xs) and could be easy to miss.
-
-## Proposed Enhancement (if the toggle is hard to find)
-If the issue is discoverability, I can make the toggle more visually prominent — for example, adding a colored background card or border around it so it stands out more clearly in the form.
-
+### Files to update
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | Style the mode toggle row with a subtle background card and border to make it more visually prominent. |
+| `src/components/practice/RepScorer.tsx` | Replace the current subtle mode row with a prominent, explicit Quick/Advanced segmented control or button group. |
+| `src/components/ui/switch.tsx` | Only if needed: improve unchecked-state contrast globally. |
 
-No other files need changes — the toggle and gating logic are already in place for every module.
-
+### Result
+After this change, users in hitting practice sessions will immediately see an obvious `Advanced` option instead of a subtle switch that looks hidden.
