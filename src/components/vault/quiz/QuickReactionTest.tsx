@@ -87,9 +87,11 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
         setPhase('waiting');
         const delay = Math.random() * (MAX_DELAY - MIN_DELAY) + MIN_DELAY;
         timeoutRef.current = setTimeout(() => {
-          startTimeRef.current = Date.now();
           setPhase('tap');
           setShowTime(null);
+          requestAnimationFrame(() => {
+            startTimeRef.current = performance.now();
+          });
         }, delay);
       }
     }
