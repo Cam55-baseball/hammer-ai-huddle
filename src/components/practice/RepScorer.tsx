@@ -1199,7 +1199,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               )}
 
               {/* ABS Guess — advanced only for pitching */}
-              {mode === 'advanced' && hasPitchLocation && isPitching && (
+              {mode === 'advanced' && !!current.pitch_location && isPitching && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">
                     ABS Guess (Select 5×5 Zone)
