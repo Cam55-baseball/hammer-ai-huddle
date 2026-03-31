@@ -990,17 +990,18 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   </div>
 
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Intent</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
                     <SelectGrid
                       options={[
-                        { value: 'mechanical', label: 'Mech' },
-                        { value: 'game_intent', label: 'Game' },
-                        { value: 'situational', label: 'Situ' },
-                        { value: 'hr_derby', label: 'HR' },
+                        { value: 'best_a_swing', label: 'Best A-Swing' },
+                        { value: 'swung', label: 'Swung' },
+                        { value: 'good_take', label: 'Good Take' },
+                        { value: 'chased', label: 'Chased' },
+                        { value: 'bunt', label: 'Bunt' },
                       ]}
-                      value={current.swing_intent}
-                      onChange={v => updateField('swing_intent', v)}
-                      cols={4}
+                      value={current.swing_decision}
+                      onChange={v => updateField('swing_decision', v)}
+                      cols={3}
                     />
                   </div>
 
