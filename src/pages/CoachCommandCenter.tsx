@@ -36,7 +36,7 @@ export default function CoachCommandCenter() {
   }
 
   return (
-    <DashboardLayout title="Player Intelligence">
+    <DashboardLayout>
       <div className="space-y-6 p-4 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3">
