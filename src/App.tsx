@@ -185,6 +185,8 @@ const App = () => {
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
               <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
               <Route path="/royal-timing" element={<RoyalTiming />} />
+              <Route path="/coach-command" element={<CoachCommandCenter />} />
+              <Route path="/owner/udl-control" element={<OwnerUDLControl />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
