@@ -333,10 +333,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsCustomRepDesc = !isCatching && isOther;
   const customRepDescValid = !needsCustomRepDesc || (current.ai_custom_rep_description?.length ?? 0) >= 15;
 
-  // ABS Guess: required when pitch_location is set AND in advanced mode
-  const hasPitchLocation = !!current.pitch_location;
-  const needsAbsGuess = mode === 'advanced' && hasPitchLocation && (isHitting || isPitching || isCatching);
-  const absGuessValid = !needsAbsGuess || !!current.abs_guess;
+  // ABS Guess: always optional
+  const needsAbsGuess = false;
+  const absGuessValid = true;
 
   // Pitcher Intent: required for pitching before pitch_location can be set (optional per spec — required when pitch_location is set)
   const needsPitcherIntent = isPitching;
@@ -880,20 +879,21 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
+              {/* ABS Guess — always visible, optional */}
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs text-muted-foreground mb-1 block">ABS Guess (Optional)</Label>
+                  <PitchLocationGrid
+                    value={current.pitch_location}
+                    onSelect={v => updateField('pitch_location', v)}
+                    batterSide={effectiveBatterSide}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
+                </div>
+              </div>
+
               {mode === 'advanced' && (
                 <>
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <PitchLocationGrid
-                        value={current.pitch_location}
-                        onSelect={v => updateField('pitch_location', v)}
-                        batterSide={effectiveBatterSide}
-                        sport={sport as 'baseball' | 'softball'}
-                      />
-                    </div>
-                  </div>
-
-              {/* ABS Guess moved to advanced block below */}
 
                   {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
                   {repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
@@ -990,17 +990,18 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   </div>
 
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Intent</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
                     <SelectGrid
                       options={[
-                        { value: 'mechanical', label: 'Mech' },
-                        { value: 'game_intent', label: 'Game' },
-                        { value: 'situational', label: 'Situ' },
-                        { value: 'hr_derby', label: 'HR' },
+                        { value: 'best_a_swing', label: 'Best A-Swing' },
+                        { value: 'swung', label: 'Swung' },
+                        { value: 'good_take', label: 'Good Take' },
+                        { value: 'chased', label: 'Chased' },
+                        { value: 'bunt', label: 'Bunt' },
                       ]}
-                      value={current.swing_intent}
-                      onChange={v => updateField('swing_intent', v)}
-                      cols={4}
+                      value={current.swing_decision}
+                      onChange={v => updateField('swing_decision', v)}
+                      cols={3}
                     />
                   </div>
 
@@ -1036,18 +1037,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Approach Quality</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'patient', label: 'Patient' },
-                        { value: 'aggressive', label: 'Aggressive' },
-                        { value: 'neutral', label: 'Neutral' },
-                      ]}
-                      value={current.approach_quality}
-                      onChange={v => updateField('approach_quality', v)}
-                    />
-                  </div>
 
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Count Situation</Label>
@@ -1210,7 +1199,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               )}
 
               {/* ABS Guess — advanced only for pitching */}
-              {mode === 'advanced' && hasPitchLocation && isPitching && (
+              {mode === 'advanced' && !!current.pitch_location && isPitching && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">
                     ABS Guess (Select 5×5 Zone)
@@ -1328,12 +1317,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
                     <SelectGrid
                       options={[
-                        { value: 'correct', label: '✅ Correct' },
-                        { value: 'incorrect', label: '❌ Incorrect' },
+                        { value: 'best_a_swing', label: 'Best A-Swing' },
+                        { value: 'swung', label: 'Swung' },
+                        { value: 'good_take', label: 'Good Take' },
+                        { value: 'chased', label: 'Chased' },
+                        { value: 'bunt', label: 'Bunt' },
                       ]}
                       value={current.swing_decision}
                       onChange={v => updateField('swing_decision', v)}
-                      cols={2}
+                      cols={3}
                     />
                   </div>
 
