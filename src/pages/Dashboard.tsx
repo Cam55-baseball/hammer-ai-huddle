@@ -25,6 +25,7 @@ import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
+import { DailyPlanCard } from "@/components/udl/DailyPlanCard";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
 import { DualStreakDisplay } from "@/components/dashboard/DualStreakDisplay";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";

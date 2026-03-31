@@ -12,6 +12,7 @@ import { DeltaTrendChart } from '@/components/analytics/DeltaTrendChart';
 import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
 import { RoadmapBlockedBadge } from '@/components/analytics/RoadmapBlockedBadge';
 import { AskHammerPanel } from '@/components/analytics/AskHammerPanel';
+import { DailyPlanCard } from '@/components/udl/DailyPlanCard';
 import { HeatMapDashboard } from '@/components/heatmaps/HeatMapDashboard';
 import { useRoadmapProgress } from '@/hooks/useRoadmapProgress';
 import { useSubscription } from '@/hooks/useSubscription';
