@@ -71,11 +71,42 @@ export function useCoachUDL() {
     },
   });
 
+  const generateAlerts = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('No user');
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.access_token) throw new Error('No session');
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/udl-generate-alerts`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(body || 'Alert scan failed');
+      }
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['udl-coach-overview'] });
+    },
+  });
+
   return {
     players: overviewQuery.data?.players ?? [],
     alerts: overviewQuery.data?.alerts ?? [],
     isLoading: overviewQuery.isLoading,
     error: overviewQuery.error,
     dismissAlert: dismissAlert.mutate,
+    generateAlerts: generateAlerts.mutate,
+    isScanning: generateAlerts.isPending,
   };
 }
