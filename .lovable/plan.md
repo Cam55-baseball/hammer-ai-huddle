@@ -1,130 +1,143 @@
 
 
-# UDL Phase 1+2: Diagnosis Engine + Prescription Engine + Player Daily Plan
+# UDL Phase 3 + Phase 4 Implementation Plan
 
-## What We're Building
+## Phase 3 Scope
+1. **Feedback Loop Engine** — auto-adjust drill difficulty based on completion patterns
+2. **Coach Command Center** — new `/coach-command` route with player UDL cards
+3. **Alert System** — detect performance drops and team patterns
 
-A new intelligence layer that **reads** existing data (sessions, MPI, Vault check-ins, Speed Lab, Tex Vision), **diagnoses** the player's top 3 constraints, **prescribes** targeted drills, and **surfaces** a daily plan card on the player dashboard. All outputs are advisory ("Recommended Based on Your Data"). Owner can override via a config table.
-
-```text
-┌──────────────────────────────────────────────────┐
-│  Data Sources (READ ONLY)                        │
-│  performance_sessions · mpi_scores               │
-│  vault_focus_quizzes · speed_lab_sessions         │
-│  tex_vision_metrics · royal_timing_sessions       │
-└───────────────┬──────────────────────────────────┘
-                ▼
-┌──────────────────────────────────────────────────┐
-│  UDL Engine (Edge Function)                      │
-│  1. Normalize → udl_player_state                 │
-│  2. Diagnose → top 3 constraints                 │
-│  3. Prescribe → drill recommendations            │
-│  4. Apply readiness adjustments                  │
-│  5. Return daily_plan (max 3 items)              │
-└───────────────┬──────────────────────────────────┘
-                ▼
-┌──────────────────────────────────────────────────┐
-│  UI: Player Daily Plan Card                      │
-│  "Recommended Based on Your Data"                │
-│  3 drill cards · Start / Complete · Progress bar  │
-└──────────────────────────────────────────────────┘
-```
+## Phase 4 Scope
+4. **Cross-Module Intelligence** — CNS, sleep, explosiveness auto-adjust UDL drills
+5. **Video Linking** — connect constraints to session video clips
+6. **Owner Control Panel UI** — `/owner/udl-control` route for editing constraints/prescriptions
 
 ---
 
-## Database Changes (3 new tables, 1 migration)
+## Database Changes (1 migration)
 
-### `udl_constraint_overrides`
-Owner-editable config overrides (hybrid approach — code defaults + DB overrides).
-
+### New table: `udl_alerts`
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid PK | |
-| constraint_key | text unique | e.g. `late_timing_vs_velocity` |
-| threshold_overrides | jsonb | Owner-set thresholds |
-| enabled | boolean default true | Toggle rules on/off |
-| prescription_overrides | jsonb | Custom drill mappings |
-| created_by | uuid FK auth.users | Must be owner |
-| updated_at | timestamptz | |
+| target_user_id | uuid | Player the alert is about |
+| alert_type | text | `performance_drop`, `fatigue_spike`, `team_pattern`, `compliance_low` |
+| severity | text | `high`, `medium`, `low` |
+| message | text | Human-readable alert text |
+| metadata | jsonb | Context data (scores, player list, etc.) |
+| dismissed_by | uuid nullable | Coach/owner who dismissed |
+| created_at | timestamptz | |
 
-### `udl_daily_plans`
-Stores generated plans per player per day.
+### Alter `udl_daily_plans`: add `feedback_applied` jsonb column
+Stores feedback loop adjustments (e.g., `{ difficulty_delta: +1, reason: "3-day completion streak" }`).
 
+### Alter `udl_drill_completions`: add `difficulty_level` int column
+Tracks what difficulty the drill was at when completed, for feedback loop comparison.
+
+RLS: Alerts readable by owner + coaches (via `scout_follows` linked players). Players see their own alerts.
+
+---
+
+## Phase 3 Implementation
+
+### 3A. Feedback Loop (`supabase/functions/udl-generate-plan/index.ts` — enhance existing)
+
+Add logic after normalization, before prescription:
+- Query last 7 days of `udl_drill_completions` for the player
+- If player completed ≥80% of prescribed drills for 3+ consecutive days → increase `difficulty_level` by 1
+- If player completed <30% for 3+ days → decrease difficulty or swap to easier drills
+- Store adjustments in `feedback_applied` on the daily plan
+- Select drills matching adjusted difficulty from `PRESCRIPTIONS`
+
+### 3B. Coach Command Center
+
+**New file: `src/pages/CoachCommandCenter.tsx`**
+
+Route: `/coach-command` (coach-only access, same pattern as CoachDashboard)
+
+UI structure:
+- Header: "Player Intelligence Command Center"
+- Fetches all linked players (from `scout_follows` where status='accepted')
+- For each player, queries their latest `udl_daily_plans` entry
+- Renders player cards sorted by priority: red flags first, declining trends, low compliance
+
+**Player card shows:**
+- Name + avatar
+- Status light (red/yellow/green based on constraints severity)
+- Primary constraint label
+- Suggested action (from prescribed drills)
+- Drill compliance % (completions / prescribed last 7 days)
+- Trend arrow (improving/declining based on constraint score delta)
+
+**Coach actions per player:**
+- "View Details" → expands to show full constraint breakdown + drill list
+- "Override Drill" → opens dialog to select alternative drill from prescriptions
+- "Send Message" → navigates to existing activity send flow
+
+**New hook: `src/hooks/useCoachUDL.ts`**
+- Fetches linked player IDs
+- Batch-queries `udl_daily_plans` and `udl_drill_completions` for all linked players
+- Computes compliance %, trend deltas, status lights
+
+### 3C. Alert System
+
+**New edge function: `supabase/functions/udl-generate-alerts/index.ts`**
+
+Called by the `udl-generate-plan` function after plan generation (or as a separate invocation):
+- Compares today's `player_state` scores against 7-day rolling average
+- If any score dropped >15 points → `performance_drop` alert
+- If `fatigue_flag` true for 2+ consecutive days → `fatigue_spike` alert
+- After processing all players (coach-triggered), detects team patterns (e.g., 3+ players with same constraint)
+
+**New component: `src/components/udl/UDLAlertsBanner.tsx`**
+- Shown on Coach Command Center
+- Lists active (non-dismissed) alerts sorted by severity
+- Dismiss button per alert
+
+---
+
+## Phase 4 Implementation
+
+### 4A. Cross-Module Intelligence (enhance `udl-generate-plan`)
+
+Add cross-module adjustment logic in the edge function:
+- If CNS readiness < 40 → reduce drill intensity, swap high-intensity drills
+- If sleep_quality ≤ 2 → skip explosive drills, add recovery
+- If explosiveness_score rising (>10 point increase over 7 days) → increase load
+- If stress_level ≥ 4 (from vault) → reduce volume by 20%
+
+Store cross-module adjustments in `readiness_adjustments` with detailed notes.
+
+### 4B. Video Linking
+
+**Alter `udl_daily_plans`**: add `linked_sessions` jsonb column (array of `{ session_id, constraint_key }`)
+
+In `udl-generate-plan`, when querying sessions for normalization, also capture `session_id` for sessions that contributed to each constraint. Store these mappings.
+
+**UI change in `DailyPlanCard.tsx`**: 
+- Add "View Related Sessions" link per drill/constraint
+- Clicking navigates to session detail (existing `SessionDetailView`) filtered by relevant sessions
+
+### 4C. Owner Control Panel
+
+**New file: `src/pages/OwnerUDLControl.tsx`**
+
+Route: `/owner/udl-control` (owner-only access)
+
+Sections:
+1. **Constraints Editor** — table listing all `DEFAULT_CONSTRAINTS` merged with `udl_constraint_overrides`. Owner can toggle enabled, edit thresholds, adjust severity weights. Saves to `udl_constraint_overrides` table.
+2. **Prescriptions Editor** — for each constraint, shows mapped drills. Owner can edit drill details, add new drills, remove drills. Saves to `prescription_overrides` jsonb.
+3. **Audit Log** — read-only view of recent UDL decisions (queries `udl_daily_plans` with player names, shows what was diagnosed and prescribed).
+4. **System Stats** — total plans generated, avg compliance %, most common constraints across all players.
+
+**New table: `udl_audit_log`**
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid PK | |
-| user_id | uuid FK auth.users | |
-| plan_date | date | |
-| constraints_detected | jsonb | Array of {key, label, severity} |
-| prescribed_drills | jsonb | Array of drill objects |
-| readiness_adjustments | jsonb | Volume/intensity modifications |
-| generated_at | timestamptz | |
-| unique(user_id, plan_date) | | One plan per day |
-
-### `udl_drill_completions`
-Tracks drill completion for feedback loop.
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| user_id | uuid FK auth.users | |
-| plan_id | uuid FK udl_daily_plans | |
-| drill_key | text | |
-| started_at | timestamptz | |
-| completed_at | timestamptz nullable | |
-| result_notes | text nullable | |
-
-RLS: All three tables — users can read/write their own rows. Owner can read all + write overrides.
-
----
-
-## Edge Function: `udl-generate-plan`
-
-Single endpoint that:
-1. **Queries** the player's recent data (last 14 days of sessions, latest MPI, today's Vault check-in, latest Speed Lab, latest Tex Vision)
-2. **Normalizes** into a `PlayerState` object with scores 0-100:
-   - `timing_score` — from Royal Timing early/late bias + session timing flags
-   - `decision_score` — from MPI decision composite + chase_pct from sessions
-   - `execution_score` — from session execution grades + contact quality
-   - `reaction_score` — from Vault CNS reaction_time_ms + Tex Vision neuro_reaction_index
-   - `explosiveness_score` — from Speed Lab sprint times
-   - `readiness_score` — from Vault physical_readiness, sleep_quality, perceived_recovery
-   - `fatigue_flag` — boolean from fatigue proxy calculation
-3. **Diagnoses** by comparing each score against thresholds (code defaults, overridden by `udl_constraint_overrides` if present). Returns top 3 lowest-scoring areas as constraints.
-4. **Prescribes** drills by mapping each constraint to drill templates (code defaults in `src/data/udlDefaults.ts`, overridden by `prescription_overrides` in DB).
-5. **Adjusts** for readiness — if fatigue_flag or low readiness, reduces volume and removes high-intensity drills.
-6. **Saves** to `udl_daily_plans` and returns the plan.
-
----
-
-## Code-Based Defaults
-
-### `src/data/udlDefaults.ts`
-Contains:
-- **Constraint definitions** with default thresholds (e.g., `late_timing: { threshold: 45, bias_threshold: 0.6 }`)
-- **Prescription mappings** — each constraint maps to 2-3 drill templates with name, setup, execution cues, reps, and goal metric
-- **Readiness adjustment rules** — fatigue = -30% volume, low sleep = skip explosive drills
-
----
-
-## Player UI
-
-### `src/components/udl/DailyPlanCard.tsx`
-Rendered on the player Dashboard (or Progress Dashboard). Shows:
-- Header: "Recommended Based on Your Data" with date
-- Up to 3 drill cards, each with:
-  - Drill name + setup instructions
-  - Constraint it addresses (subtle label)
-  - Start / Complete buttons
-  - Progress indicator
-- Readiness note if adjustments were made (e.g., "Volume reduced due to low recovery")
-- Expandable "Why these drills?" section showing the diagnosed constraints
-- Simplified mode by default; "Show Details" expands constraint reasoning
-
-### `src/hooks/useUDLPlan.ts`
-- Calls the edge function on mount (once per day, cached)
-- Manages drill start/complete mutations to `udl_drill_completions`
-- Exposes `plan`, `startDrill()`, `completeDrill()`, `isLoading`
+| action | text | `plan_generated`, `override_created`, `alert_triggered` |
+| user_id | uuid | Player or actor |
+| metadata | jsonb | Input/output snapshot |
+| created_at | timestamptz | |
 
 ---
 
@@ -132,30 +145,27 @@ Rendered on the player Dashboard (or Progress Dashboard). Shows:
 
 | File | Action |
 |------|--------|
-| `src/data/udlDefaults.ts` | **Create** — constraint thresholds + prescription mappings |
-| `supabase/functions/udl-generate-plan/index.ts` | **Create** — edge function with normalization, diagnosis, prescription |
-| `src/hooks/useUDLPlan.ts` | **Create** — fetch plan, manage completions |
-| `src/components/udl/DailyPlanCard.tsx` | **Create** — player-facing UI card |
-| `src/pages/Dashboard.tsx` | **Modify** — add DailyPlanCard to player dashboard |
-| `src/pages/ProgressDashboard.tsx` | **Modify** — add DailyPlanCard below AI Prompt section |
-| Migration SQL | **Create** — 3 tables + RLS policies |
+| `src/pages/CoachCommandCenter.tsx` | **Create** — coach player intelligence view |
+| `src/hooks/useCoachUDL.ts` | **Create** — batch player UDL data for coaches |
+| `src/components/udl/UDLAlertsBanner.tsx` | **Create** — alert display for coaches |
+| `src/components/udl/PlayerUDLCard.tsx` | **Create** — individual player card for command center |
+| `src/pages/OwnerUDLControl.tsx` | **Create** — owner constraint/prescription editor |
+| `src/components/udl/ConstraintEditor.tsx` | **Create** — editable constraint table |
+| `src/components/udl/PrescriptionEditor.tsx` | **Create** — editable drill mappings |
+| `supabase/functions/udl-generate-alerts/index.ts` | **Create** — alert generation logic |
+| `supabase/functions/udl-generate-plan/index.ts` | **Modify** — add feedback loop + cross-module + video linking |
+| `src/components/udl/DailyPlanCard.tsx` | **Modify** — add video/session links per constraint |
+| `src/hooks/useUDLPlan.ts` | **Modify** — expose linked session data |
+| `src/App.tsx` | **Modify** — add `/coach-command` and `/owner/udl-control` routes |
+| `src/components/AppSidebar.tsx` | **Modify** — add Coach Command Center + Owner UDL Control nav items |
+| Migration SQL | **Create** — `udl_alerts`, `udl_audit_log` tables + alter existing UDL tables |
 
 ---
 
-## Language Rules (Enforced)
+## Technical Notes
 
-Every UDL output prefixed with: **"Recommended Based on Your Data"**
-
-No "you must", "required", "mandatory" — only "we recommend", "consider", "suggested".
-
----
-
-## What This Does NOT Do (Deferred to Later Phases)
-
-- Coach Command Center (Phase 3)
-- Feedback loop auto-difficulty adjustment (Phase 3)
-- Alert system for team patterns (Phase 3)
-- Cross-module intelligence auto-adjustments (Phase 4)
-- Video linking to constraints (Phase 4)
-- Owner control panel UI (Phase 4 — owner uses DB overrides for now)
+- Coach Command Center queries use `service_role` via edge function to batch-read player plans (coaches cannot read other users' `udl_daily_plans` directly via RLS). A new edge function `udl-coach-overview` will handle this.
+- Feedback loop difficulty adjustments are capped at ±2 from the prescription default to prevent runaway escalation.
+- All cross-module adjustments are additive to existing readiness logic, not replacements.
+- Owner Control Panel uses direct Supabase client calls to `udl_constraint_overrides` (owner RLS policy already permits this).
 
