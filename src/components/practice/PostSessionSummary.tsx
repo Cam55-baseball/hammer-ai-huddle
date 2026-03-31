@@ -100,7 +100,7 @@ export function PostSessionSummary({ sessionId, module, sessionType, onDone }: P
 
   const composites = (session?.composite_indexes ?? {}) as Record<string, number>;
   const hasScores = Object.keys(composites).length > 0;
-  const drillBlocks = (session?.drill_blocks ?? []) as DrillBlock[];
+  const drillBlocks = (session?.drill_blocks ?? []) as unknown as DrillBlock[];
   const totalReps = drillBlocks.reduce((sum, b) => sum + (b.volume || 0), 0);
   const drillCount = drillBlocks.length;
   const effectiveGrade = session?.effective_grade as number | null;
