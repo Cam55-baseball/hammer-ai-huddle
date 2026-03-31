@@ -15,7 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 export default function OwnerUDLControl() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { isOwner, isLoading: ownerLoading } = useOwnerAccess();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const queryClient = useQueryClient();
 
   useEffect(() => {
