@@ -15,14 +15,14 @@ import { toast } from '@/components/ui/sonner';
 export default function CoachCommandCenter() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { isCoach } = useScoutAccess();
+  const { isCoach, loading: roleLoading } = useScoutAccess();
   const { players, alerts, isLoading, dismissAlert, generateAlerts, isScanning } = useCoachUDL();
 
   useEffect(() => {
-    if (!authLoading && (!user || !isCoach)) {
+    if (!authLoading && !roleLoading && (!user || !isCoach)) {
       navigate('/dashboard');
     }
-  }, [user, authLoading, isCoach, navigate]);
+  }, [user, authLoading, roleLoading, isCoach, navigate]);
 
   const handleScan = () => {
     generateAlerts(undefined, {
@@ -35,7 +35,7 @@ export default function CoachCommandCenter() {
     });
   };
 
-  if (authLoading || isLoading) {
+  if (authLoading || roleLoading || isLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-4 p-4">
