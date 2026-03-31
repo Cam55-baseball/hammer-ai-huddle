@@ -879,18 +879,31 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* ABS Guess — always visible, optional */}
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground mb-1 block">ABS Guess (Optional)</Label>
-                  <PitchLocationGrid
-                    value={current.pitch_location}
-                    onSelect={v => updateField('pitch_location', v)}
-                    batterSide={effectiveBatterSide}
-                    sport={sport as 'baseball' | 'softball'}
-                  />
+              {/* For non-tee hitting sources: Real Pitch Location → then ABS Guess */}
+              {!isTee && (
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Pitch Location</Label>
+                    <PitchLocationGrid
+                      value={current.pitch_location}
+                      onSelect={v => updateField('pitch_location', v)}
+                      batterSide={effectiveBatterSide}
+                      sport={sport as 'baseball' | 'softball'}
+                    />
+                  </div>
+                  {current.pitch_location && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">ABS Guess (Optional)</Label>
+                      <PitchLocationGrid
+                        value={current.abs_guess}
+                        onSelect={v => updateField('abs_guess', v)}
+                        batterSide={effectiveBatterSide}
+                        sport={sport as 'baseball' | 'softball'}
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
               {mode === 'advanced' && (
                 <>
