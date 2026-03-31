@@ -19,10 +19,10 @@ export default function CoachCommandCenter() {
   const { players, alerts, isLoading, dismissAlert, generateAlerts, isScanning } = useCoachUDL();
 
   useEffect(() => {
-    if (!authLoading && (!user || !isCoach)) {
+    if (!authLoading && !roleLoading && (!user || !isCoach)) {
       navigate('/dashboard');
     }
-  }, [user, authLoading, isCoach, navigate]);
+  }, [user, authLoading, roleLoading, isCoach, navigate]);
 
   const handleScan = () => {
     generateAlerts(undefined, {
