@@ -75,7 +75,7 @@ export default function OwnerUDLControl() {
 
   if (authLoading || ownerLoading || overridesQuery.isLoading) {
     return (
-      <DashboardLayout title="UDL Control">
+      <DashboardLayout>
         <div className="space-y-4 p-4">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-64 w-full" />
