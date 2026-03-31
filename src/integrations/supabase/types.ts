@@ -5080,6 +5080,107 @@ export type Database = {
         }
         Relationships: []
       }
+      udl_constraint_overrides: {
+        Row: {
+          constraint_key: string
+          created_by: string
+          enabled: boolean | null
+          id: string
+          prescription_overrides: Json | null
+          threshold_overrides: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          constraint_key: string
+          created_by: string
+          enabled?: boolean | null
+          id?: string
+          prescription_overrides?: Json | null
+          threshold_overrides?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          constraint_key?: string
+          created_by?: string
+          enabled?: boolean | null
+          id?: string
+          prescription_overrides?: Json | null
+          threshold_overrides?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      udl_daily_plans: {
+        Row: {
+          constraints_detected: Json | null
+          generated_at: string | null
+          id: string
+          plan_date: string
+          player_state: Json | null
+          prescribed_drills: Json | null
+          readiness_adjustments: Json | null
+          user_id: string
+        }
+        Insert: {
+          constraints_detected?: Json | null
+          generated_at?: string | null
+          id?: string
+          plan_date: string
+          player_state?: Json | null
+          prescribed_drills?: Json | null
+          readiness_adjustments?: Json | null
+          user_id: string
+        }
+        Update: {
+          constraints_detected?: Json | null
+          generated_at?: string | null
+          id?: string
+          plan_date?: string
+          player_state?: Json | null
+          prescribed_drills?: Json | null
+          readiness_adjustments?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      udl_drill_completions: {
+        Row: {
+          completed_at: string | null
+          drill_key: string
+          id: string
+          plan_id: string
+          result_notes: string | null
+          started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          drill_key: string
+          id?: string
+          plan_id: string
+          result_notes?: string | null
+          started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          drill_key?: string
+          id?: string
+          plan_id?: string
+          result_notes?: string | null
+          started_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "udl_drill_completions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "udl_daily_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_food_history: {
         Row: {
           created_at: string | null
