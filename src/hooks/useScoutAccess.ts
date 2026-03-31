@@ -10,6 +10,7 @@ export const useScoutAccess = () => {
 
   useEffect(() => {
     const checkAccess = async () => {
+      setLoading(true);
       if (!user) {
         setIsScout(false);
         setIsCoach(false);
