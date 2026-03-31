@@ -879,20 +879,21 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
+              {/* ABS Guess — always visible, optional */}
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Label className="text-xs text-muted-foreground mb-1 block">ABS Guess (Optional)</Label>
+                  <PitchLocationGrid
+                    value={current.pitch_location}
+                    onSelect={v => updateField('pitch_location', v)}
+                    batterSide={effectiveBatterSide}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
+                </div>
+              </div>
+
               {mode === 'advanced' && (
                 <>
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <PitchLocationGrid
-                        value={current.pitch_location}
-                        onSelect={v => updateField('pitch_location', v)}
-                        batterSide={effectiveBatterSide}
-                        sport={sport as 'baseball' | 'softball'}
-                      />
-                    </div>
-                  </div>
-
-              {/* ABS Guess moved to advanced block below */}
 
                   {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
                   {repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
