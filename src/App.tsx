@@ -197,6 +197,7 @@ const App = () => {
         </ErrorBoundary>
       </TooltipProvider>
     </SportThemeProvider>
+    </AuthProvider>
   </QueryClientProvider>
   );
 };
