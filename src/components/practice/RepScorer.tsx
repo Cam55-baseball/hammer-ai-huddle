@@ -333,10 +333,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsCustomRepDesc = !isCatching && isOther;
   const customRepDescValid = !needsCustomRepDesc || (current.ai_custom_rep_description?.length ?? 0) >= 15;
 
-  // ABS Guess: required when pitch_location is set AND in advanced mode
-  const hasPitchLocation = !!current.pitch_location;
-  const needsAbsGuess = mode === 'advanced' && hasPitchLocation && (isHitting || isPitching || isCatching);
-  const absGuessValid = !needsAbsGuess || !!current.abs_guess;
+  // ABS Guess: always optional
+  const needsAbsGuess = false;
+  const absGuessValid = true;
 
   // Pitcher Intent: required for pitching before pitch_location can be set (optional per spec — required when pitch_location is set)
   const needsPitcherIntent = isPitching;
