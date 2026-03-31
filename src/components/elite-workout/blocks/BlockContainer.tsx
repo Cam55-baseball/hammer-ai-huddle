@@ -159,7 +159,7 @@ export function BlockContainer({
             <ViewModeToggle value={viewMode} onChange={onViewModeChange} />
           )}
           
-          <Dialog open={showBlockSelector} onOpenChange={setShowBlockSelector}>
+          <Dialog open={showBlockSelector} onOpenChange={setShowBlockSelector} modal={false}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-2">
                 <Plus className="h-4 w-4" />
