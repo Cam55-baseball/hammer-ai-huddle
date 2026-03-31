@@ -383,15 +383,7 @@ export default function Dashboard() {
     );
   };
 
-  // Only show full-page skeleton on initial bootstrap — not on background refreshes
-  const [hasBootstrapped, setHasBootstrapped] = useState(false);
-  useEffect(() => {
-    if (!hasBootstrapped && !authLoading && !subLoading && !scoutLoading && !loading) {
-      setHasBootstrapped(true);
-    }
-  }, [authLoading, subLoading, scoutLoading, loading, hasBootstrapped]);
-
-  if (!hasBootstrapped && (authLoading || loading || subLoading || scoutLoading)) {
+  if (authLoading || loading || subLoading || scoutLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
