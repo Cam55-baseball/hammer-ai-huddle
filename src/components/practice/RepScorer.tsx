@@ -1037,18 +1037,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Approach Quality</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'patient', label: 'Patient' },
-                        { value: 'aggressive', label: 'Aggressive' },
-                        { value: 'neutral', label: 'Neutral' },
-                      ]}
-                      value={current.approach_quality}
-                      onChange={v => updateField('approach_quality', v)}
-                    />
-                  </div>
 
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Count Situation</Label>
