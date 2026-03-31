@@ -15,6 +15,7 @@ export const useAdminAccess = () => {
         return;
       }
 
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('user_roles')
@@ -39,7 +40,7 @@ export const useAdminAccess = () => {
     };
 
     checkAdminRole();
-  }, [user]);
+  }, [user?.id]);
 
   return { isAdmin, loading };
 };
