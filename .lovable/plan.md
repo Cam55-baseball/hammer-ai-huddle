@@ -1,66 +1,35 @@
 
 
-# Fix Dashboard Glitching — Role Query Storm
+# Fix Hitting Rep Logger: ABS Guess + Swing Decision
 
 ## Problem
+1. **ABS Guess** is not available for hitting reps at all — there's only a comment placeholder. It needs to be visible in both Quick Log and Advanced modes as an **optional** field.
+2. **Swing Decision** only has "Correct / Incorrect" — needs real baseball options: Best A-Swing, Swung, Good Take, Chased, Bunt
+3. **Swing Intent** and **Approach Quality** are unnecessary and should be removed
 
-The `useOwnerAccess` hook fires **repeatedly in a loop**, as seen in the console logs (11+ rapid-fire queries for the same user). This causes:
-- Network request storms to the database
-- UI re-renders / visual glitching on the dashboard
-- Wasted bandwidth and degraded performance
+## Changes — File: `src/components/practice/RepScorer.tsx`
 
-**Root cause:** `useOwnerAccess` has `[user, session, authLoading]` as `useEffect` dependencies. The `session` object from `AuthContext` is a new reference on every state update, causing the effect to re-trigger endlessly. Since this hook is imported in **24 files**, the problem multiplies across the app.
+### 1. Add ABS Guess grid for hitting (always visible, optional)
+- **After** the tee depth grid (line ~881) and **before** the `mode === 'advanced'` block (line 883), insert an ABS Guess `PitchLocationGrid` labeled "ABS Guess (Optional)" — visible in both Quick Log and Advanced modes
+- **Line 338**: Change `needsAbsGuess` to `false` so it never blocks rep confirmation
 
-`useAdminAccess` and `useScoutAccess` only depend on `[user]` so they're stable, but `useOwnerAccess` is the hot loop.
+### 2. Replace Swing Decision options
+- **Lines 1328-1337** (pitcher hitter outcome details): Replace `correct`/`incorrect` with:
+  - `best_a_swing` → "Best A-Swing"
+  - `swung` → "Swung"
+  - `good_take` → "Good Take"
+  - `chased` → "Chased"
+  - `bunt` → "Bunt"
+- Use `cols={3}` for the 5-option grid
+- Also add a Swing Decision selector in the **hitting advanced** section (inside lines 936-1082) with the same options
 
-## Fix
+### 3. Remove Swing Intent and Approach Quality
+- **Delete lines 992-1005** (Swing Intent block)
+- **Delete lines 1039-1050** (Approach Quality block)
 
-**File: `src/hooks/useOwnerAccess.ts`**
+### 4. Clean up
+- Remove the dangling comment on line 896 ("ABS Guess moved to advanced block below")
 
-1. Replace `session` dependency with `user?.id` (a stable string primitive). The hook only needs `session` to verify the user is authenticated — but `user` already implies a valid session.
-2. Replace `authLoading` guard with a simple `user?.id` check — if auth is loading, `user` is null, so the early return already handles it.
-3. Remove verbose console.log statements that are flooding the console.
-
-```typescript
-useEffect(() => {
-  const checkOwnerRole = async () => {
-    if (!user?.id) {
-      setIsOwner(false);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role, status')
-        .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .eq('status', 'active');
-
-      if (error) {
-        console.error('[useOwnerAccess] Error:', error);
-        setIsOwner(false);
-      } else {
-        setIsOwner(!!data && data.length > 0);
-      }
-    } catch (error) {
-      console.error('[useOwnerAccess] Exception:', error);
-      setIsOwner(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  checkOwnerRole();
-}, [user?.id]);  // Stable primitive — no re-render loop
-```
-
-One file, one dependency fix. The glitching stops.
-
-## Files
-
-| File | Action |
-|------|--------|
-| `src/hooks/useOwnerAccess.ts` | **Modify** — change deps from `[user, session, authLoading]` to `[user?.id]`, remove console spam |
+## Summary
+One file, four changes: ABS Guess becomes always-visible + optional for hitting, Swing Decision gets proper baseball options in both hitting and pitching advanced sections, and two unused fields are removed.
 
