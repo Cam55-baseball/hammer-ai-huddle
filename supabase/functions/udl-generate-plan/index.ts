@@ -487,54 +487,6 @@ Deno.serve(async (req: Request) => {
       },
     });
 
-    // ─── 9. Generate alerts (inline, Phase 3) ───
-
-    try {
-      // Check for performance drops vs 7-day rolling average
-      const { data: recentPlans } = await serviceClient
-        .from("udl_daily_plans")
-        .select("player_state, plan_date")
-        .eq("user_id", userId)
-        .gte("plan_date", sevenDaysAgo)
-        .neq("plan_date", today)
-        .order("plan_date", { ascending: false });
-
-      if (recentPlans && recentPlans.length >= 3) {
-        const scoreKeys = ["timing_score", "decision_score", "execution_score", "reaction_score", "explosiveness_score"];
-        for (const key of scoreKeys) {
-          const oldAvg =
-            recentPlans.reduce((sum: number, p: any) => sum + ((p.player_state as any)?.[key] ?? 50), 0) /
-            recentPlans.length;
-          const current = (playerState as any)[key] ?? 50;
-          if (typeof oldAvg === "number" && typeof current === "number" && oldAvg - current > 15) {
-            await serviceClient.from("udl_alerts").insert({
-              target_user_id: userId,
-              alert_type: "performance_drop",
-              severity: oldAvg - current > 25 ? "high" : "medium",
-              message: `${key.replace(/_/g, " ")} dropped ${Math.round(oldAvg - current)} points below 7-day average.`,
-              metadata: { score_key: key, current, rolling_avg: Math.round(oldAvg), delta: Math.round(oldAvg - current) },
-            });
-          }
-        }
-      }
-
-      // Check for consecutive fatigue
-      if (fatigueFlag && recentPlans && recentPlans.length >= 1) {
-        const yesterdayFatigue = (recentPlans[0]?.player_state as any)?.fatigue_flag;
-        if (yesterdayFatigue === true) {
-          await serviceClient.from("udl_alerts").insert({
-            target_user_id: userId,
-            alert_type: "fatigue_spike",
-            severity: "high",
-            message: "Fatigue flag active for 2+ consecutive days. Consider rest day.",
-            metadata: { readiness_score: readinessScore, consecutive_days: 2 },
-          });
-        }
-      }
-    } catch (alertErr) {
-      console.error("Alert generation error (non-fatal):", alertErr);
-    }
-
     return new Response(JSON.stringify({ plan: savedPlan, cached: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
