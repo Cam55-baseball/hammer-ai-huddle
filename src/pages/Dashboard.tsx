@@ -496,6 +496,9 @@ export default function Dashboard() {
         {/* Practice Intelligence Summary */}
         <PracticeIntelligenceCard />
 
+        {/* UDL Daily Plan */}
+        <DailyPlanCard />
+
         {/* Game Hub Card */}
         <Card className="p-4 sm:p-6 border-primary/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/game-scoring')}>
           <div className="flex items-center gap-3">

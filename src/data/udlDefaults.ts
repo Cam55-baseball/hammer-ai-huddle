@@ -264,7 +264,7 @@ export const DEFAULT_PRESCRIPTIONS: PrescriptionMapping[] = [
         drill_key: 'plyometric_box_jumps',
         drill_name: 'Plyometric Box Jumps',
         setup: 'Box at knee to hip height. Stable surface.',
-        execution: 'Explosive jump. Soft landing. Step down, don't jump down.',
+        execution: 'Explosive jump. Soft landing. Step down, do not jump down.',
         constraints: ['Full hip extension', 'Quiet landing'],
         reps: '3 rounds × 6 jumps',
         goal_metric: 'Consistent height across all sets',

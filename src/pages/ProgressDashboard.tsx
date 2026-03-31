@@ -117,6 +117,9 @@ Calculation Date: ${mpiQuery.data.calculation_date}
                   <IntegrityScoreBar />
                 </div>
 
+                {/* UDL Daily Plan */}
+                <DailyPlanCard />
+
                 {/* Row 3: Hammer Prompts */}
                 <AIPromptCard />
 
