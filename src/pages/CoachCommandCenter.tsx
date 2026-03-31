@@ -8,19 +8,32 @@ import { PlayerUDLCard } from '@/components/udl/PlayerUDLCard';
 import { UDLAlertsBanner } from '@/components/udl/UDLAlertsBanner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { Brain, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Brain, Users, Radar, Loader2 } from 'lucide-react';
+import { toast } from '@/components/ui/sonner';
 
 export default function CoachCommandCenter() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { isCoach } = useScoutAccess();
-  const { players, alerts, isLoading, dismissAlert } = useCoachUDL();
+  const { players, alerts, isLoading, dismissAlert, generateAlerts, isScanning } = useCoachUDL();
 
   useEffect(() => {
     if (!authLoading && (!user || !isCoach)) {
       navigate('/dashboard');
     }
   }, [user, authLoading, isCoach, navigate]);
+
+  const handleScan = () => {
+    generateAlerts(undefined, {
+      onSuccess: (data: any) => {
+        toast.success(`Scan complete: ${data?.alerts_created ?? 0} new alert(s) found`);
+      },
+      onError: () => {
+        toast.error('Alert scan failed');
+      },
+    });
+  };
 
   if (authLoading || isLoading) {
     return (
@@ -39,14 +52,30 @@ export default function CoachCommandCenter() {
     <DashboardLayout>
       <div className="space-y-6 p-4 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Brain className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-xl font-bold">Player Intelligence Command Center</h1>
-            <p className="text-sm text-muted-foreground">
-              Recommended insights based on player data
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Brain className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-xl font-bold">Player Intelligence Command Center</h1>
+              <p className="text-sm text-muted-foreground">
+                Recommended insights based on player data
+              </p>
+            </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleScan}
+            disabled={isScanning}
+            className="gap-2"
+          >
+            {isScanning ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Radar className="h-4 w-4" />
+            )}
+            {isScanning ? 'Scanning…' : 'Scan for Alerts'}
+          </Button>
         </div>
 
         {/* Alerts Banner */}
