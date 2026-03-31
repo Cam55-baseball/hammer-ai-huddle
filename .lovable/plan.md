@@ -1,66 +1,40 @@
 
 
-# Fix Dashboard Glitching — Role Query Storm
+# Fix: Custom Activity Builder Dialog Closes When Reaching Block Builder
 
-## Problem
+## Root Cause
 
-The `useOwnerAccess` hook fires **repeatedly in a loop**, as seen in the console logs (11+ rapid-fire queries for the same user). This causes:
-- Network request storms to the database
-- UI re-renders / visual glitching on the dashboard
-- Wasted bandwidth and degraded performance
+The `BlockContainer` component (rendered inside the Custom Activity Builder dialog when workout type is selected) contains:
+1. A **nested `Dialog`** (block type selector, line 162 of `BlockContainer.tsx`)
+2. A **`DragOverlay`** from `@dnd-kit` that renders via a DOM portal (outside the parent dialog's DOM tree)
 
-**Root cause:** `useOwnerAccess` has `[user, session, authLoading]` as `useEffect` dependencies. The `session` object from `AuthContext` is a new reference on every state update, causing the effect to re-trigger endlessly. Since this hook is imported in **24 files**, the problem multiplies across the app.
+Radix UI's `Dialog` monitors for "outside" interactions. When `@dnd-kit`'s `DragOverlay` portal mounts or the nested `Dialog` triggers focus management, Radix interprets these as interactions outside the parent dialog and fires `onOpenChange(false)`, closing the builder.
 
-`useAdminAccess` and `useScoutAccess` only depend on `[user]` so they're stable, but `useOwnerAccess` is the hot loop.
+This is a known Radix UI + portal interaction conflict.
 
 ## Fix
 
-**File: `src/hooks/useOwnerAccess.ts`**
+**File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
 
-1. Replace `session` dependency with `user?.id` (a stable string primitive). The hook only needs `session` to verify the user is authenticated — but `user` already implies a valid session.
-2. Replace `authLoading` guard with a simple `user?.id` check — if auth is loading, `user` is null, so the early return already handles it.
-3. Remove verbose console.log statements that are flooding the console.
+Add `onPointerDownOutside` and `onInteractOutside` event handlers to the parent `DialogContent` to prevent it from auto-dismissing due to portal-based children:
 
-```typescript
-useEffect(() => {
-  const checkOwnerRole = async () => {
-    if (!user?.id) {
-      setIsOwner(false);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role, status')
-        .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .eq('status', 'active');
-
-      if (error) {
-        console.error('[useOwnerAccess] Error:', error);
-        setIsOwner(false);
-      } else {
-        setIsOwner(!!data && data.length > 0);
-      }
-    } catch (error) {
-      console.error('[useOwnerAccess] Exception:', error);
-      setIsOwner(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  checkOwnerRole();
-}, [user?.id]);  // Stable primitive — no re-render loop
+```tsx
+<DialogContent
+  className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden"
+  onPointerDownOutside={(e) => e.preventDefault()}
+  onInteractOutside={(e) => e.preventDefault()}
+>
 ```
 
-One file, one dependency fix. The glitching stops.
+This stops the dialog from closing when Radix detects pointer events on portal-rendered children (DragOverlay, nested Dialog). Users can still close the dialog via the X button or Escape key.
 
-## Files
+**File: `src/components/elite-workout/blocks/BlockContainer.tsx`**
 
-| File | Action |
-|------|--------|
-| `src/hooks/useOwnerAccess.ts` | **Modify** — change deps from `[user, session, authLoading]` to `[user?.id]`, remove console spam |
+Add `modal={false}` to the nested block-selector Dialog so it doesn't fight with the parent dialog's focus trap:
+
+```tsx
+<Dialog open={showBlockSelector} onOpenChange={setShowBlockSelector} modal={false}>
+```
+
+Two files, two lines each.
 
