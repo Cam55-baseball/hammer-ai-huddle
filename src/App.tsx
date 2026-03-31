@@ -121,6 +121,7 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
+    <AuthProvider>
     <SportThemeProvider>
       <TooltipProvider>
         <ErrorBoundary>
