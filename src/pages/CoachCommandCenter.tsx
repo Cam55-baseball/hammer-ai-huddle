@@ -35,7 +35,7 @@ export default function CoachCommandCenter() {
     });
   };
 
-  if (authLoading || isLoading) {
+  if (authLoading || roleLoading || isLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-4 p-4">
