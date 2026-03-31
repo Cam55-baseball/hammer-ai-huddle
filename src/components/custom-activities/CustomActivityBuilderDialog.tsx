@@ -392,8 +392,14 @@ export function CustomActivityBuilderDialog({
   const totalCNS = useBlockSystem ? calculateWorkoutCNS(workoutBlocks) : 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()} onFocusOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (nextOpen) onOpenChange(true); /* block auto-close; user must use X/Cancel */ }}>
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden" 
+        onPointerDownOutside={(e) => e.preventDefault()} 
+        onInteractOutside={(e) => e.preventDefault()} 
+        onFocusOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader className="p-4 sm:p-6 pb-0 flex-shrink-0">
           <DialogTitle className="text-xl font-black">
             {isFromCoach 

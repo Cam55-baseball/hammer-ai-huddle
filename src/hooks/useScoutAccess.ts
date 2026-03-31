@@ -10,7 +10,6 @@ export const useScoutAccess = () => {
 
   useEffect(() => {
     const checkAccess = async () => {
-      setLoading(true);
       if (!user) {
         setIsScout(false);
         setIsCoach(false);
@@ -18,6 +17,7 @@ export const useScoutAccess = () => {
         return;
       }
 
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('user_roles')
@@ -45,7 +45,7 @@ export const useScoutAccess = () => {
     };
 
     checkAccess();
-  }, [user]);
+  }, [user?.id]);
 
   // canSendActivities is true for scouts OR coaches
   const canSendActivities = isScout || isCoach;
