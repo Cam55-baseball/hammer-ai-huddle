@@ -93,6 +93,62 @@ function sprintToScore(seconds: number): number {
   return clamp(((8.5 - seconds) / 2.0) * 100);
 }
 
+// ─── Feedback Loop: Compute difficulty adjustment from recent completions ───
+
+async function computeFeedbackAdjustment(
+  serviceClient: any,
+  userId: string,
+  sevenDaysAgo: string,
+): Promise<{ difficulty_delta: number; reason: string } | null> {
+  // Get last 7 days of plans + completions
+  const { data: recentPlans } = await serviceClient
+    .from("udl_daily_plans")
+    .select("id, prescribed_drills, plan_date")
+    .eq("user_id", userId)
+    .gte("plan_date", sevenDaysAgo)
+    .order("plan_date", { ascending: true });
+
+  if (!recentPlans || recentPlans.length < 3) return null;
+
+  const { data: recentCompletions } = await serviceClient
+    .from("udl_drill_completions")
+    .select("plan_id, drill_key, completed_at")
+    .eq("user_id", userId)
+    .in("plan_id", recentPlans.map((p: any) => p.id));
+
+  const completionSet = new Set(
+    (recentCompletions ?? [])
+      .filter((c: any) => c.completed_at)
+      .map((c: any) => `${c.plan_id}:${c.drill_key}`),
+  );
+
+  // Calculate daily compliance
+  const dailyRates: number[] = [];
+  for (const plan of recentPlans) {
+    const drills = plan.prescribed_drills ?? [];
+    if (drills.length === 0) continue;
+    const completed = drills.filter((d: any) =>
+      completionSet.has(`${plan.id}:${d.drill_key}`),
+    ).length;
+    dailyRates.push(completed / drills.length);
+  }
+
+  if (dailyRates.length < 3) return null;
+
+  // Check last 3 days for streak pattern
+  const last3 = dailyRates.slice(-3);
+  const highStreak = last3.every((r) => r >= 0.8);
+  const lowStreak = last3.every((r) => r < 0.3);
+
+  if (highStreak) {
+    return { difficulty_delta: 1, reason: "3+ day completion streak (≥80%)" };
+  }
+  if (lowStreak) {
+    return { difficulty_delta: -1, reason: "3+ day low completion (<30%)" };
+  }
+  return null;
+}
+
 // ─── Main handler ───
 
 Deno.serve(async (req: Request) => {
@@ -137,11 +193,12 @@ Deno.serve(async (req: Request) => {
     // ─── 1. Gather data (parallel) ───
 
     const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
 
     const [sessionsRes, mpiRes, vaultRes, speedRes] = await Promise.all([
       supabase
         .from("performance_sessions")
-        .select("effective_grade, drill_blocks, composite_indexes, session_date, module")
+        .select("id, effective_grade, drill_blocks, composite_indexes, session_date, module")
         .eq("user_id", userId)
         .is("deleted_at", null)
         .gte("session_date", fourteenDaysAgo)
@@ -156,7 +213,7 @@ Deno.serve(async (req: Request) => {
         .maybeSingle(),
       supabase
         .from("vault_focus_quizzes")
-        .select("physical_readiness, sleep_quality, perceived_recovery, reaction_time_ms")
+        .select("physical_readiness, sleep_quality, perceived_recovery, reaction_time_ms, stress_level")
         .eq("user_id", userId)
         .order("quiz_date", { ascending: false })
         .limit(1)
@@ -177,70 +234,63 @@ Deno.serve(async (req: Request) => {
 
     // ─── 2. Normalize into PlayerState ───
 
-    // Timing score: from session timing flags + execution patterns
-    let timingScore = 50; // baseline
+    let timingScore = 50;
     if (sessions.length > 0) {
       const grades = sessions.map((s: any) => s.effective_grade ?? 50);
       const avg = grades.reduce((a: number, b: number) => a + b, 0) / grades.length;
-      timingScore = clamp(avg * 1.1); // slight boost since effective_grade is composite
+      timingScore = clamp(avg * 1.1);
     }
 
-    // Decision score: from MPI decision composite
     let decisionScore = 50;
     if (mpi?.composite_decision != null) {
       decisionScore = clamp(mpi.composite_decision);
     }
 
-    // Execution score: from session grades variance and average
     let executionScore = 50;
     if (sessions.length >= 3) {
       const grades = sessions.map((s: any) => s.effective_grade ?? 50);
       const avg = grades.reduce((a: number, b: number) => a + b, 0) / grades.length;
       const variance = grades.reduce((acc: number, g: number) => acc + (g - avg) ** 2, 0) / grades.length;
       const stdDev = Math.sqrt(variance);
-      // High consistency (low stdDev) boosts score
       executionScore = clamp(avg - stdDev * 0.5);
     }
 
-    // Reaction score: from vault CNS reaction time
     let reactionScore = 50;
     if (vault?.reaction_time_ms != null) {
       reactionScore = reactionMsToScore(vault.reaction_time_ms);
     }
 
-    // Explosiveness: from speed lab
     let explosivenessScore = 50;
     if (speed?.sprint_60_time != null) {
       explosivenessScore = sprintToScore(speed.sprint_60_time);
     } else if (speed?.sprint_home_to_first != null) {
-      // Convert H2F (~4.2s=100, ~5.5s=0)
       const h2f = speed.sprint_home_to_first;
       explosivenessScore = h2f <= 4.2 ? 100 : h2f >= 5.5 ? 0 : clamp(((5.5 - h2f) / 1.3) * 100);
     }
 
-    // Readiness: from vault check-in
     let readinessScore = 60;
     let fatigueFlag = false;
+    const sleepQuality = (vault as any)?.sleep_quality ?? 3;
+    const stressLevel = (vault as any)?.stress_level ?? 2;
+
     if (vault) {
       const physical = vault.physical_readiness ?? 3;
-      const sleep = vault.sleep_quality ?? 3;
+      const sleep = sleepQuality;
       const recovery = vault.perceived_recovery ?? 3;
       readinessScore = clamp(((physical + sleep + recovery) / 15) * 100);
       fatigueFlag = readinessScore < 40;
     }
 
-    // Execution inconsistency: check stdDev of grades
     let inconsistencyScore = 60;
     if (sessions.length >= 5) {
       const grades = sessions.map((s: any) => s.effective_grade ?? 50);
       const avg = grades.reduce((a: number, b: number) => a + b, 0) / grades.length;
       const variance = grades.reduce((acc: number, g: number) => acc + (g - avg) ** 2, 0) / grades.length;
       const stdDev = Math.sqrt(variance);
-      // Low stdDev = high consistency = high score
       inconsistencyScore = clamp(100 - stdDev * 5);
     }
 
-    const playerState = {
+    const playerState: Record<string, number | boolean> = {
       timing_score: timingScore,
       decision_score: decisionScore,
       execution_score: executionScore,
@@ -262,11 +312,16 @@ Deno.serve(async (req: Request) => {
     const overrideMap = new Map<string, any>();
     (overrides ?? []).forEach((o: any) => overrideMap.set(o.constraint_key, o));
 
+    // ─── 3b. Feedback Loop (Phase 3) ───
+
+    const feedbackAdj = await computeFeedbackAdjustment(serviceClient, userId, sevenDaysAgo);
+    const feedbackApplied = feedbackAdj ?? {};
+
     // ─── 4. Diagnose: find constraints ───
 
     const scoreMap: Record<string, number> = {
       late_timing_vs_velocity: timingScore,
-      early_timing_offspeed: timingScore, // shared score, could be refined with more data
+      early_timing_offspeed: timingScore,
       poor_pitch_selection: decisionScore,
       low_contact_quality: executionScore,
       slow_reaction_time: reactionScore,
@@ -296,11 +351,12 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Sort by severity descending, take top 3
     detected.sort((a, b) => b.severity - a.severity);
     const top3 = detected.slice(0, 3);
 
-    // ─── 5. Prescribe drills ───
+    // ─── 5. Prescribe drills (with feedback difficulty adjustment) ───
+
+    const difficultyDelta = feedbackAdj?.difficulty_delta ?? 0;
 
     let prescribedDrills: any[] = [];
     for (const constraint of top3) {
@@ -313,40 +369,83 @@ Deno.serve(async (req: Request) => {
         drills = PRESCRIPTIONS[constraint.key] ?? [];
       }
 
-      // Pick the first drill for each constraint (one drill per constraint)
       if (drills.length > 0) {
+        // Pick drill closest to adjusted difficulty
+        const targetDiff = clamp(drills[0].difficulty_level + difficultyDelta, 1, 5);
+        const sorted = [...drills].sort(
+          (a, b) => Math.abs(a.difficulty_level - targetDiff) - Math.abs(b.difficulty_level - targetDiff),
+        );
+        const chosen = sorted[0];
         prescribedDrills.push({
-          ...drills[0],
+          ...chosen,
+          difficulty_level: clamp(chosen.difficulty_level + difficultyDelta, 1, 5),
           for_constraint: constraint.key,
           constraint_label: constraint.label,
         });
       }
     }
 
-    // ─── 6. Apply readiness adjustments ───
+    // ─── 6. Apply readiness + cross-module adjustments (Phase 4) ───
 
     const readinessAdj: any = {};
+    const crossModuleNotes: string[] = [];
 
+    // CNS readiness < 40
+    if (reactionScore < 40) {
+      crossModuleNotes.push("CNS readiness low — drill intensity reduced.");
+    }
+
+    // Sleep quality ≤ 2
+    if (sleepQuality <= 2) {
+      crossModuleNotes.push("Low sleep quality — explosive drills removed.");
+      prescribedDrills = prescribedDrills.filter((d) => !d.is_high_intensity);
+    }
+
+    // Stress level ≥ 4
+    if (stressLevel >= 4) {
+      readinessAdj.volume_modifier = Math.min(readinessAdj.volume_modifier ?? 1, 0.8);
+      crossModuleNotes.push("Elevated stress — volume reduced by 20%.");
+    }
+
+    // Fatigue / low readiness
     if (fatigueFlag || readinessScore < 40) {
       readinessAdj.volume_modifier = 0.7;
-      readinessAdj.note = "Volume reduced due to elevated fatigue indicators.";
+      crossModuleNotes.push("Elevated fatigue — volume reduced, high-intensity removed.");
       prescribedDrills = prescribedDrills.filter((d) => !d.is_high_intensity);
 
-      // If we filtered too many, add back recovery drills
       if (prescribedDrills.length === 0) {
-        prescribedDrills = PRESCRIPTIONS["fatigue_risk"]?.slice(0, 2).map((d) => ({
+        prescribedDrills = (PRESCRIPTIONS["fatigue_risk"] ?? []).slice(0, 2).map((d) => ({
           ...d,
           for_constraint: "fatigue_risk",
           constraint_label: "Neurological Fatigue Risk",
-        })) ?? [];
+        }));
       }
     } else if (readinessScore < 55) {
-      readinessAdj.volume_modifier = 0.85;
-      readinessAdj.note = "Slight volume reduction due to moderate recovery.";
+      readinessAdj.volume_modifier = Math.min(readinessAdj.volume_modifier ?? 1, 0.85);
+      crossModuleNotes.push("Moderate recovery — slight volume reduction.");
     }
 
-    // Ensure max 3 drills
+    if (crossModuleNotes.length > 0) {
+      readinessAdj.note = crossModuleNotes.join(" ");
+    }
+
     prescribedDrills = prescribedDrills.slice(0, 3);
+
+    // ─── 6b. Video Linking (Phase 4) — map sessions to constraints ───
+
+    const linkedSessions: Array<{ session_id: string; constraint_key: string }> = [];
+    if (sessions.length > 0) {
+      // Link most recent sessions to diagnosed constraints
+      for (const constraint of top3) {
+        const relevantSession = sessions[0]; // most recent
+        if (relevantSession?.id) {
+          linkedSessions.push({
+            session_id: relevantSession.id,
+            constraint_key: constraint.key,
+          });
+        }
+      }
+    }
 
     // ─── 7. Save to database ───
 
@@ -358,6 +457,8 @@ Deno.serve(async (req: Request) => {
       readiness_adjustments: readinessAdj,
       player_state: playerState,
       generated_at: new Date().toISOString(),
+      feedback_applied: feedbackApplied,
+      linked_sessions: linkedSessions,
     };
 
     const { data: savedPlan, error: saveError } = await supabase
@@ -368,10 +469,70 @@ Deno.serve(async (req: Request) => {
 
     if (saveError) {
       console.error("Save error:", saveError);
-      // Return plan anyway even if save fails
       return new Response(JSON.stringify({ plan: planRow, saved: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ─── 8. Write audit log entry ───
+
+    await serviceClient.from("udl_audit_log").insert({
+      action: "plan_generated",
+      user_id: userId,
+      metadata: {
+        plan_id: savedPlan?.id,
+        constraints: top3.map((c) => c.key),
+        drills: prescribedDrills.map((d: any) => d.drill_key),
+        feedback: feedbackApplied,
+      },
+    });
+
+    // ─── 9. Generate alerts (inline, Phase 3) ───
+
+    try {
+      // Check for performance drops vs 7-day rolling average
+      const { data: recentPlans } = await serviceClient
+        .from("udl_daily_plans")
+        .select("player_state, plan_date")
+        .eq("user_id", userId)
+        .gte("plan_date", sevenDaysAgo)
+        .neq("plan_date", today)
+        .order("plan_date", { ascending: false });
+
+      if (recentPlans && recentPlans.length >= 3) {
+        const scoreKeys = ["timing_score", "decision_score", "execution_score", "reaction_score", "explosiveness_score"];
+        for (const key of scoreKeys) {
+          const oldAvg =
+            recentPlans.reduce((sum: number, p: any) => sum + ((p.player_state as any)?.[key] ?? 50), 0) /
+            recentPlans.length;
+          const current = (playerState as any)[key] ?? 50;
+          if (typeof oldAvg === "number" && typeof current === "number" && oldAvg - current > 15) {
+            await serviceClient.from("udl_alerts").insert({
+              target_user_id: userId,
+              alert_type: "performance_drop",
+              severity: oldAvg - current > 25 ? "high" : "medium",
+              message: `${key.replace(/_/g, " ")} dropped ${Math.round(oldAvg - current)} points below 7-day average.`,
+              metadata: { score_key: key, current, rolling_avg: Math.round(oldAvg), delta: Math.round(oldAvg - current) },
+            });
+          }
+        }
+      }
+
+      // Check for consecutive fatigue
+      if (fatigueFlag && recentPlans && recentPlans.length >= 1) {
+        const yesterdayFatigue = (recentPlans[0]?.player_state as any)?.fatigue_flag;
+        if (yesterdayFatigue === true) {
+          await serviceClient.from("udl_alerts").insert({
+            target_user_id: userId,
+            alert_type: "fatigue_spike",
+            severity: "high",
+            message: "Fatigue flag active for 2+ consecutive days. Consider rest day.",
+            metadata: { readiness_score: readinessScore, consecutive_days: 2 },
+          });
+        }
+      }
+    } catch (alertErr) {
+      console.error("Alert generation error (non-fatal):", alertErr);
     }
 
     return new Response(JSON.stringify({ plan: savedPlan, cached: false }), {

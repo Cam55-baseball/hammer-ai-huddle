@@ -6,11 +6,13 @@ import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUDLPlan } from '@/hooks/useUDLPlan';
-import { Brain, ChevronDown, ChevronUp, Play, CheckCircle2, AlertTriangle, Dumbbell } from 'lucide-react';
+import { Brain, ChevronDown, ChevronUp, Play, CheckCircle2, AlertTriangle, Dumbbell, Video } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function DailyPlanCard() {
   const { plan, isLoading, completions, startDrill, completeDrill, getDrillStatus } = useUDLPlan();
   const [showDetails, setShowDetails] = useState(false);
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -27,14 +29,20 @@ export function DailyPlanCard() {
   }
 
   if (!plan || (plan.prescribed_drills?.length ?? 0) === 0) {
-    return null; // No plan or no constraints detected — don't show
+    return null;
   }
 
   const drills = plan.prescribed_drills ?? [];
   const constraints = plan.constraints_detected ?? [];
   const readinessNote = plan.readiness_adjustments?.note;
+  const linkedSessions = (plan as any).linked_sessions ?? [];
+  const feedbackApplied = (plan as any).feedback_applied ?? {};
   const completedCount = drills.filter((d) => getDrillStatus(d.drill_key) === 'completed').length;
   const progressPct = drills.length > 0 ? Math.round((completedCount / drills.length) * 100) : 0;
+
+  const getLinkedSession = (constraintKey: string) => {
+    return linkedSessions.find((ls: any) => ls.constraint_key === constraintKey);
+  };
 
   return (
     <Card className="border-primary/20">
@@ -58,8 +66,15 @@ export function DailyPlanCard() {
           </div>
         )}
 
+        {feedbackApplied?.reason && (
+          <div className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-1.5">
+            Difficulty adjusted: {feedbackApplied.reason}
+          </div>
+        )}
+
         {drills.map((drill) => {
           const status = getDrillStatus(drill.drill_key);
+          const linkedSession = getLinkedSession(drill.for_constraint);
 
           return (
             <div
@@ -118,6 +133,17 @@ export function DailyPlanCard() {
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     <span>Completed</span>
                   </div>
+                )}
+                {linkedSession && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs gap-1 text-muted-foreground"
+                    onClick={() => navigate(`/progress`)}
+                  >
+                    <Video className="h-3 w-3" />
+                    View Session
+                  </Button>
                 )}
               </div>
             </div>

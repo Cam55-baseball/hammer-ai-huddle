@@ -5080,6 +5080,63 @@ export type Database = {
         }
         Relationships: []
       }
+      udl_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          dismissed_by: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          severity: string
+          target_user_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          severity?: string
+          target_user_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          severity?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
+      udl_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       udl_constraint_overrides: {
         Row: {
           constraint_key: string
@@ -5113,8 +5170,10 @@ export type Database = {
       udl_daily_plans: {
         Row: {
           constraints_detected: Json | null
+          feedback_applied: Json | null
           generated_at: string | null
           id: string
+          linked_sessions: Json | null
           plan_date: string
           player_state: Json | null
           prescribed_drills: Json | null
@@ -5123,8 +5182,10 @@ export type Database = {
         }
         Insert: {
           constraints_detected?: Json | null
+          feedback_applied?: Json | null
           generated_at?: string | null
           id?: string
+          linked_sessions?: Json | null
           plan_date: string
           player_state?: Json | null
           prescribed_drills?: Json | null
@@ -5133,8 +5194,10 @@ export type Database = {
         }
         Update: {
           constraints_detected?: Json | null
+          feedback_applied?: Json | null
           generated_at?: string | null
           id?: string
+          linked_sessions?: Json | null
           plan_date?: string
           player_state?: Json | null
           prescribed_drills?: Json | null
@@ -5146,6 +5209,7 @@ export type Database = {
       udl_drill_completions: {
         Row: {
           completed_at: string | null
+          difficulty_level: number | null
           drill_key: string
           id: string
           plan_id: string
@@ -5155,6 +5219,7 @@ export type Database = {
         }
         Insert: {
           completed_at?: string | null
+          difficulty_level?: number | null
           drill_key: string
           id?: string
           plan_id: string
@@ -5164,6 +5229,7 @@ export type Database = {
         }
         Update: {
           completed_at?: string | null
+          difficulty_level?: number | null
           drill_key?: string
           id?: string
           plan_id?: string
