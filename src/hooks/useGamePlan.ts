@@ -955,11 +955,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const todayDayOfWeek = getDay(new Date()); // 0=Sun, 1=Mon, etc.
 
   // Smart default scheduling: only show training tasks on recommended days
+  // Use unified schedule logic: checks DB schedules first, then training defaults
   const shouldShowTrainingTask = (taskId: string): boolean => {
-    const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
-    if (!defaultDays) return true; // No default schedule defined, show every day
-
-    return defaultDays.includes(todayDayOfWeek);
+    return unifiedIsScheduledForDay(taskId, todayDayOfWeek);
   };
 
   // === FREE ACCESS TASKS (Available to all users with a profile) ===
