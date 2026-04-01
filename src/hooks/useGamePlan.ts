@@ -523,9 +523,12 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         // Check display settings first
         if (template.display_on_game_plan === false) return;
         
-        // Check calendar_skipped_items first (SINGLE SOURCE OF TRUTH for Repeat Weekly)
+        // Check date-specific skip (from game_plan_skipped_tasks, syncs with Calendar)
+        if (unifiedIsDateSkipped(`custom-${template.id}`, today)) return;
+        
+        // Check calendar_skipped_items (SINGLE SOURCE OF TRUTH for Repeat Weekly)
         const itemId = `template-${template.id}`;
-        const skipDays = skipItemsMap.get(itemId) || [];
+        const skipDays = unifiedSkipItems.get(itemId) || [];
         const isSkippedToday = skipDays.includes(todayDayOfWeek);
         
         // Check if there's a log for today
