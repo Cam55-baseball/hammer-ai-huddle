@@ -7,6 +7,7 @@ import { format, startOfMonth, endOfMonth, addDays, eachDayOfInterval, getDay } 
 import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame, Zap } from 'lucide-react';
 import { getOrderKey, CalendarDayOrder } from '@/hooks/useCalendarDayOrders';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
+import { useUnifiedSchedule } from '@/hooks/useUnifiedSchedule';
 
 // Helper to get the Game Plan task ID for a calendar event
 const getTaskIdForEvent = (event: { type: string; source: string }): string | null => {
@@ -192,6 +193,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
   const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({});
   const [loading, setLoading] = useState(true);
   const [currentRange, setCurrentRange] = useState<{ start: Date; end: Date } | null>(null);
+  const { skipItems: unifiedSkipItems } = useUnifiedSchedule(sport);
 
   // Check subscription access for programs (tier-aware)
   const hasHittingAccess = useMemo(() => 
@@ -365,6 +367,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           daysInRange.forEach(day => {
             const dayOfWeek = getDay(day);
             if (recurringDays.includes(dayOfWeek)) {
+              // Check calendar_skipped_items (unified schedule — consistent with Game Plan)
+              const skipDays = unifiedSkipItems.get(`template-${template.id}`) || [];
+              if (skipDays.includes(dayOfWeek)) return;
               const dateKey = format(day, 'yyyy-MM-dd');
               if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
               
@@ -838,7 +843,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     } finally {
       setLoading(false);
     }
-  }, [user, sport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess, getDaySchedule]);
+  }, [user, sport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess, getDaySchedule, unifiedSkipItems]);
 
   const addEvent = useCallback(async (event: CreateCalendarEvent): Promise<boolean> => {
     if (!user) return false;

@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import type { DayType } from '@/utils/tdeeCalculations';
+import { useQueryClient } from '@tanstack/react-query';
+import { UNIFIED_SCHEDULE_KEY } from '@/hooks/useUnifiedSchedule';
 
 export interface AthleteEvent {
   id: string;
@@ -28,6 +30,7 @@ export interface CreateEventInput {
 
 export function useAthleteEvents() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [events, setEvents] = useState<AthleteEvent[]>([]);
   const [todayEvent, setTodayEvent] = useState<AthleteEvent | null>(null);
   const [weekEvents, setWeekEvents] = useState<AthleteEvent[]>([]);
@@ -114,6 +117,7 @@ export function useAthleteEvents() {
         if (error) throw error;
 
         await fetchEvents();
+        queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
         toast.success('Event updated');
         return mapEvent(data);
       }
@@ -136,6 +140,7 @@ export function useAthleteEvents() {
       if (error) throw error;
 
       await fetchEvents();
+      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
       toast.success('Event added');
       return mapEvent(data);
     } catch (error) {
@@ -158,6 +163,7 @@ export function useAthleteEvents() {
       if (error) throw error;
 
       await fetchEvents();
+      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
       toast.success('Event removed');
       return true;
     } catch (error) {
