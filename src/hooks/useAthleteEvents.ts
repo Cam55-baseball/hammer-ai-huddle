@@ -140,6 +140,7 @@ export function useAthleteEvents() {
       if (error) throw error;
 
       await fetchEvents();
+      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
       toast.success('Event added');
       return mapEvent(data);
     } catch (error) {
