@@ -894,22 +894,23 @@ export function CalendarDaySheet({
         onToggleCheckbox={handleToggleCheckbox}
       />
 
-      {/* Edit Custom Activity Dialog */}
-      {selectedTask?.customActivityData?.template && (
+      {/* Edit Custom Activity Dialog — uses stable editingTemplate state */}
+      {editingTemplate && (
         <CustomActivityBuilderDialog
           open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          template={selectedTask.customActivityData.template}
+          onOpenChange={(open) => {
+            setEditDialogOpen(open);
+            if (!open) setEditingTemplate(null);
+          }}
+          template={editingTemplate}
           selectedSport={selectedSportForEdit}
           onSave={async (data) => {
-            const templateId = selectedTask.customActivityData?.template?.id;
-            if (templateId && selectedTask?.customActivityData) {
-              // OPTIMISTIC UPDATE: Apply changes immediately
-              updateSelectedTaskOptimistically(data as Partial<import('@/types/customActivity').CustomActivityTemplate>);
-              // Persist in background
+            const templateId = editingTemplate.id;
+            if (templateId) {
               await updateTemplate(templateId, data);
             }
             setEditDialogOpen(false);
+            setEditingTemplate(null);
             onRefresh?.();
           }}
         />
