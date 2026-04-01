@@ -7,6 +7,7 @@ import { format, startOfMonth, endOfMonth, addDays, eachDayOfInterval, getDay } 
 import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame, Zap } from 'lucide-react';
 import { getOrderKey, CalendarDayOrder } from '@/hooks/useCalendarDayOrders';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
+import { useUnifiedSchedule } from '@/hooks/useUnifiedSchedule';
 
 // Helper to get the Game Plan task ID for a calendar event
 const getTaskIdForEvent = (event: { type: string; source: string }): string | null => {
