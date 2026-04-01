@@ -193,6 +193,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
   const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({});
   const [loading, setLoading] = useState(true);
   const [currentRange, setCurrentRange] = useState<{ start: Date; end: Date } | null>(null);
+  const { skipItems: unifiedSkipItems } = useUnifiedSchedule(sport);
 
   // Check subscription access for programs (tier-aware)
   const hasHittingAccess = useMemo(() => 
