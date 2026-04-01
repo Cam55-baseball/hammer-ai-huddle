@@ -767,7 +767,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       if (template.display_on_game_plan === false) return;
 
       const itemId = `template-${template.id}`;
-      const skipDays = skipItemsMap.get(itemId) || [];
+      const skipDays = unifiedSkipItems.get(itemId) || [];
       const isSkippedToday = skipDays.includes(todayDayOfWeek);
 
       const todayLog = logs.find(l => l.template_id === template.id);
