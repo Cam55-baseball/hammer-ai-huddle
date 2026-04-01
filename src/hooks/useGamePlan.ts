@@ -654,23 +654,14 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         setFolderTasks([]);
       }
 
-      // === FETCH SCHEDULED PRACTICE SESSIONS FOR TODAY ===
-      const { data: scheduledData } = await supabase
-        .from('scheduled_practice_sessions' as any)
-        .select('*')
-        .neq('status', 'cancelled');
-
-      if (scheduledData) {
-        const todayScheduled = (scheduledData as any[]).filter(s => {
-          if (s.status === 'cancelled') return false;
-          if (s.scheduled_date === today) return true;
-          if (s.recurring_active && s.recurring_days?.includes(todayDayOfWeek) && s.scheduled_date <= today) return true;
-          return false;
-        });
-        setScheduledSessions(todayScheduled);
-      } else {
-        setScheduledSessions([]);
-      }
+      // === SCHEDULED PRACTICE SESSIONS FOR TODAY (from unified schedule) ===
+      const todayScheduled = unifiedScheduledSessions.filter((s: any) => {
+        if (s.status === 'cancelled') return false;
+        if (s.scheduled_date === today) return true;
+        if (s.recurring_active && s.recurring_days?.includes(todayDayOfWeek) && s.scheduled_date <= today) return true;
+        return false;
+      });
+      setScheduledSessions(todayScheduled);
 
 
       const { data: streakData } = await supabase
