@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import type { DayType } from '@/utils/tdeeCalculations';
+import { useQueryClient } from '@tanstack/react-query';
+import { UNIFIED_SCHEDULE_KEY } from '@/hooks/useUnifiedSchedule';
 
 export interface AthleteEvent {
   id: string;
