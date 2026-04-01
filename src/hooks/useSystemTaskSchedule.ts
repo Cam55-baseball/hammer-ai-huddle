@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getDay } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
+import { UNIFIED_SCHEDULE_KEY } from '@/hooks/useUnifiedSchedule';
 
 export interface TaskSchedule {
   id: string;
