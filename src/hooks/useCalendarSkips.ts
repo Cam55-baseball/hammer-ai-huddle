@@ -14,6 +14,7 @@ export interface SkippedItem {
 
 export function useCalendarSkips() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [skippedItems, setSkippedItems] = useState<SkippedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
