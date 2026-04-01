@@ -1,129 +1,100 @@
-# Unify Scheduling: Zero Fragmentation
 
-## Problem
+Root cause
 
-The app has **two independent scheduling engines** that query overlapping data sources with different logic:
+- The unresolved failure is a client-side state/lifecycle bug in the Calendar custom-activity edit flow.
+- Exact failure point:
+  - `src/components/calendar/CalendarDaySheet.tsx` opens the builder from `handleEditFromDetail()`
+  - that handler calls `closeDetailDialog()`
+  - `src/hooks/useCalendarActivityDetail.ts` clears `selectedTask` inside `closeDetailDialog()`
+  - but the builder is rendered only when `selectedTask?.customActivityData?.template` exists
+- Result: the template state is destroyed before the builder can mount, so users are dropped back to the underlying screen and experience it as being “kicked out”.
 
-1. `**useGamePlan**` (1391 lines) — Builds today's task list by independently querying `custom_activity_templates`, `custom_activity_logs`, `calendar_skipped_items`, `game_plan_task_schedule`, `scheduled_practice_sessions`, `activity_folders`, and applies its own day-of-week filtering.
-2. `**useCalendar**` (1002 lines) — Builds the calendar view by querying the same tables plus `athlete_events`, `calendar_events`, `vault_meal_plans`, `game_plan_skipped_tasks`, and `calendar_day_orders`.
+What this is and is not
 
-These two hooks do NOT share state. When a user skips a task in Game Plan, the Calendar may not reflect it (and vice versa). When a recurring custom activity is modified, both hooks re-query independently with slightly different filtering logic. The result: missed events, ghost events, and inconsistent state.
+- State management: Yes, this is the root cause.
+- Routing/navigation: Not a router redirect; it only looks like one because the modal state collapses.
+- Memory leak/component crash: No evidence.
+- Permission/auth handling: Not the primary issue in this path.
+- Backend function issue: No evidence; this failing path does not depend on a backend function before the exit happens.
 
-### Specific Fragmentation Points
+Evidence from current code/logs
 
+- The failing path is visible directly in code:
+  - `CalendarDaySheet.tsx` edit handoff
+  - `useCalendarActivityDetail.ts` clearing `selectedTask`
+  - builder render guarded by `selectedTask`
+- Current console snapshot does not show a Custom Activity Builder exception.
+- Current logs mainly show unrelated warnings:
+  - missing service worker `sw.js` 404
+  - missing dialog description warnings
+  - role debug logs
+- The latest network snapshot does not show custom activity save requests tied to this failure, which supports that the exit happens before save/network execution.
 
-| Data                       | Game Plan reads from                                 | Calendar reads from                                            | Conflict?                                        |
-| -------------------------- | ---------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
-| Custom activity days       | `template.recurring_days` + `calendar_skipped_items` | `template.recurring_days` + `template.display_days`            | Yes — different fallback logic                   |
-| System task days           | `TRAINING_DEFAULT_SCHEDULES` (hardcoded)             | `game_plan_task_schedule` table + `TRAINING_DEFAULT_SCHEDULES` | Yes — Game Plan ignores DB schedules for display |
-| Date-specific skips        | `game_plan_skipped_tasks` (NOT queried)              | `game_plan_skipped_tasks` (queried and filtered)               | Yes — Game Plan doesn't filter by date skips     |
-| Athlete events (game/rest) | NOT queried                                          | Queried from `athlete_events`                                  | Yes — Game Plan doesn't know about game days     |
-| Scheduled practices        | Queried independently                                | Queried independently                                          | Duplicate queries, possible drift                |
+Why this was not resolved earlier
 
+- Earlier fixes targeted auth/session drift, role loading, coach access, and scheduling sync.
+- Those were separate issues and would not fix this one because this bug happens locally in the UI before any backend call.
+- This is a silent state teardown, not a thrown crash, so it is easy to miss unless this exact calendar edit path is reviewed.
 
-## Solution: Shared Scheduling Core
+Permanent fix
 
-### New file: `src/hooks/useUnifiedSchedule.ts`
+1. Decouple builder state from detail-dialog state in `src/components/calendar/CalendarDaySheet.tsx`
+   - add dedicated `editingTemplate` state
+   - optionally add `editingTemplateId` for save/delete stability
 
-A single hook that:
+2. Change the edit flow
+   - when user taps Edit, snapshot the template into `editingTemplate`
+   - open the builder from that stable snapshot
+   - only then close the detail dialog
 
-1. Queries ALL scheduling tables once (the union of what both hooks need)
-2. Builds a normalized `ScheduledEvent[]` array for any date range
-3. Exposes helper functions: `getEventsForDate(date)`, `isTaskScheduledForDate(taskId, date)`, `getSkipState(taskId, date)`
-4. Uses React Query with a shared cache key so both Game Plan and Calendar read from the same data
-5. Subscribes to Realtime on all relevant tables for instant cross-component sync
+3. Render the builder from stable edit state
+   - stop rendering it from `selectedTask`
+   - render it from `editingTemplate`
 
-```text
-┌─────────────────────────────────┐
-│     useUnifiedSchedule          │
-│  (single query + cache layer)   │
-│                                 │
-│  Sources:                       │
-│  - game_plan_task_schedule      │
-│  - calendar_skipped_items       │
-│  - game_plan_skipped_tasks      │
-│  - custom_activity_templates    │
-│  - custom_activity_logs         │
-│  - athlete_events               │
-│  - calendar_events              │
-│  - scheduled_practice_sessions  │
-│  - activity_folders + items     │
-│  - vault_meal_plans             │
-│  - sub_module_progress          │
-│  - calendar_day_orders          │
-│  - TRAINING_DEFAULT_SCHEDULES   │
-├─────────────────────────────────┤
-│  Consumers:                     │
-│  ├── useGamePlan (today only)   │
-│  ├── useCalendar (date range)   │
-│  └── GamePlanCalendarView       │
-└─────────────────────────────────┘
-```
+4. Save/delete against stable edit state
+   - use `editingTemplate.id` instead of `selectedTask.customActivityData.template.id`
+   - clear `editingTemplate` only when the builder actually closes
 
-### Changes to existing files
+5. Keep detail state and edit state fully separate
+   - `closeDetailDialog()` should only manage detail state
+   - the builder must never depend on state that another dialog clears
 
-`**src/hooks/useGamePlan.ts**`
+6. Add hardening
+   - guard edit open if no template snapshot exists
+   - keep refresh after save so Calendar/Game Plan stay synced
+   - optionally add lightweight builder open/close logs and proper `DialogDescription` to reduce console noise
 
-- Unify and coordinate all independent scheduling queries (templates, logs, skips, scheduled sessions, folder items) with the major schedules of game plan and calendar. Nothing Independent
-- Import `useUnifiedSchedule` and call `getEventsForDate(today)` to get today's items
-- Keep task-building logic (the `tasks.push(...)` section) but source completion status and visibility from the unified layer
-- Keep completion toggling and optimistic updates (these are write operations, not scheduling reads)
+Files
 
-`**src/hooks/useCalendar.ts**`
+- `src/components/calendar/CalendarDaySheet.tsx` — core permanent fix
+- `src/hooks/useCalendarActivityDetail.ts` — only if a small API cleanup is needed
+- `src/components/CustomActivityDetailDialog.tsx` — optional UX hardening only
 
-- Remove the 600-line `fetchEventsForRange` function that independently queries all tables
-- Import `useUnifiedSchedule` and call `getEventsForRange(start, end)` to get calendar events
-- Keep `addEvent`, `updateEvent`, `deleteEvent` (write operations) and have them invalidate the shared cache
-- Keep sorting/ordering logic (date-specific locks, weekly locks)
+Safeguards to prevent future forced exits
 
-`**src/hooks/useCalendarSkips.ts**`
+- Audit every Custom Activity Builder entry point and enforce the same rule:
+  - builder must always be controlled by its own stable create/edit state
+  - never by transient selection state owned by another dialog
+- The calendar flow is the known offender; Templates/Game Plan/Folders already follow the safer pattern more closely.
 
-- Keep as a write-only hook for modifying skip state
-- After any mutation, invalidate the unified schedule cache key
-- Remove its own Realtime subscription (unified hook handles it)
+Verification after implementation
 
-`**src/hooks/useSystemTaskSchedule.ts**`
+- Desktop and mobile:
+  1. My Custom Activities → Create New → Save / Cancel
+  2. My Custom Activities → Edit Existing → Save / Cancel
+  3. Dashboard/Game Plan → open custom activity detail → Edit → Save
+  4. Calendar → open day sheet → open custom activity detail → Edit → Save / Cancel
+  5. Received activity → Accept → Customize → Save
+  6. Folder item → Create / Edit
+- Confirm:
+  - no forced exit
+  - no route jump
+  - builder stays mounted until user closes it
+  - save requests actually fire
+  - edited data persists and refreshes correctly
 
-- Keep as a write-only hook for saving schedule preferences
-- After `saveSchedule()`, invalidate the unified schedule cache key
-- Remove independent `fetchSchedules()` for read — reads come from unified hook
+Technical details
 
-`**src/hooks/useRescheduleEngine.ts**`
-
-- Keep all write operations (skipDay, pushForward, etc.)
-- `invalidateAll()` already invalidates both calendar and gameplan queries — add the unified cache key
-
-`**src/hooks/useAthleteEvents.ts**`
-
-- Keep `createEvent`, `deleteEvent` write operations
-- After mutations, invalidate unified schedule cache
-- Remove independent `fetchEvents` for read — reads flow through unified hook
-
-### Key implementation details
-
-- **React Query cache key**: `['unified-schedule', user.id]` — single source of truth
-- **Realtime channels**: One channel subscribing to changes on `calendar_skipped_items`, `game_plan_skipped_tasks`, `game_plan_task_schedule`, `custom_activity_templates`, `athlete_events`, `calendar_events`, `scheduled_practice_sessions`
-- **Stale time**: 30 seconds (data changes infrequently, Realtime handles instant updates)
-- **The unified query function** fetches all tables in a single `Promise.all` (same pattern as current `useCalendar.fetchEventsForRange` but with the Game Plan's filtering logic merged in)
-- **Custom activity filtering**: Use the Game Plan's logic (check `calendar_skipped_items` FIRST as single source of truth, then fall back to template settings) — this is the correct logic that Calendar was missing
-
-### What does NOT change
-
-- No database schema changes needed
-- No new tables or migrations
-- All write operations stay in their current hooks
-- UI components continue to use `useGamePlan` and `useCalendar` — they just get consistent data now
-- `GamePlanCalendarView`, `CalendarDaySheet`, `CalendarView` components unchanged
-
-## Files
-
-
-| File                                 | Action                                                                   |
-| ------------------------------------ | ------------------------------------------------------------------------ |
-| `src/hooks/useUnifiedSchedule.ts`    | **Create** — shared scheduling data layer                                |
-| `src/hooks/useGamePlan.ts`           | **Modify** — remove independent scheduling queries, consume unified hook |
-| `src/hooks/useCalendar.ts`           | **Modify** — remove independent fetching, consume unified hook           |
-| `src/hooks/useCalendarSkips.ts`      | **Modify** — invalidate unified cache on mutations                       |
-| `src/hooks/useSystemTaskSchedule.ts` | **Modify** — invalidate unified cache on mutations                       |
-| `src/hooks/useRescheduleEngine.ts`   | **Modify** — add unified cache key to `invalidateAll()`                  |
-| `src/hooks/useAthleteEvents.ts`      | **Modify** — invalidate unified cache on mutations                       |
+- No database migration is needed.
+- No backend-function permission rewrite is needed for this issue.
+- The exact unresolved problem is a modal-state ownership bug, not a backend/auth crash.
