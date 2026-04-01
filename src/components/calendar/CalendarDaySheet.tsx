@@ -292,6 +292,7 @@ export function CalendarDaySheet({
   const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<import('@/types/customActivity').CustomActivityTemplate | null>(null);
   const [restSchedulerOpen, setRestSchedulerOpen] = useState(false);
 
   // Combined loading state for lock data
@@ -474,10 +475,13 @@ export function CalendarDaySheet({
     }
   };
 
-  // Handle edit from detail dialog
+  // Handle edit from detail dialog — snapshot template BEFORE closing detail
   const handleEditFromDetail = () => {
-    closeDetailDialog();
+    const template = selectedTask?.customActivityData?.template;
+    if (!template) return;
+    setEditingTemplate({ ...template });
     setEditDialogOpen(true);
+    closeDetailDialog();
   };
 
   const isCompletable = (event: CalendarEvent) => event.type === 'custom_activity';
@@ -890,22 +894,23 @@ export function CalendarDaySheet({
         onToggleCheckbox={handleToggleCheckbox}
       />
 
-      {/* Edit Custom Activity Dialog */}
-      {selectedTask?.customActivityData?.template && (
+      {/* Edit Custom Activity Dialog — uses stable editingTemplate state */}
+      {editingTemplate && (
         <CustomActivityBuilderDialog
           open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          template={selectedTask.customActivityData.template}
+          onOpenChange={(open) => {
+            setEditDialogOpen(open);
+            if (!open) setEditingTemplate(null);
+          }}
+          template={editingTemplate}
           selectedSport={selectedSportForEdit}
           onSave={async (data) => {
-            const templateId = selectedTask.customActivityData?.template?.id;
-            if (templateId && selectedTask?.customActivityData) {
-              // OPTIMISTIC UPDATE: Apply changes immediately
-              updateSelectedTaskOptimistically(data as Partial<import('@/types/customActivity').CustomActivityTemplate>);
-              // Persist in background
+            const templateId = editingTemplate.id;
+            if (templateId) {
               await updateTemplate(templateId, data);
             }
             setEditDialogOpen(false);
+            setEditingTemplate(null);
             onRefresh?.();
           }}
         />
