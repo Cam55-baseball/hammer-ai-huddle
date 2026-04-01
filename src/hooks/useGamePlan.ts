@@ -93,6 +93,15 @@ const STRENGTH_TRAINING_DAYS = [1, 5];
 export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
   const { modules: subscribedModules } = useSubscription();
+  const {
+    templates: unifiedTemplates,
+    skipItems: unifiedSkipItems,
+    isTaskScheduledForDay: unifiedIsScheduledForDay,
+    isDateSkipped: unifiedIsDateSkipped,
+    playerFolders: unifiedPlayerFolders,
+    coachFolderIds: unifiedCoachFolderIds,
+    scheduledPracticeSessions: unifiedScheduledSessions,
+  } = useUnifiedSchedule(selectedSport);
   const [loading, setLoading] = useState(true);
   const currentDateRef = useRef(getTodayDate());
   const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({});
