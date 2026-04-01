@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getDay } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
+import { UNIFIED_SCHEDULE_KEY } from '@/hooks/useUnifiedSchedule';
 
 export interface SkippedItem {
   id: string;
