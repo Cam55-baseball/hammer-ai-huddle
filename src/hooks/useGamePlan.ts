@@ -752,32 +752,15 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     const today = getTodayDate();
     const todayDayOfWeek = getDay(new Date());
 
-    const [{ data: templatesData }, { data: logsData }, { data: skipItemsData }] = await Promise.all([
-      supabase
-        .from('custom_activity_templates')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('sport', selectedSport)
-        .is('deleted_at', null),
-      supabase
-        .from('custom_activity_logs')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('entry_date', today),
-      supabase
-        .from('calendar_skipped_items')
-        .select('item_id, skip_days, item_type')
-        .eq('user_id', user.id)
-        .in('item_type', ['custom_activity', 'game_plan']),
-    ]);
+    // Templates and skip items come from unified schedule (shared with Calendar)
+    const { data: logsData } = await supabase
+      .from('custom_activity_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('entry_date', today);
 
-    const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
+    const templates = unifiedTemplates as unknown as CustomActivityTemplate[];
     const logs = (logsData || []) as unknown as CustomActivityLog[];
-
-    const skipItemsMap = new Map<string, number[]>();
-    (skipItemsData || []).forEach(item => {
-      skipItemsMap.set(item.item_id, item.skip_days || []);
-    });
 
     const refreshed: CustomActivityWithLog[] = [];
     templates.forEach(template => {
