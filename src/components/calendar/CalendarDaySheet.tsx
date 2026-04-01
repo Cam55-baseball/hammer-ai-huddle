@@ -475,10 +475,13 @@ export function CalendarDaySheet({
     }
   };
 
-  // Handle edit from detail dialog
+  // Handle edit from detail dialog — snapshot template BEFORE closing detail
   const handleEditFromDetail = () => {
-    closeDetailDialog();
+    const template = selectedTask?.customActivityData?.template;
+    if (!template) return;
+    setEditingTemplate({ ...template });
     setEditDialogOpen(true);
+    closeDetailDialog();
   };
 
   const isCompletable = (event: CalendarEvent) => event.type === 'custom_activity';
