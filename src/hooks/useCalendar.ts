@@ -367,6 +367,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           daysInRange.forEach(day => {
             const dayOfWeek = getDay(day);
             if (recurringDays.includes(dayOfWeek)) {
+              // Check calendar_skipped_items (unified schedule — consistent with Game Plan)
+              const skipDays = unifiedSkipItems.get(`template-${template.id}`) || [];
+              if (skipDays.includes(dayOfWeek)) return;
               const dateKey = format(day, 'yyyy-MM-dd');
               if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
               
