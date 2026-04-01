@@ -504,35 +504,16 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       // Fetch custom activities for today
       const todayDayOfWeek = getDay(new Date()); // 0 = Sunday, 6 = Saturday
       
-      // Fetch all templates for this sport
-      const { data: templatesData } = await supabase
-        .from('custom_activity_templates')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('sport', selectedSport)
-        .is('deleted_at', null);
-
-      // Fetch today's logs
+      // Templates & skip items come from unified schedule (shared with Calendar)
+      
+      // Fetch only today's logs (date-specific, not cached in unified hook)
       const { data: logsData } = await supabase
         .from('custom_activity_logs')
         .select('*')
         .eq('user_id', user.id)
         .eq('entry_date', today);
 
-      // Fetch skip days from calendar_skipped_items (SINGLE SOURCE OF TRUTH for Repeat Weekly)
-      // Include BOTH custom_activity and game_plan types
-      const { data: skipItemsData } = await supabase
-        .from('calendar_skipped_items')
-        .select('item_id, skip_days, item_type')
-        .eq('user_id', user.id)
-        .in('item_type', ['custom_activity', 'game_plan']);
-
-      const skipItemsMap = new Map<string, number[]>();
-      (skipItemsData || []).forEach(item => {
-        skipItemsMap.set(item.item_id, item.skip_days || []);
-      });
-
-      const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
+      const templates = unifiedTemplates as unknown as CustomActivityTemplate[];
       const logs = (logsData || []) as unknown as CustomActivityLog[];
 
       // Build custom activities list
