@@ -125,6 +125,9 @@ export function useCalendarSkips() {
         }];
       });
 
+      // Invalidate unified schedule so Calendar + Game Plan both see the update
+      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
+
       return true;
     } catch (err) {
       console.error('Error in updateSkipDays:', err);
