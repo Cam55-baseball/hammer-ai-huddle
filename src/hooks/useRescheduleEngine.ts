@@ -23,6 +23,7 @@ export function useRescheduleEngine() {
     queryClient.invalidateQueries({ queryKey: ['calendar'] });
     queryClient.invalidateQueries({ queryKey: ['gameplan'] });
     queryClient.invalidateQueries({ queryKey: ['game-plan-skipped'] });
+    queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
   }, [queryClient]);
 
   /** Bulk-skip all given task IDs for a specific date */

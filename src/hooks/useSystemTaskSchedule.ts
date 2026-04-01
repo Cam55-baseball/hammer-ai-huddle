@@ -110,6 +110,8 @@ export function useSystemTaskSchedule() {
         }));
       }
 
+      // Invalidate unified schedule cache so Calendar + Game Plan both see the update
+      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
       toast.success(t('gamePlan.taskSchedule.saved', 'Schedule saved'));
       return true;
     } catch (error: any) {
