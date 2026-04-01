@@ -1338,14 +1338,17 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   });
 
-  const completedCount = tasks.filter(t => t.completed).length;
+  // Filter out tasks that are specifically skipped for today (game_plan_skipped_tasks)
+  const todayStr = getTodayDate();
+  const visibleTasks = tasks.filter(t => !unifiedIsDateSkipped(t.id, todayStr));
+  const completedCount = visibleTasks.filter(t => t.completed).length;
 
   return {
-    tasks,
+    tasks: visibleTasks,
     customActivities,
     folderTasks,
     completedCount,
-    totalCount: tasks.length,
+    totalCount: visibleTasks.length,
     daysUntilRecap,
     recapProgress,
     loading,
