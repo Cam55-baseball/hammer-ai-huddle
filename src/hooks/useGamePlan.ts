@@ -701,7 +701,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     } finally {
       setLoading(false);
     }
-  }, [user, selectedSport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess]);
+  }, [user, selectedSport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess,
+      unifiedTemplates, unifiedSkipItems, unifiedPlayerFolders, unifiedCoachFolderIds,
+      unifiedScheduledSessions, unifiedIsDateSkipped]);
 
   useEffect(() => {
     fetchTaskStatus();
