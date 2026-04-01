@@ -30,6 +30,7 @@ export interface CreateEventInput {
 
 export function useAthleteEvents() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [events, setEvents] = useState<AthleteEvent[]>([]);
   const [todayEvent, setTodayEvent] = useState<AthleteEvent | null>(null);
   const [weekEvents, setWeekEvents] = useState<AthleteEvent[]>([]);
