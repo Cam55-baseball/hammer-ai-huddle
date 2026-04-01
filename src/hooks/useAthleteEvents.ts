@@ -163,6 +163,7 @@ export function useAthleteEvents() {
       if (error) throw error;
 
       await fetchEvents();
+      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
       toast.success('Event removed');
       return true;
     } catch (error) {

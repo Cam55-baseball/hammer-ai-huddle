@@ -160,6 +160,9 @@ export function useCalendarSkips() {
         prev.filter(s => !(s.item_id === itemId && s.item_type === itemType))
       );
 
+      // Invalidate unified schedule so Calendar + Game Plan both see the update
+      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
+
       return true;
     } catch (err) {
       console.error('Error in removeSkip:', err);
