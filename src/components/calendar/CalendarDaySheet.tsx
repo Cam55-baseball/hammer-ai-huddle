@@ -292,6 +292,7 @@ export function CalendarDaySheet({
   const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<import('@/types/customActivity').CustomActivityTemplate | null>(null);
   const [restSchedulerOpen, setRestSchedulerOpen] = useState(false);
 
   // Combined loading state for lock data
