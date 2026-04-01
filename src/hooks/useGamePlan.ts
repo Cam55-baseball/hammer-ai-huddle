@@ -7,6 +7,7 @@ import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
 import { ActivityFolder, ActivityFolderItem, getCurrentCycleWeek } from '@/types/activityFolder';
+import { useUnifiedSchedule } from '@/hooks/useUnifiedSchedule';
 
 export interface FolderGamePlanTask {
   folderId: string;
