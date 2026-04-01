@@ -568,36 +568,19 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       // === FETCH FOLDER ITEMS FOR GAME PLAN ===
       const todayDow = todayDayOfWeek; // already computed above
       
-      // 1. Player-owned active folders
-      const { data: playerFoldersData } = await supabase
-        .from('activity_folders')
-        .select('*')
-        .eq('owner_id', user.id)
-        .eq('owner_type', 'player')
-        .eq('sport', selectedSport)
-        .eq('status', 'active');
-
-      // 2. Coach-assigned accepted folders
-      const { data: assignmentsData } = await supabase
-        .from('folder_assignments')
-        .select('folder_id')
-        .eq('recipient_id', user.id)
-        .eq('status', 'accepted');
-
-      const assignedFolderIds = (assignmentsData || []).map((a: any) => a.folder_id);
-      
+      // Folders come from unified schedule (shared with Calendar)
       let coachFolders: any[] = [];
-      if (assignedFolderIds.length > 0) {
+      if (unifiedCoachFolderIds.length > 0) {
         const { data: coachFoldersData } = await supabase
           .from('activity_folders')
           .select('*')
-          .in('id', assignedFolderIds)
+          .in('id', unifiedCoachFolderIds)
           .eq('status', 'active');
         coachFolders = coachFoldersData || [];
       }
 
       const allFolders = [
-        ...((playerFoldersData || []) as unknown as ActivityFolder[]),
+        ...(unifiedPlayerFolders as unknown as ActivityFolder[]),
         ...(coachFolders as unknown as ActivityFolder[]),
       ];
 
