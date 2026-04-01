@@ -805,7 +805,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     );
 
     setCustomActivities(deduped);
-  }, [user, selectedSport, folderTasks]);
+  }, [user, selectedSport, folderTasks, unifiedTemplates, unifiedSkipItems]);
 
   // Toggle folder item completion
   const toggleFolderItemCompletion = useCallback(async (itemId: string, performanceData?: any) => {

@@ -843,7 +843,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     } finally {
       setLoading(false);
     }
-  }, [user, sport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess, getDaySchedule]);
+  }, [user, sport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess, getDaySchedule, unifiedSkipItems]);
 
   const addEvent = useCallback(async (event: CreateCalendarEvent): Promise<boolean> => {
     if (!user) return false;
