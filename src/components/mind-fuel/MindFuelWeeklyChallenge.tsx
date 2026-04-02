@@ -20,72 +20,10 @@ import {
   Timer
 } from 'lucide-react';
 
-// ── Inline display map for ALL 52 challenges ──
-const CHALLENGE_DISPLAY: Record<string, { title: string; description: string }> = {
-  gratitude_journal: { title: 'Gratitude Journal', description: 'Write down 3 things you\'re grateful for each day.' },
-  visualization_practice: { title: 'Visualization Practice', description: 'Spend 5 minutes visualizing your best performance.' },
-  positive_self_talk: { title: 'Positive Self-Talk', description: 'Replace negative thoughts with positive affirmations.' },
-  breathing_exercises: { title: 'Breathing Exercises', description: 'Practice 4-7-8 breathing before each session.' },
-  mindful_eating: { title: 'Mindful Eating', description: 'Eat one meal per day without distractions.' },
-  cold_shower: { title: 'Cold Shower Challenge', description: 'End your shower with 30 seconds of cold water.' },
-  sleep_routine: { title: 'Sleep Routine', description: 'Go to bed and wake up at the same time each day.' },
-  no_phone_morning: { title: 'No Phone Morning', description: 'Avoid your phone for the first 30 minutes after waking.' },
-  hydration_tracker: { title: 'Hydration Tracker', description: 'Drink at least 64 oz of water daily.' },
-  journaling: { title: 'Daily Journaling', description: 'Write for 10 minutes about your goals and progress.' },
-  meditation: { title: 'Daily Meditation', description: 'Meditate for at least 5 minutes each day.' },
-  stretch_routine: { title: 'Stretch Routine', description: 'Complete a 10-minute stretch routine daily.' },
-  reading_habit: { title: 'Reading Habit', description: 'Read for 15 minutes about sports psychology or leadership.' },
-  acts_of_kindness: { title: 'Acts of Kindness', description: 'Do one kind thing for a teammate each day.' },
-  no_complaining: { title: 'No Complaining', description: 'Go the entire day without complaining.' },
-  early_riser: { title: 'Early Riser', description: 'Wake up 30 minutes earlier than usual.' },
-  digital_detox: { title: 'Digital Detox', description: 'Limit screen time to under 2 hours outside of school/work.' },
-  goal_setting: { title: 'Goal Setting', description: 'Write and review your short-term and long-term goals.' },
-  focus_training: { title: 'Focus Training', description: 'Practice a focus drill for 5 minutes daily.' },
-  confidence_builder: { title: 'Confidence Builder', description: 'List 3 things you did well after each practice.' },
-  team_first: { title: 'Team First', description: 'Encourage a teammate or help someone improve.' },
-  pressure_simulation: { title: 'Pressure Simulation', description: 'Simulate high-pressure situations in practice.' },
-  recovery_focus: { title: 'Recovery Focus', description: 'Prioritize active recovery with foam rolling or ice baths.' },
-  nutrition_log: { title: 'Nutrition Log', description: 'Track your meals and aim for balanced nutrition.' },
-  film_study: { title: 'Film Study', description: 'Watch 15 minutes of game film or technique videos.' },
-  mental_reset: { title: 'Mental Reset', description: 'Practice a mental reset routine between plays.' },
-  body_language: { title: 'Body Language', description: 'Maintain confident body language throughout practice.' },
-  pre_game_routine: { title: 'Pre-Game Routine', description: 'Develop and follow a consistent pre-game routine.' },
-  accountability_partner: { title: 'Accountability Partner', description: 'Check in with a partner about your goals daily.' },
-  failure_reframe: { title: 'Failure Reframe', description: 'Reframe one failure as a learning opportunity each day.' },
-  energy_management: { title: 'Energy Management', description: 'Monitor and manage your energy levels throughout the day.' },
-  process_over_results: { title: 'Process Over Results', description: 'Focus on effort and technique, not outcomes.' },
-  emotional_awareness: { title: 'Emotional Awareness', description: 'Identify and name your emotions 3 times daily.' },
-  controlled_aggression: { title: 'Controlled Aggression', description: 'Channel intensity with composure in every session.' },
-  patience_practice: { title: 'Patience Practice', description: 'Practice patience in one challenging situation daily.' },
-  self_compassion: { title: 'Self-Compassion', description: 'Treat yourself with kindness after mistakes.' },
-  competitive_mindset: { title: 'Competitive Mindset', description: 'Approach every drill like it\'s game day.' },
-  leadership_action: { title: 'Leadership Action', description: 'Take one leadership action each day.' },
-  communication_skills: { title: 'Communication Skills', description: 'Practice clear, direct communication with teammates.' },
-  coachability: { title: 'Coachability', description: 'Ask for and apply one piece of feedback daily.' },
-  adversity_response: { title: 'Adversity Response', description: 'Respond to adversity with composure and determination.' },
-  time_management: { title: 'Time Management', description: 'Plan your day the night before.' },
-  effort_consistency: { title: 'Effort Consistency', description: 'Give maximum effort on every rep, every day.' },
-  mindset_shift: { title: 'Mindset Shift', description: 'Identify one limiting belief and challenge it.' },
-  present_moment: { title: 'Present Moment', description: 'Stay fully present during practice — no drifting.' },
-  routine_mastery: { title: 'Routine Mastery', description: 'Perfect your between-play and pre-pitch routine.' },
-  fear_facing: { title: 'Face Your Fear', description: 'Do one thing that challenges your comfort zone.' },
-  rest_day_discipline: { title: 'Rest Day Discipline', description: 'Honor your rest days fully — recover like a pro.' },
-  teammate_appreciation: { title: 'Teammate Appreciation', description: 'Tell a teammate what you respect about their game.' },
-  mental_toughness: { title: 'Mental Toughness', description: 'Push through discomfort in practice without quitting.' },
-  purpose_reminder: { title: 'Purpose Reminder', description: 'Remind yourself why you play — write it down.' },
-  consistency_streak: { title: 'Consistency Streak', description: 'Show up and give your best for 7 straight days.' },
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  mental_mastery: 'Mental Mastery',
-  emotional_balance: 'Emotional Balance',
-  leadership: 'Leadership',
-  life_mastery: 'Life Mastery',
-};
-
+// Category-specific colors for badges
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   mental_mastery: { bg: 'bg-violet-500/20', text: 'text-violet-300', border: 'border-violet-500/30' },
-  emotional_balance: { bg: 'bg-sky-500/20', text: 'text-sky-300', border: 'border-sky-500/30' },
+  emotional_balance: { bg: 'bg-sky-500/20', text: 'text-red-400', border: 'border-sky-500/30' },
   leadership: { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
   life_mastery: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
 };
@@ -118,57 +56,94 @@ interface WeeklyChallengeResponse {
   cooldownEndsAt?: string | null;
 }
 
+// Challenge complete confetti animation
 function triggerChallengeCompleteConfetti() {
   const container = document.createElement('div');
-  container.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;`;
+  container.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  `;
   document.body.appendChild(container);
 
+  // Amber/orange/red themed colors for challenge completion
   const colors = ['#f59e0b', '#f97316', '#ef4444', '#eab308', '#fb923c', '#fbbf24'];
-  for (let i = 0; i < 80; i++) {
+  const particleCount = 80;
+
+  for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');
     const color = colors[Math.floor(Math.random() * colors.length)];
     const size = Math.random() * 12 + 6;
-    particle.style.cssText = `position:absolute;width:${size}px;height:${size}px;background:${color};left:${Math.random()*100}%;top:-20px;border-radius:${Math.random()>0.5?'50%':'2px'};animation:challenge-confetti-fall ${Math.random()*2.5+2}s ease-out ${Math.random()*0.8}s forwards;transform:rotate(${Math.random()*1080}deg);`;
+    const left = Math.random() * 100;
+    const animationDuration = Math.random() * 2.5 + 2;
+    const delay = Math.random() * 0.8;
+    const rotation = Math.random() * 1080;
+
+    particle.style.cssText = `
+      position: absolute;
+      width: ${size}px;
+      height: ${size}px;
+      background-color: ${color};
+      left: ${left}%;
+      top: -20px;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      animation: challenge-confetti-fall ${animationDuration}s ease-out ${delay}s forwards;
+      transform: rotate(${rotation}deg);
+    `;
+
     container.appendChild(particle);
   }
 
+  // Add animation keyframes if not exists
   if (!document.getElementById('challenge-confetti-styles')) {
     const style = document.createElement('style');
     style.id = 'challenge-confetti-styles';
-    style.textContent = `@keyframes challenge-confetti-fall{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}50%{opacity:1}100%{transform:translateY(100vh) rotate(1080deg) scale(0.5);opacity:0}}`;
+    style.textContent = `
+      @keyframes challenge-confetti-fall {
+        0% {
+          transform: translateY(0) rotate(0deg) scale(1);
+          opacity: 1;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(1080deg) scale(0.5);
+          opacity: 0;
+        }
+      }
+    `;
     document.head.appendChild(style);
   }
 
-  if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-  setTimeout(() => container.remove(), 5000);
+  // Haptic feedback
+  if (navigator.vibrate) {
+    navigator.vibrate([100, 50, 100, 50, 200]);
+  }
+
+  // Clean up
+  setTimeout(() => {
+    container.remove();
+  }, 5000);
 }
 
+// Format cooldown time remaining
 function formatCooldownTime(endsAt: string): string {
   const remaining = new Date(endsAt).getTime() - Date.now();
   if (remaining <= 0) return '';
+  
   const hours = Math.floor(remaining / (1000 * 60 * 60));
   const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-}
-
-function getChallengeTitle(id: string | undefined, t: any): string {
-  if (!id) return 'Weekly Challenge';
-  const translated = t(`weeklyChallenge.challenges.${id}.title`, '');
-  if (translated && translated !== '') return translated;
-  return CHALLENGE_DISPLAY[id]?.title ?? id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function getChallengeDescription(id: string | undefined, t: any): string {
-  if (!id) return 'Complete this challenge to earn badges!';
-  const translated = t(`weeklyChallenge.challenges.${id}.description`, '');
-  if (translated && translated !== '') return translated;
-  return CHALLENGE_DISPLAY[id]?.description ?? 'Complete this challenge to earn badges!';
-}
-
-function getCategoryLabel(category: string, t: any): string {
-  const translated = t(`weeklyChallenge.categories.${category}`, '');
-  if (translated && translated !== '') return translated;
-  return CATEGORY_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
 }
 
 export default function MindFuelWeeklyChallenge() {
@@ -181,7 +156,10 @@ export default function MindFuelWeeklyChallenge() {
 
   const fetchChallenge = useCallback(async () => {
     try {
-      const { data: result, error } = await supabase.functions.invoke('get-weekly-challenge', { body: {} });
+      const { data: result, error } = await supabase.functions.invoke('get-weekly-challenge', {
+        body: {},
+      });
+
       if (error) throw error;
       setData(result);
     } catch (error) {
@@ -191,65 +169,104 @@ export default function MindFuelWeeklyChallenge() {
     }
   }, []);
 
-  useEffect(() => { fetchChallenge(); }, [fetchChallenge]);
-
   useEffect(() => {
-    if (!data?.cooldownEndsAt) { setCooldownRemaining(null); return; }
+    fetchChallenge();
+  }, [fetchChallenge]);
+
+  // Cooldown countdown timer
+  useEffect(() => {
+    if (!data?.cooldownEndsAt) {
+      setCooldownRemaining(null);
+      return;
+    }
+
     const updateCooldown = () => {
-      const remaining = new Date(data.cooldownEndsAt!).getTime() - Date.now();
-      if (remaining <= 0) { setCooldownRemaining(null); fetchChallenge(); }
-      else setCooldownRemaining(formatCooldownTime(data.cooldownEndsAt!));
+      const endsAt = new Date(data.cooldownEndsAt!);
+      const remaining = endsAt.getTime() - Date.now();
+      
+      if (remaining <= 0) {
+        setCooldownRemaining(null);
+        // Refresh data when cooldown expires
+        fetchChallenge();
+      } else {
+        setCooldownRemaining(formatCooldownTime(data.cooldownEndsAt!));
+      }
     };
+
     updateCooldown();
-    const interval = setInterval(updateCooldown, 60000);
+    const interval = setInterval(updateCooldown, 60000); // Update every minute
+    
     return () => clearInterval(interval);
   }, [data?.cooldownEndsAt, fetchChallenge]);
 
   const handleStartChallenge = async () => {
     setIsCheckinLoading(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke('get-weekly-challenge', { body: { action: 'start' } });
+      const { data: result, error } = await supabase.functions.invoke('get-weekly-challenge', {
+        body: { action: 'start' },
+      });
+
       if (error) throw error;
       setData(result);
-      toast.success('Challenge started! Good luck!');
+      toast.success(t('mindFuel.weeklyChallenge.started', 'Challenge started! Good luck!'));
     } catch (error) {
       console.error('Error starting challenge:', error);
-      toast.error('Failed to start challenge');
-    } finally { setIsCheckinLoading(false); }
+      toast.error(t('mindFuel.weeklyChallenge.error', 'Failed to start challenge'));
+    } finally {
+      setIsCheckinLoading(false);
+    }
   };
 
   const handleCheckIn = async () => {
     setIsCheckinLoading(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke('get-weekly-challenge', { body: { action: 'check_in' } });
+      const { data: result, error } = await supabase.functions.invoke('get-weekly-challenge', {
+        body: { action: 'check_in' },
+      });
+
       if (error) throw error;
       setData(result);
+      
+      // Check if cooldown is now active (user tried to check in too soon)
       if (result.cooldownActive && result.cooldownEndsAt) {
-        toast.error('Please wait before checking in again');
+        toast.error(t('mindFuel.weeklyChallenge.cooldownActive', 'Please wait before checking in again'));
         return;
       }
+      
       if (result.currentChallenge?.status === 'completed') {
+        // Trigger confetti celebration
         triggerChallengeCompleteConfetti();
-        toast.success('Challenge completed! 🎉');
-        if (result.newBadges?.length > 0) {
+        toast.success(t('mindFuel.weeklyChallenge.completed', 'Challenge completed! 🎉'));
+        
+        // Show badge unlock toasts with staggered delay
+        if (result.newBadges && result.newBadges.length > 0) {
           result.newBadges.forEach((badgeKey: string, index: number) => {
-            setTimeout(() => showBadgeUnlockToast({ badgeKey }), 1000 + index * 1500);
+            setTimeout(() => {
+              showBadgeUnlockToast({ badgeKey });
+            }, 1000 + index * 1500);
           });
         }
       } else {
-        toast.success('Day checked in!');
+        toast.success(t('mindFuel.weeklyChallenge.checkedIn', 'Day checked in!'));
       }
     } catch (error) {
       console.error('Error checking in:', error);
-      toast.error('Failed to check in');
-    } finally { setIsCheckinLoading(false); }
+      toast.error(t('mindFuel.weeklyChallenge.error', 'Failed to check in'));
+    } finally {
+      setIsCheckinLoading(false);
+    }
   };
 
   if (isLoading) {
     return (
       <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10 border-amber-500/20">
-        <CardHeader className="pb-2"><Skeleton className="h-6 w-48" /></CardHeader>
-        <CardContent className="space-y-4"><Skeleton className="h-20 w-full" /><Skeleton className="h-10 w-full" /></CardContent>
+        <CardHeader className="pb-2">
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
       </Card>
     );
   }
@@ -258,7 +275,9 @@ export default function MindFuelWeeklyChallenge() {
   const availableChallenge = data?.availableChallenge;
   const challengeId = currentChallenge?.challenge_id || availableChallenge?.id;
   const isCompleted = currentChallenge?.status === 'completed';
-  const progressPercent = currentChallenge ? Math.round((currentChallenge.days_completed / currentChallenge.total_days) * 100) : 0;
+  const progressPercent = currentChallenge 
+    ? Math.round((currentChallenge.days_completed / currentChallenge.total_days) * 100)
+    : 0;
   const isCooldownActive = !!cooldownRemaining;
 
   return (
@@ -266,29 +285,30 @@ export default function MindFuelWeeklyChallenge() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Target className="h-5 w-5 text-amber-500" />
-          Weekly Challenge
+          {t('mindFuel.weeklyChallenge.title', 'Weekly Challenge')}
           {data && (
             <Badge variant="secondary" className="ml-2">
-              {data.completedChallengesCount} completed
+              {data.completedChallengesCount} {t('mindFuel.weeklyChallenge.completed_short', 'completed')}
             </Badge>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Current/Available Challenge Display */}
         <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
           <div className="flex items-start justify-between mb-3">
             <div>
-              {(() => {
+            {(() => {
                 const category = currentChallenge?.definition?.category || availableChallenge?.category || 'mental_mastery';
                 const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.mental_mastery;
                 return (
                   <Badge className={`${colors.bg} ${colors.text} ${colors.border} mb-2`}>
-                    {getCategoryLabel(category, t)}
+                    {t(`weeklyChallenge.categories.${category}`, category)}
                   </Badge>
                 );
               })()}
               <h3 className="font-semibold text-foreground">
-                {getChallengeTitle(challengeId, t)}
+                {t(`weeklyChallenge.challenges.${challengeId}.title`, challengeId?.replace('_', ' '))}
               </h3>
             </div>
             {isCompleted && (
@@ -299,38 +319,62 @@ export default function MindFuelWeeklyChallenge() {
           </div>
 
           <p className="text-sm text-muted-foreground mb-4">
-            {getChallengeDescription(challengeId, t)}
+            {t(`weeklyChallenge.challenges.${challengeId}.description`, 
+               'Complete this challenge to earn badges!')}
           </p>
 
           {currentChallenge && !isCompleted && (
             <>
+              {/* Progress dots */}
               <div className="flex items-center gap-1.5 mb-3">
                 {Array.from({ length: currentChallenge.total_days }).map((_, i) => (
-                  <div key={i} className={`h-3 w-3 rounded-full transition-all ${i < currentChallenge.days_completed ? 'bg-amber-500' : 'bg-muted/50'}`} />
+                  <div
+                    key={i}
+                    className={`h-3 w-3 rounded-full transition-all ${
+                      i < currentChallenge.days_completed
+                        ? 'bg-amber-500'
+                        : 'bg-muted/50'
+                    }`}
+                  />
                 ))}
                 <span className="ml-2 text-sm text-muted-foreground">
-                  Day {currentChallenge.days_completed} of {currentChallenge.total_days}
+                  {t('mindFuel.weeklyChallenge.dayProgress', 'Day {{current}} of {{total}}', {
+                    current: currentChallenge.days_completed,
+                    total: currentChallenge.total_days,
+                  })}
                 </span>
               </div>
+
+              {/* Progress bar */}
               <Progress value={progressPercent} className="h-2 mb-4" />
+
+              {/* Check-in button */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Clock className="h-3.5 w-3.5" />
-                  {data?.daysRemainingInWeek || 0} days remaining
+                  {t('mindFuel.weeklyChallenge.daysRemaining', '{{count}} days remaining', {
+                    count: data?.daysRemainingInWeek || 0,
+                  })}
                 </div>
                 <Button
                   onClick={handleCheckIn}
                   disabled={isCheckinLoading || isCooldownActive}
                   size="sm"
-                  className={isCooldownActive
+                  className={isCooldownActive 
                     ? "bg-muted text-muted-foreground cursor-not-allowed"
                     : "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
                   }
                 >
                   {isCooldownActive ? (
-                    <><Timer className="h-4 w-4 mr-2" />Next in {cooldownRemaining}</>
+                    <>
+                      <Timer className="h-4 w-4 mr-2" />
+                      {t('mindFuel.weeklyChallenge.nextCheckIn', 'Next in {{time}}', { time: cooldownRemaining })}
+                    </>
                   ) : (
-                    <><CheckCircle2 className="h-4 w-4 mr-2" />Check In Today</>
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      {t('mindFuel.weeklyChallenge.checkIn', 'Check In Today')}
+                    </>
                   )}
                 </Button>
               </div>
@@ -340,37 +384,58 @@ export default function MindFuelWeeklyChallenge() {
           {isCompleted && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
               <Sparkles className="h-5 w-5 text-green-400" />
-              <span className="text-sm text-green-400 font-medium">Challenge completed! Great job!</span>
+              <span className="text-sm text-green-400 font-medium">
+                {t('mindFuel.weeklyChallenge.challengeCompleted', 'Challenge completed! Great job!')}
+              </span>
             </div>
           )}
 
           {!currentChallenge && availableChallenge && (
-            <Button onClick={handleStartChallenge} disabled={isCheckinLoading} className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500">
-              <Flame className="h-4 w-4 mr-2" />Start This Week's Challenge
+            <Button
+              onClick={handleStartChallenge}
+              disabled={isCheckinLoading}
+              className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
+            >
+              <Flame className="h-4 w-4 mr-2" />
+              {t('mindFuel.weeklyChallenge.startChallenge', 'Start This Week\'s Challenge')}
             </Button>
           )}
         </div>
 
+        {/* Challenge History */}
         {data?.history && data.history.length > 0 && (
           <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
-                <span className="flex items-center gap-2"><Trophy className="h-4 w-4" />Challenge History</span>
+                <span className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4" />
+                  {t('mindFuel.weeklyChallenge.history', 'Challenge History')}
+                </span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${historyOpen ? 'rotate-180' : ''}`} />
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-2 mt-2">
               {data.history.slice(0, 5).map((challenge) => (
-                <div key={challenge.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                <div
+                  key={challenge.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                >
                   <div>
-                    <span className="text-sm font-medium">{getChallengeTitle(challenge.challenge_id, t)}</span>
-                    <div className="text-xs text-muted-foreground">{challenge.days_completed}/{challenge.total_days} days</div>
+                    <span className="text-sm font-medium">
+                      {t(`weeklyChallenge.challenges.${challenge.challenge_id}.title`, 
+                         challenge.challenge_id.replace('_', ' '))}
+                    </span>
+                    <div className="text-xs text-muted-foreground">
+                      {challenge.days_completed}/{challenge.total_days} {t('mindFuel.weeklyChallenge.days', 'days')}
+                    </div>
                   </div>
                   <Badge
                     variant={challenge.status === 'completed' ? 'default' : 'secondary'}
                     className={challenge.status === 'completed' ? 'bg-green-500/20 text-green-400' : ''}
                   >
-                    {challenge.status === 'completed' ? 'Completed' : 'Incomplete'}
+                    {challenge.status === 'completed' 
+                      ? t('mindFuel.weeklyChallenge.completedBadge', 'Completed')
+                      : t('mindFuel.weeklyChallenge.incompleteBadge', 'Incomplete')}
                   </Badge>
                 </div>
               ))}

@@ -238,37 +238,16 @@ export function LiveScorebook({
     setSubTarget(null);
   };
 
-  const handleOpponentRecordAndSwitch = useCallback((runs: number, hits: number, errors: number, outs: number, defensivePlays?: any[]) => {
+  const handleOpponentRecordAndSwitch = useCallback((runs: number, hits: number, errors: number) => {
     // Opponent runs key: use the half prefix for opponent batting
     const oppPrefix = opponentBattingHalf === 'top' ? 'T' : 'B';
     const key = `${oppPrefix}${currentInning}`;
     setInningRuns(prev => ({ ...prev, [key]: (prev[key] ?? 0) + runs }));
     setOpponentHitsPerInning(prev => ({ ...prev, [currentInning]: (prev[currentInning] ?? 0) + hits }));
     setTeamErrorsPerInning(prev => ({ ...prev, [currentInning]: (prev[currentInning] ?? 0) + errors }));
-
-    // Save defensive plays as game plays
-    if (defensivePlays && defensivePlays.length > 0) {
-      const defPlays: GamePlay[] = defensivePlays.map((dp, idx) => ({
-        game_id: gameId,
-        inning: currentInning,
-        half: opponentBattingHalf,
-        pitch_number: idx + 1,
-        pitch_result: 'in_play',
-        defensive_data: {
-          position: dp.position,
-          play_type: dp.playType,
-          result: dp.result,
-          first_step: dp.firstStep,
-          throw_accuracy: dp.throwAccuracy,
-          note: dp.note,
-        },
-      }));
-      onPlayRecorded(defPlays);
-    }
-
     // Switch to player's batting half
     setCurrentHalf(playerBattingHalf);
-  }, [currentInning, opponentBattingHalf, playerBattingHalf, gameId, onPlayRecorded]);
+  }, [currentInning, opponentBattingHalf, playerBattingHalf]);
 
   const handleAtBatComplete = useCallback((plays: GamePlay[]) => {
     const lastPlay = plays[plays.length - 1];
@@ -573,7 +552,6 @@ export function LiveScorebook({
             <OpponentScoringPanel
               inning={currentInning}
               opponentName={opponentName}
-              half={opponentBattingHalf}
               onRecordAndSwitch={handleOpponentRecordAndSwitch}
             />
           )}

@@ -95,20 +95,12 @@ export function useDailyNutritionTargets(consumed?: ConsumedNutrition) {
 
     const hydrationGoal = hydrationSettings?.daily_goal_oz || 100;
     
-    // Check for custom calorie override
-    const customCal = activeGoal?.customCalorieTarget;
-    const baseCal = nutritionTargets.dailyCalories;
-    const effectiveCalories = customCal && customCal > 0 ? customCal : baseCal;
-    
-    // If custom calories, scale macros proportionally
-    const calRatio = effectiveCalories / baseCal;
-    
     const targets: DailyTargets = {
-      // From TDEE calculation (with possible custom override)
-      calories: effectiveCalories,
-      protein: Math.round(nutritionTargets.macros.protein * calRatio),
-      carbs: Math.round(nutritionTargets.macros.carbs * calRatio),
-      fats: Math.round(nutritionTargets.macros.fats * calRatio),
+      // From TDEE calculation
+      calories: nutritionTargets.dailyCalories,
+      protein: nutritionTargets.macros.protein,
+      carbs: nutritionTargets.macros.carbs,
+      fats: nutritionTargets.macros.fats,
       fiber: nutritionTargets.macros.fiber,
       hydration: hydrationGoal,
       bmr: nutritionTargets.bmr,
@@ -122,10 +114,10 @@ export function useDailyNutritionTargets(consumed?: ConsumedNutrition) {
       consumedHydration: consumedHydration,
       
       // Calculate percentages
-      caloriesPercent: Math.min(100, Math.round(((consumed?.calories || 0) / effectiveCalories) * 100)),
-      proteinPercent: Math.min(100, Math.round(((consumed?.protein || 0) / Math.round(nutritionTargets.macros.protein * calRatio)) * 100)),
-      carbsPercent: Math.min(100, Math.round(((consumed?.carbs || 0) / Math.round(nutritionTargets.macros.carbs * calRatio)) * 100)),
-      fatsPercent: Math.min(100, Math.round(((consumed?.fats || 0) / Math.round(nutritionTargets.macros.fats * calRatio)) * 100)),
+      caloriesPercent: Math.min(100, Math.round(((consumed?.calories || 0) / nutritionTargets.dailyCalories) * 100)),
+      proteinPercent: Math.min(100, Math.round(((consumed?.protein || 0) / nutritionTargets.macros.protein) * 100)),
+      carbsPercent: Math.min(100, Math.round(((consumed?.carbs || 0) / nutritionTargets.macros.carbs) * 100)),
+      fatsPercent: Math.min(100, Math.round(((consumed?.fats || 0) / nutritionTargets.macros.fats) * 100)),
       hydrationPercent: Math.min(100, Math.round((consumedHydration / hydrationGoal) * 100)),
       
       // Meta info

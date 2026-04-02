@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getDay } from 'date-fns';
-import { useQueryClient } from '@tanstack/react-query';
-import { UNIFIED_SCHEDULE_KEY } from '@/hooks/useUnifiedSchedule';
 
 export interface SkippedItem {
   id: string;
@@ -14,7 +12,6 @@ export interface SkippedItem {
 
 export function useCalendarSkips() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [skippedItems, setSkippedItems] = useState<SkippedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +46,33 @@ export function useCalendarSkips() {
     fetchSkippedItems();
   }, [fetchSkippedItems]);
 
-  // Realtime is handled by the unified schedule hook — no duplicate subscription needed here.
+  // Real-time subscription to sync changes across components (Calendar <-> Game Plan)
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`calendar-skips-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'calendar_skipped_items',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Calendar skip changed (realtime):', payload.eventType);
+          // Refetch all skipped items when any change occurs
+          fetchSkippedItems();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchSkippedItems]);
 
   // Check if an item is skipped for a specific day of the week
   const isSkippedForDay = useCallback((
@@ -125,9 +148,6 @@ export function useCalendarSkips() {
         }];
       });
 
-      // Invalidate unified schedule so Calendar + Game Plan both see the update
-      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
-
       return true;
     } catch (err) {
       console.error('Error in updateSkipDays:', err);
@@ -159,9 +179,6 @@ export function useCalendarSkips() {
       setSkippedItems(prev => 
         prev.filter(s => !(s.item_id === itemId && s.item_type === itemType))
       );
-
-      // Invalidate unified schedule so Calendar + Game Plan both see the update
-      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
 
       return true;
     } catch (err) {

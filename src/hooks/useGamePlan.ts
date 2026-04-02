@@ -7,7 +7,6 @@ import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
 import { ActivityFolder, ActivityFolderItem, getCurrentCycleWeek } from '@/types/activityFolder';
-import { useUnifiedSchedule } from '@/hooks/useUnifiedSchedule';
 
 export interface FolderGamePlanTask {
   folderId: string;
@@ -93,15 +92,6 @@ const STRENGTH_TRAINING_DAYS = [1, 5];
 export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
   const { modules: subscribedModules } = useSubscription();
-  const {
-    templates: unifiedTemplates,
-    skipItems: unifiedSkipItems,
-    isTaskScheduledForDay: unifiedIsScheduledForDay,
-    isDateSkipped: unifiedIsDateSkipped,
-    playerFolders: unifiedPlayerFolders,
-    coachFolderIds: unifiedCoachFolderIds,
-    scheduledPracticeSessions: unifiedScheduledSessions,
-  } = useUnifiedSchedule(selectedSport);
   const [loading, setLoading] = useState(true);
   const currentDateRef = useRef(getTodayDate());
   const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({});
@@ -504,16 +494,35 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       // Fetch custom activities for today
       const todayDayOfWeek = getDay(new Date()); // 0 = Sunday, 6 = Saturday
       
-      // Templates & skip items come from unified schedule (shared with Calendar)
-      
-      // Fetch only today's logs (date-specific, not cached in unified hook)
+      // Fetch all templates for this sport
+      const { data: templatesData } = await supabase
+        .from('custom_activity_templates')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('sport', selectedSport)
+        .is('deleted_at', null);
+
+      // Fetch today's logs
       const { data: logsData } = await supabase
         .from('custom_activity_logs')
         .select('*')
         .eq('user_id', user.id)
         .eq('entry_date', today);
 
-      const templates = unifiedTemplates as unknown as CustomActivityTemplate[];
+      // Fetch skip days from calendar_skipped_items (SINGLE SOURCE OF TRUTH for Repeat Weekly)
+      // Include BOTH custom_activity and game_plan types
+      const { data: skipItemsData } = await supabase
+        .from('calendar_skipped_items')
+        .select('item_id, skip_days, item_type')
+        .eq('user_id', user.id)
+        .in('item_type', ['custom_activity', 'game_plan']);
+
+      const skipItemsMap = new Map<string, number[]>();
+      (skipItemsData || []).forEach(item => {
+        skipItemsMap.set(item.item_id, item.skip_days || []);
+      });
+
+      const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
       const logs = (logsData || []) as unknown as CustomActivityLog[];
 
       // Build custom activities list
@@ -523,12 +532,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         // Check display settings first
         if (template.display_on_game_plan === false) return;
         
-        // Check date-specific skip (from game_plan_skipped_tasks, syncs with Calendar)
-        if (unifiedIsDateSkipped(`custom-${template.id}`, today)) return;
-        
-        // Check calendar_skipped_items (SINGLE SOURCE OF TRUTH for Repeat Weekly)
+        // Check calendar_skipped_items first (SINGLE SOURCE OF TRUTH for Repeat Weekly)
         const itemId = `template-${template.id}`;
-        const skipDays = unifiedSkipItems.get(itemId) || [];
+        const skipDays = skipItemsMap.get(itemId) || [];
         const isSkippedToday = skipDays.includes(todayDayOfWeek);
         
         // Check if there's a log for today
@@ -568,19 +574,36 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       // === FETCH FOLDER ITEMS FOR GAME PLAN ===
       const todayDow = todayDayOfWeek; // already computed above
       
-      // Folders come from unified schedule (shared with Calendar)
+      // 1. Player-owned active folders
+      const { data: playerFoldersData } = await supabase
+        .from('activity_folders')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('owner_type', 'player')
+        .eq('sport', selectedSport)
+        .eq('status', 'active');
+
+      // 2. Coach-assigned accepted folders
+      const { data: assignmentsData } = await supabase
+        .from('folder_assignments')
+        .select('folder_id')
+        .eq('recipient_id', user.id)
+        .eq('status', 'accepted');
+
+      const assignedFolderIds = (assignmentsData || []).map((a: any) => a.folder_id);
+      
       let coachFolders: any[] = [];
-      if (unifiedCoachFolderIds.length > 0) {
+      if (assignedFolderIds.length > 0) {
         const { data: coachFoldersData } = await supabase
           .from('activity_folders')
           .select('*')
-          .in('id', unifiedCoachFolderIds)
+          .in('id', assignedFolderIds)
           .eq('status', 'active');
         coachFolders = coachFoldersData || [];
       }
 
       const allFolders = [
-        ...(unifiedPlayerFolders as unknown as ActivityFolder[]),
+        ...((playerFoldersData || []) as unknown as ActivityFolder[]),
         ...(coachFolders as unknown as ActivityFolder[]),
       ];
 
@@ -654,14 +677,23 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         setFolderTasks([]);
       }
 
-      // === SCHEDULED PRACTICE SESSIONS FOR TODAY (from unified schedule) ===
-      const todayScheduled = unifiedScheduledSessions.filter((s: any) => {
-        if (s.status === 'cancelled') return false;
-        if (s.scheduled_date === today) return true;
-        if (s.recurring_active && s.recurring_days?.includes(todayDayOfWeek) && s.scheduled_date <= today) return true;
-        return false;
-      });
-      setScheduledSessions(todayScheduled);
+      // === FETCH SCHEDULED PRACTICE SESSIONS FOR TODAY ===
+      const { data: scheduledData } = await supabase
+        .from('scheduled_practice_sessions' as any)
+        .select('*')
+        .neq('status', 'cancelled');
+
+      if (scheduledData) {
+        const todayScheduled = (scheduledData as any[]).filter(s => {
+          if (s.status === 'cancelled') return false;
+          if (s.scheduled_date === today) return true;
+          if (s.recurring_active && s.recurring_days?.includes(todayDayOfWeek) && s.scheduled_date <= today) return true;
+          return false;
+        });
+        setScheduledSessions(todayScheduled);
+      } else {
+        setScheduledSessions([]);
+      }
 
 
       const { data: streakData } = await supabase
@@ -701,9 +733,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     } finally {
       setLoading(false);
     }
-  }, [user, selectedSport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess,
-      unifiedTemplates, unifiedSkipItems, unifiedPlayerFolders, unifiedCoachFolderIds,
-      unifiedScheduledSessions, unifiedIsDateSkipped]);
+  }, [user, selectedSport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess]);
 
   useEffect(() => {
     fetchTaskStatus();
@@ -752,22 +782,39 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     const today = getTodayDate();
     const todayDayOfWeek = getDay(new Date());
 
-    // Templates and skip items come from unified schedule (shared with Calendar)
-    const { data: logsData } = await supabase
-      .from('custom_activity_logs')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('entry_date', today);
+    const [{ data: templatesData }, { data: logsData }, { data: skipItemsData }] = await Promise.all([
+      supabase
+        .from('custom_activity_templates')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('sport', selectedSport)
+        .is('deleted_at', null),
+      supabase
+        .from('custom_activity_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('entry_date', today),
+      supabase
+        .from('calendar_skipped_items')
+        .select('item_id, skip_days, item_type')
+        .eq('user_id', user.id)
+        .in('item_type', ['custom_activity', 'game_plan']),
+    ]);
 
-    const templates = unifiedTemplates as unknown as CustomActivityTemplate[];
+    const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
     const logs = (logsData || []) as unknown as CustomActivityLog[];
+
+    const skipItemsMap = new Map<string, number[]>();
+    (skipItemsData || []).forEach(item => {
+      skipItemsMap.set(item.item_id, item.skip_days || []);
+    });
 
     const refreshed: CustomActivityWithLog[] = [];
     templates.forEach(template => {
       if (template.display_on_game_plan === false) return;
 
       const itemId = `template-${template.id}`;
-      const skipDays = unifiedSkipItems.get(itemId) || [];
+      const skipDays = skipItemsMap.get(itemId) || [];
       const isSkippedToday = skipDays.includes(todayDayOfWeek);
 
       const todayLog = logs.find(l => l.template_id === template.id);
@@ -805,7 +852,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     );
 
     setCustomActivities(deduped);
-  }, [user, selectedSport, folderTasks, unifiedTemplates, unifiedSkipItems]);
+  }, [user, selectedSport, folderTasks]);
 
   // Toggle folder item completion
   const toggleFolderItemCompletion = useCallback(async (itemId: string, performanceData?: any) => {
@@ -938,9 +985,11 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const todayDayOfWeek = getDay(new Date()); // 0=Sun, 1=Mon, etc.
 
   // Smart default scheduling: only show training tasks on recommended days
-  // Use unified schedule logic: checks DB schedules first, then training defaults
   const shouldShowTrainingTask = (taskId: string): boolean => {
-    return unifiedIsScheduledForDay(taskId, todayDayOfWeek);
+    const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
+    if (!defaultDays) return true; // No default schedule defined, show every day
+
+    return defaultDays.includes(todayDayOfWeek);
   };
 
   // === FREE ACCESS TASKS (Available to all users with a profile) ===
@@ -1321,17 +1370,14 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   });
 
-  // Filter out tasks that are specifically skipped for today (game_plan_skipped_tasks)
-  const todayStr = getTodayDate();
-  const visibleTasks = tasks.filter(t => !unifiedIsDateSkipped(t.id, todayStr));
-  const completedCount = visibleTasks.filter(t => t.completed).length;
+  const completedCount = tasks.filter(t => t.completed).length;
 
   return {
-    tasks: visibleTasks,
+    tasks,
     customActivities,
     folderTasks,
     completedCount,
-    totalCount: visibleTasks.length,
+    totalCount: tasks.length,
     daysUntilRecap,
     recapProgress,
     loading,

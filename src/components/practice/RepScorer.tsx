@@ -333,9 +333,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsCustomRepDesc = !isCatching && isOther;
   const customRepDescValid = !needsCustomRepDesc || (current.ai_custom_rep_description?.length ?? 0) >= 15;
 
-  // ABS Guess: always optional
-  const needsAbsGuess = false;
-  const absGuessValid = true;
+  // ABS Guess: required when pitch_location is set for hitting/pitching/catching
+  const hasPitchLocation = !!current.pitch_location;
+  const needsAbsGuess = hasPitchLocation && (isHitting || isPitching || isCatching);
+  const absGuessValid = !needsAbsGuess || !!current.abs_guess;
 
   // Pitcher Intent: required for pitching before pitch_location can be set (optional per spec — required when pitch_location is set)
   const needsPitcherIntent = isPitching;
@@ -449,39 +450,16 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
         )}
       </AnimatePresence>
 
-      {/* Mode toggle — segmented control */}
-      <div className="space-y-1">
-        <div className="grid grid-cols-2 gap-1 rounded-lg border-2 border-border bg-muted p-1">
-          <button
-            type="button"
-            onClick={() => setMode('quick')}
-            className={cn(
-              "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all",
-              mode === 'quick'
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Zap className="h-4 w-4 text-amber-500" />
-            Quick Log
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('advanced')}
-            className={cn(
-              "flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-all",
-              mode === 'advanced'
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Settings2 className="h-4 w-4" />
-            Advanced
-          </button>
+      {/* Mode toggle */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          {mode === 'quick' ? <Zap className="h-3.5 w-3.5 text-amber-500" /> : <Settings2 className="h-3.5 w-3.5 text-primary" />}
+          <span className="text-xs font-medium">{mode === 'quick' ? 'Quick Log' : 'Advanced'}</span>
         </div>
-        <p className="text-xs text-muted-foreground text-center">
-          {mode === 'quick' ? 'Showing essential fields only' : 'All optional fields visible'}
-        </p>
+        <Switch
+          checked={mode === 'advanced'}
+          onCheckedChange={(v) => setMode(v ? 'advanced' : 'quick')}
+        />
       </div>
 
       {/* Machine Mode selector (1 Pitch vs Mix) — only for machine hitting */}
@@ -842,7 +820,21 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Exact Pitch Velocity moved to advanced block below */}
+              {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
+              {isHitting && repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
+                  <Input
+                    type="number"
+                    placeholder="Optional — overrides velocity band"
+                    value={current.exact_pitch_velocity_mph ?? ''}
+                    onChange={e => updateField('exact_pitch_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
+                    className="h-8 text-xs"
+                    min={0}
+                    step="any"
+                  />
+                </div>
+              )}
 
               {/* Switch hitter per-rep toggle */}
               {isHitting && isSwitchHitter && (
@@ -879,72 +871,70 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* For non-tee hitting sources: Real Pitch Location → then ABS Guess */}
-              {!isTee && (
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Pitch Location</Label>
-                    <PitchLocationGrid
-                      value={current.pitch_location}
-                      onSelect={v => updateField('pitch_location', v)}
-                      batterSide={effectiveBatterSide}
-                      sport={sport as 'baseball' | 'softball'}
-                    />
-                  </div>
-                  {current.pitch_location && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground mb-1 block">ABS Guess (Optional)</Label>
-                      <PitchLocationGrid
-                        value={current.abs_guess}
-                        onSelect={v => updateField('abs_guess', v)}
-                        batterSide={effectiveBatterSide}
-                        sport={sport as 'baseball' | 'softball'}
-                      />
-                    </div>
-                  )}
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <PitchLocationGrid
+                    value={current.pitch_location}
+                    onSelect={v => updateField('pitch_location', v)}
+                    batterSide={effectiveBatterSide}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
+                </div>
+              </div>
+
+              {/* ABS Guess — required after pitch location is logged (Hitting) */}
+              {hasPitchLocation && isHitting && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">
+                    ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
+                  </Label>
+                  <PitchLocationGrid
+                    value={current.abs_guess}
+                    onSelect={v => updateField('abs_guess', v)}
+                    batterSide={effectiveBatterSide}
+                    sport={sport as 'baseball' | 'softball'}
+                  />
                 </div>
               )}
 
-              {mode === 'advanced' && (
-                <>
+              {/* Swing Decision - always visible (most valuable self-assessment) */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'best_a_swing', label: '🔥 Best A-Swing', color: 'bg-green-500/20 text-green-700 border-green-300' },
+                    { value: 'swung', label: '🏏 Swung', color: 'bg-blue-500/20 text-blue-700 border-blue-300' },
+                    { value: 'good_take', label: '✅ Good Take', color: 'bg-primary/20 text-primary border-primary/30' },
+                    { value: 'should_have_swung', label: '😤 Should\'ve Swung', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
+                    { value: 'chased', label: '❌ Chased', color: 'bg-red-500/20 text-red-700 border-red-300' },
+                    { value: 'bunt', label: '🤲 Bunt', color: 'bg-cyan-500/20 text-cyan-700 border-cyan-300' },
+                    ...(sport === 'softball' ? [{ value: 'slap', label: '👋 Slap', color: 'bg-violet-500/20 text-violet-700 border-violet-300' }] : []),
+                  ]}
+                  value={current.swing_decision}
+                  onChange={v => updateField('swing_decision', v)}
+                  cols={5}
+                />
+              </div>
 
-                  {/* Exact Pitch Velocity (MPH) — hitting competitive contexts */}
-                  {repSource && ['live_bp', 'live_abs', 'game'].includes(repSource) && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
-                      <Input
-                        type="number"
-                        placeholder="Optional — overrides velocity band"
-                        value={current.exact_pitch_velocity_mph ?? ''}
-                        onChange={e => updateField('exact_pitch_velocity_mph', e.target.value ? Number(e.target.value) : undefined)}
-                        className="h-8 text-xs"
-                        min={0}
-                        step="any"
-                      />
-                    </div>
-                  )}
-
-                  {/* Hit Distance */}
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Distance (ft)</Label>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="e.g. 350, >400, 400+"
-                      value={current.hit_distance_raw ?? (current.hit_distance_ft != null ? String(current.hit_distance_ft) : '')}
-                      onChange={e => {
-                        const raw = e.target.value;
-                        updateField('hit_distance_raw', raw || undefined);
-                        const cleaned = raw.replace(/[>+]/g, '').trim();
-                        const num = parseFloat(cleaned);
-                        updateField('hit_distance_ft', !isNaN(num) && num > 0 ? num : undefined);
-                      }}
-                      className="h-8 text-xs"
-                    />
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Enter exact or use &gt;, + (e.g. &gt;400 or 400+)</p>
-                  </div>
-                </>
-              )}
+              {/* Hit Distance — always visible for hitting */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Distance (ft)</Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="e.g. 350, >400, 400+"
+                  value={current.hit_distance_raw ?? (current.hit_distance_ft != null ? String(current.hit_distance_ft) : '')}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    updateField('hit_distance_raw', raw || undefined);
+                    const cleaned = raw.replace(/[>+]/g, '').trim();
+                    const num = parseFloat(cleaned);
+                    updateField('hit_distance_ft', !isNaN(num) && num > 0 ? num : undefined);
+                  }}
+                  className="h-8 text-xs"
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5">Enter exact or use &gt;, + (e.g. &gt;400 or 400+)</p>
+              </div>
 
               {mode === 'advanced' && (
                 <>
@@ -1003,18 +993,17 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   </div>
 
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Swing Intent</Label>
                     <SelectGrid
                       options={[
-                        { value: 'best_a_swing', label: 'Best A-Swing' },
-                        { value: 'swung', label: 'Swung' },
-                        { value: 'good_take', label: 'Good Take' },
-                        { value: 'chased', label: 'Chased' },
-                        { value: 'bunt', label: 'Bunt' },
+                        { value: 'mechanical', label: 'Mech' },
+                        { value: 'game_intent', label: 'Game' },
+                        { value: 'situational', label: 'Situ' },
+                        { value: 'hr_derby', label: 'HR' },
                       ]}
-                      value={current.swing_decision}
-                      onChange={v => updateField('swing_decision', v)}
-                      cols={3}
+                      value={current.swing_intent}
+                      onChange={v => updateField('swing_intent', v)}
+                      cols={4}
                     />
                   </div>
 
@@ -1050,6 +1039,18 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     />
                   </div>
 
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Approach Quality</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'patient', label: 'Patient' },
+                        { value: 'aggressive', label: 'Aggressive' },
+                        { value: 'neutral', label: 'Neutral' },
+                      ]}
+                      value={current.approach_quality}
+                      onChange={v => updateField('approach_quality', v)}
+                    />
+                  </div>
 
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Count Situation</Label>
@@ -1211,11 +1212,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               )}
 
-              {/* ABS Guess — advanced only for pitching */}
-              {mode === 'advanced' && !!current.pitch_location && isPitching && (
+              {/* ABS Guess — required after pitch location is logged (Pitching) */}
+              {hasPitchLocation && isPitching && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">
-                    ABS Guess (Select 5×5 Zone)
+                    ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
                   </Label>
                   <PitchLocationGrid
                     value={current.abs_guess}
@@ -1247,8 +1248,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               </div>
 
-              {/* Contact Type for pitching vs hitter — advanced only */}
-              {mode === 'advanced' && ctx.showContactType && (
+              {/* Contact Type for pitching vs hitter (flat_ground_vs_hitter or live_bp) */}
+              {ctx.showContactType && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Contact Type</Label>
                   <SelectGrid
@@ -1265,8 +1266,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Live AB Hitter Tracking — advanced only */}
-              {mode === 'advanced' && ctx.showLiveAbHitterFields && (
+              {/* Live AB Hitter Tracking — swing result, ball result, at-bat outcome */}
+              {ctx.showLiveAbHitterFields && (
                 <>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Swing Result</Label>
@@ -1321,8 +1322,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </>
               )}
 
-              {/* ===== PITCHER HITTER OUTCOME DETAILS — advanced only ===== */}
-              {mode === 'advanced' && ctx.showPitcherHitterOutcomes && (
+              {/* ===== PITCHER HITTER OUTCOME DETAILS ===== */}
+              {ctx.showPitcherHitterOutcomes && (
                 <div className="space-y-3 p-3 rounded-lg border border-accent/30 bg-accent/5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Hitter Outcome Details</p>
 
@@ -1330,15 +1331,12 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
                     <SelectGrid
                       options={[
-                        { value: 'best_a_swing', label: 'Best A-Swing' },
-                        { value: 'swung', label: 'Swung' },
-                        { value: 'good_take', label: 'Good Take' },
-                        { value: 'chased', label: 'Chased' },
-                        { value: 'bunt', label: 'Bunt' },
+                        { value: 'correct', label: '✅ Correct' },
+                        { value: 'incorrect', label: '❌ Incorrect' },
                       ]}
                       value={current.swing_decision}
                       onChange={v => updateField('swing_decision', v)}
-                      cols={3}
+                      cols={2}
                     />
                   </div>
 
@@ -1479,6 +1477,20 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 required
               />
 
+              {/* Hit Type Hardness */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Exit Velocity</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'soft', label: '🟢 Soft' },
+                    { value: 'average', label: '🟡 Average' },
+                    { value: 'hard', label: '🔴 Hard' },
+                  ]}
+                  value={current.hit_type_hardness}
+                  onChange={v => updateField('hit_type_hardness', v)}
+                />
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
                 <SelectGrid
@@ -1498,34 +1510,142 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {mode === 'advanced' && (
-                <>
-                  {/* Hit Type Hardness */}
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Exit Velocity</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'soft', label: '🟢 Soft' },
-                        { value: 'average', label: '🟡 Average' },
-                        { value: 'hard', label: '🔴 Hard' },
-                      ]}
-                      value={current.hit_type_hardness}
-                      onChange={v => updateField('hit_type_hardness', v)}
-                    />
-                  </div>
+              {/* Diving Play — all defensive positions */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Diving Play</Label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                    <button
+                      key={String(opt.value)}
+                      type="button"
+                      onClick={() => updateField('diving_play', opt.value)}
+                      className={cn(
+                        'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                        current.diving_play === opt.value
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                  {/* Diving Play — all defensive positions */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
+                <SelectGrid
+                   options={[
+                     { value: 'poor', label: '❌ Poor' },
+                     { value: 'average', label: '🟡 Average' },
+                     { value: 'elite', label: '👑 Elite' },
+                   ]}
+                  value={current.route_efficiency}
+                  onChange={v => updateField('route_efficiency', v)}
+                />
+              </div>
+
+              {/* Glove-to-Glove Time — infielders */}
+              {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    From Glove to Glove (seconds)
+                  </Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 1.85"
+                    value={current.glove_to_glove_sec ?? ''}
+                    onChange={e => updateField('glove_to_glove_sec', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-8 text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {sport === 'baseball'
+                      ? 'Optimal: < 2.0s standard • < 1.5s for double play turns'
+                      : 'Optimal: < 1.8s standard • < 1.4s for double play turns'}
+                  </p>
+                </div>
+              )}
+
+              {/* Throwing Velocity */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Throwing Velocity (mph)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 78"
+                  value={current.throwing_velo_mph ?? ''}
+                  onChange={e => updateField('throwing_velo_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Play Probability</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'routine', label: '✅ Routine' },
+                    { value: 'plus', label: '🔥 Plus' },
+                    { value: 'elite', label: '👑 Elite' },
+                  ]}
+                  value={current.play_probability}
+                  onChange={v => updateField('play_probability', v)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Receiving Quality</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'poor', label: '❌ Poor' },
+                    { value: 'average', label: '✅ Average' },
+                    { value: 'elite', label: '👑 Elite' },
+                  ]}
+                  value={current.receiving_quality}
+                  onChange={v => updateField('receiving_quality', v)}
+                />
+              </div>
+
+              {/* Catch Type */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Catch Type</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'backhand', label: '🤚 Backhand' },
+                    { value: 'forehand', label: '✋ Forehand' },
+                    { value: 'underhand', label: '⬇️ Underhand' },
+                    { value: 'overhand', label: '⬆️ Overhand' },
+                  ]}
+                  value={current.catch_type}
+                  onChange={v => updateField('catch_type', v)}
+                  cols={4}
+                />
+              </div>
+
+              {/* Play Direction + Play Type (infielders get play type) */}
+              <PlayDirectionSelector
+                value={current}
+                onChange={updateField}
+                showPlayType={!!repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition)}
+              />
+
+              {/* ===== OUTFIELD-SPECIFIC FIELDS ===== */}
+              {repFieldingPosition && ['LF', 'CF', 'RF'].includes(repFieldingPosition) && (
+                <>
+                  {/* Relay Play Yes/No */}
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Diving Play</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
                     <div className="grid grid-cols-2 gap-1.5">
                       {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
                         <button
                           key={String(opt.value)}
                           type="button"
-                          onClick={() => updateField('diving_play', opt.value)}
+                          onClick={() => updateField('relay_play', opt.value)}
                           className={cn(
                             'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
-                            current.diving_play === opt.value
+                            current.relay_play === opt.value
                               ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
                               : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
                           )}
@@ -1536,428 +1656,312 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Route Efficiency</Label>
-                    <SelectGrid
-                       options={[
-                         { value: 'poor', label: '❌ Poor' },
-                         { value: 'average', label: '🟡 Average' },
-                         { value: 'elite', label: '👑 Elite' },
-                       ]}
-                      value={current.route_efficiency}
-                      onChange={v => updateField('route_efficiency', v)}
-                    />
-                  </div>
-
-                  {/* Glove-to-Glove Time — infielders */}
-                  {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
+                  {current.relay_play === true && (
                     <div>
-                      <Label className="text-xs text-muted-foreground mb-1 block">
-                        From Glove to Glove (seconds)
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="e.g. 1.85"
-                        value={current.glove_to_glove_sec ?? ''}
-                        onChange={e => updateField('glove_to_glove_sec', e.target.value ? parseFloat(e.target.value) : undefined)}
-                        className="h-8 text-xs"
+                      <Label className="text-xs text-muted-foreground mb-1 block">Hit Cutoff Man?</Label>
+                      <SelectGrid
+                        options={[
+                          { value: 'complete', label: '✅ Complete' },
+                          { value: 'incomplete', label: '❌ Incomplete' },
+                          { value: 'elite', label: '👑 Elite' },
+                        ]}
+                        value={current.relay_hit_cutoff}
+                        onChange={v => updateField('relay_hit_cutoff', v)}
                       />
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {sport === 'baseball'
-                          ? 'Optimal: < 2.0s standard • < 1.5s for double play turns'
-                          : 'Optimal: < 1.8s standard • < 1.4s for double play turns'}
-                      </p>
                     </div>
                   )}
 
-                  {/* Throwing Velocity */}
+                  {/* Wall Play Yes/No */}
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Throwing Velocity (mph)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder="e.g. 78"
-                      value={current.throwing_velo_mph ?? ''}
-                      onChange={e => updateField('throwing_velo_mph', e.target.value ? parseFloat(e.target.value) : undefined)}
-                      className="h-8 text-xs"
-                    />
+                    <Label className="text-xs text-muted-foreground mb-1 block">Played Ball Off the Wall</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('wall_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.wall_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Play Probability</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'routine', label: '✅ Routine' },
-                        { value: 'plus', label: '🔥 Plus' },
-                        { value: 'elite', label: '👑 Elite' },
-                      ]}
-                      value={current.play_probability}
-                      onChange={v => updateField('play_probability', v)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Receiving Quality</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'poor', label: '❌ Poor' },
-                        { value: 'average', label: '✅ Average' },
-                        { value: 'elite', label: '👑 Elite' },
-                      ]}
-                      value={current.receiving_quality}
-                      onChange={v => updateField('receiving_quality', v)}
-                    />
-                  </div>
-
-                  {/* Catch Type */}
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Catch Type</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'backhand', label: '🤚 Backhand' },
-                        { value: 'forehand', label: '✋ Forehand' },
-                        { value: 'underhand', label: '⬇️ Underhand' },
-                        { value: 'overhand', label: '⬆️ Overhand' },
-                      ]}
-                      value={current.catch_type}
-                      onChange={v => updateField('catch_type', v)}
-                      cols={4}
-                    />
-                  </div>
-
-                  {/* Play Direction + Play Type */}
-                  <PlayDirectionSelector
-                    value={current}
-                    onChange={updateField}
-                    showPlayType={!!repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition)}
-                  />
-
-                  {/* ===== OUTFIELD-SPECIFIC FIELDS ===== */}
-                  {repFieldingPosition && ['LF', 'CF', 'RF'].includes(repFieldingPosition) && (
-                    <>
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
-                            <button
-                              key={String(opt.value)}
-                              type="button"
-                              onClick={() => updateField('relay_play', opt.value)}
-                              className={cn(
-                                'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
-                                current.relay_play === opt.value
-                                  ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                                  : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                              )}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {current.relay_play === true && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground mb-1 block">Hit Cutoff Man?</Label>
-                          <SelectGrid
-                            options={[
-                              { value: 'complete', label: '✅ Complete' },
-                              { value: 'incomplete', label: '❌ Incomplete' },
-                              { value: 'elite', label: '👑 Elite' },
-                            ]}
-                            value={current.relay_hit_cutoff}
-                            onChange={v => updateField('relay_hit_cutoff', v)}
-                          />
-                        </div>
-                      )}
-
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Played Ball Off the Wall</Label>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
-                            <button
-                              key={String(opt.value)}
-                              type="button"
-                              onClick={() => updateField('wall_play', opt.value)}
-                              className={cn(
-                                'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
-                                current.wall_play === opt.value
-                                  ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                                  : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                              )}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {current.wall_play === true && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground mb-1 block">How Well Was the Ball Played Off the Wall</Label>
-                          <SelectGrid
-                            options={[
-                              { value: 'poor', label: '❌ Poor' },
-                              { value: 'well', label: '✅ Well' },
-                              { value: 'elite', label: '👑 Elite' },
-                            ]}
-                            value={current.wall_play_quality}
-                            onChange={v => updateField('wall_play_quality', v)}
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* ===== INFIELD-SPECIFIC FIELDS ===== */}
-                  {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
-                    <>
-                      <InfieldRepTypeFields value={current} onChange={updateField} />
-
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Tag Play Quality</Label>
-                        <SelectGrid
-                          options={[
-                            { value: 'elite', label: '👑 Elite' },
-                            { value: 'complete', label: '✅ Complete' },
-                            { value: 'incomplete', label: '❌ Incomplete' },
-                          ]}
-                          value={current.tag_play_quality}
-                          onChange={v => updateField('tag_play_quality', v)}
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
-                            <button
-                              key={String(opt.value)}
-                              type="button"
-                              onClick={() => updateField('relay_play', opt.value)}
-                              className={cn(
-                                'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
-                                current.relay_play === opt.value
-                                  ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                                  : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                              )}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {current.relay_play === true && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground mb-1 block">Got to Correct Lineup Spot?</Label>
-                          <SelectGrid
-                            options={[
-                              { value: 'off_line', label: '❌ Off Line' },
-                              { value: 'lined_up', label: '✅ Lined Up' },
-                            ]}
-                            value={current.relay_lineup_spot}
-                            onChange={v => updateField('relay_lineup_spot', v)}
-                            cols={2}
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* ===== CATCHER DEFENSE FIELDS ===== */}
-                  {repFieldingPosition === 'C' && (
-                    <div className="space-y-3">
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Catcher Rep Type <span className="text-destructive">*</span></Label>
-                        <SelectGrid
-                          options={[
-                            { value: 'back_pick_1b', label: 'Back Pick → 1B' },
-                            { value: 'back_pick_3b', label: 'Back Pick → 3B' },
-                            { value: 'throw_down_2b', label: 'Throw Down → 2B' },
-                            { value: 'throw_down_3b', label: 'Throw Down → 3B' },
-                            { value: 'pop_fly', label: 'Pop Fly' },
-                            { value: 'bunt_1b', label: 'Bunt → 1B' },
-                            { value: 'bunt_3b', label: 'Bunt → 3B' },
-                            { value: 'tag_play_home', label: 'Tag Play at Home' },
-                            { value: 'live_catching', label: 'Live Catching' },
-                          ]}
-                          value={current.catcher_rep_type}
-                          onChange={v => updateField('catcher_rep_type', v)}
-                          cols={2}
-                        />
-                      </div>
-
-                      {current.catcher_rep_type === 'pop_fly' && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground mb-1 block">Pop Fly Direction</Label>
-                          <SelectGrid
-                            options={[
-                              { value: 'backstop', label: 'Backstop' },
-                              { value: '3b_side', label: '3B Side' },
-                              { value: '1b_side', label: '1B Side' },
-                              { value: 'pitcher_area', label: 'Pitcher Area' },
-                            ]}
-                            value={current.pop_fly_direction}
-                            onChange={v => updateField('pop_fly_direction', v)}
-                            cols={2}
-                          />
-                        </div>
-                      )}
-
-                      {current.catcher_rep_type === 'tag_play_home' && (
-                        <div>
-                          <Label className="text-xs text-muted-foreground mb-1 block">Tag Completion</Label>
-                          <SelectGrid
-                            options={[
-                              { value: 'completed', label: '✅ Completed' },
-                              { value: 'missed', label: '❌ Missed' },
-                              { value: 'late', label: '⏱️ Late' },
-                            ]}
-                            value={current.tag_completion}
-                            onChange={v => updateField('tag_completion', v)}
-                          />
-                        </div>
-                      )}
-
-                      {current.catcher_rep_type === 'live_catching' && (
-                        <>
-                          <div>
-                            <Label className="text-xs text-muted-foreground mb-1.5 block">
-                              ABS Guess (Your Call)
-                            </Label>
-                            <PitchLocationGrid
-                              value={current.abs_guess}
-                              onSelect={v => updateField('abs_guess', v)}
-                              batterSide={effectiveBatterSide}
-                              sport={sport as 'baseball' | 'softball'}
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-muted-foreground mb-1.5 block">
-                              Actual Pitch Location
-                            </Label>
-                            <PitchLocationGrid
-                              value={current.catcher_actual_pitch_location}
-                              onSelect={v => updateField('catcher_actual_pitch_location', v)}
-                              batterSide={effectiveBatterSide}
-                              sport={sport as 'baseball' | 'softball'}
-                            />
-                          </div>
-                        </>
-                      )}
-
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Pop Time (sec)</Label>
-                        <Input
-                          type="number"
-                          placeholder="e.g. 1.95"
-                          value={current.catcher_pop_time_sec ?? ''}
-                          onChange={e => updateField('catcher_pop_time_sec', e.target.value ? Number(e.target.value) : undefined)}
-                          className="h-8 text-xs"
-                          min={0}
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Transfer Time (sec)</Label>
-                        <Input
-                          type="number"
-                          placeholder="e.g. 0.75"
-                          value={current.catcher_transfer_time_sec ?? ''}
-                          onChange={e => updateField('catcher_transfer_time_sec', e.target.value ? Number(e.target.value) : undefined)}
-                          className="h-8 text-xs"
-                          min={0}
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-muted-foreground mb-1 block">Throw Base</Label>
-                        <SelectGrid
-                          options={[
-                            { value: '2B', label: '2B' },
-                            { value: '3B', label: '3B' },
-                            { value: '1B', label: '1B Pickoff' },
-                          ]}
-                          value={current.catcher_throw_base}
-                          onChange={v => updateField('catcher_throw_base', v)}
-                        />
-                      </div>
+                  {current.wall_play === true && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">How Well Was the Ball Played Off the Wall</Label>
+                      <SelectGrid
+                        options={[
+                          { value: 'poor', label: '❌ Poor' },
+                          { value: 'well', label: '✅ Well' },
+                          { value: 'elite', label: '👑 Elite' },
+                        ]}
+                        value={current.wall_play_quality}
+                        onChange={v => updateField('wall_play_quality', v)}
+                      />
                     </div>
                   )}
-
-                  {/* Throw tracking — all fielding reps */}
-                  <FieldingThrowFields value={current} onChange={updateField} />
-
-                  {/* Footwork, Exchange Time, Throw Spin */}
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">
-                      Footwork Grade: {current.footwork_grade ?? 50}
-                    </Label>
-                    <Slider
-                      min={20} max={80} step={5}
-                      value={[current.footwork_grade ?? 50]}
-                      onValueChange={([v]) => updateField('footwork_grade', v)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Exchange Time</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'fast', label: 'Fast' },
-                        { value: 'average', label: 'Avg' },
-                        { value: 'slow', label: 'Slow' },
-                      ]}
-                      value={current.exchange_time_band}
-                      onChange={v => updateField('exchange_time_band', v)}
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Throw Spin Quality</Label>
-                    <SelectGrid
-                      options={[
-                        { value: 'carry', label: 'Carry' },
-                        { value: 'tail', label: 'Tail' },
-                        { value: 'cut', label: 'Cut' },
-                        { value: 'neutral', label: 'Neutral' },
-                      ]}
-                      value={current.throw_spin_quality}
-                      onChange={v => updateField('throw_spin_quality', v)}
-                      cols={4}
-                    />
-                  </div>
-
-                  {/* Field Position Diagram — collapsible */}
-                  <Collapsible>
-                    <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-1.5">
-                      <MapPin className="h-3.5 w-3.5" />
-                      📍 Mark Field Position
-                      <ChevronDown className="h-3 w-3 ml-auto" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-2">
-                      <FieldPositionDiagram
-                        sport={sport as 'baseball' | 'softball'}
-                        position={repFieldingPosition}
-                        onUpdate={({ playerPos, ballPos }) => {
-                          updateField('field_diagram_player_pos', playerPos);
-                          updateField('field_diagram_ball_pos', ballPos);
-                        }}
-                      />
-                    </CollapsibleContent>
-                  </Collapsible>
                 </>
               )}
+
+              {/* ===== INFIELD-SPECIFIC FIELDS ===== */}
+              {repFieldingPosition && INFIELD_POSITIONS.includes(repFieldingPosition) && (
+                <>
+                  <InfieldRepTypeFields value={current} onChange={updateField} />
+
+                  {/* Tag Play Quality */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Tag Play Quality</Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'elite', label: '👑 Elite' },
+                        { value: 'complete', label: '✅ Complete' },
+                        { value: 'incomplete', label: '❌ Incomplete' },
+                      ]}
+                      value={current.tag_play_quality}
+                      onChange={v => updateField('tag_play_quality', v)}
+                    />
+                  </div>
+
+                  {/* Infield Relay Yes/No */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Relay Play</Label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[{ value: true, label: '✅ Yes' }, { value: false, label: '❌ No' }].map(opt => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => updateField('relay_play', opt.value)}
+                          className={cn(
+                            'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
+                            current.relay_play === opt.value
+                              ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                              : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {current.relay_play === true && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Got to Correct Lineup Spot?</Label>
+                      <SelectGrid
+                        options={[
+                          { value: 'off_line', label: '❌ Off Line' },
+                          { value: 'lined_up', label: '✅ Lined Up' },
+                        ]}
+                        value={current.relay_lineup_spot}
+                        onChange={v => updateField('relay_lineup_spot', v)}
+                        cols={2}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* ===== CATCHER DEFENSE FIELDS ===== */}
+              {repFieldingPosition === 'C' && (
+                <div className="space-y-3">
+                  {/* Catcher Rep Type */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Catcher Rep Type <span className="text-destructive">*</span></Label>
+                    <SelectGrid
+                      options={[
+                        { value: 'back_pick_1b', label: 'Back Pick → 1B' },
+                        { value: 'back_pick_3b', label: 'Back Pick → 3B' },
+                        { value: 'throw_down_2b', label: 'Throw Down → 2B' },
+                        { value: 'throw_down_3b', label: 'Throw Down → 3B' },
+                        { value: 'pop_fly', label: 'Pop Fly' },
+                        { value: 'bunt_1b', label: 'Bunt → 1B' },
+                        { value: 'bunt_3b', label: 'Bunt → 3B' },
+                        
+                        { value: 'tag_play_home', label: 'Tag Play at Home' },
+                        { value: 'live_catching', label: 'Live Catching' },
+                      ]}
+                      value={current.catcher_rep_type}
+                      onChange={v => updateField('catcher_rep_type', v)}
+                      cols={2}
+                    />
+                  </div>
+
+                  {/* Pop Fly Direction sub-question */}
+                  {current.catcher_rep_type === 'pop_fly' && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Pop Fly Direction</Label>
+                      <SelectGrid
+                        options={[
+                          { value: 'backstop', label: 'Backstop' },
+                          { value: '3b_side', label: '3B Side' },
+                          { value: '1b_side', label: '1B Side' },
+                          { value: 'pitcher_area', label: 'Pitcher Area' },
+                        ]}
+                        value={current.pop_fly_direction}
+                        onChange={v => updateField('pop_fly_direction', v)}
+                        cols={2}
+                      />
+                    </div>
+                  )}
+
+                  {/* Tag Completion sub-question */}
+                  {current.catcher_rep_type === 'tag_play_home' && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Tag Completion</Label>
+                      <SelectGrid
+                        options={[
+                          { value: 'completed', label: '✅ Completed' },
+                          { value: 'missed', label: '❌ Missed' },
+                          { value: 'late', label: '⏱️ Late' },
+                        ]}
+                        value={current.tag_completion}
+                        onChange={v => updateField('tag_completion', v)}
+                      />
+                    </div>
+                  )}
+
+                  {/* Live Catching pitch tracking */}
+                  {current.catcher_rep_type === 'live_catching' && (
+                    <>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">
+                          ABS Guess (Your Call) <span className="text-destructive">*</span>
+                        </Label>
+                        <PitchLocationGrid
+                          value={current.abs_guess}
+                          onSelect={v => updateField('abs_guess', v)}
+                          batterSide={effectiveBatterSide}
+                          sport={sport as 'baseball' | 'softball'}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">
+                          Actual Pitch Location <span className="text-destructive">*</span>
+                        </Label>
+                        <PitchLocationGrid
+                          value={current.catcher_actual_pitch_location}
+                          onSelect={v => updateField('catcher_actual_pitch_location', v)}
+                          batterSide={effectiveBatterSide}
+                          sport={sport as 'baseball' | 'softball'}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Always-visible catcher metrics */}
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Pop Time (sec)</Label>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 1.95"
+                      value={current.catcher_pop_time_sec ?? ''}
+                      onChange={e => updateField('catcher_pop_time_sec', e.target.value ? Number(e.target.value) : undefined)}
+                      className="h-8 text-xs"
+                      min={0}
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Transfer Time (sec)</Label>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 0.75"
+                      value={current.catcher_transfer_time_sec ?? ''}
+                      onChange={e => updateField('catcher_transfer_time_sec', e.target.value ? Number(e.target.value) : undefined)}
+                      className="h-8 text-xs"
+                      min={0}
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Throw Base</Label>
+                    <SelectGrid
+                      options={[
+                        { value: '2B', label: '2B' },
+                        { value: '3B', label: '3B' },
+                        { value: '1B', label: '1B Pickoff' },
+                      ]}
+                      value={current.catcher_throw_base}
+                      onChange={v => updateField('catcher_throw_base', v)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Throw tracking — all fielding reps */}
+              <FieldingThrowFields value={current} onChange={updateField} />
+
+              {/* Footwork, Exchange Time, Throw Spin — ALWAYS VISIBLE (promoted from advanced) */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">
+                  Footwork Grade: {current.footwork_grade ?? 50}
+                </Label>
+                <Slider
+                  min={20} max={80} step={5}
+                  value={[current.footwork_grade ?? 50]}
+                  onValueChange={([v]) => updateField('footwork_grade', v)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Exchange Time</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'fast', label: 'Fast' },
+                    { value: 'average', label: 'Avg' },
+                    { value: 'slow', label: 'Slow' },
+                  ]}
+                  value={current.exchange_time_band}
+                  onChange={v => updateField('exchange_time_band', v)}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Throw Spin Quality</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'carry', label: 'Carry' },
+                    { value: 'tail', label: 'Tail' },
+                    { value: 'cut', label: 'Cut' },
+                    { value: 'neutral', label: 'Neutral' },
+                  ]}
+                  value={current.throw_spin_quality}
+                  onChange={v => updateField('throw_spin_quality', v)}
+                  cols={4}
+                />
+              </div>
+
+              {/* Field Position Diagram — collapsible */}
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-1.5">
+                  <MapPin className="h-3.5 w-3.5" />
+                  📍 Mark Field Position
+                  <ChevronDown className="h-3 w-3 ml-auto" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2">
+                  <FieldPositionDiagram
+                    sport={sport as 'baseball' | 'softball'}
+                    position={repFieldingPosition}
+                    onUpdate={({ playerPos, ballPos }) => {
+                      updateField('field_diagram_player_pos', playerPos);
+                      updateField('field_diagram_ball_pos', ballPos);
+                    }}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
             </>
           )}
 
           {/* ===== BASERUNNING FIELDS ===== */}
           {isBaserunning && (
-            <BaserunningRepFields value={current} onChange={updateField} sport={sport} mode={mode} />
+            <BaserunningRepFields value={current} onChange={updateField} sport={sport} />
           )}
 
            {/* ===== THROWING FIELDS ===== */}
@@ -1967,30 +1971,26 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
            {/* ===== BUNTING FIELDS ===== */}
            {isBunting && (
-             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} mode={mode} />
+             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} />
            )}
 
-          {/* Goal of Rep & Actual Outcome — advanced only */}
-          {mode === 'advanced' && (
-            <>
-              <AITextBoxField
-                label="Goal of Rep"
-                value={current.goal_of_rep ?? ''}
-                onChange={(v) => updateField('goal_of_rep', v)}
-                minChars={0}
-                required={false}
-                placeholder="What was your goal for this rep? (optional)..."
-              />
-              <AITextBoxField
-                label="Actual Outcome"
-                value={current.actual_outcome ?? ''}
-                onChange={(v) => updateField('actual_outcome', v)}
-                minChars={0}
-                required={false}
-                placeholder="What actually happened? (optional)..."
-              />
-            </>
-          )}
+          {/* Goal of Rep & Actual Outcome (per-rep) */}
+          <AITextBoxField
+            label="Goal of Rep"
+            value={current.goal_of_rep ?? ''}
+            onChange={(v) => updateField('goal_of_rep', v)}
+            minChars={0}
+            required={false}
+            placeholder="What was your goal for this rep? (optional)..."
+          />
+          <AITextBoxField
+            label="Actual Outcome"
+            value={current.actual_outcome ?? ''}
+            onChange={(v) => updateField('actual_outcome', v)}
+            minChars={0}
+            required={false}
+            placeholder="What actually happened? (optional)..."
+          />
 
           {/* CONFIRM REP */}
           <div className="relative">

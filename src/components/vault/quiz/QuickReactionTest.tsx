@@ -46,10 +46,8 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
     // Random delay before showing target
     const delay = Math.random() * (MAX_DELAY - MIN_DELAY) + MIN_DELAY;
     timeoutRef.current = setTimeout(() => {
+      startTimeRef.current = Date.now();
       setPhase('tap');
-      requestAnimationFrame(() => {
-        startTimeRef.current = performance.now();
-      });
     }, delay);
   }, []);
 
@@ -64,7 +62,7 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
     }
 
     if (phase === 'tap') {
-      const reactionTime = Math.round(performance.now() - startTimeRef.current);
+      const reactionTime = Date.now() - startTimeRef.current;
       setShowTime(reactionTime);
       if (navigator.vibrate) navigator.vibrate(10);
       
@@ -87,11 +85,9 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
         setPhase('waiting');
         const delay = Math.random() * (MAX_DELAY - MIN_DELAY) + MIN_DELAY;
         timeoutRef.current = setTimeout(() => {
+          startTimeRef.current = Date.now();
           setPhase('tap');
           setShowTime(null);
-          requestAnimationFrame(() => {
-            startTimeRef.current = performance.now();
-          });
         }, delay);
       }
     }
@@ -157,7 +153,7 @@ export function QuickReactionTest({ onComplete, disabled }: QuickReactionTestPro
 
       {(phase === 'waiting' || phase === 'tap') && (
         <div
-          onPointerDown={handleTap}
+          onClick={handleTap}
           className={cn(
             "relative h-24 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-150 select-none",
             phase === 'waiting' 

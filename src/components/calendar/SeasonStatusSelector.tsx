@@ -14,25 +14,14 @@ const SEASON_OPTIONS: { value: SeasonStatus; label: string }[] = [
   { value: 'post_season', label: 'Post-Season' },
 ];
 
-const DATE_KEYS: Record<SeasonStatus, { start: string; end: string }> = {
-  preseason: { start: 'preseason_start_date', end: 'preseason_end_date' },
-  in_season: { start: 'in_season_start_date', end: 'in_season_end_date' },
-  post_season: { start: 'post_season_start_date', end: 'post_season_end_date' },
-};
-
 export function SeasonStatusSelector() {
-  const { seasonStatus, seasonDates, isLoading, updateSeasonStatus } = useSeasonStatus();
-  const [showDates, setShowDates] = useState(false);
+  const { seasonStatus, seasonStartDate, seasonEndDate, isLoading, updateSeasonStatus } = useSeasonStatus();
+  const [showDates, setShowDates] = useState(!!(seasonStartDate || seasonEndDate));
 
   if (isLoading) return null;
 
-  const keys = DATE_KEYS[seasonStatus];
-  const startDateStr = (seasonDates as any)[keys.start] as string | null;
-  const endDateStr = (seasonDates as any)[keys.end] as string | null;
-  const startDate = startDateStr ? new Date(startDateStr + 'T00:00:00') : undefined;
-  const endDate = endDateStr ? new Date(endDateStr + 'T00:00:00') : undefined;
-
-  const phaseLabel = SEASON_OPTIONS.find(o => o.value === seasonStatus)?.label ?? 'Season';
+  const startDate = seasonStartDate ? new Date(seasonStartDate + 'T00:00:00') : undefined;
+  const endDate = seasonEndDate ? new Date(seasonEndDate + 'T00:00:00') : undefined;
 
   const handleStatusChange = (status: SeasonStatus) => {
     updateSeasonStatus({ season_status: status });
@@ -40,14 +29,14 @@ export function SeasonStatusSelector() {
 
   const handleStartDateChange = (date: Date | undefined) => {
     updateSeasonStatus({
-      [keys.start]: date ? format(date, 'yyyy-MM-dd') : null,
-    } as any);
+      season_start_date: date ? format(date, 'yyyy-MM-dd') : null,
+    });
   };
 
   const handleEndDateChange = (date: Date | undefined) => {
     updateSeasonStatus({
-      [keys.end]: date ? format(date, 'yyyy-MM-dd') : null,
-    } as any);
+      season_end_date: date ? format(date, 'yyyy-MM-dd') : null,
+    });
   };
 
   return (
@@ -84,14 +73,11 @@ export function SeasonStatusSelector() {
           ))}
         </div>
 
-        {/* Date pickers for current phase */}
+        {/* Date pickers */}
         {showDates && (
-          <div className="space-y-2">
-            <span className="text-xs font-medium text-muted-foreground">{phaseLabel} Dates</span>
-            <div className="grid grid-cols-2 gap-2">
-              <DateField label="Start" value={startDate} onChange={handleStartDateChange} />
-              <DateField label="End" value={endDate} onChange={handleEndDateChange} />
-            </div>
+          <div className="grid grid-cols-2 gap-2">
+            <DateField label="Start" value={startDate} onChange={handleStartDateChange} />
+            <DateField label="End" value={endDate} onChange={handleEndDateChange} />
           </div>
         )}
       </CardContent>

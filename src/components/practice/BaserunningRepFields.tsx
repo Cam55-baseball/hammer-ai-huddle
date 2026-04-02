@@ -9,7 +9,6 @@ interface BaserunningRepFieldsProps {
   value: Partial<ScoredRep>;
   onChange: (field: string, val: any) => void;
   sport?: string;
-  mode?: 'quick' | 'advanced';
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
@@ -75,16 +74,13 @@ const goalOptions = [
   { value: 'situational', label: '🎯 Situational' },
 ];
 
-export function BaserunningRepFields({ value, onChange, sport, mode = 'quick' }: BaserunningRepFieldsProps) {
+export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepFieldsProps) {
   const drills = sport === 'softball' ? softballDrills : baseballDrills;
 
   return (
     <div className="space-y-3">
-      {/* Required: Drill Type */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">
-          Drill Type <span className="text-destructive">*</span>
-        </Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type</Label>
         <SelectGrid
           options={drills}
           value={value.drill_type}
@@ -104,80 +100,78 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'quick' }:
         />
       )}
 
-      {/* Advanced-only fields */}
-      {mode === 'advanced' && (
-        <>
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
-            <SelectGrid
-              options={goalOptions}
-              value={value.baserunning_goal}
-              onChange={v => onChange('baserunning_goal', v)}
-              cols={3}
-            />
-          </div>
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
+        <SelectGrid
+          options={goalOptions}
+          value={value.baserunning_goal}
+          onChange={v => onChange('baserunning_goal', v)}
+          cols={3}
+        />
+      </div>
 
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">
-              Jump Grade: {value.jump_grade ?? 50}
-            </Label>
-            <Slider
-              min={20} max={80} step={5}
-              value={[value.jump_grade ?? 50]}
-              onValueChange={([v]) => onChange('jump_grade', v)}
-            />
-          </div>
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Jump Grade: {value.jump_grade ?? 50}
+        </Label>
+        <Slider
+          min={20} max={80} step={5}
+          value={[value.jump_grade ?? 50]}
+          onValueChange={([v]) => onChange('jump_grade', v)}
+        />
+      </div>
 
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">
-              Read Grade: {value.read_grade ?? 50}
-            </Label>
-            <Slider
-              min={20} max={80} step={5}
-              value={[value.read_grade ?? 50]}
-              onValueChange={([v]) => onChange('read_grade', v)}
-            />
-          </div>
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Read Grade: {value.read_grade ?? 50}
+        </Label>
+        <Slider
+          min={20} max={80} step={5}
+          value={[value.read_grade ?? 50]}
+          onValueChange={([v]) => onChange('read_grade', v)}
+        />
+      </div>
 
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Time to Base</Label>
-            <SelectGrid
-              options={[
-                { value: 'fast', label: 'Fast' },
-                { value: 'average', label: 'Average' },
-                { value: 'slow', label: 'Slow' },
-              ]}
-              value={value.time_to_base_band}
-              onChange={v => onChange('time_to_base_band', v)}
-            />
-          </div>
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Time to Base</Label>
+        <SelectGrid
+          options={[
+            { value: 'fast', label: 'Fast' },
+            { value: 'average', label: 'Average' },
+            { value: 'slow', label: 'Slow' },
+          ]}
+          value={value.time_to_base_band}
+          onChange={v => onChange('time_to_base_band', v)}
+        />
+      </div>
 
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Exact Time to Base (Seconds)</Label>
-            <Input
-              type="number"
-              placeholder="Optional — overrides time band"
-              value={value.exact_time_to_base_sec ?? ''}
-              onChange={e => onChange('exact_time_to_base_sec', e.target.value ? Number(e.target.value) : undefined)}
-              className="h-8 text-xs"
-              min={0}
-              step="any"
-            />
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Exact Steps to Base</Label>
-            <Input
-              type="number"
-              placeholder="Optional integer"
-              value={value.exact_steps_to_base ?? ''}
-              onChange={e => onChange('exact_steps_to_base', e.target.value ? parseInt(e.target.value, 10) : undefined)}
-              className="h-8 text-xs"
-              min={0}
-              step="1"
-            />
-          </div>
-        </>
-      )}
+      {/* Exact Time to Base (optional override) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Exact Time to Base (Seconds)</Label>
+        <Input
+          type="number"
+          placeholder="Optional — overrides time band"
+          value={value.exact_time_to_base_sec ?? ''}
+          onChange={e => onChange('exact_time_to_base_sec', e.target.value ? Number(e.target.value) : undefined)}
+          className="h-8 text-xs"
+          min={0}
+          step="any"
+        />
+      </div>
+
+      {/* Exact Steps to Base (optional) */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Exact Steps to Base</Label>
+        <Input
+          type="number"
+          placeholder="Optional integer"
+          value={value.exact_steps_to_base ?? ''}
+          onChange={e => onChange('exact_steps_to_base', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+          className="h-8 text-xs"
+          min={0}
+          step="1"
+        />
+      </div>
     </div>
   );
 }

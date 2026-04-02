@@ -137,7 +137,7 @@ export function VaultNutritionLogCard({
   };
   
   // Smart food lookup
-  const { status: lookupStatus, result: lookupResult, error: lookupError, creditsDepleted, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
+  const { status: lookupStatus, result: lookupResult, error: lookupError, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
   const touchedFields = useRef<Set<string>>(new Set());
   
   // Favorite meal name

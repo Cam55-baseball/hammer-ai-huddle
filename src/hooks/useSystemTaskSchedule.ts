@@ -4,8 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getDay } from 'date-fns';
-import { useQueryClient } from '@tanstack/react-query';
-import { UNIFIED_SCHEDULE_KEY } from '@/hooks/useUnifiedSchedule';
 
 export interface TaskSchedule {
   id: string;
@@ -19,7 +17,6 @@ export interface TaskSchedule {
 export function useSystemTaskSchedule() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [schedules, setSchedules] = useState<Record<string, TaskSchedule>>({});
   const [loading, setLoading] = useState(true);
 
@@ -110,8 +107,6 @@ export function useSystemTaskSchedule() {
         }));
       }
 
-      // Invalidate unified schedule cache so Calendar + Game Plan both see the update
-      queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
       toast.success(t('gamePlan.taskSchedule.saved', 'Schedule saved'));
       return true;
     } catch (error: any) {

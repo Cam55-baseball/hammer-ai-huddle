@@ -144,7 +144,7 @@ export function CustomActivityBuilderDialog({
   const [specificDates, setSpecificDates] = useState<Date[]>([]);
   
   // Elite Workout Block System state
-  const [useBlockSystem, setUseBlockSystem] = useState(presetActivityType === 'workout' || false);
+  const [useBlockSystem, setUseBlockSystem] = useState(false);
   const [workoutBlocks, setWorkoutBlocks] = useState<WorkoutBlock[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('execute');
 
@@ -393,12 +393,7 @@ export function CustomActivityBuilderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onFocusOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="p-4 sm:p-6 pb-0 flex-shrink-0">
           <DialogTitle className="text-xl font-black">
             {isFromCoach 
@@ -425,11 +420,7 @@ export function CustomActivityBuilderDialog({
             {!isEditing && !presetActivityType && !isFieldLocked('type') && (
               <div className="space-y-2">
                 <Label className="text-sm font-bold">{t('customActivity.selectType')}</Label>
-                <ActivityTypeSelector selected={activityType} onSelect={(type) => {
-                  setActivityType(type);
-                  if (type === 'workout') setUseBlockSystem(true);
-                  else setUseBlockSystem(false);
-                }} />
+                <ActivityTypeSelector selected={activityType} onSelect={setActivityType} />
               </div>
             )}
 
@@ -755,19 +746,14 @@ export function CustomActivityBuilderDialog({
 
                 <Separator className="my-4" />
                 
-                {/* Block System Toggle - Only for workout type - Prominent placement */}
+                {/* Block System Toggle - Only for workout type */}
                 {showBlockSystemToggle && (
-                  <div className="p-3 sm:p-4 rounded-lg border-l-4 border-l-primary bg-primary/5 space-y-4 overflow-hidden">
+                  <div className="p-3 sm:p-4 rounded-lg border-2 border-dashed bg-muted/30 space-y-4 overflow-hidden">
                     <div className="flex items-center justify-between gap-3">
                       <Label htmlFor="useBlockSystem" className="flex items-center gap-2 cursor-pointer min-w-0">
-                        <div className="p-1.5 rounded-md bg-primary/10">
-                          <Layers className="h-4 w-4 text-primary shrink-0" />
-                        </div>
+                        <Layers className="h-4 w-4 text-primary shrink-0" />
                         <div className="min-w-0">
                           <span className="font-bold">{t('eliteWorkout.useBlockSystem', 'Use Block-Based Builder')}</span>
-                          <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">
-                            {t('common.recommended', 'Recommended')}
-                          </Badge>
                           <p className="text-xs text-muted-foreground mt-0.5 break-words">
                             {t('eliteWorkout.useBlockSystemDesc', 'Organize exercises into structured blocks with intelligent load tracking')}
                           </p>
@@ -792,8 +778,7 @@ export function CustomActivityBuilderDialog({
                     )}
                   </div>
                 )}
-
-                <Separator className="my-4" />
+                
                 {/* Universal sections - Available for ALL activity types */}
                 <div className="space-y-4 overflow-hidden">
                   <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">

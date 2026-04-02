@@ -37,7 +37,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
   const [saving, setSaving] = useState(false);
   
   // Smart food lookup
-  const { status: lookupStatus, result: lookupResult, error: lookupError, creditsDepleted, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
+  const { status: lookupStatus, result: lookupResult, error: lookupError, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
   
   // Track which fields user has manually edited
   const touchedFields = useRef<Set<string>>(new Set());

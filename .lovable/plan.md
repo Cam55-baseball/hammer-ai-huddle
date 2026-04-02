@@ -1,39 +1,44 @@
 
 
-# Fix Custom Activity Builder Forced Exit — Real Root Cause
+# Season Status Selector for Calendar Module
 
-## Problem
+## What it does
+Adds a season context selector to the Calendar header where users can set their current season phase (In-Season, Pre-Season, Post-Season) with optional start/end dates. This setting persists in the database and can be referenced by other modules (practice sessions, game plan, etc.).
 
-The `CustomActivityBuilderDialog` closes unexpectedly whenever users interact with **any dropdown, popover, or picker** inside it. This affects ALL entry points (Templates, Game Plan, Calendar, Folders, Received Activities).
+## Database
 
-**Root cause:** The `DialogContent` in `CustomActivityBuilderDialog.tsx` (line 396) has NO interaction prevention handlers. The builder contains many portal-rendered elements — `Select` dropdowns, `Popover` (color picker, icon picker, date picker), and `DragOverlay` — that render outside the dialog's DOM tree. Radix Dialog interprets clicks on these portals as "outside" clicks and auto-dismisses.
+### Migration: Add columns to `athlete_mpi_settings`
+Add three new columns to the existing `athlete_mpi_settings` table:
+- `season_status` (text, default `'in_season'`) — one of `in_season`, `preseason`, `post_season`
+- `season_start_date` (date, nullable)
+- `season_end_date` (date, nullable)
 
-This is NOT a state management issue in CalendarDaySheet. The previous fix (snapshotting `editingTemplate`) was correct but addressed a secondary problem. The primary issue is the dialog itself dismissing on any portal interaction.
+This avoids creating a new table and keeps season context co-located with other athlete settings.
 
-## Fix — One file, one change
+## New Component: `SeasonStatusSelector.tsx`
 
-**File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
+A compact card/section placed below the Calendar header that shows:
+1. **Three-button toggle** — In-Season, Pre-Season, Post-Season (styled like `SeasonContextToggle`)
+2. **Optional date pickers** — Start Date and End Date fields using the Shadcn date picker pattern, shown inline or in a collapsible row
+3. **Auto-save** — Changes upsert to `athlete_mpi_settings` on selection; no separate save button needed
 
-Add three event prevention handlers to `DialogContent` (line 396):
+## New Hook: `useSeasonStatus.ts`
 
-```typescript
-<DialogContent 
-  className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden"
-  onPointerDownOutside={(e) => e.preventDefault()}
-  onInteractOutside={(e) => e.preventDefault()}
-  onFocusOutside={(e) => e.preventDefault()}
->
-```
+- Fetches the user's `season_status`, `season_start_date`, `season_end_date` from `athlete_mpi_settings`
+- Provides an `updateSeasonStatus` mutation
+- Uses React Query for caching
 
-This stops the dialog from closing when users click on Select menus, color pickers, icon pickers, date pickers, or drag overlays. The dialog will only close via the explicit X button or Cancel/Save actions.
+## Integration into CalendarView
 
-## Why this was missed
-
-Previous investigations focused on state lifecycle in CalendarDaySheet. The actual dismissal happens inside the Radix Dialog primitive, not in React state. The symptom (getting "kicked out") looks identical whether caused by state teardown or dialog auto-dismiss, but the fix is completely different.
+- Import and render `<SeasonStatusSelector />` between the header card and the pending coach activities section
+- The component is self-contained (fetches/saves its own data)
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | Add `onPointerDownOutside`, `onInteractOutside`, `onFocusOutside` to `DialogContent` |
+| Migration SQL | Add `season_status`, `season_start_date`, `season_end_date` to `athlete_mpi_settings` |
+| `src/hooks/useSeasonStatus.ts` | New hook — fetch and update season status |
+| `src/components/calendar/SeasonStatusSelector.tsx` | New component — toggle + date pickers |
+| `src/components/calendar/CalendarView.tsx` | Render `SeasonStatusSelector` in the header area |
 

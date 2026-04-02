@@ -176,8 +176,6 @@ export function AppSidebar() {
     { title: t('navigation.weather'), url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
     ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
-    ...(isCoach ? [{ title: 'Player Intelligence', url: "/coach-command", icon: Brain }] : []),
-    ...(isOwner ? [{ title: 'UDL Control', url: "/owner/udl-control", icon: Brain }] : []),
   ];
 
   // Determine active tier for sidebar display

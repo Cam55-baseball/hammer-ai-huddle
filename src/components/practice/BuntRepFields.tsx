@@ -11,7 +11,6 @@ interface BuntRepFieldsProps {
   onChange: (field: string, val: any) => void;
   sport?: string;
   batterSide?: 'L' | 'R';
-  mode?: 'quick' | 'advanced';
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
@@ -95,7 +94,7 @@ const spinTypes = [
 ];
 
 
-export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'quick' }: BuntRepFieldsProps) {
+export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFieldsProps) {
   const { pitchTypes } = useSportConfig();
   const v = value as any;
 
@@ -155,83 +154,75 @@ export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'quic
         )}
       </div>
 
-      {/* Bunt Direction — required */}
+      {/* Pitch Location */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">
-          Bunt Direction <span className="text-destructive">*</span>
-        </Label>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">Pitch Location</Label>
+        <PitchLocationGrid
+          value={v.pitch_location}
+          onSelect={val => onChange('pitch_location', val)}
+          batterSide={batterSide || 'R'}
+          sport={(sport as 'baseball' | 'softball') || 'baseball'}
+        />
+      </div>
+
+      {/* ABS Guess */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1.5 block">ABS Guess</Label>
+        <PitchLocationGrid
+          value={v.abs_guess}
+          onSelect={val => onChange('abs_guess', val)}
+          batterSide={batterSide || 'R'}
+          sport={(sport as 'baseball' | 'softball') || 'baseball'}
+        />
+      </div>
+
+      {/* Contact Quality */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality</Label>
+        <SelectGrid options={contactQualities} value={v.bunt_contact_quality} onChange={val => onChange('bunt_contact_quality', val)} />
+      </div>
+
+      {/* Bunt Direction */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Direction</Label>
         <SelectGrid options={buntDirections} value={v.bunt_direction} onChange={val => onChange('bunt_direction', val)} cols={4} />
       </div>
 
-      {/* Bunt Type — required */}
+      {/* Ball State */}
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">
-          Bunt Type <span className="text-destructive">*</span>
-        </Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">Ball State</Label>
+        <SelectGrid options={ballStates} value={v.bunt_ball_state} onChange={val => onChange('bunt_ball_state', val)} cols={2} />
+      </div>
+
+      {/* Defense Result */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Defense Result</Label>
+        <SelectGrid options={defenseResults} value={v.bunt_defense_result} onChange={val => onChange('bunt_defense_result', val)} cols={2} />
+      </div>
+
+      {/* Hit or Out */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Hit or Out</Label>
+        <SelectGrid options={hitOrOut} value={v.bunt_hit_or_out} onChange={val => onChange('bunt_hit_or_out', val)} cols={2} />
+      </div>
+
+      {/* Bunt Type */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Type</Label>
         <SelectGrid options={buntTypes} value={v.bunt_type} onChange={val => onChange('bunt_type', val)} />
       </div>
 
-      {mode === 'advanced' && (
-        <>
-          {/* Pitch Location */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Pitch Location</Label>
-            <PitchLocationGrid
-              value={v.pitch_location}
-              onSelect={val => onChange('pitch_location', val)}
-              batterSide={batterSide || 'R'}
-              sport={(sport as 'baseball' | 'softball') || 'baseball'}
-            />
-          </div>
+      {/* Runner Location */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Runner Location</Label>
+        <SelectGrid options={runnerLocations} value={v.bunt_runner_location} onChange={val => onChange('bunt_runner_location', val)} />
+      </div>
 
-          {/* ABS Guess */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">ABS Guess</Label>
-            <PitchLocationGrid
-              value={v.abs_guess}
-              onSelect={val => onChange('abs_guess', val)}
-              batterSide={batterSide || 'R'}
-              sport={(sport as 'baseball' | 'softball') || 'baseball'}
-            />
-          </div>
-
-          {/* Contact Quality */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality</Label>
-            <SelectGrid options={contactQualities} value={v.bunt_contact_quality} onChange={val => onChange('bunt_contact_quality', val)} />
-          </div>
-
-          {/* Ball State */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Ball State</Label>
-            <SelectGrid options={ballStates} value={v.bunt_ball_state} onChange={val => onChange('bunt_ball_state', val)} cols={2} />
-          </div>
-
-          {/* Defense Result */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Defense Result</Label>
-            <SelectGrid options={defenseResults} value={v.bunt_defense_result} onChange={val => onChange('bunt_defense_result', val)} cols={2} />
-          </div>
-
-          {/* Hit or Out */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Hit or Out</Label>
-            <SelectGrid options={hitOrOut} value={v.bunt_hit_or_out} onChange={val => onChange('bunt_hit_or_out', val)} cols={2} />
-          </div>
-
-          {/* Runner Location */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Runner Location</Label>
-            <SelectGrid options={runnerLocations} value={v.bunt_runner_location} onChange={val => onChange('bunt_runner_location', val)} />
-          </div>
-
-          {/* Spin Type */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">Spin Type</Label>
-            <SelectGrid options={spinTypes} value={v.bunt_spin_type} onChange={val => onChange('bunt_spin_type', val)} cols={4} />
-          </div>
-        </>
-      )}
+      {/* Spin Type */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Spin Type</Label>
+        <SelectGrid options={spinTypes} value={v.bunt_spin_type} onChange={val => onChange('bunt_spin_type', val)} cols={4} />
+      </div>
 
     </div>
   );

@@ -8,7 +8,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
-import { AuthProvider } from "./contexts/AuthContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 
 // Clean up cache-busting param after successful load
@@ -99,8 +98,6 @@ const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrai
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
-const CoachCommandCenter = lazyWithRetry(() => import("./pages/CoachCommandCenter"));
-const OwnerUDLControl = lazyWithRetry(() => import("./pages/OwnerUDLControl"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -121,7 +118,6 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
     <SportThemeProvider>
       <TooltipProvider>
         <ErrorBoundary>
@@ -187,8 +183,6 @@ const App = () => {
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
               <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
               <Route path="/royal-timing" element={<RoyalTiming />} />
-              <Route path="/coach-command" element={<CoachCommandCenter />} />
-              <Route path="/owner/udl-control" element={<OwnerUDLControl />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
@@ -197,7 +191,6 @@ const App = () => {
         </ErrorBoundary>
       </TooltipProvider>
     </SportThemeProvider>
-    </AuthProvider>
   </QueryClientProvider>
   );
 };

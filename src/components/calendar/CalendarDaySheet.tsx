@@ -292,7 +292,6 @@ export function CalendarDaySheet({
   const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<import('@/types/customActivity').CustomActivityTemplate | null>(null);
   const [restSchedulerOpen, setRestSchedulerOpen] = useState(false);
 
   // Combined loading state for lock data
@@ -475,13 +474,10 @@ export function CalendarDaySheet({
     }
   };
 
-  // Handle edit from detail dialog — snapshot template BEFORE closing detail
+  // Handle edit from detail dialog
   const handleEditFromDetail = () => {
-    const template = selectedTask?.customActivityData?.template;
-    if (!template) return;
-    setEditingTemplate({ ...template });
-    setEditDialogOpen(true);
     closeDetailDialog();
+    setEditDialogOpen(true);
   };
 
   const isCompletable = (event: CalendarEvent) => event.type === 'custom_activity';
@@ -894,23 +890,22 @@ export function CalendarDaySheet({
         onToggleCheckbox={handleToggleCheckbox}
       />
 
-      {/* Edit Custom Activity Dialog — uses stable editingTemplate state */}
-      {editingTemplate && (
+      {/* Edit Custom Activity Dialog */}
+      {selectedTask?.customActivityData?.template && (
         <CustomActivityBuilderDialog
           open={editDialogOpen}
-          onOpenChange={(open) => {
-            setEditDialogOpen(open);
-            if (!open) setEditingTemplate(null);
-          }}
-          template={editingTemplate}
+          onOpenChange={setEditDialogOpen}
+          template={selectedTask.customActivityData.template}
           selectedSport={selectedSportForEdit}
           onSave={async (data) => {
-            const templateId = editingTemplate.id;
-            if (templateId) {
+            const templateId = selectedTask.customActivityData?.template?.id;
+            if (templateId && selectedTask?.customActivityData) {
+              // OPTIMISTIC UPDATE: Apply changes immediately
+              updateSelectedTaskOptimistically(data as Partial<import('@/types/customActivity').CustomActivityTemplate>);
+              // Persist in background
               await updateTemplate(templateId, data);
             }
             setEditDialogOpen(false);
-            setEditingTemplate(null);
             onRefresh?.();
           }}
         />

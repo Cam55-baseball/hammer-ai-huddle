@@ -21,10 +21,6 @@ export interface SubscriptionData {
   discount_percent?: number | null;
 }
 
-// Module-level deduplication: only one check-subscription call at a time
-let inflightCheck: Promise<void> | null = null;
-let lastResult: SubscriptionData | null = null;
-
 export const useSubscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
     subscribed: false,
@@ -60,17 +56,12 @@ export const useSubscription = () => {
     return hasModuleForSport(module, sport);
   }, [hasModuleForSport]);
 
-  const setAndCache = useCallback((data: SubscriptionData) => {
-    lastResult = data;
-    setSubscriptionData(data);
-  }, []);
-
-  const doCheckSubscription = useCallback(async (silent: boolean = false) => {
+  const checkSubscription = useCallback(async (silent: boolean = false) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        setAndCache({
+        setSubscriptionData({
           subscribed: false,
           modules: [],
           module_details: {},
@@ -83,20 +74,12 @@ export const useSubscription = () => {
         return;
       }
 
-      // Refresh session proactively before calling edge function to avoid expired token errors
-      await supabase.auth.refreshSession();
-
-      // Call edge function with refreshed session
+      // First attempt: Call edge function with current session
       let { data, error } = await supabase.functions.invoke('check-subscription');
       let authFailed = false;
 
-      // If we still get an auth error (401), try one more refresh and retry
-      const isAuthError = (err: any) => {
-        const msg = err?.message || '';
-        return msg.includes('Authentication') || msg.includes('401') || msg.includes('expired') || msg.includes('session missing') || msg.includes('session_not_found') || msg.includes('non-2xx');
-      };
-
-      if (error && isAuthError(error)) {
+      // If we get an auth error (401), try refreshing the session and retry once
+      if (error && (error.message?.includes('Authentication') || error.message?.includes('401') || error.message?.includes('Invalid or expired token'))) {
         console.log('[useSubscription] Auth error detected, attempting token refresh...');
         
         try {
@@ -105,12 +88,14 @@ export const useSubscription = () => {
           if (!refreshError && refreshData.session) {
             console.log('[useSubscription] Token refreshed successfully, retrying edge function...');
             
+            // Retry with refreshed token
             const retryResult = await supabase.functions.invoke('check-subscription');
             
             data = retryResult.data;
             error = retryResult.error;
             
-            if (error && isAuthError(error)) {
+            // If still auth error after refresh, mark as failed
+            if (error && (error.message?.includes('Authentication') || error.message?.includes('401'))) {
               authFailed = true;
             }
           } else {
@@ -131,7 +116,7 @@ export const useSubscription = () => {
         (error.message?.includes('NOT_FOUND') || error.message?.includes('not found') || (error as any)?.status === 404)
       ) {
         retries++;
-        const delay = 500 * retries;
+        const delay = 500 * retries; // 500ms, 1000ms, 1500ms
         console.warn(`[useSubscription] Function not found (404). Retry ${retries}/3 after ${delay}ms...`);
         await new Promise((r) => setTimeout(r, delay));
         const retry404 = await supabase.functions.invoke('check-subscription');
@@ -139,6 +124,7 @@ export const useSubscription = () => {
         error = retry404.error;
       }
 
+      // Check if we still have a 404 after all retries - treat as non-fatal
       const is404Error = error && (
         error.message?.includes('NOT_FOUND') || 
         error.message?.includes('not found') || 
@@ -147,12 +133,13 @@ export const useSubscription = () => {
       
       if (is404Error) {
         console.warn('[useSubscription] Function still unavailable after retries, using database fallback');
+        // Fall through to the fallback logic below - don't treat as critical error
       }
 
       if (!error && data) {
         const newModules = data.modules || [];
         
-        setAndCache({
+        setSubscriptionData({
           subscribed: data.subscribed || false,
           modules: newModules,
           module_details: data.module_details || {},
@@ -163,18 +150,21 @@ export const useSubscription = () => {
           discount_percent: data.discount_percent || null,
         });
         
+        // Detect module changes and trigger callbacks
         if (prevModules.length > 0 && newModules.length > prevModules.length) {
           console.log('[useSubscription] New modules detected:', newModules);
           onChangeCallbacks.forEach(callback => callback(newModules));
         }
         setPrevModules(newModules);
       } else {
+        // Log as warning for 404s and auth failures (transient), error for other issues
         if (is404Error || authFailed) {
           console.warn('[useSubscription] Edge function unavailable or auth failed, falling back to database');
         } else if (error) {
           console.error('Error fetching subscription:', error);
         }
         
+        // Fallback to database query
         try {
           const { data: fallbackData, error: fallbackError } = await supabase
             .from('subscriptions')
@@ -184,7 +174,7 @@ export const useSubscription = () => {
 
           if (fallbackData && !fallbackError) {
             const isActive = fallbackData.status === 'active';
-            setAndCache({
+            setSubscriptionData({
               subscribed: isActive,
               modules: fallbackData.subscribed_modules || [],
               module_details: (fallbackData.module_subscription_mapping as unknown as Record<string, ModuleDetails>) || {},
@@ -195,7 +185,7 @@ export const useSubscription = () => {
               discount_percent: null,
             });
           } else {
-            setAndCache({
+            setSubscriptionData({
               subscribed: false,
               modules: [],
               module_details: {},
@@ -208,7 +198,7 @@ export const useSubscription = () => {
           }
         } catch (fallbackError) {
           console.error('Fallback query failed:', fallbackError);
-          setAndCache({
+          setSubscriptionData({
             subscribed: false,
             modules: [],
             module_details: {},
@@ -222,7 +212,7 @@ export const useSubscription = () => {
       }
     } catch (error) {
       console.error('Error in checkSubscription:', error);
-      setAndCache({
+      setSubscriptionData({
         subscribed: false,
         modules: [],
         module_details: {},
@@ -234,22 +224,6 @@ export const useSubscription = () => {
       });
     }
   }, []);
-
-  // Deduplicated wrapper: ensures only one check runs at a time across all hook instances
-  const checkSubscription = useCallback(async (silent: boolean = false) => {
-    if (inflightCheck) {
-      await inflightCheck;
-      // Apply cached result to this instance's state
-      if (lastResult) {
-        setSubscriptionData(lastResult);
-      }
-      return;
-    }
-    inflightCheck = doCheckSubscription(silent).finally(() => {
-      inflightCheck = null;
-    });
-    await inflightCheck;
-  }, [doCheckSubscription]);
 
   const getModuleDetails = useCallback((module: string, sport: string) => {
     const key = `${sport}_${module}`;
@@ -280,25 +254,16 @@ export const useSubscription = () => {
       }, pollingInterval);
     };
 
-    // Only run initial check if a session already exists
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && mounted) {
-        checkSubscription(false).then(() => {
-          if (mounted) startPolling();
-        });
-      } else if (mounted) {
-        // No session — mark as initialized immediately without calling the edge function
-        setSubscriptionData(prev => ({ ...prev, loading: false, initialized: true }));
-      }
+    // Initial check
+    checkSubscription(false).then(() => {
+      if (mounted) startPolling();
     });
 
-    // Listen for auth state changes
+    // Listen for auth state changes to stop polling on sign-out
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         if (interval) clearInterval(interval);
         if (mounted) {
-          setPrevModules([]);
-          lastResult = null;
           setSubscriptionData({
             subscribed: false,
             modules: [],

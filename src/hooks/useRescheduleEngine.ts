@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { getTodayDate } from '@/utils/dateUtils';
 import { toast } from 'sonner';
-import { UNIFIED_SCHEDULE_KEY } from '@/hooks/useUnifiedSchedule';
 
 interface UndoSnapshot {
   type: 'skip' | 'pushForward' | 'pushToDate' | 'replace';
@@ -23,7 +22,6 @@ export function useRescheduleEngine() {
     queryClient.invalidateQueries({ queryKey: ['calendar'] });
     queryClient.invalidateQueries({ queryKey: ['gameplan'] });
     queryClient.invalidateQueries({ queryKey: ['game-plan-skipped'] });
-    queryClient.invalidateQueries({ queryKey: [UNIFIED_SCHEDULE_KEY] });
   }, [queryClient]);
 
   /** Bulk-skip all given task IDs for a specific date */

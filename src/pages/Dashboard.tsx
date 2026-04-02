@@ -25,7 +25,6 @@ import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
-import { DailyPlanCard } from "@/components/udl/DailyPlanCard";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
 import { DualStreakDisplay } from "@/components/dashboard/DualStreakDisplay";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
@@ -496,9 +495,6 @@ export default function Dashboard() {
 
         {/* Practice Intelligence Summary */}
         <PracticeIntelligenceCard />
-
-        {/* UDL Daily Plan */}
-        <DailyPlanCard />
 
         {/* Game Hub Card */}
         <Card className="p-4 sm:p-6 border-primary/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/game-scoring')}>

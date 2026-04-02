@@ -1,1 +1,0 @@
-ALTER TABLE public.athlete_body_goals ADD COLUMN custom_calorie_target integer DEFAULT NULL;
