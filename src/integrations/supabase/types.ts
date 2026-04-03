@@ -1109,6 +1109,7 @@ export type Database = {
         Row: {
           adherence_count: number | null
           constraints: string | null
+          constraints_json: Json | null
           created_at: string
           drill_name: string
           effectiveness_score: number | null
@@ -1128,6 +1129,7 @@ export type Database = {
         Insert: {
           adherence_count?: number | null
           constraints?: string | null
+          constraints_json?: Json | null
           created_at?: string
           drill_name: string
           effectiveness_score?: number | null
@@ -1147,6 +1149,7 @@ export type Database = {
         Update: {
           adherence_count?: number | null
           constraints?: string | null
+          constraints_json?: Json | null
           created_at?: string
           drill_name?: string
           effectiveness_score?: number | null

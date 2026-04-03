@@ -1,0 +1,1 @@
+ALTER TABLE public.drill_prescriptions ADD COLUMN IF NOT EXISTS constraints_json JSONB DEFAULT '{}';
