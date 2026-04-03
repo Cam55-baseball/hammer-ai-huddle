@@ -52,7 +52,7 @@ interface MicroPattern {
 // MICRO-DATA ANALYSIS ENGINE
 // ═══════════════════════════════════════════════════════════════
 
-function analyzeHittingMicro(microReps: any[], drillBlocks: any[]): MicroPattern[] {
+function analyzeHittingMicro(microReps: any[], drillBlocks: any[], batterSide: string = 'R'): MicroPattern[] {
   const patterns: MicroPattern[] = [];
   const hittingReps = microReps.filter((r: any) =>
     r.contact_quality || r.swing_result || r.batted_ball_type || r.swing_decision
