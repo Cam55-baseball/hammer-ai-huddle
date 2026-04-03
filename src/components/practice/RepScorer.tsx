@@ -305,10 +305,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const [machineVeloBand, setMachineVeloBand] = useState<string | undefined>();
 
 
-  // For switch hitters in hitting, use toggle side; otherwise use gate handedness
-  // sideMode controls whether toggle is shown or side is locked
-  const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode ?? handedness);
-  const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode ?? handedness);
+  // Side derived from sideMode — single source of truth, no DB fallback
+  const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode as 'L' | 'R' | undefined);
+  const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode as 'L' | 'R' | undefined);
+  const effectiveThrowingHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode as 'L' | 'R' | undefined);
 
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
