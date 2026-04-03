@@ -465,7 +465,14 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
         />
       </div>
 
-      {/* Machine Mode selector (1 Pitch vs Mix) — only for machine hitting */}
+      {/* Inline side toggle for switch hitters / ambidextrous throwers */}
+      {isHitting && isSwitchHitter && (
+        <SideToggle value={switchSide} onChange={setSwitchSide} label="Batting Side" />
+      )}
+      {isPitching && isAmbidextrousThrower && (
+        <SideToggle value={switchThrowSide} onChange={setSwitchThrowSide} label="Throwing Hand" />
+      )}
+
       {isHitting && isMachine && (
         <div className="space-y-3">
           <div>
