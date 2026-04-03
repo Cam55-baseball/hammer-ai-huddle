@@ -1,269 +1,188 @@
 
 
-# Hammers Intelligence Engine (HIE) — Full System Build
+# HIE Full System Rebuild — From Facade to Real Intelligence
 
-## Overview
+## Scope Reality Check
 
-This rebuilds three major surfaces — the **Player Dashboard**, **Coach Intelligence Hub**, and a new **HIE backend engine** — into a unified "Diagnose → Prescribe → Guide → Adapt → Verify" system. The existing MPI engine, Vault check-ins, Speed Lab, Royal Timing, Tex Vision, and session data all feed into a new intelligence layer that computes actionable outputs rather than just scores.
+This request spans 10 phases with hundreds of individual changes. To deliver real, working code (not stubs), this must be broken into focused implementation passes. Each pass delivers complete, verifiable functionality.
 
-## Architecture
+## Pass 1: Replace LIMITER_MAP with Real Micro-Data Analysis Engine
 
-```text
-┌─────────────────────────────────────────────────┐
-│              EXISTING DATA SOURCES              │
-│  MPI Scores │ Sessions │ Vault │ Speed Lab      │
-│  Royal Timing │ Tex Vision │ CNS │ Coach Grades │
-└──────────────────────┬──────────────────────────┘
-                       ▼
-┌─────────────────────────────────────────────────┐
-│     NEW: hie-analyze (Edge Function)            │
-│  ─ Root Cause Analysis                          │
-│  ─ Weakness Clusters (Top 3)                    │
-│  ─ Prescriptive Drill Actions                   │
-│  ─ Development Status (Stalled/Improving/etc)   │
-│  ─ Primary Limiter (plain English)              │
-│  ─ Readiness Recommendation                     │
-│  ─ Risk Alerts                                  │
-│  ─ Development Confidence Score                 │
-│  ─ Smart Week Plan (advisory)                   │
-└──────────────────────┬──────────────────────────┘
-                       ▼
-┌────────────────┐  ┌─────────────────────┐
-│ Player Snapshot │  │ Coach Intelligence  │
-│ Dashboard       │  │ Hub                 │
-│ (Rebuilt)       │  │ (Rebuilt)           │
-└────────────────┘  └─────────────────────┘
-```
+### What changes in `hie-analyze/index.ts`:
 
-## Phase 1: Database Schema
+**DELETE** the static `LIMITER_MAP` (lines 28-62).
 
-### New table: `hie_snapshots`
-Stores the latest HIE analysis per athlete, computed on-demand or nightly.
+**ADD** real micro-layer analysis that reads `performance_sessions.micro_layer_data` and `performance_sessions.drill_blocks` to detect specific patterns:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | uuid PK | |
-| `user_id` | uuid, NOT NULL | Athlete |
-| `sport` | text | baseball/softball |
-| `computed_at` | timestamptz | When analysis ran |
-| `development_status` | text | stalled, inconsistent, improving, accelerating |
-| `primary_limiter` | text | Plain English limiter |
-| `weakness_clusters` | jsonb | Top 3 weakness objects |
-| `prescriptive_actions` | jsonb | Drill recommendations per weakness |
-| `readiness_score` | numeric | 0-100 readiness |
-| `readiness_recommendation` | text | "Train full intent" / "Reduce volume" |
-| `risk_alerts` | jsonb | Overtraining, decline, stagnation alerts |
-| `development_confidence` | numeric | 0-100 how reliable the data is |
-| `smart_week_plan` | jsonb | Day-by-day suggested structure |
-| `before_after_trends` | jsonb | Weakness resolution tracking |
-| `drill_effectiveness` | jsonb | Which drills moved the needle |
+1. **Hitting analysis**: Iterate all micro reps. Compute:
+   - chase rate (swing_decision === 'incorrect' on pitches outside zone)
+   - whiff rate by pitch location zone (row/col grid)
+   - contact quality distribution by velocity band
+   - contact quality by pitch location (inside vs outside vs up vs down)
+   - swing decision accuracy vs pitch type
+   - weak contact rate on specific zones
 
-RLS: Owner reads own; coaches read linked players via `is_linked_coach`.
+2. **Fielding analysis**: Compute:
+   - clean field percentage
+   - exchange time distribution
+   - throw accuracy by play type
+   - footwork grade average
 
-### New table: `hie_team_snapshots`
-Stores team-level analysis for coaches.
+3. **Pitching analysis** (NEW — was missing): Compute:
+   - zone percentage
+   - command grade by pitch type
+   - miss direction patterns
+   - spin efficiency trends
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `id` | uuid PK | |
-| `organization_id` | uuid | Team |
-| `computed_at` | timestamptz | |
-| `team_mpi_avg` | numeric | |
-| `trending_players` | jsonb | Up/down lists |
-| `risk_alerts` | jsonb | Team-level risks |
-| `team_weakness_patterns` | jsonb | Common issues across roster |
-| `suggested_team_drills` | jsonb | |
+4. **Output**: Primary limiter is now a specific plain-English statement generated from the actual data patterns, e.g., "Late on inside fastballs 80+ mph — 72% weak contact in zones (1,0) and (1,1)" instead of generic "Batting Quality Breakdown."
 
-RLS: Org coaches/owners only via `is_org_coach_or_owner`.
+5. **Prescriptive actions**: Map detected patterns to specific drills with constraints that vary based on the athlete's data. A player weak on inside fastballs gets different drills than one struggling with off-speed away.
 
-## Phase 2: HIE Backend Engine
+### Connect Speed Lab + Royal Timing + Tex Vision:
 
-### New Edge Function: `hie-analyze`
+Add fetches for:
+- `speed_sessions` → compute explosiveness index from best times and stride analytics
+- `royal_timing_sessions` → compute timing consistency index
+- `tex_vision_drill_results` → compute recognition speed index
 
-Accepts `{ user_id, sport }` or `{ organization_id }` for team analysis.
+Feed these into `transfer_score`, `decision_speed_index`, and `movement_efficiency_score` columns (already exist in schema).
 
-**Player Analysis Logic:**
-1. Fetch latest `mpi_scores` (composites, trend, integrity)
-2. Fetch recent `performance_sessions` (90 days) with `micro_layer_data`
-3. Fetch `vault_focus_quizzes` (readiness, sleep, pain, stress)
-4. Fetch `speed_lab` data if exists (explosiveness)
-5. Fetch `tex_vision_drill_results` (recognition speed)
-6. Fetch `royal_timing_sessions` (timing index)
+### Smart Week Plan — AI Generation:
 
-**Compute:**
-- **Development Status**: Based on 7d and 30d trend deltas from MPI
-  - Accelerating: 30d delta > +5 AND 7d delta > +2
-  - Improving: 30d delta > +2
-  - Inconsistent: 30d stddev > 8
-  - Stalled: 30d delta within ±1
-- **Primary Limiter**: Lowest composite index mapped to plain English via a symptom→cause→fix lookup table
-- **Weakness Clusters**: Bottom 3 composites with rep-level data backing (e.g., chase rate %, whiff %, contact quality distribution)
-- **Prescriptive Actions**: Map each weakness to 1-3 specific drills from `s2DrillRecommendations` and practice hub modules
-- **Readiness**: Aggregate sleep, stress, pain, CNS into 0-100 score with training recommendation
-- **Risk Alerts**: Overtraining (consecutive heavy days), decline (3+ sessions dropping), integrity drop, plateau detection
-- **Development Confidence**: Based on session count, data recency, coach validation rate
-- **Smart Week Plan**: AI-generated via Lovable AI (Gemini) using all context, labeled "Suggested — Not Mandatory"
+Replace `smart_week_plan: []` with actual Lovable AI call using the athlete's weakness data, readiness, and training history as context. Use `LOVABLE_API_KEY` (already available) to call Gemini for plan generation.
 
-Upserts result into `hie_snapshots`.
+### Before/After Trends — Real Computation:
 
-**Team Analysis Logic:**
-- Aggregate all org member HIE snapshots
-- Find common weakness patterns (e.g., "62% of team struggles with inside pitch timing")
-- Generate team drill suggestions
-- Surface risk alerts per player
+Replace `before_after_trends: []` with actual trend calculation: for each weakness cluster, compare the metric's value 14 days ago vs now.
 
-## Phase 3: Player Dashboard Rebuild
+### Drill Effectiveness — Real Tracking:
 
-### Replace current `ProgressDashboard.tsx` content
+Replace `drill_effectiveness: []` by checking if previously prescribed drill areas showed improvement in subsequent sessions.
 
-**Section 1 — Player Snapshot Card** (replaces MPIScoreCard + RankMovementBadge)
-- MPI Score (kept)
-- Development Tier (from `getGradeLabel`, renamed)
-- 7d + 30d trend arrows
-- Development Status badge (color-coded: red/yellow/green/fire)
-- Primary Limiter in large text
-- "Refresh Analysis" button triggers `hie-analyze`
+---
 
-**Section 2 — "What's Holding You Back"**
-- Top 3 weakness clusters from `hie_snapshots`
-- Each: Issue, Why (data citation), Impact level badge
+## Pass 2: Replace DataBuildingGate with Progressive Intelligence
 
-**Section 3 — "What To Do Next"**
-- Prescriptive actions per weakness
-- Each drill links to Practice Hub module
-- Constraints shown (speed, reps, intent)
-- Labeled: "Recommended Based on Your Data"
+### Replace `DataBuildingGate.tsx`:
 
-**Section 4 — "Today's Readiness"**
-- Readiness score with trend
-- Sleep, CNS, fatigue summary
-- Training recommendation text
+**0-10 sessions (Early Stage):**
+- Show basic tendencies (best/worst drill types from session data)
+- Show "Your strongest area" / "Area to focus on"
+- Simple recommendation: "Keep logging — your analysis gets smarter with more data"
 
-**Section 5 — "Smart Week Plan"**
-- Day-by-day cards with skill focus + intensity
-- Collapsible, labeled "Suggested Plan — Not Mandatory"
+**10-50 sessions (Development Mode):**
+- Show early weakness detection (simplified clusters)
+- Show basic prescriptions
+- Show MPI trend if available
 
-**Section 6 — "Proof It's Working"**
-- Before/after trend charts per weakness
-- Drill effectiveness scores
-- Resolution tracking
+**50+ sessions (Full Mode):**
+- Full HIE dashboard (current behavior)
 
-**Removed:**
-- Global Rank (RankMovementBadge) — removed
-- Static AI prompts (AIPromptCard) — replaced by prescriptive actions
-- Pro Probability — locked behind verified + age guard (kept but gated)
+The gate becomes a `useDataDensityLevel` hook returning `{ level: 'early' | 'developing' | 'full', sessionCount }`. Dashboard renders appropriate components per level.
 
-### New Components
-| Component | Purpose |
-|-----------|---------|
-| `PlayerSnapshotCard.tsx` | MPI + status + limiter |
-| `WeaknessClusterCard.tsx` | Top 3 weaknesses |
-| `PrescriptiveActionsCard.tsx` | Drill recommendations |
-| `ReadinessCard.tsx` | Today's readiness |
-| `SmartWeekPlan.tsx` | Advisory weekly plan |
-| `ProofCard.tsx` | Before/after + effectiveness |
+---
 
-### New Hook: `useHIESnapshot.ts`
-- Fetches latest `hie_snapshots` for user
-- Provides `refreshAnalysis()` that invokes `hie-analyze`
-- 5-minute stale time
+## Pass 3: Auto-trigger HIE After Every Session + Nightly
 
-## Phase 4: Coach Intelligence Hub Rebuild
+### Post-session trigger:
+In `calculate-session/index.ts`, after session computation completes, invoke `hie-analyze` for that user via `supabase.functions.invoke('hie-analyze', { body: { user_id } })`.
 
-### Replace current `CoachDashboard.tsx`
+### Post-nightly trigger:
+At end of `nightly-mpi-process/index.ts`, for each processed athlete, invoke `hie-analyze`.
 
-**Section 1 — Team Overview** (first screen)
-- Team MPI average
-- Trending players (up/down badges)
-- Risk alerts summary (overtraining, decline, low integrity counts)
+### Stale data detection:
+In `useHIESnapshot.ts`, check `snapshot.computed_at`. If older than 24 hours, show a "Stale — refreshing..." indicator and auto-trigger refresh.
 
-**Section 2 — Actionable Player Cards**
-- Each linked player shows: MPI + trend, development status, primary limiter, readiness score
-- Click → expands to full player analytics (mirrors player view + coach extras)
+---
 
-**Section 3 — Coach Extras per Player**
-- Drill effectiveness for prescribed actions
-- Coach vs player grading gaps (delta maturity)
-- Linked video evidence
-- Session pattern breakdown
+## Pass 4: Scale Architecture for Nightly Process
 
-**Section 4 — Team Weakness Engine**
-- Common weakness patterns across roster
-- Auto-suggested team drill blocks
-- Practice plan generation
+### Replace sequential processing in `nightly-mpi-process`:
+- Process athletes in batches of 50
+- Add per-athlete try/catch so one failure doesn't stop the batch
+- Add timing logs per batch
+- If total runtime exceeds 50s, stop and log remaining athletes for next run
 
-**Section 5 — Comparison Tool**
-- Player vs player side-by-side
-- Player vs team average
-- Player vs position/age benchmarks
+This is achievable within the edge function model without a queue system (which requires infrastructure Lovable Cloud doesn't expose).
 
-**Section 6 — Alert System**
-- Player declining 3+ sessions
-- CNS fatigue risk
-- Integrity drop
-- Plateau detection
+---
 
-### New Components
-| Component | Purpose |
-|-----------|---------|
-| `TeamOverviewCard.tsx` | Team MPI + trends + risks |
-| `CoachPlayerCard.tsx` | Actionable player summary |
-| `CoachPlayerDetail.tsx` | Full analytics + coach extras |
-| `TeamWeaknessEngine.tsx` | Common patterns + drill suggestions |
-| `PlayerComparisonTool.tsx` | Side-by-side comparison |
-| `CoachAlertPanel.tsx` | Risk/decline/plateau alerts |
+## Pass 5: Coach Intelligence Hub Rebuild
 
-### New Hook: `useHIETeamSnapshot.ts`
-- Fetches `hie_team_snapshots` for coach's org
-- Fetches all linked players' `hie_snapshots`
+### Team practice plan generation:
+`TeamWeaknessEngine` calls AI to generate team drill blocks from aggregated weakness data.
 
-## Phase 5: Elite Additions
+### Player comparison tool:
+New `PlayerComparisonTool.tsx` component allowing side-by-side comparison of two players' HIE snapshots.
 
-### Development Confidence Score
-Already computed in HIE — displayed in Player Snapshot Card as a secondary metric.
+### Coach alert system:
+`CoachAlertPanel` reads actual `risk_alerts` from all player snapshots instead of showing static content.
 
-### Transfer Score (Practice → Game)
-Computed by comparing practice session grades to game session grades. Added to `hie_snapshots` as `transfer_score`.
+---
 
-### Decision Speed Index
-Aggregated from hitting (chase rate, recognition time), baserunning (reaction time), fielding (exchange time). Added to `hie_snapshots`.
+## Pass 6: Prescriptive Actions — Launchable Drills
 
-### Movement Efficiency Score
-Derived from Speed Lab stride analytics + Royal Timing data. Added to `hie_snapshots`.
+### `PrescriptiveActionsCard.tsx`:
+Each drill gets a "Start Drill" button that navigates to the relevant Practice Hub module with pre-filled parameters (drill type, constraints).
 
-## Implementation Order
+---
 
-Due to scope, this will be built across multiple implementation passes:
+## Pass 7: Adaptive Learning Loop
 
-1. **Pass 1**: Database migration (both tables) + `hie-analyze` edge function (core logic)
-2. **Pass 2**: `useHIESnapshot` hook + Player Dashboard rebuild (Sections 1-4)
-3. **Pass 3**: Player Dashboard Sections 5-6 + Smart Week Plan AI integration
-4. **Pass 4**: Coach Intelligence Hub rebuild (Sections 1-3)
-5. **Pass 5**: Coach Hub Sections 4-6 (team weakness engine, comparison, alerts)
-6. **Pass 6**: Elite additions (transfer score, decision speed, movement efficiency)
+### Database migration:
+New table `drill_prescriptions`:
+- `id`, `user_id`, `prescribed_at`, `weakness_area`, `drill_name`, `module`
+- `pre_score` (composite score at prescription time)
+- `post_score` (updated after next HIE run)
+- `effectiveness_score` (post - pre)
+- `adherence_count` (sessions matching this drill type since prescription)
+
+### HIE tracks:
+When prescribing drills, record them. On next HIE run, compute effectiveness by comparing pre/post scores for each prescribed area.
+
+---
+
+## Pass 8: Owner Admin Panel
+
+### New page: `/admin/engine-settings`
+- Read/write `ENGINE_CONTRACT` values from a new `engine_settings` table
+- Owner can adjust MPI weights, thresholds, drill mappings
+- Changes logged to `audit_log`
+- Gated behind owner role check
+
+---
+
+## Implementation Order (8 passes)
+
+| Pass | Focus | Key Deliverable |
+|------|-------|-----------------|
+| 1 | Real HIE engine + module integration | Micro-data analysis, Speed/Timing/Vision connected, AI week plan |
+| 2 | Progressive intelligence (replace DataBuildingGate) | Value from session 1 |
+| 3 | Auto-trigger HIE | No manual refresh needed |
+| 4 | Scale nightly process | Batch processing with error isolation |
+| 5 | Coach hub rebuild | Team plans, comparisons, real alerts |
+| 6 | Launchable drills | One-click drill start from prescriptions |
+| 7 | Adaptive learning loop | Track drill effectiveness over time |
+| 8 | Owner admin panel | No-code engine tuning |
 
 ## Files Summary
 
 | File | Action |
 |------|--------|
-| Migration SQL | Create `hie_snapshots` + `hie_team_snapshots` tables with RLS |
-| `supabase/functions/hie-analyze/index.ts` | New edge function — core intelligence engine |
-| `src/hooks/useHIESnapshot.ts` | New hook — fetch + refresh player HIE data |
-| `src/hooks/useHIETeamSnapshot.ts` | New hook — fetch team HIE data |
-| `src/components/hie/PlayerSnapshotCard.tsx` | New — MPI + status + limiter |
-| `src/components/hie/WeaknessClusterCard.tsx` | New — top 3 weaknesses |
-| `src/components/hie/PrescriptiveActionsCard.tsx` | New — drill recommendations |
-| `src/components/hie/ReadinessCard.tsx` | New — readiness + recommendation |
-| `src/components/hie/SmartWeekPlan.tsx` | New — advisory weekly plan |
-| `src/components/hie/ProofCard.tsx` | New — before/after + effectiveness |
-| `src/components/hie/TeamOverviewCard.tsx` | New — team summary |
-| `src/components/hie/CoachPlayerCard.tsx` | New — actionable player card |
-| `src/components/hie/CoachPlayerDetail.tsx` | New — full player analytics |
-| `src/components/hie/TeamWeaknessEngine.tsx` | New — common patterns |
-| `src/components/hie/PlayerComparisonTool.tsx` | New — side-by-side |
-| `src/components/hie/CoachAlertPanel.tsx` | New — alerts |
-| `src/pages/ProgressDashboard.tsx` | Rebuilt — uses HIE components |
-| `src/pages/CoachDashboard.tsx` | Rebuilt — uses HIE components |
-| `src/components/analytics/RankMovementBadge.tsx` | Removed from dashboard |
-| `src/components/analytics/AIPromptCard.tsx` | Removed from dashboard |
+| `supabase/functions/hie-analyze/index.ts` | Complete rewrite — real micro-data analysis engine |
+| `supabase/functions/calculate-session/index.ts` | Add post-session HIE trigger |
+| `supabase/functions/nightly-mpi-process/index.ts` | Add batching + post-run HIE triggers |
+| `src/components/analytics/DataBuildingGate.tsx` | Replace with progressive 3-tier system |
+| `src/hooks/useHIESnapshot.ts` | Add stale detection + auto-refresh |
+| `src/components/hie/PrescriptiveActionsCard.tsx` | Add launchable drill buttons |
+| `src/components/hie/SmartWeekPlan.tsx` | Display real AI-generated plans |
+| `src/components/hie/ProofCard.tsx` | Display real before/after data |
+| `src/components/hie/TeamWeaknessEngine.tsx` | Add AI team drill generation |
+| `src/components/hie/PlayerComparisonTool.tsx` | New — side-by-side comparison |
+| `src/components/hie/CoachAlertPanel.tsx` | Read real risk alerts from snapshots |
+| `src/pages/ProgressDashboard.tsx` | Adapt for progressive rendering |
+| `src/pages/CoachDashboard.tsx` | Integrate comparison tool |
+| Migration SQL | New `drill_prescriptions` table |
+| Migration SQL | New `engine_settings` table |
+| `src/pages/AdminEngineSettings.tsx` | New — owner admin panel |
 
