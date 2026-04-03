@@ -145,6 +145,8 @@ serve(async (req) => {
     const sports = ['baseball', 'softball'];
     const today = new Date().toISOString().split('T')[0];
 
+    const processedUserIds: string[] = [];
+
     for (const sport of sports) {
       const { data: athletes } = await supabase.from('athlete_mpi_settings')
         .select('*').eq('sport', sport).eq('admin_ranking_excluded', false);
@@ -183,7 +185,28 @@ serve(async (req) => {
         tierMult: number; ageCurveMult: number; posWeight: number;
       }> = [];
 
-      for (const athlete of athletes) {
+      // ── Batch processing: batches of 50 with error isolation ──
+      const BATCH_SIZE = 50;
+      const failedUsers: string[] = [];
+      for (let batchStart = 0; batchStart < athletes.length; batchStart += BATCH_SIZE) {
+        // Check runtime budget — stop if approaching 50s limit
+        if (Date.now() - nightlyStartTime > 50000) {
+          const remaining = athletes.length - batchStart;
+          console.warn(`[nightly-mpi] Runtime budget exceeded (${Date.now() - nightlyStartTime}ms). ${remaining} athletes remaining.`);
+          await supabase.from('audit_log').insert({
+            user_id: '00000000-0000-0000-0000-000000000000',
+            action: 'nightly_mpi_timeout',
+            table_name: 'mpi_scores',
+            metadata: { sport, processed: batchStart, remaining, elapsed_ms: Date.now() - nightlyStartTime },
+          });
+          break;
+        }
+        const batch = athletes.slice(batchStart, batchStart + BATCH_SIZE);
+        const batchTimestamp = Date.now();
+        console.log(`[nightly-mpi] ${sport}: Processing batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (${batch.length} athletes)`);
+
+      for (const athlete of batch) {
+       try {
         const uid = athlete.user_id;
 
         const { data: sessions } = await supabase.from('performance_sessions')
@@ -428,6 +451,21 @@ serve(async (req) => {
           hofActive, hofProb, proProbability, proProbCapped, consecutiveHeavy,
           tierMult, ageCurveMult, posWeight,
         });
+       } catch (athleteError) {
+          console.error(`[nightly-mpi] Error processing athlete ${athlete.user_id}:`, athleteError);
+          failedUsers.push(athlete.user_id);
+        }
+      } // end athlete loop
+        console.log(`[nightly-mpi] ${sport}: Batch completed in ${Date.now() - batchTimestamp}ms`);
+      } // end batch loop
+      if (failedUsers.length > 0) {
+        console.warn(`[nightly-mpi] ${sport}: ${failedUsers.length} athletes failed processing`);
+        await supabase.from('audit_log').insert({
+          user_id: '00000000-0000-0000-0000-000000000000',
+          action: 'nightly_mpi_failures',
+          table_name: 'mpi_scores',
+          metadata: { sport, failed_count: failedUsers.length, failed_users: failedUsers.slice(0, 20) },
+        });
       }
 
       // Sort and assign ranks
@@ -475,6 +513,8 @@ serve(async (req) => {
       }
 
       totalProcessed += scores.length;
+      // Track processed users for post-nightly HIE triggers
+      scores.forEach(s => processedUserIds.push(s.userId));
       console.log(`[nightly-mpi] ${sport}: Ranked ${scores.length} eligible athletes`);
 
       // ── Heat map snapshots ──
@@ -788,6 +828,22 @@ serve(async (req) => {
         duration_ms: Date.now() - nightlyStartTime,
       },
     });
+
+    // ── Post-nightly HIE triggers (fire-and-forget) ──
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+    const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const uniqueProcessed = [...new Set(processedUserIds)];
+    console.log(`[nightly-mpi] Triggering HIE analysis for ${uniqueProcessed.length} athletes...`);
+    for (const uid of uniqueProcessed) {
+      fetch(`${SUPABASE_URL}/functions/v1/hie-analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ user_id: uid, sport: 'baseball' }),
+      }).catch(err => console.error(`[nightly-mpi] HIE trigger failed for ${uid}:`, err));
+    }
 
     console.log('[nightly-mpi] Complete.');
     return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString() }), {

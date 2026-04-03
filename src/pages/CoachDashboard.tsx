@@ -25,6 +25,7 @@ import { TeamOverviewCard } from '@/components/hie/TeamOverviewCard';
 import { CoachPlayerCard } from '@/components/hie/CoachPlayerCard';
 import { TeamWeaknessEngine } from '@/components/hie/TeamWeaknessEngine';
 import { CoachAlertPanel } from '@/components/hie/CoachAlertPanel';
+import { PlayerComparisonTool } from '@/components/hie/PlayerComparisonTool';
 import { useHIETeamSnapshot } from '@/hooks/useHIETeamSnapshot';
 import { 
   Command,
@@ -270,7 +271,7 @@ export default function CoachDashboard() {
         <TeamOverviewCard />
 
         {/* HIE: Alert System */}
-        <CoachAlertPanel />
+        <CoachAlertPanel playerNames={playerNameMap} />
 
         {/* HIE: Actionable Player Cards */}
         {playerSnapshots.length > 0 && (
@@ -292,6 +293,9 @@ export default function CoachDashboard() {
 
         {/* HIE: Team Weakness Engine */}
         <TeamWeaknessEngine />
+
+        {/* HIE: Player Comparison Tool */}
+        <PlayerComparisonTool playerNames={playerNameMap} />
 
         {/* Organization Quick Link */}
         {activeOrg ? (
