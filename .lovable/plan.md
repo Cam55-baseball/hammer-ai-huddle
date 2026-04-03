@@ -1,71 +1,96 @@
 
 
-# Base Stealing Isolation Confirmation + Post-Session Redesign Readiness
+# Post-Session Experience v2 — Elite Feedback Layer
 
-## 1. Base Stealing Trainer — FULLY ISOLATED ✅
+## Overview
+Replace `PostSessionSummary.tsx` with a new session-reactive feedback system and redesign `RecentSessionsList.tsx` to show insight-tagged history with expandable Win/Focus/Metrics detail.
 
-The base stealing trainers operate on **completely separate pages and components** that never touch `PostSessionSummary.tsx`.
+## New Files
 
-### Baseball Base Stealing Trainer
-| Component | File |
-|-----------|------|
-| Pre-save summary | `src/components/base-stealing/SessionSummary.tsx` |
-| Post-save analysis | `src/components/base-stealing/PerformanceAnalysis.tsx` |
-| Page | `src/pages/BaseStealingTrainer.tsx` |
+### 1. `src/lib/sessionInsights.ts` — Deterministic Insight Engine
+Pure functions that take `composite_indexes` + `drill_blocks` + `module` and return:
+- **Win**: Best signal from session (highest relative composite or standout metric like barrel_pct >= 30%, decision >= 65, etc.)
+- **Focus**: Biggest limiter (lowest composite, chase_pct spike, whiff_pct high, etc.)
+- **Next Rep Cue**: Mapped from Focus category (lookup table: chase → "See it deeper before committing", whiff → "Stay through the zone", etc.)
+- **Key Metrics**: Top 3 most relevant metrics filtered by module (Hitting: barrel_pct, chase_pct, hard_contact_pct; Pitching: avg_zone_pct, pei; Fielding: avg_clean_field_pct, avg_footwork_grade)
+- **Session Tag**: Single label for history view ("Power Day", "Chase Spike", "Elite Execution", "Fatigue Drop", "Solid Work")
 
-**Data inputs**: Local `RepResult[]` array + `LeadConfig` (never fetches from DB post-session). Analytics computed client-side via `src/lib/stealAnalytics.ts` (steal window, projected success %, acceleration efficiency, lead efficiency, MLB benchmarks).
+Module-aware metric relevance maps:
+- `hitting` → BQI, decision, barrel_pct, chase_pct, whiff_pct, hard_contact_pct, line_drive_pct
+- `pitching` → PEI, avg_zone_pct, competitive_execution
+- `fielding` → FQI, avg_footwork_grade, avg_clean_field_pct
+- `throwing` → competitive_execution
 
-### Softball Stealing Trainer
-| Component | File |
-|-----------|------|
-| Pre-save summary | `src/components/softball-stealing/SoftballStealSummary.tsx` |
-| Post-save analysis | `src/components/softball-stealing/SoftballStealAnalysis.tsx` |
-| Page | `src/pages/SoftballStealingTrainer.tsx` |
+Win/Focus selection: rank all relevant metrics by deviation from thresholds, pick strongest positive (win) and strongest negative (focus).
 
-**Data inputs**: Local `RepData[]` + `StealSetupConfig`. Analytics via `src/lib/softballStealAnalytics.ts`.
+### 2. `src/components/practice/PostSessionSummaryV2.tsx` — New Summary Component
+Replaces `PostSessionSummary.tsx` in PracticeHub.
 
-**Isolation guarantee**: Neither trainer imports or references `PostSessionSummary.tsx`. They use their own page-level phase state (`setup → live_rep → summary → analysis`) with zero shared logic. Redesigning `PostSessionSummary` has **zero impact** on either stealing trainer.
+**Data fetch**: Same polling pattern but expanded select to include `drill_blocks, effective_grade, micro_layer_data`.
 
----
+**Layout (top → bottom):**
 
-## 2. PostSessionSummary.tsx — Current Consumers
+**A. Session Snapshot Card** (primary/5 bg)
+- Module + type + date + optional Coach-Led badge
+- Large effective_grade display with `getGradeLabel()` prominently shown (e.g., "Plus-Plus · 62")
+- Total reps + drill count subtitle
 
-`PostSessionSummary` is used in **exactly one place**: `src/pages/PracticeHub.tsx` (line 540), which serves **all standard modules** (Hitting, Pitching, Fielding, Throwing, Baserunning drills).
+**B. Clear Win Card** (green/5 bg, trophy icon)
+- Single sentence from `generateWin(composites, module)`
+- e.g., "Your barrel rate hit 34% — above pro average"
 
-- No module overrides or extends it — it renders identically for every module.
-- A new summary layer can be introduced by replacing the single `<PostSessionSummary>` call in PracticeHub without affecting any other page.
+**C. Priority Focus Card** (amber/5 bg, target icon)
+- Single sentence from `generateFocus(composites, module)`
+- e.g., "Chase rate spiked to 38% — costing quality reps"
 
----
+**D. Next Rep Cue** (blue/5 bg, arrow icon)
+- Short actionable instruction mapped from Focus
+- e.g., "See it deeper before committing"
 
-## 3. Data Readiness — All Confirmed Available
+**E. Key Metrics** (max 3, horizontal row)
+- Each: label + value + color indicator
+- Only metrics supporting Win or Focus
 
-| Data Source | Available at post-session time? | How |
-|-------------|-------------------------------|-----|
-| `composite_indexes` (full set including barrel%, chase%, whiff%, power trend, etc.) | ✅ | Polled from `performance_sessions` after `calculate-session` writes them (2-6s delay) |
-| `drill_blocks` (rep counts, drill types) | ✅ | Already stored on the session row; just not currently fetched in PostSessionSummary |
-| `micro_layer_data` | ✅ | Stored on the session row; can be fetched for lightweight client-side aggregation |
-| `effective_grade` | ✅ | Written by `calculate-session` alongside composites |
-| `notes`, `coach_id`, `session_type`, `module` | ✅ | Already fetched |
+**F. Streak** (kept, same as current)
 
----
+**G. Done Button**
 
-## 4. Performance Guardrails
+**Removed**: AIPromptCard, full composite grid
 
-| Concern | Assessment |
-|---------|-----------|
-| **micro_layer_data aggregation** | Safe client-side for up to ~200 reps (typical session). For 500+ reps, move to edge function. Current sessions average 15-50 reps — no risk. |
-| **Additional fields in post-session fetch** | Adding `drill_blocks`, `effective_grade`, `micro_layer_data` to the existing query adds negligible overhead (single row fetch). |
-| **3-5 real-time insights** | Fully achievable using `composite_indexes` + `drill_blocks` + light `micro_layer_data` aggregation. No HIE or AI call needed — pure deterministic logic (e.g., "Your barrel rate this session was 32% — above your 7-day average of 24%"). |
-| **Historical comparison** | Fetching last 3-5 sessions for the same module (lightweight query) enables "vs recent" comparisons without touching HIE. |
+### 3. Updated `src/components/practice/RecentSessionsList.tsx`
+**List row changes:**
+- Date + module
+- Effective grade badge
+- Auto-generated insight tag badge (from `getSessionTag()`)
+- Remove raw rep count from collapsed view
 
----
+**Expanded view changes:**
+- Show Win / Focus / Next Rep Cue (same insight engine)
+- Show max 3 key metrics
+- Keep videos and notes
+- Remove raw drill_blocks dump and full composite grid
 
-## Summary
+## Modified Files
 
-- **Base stealing trainers**: Elite, isolated, untouchable. Zero shared code with PostSessionSummary.
-- **PostSessionSummary**: Single consumer (PracticeHub). Safe to replace/enhance.
-- **Data**: All required fields available at post-session time without HIE.
-- **Performance**: No constraints blocking 3-5 real-time insights from existing data.
+| File | Change |
+|------|--------|
+| `src/lib/sessionInsights.ts` | **NEW** — deterministic insight engine |
+| `src/components/practice/PostSessionSummaryV2.tsx` | **NEW** — replaces old summary |
+| `src/pages/PracticeHub.tsx` | Import `PostSessionSummaryV2` instead of `PostSessionSummary` |
+| `src/components/practice/RecentSessionsList.tsx` | Redesign with insight tags + Win/Focus expansion |
+| `src/hooks/useRecentSessions.ts` | Add `effective_grade` to select (already has `composite_indexes`) |
 
-Ready for redesign scope definition when you are.
+## Implementation Order
+1. Create `sessionInsights.ts` (pure logic, no deps)
+2. Create `PostSessionSummaryV2.tsx`
+3. Update `PracticeHub.tsx` import
+4. Update `useRecentSessions.ts` select
+5. Redesign `RecentSessionsList.tsx`
+
+## What This Does NOT Touch
+- Base stealing trainers (isolated, untouchable)
+- Progress Hub
+- HIE / prescription engine
+- `calculate-session` edge function
+- No new DB tables or migrations needed
 
