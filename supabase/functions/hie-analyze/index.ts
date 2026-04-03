@@ -1333,6 +1333,9 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── READINESS (must be computed before prescription engine needs it) ──
+    const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
+
     // ── PRESCRIPTIVE ACTIONS (AI + scoring hybrid with fallback) ──
     const prescriptiveActions: PrescriptiveAction[] = [];
     const usedAreas = new Set<string>();
