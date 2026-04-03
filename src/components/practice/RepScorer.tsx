@@ -339,7 +339,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const catchingAIDrillDescValid = !needsCatchingAIDrillDesc || (current.ai_drill_description?.length ?? 0) >= 15;
 
   // Non-catching + drill → ai_drill_clarification required (≥15)
-  const needsDrillClarification = !isCatching && isDrill;
+  const needsDrillClarification = !isCatching && !isBaserunning && isDrill;
   const drillClarificationValid = !needsDrillClarification || (current.ai_drill_clarification?.length ?? 0) >= 15;
 
   // Non-catching + other → ai_custom_rep_description required (≥15)
