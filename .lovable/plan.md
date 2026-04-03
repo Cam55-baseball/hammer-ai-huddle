@@ -1,57 +1,79 @@
 
 
-# Implementation Plan: Migration Fix + Handedness Correction
+# Live E2E Validation Results + Required Fixes
 
-## Current State (Verified)
+## LIVE TEST EXECUTED
+HIE was triggered for athlete `95de827d` (left-handed batter, 9 sessions, 40 total reps). Results:
 
-The previous implementation pass successfully delivered:
-- Context detection (`detectGamePracticeGap`), fatigue detection (`detectFatigueDropoff`), session_type tagging, weakness_scores writes, prescription-engine integration, skill-specific effectiveness, Practice Hub pre-fill/banner, and constraint enforcement.
+### What WORKED (verified with database evidence)
+| Feature | Evidence |
+|---------|----------|
+| HIE snapshot created | `hie_snapshots` row exists: development_status="stalled", readiness=70, confidence=42 |
+| weakness_scores populated | **4 rows written**: vision_accuracy_low (scores: 36, 40, 61), slow_reaction_time (656) |
+| drill_prescriptions created | **2 rows**: "meter_timing Focused Training" + "Reaction Compression Training" |
+| targeted_metric populated | Both prescriptions have `targeted_metric: "recognition"` |
+| drill_id linked (partial) | Second prescription has `drill_id: 0133348d...` (catalog match). First has null (auto-generated name, no catalog match) |
+| Smart week plan generated | 7-day AI-generated plan returned |
+| Fallback path works | Switch-statement drills returned successfully after prescription-engine failure |
 
-**Two critical gaps remain:**
+### What FAILED (3 bugs found)
 
-### Gap 1: Missing Database Columns (Silent Data Loss)
-`hie-analyze/index.ts` writes `targeted_metric` (line 1543) and `drill_id` (line 1545) to `drill_prescriptions`, but neither column exists. Supabase silently drops these fields on insert. This breaks:
-- Drill-to-catalog linking (`drill_id`)
-- The entire skill-specific effectiveness loop (`targeted_metric` is read at line 1553 and always returns `null`, forcing MPI fallback)
+#### Bug 1: `readinessScore` used before initialization (CRITICAL)
+- **Error**: `Cannot access 'readinessScore' before initialization`
+- **Location**: Line 1365 references `readinessScore`, but it's defined at line 1421
+- **Impact**: Prescription engine NEVER executes. Every athlete falls through to switch-statement fallback. The AI hybrid engine is dead code in production.
+- **Fix**: Move lines 1420-1421 (readiness computation) to before line 1340 (prescription engine block)
 
-### Gap 2: Handedness Blindness
-Line 147: `loc.col < midCol` = "inside" regardless of batter side. A left-handed hitter's "inside" is the opposite column range. The system already fetches `primary_batting_side` (line 1357) but never passes it to `analyzeHittingMicro`.
+#### Bug 2: `pre_weakness_value` always null (MEDIUM)
+- **Evidence**: Both prescriptions show `pre_weakness_value: <nil>`
+- **Root cause**: Line 1532 tries to match `drill.drill_type` ("recognition") against `weakness_metric` ("vision_accuracy_low"). These never match because `drill_type` is a category label, not the specific metric name.
+- **Impact**: Effectiveness calculation can never use weakness-specific deltas. Always falls back to MPI delta.
+- **Fix**: Change line 1531-1532 to search weakness_scores by the pattern's actual metric, not the drill_type string. Use `allPatterns.find(p => p.description === action.weakness_area)?.metric` to get the real metric.
+
+#### Bug 3: First prescription has no `drill_id` (LOW)
+- **Evidence**: "meter_timing Focused Training" has `drill_id: null`
+- **Root cause**: Fallback switch generates drill names that don't exist in the `drills` catalog (29 seeded drills don't include auto-generated names)
+- **Impact**: Drill-to-catalog linking broken for fallback-generated prescriptions
+- **Fix**: Update `buildDrillRotations` to return `drill_id` from catalog when available. For dynamically named drills, leave null (acceptable — these are fallback-generated)
 
 ---
 
-## Changes
+## Implementation Plan
 
-### 1. Database Migration
-Add the two missing columns to `drill_prescriptions`:
-```sql
-ALTER TABLE public.drill_prescriptions
-  ADD COLUMN IF NOT EXISTS drill_id UUID REFERENCES public.drills(id),
-  ADD COLUMN IF NOT EXISTS targeted_metric TEXT;
+### Step 1: Move readiness computation before prescription engine
+In `supabase/functions/hie-analyze/index.ts`:
+- Cut lines 1420-1421 (`const { score: readinessScore, ... } = computeReadiness(...)`)
+- Paste before line 1340 (before the prescription engine block)
+- This unblocks the AI prescription engine from ever executing
+
+### Step 2: Fix pre_weakness_value mapping
+In the same file, lines 1531-1532, change the weakness value lookup:
+```typescript
+// Current (broken): matches drill_type against weakness_metric
+const targetedMetric = drill.drill_type || action.weakness_area;
+const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
+
+// Fixed: find the pattern that generated this action, use its metric
+const matchingPattern = allPatterns.find(p => p.description === action.weakness_area);
+const targetedMetric = matchingPattern?.metric || drill.drill_type || action.weakness_area;
+const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
 ```
 
-### 2. Handedness Fix in `hie-analyze/index.ts`
-
-**Modify `analyzeHittingMicro` signature** (line 55): Add `batterSide` parameter defaulting to `'R'`.
-
-**Modify location bucketing** (lines 142-157): Flip inside/outside for left-handed hitters:
-- Right-handed: `col < midCol` = inside, `col > midCol` = outside
-- Left-handed: `col < midCol` = outside, `col > midCol` = inside
-
-**Modify the call site** (line 1249): Pass `settings?.primary_batting_side || 'R'` as the third argument. This requires fetching `primary_batting_side` in the settings query (line 1175) — add it to the select.
+### Step 3: Verify with second HIE run
+After fixing, trigger HIE again for the same athlete and confirm:
+- Prescription engine returns 200 (not fallback)
+- `pre_weakness_value` is populated (not null)
+- `constraints_json` contains structured data from AI engine
 
 ### Files Modified
 | File | Change |
-|---|---|
-| Migration SQL | Add `drill_id` + `targeted_metric` to `drill_prescriptions` |
-| `supabase/functions/hie-analyze/index.ts` | Add `batterSide` param to `analyzeHittingMicro`, flip inside/outside for lefties, update settings select to include `primary_batting_side` |
+|------|--------|
+| `supabase/functions/hie-analyze/index.ts` | Move readiness computation before prescription-engine block; fix targeted_metric mapping |
 
-### Implementation Order
-1. Run migration (add columns)
-2. Update `hie-analyze` settings query to select `primary_batting_side`
-3. Update `analyzeHittingMicro` signature and location bucketing logic
-4. Update call site to pass batter side
-
-### Verification
-- Query `drill_prescriptions` after next HIE run → `targeted_metric` and `drill_id` columns populated (not null)
-- Simulate left-handed hitter with weak contact on `col=0` → should produce `outside_weakness` (not `inside_weakness`)
+### Post-Fix Verification Checklist
+- [ ] Edge function logs show NO "Prescription engine call failed" error
+- [ ] `drill_prescriptions.pre_weakness_value` is numeric (not null)
+- [ ] `drill_prescriptions.constraints_json` contains structured JSON from AI engine
+- [ ] `weakness_scores` rows match `drill_prescriptions.targeted_metric` values
+- [ ] Prescription engine returns 200 with valid drill_ids
 
