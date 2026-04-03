@@ -287,7 +287,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   // Sync when DB data loads after mount
   useEffect(() => {
     if (handedness) return; // already set
-    if (isHitting || module === 'bunting') {
+    if (isHitting || isBunting) {
       if (primaryBattingSide === 'R' || primaryBattingSide === 'L') setHandedness(primaryBattingSide);
     } else if (module !== 'baserunning') {
       if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') setHandedness(primaryThrowingHand);
