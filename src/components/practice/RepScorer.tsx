@@ -327,8 +327,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
 
   // For switch hitters in hitting, use toggle side; otherwise use gate handedness
-  const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
-  const effectivePitcherHand = (isPitching && isAmbidextrousThrower) ? switchThrowSide : handedness;
+  // sideMode controls whether toggle is shown or side is locked
+  const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode ?? handedness);
+  const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode ?? handedness);
 
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
