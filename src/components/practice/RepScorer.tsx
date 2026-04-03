@@ -431,9 +431,25 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     onRepsChange(reps.filter((_, i) => i !== index));
   }, [reps, onRepsChange]);
 
-  // If no handedness selected, show gate (skip for baserunning — no side needed)
-  if (!handedness && !isBaserunning && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
-    return <HandednessGate module={module} value={handedness} onChange={setHandedness} />;
+  // Determine which DB field to save identity to
+  const identityField = (isHitting || module === 'bunting') ? 'primary_batting_side' : 'primary_throwing_hand';
+  // Show identity gate only if DB value is null and not a switch player
+  const dbIdentity = (isHitting || module === 'bunting') ? primaryBattingSide : primaryThrowingHand;
+  if (!handedness && !isBaserunning && !dbIdentity && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
+    return (
+      <HandednessGate
+        module={module}
+        isSaving={isSavingIdentity}
+        onSelect={(side) => {
+          saveIdentity(identityField, side);
+          if (side === 'S') {
+            // Switch/ambidextrous — don't set handedness, toggle handles it
+          } else {
+            setHandedness(side as 'L' | 'R');
+          }
+        }}
+      />
+    );
   }
 
   // Whether the pitcher intent grid should be locked (after pitch location is logged)
