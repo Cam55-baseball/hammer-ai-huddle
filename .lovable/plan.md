@@ -1,99 +1,36 @@
 
 
-# Adaptive Variation Layer — Implementation Plan
+# Per-Athlete Insight History Isolation
 
-## What This Delivers
-Controlled phrasing variation for Win/Focus/Cue/Tag outputs plus repetition detection across sessions, keeping the system fresh without changing any thresholds, metrics, or logic.
-
-## Architecture
-
-```text
-sessionInsights.ts (enhanced)
-├── WIN_VARIATIONS[metric] → string[][]  (2-3 phrasings per metric)
-├── FOCUS_VARIATIONS[metric] → string[][] 
-├── CUE_VARIATIONS[metric] → string[]
-├── TAG_VARIATIONS[tag] → string[]
-├── variationIndex(sessionId, metric) → deterministic hash pick
-└── generateInsights(composites, drillBlocks, module, sessionContext?)
-                                                        ↑
-                                            { sessionType, sessionDate }
-                                            for practice/game context cues
-
-PostSessionSummaryV2.tsx
-└── passes sessionContext to generateInsights()
-
-useInsightHistory (new hook, lightweight)
-└── tracks last 3-5 focus metrics per athlete in localStorage
-└── provides focusVariationOffset to shift phrasing when repeated
-```
+## Change Summary
+Update `useInsightHistory` to accept an optional `userId` parameter and scope the localStorage key to `insight_history_${userId}`. Two files changed.
 
 ## Changes
 
-### 1. `src/lib/sessionInsights.ts` — Variation + Context
+### 1. `src/hooks/useInsightHistory.ts`
+- Accept `userId?: string` parameter in `useInsightHistory(userId?)`
+- Compute storage key: `userId ? \`insight_history_${userId}\` : 'insight_history'` (fallback for missing userId)
+- Pass dynamic key to `readHistory(key)` and `writeHistory(key, entries)`
+- On first call with a userId, attempt to migrate old shared `insight_history` data: read it, write to new scoped key, delete old key. One-time backward compatibility.
+- Reset `historyRef` when userId changes (add to deps)
 
-**Add variation arrays** (2-3 per metric, same meaning):
-```
-WIN_VARIATIONS.chase_pct = [
-  (v) => `Chase discipline was elite — only ${v}% chase rate`,
-  (v) => `You laid off pitches outside the zone — just ${v}% chases`,
-  (v) => `${v}% chase rate — that's pro-level plate discipline`,
-]
-```
+### 2. `src/components/practice/PostSessionSummaryV2.tsx`
+- Already fetches `supabase.auth.getUser()` indirectly via the session query. Instead, use the existing `useAuth()` hook to get `user.id`.
+- Pass `user?.id` to `useInsightHistory(user?.id)`
 
-**Add context sensitivity**: Accept optional `sessionContext: { sessionType?: string }`. Append context suffix to cue:
-- `practice/solo_work` → " — lock this in before game speed"
-- `game/live_scrimmage` → " — this is showing up in competition"
+## Behavior
 
-**Variation selection**: Deterministic hash of `sessionDate + metric` → index into variations array. No randomness.
-
-**Tag variations**:
-```
-TAG_VARIATIONS = {
-  'Grind Session': ['Grind Day', 'Work Day', 'Foundation Work'],
-  'Solid Work': ['Steady Session', 'Clean Work', 'Consistent Day'],
-  'Elite Execution': ['Elite Day', 'Locked In', 'Peak Performance'],
-  'Building': ['Growth Day', 'Progress Session', 'Developing'],
-}
-```
-
-### 2. `src/hooks/useInsightHistory.ts` — Repetition Detection (NEW)
-
-Lightweight localStorage-based tracker:
-- Stores last 5 `{ focusMetric, cueIndex, date }` entries per user
-- Exposes `getVariationOffset(focusMetric)` — returns 0, 1, or 2 to shift to next phrasing variant when same focus repeats
-- No DB queries, no API calls
-
-### 3. `src/components/practice/PostSessionSummaryV2.tsx` — Wire Up
-
-- Pass `sessionContext: { sessionType }` to `generateInsights()`
-- Call `useInsightHistory` to get variation offset
-- After rendering, record current focus metric to history
-- Zero new queries added
-
-### 4. `src/components/practice/RecentSessionsList.tsx` — Tag Variation
-
-- Pass session date to tag generation for deterministic variation
-
-## Hard Guardrails Maintained
-- No AI calls added
-- No threshold changes
-- No metric selection logic changes
-- No additional DB queries
-- No micro_layer_data expansion
-- Base stealing trainer untouched
-- Sub-2s render preserved (localStorage read is <1ms)
+| Scenario | Result |
+|----------|--------|
+| Athlete A logs session | Writes to `insight_history_abc123` |
+| Athlete B on same device | Writes to `insight_history_def456` — completely independent |
+| No authenticated user | Falls back to `insight_history` (offset=0, safe) |
+| Old `insight_history` key exists | Migrated to scoped key on first use, then deleted |
+| localStorage unavailable | Silent fail, offset=0 |
 
 ## Files Modified
-
 | File | Change |
 |------|--------|
-| `src/lib/sessionInsights.ts` | Add variation arrays, context sensitivity, hash-based selection |
-| `src/hooks/useInsightHistory.ts` | **NEW** — localStorage repetition tracker |
-| `src/components/practice/PostSessionSummaryV2.tsx` | Pass context + variation offset |
-| `src/components/practice/RecentSessionsList.tsx` | Use tag variations |
-
-## Verification
-- Same composite input with different dates → different phrasing (hash-based)
-- Same focus metric 3x in a row → offset shifts phrasing each time
-- No accuracy or metric alignment degradation (thresholds untouched)
+| `src/hooks/useInsightHistory.ts` | Accept userId, scope key, migrate old data |
+| `src/components/practice/PostSessionSummaryV2.tsx` | Import `useAuth`, pass `user?.id` |
 
