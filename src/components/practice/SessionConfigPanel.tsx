@@ -201,8 +201,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       linked_session_id: linkedSessionId,
       bat_size: isHitting && batSize ? batSize : undefined,
       bat_type: isHitting ? (batType === 'custom' ? customBatType || undefined : batType || undefined) : undefined,
-      baserunning_drill_type: isBaserunning ? baserunningDrillType || undefined : undefined,
-      ai_baserunning_drill_description: isBaserunning && baserunningDrillType === 'custom' ? aiBaserunningDrillDesc || undefined : undefined,
     });
   };
 
