@@ -184,18 +184,13 @@ export function useScheduledPracticeSessions() {
 
   const updateSession = useCallback(async (id: string, updates: Partial<Pick<ScheduledPracticeSession, 'scheduled_date' | 'start_time' | 'end_time' | 'description' | 'recurring_active' | 'recurring_days'>>) => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from('scheduled_practice_sessions' as any)
-      .update(updates as any)
-      .eq('id', id);
-
-    if (error) {
-      toast({ title: 'Error updating session', description: error.message, variant: 'destructive' });
+    const success = await schedulingService.updateSession(id, updates);
+    if (!success) {
+      toast({ title: 'Error updating session', variant: 'destructive' });
     } else {
       toast({ title: 'Session updated' });
     }
-  }, [user, toast]);
+  }, [user, toast, schedulingService]);
 
   return {
     loading,
