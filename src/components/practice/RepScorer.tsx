@@ -1644,21 +1644,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {/* Catch Type */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Catch Type</Label>
-                <SelectGrid
-                  options={[
-                    { value: 'backhand', label: '🤚 Backhand' },
-                    { value: 'forehand', label: '✋ Forehand' },
-                    { value: 'underhand', label: '⬇️ Underhand' },
-                    { value: 'overhand', label: '⬆️ Overhand' },
-                  ]}
-                  value={current.catch_type}
-                  onChange={v => updateField('catch_type', v)}
-                  cols={4}
-                />
-              </div>
+              {/* Catch Type — moved to mandatory section above */}
 
               {/* Play Direction + Play Type (infielders get play type) */}
               <PlayDirectionSelector
