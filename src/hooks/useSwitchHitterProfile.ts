@@ -39,5 +39,10 @@ export function useSwitchHitterProfile() {
     enabled: !!user && !!settings.data?.is_switch_hitter,
   });
 
-  return { settings, sessionsBySide, isSwitchHitter: settings.data?.is_switch_hitter ?? false };
+  return {
+    settings,
+    sessionsBySide,
+    isSwitchHitter: settings.data?.is_switch_hitter ?? false,
+    isAmbidextrousThrower: settings.data?.is_ambidextrous_thrower ?? false,
+  };
 }
