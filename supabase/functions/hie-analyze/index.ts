@@ -1609,11 +1609,39 @@ Deno.serve(async (req) => {
             .in('id', resolvedIds);
         }
       }
-      // Insert new prescriptions (only if area is new)
-      const existingAreas = new Set((existingPrescriptions ?? []).map((e: any) => e.weakness_area));
-      const truly_new = newPrescriptions.filter(p => !existingAreas.has(p.weakness_area));
-      if (truly_new.length > 0) {
-        await supabase.from('drill_prescriptions').insert(truly_new);
+      // ── PRESCRIPTION UPSERT BY targeted_metric ──
+      // Ensures exactly 1 active prescription per targeted_metric per athlete
+      for (const np of newPrescriptions) {
+        // Validate required fields before write
+        if (!np.targeted_metric || !np.drill_name || !np.user_id) {
+          console.error('Skipping malformed prescription:', JSON.stringify({
+            targeted_metric: np.targeted_metric, drill_name: np.drill_name, user_id: np.user_id,
+          }));
+          continue;
+        }
+        try {
+          const existingMatch = (existingPrescriptions ?? []).find(
+            (e: any) => e.targeted_metric === np.targeted_metric && !e.resolved
+          );
+          if (existingMatch) {
+            // Update existing prescription with latest drill data
+            await supabase.from('drill_prescriptions').update({
+              drill_name: np.drill_name,
+              module: np.module,
+              constraints: np.constraints,
+              constraints_json: np.constraints_json,
+              drill_id: np.drill_id,
+              weakness_area: np.weakness_area,
+              pre_weakness_value: np.pre_weakness_value,
+              pre_score: np.pre_score,
+              updated_at: new Date().toISOString(),
+            }).eq('id', existingMatch.id);
+          } else {
+            await supabase.from('drill_prescriptions').insert(np);
+          }
+        } catch (insertErr: any) {
+          console.error(`Prescription save failed for metric=${np.targeted_metric}:`, insertErr.message);
+        }
       }
     }
 

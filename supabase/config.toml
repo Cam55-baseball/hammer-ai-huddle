@@ -185,3 +185,6 @@ verify_jwt = false
 
 [functions.prescription-engine]
 verify_jwt = false
+
+[functions.hie-verify]
+verify_jwt = false
