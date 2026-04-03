@@ -384,7 +384,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && absGuessValid
     && pitcherIntentValid
     && throwingRequiredValid
-    && baserunningCustomDescValid
+    && baserunningDrillValid
     && contactQualityValid
     && buntMandatoryValid
     && pitchLocationValid
