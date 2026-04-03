@@ -40,6 +40,7 @@ interface CalendarFilters {
   events: boolean;
   gamePlan: boolean;
   athleteEvents: boolean;
+  sessions: boolean;
 }
 
 const FILTER_STORAGE_KEY = 'calendarFilters';
