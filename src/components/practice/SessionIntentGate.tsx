@@ -24,7 +24,7 @@ const pitchingOptions: { value: SideMode; label: string }[] = [
 export function SessionIntentGate({ module, defaultMode, onSelect }: SessionIntentGateProps) {
   const isHitting = module === 'hitting' || module === 'bunting';
   const options = isHitting ? hittingOptions : pitchingOptions;
-  const title = isHitting ? 'Today's Batting Side' : 'Today's Throwing Arm';
+  const title = isHitting ? "Today's Batting Side" : "Today's Throwing Arm";
 
   return (
     <Card>
