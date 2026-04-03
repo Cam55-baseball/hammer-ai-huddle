@@ -15,7 +15,7 @@ import { RepScorer, type ScoredRep } from '@/components/practice/RepScorer';
 import { FeelingsPrompt, type FeelingState } from '@/components/practice/FeelingsPrompt';
 import { SessionConfigPanel, type SessionConfig } from '@/components/practice/SessionConfigPanel';
 import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
-import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
+
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
 import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader';
 import { PostSessionSummaryV2 } from '@/components/practice/PostSessionSummaryV2';
