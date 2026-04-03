@@ -1506,7 +1506,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               </div>
 
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type <span className="text-destructive">*</span></Label>
                 <SelectGrid
                   options={playTypeOptions}
                   value={current.play_type}
@@ -1515,12 +1515,46 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
+              {/* Catch Type — mandatory */}
               <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Fielding Result</Label>
+                <Label className="text-xs text-muted-foreground mb-1 block">Catch Type <span className="text-destructive">*</span></Label>
+                <SelectGrid
+                  options={[
+                    { value: 'backhand', label: '🤚 Backhand' },
+                    { value: 'forehand', label: '✋ Forehand' },
+                    { value: 'underhand', label: '⬇️ Underhand' },
+                    { value: 'overhand', label: '⬆️ Overhand' },
+                  ]}
+                  value={current.catch_type}
+                  onChange={v => updateField('catch_type', v)}
+                  cols={4}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Fielding Result <span className="text-destructive">*</span></Label>
                 <SelectGrid
                   options={fieldingResultOptions}
                   value={current.fielding_result}
                   onChange={v => updateField('fielding_result', v)}
+                />
+              </div>
+
+              {/* === ADVANCED FIELDING FIELDS === */}
+              {mode === 'advanced' && (
+              <>
+
+              {/* Hit Type Hardness — was above, now advanced */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Exit Velocity</Label>
+                <SelectGrid
+                  options={[
+                    { value: 'soft', label: '🟢 Soft' },
+                    { value: 'average', label: '🟡 Average' },
+                    { value: 'hard', label: '🔴 Hard' },
+                  ]}
+                  value={current.hit_type_hardness}
+                  onChange={v => updateField('hit_type_hardness', v)}
                 />
               </div>
 
