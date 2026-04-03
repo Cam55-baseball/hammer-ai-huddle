@@ -1284,8 +1284,11 @@ Deno.serve(async (req) => {
     }));
     if (weaknessScoreRows.length > 0) {
       // Deduplicate: remove previous weakness_scores for this athlete before inserting fresh ones
-      const { error: delErr } = await supabase.from('weakness_scores').delete().eq('user_id', user_id);
-      if (delErr) console.warn('weakness_scores delete failed:', delErr.message);
+      const { data: delData, error: delErr, count: delCount } = await supabase
+        .from('weakness_scores')
+        .delete({ count: 'exact' })
+        .eq('user_id', user_id);
+      console.log(`weakness_scores cleanup: deleted=${delCount}, error=${delErr?.message ?? 'none'}`);
       const { error: insErr } = await supabase.from('weakness_scores').insert(weaknessScoreRows);
       if (insErr) console.warn('weakness_scores insert failed:', insErr.message);
     }
