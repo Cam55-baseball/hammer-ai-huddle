@@ -261,7 +261,7 @@ const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
-  const { isSwitchHitter, isAmbidextrousThrower } = useSwitchHitterProfile();
+  const { isSwitchHitter, isAmbidextrousThrower, primaryBattingSide, primaryThrowingHand, saveIdentity, isSavingIdentity } = useSwitchHitterProfile();
 
   // Commit animation state
   const [showCommitCheck, setShowCommitCheck] = useState(false);
