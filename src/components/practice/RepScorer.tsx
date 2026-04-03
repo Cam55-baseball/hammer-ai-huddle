@@ -839,29 +839,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Switch hitter per-rep toggle */}
-              {isHitting && isSwitchHitter && (
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Batter Side</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['L', 'R'] as const).map(s => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setSwitchSide(s)}
-                        className={cn(
-                          'rounded-md border p-2 text-xs font-medium transition-all',
-                          switchSide === s
-                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                            : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {s === 'L' ? '🫲 Left' : '🫱 Right'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {isTee && (
                 <div className="flex justify-center">
