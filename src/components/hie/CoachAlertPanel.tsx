@@ -3,7 +3,11 @@ import { Badge } from '@/components/ui/badge';
 import { useHIETeamSnapshot } from '@/hooks/useHIETeamSnapshot';
 import { Bell, AlertTriangle, TrendingDown, ShieldAlert, Pause } from 'lucide-react';
 
-export function CoachAlertPanel() {
+interface CoachAlertPanelProps {
+  playerNames?: Record<string, string>;
+}
+
+export function CoachAlertPanel({ playerNames = {} }: CoachAlertPanelProps) {
   const { playerSnapshots } = useHIETeamSnapshot();
 
   const allAlerts: { userId: string; alert: any }[] = [];
@@ -22,6 +26,8 @@ export function CoachAlertPanel() {
     stagnation: <Pause className="h-4 w-4 text-muted-foreground" />,
   };
 
+  const getPlayerName = (userId: string) => playerNames[userId] || `Player ${userId.slice(0, 8)}…`;
+
   return (
     <Card className="border-amber-500/20">
       <CardHeader className="pb-3">
@@ -37,7 +43,7 @@ export function CoachAlertPanel() {
             {ALERT_ICONS[item.alert.type] ?? <ShieldAlert className="h-4 w-4 text-muted-foreground" />}
             <div className="min-w-0 flex-1">
               <div className="text-sm">{item.alert.message}</div>
-              <div className="text-xs text-muted-foreground">Player: {item.userId.slice(0, 8)}…</div>
+              <div className="text-xs text-muted-foreground">{getPlayerName(item.userId)}</div>
             </div>
             <Badge variant="outline" className="text-xs shrink-0">{item.alert.severity}</Badge>
           </div>
@@ -47,7 +53,7 @@ export function CoachAlertPanel() {
             <Pause className="h-4 w-4 text-red-500" />
             <div className="min-w-0 flex-1">
               <div className="text-sm">Player stalled with declining trend ({p.mpi_trend_30d})</div>
-              <div className="text-xs text-muted-foreground">Player: {p.user_id.slice(0, 8)}…</div>
+              <div className="text-xs text-muted-foreground">{getPlayerName(p.user_id)}</div>
             </div>
             <Badge variant="outline" className="text-xs shrink-0 bg-red-500/10 text-red-600 border-red-500/30">plateau</Badge>
           </div>

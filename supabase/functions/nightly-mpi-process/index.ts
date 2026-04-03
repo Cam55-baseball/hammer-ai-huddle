@@ -829,6 +829,22 @@ serve(async (req) => {
       },
     });
 
+    // ── Post-nightly HIE triggers (fire-and-forget) ──
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+    const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const uniqueProcessed = [...new Set(processedUserIds)];
+    console.log(`[nightly-mpi] Triggering HIE analysis for ${uniqueProcessed.length} athletes...`);
+    for (const uid of uniqueProcessed) {
+      fetch(`${SUPABASE_URL}/functions/v1/hie-analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({ user_id: uid, sport: 'baseball' }),
+      }).catch(err => console.error(`[nightly-mpi] HIE trigger failed for ${uid}:`, err));
+    }
+
     console.log('[nightly-mpi] Complete.');
     return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
