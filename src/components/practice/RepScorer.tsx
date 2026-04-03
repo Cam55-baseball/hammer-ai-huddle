@@ -359,9 +359,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsThrowingRequired = isThrowing;
   const throwingRequiredValid = !needsThrowingRequired || (!!current.self_catch_quality && !!current.effort_level);
 
-  // Baserunning: if drill_type === 'custom', require ai_baserunning_drill_description >= 15
-  const needsBaserunningCustomDesc = isBaserunning && current.drill_type === 'custom';
-  const baserunningCustomDescValid = !needsBaserunningCustomDesc || (current.ai_baserunning_drill_description?.length ?? 0) >= 15;
+  // Baserunning custom desc now handled at session config level
+  const baserunningCustomDescValid = true;
 
   // Validation
   const execScore = current.execution_score;
