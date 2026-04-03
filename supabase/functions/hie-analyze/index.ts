@@ -1174,13 +1174,32 @@ Deno.serve(async (req) => {
     const visionPatterns = analyzeVisionMicro(visionDrills ?? []);
     const baserunningPatterns = analyzeBaserunningMicro(allMicroReps, allDrillBlocks);
 
+    // ── CONTEXT-AWARE PATTERNS ──
+    const gamePracticePatterns = detectGamePracticeGap(allMicroReps);
+    const fatiguePatterns = detectFatigueDropoff(sessions ?? []);
+
     const allPatterns = [
       ...hittingPatterns, ...fieldingPatterns, ...pitchingPatterns,
       ...speedPatterns, ...timingPatterns, ...visionPatterns, ...baserunningPatterns,
+      ...gamePracticePatterns, ...fatiguePatterns,
     ].sort((a, b) => {
-      const sevOrder = { high: 0, medium: 1, low: 2 };
-      return (sevOrder[a.severity] ?? 2) - (sevOrder[b.severity] ?? 2);
+      const sevWeight: Record<string, number> = { high: 3, medium: 2, low: 1 };
+      const aGameBonus = a.data_points?.context === 'game_gap' ? 0.5 : 0;
+      const aFatigueBonus = a.metric === 'fatigue_dropoff' ? 0.3 : 0;
+      const bGameBonus = b.data_points?.context === 'game_gap' ? 0.5 : 0;
+      const bFatigueBonus = b.metric === 'fatigue_dropoff' ? 0.3 : 0;
+      const aScore = (sevWeight[a.severity] ?? 1) * (1 + aGameBonus + aFatigueBonus);
+      const bScore = (sevWeight[b.severity] ?? 1) * (1 + bGameBonus + bFatigueBonus);
+      return bScore - aScore;
     });
+
+    // ── WRITE WEAKNESS SCORES ──
+    const weaknessScoreRows = allPatterns.map(p => ({
+      user_id, weakness_metric: p.metric, score: p.value, computed_at: new Date().toISOString(),
+    }));
+    if (weaknessScoreRows.length > 0) {
+      await supabase.from('weakness_scores').insert(weaknessScoreRows);
+    }
 
     // ── BUILD PRIMARY LIMITER ──
     let primaryLimiter: string;
