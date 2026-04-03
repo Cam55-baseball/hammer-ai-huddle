@@ -294,6 +294,9 @@ export default function CoachDashboard() {
         {/* HIE: Team Weakness Engine */}
         <TeamWeaknessEngine />
 
+        {/* HIE: Player Comparison Tool */}
+        <PlayerComparisonTool playerNames={playerNameMap} />
+
         {/* Organization Quick Link */}
         {activeOrg ? (
           <Card className="border-primary/20 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors" onClick={() => navigate('/organization')}>
