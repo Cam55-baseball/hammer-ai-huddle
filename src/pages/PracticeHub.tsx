@@ -18,7 +18,7 @@ import { SessionConfigBar } from '@/components/practice/SessionConfigBar';
 import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
 import { SessionVideoUploader } from '@/components/practice/SessionVideoUploader';
-import { PostSessionSummary } from '@/components/practice/PostSessionSummary';
+import { PostSessionSummaryV2 } from '@/components/practice/PostSessionSummaryV2';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { PlayerScheduledSessions } from '@/components/practice/PlayerScheduledSessions';
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
