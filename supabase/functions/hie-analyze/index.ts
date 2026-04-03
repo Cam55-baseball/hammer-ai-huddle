@@ -1284,8 +1284,10 @@ Deno.serve(async (req) => {
     }));
     if (weaknessScoreRows.length > 0) {
       // Deduplicate: remove previous weakness_scores for this athlete before inserting fresh ones
-      await supabase.from('weakness_scores').delete().eq('user_id', user_id);
-      await supabase.from('weakness_scores').insert(weaknessScoreRows);
+      const { error: delErr } = await supabase.from('weakness_scores').delete().eq('user_id', user_id);
+      if (delErr) console.warn('weakness_scores delete failed:', delErr.message);
+      const { error: insErr } = await supabase.from('weakness_scores').insert(weaknessScoreRows);
+      if (insErr) console.warn('weakness_scores insert failed:', insErr.message);
     }
 
     // ── BUILD PRIMARY LIMITER ──
