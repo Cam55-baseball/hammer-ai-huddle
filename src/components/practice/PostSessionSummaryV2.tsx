@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { getGradeLabel } from '@/lib/gradeLabel';
 import { generateInsights, getTotalReps, getDrillCount } from '@/lib/sessionInsights';
 import { useInsightHistory } from '@/hooks/useInsightHistory';
+import { useAuth } from '@/hooks/useAuth';
 import { CheckCircle, Loader2, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +19,8 @@ interface PostSessionSummaryV2Props {
 }
 
 export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }: PostSessionSummaryV2Props) {
-  const { getVariationOffset, recordFocus } = useInsightHistory();
+  const { user } = useAuth();
+  const { getVariationOffset, recordFocus } = useInsightHistory(user?.id);
   const recordedRef = useRef(false);
 
   const { data: session, isLoading } = useQuery({
