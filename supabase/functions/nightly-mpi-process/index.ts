@@ -145,6 +145,8 @@ serve(async (req) => {
     const sports = ['baseball', 'softball'];
     const today = new Date().toISOString().split('T')[0];
 
+    const processedUserIds: string[] = [];
+
     for (const sport of sports) {
       const { data: athletes } = await supabase.from('athlete_mpi_settings')
         .select('*').eq('sport', sport).eq('admin_ranking_excluded', false);
