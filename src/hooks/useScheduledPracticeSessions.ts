@@ -119,16 +119,8 @@ export function useScheduledPracticeSessions() {
 
   const updateStatus = useCallback(async (id: string, status: 'scheduled' | 'completed' | 'cancelled') => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from('scheduled_practice_sessions' as any)
-      .update({ status } as any)
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error updating scheduled session status:', error);
-    }
-  }, [user]);
+    await schedulingService.updateSessionStatus(id, status);
+  }, [user, schedulingService]);
 
   const deleteSession = useCallback(async (id: string) => {
     if (!user) return;
