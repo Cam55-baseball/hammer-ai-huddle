@@ -1175,8 +1175,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Per-rep velocity band — always visible for live_bp/game, advanced-only for others */}
-              {!hidesVelocity && (PITCHING_ALWAYS_VELO.includes(repSource) || mode === 'advanced') && (
+              {/* Per-rep velocity band — advanced only */}
+              {mode === 'advanced' && !hidesVelocity && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Velocity Band</Label>
                   <SelectGrid
