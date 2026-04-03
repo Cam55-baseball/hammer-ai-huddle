@@ -295,6 +295,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     }
   }, [primaryBattingSide, primaryThrowingHand]);
 
+  // Session intent — side mode for this session
+  const [sideMode, setSideMode] = useState<'R' | 'L' | 'BOTH' | null>(null);
+
   // Switch hitter per-rep side override
   const [switchSide, setSwitchSide] = useState<'L' | 'R'>('R');
   const [switchThrowSide, setSwitchThrowSide] = useState<'L' | 'R'>('R');
