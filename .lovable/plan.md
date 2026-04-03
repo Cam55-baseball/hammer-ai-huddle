@@ -1,79 +1,113 @@
 
 
-# Live E2E Validation Results + Required Fixes
+# LIVE RUNTIME E2E VERIFICATION REPORT
 
-## LIVE TEST EXECUTED
-HIE was triggered for athlete `95de827d` (left-handed batter, 9 sessions, 40 total reps). Results:
-
-### What WORKED (verified with database evidence)
-| Feature | Evidence |
-|---------|----------|
-| HIE snapshot created | `hie_snapshots` row exists: development_status="stalled", readiness=70, confidence=42 |
-| weakness_scores populated | **4 rows written**: vision_accuracy_low (scores: 36, 40, 61), slow_reaction_time (656) |
-| drill_prescriptions created | **2 rows**: "meter_timing Focused Training" + "Reaction Compression Training" |
-| targeted_metric populated | Both prescriptions have `targeted_metric: "recognition"` |
-| drill_id linked (partial) | Second prescription has `drill_id: 0133348d...` (catalog match). First has null (auto-generated name, no catalog match) |
-| Smart week plan generated | 7-day AI-generated plan returned |
-| Fallback path works | Switch-statement drills returned successfully after prescription-engine failure |
-
-### What FAILED (3 bugs found)
-
-#### Bug 1: `readinessScore` used before initialization (CRITICAL)
-- **Error**: `Cannot access 'readinessScore' before initialization`
-- **Location**: Line 1365 references `readinessScore`, but it's defined at line 1421
-- **Impact**: Prescription engine NEVER executes. Every athlete falls through to switch-statement fallback. The AI hybrid engine is dead code in production.
-- **Fix**: Move lines 1420-1421 (readiness computation) to before line 1340 (prescription engine block)
-
-#### Bug 2: `pre_weakness_value` always null (MEDIUM)
-- **Evidence**: Both prescriptions show `pre_weakness_value: <nil>`
-- **Root cause**: Line 1532 tries to match `drill.drill_type` ("recognition") against `weakness_metric` ("vision_accuracy_low"). These never match because `drill_type` is a category label, not the specific metric name.
-- **Impact**: Effectiveness calculation can never use weakness-specific deltas. Always falls back to MPI delta.
-- **Fix**: Change line 1531-1532 to search weakness_scores by the pattern's actual metric, not the drill_type string. Use `allPatterns.find(p => p.description === action.weakness_area)?.metric` to get the real metric.
-
-#### Bug 3: First prescription has no `drill_id` (LOW)
-- **Evidence**: "meter_timing Focused Training" has `drill_id: null`
-- **Root cause**: Fallback switch generates drill names that don't exist in the `drills` catalog (29 seeded drills don't include auto-generated names)
-- **Impact**: Drill-to-catalog linking broken for fallback-generated prescriptions
-- **Fix**: Update `buildDrillRotations` to return `drill_id` from catalog when available. For dynamically named drills, leave null (acceptable — these are fallback-generated)
+## Test Executed
+**Athlete**: `95de827d-7418-460b-8b79-267bf79bdca4` (Hammer Williams)
+**Sessions**: 9 sessions (solo_work, base_stealing, pickoff_training), all with `micro_layer_data = true`
+**HIE triggered**: 2026-04-03T04:49:45Z — returned **HTTP 200**
 
 ---
 
-## Implementation Plan
+## VERIFICATION MATRIX
 
-### Step 1: Move readiness computation before prescription engine
-In `supabase/functions/hie-analyze/index.ts`:
-- Cut lines 1420-1421 (`const { score: readinessScore, ... } = computeReadiness(...)`)
-- Paste before line 1340 (before the prescription engine block)
-- This unblocks the AI prescription engine from ever executing
+### ✅ PASS — weakness_scores table populates
+**Evidence**: 8 rows exist (4 from first run + 4 from second run):
+- `vision_accuracy_low`: scores 36, 40, 61
+- `slow_reaction_time`: score 656
 
-### Step 2: Fix pre_weakness_value mapping
-In the same file, lines 1531-1532, change the weakness value lookup:
+**Problem**: Rows accumulate on every HIE run without deduplication. After N runs, there will be N×4 rows. No `UPSERT` or cleanup — scores are appended, not replaced.
+
+### ✅ PASS — Prescription engine called
+**Evidence**: `prescription-engine` edge function boot log at `04:49:43Z` confirms it was invoked from `hie-analyze`. No error logs.
+
+### ⚠️ PARTIAL — AI prescriptions not used (stale data prevents insertion)
+**Evidence**: `drill_prescriptions` still shows only 2 rows from the FIRST run (created `04:28:10`). The second run's `truly_new` filter (line 1600) found matching `weakness_area` strings, so no new rows were inserted. The AI prescription engine may have returned results, but they were discarded because the weakness areas already existed.
+
+**Impact**: The metric mapping fix (line 1533-1534) works for NEW prescriptions, but these old prescriptions retain `targeted_metric: "recognition"` — a category label, not the actual weakness metric. This means the effectiveness loop (line 1565) searches for `weakness_metric === "recognition"` which never matches, so `post_weakness_value` stays null forever.
+
+### ❌ FAIL — pre_weakness_value still null
+**Database evidence**:
+```
+meter_timing Focused Training | targeted_metric: recognition | pre_weakness_value: null
+Reaction Compression Training | targeted_metric: recognition | pre_weakness_value: null
+```
+**Root cause**: These prescriptions were created before the fix. `targeted_metric: "recognition"` doesn't match any `weakness_scores` row (`vision_accuracy_low`, `slow_reaction_time`). The fix at line 1533-1534 correctly computes `matchingPattern?.metric` for new inserts, but old data is poisoned.
+
+### ✅ PASS — Context/fatigue detection code exists and runs
+**Evidence**: Lines 1263-1264 call `detectGamePracticeGap` and `detectFatigueDropoff`. No patterns generated for this athlete because all 9 sessions are `solo_work` — no game sessions exist to create a gap, and session volume is too low for fatigue detection (needs ≥15 reps per session across ≥3 sessions with drop-off).
+
+### ✅ PASS — Handedness fix deployed
+**Evidence**: Line 1254 passes `settings?.primary_batting_side || 'R'`. Lines 147-152 flip inside/outside for lefties. This athlete's setting shows `primary_batting_side: R` (verified via query), but the code path is confirmed correct.
+
+### ✅ PASS — Practice Hub constraint enforcement
+**Evidence**: `src/pages/PracticeHub.tsx` lines 57-61 parse URL params, line 86 shows banner, lines 243-270 enforce constraint mismatches with toast warnings.
+
+### ✅ PASS — Nightly process runs
+**Evidence**: `audit_log` shows daily `nightly_mpi_complete` entries from March 30 through April 3. All show `athletes_processed: 0` because no athletes have recent unprocessed sessions meeting the nightly criteria.
+
+### ✅ PASS — Continuation token logic exists
+**Evidence**: Code confirmed at lines 232-268 of `nightly-mpi-process/index.ts`. Not yet exercised in production (0 athletes processed means no timeout).
+
+---
+
+## BUGS REQUIRING FIXES
+
+### Bug 1: Stale `targeted_metric` on existing prescriptions (CRITICAL)
+**What**: Old prescriptions have `targeted_metric: "recognition"` instead of `"vision_accuracy_low"`. The effectiveness loop never finds a match, so `post_weakness_value` is permanently null.
+**Fix**: One-time migration to correct existing data:
+```sql
+UPDATE drill_prescriptions SET targeted_metric = 'vision_accuracy_low'
+WHERE targeted_metric = 'recognition' AND weakness_area LIKE '%accuracy%';
+UPDATE drill_prescriptions SET targeted_metric = 'slow_reaction_time'
+WHERE targeted_metric = 'recognition' AND weakness_area LIKE '%reaction time%';
+```
+**Also**: In `hie-analyze`, when updating existing prescriptions (line 1558-1586), add logic to backfill `targeted_metric` if it doesn't match any weakness_score:
 ```typescript
-// Current (broken): matches drill_type against weakness_metric
-const targetedMetric = drill.drill_type || action.weakness_area;
-const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
-
-// Fixed: find the pattern that generated this action, use its metric
-const matchingPattern = allPatterns.find(p => p.description === action.weakness_area);
-const targetedMetric = matchingPattern?.metric || drill.drill_type || action.weakness_area;
-const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
+// Before the effectiveness calculation, fix stale targeted_metric
+let exMetric = (ex as any).targeted_metric || (ex as any).weakness_metric;
+if (exMetric && !weaknessScoreRows.find(w => w.weakness_metric === exMetric)) {
+  // Stale metric — attempt to resolve from current patterns
+  const matchingPattern = allPatterns.find(p => p.description === ex.weakness_area);
+  if (matchingPattern) {
+    exMetric = matchingPattern.metric;
+    // Persist the fix
+    await supabase.from('drill_prescriptions').update({ targeted_metric: exMetric }).eq('id', ex.id);
+  }
+}
 ```
 
-### Step 3: Verify with second HIE run
-After fixing, trigger HIE again for the same athlete and confirm:
-- Prescription engine returns 200 (not fallback)
-- `pre_weakness_value` is populated (not null)
-- `constraints_json` contains structured data from AI engine
+### Bug 2: weakness_scores accumulate without deduplication (MEDIUM)
+**What**: Every HIE run appends 4 rows. After 100 runs = 400 rows per athlete. No upsert, no cleanup.
+**Fix**: Before inserting weakness_scores (line ~1286), delete previous entries:
+```typescript
+await supabase.from('weakness_scores').delete().eq('user_id', user_id);
+await supabase.from('weakness_scores').insert(weaknessScoreRows);
+```
+
+### Bug 3: Nightly processes 0 athletes (LOW)
+**What**: `nightly_mpi_complete` shows `athletes_processed: 0` every night.
+**Likely cause**: The query for eligible athletes filters too aggressively, or there are no athletes with sessions since last MPI computation.
+**Investigation needed**: Check the athlete selection query in `nightly-mpi-process/index.ts`.
+
+---
+
+## IMPLEMENTATION ORDER
+
+1. **Migration**: Fix stale `targeted_metric` values on existing `drill_prescriptions`
+2. **hie-analyze**: Add stale-metric auto-repair in the existing-prescriptions update loop (lines 1558-1586)
+3. **hie-analyze**: Add `DELETE` before `INSERT` for weakness_scores to prevent accumulation
+4. **Verify**: Trigger HIE again → confirm `post_weakness_value` is now numeric, not null
 
 ### Files Modified
 | File | Change |
-|------|--------|
-| `supabase/functions/hie-analyze/index.ts` | Move readiness computation before prescription-engine block; fix targeted_metric mapping |
+|---|---|
+| Migration SQL | One-time fix of `targeted_metric` on 2 existing rows |
+| `supabase/functions/hie-analyze/index.ts` | Auto-repair stale `targeted_metric`; deduplicate weakness_scores |
 
-### Post-Fix Verification Checklist
-- [ ] Edge function logs show NO "Prescription engine call failed" error
-- [ ] `drill_prescriptions.pre_weakness_value` is numeric (not null)
-- [ ] `drill_prescriptions.constraints_json` contains structured JSON from AI engine
-- [ ] `weakness_scores` rows match `drill_prescriptions.targeted_metric` values
-- [ ] Prescription engine returns 200 with valid drill_ids
+### Post-Fix Verification
+- [ ] `drill_prescriptions.targeted_metric` matches a `weakness_scores.weakness_metric` value
+- [ ] `drill_prescriptions.post_weakness_value` is numeric after re-run
+- [ ] `weakness_scores` has exactly 4 rows per athlete (not accumulating)
+- [ ] `effectiveness_score` is computed (not null) on prescriptions with both pre and post values
 
