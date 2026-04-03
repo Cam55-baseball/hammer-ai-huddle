@@ -41,8 +41,6 @@ export interface SessionConfig {
   linked_session_id?: string;
   bat_size?: string;
   bat_type?: string;
-  baserunning_drill_type?: string;
-  ai_baserunning_drill_description?: string;
 }
 
 interface SessionConfigPanelProps {
