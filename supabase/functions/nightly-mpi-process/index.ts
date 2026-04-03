@@ -492,9 +492,9 @@ serve(async (req) => {
           hofActive, hofProb, proProbability, proProbCapped, consecutiveHeavy,
           tierMult, ageCurveMult, posWeight,
         });
-       } catch (athleteError) {
+       } catch (athleteError: any) {
           console.error(`[nightly-mpi] Error processing athlete ${athlete.user_id}:`, athleteError);
-          failedUsers.push(athlete.user_id);
+          failedUsers.push({ user_id: athlete.user_id, error: athleteError?.message || String(athleteError) });
         }
       } // end athlete loop
         console.log(`[nightly-mpi] ${sport}: Batch completed in ${Date.now() - batchTimestamp}ms`);
