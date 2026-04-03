@@ -1,144 +1,67 @@
 
 
-# Mandatory Fields + Quick/Advanced Mode Enforcement
-
-## Current State Analysis
-
-**RepScorer.tsx** has a Quick/Advanced toggle but the split is only implemented for **hitting** (line 961 `mode === 'advanced'`). All other modules render all fields unconditionally. The Execution Number Line (lines 633-666) shows for ALL modules including fielding.
+# Pitching ABS Guess Mandatory + Baserunning Drill Type to Session Setup + Remove Pitching Velocity Band
 
 ## Changes
 
-### 1. `src/components/practice/RepScorer.tsx` — Validation + Quick/Advanced gating
+### 1. `src/components/practice/RepScorer.tsx` — ABS Guess mandatory in Quick Log
 
-**A. Validation additions (around line 357-373)**
+**Current**: ABS Guess is gated behind `mode === 'advanced'` (line 1241) and only required when `pitch_location` is set.
 
-Add mandatory checks to `canConfirm`:
-- **Bunting**: `bunt_ball_state`, `bunt_direction`, `bunt_contact_quality` all required
-- **Pitching**: `pitch_location` required (currently only `pitcher_spot_intent` is enforced)
-- **Fielding**: `play_type` (batted ball type) and `catch_type` required; `fielding_result` required
-- **Baserunning**: `drill_type` required (currently only validated when `custom`)
+**Fix**:
+- Remove `mode === 'advanced' &&` from ABS Guess render condition (line 1241) — show in Quick Log
+- Change validation: ABS Guess is mandatory for ALL pitching reps regardless of pitch_location. Update line 349-352:
+  ```
+  const needsAbsGuess = isPitching;
+  const absGuessValid = !needsAbsGuess || !!current.abs_guess;
+  ```
+- This means ABS Guess shows always for pitching (not gated behind pitch_location existing), and blocks submission if missing
 
-New validation variables:
-```
-const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
-const pitchLocationValid = !isPitching || !!current.pitch_location;
-const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
-const baserunningDrillValid = !isBaserunning || !!current.drill_type;
-```
+### 2. `src/components/practice/SessionConfigPanel.tsx` — Add Baserunning Drill Type + Remove Pitching Velocity Band
 
-Add all four to `canConfirm` chain + error messages.
+**A. Add `baserunning_drill_type` to `SessionConfig` interface** (line 25-44):
+- Add `baserunning_drill_type?: string`
 
-**B. Hide Execution Number Line for fielding (lines 633-666)**
+**B. Add drill type selector for baserunning** in the setup UI:
+- When `isBaserunning`, show the drill type grid (reuse the same options from `BaserunningRepFields.tsx`: `home_to_1st`, `1st_to_3rd`, etc.)
+- Make it mandatory: update `canConfirm` (line 167) to: `!!repSource && (!isBaserunning || !!baserunningDrillType)`
+- Include custom drill description text field when `baserunningDrillType === 'custom'`
 
-Wrap the execution score number line in `{!isFielding && (...)}`. Fielding uses `fielding_result` (clean/error/assist) as its execution metric — no duplicate input.
+**C. Remove Velocity Band for pitching**:
+- Change `showVelocityBand` (line 118) to exclude pitching: `(isHitting || isBunting) && !HIDES_VELOCITY.includes(repSource)`
+- Velocity Band remains for hitting/bunting setup only
 
-For fielding, `execution_score` should NOT be required. Update the `canConfirm` to skip `execScore` check when `isFielding`:
-```
-const needsExecScore = !isFielding;
-// in canConfirm: (!needsExecScore || (execScore != null && execScore >= 1))
-```
+**D. Pass `baserunning_drill_type` in `onConfirm`** payload
 
-**C. Fielding Quick/Advanced split (lines 1472-1961)**
+### 3. `src/components/practice/RepScorer.tsx` — Baserunning: Remove per-rep drill_type requirement
 
-Quick Log (always visible — mandatory):
-- FieldingPositionSelector (already required)
-- Batted Ball Type (`play_type`)
-- Catch Type
-- Fielding Result
+**Current**: `baserunningDrillValid` (line 377) requires `current.drill_type` per rep, and `BaserunningRepFields` shows drill type in quick mode.
 
-Advanced only (wrap in `mode === 'advanced'`):
-- Hit Type Hardness (Exit Velocity)
-- Diving Play
-- Route Efficiency
-- Glove-to-Glove Time
-- Throwing Velocity
-- Play Probability
-- Receiving Quality
-- Play Direction + Play Type (infield)
-- Outfield-specific fields (relay, wall play)
-- Infield-specific fields (rep type, tag play, relay)
-- Catcher defense fields
-- FieldingThrowFields
-- Footwork Grade
-- Exchange Time
-- Throw Spin Quality
-- Field Position Diagram
+**Fix**:
+- Remove `baserunningDrillValid` from `canConfirm` chain
+- Auto-populate `drill_type` from `sessionConfig.baserunning_drill_type` in `commitRep` so every rep inherits the session-level value
+- Remove the per-rep drill_type error message from validation hints
 
-**D. Pitching Quick/Advanced split (lines 1092-1469)**
+### 4. `src/components/practice/BaserunningRepFields.tsx` — Remove Drill Type from rep fields
 
-Quick Log (always visible — mandatory):
-- Pitch Type (already shown)
-- Pitcher Spot Intent (already required)
-- Pitch Location (now mandatory — show unconditionally, not gated behind intent)
-- Result
+- Remove the Drill Type `SelectGrid` from this component entirely (it's now session-level)
+- Remove the custom drill description conditional that was tied to `value.drill_type === 'custom'`
+- Keep all other fields (goal, jump grade, read grade, time to base, exact time, exact steps) as advanced-only
 
-Advanced only (wrap remaining):
-- Hitter Side
-- Velocity Band / Exact Velocity
-- ABS Guess
-- Contact Type
-- Live AB fields
-- Pitcher Hitter Outcomes
-- Hit Spot
-- Pitch Command
-- In Zone
-- Spin Direction
+### 5. Error messages update (RepScorer line 2062-2081)
 
-Wait — Pitcher Spot Intent is currently required and Pitch Location shows only after intent. Making pitch_location mandatory while intent gates it creates a dependency. Keep the existing flow (intent → location) but ensure both are in Quick Log. Both are already visible outside `mode === 'advanced'`, so this is correct.
-
-**E. Bunting Quick/Advanced split (lines 1974-1977)**
-
-Currently renders `<BuntRepFields>` unconditionally with ALL fields. Need to split:
-
-Quick Log mandatory fields rendered inline in RepScorer:
-- Ball State
-- Bunt Direction  
-- Contact Quality (bunt_contact_quality)
-
-Advanced: render full `<BuntRepFields>` (which already contains these + execution score, pitch type, pitch location, ABS guess, defense result, hit/out, bunt type, runner location, spin type)
-
-To avoid duplication, pass a `mode` prop to BuntRepFields and have it conditionally show fields.
-
-**F. Baserunning Quick/Advanced split (lines 1964-1967)**
-
-Quick Log: Drill Type only (mandatory).
-Advanced: Full BaserunningRepFields.
-
-Pass `mode` prop to BaserunningRepFields to control visibility.
-
-### 2. `src/components/practice/BuntRepFields.tsx`
-
-Add `mode?: 'quick' | 'advanced'` prop. When `mode === 'quick'`, show ONLY:
-- Ball State
-- Bunt Direction
-- Contact Quality (bunt_contact_quality)
-
-When `mode === 'advanced'` (or undefined for backward compat), show all fields.
-
-### 3. `src/components/practice/BaserunningRepFields.tsx`
-
-Add `mode?: 'quick' | 'advanced'` prop. When `mode === 'quick'`, show ONLY:
-- Drill Type
-- Custom drill description (when drill_type === 'custom')
-
-When `mode === 'advanced'`, show all fields.
-
-### 4. Error message updates (lines 2028-2042)
-
-Add validation hints:
-- `!buntMandatoryValid` → "Select ball state, direction, and contact quality"
-- `!pitchLocationValid` → "Select pitch location"
-- `!fieldingMandatoryValid` → "Select batted ball type, catch type, and fielding result"
-- `!baserunningDrillValid` → "Select drill type"
+- Update ABS Guess error: ensure it shows for pitching without requiring pitch_location first
+- Remove `baserunningDrillValid` error line
+- Reorder as needed
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | Add validation, hide exec number line for fielding, implement Quick/Advanced splits for fielding/pitching/bunting/baserunning |
-| `src/components/practice/BuntRepFields.tsx` | Add `mode` prop, gate non-mandatory fields behind advanced |
-| `src/components/practice/BaserunningRepFields.tsx` | Add `mode` prop, gate non-mandatory fields behind advanced |
+| `src/components/practice/RepScorer.tsx` | ABS Guess: remove advanced gate, make mandatory for pitching always. Baserunning: remove per-rep drill_type validation, auto-inherit from session config |
+| `src/components/practice/SessionConfigPanel.tsx` | Add baserunning drill type selector (mandatory), remove velocity band for pitching, add `baserunning_drill_type` to SessionConfig |
+| `src/components/practice/BaserunningRepFields.tsx` | Remove drill type selector and custom description from rep-level fields |
 
 ## No DB Changes
-All fields already exist in the `ScoredRep` interface and are stored in `drill_blocks` JSONB. No schema migration needed.
+All data stored in `drill_blocks` JSONB. `baserunning_drill_type` will be stored at session config level and inherited per rep.
 
