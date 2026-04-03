@@ -167,7 +167,9 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   }, [showCoachSelector, mpiSettings?.primary_coach_id, headCoachName]);
 
   const velocityBands = isHitting ? machineVelocityBands : pitchingVelocityBands;
-  const canConfirm = !!repSource;
+  const baserunningDrillValid = !isBaserunning || !!baserunningDrillType;
+  const baserunningCustomDescValid = !isBaserunning || baserunningDrillType !== 'custom' || (aiBaserunningDrillDesc.length >= 15);
+  const canConfirm = !!repSource && baserunningDrillValid && baserunningCustomDescValid;
 
   const handleLeagueLevelChange = (level: string) => {
     setLeagueLevel(level);
