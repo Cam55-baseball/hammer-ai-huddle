@@ -1152,11 +1152,16 @@ Deno.serve(async (req) => {
     }));
     const { status: developmentStatus, trend7d, trend30d } = computeDevelopmentStatus(scoreHistory);
 
-    // ── AGGREGATE MICRO DATA FROM ALL SESSIONS ──
+    // ── AGGREGATE MICRO DATA FROM ALL SESSIONS (with context) ──
     const allMicroReps: any[] = [];
     const allDrillBlocks: any[] = [];
     (sessions ?? []).forEach((s: any) => {
-      if (Array.isArray(s.micro_layer_data)) allMicroReps.push(...s.micro_layer_data);
+      const sessionType = s.session_type || 'personal_practice';
+      if (Array.isArray(s.micro_layer_data)) {
+        s.micro_layer_data.forEach((rep: any) => {
+          allMicroReps.push({ ...rep, _session_type: sessionType });
+        });
+      }
       if (Array.isArray(s.drill_blocks)) allDrillBlocks.push(...s.drill_blocks);
     });
 
