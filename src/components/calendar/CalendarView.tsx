@@ -61,6 +61,7 @@ const getInitialFilters = (): CalendarFilters => {
     events: true,
     gamePlan: true,
     athleteEvents: true,
+    sessions: true,
   };
 };
 
