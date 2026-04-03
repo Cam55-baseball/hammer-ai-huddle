@@ -94,7 +94,7 @@ const spinTypes = [
 ];
 
 
-export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFieldsProps) {
+export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'advanced' }: BuntRepFieldsProps) {
   const { pitchTypes } = useSportConfig();
   const v = value as any;
 
