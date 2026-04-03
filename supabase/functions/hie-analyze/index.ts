@@ -519,6 +519,64 @@ function analyzeBaserunningMicro(microReps: any[], drillBlocks: any[]): MicroPat
 }
 
 // ═══════════════════════════════════════════════════════════════
+// CONTEXT-AWARE DETECTION: Game vs Practice Gap
+// ═══════════════════════════════════════════════════════════════
+
+function detectGamePracticeGap(allReps: any[]): MicroPattern[] {
+  const gameReps = allReps.filter((r: any) => ['game', 'live_scrimmage', 'live_abs'].includes(r._session_type));
+  const practiceReps = allReps.filter((r: any) => !['game', 'live_scrimmage', 'live_abs'].includes(r._session_type));
+  if (gameReps.length < 5 || practiceReps.length < 5) return [];
+
+  const gameWeak = gameReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / gameReps.length * 100;
+  const practiceWeak = practiceReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / practiceReps.length * 100;
+  const gap = gameWeak - practiceWeak;
+
+  if (gap > 20) {
+    return [{
+      category: 'hitting', metric: 'practice_game_gap', value: Math.round(gap),
+      threshold: 20, severity: gap > 35 ? 'high' : 'medium',
+      description: `Game performance ${Math.round(gap)}% worse than practice — transfer gap detected`,
+      data_points: { game_weak_pct: Math.round(gameWeak), practice_weak_pct: Math.round(practiceWeak), game_reps: gameReps.length, practice_reps: practiceReps.length, context: 'game_gap' },
+    }];
+  }
+  return [];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPORAL INTELLIGENCE: Fatigue Drop-off Detection
+// ═══════════════════════════════════════════════════════════════
+
+function detectFatigueDropoff(sessions: any[]): MicroPattern[] {
+  let fatigueSessionCount = 0;
+  let totalMagnitude = 0;
+  for (const s of sessions) {
+    const reps = Array.isArray(s.micro_layer_data) ? s.micro_layer_data : [];
+    if (reps.length < 15) continue;
+    const third = Math.floor(reps.length / 3);
+    const earlyReps = reps.slice(0, third);
+    const lateReps = reps.slice(-third);
+    if (earlyReps.length === 0 || lateReps.length === 0) continue;
+    const earlyWeak = earlyReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / earlyReps.length * 100;
+    const lateWeak = lateReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / lateReps.length * 100;
+    const dropoff = lateWeak - earlyWeak;
+    if (dropoff > 20) {
+      fatigueSessionCount++;
+      totalMagnitude += dropoff;
+    }
+  }
+  if (fatigueSessionCount >= 3) {
+    const avgMagnitude = Math.round(totalMagnitude / fatigueSessionCount);
+    return [{
+      category: 'hitting', metric: 'fatigue_dropoff', value: fatigueSessionCount,
+      threshold: 3, severity: fatigueSessionCount >= 5 ? 'high' : 'medium',
+      description: `Performance drops ${avgMagnitude}% in final third of ${fatigueSessionCount} recent sessions — fatigue pattern detected`,
+      data_points: { sessions_with_dropoff: fatigueSessionCount, avg_magnitude: avgMagnitude, context: 'fatigue' },
+    }];
+  }
+  return [];
+}
+
+// ═══════════════════════════════════════════════════════════════
 // PRESCRIPTIVE DRILL MAPPING (with adaptive rotation)
 // ═══════════════════════════════════════════════════════════════
 
