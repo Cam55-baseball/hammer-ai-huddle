@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
-import { HandednessGate } from './HandednessGate';
 import { SideToggle } from './SideToggle';
 import { SessionIntentGate } from './SessionIntentGate';
 import { TeeDepthGrid } from './TeeDepthGrid';
