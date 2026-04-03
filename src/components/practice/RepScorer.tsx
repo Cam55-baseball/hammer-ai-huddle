@@ -2093,6 +2093,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !absGuessValid ? 'Select ABS Guess zone' :
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
                 !baserunningCustomDescValid ? 'AI Drill Type Description requires min 15 characters' :
+                !contactQualityValid ? 'Select contact quality' :
                   'Set execution score (1-10) to confirm rep'}
             </p>
           )}
