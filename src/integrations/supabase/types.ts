@@ -1111,6 +1111,7 @@ export type Database = {
           constraints: string | null
           constraints_json: Json | null
           created_at: string
+          drill_id: string | null
           drill_name: string
           effectiveness_score: number | null
           id: string
@@ -1121,6 +1122,7 @@ export type Database = {
           pre_weakness_value: number | null
           prescribed_at: string
           resolved: boolean | null
+          targeted_metric: string | null
           updated_at: string
           user_id: string
           weakness_area: string
@@ -1131,6 +1133,7 @@ export type Database = {
           constraints?: string | null
           constraints_json?: Json | null
           created_at?: string
+          drill_id?: string | null
           drill_name: string
           effectiveness_score?: number | null
           id?: string
@@ -1141,6 +1144,7 @@ export type Database = {
           pre_weakness_value?: number | null
           prescribed_at?: string
           resolved?: boolean | null
+          targeted_metric?: string | null
           updated_at?: string
           user_id: string
           weakness_area: string
@@ -1151,6 +1155,7 @@ export type Database = {
           constraints?: string | null
           constraints_json?: Json | null
           created_at?: string
+          drill_id?: string | null
           drill_name?: string
           effectiveness_score?: number | null
           id?: string
@@ -1161,12 +1166,21 @@ export type Database = {
           pre_weakness_value?: number | null
           prescribed_at?: string
           resolved?: boolean | null
+          targeted_metric?: string | null
           updated_at?: string
           user_id?: string
           weakness_area?: string
           weakness_metric?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drill_prescriptions_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drills: {
         Row: {

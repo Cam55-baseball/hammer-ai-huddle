@@ -52,7 +52,7 @@ interface MicroPattern {
 // MICRO-DATA ANALYSIS ENGINE
 // ═══════════════════════════════════════════════════════════════
 
-function analyzeHittingMicro(microReps: any[], drillBlocks: any[]): MicroPattern[] {
+function analyzeHittingMicro(microReps: any[], drillBlocks: any[], batterSide: string = 'R'): MicroPattern[] {
   const patterns: MicroPattern[] = [];
   const hittingReps = microReps.filter((r: any) =>
     r.contact_quality || r.swing_result || r.batted_ball_type || r.swing_decision
@@ -144,7 +144,12 @@ function analyzeHittingMicro(microReps: any[], drillBlocks: any[]): MicroPattern
       const gridSize = loc.row <= 2 && loc.col <= 2 ? 3 : 5;
       const midCol = Math.floor(gridSize / 2);
       const midRow = Math.floor(gridSize / 2);
-      const bucket = loc.col < midCol ? 'inside' : loc.col > midCol ? 'outside' : null;
+      const isLefty = batterSide === 'L';
+      const bucket = loc.col < midCol
+        ? (isLefty ? 'outside' : 'inside')
+        : loc.col > midCol
+          ? (isLefty ? 'inside' : 'outside')
+          : null;
       const vBucket = loc.row < midRow ? 'up' : loc.row > midRow ? 'down' : null;
       const isWeak = ['weak_contact', 'miss', 'foul'].includes(r.contact_quality || '');
       if (bucket) {
@@ -1174,7 +1179,7 @@ Deno.serve(async (req) => {
     // 5. Settings
     const { data: settings } = await supabase
       .from("athlete_mpi_settings")
-      .select("coach_validation_met, primary_coach_id")
+      .select("coach_validation_met, primary_coach_id, primary_batting_side")
       .eq("user_id", user_id)
       .maybeSingle();
 
@@ -1246,7 +1251,7 @@ Deno.serve(async (req) => {
     });
 
     // ── REAL MICRO-DATA ANALYSIS (ALL MODULES) ──
-    const hittingPatterns = analyzeHittingMicro(allMicroReps, allDrillBlocks);
+    const hittingPatterns = analyzeHittingMicro(allMicroReps, allDrillBlocks, settings?.primary_batting_side || 'R');
     const fieldingPatterns = analyzeFieldingMicro(allMicroReps, allDrillBlocks);
     const pitchingPatterns = analyzePitchingMicro(allMicroReps, allDrillBlocks);
     const speedPatterns = analyzeSpeedLabMicro(speedSessions ?? []);
