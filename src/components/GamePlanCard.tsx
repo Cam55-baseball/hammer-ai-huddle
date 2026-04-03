@@ -81,6 +81,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
   const { getBadgesForTask } = usePhysioGamePlanBadges();
+  const scheduling = useSchedulingService();
   
   // System task schedule hook - for time/reminder settings only
   const { schedules: taskSchedules, saveSchedule: saveTaskSchedule, getSchedule } = useSystemTaskSchedule();
