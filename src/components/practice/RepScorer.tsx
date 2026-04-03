@@ -321,13 +321,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const [machinePitchType, setMachinePitchType] = useState<string | undefined>();
   const [machineVeloBand, setMachineVeloBand] = useState<string | undefined>();
 
-  const isHitting = module === 'hitting';
-  const isPitching = module === 'pitching';
-  const isFielding = module === 'fielding';
-  const isCatching = false; // catching module removed — catcher defense is under fielding
-  const isBaserunning = module === 'baserunning';
-  const isThrowing = module === 'throwing';
-  const isBunting = module === 'bunting';
 
   // For switch hitters in hitting, use toggle side; otherwise use gate handedness
   const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
