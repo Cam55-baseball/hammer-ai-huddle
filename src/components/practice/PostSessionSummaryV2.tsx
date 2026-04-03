@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getGradeLabel } from '@/lib/gradeLabel';
 import { generateInsights, getTotalReps, getDrillCount } from '@/lib/sessionInsights';
+import { useInsightHistory } from '@/hooks/useInsightHistory';
 import { CheckCircle, Loader2, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +18,9 @@ interface PostSessionSummaryV2Props {
 }
 
 export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }: PostSessionSummaryV2Props) {
+  const { getVariationOffset, recordFocus } = useInsightHistory();
+  const recordedRef = useRef(false);
+
   const { data: session, isLoading } = useQuery({
     queryKey: ['session-summary-v2', sessionId],
     queryFn: async () => {
@@ -53,7 +58,32 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
   const totalReps = getTotalReps(drillBlocks);
   const drillCount = getDrillCount(drillBlocks);
 
-  const insights = generateInsights(composites, drillBlocks, module);
+  // Compute variation offset from repetition history
+  const preOffset = hasScores ? getVariationOffset(null) : 0;
+  
+  const insights = generateInsights(composites, drillBlocks, module, {
+    sessionType,
+    sessionDate: session?.session_date ?? undefined,
+    variationOffset: preOffset,
+  });
+
+  // After insights are computed with a focus, get the real offset and recompute if needed
+  const finalOffset = hasScores ? getVariationOffset(insights.focusMetric) : 0;
+  const finalInsights = finalOffset !== preOffset
+    ? generateInsights(composites, drillBlocks, module, {
+        sessionType,
+        sessionDate: session?.session_date ?? undefined,
+        variationOffset: finalOffset,
+      })
+    : insights;
+
+  // Record focus metric to history (once)
+  useEffect(() => {
+    if (hasScores && finalInsights.focusMetric && !recordedRef.current) {
+      recordedRef.current = true;
+      recordFocus(finalInsights.focusMetric, session?.session_date ?? undefined);
+    }
+  }, [hasScores, finalInsights.focusMetric, recordFocus, session?.session_date]);
 
   const colorMap = {
     green: 'text-green-500',
@@ -111,48 +141,48 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
       {hasScores && (
         <>
           {/* B. Clear Win */}
-          {insights.win && (
+          {finalInsights.win && (
             <Card className="border-green-500/20 bg-green-500/5">
               <CardContent className="pt-4 pb-4 flex items-start gap-3">
                 <Trophy className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-green-600">Your Win</p>
-                  <p className="text-sm font-medium mt-0.5">{insights.win}</p>
+                  <p className="text-sm font-medium mt-0.5">{finalInsights.win}</p>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* C. Priority Focus */}
-          {insights.focus && (
+          {finalInsights.focus && (
             <Card className="border-amber-500/20 bg-amber-500/5">
               <CardContent className="pt-4 pb-4 flex items-start gap-3">
                 <Target className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-600">Priority Focus</p>
-                  <p className="text-sm font-medium mt-0.5">{insights.focus}</p>
+                  <p className="text-sm font-medium mt-0.5">{finalInsights.focus}</p>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* D. Next Rep Cue */}
-          {insights.nextRepCue && (
+          {finalInsights.nextRepCue && (
             <Card className="border-blue-500/20 bg-blue-500/5">
               <CardContent className="pt-4 pb-4 flex items-start gap-3">
                 <ArrowRight className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">Next Rep Cue</p>
-                  <p className="text-sm font-medium mt-0.5">{insights.nextRepCue}</p>
+                  <p className="text-sm font-medium mt-0.5">{finalInsights.nextRepCue}</p>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* E. Key Metrics */}
-          {insights.keyMetrics.length > 0 && (
+          {finalInsights.keyMetrics.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
-              {insights.keyMetrics.map((m) => (
+              {finalInsights.keyMetrics.map((m) => (
                 <div
                   key={m.label}
                   className={cn(

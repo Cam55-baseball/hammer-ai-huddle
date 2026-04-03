@@ -59,7 +59,10 @@ export function RecentSessionsList({ sport, moduleLabel, module }: RecentSession
               const drillBlocks = (s.drill_blocks as any[] | null) ?? [];
               const composites = (s.composite_indexes as Record<string, number> | null) ?? {};
               const sessionModule = s.module || module || 'hitting';
-              const insights = generateInsights(composites, drillBlocks, sessionModule);
+              const insights = generateInsights(composites, drillBlocks, sessionModule, {
+                sessionDate: s.session_date,
+                sessionType: s.session_type ?? undefined,
+              });
               const isOpen = expandedId === s.id;
               const tagStyle = TAG_STYLES[insights.sessionTag] ?? TAG_STYLES['Solid Work'];
 
