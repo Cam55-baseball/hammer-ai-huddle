@@ -267,10 +267,18 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const [showCommitCheck, setShowCommitCheck] = useState(false);
 
   // Handedness — auto-load from DB identity
+  const isHitting = module === 'hitting';
+  const isPitching = module === 'pitching';
+  const isFielding = module === 'fielding';
+  const isCatching = false;
+  const isBaserunning = module === 'baserunning';
+  const isThrowing = module === 'throwing';
+  const isBunting = module === 'bunting';
+
   const [handedness, setHandedness] = useState<'L' | 'R' | undefined>(() => {
-    if (isHitting || module === 'bunting') {
+    if (isHitting || isBunting) {
       if (primaryBattingSide === 'R' || primaryBattingSide === 'L') return primaryBattingSide;
-    } else if (module !== 'baserunning') {
+    } else if (!isBaserunning) {
       if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') return primaryThrowingHand;
     }
     return undefined;
