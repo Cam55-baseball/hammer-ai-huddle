@@ -144,7 +144,12 @@ function analyzeHittingMicro(microReps: any[], drillBlocks: any[], batterSide: s
       const gridSize = loc.row <= 2 && loc.col <= 2 ? 3 : 5;
       const midCol = Math.floor(gridSize / 2);
       const midRow = Math.floor(gridSize / 2);
-      const bucket = loc.col < midCol ? 'inside' : loc.col > midCol ? 'outside' : null;
+      const isLefty = batterSide === 'L';
+      const bucket = loc.col < midCol
+        ? (isLefty ? 'outside' : 'inside')
+        : loc.col > midCol
+          ? (isLefty ? 'inside' : 'outside')
+          : null;
       const vBucket = loc.row < midRow ? 'up' : loc.row > midRow ? 'down' : null;
       const isWeak = ['weak_contact', 'miss', 'foul'].includes(r.contact_quality || '');
       if (bucket) {
