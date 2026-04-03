@@ -81,7 +81,7 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced'
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type <span className="text-destructive">*</span></Label>
         <SelectGrid
           options={drills}
           value={value.drill_type}
