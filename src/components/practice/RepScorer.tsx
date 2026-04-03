@@ -289,7 +289,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     if (handedness) return; // already set
     if (isHitting || isBunting) {
       if (primaryBattingSide === 'R' || primaryBattingSide === 'L') setHandedness(primaryBattingSide);
-    } else if (module !== 'baserunning') {
+    } else if (!isBaserunning) {
       if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') setHandedness(primaryThrowingHand);
     }
   }, [primaryBattingSide, primaryThrowingHand]);
