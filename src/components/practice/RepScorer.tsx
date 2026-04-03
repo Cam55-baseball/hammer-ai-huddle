@@ -374,7 +374,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
   const pitchLocationValid = !isPitching || !!current.pitch_location;
   const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
-  const baserunningDrillValid = !isBaserunning || !!current.drill_type;
+  // Baserunning drill_type now inherited from session config — no per-rep validation needed
   const needsExecScore = !isFielding;
 
   const canConfirm = hasRepSource && (!needsExecScore || (execScore != null && execScore >= 1))
