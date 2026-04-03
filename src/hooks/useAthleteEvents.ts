@@ -90,56 +90,24 @@ export function useAthleteEvents() {
     if (!user?.id) return null;
 
     try {
-      // Check if event already exists for this date
-      const { data: existing } = await supabase
+      const result = await schedulingService.setDayType(input);
+      if (!result.success) {
+        toast.error('Failed to add event');
+        return null;
+      }
+
+      await fetchEvents();
+      toast.success('Event saved');
+      
+      // Fetch the created/updated event to return it
+      const { data } = await supabase
         .from('athlete_events')
-        .select('id')
+        .select('*')
         .eq('user_id', user.id)
         .eq('event_date', input.eventDate)
         .maybeSingle();
-
-      if (existing) {
-        // Update existing event
-        const { data, error } = await supabase
-          .from('athlete_events')
-          .update({
-            event_type: input.eventType,
-            event_time: input.eventTime,
-            intensity_level: input.intensityLevel,
-            sport: input.sport,
-            notes: input.notes
-          })
-          .eq('id', existing.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        await fetchEvents();
-        toast.success('Event updated');
-        return mapEvent(data);
-      }
-
-      // Create new event
-      const { data, error } = await supabase
-        .from('athlete_events')
-        .insert({
-          user_id: user.id,
-          event_date: input.eventDate,
-          event_type: input.eventType,
-          event_time: input.eventTime,
-          intensity_level: input.intensityLevel,
-          sport: input.sport,
-          notes: input.notes
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await fetchEvents();
-      toast.success('Event added');
-      return mapEvent(data);
+      
+      return data ? mapEvent(data) : null;
     } catch (error) {
       console.error('Error creating event:', error);
       toast.error('Failed to add event');
