@@ -1,76 +1,144 @@
 
 
-# Fix Session Side Flow — Single Source of Truth
+# Mandatory Fields + Quick/Advanced Mode Enforcement
 
-## Problem
-Two competing gates: `HandednessGate` (permanent DB identity, "never asked again") and `SessionIntentGate` (per-session). This creates duplicate prompts, especially for switch hitters in bunting. The permanent gate is architecturally wrong — side selection must be session-scoped.
+## Current State Analysis
 
-## Architecture After Fix
-
-```text
-Session Start → SessionIntentGate (ONCE) → Rep Logging
-                     ↓
-              R / L / Switch(or Ambi)
-                     ↓
-         R or L → side locked, no toggle
-         Switch  → SideToggle shown inline
-```
-
-One gate. One prompt. Zero re-asks. No DB-persisted blocking gate.
+**RepScorer.tsx** has a Quick/Advanced toggle but the split is only implemented for **hitting** (line 961 `mode === 'advanced'`). All other modules render all fields unconditionally. The Execution Number Line (lines 633-666) shows for ALL modules including fielding.
 
 ## Changes
 
-### 1. `src/components/practice/RepScorer.tsx`
+### 1. `src/components/practice/RepScorer.tsx` — Validation + Quick/Advanced gating
 
-**Remove HandednessGate entirely:**
-- Delete import of `HandednessGate`
-- Delete the `handedness` state + its `useEffect` sync (lines 279-296)
-- Delete the `dbIdentity` check + `HandednessGate` render block (lines 442-461)
-- Remove `useSwitchHitterProfile` import and all references to `isSwitchHitter`, `isAmbidextrousThrower`, `primaryBattingSide`, `primaryThrowingHand`, `saveIdentity`, `isSavingIdentity`
+**A. Validation additions (around line 357-373)**
 
-**Expand SessionIntentGate to ALL modules (except baserunning):**
-- Change `needsSessionIntent` to: `!isBaserunning` (covers hitting, bunting, pitching, fielding, throwing)
-- Remove the `defaultSideMode` logic that reads from DB identity
-- Default to `'R'` for all modules
+Add mandatory checks to `canConfirm`:
+- **Bunting**: `bunt_ball_state`, `bunt_direction`, `bunt_contact_quality` all required
+- **Pitching**: `pitch_location` required (currently only `pitcher_spot_intent` is enforced)
+- **Fielding**: `play_type` (batted ball type) and `catch_type` required; `fielding_result` required
+- **Baserunning**: `drill_type` required (currently only validated when `custom`)
 
-**Replace `handedness` with `sideMode` everywhere:**
-- `effectiveBatterSide`: for hitting/bunting → `sideMode === 'BOTH' ? switchSide : sideMode`
-- `effectivePitcherHand`: for pitching → `sideMode === 'BOTH' ? switchThrowSide : sideMode`
-- For fielding/throwing → `sideMode === 'BOTH' ? switchThrowSide : sideMode` (used as `throwing_hand`)
-- Update `commitRep` to use these instead of `handedness`
+New validation variables:
+```
+const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
+const pitchLocationValid = !isPitching || !!current.pitch_location;
+const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
+const baserunningDrillValid = !isBaserunning || !!current.drill_type;
+```
 
-**Expand SideToggle visibility:**
-- Show for bunting when `sideMode === 'BOTH'` (currently only hitting)
-- Show for fielding/throwing when `sideMode === 'BOTH'`
+Add all four to `canConfirm` chain + error messages.
 
-### 2. `src/components/practice/SessionIntentGate.tsx`
+**B. Hide Execution Number Line for fielding (lines 633-666)**
 
-**Add fielding/throwing support:**
-- Add throwing options: `{ R: 'Right', L: 'Left', BOTH: 'Ambidextrous' }`
-- Update module detection: hitting/bunting use batting options, pitching/fielding/throwing use throwing options
-- Update title: fielding/throwing → "Today's Throwing Hand"
-- Remove "defaultMode" prop — no pre-selection needed, user must tap
+Wrap the execution score number line in `{!isFielding && (...)}`. Fielding uses `fielding_result` (clean/error/assist) as its execution metric — no duplicate input.
 
-### 3. No DB Changes
-- `athlete_mpi_settings` columns remain (they're used elsewhere for analytics/profiles)
-- `useSwitchHitterProfile` hook remains available for profile display — just no longer gates session flow
+For fielding, `execution_score` should NOT be required. Update the `canConfirm` to skip `execScore` check when `isFielding`:
+```
+const needsExecScore = !isFielding;
+// in canConfirm: (!needsExecScore || (execScore != null && execScore >= 1))
+```
 
-### 4. `src/components/practice/HandednessGate.tsx`
-- Can be deleted (no remaining imports)
+**C. Fielding Quick/Advanced split (lines 1472-1961)**
 
-## Validation Criteria
-1. Every session (hitting/bunting/pitching/fielding/throwing) shows exactly one side prompt
-2. Selecting Switch/Ambi → immediate session start + SideToggle visible
-3. Selecting R or L → immediate session start, no toggle
-4. Zero re-prompts during session
-5. Each rep stores correct `batter_side` / `pitcher_hand` / `throwing_hand`
-6. Baserunning skips the gate entirely
+Quick Log (always visible — mandatory):
+- FieldingPositionSelector (already required)
+- Batted Ball Type (`play_type`)
+- Catch Type
+- Fielding Result
+
+Advanced only (wrap in `mode === 'advanced'`):
+- Hit Type Hardness (Exit Velocity)
+- Diving Play
+- Route Efficiency
+- Glove-to-Glove Time
+- Throwing Velocity
+- Play Probability
+- Receiving Quality
+- Play Direction + Play Type (infield)
+- Outfield-specific fields (relay, wall play)
+- Infield-specific fields (rep type, tag play, relay)
+- Catcher defense fields
+- FieldingThrowFields
+- Footwork Grade
+- Exchange Time
+- Throw Spin Quality
+- Field Position Diagram
+
+**D. Pitching Quick/Advanced split (lines 1092-1469)**
+
+Quick Log (always visible — mandatory):
+- Pitch Type (already shown)
+- Pitcher Spot Intent (already required)
+- Pitch Location (now mandatory — show unconditionally, not gated behind intent)
+- Result
+
+Advanced only (wrap remaining):
+- Hitter Side
+- Velocity Band / Exact Velocity
+- ABS Guess
+- Contact Type
+- Live AB fields
+- Pitcher Hitter Outcomes
+- Hit Spot
+- Pitch Command
+- In Zone
+- Spin Direction
+
+Wait — Pitcher Spot Intent is currently required and Pitch Location shows only after intent. Making pitch_location mandatory while intent gates it creates a dependency. Keep the existing flow (intent → location) but ensure both are in Quick Log. Both are already visible outside `mode === 'advanced'`, so this is correct.
+
+**E. Bunting Quick/Advanced split (lines 1974-1977)**
+
+Currently renders `<BuntRepFields>` unconditionally with ALL fields. Need to split:
+
+Quick Log mandatory fields rendered inline in RepScorer:
+- Ball State
+- Bunt Direction  
+- Contact Quality (bunt_contact_quality)
+
+Advanced: render full `<BuntRepFields>` (which already contains these + execution score, pitch type, pitch location, ABS guess, defense result, hit/out, bunt type, runner location, spin type)
+
+To avoid duplication, pass a `mode` prop to BuntRepFields and have it conditionally show fields.
+
+**F. Baserunning Quick/Advanced split (lines 1964-1967)**
+
+Quick Log: Drill Type only (mandatory).
+Advanced: Full BaserunningRepFields.
+
+Pass `mode` prop to BaserunningRepFields to control visibility.
+
+### 2. `src/components/practice/BuntRepFields.tsx`
+
+Add `mode?: 'quick' | 'advanced'` prop. When `mode === 'quick'`, show ONLY:
+- Ball State
+- Bunt Direction
+- Contact Quality (bunt_contact_quality)
+
+When `mode === 'advanced'` (or undefined for backward compat), show all fields.
+
+### 3. `src/components/practice/BaserunningRepFields.tsx`
+
+Add `mode?: 'quick' | 'advanced'` prop. When `mode === 'quick'`, show ONLY:
+- Drill Type
+- Custom drill description (when drill_type === 'custom')
+
+When `mode === 'advanced'`, show all fields.
+
+### 4. Error message updates (lines 2028-2042)
+
+Add validation hints:
+- `!buntMandatoryValid` → "Select ball state, direction, and contact quality"
+- `!pitchLocationValid` → "Select pitch location"
+- `!fieldingMandatoryValid` → "Select batted ball type, catch type, and fielding result"
+- `!baserunningDrillValid` → "Select drill type"
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | Remove HandednessGate, expand SessionIntentGate to all modules, replace `handedness` with `sideMode` |
-| `src/components/practice/SessionIntentGate.tsx` | Add fielding/throwing options, remove defaultMode prop |
-| `src/components/practice/HandednessGate.tsx` | Delete file |
+| `src/components/practice/RepScorer.tsx` | Add validation, hide exec number line for fielding, implement Quick/Advanced splits for fielding/pitching/bunting/baserunning |
+| `src/components/practice/BuntRepFields.tsx` | Add `mode` prop, gate non-mandatory fields behind advanced |
+| `src/components/practice/BaserunningRepFields.tsx` | Add `mode` prop, gate non-mandatory fields behind advanced |
+
+## No DB Changes
+All fields already exist in the `ScoredRep` interface and are stored in `drill_blocks` JSONB. No schema migration needed.
 
