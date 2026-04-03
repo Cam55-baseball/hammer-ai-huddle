@@ -301,6 +301,13 @@ export default function PracticeHub() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {prescribedBanner && (
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-primary">{prescribedBanner}</span>
+            {prescribedConstraints && <span className="text-xs text-muted-foreground ml-2">({prescribedConstraints})</span>}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Practice Intelligence</h1>
