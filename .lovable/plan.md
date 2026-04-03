@@ -1,83 +1,28 @@
 
 
-# Session Intent Layer — Side Mode Selection Per Session
+# Make Contact Quality Mandatory in Quick Log for Hitting
 
 ## Problem
-Currently, switch hitters always see the `SideToggle` and non-switch players never do. There's no way for a switch hitter to say "today I'm only hitting right" or for a right-handed hitter to say "I want to work both sides today." Session intent is missing.
-
-## Architecture
-
-```text
-Athlete Identity (DB, set once)
-  └── Session Intent (asked each session, stored in state)
-       └── Rep Execution (per-rep side, stored with rep)
-```
+Contact Quality is currently only shown in Advanced mode for hitting reps. It needs to be a mandatory field in Quick Log mode as well, and the confirm button should require it.
 
 ## Changes
 
-### 1. `src/components/practice/SessionIntentGate.tsx` (NEW)
-A compact one-tap mode selector shown at the top of the rep area before the first rep is logged.
+### 1. `src/components/practice/RepScorer.tsx`
 
-**Hitting** (when `primaryBattingSide` is known):
-- Three options: `Right Only` | `Left Only` | `Both`
-- Default pre-selected based on identity: `'S'` → `Both`, `'R'` → `Right Only`, `'L'` → `Left Only`
+**A. Move Contact Quality out of the `mode === 'advanced'` block (line ~994)**
+- Extract the Contact Quality grid from inside the `{mode === 'advanced' && (...)}` block (lines 994-1015)
+- Place it directly after the Swing Decision section (after line 972), so it appears in both Quick and Advanced modes
+- Add the required asterisk indicator to the label
 
-**Pitching** (when `primaryThrowingHand` is known):
-- Three options: `Right Arm` | `Left Arm` | `Both`
-- Same default logic
+**B. Add to `canConfirm` validation (line 384)**
+- Add condition: `&& (!isHitting || current.contact_quality != null)`
+- This makes it mandatory for all hitting reps regardless of Quick/Advanced mode
 
-**Design**: Horizontal segmented control (like the existing Quick/Advanced toggle style). One tap confirms — no modal, no extra button. Selecting a value immediately sets the mode and the gate disappears, replaced by the normal rep input.
+**C. Update the validation error message (around line 2081)**
+- Add a hint when contact quality is missing: "Select contact quality"
 
-### 2. `src/components/practice/RepScorer.tsx`
-**A. New state:**
-```ts
-const [sideMode, setSideMode] = useState<'R' | 'L' | 'BOTH' | null>(null);
-```
-
-**B. Auto-default on mount** (via useEffect):
-- Switch hitter → default `'BOTH'`
-- Right-handed → default `'R'`
-- Left-handed → default `'L'`
-- But do NOT auto-confirm — show the `SessionIntentGate` so user can override
-
-**C. Show `SessionIntentGate`** when `sideMode === null` and identity is known (after the identity gate). This replaces the current immediate jump to rep input.
-
-**D. Toggle visibility update:**
-- `SideToggle` shown ONLY when `sideMode === 'BOTH'`
-- When `sideMode === 'R'` or `'L'`, lock `effectiveBatterSide` / `effectivePitcherHand` to that value — no toggle rendered
-
-**E. Update `effectiveBatterSide` / `effectivePitcherHand`:**
-```ts
-const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode ?? handedness);
-const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode ?? handedness);
-```
-
-**F. Gate ordering** (the return-early chain):
-1. Identity gate (existing — only if DB identity is null)
-2. Session intent gate (NEW — only if `sideMode` is null and module is hitting/pitching)
-3. Normal rep input
-
-### 3. No changes needed to:
-- `HandednessGate.tsx` — identity gate stays as-is
-- `SideToggle.tsx` — component stays as-is, just conditionally rendered
-- `SessionConfigPanel.tsx` — session config is unrelated to side intent
-- `useSwitchHitterProfile.ts` — already exposes everything needed
-- Database — no schema changes, `sideMode` is session-local state only
-
-## Data Flow
-
-```text
-Identity (DB)           Session Intent (state)      Rep Execution
-primary_batting_side    sideMode = 'R'|'L'|'BOTH'   batter_side per rep
-├── 'R' → default 'R'  ├── 'R' → lock to R          └── always R
-├── 'L' → default 'L'  ├── 'L' → lock to L          └── always L
-└── 'S' → default BOTH └── 'BOTH' → show toggle     └── R or L per tap
-```
-
-## Files
-
-| File | Change |
-|------|--------|
-| `src/components/practice/SessionIntentGate.tsx` | **NEW** — one-tap session mode selector |
-| `src/components/practice/RepScorer.tsx` | Add `sideMode` state, show intent gate, conditional toggle |
+## No other files changed
+- Contact Quality options already defined (line 195)
+- Field already stored in rep data via `updateField('contact_quality', ...)`
+- No DB changes needed
 
