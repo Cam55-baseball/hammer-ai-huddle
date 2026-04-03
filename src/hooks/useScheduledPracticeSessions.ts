@@ -105,42 +105,17 @@ export function useScheduledPracticeSessions() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('scheduled_practice_sessions' as any)
-        .insert({
-          user_id: input.user_id || user.id,
-          created_by: user.id,
-          session_module: input.session_module,
-          session_type: input.session_type,
-          title: input.title,
-          description: input.description || null,
-          scheduled_date: input.scheduled_date,
-          start_time: input.start_time || null,
-          end_time: input.end_time || null,
-          recurring_active: input.recurring_active || false,
-          recurring_days: input.recurring_days || [],
-          sport: input.sport,
-          organization_id: input.organization_id || null,
-          team_id: input.team_id || null,
-          assignment_scope: input.assignment_scope || 'individual',
-          coach_id: input.coach_id || null,
-          opponent_name: input.opponent_name || null,
-          opponent_level: input.opponent_level || null,
-          team_name: input.team_name || null,
-        } as any)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const result = await schedulingService.scheduleSession(input);
+      if (!result.success) throw new Error('Failed to schedule session');
       toast({ title: 'Session scheduled', description: input.title });
-      return data as unknown as ScheduledPracticeSession;
+      return result.data as unknown as ScheduledPracticeSession;
     } catch (error: any) {
       toast({ title: 'Error scheduling session', description: error.message, variant: 'destructive' });
       return null;
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, schedulingService]);
 
   const updateStatus = useCallback(async (id: string, status: 'scheduled' | 'completed' | 'cancelled') => {
     if (!user) return;
