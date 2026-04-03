@@ -128,7 +128,7 @@ export interface ScoredRep {
   video_id?: string;
   video_start_sec?: number;
   video_end_sec?: number;
-  // AI-structured fields
+  // Structured fields
   ai_drill_description?: string;
   ai_drill_clarification?: string;
   ai_custom_rep_description?: string;
