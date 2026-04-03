@@ -499,9 +499,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         </Button>
         {!canConfirm && (
           <p className="text-[10px] text-destructive text-center">
-            {!repSource ? 'Select a rep source to continue' :
-             !baserunningDrillValid ? 'Select a drill type for baserunning' :
-             !baserunningCustomDescValid ? 'Custom drill description requires min 15 characters' : ''}
+            {!repSource ? 'Select a rep source to continue' : ''}
           </p>
         )}
       </CardContent>

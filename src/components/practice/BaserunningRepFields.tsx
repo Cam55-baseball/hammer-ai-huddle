@@ -112,8 +112,8 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced'
         label="AI Drill Clarification (Optional)"
         value={value.ai_drill_clarification ?? ''}
         onChange={val => onChange('ai_drill_clarification', val || undefined)}
-        sport={sport}
         placeholder="Optional notes for AI analysis..."
+        required={false}
       />
 
       {mode === 'advanced' && (
