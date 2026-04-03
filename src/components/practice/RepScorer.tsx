@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
-import { HandednessGate } from './HandednessGate';
 import { SideToggle } from './SideToggle';
 import { SessionIntentGate } from './SessionIntentGate';
 import { TeeDepthGrid } from './TeeDepthGrid';
@@ -25,7 +24,6 @@ import { FieldPositionDiagram } from '@/components/game-scoring/FieldPositionDia
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getContextFields } from '@/data/contextAppropriatenessEngine';
 import { useSportConfig } from '@/hooks/useSportConfig';
-import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { cn } from '@/lib/utils';
 import { Trash2, Check, Zap, Settings2, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -262,12 +260,11 @@ const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
-  const { isSwitchHitter, isAmbidextrousThrower, primaryBattingSide, primaryThrowingHand, saveIdentity, isSavingIdentity } = useSwitchHitterProfile();
 
   // Commit animation state
   const [showCommitCheck, setShowCommitCheck] = useState(false);
 
-  // Handedness — auto-load from DB identity
+  // Module flags
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isFielding = module === 'fielding';
@@ -276,26 +273,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isThrowing = module === 'throwing';
   const isBunting = module === 'bunting';
 
-  const [handedness, setHandedness] = useState<'L' | 'R' | undefined>(() => {
-    if (isHitting || isBunting) {
-      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') return primaryBattingSide;
-    } else if (!isBaserunning) {
-      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') return primaryThrowingHand;
-    }
-    return undefined;
-  });
-
-  // Sync when DB data loads after mount
-  useEffect(() => {
-    if (handedness) return; // already set
-    if (isHitting || isBunting) {
-      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') setHandedness(primaryBattingSide);
-    } else if (!isBaserunning) {
-      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') setHandedness(primaryThrowingHand);
-    }
-  }, [primaryBattingSide, primaryThrowingHand]);
-
-  // Session intent — side mode for this session
+  // Session intent — side mode for this session (the ONLY source of truth)
   const [sideMode, setSideMode] = useState<'R' | 'L' | 'BOTH' | null>(null);
 
   // Switch hitter per-rep side override
@@ -326,10 +304,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const [machineVeloBand, setMachineVeloBand] = useState<string | undefined>();
 
 
-  // For switch hitters in hitting, use toggle side; otherwise use gate handedness
-  // sideMode controls whether toggle is shown or side is locked
-  const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode ?? handedness);
-  const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode ?? handedness);
+  // Side derived from sideMode — single source of truth, no DB fallback
+  const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode as 'L' | 'R' | undefined);
+  const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode as 'L' | 'R' | undefined);
+  const effectiveThrowingHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode as 'L' | 'R' | undefined);
 
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
@@ -411,10 +389,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       session_rep_source: sessionConfig?.rep_source,
       custom_rep_source: sessionConfig?.custom_rep_source,
       environment: sessionConfig?.environment,
-      ...(isHitting && { batter_side: effectiveBatterSide }),
+      ...((isHitting || isBunting) && { batter_side: effectiveBatterSide }),
       ...(isPitching && { pitcher_hand: effectivePitcherHand }),
-      ...((isFielding || isCatching) && { throwing_hand: handedness }),
-      ...(isThrowing && { throwing_hand: handedness }),
+      ...((isFielding || isCatching) && { throwing_hand: effectiveThrowingHand }),
+      ...(isThrowing && { throwing_hand: effectiveThrowingHand }),
       ...(isFielding && { fielding_position: repFieldingPosition }),
       // Apply machine single-mode presets
       ...(isHitting && isMachine && machineMode === 'single' && {
@@ -433,51 +411,17 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     // Reset current but keep execution_score for speed
     setCurrent({ execution_score: current.execution_score });
     setShowOverrides(false);
-  }, [current, handedness, effectiveBatterSide, effectivePitcherHand, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand, repFieldingPosition]);
+  }, [current, effectiveBatterSide, effectivePitcherHand, effectiveThrowingHand, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isThrowing, isBunting, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand, repFieldingPosition]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
   }, [reps, onRepsChange]);
 
-  // Determine which DB field to save identity to
-  const identityField = (isHitting || module === 'bunting') ? 'primary_batting_side' : 'primary_throwing_hand';
-  // Show identity gate only if DB value is null and not a switch player
-  const dbIdentity = (isHitting || module === 'bunting') ? primaryBattingSide : primaryThrowingHand;
-  if (!handedness && !isBaserunning && !dbIdentity && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
-    return (
-      <HandednessGate
-        module={module}
-        isSaving={isSavingIdentity}
-        onSelect={(side) => {
-          saveIdentity(identityField, side);
-          if (side === 'S') {
-            // Switch/ambidextrous — don't set handedness, toggle handles it
-          } else {
-            setHandedness(side as 'L' | 'R');
-          }
-        }}
-      />
-    );
-  }
-
-  // Session intent gate — shown every session for hitting/pitching if sideMode not yet selected
-  const needsSessionIntent = !isBaserunning && !isFielding && !isThrowing && (isHitting || isPitching || isBunting);
-  const defaultSideMode: 'R' | 'L' | 'BOTH' = (() => {
-    if (isHitting || isBunting) {
-      if (primaryBattingSide === 'S' || isSwitchHitter) return 'BOTH';
-      if (primaryBattingSide === 'L') return 'L';
-      return 'R';
-    }
-    if (primaryThrowingHand === 'S' || isAmbidextrousThrower) return 'BOTH';
-    if (primaryThrowingHand === 'L') return 'L';
-    return 'R';
-  })();
-
-  if (needsSessionIntent && sideMode === null) {
+  // Session intent gate — shown once at start for ALL modules except baserunning
+  if (!isBaserunning && sideMode === null) {
     return (
       <SessionIntentGate
         module={module}
-        defaultMode={defaultSideMode}
         onSelect={(mode) => {
           setSideMode(mode);
           if (mode !== 'BOTH') {
@@ -536,10 +480,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       </div>
 
       {/* Inline side toggle — only when session mode is BOTH */}
-      {isHitting && sideMode === 'BOTH' && (
+      {(isHitting || isBunting) && sideMode === 'BOTH' && (
         <SideToggle value={switchSide} onChange={setSwitchSide} label="Batting Side" />
       )}
-      {isPitching && sideMode === 'BOTH' && (
+      {(isPitching || isFielding || isThrowing) && sideMode === 'BOTH' && (
         <SideToggle value={switchThrowSide} onChange={setSwitchThrowSide} label="Throwing Hand" />
       )}
 
