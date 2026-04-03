@@ -1,67 +1,60 @@
 
 
-# Pitching ABS Guess Mandatory + Baserunning Drill Type to Session Setup + Remove Pitching Velocity Band
+# Baserunning Drill Type: Per-Rep Mandatory + AI Drill Clarification Optional
+
+## Problem
+The previous implementation moved Drill Type to session-level setup. The user now requires it back at the per-rep level as mandatory, and wants AI Drill Clarification to be optional but visible in Quick Log.
 
 ## Changes
 
-### 1. `src/components/practice/RepScorer.tsx` — ABS Guess mandatory in Quick Log
+### 1. `src/components/practice/SessionConfigPanel.tsx` — Remove Baserunning Drill Type from Setup
 
-**Current**: ABS Guess is gated behind `mode === 'advanced'` (line 1241) and only required when `pitch_location` is set.
+- Remove `baserunning_drill_type` and `ai_baserunning_drill_description` from `SessionConfig` interface
+- Remove `baserunningDrillType` / `aiBaserunningDrillDesc` state variables
+- Remove `baserunningDrillValid` and `baserunningCustomDescValid` from `canConfirm`
+- Remove the entire baserunning drill type UI block (lines ~230-294)
+- Remove baserunning fields from `handleConfirm` payload
+- Remove baserunning error messages from validation hint
 
-**Fix**:
-- Remove `mode === 'advanced' &&` from ABS Guess render condition (line 1241) — show in Quick Log
-- Change validation: ABS Guess is mandatory for ALL pitching reps regardless of pitch_location. Update line 349-352:
-  ```
-  const needsAbsGuess = isPitching;
-  const absGuessValid = !needsAbsGuess || !!current.abs_guess;
-  ```
-- This means ABS Guess shows always for pitching (not gated behind pitch_location existing), and blocks submission if missing
+### 2. `src/components/practice/BaserunningRepFields.tsx` — Add Drill Type Back (Always Visible)
 
-### 2. `src/components/practice/SessionConfigPanel.tsx` — Add Baserunning Drill Type + Remove Pitching Velocity Band
+- Add Drill Type `SelectGrid` back as the FIRST field, shown regardless of mode (not gated behind `mode === 'advanced'`)
+- Add custom drill description field when `drill_type === 'custom'` (also always visible)
+- Keep all other fields (goal, jump/read grade, time to base, etc.) gated behind `mode === 'advanced'`
 
-**A. Add `baserunning_drill_type` to `SessionConfig` interface** (line 25-44):
-- Add `baserunning_drill_type?: string`
+### 3. `src/components/practice/RepScorer.tsx` — Validation + Remove Session Inheritance
 
-**B. Add drill type selector for baserunning** in the setup UI:
-- When `isBaserunning`, show the drill type grid (reuse the same options from `BaserunningRepFields.tsx`: `home_to_1st`, `1st_to_3rd`, etc.)
-- Make it mandatory: update `canConfirm` (line 167) to: `!!repSource && (!isBaserunning || !!baserunningDrillType)`
-- Include custom drill description text field when `baserunningDrillType === 'custom'`
+**A. Add per-rep `baserunningDrillValid`:**
+```
+const baserunningDrillValid = !isBaserunning || !!current.drill_type;
+```
+Add to `canConfirm` chain.
 
-**C. Remove Velocity Band for pitching**:
-- Change `showVelocityBand` (line 118) to exclude pitching: `(isHitting || isBunting) && !HIDES_VELOCITY.includes(repSource)`
-- Velocity Band remains for hitting/bunting setup only
+**B. Remove session-level inheritance in `commitRep`:**
+- Delete lines 417-423 that spread `sessionConfig.baserunning_drill_type` into the rep
 
-**D. Pass `baserunning_drill_type` in `onConfirm`** payload
+**C. Make AI Drill Clarification optional for baserunning:**
+- The existing `drillClarificationValid` logic uses `isDrill` — baserunning doesn't use "drill" rep source, so this is likely already fine. Will verify the `isDrill` check doesn't affect baserunning.
 
-### 3. `src/components/practice/RepScorer.tsx` — Baserunning: Remove per-rep drill_type requirement
+**D. Add error message:**
+- Add `!baserunningDrillValid ? 'Select drill type' :` to the validation hints
 
-**Current**: `baserunningDrillValid` (line 377) requires `current.drill_type` per rep, and `BaserunningRepFields` shows drill type in quick mode.
+**E. AI Drill Clarification visibility:**
+- Currently gated behind `mode === 'advanced'` or certain conditions. Ensure it remains visible in Quick Log for baserunning as an optional field. If it's not already showing for baserunning in quick mode, add it.
 
-**Fix**:
-- Remove `baserunningDrillValid` from `canConfirm` chain
-- Auto-populate `drill_type` from `sessionConfig.baserunning_drill_type` in `commitRep` so every rep inherits the session-level value
-- Remove the per-rep drill_type error message from validation hints
+### 4. `src/components/practice/RepScorer.tsx` — Baserunning custom desc validation
 
-### 4. `src/components/practice/BaserunningRepFields.tsx` — Remove Drill Type from rep fields
-
-- Remove the Drill Type `SelectGrid` from this component entirely (it's now session-level)
-- Remove the custom drill description conditional that was tied to `value.drill_type === 'custom'`
-- Keep all other fields (goal, jump grade, read grade, time to base, exact time, exact steps) as advanced-only
-
-### 5. Error messages update (RepScorer line 2062-2081)
-
-- Update ABS Guess error: ensure it shows for pitching without requiring pitch_location first
-- Remove `baserunningDrillValid` error line
-- Reorder as needed
+- Update `baserunningCustomDescValid` to always be `true` (no blocking) since AI drill clarification is optional
+- Or simply remove it from `canConfirm` if it only applies to baserunning
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | ABS Guess: remove advanced gate, make mandatory for pitching always. Baserunning: remove per-rep drill_type validation, auto-inherit from session config |
-| `src/components/practice/SessionConfigPanel.tsx` | Add baserunning drill type selector (mandatory), remove velocity band for pitching, add `baserunning_drill_type` to SessionConfig |
-| `src/components/practice/BaserunningRepFields.tsx` | Remove drill type selector and custom description from rep-level fields |
+| `src/components/practice/SessionConfigPanel.tsx` | Remove baserunning drill type from setup UI, interface, and validation |
+| `src/components/practice/BaserunningRepFields.tsx` | Add drill type selector back (always visible, not advanced-gated) |
+| `src/components/practice/RepScorer.tsx` | Add per-rep drill_type validation, remove session inheritance, ensure AI drill clarification is optional |
 
 ## No DB Changes
-All data stored in `drill_blocks` JSONB. `baserunning_drill_type` will be stored at session config level and inherited per rep.
+All data stored in `drill_blocks` JSONB — no schema changes needed.
 
