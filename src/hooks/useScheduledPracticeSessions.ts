@@ -53,6 +53,7 @@ export interface CreateScheduledSession {
 export function useScheduledPracticeSessions() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const schedulingService = useSchedulingService();
   const [loading, setLoading] = useState(false);
 
   const fetchForDateRange = useCallback(async (startDate: string, endDate: string): Promise<ScheduledPracticeSession[]> => {
