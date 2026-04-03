@@ -1,73 +1,74 @@
 
 
-# Inline Side Switching — Switch Hitter/Pitcher Rep Flow
+# Fix Session Identity — Persistent Athlete Handedness
 
-## Current State
+## Problem
+Every session, `HandednessGate` asks R/L via localStorage. This should be set once from the athlete's DB profile (`primary_batting_side` / `primary_throwing_hand`) and never asked again.
 
-RepScorer.tsx **already has** a switch hitter toggle (lines 839-861) but it has three problems:
-1. **Buried** — it's deep in the form below velocity fields, not a compact top-level control
-2. **Hitting only** — no toggle exists for ambidextrous pitchers (`is_ambidextrous_thrower` / `primary_throwing_hand = 'S'`)
-3. **Redundant gate** — switch hitters still see the HandednessGate on session start, then override via toggle (unnecessary friction)
+## Current Flow
+1. `RepScorer` checks `handedness` state (starts `undefined`)
+2. If undefined + not switch player → shows `HandednessGate`
+3. `HandednessGate` checks localStorage for saved value, auto-selects if found
+4. User selects → saves to localStorage → sets `handedness` state
 
-`useSwitchHitterProfile` already fetches `is_ambidextrous_thrower` and `primary_throwing_hand` but only exposes `isSwitchHitter`.
+**Problems**: localStorage is device-specific, not athlete-specific. Prompt appears on new devices. Identity should come from DB.
+
+## New Flow
+1. `useSwitchHitterProfile` already fetches `primary_batting_side` and `primary_throwing_hand` from `athlete_mpi_settings`
+2. `RepScorer` reads these values on mount
+3. If DB value exists (R or L) → auto-set `handedness`, no gate shown
+4. If DB value is null (legacy user) → show a **one-time identity prompt** (not the old HandednessGate) → save to DB → never ask again
+5. If DB value is 'S' → skip gate (existing switch toggle handles it)
 
 ## Changes
 
 ### 1. `src/hooks/useSwitchHitterProfile.ts`
-- Expose `isAmbidextrousThrower: settings.data?.is_ambidextrous_thrower ?? false`
-- No new queries — data already fetched
+- Expose `primaryBattingSide` and `primaryThrowingHand` raw values from settings
+- Add a `saveIdentity(field, value)` mutation function that updates `athlete_mpi_settings` in DB
+- Uses `useMutation` + invalidates the query cache on success
 
-### 2. `src/components/practice/SideToggle.tsx` (NEW)
-Compact inline segmented control component:
-- Two-button `R | L` toggle, styled as a tight pill/segmented control
-- Props: `value: 'L' | 'R'`, `onChange`, `label` (e.g., "Batting Side" or "Throwing Hand")
-- Compact: ~32px tall, inline with rep input area
-- Subtle visual: selected side gets `bg-primary/20 border-primary`, unselected is muted
-- No modal, no toast, no popup — instant state change on tap
+### 2. `src/components/practice/HandednessGate.tsx` → **Redesign as Identity Gate**
+- Rename concept: this is now an **identity setup**, not a session prompt
+- For **hitting**: show 3 options — Right-Handed, Left-Handed, Switch Hitter
+- For **pitching/throwing/fielding**: show 3 options — Right-Handed, Left-Handed, Ambidextrous
+- On selection: call `saveIdentity()` to persist to DB (sets `primary_batting_side` or `primary_throwing_hand`)
+- For Switch/Ambidextrous: also sets `is_switch_hitter` or `is_ambidextrous_thrower` flag
+- Header text: "Set Your [Batting Stance / Throwing Hand]" with subtitle "This is saved to your profile — you won't be asked again"
+- Remove localStorage dependency entirely
 
 ### 3. `src/components/practice/RepScorer.tsx`
-**A. Skip HandednessGate for switch players:**
-- If `isHitting && isSwitchHitter` → skip gate, use `switchSide` directly
-- If `isPitching && isAmbidextrousThrower` → skip gate, use new `switchThrowSide` state
+- Pull `primaryBattingSide`, `primaryThrowingHand`, `saveIdentity` from `useSwitchHitterProfile`
+- On mount: if hitting and `primaryBattingSide` is 'R' or 'L' → `setHandedness(primaryBattingSide)`
+- On mount: if pitching and `primaryThrowingHand` is 'R' or 'L' → `setHandedness(primaryThrowingHand)`
+- Gate logic becomes: show identity gate **only** if DB value is null (first time ever)
+- Remove localStorage-based handedness logic from `useSessionDefaults`
+- Switch hitter default: initialize `switchSide` from `primaryBattingSide` if it's 'S', defaulting to 'R'
 
-**B. Add `switchThrowSide` state** (parallel to existing `switchSide`):
-- `const [switchThrowSide, setSwitchThrowSide] = useState<'L' | 'R'>('R')`
+### 4. `src/hooks/useSessionDefaults.ts`
+- Remove `getHandedness` / `saveHandedness` functions (no longer needed)
+- Keep `getDefaults` / `saveDefaults` for other session config
 
-**C. Update `effectiveBatterSide` / add `effectivePitcherHand`:**
-- Existing: `effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness`
-- New: `effectivePitcherHand = (isPitching && isAmbidextrousThrower) ? switchThrowSide : handedness`
+## Data Flow
 
-**D. Move toggle to top of rep input** (remove from buried position at line 839):
-- Render `SideToggle` immediately after the rep feed badges, before execution score
-- Hitting + switch hitter → show "Batting Side" toggle
-- Pitching + ambidextrous → show "Throwing Hand" toggle
-- All other cases → nothing shown (no clutter for non-switch players)
-
-**E. Update `commitRep`:**
-- Line 387: Change `pitcher_hand: handedness` → `pitcher_hand: effectivePitcherHand` when ambidextrous
-- Line 386 already uses `effectiveBatterSide` ✅
-- Each rep stores `batter_side` or `pitcher_hand` per-rep, not inferred
-
-### 4. HandednessGate bypass logic
-In the gate check (line 415):
+```text
+athlete_mpi_settings.primary_batting_side
+├── null → Show Identity Gate (one-time) → save to DB
+├── 'R' or 'L' → Auto-set handedness, no prompt
+└── 'S' → Skip gate, show SideToggle (existing)
 ```
-if (!handedness && !isBaserunning && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
-  return <HandednessGate ... />;
-}
-```
-Switch players skip the gate entirely — the inline toggle handles side selection.
 
-## What This Does NOT Touch
-- Base stealing trainer (isolated)
-- Session-level `batting_side_used` / `throwing_hand_used` fields (session level remains as-is)
-- No new queries, no new DB changes
-- Non-switch players see zero UI changes
-
-## Files
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/hooks/useSwitchHitterProfile.ts` | Expose `isAmbidextrousThrower` |
-| `src/components/practice/SideToggle.tsx` | **NEW** — compact R\|L segmented control |
-| `src/components/practice/RepScorer.tsx` | Move toggle to top, add pitching toggle, skip gate for switch players, update commitRep |
+| `useSwitchHitterProfile.ts` | Expose raw values + `saveIdentity` mutation |
+| `HandednessGate.tsx` | Redesign as 3-option identity prompt, save to DB |
+| `RepScorer.tsx` | Auto-load from DB, only show gate if null |
+| `useSessionDefaults.ts` | Remove handedness localStorage functions |
+
+## What This Does NOT Touch
+- Base stealing trainers
+- Session-level fields
+- Switch toggle (already works)
+- No DB schema changes (columns already exist)
 
