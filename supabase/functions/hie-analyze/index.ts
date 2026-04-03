@@ -1420,8 +1420,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── READINESS ──
-    const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
+    // ── READINESS (already computed above, before prescription engine) ──
 
     // ── RISK ALERTS ──
     const riskAlerts: RiskAlert[] = [];
