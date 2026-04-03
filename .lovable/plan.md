@@ -1,28 +1,74 @@
 
 
-# Make Contact Quality Mandatory in Quick Log for Hitting
+# Move Session History to Calendar
 
-## Problem
-Contact Quality is currently only shown in Advanced mode for hitting reps. It needs to be a mandatory field in Quick Log mode as well, and the confirm button should require it.
+## Summary
+Remove `RecentSessionsList` from Practice Hub and surface session history inside the Calendar Day Sheet. Practice Hub becomes execution-only; Calendar becomes the system of record for reviewing past sessions.
 
 ## Changes
 
-### 1. `src/components/practice/RepScorer.tsx`
+### 1. New Hook: `src/hooks/useDaySessions.ts`
+- Fetches `performance_sessions` for a given date and user
+- Selects lightweight columns only: `id, session_type, module, effective_grade, composite_indexes, drill_blocks, notes, session_date`
+- No `micro_layer_data` in list query (performance requirement)
+- Query key: `['day-sessions', userId, dateString]`
+- `staleTime: 60_000`
 
-**A. Move Contact Quality out of the `mode === 'advanced'` block (line ~994)**
-- Extract the Contact Quality grid from inside the `{mode === 'advanced' && (...)}` block (lines 994-1015)
-- Place it directly after the Swing Decision section (after line 972), so it appears in both Quick and Advanced modes
-- Add the required asterisk indicator to the label
+### 2. New Component: `src/components/calendar/DaySessionsList.tsx`
+- Renders inside `CalendarDaySheet` as a "Practice Sessions" section
+- Uses `useDaySessions(date)` to fetch sessions for the selected day
+- Each session card shows:
+  - Module badge (Hitting, Pitching, etc.)
+  - Session type (practice, game, etc.)
+  - Session tag from `generateInsights()` with color badge
+  - Effective grade with label
+- On click → opens `SessionDetailDialog`
 
-**B. Add to `canConfirm` validation (line 384)**
-- Add condition: `&& (!isHitting || current.contact_quality != null)`
-- This makes it mandatory for all hitting reps regardless of Quick/Advanced mode
+### 3. New Component: `src/components/calendar/SessionDetailDialog.tsx`
+- Dialog showing full session detail for a clicked session
+- Reuses `generateInsights()` to produce Win / Focus / Cue / Key Metrics
+- Shows drill blocks summary
+- Includes `SessionVideosDisplay` for attached videos
+- Shows notes
+- Fetches full session data (including any heavy fields) only on open
 
-**C. Update the validation error message (around line 2081)**
-- Add a hint when contact quality is missing: "Select contact quality"
+### 4. Update: `src/components/calendar/CalendarDaySheet.tsx`
+- Import and render `DaySessionsList` after the existing event sections (before skipped section)
+- Pass `date` prop (formatted as `YYYY-MM-DD`)
+- Add a separator before the sessions section
 
-## No other files changed
-- Contact Quality options already defined (line 195)
-- Field already stored in rep data via `updateField('contact_quality', ...)`
-- No DB changes needed
+### 5. Update: `src/components/calendar/CalendarView.tsx`
+- Add `'sessions'` to the `CalendarFilters` type (default: `true`)
+- Add a "Sessions" filter toggle (orange/primary colored dot)
+- Pass the filter state to `CalendarDaySheet`
+- Add session indicator dots on calendar days that have sessions (new query or piggyback on existing fetch)
+
+### 6. New Hook or Extension: Calendar Day Indicators for Sessions
+- To show dots on calendar days with sessions, add a lightweight query in `useCalendar` that fetches distinct `session_date` values for the visible month range
+- Returns a `Set<string>` of dates with sessions
+- Used by `CalendarView` to render an additional indicator dot on days with logged sessions
+
+### 7. Update: `src/pages/PracticeHub.tsx`
+- Remove `import { RecentSessionsList }` (line 18)
+- Remove `<RecentSessionsList ... />` usage (line 411)
+- Practice Hub now contains only: module selection → session type → readiness → configure → build session → summary
+
+## Files
+
+| File | Change |
+|------|--------|
+| `src/hooks/useDaySessions.ts` | **NEW** — fetch sessions for a date |
+| `src/components/calendar/DaySessionsList.tsx` | **NEW** — session cards in day sheet |
+| `src/components/calendar/SessionDetailDialog.tsx` | **NEW** — full session detail on click |
+| `src/components/calendar/CalendarDaySheet.tsx` | Add `DaySessionsList` section |
+| `src/components/calendar/CalendarView.tsx` | Add sessions filter + day indicators |
+| `src/hooks/useCalendar.ts` | Add session date indicator query |
+| `src/pages/PracticeHub.tsx` | Remove `RecentSessionsList` |
+
+## What This Does NOT Touch
+- `PostSessionSummaryV2` — still used in Practice Hub after session completion
+- `RecentSessionsList.tsx` file — can be deleted or left (no imports will reference it)
+- Session creation/submission flow
+- Any thresholds, metrics, or insight logic
+- Database schema — reads existing `performance_sessions` table
 
