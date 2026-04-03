@@ -175,6 +175,8 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced'
           step="1"
         />
       </div>
+      </>
+      )}
     </div>
   );
 }

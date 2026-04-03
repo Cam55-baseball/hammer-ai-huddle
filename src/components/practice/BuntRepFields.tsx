@@ -199,24 +199,6 @@ export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'adva
         />
       </div>
 
-      {/* Contact Quality */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality</Label>
-        <SelectGrid options={contactQualities} value={v.bunt_contact_quality} onChange={val => onChange('bunt_contact_quality', val)} />
-      </div>
-
-      {/* Bunt Direction */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Direction</Label>
-        <SelectGrid options={buntDirections} value={v.bunt_direction} onChange={val => onChange('bunt_direction', val)} cols={4} />
-      </div>
-
-      {/* Ball State */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Ball State</Label>
-        <SelectGrid options={ballStates} value={v.bunt_ball_state} onChange={val => onChange('bunt_ball_state', val)} cols={2} />
-      </div>
-
       {/* Defense Result */}
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Defense Result</Label>
@@ -246,6 +228,9 @@ export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'adva
         <Label className="text-xs text-muted-foreground mb-1 block">Spin Type</Label>
         <SelectGrid options={spinTypes} value={v.bunt_spin_type} onChange={val => onChange('bunt_spin_type', val)} cols={4} />
       </div>
+
+      </>
+      )}
 
     </div>
   );

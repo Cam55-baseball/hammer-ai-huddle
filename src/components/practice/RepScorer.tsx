@@ -2057,11 +2057,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !drillClarificationValid ? 'AI Drill Clarification requires min 15 characters' :
                 !customRepDescValid ? 'AI Custom Rep Description requires min 15 characters' :
                 !pitcherIntentValid ? 'Select Pitcher Spot Intent before logging pitch' :
+                !pitchLocationValid ? 'Select pitch location' :
                 !absGuessValid ? 'Select ABS Guess zone' :
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
+                !baserunningDrillValid ? 'Select drill type' :
                 !baserunningCustomDescValid ? 'AI Drill Type Description requires min 15 characters' :
                 !contactQualityValid ? 'Select contact quality' :
-                  'Set execution score (1-10) to confirm rep'}
+                !buntMandatoryValid ? 'Select ball state, direction, and contact quality' :
+                !fieldingMandatoryValid ? 'Select batted ball type, catch type, and fielding result' :
+                  needsExecScore ? 'Set execution score (1-10) to confirm rep' : ''}
             </p>
           )}
         </CardContent>
