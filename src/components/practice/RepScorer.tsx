@@ -266,8 +266,25 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   // Commit animation state
   const [showCommitCheck, setShowCommitCheck] = useState(false);
 
-  // Handedness gate
-  const [handedness, setHandedness] = useState<'L' | 'R' | undefined>();
+  // Handedness — auto-load from DB identity
+  const [handedness, setHandedness] = useState<'L' | 'R' | undefined>(() => {
+    if (isHitting || module === 'bunting') {
+      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') return primaryBattingSide;
+    } else if (module !== 'baserunning') {
+      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') return primaryThrowingHand;
+    }
+    return undefined;
+  });
+
+  // Sync when DB data loads after mount
+  useEffect(() => {
+    if (handedness) return; // already set
+    if (isHitting || module === 'bunting') {
+      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') setHandedness(primaryBattingSide);
+    } else if (module !== 'baserunning') {
+      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') setHandedness(primaryThrowingHand);
+    }
+  }, [primaryBattingSide, primaryThrowingHand]);
 
   // Switch hitter per-rep side override
   const [switchSide, setSwitchSide] = useState<'L' | 'R'>('R');
