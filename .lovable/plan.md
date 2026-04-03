@@ -1,74 +1,62 @@
 
 
-# Move Session History to Calendar
-
-## Summary
-Remove `RecentSessionsList` from Practice Hub and surface session history inside the Calendar Day Sheet. Practice Hub becomes execution-only; Calendar becomes the system of record for reviewing past sessions.
+# Scheduling System — Elite Standard Elevation
 
 ## Changes
 
-### 1. New Hook: `src/hooks/useDaySessions.ts`
-- Fetches `performance_sessions` for a given date and user
-- Selects lightweight columns only: `id, session_type, module, effective_grade, composite_indexes, drill_blocks, notes, session_date`
-- No `micro_layer_data` in list query (performance requirement)
-- Query key: `['day-sessions', userId, dateString]`
-- `staleTime: 60_000`
+### 1. `src/hooks/useSchedulingRealtime.ts` — Precision Realtime + Scoped Invalidation
 
-### 2. New Component: `src/components/calendar/DaySessionsList.tsx`
-- Renders inside `CalendarDaySheet` as a "Practice Sessions" section
-- Uses `useDaySessions(date)` to fetch sessions for the selected day
-- Each session card shows:
-  - Module badge (Hitting, Pitching, etc.)
-  - Session type (practice, game, etc.)
-  - Session tag from `generateInsights()` with color badge
-  - Effective grade with label
-- On click → opens `SessionDetailDialog`
+Replace the single `invalidateAll` with event-specific handlers for `performance_sessions`:
 
-### 3. New Component: `src/components/calendar/SessionDetailDialog.tsx`
-- Dialog showing full session detail for a clicked session
-- Reuses `generateInsights()` to produce Win / Focus / Cue / Key Metrics
-- Shows drill blocks summary
-- Includes `SessionVideosDisplay` for attached videos
-- Shows notes
-- Fetches full session data (including any heavy fields) only on open
+- **INSERT**: Extract `session_date` from `payload.new`, invalidate `['day-sessions', userId, session_date]` + `['calendar']` + `['recent-sessions']`
+- **UPDATE**: Extract `session_date` from both `payload.new` and `payload.old` (in case date changed), invalidate both scoped day-sessions keys
+- **DELETE**: Same scoped invalidation + remove from cache
 
-### 4. Update: `src/components/calendar/CalendarDaySheet.tsx`
-- Import and render `DaySessionsList` after the existing event sections (before skipped section)
-- Pass `date` prop (formatted as `YYYY-MM-DD`)
-- Add a separator before the sessions section
+Keep existing `invalidateAll` for the other 7 scheduling tables (they don't have date-scoped queries).
 
-### 5. Update: `src/components/calendar/CalendarView.tsx`
-- Add `'sessions'` to the `CalendarFilters` type (default: `true`)
-- Add a "Sessions" filter toggle (orange/primary colored dot)
-- Pass the filter state to `CalendarDaySheet`
-- Add session indicator dots on calendar days that have sessions (new query or piggyback on existing fetch)
+Add the `performance_sessions` subscription with three separate `.on()` calls for `INSERT`, `UPDATE`, `DELETE` events instead of `*`.
 
-### 6. New Hook or Extension: Calendar Day Indicators for Sessions
-- To show dots on calendar days with sessions, add a lightweight query in `useCalendar` that fetches distinct `session_date` values for the visible month range
-- Returns a `Set<string>` of dates with sessions
-- Used by `CalendarView` to render an additional indicator dot on days with logged sessions
+### 2. `src/hooks/useDaySessions.ts` — Deterministic Ordering + Self-Healing
 
-### 7. Update: `src/pages/PracticeHub.tsx`
-- Remove `import { RecentSessionsList }` (line 18)
-- Remove `<RecentSessionsList ... />` usage (line 411)
-- Practice Hub now contains only: module selection → session type → readiness → configure → build session → summary
+- Add secondary sort: `.order('id', { ascending: false })` after `created_at` to guarantee stable ordering under rapid writes
+- Override `refetchOnWindowFocus: true` to recover from missed realtime events
+- Add `refetchInterval: 45_000` (45s periodic reconciliation) as a safety net
+
+### 3. `src/hooks/useRecentSessions.ts` — Same Hardening
+
+- Add `.order('id', { ascending: false })` secondary sort
+- Add `refetchOnWindowFocus: true`
+
+### 4. `src/hooks/usePerformanceSession.ts` — Backend Duplicate Protection
+
+Add a client-side idempotency key:
+- Generate a `crypto.randomUUID()` idempotency key when `createSession` is called
+- Store it in the session's insert payload (new column `idempotency_key`)
+- This prevents double-inserts if the network retries
+
+**Database migration**: Add `idempotency_key` column with a unique constraint:
+```sql
+ALTER TABLE performance_sessions ADD COLUMN idempotency_key text;
+CREATE UNIQUE INDEX idx_perf_sessions_idempotency ON performance_sessions (idempotency_key) WHERE idempotency_key IS NOT NULL;
+```
+
+### 5. `src/App.tsx` — No Change
+
+Keep global `refetchOnWindowFocus: false` as default. The two session hooks override it locally. This avoids unnecessary refetches across the entire app.
+
+### 6. Database Migration — Enable Realtime
+
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.performance_sessions;
+```
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/hooks/useDaySessions.ts` | **NEW** — fetch sessions for a date |
-| `src/components/calendar/DaySessionsList.tsx` | **NEW** — session cards in day sheet |
-| `src/components/calendar/SessionDetailDialog.tsx` | **NEW** — full session detail on click |
-| `src/components/calendar/CalendarDaySheet.tsx` | Add `DaySessionsList` section |
-| `src/components/calendar/CalendarView.tsx` | Add sessions filter + day indicators |
-| `src/hooks/useCalendar.ts` | Add session date indicator query |
-| `src/pages/PracticeHub.tsx` | Remove `RecentSessionsList` |
-
-## What This Does NOT Touch
-- `PostSessionSummaryV2` — still used in Practice Hub after session completion
-- `RecentSessionsList.tsx` file — can be deleted or left (no imports will reference it)
-- Session creation/submission flow
-- Any thresholds, metrics, or insight logic
-- Database schema — reads existing `performance_sessions` table
+| `src/hooks/useSchedulingRealtime.ts` | Split `performance_sessions` into INSERT/UPDATE/DELETE handlers with scoped invalidation |
+| `src/hooks/useDaySessions.ts` | Deterministic ordering, `refetchOnWindowFocus`, periodic refetch |
+| `src/hooks/useRecentSessions.ts` | Deterministic ordering, `refetchOnWindowFocus` |
+| `src/hooks/usePerformanceSession.ts` | Add `idempotency_key` to insert payload |
+| Migration | Add `idempotency_key` column + unique index + enable realtime publication |
 
