@@ -9,6 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { HandednessGate } from './HandednessGate';
 import { SideToggle } from './SideToggle';
+import { SessionIntentGate } from './SessionIntentGate';
 import { TeeDepthGrid } from './TeeDepthGrid';
 import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
 // CatchingRepFields removed — catcher defense now handled within fielding module
@@ -294,6 +295,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     }
   }, [primaryBattingSide, primaryThrowingHand]);
 
+  // Session intent — side mode for this session
+  const [sideMode, setSideMode] = useState<'R' | 'L' | 'BOTH' | null>(null);
+
   // Switch hitter per-rep side override
   const [switchSide, setSwitchSide] = useState<'L' | 'R'>('R');
   const [switchThrowSide, setSwitchThrowSide] = useState<'L' | 'R'>('R');
@@ -323,8 +327,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
 
   // For switch hitters in hitting, use toggle side; otherwise use gate handedness
-  const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
-  const effectivePitcherHand = (isPitching && isAmbidextrousThrower) ? switchThrowSide : handedness;
+  // sideMode controls whether toggle is shown or side is locked
+  const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode ?? handedness);
+  const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode ?? handedness);
 
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
@@ -453,6 +458,35 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     );
   }
 
+  // Session intent gate — shown every session for hitting/pitching if sideMode not yet selected
+  const needsSessionIntent = !isBaserunning && !isFielding && !isThrowing && (isHitting || isPitching || isBunting);
+  const defaultSideMode: 'R' | 'L' | 'BOTH' = (() => {
+    if (isHitting || isBunting) {
+      if (primaryBattingSide === 'S' || isSwitchHitter) return 'BOTH';
+      if (primaryBattingSide === 'L') return 'L';
+      return 'R';
+    }
+    if (primaryThrowingHand === 'S' || isAmbidextrousThrower) return 'BOTH';
+    if (primaryThrowingHand === 'L') return 'L';
+    return 'R';
+  })();
+
+  if (needsSessionIntent && sideMode === null) {
+    return (
+      <SessionIntentGate
+        module={module}
+        defaultMode={defaultSideMode}
+        onSelect={(mode) => {
+          setSideMode(mode);
+          if (mode !== 'BOTH') {
+            if (isHitting || isBunting) setSwitchSide(mode as 'L' | 'R');
+            else setSwitchThrowSide(mode as 'L' | 'R');
+          }
+        }}
+      />
+    );
+  }
+
   // Whether the pitcher intent grid should be locked (after pitch location is logged)
   const pitcherIntentLocked = isPitching && !!current.pitch_location;
 
@@ -499,11 +533,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
         />
       </div>
 
-      {/* Inline side toggle for switch hitters / ambidextrous throwers */}
-      {isHitting && isSwitchHitter && (
+      {/* Inline side toggle — only when session mode is BOTH */}
+      {isHitting && sideMode === 'BOTH' && (
         <SideToggle value={switchSide} onChange={setSwitchSide} label="Batting Side" />
       )}
-      {isPitching && isAmbidextrousThrower && (
+      {isPitching && sideMode === 'BOTH' && (
         <SideToggle value={switchThrowSide} onChange={setSwitchThrowSide} label="Throwing Hand" />
       )}
 
