@@ -481,10 +481,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       </div>
 
       {/* Inline side toggle — only when session mode is BOTH */}
-      {isHitting && sideMode === 'BOTH' && (
+      {(isHitting || isBunting) && sideMode === 'BOTH' && (
         <SideToggle value={switchSide} onChange={setSwitchSide} label="Batting Side" />
       )}
-      {isPitching && sideMode === 'BOTH' && (
+      {(isPitching || isFielding || isThrowing) && sideMode === 'BOTH' && (
         <SideToggle value={switchThrowSide} onChange={setSwitchThrowSide} label="Throwing Hand" />
       )}
 

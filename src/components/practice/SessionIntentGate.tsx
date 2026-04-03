@@ -5,26 +5,25 @@ type SideMode = 'R' | 'L' | 'BOTH';
 
 interface SessionIntentGateProps {
   module: string;
-  defaultMode: SideMode;
   onSelect: (mode: SideMode) => void;
 }
 
 const hittingOptions: { value: SideMode; label: string }[] = [
-  { value: 'R', label: 'Right Only' },
-  { value: 'BOTH', label: 'Both' },
-  { value: 'L', label: 'Left Only' },
+  { value: 'R', label: 'Right' },
+  { value: 'BOTH', label: 'Switch' },
+  { value: 'L', label: 'Left' },
 ];
 
-const pitchingOptions: { value: SideMode; label: string }[] = [
-  { value: 'R', label: 'Right Arm' },
-  { value: 'BOTH', label: 'Both' },
-  { value: 'L', label: 'Left Arm' },
+const throwingOptions: { value: SideMode; label: string }[] = [
+  { value: 'R', label: 'Right' },
+  { value: 'BOTH', label: 'Ambidextrous' },
+  { value: 'L', label: 'Left' },
 ];
 
-export function SessionIntentGate({ module, defaultMode, onSelect }: SessionIntentGateProps) {
+export function SessionIntentGate({ module, onSelect }: SessionIntentGateProps) {
   const isHitting = module === 'hitting' || module === 'bunting';
-  const options = isHitting ? hittingOptions : pitchingOptions;
-  const title = isHitting ? "Today's Batting Side" : "Today's Throwing Arm";
+  const options = isHitting ? hittingOptions : throwingOptions;
+  const title = isHitting ? "Today's Batting Side" : "Today's Throwing Hand";
 
   return (
     <Card>
@@ -41,9 +40,7 @@ export function SessionIntentGate({ module, defaultMode, onSelect }: SessionInte
               onClick={() => onSelect(opt.value)}
               className={cn(
                 'rounded-lg border-2 py-2.5 px-2 text-center font-semibold transition-all text-xs',
-                opt.value === defaultMode
-                  ? 'bg-primary/15 border-primary text-primary'
-                  : 'bg-muted/20 border-border hover:bg-muted/40 text-foreground'
+                'bg-muted/20 border-border hover:bg-muted/40 text-foreground'
               )}
             >
               {opt.label}
