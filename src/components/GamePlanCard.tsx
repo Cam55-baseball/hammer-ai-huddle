@@ -45,6 +45,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { PhysioPostWorkoutBanner } from '@/components/physio/PhysioPostWorkoutBanner';
 import { usePhysioGamePlanBadges } from '@/hooks/usePhysioGamePlanBadges';
 import { supabase } from '@/integrations/supabase/client';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useRescheduleEngine } from '@/hooks/useRescheduleEngine';
