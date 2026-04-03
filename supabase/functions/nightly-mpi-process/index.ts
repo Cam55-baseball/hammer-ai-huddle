@@ -129,6 +129,39 @@ serve(async (req) => {
     let totalProcessed = 0;
     console.log('[nightly-mpi] Starting nightly MPI process...');
 
+    // ── LOAD ENGINE SETTINGS (dynamic weights & thresholds) ──
+    const { data: engineSettingsRows } = await supabase
+      .from('engine_settings')
+      .select('setting_key, setting_value');
+    const es: Record<string, any> = {};
+    (engineSettingsRows ?? []).forEach((r: any) => { es[r.setting_key] = r.setting_value; });
+    const W_BQI = typeof es.mpi_weight_bqi === 'number' ? es.mpi_weight_bqi : 0.25;
+    const W_FQI = typeof es.mpi_weight_fqi === 'number' ? es.mpi_weight_fqi : 0.15;
+    const W_PEI = typeof es.mpi_weight_pei === 'number' ? es.mpi_weight_pei : 0.20;
+    const W_DECISION = typeof es.mpi_weight_decision === 'number' ? es.mpi_weight_decision : 0.20;
+    const W_COMPETITIVE = typeof es.mpi_weight_competitive === 'number' ? es.mpi_weight_competitive : 0.20;
+    const INTEGRITY_THRESHOLD = typeof es.integrity_threshold === 'number' ? es.integrity_threshold : 80;
+    const DATA_GATE_MIN = typeof es.data_gate_min_sessions === 'number' ? es.data_gate_min_sessions : 60;
+    console.log(`[nightly-mpi] Engine settings loaded: BQI=${W_BQI}, FQI=${W_FQI}, PEI=${W_PEI}, DEC=${W_DECISION}, COMP=${W_COMPETITIVE}, integrity=${INTEGRITY_THRESHOLD}, gate=${DATA_GATE_MIN}`);
+
+    // ── RETRY PREVIOUSLY FAILED ATHLETES FIRST ──
+    const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
+    const { data: recentFailures } = await supabase
+      .from('audit_log')
+      .select('metadata')
+      .eq('action', 'nightly_mpi_failures')
+      .gte('created_at', oneDayAgo)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const retryUserIds: string[] = [];
+    if (recentFailures && recentFailures.length > 0) {
+      const meta = recentFailures[0].metadata as any;
+      if (meta?.failed_users && Array.isArray(meta.failed_users)) {
+        retryUserIds.push(...meta.failed_users);
+        console.log(`[nightly-mpi] Retrying ${retryUserIds.length} previously failed athletes first`);
+      }
+    }
+
     // Step 1: Auto-resolve info-level governance flags older than 7 days
     await supabase.from('governance_flags')
       .update({ status: 'resolved', resolved_at: new Date().toISOString() })
@@ -187,7 +220,15 @@ serve(async (req) => {
 
       // ── Batch processing: batches of 50 with error isolation ──
       const BATCH_SIZE = 50;
-      const failedUsers: string[] = [];
+      const failedUsers: Array<{ user_id: string; error: string }> = [];
+      // Prioritize retry athletes by moving them to the front
+      if (retryUserIds.length > 0) {
+        const retrySet = new Set(retryUserIds);
+        const retryAthletes = athletes.filter(a => retrySet.has(a.user_id));
+        const normalAthletes = athletes.filter(a => !retrySet.has(a.user_id));
+        athletes.length = 0;
+        athletes.push(...retryAthletes, ...normalAthletes);
+      }
       for (let batchStart = 0; batchStart < athletes.length; batchStart += BATCH_SIZE) {
         // Check runtime budget — stop if approaching 50s limit
         if (Date.now() - nightlyStartTime > 50000) {
@@ -198,6 +239,13 @@ serve(async (req) => {
             action: 'nightly_mpi_timeout',
             table_name: 'mpi_scores',
             metadata: { sport, processed: batchStart, remaining, elapsed_ms: Date.now() - nightlyStartTime },
+          });
+          // Store continuation token for next invocation
+          await supabase.from('audit_log').insert({
+            user_id: '00000000-0000-0000-0000-000000000000',
+            action: 'nightly_mpi_continuation',
+            table_name: 'mpi_scores',
+            metadata: { sport, resume_from: batchStart, total_athletes: athletes.length, timestamp: new Date().toISOString() },
           });
           break;
         }
@@ -235,8 +283,8 @@ serve(async (req) => {
           decision: wDecision / totalWeight, competitive: wCompetitive / totalWeight,
         };
 
-        const rawScore = composites.bqi * 0.25 + composites.fqi * 0.15 + composites.pei * 0.20 +
-          composites.decision * 0.20 + composites.competitive * 0.20;
+        const rawScore = composites.bqi * W_BQI + composites.fqi * W_FQI + composites.pei * W_PEI +
+          composites.decision * W_DECISION + composites.competitive * W_COMPETITIVE;
 
         const tierMult = tierMultipliers[athlete.league_tier] || 1.0;
         let adjusted = rawScore * tierMult;
@@ -433,8 +481,8 @@ serve(async (req) => {
         const coachValidationMet = hasCoach ? gradedSessions.length >= count * 0.4 : true;
 
         const gates: Record<string, boolean> = {
-          games_minimum_met: count >= 60,
-          integrity_threshold_met: integrityScore >= 80,
+          games_minimum_met: count >= DATA_GATE_MIN,
+          integrity_threshold_met: integrityScore >= INTEGRITY_THRESHOLD,
           coach_validation_met: coachValidationMet,
           data_span_met: count >= 14,
         };
@@ -451,9 +499,9 @@ serve(async (req) => {
           hofActive, hofProb, proProbability, proProbCapped, consecutiveHeavy,
           tierMult, ageCurveMult, posWeight,
         });
-       } catch (athleteError) {
+       } catch (athleteError: any) {
           console.error(`[nightly-mpi] Error processing athlete ${athlete.user_id}:`, athleteError);
-          failedUsers.push(athlete.user_id);
+          failedUsers.push({ user_id: athlete.user_id, error: athleteError?.message || String(athleteError) });
         }
       } // end athlete loop
         console.log(`[nightly-mpi] ${sport}: Batch completed in ${Date.now() - batchTimestamp}ms`);
@@ -464,7 +512,12 @@ serve(async (req) => {
           user_id: '00000000-0000-0000-0000-000000000000',
           action: 'nightly_mpi_failures',
           table_name: 'mpi_scores',
-          metadata: { sport, failed_count: failedUsers.length, failed_users: failedUsers.slice(0, 20) },
+          metadata: {
+            sport,
+            failed_count: failedUsers.length,
+            failed_users: failedUsers.slice(0, 20).map(f => f.user_id),
+            errors: failedUsers.slice(0, 20).map(f => ({ user_id: f.user_id, error: f.error })),
+          },
         });
       }
 

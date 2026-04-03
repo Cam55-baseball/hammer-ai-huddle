@@ -55,7 +55,13 @@ export default function PracticeHub() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { updateStatus } = useScheduledPracticeSessions();
 
-  const [activeModule, setActiveModule] = useState(searchParams.get('module') || 'hitting');
+  // Prescribed drill pre-fill from URL params
+  const prescribedDrillType = searchParams.get('drill_type');
+  const prescribedModule = searchParams.get('module');
+  const prescribedConstraints = searchParams.get('constraints');
+
+  const [activeModule, setActiveModule] = useState(prescribedModule || searchParams.get('module') || 'hitting');
+  const [prescribedBanner, setPrescribedBanner] = useState<string | null>(null);
 
   // Reset module selection when sport changes
   useEffect(() => {
@@ -63,6 +69,24 @@ export default function PracticeHub() {
       setActiveModule('hitting');
     }
   }, [sportKey]);
+
+  // Auto-configure prescribed drill from HIE
+  useEffect(() => {
+    if (prescribedDrillType && prescribedModule) {
+      // Map module to activeModule
+      const moduleMap: Record<string, string> = {
+        'practice-hub': 'hitting',
+        'tex-vision': 'hitting',
+        'speed-lab': 'baserunning',
+      };
+      const mappedModule = moduleMap[prescribedModule] || prescribedModule;
+      if (modules.some(m => m.id === mappedModule)) {
+        setActiveModule(mappedModule);
+      }
+      setPrescribedBanner(`Starting Prescribed Drill: ${prescribedDrillType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`);
+    }
+  }, [prescribedDrillType, prescribedModule]);
+
   const { getHandedness } = useSessionDefaults(activeModule);
   const currentHandedness = useMemo(() => getHandedness(), [activeModule, getHandedness]);
   const [step, setStep] = useState<FlowStep>('select_type');
@@ -277,6 +301,13 @@ export default function PracticeHub() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {prescribedBanner && (
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 flex items-center gap-2">
+            <Zap className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-primary">{prescribedBanner}</span>
+            {prescribedConstraints && <span className="text-xs text-muted-foreground ml-2">({prescribedConstraints})</span>}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Practice Intelligence</h1>

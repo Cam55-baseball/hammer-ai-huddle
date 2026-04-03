@@ -1156,6 +1156,39 @@ export type Database = {
         }
         Relationships: []
       }
+      drills: {
+        Row: {
+          created_at: string | null
+          default_constraints: Json | null
+          difficulty_levels: string[] | null
+          id: string
+          module: string
+          name: string
+          skill_target: string | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_constraints?: Json | null
+          difficulty_levels?: string[] | null
+          id?: string
+          module: string
+          name: string
+          skill_target?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_constraints?: Json | null
+          difficulty_levels?: string[] | null
+          id?: string
+          module?: string
+          name?: string
+          skill_target?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       emotion_tracking: {
         Row: {
           action_taken: string | null
