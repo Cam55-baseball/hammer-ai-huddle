@@ -268,8 +268,8 @@ serve(async (req) => {
           decision: wDecision / totalWeight, competitive: wCompetitive / totalWeight,
         };
 
-        const rawScore = composites.bqi * 0.25 + composites.fqi * 0.15 + composites.pei * 0.20 +
-          composites.decision * 0.20 + composites.competitive * 0.20;
+        const rawScore = composites.bqi * W_BQI + composites.fqi * W_FQI + composites.pei * W_PEI +
+          composites.decision * W_DECISION + composites.competitive * W_COMPETITIVE;
 
         const tierMult = tierMultipliers[athlete.league_tier] || 1.0;
         let adjusted = rawScore * tierMult;
