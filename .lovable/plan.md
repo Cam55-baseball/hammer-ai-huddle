@@ -1,113 +1,66 @@
 
 
-# LIVE RUNTIME E2E VERIFICATION REPORT
+# Stress Test & Edge Case Verification — Executable Plan
 
-## Test Executed
-**Athlete**: `95de827d-7418-460b-8b79-267bf79bdca4` (Hammer Williams)
-**Sessions**: 9 sessions (solo_work, base_stealing, pickoff_training), all with `micro_layer_data = true`
-**HIE triggered**: 2026-04-03T04:49:45Z — returned **HTTP 200**
+## What This Delivers
+A comprehensive stress test script that exercises 6 scenarios against the live `hie-analyze` edge function and database, producing a pass/fail report with database evidence for each case.
 
----
-
-## VERIFICATION MATRIX
-
-### ✅ PASS — weakness_scores table populates
-**Evidence**: 8 rows exist (4 from first run + 4 from second run):
-- `vision_accuracy_low`: scores 36, 40, 61
-- `slow_reaction_time`: score 656
-
-**Problem**: Rows accumulate on every HIE run without deduplication. After N runs, there will be N×4 rows. No `UPSERT` or cleanup — scores are appended, not replaced.
-
-### ✅ PASS — Prescription engine called
-**Evidence**: `prescription-engine` edge function boot log at `04:49:43Z` confirms it was invoked from `hie-analyze`. No error logs.
-
-### ⚠️ PARTIAL — AI prescriptions not used (stale data prevents insertion)
-**Evidence**: `drill_prescriptions` still shows only 2 rows from the FIRST run (created `04:28:10`). The second run's `truly_new` filter (line 1600) found matching `weakness_area` strings, so no new rows were inserted. The AI prescription engine may have returned results, but they were discarded because the weakness areas already existed.
-
-**Impact**: The metric mapping fix (line 1533-1534) works for NEW prescriptions, but these old prescriptions retain `targeted_metric: "recognition"` — a category label, not the actual weakness metric. This means the effectiveness loop (line 1565) searches for `weakness_metric === "recognition"` which never matches, so `post_weakness_value` stays null forever.
-
-### ❌ FAIL — pre_weakness_value still null
-**Database evidence**:
-```
-meter_timing Focused Training | targeted_metric: recognition | pre_weakness_value: null
-Reaction Compression Training | targeted_metric: recognition | pre_weakness_value: null
-```
-**Root cause**: These prescriptions were created before the fix. `targeted_metric: "recognition"` doesn't match any `weakness_scores` row (`vision_accuracy_low`, `slow_reaction_time`). The fix at line 1533-1534 correctly computes `matchingPattern?.metric` for new inserts, but old data is poisoned.
-
-### ✅ PASS — Context/fatigue detection code exists and runs
-**Evidence**: Lines 1263-1264 call `detectGamePracticeGap` and `detectFatigueDropoff`. No patterns generated for this athlete because all 9 sessions are `solo_work` — no game sessions exist to create a gap, and session volume is too low for fatigue detection (needs ≥15 reps per session across ≥3 sessions with drop-off).
-
-### ✅ PASS — Handedness fix deployed
-**Evidence**: Line 1254 passes `settings?.primary_batting_side || 'R'`. Lines 147-152 flip inside/outside for lefties. This athlete's setting shows `primary_batting_side: R` (verified via query), but the code path is confirmed correct.
-
-### ✅ PASS — Practice Hub constraint enforcement
-**Evidence**: `src/pages/PracticeHub.tsx` lines 57-61 parse URL params, line 86 shows banner, lines 243-270 enforce constraint mismatches with toast warnings.
-
-### ✅ PASS — Nightly process runs
-**Evidence**: `audit_log` shows daily `nightly_mpi_complete` entries from March 30 through April 3. All show `athletes_processed: 0` because no athletes have recent unprocessed sessions meeting the nightly criteria.
-
-### ✅ PASS — Continuation token logic exists
-**Evidence**: Code confirmed at lines 232-268 of `nightly-mpi-process/index.ts`. Not yet exercised in production (0 athletes processed means no timeout).
+## Approach
+Execute all 6 scenarios via direct edge function calls (`supabase--curl_edge_functions`) and database queries (`supabase--read_query`), using the existing test athlete and crafting specific inputs to trigger each edge case.
 
 ---
 
-## BUGS REQUIRING FIXES
+## Scenario 1: No micro_layer_data
+**Method**: Call `hie-analyze` for athlete `95de827d...` after confirming sessions exist. The function already handles empty `micro_layer_data` arrays — `hittingReps.length < 5` returns `[]` from each analyzer (line 60). When `allPatterns` is empty, fallback to MPI composites (lines 1324-1341).
+**Verify**: Returns 200, snapshot has MPI-based weakness clusters, no crash.
 
-### Bug 1: Stale `targeted_metric` on existing prescriptions (CRITICAL)
-**What**: Old prescriptions have `targeted_metric: "recognition"` instead of `"vision_accuracy_low"`. The effectiveness loop never finds a match, so `post_weakness_value` is permanently null.
-**Fix**: One-time migration to correct existing data:
+## Scenario 2: AI Prescription Engine Failure
+**Method**: The code already wraps the prescription-engine call in try/catch (lines 1396-1398). If the engine returns non-200 or throws, `aiPrescriptions` stays `[]` and the fallback switch runs (lines 1419-1428). We verify this by checking edge function logs after a run — if prescription-engine errors, hie-analyze still completes.
+**Verify**: Confirm hie-analyze returns 200 even when prescription-engine logs show errors. Check that `prescriptive_actions` in snapshot is populated via fallback.
+
+## Scenario 3: Continuation Token (Nightly Interrupted Run)
+**Method**: The nightly process reads `resume_from` from `audit_log` (action: `nightly_mpi_continuation`). We verify the token logic exists and query the audit_log for continuation entries.
+**Verify**: Query `audit_log` for `nightly_mpi_continuation` entries. Confirm code at nightly-mpi-process lines 232-268 persists `resume_from` on timeout.
+**Note**: Cannot simulate mid-run interruption without modifying edge function code (adding artificial timeout). This is a code-path verification, not a live interruption test.
+
+## Scenario 4: Multi-Athlete Isolation
+**Method**: Query all athletes with `hie_snapshots` and `weakness_scores`. Verify each athlete's `weakness_scores` rows reference only their own `user_id`. Cross-check that no `drill_prescriptions` reference a different athlete's weakness data.
+**Verify**: SQL query confirming no cross-contamination:
 ```sql
-UPDATE drill_prescriptions SET targeted_metric = 'vision_accuracy_low'
-WHERE targeted_metric = 'recognition' AND weakness_area LIKE '%accuracy%';
-UPDATE drill_prescriptions SET targeted_metric = 'slow_reaction_time'
-WHERE targeted_metric = 'recognition' AND weakness_area LIKE '%reaction time%';
-```
-**Also**: In `hie-analyze`, when updating existing prescriptions (line 1558-1586), add logic to backfill `targeted_metric` if it doesn't match any weakness_score:
-```typescript
-// Before the effectiveness calculation, fix stale targeted_metric
-let exMetric = (ex as any).targeted_metric || (ex as any).weakness_metric;
-if (exMetric && !weaknessScoreRows.find(w => w.weakness_metric === exMetric)) {
-  // Stale metric — attempt to resolve from current patterns
-  const matchingPattern = allPatterns.find(p => p.description === ex.weakness_area);
-  if (matchingPattern) {
-    exMetric = matchingPattern.metric;
-    // Persist the fix
-    await supabase.from('drill_prescriptions').update({ targeted_metric: exMetric }).eq('id', ex.id);
-  }
-}
+SELECT user_id, COUNT(*) FROM weakness_scores GROUP BY user_id;
+SELECT dp.user_id AS prescription_user, ws.user_id AS score_user
+FROM drill_prescriptions dp
+JOIN weakness_scores ws ON dp.targeted_metric = ws.weakness_metric
+WHERE dp.user_id != ws.user_id;
 ```
 
-### Bug 2: weakness_scores accumulate without deduplication (MEDIUM)
-**What**: Every HIE run appends 4 rows. After 100 runs = 400 rows per athlete. No upsert, no cleanup.
-**Fix**: Before inserting weakness_scores (line ~1286), delete previous entries:
-```typescript
-await supabase.from('weakness_scores').delete().eq('user_id', user_id);
-await supabase.from('weakness_scores').insert(weaknessScoreRows);
-```
+## Scenario 5: Longitudinal Integrity (Multiple HIE Cycles)
+**Method**: Trigger HIE twice for the same athlete. After each run, query `weakness_scores` count (should be exactly N patterns, not 2×N due to DELETE-before-INSERT at lines 1287-1293). Check `adherence_count` increments by 1 per run on existing prescriptions.
+**Verify**:
+- `weakness_scores` count stable (not doubling)
+- `adherence_count` on existing prescriptions increments correctly
+- `effectiveness_score` populated where both pre and post values exist
 
-### Bug 3: Nightly processes 0 athletes (LOW)
-**What**: `nightly_mpi_complete` shows `athletes_processed: 0` every night.
-**Likely cause**: The query for eligible athletes filters too aggressively, or there are no athletes with sessions since last MPI computation.
-**Investigation needed**: Check the athlete selection query in `nightly-mpi-process/index.ts`.
+## Scenario 6: Legacy Data (null pre_weakness_value)
+**Method**: Query existing prescriptions with null `pre_weakness_value`. Confirm system doesn't crash — the effectiveness loop handles null gracefully at line 1582-1585 (`preVal != null` guard). Falls back to MPI delta at line 1589.
+**Verify**: Prescriptions with null `pre_weakness_value` still get `effectiveness_score` via MPI fallback. No errors in logs.
 
 ---
 
-## IMPLEMENTATION ORDER
+## Implementation Steps
 
-1. **Migration**: Fix stale `targeted_metric` values on existing `drill_prescriptions`
-2. **hie-analyze**: Add stale-metric auto-repair in the existing-prescriptions update loop (lines 1558-1586)
-3. **hie-analyze**: Add `DELETE` before `INSERT` for weakness_scores to prevent accumulation
-4. **Verify**: Trigger HIE again → confirm `post_weakness_value` is now numeric, not null
+1. **Query current database state** — baseline counts for weakness_scores, drill_prescriptions, hie_snapshots
+2. **Trigger HIE run #1** for test athlete via `curl_edge_functions`
+3. **Query post-run state** — verify weakness_scores dedup, prescription updates, snapshot creation
+4. **Trigger HIE run #2** — same athlete, verify no duplication, adherence increments
+5. **Query cross-athlete isolation** — SQL joins to detect contamination
+6. **Query legacy prescriptions** — confirm null handling doesn't break
+7. **Check edge function logs** — confirm no crashes, fallback paths logged
+8. **Compile pass/fail report** with database evidence for each scenario
 
-### Files Modified
-| File | Change |
-|---|---|
-| Migration SQL | One-time fix of `targeted_metric` on 2 existing rows |
-| `supabase/functions/hie-analyze/index.ts` | Auto-repair stale `targeted_metric`; deduplicate weakness_scores |
+## Files Modified
+None. This is a read-only verification pass using edge function invocations and database queries.
 
-### Post-Fix Verification
-- [ ] `drill_prescriptions.targeted_metric` matches a `weakness_scores.weakness_metric` value
-- [ ] `drill_prescriptions.post_weakness_value` is numeric after re-run
-- [ ] `weakness_scores` has exactly 4 rows per athlete (not accumulating)
-- [ ] `effectiveness_score` is computed (not null) on prescriptions with both pre and post values
+## Expected Output
+A verification matrix with PASS/FAIL per scenario, backed by query results and log evidence.
 
