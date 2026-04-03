@@ -391,7 +391,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && buntMandatoryValid
     && pitchLocationValid
     && fieldingMandatoryValid
-    && baserunningDrillValid;
+    ;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
