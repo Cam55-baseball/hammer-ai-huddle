@@ -138,32 +138,8 @@ export function useScheduledPracticeSessions() {
     setLoading(true);
 
     try {
-      const rows = playerIds.map(playerId => ({
-        user_id: playerId,
-        created_by: user.id,
-        session_module: baseSession.session_module,
-        session_type: baseSession.session_type,
-        title: baseSession.title,
-        description: baseSession.description || null,
-        scheduled_date: baseSession.scheduled_date,
-        start_time: baseSession.start_time || null,
-        end_time: baseSession.end_time || null,
-        recurring_active: baseSession.recurring_active || false,
-        recurring_days: baseSession.recurring_days || [],
-        sport: baseSession.sport,
-        organization_id: baseSession.organization_id || null,
-        team_id: baseSession.team_id || null,
-        assignment_scope: baseSession.assignment_scope || 'individual',
-        coach_id: baseSession.coach_id || user.id,
-        status: (baseSession as any).status || 'scheduled',
-        requires_approval: (baseSession as any).requires_approval || false,
-      }));
-
-      const { error } = await supabase
-        .from('scheduled_practice_sessions' as any)
-        .insert(rows as any);
-
-      if (error) throw error;
+      const success = await schedulingService.scheduleBulkSessions(playerIds, baseSession, 'coach');
+      if (!success) throw new Error('Failed to schedule bulk sessions');
       toast({ title: 'Sessions scheduled', description: `${playerIds.length} player(s) assigned` });
       return true;
     } catch (error: any) {
@@ -172,7 +148,7 @@ export function useScheduledPracticeSessions() {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, schedulingService]);
 
   const fetchPlayerSessions = useCallback(async (): Promise<ScheduledPracticeSession[]> => {
     if (!user) return [];
