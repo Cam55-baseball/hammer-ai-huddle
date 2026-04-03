@@ -108,7 +108,7 @@ export function useCalendarSkips() {
     }
   }, [user, schedulingService]);
 
-  // Remove all skips for an item (un-skip completely)
+  // Remove all skips for an item — routed through scheduling service
   const removeSkip = useCallback(async (
     itemId: string, 
     itemType: string
@@ -116,17 +116,8 @@ export function useCalendarSkips() {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('calendar_skipped_items')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('item_id', itemId)
-        .eq('item_type', itemType);
-
-      if (error) {
-        console.error('Error removing skip:', error);
-        return false;
-      }
+      const success = await schedulingService.removeCalendarSkip(itemId, itemType);
+      if (!success) return false;
 
       // Optimistically update local state
       setSkippedItems(prev => 
@@ -138,7 +129,7 @@ export function useCalendarSkips() {
       console.error('Error in removeSkip:', err);
       return false;
     }
-  }, [user]);
+  }, [user, schedulingService]);
 
   // Un-skip for a specific day only (keep other skip days)
   const unskipForDay = useCallback(async (
