@@ -413,13 +413,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       ...((isFielding || isCatching) && { throwing_hand: effectiveThrowingHand }),
       ...(isThrowing && { throwing_hand: effectiveThrowingHand }),
       ...(isFielding && { fielding_position: repFieldingPosition }),
-      // Baserunning: inherit drill_type from session config
-      ...(isBaserunning && sessionConfig?.baserunning_drill_type && {
-        drill_type: sessionConfig.baserunning_drill_type,
-        ...(sessionConfig.baserunning_drill_type === 'custom' && sessionConfig.ai_baserunning_drill_description && {
-          ai_baserunning_drill_description: sessionConfig.ai_baserunning_drill_description,
-        }),
-      }),
       // Apply machine single-mode presets
       ...(isHitting && isMachine && machineMode === 'single' && {
         pitch_type: machinePitchType,
