@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 
 export interface ScheduledPracticeSession {
   id: string;
