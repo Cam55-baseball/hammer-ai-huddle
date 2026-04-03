@@ -443,7 +443,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const identityField = (isHitting || module === 'bunting') ? 'primary_batting_side' : 'primary_throwing_hand';
   // Show identity gate only if DB value is null and not a switch player
   const dbIdentity = (isHitting || module === 'bunting') ? primaryBattingSide : primaryThrowingHand;
-  if (!handedness && !isBaserunning && !dbIdentity && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
+  if (!handedness && !isBaserunning && !dbIdentity && !((isHitting || isBunting) && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
     return (
       <HandednessGate
         module={module}
