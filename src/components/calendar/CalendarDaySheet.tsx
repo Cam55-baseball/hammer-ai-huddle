@@ -38,6 +38,7 @@ import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDia
 import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { DayStatusSelector } from './DayStatusSelector';
+import { DaySessionsList } from './DaySessionsList';
 import { RestDayScheduler } from './RestDayScheduler';
 import { toast } from 'sonner';
 import { useSportTheme } from '@/contexts/SportThemeContext';
@@ -830,6 +831,14 @@ export function CalendarDaySheet({
                       <Moon className="h-3.5 w-3.5" />,
                       evening
                     )}
+                  </>
+                )}
+
+                {/* Practice Sessions */}
+                {!isReorderMode && (
+                  <>
+                    <Separator />
+                    <DaySessionsList date={format(date, 'yyyy-MM-dd')} />
                   </>
                 )}
 
