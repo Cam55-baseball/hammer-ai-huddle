@@ -271,7 +271,7 @@ export default function CoachDashboard() {
         <TeamOverviewCard />
 
         {/* HIE: Alert System */}
-        <CoachAlertPanel />
+        <CoachAlertPanel playerNames={playerNameMap} />
 
         {/* HIE: Actionable Player Cards */}
         {playerSnapshots.length > 0 && (
