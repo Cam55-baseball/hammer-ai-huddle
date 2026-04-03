@@ -642,7 +642,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             />
           )}
 
-          {/* Mandatory: Execution Score — number line */}
+          {/* Mandatory: Execution Score — number line (hidden for fielding) */}
+          {!isFielding && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">
               Execution Score <span className="text-destructive">*</span>
