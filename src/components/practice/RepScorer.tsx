@@ -381,6 +381,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const hasRepSource = !!repSource;
   const needsDepthZone = isTee && isHitting;
   const needsFieldingPosition = isFielding && !repFieldingPosition;
+  const contactQualityValid = !isHitting || current.contact_quality != null;
   const canConfirm = hasRepSource && execScore != null && execScore >= 1
     && (!needsDepthZone || current.depth_zone != null)
     && !needsFieldingPosition
@@ -390,7 +391,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && absGuessValid
     && pitcherIntentValid
     && throwingRequiredValid
-    && baserunningCustomDescValid;
+    && baserunningCustomDescValid
+    && contactQualityValid;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
