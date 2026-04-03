@@ -1,68 +1,73 @@
-import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { useSessionDefaults } from '@/hooks/useSessionDefaults';
 
 interface HandednessGateProps {
   module: string;
-  value?: 'L' | 'R';
-  onChange: (side: 'L' | 'R') => void;
+  onSelect: (side: 'L' | 'R' | 'S') => void;
+  isSaving?: boolean;
 }
 
-const labels: Record<string, { prompt: string; left: string; right: string }> = {
-  hitting: { prompt: 'Batter Stance', left: 'Left-Handed', right: 'Right-Handed' },
-  pitching: { prompt: 'Pitcher Arm', left: 'Left-Handed', right: 'Right-Handed' },
-  fielding: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
-  throwing: { prompt: 'Throwing Hand', left: 'Left', right: 'Right' },
-  
+const configs: Record<string, { title: string; options: { value: 'L' | 'R' | 'S'; label: string; emoji: string }[] }> = {
+  hitting: {
+    title: 'Set Your Batting Stance',
+    options: [
+      { value: 'R', label: 'Right-Handed', emoji: '🫱' },
+      { value: 'L', label: 'Left-Handed', emoji: '🫲' },
+      { value: 'S', label: 'Switch Hitter', emoji: '🔄' },
+    ],
+  },
+  pitching: {
+    title: 'Set Your Throwing Hand',
+    options: [
+      { value: 'R', label: 'Right-Handed', emoji: '🫱' },
+      { value: 'L', label: 'Left-Handed', emoji: '🫲' },
+      { value: 'S', label: 'Ambidextrous', emoji: '🔄' },
+    ],
+  },
+  fielding: {
+    title: 'Set Your Throwing Hand',
+    options: [
+      { value: 'R', label: 'Right', emoji: '🫱' },
+      { value: 'L', label: 'Left', emoji: '🫲' },
+    ],
+  },
+  throwing: {
+    title: 'Set Your Throwing Hand',
+    options: [
+      { value: 'R', label: 'Right', emoji: '🫱' },
+      { value: 'L', label: 'Left', emoji: '🫲' },
+    ],
+  },
 };
 
-export function HandednessGate({ module, value, onChange }: HandednessGateProps) {
-  const config = labels[module] ?? labels.hitting;
-  const { getHandedness, saveHandedness } = useSessionDefaults(module);
-
-  // Auto-select from saved preference
-  useEffect(() => {
-    if (!value) {
-      const saved = getHandedness();
-      if (saved) {
-        onChange(saved);
-      }
-    }
-  }, []);
-
-  const handleSelect = (side: 'L' | 'R') => {
-    saveHandedness(side);
-    onChange(side);
-  };
-
-  // If value is already set (from saved default), don't show the gate
-  // The gate is only shown when value is undefined AND no saved default
-  if (value) return null;
+export function HandednessGate({ module, onSelect, isSaving }: HandednessGateProps) {
+  const config = configs[module] ?? configs.hitting;
 
   return (
     <Card>
       <CardContent className="py-4">
-        <p className="text-sm font-medium text-center mb-3">{config.prompt}</p>
-        <div className="grid grid-cols-2 gap-3">
-          {(['L', 'R'] as const).map((side) => (
+        <p className="text-sm font-medium text-center mb-1">{config.title}</p>
+        <p className="text-xs text-muted-foreground text-center mb-3">
+          Saved to your profile — you won't be asked again
+        </p>
+        <div className={cn('grid gap-3', config.options.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
+          {config.options.map((opt) => (
             <button
-              key={side}
+              key={opt.value}
               type="button"
-              onClick={() => handleSelect(side)}
+              disabled={isSaving}
+              onClick={() => onSelect(opt.value)}
               className={cn(
-                'rounded-lg border-2 p-4 text-center font-semibold transition-all',
-                'bg-muted/20 border-border hover:bg-muted/40 text-foreground'
+                'rounded-lg border-2 p-3 text-center font-semibold transition-all',
+                'bg-muted/20 border-border hover:bg-muted/40 text-foreground',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >
-              <span className="text-2xl block mb-1">{side === 'L' ? '🫲' : '🫱'}</span>
-              <span className="text-sm">{side === 'L' ? config.left : config.right}</span>
+              <span className="text-xl block mb-1">{opt.emoji}</span>
+              <span className="text-xs">{opt.label}</span>
             </button>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground text-center mt-2">
-          Select {config.prompt.toLowerCase()} to begin logging
-        </p>
       </CardContent>
     </Card>
   );
