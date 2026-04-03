@@ -1188,8 +1188,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Exact Pitch Velocity (MPH) — optional, for live/game/advanced pitching */}
-              {!hidesVelocity && (PITCHING_ALWAYS_VELO.includes(repSource) || mode === 'advanced') && (
+              {/* Exact Pitch Velocity (MPH) — advanced only */}
+              {mode === 'advanced' && !hidesVelocity && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
                   <Input
