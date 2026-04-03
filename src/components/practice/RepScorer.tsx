@@ -128,7 +128,7 @@ export interface ScoredRep {
   video_id?: string;
   video_start_sec?: number;
   video_end_sec?: number;
-  // AI-structured fields
+  // Structured fields
   ai_drill_description?: string;
   ai_drill_clarification?: string;
   ai_custom_rep_description?: string;
@@ -330,7 +330,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     setCurrent(prev => ({ ...prev, [field]: val }));
   };
 
-  // === AI field validation ===
+  // === Field validation ===
   const isDrill = repSource === 'drill';
   const isOther = repSource === 'other';
 
@@ -617,35 +617,35 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             Rep will be recorded manually once you confirm all required fields.
           </p>
 
-          {/* === AI DRILL / CUSTOM FIELDS (per-rep, directly under rep source context) === */}
+          {/* === DRILL / CUSTOM FIELDS (per-rep, directly under rep source context) === */}
           {needsCatchingAIDrillDesc && (
             <AITextBoxField
-              label="AI Drill Description"
+              label="Drill Description"
               value={current.ai_drill_description ?? ''}
               onChange={v => updateField('ai_drill_description', v)}
               minChars={15}
               required
-              placeholder="Describe the drill for AI tracking (min 15 characters)..."
+              placeholder="Describe the drill (min 15 characters)..."
             />
           )}
           {needsDrillClarification && (
             <AITextBoxField
-              label="AI Drill Clarification"
+              label="Drill Clarification"
               value={current.ai_drill_clarification ?? ''}
               onChange={v => updateField('ai_drill_clarification', v)}
               minChars={15}
               required
-              placeholder="Clarify the drill for AI tracking (min 15 characters)..."
+              placeholder="Clarify the drill (min 15 characters)..."
             />
           )}
           {needsCustomRepDesc && (
             <AITextBoxField
-              label="AI Custom Rep Description"
+              label="Custom Rep Description"
               value={current.ai_custom_rep_description ?? ''}
               onChange={v => updateField('ai_custom_rep_description', v)}
               minChars={15}
               required
-              placeholder="Describe this custom rep source for AI tracking (min 15 characters)..."
+              placeholder="Describe this custom rep source (min 15 characters)..."
             />
           )}
 
@@ -2062,9 +2062,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               {!hasRepSource ? 'Configure session rep source first' :
                 needsFieldingPosition ? 'Select fielding position' :
                 needsDepthZone && !current.depth_zone ? 'Select tee depth zone' :
-                !catchingAIDrillDescValid ? 'AI Drill Description requires min 15 characters' :
-                !drillClarificationValid ? 'AI Drill Clarification requires min 15 characters' :
-                !customRepDescValid ? 'AI Custom Rep Description requires min 15 characters' :
+                !catchingAIDrillDescValid ? 'Drill Description requires min 15 characters' :
+                !drillClarificationValid ? 'Drill Clarification requires min 15 characters' :
+                !customRepDescValid ? 'Custom Rep Description requires min 15 characters' :
                 !pitcherIntentValid ? 'Select Pitcher Spot Intent before logging pitch' :
                 !pitchLocationValid ? 'Select pitch location' :
                 !absGuessValid ? 'Select ABS Guess zone' :
