@@ -1,66 +1,122 @@
 
 
-# Stress Test & Edge Case Verification — Executable Plan
+# Final Lock: Prescription Dedup + Verification Script
 
-## What This Delivers
-A comprehensive stress test script that exercises 6 scenarios against the live `hie-analyze` edge function and database, producing a pass/fail report with database evidence for each case.
+## Current State
 
-## Approach
-Execute all 6 scenarios via direct edge function calls (`supabase--curl_edge_functions`) and database queries (`supabase--read_query`), using the existing test athlete and crafting specific inputs to trigger each edge case.
+- **Snapshots**: Already uses `upsert` on `(user_id, sport)` — only 1 snapshot per athlete per sport. No accumulation. ✅
+- **weakness_scores**: Already uses DELETE-before-INSERT — deduped. ✅
+- **drill_prescriptions**: Accumulation risk exists. New prescriptions are filtered by `truly_new` (line 1613-1614), checking `existingAreas`. But if the same weakness_area reappears across runs with slightly different descriptions, duplicates can occur. Old prescriptions are never cleaned up — they just get `resolved: true` after 5 adherence counts.
 
 ---
 
-## Scenario 1: No micro_layer_data
-**Method**: Call `hie-analyze` for athlete `95de827d...` after confirming sessions exist. The function already handles empty `micro_layer_data` arrays — `hittingReps.length < 5` returns `[]` from each analyzer (line 60). When `allPatterns` is empty, fallback to MPI composites (lines 1324-1341).
-**Verify**: Returns 200, snapshot has MPI-based weakness clusters, no crash.
+## Part 1: Prescription Deduplication (Option A — Upsert by user_id + targeted_metric)
 
-## Scenario 2: AI Prescription Engine Failure
-**Method**: The code already wraps the prescription-engine call in try/catch (lines 1396-1398). If the engine returns non-200 or throws, `aiPrescriptions` stays `[]` and the fallback switch runs (lines 1419-1428). We verify this by checking edge function logs after a run — if prescription-engine errors, hie-analyze still completes.
-**Verify**: Confirm hie-analyze returns 200 even when prescription-engine logs show errors. Check that `prescriptive_actions` in snapshot is populated via fallback.
+**In `hie-analyze/index.ts`**, replace the current insert logic (lines 1612-1617):
 
-## Scenario 3: Continuation Token (Nightly Interrupted Run)
-**Method**: The nightly process reads `resume_from` from `audit_log` (action: `nightly_mpi_continuation`). We verify the token logic exists and query the audit_log for continuation entries.
-**Verify**: Query `audit_log` for `nightly_mpi_continuation` entries. Confirm code at nightly-mpi-process lines 232-268 persists `resume_from` on timeout.
-**Note**: Cannot simulate mid-run interruption without modifying edge function code (adding artificial timeout). This is a code-path verification, not a live interruption test.
-
-## Scenario 4: Multi-Athlete Isolation
-**Method**: Query all athletes with `hie_snapshots` and `weakness_scores`. Verify each athlete's `weakness_scores` rows reference only their own `user_id`. Cross-check that no `drill_prescriptions` reference a different athlete's weakness data.
-**Verify**: SQL query confirming no cross-contamination:
-```sql
-SELECT user_id, COUNT(*) FROM weakness_scores GROUP BY user_id;
-SELECT dp.user_id AS prescription_user, ws.user_id AS score_user
-FROM drill_prescriptions dp
-JOIN weakness_scores ws ON dp.targeted_metric = ws.weakness_metric
-WHERE dp.user_id != ws.user_id;
+**Current:**
+```typescript
+const existingAreas = new Set((existingPrescriptions ?? []).map((e: any) => e.weakness_area));
+const truly_new = newPrescriptions.filter(p => !existingAreas.has(p.weakness_area));
+if (truly_new.length > 0) {
+  await supabase.from('drill_prescriptions').insert(truly_new);
+}
 ```
 
-## Scenario 5: Longitudinal Integrity (Multiple HIE Cycles)
-**Method**: Trigger HIE twice for the same athlete. After each run, query `weakness_scores` count (should be exactly N patterns, not 2×N due to DELETE-before-INSERT at lines 1287-1293). Check `adherence_count` increments by 1 per run on existing prescriptions.
-**Verify**:
-- `weakness_scores` count stable (not doubling)
-- `adherence_count` on existing prescriptions increments correctly
-- `effectiveness_score` populated where both pre and post values exist
+**New approach:**
+1. For each new prescription, check if an active (unresolved) prescription exists for the same `(user_id, targeted_metric)`
+2. If yes → UPDATE the existing row with new drill details, reset `adherence_count` to 0, update `pre_weakness_value`
+3. If no → INSERT new row
+4. This ensures exactly 1 active prescription per targeted_metric per athlete
 
-## Scenario 6: Legacy Data (null pre_weakness_value)
-**Method**: Query existing prescriptions with null `pre_weakness_value`. Confirm system doesn't crash — the effectiveness loop handles null gracefully at line 1582-1585 (`preVal != null` guard). Falls back to MPI delta at line 1589.
-**Verify**: Prescriptions with null `pre_weakness_value` still get `effectiveness_score` via MPI fallback. No errors in logs.
+**Implementation:**
+```typescript
+for (const np of newPrescriptions) {
+  const existing = (existingPrescriptions ?? []).find(
+    (e: any) => e.targeted_metric === np.targeted_metric && !e.resolved
+  );
+  if (existing) {
+    // Update existing prescription with latest drill data
+    await supabase.from('drill_prescriptions').update({
+      drill_name: np.drill_name,
+      module: np.module,
+      constraints: np.constraints,
+      constraints_json: np.constraints_json,
+      drill_id: np.drill_id,
+      pre_weakness_value: np.pre_weakness_value,
+      pre_score: np.pre_score,
+      updated_at: new Date().toISOString(),
+    }).eq('id', existing.id);
+  } else {
+    await supabase.from('drill_prescriptions').insert(np);
+  }
+}
+```
+
+**Migration needed:** Add `updated_at` column to `drill_prescriptions` (if not present) for tracking when a prescription was last refreshed.
 
 ---
 
-## Implementation Steps
+## Part 2: Snapshot Consistency
 
-1. **Query current database state** — baseline counts for weakness_scores, drill_prescriptions, hie_snapshots
-2. **Trigger HIE run #1** for test athlete via `curl_edge_functions`
-3. **Query post-run state** — verify weakness_scores dedup, prescription updates, snapshot creation
-4. **Trigger HIE run #2** — same athlete, verify no duplication, adherence increments
-5. **Query cross-athlete isolation** — SQL joins to detect contamination
-6. **Query legacy prescriptions** — confirm null handling doesn't break
-7. **Check edge function logs** — confirm no crashes, fallback paths logged
-8. **Compile pass/fail report** with database evidence for each scenario
+Already guaranteed — `upsert` on `(user_id, sport)` at line 1644-1646. No changes needed.
 
-## Files Modified
-None. This is a read-only verification pass using edge function invocations and database queries.
+---
 
-## Expected Output
-A verification matrix with PASS/FAIL per scenario, backed by query results and log evidence.
+## Part 3: Permanent Verification Script
+
+Create `supabase/functions/hie-verify/index.ts` — a callable edge function that runs 8 checks and returns a structured PASS/FAIL report.
+
+**Checks:**
+1. **HIE Run Success** — Invoke `hie-analyze` for a given athlete, confirm 200 response
+2. **weakness_scores Integrity** — Query count per user_id, verify no user has more rows than pattern count (max ~10)
+3. **Prescription Correctness** — All active prescriptions have non-null `targeted_metric`; each `targeted_metric` exists in `weakness_scores`
+4. **Effectiveness Integrity** — Prescriptions with both `pre_weakness_value` and `post_weakness_value` have a computed `effectiveness_score`
+5. **Constraint Enforcement** — All prescriptions have `constraints` field populated (non-empty string)
+6. **Fallback Logic** — Prescriptions exist even for athletes with no AI engine response (drill_name populated)
+7. **Continuation Token** — Query `audit_log` for `nightly_mpi_continuation` entries, verify structure
+8. **Cross-Athlete Isolation** — SQL join confirms no `drill_prescriptions.user_id != weakness_scores.user_id` matches on same `targeted_metric`
+
+**Output format:**
+```json
+{
+  "timestamp": "...",
+  "athlete_id": "...",
+  "results": [
+    { "check": "weakness_scores_integrity", "status": "PASS", "detail": "4 rows, no duplicates" },
+    { "check": "prescription_correctness", "status": "FAIL", "detail": "1 prescription missing targeted_metric" }
+  ],
+  "overall": "PASS"
+}
+```
+
+---
+
+## Part 4: Regression Protection
+
+Add defensive guards in `hie-analyze`:
+
+1. **Column existence validation** — Before inserting prescriptions, validate required fields are present in the object (targeted_metric, drill_name, user_id). Log and skip any malformed entries.
+2. **Error surfacing** — The catch block at line 1653 already logs to `audit_log` with action `hie_analyze_failure`. Confirm prescription-engine failures are also logged (they are, via console.error at line ~1398).
+3. **Insert validation wrapper** — Wrap prescription inserts in try/catch with per-row error logging so one bad row doesn't kill the batch.
+
+---
+
+## Files Modified/Created
+
+| File | Change |
+|------|--------|
+| `supabase/functions/hie-analyze/index.ts` | Replace insert logic with upsert-by-metric; add insert validation guards |
+| `supabase/functions/hie-verify/index.ts` | New verification edge function |
+| `supabase/config.toml` | Add `[functions.hie-verify]` entry |
+| Migration | Add `updated_at` column to `drill_prescriptions` if missing |
+
+## Implementation Order
+
+1. Migration: Add `updated_at` to `drill_prescriptions`
+2. Update `hie-analyze` prescription save logic (upsert by metric)
+3. Add insert validation guards in `hie-analyze`
+4. Create `hie-verify` edge function
+5. Add config.toml entry
+6. Run verification against test athlete to confirm PASS
 
