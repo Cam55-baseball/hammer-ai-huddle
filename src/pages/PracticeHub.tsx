@@ -29,6 +29,7 @@ import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Lo
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
+import { useSwitchHitterProfile } from '@/hooks/useSwitchHitterProfile';
 import { useLiveRepBroadcast } from '@/hooks/useLiveRepBroadcast';
 import { PartnerRepsFeed } from '@/components/practice/PartnerRepsFeed';
 
@@ -87,8 +88,13 @@ export default function PracticeHub() {
     }
   }, [prescribedDrillType, prescribedModule]);
 
-  const { getHandedness } = useSessionDefaults(activeModule);
-  const currentHandedness = useMemo(() => getHandedness(), [activeModule, getHandedness]);
+  const { primaryBattingSide, primaryThrowingHand } = useSwitchHitterProfile();
+  const currentHandedness = useMemo(() => {
+    const isHitting = activeModule === 'hitting' || activeModule === 'bunting';
+    const side = isHitting ? primaryBattingSide : primaryThrowingHand;
+    if (side === 'R' || side === 'L') return side;
+    return undefined;
+  }, [activeModule, primaryBattingSide, primaryThrowingHand]);
   const [step, setStep] = useState<FlowStep>('select_type');
   const [sessionType, setSessionType] = useState<string | null>(null);
   const [scheduledId, setScheduledId] = useState<string | null>(searchParams.get('scheduled') || null);

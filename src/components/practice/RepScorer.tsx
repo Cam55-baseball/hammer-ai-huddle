@@ -261,13 +261,38 @@ const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
-  const { isSwitchHitter, isAmbidextrousThrower } = useSwitchHitterProfile();
+  const { isSwitchHitter, isAmbidextrousThrower, primaryBattingSide, primaryThrowingHand, saveIdentity, isSavingIdentity } = useSwitchHitterProfile();
 
   // Commit animation state
   const [showCommitCheck, setShowCommitCheck] = useState(false);
 
-  // Handedness gate
-  const [handedness, setHandedness] = useState<'L' | 'R' | undefined>();
+  // Handedness — auto-load from DB identity
+  const isHitting = module === 'hitting';
+  const isPitching = module === 'pitching';
+  const isFielding = module === 'fielding';
+  const isCatching = false;
+  const isBaserunning = module === 'baserunning';
+  const isThrowing = module === 'throwing';
+  const isBunting = module === 'bunting';
+
+  const [handedness, setHandedness] = useState<'L' | 'R' | undefined>(() => {
+    if (isHitting || isBunting) {
+      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') return primaryBattingSide;
+    } else if (!isBaserunning) {
+      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') return primaryThrowingHand;
+    }
+    return undefined;
+  });
+
+  // Sync when DB data loads after mount
+  useEffect(() => {
+    if (handedness) return; // already set
+    if (isHitting || isBunting) {
+      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') setHandedness(primaryBattingSide);
+    } else if (!isBaserunning) {
+      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') setHandedness(primaryThrowingHand);
+    }
+  }, [primaryBattingSide, primaryThrowingHand]);
 
   // Switch hitter per-rep side override
   const [switchSide, setSwitchSide] = useState<'L' | 'R'>('R');
@@ -296,13 +321,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const [machinePitchType, setMachinePitchType] = useState<string | undefined>();
   const [machineVeloBand, setMachineVeloBand] = useState<string | undefined>();
 
-  const isHitting = module === 'hitting';
-  const isPitching = module === 'pitching';
-  const isFielding = module === 'fielding';
-  const isCatching = false; // catching module removed — catcher defense is under fielding
-  const isBaserunning = module === 'baserunning';
-  const isThrowing = module === 'throwing';
-  const isBunting = module === 'bunting';
 
   // For switch hitters in hitting, use toggle side; otherwise use gate handedness
   const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
@@ -414,9 +432,25 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     onRepsChange(reps.filter((_, i) => i !== index));
   }, [reps, onRepsChange]);
 
-  // If no handedness selected, show gate (skip for baserunning — no side needed)
-  if (!handedness && !isBaserunning && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
-    return <HandednessGate module={module} value={handedness} onChange={setHandedness} />;
+  // Determine which DB field to save identity to
+  const identityField = (isHitting || module === 'bunting') ? 'primary_batting_side' : 'primary_throwing_hand';
+  // Show identity gate only if DB value is null and not a switch player
+  const dbIdentity = (isHitting || module === 'bunting') ? primaryBattingSide : primaryThrowingHand;
+  if (!handedness && !isBaserunning && !dbIdentity && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
+    return (
+      <HandednessGate
+        module={module}
+        isSaving={isSavingIdentity}
+        onSelect={(side) => {
+          saveIdentity(identityField, side);
+          if (side === 'S') {
+            // Switch/ambidextrous — don't set handedness, toggle handles it
+          } else {
+            setHandedness(side as 'L' | 'R');
+          }
+        }}
+      />
+    );
   }
 
   // Whether the pitcher intent grid should be locked (after pitch location is logged)

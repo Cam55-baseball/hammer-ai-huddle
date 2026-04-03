@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 export function useSwitchHitterProfile() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const settings = useQuery({
     queryKey: ['switch-hitter-settings', user?.id],
@@ -39,10 +40,40 @@ export function useSwitchHitterProfile() {
     enabled: !!user && !!settings.data?.is_switch_hitter,
   });
 
+  const saveIdentityMutation = useMutation({
+    mutationFn: async ({ field, value }: { field: string; value: string }) => {
+      if (!user) throw new Error('Not authenticated');
+      const updates: Record<string, unknown> = { [field]: value };
+      // When setting switch/ambidextrous flags
+      if (field === 'primary_batting_side' && value === 'S') {
+        updates.is_switch_hitter = true;
+      }
+      if (field === 'primary_throwing_hand' && value === 'S') {
+        updates.is_ambidextrous_thrower = true;
+      }
+      const { error } = await supabase
+        .from('athlete_mpi_settings')
+        .update(updates)
+        .eq('user_id', user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['switch-hitter-settings', user?.id] });
+    },
+  });
+
+  const saveIdentity = (field: string, value: string) => {
+    saveIdentityMutation.mutate({ field, value });
+  };
+
   return {
     settings,
     sessionsBySide,
     isSwitchHitter: settings.data?.is_switch_hitter ?? false,
     isAmbidextrousThrower: settings.data?.is_ambidextrous_thrower ?? false,
+    primaryBattingSide: (settings.data?.primary_batting_side as 'L' | 'R' | 'S' | null) ?? null,
+    primaryThrowingHand: (settings.data?.primary_throwing_hand as 'L' | 'R' | 'S' | null) ?? null,
+    saveIdentity,
+    isSavingIdentity: saveIdentityMutation.isPending,
   };
 }
