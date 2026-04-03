@@ -297,7 +297,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     fetchSkippedTasks();
   }, [user]);
   
-  // Skip task handler (load management)
+  // Skip task handler (load management) — routed through scheduling service
   const handleSkipTask = async (taskId: string) => {
     if (!user) return;
     
@@ -305,16 +305,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     setSkippedTasks(prev => new Set([...prev, taskId]));
     
     const today = getTodayDate();
-    const { error } = await supabase
-      .from('game_plan_skipped_tasks')
-      .upsert({
-        user_id: user.id,
-        task_id: taskId,
-        skip_date: today,
-      }, { onConflict: 'user_id,task_id,skip_date' });
+    const success = await scheduling.skipTask(taskId, today);
     
-    if (error) {
-      console.error('Error skipping task:', error);
+    if (!success) {
       // Rollback on error
       setSkippedTasks(prev => {
         const next = new Set(prev);
@@ -327,7 +320,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
   
-  // Restore skipped task handler
+  // Restore skipped task handler — routed through scheduling service
   const handleRestoreTask = async (taskId: string) => {
     if (!user) return;
     
@@ -339,15 +332,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     });
     
     const today = getTodayDate();
-    const { error } = await supabase
-      .from('game_plan_skipped_tasks')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('task_id', taskId)
-      .eq('skip_date', today);
+    const success = await scheduling.unskipTask(taskId, today);
     
-    if (error) {
-      console.error('Error restoring task:', error);
+    if (!success) {
       // Rollback on error
       setSkippedTasks(prev => new Set([...prev, taskId]));
       toast.error(t('gamePlan.restoreError', 'Failed to restore task'));
