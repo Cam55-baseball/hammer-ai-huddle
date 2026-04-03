@@ -451,6 +451,21 @@ serve(async (req) => {
           hofActive, hofProb, proProbability, proProbCapped, consecutiveHeavy,
           tierMult, ageCurveMult, posWeight,
         });
+       } catch (athleteError) {
+          console.error(`[nightly-mpi] Error processing athlete ${athlete.user_id}:`, athleteError);
+          failedUsers.push(athlete.user_id);
+        }
+      } // end athlete loop
+        console.log(`[nightly-mpi] ${sport}: Batch completed in ${Date.now() - batchTimestamp}ms`);
+      } // end batch loop
+      if (failedUsers.length > 0) {
+        console.warn(`[nightly-mpi] ${sport}: ${failedUsers.length} athletes failed processing`);
+        await supabase.from('audit_log').insert({
+          user_id: '00000000-0000-0000-0000-000000000000',
+          action: 'nightly_mpi_failures',
+          table_name: 'mpi_scores',
+          metadata: { sport, failed_count: failedUsers.length, failed_users: failedUsers.slice(0, 20) },
+        });
       }
 
       // Sort and assign ranks
