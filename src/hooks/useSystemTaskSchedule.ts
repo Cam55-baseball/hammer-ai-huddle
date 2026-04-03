@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getDay } from 'date-fns';
