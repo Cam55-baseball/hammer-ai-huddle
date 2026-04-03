@@ -240,6 +240,13 @@ serve(async (req) => {
             table_name: 'mpi_scores',
             metadata: { sport, processed: batchStart, remaining, elapsed_ms: Date.now() - nightlyStartTime },
           });
+          // Store continuation token for next invocation
+          await supabase.from('audit_log').insert({
+            user_id: '00000000-0000-0000-0000-000000000000',
+            action: 'nightly_mpi_continuation',
+            table_name: 'mpi_scores',
+            metadata: { sport, resume_from: batchStart, total_athletes: athletes.length, timestamp: new Date().toISOString() },
+          });
           break;
         }
         const batch = athletes.slice(batchStart, batchStart + BATCH_SIZE);
