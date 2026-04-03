@@ -1,122 +1,117 @@
 
 
-# Pass 4-8: Batch Processing, Coach AI, Comparison Tool, Admin Panel
+# HIE Final Hardening — Complete Intelligence Loop
 
-## Pass 4: Batch Nightly Processing with Error Isolation
+## Scope
 
-### `supabase/functions/nightly-mpi-process/index.ts`
+8 changes that close every verified gap: adaptive loop, module micro-analyzers, fragile string logic, drill catalog table, Practice Hub pre-fill, nightly cron, engine_settings consumption, and failure persistence.
 
-Currently processes all athletes sequentially in a single loop (line 186: `for (const athlete of athletes)`). Refactor to:
+## Pass 1: Close Adaptive Loop (hie-analyze/index.ts)
 
-1. Split athletes into batches of 50
-2. Wrap each athlete in try/catch so one failure doesn't crash the batch
-3. Track per-batch timing and log failures
-4. If total runtime exceeds 50 seconds (`Date.now() - nightlyStartTime > 50000`), stop processing and log remaining athletes
-5. After all batches complete, trigger `hie-analyze` for each successfully processed user (fire-and-forget via `fetch()` to the function URL)
+Before calling `mapPatternToDrills`, fetch `drill_prescriptions` where `user_id = current AND resolved = false AND effectiveness_score IS NOT NULL AND effectiveness_score <= 0`. Build a `Set<string>` of ineffective drill names. Modify `mapPatternToDrills` to accept this set as a second parameter. Inside each case, if the primary drill is in the ineffective set, substitute an alternative drill (each case gets a primary + 2 alternatives in a rotation array). Also track `drill_usage_count` — if a drill has been prescribed 3+ times without improvement, auto-rotate to the next alternative.
 
-The core MPI calculation logic stays identical — only the iteration wrapper changes.
+## Pass 2: Module Micro-Analyzers (hie-analyze/index.ts)
 
-### `supabase/functions/nightly-mpi-process/index.ts` — Post-nightly HIE triggers
+Add 4 new functions returning `MicroPattern[]`:
 
-After the main processing loop completes, for each processed athlete ID, invoke `hie-analyze` via `fetch()` to `${SUPABASE_URL}/functions/v1/hie-analyze` with the service role key. Fire-and-forget (no await on response).
+**`analyzeSpeedLabMicro(speedSessions)`**: If `steps_per_rep` trending upward over last 7 sessions → "Decreasing stride efficiency". If RPE high but output (distances) declining → "High effort, low output". Prescriptions: sprint mechanics, resisted starts.
 
----
+**`analyzeTimingMicro(timingSessions)`**: Extract all times from `timer_data`, compute CV. If CV > 0.15 → "Timing inconsistency during stride phase". Prescriptions: load/stride sync drills, rhythm blocks.
 
-## Pass 5: Coach Intelligence — AI Team Plans + Real Alerts
+**`analyzeVisionMicro(visionDrills)`**: Group by `drill_type`. If accuracy < 70% on any type → "Recognition delay vs [type]". If avg reaction_time > 400ms → "Slow reaction time". Prescriptions: pitch-type specific drills, reaction compression.
 
-### `src/components/hie/TeamWeaknessEngine.tsx` — Add AI-generated team drill blocks
+**`analyzeBaserunningMicro(microReps, drillBlocks)`**: Filter reps where `drill_type` is baserunning-related. Analyze `jump_grade`, `read_grade`, `time_to_base_band`. If jump_grade avg < 40 → "Delayed jump timing". Prescriptions: first-step reaction drills, read-based drills.
 
-Currently just shows aggregated weakness counts. Enhance to:
-1. After computing weakness patterns, call an edge function to generate team drill blocks via AI
-2. New edge function: `supabase/functions/hie-team-plan/index.ts` — accepts `{ weakness_patterns, team_size }`, calls Lovable AI (Gemini) with a system prompt to generate 3-5 team drill blocks per weakness, returns structured JSON
-3. Display generated drill blocks below each weakness pattern with drill name, duration, and focus area
-4. Cache results in `hie_team_snapshots.suggested_team_drills` so AI isn't called on every render
-5. Add a "Generate Team Plan" button that triggers the AI call
+Merge all into `allPatterns`:
+```
+const allPatterns = [...hittingPatterns, ...fieldingPatterns, ...pitchingPatterns,
+  ...speedPatterns, ...timingPatterns, ...visionPatterns, ...baserunningPatterns]
+```
 
-### `src/components/hie/CoachAlertPanel.tsx` — Already reads real alerts
+## Pass 3: Fix Fragile String Logic (hie-analyze/index.ts)
 
-This component already reads `risk_alerts` from player snapshots and flags stalled players (lines 10-15). It also shows truncated UUIDs instead of names (line 40: `item.userId.slice(0, 8)`). Fix:
-1. Accept a `playerNames: Record<string, string>` prop from `CoachDashboard`
-2. Display actual player names instead of UUID fragments
+In `mapPatternToDrills`, the `velocity_weakness` case currently uses `pattern.description.includes('80+')`. Replace with reading `pattern.data_points.velocity_band` (already stored in data_points during pattern creation). Update the velocity pattern creation in `analyzeHittingMicro` to include `velocity_band` in its data_points. The drill constraint then reads: `Set machine to ${pattern.data_points.velocity_band} mph`.
 
-### `src/pages/CoachDashboard.tsx` — Wire names into alert panel
+## Pass 4: Drill Catalog Table + Practice Hub Pre-fill
 
-Build a `nameMap` from `following` players and pass it to `CoachAlertPanel` and `CoachPlayerCard`. The `following` array already contains `id` and `full_name`.
+### Migration: `drills` table
+```sql
+CREATE TABLE public.drills (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  module TEXT NOT NULL,
+  skill_target TEXT,
+  default_constraints JSONB DEFAULT '{}',
+  video_url TEXT,
+  difficulty_levels TEXT[] DEFAULT '{"beginner","intermediate","advanced"}',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.drills ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read drills" ON public.drills FOR SELECT USING (true);
+```
 
-### `src/components/hie/PlayerComparisonTool.tsx` — New component
+Seed ~20 drills matching all drill names in `mapPatternToDrills`. Update `mapPatternToDrills` to include `drill_id` in output (matched by name from a pre-fetched drill catalog). Add `drill_id` field to `PrescriptiveDrill` interface.
 
-Side-by-side comparison of two players' HIE snapshots:
-1. Two dropdowns to select players from the team roster
-2. Compare: MPI, development status, readiness, weakness clusters, prescriptive actions
-3. Visual diff with color coding (green = better, red = worse)
-4. Add to `CoachDashboard.tsx` after TeamWeaknessEngine
+### Practice Hub pre-fill (`src/pages/PracticeHub.tsx`)
+On mount, read `searchParams.get('drill_type')`, `searchParams.get('constraints')`, `searchParams.get('module')`. If present:
+- Auto-set `activeModule` to the module value
+- Show a banner: "Starting Prescribed Drill: [drill_type]"
+- Skip to `configure_session` step with pre-filled values
 
----
+## Pass 5: Nightly Cron Job
 
-## Pass 6: Launchable Drills (Already Done)
+Use the insert tool to create a `cron.schedule` entry:
+```sql
+SELECT cron.schedule('nightly-mpi-3am', '0 3 * * *', $$
+  SELECT net.http_post(
+    url:='https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/nightly-mpi-process',
+    headers:='{"Content-Type":"application/json","Authorization":"Bearer <anon_key>"}'::jsonb,
+    body:='{"time":"now"}'::jsonb
+  ) as request_id;
+$$);
+```
 
-`PrescriptiveActionsCard.tsx` already has "Start" buttons that navigate to Practice Hub with query params (lines 14-26). This pass is complete.
+Also enable `pg_cron` and `pg_net` extensions via migration if not already enabled.
 
----
+## Pass 6: Engine Settings Consumption
 
-## Pass 7: Adaptive Learning Loop (Partially Done)
+### `nightly-mpi-process/index.ts`
+At start (after creating supabase client), fetch all rows from `engine_settings`. Build a settings map. Replace hardcoded values:
+- `composites.bqi * 0.25` → `composites.bqi * settings.mpi_weight_bqi`
+- Same for fqi (0.15), pei (0.20), decision (0.20), competitive (0.20)
+- `integrityScore >= 80` → `integrityScore >= settings.integrity_threshold`
+- `count >= 60` → `count >= settings.data_gate_min_sessions`
 
-The `drill_prescriptions` table exists. `hie-analyze` already writes prescriptions (line 970) and updates effectiveness (line 961). What's missing:
+### `hie-analyze/index.ts`
+Fetch `engine_settings` at start. Use `data_gate_min_sessions` for DataBuildingGate threshold passed in snapshot metadata.
 
-### `src/components/hie/ProofCard.tsx` — Show drill effectiveness data
+## Pass 7: Failure Persistence
 
-Currently shows before/after trends from `hie_snapshots.before_after_trends`. Also display data from `drill_prescriptions`:
-1. Fetch `drill_prescriptions` for the user via a new query in `useHIESnapshot` or a dedicated hook
-2. Show each prescribed drill with pre_score, post_score, effectiveness_score, and adherence_count
-3. Color code: green if effectiveness > 0, red if < 0, gray if no post_score yet
+### `nightly-mpi-process/index.ts`
+The `failedUsers` array is already logged to `audit_log` (line 463-468). But per-athlete errors lose detail. Enhance the catch block (line 454) to push `{ user_id, error: athleteError.message }` objects instead of just user_id strings. Write the full error details to audit_log.
 
----
+Also add: on next nightly run, query `audit_log` for `action = 'nightly_mpi_failures'` from last 24h. Extract `failed_users` and process those first before the main batch.
 
-## Pass 8: Owner Admin Panel
+### `hie-analyze/index.ts`
+Wrap the main handler in error logging that writes to `audit_log` on failure:
+```
+await supabase.from('audit_log').insert({
+  user_id, action: 'hie_analyze_failure', table_name: 'hie_snapshots',
+  metadata: { error: err.message, sport }
+});
+```
 
-### Migration: Insert default engine settings
+## Pass 8: Nightly Scale — Continuation Token
 
-Use insert tool (not migration) to seed `engine_settings` with default values from `ENGINE_CONTRACT.ts`:
-- `mpi_weight_bqi` = 0.25
-- `mpi_weight_fqi` = 0.15
-- `mpi_weight_pei` = 0.20
-- `mpi_weight_decision` = 0.20
-- `mpi_weight_competitive` = 0.20
-- `integrity_threshold` = 80
-- `retroactive_window_days` = 7
-- `data_gate_min_sessions` = 60
-
-### `src/pages/AdminEngineSettings.tsx` — New page
-
-- Gated behind `useOwnerAccess()` — redirects if not owner
-- Fetches all rows from `engine_settings`
-- Renders each as an editable input (number or text based on value type)
-- Save button updates values via `supabase.from('engine_settings').update()`
-- Logs changes to `audit_log`
-- Header: "Engine Settings — Owner Only"
-
-### `src/App.tsx` — Add route
-
-Add lazy import and route: `<Route path="/admin/engine-settings" element={<AdminEngineSettings />} />`
-
-### `supabase/functions/hie-team-plan/index.ts` — New edge function
-
-Accepts `{ weakness_patterns, team_size, sport }`. Uses `LOVABLE_API_KEY` to call Gemini with a structured prompt asking for team drill blocks. Returns JSON array of drill blocks with `name`, `duration`, `focus`, `description`, `intensity`.
-
----
+The 50s timeout currently stops processing and logs remaining count. Add a `continuation_token` mechanism: when timeout is hit, write the `batchStart` index to `audit_log` with action `nightly_mpi_continuation`. On next invocation, check for a continuation token and resume from that index. This allows the cron job (running every day) to finish processing across multiple invocations if needed.
 
 ## Files Summary
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `supabase/functions/nightly-mpi-process/index.ts` | Add batch processing (batches of 50) + error isolation + post-run HIE triggers |
-| `supabase/functions/hie-team-plan/index.ts` | New — AI team drill plan generation |
-| `src/components/hie/TeamWeaknessEngine.tsx` | Add AI drill block generation + display |
-| `src/components/hie/CoachAlertPanel.tsx` | Accept playerNames prop, show real names |
-| `src/components/hie/PlayerComparisonTool.tsx` | New — side-by-side player comparison |
-| `src/components/hie/ProofCard.tsx` | Add drill_prescriptions effectiveness display |
-| `src/pages/CoachDashboard.tsx` | Wire nameMap to alerts/cards, add comparison tool |
-| `src/pages/AdminEngineSettings.tsx` | New — owner admin panel for engine tuning |
-| `src/App.tsx` | Add `/admin/engine-settings` route |
-| Insert SQL | Seed `engine_settings` with ENGINE_CONTRACT defaults |
+| `supabase/functions/hie-analyze/index.ts` | Add 4 module analyzers, close adaptive loop, fix fragile string logic, add drill_id, consume engine_settings, log failures |
+| `supabase/functions/nightly-mpi-process/index.ts` | Consume engine_settings, enhance failure logging, add retry-first logic, continuation token |
+| `src/pages/PracticeHub.tsx` | Parse URL params for drill pre-fill, show prescribed drill banner |
+| Migration SQL | Create `drills` table + seed data, enable pg_cron + pg_net |
+| Insert SQL (cron) | Schedule nightly-mpi-process at 3am UTC |
 
