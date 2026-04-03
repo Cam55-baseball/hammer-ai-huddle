@@ -381,6 +381,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const hasRepSource = !!repSource;
   const needsDepthZone = isTee && isHitting;
   const needsFieldingPosition = isFielding && !repFieldingPosition;
+  const contactQualityValid = !isHitting || current.contact_quality != null;
   const canConfirm = hasRepSource && execScore != null && execScore >= 1
     && (!needsDepthZone || current.depth_zone != null)
     && !needsFieldingPosition
@@ -390,7 +391,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && absGuessValid
     && pitcherIntentValid
     && throwingRequiredValid
-    && baserunningCustomDescValid;
+    && baserunningCustomDescValid
+    && contactQualityValid;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
@@ -991,28 +993,29 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 <p className="text-[10px] text-muted-foreground mt-0.5">Enter exact or use &gt;, + (e.g. &gt;400 or 400+)</p>
               </div>
 
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality <span className="text-destructive">*</span></Label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {contactOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateField('contact_quality', opt.value)}
+                      className={cn(
+                        'rounded-md border p-2 text-center text-[10px] font-medium transition-all',
+                        current.contact_quality === opt.value
+                          ? opt.color + ' ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted'
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {mode === 'advanced' && (
                 <>
-                  <div>
-                    <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality</Label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                      {contactOptions.map(opt => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => updateField('contact_quality', opt.value)}
-                          className={cn(
-                            'rounded-md border p-2 text-center text-[10px] font-medium transition-all',
-                            current.contact_quality === opt.value
-                              ? opt.color + ' ring-1 ring-primary'
-                              : 'bg-muted/30 border-border hover:bg-muted'
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Exit Direction</Label>
@@ -2090,6 +2093,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !absGuessValid ? 'Select ABS Guess zone' :
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
                 !baserunningCustomDescValid ? 'AI Drill Type Description requires min 15 characters' :
+                !contactQualityValid ? 'Select contact quality' :
                   'Set execution score (1-10) to confirm rep'}
             </p>
           )}
