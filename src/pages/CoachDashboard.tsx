@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package, Building2, Users, ArrowRight, CalendarIcon } from 'lucide-react';
+import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package, Building2, Users, ArrowRight } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
@@ -21,6 +21,11 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { CollaborativeWorkspace } from '@/components/coach/CollaborativeWorkspace';
 import { CoachScheduleDialog } from '@/components/coach/CoachScheduleDialog';
 import { ScheduledSessionsManager } from '@/components/coach/ScheduledSessionsManager';
+import { TeamOverviewCard } from '@/components/hie/TeamOverviewCard';
+import { CoachPlayerCard } from '@/components/hie/CoachPlayerCard';
+import { TeamWeaknessEngine } from '@/components/hie/TeamWeaknessEngine';
+import { CoachAlertPanel } from '@/components/hie/CoachAlertPanel';
+import { useHIETeamSnapshot } from '@/hooks/useHIETeamSnapshot';
 import { 
   Command,
   CommandEmpty,
@@ -46,6 +51,7 @@ export default function CoachDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { myOrgs, members } = useOrganization();
+  const { playerSnapshots } = useHIETeamSnapshot();
   const [following, setFollowing] = useState<Player[]>([]);
   const [searchResults, setSearchResults] = useState<Player[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -89,7 +95,6 @@ export default function CoachDashboard() {
     }
   }, [user, authLoading, navigate]);
 
-  // Check coach access
   const [hasCoachAccess, setHasCoachAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
 
@@ -99,9 +104,7 @@ export default function CoachDashboard() {
         setCheckingAccess(false);
         return;
       }
-
       try {
-        // Check if user has coach role
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('id')
@@ -116,7 +119,6 @@ export default function CoachDashboard() {
           return;
         }
 
-        // Check application status
         const { data: appData } = await supabase
           .from('scout_applications')
           .select('status')
@@ -124,17 +126,10 @@ export default function CoachDashboard() {
           .maybeSingle();
 
         if (appData) {
-          if (appData.status === 'approved') {
-            // They might have been approved as a scout, not a coach
-            // Redirect to scout dashboard or application
-            navigate('/scout-dashboard');
-          } else if (appData.status === 'pending') {
-            navigate('/scout-application-pending');
-          } else {
-            navigate('/scout-application');
-          }
+          if (appData.status === 'approved') navigate('/scout-dashboard');
+          else if (appData.status === 'pending') navigate('/scout-application-pending');
+          else navigate('/scout-application');
         } else {
-          // No application, redirect to apply
           navigate('/scout-application');
         }
       } catch (error) {
@@ -144,211 +139,100 @@ export default function CoachDashboard() {
         setCheckingAccess(false);
       }
     };
-
     checkAccess();
   }, [user, navigate]);
 
   const fetchFollowing = async () => {
     if (!user) return;
-
     try {
       setLoading(true);
-      
       const { data, error } = await supabase.functions.invoke('get-following-players');
-
-      if (error) {
-        console.error('Error fetching following:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       setFollowing(data?.results || []);
     } catch (error) {
       console.error('Error in fetchFollowing:', error);
-      toast({
-        title: t('common.error'),
-        description: t('coach.failedToLoadPlayers', 'Failed to load your players'),
-        variant: "destructive",
-      });
+      toast({ title: t('common.error'), description: t('coach.failedToLoadPlayers', 'Failed to load your players'), variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user && hasCoachAccess) {
-      fetchFollowing();
-    }
+    if (user && hasCoachAccess) fetchFollowing();
   }, [user, hasCoachAccess]);
 
-  // Fetch owner ID
   useEffect(() => {
     const fetchOwnerId = async () => {
       setOwnerLoading(true);
-      const { data } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'owner')
-        .maybeSingle();
+      const { data } = await supabase.from('user_roles').select('user_id').eq('role', 'owner').maybeSingle();
       if (data) setOwnerId(data.user_id);
       setOwnerLoading(false);
     };
     fetchOwnerId();
   }, []);
 
-  // Debounced search effect with filters
   useEffect(() => {
-    // Don't search if user isn't authenticated or doesn't have access
-    if (!user || !hasCoachAccess) {
-      setSearchResults([]);
-      return;
-    }
-
+    if (!user || !hasCoachAccess) { setSearchResults([]); return; }
     const hasActiveFilters = 
-      filters.positions.length > 0 ||
-      filters.throwingHands.length > 0 ||
-      filters.battingSides.length > 0 ||
-      filters.heightMin || filters.heightMax ||
-      filters.weightMin || filters.weightMax ||
-      filters.state ||
-      filters.commitmentStatus ||
-      filters.hsGradYearMin || filters.hsGradYearMax ||
-      filters.collegeGradYearMin || filters.collegeGradYearMax ||
-      filters.enrolledInCollege !== null ||
-      filters.isProfessional !== null ||
-      filters.isFreeAgent !== null ||
-      filters.mlbAffiliate ||
-      filters.independentLeague ||
-      filters.isForeignPlayer !== null ||
-      filters.sportPreference !== null;
+      filters.positions.length > 0 || filters.throwingHands.length > 0 || filters.battingSides.length > 0 ||
+      filters.heightMin || filters.heightMax || filters.weightMin || filters.weightMax ||
+      filters.state || filters.commitmentStatus ||
+      filters.hsGradYearMin || filters.hsGradYearMax || filters.collegeGradYearMin || filters.collegeGradYearMax ||
+      filters.enrolledInCollege !== null || filters.isProfessional !== null || filters.isFreeAgent !== null ||
+      filters.mlbAffiliate || filters.independentLeague || filters.isForeignPlayer !== null || filters.sportPreference !== null;
 
     if (searchTerm.trim().length >= 2 || hasActiveFilters) {
       setSearchLoading(true);
       const timer = setTimeout(async () => {
         try {
           const { data, error } = await supabase.functions.invoke('search-players', {
-            body: { 
-              query: searchTerm,
-              positions: filters.positions.length > 0 ? filters.positions : undefined,
-              throwingHands: filters.throwingHands.length > 0 ? filters.throwingHands : undefined,
-              battingSides: filters.battingSides.length > 0 ? filters.battingSides : undefined,
-              heightMin: filters.heightMin || undefined,
-              heightMax: filters.heightMax || undefined,
-              weightMin: filters.weightMin || undefined,
-              weightMax: filters.weightMax || undefined,
-              state: filters.state || undefined,
-              commitmentStatus: filters.commitmentStatus || undefined,
-              hsGradYearMin: filters.hsGradYearMin || undefined,
-              hsGradYearMax: filters.hsGradYearMax || undefined,
-              collegeGradYearMin: filters.collegeGradYearMin || undefined,
-              collegeGradYearMax: filters.collegeGradYearMax || undefined,
-              enrolledInCollege: filters.enrolledInCollege !== null ? filters.enrolledInCollege : undefined,
-              isProfessional: filters.isProfessional !== null ? filters.isProfessional : undefined,
-              isFreeAgent: filters.isFreeAgent !== null ? filters.isFreeAgent : undefined,
-              mlbAffiliate: filters.mlbAffiliate || undefined,
-              independentLeague: filters.independentLeague || undefined,
-              isForeignPlayer: filters.isForeignPlayer !== null ? filters.isForeignPlayer : undefined,
-              sport: filters.sportPreference || undefined,
-            }
+            body: { query: searchTerm, positions: filters.positions.length > 0 ? filters.positions : undefined, throwingHands: filters.throwingHands.length > 0 ? filters.throwingHands : undefined, battingSides: filters.battingSides.length > 0 ? filters.battingSides : undefined, heightMin: filters.heightMin || undefined, heightMax: filters.heightMax || undefined, weightMin: filters.weightMin || undefined, weightMax: filters.weightMax || undefined, state: filters.state || undefined, commitmentStatus: filters.commitmentStatus || undefined, hsGradYearMin: filters.hsGradYearMin || undefined, hsGradYearMax: filters.hsGradYearMax || undefined, collegeGradYearMin: filters.collegeGradYearMin || undefined, collegeGradYearMax: filters.collegeGradYearMax || undefined, enrolledInCollege: filters.enrolledInCollege !== null ? filters.enrolledInCollege : undefined, isProfessional: filters.isProfessional !== null ? filters.isProfessional : undefined, isFreeAgent: filters.isFreeAgent !== null ? filters.isFreeAgent : undefined, mlbAffiliate: filters.mlbAffiliate || undefined, independentLeague: filters.independentLeague || undefined, isForeignPlayer: filters.isForeignPlayer !== null ? filters.isForeignPlayer : undefined, sport: filters.sportPreference || undefined }
           });
-
-          if (error) {
-            console.error('Error searching players:', error);
-            throw error;
-          }
-
+          if (error) throw error;
           setSearchResults(data?.results || []);
         } catch (error) {
-          console.error('Search error:', error);
-          toast({
-            title: t('common.error'),
-            description: t('coach.failedToSearchPlayers', 'Failed to search players'),
-            variant: "destructive",
-          });
+          toast({ title: t('common.error'), description: t('coach.failedToSearchPlayers', 'Failed to search players'), variant: "destructive" });
           setSearchResults([]);
-        } finally {
-          setSearchLoading(false);
-        }
+        } finally { setSearchLoading(false); }
       }, 300);
-
       return () => clearTimeout(timer);
-    } else {
-      setSearchResults([]);
-      setSearchLoading(false);
-    }
+    } else { setSearchResults([]); setSearchLoading(false); }
   }, [searchTerm, filters]);
 
   const handleSendFollow = async (playerId: string) => {
     try {
-      const { error } = await supabase.functions.invoke('send-follow-request', {
-        body: { player_id: playerId }
-      });
-
+      const { error } = await supabase.functions.invoke('send-follow-request', { body: { player_id: playerId } });
       if (error) throw error;
-
-      toast({
-        title: t('coach.followRequestSent', 'Follow request sent'),
-        description: t('coach.followRequestSentDescription', 'The player will receive your request.'),
-      });
-
+      toast({ title: t('coach.followRequestSent', 'Follow request sent'), description: t('coach.followRequestSentDescription', 'The player will receive your request.') });
       fetchFollowing();
       if (searchTerm.trim().length >= 2) {
-        const { data } = await supabase.functions.invoke('search-players', {
-          body: { query: searchTerm }
-        });
+        const { data } = await supabase.functions.invoke('search-players', { body: { query: searchTerm } });
         setSearchResults(data?.results || []);
       }
     } catch (error: any) {
-      console.error('Error sending follow:', error);
-      toast({
-        title: t('common.error'),
-        description: error.message || t('coach.failedToSendFollow', 'Failed to send follow request'),
-        variant: 'destructive',
-      });
+      toast({ title: t('common.error'), description: error.message || t('coach.failedToSendFollow', 'Failed to send follow request'), variant: 'destructive' });
     }
   };
 
-  const handleUnfollowClick = (player: Player) => {
-    setPlayerToUnfollow(player);
-    setUnfollowDialogOpen(true);
-  };
+  const handleUnfollowClick = (player: Player) => { setPlayerToUnfollow(player); setUnfollowDialogOpen(true); };
 
   const handleConfirmUnfollow = async () => {
     if (!playerToUnfollow) return;
-    
     setIsUnfollowing(true);
     try {
-      const { error } = await supabase.functions.invoke('unfollow-player', {
-        body: { playerId: playerToUnfollow.id }
-      });
-
+      const { error } = await supabase.functions.invoke('unfollow-player', { body: { playerId: playerToUnfollow.id } });
       if (error) throw error;
-
-      toast({
-        title: t('coach.unfollowedPlayer', 'Player removed'),
-        description: t('coach.unfollowedPlayerDescription', '{{name}} has been removed from your players.', { name: playerToUnfollow.full_name }),
-      });
-      
+      toast({ title: t('coach.unfollowedPlayer', 'Player removed'), description: t('coach.unfollowedPlayerDescription', '{{name}} has been removed from your players.', { name: playerToUnfollow.full_name }) });
       await fetchFollowing();
-      
       if (searchTerm.trim().length >= 2) {
-        const { data } = await supabase.functions.invoke('search-players', {
-          body: { query: searchTerm }
-        });
+        const { data } = await supabase.functions.invoke('search-players', { body: { query: searchTerm } });
         setSearchResults(data?.results || []);
       }
-      
       setUnfollowDialogOpen(false);
       setPlayerToUnfollow(null);
     } catch (error: any) {
-      console.error('Error unfollowing player:', error);
-      toast({
-        title: t('common.error'),
-        description: error.message || t('coach.failedToUnfollow', 'Failed to remove player'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUnfollowing(false);
-    }
+      toast({ title: t('common.error'), description: error.message || t('coach.failedToUnfollow', 'Failed to remove player'), variant: 'destructive' });
+    } finally { setIsUnfollowing(false); }
   };
 
   if (authLoading || loading) {
@@ -365,18 +249,49 @@ export default function CoachDashboard() {
   const activeOrg = myOrgs.data?.[0];
   const memberCount = members.data?.length ?? 0;
 
+  // Build name map for player cards
+  const playerNameMap: Record<string, string> = {};
+  following.forEach(p => { playerNameMap[p.id] = p.full_name; });
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <GraduationCap className="h-8 w-8" />
-            {t('coach.dashboard', 'Coach Dashboard')}
+            {t('coach.dashboard', 'Coach Intelligence Hub')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {t('coach.dashboardDescription', 'Manage your players and send them training activities')}
+            Who needs help · Why · What to run today
           </p>
         </div>
+
+        {/* HIE: Team Overview */}
+        <TeamOverviewCard />
+
+        {/* HIE: Alert System */}
+        <CoachAlertPanel />
+
+        {/* HIE: Actionable Player Cards */}
+        {playerSnapshots.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Player Intelligence</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {playerSnapshots.map(snap => (
+                <CoachPlayerCard
+                  key={snap.user_id}
+                  snapshot={snap}
+                  playerName={playerNameMap[snap.user_id]}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* HIE: Team Weakness Engine */}
+        <TeamWeaknessEngine />
 
         {/* Organization Quick Link */}
         {activeOrg ? (
@@ -422,10 +337,7 @@ export default function CoachDashboard() {
                 <Badge variant="secondary">{followingCount}</Badge>
               </div>
               {selectedPlayers.length > 0 && (
-                <Button 
-                  onClick={() => setBulkSendDialogOpen(true)}
-                  className="gap-2"
-                >
+                <Button onClick={() => setBulkSendDialogOpen(true)} className="gap-2">
                   <Package className="h-4 w-4" />
                   {t('coach.sendActivities', 'Send Activities')} ({selectedPlayers.length})
                 </Button>
@@ -442,28 +354,18 @@ export default function CoachDashboard() {
             ) : (
               <div className="space-y-3">
                 {following.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
-                  >
+                  <div key={player.id} className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Checkbox 
+                      <Checkbox
                         checked={selectedPlayers.includes(player.id)}
                         onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedPlayers(prev => [...prev, player.id]);
-                          } else {
-                            setSelectedPlayers(prev => prev.filter(id => id !== player.id));
-                          }
+                          if (checked) setSelectedPlayers(prev => [...prev, player.id]);
+                          else setSelectedPlayers(prev => prev.filter(id => id !== player.id));
                         }}
                       />
                       <div className="flex-shrink-0">
                         {player.avatar_url ? (
-                          <img
-                            src={player.avatar_url}
-                            alt={player.full_name}
-                            className="h-12 w-12 rounded-full object-cover"
-                          />
+                          <img src={player.avatar_url} alt={player.full_name} className="h-12 w-12 rounded-full object-cover" />
                         ) : (
                           <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                             <GraduationCap className="h-6 w-6 text-primary" />
@@ -474,14 +376,7 @@ export default function CoachDashboard() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-semibold truncate">{player.full_name}</p>
                           {player.sport && (
-                            <Badge 
-                              variant="outline" 
-                              className={
-                                player.sport === 'baseball' ? "border-blue-500 text-blue-600 text-xs" :
-                                player.sport === 'softball' ? "border-pink-500 text-pink-600 text-xs" :
-                                "border-purple-500 text-purple-600 text-xs"
-                              }
-                            >
+                            <Badge variant="outline" className={player.sport === 'baseball' ? "border-blue-500 text-blue-600 text-xs" : player.sport === 'softball' ? "border-pink-500 text-pink-600 text-xs" : "border-purple-500 text-purple-600 text-xs"}>
                               {player.sport === 'baseball' && '⚾ Baseball'}
                               {player.sport === 'softball' && '🥎 Softball'}
                               {player.sport === 'both' && '⚾🥎 Both'}
@@ -491,40 +386,20 @@ export default function CoachDashboard() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 items-center">
-                      <Button
-                        onClick={() => navigate(`/profile?userId=${player.id}`)}
-                        size="sm"
-                        variant="outline"
-                        className="flex-shrink-0"
-                      >
+                      <Button onClick={() => navigate(`/profile?userId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
                         <User className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewProfile', 'View Profile')}</span>
                       </Button>
-                      <Button
-                        onClick={() => navigate(`/players-club?playerId=${player.id}`)}
-                        size="sm"
-                        variant="outline"
-                        className="flex-shrink-0"
-                      >
+                      <Button onClick={() => navigate(`/players-club?playerId=${player.id}`)} size="sm" variant="outline" className="flex-shrink-0">
                         <BookMarked className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.viewLibrary', 'View Library')}</span>
                       </Button>
-                      <Button
-                        onClick={() => navigate('/my-custom-activities?tab=templates')}
-                        size="sm"
-                        variant="default"
-                        className="flex-shrink-0"
-                      >
+                      <Button onClick={() => navigate('/my-custom-activities?tab=templates')} size="sm" variant="default" className="flex-shrink-0">
                         <Send className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline">{t('coach.sendActivity', 'Send Activity')}</span>
                       </Button>
                       {player.id !== ownerId && (
-                        <Button
-                          onClick={() => handleUnfollowClick(player)}
-                          size="sm"
-                          variant="destructive"
-                          className="flex-shrink-0"
-                        >
+                        <Button onClick={() => handleUnfollowClick(player)} size="sm" variant="destructive" className="flex-shrink-0">
                           <UserMinus className="h-4 w-4 sm:mr-2" />
                           <span className="hidden sm:inline">{t('coach.remove', 'Remove')}</span>
                         </Button>
@@ -539,23 +414,16 @@ export default function CoachDashboard() {
 
         <PlayerNotesSection players={following} />
 
-        {/* Session Feed for linked players */}
         {(() => {
           const linkedPlayers = following.filter(p => p.relationship_type === 'linked');
           const linkedIds = linkedPlayers.map(p => p.id);
           const nameMap: Record<string, string> = {};
           linkedPlayers.forEach(p => { nameMap[p.id] = p.full_name; });
-          return linkedIds.length > 0 ? (
-            <SessionFeed linkedPlayerIds={linkedIds} playerNames={nameMap} />
-          ) : null;
+          return linkedIds.length > 0 ? <SessionFeed linkedPlayerIds={linkedIds} playerNames={nameMap} /> : null;
         })()}
 
-        {/* Scheduled Sessions Management */}
         <ScheduledSessionsManager onSchedule={() => setScheduleDialogOpen(true)} />
-
-        {/* Collaborative Workspace */}
         <CollaborativeWorkspace />
-
         <SentActivitiesHistory />
 
         <Card>
@@ -569,57 +437,21 @@ export default function CoachDashboard() {
                 sportFilter={sportFilter}
                 onFilterChange={setFilters}
                 onClearFilters={() => setFilters({
-                  positions: [],
-                  throwingHands: [],
-                  battingSides: [],
-                  heightMin: '',
-                  heightMax: '',
-                  weightMin: '',
-                  weightMax: '',
-                  state: '',
-                  commitmentStatus: '',
-                  hsGradYearMin: '',
-                  hsGradYearMax: '',
-                  collegeGradYearMin: '',
-                  collegeGradYearMax: '',
-                  enrolledInCollege: null,
-                  isProfessional: null,
-                  isFreeAgent: null,
-                  mlbAffiliate: '',
-                  independentLeague: '',
-                  isForeignPlayer: null,
-                  sportPreference: null,
+                  positions: [], throwingHands: [], battingSides: [], heightMin: '', heightMax: '', weightMin: '', weightMax: '', state: '', commitmentStatus: '', hsGradYearMin: '', hsGradYearMax: '', collegeGradYearMin: '', collegeGradYearMax: '', enrolledInCollege: null, isProfessional: null, isFreeAgent: null, mlbAffiliate: '', independentLeague: '', isForeignPlayer: null, sportPreference: null,
                 })}
               />
-              
               <Command className="rounded-lg border shadow-md">
-                <CommandInput
-                  placeholder={t('coach.searchPlayersPlaceholder', 'Search players by name...')}
-                  value={searchTerm}
-                  onValueChange={setSearchTerm}
-                />
+                <CommandInput placeholder={t('coach.searchPlayersPlaceholder', 'Search players by name...')} value={searchTerm} onValueChange={setSearchTerm} />
                 <CommandList>
                   <CommandEmpty>
-                    {searchTerm.trim().length < 2 
-                      ? t('coach.minCharactersToSearch', 'Type at least 2 characters to search')
-                      : searchLoading 
-                      ? t('common.searching')
-                      : t('coach.noPlayersFound', 'No players found')}
+                    {searchTerm.trim().length < 2 ? t('coach.minCharactersToSearch', 'Type at least 2 characters to search') : searchLoading ? t('common.searching') : t('coach.noPlayersFound', 'No players found')}
                   </CommandEmpty>
                   <CommandGroup heading={t('coach.players', 'Players')}>
                     {searchResults.map((player) => (
-                      <CommandItem
-                        key={player.id}
-                        value={player.full_name}
-                        className="flex items-center justify-between p-3"
-                      >
+                      <CommandItem key={player.id} value={player.full_name} className="flex items-center justify-between p-3">
                         <div className="flex items-center gap-3">
                           {player.avatar_url ? (
-                            <img
-                              src={player.avatar_url}
-                              alt={player.full_name}
-                              className="h-10 w-10 rounded-full object-cover"
-                            />
+                            <img src={player.avatar_url} alt={player.full_name} className="h-10 w-10 rounded-full object-cover" />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                               <GraduationCap className="h-5 w-5 text-primary" />
@@ -629,25 +461,12 @@ export default function CoachDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           {player.followStatus === 'accepted' ? (
-                            <Badge variant="secondary" className="gap-1">
-                              <Check className="h-3 w-3" />
-                              {t('coach.following', 'Following')}
-                            </Badge>
+                            <Badge variant="secondary" className="gap-1"><Check className="h-3 w-3" />{t('coach.following', 'Following')}</Badge>
                           ) : player.followStatus === 'pending' ? (
-                            <Badge variant="outline" className="gap-1">
-                              <Clock className="h-3 w-3" />
-                              {t('coach.pending', 'Pending')}
-                            </Badge>
+                            <Badge variant="outline" className="gap-1"><Clock className="h-3 w-3" />{t('coach.pending', 'Pending')}</Badge>
                           ) : (
-                            <Button
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSendFollow(player.id);
-                              }}
-                            >
-                              <GraduationCap className="h-4 w-4 mr-1" />
-                              {t('coach.addPlayer', 'Add Player')}
+                            <Button size="sm" onClick={(e) => { e.stopPropagation(); handleSendFollow(player.id); }}>
+                              <GraduationCap className="h-4 w-4 mr-1" />{t('coach.addPlayer', 'Add Player')}
                             </Button>
                           )}
                         </div>
@@ -670,33 +489,15 @@ export default function CoachDashboard() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isUnfollowing}>{t('common.cancel')}</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmUnfollow}
-                disabled={isUnfollowing}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
+              <AlertDialogAction onClick={handleConfirmUnfollow} disabled={isUnfollowing} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 {isUnfollowing ? t('common.loading') : t('coach.remove', 'Remove')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
-        <BulkSendDialog 
-          open={bulkSendDialogOpen}
-          onOpenChange={setBulkSendDialogOpen}
-          selectedPlayerIds={selectedPlayers}
-          selectedPlayerNames={following.filter(p => selectedPlayers.includes(p.id)).map(p => p.full_name)}
-        />
-
-        <CoachScheduleDialog
-          open={scheduleDialogOpen}
-          onOpenChange={setScheduleDialogOpen}
-          linkedPlayers={following.filter(p => p.followStatus === 'accepted').map(p => ({
-            id: p.id,
-            full_name: p.full_name,
-            avatar_url: p.avatar_url,
-          }))}
-        />
+        <BulkSendDialog open={bulkSendDialogOpen} onOpenChange={setBulkSendDialogOpen} selectedPlayerIds={selectedPlayers} selectedPlayerNames={following.filter(p => selectedPlayers.includes(p.id)).map(p => p.full_name)} />
+        <CoachScheduleDialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen} linkedPlayers={following.filter(p => p.followStatus === 'accepted').map(p => ({ id: p.id, full_name: p.full_name, avatar_url: p.avatar_url }))} />
       </div>
     </DashboardLayout>
   );

@@ -1,92 +1,33 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { MPIScoreCard } from '@/components/analytics/MPIScoreCard';
-import { MPIBreakdownCard } from '@/components/analytics/MPIBreakdownCard';
+import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
+import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
+import { PrescriptiveActionsCard } from '@/components/hie/PrescriptiveActionsCard';
+import { ReadinessCard } from '@/components/hie/ReadinessCard';
+import { SmartWeekPlan } from '@/components/hie/SmartWeekPlan';
+import { ProofCard } from '@/components/hie/ProofCard';
+import { RiskAlertsCard } from '@/components/hie/RiskAlertsCard';
 import { ProProbabilityCard } from '@/components/analytics/ProProbabilityCard';
-import { RankMovementBadge } from '@/components/analytics/RankMovementBadge';
-import { HoFCountdown } from '@/components/analytics/HoFCountdown';
-import { IntegrityScoreBar } from '@/components/analytics/IntegrityScoreBar';
-import { AIPromptCard } from '@/components/analytics/AIPromptCard';
-import { DeltaTrendChart } from '@/components/analytics/DeltaTrendChart';
-import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
-import { RoadmapBlockedBadge } from '@/components/analytics/RoadmapBlockedBadge';
-import { AskHammerPanel } from '@/components/analytics/AskHammerPanel';
 import { HeatMapDashboard } from '@/components/heatmaps/HeatMapDashboard';
-import { useRoadmapProgress } from '@/hooks/useRoadmapProgress';
+import { AskHammerPanel } from '@/components/analytics/AskHammerPanel';
+import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
-import { useMPIScores } from '@/hooks/useMPIScores';
+import { useHIESnapshot } from '@/hooks/useHIESnapshot';
 import { UpgradePrompt } from '@/components/UpgradePrompt';
-import { CheckCircle2, Circle, Loader2, Lock } from 'lucide-react';
-
-function RoadmapSection() {
-  const { milestones, progress } = useRoadmapProgress();
-  const milestonesData = milestones.data ?? [];
-  const progressData = progress.data ?? [];
-
-  const progressMap = new Map(progressData.map(p => [p.milestone_id, p]));
-
-  if (milestones.isLoading) return null;
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Development Roadmap</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {milestonesData.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Complete sessions to unlock milestones.</p>
-        ) : (
-          milestonesData.map((m) => {
-            const p = progressMap.get(m.id);
-            const status = p?.status ?? 'locked';
-            const pct = p?.progress_pct ?? 0;
-
-            return (
-              <div key={m.id} className="space-y-1">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-sm min-w-0">
-                    {status === 'completed' ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                    ) : status === 'in_progress' ? (
-                      <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" />
-                    ) : status === 'blocked' ? (
-                      <Lock className="h-4 w-4 text-amber-500 shrink-0" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
-                    )}
-                    <span className="truncate">{m.milestone_name}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground shrink-0">{Math.round(pct)}%</span>
-                </div>
-                <Progress value={pct} className="h-1.5" />
-                {status === 'blocked' && p?.blocked_reason && (
-                  <RoadmapBlockedBadge reason={p.blocked_reason} />
-                )}
-              </div>
-            );
-          })
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ProgressDashboard() {
   const { modules } = useSubscription();
   const { isOwner } = useOwnerAccess();
-  const mpiQuery = useMPIScores();
+  const { snapshot } = useHIESnapshot();
   const hasAdvancedAccess = isOwner || modules.length > 0;
 
-  // Build dashboard context for Ask Hammer
-  const dashboardContext = mpiQuery.data ? `
-MPI Score: ${mpiQuery.data.adjusted_global_score ?? 'N/A'}
-Competitive: ${mpiQuery.data.composite_competitive ?? 'N/A'}
-Decision: ${mpiQuery.data.composite_decision ?? 'N/A'}
-Power (FQI): ${mpiQuery.data.composite_fqi ?? 'N/A'}
-BQI: ${mpiQuery.data.composite_bqi ?? 'N/A'}
-Calculation Date: ${mpiQuery.data.calculation_date}
+  const dashboardContext = snapshot ? `
+MPI Score: ${snapshot.mpi_score ?? 'N/A'}
+Development Status: ${snapshot.development_status}
+Primary Limiter: ${snapshot.primary_limiter ?? 'N/A'}
+Readiness: ${snapshot.readiness_score}%
+Confidence: ${snapshot.development_confidence}%
   `.trim() : '';
 
   return (
@@ -94,42 +35,41 @@ Calculation Date: ${mpiQuery.data.calculation_date}
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Progress Dashboard</h1>
-          <p className="text-muted-foreground">Your MPI score, rankings, and development roadmap</p>
+          <p className="text-muted-foreground">Diagnose → Prescribe → Guide → Verify</p>
         </div>
 
         <DataBuildingGate>
           <div className="space-y-6">
             {hasAdvancedAccess ? (
               <>
-                {/* Row 1: Score cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <MPIScoreCard />
-                    <MPIBreakdownCard />
-                  </div>
-                  <ProProbabilityCard />
-                  <RankMovementBadge />
-                </div>
+                {/* Section 1: Player Snapshot */}
+                <PlayerSnapshotCard />
 
-                {/* Row 2: HoF + Integrity */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <HoFCountdown />
-                  <IntegrityScoreBar />
-                </div>
+                {/* Section 2: What's Holding You Back */}
+                <WeaknessClusterCard />
 
-                {/* Row 3: Hammer Prompts */}
-                <AIPromptCard />
+                {/* Section 3: What To Do Next */}
+                <PrescriptiveActionsCard />
+
+                {/* Section 4: Today's Readiness */}
+                <ReadinessCard />
+
+                {/* Risk Alerts */}
+                <RiskAlertsCard />
 
                 {/* Ask Hammer AI Chat */}
                 <AskHammerPanel dashboardContext={dashboardContext} />
 
-                {/* Row 4: Delta Trend */}
-                <DeltaTrendChart />
+                {/* Section 5: Smart Week Plan */}
+                <SmartWeekPlan />
 
-                {/* Row 5: Roadmap */}
-                <RoadmapSection />
+                {/* Section 6: Proof It's Working */}
+                <ProofCard />
 
-                {/* Row 6: Heat Maps */}
+                {/* Pro Probability - kept but gated */}
+                <ProProbabilityCard />
+
+                {/* Heat Maps */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Performance Heat Maps</CardTitle>
@@ -140,9 +80,9 @@ Calculation Date: ${mpiQuery.data.calculation_date}
                 </Card>
               </>
             ) : (
-              <UpgradePrompt 
+              <UpgradePrompt
                 featureName="Advanced Performance Insights"
-                featureDescription="Unlock your MPI score, pro probability, heat maps, trend analysis, and full development roadmap."
+                featureDescription="Unlock your development analysis, prescriptive actions, readiness tracking, and full intelligence engine."
                 variant="full"
               />
             )}
