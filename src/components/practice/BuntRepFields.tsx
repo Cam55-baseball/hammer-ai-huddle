@@ -101,6 +101,28 @@ export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'adva
 
   return (
     <div className="space-y-3">
+      {/* Ball State — mandatory */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Ball State <span className="text-destructive">*</span></Label>
+        <SelectGrid options={ballStates} value={v.bunt_ball_state} onChange={val => onChange('bunt_ball_state', val)} cols={2} />
+      </div>
+
+      {/* Bunt Direction — mandatory */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Direction <span className="text-destructive">*</span></Label>
+        <SelectGrid options={buntDirections} value={v.bunt_direction} onChange={val => onChange('bunt_direction', val)} cols={4} />
+      </div>
+
+      {/* Contact Quality — mandatory */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality <span className="text-destructive">*</span></Label>
+        <SelectGrid options={contactQualities} value={v.bunt_contact_quality} onChange={val => onChange('bunt_contact_quality', val)} />
+      </div>
+
+      {/* === ADVANCED FIELDS === */}
+      {mode === 'advanced' && (
+      <>
+
       {/* Execution Score */}
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">
