@@ -1,42 +1,30 @@
 
 
-# Remove "AI" from UI Labels + Confirm Single Optional Clarification Field
+# Fix: Base Running Drill Clarification Must Never Be Required
 
-## Current State
+## Root Cause
 
-`BaserunningRepFields.tsx` has ONE clarification field — the `AITextBoxField` on line 111 labeled "AI Drill Clarification (Optional)". It is already `required={false}` and does not block submission. There is no duplicate required version in baserunning — the required "AI Drill Clarification" in `RepScorer.tsx` (line 631-639) only renders for `repSource === 'drill'`, which baserunning never uses. So there is no functional bug — only incorrect "AI" labeling across the UI.
+In `RepScorer.tsx` line 342:
+```
+const needsDrillClarification = !isCatching && isDrill;
+```
+When a baserunning session uses `repSource === 'drill'`, `isDrill` is true, which makes `drillClarificationValid` require ≥15 characters in `ai_drill_clarification`. This blocks submission if the field is empty.
 
-## Changes
+## Fix
 
-### 1. `src/components/practice/BaserunningRepFields.tsx`
-- Line 110 comment: `AI Drill Clarification` → `Drill Clarification`
-- Line 112: label `"AI Drill Clarification (Optional)"` → `"Base Running Drill Clarification"`
-- Line 115: placeholder `"Optional notes for AI analysis..."` → `"Optional notes for this rep..."`
+### `src/components/practice/RepScorer.tsx`
 
-### 2. `src/components/practice/RepScorer.tsx` — Remove all "AI" from user-facing text
-- Line 620 comment: remove "AI" prefix
-- Line 623: `"AI Drill Description"` → `"Drill Description"`
-- Line 628: placeholder remove "for AI tracking"
-- Line 633: `"AI Drill Clarification"` → `"Drill Clarification"`
-- Line 638: placeholder remove "for AI tracking"
-- Line 643: `"AI Custom Rep Description"` → `"Custom Rep Description"`
-- Line 648: placeholder remove "for AI tracking"
-- Line 2065: `'AI Drill Description requires min 15 characters'` → `'Drill Description requires min 15 characters'`
-- Line 2066: `'AI Drill Clarification requires min 15 characters'` → `'Drill Clarification requires min 15 characters'`
-- Line 2067: `'AI Custom Rep Description requires min 15 characters'` → `'Custom Rep Description requires min 15 characters'`
-- Line 131 comment, line 333 comment: remove "AI" prefix
+**Line 342** — Exclude baserunning from drill clarification requirement:
+```
+const needsDrillClarification = !isCatching && !isBaserunning && isDrill;
+```
 
-### No validation changes needed
-- The baserunning clarification field is already `required={false}` and not in `canConfirm`
-- The required drill clarification in RepScorer only triggers for `repSource === 'drill'` (non-baserunning modules) — no conflict exists
-- `baserunningDrillValid` (drill type per rep) remains correctly enforced
+This single change ensures:
+- Baserunning reps never require `ai_drill_clarification`
+- The `drillClarificationValid` check always passes for baserunning
+- The "Drill Clarification requires min 15 characters" error never appears for baserunning
+- The field in `BaserunningRepFields.tsx` remains visible and optional (already `required={false}`)
+- Other modules (hitting, pitching, etc.) with `repSource === 'drill'` still enforce clarification as intended
 
-## Files
-
-| File | Change |
-|------|--------|
-| `BaserunningRepFields.tsx` | Rename label + placeholder to remove "AI" |
-| `RepScorer.tsx` | Rename 6 user-facing labels, 3 error messages, 3 placeholders, 3 comments to remove "AI" |
-
-No DB changes. No validation changes. No data model changes. Label-only update.
+No other files need changes. `BaserunningRepFields.tsx` already has `required={false}` and the correct label.
 
