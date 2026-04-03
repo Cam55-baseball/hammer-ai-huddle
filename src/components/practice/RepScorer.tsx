@@ -346,9 +346,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsCustomRepDesc = !isCatching && isOther;
   const customRepDescValid = !needsCustomRepDesc || (current.ai_custom_rep_description?.length ?? 0) >= 15;
 
-  // ABS Guess: required when pitch_location is set for hitting/pitching/catching
+  // ABS Guess: required for ALL pitching reps; optional for hitting/catching (only when pitch_location set)
   const hasPitchLocation = !!current.pitch_location;
-  const needsAbsGuess = hasPitchLocation && (isHitting || isPitching || isCatching);
+  const needsAbsGuess = isPitching || (hasPitchLocation && (isHitting || isCatching));
   const absGuessValid = !needsAbsGuess || !!current.abs_guess;
 
   // Pitcher Intent: required for pitching before pitch_location can be set (optional per spec — required when pitch_location is set)
@@ -359,9 +359,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsThrowingRequired = isThrowing;
   const throwingRequiredValid = !needsThrowingRequired || (!!current.self_catch_quality && !!current.effort_level);
 
-  // Baserunning: if drill_type === 'custom', require ai_baserunning_drill_description >= 15
-  const needsBaserunningCustomDesc = isBaserunning && current.drill_type === 'custom';
-  const baserunningCustomDescValid = !needsBaserunningCustomDesc || (current.ai_baserunning_drill_description?.length ?? 0) >= 15;
+  // Baserunning custom desc now handled at session config level
+  const baserunningCustomDescValid = true;
 
   // Validation
   const execScore = current.execution_score;
@@ -374,7 +373,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
   const pitchLocationValid = !isPitching || !!current.pitch_location;
   const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
-  const baserunningDrillValid = !isBaserunning || !!current.drill_type;
+  // Baserunning drill_type now inherited from session config — no per-rep validation needed
   const needsExecScore = !isFielding;
 
   const canConfirm = hasRepSource && (!needsExecScore || (execScore != null && execScore >= 1))
@@ -391,7 +390,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && buntMandatoryValid
     && pitchLocationValid
     && fieldingMandatoryValid
-    && baserunningDrillValid;
+    ;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
@@ -415,6 +414,13 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       ...((isFielding || isCatching) && { throwing_hand: effectiveThrowingHand }),
       ...(isThrowing && { throwing_hand: effectiveThrowingHand }),
       ...(isFielding && { fielding_position: repFieldingPosition }),
+      // Baserunning: inherit drill_type from session config
+      ...(isBaserunning && sessionConfig?.baserunning_drill_type && {
+        drill_type: sessionConfig.baserunning_drill_type,
+        ...(sessionConfig.baserunning_drill_type === 'custom' && sessionConfig.ai_baserunning_drill_description && {
+          ai_baserunning_drill_description: sessionConfig.ai_baserunning_drill_description,
+        }),
+      }),
       // Apply machine single-mode presets
       ...(isHitting && isMachine && machineMode === 'single' && {
         pitch_type: machinePitchType,
@@ -1237,8 +1243,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               )}
 
-              {/* ABS Guess — advanced only */}
-              {mode === 'advanced' && hasPitchLocation && isPitching && (
+              {/* ABS Guess — mandatory for pitching (Quick Log) */}
+              {isPitching && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">
                     ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
@@ -2071,8 +2077,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !pitchLocationValid ? 'Select pitch location' :
                 !absGuessValid ? 'Select ABS Guess zone' :
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
-                !baserunningDrillValid ? 'Select drill type' :
-                !baserunningCustomDescValid ? 'AI Drill Type Description requires min 15 characters' :
+                
                 !contactQualityValid ? 'Select contact quality' :
                 !buntMandatoryValid ? 'Select ball state, direction, and contact quality' :
                 !fieldingMandatoryValid ? 'Select batted ball type, catch type, and fielding result' :
