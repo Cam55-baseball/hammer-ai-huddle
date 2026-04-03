@@ -458,6 +458,35 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     );
   }
 
+  // Session intent gate — shown every session for hitting/pitching if sideMode not yet selected
+  const needsSessionIntent = !isBaserunning && !isFielding && !isThrowing && (isHitting || isPitching || isBunting);
+  const defaultSideMode: 'R' | 'L' | 'BOTH' = (() => {
+    if (isHitting || isBunting) {
+      if (primaryBattingSide === 'S' || isSwitchHitter) return 'BOTH';
+      if (primaryBattingSide === 'L') return 'L';
+      return 'R';
+    }
+    if (primaryThrowingHand === 'S' || isAmbidextrousThrower) return 'BOTH';
+    if (primaryThrowingHand === 'L') return 'L';
+    return 'R';
+  })();
+
+  if (needsSessionIntent && sideMode === null) {
+    return (
+      <SessionIntentGate
+        module={module}
+        defaultMode={defaultSideMode}
+        onSelect={(mode) => {
+          setSideMode(mode);
+          if (mode !== 'BOTH') {
+            if (isHitting || isBunting) setSwitchSide(mode as 'L' | 'R');
+            else setSwitchThrowSide(mode as 'L' | 'R');
+          }
+        }}
+      />
+    );
+  }
+
   // Whether the pitcher intent grid should be locked (after pitch location is logged)
   const pitcherIntentLocked = isPitching && !!current.pitch_location;
 
