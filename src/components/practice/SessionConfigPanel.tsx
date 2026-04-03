@@ -105,7 +105,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [batSize, setBatSize] = useState<string>('');
   const [batType, setBatType] = useState<string>('');
   const [customBatType, setCustomBatType] = useState<string>('');
-
+  const [baserunningDrillType, setBaserunningDrillType] = useState<string>('');
+  const [aiBaserunningDrillDesc, setAiBaserunningDrillDesc] = useState<string>('');
   const competitionCategories = useMemo(() => {
     return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
   }, [sport]);
