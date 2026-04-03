@@ -414,7 +414,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   }, [reps, onRepsChange]);
 
   // If no handedness selected, show gate (skip for baserunning — no side needed)
-  if (!handedness && !isBaserunning) {
+  if (!handedness && !isBaserunning && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
     return <HandednessGate module={module} value={handedness} onChange={setHandedness} />;
   }
 
