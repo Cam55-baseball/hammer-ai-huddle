@@ -1283,7 +1283,14 @@ Deno.serve(async (req) => {
       user_id, weakness_metric: p.metric, score: p.value, computed_at: new Date().toISOString(),
     }));
     if (weaknessScoreRows.length > 0) {
-      await supabase.from('weakness_scores').insert(weaknessScoreRows);
+      // Deduplicate: remove previous weakness_scores for this athlete before inserting fresh ones
+      const { data: delData, error: delErr, count: delCount } = await supabase
+        .from('weakness_scores')
+        .delete({ count: 'exact' })
+        .eq('user_id', user_id);
+      console.log(`weakness_scores cleanup: deleted=${delCount}, error=${delErr?.message ?? 'none'}`);
+      const { error: insErr } = await supabase.from('weakness_scores').insert(weaknessScoreRows);
+      if (insErr) console.warn('weakness_scores insert failed:', insErr.message);
     }
 
     // ── BUILD PRIMARY LIMITER ──
@@ -1556,9 +1563,16 @@ Deno.serve(async (req) => {
       );
       // Update post_score on existing unresolved prescriptions using weakness-specific scores
       if (existingPrescriptions && existingPrescriptions.length > 0) {
-        for (const ex of existingPrescriptions) {
-          // Fetch current weakness score for this prescription's targeted_metric
-          const exMetric = (ex as any).targeted_metric || (ex as any).weakness_metric;
+      for (const ex of existingPrescriptions) {
+          // Auto-repair stale targeted_metric that doesn't match any current weakness_score
+          let exMetric = (ex as any).targeted_metric || (ex as any).weakness_metric;
+          if (exMetric && !weaknessScoreRows.find(w => w.weakness_metric === exMetric)) {
+            const matchingPattern = allPatterns.find(p => p.description === (ex as any).weakness_area);
+            if (matchingPattern) {
+              exMetric = matchingPattern.metric;
+              await supabase.from('drill_prescriptions').update({ targeted_metric: exMetric }).eq('id', ex.id);
+            }
+          }
           let effectivenessScore: number | null = null;
           let postWeaknessValue: number | null = null;
           if (exMetric) {
