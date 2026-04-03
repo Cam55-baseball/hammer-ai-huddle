@@ -330,7 +330,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     setCurrent(prev => ({ ...prev, [field]: val }));
   };
 
-  // === AI field validation ===
+  // === Field validation ===
   const isDrill = repSource === 'drill';
   const isOther = repSource === 'other';
 
