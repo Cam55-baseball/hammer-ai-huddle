@@ -1338,8 +1338,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </>
               )}
 
-              {/* ===== PITCHER HITTER OUTCOME DETAILS ===== */}
-              {ctx.showPitcherHitterOutcomes && (
+              {/* ===== PITCHER HITTER OUTCOME DETAILS — advanced only ===== */}
+              {mode === 'advanced' && ctx.showPitcherHitterOutcomes && (
                 <div className="space-y-3 p-3 rounded-lg border border-accent/30 bg-accent/5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Hitter Outcome Details</p>
 
