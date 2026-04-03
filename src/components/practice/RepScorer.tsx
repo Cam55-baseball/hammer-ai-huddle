@@ -2077,7 +2077,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !pitchLocationValid ? 'Select pitch location' :
                 !absGuessValid ? 'Select ABS Guess zone' :
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
-                !baserunningCustomDescValid ? 'AI Drill Type Description requires min 15 characters' :
+                
                 !contactQualityValid ? 'Select contact quality' :
                 !buntMandatoryValid ? 'Select ball state, direction, and contact quality' :
                 !fieldingMandatoryValid ? 'Select batted ball type, catch type, and fielding result' :
