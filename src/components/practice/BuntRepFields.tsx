@@ -11,6 +11,7 @@ interface BuntRepFieldsProps {
   onChange: (field: string, val: any) => void;
   sport?: string;
   batterSide?: 'L' | 'R';
+  mode?: 'quick' | 'advanced';
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
