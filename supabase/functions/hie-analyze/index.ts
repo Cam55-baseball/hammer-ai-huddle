@@ -1530,7 +1530,8 @@ Deno.serve(async (req) => {
     if (prescriptiveActions.length > 0) {
       const newPrescriptions = prescriptiveActions.flatMap(action =>
         action.drills.map(drill => {
-          const targetedMetric = drill.drill_type || action.weakness_area;
+          const matchingPattern = allPatterns.find(p => p.description === action.weakness_area);
+          const targetedMetric = matchingPattern?.metric || drill.drill_type || action.weakness_area;
           const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
           // Parse constraints_json from structured constraints or text
           let constraintsJson: any = {};
