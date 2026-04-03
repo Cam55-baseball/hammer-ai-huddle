@@ -280,6 +280,7 @@ export type Database = {
       athlete_body_goals: {
         Row: {
           created_at: string | null
+          custom_calorie_target: number | null
           goal_type: string
           id: string
           is_active: boolean | null
@@ -294,6 +295,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          custom_calorie_target?: number | null
           goal_type: string
           id?: string
           is_active?: boolean | null
@@ -308,6 +310,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          custom_calorie_target?: number | null
           goal_type?: string
           id?: string
           is_active?: boolean | null
@@ -472,19 +475,23 @@ export type Database = {
           date_of_birth: string | null
           games_minimum_met: boolean | null
           id: string
+          in_season_end_date: string | null
+          in_season_start_date: string | null
           integrity_threshold_met: boolean | null
           is_ambidextrous_thrower: boolean | null
           is_college_verified: boolean | null
           is_pro_verified: boolean | null
           is_switch_hitter: boolean | null
           league_tier: string | null
+          post_season_end_date: string | null
+          post_season_start_date: string | null
+          preseason_end_date: string | null
+          preseason_start_date: string | null
           primary_batting_side: string | null
           primary_coach_id: string | null
           primary_position: string | null
           primary_throwing_hand: string | null
           ranking_eligible: boolean | null
-          season_end_date: string | null
-          season_start_date: string | null
           season_status: string
           secondary_coach_ids: string[] | null
           secondary_position: string | null
@@ -506,19 +513,23 @@ export type Database = {
           date_of_birth?: string | null
           games_minimum_met?: boolean | null
           id?: string
+          in_season_end_date?: string | null
+          in_season_start_date?: string | null
           integrity_threshold_met?: boolean | null
           is_ambidextrous_thrower?: boolean | null
           is_college_verified?: boolean | null
           is_pro_verified?: boolean | null
           is_switch_hitter?: boolean | null
           league_tier?: string | null
+          post_season_end_date?: string | null
+          post_season_start_date?: string | null
+          preseason_end_date?: string | null
+          preseason_start_date?: string | null
           primary_batting_side?: string | null
           primary_coach_id?: string | null
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
-          season_end_date?: string | null
-          season_start_date?: string | null
           season_status?: string
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
@@ -540,19 +551,23 @@ export type Database = {
           date_of_birth?: string | null
           games_minimum_met?: boolean | null
           id?: string
+          in_season_end_date?: string | null
+          in_season_start_date?: string | null
           integrity_threshold_met?: boolean | null
           is_ambidextrous_thrower?: boolean | null
           is_college_verified?: boolean | null
           is_pro_verified?: boolean | null
           is_switch_hitter?: boolean | null
           league_tier?: string | null
+          post_season_end_date?: string | null
+          post_season_start_date?: string | null
+          preseason_end_date?: string | null
+          preseason_start_date?: string | null
           primary_batting_side?: string | null
           primary_coach_id?: string | null
           primary_position?: string | null
           primary_throwing_hand?: string | null
           ranking_eligible?: boolean | null
-          season_end_date?: string | null
-          season_start_date?: string | null
           season_status?: string
           secondary_coach_ids?: string[] | null
           secondary_position?: string | null
@@ -1686,6 +1701,123 @@ export type Database = {
           time_window?: string
           total_data_points?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      hie_snapshots: {
+        Row: {
+          before_after_trends: Json | null
+          computed_at: string
+          created_at: string
+          decision_speed_index: number | null
+          development_confidence: number | null
+          development_status: string
+          drill_effectiveness: Json | null
+          id: string
+          movement_efficiency_score: number | null
+          mpi_score: number | null
+          mpi_trend_30d: number | null
+          mpi_trend_7d: number | null
+          prescriptive_actions: Json | null
+          primary_limiter: string | null
+          readiness_recommendation: string | null
+          readiness_score: number | null
+          risk_alerts: Json | null
+          smart_week_plan: Json | null
+          sport: string
+          transfer_score: number | null
+          updated_at: string
+          user_id: string
+          weakness_clusters: Json | null
+        }
+        Insert: {
+          before_after_trends?: Json | null
+          computed_at?: string
+          created_at?: string
+          decision_speed_index?: number | null
+          development_confidence?: number | null
+          development_status?: string
+          drill_effectiveness?: Json | null
+          id?: string
+          movement_efficiency_score?: number | null
+          mpi_score?: number | null
+          mpi_trend_30d?: number | null
+          mpi_trend_7d?: number | null
+          prescriptive_actions?: Json | null
+          primary_limiter?: string | null
+          readiness_recommendation?: string | null
+          readiness_score?: number | null
+          risk_alerts?: Json | null
+          smart_week_plan?: Json | null
+          sport?: string
+          transfer_score?: number | null
+          updated_at?: string
+          user_id: string
+          weakness_clusters?: Json | null
+        }
+        Update: {
+          before_after_trends?: Json | null
+          computed_at?: string
+          created_at?: string
+          decision_speed_index?: number | null
+          development_confidence?: number | null
+          development_status?: string
+          drill_effectiveness?: Json | null
+          id?: string
+          movement_efficiency_score?: number | null
+          mpi_score?: number | null
+          mpi_trend_30d?: number | null
+          mpi_trend_7d?: number | null
+          prescriptive_actions?: Json | null
+          primary_limiter?: string | null
+          readiness_recommendation?: string | null
+          readiness_score?: number | null
+          risk_alerts?: Json | null
+          smart_week_plan?: Json | null
+          sport?: string
+          transfer_score?: number | null
+          updated_at?: string
+          user_id?: string
+          weakness_clusters?: Json | null
+        }
+        Relationships: []
+      }
+      hie_team_snapshots: {
+        Row: {
+          computed_at: string
+          created_at: string
+          id: string
+          organization_id: string
+          risk_alerts: Json | null
+          suggested_team_drills: Json | null
+          team_mpi_avg: number | null
+          team_weakness_patterns: Json | null
+          trending_players: Json | null
+          updated_at: string
+        }
+        Insert: {
+          computed_at?: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          risk_alerts?: Json | null
+          suggested_team_drills?: Json | null
+          team_mpi_avg?: number | null
+          team_weakness_patterns?: Json | null
+          trending_players?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          computed_at?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          risk_alerts?: Json | null
+          suggested_team_drills?: Json | null
+          team_mpi_avg?: number | null
+          team_weakness_patterns?: Json | null
+          trending_players?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -5064,6 +5196,173 @@ export type Database = {
           video_url?: string
         }
         Relationships: []
+      }
+      udl_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          dismissed_by: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          severity: string
+          target_user_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          severity?: string
+          target_user_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          severity?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
+      udl_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      udl_constraint_overrides: {
+        Row: {
+          constraint_key: string
+          created_by: string
+          enabled: boolean | null
+          id: string
+          prescription_overrides: Json | null
+          threshold_overrides: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          constraint_key: string
+          created_by: string
+          enabled?: boolean | null
+          id?: string
+          prescription_overrides?: Json | null
+          threshold_overrides?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          constraint_key?: string
+          created_by?: string
+          enabled?: boolean | null
+          id?: string
+          prescription_overrides?: Json | null
+          threshold_overrides?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      udl_daily_plans: {
+        Row: {
+          constraints_detected: Json | null
+          feedback_applied: Json | null
+          generated_at: string | null
+          id: string
+          linked_sessions: Json | null
+          plan_date: string
+          player_state: Json | null
+          prescribed_drills: Json | null
+          readiness_adjustments: Json | null
+          user_id: string
+        }
+        Insert: {
+          constraints_detected?: Json | null
+          feedback_applied?: Json | null
+          generated_at?: string | null
+          id?: string
+          linked_sessions?: Json | null
+          plan_date: string
+          player_state?: Json | null
+          prescribed_drills?: Json | null
+          readiness_adjustments?: Json | null
+          user_id: string
+        }
+        Update: {
+          constraints_detected?: Json | null
+          feedback_applied?: Json | null
+          generated_at?: string | null
+          id?: string
+          linked_sessions?: Json | null
+          plan_date?: string
+          player_state?: Json | null
+          prescribed_drills?: Json | null
+          readiness_adjustments?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      udl_drill_completions: {
+        Row: {
+          completed_at: string | null
+          difficulty_level: number | null
+          drill_key: string
+          id: string
+          plan_id: string
+          result_notes: string | null
+          started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          difficulty_level?: number | null
+          drill_key: string
+          id?: string
+          plan_id: string
+          result_notes?: string | null
+          started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          difficulty_level?: number | null
+          drill_key?: string
+          id?: string
+          plan_id?: string
+          result_notes?: string | null
+          started_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "udl_drill_completions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "udl_daily_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_food_history: {
         Row: {
