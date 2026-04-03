@@ -417,6 +417,16 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               <div className="w-2 h-2 rounded-full bg-indigo-500" />
               <span className="text-xs">{t('calendar.filter.manual', 'Manual')}</span>
             </Toggle>
+            
+            <Toggle
+              pressed={filters.sessions}
+              onPressedChange={() => toggleFilter('sessions')}
+              size="sm"
+              className="h-7 px-2 gap-1.5 data-[state=on]:bg-orange-500/20 data-[state=on]:text-orange-700 dark:data-[state=on]:text-orange-400"
+            >
+              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <span className="text-xs">{t('calendar.filter.sessions', 'Sessions')}</span>
+            </Toggle>
           </div>
         </CardContent>
       </Card>
