@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { getGradeLabel } from '@/lib/gradeLabel';
 import { generateInsights, getTotalReps, getDrillCount } from '@/lib/sessionInsights';
 import { useInsightHistory } from '@/hooks/useInsightHistory';
+import { useAuth } from '@/hooks/useAuth';
 import { CheckCircle, Loader2, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
