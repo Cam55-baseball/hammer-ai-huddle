@@ -1,122 +1,135 @@
 
 
-# Final Lock: Prescription Dedup + Verification Script
+# Scheduling Unification — Forensic Analysis + Implementation Plan
 
-## Current State
+## Current Architecture (14 files, 8 tables)
 
-- **Snapshots**: Already uses `upsert` on `(user_id, sport)` — only 1 snapshot per athlete per sport. No accumulation. ✅
-- **weakness_scores**: Already uses DELETE-before-INSERT — deduped. ✅
-- **drill_prescriptions**: Accumulation risk exists. New prescriptions are filtered by `truly_new` (line 1613-1614), checking `existingAreas`. But if the same weakness_area reappears across runs with slightly different descriptions, duplicates can occur. Old prescriptions are never cleaned up — they just get `resolved: true` after 5 adherence counts.
+The scheduling system currently spans **8 database tables** and **14 files** with direct read/write access:
 
----
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    SCHEDULING DATA SOURCES                   │
+├─────────────────────┬───────────────────────────────────────┤
+│ Table               │ Purpose                               │
+├─────────────────────┼───────────────────────────────────────┤
+│ calendar_events     │ Manual user-created events            │
+│ athlete_events      │ Day-type (game/rest/training)         │
+│ scheduled_practice  │ Coach-assigned sessions + approval    │
+│ game_plan_task_     │ Recurring day prefs for system tasks  │
+│   schedule          │                                       │
+│ game_plan_skipped_  │ Date-specific task skips              │
+│   tasks             │                                       │
+│ calendar_skipped_   │ Recurring day skips for calendar      │
+│   items             │                                       │
+│ calendar_day_orders │ Visual ordering per day               │
+│ timeline_schedule_  │ Saved schedule templates              │
+│   templates         │                                       │
+└─────────────────────┴───────────────────────────────────────┘
 
-## Part 1: Prescription Deduplication (Option A — Upsert by user_id + targeted_metric)
-
-**In `hie-analyze/index.ts`**, replace the current insert logic (lines 1612-1617):
-
-**Current:**
-```typescript
-const existingAreas = new Set((existingPrescriptions ?? []).map((e: any) => e.weakness_area));
-const truly_new = newPrescriptions.filter(p => !existingAreas.has(p.weakness_area));
-if (truly_new.length > 0) {
-  await supabase.from('drill_prescriptions').insert(truly_new);
-}
+DIRECT WRITERS (the fragmentation problem):
+─────────────────────────────────────────────
+• useCalendar.ts         → calendar_events (insert/update/delete)
+• useAthleteEvents.ts    → athlete_events (insert/update/delete)
+• useScheduledPractice   → scheduled_practice_sessions (insert/update/delete)
+•   Sessions.ts
+• useSystemTaskSchedule  → game_plan_task_schedule (upsert)
+• useCalendarSkips.ts    → calendar_skipped_items (upsert/delete)
+• useRescheduleEngine.ts → calendar_events + game_plan_skipped_tasks
+• useScheduleTemplates   → timeline_schedule_templates
+• RestDayScheduler.tsx   → calendar_events + game_plan_skipped_tasks (DIRECT!)
+• PendingSessionApproval → scheduled_practice_sessions (DIRECT!)
+•   s.tsx
+• useGamePlan.ts         → game_plan_skipped_tasks (DIRECT!)
 ```
 
-**New approach:**
-1. For each new prescription, check if an active (unresolved) prescription exists for the same `(user_id, targeted_metric)`
-2. If yes → UPDATE the existing row with new drill details, reset `adherence_count` to 0, update `pre_weakness_value`
-3. If no → INSERT new row
-4. This ensures exactly 1 active prescription per targeted_metric per athlete
+## Why "One Table" Is Wrong
 
-**Implementation:**
-```typescript
-for (const np of newPrescriptions) {
-  const existing = (existingPrescriptions ?? []).find(
-    (e: any) => e.targeted_metric === np.targeted_metric && !e.resolved
-  );
-  if (existing) {
-    // Update existing prescription with latest drill data
-    await supabase.from('drill_prescriptions').update({
-      drill_name: np.drill_name,
-      module: np.module,
-      constraints: np.constraints,
-      constraints_json: np.constraints_json,
-      drill_id: np.drill_id,
-      pre_weakness_value: np.pre_weakness_value,
-      pre_score: np.pre_score,
-      updated_at: new Date().toISOString(),
-    }).eq('id', existing.id);
-  } else {
-    await supabase.from('drill_prescriptions').insert(np);
-  }
-}
-```
+These 8 tables serve fundamentally different data models (recurring preferences vs. date-specific events vs. day-type classification vs. coach approval workflows). Merging them would destroy purpose-specific constraints, RLS policies, and the approval workflow.
 
-**Migration needed:** Add `updated_at` column to `drill_prescriptions` (if not present) for tracking when a prescription was last refreshed.
+**The real problem**: 11 files make direct Supabase writes independently, with no centralized validation, no audit trail, and inconsistent real-time propagation.
 
----
+## What We Will Build
 
-## Part 2: Snapshot Consistency
+### 1. Unified Scheduling Service (`useSchedulingService.ts`)
+A single hook that ALL schedule mutations route through. Every other hook/component calls this service instead of writing directly to Supabase.
 
-Already guaranteed — `upsert` on `(user_id, sport)` at line 1644-1646. No changes needed.
+**Methods:**
+- `addCalendarEvent()` — replaces direct `calendar_events` inserts
+- `updateCalendarEvent()` / `deleteCalendarEvent()`
+- `setDayType()` — replaces direct `athlete_events` writes
+- `scheduleSession()` / `cancelSession()` — replaces direct `scheduled_practice_sessions` writes
+- `skipTask()` / `unskipTask()` — replaces direct `game_plan_skipped_tasks` writes
+- `setTaskSchedule()` — replaces direct `game_plan_task_schedule` writes
+- `setCalendarSkip()` — replaces direct `calendar_skipped_items` writes
 
----
+Every method: validates input, writes to DB, logs to `audit_log`, and invalidates React Query caches.
 
-## Part 3: Permanent Verification Script
+### 2. Eliminate All Direct Writes
+Refactor these files to use the service instead of direct Supabase calls:
 
-Create `supabase/functions/hie-verify/index.ts` — a callable edge function that runs 8 checks and returns a structured PASS/FAIL report.
+| File | Current Direct Write | After |
+|------|---------------------|-------|
+| `useCalendar.ts` | `calendar_events` insert/update/delete | Calls `schedulingService.addCalendarEvent()` etc. |
+| `useAthleteEvents.ts` | `athlete_events` insert/update/delete | Calls `schedulingService.setDayType()` |
+| `useScheduledPracticeSessions.ts` | `scheduled_practice_sessions` all ops | Calls `schedulingService.scheduleSession()` |
+| `useSystemTaskSchedule.ts` | `game_plan_task_schedule` upsert | Calls `schedulingService.setTaskSchedule()` |
+| `useCalendarSkips.ts` | `calendar_skipped_items` upsert/delete | Calls `schedulingService.setCalendarSkip()` |
+| `useRescheduleEngine.ts` | `calendar_events` + `game_plan_skipped_tasks` | Calls service methods |
+| `RestDayScheduler.tsx` | Direct writes to 2 tables | Calls service methods |
+| `PendingSessionApprovals.tsx` | Direct `scheduled_practice_sessions` update | Calls `schedulingService.updateSessionStatus()` |
+| `useGamePlan.ts` | Direct `game_plan_skipped_tasks` writes | Calls service methods |
 
-**Checks:**
-1. **HIE Run Success** — Invoke `hie-analyze` for a given athlete, confirm 200 response
-2. **weakness_scores Integrity** — Query count per user_id, verify no user has more rows than pattern count (max ~10)
-3. **Prescription Correctness** — All active prescriptions have non-null `targeted_metric`; each `targeted_metric` exists in `weakness_scores`
-4. **Effectiveness Integrity** — Prescriptions with both `pre_weakness_value` and `post_weakness_value` have a computed `effectiveness_score`
-5. **Constraint Enforcement** — All prescriptions have `constraints` field populated (non-empty string)
-6. **Fallback Logic** — Prescriptions exist even for athletes with no AI engine response (drill_name populated)
-7. **Continuation Token** — Query `audit_log` for `nightly_mpi_continuation` entries, verify structure
-8. **Cross-Athlete Isolation** — SQL join confirms no `drill_prescriptions.user_id != weakness_scores.user_id` matches on same `targeted_metric`
+### 3. Real-Time Subscription Hub
+Add a single `useSchedulingRealtime()` hook that subscribes to ALL 5 mutable scheduling tables and invalidates the correct React Query keys. Replace the 3 separate channel subscriptions currently in `useCalendar.ts`.
 
-**Output format:**
-```json
-{
-  "timestamp": "...",
-  "athlete_id": "...",
-  "results": [
-    { "check": "weakness_scores_integrity", "status": "PASS", "detail": "4 rows, no duplicates" },
-    { "check": "prescription_correctness", "status": "FAIL", "detail": "1 prescription missing targeted_metric" }
-  ],
-  "overall": "PASS"
-}
-```
+### 4. Database-Level Constraints
+Migration to add:
+- **Unique constraint** on `(user_id, event_date, event_type, source_id)` for `calendar_events` to prevent duplicate manual events
+- **Unique constraint** on `(user_id, event_date)` for `athlete_events` (already enforced in code, make it DB-level)
 
----
+### 5. Audit Trail
+Every scheduling mutation logs to `audit_log` with:
+- `action`: `schedule_create`, `schedule_update`, `schedule_delete`, `schedule_skip`
+- `table_name`: which table was affected
+- `metadata`: `{ event_id, old_value, new_value, source: "user"|"coach"|"ai"|"reschedule" }`
 
-## Part 4: Regression Protection
+## Files Created/Modified
 
-Add defensive guards in `hie-analyze`:
-
-1. **Column existence validation** — Before inserting prescriptions, validate required fields are present in the object (targeted_metric, drill_name, user_id). Log and skip any malformed entries.
-2. **Error surfacing** — The catch block at line 1653 already logs to `audit_log` with action `hie_analyze_failure`. Confirm prescription-engine failures are also logged (they are, via console.error at line ~1398).
-3. **Insert validation wrapper** — Wrap prescription inserts in try/catch with per-row error logging so one bad row doesn't kill the batch.
-
----
-
-## Files Modified/Created
-
-| File | Change |
+| File | Action |
 |------|--------|
-| `supabase/functions/hie-analyze/index.ts` | Replace insert logic with upsert-by-metric; add insert validation guards |
-| `supabase/functions/hie-verify/index.ts` | New verification edge function |
-| `supabase/config.toml` | Add `[functions.hie-verify]` entry |
-| Migration | Add `updated_at` column to `drill_prescriptions` if missing |
+| `src/hooks/useSchedulingService.ts` | **NEW** — central write service |
+| `src/hooks/useSchedulingRealtime.ts` | **NEW** — unified realtime subscriptions |
+| `src/hooks/useCalendar.ts` | Remove direct writes, use service |
+| `src/hooks/useAthleteEvents.ts` | Remove direct writes, use service |
+| `src/hooks/useScheduledPracticeSessions.ts` | Remove direct writes, use service |
+| `src/hooks/useSystemTaskSchedule.ts` | Remove direct writes, use service |
+| `src/hooks/useCalendarSkips.ts` | Remove direct writes, use service |
+| `src/hooks/useRescheduleEngine.ts` | Remove direct writes, use service |
+| `src/components/calendar/RestDayScheduler.tsx` | Remove direct writes, use service |
+| `src/components/practice/PendingSessionApprovals.tsx` | Remove direct writes, use service |
+| `src/hooks/useGamePlan.ts` | Remove direct skip writes, use service |
+| Migration SQL | Add unique constraints |
 
 ## Implementation Order
 
-1. Migration: Add `updated_at` to `drill_prescriptions`
-2. Update `hie-analyze` prescription save logic (upsert by metric)
-3. Add insert validation guards in `hie-analyze`
-4. Create `hie-verify` edge function
-5. Add config.toml entry
-6. Run verification against test athlete to confirm PASS
+1. Migration: Add DB-level unique constraints
+2. Create `useSchedulingService.ts` with all methods + audit logging
+3. Create `useSchedulingRealtime.ts` with unified subscriptions
+4. Refactor `useCalendar.ts` — replace writes + replace realtime channels
+5. Refactor `useAthleteEvents.ts`
+6. Refactor `useScheduledPracticeSessions.ts`
+7. Refactor remaining 5 files (parallel-safe, no interdependencies)
+8. Verify: grep for any remaining direct writes to scheduling tables
+
+## What This Does NOT Do
+- Does NOT merge 8 tables into 1 (architecturally wrong — different data models need different schemas)
+- Does NOT add a new `schedule_events` table (the existing tables are correctly separated by concern)
+- Instead: enforces a **single code path** for all writes, with audit logging and real-time sync
+
+## Verification Checklist
+- [ ] `grep -r "from('calendar_events')" src/` returns only reads (no `.insert`, `.update`, `.delete`) outside `useSchedulingService.ts`
+- [ ] Same for all 7 other scheduling tables
+- [ ] `audit_log` entries appear for every schedule mutation
+- [ ] Real-time subscription triggers refetch across Calendar + Game Plan simultaneously
+- [ ] DB unique constraints prevent duplicate athlete events and calendar events
 
