@@ -1283,6 +1283,8 @@ Deno.serve(async (req) => {
       user_id, weakness_metric: p.metric, score: p.value, computed_at: new Date().toISOString(),
     }));
     if (weaknessScoreRows.length > 0) {
+      // Deduplicate: remove previous weakness_scores for this athlete before inserting fresh ones
+      await supabase.from('weakness_scores').delete().eq('user_id', user_id);
       await supabase.from('weakness_scores').insert(weaknessScoreRows);
     }
 
