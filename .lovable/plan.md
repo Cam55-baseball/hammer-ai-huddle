@@ -1,85 +1,76 @@
 
 
-# E2E Execution Verification — Elite Implementation Plan
+# Fix Session Side Flow — Single Source of Truth
 
-## Phase A — DB Schema Verification (Completed)
+## Problem
+Two competing gates: `HandednessGate` (permanent DB identity, "never asked again") and `SessionIntentGate` (per-session). This creates duplicate prompts, especially for switch hitters in bunting. The permanent gate is architecturally wrong — side selection must be session-scoped.
 
-All three prerequisites confirmed via live queries:
+## Architecture After Fix
 
-| Check | Result |
-|-------|--------|
-| `idempotency_key` column exists | `text`, nullable ✓ |
-| Unique index `idx_perf_sessions_idempotency` | Active, partial (`WHERE idempotency_key IS NOT NULL`) ✓ |
-| Realtime publication | `performance_sessions` in `supabase_realtime` ✓ |
+```text
+Session Start → SessionIntentGate (ONCE) → Rep Logging
+                     ↓
+              R / L / Switch(or Ambi)
+                     ↓
+         R or L → side locked, no toggle
+         Switch  → SideToggle shown inline
+```
 
-**Note**: Existing rows have empty `idempotency_key` — expected (pre-migration sessions). New sessions will populate this field.
+One gate. One prompt. Zero re-asks. No DB-persisted blocking gate.
 
-## Phase B — Playwright E2E Suite
+## Changes
 
-### New file: `e2e/scheduling-elite.spec.ts`
+### 1. `src/components/practice/RepScorer.tsx`
 
-Six deterministic tests, all using the shared Playwright fixture from `playwright-fixture.ts`.
+**Remove HandednessGate entirely:**
+- Delete import of `HandednessGate`
+- Delete the `handedness` state + its `useEffect` sync (lines 279-296)
+- Delete the `dbIdentity` check + `HandednessGate` render block (lines 442-461)
+- Remove `useSwitchHitterProfile` import and all references to `isSwitchHitter`, `isAmbidextrousThrower`, `primaryBattingSide`, `primaryThrowingHand`, `saveIdentity`, `isSavingIdentity`
 
----
+**Expand SessionIntentGate to ALL modules (except baserunning):**
+- Change `needsSessionIntent` to: `!isBaserunning` (covers hitting, bunting, pitching, fielding, throwing)
+- Remove the `defaultSideMode` logic that reads from DB identity
+- Default to `'R'` for all modules
 
-### Test 1: Rapid Write Stress (10 Sessions in <5s)
+**Replace `handedness` with `sideMode` everywhere:**
+- `effectiveBatterSide`: for hitting/bunting → `sideMode === 'BOTH' ? switchSide : sideMode`
+- `effectivePitcherHand`: for pitching → `sideMode === 'BOTH' ? switchThrowSide : sideMode`
+- For fielding/throwing → `sideMode === 'BOTH' ? switchThrowSide : sideMode` (used as `throwing_hand`)
+- Update `commitRep` to use these instead of `handedness`
 
-- Authenticate via Supabase `signInWithPassword` in `beforeAll`
-- Insert 10 `performance_sessions` rows via Supabase JS client with unique `idempotency_key` each, same `session_date`
-- **Assert**: DB count = 10, all IDs distinct, `created_at` ordering matches `id` ordering
-- Navigate to calendar → open day sheet → **Assert**: UI shows exactly 10 sessions
-- Wait 45s (reconciliation) → **Assert**: order unchanged
-- Reload page → **Assert**: order unchanged
+**Expand SideToggle visibility:**
+- Show for bunting when `sideMode === 'BOTH'` (currently only hitting)
+- Show for fielding/throwing when `sideMode === 'BOTH'`
 
-### Test 2: Idempotency Rejection
+### 2. `src/components/practice/SessionIntentGate.tsx`
 
-- Insert session with `idempotency_key = 'test-dupe-key'`
-- Attempt second insert with same key
-- **Assert**: second insert throws unique constraint error
-- **Assert**: DB has exactly 1 row with that key
+**Add fielding/throwing support:**
+- Add throwing options: `{ R: 'Right', L: 'Left', BOTH: 'Ambidextrous' }`
+- Update module detection: hitting/bunting use batting options, pitching/fielding/throwing use throwing options
+- Update title: fielding/throwing → "Today's Throwing Hand"
+- Remove "defaultMode" prop — no pre-selection needed, user must tap
 
-### Test 3: Multi-Date Isolation
+### 3. No DB Changes
+- `athlete_mpi_settings` columns remain (they're used elsewhere for analytics/profiles)
+- `useSwitchHitterProfile` hook remains available for profile display — just no longer gates session flow
 
-- Insert sessions on 3 dates: today, yesterday, 2 days ago
-- Navigate calendar to each date, open day sheet
-- **Assert**: each day shows ONLY its own sessions, zero cross-day bleed
+### 4. `src/components/practice/HandednessGate.tsx`
+- Can be deleted (no remaining imports)
 
-### Test 4: Network Failure Recovery
-
-- Use `page.route('**/rest/v1/performance_sessions*', route => route.abort())` to block insert
-- Attempt session creation via UI
-- **Assert**: error toast appears, no DB row created
-- Remove route block, retry
-- **Assert**: single valid row in DB, UI reflects it
-
-### Test 5: Missed Realtime / Reconciliation
-
-- Insert session directly via Supabase admin client (bypassing UI)
-- Do NOT trigger any UI interaction
-- **Assert**: within 45s polling interval, session appears in calendar day sheet without manual refresh
-- Alternative: trigger `visibilitychange` event to force `refetchOnWindowFocus`
-
-### Test 6: Side Toggle Integrity
-
-- Navigate to Practice Hub, start hitting session as switch hitter with `sideMode = 'BOTH'`
-- Log 4 reps alternating R/L/R/L
-- Complete session
-- Query DB for the session's `drill_blocks`
-- **Assert**: rep-level `batter_side` values = `['R', 'L', 'R', 'L']` in exact order
-- Navigate to calendar → open session detail → **Assert**: UI shows matching side data
-
----
-
-### Test Infrastructure
-
-- Auth: `beforeAll` block authenticates with test credentials via `signInWithPassword`
-- Cleanup: `afterEach` soft-deletes test sessions via `deleted_at` update
-- Timing: Each assertion logs `performance.now()` timestamps for latency measurement
-- No production code changes — verification only
+## Validation Criteria
+1. Every session (hitting/bunting/pitching/fielding/throwing) shows exactly one side prompt
+2. Selecting Switch/Ambi → immediate session start + SideToggle visible
+3. Selecting R or L → immediate session start, no toggle
+4. Zero re-prompts during session
+5. Each rep stores correct `batter_side` / `pitcher_hand` / `throwing_hand`
+6. Baserunning skips the gate entirely
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `e2e/scheduling-elite.spec.ts` | Complete 6-test E2E suite |
+| File | Change |
+|------|--------|
+| `src/components/practice/RepScorer.tsx` | Remove HandednessGate, expand SessionIntentGate to all modules, replace `handedness` with `sideMode` |
+| `src/components/practice/SessionIntentGate.tsx` | Add fielding/throwing options, remove defaultMode prop |
+| `src/components/practice/HandednessGate.tsx` | Delete file |
 
