@@ -129,6 +129,39 @@ serve(async (req) => {
     let totalProcessed = 0;
     console.log('[nightly-mpi] Starting nightly MPI process...');
 
+    // ── LOAD ENGINE SETTINGS (dynamic weights & thresholds) ──
+    const { data: engineSettingsRows } = await supabase
+      .from('engine_settings')
+      .select('setting_key, setting_value');
+    const es: Record<string, any> = {};
+    (engineSettingsRows ?? []).forEach((r: any) => { es[r.setting_key] = r.setting_value; });
+    const W_BQI = typeof es.mpi_weight_bqi === 'number' ? es.mpi_weight_bqi : 0.25;
+    const W_FQI = typeof es.mpi_weight_fqi === 'number' ? es.mpi_weight_fqi : 0.15;
+    const W_PEI = typeof es.mpi_weight_pei === 'number' ? es.mpi_weight_pei : 0.20;
+    const W_DECISION = typeof es.mpi_weight_decision === 'number' ? es.mpi_weight_decision : 0.20;
+    const W_COMPETITIVE = typeof es.mpi_weight_competitive === 'number' ? es.mpi_weight_competitive : 0.20;
+    const INTEGRITY_THRESHOLD = typeof es.integrity_threshold === 'number' ? es.integrity_threshold : 80;
+    const DATA_GATE_MIN = typeof es.data_gate_min_sessions === 'number' ? es.data_gate_min_sessions : 60;
+    console.log(`[nightly-mpi] Engine settings loaded: BQI=${W_BQI}, FQI=${W_FQI}, PEI=${W_PEI}, DEC=${W_DECISION}, COMP=${W_COMPETITIVE}, integrity=${INTEGRITY_THRESHOLD}, gate=${DATA_GATE_MIN}`);
+
+    // ── RETRY PREVIOUSLY FAILED ATHLETES FIRST ──
+    const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
+    const { data: recentFailures } = await supabase
+      .from('audit_log')
+      .select('metadata')
+      .eq('action', 'nightly_mpi_failures')
+      .gte('created_at', oneDayAgo)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const retryUserIds: string[] = [];
+    if (recentFailures && recentFailures.length > 0) {
+      const meta = recentFailures[0].metadata as any;
+      if (meta?.failed_users && Array.isArray(meta.failed_users)) {
+        retryUserIds.push(...meta.failed_users);
+        console.log(`[nightly-mpi] Retrying ${retryUserIds.length} previously failed athletes first`);
+      }
+    }
+
     // Step 1: Auto-resolve info-level governance flags older than 7 days
     await supabase.from('governance_flags')
       .update({ status: 'resolved', resolved_at: new Date().toISOString() })
