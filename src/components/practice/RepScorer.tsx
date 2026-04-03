@@ -418,45 +418,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     onRepsChange(reps.filter((_, i) => i !== index));
   }, [reps, onRepsChange]);
 
-  // Determine which DB field to save identity to
-  const identityField = (isHitting || module === 'bunting') ? 'primary_batting_side' : 'primary_throwing_hand';
-  // Show identity gate only if DB value is null and not a switch player
-  const dbIdentity = (isHitting || module === 'bunting') ? primaryBattingSide : primaryThrowingHand;
-  if (!handedness && !isBaserunning && !dbIdentity && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
-    return (
-      <HandednessGate
-        module={module}
-        isSaving={isSavingIdentity}
-        onSelect={(side) => {
-          saveIdentity(identityField, side);
-          if (side === 'S') {
-            // Switch/ambidextrous — don't set handedness, toggle handles it
-          } else {
-            setHandedness(side as 'L' | 'R');
-          }
-        }}
-      />
-    );
-  }
-
-  // Session intent gate — shown every session for hitting/pitching if sideMode not yet selected
-  const needsSessionIntent = !isBaserunning && !isFielding && !isThrowing && (isHitting || isPitching || isBunting);
-  const defaultSideMode: 'R' | 'L' | 'BOTH' = (() => {
-    if (isHitting || isBunting) {
-      if (primaryBattingSide === 'S' || isSwitchHitter) return 'BOTH';
-      if (primaryBattingSide === 'L') return 'L';
-      return 'R';
-    }
-    if (primaryThrowingHand === 'S' || isAmbidextrousThrower) return 'BOTH';
-    if (primaryThrowingHand === 'L') return 'L';
-    return 'R';
-  })();
-
-  if (needsSessionIntent && sideMode === null) {
+  // Session intent gate — shown once at start for ALL modules except baserunning
+  if (!isBaserunning && sideMode === null) {
     return (
       <SessionIntentGate
         module={module}
-        defaultMode={defaultSideMode}
         onSelect={(mode) => {
           setSideMode(mode);
           if (mode !== 'BOTH') {
