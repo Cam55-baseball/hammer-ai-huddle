@@ -240,6 +240,36 @@ export default function PracticeHub() {
       return;
     }
 
+    // ── CONSTRAINT ENFORCEMENT ──
+    let constraintWarning: string | null = null;
+    if (prescribedConstraints) {
+      try {
+        const prescribed = JSON.parse(prescribedConstraints);
+        const actualReps = reps.length;
+        const actualVelocity = sessionConfig.velocity_band;
+
+        // Check rep count mismatch
+        if (prescribed.reps && actualReps > 0) {
+          const repDiff = Math.abs(actualReps - prescribed.reps) / prescribed.reps;
+          if (repDiff > 0.5) {
+            constraintWarning = `Prescribed: ${prescribed.reps} reps. Logged: ${actualReps} reps. This session may not count toward your prescription.`;
+            toast({ title: 'Constraint Mismatch', description: constraintWarning, variant: 'destructive' });
+          } else if (repDiff > 0.2) {
+            constraintWarning = `Prescribed: ${prescribed.reps} reps. Logged: ${actualReps} reps. Partial adherence recorded.`;
+            toast({ title: 'Partial Adherence', description: constraintWarning });
+          }
+        }
+
+        // Check velocity mismatch
+        if (prescribed.velocity_band && actualVelocity && prescribed.velocity_band !== actualVelocity) {
+          const velWarning = `Prescribed velocity: ${prescribed.velocity_band} mph. Used: ${actualVelocity} mph.`;
+          toast({ title: 'Velocity Mismatch', description: velWarning });
+        }
+      } catch {
+        // Non-JSON constraints, skip enforcement
+      }
+    }
+
     try {
       const result = await createSession({
         sport: sportKey,

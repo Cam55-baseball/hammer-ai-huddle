@@ -519,6 +519,64 @@ function analyzeBaserunningMicro(microReps: any[], drillBlocks: any[]): MicroPat
 }
 
 // ═══════════════════════════════════════════════════════════════
+// CONTEXT-AWARE DETECTION: Game vs Practice Gap
+// ═══════════════════════════════════════════════════════════════
+
+function detectGamePracticeGap(allReps: any[]): MicroPattern[] {
+  const gameReps = allReps.filter((r: any) => ['game', 'live_scrimmage', 'live_abs'].includes(r._session_type));
+  const practiceReps = allReps.filter((r: any) => !['game', 'live_scrimmage', 'live_abs'].includes(r._session_type));
+  if (gameReps.length < 5 || practiceReps.length < 5) return [];
+
+  const gameWeak = gameReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / gameReps.length * 100;
+  const practiceWeak = practiceReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / practiceReps.length * 100;
+  const gap = gameWeak - practiceWeak;
+
+  if (gap > 20) {
+    return [{
+      category: 'hitting', metric: 'practice_game_gap', value: Math.round(gap),
+      threshold: 20, severity: gap > 35 ? 'high' : 'medium',
+      description: `Game performance ${Math.round(gap)}% worse than practice — transfer gap detected`,
+      data_points: { game_weak_pct: Math.round(gameWeak), practice_weak_pct: Math.round(practiceWeak), game_reps: gameReps.length, practice_reps: practiceReps.length, context: 'game_gap' },
+    }];
+  }
+  return [];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPORAL INTELLIGENCE: Fatigue Drop-off Detection
+// ═══════════════════════════════════════════════════════════════
+
+function detectFatigueDropoff(sessions: any[]): MicroPattern[] {
+  let fatigueSessionCount = 0;
+  let totalMagnitude = 0;
+  for (const s of sessions) {
+    const reps = Array.isArray(s.micro_layer_data) ? s.micro_layer_data : [];
+    if (reps.length < 15) continue;
+    const third = Math.floor(reps.length / 3);
+    const earlyReps = reps.slice(0, third);
+    const lateReps = reps.slice(-third);
+    if (earlyReps.length === 0 || lateReps.length === 0) continue;
+    const earlyWeak = earlyReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / earlyReps.length * 100;
+    const lateWeak = lateReps.filter((r: any) => ['weak_contact', 'miss', 'foul'].includes(r.contact_quality)).length / lateReps.length * 100;
+    const dropoff = lateWeak - earlyWeak;
+    if (dropoff > 20) {
+      fatigueSessionCount++;
+      totalMagnitude += dropoff;
+    }
+  }
+  if (fatigueSessionCount >= 3) {
+    const avgMagnitude = Math.round(totalMagnitude / fatigueSessionCount);
+    return [{
+      category: 'hitting', metric: 'fatigue_dropoff', value: fatigueSessionCount,
+      threshold: 3, severity: fatigueSessionCount >= 5 ? 'high' : 'medium',
+      description: `Performance drops ${avgMagnitude}% in final third of ${fatigueSessionCount} recent sessions — fatigue pattern detected`,
+      data_points: { sessions_with_dropoff: fatigueSessionCount, avg_magnitude: avgMagnitude, context: 'fatigue' },
+    }];
+  }
+  return [];
+}
+
+// ═══════════════════════════════════════════════════════════════
 // PRESCRIPTIVE DRILL MAPPING (with adaptive rotation)
 // ═══════════════════════════════════════════════════════════════
 
@@ -761,6 +819,28 @@ function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
         primary: { name: "Base Path Sprint Work", description: "Timed sprints on full base paths", module: "speed-lab", constraints: "4 reps home-to-first, 2 reps home-to-second", drill_type: "sprint" },
         alternatives: [
           { name: "Curved Sprint Drill", description: "Practice efficient rounding technique", module: "speed-lab", constraints: "4 reps around bases, focus on angles", drill_type: "sprint" },
+        ],
+      });
+      break;
+    case "practice_game_gap":
+      rotations.push({
+        primary: { name: "Pressure Simulation BP", description: "Live at-bats with simulated game counts and consequences", module: "practice-hub", constraints: "15 ABs, full count scenarios", drill_type: "situational" },
+        alternatives: [
+          { name: "Competitive Rounds", description: "Score-based hitting rounds against teammates", module: "practice-hub", constraints: "3 rounds × 5 ABs, track results", drill_type: "situational" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Mental Performance Routine", description: "Pre-AB breathing and visualization routine under pressure", module: "practice-hub", constraints: "5 min visualization + 10 live ABs", drill_type: "mental" },
+        alternatives: [
+          { name: "Distraction Training", description: "Practice with crowd noise and distractions", module: "practice-hub", constraints: "10 ABs with audio distractions", drill_type: "mental" },
+        ],
+      });
+      break;
+    case "fatigue_dropoff":
+      rotations.push({
+        primary: { name: "Quality-Over-Quantity Protocol", description: "Reduce session volume, increase rest between sets", module: "practice-hub", constraints: "Max 15 reps per set, 2 min rest", drill_type: "volume_management" },
+        alternatives: [
+          { name: "Endurance Conditioning Circuit", description: "Build stamina to maintain quality through full sessions", module: "speed-lab", constraints: "3 circuits, moderate intensity", drill_type: "conditioning" },
         ],
       });
       break;
@@ -1132,7 +1212,7 @@ Deno.serve(async (req) => {
     // 10. Existing prescriptions for adaptive loop
     const { data: existingPrescriptions } = await supabase
       .from('drill_prescriptions')
-      .select('id, drill_name, weakness_area, pre_score, effectiveness_score, adherence_count')
+      .select('id, drill_name, weakness_area, pre_score, effectiveness_score, adherence_count, targeted_metric, weakness_metric, pre_weakness_value')
       .eq('user_id', user_id)
       .eq('resolved', false);
 
@@ -1152,11 +1232,16 @@ Deno.serve(async (req) => {
     }));
     const { status: developmentStatus, trend7d, trend30d } = computeDevelopmentStatus(scoreHistory);
 
-    // ── AGGREGATE MICRO DATA FROM ALL SESSIONS ──
+    // ── AGGREGATE MICRO DATA FROM ALL SESSIONS (with context) ──
     const allMicroReps: any[] = [];
     const allDrillBlocks: any[] = [];
     (sessions ?? []).forEach((s: any) => {
-      if (Array.isArray(s.micro_layer_data)) allMicroReps.push(...s.micro_layer_data);
+      const sessionType = s.session_type || 'personal_practice';
+      if (Array.isArray(s.micro_layer_data)) {
+        s.micro_layer_data.forEach((rep: any) => {
+          allMicroReps.push({ ...rep, _session_type: sessionType });
+        });
+      }
       if (Array.isArray(s.drill_blocks)) allDrillBlocks.push(...s.drill_blocks);
     });
 
@@ -1169,13 +1254,32 @@ Deno.serve(async (req) => {
     const visionPatterns = analyzeVisionMicro(visionDrills ?? []);
     const baserunningPatterns = analyzeBaserunningMicro(allMicroReps, allDrillBlocks);
 
+    // ── CONTEXT-AWARE PATTERNS ──
+    const gamePracticePatterns = detectGamePracticeGap(allMicroReps);
+    const fatiguePatterns = detectFatigueDropoff(sessions ?? []);
+
     const allPatterns = [
       ...hittingPatterns, ...fieldingPatterns, ...pitchingPatterns,
       ...speedPatterns, ...timingPatterns, ...visionPatterns, ...baserunningPatterns,
+      ...gamePracticePatterns, ...fatiguePatterns,
     ].sort((a, b) => {
-      const sevOrder = { high: 0, medium: 1, low: 2 };
-      return (sevOrder[a.severity] ?? 2) - (sevOrder[b.severity] ?? 2);
+      const sevWeight: Record<string, number> = { high: 3, medium: 2, low: 1 };
+      const aGameBonus = a.data_points?.context === 'game_gap' ? 0.5 : 0;
+      const aFatigueBonus = a.metric === 'fatigue_dropoff' ? 0.3 : 0;
+      const bGameBonus = b.data_points?.context === 'game_gap' ? 0.5 : 0;
+      const bFatigueBonus = b.metric === 'fatigue_dropoff' ? 0.3 : 0;
+      const aScore = (sevWeight[a.severity] ?? 1) * (1 + aGameBonus + aFatigueBonus);
+      const bScore = (sevWeight[b.severity] ?? 1) * (1 + bGameBonus + bFatigueBonus);
+      return bScore - aScore;
     });
+
+    // ── WRITE WEAKNESS SCORES ──
+    const weaknessScoreRows = allPatterns.map(p => ({
+      user_id, weakness_metric: p.metric, score: p.value, computed_at: new Date().toISOString(),
+    }));
+    if (weaknessScoreRows.length > 0) {
+      await supabase.from('weakness_scores').insert(weaknessScoreRows);
+    }
 
     // ── BUILD PRIMARY LIMITER ──
     let primaryLimiter: string;
@@ -1224,16 +1328,89 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── PRESCRIPTIVE ACTIONS (adaptive — rotates out ineffective drills) ──
+    // ── PRESCRIPTIVE ACTIONS (AI + scoring hybrid with fallback) ──
     const prescriptiveActions: PrescriptiveAction[] = [];
     const usedAreas = new Set<string>();
-    allPatterns.slice(0, 5).forEach((p) => {
-      const drills = mapPatternToDrills(p, ineffectiveDrills, drillUsageCounts, drillCatalog);
-      if (drills.length > 0 && !usedAreas.has(p.metric)) {
-        usedAreas.add(p.metric);
-        prescriptiveActions.push({ weakness_area: p.description, drills });
+
+    // Attempt prescription-engine call
+    let aiPrescriptions: any[] = [];
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const { data: drillCatalogFull } = await supabase.from("drills").select("id, name, module, skill_target, default_constraints");
+      const athleteAge = settings?.date_of_birth
+        ? Math.floor((Date.now() - new Date(settings.date_of_birth).getTime()) / (365.25 * 86400000))
+        : 18;
+      const { data: profileData } = await supabase.from("profiles").select("experience_level").eq("id", user_id).maybeSingle();
+
+      const prescriptionInput = {
+        user_id,
+        patterns: allPatterns.slice(0, 10),
+        weakness_scores: weaknessScoreRows.map(w => ({ metric: w.weakness_metric, value: w.score, prev_value: null })),
+        recent_prescriptions: (existingPrescriptions ?? []).map((rx: any) => ({
+          drill_name: rx.drill_name, weakness_area: rx.weakness_area,
+          effectiveness_score: rx.effectiveness_score, adherence_count: rx.adherence_count ?? 0,
+          targeted_metric: rx.targeted_metric ?? null,
+        })),
+        athlete_profile: {
+          age: athleteAge,
+          level: profileData?.experience_level || 'hs',
+          batting_side: settings?.primary_batting_side || 'R',
+          throwing_hand: settings?.primary_throwing_hand || 'R',
+        },
+        readiness_score: readinessScore,
+        available_drills: (drillCatalogFull ?? []).map((d: any) => ({
+          id: d.id, name: d.name, module: d.module, skill_target: d.skill_target || '', default_constraints: d.default_constraints || {},
+        })),
+      };
+
+      const engineResp = await fetch(`${supabaseUrl}/functions/v1/prescription-engine`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify(prescriptionInput),
+      });
+
+      if (engineResp.ok) {
+        const engineData = await engineResp.json();
+        aiPrescriptions = engineData.prescriptions ?? [];
+      } else {
+        console.warn(`Prescription engine returned ${engineResp.status}, falling back to switch statement`);
       }
-    });
+    } catch (engineErr: any) {
+      console.error("Prescription engine call failed, using fallback:", engineErr.message);
+    }
+
+    // If AI prescriptions returned, use them; otherwise fall back to switch statement
+    if (aiPrescriptions.length > 0) {
+      // Group AI prescriptions by targeted_metric for prescriptive actions
+      for (const aiRx of aiPrescriptions) {
+        if (!usedAreas.has(aiRx.targeted_metric)) {
+          usedAreas.add(aiRx.targeted_metric);
+          prescriptiveActions.push({
+            weakness_area: aiRx.rationale || aiRx.targeted_metric,
+            drills: [{
+              name: aiRx.name,
+              description: aiRx.rationale,
+              module: aiRx.module,
+              constraints: JSON.stringify(aiRx.constraints),
+              drill_type: aiRx.targeted_metric,
+              drill_id: aiRx.drill_id,
+            }],
+          });
+        }
+      }
+    } else {
+      // Fallback: original switch-statement logic
+      allPatterns.slice(0, 5).forEach((p) => {
+        const drills = mapPatternToDrills(p, ineffectiveDrills, drillUsageCounts, drillCatalog);
+        if (drills.length > 0 && !usedAreas.has(p.metric)) {
+          usedAreas.add(p.metric);
+          prescriptiveActions.push({ weakness_area: p.description, drills });
+        }
+      });
+    }
 
     // ── READINESS ──
     const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
@@ -1345,22 +1522,57 @@ Deno.serve(async (req) => {
     // ── SAVE PRESCRIPTIONS FOR ADAPTIVE LEARNING ──
     if (prescriptiveActions.length > 0) {
       const newPrescriptions = prescriptiveActions.flatMap(action =>
-        action.drills.map(drill => ({
-          user_id,
-          weakness_area: action.weakness_area,
-          drill_name: drill.name,
-          module: drill.module,
-          constraints: drill.constraints,
-          pre_score: mpiScore,
-        }))
+        action.drills.map(drill => {
+          const targetedMetric = drill.drill_type || action.weakness_area;
+          const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
+          // Parse constraints_json from structured constraints or text
+          let constraintsJson: any = {};
+          try {
+            if (typeof drill.constraints === 'string' && drill.constraints.startsWith('{')) {
+              constraintsJson = JSON.parse(drill.constraints);
+            }
+          } catch { /* leave as empty */ }
+          return {
+            user_id,
+            weakness_area: action.weakness_area,
+            drill_name: drill.name,
+            module: drill.module,
+            constraints: typeof drill.constraints === 'string' ? drill.constraints : JSON.stringify(drill.constraints),
+            constraints_json: constraintsJson,
+            pre_score: mpiScore,
+            targeted_metric: targetedMetric,
+            pre_weakness_value: weaknessVal,
+            drill_id: drill.drill_id || drillCatalog.get(drill.name) || null,
+          };
+        })
       );
-      // Update post_score on existing unresolved prescriptions
+      // Update post_score on existing unresolved prescriptions using weakness-specific scores
       if (existingPrescriptions && existingPrescriptions.length > 0) {
         for (const ex of existingPrescriptions) {
+          // Fetch current weakness score for this prescription's targeted_metric
+          const exMetric = (ex as any).targeted_metric || (ex as any).weakness_metric;
+          let effectivenessScore: number | null = null;
+          let postWeaknessValue: number | null = null;
+          if (exMetric) {
+            const currentWS = weaknessScoreRows.find(w => w.weakness_metric === exMetric);
+            if (currentWS) {
+              postWeaknessValue = currentWS.score;
+              const preVal = (ex as any).pre_weakness_value ?? (ex as any).pre_score;
+              if (preVal != null) {
+                effectivenessScore = preVal - currentWS.score; // positive = improvement
+              }
+            }
+          }
+          // Fall back to MPI-level if no weakness-specific data
+          if (effectivenessScore == null && mpiScore != null && ex.pre_score != null) {
+            effectivenessScore = mpiScore - ex.pre_score;
+          }
+
           await supabase.from('drill_prescriptions')
             .update({
               post_score: mpiScore,
-              effectiveness_score: mpiScore != null && ex.pre_score != null ? mpiScore - ex.pre_score : null,
+              post_weakness_value: postWeaknessValue,
+              effectiveness_score: effectivenessScore,
               adherence_count: (ex.adherence_count ?? 0) + 1,
             })
             .eq('id', ex.id);

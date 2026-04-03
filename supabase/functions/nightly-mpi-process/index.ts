@@ -229,7 +229,25 @@ serve(async (req) => {
         athletes.length = 0;
         athletes.push(...retryAthletes, ...normalAthletes);
       }
-      for (let batchStart = 0; batchStart < athletes.length; batchStart += BATCH_SIZE) {
+      // ── Read continuation token from previous run ──
+      const { data: continuationLog } = await supabase.from('audit_log')
+        .select('metadata')
+        .eq('action', 'nightly_mpi_continuation')
+        .eq('table_name', 'mpi_scores')
+        .gte('created_at', oneDayAgo)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      let resumeFrom = 0;
+      if (continuationLog && continuationLog.length > 0) {
+        const contMeta = continuationLog[0].metadata as any;
+        if (contMeta?.sport === sport && typeof contMeta?.resume_from === 'number') {
+          resumeFrom = contMeta.resume_from;
+          console.log(`[nightly-mpi] ${sport}: Resuming from athlete index ${resumeFrom}`);
+        }
+      }
+
+      for (let batchStart = resumeFrom; batchStart < athletes.length; batchStart += BATCH_SIZE) {
         // Check runtime budget — stop if approaching 50s limit
         if (Date.now() - nightlyStartTime > 50000) {
           const remaining = athletes.length - batchStart;
