@@ -407,7 +407,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     // Reset current but keep execution_score for speed
     setCurrent({ execution_score: current.execution_score });
     setShowOverrides(false);
-  }, [current, handedness, effectiveBatterSide, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand, repFieldingPosition]);
+  }, [current, handedness, effectiveBatterSide, effectivePitcherHand, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand, repFieldingPosition]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
