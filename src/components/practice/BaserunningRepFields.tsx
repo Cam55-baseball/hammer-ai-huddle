@@ -9,6 +9,7 @@ interface BaserunningRepFieldsProps {
   value: Partial<ScoredRep>;
   onChange: (field: string, val: any) => void;
   sport?: string;
+  mode?: 'quick' | 'advanced';
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
