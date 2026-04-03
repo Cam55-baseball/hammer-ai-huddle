@@ -359,8 +359,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsThrowingRequired = isThrowing;
   const throwingRequiredValid = !needsThrowingRequired || (!!current.self_catch_quality && !!current.effort_level);
 
-  // Baserunning custom desc now handled at session config level
-  const baserunningCustomDescValid = true;
+  // Baserunning: drill_type required per rep
+  const baserunningDrillValid = !isBaserunning || !!current.drill_type;
 
   // Validation
   const execScore = current.execution_score;
