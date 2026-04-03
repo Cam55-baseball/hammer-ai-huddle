@@ -15,11 +15,14 @@ export function useDaySessions(date: string | null) {
         .eq('user_id', user.id)
         .eq('session_date', date)
         .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
     enabled: !!user && !!date,
     staleTime: 60_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 45_000,
   });
 }

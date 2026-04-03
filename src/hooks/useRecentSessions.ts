@@ -16,6 +16,7 @@ export function useRecentSessions(sport: string, module?: string) {
         .eq('sport', sport)
         .is('deleted_at', null)
         .order('session_date', { ascending: false })
+        .order('id', { ascending: false })
         .limit(10);
 
       if (module) {
@@ -28,5 +29,6 @@ export function useRecentSessions(sport: string, module?: string) {
     },
     enabled: !!user,
     staleTime: 60_000,
+    refetchOnWindowFocus: true,
   });
 }

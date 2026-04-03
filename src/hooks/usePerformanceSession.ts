@@ -80,10 +80,12 @@ export function usePerformanceSession() {
         throw new Error('Retroactive limit exceeded');
       }
 
+      const idempotencyKey = crypto.randomUUID();
       const { data: session, error } = await supabase
         .from('performance_sessions')
         .insert({
           user_id: user.id,
+          idempotency_key: idempotencyKey,
           sport: data.sport,
           session_type: data.session_type,
           session_date: data.session_date,
