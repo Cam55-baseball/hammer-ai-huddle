@@ -1179,7 +1179,7 @@ Deno.serve(async (req) => {
     // 5. Settings
     const { data: settings } = await supabase
       .from("athlete_mpi_settings")
-      .select("coach_validation_met, primary_coach_id")
+      .select("coach_validation_met, primary_coach_id, primary_batting_side")
       .eq("user_id", user_id)
       .maybeSingle();
 
