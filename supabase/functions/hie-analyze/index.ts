@@ -1248,16 +1248,89 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── PRESCRIPTIVE ACTIONS (adaptive — rotates out ineffective drills) ──
+    // ── PRESCRIPTIVE ACTIONS (AI + scoring hybrid with fallback) ──
     const prescriptiveActions: PrescriptiveAction[] = [];
     const usedAreas = new Set<string>();
-    allPatterns.slice(0, 5).forEach((p) => {
-      const drills = mapPatternToDrills(p, ineffectiveDrills, drillUsageCounts, drillCatalog);
-      if (drills.length > 0 && !usedAreas.has(p.metric)) {
-        usedAreas.add(p.metric);
-        prescriptiveActions.push({ weakness_area: p.description, drills });
+
+    // Attempt prescription-engine call
+    let aiPrescriptions: any[] = [];
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const { data: drillCatalogFull } = await supabase.from("drills").select("id, name, module, skill_target, default_constraints");
+      const athleteAge = settings?.date_of_birth
+        ? Math.floor((Date.now() - new Date(settings.date_of_birth).getTime()) / (365.25 * 86400000))
+        : 18;
+      const { data: profileData } = await supabase.from("profiles").select("experience_level").eq("id", user_id).maybeSingle();
+
+      const prescriptionInput = {
+        user_id,
+        patterns: allPatterns.slice(0, 10),
+        weakness_scores: weaknessScoreRows.map(w => ({ metric: w.weakness_metric, value: w.score, prev_value: null })),
+        recent_prescriptions: (existingPrescriptions ?? []).map((rx: any) => ({
+          drill_name: rx.drill_name, weakness_area: rx.weakness_area,
+          effectiveness_score: rx.effectiveness_score, adherence_count: rx.adherence_count ?? 0,
+          targeted_metric: rx.targeted_metric ?? null,
+        })),
+        athlete_profile: {
+          age: athleteAge,
+          level: profileData?.experience_level || 'hs',
+          batting_side: settings?.primary_batting_side || 'R',
+          throwing_hand: settings?.primary_throwing_hand || 'R',
+        },
+        readiness_score: readinessScore,
+        available_drills: (drillCatalogFull ?? []).map((d: any) => ({
+          id: d.id, name: d.name, module: d.module, skill_target: d.skill_target || '', default_constraints: d.default_constraints || {},
+        })),
+      };
+
+      const engineResp = await fetch(`${supabaseUrl}/functions/v1/prescription-engine`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify(prescriptionInput),
+      });
+
+      if (engineResp.ok) {
+        const engineData = await engineResp.json();
+        aiPrescriptions = engineData.prescriptions ?? [];
+      } else {
+        console.warn(`Prescription engine returned ${engineResp.status}, falling back to switch statement`);
       }
-    });
+    } catch (engineErr: any) {
+      console.error("Prescription engine call failed, using fallback:", engineErr.message);
+    }
+
+    // If AI prescriptions returned, use them; otherwise fall back to switch statement
+    if (aiPrescriptions.length > 0) {
+      // Group AI prescriptions by targeted_metric for prescriptive actions
+      for (const aiRx of aiPrescriptions) {
+        if (!usedAreas.has(aiRx.targeted_metric)) {
+          usedAreas.add(aiRx.targeted_metric);
+          prescriptiveActions.push({
+            weakness_area: aiRx.rationale || aiRx.targeted_metric,
+            drills: [{
+              name: aiRx.name,
+              description: aiRx.rationale,
+              module: aiRx.module,
+              constraints: JSON.stringify(aiRx.constraints),
+              drill_type: aiRx.targeted_metric,
+              drill_id: aiRx.drill_id,
+            }],
+          });
+        }
+      }
+    } else {
+      // Fallback: original switch-statement logic
+      allPatterns.slice(0, 5).forEach((p) => {
+        const drills = mapPatternToDrills(p, ineffectiveDrills, drillUsageCounts, drillCatalog);
+        if (drills.length > 0 && !usedAreas.has(p.metric)) {
+          usedAreas.add(p.metric);
+          prescriptiveActions.push({ weakness_area: p.description, drills });
+        }
+      });
+    }
 
     // ── READINESS ──
     const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
