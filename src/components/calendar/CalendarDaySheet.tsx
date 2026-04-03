@@ -833,6 +833,14 @@ export function CalendarDaySheet({
                   </>
                 )}
 
+                {/* Practice Sessions */}
+                {!isReorderMode && (
+                  <>
+                    <Separator />
+                    <DaySessionsList date={format(date, 'yyyy-MM-dd')} />
+                  </>
+                )}
+
                 {/* Skipped Section - shown when not in reorder mode */}
                 {!isReorderMode && skippedEvents.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-border">
