@@ -1704,6 +1704,123 @@ export type Database = {
         }
         Relationships: []
       }
+      hie_snapshots: {
+        Row: {
+          before_after_trends: Json | null
+          computed_at: string
+          created_at: string
+          decision_speed_index: number | null
+          development_confidence: number | null
+          development_status: string
+          drill_effectiveness: Json | null
+          id: string
+          movement_efficiency_score: number | null
+          mpi_score: number | null
+          mpi_trend_30d: number | null
+          mpi_trend_7d: number | null
+          prescriptive_actions: Json | null
+          primary_limiter: string | null
+          readiness_recommendation: string | null
+          readiness_score: number | null
+          risk_alerts: Json | null
+          smart_week_plan: Json | null
+          sport: string
+          transfer_score: number | null
+          updated_at: string
+          user_id: string
+          weakness_clusters: Json | null
+        }
+        Insert: {
+          before_after_trends?: Json | null
+          computed_at?: string
+          created_at?: string
+          decision_speed_index?: number | null
+          development_confidence?: number | null
+          development_status?: string
+          drill_effectiveness?: Json | null
+          id?: string
+          movement_efficiency_score?: number | null
+          mpi_score?: number | null
+          mpi_trend_30d?: number | null
+          mpi_trend_7d?: number | null
+          prescriptive_actions?: Json | null
+          primary_limiter?: string | null
+          readiness_recommendation?: string | null
+          readiness_score?: number | null
+          risk_alerts?: Json | null
+          smart_week_plan?: Json | null
+          sport?: string
+          transfer_score?: number | null
+          updated_at?: string
+          user_id: string
+          weakness_clusters?: Json | null
+        }
+        Update: {
+          before_after_trends?: Json | null
+          computed_at?: string
+          created_at?: string
+          decision_speed_index?: number | null
+          development_confidence?: number | null
+          development_status?: string
+          drill_effectiveness?: Json | null
+          id?: string
+          movement_efficiency_score?: number | null
+          mpi_score?: number | null
+          mpi_trend_30d?: number | null
+          mpi_trend_7d?: number | null
+          prescriptive_actions?: Json | null
+          primary_limiter?: string | null
+          readiness_recommendation?: string | null
+          readiness_score?: number | null
+          risk_alerts?: Json | null
+          smart_week_plan?: Json | null
+          sport?: string
+          transfer_score?: number | null
+          updated_at?: string
+          user_id?: string
+          weakness_clusters?: Json | null
+        }
+        Relationships: []
+      }
+      hie_team_snapshots: {
+        Row: {
+          computed_at: string
+          created_at: string
+          id: string
+          organization_id: string
+          risk_alerts: Json | null
+          suggested_team_drills: Json | null
+          team_mpi_avg: number | null
+          team_weakness_patterns: Json | null
+          trending_players: Json | null
+          updated_at: string
+        }
+        Insert: {
+          computed_at?: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          risk_alerts?: Json | null
+          suggested_team_drills?: Json | null
+          team_mpi_avg?: number | null
+          team_weakness_patterns?: Json | null
+          trending_players?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          computed_at?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          risk_alerts?: Json | null
+          suggested_team_drills?: Json | null
+          team_mpi_avg?: number | null
+          team_weakness_patterns?: Json | null
+          trending_players?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hydration_logs: {
         Row: {
           amount_oz: number
