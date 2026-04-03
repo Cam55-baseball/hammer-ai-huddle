@@ -3209,6 +3209,7 @@ export type Database = {
           effective_grade: number | null
           fatigue_state_at_session: Json | null
           id: string
+          idempotency_key: string | null
           intent_compliance_pct: number | null
           is_locked: boolean | null
           is_retroactive: boolean | null
@@ -3249,6 +3250,7 @@ export type Database = {
           effective_grade?: number | null
           fatigue_state_at_session?: Json | null
           id?: string
+          idempotency_key?: string | null
           intent_compliance_pct?: number | null
           is_locked?: boolean | null
           is_retroactive?: boolean | null
@@ -3289,6 +3291,7 @@ export type Database = {
           effective_grade?: number | null
           fatigue_state_at_session?: Json | null
           id?: string
+          idempotency_key?: string | null
           intent_compliance_pct?: number | null
           is_locked?: boolean | null
           is_retroactive?: boolean | null

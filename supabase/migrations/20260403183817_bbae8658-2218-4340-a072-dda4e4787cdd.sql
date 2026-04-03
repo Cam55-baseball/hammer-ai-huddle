@@ -1,0 +1,2 @@
+ALTER TABLE public.performance_sessions ADD COLUMN IF NOT EXISTS idempotency_key text;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_perf_sessions_idempotency ON public.performance_sessions (idempotency_key) WHERE idempotency_key IS NOT NULL;
