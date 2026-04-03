@@ -1,8 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useQueryClient } from '@tanstack/react-query';
-import { getTodayDate } from '@/utils/dateUtils';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { toast } from 'sonner';
 
 interface UndoSnapshot {
@@ -15,14 +14,8 @@ interface UndoSnapshot {
 
 export function useRescheduleEngine() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const scheduling = useSchedulingService();
   const lastAction = useRef<UndoSnapshot | null>(null);
-
-  const invalidateAll = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['calendar'] });
-    queryClient.invalidateQueries({ queryKey: ['gameplan'] });
-    queryClient.invalidateQueries({ queryKey: ['game-plan-skipped'] });
-  }, [queryClient]);
 
   /** Bulk-skip all given task IDs for a specific date */
   const skipDay = useCallback(async (date: string, taskIds: string[]) => {
@@ -42,15 +35,9 @@ export function useRescheduleEngine() {
       lastAction.current = { type: 'skip', skippedRows: rows };
     }
 
-    for (const row of rows) {
-      await supabase
-        .from('game_plan_skipped_tasks')
-        .upsert(row, { onConflict: 'user_id,task_id,skip_date' });
-    }
-
-    invalidateAll();
+    await scheduling.skipTasksBulk(taskIds, date, 'reschedule');
     toast.success(`Skipped ${taskIds.length} tasks for ${date}`);
-  }, [user, invalidateAll]);
+  }, [user, scheduling]);
 
   /** Push all non-mandatory calendar events forward by 1 day from a given date */
   const pushForwardOneDay = useCallback(async (fromDate: string) => {
@@ -73,9 +60,9 @@ export function useRescheduleEngine() {
         movedEvents.push({ id: evt.id, original_date: evt.event_date });
         const nextDate = new Date(evt.event_date);
         nextDate.setDate(nextDate.getDate() + 1);
-        await supabase.from('calendar_events')
-          .update({ event_date: nextDate.toISOString().split('T')[0] })
-          .eq('id', evt.id);
+        await scheduling.updateCalendarEvent(evt.id, {
+          event_date: nextDate.toISOString().split('T')[0],
+        }, 'reschedule');
       }
     }
 
@@ -86,9 +73,8 @@ export function useRescheduleEngine() {
     } else {
       lastAction.current = { type: 'pushForward', movedEvents };
     }
-    invalidateAll();
     toast.success('Schedule pushed forward 1 day');
-  }, [user, invalidateAll]);
+  }, [user, scheduling]);
 
   /** Push events from fromDate to a specific targetDate, shifting subsequent accordingly */
   const pushToDate = useCallback(async (fromDate: string, targetDate: string) => {
@@ -117,15 +103,14 @@ export function useRescheduleEngine() {
         if (mandatoryTypes.includes(evt.event_type)) continue;
         const newDate = new Date(evt.event_date);
         newDate.setDate(newDate.getDate() + diffDays);
-        await supabase.from('calendar_events')
-          .update({ event_date: newDate.toISOString().split('T')[0] })
-          .eq('id', evt.id);
+        await scheduling.updateCalendarEvent(evt.id, {
+          event_date: newDate.toISOString().split('T')[0],
+        }, 'reschedule');
       }
     }
 
-    invalidateAll();
     toast.success(`Schedule pushed to ${targetDate}`);
-  }, [user, invalidateAll]);
+  }, [user, scheduling]);
 
   /** Replace a target day's tasks with source day's tasks (copy events) */
   const replaceDay = useCallback(async (targetDate: string, sourceDate: string) => {
@@ -154,23 +139,22 @@ export function useRescheduleEngine() {
     if (targetEvents) {
       for (const evt of targetEvents) {
         if (mandatoryTypes.includes(evt.event_type)) continue;
-        await supabase.from('calendar_events').delete().eq('id', evt.id);
+        await scheduling.deleteCalendarEvent(evt.id, 'reschedule');
       }
     }
 
     // Copy source events to target
     for (const evt of sourceEvents) {
       if (mandatoryTypes.includes(evt.event_type)) continue;
-      const { id, created_at, updated_at, ...rest } = evt;
-      await supabase.from('calendar_events').insert({
+      const { id, created_at, updated_at, user_id, ...rest } = evt;
+      await scheduling.addCalendarEvent({
         ...rest,
         event_date: targetDate,
-      });
+      }, 'reschedule');
     }
 
-    invalidateAll();
     toast.success(`Replaced ${targetDate} with ${sourceDate}'s schedule`);
-  }, [user, invalidateAll]);
+  }, [user, scheduling]);
 
   /** Undo the last scheduling action */
   const undoLastAction = useCallback(async () => {
@@ -181,49 +165,43 @@ export function useRescheduleEngine() {
       // Undo skipped rows (from skip or compound skip+push)
       if (snapshot.skippedRows) {
         for (const row of snapshot.skippedRows) {
-          await supabase
-            .from('game_plan_skipped_tasks')
-            .delete()
-            .eq('user_id', row.user_id)
-            .eq('task_id', row.task_id)
-            .eq('skip_date', row.skip_date);
+          await scheduling.unskipTask(row.task_id, row.skip_date, 'reschedule');
         }
       }
 
       // Undo moved events (from push or compound skip+push)
       if (snapshot.movedEvents) {
         for (const evt of snapshot.movedEvents) {
-          await supabase.from('calendar_events')
-            .update({ event_date: evt.original_date })
-            .eq('id', evt.id);
+          await scheduling.updateCalendarEvent(evt.id, {
+            event_date: evt.original_date,
+          }, 'reschedule');
         }
       }
 
       if (snapshot.type === 'replace') {
         if (snapshot.insertedEventIds) {
           for (const id of snapshot.insertedEventIds) {
-            await supabase.from('calendar_events').delete().eq('id', id);
+            await scheduling.deleteCalendarEvent(id, 'reschedule');
           }
         }
         if (snapshot.deletedEvents) {
           for (const evt of snapshot.deletedEvents) {
             const { id, ...rest } = evt;
-            await supabase.from('calendar_events').insert({ ...rest, id });
+            await scheduling.addCalendarEvent({ ...rest }, 'reschedule');
           }
         }
       }
 
       lastAction.current = null;
-      invalidateAll();
       toast.success('Action undone');
       return true;
     } catch (err: any) {
       toast.error('Failed to undo');
       return false;
     }
-  }, [user, invalidateAll]);
+  }, [user, scheduling]);
 
   const canUndo = useCallback(() => !!lastAction.current, []);
 
-  return { skipDay, pushForwardOneDay, pushToDate, replaceDay, undoLastAction, canUndo, invalidateAll };
+  return { skipDay, pushForwardOneDay, pushToDate, replaceDay, undoLastAction, canUndo, invalidateAll: scheduling.invalidateScheduling };
 }

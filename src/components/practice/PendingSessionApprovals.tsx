@@ -5,8 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { Check, X, Clock, CalendarDays } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface PendingSession {
@@ -30,6 +30,7 @@ interface PendingSessionApprovalsProps {
 export function PendingSessionApprovals({ onCountChange }: PendingSessionApprovalsProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const scheduling = useSchedulingService();
   const [sessions, setSessions] = useState<PendingSession[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -84,13 +85,10 @@ export function PendingSessionApprovals({ onCountChange }: PendingSessionApprova
   const handleAction = async (id: string, action: 'accepted' | 'rejected') => {
     setLoading(true);
     const newStatus = action === 'accepted' ? 'scheduled' : 'rejected';
-    const { error } = await supabase
-      .from('scheduled_practice_sessions' as any)
-      .update({ status: newStatus } as any)
-      .eq('id', id);
+    const success = await scheduling.updateSessionStatus(id, newStatus);
 
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    if (!success) {
+      toast({ title: 'Error', description: 'Failed to update session', variant: 'destructive' });
     } else {
       toast({ title: action === 'accepted' ? 'Session accepted' : 'Session declined' });
       fetchPending();
