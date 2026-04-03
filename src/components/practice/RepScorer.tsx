@@ -1477,7 +1477,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                       cols={4}
                     />
                   </div>
-                </>
               )}
             </>
           )}
