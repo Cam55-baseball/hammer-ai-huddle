@@ -3,11 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { CalendarView } from '@/components/calendar/CalendarView';
 import { useSportTheme } from '@/contexts/SportThemeContext';
+import { useSchedulingRealtime } from '@/hooks/useSchedulingRealtime';
 
 export default function Calendar() {
   const { t } = useTranslation();
   const { sport } = useSportTheme();
   const [selectedSport] = useState<'baseball' | 'softball'>(sport || 'baseball');
+
+  // Mount unified scheduling realtime subscriptions
+  useSchedulingRealtime();
 
   return (
     <DashboardLayout>

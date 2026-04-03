@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { CalendarClock, ArrowRight, Trash2, ChevronRight } from 'lucide-react';
 
 interface RestDaySchedulerProps {
@@ -20,7 +20,7 @@ interface RestDaySchedulerProps {
 export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTaskIds }: RestDaySchedulerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const scheduling = useSchedulingService();
   const [processing, setProcessing] = useState(false);
 
   const mandatoryTypes = ['game', 'coach_assigned', 'tryout'];
@@ -30,24 +30,7 @@ export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTas
   /** Skip all game plan tasks for this date */
   const skipGamePlanTasks = async () => {
     if (!user || !gamePlanTaskIds || gamePlanTaskIds.length === 0) return;
-    
-    const rows = gamePlanTaskIds.map(taskId => ({
-      user_id: user.id,
-      task_id: taskId,
-      skip_date: date,
-    }));
-
-    // Upsert to avoid duplicates
-    for (const row of rows) {
-      await supabase
-        .from('game_plan_skipped_tasks')
-        .upsert(row, { onConflict: 'user_id,task_id,skip_date' });
-    }
-  };
-
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ['calendar'] });
-    queryClient.invalidateQueries({ queryKey: ['gameplan'] });
+    await scheduling.skipTasksBulk(gamePlanTaskIds, date, 'reschedule');
   };
 
   const findNextOpenDay = async (): Promise<string> => {
@@ -74,13 +57,9 @@ export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTas
     try {
       const nextDay = await findNextOpenDay();
       for (const evt of movableEvents) {
-        await supabase.from('calendar_events')
-          .update({ event_date: nextDay })
-          .eq('id', evt.id);
+        await scheduling.updateCalendarEvent(evt.id, { event_date: nextDay }, 'reschedule');
       }
-      // Also skip game plan tasks for rest day
       await skipGamePlanTasks();
-      invalidateAll();
       toast({ title: 'Events moved', description: `${movableEvents.length} events moved to ${nextDay}` });
       onOpenChange(false);
     } catch (e: any) {
@@ -94,7 +73,6 @@ export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTas
     if (!user) return;
     setProcessing(true);
     try {
-      // Get all future non-mandatory events and shift by 1 day
       const { data: futureEvents } = await supabase
         .from('calendar_events')
         .select('id, event_date, event_type')
@@ -107,14 +85,12 @@ export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTas
           if (mandatoryTypes.includes(evt.event_type)) continue;
           const nextDate = new Date(evt.event_date);
           nextDate.setDate(nextDate.getDate() + 1);
-          await supabase.from('calendar_events')
-            .update({ event_date: nextDate.toISOString().split('T')[0] })
-            .eq('id', evt.id);
+          await scheduling.updateCalendarEvent(evt.id, {
+            event_date: nextDate.toISOString().split('T')[0],
+          }, 'reschedule');
         }
       }
-      // Also skip game plan tasks for rest day
       await skipGamePlanTasks();
-      invalidateAll();
       toast({ title: 'Schedule pushed', description: 'Non-mandatory events shifted forward 1 day' });
       onOpenChange(false);
     } catch (e: any) {
@@ -129,11 +105,9 @@ export function RestDayScheduler({ open, onOpenChange, date, events, gamePlanTas
     setProcessing(true);
     try {
       for (const evt of movableEvents) {
-        await supabase.from('calendar_events').delete().eq('id', evt.id);
+        await scheduling.deleteCalendarEvent(evt.id, 'reschedule');
       }
-      // Also skip game plan tasks for rest day
       await skipGamePlanTasks();
-      invalidateAll();
       toast({ title: 'Sessions dropped', description: `${movableEvents.length} sessions removed` });
       onOpenChange(false);
     } catch (e: any) {

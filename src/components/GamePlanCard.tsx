@@ -45,6 +45,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { PhysioPostWorkoutBanner } from '@/components/physio/PhysioPostWorkoutBanner';
 import { usePhysioGamePlanBadges } from '@/hooks/usePhysioGamePlanBadges';
 import { supabase } from '@/integrations/supabase/client';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useRescheduleEngine } from '@/hooks/useRescheduleEngine';
@@ -80,6 +81,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
   const { getBadgesForTask } = usePhysioGamePlanBadges();
+  const scheduling = useSchedulingService();
   
   // System task schedule hook - for time/reminder settings only
   const { schedules: taskSchedules, saveSchedule: saveTaskSchedule, getSchedule } = useSystemTaskSchedule();
@@ -295,7 +297,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     fetchSkippedTasks();
   }, [user]);
   
-  // Skip task handler (load management)
+  // Skip task handler (load management) — routed through scheduling service
   const handleSkipTask = async (taskId: string) => {
     if (!user) return;
     
@@ -303,16 +305,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     setSkippedTasks(prev => new Set([...prev, taskId]));
     
     const today = getTodayDate();
-    const { error } = await supabase
-      .from('game_plan_skipped_tasks')
-      .upsert({
-        user_id: user.id,
-        task_id: taskId,
-        skip_date: today,
-      }, { onConflict: 'user_id,task_id,skip_date' });
+    const success = await scheduling.skipTask(taskId, today);
     
-    if (error) {
-      console.error('Error skipping task:', error);
+    if (!success) {
       // Rollback on error
       setSkippedTasks(prev => {
         const next = new Set(prev);
@@ -325,7 +320,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
   
-  // Restore skipped task handler
+  // Restore skipped task handler — routed through scheduling service
   const handleRestoreTask = async (taskId: string) => {
     if (!user) return;
     
@@ -337,15 +332,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     });
     
     const today = getTodayDate();
-    const { error } = await supabase
-      .from('game_plan_skipped_tasks')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('task_id', taskId)
-      .eq('skip_date', today);
+    const success = await scheduling.unskipTask(taskId, today);
     
-    if (error) {
-      console.error('Error restoring task:', error);
+    if (!success) {
       // Rollback on error
       setSkippedTasks(prev => new Set([...prev, taskId]));
       toast.error(t('gamePlan.restoreError', 'Failed to restore task'));

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getDay } from 'date-fns';
@@ -17,6 +18,7 @@ export interface TaskSchedule {
 export function useSystemTaskSchedule() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const schedulingService = useSchedulingService();
   const [schedules, setSchedules] = useState<Record<string, TaskSchedule>>({});
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +62,7 @@ export function useSystemTaskSchedule() {
     fetchSchedules();
   }, [fetchSchedules]);
 
-  // Save or update a task schedule
+  // Save or update a task schedule — routed through scheduling service
   const saveSchedule = useCallback(async (
     taskId: string,
     displayDays: number[],
@@ -74,39 +76,14 @@ export function useSystemTaskSchedule() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('game_plan_task_schedule')
-        .upsert({
-          user_id: user.id,
-          task_id: taskId,
-          display_days: displayDays,
-          display_time: displayTime,
-          reminder_enabled: reminderEnabled,
-          reminder_minutes: reminderMinutes,
-          updated_at: new Date().toISOString(),
-        }, { 
-          onConflict: 'user_id,task_id'
-        })
-        .select()
-        .single();
+      const success = await schedulingService.setTaskSchedule(
+        taskId, displayDays, displayTime, reminderEnabled, reminderMinutes
+      );
 
-      if (error) throw error;
+      if (!success) throw new Error('Failed to save schedule');
 
-      // Update local state from the persisted row (source of truth)
-      if (data) {
-        setSchedules(prev => ({
-          ...prev,
-          [taskId]: {
-            id: data.id,
-            task_id: data.task_id,
-            display_days: (data.display_days as number[]) || [0, 1, 2, 3, 4, 5, 6],
-            display_time: data.display_time,
-            reminder_enabled: data.reminder_enabled || false,
-            reminder_minutes: data.reminder_minutes || 15,
-          }
-        }));
-      }
-
+      // Refetch to get the persisted state
+      await fetchSchedules();
       toast.success(t('gamePlan.taskSchedule.saved', 'Schedule saved'));
       return true;
     } catch (error: any) {
@@ -115,7 +92,7 @@ export function useSystemTaskSchedule() {
       toast.error(errorMessage);
       return false;
     }
-  }, [user, t]);
+  }, [user, t, schedulingService, fetchSchedules]);
 
   // Check if a task should be displayed today based on its schedule
   const isScheduledForToday = useCallback((taskId: string): boolean => {

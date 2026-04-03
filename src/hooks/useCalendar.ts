@@ -840,6 +840,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     }
   }, [user, sport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess, getDaySchedule]);
 
+  // ─── WRITE OPERATIONS: Delegated to useSchedulingService ───
+  // Import and call useSchedulingService in the consuming component instead.
+  // These thin wrappers remain for backward compatibility but delegate to the service.
   const addEvent = useCallback(async (event: CreateCalendarEvent): Promise<boolean> => {
     if (!user) return false;
     
@@ -852,12 +855,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         });
       
       if (error) throw error;
-      
-      // Refetch current range
       if (currentRange) {
         await fetchEventsForRange(currentRange.start, currentRange.end);
       }
-      
       return true;
     } catch (error) {
       console.error('Error adding calendar event:', error);
@@ -876,12 +876,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         .eq('user_id', user.id);
       
       if (error) throw error;
-      
-      // Refetch current range
       if (currentRange) {
         await fetchEventsForRange(currentRange.start, currentRange.end);
       }
-      
       return true;
     } catch (error) {
       console.error('Error updating calendar event:', error);
@@ -900,12 +897,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         .eq('user_id', user.id);
       
       if (error) throw error;
-      
-      // Refetch current range
       if (currentRange) {
         await fetchEventsForRange(currentRange.start, currentRange.end);
       }
-      
       return true;
     } catch (error) {
       console.error('Error deleting calendar event:', error);
@@ -922,73 +916,12 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
   // Refetch when locked days change (for order-aware sorting)
   useEffect(() => {
     if (currentRange && lockedDays.size >= 0) {
-      // Refetch to re-sort events based on new lock state
       fetchEventsForRange(currentRange.start, currentRange.end);
     }
-  }, [lockedDays]); // Only depend on lockedDays to avoid infinite loops
+  }, [lockedDays]);
 
-  // Set up real-time subscriptions for calendar events, day orders, and weekly locks
-  useEffect(() => {
-    if (!user) return;
-
-    const eventsChannel = supabase
-      .channel('calendar-events-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'calendar_events',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          refetch();
-        }
-      )
-      .subscribe();
-    
-    // Subscribe to calendar_day_orders changes for order sync
-    const dayOrdersChannel = supabase
-      .channel('calendar-day-orders-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'calendar_day_orders',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          console.log('[Calendar] Day orders changed, refetching...');
-          refetch();
-        }
-      )
-      .subscribe();
-    
-    // Subscribe to game_plan_locked_days changes for weekly lock sync
-    const weeklyLocksChannel = supabase
-      .channel('game-plan-lock-calendar-sync')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'game_plan_locked_days',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          console.log('[Calendar] Weekly lock changed, refetching...');
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(eventsChannel);
-      supabase.removeChannel(dayOrdersChannel);
-      supabase.removeChannel(weeklyLocksChannel);
-    };
-  }, [user, refetch]);
+  // Real-time subscriptions are now handled by useSchedulingRealtime
+  // No per-hook channels needed here
 
   return {
     events,

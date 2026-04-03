@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -21,6 +22,7 @@ export interface ScheduleTemplate {
 export function useScheduleTemplates() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const scheduling = useSchedulingService();
   const [templates, setTemplates] = useState<ScheduleTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,25 +67,8 @@ export function useScheduleTemplates() {
     if (!user) return false;
 
     try {
-      // If setting as default, first unset any existing defaults
-      if (isDefault) {
-        await supabase
-          .from('timeline_schedule_templates')
-          .update({ is_default: false })
-          .eq('user_id', user.id);
-      }
-
-      const { error } = await supabase
-        .from('timeline_schedule_templates')
-        .insert({
-          user_id: user.id,
-          name,
-          schedule: schedule as any,
-          is_default: isDefault,
-        });
-
-      if (error) throw error;
-
+      const success = await scheduling.saveScheduleTemplate(name, schedule, isDefault);
+      if (!success) throw new Error('Failed to save');
       toast.success(t('gamePlan.scheduleTemplate.savedSuccess'));
       await fetchTemplates();
       return true;
@@ -92,7 +77,7 @@ export function useScheduleTemplates() {
       toast.error(t('common.error'));
       return false;
     }
-  }, [user, fetchTemplates, t]);
+  }, [user, scheduling, fetchTemplates, t]);
 
   const updateTemplate = useCallback(async (
     templateId: string,
@@ -101,25 +86,8 @@ export function useScheduleTemplates() {
     if (!user) return false;
 
     try {
-      // If setting as default, first unset any existing defaults
-      if (updates.is_default) {
-        await supabase
-          .from('timeline_schedule_templates')
-          .update({ is_default: false })
-          .eq('user_id', user.id);
-      }
-
-      const { error } = await supabase
-        .from('timeline_schedule_templates')
-        .update({
-          ...updates,
-          schedule: updates.schedule as any,
-        })
-        .eq('id', templateId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
+      const success = await scheduling.updateScheduleTemplate(templateId, updates);
+      if (!success) throw new Error('Failed to update');
       await fetchTemplates();
       return true;
     } catch (error) {
@@ -127,20 +95,14 @@ export function useScheduleTemplates() {
       toast.error(t('common.error'));
       return false;
     }
-  }, [user, fetchTemplates, t]);
+  }, [user, scheduling, fetchTemplates, t]);
 
   const deleteTemplate = useCallback(async (templateId: string): Promise<boolean> => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('timeline_schedule_templates')
-        .delete()
-        .eq('id', templateId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
+      const success = await scheduling.deleteScheduleTemplate(templateId);
+      if (!success) throw new Error('Failed to delete');
       toast.success(t('gamePlan.scheduleTemplate.deleteSuccess'));
       await fetchTemplates();
       return true;
@@ -149,7 +111,7 @@ export function useScheduleTemplates() {
       toast.error(t('common.error'));
       return false;
     }
-  }, [user, fetchTemplates, t]);
+  }, [user, scheduling, fetchTemplates, t]);
 
   const getDefaultTemplate = useCallback((): ScheduleTemplate | null => {
     return templates.find(t => t.is_default) || null;

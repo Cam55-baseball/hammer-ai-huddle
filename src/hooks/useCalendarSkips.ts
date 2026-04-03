@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { getDay } from 'date-fns';
 
 export interface SkippedItem {
@@ -12,6 +13,7 @@ export interface SkippedItem {
 
 export function useCalendarSkips() {
   const { user } = useAuth();
+  const schedulingService = useSchedulingService();
   const [skippedItems, setSkippedItems] = useState<SkippedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,33 +48,8 @@ export function useCalendarSkips() {
     fetchSkippedItems();
   }, [fetchSkippedItems]);
 
-  // Real-time subscription to sync changes across components (Calendar <-> Game Plan)
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`calendar-skips-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen for INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'calendar_skipped_items',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Calendar skip changed (realtime):', payload.eventType);
-          // Refetch all skipped items when any change occurs
-          fetchSkippedItems();
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchSkippedItems]);
+  // Real-time subscriptions are now handled by useSchedulingRealtime
+  // No per-hook channels needed here
 
   // Check if an item is skipped for a specific day of the week
   const isSkippedForDay = useCallback((
@@ -98,7 +75,7 @@ export function useCalendarSkips() {
     return skipRecord?.skip_days || [];
   }, [skippedItems]);
 
-  // Update skip days for an item (create/update)
+  // Update skip days for an item — routed through scheduling service
   const updateSkipDays = useCallback(async (
     itemId: string, 
     itemType: string, 
@@ -107,45 +84,21 @@ export function useCalendarSkips() {
     if (!user) return false;
 
     try {
-      // If empty skip days, remove the record entirely
-      if (skipDays.length === 0) {
-        return await removeSkip(itemId, itemType);
-      }
-
-      const { error } = await supabase
-        .from('calendar_skipped_items')
-        .upsert({
-          user_id: user.id,
-          item_id: itemId,
-          item_type: itemType,
-          skip_days: skipDays,
-        }, { 
-          onConflict: 'user_id,item_id,item_type' 
-        });
-
-      if (error) {
-        console.error('Error updating skip days:', error);
-        return false;
-      }
+      const success = await schedulingService.setCalendarSkip(itemId, itemType, skipDays);
+      if (!success) return false;
 
       // Optimistically update local state
       setSkippedItems(prev => {
-        const existing = prev.findIndex(
-          s => s.item_id === itemId && s.item_type === itemType
-        );
-        
+        if (skipDays.length === 0) {
+          return prev.filter(s => !(s.item_id === itemId && s.item_type === itemType));
+        }
+        const existing = prev.findIndex(s => s.item_id === itemId && s.item_type === itemType);
         if (existing >= 0) {
           const updated = [...prev];
           updated[existing] = { ...updated[existing], skip_days: skipDays };
           return updated;
         }
-        
-        return [...prev, {
-          id: 'temp-' + Date.now(),
-          item_id: itemId,
-          item_type: itemType,
-          skip_days: skipDays,
-        }];
+        return [...prev, { id: 'temp-' + Date.now(), item_id: itemId, item_type: itemType, skip_days: skipDays }];
       });
 
       return true;
@@ -153,9 +106,9 @@ export function useCalendarSkips() {
       console.error('Error in updateSkipDays:', err);
       return false;
     }
-  }, [user]);
+  }, [user, schedulingService]);
 
-  // Remove all skips for an item (un-skip completely)
+  // Remove all skips for an item — routed through scheduling service
   const removeSkip = useCallback(async (
     itemId: string, 
     itemType: string
@@ -163,17 +116,8 @@ export function useCalendarSkips() {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from('calendar_skipped_items')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('item_id', itemId)
-        .eq('item_type', itemType);
-
-      if (error) {
-        console.error('Error removing skip:', error);
-        return false;
-      }
+      const success = await schedulingService.removeCalendarSkip(itemId, itemType);
+      if (!success) return false;
 
       // Optimistically update local state
       setSkippedItems(prev => 
@@ -185,7 +129,7 @@ export function useCalendarSkips() {
       console.error('Error in removeSkip:', err);
       return false;
     }
-  }, [user]);
+  }, [user, schedulingService]);
 
   // Un-skip for a specific day only (keep other skip days)
   const unskipForDay = useCallback(async (
