@@ -1,96 +1,99 @@
 
 
-# Post-Session Experience v2 — Elite Feedback Layer
+# Adaptive Variation Layer — Implementation Plan
 
-## Overview
-Replace `PostSessionSummary.tsx` with a new session-reactive feedback system and redesign `RecentSessionsList.tsx` to show insight-tagged history with expandable Win/Focus/Metrics detail.
+## What This Delivers
+Controlled phrasing variation for Win/Focus/Cue/Tag outputs plus repetition detection across sessions, keeping the system fresh without changing any thresholds, metrics, or logic.
 
-## New Files
+## Architecture
 
-### 1. `src/lib/sessionInsights.ts` — Deterministic Insight Engine
-Pure functions that take `composite_indexes` + `drill_blocks` + `module` and return:
-- **Win**: Best signal from session (highest relative composite or standout metric like barrel_pct >= 30%, decision >= 65, etc.)
-- **Focus**: Biggest limiter (lowest composite, chase_pct spike, whiff_pct high, etc.)
-- **Next Rep Cue**: Mapped from Focus category (lookup table: chase → "See it deeper before committing", whiff → "Stay through the zone", etc.)
-- **Key Metrics**: Top 3 most relevant metrics filtered by module (Hitting: barrel_pct, chase_pct, hard_contact_pct; Pitching: avg_zone_pct, pei; Fielding: avg_clean_field_pct, avg_footwork_grade)
-- **Session Tag**: Single label for history view ("Power Day", "Chase Spike", "Elite Execution", "Fatigue Drop", "Solid Work")
+```text
+sessionInsights.ts (enhanced)
+├── WIN_VARIATIONS[metric] → string[][]  (2-3 phrasings per metric)
+├── FOCUS_VARIATIONS[metric] → string[][] 
+├── CUE_VARIATIONS[metric] → string[]
+├── TAG_VARIATIONS[tag] → string[]
+├── variationIndex(sessionId, metric) → deterministic hash pick
+└── generateInsights(composites, drillBlocks, module, sessionContext?)
+                                                        ↑
+                                            { sessionType, sessionDate }
+                                            for practice/game context cues
 
-Module-aware metric relevance maps:
-- `hitting` → BQI, decision, barrel_pct, chase_pct, whiff_pct, hard_contact_pct, line_drive_pct
-- `pitching` → PEI, avg_zone_pct, competitive_execution
-- `fielding` → FQI, avg_footwork_grade, avg_clean_field_pct
-- `throwing` → competitive_execution
+PostSessionSummaryV2.tsx
+└── passes sessionContext to generateInsights()
 
-Win/Focus selection: rank all relevant metrics by deviation from thresholds, pick strongest positive (win) and strongest negative (focus).
+useInsightHistory (new hook, lightweight)
+└── tracks last 3-5 focus metrics per athlete in localStorage
+└── provides focusVariationOffset to shift phrasing when repeated
+```
 
-### 2. `src/components/practice/PostSessionSummaryV2.tsx` — New Summary Component
-Replaces `PostSessionSummary.tsx` in PracticeHub.
+## Changes
 
-**Data fetch**: Same polling pattern but expanded select to include `drill_blocks, effective_grade, micro_layer_data`.
+### 1. `src/lib/sessionInsights.ts` — Variation + Context
 
-**Layout (top → bottom):**
+**Add variation arrays** (2-3 per metric, same meaning):
+```
+WIN_VARIATIONS.chase_pct = [
+  (v) => `Chase discipline was elite — only ${v}% chase rate`,
+  (v) => `You laid off pitches outside the zone — just ${v}% chases`,
+  (v) => `${v}% chase rate — that's pro-level plate discipline`,
+]
+```
 
-**A. Session Snapshot Card** (primary/5 bg)
-- Module + type + date + optional Coach-Led badge
-- Large effective_grade display with `getGradeLabel()` prominently shown (e.g., "Plus-Plus · 62")
-- Total reps + drill count subtitle
+**Add context sensitivity**: Accept optional `sessionContext: { sessionType?: string }`. Append context suffix to cue:
+- `practice/solo_work` → " — lock this in before game speed"
+- `game/live_scrimmage` → " — this is showing up in competition"
 
-**B. Clear Win Card** (green/5 bg, trophy icon)
-- Single sentence from `generateWin(composites, module)`
-- e.g., "Your barrel rate hit 34% — above pro average"
+**Variation selection**: Deterministic hash of `sessionDate + metric` → index into variations array. No randomness.
 
-**C. Priority Focus Card** (amber/5 bg, target icon)
-- Single sentence from `generateFocus(composites, module)`
-- e.g., "Chase rate spiked to 38% — costing quality reps"
+**Tag variations**:
+```
+TAG_VARIATIONS = {
+  'Grind Session': ['Grind Day', 'Work Day', 'Foundation Work'],
+  'Solid Work': ['Steady Session', 'Clean Work', 'Consistent Day'],
+  'Elite Execution': ['Elite Day', 'Locked In', 'Peak Performance'],
+  'Building': ['Growth Day', 'Progress Session', 'Developing'],
+}
+```
 
-**D. Next Rep Cue** (blue/5 bg, arrow icon)
-- Short actionable instruction mapped from Focus
-- e.g., "See it deeper before committing"
+### 2. `src/hooks/useInsightHistory.ts` — Repetition Detection (NEW)
 
-**E. Key Metrics** (max 3, horizontal row)
-- Each: label + value + color indicator
-- Only metrics supporting Win or Focus
+Lightweight localStorage-based tracker:
+- Stores last 5 `{ focusMetric, cueIndex, date }` entries per user
+- Exposes `getVariationOffset(focusMetric)` — returns 0, 1, or 2 to shift to next phrasing variant when same focus repeats
+- No DB queries, no API calls
 
-**F. Streak** (kept, same as current)
+### 3. `src/components/practice/PostSessionSummaryV2.tsx` — Wire Up
 
-**G. Done Button**
+- Pass `sessionContext: { sessionType }` to `generateInsights()`
+- Call `useInsightHistory` to get variation offset
+- After rendering, record current focus metric to history
+- Zero new queries added
 
-**Removed**: AIPromptCard, full composite grid
+### 4. `src/components/practice/RecentSessionsList.tsx` — Tag Variation
 
-### 3. Updated `src/components/practice/RecentSessionsList.tsx`
-**List row changes:**
-- Date + module
-- Effective grade badge
-- Auto-generated insight tag badge (from `getSessionTag()`)
-- Remove raw rep count from collapsed view
+- Pass session date to tag generation for deterministic variation
 
-**Expanded view changes:**
-- Show Win / Focus / Next Rep Cue (same insight engine)
-- Show max 3 key metrics
-- Keep videos and notes
-- Remove raw drill_blocks dump and full composite grid
+## Hard Guardrails Maintained
+- No AI calls added
+- No threshold changes
+- No metric selection logic changes
+- No additional DB queries
+- No micro_layer_data expansion
+- Base stealing trainer untouched
+- Sub-2s render preserved (localStorage read is <1ms)
 
-## Modified Files
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/lib/sessionInsights.ts` | **NEW** — deterministic insight engine |
-| `src/components/practice/PostSessionSummaryV2.tsx` | **NEW** — replaces old summary |
-| `src/pages/PracticeHub.tsx` | Import `PostSessionSummaryV2` instead of `PostSessionSummary` |
-| `src/components/practice/RecentSessionsList.tsx` | Redesign with insight tags + Win/Focus expansion |
-| `src/hooks/useRecentSessions.ts` | Add `effective_grade` to select (already has `composite_indexes`) |
+| `src/lib/sessionInsights.ts` | Add variation arrays, context sensitivity, hash-based selection |
+| `src/hooks/useInsightHistory.ts` | **NEW** — localStorage repetition tracker |
+| `src/components/practice/PostSessionSummaryV2.tsx` | Pass context + variation offset |
+| `src/components/practice/RecentSessionsList.tsx` | Use tag variations |
 
-## Implementation Order
-1. Create `sessionInsights.ts` (pure logic, no deps)
-2. Create `PostSessionSummaryV2.tsx`
-3. Update `PracticeHub.tsx` import
-4. Update `useRecentSessions.ts` select
-5. Redesign `RecentSessionsList.tsx`
-
-## What This Does NOT Touch
-- Base stealing trainers (isolated, untouchable)
-- Progress Hub
-- HIE / prescription engine
-- `calculate-session` edge function
-- No new DB tables or migrations needed
+## Verification
+- Same composite input with different dates → different phrasing (hash-based)
+- Same focus metric 3x in a row → offset shifts phrasing each time
+- No accuracy or metric alignment degradation (thresholds untouched)
 
