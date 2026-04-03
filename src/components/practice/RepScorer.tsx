@@ -1491,19 +1491,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 required
               />
 
-              {/* Hit Type Hardness */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Exit Velocity</Label>
-                <SelectGrid
-                  options={[
-                    { value: 'soft', label: '🟢 Soft' },
-                    { value: 'average', label: '🟡 Average' },
-                    { value: 'hard', label: '🔴 Hard' },
-                  ]}
-                  value={current.hit_type_hardness}
-                  onChange={v => updateField('hit_type_hardness', v)}
-                />
-              </div>
+              {/* Hit Type Hardness moved to advanced section below */}
 
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type <span className="text-destructive">*</span></Label>
