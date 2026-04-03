@@ -101,6 +101,15 @@ export interface ScoredRep {
   adjustment_tag?: string;
   // Pitching contact type
   contact_type?: string;
+  // Bunting mandatory fields
+  bunt_ball_state?: string;
+  bunt_direction?: string;
+  bunt_contact_quality?: string;
+  bunt_defense_result?: string;
+  bunt_hit_or_out?: string;
+  bunt_type?: string;
+  bunt_runner_location?: string;
+  bunt_spin_type?: string;
   // Baserunning
   drill_type?: string;
   baserunning_goal?: string;
