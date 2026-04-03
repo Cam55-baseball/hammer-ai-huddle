@@ -1444,8 +1444,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {mode === 'advanced' && (
-                <>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
                       Pitch Command: {current.pitch_command_grade ?? 50}
