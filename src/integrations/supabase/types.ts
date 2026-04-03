@@ -1115,12 +1115,15 @@ export type Database = {
           id: string
           module: string
           post_score: number | null
+          post_weakness_value: number | null
           pre_score: number | null
+          pre_weakness_value: number | null
           prescribed_at: string
           resolved: boolean | null
           updated_at: string
           user_id: string
           weakness_area: string
+          weakness_metric: string | null
         }
         Insert: {
           adherence_count?: number | null
@@ -1131,12 +1134,15 @@ export type Database = {
           id?: string
           module: string
           post_score?: number | null
+          post_weakness_value?: number | null
           pre_score?: number | null
+          pre_weakness_value?: number | null
           prescribed_at?: string
           resolved?: boolean | null
           updated_at?: string
           user_id: string
           weakness_area: string
+          weakness_metric?: string | null
         }
         Update: {
           adherence_count?: number | null
@@ -1147,12 +1153,15 @@ export type Database = {
           id?: string
           module?: string
           post_score?: number | null
+          post_weakness_value?: number | null
           pre_score?: number | null
+          pre_weakness_value?: number | null
           prescribed_at?: string
           resolved?: boolean | null
           updated_at?: string
           user_id?: string
           weakness_area?: string
+          weakness_metric?: string | null
         }
         Relationships: []
       }
@@ -6851,6 +6860,30 @@ export type Database = {
           updated_at?: string
           user_id?: string
           video_url?: string
+        }
+        Relationships: []
+      }
+      weakness_scores: {
+        Row: {
+          computed_at: string
+          id: string
+          score: number
+          user_id: string
+          weakness_metric: string
+        }
+        Insert: {
+          computed_at?: string
+          id?: string
+          score: number
+          user_id: string
+          weakness_metric: string
+        }
+        Update: {
+          computed_at?: string
+          id?: string
+          score?: number
+          user_id?: string
+          weakness_metric?: string
         }
         Relationships: []
       }
