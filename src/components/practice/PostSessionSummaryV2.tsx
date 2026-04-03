@@ -19,7 +19,8 @@ interface PostSessionSummaryV2Props {
 }
 
 export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }: PostSessionSummaryV2Props) {
-  const { getVariationOffset, recordFocus } = useInsightHistory();
+  const { user } = useAuth();
+  const { getVariationOffset, recordFocus } = useInsightHistory(user?.id);
   const recordedRef = useRef(false);
 
   const { data: session, isLoading } = useQuery({
