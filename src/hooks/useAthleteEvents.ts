@@ -119,13 +119,11 @@ export function useAthleteEvents() {
     if (!user?.id) return false;
 
     try {
-      const { error } = await supabase
-        .from('athlete_events')
-        .delete()
-        .eq('id', eventId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      const success = await schedulingService.deleteDayType(eventId);
+      if (!success) {
+        toast.error('Failed to remove event');
+        return false;
+      }
 
       await fetchEvents();
       toast.success('Event removed');
