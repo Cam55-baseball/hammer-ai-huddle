@@ -537,7 +537,7 @@ export default function PracticeHub() {
               )}
               {/* Step 5: Post-Session Summary */}
               {step === 'session_summary' && savedSessionId && sessionType && (
-                <PostSessionSummary
+                <PostSessionSummaryV2
                   sessionId={savedSessionId}
                   module={activeModule}
                   sessionType={sessionType}
