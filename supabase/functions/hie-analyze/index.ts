@@ -822,6 +822,28 @@ function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
         ],
       });
       break;
+    case "practice_game_gap":
+      rotations.push({
+        primary: { name: "Pressure Simulation BP", description: "Live at-bats with simulated game counts and consequences", module: "practice-hub", constraints: "15 ABs, full count scenarios", drill_type: "situational" },
+        alternatives: [
+          { name: "Competitive Rounds", description: "Score-based hitting rounds against teammates", module: "practice-hub", constraints: "3 rounds × 5 ABs, track results", drill_type: "situational" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Mental Performance Routine", description: "Pre-AB breathing and visualization routine under pressure", module: "practice-hub", constraints: "5 min visualization + 10 live ABs", drill_type: "mental" },
+        alternatives: [
+          { name: "Distraction Training", description: "Practice with crowd noise and distractions", module: "practice-hub", constraints: "10 ABs with audio distractions", drill_type: "mental" },
+        ],
+      });
+      break;
+    case "fatigue_dropoff":
+      rotations.push({
+        primary: { name: "Quality-Over-Quantity Protocol", description: "Reduce session volume, increase rest between sets", module: "practice-hub", constraints: "Max 15 reps per set, 2 min rest", drill_type: "volume_management" },
+        alternatives: [
+          { name: "Endurance Conditioning Circuit", description: "Build stamina to maintain quality through full sessions", module: "speed-lab", constraints: "3 circuits, moderate intensity", drill_type: "conditioning" },
+        ],
+      });
+      break;
     default:
       if (pattern.category === "pitching") {
         rotations.push({
