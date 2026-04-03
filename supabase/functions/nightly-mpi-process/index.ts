@@ -505,7 +505,12 @@ serve(async (req) => {
           user_id: '00000000-0000-0000-0000-000000000000',
           action: 'nightly_mpi_failures',
           table_name: 'mpi_scores',
-          metadata: { sport, failed_count: failedUsers.length, failed_users: failedUsers.slice(0, 20) },
+          metadata: {
+            sport,
+            failed_count: failedUsers.length,
+            failed_users: failedUsers.slice(0, 20).map(f => f.user_id),
+            errors: failedUsers.slice(0, 20).map(f => ({ user_id: f.user_id, error: f.error })),
+          },
         });
       }
 
