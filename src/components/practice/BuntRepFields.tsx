@@ -11,6 +11,7 @@ interface BuntRepFieldsProps {
   onChange: (field: string, val: any) => void;
   sport?: string;
   batterSide?: 'L' | 'R';
+  mode?: 'quick' | 'advanced';
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
@@ -94,12 +95,34 @@ const spinTypes = [
 ];
 
 
-export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFieldsProps) {
+export function BuntRepFields({ value, onChange, sport, batterSide, mode = 'advanced' }: BuntRepFieldsProps) {
   const { pitchTypes } = useSportConfig();
   const v = value as any;
 
   return (
     <div className="space-y-3">
+      {/* Ball State — mandatory */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Ball State <span className="text-destructive">*</span></Label>
+        <SelectGrid options={ballStates} value={v.bunt_ball_state} onChange={val => onChange('bunt_ball_state', val)} cols={2} />
+      </div>
+
+      {/* Bunt Direction — mandatory */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Direction <span className="text-destructive">*</span></Label>
+        <SelectGrid options={buntDirections} value={v.bunt_direction} onChange={val => onChange('bunt_direction', val)} cols={4} />
+      </div>
+
+      {/* Contact Quality — mandatory */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality <span className="text-destructive">*</span></Label>
+        <SelectGrid options={contactQualities} value={v.bunt_contact_quality} onChange={val => onChange('bunt_contact_quality', val)} />
+      </div>
+
+      {/* === ADVANCED FIELDS === */}
+      {mode === 'advanced' && (
+      <>
+
       {/* Execution Score */}
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">
@@ -176,24 +199,6 @@ export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFie
         />
       </div>
 
-      {/* Contact Quality */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality</Label>
-        <SelectGrid options={contactQualities} value={v.bunt_contact_quality} onChange={val => onChange('bunt_contact_quality', val)} />
-      </div>
-
-      {/* Bunt Direction */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Bunt Direction</Label>
-        <SelectGrid options={buntDirections} value={v.bunt_direction} onChange={val => onChange('bunt_direction', val)} cols={4} />
-      </div>
-
-      {/* Ball State */}
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Ball State</Label>
-        <SelectGrid options={ballStates} value={v.bunt_ball_state} onChange={val => onChange('bunt_ball_state', val)} cols={2} />
-      </div>
-
       {/* Defense Result */}
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Defense Result</Label>
@@ -223,6 +228,9 @@ export function BuntRepFields({ value, onChange, sport, batterSide }: BuntRepFie
         <Label className="text-xs text-muted-foreground mb-1 block">Spin Type</Label>
         <SelectGrid options={spinTypes} value={v.bunt_spin_type} onChange={val => onChange('bunt_spin_type', val)} cols={4} />
       </div>
+
+      </>
+      )}
 
     </div>
   );

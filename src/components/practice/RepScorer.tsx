@@ -101,6 +101,15 @@ export interface ScoredRep {
   adjustment_tag?: string;
   // Pitching contact type
   contact_type?: string;
+  // Bunting mandatory fields
+  bunt_ball_state?: string;
+  bunt_direction?: string;
+  bunt_contact_quality?: string;
+  bunt_defense_result?: string;
+  bunt_hit_or_out?: string;
+  bunt_type?: string;
+  bunt_runner_location?: string;
+  bunt_spin_type?: string;
   // Baserunning
   drill_type?: string;
   baserunning_goal?: string;
@@ -360,7 +369,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsDepthZone = isTee && isHitting;
   const needsFieldingPosition = isFielding && !repFieldingPosition;
   const contactQualityValid = !isHitting || current.contact_quality != null;
-  const canConfirm = hasRepSource && execScore != null && execScore >= 1
+
+  // Module-specific mandatory validations
+  const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
+  const pitchLocationValid = !isPitching || !!current.pitch_location;
+  const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
+  const baserunningDrillValid = !isBaserunning || !!current.drill_type;
+  const needsExecScore = !isFielding;
+
+  const canConfirm = hasRepSource && (!needsExecScore || (execScore != null && execScore >= 1))
     && (!needsDepthZone || current.depth_zone != null)
     && !needsFieldingPosition
     && catchingAIDrillDescValid
@@ -370,7 +387,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && pitcherIntentValid
     && throwingRequiredValid
     && baserunningCustomDescValid
-    && contactQualityValid;
+    && contactQualityValid
+    && buntMandatoryValid
+    && pitchLocationValid
+    && fieldingMandatoryValid
+    && baserunningDrillValid;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
@@ -630,7 +651,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             />
           )}
 
-          {/* Mandatory: Execution Score — number line */}
+          {/* Mandatory: Execution Score — number line (hidden for fielding) */}
+          {!isFielding && (
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">
               Execution Score <span className="text-destructive">*</span>
@@ -664,6 +686,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               ))}
             </div>
           </div>
+          )}
 
           {/* Pitcher handedness sub-field (hitting reps — non-machine) */}
           {needsThrowerHand && !isMachine && (
@@ -1137,8 +1160,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Hitter Side for live pitching reps */}
-              {['live_bp', 'game', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game'].includes(repSource) && (
+              {/* Hitter Side for live pitching reps — advanced only */}
+              {mode === 'advanced' && ['live_bp', 'game', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game'].includes(repSource) && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Hitter Side (L/R)</Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -1161,8 +1184,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Per-rep velocity band — always visible for live_bp/game, advanced-only for others */}
-              {!hidesVelocity && (PITCHING_ALWAYS_VELO.includes(repSource) || mode === 'advanced') && (
+              {/* Per-rep velocity band — advanced only */}
+              {mode === 'advanced' && !hidesVelocity && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Velocity Band</Label>
                   <SelectGrid
@@ -1174,8 +1197,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Exact Pitch Velocity (MPH) — optional, for live/game/advanced pitching */}
-              {!hidesVelocity && (PITCHING_ALWAYS_VELO.includes(repSource) || mode === 'advanced') && (
+              {/* Exact Pitch Velocity (MPH) — advanced only */}
+              {mode === 'advanced' && !hidesVelocity && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Exact Pitch Velocity (MPH)</Label>
                   <Input
@@ -1214,8 +1237,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               )}
 
-              {/* ABS Guess — required after pitch location is logged (Pitching) */}
-              {hasPitchLocation && isPitching && (
+              {/* ABS Guess — advanced only */}
+              {mode === 'advanced' && hasPitchLocation && isPitching && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">
                     ABS Guess (Select 5×5 Zone) <span className="text-destructive">*</span>
@@ -1250,8 +1273,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               </div>
 
-              {/* Contact Type for pitching vs hitter (flat_ground_vs_hitter or live_bp) */}
-              {ctx.showContactType && (
+              {/* Contact Type — advanced only */}
+              {mode === 'advanced' && ctx.showContactType && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Contact Type</Label>
                   <SelectGrid
@@ -1268,8 +1291,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Live AB Hitter Tracking — swing result, ball result, at-bat outcome */}
-              {ctx.showLiveAbHitterFields && (
+              {/* Live AB Hitter Tracking — advanced only */}
+              {mode === 'advanced' && ctx.showLiveAbHitterFields && (
                 <>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Swing Result</Label>
@@ -1324,8 +1347,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </>
               )}
 
-              {/* ===== PITCHER HITTER OUTCOME DETAILS ===== */}
-              {ctx.showPitcherHitterOutcomes && (
+              {/* ===== PITCHER HITTER OUTCOME DETAILS — advanced only ===== */}
+              {mode === 'advanced' && ctx.showPitcherHitterOutcomes && (
                 <div className="space-y-3 p-3 rounded-lg border border-accent/30 bg-accent/5">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Hitter Outcome Details</p>
 
@@ -1416,6 +1439,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
+              {mode === 'advanced' && (
+              <>
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Hit Spot?</Label>
                 <SelectGrid
@@ -1429,8 +1454,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {mode === 'advanced' && (
-                <>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">
                       Pitch Command: {current.pitch_command_grade ?? 50}
@@ -1464,7 +1487,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                       cols={4}
                     />
                   </div>
-                </>
+              </>
               )}
             </>
           )}
@@ -1479,7 +1502,48 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 required
               />
 
-              {/* Hit Type Hardness */}
+              {/* Hit Type Hardness moved to advanced section below */}
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type <span className="text-destructive">*</span></Label>
+                <SelectGrid
+                  options={playTypeOptions}
+                  value={current.play_type}
+                  onChange={v => updateField('play_type', v)}
+                  cols={3}
+                />
+              </div>
+
+              {/* Catch Type — mandatory */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Catch Type <span className="text-destructive">*</span></Label>
+                <SelectGrid
+                  options={[
+                    { value: 'backhand', label: '🤚 Backhand' },
+                    { value: 'forehand', label: '✋ Forehand' },
+                    { value: 'underhand', label: '⬇️ Underhand' },
+                    { value: 'overhand', label: '⬆️ Overhand' },
+                  ]}
+                  value={current.catch_type}
+                  onChange={v => updateField('catch_type', v)}
+                  cols={4}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Fielding Result <span className="text-destructive">*</span></Label>
+                <SelectGrid
+                  options={fieldingResultOptions}
+                  value={current.fielding_result}
+                  onChange={v => updateField('fielding_result', v)}
+                />
+              </div>
+
+              {/* === ADVANCED FIELDING FIELDS === */}
+              {mode === 'advanced' && (
+              <>
+
+              {/* Hit Type Hardness — was above, now advanced */}
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Exit Velocity</Label>
                 <SelectGrid
@@ -1490,25 +1554,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   ]}
                   value={current.hit_type_hardness}
                   onChange={v => updateField('hit_type_hardness', v)}
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Batted Ball Type</Label>
-                <SelectGrid
-                  options={playTypeOptions}
-                  value={current.play_type}
-                  onChange={v => updateField('play_type', v)}
-                  cols={3}
-                />
-              </div>
-
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Fielding Result</Label>
-                <SelectGrid
-                  options={fieldingResultOptions}
-                  value={current.fielding_result}
-                  onChange={v => updateField('fielding_result', v)}
                 />
               </div>
 
@@ -1610,21 +1655,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {/* Catch Type */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">Catch Type</Label>
-                <SelectGrid
-                  options={[
-                    { value: 'backhand', label: '🤚 Backhand' },
-                    { value: 'forehand', label: '✋ Forehand' },
-                    { value: 'underhand', label: '⬇️ Underhand' },
-                    { value: 'overhand', label: '⬆️ Overhand' },
-                  ]}
-                  value={current.catch_type}
-                  onChange={v => updateField('catch_type', v)}
-                  cols={4}
-                />
-              </div>
+              {/* Catch Type — moved to mandatory section above */}
 
               {/* Play Direction + Play Type (infielders get play type) */}
               <PlayDirectionSelector
@@ -1957,13 +1988,16 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     }}
                   />
                 </CollapsibleContent>
-              </Collapsible>
+               </Collapsible>
+
+              </>
+              )}
             </>
           )}
 
           {/* ===== BASERUNNING FIELDS ===== */}
           {isBaserunning && (
-            <BaserunningRepFields value={current} onChange={updateField} sport={sport} />
+            <BaserunningRepFields value={current} onChange={updateField} sport={sport} mode={mode} />
           )}
 
            {/* ===== THROWING FIELDS ===== */}
@@ -1973,7 +2007,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
            {/* ===== BUNTING FIELDS ===== */}
            {isBunting && (
-             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} />
+             <BuntRepFields value={current} onChange={updateField} sport={sport} batterSide={effectiveBatterSide} mode={mode} />
            )}
 
           {/* Goal of Rep & Actual Outcome (per-rep) */}
@@ -2034,11 +2068,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !drillClarificationValid ? 'AI Drill Clarification requires min 15 characters' :
                 !customRepDescValid ? 'AI Custom Rep Description requires min 15 characters' :
                 !pitcherIntentValid ? 'Select Pitcher Spot Intent before logging pitch' :
+                !pitchLocationValid ? 'Select pitch location' :
                 !absGuessValid ? 'Select ABS Guess zone' :
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
+                !baserunningDrillValid ? 'Select drill type' :
                 !baserunningCustomDescValid ? 'AI Drill Type Description requires min 15 characters' :
                 !contactQualityValid ? 'Select contact quality' :
-                  'Set execution score (1-10) to confirm rep'}
+                !buntMandatoryValid ? 'Select ball state, direction, and contact quality' :
+                !fieldingMandatoryValid ? 'Select batted ball type, catch type, and fielding result' :
+                  needsExecScore ? 'Set execution score (1-10) to confirm rep' : ''}
             </p>
           )}
         </CardContent>

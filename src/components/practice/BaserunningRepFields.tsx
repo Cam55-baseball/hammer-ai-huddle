@@ -9,6 +9,7 @@ interface BaserunningRepFieldsProps {
   value: Partial<ScoredRep>;
   onChange: (field: string, val: any) => void;
   sport?: string;
+  mode?: 'quick' | 'advanced';
 }
 
 const SelectGrid = ({ options, value, onChange, cols = 3 }: {
@@ -74,13 +75,13 @@ const goalOptions = [
   { value: 'situational', label: '🎯 Situational' },
 ];
 
-export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepFieldsProps) {
+export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced' }: BaserunningRepFieldsProps) {
   const drills = sport === 'softball' ? softballDrills : baseballDrills;
 
   return (
     <div className="space-y-3">
       <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type</Label>
+        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type <span className="text-destructive">*</span></Label>
         <SelectGrid
           options={drills}
           value={value.drill_type}
@@ -100,6 +101,8 @@ export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepF
         />
       )}
 
+      {mode === 'advanced' && (
+      <>
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
         <SelectGrid
@@ -172,6 +175,8 @@ export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepF
           step="1"
         />
       </div>
+      </>
+      )}
     </div>
   );
 }
