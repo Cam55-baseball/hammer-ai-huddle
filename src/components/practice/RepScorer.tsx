@@ -1151,8 +1151,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Hitter Side for live pitching reps */}
-              {['live_bp', 'game', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game'].includes(repSource) && (
+              {/* Hitter Side for live pitching reps — advanced only */}
+              {mode === 'advanced' && ['live_bp', 'game', 'flat_ground_vs_hitter', 'bullpen_vs_hitter', 'sim_game'].includes(repSource) && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Hitter Side (L/R)</Label>
                   <div className="grid grid-cols-2 gap-2">
