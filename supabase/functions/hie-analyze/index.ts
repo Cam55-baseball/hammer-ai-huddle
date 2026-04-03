@@ -1442,22 +1442,57 @@ Deno.serve(async (req) => {
     // ── SAVE PRESCRIPTIONS FOR ADAPTIVE LEARNING ──
     if (prescriptiveActions.length > 0) {
       const newPrescriptions = prescriptiveActions.flatMap(action =>
-        action.drills.map(drill => ({
-          user_id,
-          weakness_area: action.weakness_area,
-          drill_name: drill.name,
-          module: drill.module,
-          constraints: drill.constraints,
-          pre_score: mpiScore,
-        }))
+        action.drills.map(drill => {
+          const targetedMetric = drill.drill_type || action.weakness_area;
+          const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
+          // Parse constraints_json from structured constraints or text
+          let constraintsJson: any = {};
+          try {
+            if (typeof drill.constraints === 'string' && drill.constraints.startsWith('{')) {
+              constraintsJson = JSON.parse(drill.constraints);
+            }
+          } catch { /* leave as empty */ }
+          return {
+            user_id,
+            weakness_area: action.weakness_area,
+            drill_name: drill.name,
+            module: drill.module,
+            constraints: typeof drill.constraints === 'string' ? drill.constraints : JSON.stringify(drill.constraints),
+            constraints_json: constraintsJson,
+            pre_score: mpiScore,
+            targeted_metric: targetedMetric,
+            pre_weakness_value: weaknessVal,
+            drill_id: drill.drill_id || drillCatalog.get(drill.name) || null,
+          };
+        })
       );
-      // Update post_score on existing unresolved prescriptions
+      // Update post_score on existing unresolved prescriptions using weakness-specific scores
       if (existingPrescriptions && existingPrescriptions.length > 0) {
         for (const ex of existingPrescriptions) {
+          // Fetch current weakness score for this prescription's targeted_metric
+          const exMetric = (ex as any).targeted_metric || (ex as any).weakness_metric;
+          let effectivenessScore: number | null = null;
+          let postWeaknessValue: number | null = null;
+          if (exMetric) {
+            const currentWS = weaknessScoreRows.find(w => w.weakness_metric === exMetric);
+            if (currentWS) {
+              postWeaknessValue = currentWS.score;
+              const preVal = (ex as any).pre_weakness_value ?? (ex as any).pre_score;
+              if (preVal != null) {
+                effectivenessScore = preVal - currentWS.score; // positive = improvement
+              }
+            }
+          }
+          // Fall back to MPI-level if no weakness-specific data
+          if (effectivenessScore == null && mpiScore != null && ex.pre_score != null) {
+            effectivenessScore = mpiScore - ex.pre_score;
+          }
+
           await supabase.from('drill_prescriptions')
             .update({
               post_score: mpiScore,
-              effectiveness_score: mpiScore != null && ex.pre_score != null ? mpiScore - ex.pre_score : null,
+              post_weakness_value: postWeaknessValue,
+              effectiveness_score: effectivenessScore,
               adherence_count: (ex.adherence_count ?? 0) + 1,
             })
             .eq('id', ex.id);
