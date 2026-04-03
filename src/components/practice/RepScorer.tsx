@@ -360,7 +360,15 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsDepthZone = isTee && isHitting;
   const needsFieldingPosition = isFielding && !repFieldingPosition;
   const contactQualityValid = !isHitting || current.contact_quality != null;
-  const canConfirm = hasRepSource && execScore != null && execScore >= 1
+
+  // Module-specific mandatory validations
+  const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
+  const pitchLocationValid = !isPitching || !!current.pitch_location;
+  const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
+  const baserunningDrillValid = !isBaserunning || !!current.drill_type;
+  const needsExecScore = !isFielding;
+
+  const canConfirm = hasRepSource && (!needsExecScore || (execScore != null && execScore >= 1))
     && (!needsDepthZone || current.depth_zone != null)
     && !needsFieldingPosition
     && catchingAIDrillDescValid
@@ -370,7 +378,11 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && pitcherIntentValid
     && throwingRequiredValid
     && baserunningCustomDescValid
-    && contactQualityValid;
+    && contactQualityValid
+    && buntMandatoryValid
+    && pitchLocationValid
+    && fieldingMandatoryValid
+    && baserunningDrillValid;
 
   const needsThrowerHand = repSource && REQUIRES_THROWER_HAND.includes(repSource);
   const needsVelocity = repSource && REQUIRES_VELOCITY.includes(repSource);
