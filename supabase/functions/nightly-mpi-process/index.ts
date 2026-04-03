@@ -513,6 +513,8 @@ serve(async (req) => {
       }
 
       totalProcessed += scores.length;
+      // Track processed users for post-nightly HIE triggers
+      scores.forEach(s => processedUserIds.push(s.userId));
       console.log(`[nightly-mpi] ${sport}: Ranked ${scores.length} eligible athletes`);
 
       // ── Heat map snapshots ──
