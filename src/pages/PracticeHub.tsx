@@ -408,7 +408,7 @@ export default function PracticeHub() {
                         </CardContent>
                       </Card>
                     )}
-                   <RecentSessionsList sport={sportKey} moduleLabel={mod.label} module={mod.id} />
+                   
                  </>
               )}
 
