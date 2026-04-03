@@ -124,16 +124,11 @@ export function useScheduledPracticeSessions() {
 
   const deleteSession = useCallback(async (id: string) => {
     if (!user) return;
-
-    const { error } = await supabase
-      .from('scheduled_practice_sessions' as any)
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      toast({ title: 'Error deleting session', description: error.message, variant: 'destructive' });
+    const success = await schedulingService.deleteSession(id);
+    if (!success) {
+      toast({ title: 'Error deleting session', variant: 'destructive' });
     }
-  }, [user, toast]);
+  }, [user, toast, schedulingService]);
 
   const createBulkSessions = useCallback(async (
     playerIds: string[],
