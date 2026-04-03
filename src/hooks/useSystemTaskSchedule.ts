@@ -18,6 +18,7 @@ export interface TaskSchedule {
 export function useSystemTaskSchedule() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const schedulingService = useSchedulingService();
   const [schedules, setSchedules] = useState<Record<string, TaskSchedule>>({});
   const [loading, setLoading] = useState(true);
 
