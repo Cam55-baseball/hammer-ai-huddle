@@ -76,9 +76,46 @@ const goalOptions = [
 ];
 
 export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced' }: BaserunningRepFieldsProps) {
-  // Drill type is now session-level — rep fields start from goal
+  const drills = sport === 'softball' ? softballDrills : baseballDrills;
+
   return (
     <div className="space-y-3">
+      {/* Drill Type — always visible, mandatory per rep */}
+      <div>
+        <Label className="text-xs text-muted-foreground mb-1 block">
+          Drill Type <span className="text-destructive">*</span>
+        </Label>
+        <SelectGrid
+          options={drills}
+          value={value.drill_type}
+          onChange={v => onChange('drill_type', v)}
+          cols={3}
+        />
+      </div>
+
+      {/* Custom drill description — always visible when custom selected */}
+      {value.drill_type === 'custom' && (
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Custom Drill Description</Label>
+          <Input
+            type="text"
+            value={value.ai_baserunning_drill_description ?? ''}
+            onChange={e => onChange('ai_baserunning_drill_description', e.target.value || undefined)}
+            placeholder="Describe the custom drill (optional)"
+            className="h-8 text-xs"
+          />
+        </div>
+      )}
+
+      {/* AI Drill Clarification — optional, visible in Quick Log */}
+      <AITextBoxField
+        label="AI Drill Clarification (Optional)"
+        value={value.ai_drill_clarification ?? ''}
+        onChange={val => onChange('ai_drill_clarification', val || undefined)}
+        sport={sport}
+        placeholder="Optional notes for AI analysis..."
+      />
+
       {mode === 'advanced' && (
       <>
       <div>
