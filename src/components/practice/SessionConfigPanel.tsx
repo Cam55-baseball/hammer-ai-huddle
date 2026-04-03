@@ -294,6 +294,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
               </div>
             )}
           </div>
+        )}
 
         {/* Fielding position — required for fielding sessions */}
         {isFielding && (
