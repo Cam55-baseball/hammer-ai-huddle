@@ -185,7 +185,28 @@ serve(async (req) => {
         tierMult: number; ageCurveMult: number; posWeight: number;
       }> = [];
 
-      for (const athlete of athletes) {
+      // ── Batch processing: batches of 50 with error isolation ──
+      const BATCH_SIZE = 50;
+      const failedUsers: string[] = [];
+      for (let batchStart = 0; batchStart < athletes.length; batchStart += BATCH_SIZE) {
+        // Check runtime budget — stop if approaching 50s limit
+        if (Date.now() - nightlyStartTime > 50000) {
+          const remaining = athletes.length - batchStart;
+          console.warn(`[nightly-mpi] Runtime budget exceeded (${Date.now() - nightlyStartTime}ms). ${remaining} athletes remaining.`);
+          await supabase.from('audit_log').insert({
+            user_id: '00000000-0000-0000-0000-000000000000',
+            action: 'nightly_mpi_timeout',
+            table_name: 'mpi_scores',
+            metadata: { sport, processed: batchStart, remaining, elapsed_ms: Date.now() - nightlyStartTime },
+          });
+          break;
+        }
+        const batch = athletes.slice(batchStart, batchStart + BATCH_SIZE);
+        const batchTimestamp = Date.now();
+        console.log(`[nightly-mpi] ${sport}: Processing batch ${Math.floor(batchStart / BATCH_SIZE) + 1} (${batch.length} athletes)`);
+
+      for (const athlete of batch) {
+       try {
         const uid = athlete.user_id;
 
         const { data: sessions } = await supabase.from('performance_sessions')
