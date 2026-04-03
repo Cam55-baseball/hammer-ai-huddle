@@ -466,8 +466,8 @@ serve(async (req) => {
         const coachValidationMet = hasCoach ? gradedSessions.length >= count * 0.4 : true;
 
         const gates: Record<string, boolean> = {
-          games_minimum_met: count >= 60,
-          integrity_threshold_met: integrityScore >= 80,
+          games_minimum_met: count >= DATA_GATE_MIN,
+          integrity_threshold_met: integrityScore >= INTEGRITY_THRESHOLD,
           coach_validation_met: coachValidationMet,
           data_span_met: count >= 14,
         };
