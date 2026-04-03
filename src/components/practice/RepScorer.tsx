@@ -443,7 +443,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const identityField = (isHitting || module === 'bunting') ? 'primary_batting_side' : 'primary_throwing_hand';
   // Show identity gate only if DB value is null and not a switch player
   const dbIdentity = (isHitting || module === 'bunting') ? primaryBattingSide : primaryThrowingHand;
-  if (!handedness && !isBaserunning && !dbIdentity && !((isHitting || isBunting) && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
+  if (!handedness && !isBaserunning && !dbIdentity && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
     return (
       <HandednessGate
         module={module}
@@ -462,9 +462,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
   // Session intent gate — shown every session for hitting/pitching if sideMode not yet selected
   const needsSessionIntent = !isBaserunning && !isFielding && !isThrowing && (isHitting || isPitching || isBunting);
-  const isSwitchOrAmbidextrous = (isHitting || isBunting)
-    ? (primaryBattingSide === 'S' || isSwitchHitter)
-    : (primaryThrowingHand === 'S' || isAmbidextrousThrower);
   const defaultSideMode: 'R' | 'L' | 'BOTH' = (() => {
     if (isHitting || isBunting) {
       if (primaryBattingSide === 'S' || isSwitchHitter) return 'BOTH';
@@ -476,13 +473,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     return 'R';
   })();
 
-  // Auto-resolve sideMode for non-switch players — skip the intent gate entirely
-  if (needsSessionIntent && sideMode === null && !isSwitchOrAmbidextrous) {
-    // Single-sided player: auto-set and fall through to rep logging
-    setSideMode(defaultSideMode);
-  }
-
-  if (needsSessionIntent && sideMode === null && isSwitchOrAmbidextrous) {
+  if (needsSessionIntent && sideMode === null) {
     return (
       <SessionIntentGate
         module={module}
