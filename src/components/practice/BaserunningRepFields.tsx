@@ -101,6 +101,8 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced'
         />
       )}
 
+      {mode === 'advanced' && (
+      <>
       <div>
         <Label className="text-xs text-muted-foreground mb-1 block">Goal of Rep</Label>
         <SelectGrid
