@@ -485,6 +485,15 @@ serve(async (req) => {
 
     const result = await processSession(supabase, user.id, session_id);
 
+    // Auto-trigger HIE analysis after session computation
+    try {
+      await supabase.functions.invoke('hie-analyze', {
+        body: { user_id: user.id, sport: 'baseball' },
+      });
+    } catch (hieErr) {
+      console.warn('HIE auto-trigger failed (non-blocking):', hieErr);
+    }
+
     return new Response(JSON.stringify({ success: true, ...result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

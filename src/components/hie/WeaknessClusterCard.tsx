@@ -4,8 +4,8 @@ import { useHIESnapshot } from '@/hooks/useHIESnapshot';
 import { AlertTriangle } from 'lucide-react';
 
 const IMPACT_COLORS = {
-  high: 'bg-red-500/10 text-red-600 border-red-500/30',
-  medium: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
+  high: 'bg-destructive/10 text-destructive border-destructive/30',
+  medium: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
   low: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
 };
 
@@ -32,11 +32,12 @@ export function WeaknessClusterCard() {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="font-medium">Caused by:</span> {cluster.why}
+              <span className="font-medium">Why:</span> {cluster.why}
             </p>
-            {cluster.data_points?.score !== undefined && (
+            {cluster.data_points?.value !== undefined && (
               <p className="text-xs text-muted-foreground">
-                Current score: <span className="font-medium">{cluster.data_points.score}</span>/80
+                {cluster.data_points.metric}: <span className="font-medium">{cluster.data_points.value}</span>
+                {cluster.data_points.threshold && <span> (threshold: {cluster.data_points.threshold})</span>}
               </p>
             )}
           </div>

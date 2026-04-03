@@ -1105,6 +1105,57 @@ export type Database = {
         }
         Relationships: []
       }
+      drill_prescriptions: {
+        Row: {
+          adherence_count: number | null
+          constraints: string | null
+          created_at: string
+          drill_name: string
+          effectiveness_score: number | null
+          id: string
+          module: string
+          post_score: number | null
+          pre_score: number | null
+          prescribed_at: string
+          resolved: boolean | null
+          updated_at: string
+          user_id: string
+          weakness_area: string
+        }
+        Insert: {
+          adherence_count?: number | null
+          constraints?: string | null
+          created_at?: string
+          drill_name: string
+          effectiveness_score?: number | null
+          id?: string
+          module: string
+          post_score?: number | null
+          pre_score?: number | null
+          prescribed_at?: string
+          resolved?: boolean | null
+          updated_at?: string
+          user_id: string
+          weakness_area: string
+        }
+        Update: {
+          adherence_count?: number | null
+          constraints?: string | null
+          created_at?: string
+          drill_name?: string
+          effectiveness_score?: number | null
+          id?: string
+          module?: string
+          post_score?: number | null
+          pre_score?: number | null
+          prescribed_at?: string
+          resolved?: boolean | null
+          updated_at?: string
+          user_id?: string
+          weakness_area?: string
+        }
+        Relationships: []
+      }
       emotion_tracking: {
         Row: {
           action_taken: string | null
@@ -1141,6 +1192,33 @@ export type Database = {
           trigger_category?: string | null
           trigger_description?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      engine_settings: {
+        Row: {
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
