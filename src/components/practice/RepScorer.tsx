@@ -261,12 +261,11 @@ const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
-  const { isSwitchHitter, isAmbidextrousThrower, primaryBattingSide, primaryThrowingHand, saveIdentity, isSavingIdentity } = useSwitchHitterProfile();
 
   // Commit animation state
   const [showCommitCheck, setShowCommitCheck] = useState(false);
 
-  // Handedness — auto-load from DB identity
+  // Module flags
   const isHitting = module === 'hitting';
   const isPitching = module === 'pitching';
   const isFielding = module === 'fielding';
@@ -275,26 +274,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const isThrowing = module === 'throwing';
   const isBunting = module === 'bunting';
 
-  const [handedness, setHandedness] = useState<'L' | 'R' | undefined>(() => {
-    if (isHitting || isBunting) {
-      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') return primaryBattingSide;
-    } else if (!isBaserunning) {
-      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') return primaryThrowingHand;
-    }
-    return undefined;
-  });
-
-  // Sync when DB data loads after mount
-  useEffect(() => {
-    if (handedness) return; // already set
-    if (isHitting || isBunting) {
-      if (primaryBattingSide === 'R' || primaryBattingSide === 'L') setHandedness(primaryBattingSide);
-    } else if (!isBaserunning) {
-      if (primaryThrowingHand === 'R' || primaryThrowingHand === 'L') setHandedness(primaryThrowingHand);
-    }
-  }, [primaryBattingSide, primaryThrowingHand]);
-
-  // Session intent — side mode for this session
+  // Session intent — side mode for this session (the ONLY source of truth)
   const [sideMode, setSideMode] = useState<'R' | 'L' | 'BOTH' | null>(null);
 
   // Switch hitter per-rep side override
