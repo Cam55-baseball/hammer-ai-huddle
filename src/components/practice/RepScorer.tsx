@@ -462,6 +462,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
   // Session intent gate — shown every session for hitting/pitching if sideMode not yet selected
   const needsSessionIntent = !isBaserunning && !isFielding && !isThrowing && (isHitting || isPitching || isBunting);
+  const isSwitchOrAmbidextrous = (isHitting || isBunting)
+    ? (primaryBattingSide === 'S' || isSwitchHitter)
+    : (primaryThrowingHand === 'S' || isAmbidextrousThrower);
   const defaultSideMode: 'R' | 'L' | 'BOTH' = (() => {
     if (isHitting || isBunting) {
       if (primaryBattingSide === 'S' || isSwitchHitter) return 'BOTH';
@@ -473,7 +476,13 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     return 'R';
   })();
 
-  if (needsSessionIntent && sideMode === null) {
+  // Auto-resolve sideMode for non-switch players — skip the intent gate entirely
+  if (needsSessionIntent && sideMode === null && !isSwitchOrAmbidextrous) {
+    // Single-sided player: auto-set and fall through to rep logging
+    setSideMode(defaultSideMode);
+  }
+
+  if (needsSessionIntent && sideMode === null && isSwitchOrAmbidextrous) {
     return (
       <SessionIntentGate
         module={module}
