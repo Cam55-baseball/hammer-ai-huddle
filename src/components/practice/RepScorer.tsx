@@ -359,8 +359,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const needsThrowingRequired = isThrowing;
   const throwingRequiredValid = !needsThrowingRequired || (!!current.self_catch_quality && !!current.effort_level);
 
-  // Baserunning custom desc now handled at session config level
-  const baserunningCustomDescValid = true;
+  // Baserunning: drill_type required per rep
+  const baserunningDrillValid = !isBaserunning || !!current.drill_type;
 
   // Validation
   const execScore = current.execution_score;
@@ -373,7 +373,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
   const buntMandatoryValid = !isBunting || (!!current.bunt_ball_state && !!current.bunt_direction && !!current.bunt_contact_quality);
   const pitchLocationValid = !isPitching || !!current.pitch_location;
   const fieldingMandatoryValid = !isFielding || (!!current.play_type && !!current.catch_type && !!current.fielding_result);
-  // Baserunning drill_type now inherited from session config — no per-rep validation needed
   const needsExecScore = !isFielding;
 
   const canConfirm = hasRepSource && (!needsExecScore || (execScore != null && execScore >= 1))
@@ -385,7 +384,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     && absGuessValid
     && pitcherIntentValid
     && throwingRequiredValid
-    && baserunningCustomDescValid
+    && baserunningDrillValid
     && contactQualityValid
     && buntMandatoryValid
     && pitchLocationValid
@@ -414,13 +413,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       ...((isFielding || isCatching) && { throwing_hand: effectiveThrowingHand }),
       ...(isThrowing && { throwing_hand: effectiveThrowingHand }),
       ...(isFielding && { fielding_position: repFieldingPosition }),
-      // Baserunning: inherit drill_type from session config
-      ...(isBaserunning && sessionConfig?.baserunning_drill_type && {
-        drill_type: sessionConfig.baserunning_drill_type,
-        ...(sessionConfig.baserunning_drill_type === 'custom' && sessionConfig.ai_baserunning_drill_description && {
-          ai_baserunning_drill_description: sessionConfig.ai_baserunning_drill_description,
-        }),
-      }),
       // Apply machine single-mode presets
       ...(isHitting && isMachine && machineMode === 'single' && {
         pitch_type: machinePitchType,
@@ -2077,7 +2069,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 !pitchLocationValid ? 'Select pitch location' :
                 !absGuessValid ? 'Select ABS Guess zone' :
                 !throwingRequiredValid ? 'Self-Catch Quality and Effort Level are required' :
-                
+                !baserunningDrillValid ? 'Select drill type' :
                 !contactQualityValid ? 'Select contact quality' :
                 !buntMandatoryValid ? 'Select ball state, direction, and contact quality' :
                 !fieldingMandatoryValid ? 'Select batted ball type, catch type, and fielding result' :

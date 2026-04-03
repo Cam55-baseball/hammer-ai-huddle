@@ -41,8 +41,6 @@ export interface SessionConfig {
   linked_session_id?: string;
   bat_size?: string;
   bat_type?: string;
-  baserunning_drill_type?: string;
-  ai_baserunning_drill_description?: string;
 }
 
 interface SessionConfigPanelProps {
@@ -105,8 +103,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [batSize, setBatSize] = useState<string>('');
   const [batType, setBatType] = useState<string>('');
   const [customBatType, setCustomBatType] = useState<string>('');
-  const [baserunningDrillType, setBaserunningDrillType] = useState<string>('');
-  const [aiBaserunningDrillDesc, setAiBaserunningDrillDesc] = useState<string>('');
   const competitionCategories = useMemo(() => {
     return getCompetitionLevelsByCategory(sport as 'baseball' | 'softball');
   }, [sport]);
@@ -167,9 +163,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   }, [showCoachSelector, mpiSettings?.primary_coach_id, headCoachName]);
 
   const velocityBands = isHitting ? machineVelocityBands : pitchingVelocityBands;
-  const baserunningDrillValid = !isBaserunning || !!baserunningDrillType;
-  const baserunningCustomDescValid = !isBaserunning || baserunningDrillType !== 'custom' || (aiBaserunningDrillDesc.length >= 15);
-  const canConfirm = !!repSource && baserunningDrillValid && baserunningCustomDescValid;
+  const canConfirm = !!repSource;
 
   const handleLeagueLevelChange = (level: string) => {
     setLeagueLevel(level);
@@ -207,8 +201,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       linked_session_id: linkedSessionId,
       bat_size: isHitting && batSize ? batSize : undefined,
       bat_type: isHitting ? (batType === 'custom' ? customBatType || undefined : batType || undefined) : undefined,
-      baserunning_drill_type: isBaserunning ? baserunningDrillType || undefined : undefined,
-      ai_baserunning_drill_description: isBaserunning && baserunningDrillType === 'custom' ? aiBaserunningDrillDesc || undefined : undefined,
     });
   };
 
@@ -227,74 +219,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           <RepSourceSelector module={module} sessionType={sessionType} value={repSource} onChange={setRepSource} customSource={customRepSource} onCustomSourceChange={setCustomRepSource} />
         )}
 
-        {/* Baserunning Drill Type — required for baserunning sessions */}
-        {isBaserunning && (
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">
-              Drill Type <span className="text-destructive">*</span>
-            </Label>
-            <div className={cn('grid gap-1.5', 'grid-cols-3')}>
-              {(sport === 'softball' ? [
-                { value: 'home_to_1st', label: 'Home→1st' },
-                { value: '1st_to_3rd', label: '1st→3rd' },
-                { value: '1st_to_home', label: '1st→Home' },
-                { value: '2nd_to_home', label: '2nd→Home' },
-                { value: 'steal_2nd', label: 'Steal 2nd' },
-                { value: 'steal_3rd', label: 'Steal 3rd' },
-                { value: 'steal_home', label: 'Steal Home' },
-                { value: 'slap_and_run', label: 'Slap & Run' },
-                { value: 'bunt_and_run', label: 'Bunt & Run' },
-                { value: 'tag_up', label: 'Tag Up' },
-                { value: 'leadoff', label: 'Lead-off' },
-                { value: 'custom', label: '✏️ Custom' },
-              ] : [
-                { value: 'home_to_1st', label: 'Home→1st' },
-                { value: '1st_to_3rd', label: '1st→3rd' },
-                { value: '1st_to_home', label: '1st→Home' },
-                { value: '2nd_to_home', label: '2nd→Home' },
-                { value: 'steal_2nd', label: 'Steal 2nd' },
-                { value: 'steal_3rd', label: 'Steal 3rd' },
-                { value: 'steal_home', label: 'Steal Home' },
-                { value: 'delayed_steal', label: 'Delayed Steal' },
-                { value: 'hit_and_run', label: 'Hit & Run' },
-                { value: 'tag_up', label: 'Tag Up' },
-                { value: 'lead_work', label: 'Lead Work' },
-                { value: 'custom', label: '✏️ Custom' },
-              ]).map(opt => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setBaserunningDrillType(baserunningDrillType === opt.value ? '' : opt.value)}
-                  className={cn(
-                    'rounded-md border px-2 py-1.5 text-[11px] font-medium transition-all',
-                    baserunningDrillType === opt.value
-                      ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                      : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-            {baserunningDrillType === 'custom' && (
-              <div className="mt-2">
-                <Label className="text-xs text-muted-foreground mb-1 block">
-                  Custom Drill Description <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  value={aiBaserunningDrillDesc}
-                  onChange={e => setAiBaserunningDrillDesc(e.target.value)}
-                  placeholder="Describe the custom drill (min 15 chars)..."
-                  className="h-8 text-xs"
-                />
-                {aiBaserunningDrillDesc.length > 0 && aiBaserunningDrillDesc.length < 15 && (
-                  <p className="text-[10px] text-destructive mt-0.5">{15 - aiBaserunningDrillDesc.length} more characters needed</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+
+
 
         {/* Fielding position — required for fielding sessions */}
         {isFielding && (
@@ -507,9 +433,7 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         </Button>
         {!canConfirm && (
           <p className="text-[10px] text-destructive text-center">
-            {!repSource ? 'Select a rep source to continue' :
-             !baserunningDrillValid ? 'Select a drill type for baserunning' :
-             !baserunningCustomDescValid ? 'Custom drill description requires min 15 characters' : ''}
+            {!repSource ? 'Select a rep source to continue' : ''}
           </p>
         )}
       </CardContent>
