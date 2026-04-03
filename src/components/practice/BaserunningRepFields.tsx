@@ -76,31 +76,9 @@ const goalOptions = [
 ];
 
 export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced' }: BaserunningRepFieldsProps) {
-  const drills = sport === 'softball' ? softballDrills : baseballDrills;
-
+  // Drill type is now session-level — rep fields start from goal
   return (
     <div className="space-y-3">
-      <div>
-        <Label className="text-xs text-muted-foreground mb-1 block">Drill Type <span className="text-destructive">*</span></Label>
-        <SelectGrid
-          options={drills}
-          value={value.drill_type}
-          onChange={v => onChange('drill_type', v)}
-        />
-      </div>
-
-      {/* AI Drill Type Description — required when drill_type is custom */}
-      {value.drill_type === 'custom' && (
-        <AITextBoxField
-          label="AI Drill Type Description"
-          value={value.ai_baserunning_drill_description ?? ''}
-          onChange={v => onChange('ai_baserunning_drill_description', v)}
-          minChars={15}
-          required
-          placeholder="Describe the custom drill for AI tracking (min 15 characters)..."
-        />
-      )}
-
       {mode === 'advanced' && (
       <>
       <div>

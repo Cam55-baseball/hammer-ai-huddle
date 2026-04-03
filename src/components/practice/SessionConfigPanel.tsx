@@ -505,7 +505,11 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
           Start Logging Reps
         </Button>
         {!canConfirm && (
-          <p className="text-[10px] text-destructive text-center">Select a rep source to continue</p>
+          <p className="text-[10px] text-destructive text-center">
+            {!repSource ? 'Select a rep source to continue' :
+             !baserunningDrillValid ? 'Select a drill type for baserunning' :
+             !baserunningCustomDescValid ? 'Custom drill description requires min 15 characters' : ''}
+          </p>
         )}
       </CardContent>
     </Card>
