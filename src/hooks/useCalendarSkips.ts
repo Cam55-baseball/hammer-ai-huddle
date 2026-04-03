@@ -75,7 +75,7 @@ export function useCalendarSkips() {
     return skipRecord?.skip_days || [];
   }, [skippedItems]);
 
-  // Update skip days for an item (create/update)
+  // Update skip days for an item — routed through scheduling service
   const updateSkipDays = useCallback(async (
     itemId: string, 
     itemType: string, 
@@ -84,45 +84,21 @@ export function useCalendarSkips() {
     if (!user) return false;
 
     try {
-      // If empty skip days, remove the record entirely
-      if (skipDays.length === 0) {
-        return await removeSkip(itemId, itemType);
-      }
-
-      const { error } = await supabase
-        .from('calendar_skipped_items')
-        .upsert({
-          user_id: user.id,
-          item_id: itemId,
-          item_type: itemType,
-          skip_days: skipDays,
-        }, { 
-          onConflict: 'user_id,item_id,item_type' 
-        });
-
-      if (error) {
-        console.error('Error updating skip days:', error);
-        return false;
-      }
+      const success = await schedulingService.setCalendarSkip(itemId, itemType, skipDays);
+      if (!success) return false;
 
       // Optimistically update local state
       setSkippedItems(prev => {
-        const existing = prev.findIndex(
-          s => s.item_id === itemId && s.item_type === itemType
-        );
-        
+        if (skipDays.length === 0) {
+          return prev.filter(s => !(s.item_id === itemId && s.item_type === itemType));
+        }
+        const existing = prev.findIndex(s => s.item_id === itemId && s.item_type === itemType);
         if (existing >= 0) {
           const updated = [...prev];
           updated[existing] = { ...updated[existing], skip_days: skipDays };
           return updated;
         }
-        
-        return [...prev, {
-          id: 'temp-' + Date.now(),
-          item_id: itemId,
-          item_type: itemType,
-          skip_days: skipDays,
-        }];
+        return [...prev, { id: 'temp-' + Date.now(), item_id: itemId, item_type: itemType, skip_days: skipDays }];
       });
 
       return true;
@@ -130,7 +106,7 @@ export function useCalendarSkips() {
       console.error('Error in updateSkipDays:', err);
       return false;
     }
-  }, [user]);
+  }, [user, schedulingService]);
 
   // Remove all skips for an item (un-skip completely)
   const removeSkip = useCallback(async (
