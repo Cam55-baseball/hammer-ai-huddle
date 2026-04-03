@@ -677,6 +677,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               ))}
             </div>
           </div>
+          )}
 
           {/* Pitcher handedness sub-field (hitting reps — non-machine) */}
           {needsThrowerHand && !isMachine && (
