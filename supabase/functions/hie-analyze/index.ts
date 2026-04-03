@@ -1212,7 +1212,7 @@ Deno.serve(async (req) => {
     // 10. Existing prescriptions for adaptive loop
     const { data: existingPrescriptions } = await supabase
       .from('drill_prescriptions')
-      .select('id, drill_name, weakness_area, pre_score, effectiveness_score, adherence_count')
+      .select('id, drill_name, weakness_area, pre_score, effectiveness_score, adherence_count, targeted_metric, weakness_metric, pre_weakness_value')
       .eq('user_id', user_id)
       .eq('resolved', false);
 
