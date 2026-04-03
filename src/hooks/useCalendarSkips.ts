@@ -13,6 +13,7 @@ export interface SkippedItem {
 
 export function useCalendarSkips() {
   const { user } = useAuth();
+  const schedulingService = useSchedulingService();
   const [skippedItems, setSkippedItems] = useState<SkippedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
