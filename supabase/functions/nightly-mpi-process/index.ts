@@ -220,7 +220,15 @@ serve(async (req) => {
 
       // ── Batch processing: batches of 50 with error isolation ──
       const BATCH_SIZE = 50;
-      const failedUsers: string[] = [];
+      const failedUsers: Array<{ user_id: string; error: string }> = [];
+      // Prioritize retry athletes by moving them to the front
+      if (retryUserIds.length > 0) {
+        const retrySet = new Set(retryUserIds);
+        const retryAthletes = athletes.filter(a => retrySet.has(a.user_id));
+        const normalAthletes = athletes.filter(a => !retrySet.has(a.user_id));
+        athletes.length = 0;
+        athletes.push(...retryAthletes, ...normalAthletes);
+      }
       for (let batchStart = 0; batchStart < athletes.length; batchStart += BATCH_SIZE) {
         // Check runtime budget — stop if approaching 50s limit
         if (Date.now() - nightlyStartTime > 50000) {
