@@ -107,12 +107,12 @@ export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced'
         </div>
       )}
 
-      {/* AI Drill Clarification — optional, visible in Quick Log */}
+      {/* Drill Clarification — optional, visible in Quick Log */}
       <AITextBoxField
-        label="AI Drill Clarification (Optional)"
+        label="Base Running Drill Clarification"
         value={value.ai_drill_clarification ?? ''}
         onChange={val => onChange('ai_drill_clarification', val || undefined)}
-        placeholder="Optional notes for AI analysis..."
+        placeholder="Optional notes for this rep..."
         required={false}
       />
 

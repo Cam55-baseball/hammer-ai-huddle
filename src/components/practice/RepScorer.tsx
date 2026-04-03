@@ -2062,9 +2062,9 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
               {!hasRepSource ? 'Configure session rep source first' :
                 needsFieldingPosition ? 'Select fielding position' :
                 needsDepthZone && !current.depth_zone ? 'Select tee depth zone' :
-                !catchingAIDrillDescValid ? 'AI Drill Description requires min 15 characters' :
-                !drillClarificationValid ? 'AI Drill Clarification requires min 15 characters' :
-                !customRepDescValid ? 'AI Custom Rep Description requires min 15 characters' :
+                !catchingAIDrillDescValid ? 'Drill Description requires min 15 characters' :
+                !drillClarificationValid ? 'Drill Clarification requires min 15 characters' :
+                !customRepDescValid ? 'Custom Rep Description requires min 15 characters' :
                 !pitcherIntentValid ? 'Select Pitcher Spot Intent before logging pitch' :
                 !pitchLocationValid ? 'Select pitch location' :
                 !absGuessValid ? 'Select ABS Guess zone' :
