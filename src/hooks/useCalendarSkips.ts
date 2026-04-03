@@ -48,33 +48,8 @@ export function useCalendarSkips() {
     fetchSkippedItems();
   }, [fetchSkippedItems]);
 
-  // Real-time subscription to sync changes across components (Calendar <-> Game Plan)
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`calendar-skips-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen for INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'calendar_skipped_items',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Calendar skip changed (realtime):', payload.eventType);
-          // Refetch all skipped items when any change occurs
-          fetchSkippedItems();
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchSkippedItems]);
+  // Real-time subscriptions are now handled by useSchedulingRealtime
+  // No per-hook channels needed here
 
   // Check if an item is skipped for a specific day of the week
   const isSkippedForDay = useCallback((
