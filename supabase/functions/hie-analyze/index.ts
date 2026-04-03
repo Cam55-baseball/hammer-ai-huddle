@@ -23,6 +23,7 @@ interface PrescriptiveDrill {
   module: string;
   constraints: string;
   drill_type?: string;
+  drill_id?: string;
 }
 
 interface PrescriptiveAction {
@@ -44,10 +45,11 @@ interface MicroPattern {
   severity: "high" | "medium" | "low";
   description: string;
   zone_details?: string;
+  data_points?: Record<string, any>;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MICRO-DATA ANALYSIS ENGINE (replaces static LIMITER_MAP)
+// MICRO-DATA ANALYSIS ENGINE
 // ═══════════════════════════════════════════════════════════════
 
 function analyzeHittingMicro(microReps: any[], drillBlocks: any[]): MicroPattern[] {
@@ -64,7 +66,6 @@ function analyzeHittingMicro(microReps: any[], drillBlocks: any[]): MicroPattern
   );
   const chaseRate = outOfZone.length > 0 ? (chases.length / outOfZone.length) * 100 : 0;
   if (chaseRate > 30) {
-    // Identify worst chase zones
     const zoneChases: Record<string, number> = {};
     chases.forEach((r: any) => {
       if (r.pitch_location) {
@@ -124,6 +125,7 @@ function analyzeHittingMicro(microReps: any[], drillBlocks: any[]): MicroPattern
             category: "hitting", metric: "velocity_weakness", value: Math.round(weakPct),
             threshold: 60, severity: weakPct > 75 ? "high" : "medium",
             description: `${Math.round(weakPct)}% weak contact vs ${band} mph velocity`,
+            data_points: { velocity_band: band },
           });
         }
       }
@@ -185,6 +187,7 @@ function analyzeHittingMicro(microReps: any[], drillBlocks: any[]): MicroPattern
             category: "hitting", metric: "pitch_type_decision", value: Math.round(errRate),
             threshold: 40, severity: errRate > 55 ? "high" : "medium",
             description: `${Math.round(errRate)}% incorrect decisions vs ${type}`,
+            data_points: { pitch_type: type },
           });
         }
       }
@@ -213,7 +216,6 @@ function analyzeFieldingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
     r.footwork_grade || r.throw_accuracy || r.exchange_time_band || r.route_efficiency
   );
 
-  // Clean field %
   const cleanFieldPcts = drillBlocks.filter((b: any) => b.clean_field_pct != null);
   if (cleanFieldPcts.length > 0) {
     const avg = cleanFieldPcts.reduce((s: number, b: any) => s + b.clean_field_pct, 0) / cleanFieldPcts.length;
@@ -226,7 +228,6 @@ function analyzeFieldingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
     }
   }
 
-  // Exchange time
   const exchangeReps = fieldingReps.filter((r: any) => r.exchange_time_band);
   if (exchangeReps.length >= 3) {
     const slowCount = exchangeReps.filter((r: any) => r.exchange_time_band === 'slow').length;
@@ -240,7 +241,6 @@ function analyzeFieldingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
     }
   }
 
-  // Footwork grade
   const fwGrades = fieldingReps.filter((r: any) => r.footwork_grade != null).map((r: any) => r.footwork_grade);
   if (fwGrades.length >= 3) {
     const avg = fwGrades.reduce((a: number, b: number) => a + b, 0) / fwGrades.length;
@@ -253,7 +253,6 @@ function analyzeFieldingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
     }
   }
 
-  // Throw accuracy
   const throwAccs = fieldingReps.filter((r: any) => r.throw_accuracy != null).map((r: any) => r.throw_accuracy);
   if (throwAccs.length >= 3) {
     const avg = throwAccs.reduce((a: number, b: number) => a + b, 0) / throwAccs.length;
@@ -276,7 +275,6 @@ function analyzePitchingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
   );
   if (pitchingReps.length < 5) return patterns;
 
-  // Zone %
   const zonePcts = drillBlocks.filter((b: any) => b.zone_pct != null);
   if (zonePcts.length > 0) {
     const avg = zonePcts.reduce((s: number, b: any) => s + b.zone_pct, 0) / zonePcts.length;
@@ -289,7 +287,6 @@ function analyzePitchingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
     }
   }
 
-  // Command grade by pitch type
   const cmdByType: Record<string, number[]> = {};
   pitchingReps.forEach((r: any) => {
     if (r.pitch_type && r.pitch_command_grade) {
@@ -310,7 +307,6 @@ function analyzePitchingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
     }
   });
 
-  // Miss direction patterns
   const misses = pitchingReps.filter((r: any) => r.pitch_result === 'ball' && r.pitch_location);
   if (misses.length >= 5) {
     const dirs: Record<string, number> = { up: 0, down: 0, inside: 0, outside: 0 };
@@ -336,96 +332,473 @@ function analyzePitchingMicro(microReps: any[], drillBlocks: any[]): MicroPatter
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PRESCRIPTIVE DRILL MAPPING (dynamic, data-driven)
+// MODULE MICRO-ANALYZERS (Speed Lab, Royal Timing, Tex Vision, Baserunning)
 // ═══════════════════════════════════════════════════════════════
 
-function mapPatternToDrills(pattern: MicroPattern): PrescriptiveDrill[] {
-  const drills: PrescriptiveDrill[] = [];
+function analyzeSpeedLabMicro(speedSessions: any[]): MicroPattern[] {
+  const patterns: MicroPattern[] = [];
+  if (!speedSessions || speedSessions.length < 3) return patterns;
+
+  // Stride inefficiency trend: compare first half vs second half of sessions
+  const stepsData = speedSessions.filter((s: any) => s.steps_per_rep);
+  if (stepsData.length >= 4) {
+    const extractSteps = (s: any): number[] => {
+      if (typeof s.steps_per_rep === 'object') return Object.values(s.steps_per_rep).filter((v: any) => typeof v === 'number') as number[];
+      return [];
+    };
+    const recentHalf = stepsData.slice(0, Math.floor(stepsData.length / 2));
+    const olderHalf = stepsData.slice(Math.floor(stepsData.length / 2));
+    const recentAvg = recentHalf.flatMap(extractSteps);
+    const olderAvg = olderHalf.flatMap(extractSteps);
+    if (recentAvg.length > 0 && olderAvg.length > 0) {
+      const recentMean = recentAvg.reduce((a, b) => a + b, 0) / recentAvg.length;
+      const olderMean = olderAvg.reduce((a, b) => a + b, 0) / olderAvg.length;
+      if (recentMean > olderMean * 1.08) {
+        patterns.push({
+          category: "speed", metric: "stride_inefficiency", value: Math.round(recentMean * 10) / 10,
+          threshold: Math.round(olderMean * 10) / 10, severity: recentMean > olderMean * 1.15 ? "high" : "medium",
+          description: `Decreasing stride efficiency — avg steps/rep rising from ${olderMean.toFixed(1)} to ${recentMean.toFixed(1)}`,
+          data_points: { recent_avg: recentMean, older_avg: olderMean },
+        });
+      }
+    }
+  }
+
+  // High RPE with low output
+  const rpeOutputData = speedSessions.filter((s: any) => s.rpe != null && s.distances);
+  if (rpeOutputData.length >= 3) {
+    const highRpeLowOutput = rpeOutputData.filter((s: any) => {
+      const dists = Array.isArray(s.distances) ? s.distances : Object.values(s.distances || {});
+      const maxDist = Math.max(...(dists.filter((d: any) => typeof d === 'number') as number[]));
+      return s.rpe >= 7 && maxDist < 30; // High effort, short distances
+    });
+    if (highRpeLowOutput.length >= 2) {
+      const pct = Math.round((highRpeLowOutput.length / rpeOutputData.length) * 100);
+      patterns.push({
+        category: "speed", metric: "effort_output_mismatch", value: pct,
+        threshold: 30, severity: pct > 50 ? "high" : "medium",
+        description: `${pct}% of speed sessions show high effort (RPE 7+) with low output`,
+        data_points: { high_rpe_low_output_count: highRpeLowOutput.length },
+      });
+    }
+  }
+
+  return patterns;
+}
+
+function analyzeTimingMicro(timingSessions: any[]): MicroPattern[] {
+  const patterns: MicroPattern[] = [];
+  if (!timingSessions || timingSessions.length < 3) return patterns;
+
+  const allTimes: number[] = [];
+  timingSessions.forEach((s: any) => {
+    const td = s.timer_data;
+    if (Array.isArray(td)) {
+      td.forEach((t: any) => { if (typeof t === 'number') allTimes.push(t); });
+    } else if (typeof td === 'object' && td) {
+      Object.values(td).forEach((v: any) => { if (typeof v === 'number') allTimes.push(v); });
+    }
+  });
+
+  if (allTimes.length >= 5) {
+    const mean = allTimes.reduce((a, b) => a + b, 0) / allTimes.length;
+    const variance = allTimes.reduce((s, v) => s + (v - mean) ** 2, 0) / allTimes.length;
+    const cv = Math.sqrt(variance) / Math.max(mean, 0.01);
+    if (cv > 0.15) {
+      patterns.push({
+        category: "timing", metric: "timing_inconsistency", value: Math.round(cv * 100),
+        threshold: 15, severity: cv > 0.25 ? "high" : "medium",
+        description: `Timing inconsistency during stride phase — CV ${(cv * 100).toFixed(0)}% (target: <15%)`,
+        data_points: { cv, mean_time: mean, sample_size: allTimes.length },
+      });
+    }
+  }
+
+  return patterns;
+}
+
+function analyzeVisionMicro(visionDrills: any[]): MicroPattern[] {
+  const patterns: MicroPattern[] = [];
+  if (!visionDrills || visionDrills.length < 3) return patterns;
+
+  // Group by drill_type and detect low accuracy
+  const byType: Record<string, { accuracies: number[]; reactions: number[] }> = {};
+  visionDrills.forEach((d: any) => {
+    const type = d.drill_type || 'general';
+    if (!byType[type]) byType[type] = { accuracies: [], reactions: [] };
+    if (d.accuracy_percent != null) byType[type].accuracies.push(d.accuracy_percent);
+    if (d.reaction_time_ms != null) byType[type].reactions.push(d.reaction_time_ms);
+  });
+
+  Object.entries(byType).forEach(([type, data]) => {
+    if (data.accuracies.length >= 2) {
+      const avgAcc = data.accuracies.reduce((a, b) => a + b, 0) / data.accuracies.length;
+      if (avgAcc < 70) {
+        patterns.push({
+          category: "vision", metric: "vision_accuracy_low", value: Math.round(avgAcc),
+          threshold: 70, severity: avgAcc < 50 ? "high" : "medium",
+          description: `Recognition accuracy ${Math.round(avgAcc)}% on ${type} drills — below 70% target`,
+          data_points: { drill_type: type, avg_accuracy: avgAcc },
+        });
+      }
+    }
+  });
+
+  // Overall reaction time check
+  const allReactions = visionDrills.filter((d: any) => d.reaction_time_ms).map((d: any) => d.reaction_time_ms);
+  if (allReactions.length >= 3) {
+    const avgReaction = allReactions.reduce((a: number, b: number) => a + b, 0) / allReactions.length;
+    if (avgReaction > 400) {
+      patterns.push({
+        category: "vision", metric: "slow_reaction_time", value: Math.round(avgReaction),
+        threshold: 400, severity: avgReaction > 500 ? "high" : "medium",
+        description: `Avg reaction time ${Math.round(avgReaction)}ms — above 400ms threshold`,
+        data_points: { avg_reaction_ms: avgReaction },
+      });
+    }
+  }
+
+  return patterns;
+}
+
+function analyzeBaserunningMicro(microReps: any[], drillBlocks: any[]): MicroPattern[] {
+  const patterns: MicroPattern[] = [];
+
+  // Filter baserunning reps from micro_layer_data
+  const brReps = microReps.filter((r: any) =>
+    r.jump_grade != null || r.read_grade != null || r.time_to_base_band
+  );
+  const brBlocks = drillBlocks.filter((b: any) =>
+    b.drill_type && ['baserunning', 'base_stealing', 'lead_off', 'sprint'].some(t => (b.drill_type || '').toLowerCase().includes(t))
+  );
+
+  // Jump grade analysis
+  const jumpGrades = brReps.filter((r: any) => r.jump_grade != null).map((r: any) => r.jump_grade);
+  if (jumpGrades.length >= 3) {
+    const avg = jumpGrades.reduce((a: number, b: number) => a + b, 0) / jumpGrades.length;
+    if (avg < 40) {
+      patterns.push({
+        category: "baserunning", metric: "poor_jump_timing", value: Math.round(avg),
+        threshold: 40, severity: avg < 25 ? "high" : "medium",
+        description: `Delayed jump timing — avg jump grade ${Math.round(avg)}/80`,
+        data_points: { avg_jump_grade: avg, sample_size: jumpGrades.length },
+      });
+    }
+  }
+
+  // Read grade analysis
+  const readGrades = brReps.filter((r: any) => r.read_grade != null).map((r: any) => r.read_grade);
+  if (readGrades.length >= 3) {
+    const avg = readGrades.reduce((a: number, b: number) => a + b, 0) / readGrades.length;
+    if (avg < 40) {
+      patterns.push({
+        category: "baserunning", metric: "poor_read_timing", value: Math.round(avg),
+        threshold: 40, severity: avg < 25 ? "high" : "medium",
+        description: `Poor read timing — avg read grade ${Math.round(avg)}/80`,
+        data_points: { avg_read_grade: avg, sample_size: readGrades.length },
+      });
+    }
+  }
+
+  // Time to base band — slow band detection
+  const timeBands = brReps.filter((r: any) => r.time_to_base_band);
+  if (timeBands.length >= 3) {
+    const slowCount = timeBands.filter((r: any) => r.time_to_base_band === 'slow').length;
+    const slowPct = (slowCount / timeBands.length) * 100;
+    if (slowPct > 40) {
+      patterns.push({
+        category: "baserunning", metric: "slow_base_times", value: Math.round(slowPct),
+        threshold: 40, severity: slowPct > 60 ? "high" : "medium",
+        description: `${Math.round(slowPct)}% of base times graded slow`,
+        data_points: { slow_count: slowCount, total: timeBands.length },
+      });
+    }
+  }
+
+  return patterns;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRESCRIPTIVE DRILL MAPPING (with adaptive rotation)
+// ═══════════════════════════════════════════════════════════════
+
+interface DrillRotation {
+  primary: PrescriptiveDrill;
+  alternatives: PrescriptiveDrill[];
+}
+
+function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
+  const rotations: DrillRotation[] = [];
 
   switch (pattern.metric) {
     case "chase_rate":
     case "block_chase_rate":
-      drills.push(
-        { name: "Go/No-Go Recognition", description: "Decision-only tracking — identify pitches without swinging", module: "tex-vision", constraints: "0.35s window, 40 pitches", drill_type: "recognition" },
-        { name: "Zone Awareness Tracking", description: "Call ball/strike before pitch crosses plate", module: "practice-hub", constraints: "30 pitches, verbal call only", drill_type: "pitch_recognition" },
-      );
+      rotations.push({
+        primary: { name: "Go/No-Go Recognition", description: "Decision-only tracking — identify pitches without swinging", module: "tex-vision", constraints: "0.35s window, 40 pitches", drill_type: "recognition" },
+        alternatives: [
+          { name: "Zone Discipline Trainer", description: "Track zone boundaries, no swing required", module: "tex-vision", constraints: "0.4s window, 35 pitches", drill_type: "vision" },
+          { name: "Take Drill: Off-Speed Only", description: "Practice taking all off-speed pitches", module: "practice-hub", constraints: "20 pitches, take all breaking", drill_type: "pitch_recognition" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Zone Awareness Tracking", description: "Call ball/strike before pitch crosses plate", module: "practice-hub", constraints: "30 pitches, verbal call only", drill_type: "pitch_recognition" },
+        alternatives: [
+          { name: "2-Strike Discipline Drill", description: "Protect the zone with 2 strikes, expand nothing", module: "practice-hub", constraints: "15 ABs, 2-strike count start", drill_type: "situational" },
+        ],
+      });
       break;
     case "whiff_rate":
-      drills.push(
-        { name: "Tee Work: Barrel Precision", description: "Center-mass contact focus with intent", module: "practice-hub", constraints: `3 sets × 15 reps, 80% intent`, drill_type: "tee_work" },
-        { name: "Short Toss: Contact Focus", description: "Shortened swing to maximize barrel contact", module: "practice-hub", constraints: "20 reps, contact priority", drill_type: "soft_toss" },
-      );
+      rotations.push({
+        primary: { name: "Tee Work: Barrel Precision", description: "Center-mass contact focus with intent", module: "practice-hub", constraints: "3 sets × 15 reps, 80% intent", drill_type: "tee_work" },
+        alternatives: [
+          { name: "Overload/Underload Bat Drill", description: "Alternate heavy and light bats for barrel control", module: "practice-hub", constraints: "10 reps each weight, 3 rounds", drill_type: "bat_speed" },
+          { name: "One-Hand Tee Drill", description: "Top hand and bottom hand isolation for barrel path", module: "practice-hub", constraints: "10 reps each hand", drill_type: "tee_work" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Short Toss: Contact Focus", description: "Shortened swing to maximize barrel contact", module: "practice-hub", constraints: "20 reps, contact priority", drill_type: "soft_toss" },
+        alternatives: [
+          { name: "Flat Ground BP: Barrel Path", description: "Focus on line-drive contact with flat bat path", module: "practice-hub", constraints: "25 reps, line drives only", drill_type: "machine_bp" },
+        ],
+      });
       break;
-    case "velocity_weakness":
-      drills.push(
-        { name: "High Velocity Machine BP", description: `Train against elevated velocity to close timing gap`, module: "practice-hub", constraints: `Set machine to ${pattern.description.includes('80+') ? '82-85' : '75-80'} mph, 25 reps`, drill_type: "machine_bp" },
-        { name: "Quick Hands Drill", description: "Accelerated bat speed through the zone", module: "practice-hub", constraints: "Overload bat → game bat, 15 reps each", drill_type: "bat_speed" },
-      );
+    case "velocity_weakness": {
+      const veloBand = pattern.data_points?.velocity_band || "75-80";
+      rotations.push({
+        primary: { name: "High Velocity Machine BP", description: `Train against elevated velocity to close timing gap`, module: "practice-hub", constraints: `Set machine to ${veloBand} mph, 25 reps`, drill_type: "machine_bp" },
+        alternatives: [
+          { name: "Rapid Fire Front Toss", description: "Quick-paced front toss to train fast-twitch bat speed", module: "practice-hub", constraints: `20 reps, rapid pace, ${veloBand} simulate`, drill_type: "front_toss" },
+          { name: "Velocity Ladder Drill", description: "Progressive speed increase across rounds", module: "practice-hub", constraints: "5 reps per speed increment", drill_type: "machine_bp" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Quick Hands Drill", description: "Accelerated bat speed through the zone", module: "practice-hub", constraints: "Overload bat → game bat, 15 reps each", drill_type: "bat_speed" },
+        alternatives: [
+          { name: "Short Bat Velocity Drill", description: "Use shortened bat to train quick path to contact", module: "practice-hub", constraints: "15 reps, quick hands focus", drill_type: "bat_speed" },
+        ],
+      });
       break;
+    }
     case "inside_weakness":
-      drills.push(
-        { name: "Inside Pitch Tee Work", description: "Set tee on inside corner, drive pull-side", module: "practice-hub", constraints: "20 reps, pull focus, 90% intent", drill_type: "tee_work" },
-        { name: "Front Toss Inside", description: "Quick hands inside, stay through the ball", module: "practice-hub", constraints: "15 reps from 15ft", drill_type: "front_toss" },
-      );
+      rotations.push({
+        primary: { name: "Inside Pitch Tee Work", description: "Set tee on inside corner, drive pull-side", module: "practice-hub", constraints: "20 reps, pull focus, 90% intent", drill_type: "tee_work" },
+        alternatives: [
+          { name: "Turn & Burn Drill", description: "Quick rotation focus — get barrel to inside pitch fast", module: "practice-hub", constraints: "15 reps, max rotation speed", drill_type: "bat_speed" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Front Toss Inside", description: "Quick hands inside, stay through the ball", module: "practice-hub", constraints: "15 reps from 15ft", drill_type: "front_toss" },
+        alternatives: [
+          { name: "Inside Soft Toss Variation", description: "Inside location from multiple arm angles", module: "practice-hub", constraints: "20 reps, varied angles", drill_type: "soft_toss" },
+        ],
+      });
       break;
     case "outside_weakness":
-      drills.push(
-        { name: "Opposite Field Soft Toss", description: "Late barrel path, plate coverage", module: "practice-hub", constraints: "20 reps, oppo-field only", drill_type: "soft_toss" },
-        { name: "Two-Strike Approach", description: "Widen zone, shorten swing, use whole field", module: "practice-hub", constraints: "10 ABs, 2-strike count", drill_type: "situational" },
-      );
+      rotations.push({
+        primary: { name: "Opposite Field Soft Toss", description: "Late barrel path, plate coverage", module: "practice-hub", constraints: "20 reps, oppo-field only", drill_type: "soft_toss" },
+        alternatives: [
+          { name: "Outside Tee: Stay Inside Ball", description: "Tee on outer third, drive opposite field", module: "practice-hub", constraints: "20 reps, oppo focus", drill_type: "tee_work" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Two-Strike Approach", description: "Widen zone, shorten swing, use whole field", module: "practice-hub", constraints: "10 ABs, 2-strike count", drill_type: "situational" },
+        alternatives: [
+          { name: "Plate Coverage Drill", description: "Hit to all fields from various locations", module: "practice-hub", constraints: "15 reps, all-field approach", drill_type: "soft_toss" },
+        ],
+      });
       break;
     case "up_weakness":
     case "down_weakness":
-      drills.push(
-        { name: `${pattern.metric === 'up_weakness' ? 'High' : 'Low'} Pitch Tee Work`, description: `Set tee ${pattern.metric === 'up_weakness' ? 'chest high' : 'at knees'} and drive`, module: "practice-hub", constraints: "20 reps, level swing", drill_type: "tee_work" },
-      );
+      rotations.push({
+        primary: { name: `${pattern.metric === 'up_weakness' ? 'High' : 'Low'} Pitch Tee Work`, description: `Set tee ${pattern.metric === 'up_weakness' ? 'chest high' : 'at knees'} and drive`, module: "practice-hub", constraints: "20 reps, level swing", drill_type: "tee_work" },
+        alternatives: [
+          { name: `${pattern.metric === 'up_weakness' ? 'High' : 'Low'} Zone Front Toss`, description: `Front toss to ${pattern.metric === 'up_weakness' ? 'elevated' : 'low'} zone`, module: "practice-hub", constraints: "15 reps, zone focus", drill_type: "front_toss" },
+        ],
+      });
       break;
-    case "pitch_type_decision":
-      const pitchType = pattern.description.match(/vs (\w+)/)?.[1] || "off-speed";
-      drills.push(
-        { name: `${pitchType} Recognition Drill`, description: `Identify ${pitchType} out of hand — no swing`, module: "tex-vision", constraints: "0.4s window, 30 pitches", drill_type: "recognition" },
-        { name: "Pitch Tunneling Awareness", description: "Differentiate fastball vs breaking ball from same tunnel", module: "tex-vision", constraints: "3 min, chaos mode", drill_type: "vision" },
-      );
+    case "pitch_type_decision": {
+      const pitchType = pattern.data_points?.pitch_type || pattern.description.match(/vs (\w+)/)?.[1] || "off-speed";
+      rotations.push({
+        primary: { name: `${pitchType} Recognition Drill`, description: `Identify ${pitchType} out of hand — no swing`, module: "tex-vision", constraints: "0.4s window, 30 pitches", drill_type: "recognition" },
+        alternatives: [
+          { name: `${pitchType} Spin Identification`, description: `Focus on spin axis to identify ${pitchType} early`, module: "tex-vision", constraints: "0.35s window, 25 pitches", drill_type: "vision" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Pitch Tunneling Awareness", description: "Differentiate fastball vs breaking ball from same tunnel", module: "tex-vision", constraints: "3 min, chaos mode", drill_type: "vision" },
+        alternatives: [
+          { name: "Sequence Recognition Drill", description: "Identify pitch sequences and patterns", module: "tex-vision", constraints: "5 min, progressive difficulty", drill_type: "recognition" },
+        ],
+      });
       break;
+    }
     case "clean_field_pct":
-      drills.push(
-        { name: "Ground Ball Funnel", description: "Rapid ground ball reps with clean transfer", module: "practice-hub", constraints: "25 reps, clean field focus", drill_type: "fielding" },
-        { name: "Bare Hand Drill", description: "Soft hands and clean exchange", module: "practice-hub", constraints: "15 reps, timed", drill_type: "fielding" },
-      );
+      rotations.push({
+        primary: { name: "Ground Ball Funnel", description: "Rapid ground ball reps with clean transfer", module: "practice-hub", constraints: "25 reps, clean field focus", drill_type: "fielding" },
+        alternatives: [
+          { name: "Short Hop Drill", description: "Read and react to short hops at game speed", module: "practice-hub", constraints: "20 reps, varied hops", drill_type: "fielding" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Bare Hand Drill", description: "Soft hands and clean exchange", module: "practice-hub", constraints: "15 reps, timed", drill_type: "fielding" },
+        alternatives: [
+          { name: "Backhand/Forehand Mix", description: "Alternate backhand and forehand reps", module: "practice-hub", constraints: "10 each side", drill_type: "fielding" },
+        ],
+      });
       break;
     case "slow_exchange":
-      drills.push(
-        { name: "Quick Exchange Drill", description: "Glove-to-throw in under 1.2s", module: "practice-hub", constraints: "20 reps, timed exchange", drill_type: "fielding" },
-      );
+      rotations.push({
+        primary: { name: "Quick Exchange Drill", description: "Glove-to-throw in under 1.2s", module: "practice-hub", constraints: "20 reps, timed exchange", drill_type: "fielding" },
+        alternatives: [
+          { name: "Flip Drill", description: "Quick flip transfers to partner", module: "practice-hub", constraints: "15 reps, target 0.8s", drill_type: "fielding" },
+        ],
+      });
       break;
     case "footwork_grade":
-      drills.push(
-        { name: "Footwork Pattern Drill", description: "Crossover, drop step, and approach angles", module: "practice-hub", constraints: "15 reps each pattern", drill_type: "fielding" },
-      );
+      rotations.push({
+        primary: { name: "Footwork Pattern Drill", description: "Crossover, drop step, and approach angles", module: "practice-hub", constraints: "15 reps each pattern", drill_type: "fielding" },
+        alternatives: [
+          { name: "Cone Agility Footwork", description: "Lateral movement and plant-and-throw patterns", module: "practice-hub", constraints: "3 sets × 5 reps", drill_type: "fielding" },
+        ],
+      });
       break;
     case "throw_accuracy":
-      drills.push(
-        { name: "Target Throwing", description: "Hit specific target zones from game distances", module: "practice-hub", constraints: "20 throws, log accuracy", drill_type: "throwing" },
-      );
+      rotations.push({
+        primary: { name: "Target Throwing", description: "Hit specific target zones from game distances", module: "practice-hub", constraints: "20 throws, log accuracy", drill_type: "throwing" },
+        alternatives: [
+          { name: "Long Toss Accuracy", description: "Maintain accuracy through progressively longer throws", module: "practice-hub", constraints: "15 throws, track accuracy", drill_type: "throwing" },
+        ],
+      });
       break;
     case "zone_pct":
-      drills.push(
-        { name: "Bullpen: Command Focus", description: "Hit specific quadrants with each pitch type", module: "practice-hub", constraints: "40 pitches, track zone %", drill_type: "bullpen" },
-      );
+      rotations.push({
+        primary: { name: "Bullpen: Command Focus", description: "Hit specific quadrants with each pitch type", module: "practice-hub", constraints: "40 pitches, track zone %", drill_type: "bullpen" },
+        alternatives: [
+          { name: "Spot Drill: Four Corners", description: "Target each corner of the zone sequentially", module: "practice-hub", constraints: "10 per corner, chart results", drill_type: "bullpen" },
+        ],
+      });
       break;
-    case "miss_direction":
+    case "miss_direction": {
       const dir = pattern.description.match(/go (\w+)/)?.[1] || "away";
-      drills.push(
-        { name: `${dir.charAt(0).toUpperCase() + dir.slice(1)} Correction Drill`, description: `Mechanical focus to correct ${dir} miss tendency`, module: "practice-hub", constraints: "30 pitches, intent on opposite correction", drill_type: "bullpen" },
-      );
+      rotations.push({
+        primary: { name: `${dir.charAt(0).toUpperCase() + dir.slice(1)} Correction Drill`, description: `Mechanical focus to correct ${dir} miss tendency`, module: "practice-hub", constraints: "30 pitches, intent on opposite correction", drill_type: "bullpen" },
+        alternatives: [
+          { name: "Mirror Drill: Release Point", description: "Video and repeat release mechanics for consistency", module: "practice-hub", constraints: "20 reps, check video each 5", drill_type: "bullpen" },
+        ],
+      });
+      break;
+    }
+    // ── NEW: Speed Lab patterns
+    case "stride_inefficiency":
+      rotations.push({
+        primary: { name: "Sprint Mechanics Drill", description: "Focus on efficient stride length and ground contact", module: "speed-lab", constraints: "4 × 30yd, film and review stride", drill_type: "sprint" },
+        alternatives: [
+          { name: "Resisted Sprint Starts", description: "Sled or band resisted starts for power", module: "speed-lab", constraints: "6 × 10yd, 60s rest", drill_type: "sprint" },
+        ],
+      });
+      break;
+    case "effort_output_mismatch":
+      rotations.push({
+        primary: { name: "Resisted Acceleration Starts", description: "Build first-step explosiveness", module: "speed-lab", constraints: "5 × 10yd, full recovery", drill_type: "sprint" },
+        alternatives: [
+          { name: "Plyometric Acceleration Drill", description: "Box jumps to sprint transitions", module: "speed-lab", constraints: "4 sets × 3 reps", drill_type: "sprint" },
+        ],
+      });
+      break;
+    // ── NEW: Timing patterns
+    case "timing_inconsistency":
+      rotations.push({
+        primary: { name: "Load/Stride Sync Drill", description: "Synchronize load timing with stride landing", module: "practice-hub", constraints: "20 reps, metronome pacing", drill_type: "timing" },
+        alternatives: [
+          { name: "Tempo Hitting Drill", description: "Hit to a consistent rhythmic count", module: "practice-hub", constraints: "15 reps, 3-count tempo", drill_type: "timing" },
+        ],
+      });
+      rotations.push({
+        primary: { name: "Rhythm Training Block", description: "Progressive timing with varied pitch speeds", module: "practice-hub", constraints: "3 rounds × 10 pitches", drill_type: "timing" },
+        alternatives: [
+          { name: "Dry Swing Timing Drill", description: "No-ball swings focusing on consistent trigger timing", module: "practice-hub", constraints: "20 dry swings, film and check", drill_type: "timing" },
+        ],
+      });
+      break;
+    // ── NEW: Vision patterns
+    case "vision_accuracy_low": {
+      const drillType = pattern.data_points?.drill_type || "recognition";
+      rotations.push({
+        primary: { name: `${drillType} Focused Training`, description: `Targeted accuracy improvement on ${drillType} drills`, module: "tex-vision", constraints: "0.4s window, 30 pitches", drill_type: "recognition" },
+        alternatives: [
+          { name: "Progressive Difficulty Vision", description: "Start easy, ramp to hard difficulty", module: "tex-vision", constraints: "10 easy → 10 medium → 10 hard", drill_type: "vision" },
+        ],
+      });
+      break;
+    }
+    case "slow_reaction_time":
+      rotations.push({
+        primary: { name: "Reaction Compression Training", description: "Progressively shorten decision windows", module: "tex-vision", constraints: "Start 0.5s, compress to 0.3s", drill_type: "recognition" },
+        alternatives: [
+          { name: "Flash Recognition Drill", description: "Ultra-short exposure pitch identification", module: "tex-vision", constraints: "0.25s flash, 25 pitches", drill_type: "vision" },
+        ],
+      });
+      break;
+    // ── NEW: Baserunning patterns
+    case "poor_jump_timing":
+      rotations.push({
+        primary: { name: "First-Step Reaction Drill", description: "React to visual cue, explosive first step", module: "speed-lab", constraints: "8 reps, max effort start", drill_type: "baserunning" },
+        alternatives: [
+          { name: "Lead-Off Jump Drill", description: "Practice primary and secondary leads with timed jumps", module: "practice-hub", constraints: "10 reps, time each jump", drill_type: "baserunning" },
+        ],
+      });
+      break;
+    case "poor_read_timing":
+      rotations.push({
+        primary: { name: "Read-Based Baserunning Drill", description: "React to pitcher movement cues for go/no-go", module: "practice-hub", constraints: "10 reps, randomized go/stay", drill_type: "baserunning" },
+        alternatives: [
+          { name: "Video Read Drill", description: "Watch pitcher video clips, call go or stay", module: "tex-vision", constraints: "20 clips, timed decisions", drill_type: "recognition" },
+        ],
+      });
+      break;
+    case "slow_base_times":
+      rotations.push({
+        primary: { name: "Base Path Sprint Work", description: "Timed sprints on full base paths", module: "speed-lab", constraints: "4 reps home-to-first, 2 reps home-to-second", drill_type: "sprint" },
+        alternatives: [
+          { name: "Curved Sprint Drill", description: "Practice efficient rounding technique", module: "speed-lab", constraints: "4 reps around bases, focus on angles", drill_type: "sprint" },
+        ],
+      });
       break;
     default:
       if (pattern.category === "pitching") {
-        drills.push(
-          { name: "Command Bullpen", description: "Focus on locating all pitch types", module: "practice-hub", constraints: "40 pitches, chart location", drill_type: "bullpen" },
-        );
+        rotations.push({
+          primary: { name: "Command Bullpen", description: "Focus on locating all pitch types", module: "practice-hub", constraints: "40 pitches, chart location", drill_type: "bullpen" },
+          alternatives: [
+            { name: "Targeted Bullpen", description: "Focus on weakest pitch type only", module: "practice-hub", constraints: "25 pitches, single pitch type", drill_type: "bullpen" },
+          ],
+        });
       }
       break;
+  }
+
+  return rotations;
+}
+
+function mapPatternToDrills(
+  pattern: MicroPattern,
+  ineffectiveDrills: Set<string>,
+  drillUsageCounts: Record<string, number>,
+  drillCatalog: Map<string, string>,
+): PrescriptiveDrill[] {
+  const rotations = buildDrillRotations(pattern);
+  const drills: PrescriptiveDrill[] = [];
+
+  for (const rotation of rotations) {
+    let chosen = rotation.primary;
+    // If primary is ineffective or overused (3+), rotate
+    if (ineffectiveDrills.has(chosen.name) || (drillUsageCounts[chosen.name] ?? 0) >= 3) {
+      const alt = rotation.alternatives.find(a => !ineffectiveDrills.has(a.name) && (drillUsageCounts[a.name] ?? 0) < 3);
+      if (alt) chosen = alt;
+      else if (rotation.alternatives.length > 0) chosen = rotation.alternatives[0]; // fallback to first alt
+    }
+    // Attach drill_id from catalog
+    chosen.drill_id = drillCatalog.get(chosen.name) || undefined;
+    drills.push(chosen);
   }
 
   return drills;
@@ -485,7 +858,7 @@ function computeConfidence(sessionCount: number, dataRecencyDays: number, hasCoa
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BEFORE/AFTER TRENDS (real computation)
+// BEFORE/AFTER TRENDS
 // ═══════════════════════════════════════════════════════════════
 
 function computeBeforeAfterTrends(
@@ -527,7 +900,7 @@ function computeBeforeAfterTrends(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DRILL EFFECTIVENESS (real tracking)
+// DRILL EFFECTIVENESS
 // ═══════════════════════════════════════════════════════════════
 
 async function computeDrillEffectiveness(supabase: any, userId: string): Promise<any[]> {
@@ -623,7 +996,6 @@ Return ONLY the JSON array, no other text.`;
 
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content ?? "";
-    // Extract JSON array from response
     const match = content.match(/\[[\s\S]*\]/);
     if (match) {
       const plan = JSON.parse(match[0]);
@@ -674,6 +1046,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── FETCH ENGINE SETTINGS ──
+    const { data: engineSettingsRows } = await supabase
+      .from('engine_settings')
+      .select('setting_key, setting_value');
+    const engineSettings: Record<string, any> = {};
+    (engineSettingsRows ?? []).forEach((r: any) => { engineSettings[r.setting_key] = r.setting_value; });
+    const dataGateMinSessions = engineSettings.data_gate_min_sessions ?? 60;
+
     // ── FETCH ALL DATA SOURCES ──
 
     // 1. MPI scores
@@ -718,7 +1098,7 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id)
       .maybeSingle();
 
-    // 6. Speed Lab data (NOW CONNECTED)
+    // 6. Speed Lab data
     const { data: speedSessions } = await supabase
       .from("speed_sessions")
       .select("distances, steps_per_rep, rpe, session_date")
@@ -726,7 +1106,7 @@ Deno.serve(async (req) => {
       .order("session_date", { ascending: false })
       .limit(10);
 
-    // 7. Royal Timing data (NOW CONNECTED)
+    // 7. Royal Timing data
     const { data: timingSessions } = await supabase
       .from("royal_timing_sessions")
       .select("timer_data, ai_analysis, created_at")
@@ -734,13 +1114,37 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // 8. Tex Vision data (NOW CONNECTED)
+    // 8. Tex Vision data
     const { data: visionDrills } = await supabase
       .from("tex_vision_drill_results")
       .select("accuracy_percent, reaction_time_ms, drill_type, difficulty_level, completed_at")
       .eq("user_id", user_id)
       .order("completed_at", { ascending: false })
       .limit(20);
+
+    // 9. Drill catalog for ID mapping
+    const { data: drillCatalogRows } = await supabase
+      .from("drills")
+      .select("id, name");
+    const drillCatalog = new Map<string, string>();
+    (drillCatalogRows ?? []).forEach((d: any) => drillCatalog.set(d.name, d.id));
+
+    // 10. Existing prescriptions for adaptive loop
+    const { data: existingPrescriptions } = await supabase
+      .from('drill_prescriptions')
+      .select('id, drill_name, weakness_area, pre_score, effectiveness_score, adherence_count')
+      .eq('user_id', user_id)
+      .eq('resolved', false);
+
+    // Build ineffective drills set and usage counts
+    const ineffectiveDrills = new Set<string>();
+    const drillUsageCounts: Record<string, number> = {};
+    (existingPrescriptions ?? []).forEach((rx: any) => {
+      drillUsageCounts[rx.drill_name] = (drillUsageCounts[rx.drill_name] ?? 0) + 1;
+      if (rx.effectiveness_score != null && rx.effectiveness_score <= 0) {
+        ineffectiveDrills.add(rx.drill_name);
+      }
+    });
 
     // ── COMPUTE DEVELOPMENT STATUS ──
     const scoreHistory = (mpiScores ?? []).map((s: any) => ({
@@ -756,24 +1160,30 @@ Deno.serve(async (req) => {
       if (Array.isArray(s.drill_blocks)) allDrillBlocks.push(...s.drill_blocks);
     });
 
-    // ── REAL MICRO-DATA ANALYSIS ──
+    // ── REAL MICRO-DATA ANALYSIS (ALL MODULES) ──
     const hittingPatterns = analyzeHittingMicro(allMicroReps, allDrillBlocks);
     const fieldingPatterns = analyzeFieldingMicro(allMicroReps, allDrillBlocks);
     const pitchingPatterns = analyzePitchingMicro(allMicroReps, allDrillBlocks);
-    const allPatterns = [...hittingPatterns, ...fieldingPatterns, ...pitchingPatterns]
-      .sort((a, b) => {
-        const sevOrder = { high: 0, medium: 1, low: 2 };
-        return (sevOrder[a.severity] ?? 2) - (sevOrder[b.severity] ?? 2);
-      });
+    const speedPatterns = analyzeSpeedLabMicro(speedSessions ?? []);
+    const timingPatterns = analyzeTimingMicro(timingSessions ?? []);
+    const visionPatterns = analyzeVisionMicro(visionDrills ?? []);
+    const baserunningPatterns = analyzeBaserunningMicro(allMicroReps, allDrillBlocks);
 
-    // ── BUILD PRIMARY LIMITER (specific, not generic) ──
+    const allPatterns = [
+      ...hittingPatterns, ...fieldingPatterns, ...pitchingPatterns,
+      ...speedPatterns, ...timingPatterns, ...visionPatterns, ...baserunningPatterns,
+    ].sort((a, b) => {
+      const sevOrder = { high: 0, medium: 1, low: 2 };
+      return (sevOrder[a.severity] ?? 2) - (sevOrder[b.severity] ?? 2);
+    });
+
+    // ── BUILD PRIMARY LIMITER ──
     let primaryLimiter: string;
     if (allPatterns.length > 0) {
       const top = allPatterns[0];
       primaryLimiter = top.description;
       if (top.zone_details) primaryLimiter += ` — ${top.zone_details}`;
     } else {
-      // Fallback to composite comparison
       const latestMPI = mpiScores?.[0];
       const composites: Record<string, number> = {
         "Batting Quality": latestMPI?.composite_bqi ?? 50,
@@ -786,16 +1196,15 @@ Deno.serve(async (req) => {
       primaryLimiter = `${sorted[0][0]} is your lowest area at ${Math.round(sorted[0][1])}`;
     }
 
-    // ── WEAKNESS CLUSTERS (data-backed) ──
+    // ── WEAKNESS CLUSTERS ──
     const weaknessClusters: WeaknessCluster[] = allPatterns.slice(0, 3).map((p) => ({
       area: p.category,
       issue: p.description,
       why: p.zone_details || `${p.metric} at ${p.value}% exceeds threshold of ${p.threshold}%`,
       impact: p.severity,
-      data_points: { metric: p.metric, value: p.value, threshold: p.threshold, category: p.category },
+      data_points: { metric: p.metric, value: p.value, threshold: p.threshold, category: p.category, ...(p.data_points || {}) },
     }));
 
-    // If no micro patterns, fall back to composite-based clusters
     if (weaknessClusters.length === 0) {
       const latestMPI = mpiScores?.[0];
       const compositeList = [
@@ -815,11 +1224,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── PRESCRIPTIVE ACTIONS (dynamic, pattern-based) ──
+    // ── PRESCRIPTIVE ACTIONS (adaptive — rotates out ineffective drills) ──
     const prescriptiveActions: PrescriptiveAction[] = [];
     const usedAreas = new Set<string>();
     allPatterns.slice(0, 5).forEach((p) => {
-      const drills = mapPatternToDrills(p);
+      const drills = mapPatternToDrills(p, ineffectiveDrills, drillUsageCounts, drillCatalog);
       if (drills.length > 0 && !usedAreas.has(p.metric)) {
         usedAreas.add(p.metric);
         prescriptiveActions.push({ weakness_area: p.description, drills });
@@ -857,11 +1266,9 @@ Deno.serve(async (req) => {
     if (speedSessions && speedSessions.length > 0) {
       const rpes = speedSessions.filter((s: any) => s.rpe != null).map((s: any) => s.rpe);
       const avgRpe = rpes.length > 0 ? rpes.reduce((a: number, b: number) => a + b, 0) / rpes.length : 5;
-      // Compute from distances data and steps_per_rep
       let strideEfficiency = 70;
       const stepsData = speedSessions.filter((s: any) => s.steps_per_rep);
       if (stepsData.length > 0) {
-        // Lower steps per rep = better efficiency
         const allSteps: number[] = [];
         stepsData.forEach((s: any) => {
           if (typeof s.steps_per_rep === 'object') {
@@ -882,7 +1289,6 @@ Deno.serve(async (req) => {
     if (timingSessions && timingSessions.length > 0) {
       const timerDataArr = timingSessions.filter((s: any) => s.timer_data).map((s: any) => s.timer_data);
       if (timerDataArr.length > 0) {
-        // Extract timing consistency from timer_data
         const allTimes: number[] = [];
         timerDataArr.forEach((td: any) => {
           if (Array.isArray(td)) {
@@ -895,7 +1301,6 @@ Deno.serve(async (req) => {
           const mean = allTimes.reduce((a, b) => a + b, 0) / allTimes.length;
           const variance = allTimes.reduce((s, v) => s + (v - mean) ** 2, 0) / allTimes.length;
           const cv = Math.sqrt(variance) / Math.max(mean, 0.01);
-          // Lower CV = more consistent = higher score
           transferScore = Math.round(Math.min(100, Math.max(0, 100 - cv * 100)));
         }
       }
@@ -909,7 +1314,6 @@ Deno.serve(async (req) => {
       if (reactionTimes.length > 0 && accuracies.length > 0) {
         const avgReaction = reactionTimes.reduce((a: number, b: number) => a + b, 0) / reactionTimes.length;
         const avgAccuracy = accuracies.reduce((a: number, b: number) => a + b, 0) / accuracies.length;
-        // Fast reaction (< 350ms) + high accuracy = high score
         const reactionScore = Math.min(100, Math.max(0, (500 - avgReaction) / 3));
         decisionSpeedIndex = Math.round(reactionScore * 0.5 + avgAccuracy * 0.5);
         decisionSpeedIndex = Math.min(100, Math.max(0, decisionSpeedIndex));
@@ -933,7 +1337,7 @@ Deno.serve(async (req) => {
     // ── DRILL EFFECTIVENESS ──
     const drillEffectiveness = await computeDrillEffectiveness(supabase, user_id);
 
-    // ── SMART WEEK PLAN (AI-generated) ──
+    // ── SMART WEEK PLAN ──
     const smartWeekPlan = await generateSmartWeekPlan(
       weaknessClusters, readinessScore, readinessRecommendation, developmentStatus, sessionCount
     );
@@ -951,20 +1355,28 @@ Deno.serve(async (req) => {
         }))
       );
       // Update post_score on existing unresolved prescriptions
-      const { data: existing } = await supabase
-        .from('drill_prescriptions')
-        .select('id, weakness_area, pre_score')
-        .eq('user_id', user_id)
-        .eq('resolved', false);
-      if (existing && existing.length > 0) {
-        for (const ex of existing) {
+      if (existingPrescriptions && existingPrescriptions.length > 0) {
+        for (const ex of existingPrescriptions) {
           await supabase.from('drill_prescriptions')
-            .update({ post_score: mpiScore, effectiveness_score: mpiScore != null && ex.pre_score != null ? mpiScore - ex.pre_score : null })
+            .update({
+              post_score: mpiScore,
+              effectiveness_score: mpiScore != null && ex.pre_score != null ? mpiScore - ex.pre_score : null,
+              adherence_count: (ex.adherence_count ?? 0) + 1,
+            })
             .eq('id', ex.id);
+        }
+        // Resolve prescriptions that have been tracked 5+ times
+        const resolvedIds = existingPrescriptions
+          .filter((ex: any) => (ex.adherence_count ?? 0) >= 4)
+          .map((ex: any) => ex.id);
+        if (resolvedIds.length > 0) {
+          await supabase.from('drill_prescriptions')
+            .update({ resolved: true })
+            .in('id', resolvedIds);
         }
       }
       // Insert new prescriptions (only if area is new)
-      const existingAreas = new Set((existing ?? []).map((e: any) => e.weakness_area));
+      const existingAreas = new Set((existingPrescriptions ?? []).map((e: any) => e.weakness_area));
       const truly_new = newPrescriptions.filter(p => !existingAreas.has(p.weakness_area));
       if (truly_new.length > 0) {
         await supabase.from('drill_prescriptions').insert(truly_new);
@@ -1006,6 +1418,19 @@ Deno.serve(async (req) => {
     });
   } catch (err: any) {
     console.error("HIE analyze error:", err);
+    // Log failure to audit_log
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, serviceKey);
+      const body2 = await req.clone().json().catch(() => ({}));
+      await supabase.from('audit_log').insert({
+        user_id: body2.user_id || '00000000-0000-0000-0000-000000000000',
+        action: 'hie_analyze_failure',
+        table_name: 'hie_snapshots',
+        metadata: { error: err.message, sport: body2.sport || 'unknown' },
+      });
+    } catch (_) { /* best-effort logging */ }
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
