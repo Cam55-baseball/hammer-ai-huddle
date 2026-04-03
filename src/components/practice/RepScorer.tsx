@@ -386,7 +386,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       custom_rep_source: sessionConfig?.custom_rep_source,
       environment: sessionConfig?.environment,
       ...(isHitting && { batter_side: effectiveBatterSide }),
-      ...(isPitching && { pitcher_hand: handedness }),
+      ...(isPitching && { pitcher_hand: effectivePitcherHand }),
       ...((isFielding || isCatching) && { throwing_hand: handedness }),
       ...(isThrowing && { throwing_hand: handedness }),
       ...(isFielding && { fielding_position: repFieldingPosition }),
