@@ -617,35 +617,35 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             Rep will be recorded manually once you confirm all required fields.
           </p>
 
-          {/* === AI DRILL / CUSTOM FIELDS (per-rep, directly under rep source context) === */}
+          {/* === DRILL / CUSTOM FIELDS (per-rep, directly under rep source context) === */}
           {needsCatchingAIDrillDesc && (
             <AITextBoxField
-              label="AI Drill Description"
+              label="Drill Description"
               value={current.ai_drill_description ?? ''}
               onChange={v => updateField('ai_drill_description', v)}
               minChars={15}
               required
-              placeholder="Describe the drill for AI tracking (min 15 characters)..."
+              placeholder="Describe the drill (min 15 characters)..."
             />
           )}
           {needsDrillClarification && (
             <AITextBoxField
-              label="AI Drill Clarification"
+              label="Drill Clarification"
               value={current.ai_drill_clarification ?? ''}
               onChange={v => updateField('ai_drill_clarification', v)}
               minChars={15}
               required
-              placeholder="Clarify the drill for AI tracking (min 15 characters)..."
+              placeholder="Clarify the drill (min 15 characters)..."
             />
           )}
           {needsCustomRepDesc && (
             <AITextBoxField
-              label="AI Custom Rep Description"
+              label="Custom Rep Description"
               value={current.ai_custom_rep_description ?? ''}
               onChange={v => updateField('ai_custom_rep_description', v)}
               minChars={15}
               required
-              placeholder="Describe this custom rep source for AI tracking (min 15 characters)..."
+              placeholder="Describe this custom rep source (min 15 characters)..."
             />
           )}
 
