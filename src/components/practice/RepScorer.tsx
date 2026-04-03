@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { HandednessGate } from './HandednessGate';
+import { SideToggle } from './SideToggle';
 import { TeeDepthGrid } from './TeeDepthGrid';
 import { REQUIRES_THROWER_HAND, REQUIRES_VELOCITY, HIDES_VELOCITY, REQUIRES_PITCH_TYPE, HIDES_PITCH_TYPE } from './RepSourceSelector';
 // CatchingRepFields removed — catcher defense now handled within fielding module
@@ -260,7 +261,7 @@ const PITCHING_ALWAYS_VELO = ['live_bp', 'game', 'flat_ground_vs_hitter'];
 
 export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig }: RepScorerProps) {
   const { pitchTypes, machineVelocityBands, pitchingVelocityBands, bpDistanceRange, sport } = useSportConfig();
-  const { isSwitchHitter } = useSwitchHitterProfile();
+  const { isSwitchHitter, isAmbidextrousThrower } = useSwitchHitterProfile();
 
   // Commit animation state
   const [showCommitCheck, setShowCommitCheck] = useState(false);
@@ -270,6 +271,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
   // Switch hitter per-rep side override
   const [switchSide, setSwitchSide] = useState<'L' | 'R'>('R');
+  const [switchThrowSide, setSwitchThrowSide] = useState<'L' | 'R'>('R');
 
   // Fielding position per-rep (defaults from session config)
   const [repFieldingPosition, setRepFieldingPosition] = useState<string | undefined>(sessionConfig?.fielding_position);
@@ -304,6 +306,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
   // For switch hitters in hitting, use toggle side; otherwise use gate handedness
   const effectiveBatterSide = (isHitting && isSwitchHitter) ? switchSide : handedness;
+  const effectivePitcherHand = (isPitching && isAmbidextrousThrower) ? switchThrowSide : handedness;
 
   // Session-level defaults
   const repSource = sessionConfig?.rep_source ?? current.rep_source;
@@ -384,7 +387,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       custom_rep_source: sessionConfig?.custom_rep_source,
       environment: sessionConfig?.environment,
       ...(isHitting && { batter_side: effectiveBatterSide }),
-      ...(isPitching && { pitcher_hand: handedness }),
+      ...(isPitching && { pitcher_hand: effectivePitcherHand }),
       ...((isFielding || isCatching) && { throwing_hand: handedness }),
       ...(isThrowing && { throwing_hand: handedness }),
       ...(isFielding && { fielding_position: repFieldingPosition }),
@@ -405,14 +408,14 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
     // Reset current but keep execution_score for speed
     setCurrent({ execution_score: current.execution_score });
     setShowOverrides(false);
-  }, [current, handedness, effectiveBatterSide, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand, repFieldingPosition]);
+  }, [current, handedness, effectiveBatterSide, effectivePitcherHand, canConfirm, reps, onRepsChange, isHitting, isPitching, isFielding, isCatching, isThrowing, repSource, sessionConfig, isMachine, machineMode, machinePitchType, machineVeloBand, repFieldingPosition]);
 
   const removeRep = useCallback((index: number) => {
     onRepsChange(reps.filter((_, i) => i !== index));
   }, [reps, onRepsChange]);
 
   // If no handedness selected, show gate (skip for baserunning — no side needed)
-  if (!handedness && !isBaserunning) {
+  if (!handedness && !isBaserunning && !(isHitting && isSwitchHitter) && !(isPitching && isAmbidextrousThrower)) {
     return <HandednessGate module={module} value={handedness} onChange={setHandedness} />;
   }
 
@@ -462,7 +465,14 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
         />
       </div>
 
-      {/* Machine Mode selector (1 Pitch vs Mix) — only for machine hitting */}
+      {/* Inline side toggle for switch hitters / ambidextrous throwers */}
+      {isHitting && isSwitchHitter && (
+        <SideToggle value={switchSide} onChange={setSwitchSide} label="Batting Side" />
+      )}
+      {isPitching && isAmbidextrousThrower && (
+        <SideToggle value={switchThrowSide} onChange={setSwitchThrowSide} label="Throwing Hand" />
+      )}
+
       {isHitting && isMachine && (
         <div className="space-y-3">
           <div>
@@ -836,29 +846,6 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
-              {/* Switch hitter per-rep toggle */}
-              {isHitting && isSwitchHitter && (
-                <div>
-                  <Label className="text-xs text-muted-foreground mb-1 block">Batter Side</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['L', 'R'] as const).map(s => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setSwitchSide(s)}
-                        className={cn(
-                          'rounded-md border p-2 text-xs font-medium transition-all',
-                          switchSide === s
-                            ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                            : 'bg-muted/30 border-border hover:bg-muted text-muted-foreground'
-                        )}
-                      >
-                        {s === 'L' ? '🫲 Left' : '🫱 Right'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {isTee && (
                 <div className="flex justify-center">
