@@ -390,10 +390,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       session_rep_source: sessionConfig?.rep_source,
       custom_rep_source: sessionConfig?.custom_rep_source,
       environment: sessionConfig?.environment,
-      ...(isHitting && { batter_side: effectiveBatterSide }),
+      ...((isHitting || isBunting) && { batter_side: effectiveBatterSide }),
       ...(isPitching && { pitcher_hand: effectivePitcherHand }),
-      ...((isFielding || isCatching) && { throwing_hand: handedness }),
-      ...(isThrowing && { throwing_hand: handedness }),
+      ...((isFielding || isCatching) && { throwing_hand: effectiveThrowingHand }),
+      ...(isThrowing && { throwing_hand: effectiveThrowingHand }),
       ...(isFielding && { fielding_position: repFieldingPosition }),
       // Apply machine single-mode presets
       ...(isHitting && isMachine && machineMode === 'single' && {
