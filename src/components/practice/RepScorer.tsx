@@ -270,6 +270,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
   // Switch hitter per-rep side override
   const [switchSide, setSwitchSide] = useState<'L' | 'R'>('R');
+  const [switchThrowSide, setSwitchThrowSide] = useState<'L' | 'R'>('R');
 
   // Fielding position per-rep (defaults from session config)
   const [repFieldingPosition, setRepFieldingPosition] = useState<string | undefined>(sessionConfig?.fielding_position);
