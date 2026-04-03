@@ -75,7 +75,7 @@ const goalOptions = [
   { value: 'situational', label: '🎯 Situational' },
 ];
 
-export function BaserunningRepFields({ value, onChange, sport }: BaserunningRepFieldsProps) {
+export function BaserunningRepFields({ value, onChange, sport, mode = 'advanced' }: BaserunningRepFieldsProps) {
   const drills = sport === 'softball' ? softballDrills : baseballDrills;
 
   return (
