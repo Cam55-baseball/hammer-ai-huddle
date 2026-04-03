@@ -25,6 +25,7 @@ import { TeamOverviewCard } from '@/components/hie/TeamOverviewCard';
 import { CoachPlayerCard } from '@/components/hie/CoachPlayerCard';
 import { TeamWeaknessEngine } from '@/components/hie/TeamWeaknessEngine';
 import { CoachAlertPanel } from '@/components/hie/CoachAlertPanel';
+import { PlayerComparisonTool } from '@/components/hie/PlayerComparisonTool';
 import { useHIETeamSnapshot } from '@/hooks/useHIETeamSnapshot';
 import { 
   Command,
