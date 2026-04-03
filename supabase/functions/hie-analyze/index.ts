@@ -1251,7 +1251,7 @@ Deno.serve(async (req) => {
     });
 
     // ── REAL MICRO-DATA ANALYSIS (ALL MODULES) ──
-    const hittingPatterns = analyzeHittingMicro(allMicroReps, allDrillBlocks);
+    const hittingPatterns = analyzeHittingMicro(allMicroReps, allDrillBlocks, settings?.primary_batting_side || 'R');
     const fieldingPatterns = analyzeFieldingMicro(allMicroReps, allDrillBlocks);
     const pitchingPatterns = analyzePitchingMicro(allMicroReps, allDrillBlocks);
     const speedPatterns = analyzeSpeedLabMicro(speedSessions ?? []);
