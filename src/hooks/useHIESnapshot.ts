@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useRef } from 'react';
 
 export interface WeaknessCluster {
   area: string;
@@ -16,6 +17,7 @@ export interface PrescriptiveDrill {
   description: string;
   module: string;
   constraints: string;
+  drill_type?: string;
 }
 
 export interface PrescriptiveAction {
@@ -57,6 +59,7 @@ export function useHIESnapshot() {
   const { user, session } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const autoRefreshTriggered = useRef(false);
 
   const query = useQuery({
     queryKey: ['hie-snapshot', user?.id],
@@ -104,10 +107,27 @@ export function useHIESnapshot() {
     },
   });
 
+  // ── STALE DATA AUTO-REFRESH ──
+  // If snapshot is older than 24 hours, auto-trigger refresh once
+  useEffect(() => {
+    if (!query.data || autoRefreshTriggered.current || refreshMutation.isPending) return;
+    const computedAt = new Date(query.data.computed_at).getTime();
+    const staleThreshold = 24 * 60 * 60 * 1000; // 24 hours
+    if (Date.now() - computedAt > staleThreshold) {
+      autoRefreshTriggered.current = true;
+      refreshMutation.mutate();
+    }
+  }, [query.data]);
+
+  const isStale = query.data
+    ? Date.now() - new Date(query.data.computed_at).getTime() > 24 * 60 * 60 * 1000
+    : false;
+
   return {
     snapshot: query.data,
     isLoading: query.isLoading,
     refreshAnalysis: refreshMutation.mutate,
     isRefreshing: refreshMutation.isPending,
+    isStale,
   };
 }
