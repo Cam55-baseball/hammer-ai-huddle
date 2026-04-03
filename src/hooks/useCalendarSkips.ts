@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { getDay } from 'date-fns';
 
 export interface SkippedItem {
