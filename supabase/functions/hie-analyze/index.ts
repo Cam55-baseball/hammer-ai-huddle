@@ -1333,6 +1333,9 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── READINESS (must be computed before prescription engine needs it) ──
+    const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
+
     // ── PRESCRIPTIVE ACTIONS (AI + scoring hybrid with fallback) ──
     const prescriptiveActions: PrescriptiveAction[] = [];
     const usedAreas = new Set<string>();
@@ -1417,8 +1420,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── READINESS ──
-    const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
+    // ── READINESS (already computed above, before prescription engine) ──
 
     // ── RISK ALERTS ──
     const riskAlerts: RiskAlert[] = [];
@@ -1528,7 +1530,8 @@ Deno.serve(async (req) => {
     if (prescriptiveActions.length > 0) {
       const newPrescriptions = prescriptiveActions.flatMap(action =>
         action.drills.map(drill => {
-          const targetedMetric = drill.drill_type || action.weakness_area;
+          const matchingPattern = allPatterns.find(p => p.description === action.weakness_area);
+          const targetedMetric = matchingPattern?.metric || drill.drill_type || action.weakness_area;
           const weaknessVal = weaknessScoreRows.find(w => w.weakness_metric === targetedMetric)?.score ?? null;
           // Parse constraints_json from structured constraints or text
           let constraintsJson: any = {};
