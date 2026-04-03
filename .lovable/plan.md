@@ -1,74 +1,83 @@
 
 
-# Fix Session Identity — Persistent Athlete Handedness
+# Session Intent Layer — Side Mode Selection Per Session
 
 ## Problem
-Every session, `HandednessGate` asks R/L via localStorage. This should be set once from the athlete's DB profile (`primary_batting_side` / `primary_throwing_hand`) and never asked again.
+Currently, switch hitters always see the `SideToggle` and non-switch players never do. There's no way for a switch hitter to say "today I'm only hitting right" or for a right-handed hitter to say "I want to work both sides today." Session intent is missing.
 
-## Current Flow
-1. `RepScorer` checks `handedness` state (starts `undefined`)
-2. If undefined + not switch player → shows `HandednessGate`
-3. `HandednessGate` checks localStorage for saved value, auto-selects if found
-4. User selects → saves to localStorage → sets `handedness` state
+## Architecture
 
-**Problems**: localStorage is device-specific, not athlete-specific. Prompt appears on new devices. Identity should come from DB.
-
-## New Flow
-1. `useSwitchHitterProfile` already fetches `primary_batting_side` and `primary_throwing_hand` from `athlete_mpi_settings`
-2. `RepScorer` reads these values on mount
-3. If DB value exists (R or L) → auto-set `handedness`, no gate shown
-4. If DB value is null (legacy user) → show a **one-time identity prompt** (not the old HandednessGate) → save to DB → never ask again
-5. If DB value is 'S' → skip gate (existing switch toggle handles it)
+```text
+Athlete Identity (DB, set once)
+  └── Session Intent (asked each session, stored in state)
+       └── Rep Execution (per-rep side, stored with rep)
+```
 
 ## Changes
 
-### 1. `src/hooks/useSwitchHitterProfile.ts`
-- Expose `primaryBattingSide` and `primaryThrowingHand` raw values from settings
-- Add a `saveIdentity(field, value)` mutation function that updates `athlete_mpi_settings` in DB
-- Uses `useMutation` + invalidates the query cache on success
+### 1. `src/components/practice/SessionIntentGate.tsx` (NEW)
+A compact one-tap mode selector shown at the top of the rep area before the first rep is logged.
 
-### 2. `src/components/practice/HandednessGate.tsx` → **Redesign as Identity Gate**
-- Rename concept: this is now an **identity setup**, not a session prompt
-- For **hitting**: show 3 options — Right-Handed, Left-Handed, Switch Hitter
-- For **pitching/throwing/fielding**: show 3 options — Right-Handed, Left-Handed, Ambidextrous
-- On selection: call `saveIdentity()` to persist to DB (sets `primary_batting_side` or `primary_throwing_hand`)
-- For Switch/Ambidextrous: also sets `is_switch_hitter` or `is_ambidextrous_thrower` flag
-- Header text: "Set Your [Batting Stance / Throwing Hand]" with subtitle "This is saved to your profile — you won't be asked again"
-- Remove localStorage dependency entirely
+**Hitting** (when `primaryBattingSide` is known):
+- Three options: `Right Only` | `Left Only` | `Both`
+- Default pre-selected based on identity: `'S'` → `Both`, `'R'` → `Right Only`, `'L'` → `Left Only`
 
-### 3. `src/components/practice/RepScorer.tsx`
-- Pull `primaryBattingSide`, `primaryThrowingHand`, `saveIdentity` from `useSwitchHitterProfile`
-- On mount: if hitting and `primaryBattingSide` is 'R' or 'L' → `setHandedness(primaryBattingSide)`
-- On mount: if pitching and `primaryThrowingHand` is 'R' or 'L' → `setHandedness(primaryThrowingHand)`
-- Gate logic becomes: show identity gate **only** if DB value is null (first time ever)
-- Remove localStorage-based handedness logic from `useSessionDefaults`
-- Switch hitter default: initialize `switchSide` from `primaryBattingSide` if it's 'S', defaulting to 'R'
+**Pitching** (when `primaryThrowingHand` is known):
+- Three options: `Right Arm` | `Left Arm` | `Both`
+- Same default logic
 
-### 4. `src/hooks/useSessionDefaults.ts`
-- Remove `getHandedness` / `saveHandedness` functions (no longer needed)
-- Keep `getDefaults` / `saveDefaults` for other session config
+**Design**: Horizontal segmented control (like the existing Quick/Advanced toggle style). One tap confirms — no modal, no extra button. Selecting a value immediately sets the mode and the gate disappears, replaced by the normal rep input.
+
+### 2. `src/components/practice/RepScorer.tsx`
+**A. New state:**
+```ts
+const [sideMode, setSideMode] = useState<'R' | 'L' | 'BOTH' | null>(null);
+```
+
+**B. Auto-default on mount** (via useEffect):
+- Switch hitter → default `'BOTH'`
+- Right-handed → default `'R'`
+- Left-handed → default `'L'`
+- But do NOT auto-confirm — show the `SessionIntentGate` so user can override
+
+**C. Show `SessionIntentGate`** when `sideMode === null` and identity is known (after the identity gate). This replaces the current immediate jump to rep input.
+
+**D. Toggle visibility update:**
+- `SideToggle` shown ONLY when `sideMode === 'BOTH'`
+- When `sideMode === 'R'` or `'L'`, lock `effectiveBatterSide` / `effectivePitcherHand` to that value — no toggle rendered
+
+**E. Update `effectiveBatterSide` / `effectivePitcherHand`:**
+```ts
+const effectiveBatterSide = sideMode === 'BOTH' ? switchSide : (sideMode ?? handedness);
+const effectivePitcherHand = sideMode === 'BOTH' ? switchThrowSide : (sideMode ?? handedness);
+```
+
+**F. Gate ordering** (the return-early chain):
+1. Identity gate (existing — only if DB identity is null)
+2. Session intent gate (NEW — only if `sideMode` is null and module is hitting/pitching)
+3. Normal rep input
+
+### 3. No changes needed to:
+- `HandednessGate.tsx` — identity gate stays as-is
+- `SideToggle.tsx` — component stays as-is, just conditionally rendered
+- `SessionConfigPanel.tsx` — session config is unrelated to side intent
+- `useSwitchHitterProfile.ts` — already exposes everything needed
+- Database — no schema changes, `sideMode` is session-local state only
 
 ## Data Flow
 
 ```text
-athlete_mpi_settings.primary_batting_side
-├── null → Show Identity Gate (one-time) → save to DB
-├── 'R' or 'L' → Auto-set handedness, no prompt
-└── 'S' → Skip gate, show SideToggle (existing)
+Identity (DB)           Session Intent (state)      Rep Execution
+primary_batting_side    sideMode = 'R'|'L'|'BOTH'   batter_side per rep
+├── 'R' → default 'R'  ├── 'R' → lock to R          └── always R
+├── 'L' → default 'L'  ├── 'L' → lock to L          └── always L
+└── 'S' → default BOTH └── 'BOTH' → show toggle     └── R or L per tap
 ```
 
-## Files Modified
+## Files
 
 | File | Change |
 |------|--------|
-| `useSwitchHitterProfile.ts` | Expose raw values + `saveIdentity` mutation |
-| `HandednessGate.tsx` | Redesign as 3-option identity prompt, save to DB |
-| `RepScorer.tsx` | Auto-load from DB, only show gate if null |
-| `useSessionDefaults.ts` | Remove handedness localStorage functions |
-
-## What This Does NOT Touch
-- Base stealing trainers
-- Session-level fields
-- Switch toggle (already works)
-- No DB schema changes (columns already exist)
+| `src/components/practice/SessionIntentGate.tsx` | **NEW** — one-tap session mode selector |
+| `src/components/practice/RepScorer.tsx` | Add `sideMode` state, show intent gate, conditional toggle |
 
