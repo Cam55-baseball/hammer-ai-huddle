@@ -54,6 +54,7 @@ const KNOWN_TAG_VALUES = new Set(DIGESTION_TAGS.map(t => t.value));
 export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [showMicros, setShowMicros] = useState(false);
 
   const mealTypeKey = meal.mealType?.toLowerCase().replace('-', '_') || 'snack';
   const mealTypeColor = MEAL_TYPE_COLORS[mealTypeKey] || MEAL_TYPE_COLORS.snack;
@@ -61,6 +62,7 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
 
   const hasMacros = meal.proteinG || meal.carbsG || meal.fatsG;
   const hasSupplements = meal.supplements && meal.supplements.length > 0;
+  const hasMicros = meal.micros && Object.keys(meal.micros).length > 0;
 
   // Parse digestion notes into chips (known tags) + freeform text
   const parsedDigestionNotes = meal.digestionNotes
