@@ -181,6 +181,10 @@ export function useMealVaultSync() {
       const microsComplete = REQUIRED_MICRO_KEYS.every(k => typeof aggregatedMicros[k] === 'number' && aggregatedMicros[k] >= 0);
       const hasMicrosData = Object.keys(aggregatedMicros).length > 0 && Object.values(aggregatedMicros).some(v => v > 0);
 
+      // Guard: empty micros object → null, force low confidence when no micros
+      const finalMicros = (microsComplete && hasMicrosData) ? aggregatedMicros : null;
+      const finalConfidence = finalMicros ? dataConfidence : 'low';
+
       // Insert to vault_nutrition_logs
       const { error } = await supabase
         .from('vault_nutrition_logs')
@@ -199,14 +203,31 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-      micros: (microsComplete && hasMicrosData) ? aggregatedMicros : null,
-          data_confidence: (microsComplete && hasMicrosData) ? dataConfidence : 'low',
+          micros: finalMicros,
+          data_confidence: finalConfidence,
           data_source: dataSource,
         } as any);
 
       if (error) throw error;
 
-      // Wire effectiveness tracking: check if any logged food matches a recently accepted suggestion
+      // Stage AI-sourced items in unverified_foods for review
+      try {
+        const aiItems = meals.items.filter(i => i.source === 'ai' && i.micros && Object.keys(i.micros).length > 0);
+        if (aiItems.length > 0) {
+          const unverifiedInserts = aiItems.map(item => ({
+            food_name: item.name,
+            micros: item.micros,
+            serving_size: (item as any).servingSize || '1 serving',
+            source: 'ai',
+            submitted_by: user.id,
+          }));
+          await supabase.from('unverified_foods').insert(unverifiedInserts as any);
+        }
+      } catch (e) {
+        console.warn('Unverified foods staging failed (non-blocking):', e);
+      }
+
+
       try {
         const foodNames = meals.items.map(i => i.name.toLowerCase());
         const { data: recentAccepted } = await (supabase as any)
