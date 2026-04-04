@@ -57,8 +57,8 @@ export function useSuggestionLearning() {
   ) => {
     if (!user) return;
     // Update the most recent accepted interaction with effectiveness
-    const { data: recent } = await supabase
-      .from('nutrition_suggestion_interactions' as any)
+    const { data: recent } = await (supabase as any)
+      .from('nutrition_suggestion_interactions')
       .select('id')
       .eq('user_id', user.id)
       .eq('nutrient_key', nutrientKey)
@@ -67,10 +67,10 @@ export function useSuggestionLearning() {
       .order('created_at', { ascending: false })
       .limit(1);
     if (recent && recent.length > 0) {
-      await supabase
-        .from('nutrition_suggestion_interactions' as any)
-        .update({ effectiveness_delta: scoreDelta } as any)
-        .eq('id', (recent[0] as any).id);
+      await (supabase as any)
+        .from('nutrition_suggestion_interactions')
+        .update({ effectiveness_delta: scoreDelta })
+        .eq('id', recent[0].id);
     }
   }, [user]);
 
