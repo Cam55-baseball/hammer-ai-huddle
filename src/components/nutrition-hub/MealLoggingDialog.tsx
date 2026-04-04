@@ -242,6 +242,17 @@ export function MealLoggingDialog({
 
     setSaving(true);
     try {
+      // Extract micros from lookup result if available (DB-first enrichment)
+      let itemMicros: Record<string, number> | null = null;
+      let itemConfidence: 'high' | 'medium' | 'low' = 'low';
+      let itemSource: 'database' | 'ai' | 'manual' = 'manual';
+
+      if (lookupResult && lookupResult.totals?.micros && Object.keys(lookupResult.totals.micros).length > 0) {
+        itemMicros = lookupResult.totals.micros as Record<string, number>;
+        itemConfidence = lookupResult.source === 'database' ? 'high' : 'medium';
+        itemSource = lookupResult.source === 'database' ? 'database' : 'ai';
+      }
+
       // Create a minimal MealData structure for quick entry
       const quickMealData: MealData = {
         items: [{
@@ -253,6 +264,9 @@ export function MealLoggingDialog({
           fats: fatsNum,
           quantity: 1,
           unit: 'serving',
+          micros: itemMicros,
+          confidence: itemConfidence,
+          source: itemSource,
         }],
         vitamins: [],
         supplements: [],

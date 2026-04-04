@@ -36,6 +36,9 @@ export interface MealItem {
   protein?: number;
   carbs?: number;
   fats?: number;
+  micros?: Record<string, number> | null;
+  confidence?: 'high' | 'medium' | 'low';
+  source?: 'database' | 'ai' | 'manual';
 }
 
 export interface Vitamin {

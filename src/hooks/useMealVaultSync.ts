@@ -199,7 +199,7 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-          micros: (microsComplete && hasMicrosData) ? aggregatedMicros : undefined,
+          micros: (microsComplete && hasMicrosData) ? aggregatedMicros : null,
           data_confidence: dataConfidence,
           data_source: dataSource,
         } as any);
