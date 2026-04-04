@@ -40,6 +40,7 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
   const [selectedLiquidType, setSelectedLiquidType] = useState('water');
   const [liquidPickerOpen, setLiquidPickerOpen] = useState(false);
   const [pendingWaterAmount, setPendingWaterAmount] = useState<number | null>(null);
+  const [pendingLiquid, setPendingLiquid] = useState<{ type: string; quality: string } | null>(null);
   
   // Store pending items waiting for meal type selection
   const pendingItemsRef = useRef<RecipeIngredient[] | null>(null);
