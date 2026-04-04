@@ -14,8 +14,8 @@ import { RecipeIngredient } from '@/hooks/useRecipes';
 import { BarcodeScanner } from './BarcodeScanner';
 import { FoodSearchResult } from '@/hooks/useFoodSearch';
 import { MealTypeSelector, MEAL_TYPES } from './MealTypeSelector';
-
 import { PhotoFoodLogger } from './PhotoFoodLogger';
+import { LIQUID_TYPES, classifyLiquid } from '@/constants/hydrationClassification';
 
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
