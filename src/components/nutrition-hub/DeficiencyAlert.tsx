@@ -212,6 +212,12 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
                       {item.percent}% RDA ({item.current}{item.unit})
                     </span>
                   </div>
+                  {/* Performance impact label */}
+                  {(item as any).impact && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 ml-4">
+                      → {(item as any).impact}
+                    </p>
+                  )}
                   {item.suggestions && item.suggestions.length > 0 && (
                     <div className="mt-1 space-y-0.5">
                       {item.suggestions.map((food, idx) => (
