@@ -289,38 +289,96 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
           </Dialog>
 
           {/* Liquid Type Picker Dialog */}
-          <Dialog open={liquidPickerOpen} onOpenChange={setLiquidPickerOpen}>
+          <Dialog open={liquidPickerOpen} onOpenChange={(open) => {
+            setLiquidPickerOpen(open);
+            if (!open) setPendingLiquid(null);
+          }}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
                   {t('nutrition.selectLiquidType', 'What are you drinking?')} ({pendingWaterAmount}oz)
                 </DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-2 py-4">
-                {LIQUID_TYPES.map((lt) => (
-                  <Button
-                    key={lt.value}
-                    variant="outline"
-                    className={cn(
-                      "justify-start gap-2 h-auto py-2.5",
-                      lt.defaultQuality === 'filler' && "border-amber-500/30"
-                    )}
-                    disabled={isLogging}
-                    onClick={() => handleLiquidLog(lt.value)}
-                  >
-                    <span>{lt.emoji}</span>
-                    <div className="text-left">
-                      <span className="text-sm">{lt.label}</span>
-                      <span className={cn(
-                        "block text-[10px]",
-                        lt.defaultQuality === 'quality' ? "text-emerald-500" : "text-amber-500"
-                      )}>
-                        {lt.defaultQuality === 'quality' ? '● Quality' : '● Filler'}
-                      </span>
+              
+              {!pendingLiquid ? (
+                <div className="grid grid-cols-2 gap-2 py-4">
+                  {LIQUID_TYPES.map((lt) => (
+                    <Button
+                      key={lt.value}
+                      variant="outline"
+                      className={cn(
+                        "justify-start gap-2 h-auto py-2.5",
+                        lt.defaultQuality === 'filler' && "border-amber-500/30"
+                      )}
+                      disabled={isLogging}
+                      onClick={() => handleLiquidSelect(lt.value)}
+                    >
+                      <span>{lt.emoji}</span>
+                      <div className="text-left">
+                        <span className="text-sm">{lt.label}</span>
+                        <span className={cn(
+                          "block text-[10px]",
+                          lt.defaultQuality === 'quality' ? "text-emerald-500" : "text-amber-500"
+                        )}>
+                          {lt.defaultQuality === 'quality' ? '● Quality' : '● Filler'}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4 py-4">
+                  {/* Confirm selected liquid with override option */}
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                    <span className="text-2xl">
+                      {LIQUID_TYPES.find(lt => lt.value === pendingLiquid.type)?.emoji || '🫗'}
+                    </span>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">
+                        {LIQUID_TYPES.find(lt => lt.value === pendingLiquid.type)?.label || pendingLiquid.type}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{pendingWaterAmount}oz</p>
                     </div>
-                  </Button>
-                ))}
-              </div>
+                  </div>
+
+                  {/* Quality Override Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">Classification</p>
+                      <p className={cn(
+                        "text-xs font-semibold",
+                        pendingLiquid.quality === 'quality' ? "text-emerald-500" : "text-amber-500"
+                      )}>
+                        {pendingLiquid.quality === 'quality' ? '✓ Quality' : '⚠ Filler'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">Override</span>
+                      <Switch
+                        checked={pendingLiquid.quality === 'filler'}
+                        onCheckedChange={toggleQualityOverride}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setPendingLiquid(null)}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      disabled={isLogging}
+                      onClick={handleLiquidConfirm}
+                    >
+                      {t('nutrition.add', 'Add')}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </div>
