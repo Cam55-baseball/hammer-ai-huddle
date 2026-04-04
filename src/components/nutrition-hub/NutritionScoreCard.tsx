@@ -232,15 +232,23 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
             {consistency && consistency.daysAnalyzed >= 3 && (
               <div className="mt-1.5 flex items-center gap-1.5">
                 <BarChart3 className="h-3 w-3 text-primary/60" />
-                <span className="text-[10px] text-muted-foreground">
-                  14-day consistency:
-                </span>
-                <span className={cn(
-                  'text-[10px] font-semibold',
-                  consistency.score >= 70 ? 'text-emerald-500' : consistency.score >= 40 ? 'text-amber-500' : 'text-destructive'
-                )}>
-                  {consistency.score}
-                </span>
+                {consistency.score !== null ? (
+                  <>
+                    <span className="text-[10px] text-muted-foreground">
+                      14-day consistency:
+                    </span>
+                    <span className={cn(
+                      'text-[10px] font-semibold',
+                      consistency.score >= 70 ? 'text-emerald-500' : consistency.score >= 40 ? 'text-amber-500' : 'text-destructive'
+                    )}>
+                      {consistency.score}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground italic">
+                    Consistency unavailable — insufficient micronutrient data
+                  </span>
+                )}
               </div>
             )}
           </div>

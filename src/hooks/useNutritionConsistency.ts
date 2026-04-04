@@ -16,7 +16,8 @@ const RDA: Record<string, number> = {
 };
 
 export interface ConsistencyData {
-  score: number; // 0-100
+  score: number | null;
+  status: 'active' | 'insufficient_data';
   stabilityScore: number;
   loggingFrequency: number;
   deficiencyFreeRate: number;
@@ -78,8 +79,12 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
         }
         dailyScores.push(Math.round((met / 13) * 100));
       }
-      let stabilityScore = 100;
-      if (dailyScores.length >= 2) {
+      let stabilityScore = 0;
+      if (dailyScores.length === 0) {
+        stabilityScore = 0;
+      } else if (dailyScores.length === 1) {
+        stabilityScore = 50;
+      } else {
         const mean = dailyScores.reduce((a, b) => a + b, 0) / dailyScores.length;
         const variance = dailyScores.reduce((sum, s) => sum + (s - mean) ** 2, 0) / dailyScores.length;
         const stdDev = Math.sqrt(variance);
@@ -88,10 +93,23 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
 
       // 3. Deficiency-free rate (30%): only from days WITH micro data
       const daysWithMicros = allDates.filter(d => dayMap.get(d)?.hasMicros).length;
+
+      // Hard guard: zero micro days = insufficient data
+      if (daysWithMicros === 0) {
+        return {
+          score: null,
+          status: 'insufficient_data' as const,
+          stabilityScore: 0,
+          loggingFrequency,
+          deficiencyFreeRate: 0,
+          daysAnalyzed: daysLogged,
+        };
+      }
+
       let deficiencyFreeDays = 0;
       for (const date of allDates) {
         const day = dayMap.get(date);
-        if (!day || !day.hasMicros) continue; // exclude macro-only days
+        if (!day || !day.hasMicros) continue;
         const hasDeficiency = MICRO_KEYS.some(key => {
           const rda = RDA[key] * rdaMultiplier;
           return (day.micros[key] || 0) < rda * 0.25;
@@ -111,6 +129,7 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
 
       return {
         score,
+        status: 'active' as const,
         stabilityScore,
         loggingFrequency,
         deficiencyFreeRate,
