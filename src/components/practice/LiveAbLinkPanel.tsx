@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 
 interface LiveAbLinkPanelProps {
   linkCode: string | null;
-  onLinkEstablished: (code: string, linkedSessionId?: string) => void;
+  onLinkEstablished: (code: string) => void;
   onUnlink: () => void;
 }
 
