@@ -2332,6 +2332,7 @@ export type Database = {
       }
       live_ab_links: {
         Row: {
+          claimed_at: string | null
           created_at: string | null
           creator_session_id: string | null
           creator_user_id: string
@@ -2340,11 +2341,12 @@ export type Database = {
           joiner_session_id: string | null
           joiner_user_id: string | null
           link_code: string
+          linked_at: string | null
           sport: string
           status: string
-          used_at: string | null
         }
         Insert: {
+          claimed_at?: string | null
           created_at?: string | null
           creator_session_id?: string | null
           creator_user_id: string
@@ -2353,11 +2355,12 @@ export type Database = {
           joiner_session_id?: string | null
           joiner_user_id?: string | null
           link_code: string
+          linked_at?: string | null
           sport: string
           status?: string
-          used_at?: string | null
         }
         Update: {
+          claimed_at?: string | null
           created_at?: string | null
           creator_session_id?: string | null
           creator_user_id?: string
@@ -2366,9 +2369,9 @@ export type Database = {
           joiner_session_id?: string | null
           joiner_user_id?: string | null
           link_code?: string
+          linked_at?: string | null
           sport?: string
           status?: string
-          used_at?: string | null
         }
         Relationships: [
           {
@@ -7365,14 +7368,18 @@ export type Database = {
     }
     Functions: {
       archive_old_scout_applications: { Args: never; Returns: undefined }
+      attach_session_to_link: {
+        Args: { p_link_code: string; p_session_id: string; p_user_id: string }
+        Returns: undefined
+      }
       can_edit_folder_item: {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
       }
-      cancel_pending_links: { Args: { p_user_id: string }; Returns: undefined }
       claim_ab_link: {
         Args: { p_code: string; p_user_id: string }
         Returns: {
+          claimed_at: string | null
           created_at: string | null
           creator_session_id: string | null
           creator_user_id: string
@@ -7381,9 +7388,9 @@ export type Database = {
           joiner_session_id: string | null
           joiner_user_id: string | null
           link_code: string
+          linked_at: string | null
           sport: string
           status: string
-          used_at: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -7394,6 +7401,30 @@ export type Database = {
       }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
+      create_ab_link: {
+        Args: { p_link_code: string; p_sport: string; p_user_id: string }
+        Returns: {
+          claimed_at: string | null
+          created_at: string | null
+          creator_session_id: string | null
+          creator_user_id: string
+          expires_at: string | null
+          id: string
+          joiner_session_id: string | null
+          joiner_user_id: string | null
+          link_code: string
+          linked_at: string | null
+          sport: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "live_ab_links"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      expire_stale_links: { Args: never; Returns: undefined }
       folder_allows_coach_edit: {
         Args: { p_coach_id: string; p_folder_id: string }
         Returns: boolean
@@ -7434,10 +7465,6 @@ export type Database = {
       try_acquire_hie_lock: {
         Args: { p_stale_seconds?: number; p_user_id: string }
         Returns: boolean
-      }
-      update_link_session_id: {
-        Args: { p_link_code: string; p_session_id: string; p_user_id: string }
-        Returns: undefined
       }
       user_has_role: {
         Args: {
