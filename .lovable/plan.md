@@ -1,63 +1,65 @@
 
 
-# Fix unverified_foods Insert — Column Name Mismatch
+# Fix: Second Insert Path Missing Micros Guard
 
-## Bug (CONFIRMED)
-Lines 214-228 in `useMealVaultSync.ts` use wrong column names, causing **every insert to silently fail**:
+## Problem Found
+There are **two** code paths that insert into `vault_nutrition_logs`:
 
-| Code uses | Table expects |
-|-----------|---------------|
-| `food_name` | `name` |
-| `micros` (JSON blob) | 13 individual columns (`vitamin_a_mcg`, etc.) |
-| `submitted_by` | doesn't exist |
-| missing | `calories_per_serving`, `protein_g`, `carbs_g`, `fats_g`, `confidence_level` |
+1. **`useMealVaultSync.ts`** (line 189) — has the `{}` → `null` guard ✅
+2. **`useVault.ts`** (line 719) — spreads `logData` directly with **NO guard** ❌
 
-## Fix — `src/hooks/useMealVaultSync.ts` (lines 214-228)
+The spirulina smoothie (`micros = '{}'`, `data_confidence = 'medium'`) was inserted via the `useVault.ts` path, bypassing all integrity checks.
 
-Replace the staging block with correct column mapping:
+## Fix — `src/hooks/useVault.ts` (line ~717-724)
+
+Add the same guard before insert:
 
 ```typescript
-try {
-  const aiItems = meals.items.filter(i => i.source === 'ai' && i.micros && Object.keys(i.micros).length > 0);
-  if (aiItems.length > 0) {
-    const unverifiedInserts = aiItems.map(item => ({
-      name: item.name,
-      calories_per_serving: item.calories || null,
-      protein_g: item.protein || null,
-      carbs_g: item.carbs || null,
-      fats_g: item.fats || null,
-      serving_size: (item as any).servingSize || '1 serving',
-      confidence_level: item.confidence || 'medium',
-      source: 'ai',
-      vitamin_a_mcg: item.micros?.vitamin_a_mcg ?? null,
-      vitamin_c_mg: item.micros?.vitamin_c_mg ?? null,
-      vitamin_d_mcg: item.micros?.vitamin_d_mcg ?? null,
-      vitamin_e_mg: item.micros?.vitamin_e_mg ?? null,
-      vitamin_k_mcg: item.micros?.vitamin_k_mcg ?? null,
-      vitamin_b6_mg: item.micros?.vitamin_b6_mg ?? null,
-      vitamin_b12_mcg: item.micros?.vitamin_b12_mcg ?? null,
-      folate_mcg: item.micros?.folate_mcg ?? null,
-      calcium_mg: item.micros?.calcium_mg ?? null,
-      iron_mg: item.micros?.iron_mg ?? null,
-      magnesium_mg: item.micros?.magnesium_mg ?? null,
-      potassium_mg: item.micros?.potassium_mg ?? null,
-      zinc_mg: item.micros?.zinc_mg ?? null,
-    }));
-    await supabase.from('unverified_foods').insert(unverifiedInserts as any);
+const saveNutritionLog = useCallback(async (logData: Omit<VaultNutritionLog, 'id' | 'logged_at'>) => {
+  if (!user) return { success: false };
+
+  // Guard: empty micros → null, force low confidence
+  const REQUIRED_MICRO_KEYS = [
+    'vitamin_a_mcg', 'vitamin_c_mg', 'vitamin_d_mcg', 'vitamin_e_mg',
+    'vitamin_k_mcg', 'vitamin_b6_mg', 'vitamin_b12_mcg', 'folate_mcg',
+    'calcium_mg', 'iron_mg', 'magnesium_mg', 'potassium_mg', 'zinc_mg',
+  ];
+  let sanitizedData = { ...logData };
+  if (sanitizedData.micros != null && typeof sanitizedData.micros === 'object') {
+    const micros = sanitizedData.micros as Record<string, unknown>;
+    const hasData = Object.values(micros).some(v => typeof v === 'number' && v > 0);
+    const isComplete = REQUIRED_MICRO_KEYS.every(k => typeof micros[k] === 'number');
+    if (!hasData || !isComplete) {
+      sanitizedData.micros = null;
+      sanitizedData.data_confidence = 'low';
+    }
   }
-} catch (e) {
-  console.warn('Unverified foods staging failed (non-blocking):', e);
-}
+
+  const { error } = await supabase.from('vault_nutrition_logs').insert({
+    user_id: user.id,
+    entry_date: today,
+    logged_at: new Date().toISOString(),
+    ...sanitizedData,
+  });
+  // ... rest unchanged
 ```
 
-## One file changed
+## Database Fix — Clean the leaked row
+
+```sql
+UPDATE vault_nutrition_logs
+SET micros = null, data_confidence = 'low'
+WHERE micros::text = '{}';
+```
+
+## Files Changed
+
 | File | Change |
 |------|--------|
-| `src/hooks/useMealVaultSync.ts` | Fix column mapping in unverified_foods insert (lines 214-228) |
+| `src/hooks/useVault.ts` | Add micros `{}` → `null` guard in `saveNutritionLog` |
+| DB migration | Clean any remaining `{}` micros rows |
 
-## After deploy — verification queries
-```sql
-SELECT name, vitamin_c_mg, iron_mg, source FROM unverified_foods ORDER BY created_at DESC LIMIT 1;
-SELECT data_source, micros FROM vault_nutrition_logs ORDER BY created_at DESC LIMIT 1;
-```
+## Verification
+
+After deploy, both insert paths enforce the same rule: incomplete micros → `null` + `low` confidence. No `{}` can leak through.
 
