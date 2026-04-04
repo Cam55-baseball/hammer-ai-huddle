@@ -45,9 +45,8 @@ export function useMealVaultSync() {
       if (hydrationData.entries && hydrationData.entries.length > 0) {
         for (const entry of hydrationData.entries) {
           const amountOz = convertToOz(entry.amount, hydrationData.unit);
-          const entryLiquidType: string = (entry as any).liquidType ?? 'water';
-          const entryQualityClass: string = (entry as any).qualityClass ?? 'quality';
-          await addWater(amountOz, entryLiquidType, entryQualityClass);
+          // MealBuilder hydration is explicitly water — no fallback patterns
+          await addWater(amountOz, 'water', 'quality');
         }
       } else if (hydrationData.amount > 0) {
         // Otherwise sync the total amount — MealBuilder hydration defaults to water
