@@ -39,14 +39,14 @@ export function useSuggestionLearning() {
     action: InteractionAction,
   ) => {
     if (!user) return;
-    await supabase
-      .from('nutrition_suggestion_interactions' as any)
+    await (supabase as any)
+      .from('nutrition_suggestion_interactions')
       .insert({
         user_id: user.id,
         nutrient_key: nutrientKey,
         food_name: foodName,
         action,
-      } as any);
+      });
     queryClient.invalidateQueries({ queryKey: ['suggestionInteractions'] });
   }, [user, queryClient]);
 
