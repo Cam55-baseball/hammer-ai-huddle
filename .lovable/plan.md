@@ -1,82 +1,83 @@
 
 
-# Auth Stability — Stabilization Guard + Remaining Redirect Fixes
+# UI State Persistence — Activity Dialog Survives Refresh
 
 ## Problem
-1. **No stabilization window**: Even with `!user && !session`, a redirect can fire in the same render tick that `loading` flips to `false`, before React has committed the auth state.
-2. **5 pages still use `!user` alone** (no `session` check): `HelpDesk`, `SelectUserRole`, `MyFollowers`, `ScoutApplicationPending`, `SelectModules`, `Pricing`, `PickoffTrainer`.
-3. **Activity edit context**: Activities are edited via dialogs inside `GamePlanCard` on the Dashboard page — there are no separate `/game-plan/activity/:id` routes. The fix is ensuring the Dashboard itself never redirects during token refresh, which the stabilization guard solves.
+`detailDialogOpen` and `selectedCustomTask` are ephemeral `useState` in `GamePlanCard.tsx`. Any refresh, crash, or re-render that unmounts the component loses the open dialog state.
+
+## Solution — URL Search Params (Option A)
+
+Use `?activityId=custom-{templateId}` on the Dashboard URL. On mount, if the param exists, find the matching task and reopen the dialog. On close, clear the param.
+
+This also covers folder items (`folderLoggerOpen` + `selectedFolderTask`) using `?folderId={itemId}`.
 
 ## Changes
 
-### 1. `src/contexts/AuthContext.tsx` — Add `isAuthStable` flag
+### `src/components/GamePlanCard.tsx`
 
-Add a derived `isAuthStable` boolean to the context. It starts `false` and becomes `true` one tick after `loading` becomes `false`:
-
+**On task click (line ~520-523):**
+When opening the detail dialog, also update the URL:
 ```typescript
-const [isAuthStable, setIsAuthStable] = useState(false);
+setSelectedCustomTask(task);
+setDetailDialogOpen(true);
+const params = new URLSearchParams(window.location.search);
+params.set('activityId', task.id);
+window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+```
 
+**On dialog close:**
+Clear the URL param whenever `detailDialogOpen` becomes false:
+```typescript
+const handleDetailClose = (open: boolean) => {
+  setDetailDialogOpen(open);
+  if (!open) {
+    setSelectedCustomTask(null);
+    const params = new URLSearchParams(window.location.search);
+    params.delete('activityId');
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+};
+```
+
+**On mount — restore from URL (new useEffect):**
+After tasks load, check URL for `activityId`:
+```typescript
 useEffect(() => {
-  if (!loading) {
-    const timeout = setTimeout(() => setIsAuthStable(true), 0);
-    return () => clearTimeout(timeout);
+  if (loading || !tasks.length) return;
+  const params = new URLSearchParams(window.location.search);
+  const activityId = params.get('activityId');
+  if (!activityId) return;
+  
+  const allTasks = [...tasks, ...customActivities];
+  const match = allTasks.find(t => t.id === activityId);
+  if (match?.taskType === 'custom' && match.customActivityData) {
+    setSelectedCustomTask(match);
+    setDetailDialogOpen(true);
+    toast.info("Resuming your last activity");
   } else {
-    setIsAuthStable(false);
+    // Stale ID — clear it
+    params.delete('activityId');
+    window.history.replaceState({}, '', window.location.pathname);
   }
-}, [loading]);
+}, [loading, tasks, customActivities]);
 ```
 
-Expose `isAuthStable` in the context type and provider value.
+**Same pattern for folder items** using `?folderItemId=` param.
 
-### 2. All pages with auto-redirects — Use stabilized guard
+### Wire up the close handler
+Replace `onOpenChange={setDetailDialogOpen}` (line ~1959) with `onOpenChange={handleDetailClose}`.
 
-Every page that auto-redirects to `/auth` gets the same pattern:
-
-```typescript
-const { user, session, loading, isAuthStable } = useAuth();
-
-useEffect(() => {
-  if (!loading && isAuthStable && !user && !session) {
-    navigate("/auth", { replace: true });
-  }
-}, [loading, isAuthStable, user, session, navigate]);
-```
-
-Pages to update:
-
-| Page | Current guard | Fix |
-|------|--------------|-----|
-| `Dashboard.tsx` | `!user && !session` | Add `isAuthStable` |
-| `Profile.tsx` | `!user && !session` | Add `isAuthStable` |
-| `ProfileSetup.tsx` | `!user && !session` | Add `isAuthStable` |
-| `AnalyzeVideo.tsx` | `!user && !session` | Add `isAuthStable` |
-| `HelpDesk.tsx` | `!user` only | Add `session` + `isAuthStable` |
-| `SelectUserRole.tsx` | `!user` only | Add `session` + `isAuthStable` |
-| `MyFollowers.tsx` | `!user` only | Add `session` + `isAuthStable` |
-| `ScoutApplicationPending.tsx` | `!user`, no loading guard | Add `loading` + `session` + `isAuthStable` |
-| `SelectModules.tsx` | `!user` only | Add `session` + `isAuthStable` |
-| `Pricing.tsx` | `!user` only | Add `session` + `isAuthStable` |
-| `PickoffTrainer.tsx` | `!user` (JSX Navigate) | Convert to `useEffect` guard with full pattern |
-
-### 3. Route persistence — Not applicable
-
-Activity editing uses dialogs within the Dashboard page, not separate routes. The stabilization guard on Dashboard is the fix — it prevents the Dashboard from unmounting (which would close dialogs) during token refresh. No URL-based activity routes or sessionStorage needed.
+Also clear URL param on Skip action (line ~2128) and Edit action (line ~1971).
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/contexts/AuthContext.tsx` | Add `isAuthStable` state + expose in context |
-| `src/hooks/useAuth.ts` | Already re-exports context (no change needed) |
-| `src/pages/Dashboard.tsx` | Add `isAuthStable` to guard |
-| `src/pages/Profile.tsx` | Add `isAuthStable` to guard |
-| `src/pages/ProfileSetup.tsx` | Add `isAuthStable` to guard |
-| `src/pages/AnalyzeVideo.tsx` | Add `isAuthStable` to guard |
-| `src/pages/HelpDesk.tsx` | Add `session` + `isAuthStable` to guard |
-| `src/pages/SelectUserRole.tsx` | Add `session` + `isAuthStable` to guard |
-| `src/pages/MyFollowers.tsx` | Add `session` + `isAuthStable` to guard |
-| `src/pages/ScoutApplicationPending.tsx` | Add `loading` + `session` + `isAuthStable` to guard |
-| `src/pages/SelectModules.tsx` | Add `session` + `isAuthStable` to guard |
-| `src/pages/Pricing.tsx` | Add `session` + `isAuthStable` to guard |
-| `src/pages/PickoffTrainer.tsx` | Convert to `useEffect` guard with full pattern |
+| `src/components/GamePlanCard.tsx` | Add URL param persistence for detail dialog open/close/restore |
+
+## What This Does NOT Do
+- No new routes or pages
+- No new dependencies
+- No database changes
+- No changes to auth logic
 
