@@ -95,7 +95,7 @@ function OrgBadge() {
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
@@ -123,16 +123,17 @@ export default function Dashboard() {
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user && !session) {
-      navigate("/auth", { replace: true });
-      return;
+    if (!authLoading && isAuthStable) {
+      if (!user && !session) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+      if (user) {
+        refetch();
+        loadProgress();
+      }
     }
-    if (user) {
-      refetch();
-      loadProgress();
-    }
-  }, [authLoading, user, session, navigate]);
+  }, [authLoading, isAuthStable, user, session, navigate]);
   
   // Detect sport from subscribed modules if localStorage is empty
   useEffect(() => {

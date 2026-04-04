@@ -65,7 +65,7 @@ function PracticeIntelligenceSections() {
 }
 
 export default function Profile() {
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
   const navigate = useNavigate();
@@ -131,7 +131,7 @@ export default function Profile() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (authLoading || ownerLoading) return;
+    if (authLoading || ownerLoading || !isAuthStable) return;
     
     if (!user && !session) {
       navigate("/auth", { replace: true });

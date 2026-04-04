@@ -14,7 +14,7 @@ const SelectModules = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { modules: subscribedModules, loading: subscriptionLoading } = useSubscription();
   const state = location.state as { sport?: string; mode?: 'add' };
   
@@ -25,9 +25,10 @@ const SelectModules = () => {
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user && !isAddMode) navigate("/auth");
-  }, [authLoading, user, isAddMode, navigate]);
+    if (!authLoading && isAuthStable && !user && !session && !isAddMode) {
+      navigate("/auth", { replace: true });
+    }
+  }, [authLoading, isAuthStable, user, session, isAddMode, navigate]);
 
   const handleContinue = () => {
     if (!selectedTier) return;
