@@ -55,7 +55,7 @@ const SelectModules = lazyWithRetry(() => import("./pages/SelectModules"));
 const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
 const Checkout = lazyWithRetry(() => import("./pages/Checkout"));
 const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup"));
-const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
