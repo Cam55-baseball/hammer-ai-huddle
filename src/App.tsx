@@ -10,8 +10,17 @@ import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton"
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
-import Dashboard from "./pages/Dashboard";
-import ScoutDashboard from "./pages/ScoutDashboard";
+// Preloaded lazy imports — triggers fetch at boot, not on navigation
+const dashboardImport = () => import("./pages/Dashboard");
+const scoutDashboardImport = () => import("./pages/ScoutDashboard");
+
+// Fire preloads immediately at module load time
+const dashboardPreload = dashboardImport();
+const scoutDashboardPreload = scoutDashboardImport();
+
+// Lazy components that resolve from the already-in-flight preload
+const Dashboard = lazy(() => dashboardPreload.catch(() => dashboardImport()));
+const ScoutDashboard = lazy(() => scoutDashboardPreload.catch(() => scoutDashboardImport()));
 
 // Clean up cache-busting param after successful load
 const cleanupCacheBustParam = () => {
