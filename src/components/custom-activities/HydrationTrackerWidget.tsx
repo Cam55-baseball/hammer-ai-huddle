@@ -80,7 +80,8 @@ export function HydrationTrackerWidget() {
             <div className="space-y-1 max-h-32 overflow-y-auto">
               <p className="text-xs font-medium text-muted-foreground">Today's entries</p>
               {todayLogs.map(log => {
-                const info = getLiquidTypeInfo((log as any).liquid_type ?? 'water');
+                const rawLiquidType = (log as any).liquid_type;
+                const info = rawLiquidType ? getLiquidTypeInfo(rawLiquidType) : { emoji: '💧', value: 'water', label: 'Water', defaultQuality: 'quality' as const };
                 const isFiller = (log as any).quality_class === 'filler';
                 return (
                   <div key={log.id} className={cn(
