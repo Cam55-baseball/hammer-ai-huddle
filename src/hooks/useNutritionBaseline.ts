@@ -113,8 +113,8 @@ export function useNutritionBaseline(rdaMultiplier = 1.0) {
         .slice(0, 10)
         .map(([name]) => name);
 
-      // Score range (simple proxy: count how many nutrients meet >50% RDA per day)
-      const dailyScores = days.map(day => {
+      // Score range (only from days with micro data)
+      const dailyScores = microDays.map(day => {
         let met = 0;
         for (const key of MICRO_KEYS) {
           const rda = RDA[key] * rdaMultiplier;

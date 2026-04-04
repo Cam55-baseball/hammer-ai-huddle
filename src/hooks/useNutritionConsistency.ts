@@ -46,15 +46,16 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
       if (error) throw error;
       if (!data || data.length === 0) return null;
 
-      // Group by date
-      const dayMap = new Map<string, { micros: Record<string, number>; hasData: boolean }>();
+      // Group by date — track which days have micro data separately
+      const dayMap = new Map<string, { micros: Record<string, number>; hasMicros: boolean }>();
       for (const log of data) {
         if (!dayMap.has(log.entry_date)) {
-          dayMap.set(log.entry_date, { micros: {}, hasData: true });
+          dayMap.set(log.entry_date, { micros: {}, hasMicros: false });
         }
         const day = dayMap.get(log.entry_date)!;
         const micros = log.micros as Record<string, number> | null;
-        if (micros) {
+        if (micros && Object.keys(micros).length > 0) {
+          day.hasMicros = true;
           for (const [k, v] of Object.entries(micros)) {
             if (typeof v === 'number') day.micros[k] = (day.micros[k] || 0) + v;
           }
@@ -65,11 +66,11 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
       const daysLogged = allDates.filter(d => dayMap.has(d)).length;
       const loggingFrequency = Math.round((daysLogged / allDates.length) * 100);
 
-      // 2. Score stability (40%): compute a simple "micro coverage" per day, then std dev
+      // 2. Score stability (40%): only include days WITH micro data (exclude macro-only)
       const dailyScores: number[] = [];
       for (const date of allDates) {
         const day = dayMap.get(date);
-        if (!day) { dailyScores.push(0); continue; }
+        if (!day || !day.hasMicros) continue; // skip days without micro data
         let met = 0;
         for (const key of MICRO_KEYS) {
           const rda = RDA[key] * rdaMultiplier;
@@ -77,29 +78,28 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
         }
         dailyScores.push(Math.round((met / 13) * 100));
       }
-      const scoredDays = dailyScores.filter(s => s > 0);
       let stabilityScore = 100;
-      if (scoredDays.length >= 2) {
-        const mean = scoredDays.reduce((a, b) => a + b, 0) / scoredDays.length;
-        const variance = scoredDays.reduce((sum, s) => sum + (s - mean) ** 2, 0) / scoredDays.length;
+      if (dailyScores.length >= 2) {
+        const mean = dailyScores.reduce((a, b) => a + b, 0) / dailyScores.length;
+        const variance = dailyScores.reduce((sum, s) => sum + (s - mean) ** 2, 0) / dailyScores.length;
         const stdDev = Math.sqrt(variance);
-        // Lower std dev = higher stability. Max penalty at stdDev=50
         stabilityScore = Math.max(0, Math.round(100 - stdDev * 2));
       }
 
-      // 3. Deficiency-free rate (30%): % of logged days with 0 deficient nutrients
+      // 3. Deficiency-free rate (30%): only from days WITH micro data
+      const daysWithMicros = allDates.filter(d => dayMap.get(d)?.hasMicros).length;
       let deficiencyFreeDays = 0;
       for (const date of allDates) {
         const day = dayMap.get(date);
-        if (!day) continue;
+        if (!day || !day.hasMicros) continue; // exclude macro-only days
         const hasDeficiency = MICRO_KEYS.some(key => {
           const rda = RDA[key] * rdaMultiplier;
           return (day.micros[key] || 0) < rda * 0.25;
         });
         if (!hasDeficiency) deficiencyFreeDays++;
       }
-      const deficiencyFreeRate = daysLogged > 0
-        ? Math.round((deficiencyFreeDays / daysLogged) * 100)
+      const deficiencyFreeRate = daysWithMicros > 0
+        ? Math.round((deficiencyFreeDays / daysWithMicros) * 100)
         : 0;
 
       // Weighted total
