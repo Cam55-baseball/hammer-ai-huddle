@@ -2728,7 +2728,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               }}
               onSkipTask={() => {
                 handleSkipTask(selectedFolderTask.id);
-                setFolderLoggerOpen(false);
+                handleFolderLoggerClose(false);
               }}
             />
             {item && (
