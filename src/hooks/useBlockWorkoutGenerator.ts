@@ -44,6 +44,7 @@ export function useBlockWorkoutGenerator() {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const generatingRef = useRef(false);
   const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
 
   // Fix 1: Subscription ready state
   const subscriptionReady = initialized && !subLoading && !ownerLoading;
@@ -82,6 +83,7 @@ export function useBlockWorkoutGenerator() {
     }
 
     generatingRef.current = true;
+    const currentRequestId = ++requestIdRef.current;
     setIsGenerating(true);
     setError(null);
 
@@ -99,12 +101,11 @@ export function useBlockWorkoutGenerator() {
         throw new Error(fnError.message);
       }
 
-      // Fix 3: Null response hardening
-      if (!data) {
+      // Strict response validation
+      if (!data || typeof data !== 'object') {
         throw new Error('No response from server');
       }
 
-      // Fix 4: Safe parsing
       try {
         if (data.error) {
           if (data.error.includes('Rate limits')) {
@@ -141,15 +142,15 @@ export function useBlockWorkoutGenerator() {
         const isAuthError = msg.includes('Rate limits') || msg.includes('Payment required') || msg.includes("plan doesn't include");
 
         if (!isAuthError) {
-          // Fix 6: Retry once after 1 second for non-auth failures
           await new Promise(r => setTimeout(r, 1000));
-          if (!mountedRef.current) return null;
+          if (!mountedRef.current || currentRequestId !== requestIdRef.current) return null;
           generatedData = await attemptGenerate();
         } else {
           throw firstErr;
         }
       }
 
+      if (currentRequestId !== requestIdRef.current) return null;
       if (mountedRef.current && generatedData) {
         setResult(generatedData);
       }
