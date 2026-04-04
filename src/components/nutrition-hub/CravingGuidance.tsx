@@ -70,6 +70,7 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
       const { data: foods } = await supabase
         .from('nutrition_food_database')
         .select('name')
+        .contains('food_category', [selectedCraving])
         .gt(topDeficient, 0)
         .order(topDeficient, { ascending: false })
         .limit(2);
@@ -145,9 +146,14 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
                 ))}
               </>
             ) : (
-              <p className="text-xs text-muted-foreground italic">
-                No aligned foods found — prioritize nutrient correction first
-              </p>
+              <div>
+                <p className="text-xs text-muted-foreground italic">
+                  No aligned foods found — prioritize nutrient correction first
+                </p>
+                <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                  Your craving may not align with your body's highest nutrient need today
+                </p>
+              </div>
             )}
           </div>
         )}

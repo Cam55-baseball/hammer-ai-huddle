@@ -1,0 +1,18 @@
+
+ALTER TABLE public.nutrition_food_database ADD COLUMN IF NOT EXISTS food_category text[] DEFAULT '{}';
+
+UPDATE public.nutrition_food_database SET food_category = '{sweet}' WHERE name IN ('Apple', 'Apple Juice', 'Banana', 'Blueberries', 'Grapes', 'Honey', 'Mango', 'Maple Syrup', 'Orange', 'Orange Juice', 'Peach', 'Pineapple', 'Strawberries', 'Watermelon', 'Granola', 'Waffle', 'Pancake', 'Coconut Water', 'Gatorade (20oz)');
+UPDATE public.nutrition_food_database SET food_category = '{sweet}' WHERE name IN ('Greek Yogurt', 'Greek Yogurt (plain, 2%)', 'Greek Yogurt (plain, nonfat)', 'Oatmeal', 'Oatmeal (dry)', 'Overnight Oats (basic)');
+UPDATE public.nutrition_food_database SET food_category = '{sweet,chocolate}' WHERE name IN ('Dark Chocolate', 'Chocolate Milk (low-fat)', 'RX Bar (Chocolate)');
+UPDATE public.nutrition_food_database SET food_category = '{salty}' WHERE name IN ('Bacon', 'Pretzels', 'Soy Sauce', 'Ham', 'Sausage', 'Salsa', 'Cream Cheese', 'Garlic Parmesan');
+UPDATE public.nutrition_food_database SET food_category = '{salty,crunchy}' WHERE name IN ('Popcorn', 'Kettle cooked potato chips - jalapeño');
+UPDATE public.nutrition_food_database SET food_category = '{salty,savory}' WHERE name IN ('Cheddar Cheese', 'Parmesan', 'Parmesan Cheese', 'Mozzarella', 'Mozzarella (part-skim)', 'Hummus', 'Cottage Cheese', 'Cottage Cheese (2%)');
+UPDATE public.nutrition_food_database SET food_category = '{savory}' WHERE name IN ('Beef Steak', 'Grilled Chicken Breast', 'Grilled Chicken Salad', 'Ground Turkey (93%)', 'Ground Chicken', 'Lean Ground Beef (93%)', 'Pork Chop', 'Pork Tenderloin', 'Tilapia', 'Shrimp', 'Shrimp (cooked)', 'Tuna (canned in water)', 'Tuna (canned)', 'Tuna Salad (no bread)', 'Large Egg', 'Egg Whites', 'Tofu', 'Tofu (firm)', 'Lentils', 'Black Beans', 'Chickpeas', 'Edamame', 'Baked Salmon Fillet');
+UPDATE public.nutrition_food_database SET food_category = '{savory}' WHERE name IN ('Broccoli', 'Broccoli (cooked)', 'Asparagus', 'Mushrooms', 'Cauliflower', 'Green Beans', 'Green Peas', 'Spinach', 'Spinach (raw)', 'Kale', 'Zucchini', 'Corn', 'Sweet Potato', 'Sweet Potato (baked)', 'White Potato (baked)', 'Beets', 'Tomato', 'Onion', 'Garlic', 'Lettuce', 'Cucumber', 'Guacamole');
+UPDATE public.nutrition_food_database SET food_category = '{savory}' WHERE name IN ('Brown Rice', 'Brown Rice (cooked)', 'White Rice', 'White Rice (cooked)', 'Jasmine Rice (cooked)', 'Quinoa', 'Quinoa (cooked)', 'Pasta', 'Pasta (cooked)', 'Bagel', 'Bagel (plain)', 'English Muffin', 'Tortilla (Flour)', 'White Bread', 'Whole Wheat Bread', 'Turkey & Cheese Sandwich', 'Turkey Breast');
+UPDATE public.nutrition_food_database SET food_category = '{crunchy}' WHERE name IN ('Almonds', 'Cashews', 'Walnuts', 'Rice Cakes', 'BBQ Seeds', 'Chia Seeds', 'Flax Seeds (ground)');
+UPDATE public.nutrition_food_database SET food_category = '{crunchy,savory}' WHERE name IN ('Carrots', 'Carrot', 'Celery', 'Bell Pepper', 'Bell Pepper (any color)');
+UPDATE public.nutrition_food_database SET food_category = '{crunchy,sweet}' WHERE name IN ('Trail Mix', 'Kind Bar (Nut Delight)', 'Clif Bar', 'Protein Bar');
+UPDATE public.nutrition_food_database SET food_category = '{sweet}' WHERE name IN ('Peanut Butter', 'Peanut Butter (natural)', 'Almond Butter');
+UPDATE public.nutrition_food_database SET food_category = '{sweet}' WHERE name IN ('2% Milk', 'Skim Milk', 'Whole Milk', 'Almond Milk', 'Protein Shake (pre-made)', 'Protein Smoothie (basic)', 'Protein Powder (Whey)', 'Whey Protein Powder');
+UPDATE public.nutrition_food_database SET food_category = '{savory}' WHERE name IN ('Olive Oil', 'Coconut Oil', 'Butter', 'Avocado', 'Ham');
