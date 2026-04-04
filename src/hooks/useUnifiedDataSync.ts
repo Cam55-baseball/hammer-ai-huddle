@@ -147,7 +147,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   // ── BROADCAST TO OTHER TABS ──
   const broadcastInvalidate = useCallback((queryKey: string[]) => {
     try {
-      broadcastChannelRef.current?.postMessage({ type: 'invalidate', key: queryKey });
+      broadcastChannelRef.current?.postMessage({ type: 'invalidate', key: queryKey, source: tabIdRef.current });
     } catch {
       // BroadcastChannel may be closed
     }
