@@ -133,9 +133,9 @@ export default function Profile() {
   useEffect(() => {
     if (authLoading || ownerLoading) return;
     
-    if (!user) {
+    if (!user && !session) {
       navigate("/auth", { replace: true });
-    } else {
+    } else if (user) {
       // Check if viewing another user's profile
       if (viewingUserId && viewingUserId !== user.id) {
         setViewingOtherProfile(true);
