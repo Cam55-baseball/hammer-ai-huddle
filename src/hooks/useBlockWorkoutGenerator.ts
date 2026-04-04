@@ -142,6 +142,7 @@ export function useBlockWorkoutGenerator() {
         const isAuthError = msg.includes('Rate limits') || msg.includes('Payment required') || msg.includes("plan doesn't include");
 
         if (!isAuthError) {
+          if (!mountedRef.current || currentRequestId !== requestIdRef.current) return null;
           await new Promise(r => setTimeout(r, 1000));
           if (!mountedRef.current || currentRequestId !== requestIdRef.current) return null;
           generatedData = await attemptGenerate();
