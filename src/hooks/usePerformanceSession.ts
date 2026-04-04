@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -9,46 +9,59 @@ export interface DrillBlock {
   drill_type: string;
   intent: string;
   volume: number;
-  execution_grade: number; // 20-80 scale
+  execution_grade: number;
   outcome_tags: string[];
   notes?: string;
   batter_side?: string;
   pitcher_hand?: string;
-  // Hitting micro fields
   bp_distance_ft?: number;
-  machine_velocity_band?: string; // '40-50' | '50-60' | '60-70' | '70-80' | '80+'
+  machine_velocity_band?: string;
   batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel' | 'slow_roller' | 'one_hopper' | 'chopper';
   spin_direction?: 'topspin' | 'backspin' | 'sidespin';
   swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
   goal_of_rep?: string;
   actual_outcome?: string;
-  execution_score?: number; // 1-10 per rep
+  execution_score?: number;
   hard_contact_pct?: number;
   whiff_pct?: number;
   chase_pct?: number;
   in_zone_contact_pct?: number;
-  // Fielding micro fields
   throw_included?: boolean;
-  footwork_grade?: number; // 20-80
+  footwork_grade?: number;
   exchange_time_band?: 'fast' | 'average' | 'slow';
-  throw_accuracy?: number; // 20-80
+  throw_accuracy?: number;
   throw_spin_quality?: 'carry' | 'tail' | 'cut' | 'neutral';
   clean_field_pct?: number;
-  // Pitching micro fields
   velocity_band?: string;
   spin_rate_band?: string;
   spin_efficiency_pct?: number;
-  pitch_command_grade?: number; // 20-80
+  pitch_command_grade?: number;
   zone_pct?: number;
   pitch_whiff_pct?: number;
   pitch_chase_pct?: number;
 }
+
+const SESSION_KEYS = [
+  ['recent-sessions'], ['day-sessions'], ['calendar'],
+  ['fatigue-state'], ['latest-session-ts'],
+];
+
+const ANALYTICS_KEYS = [
+  ['hie-snapshot'], ['progressive-gate'], ['delta-analytics'],
+  ['split-analytics-composites'],
+];
 
 export function usePerformanceSession() {
   const { user, session: authSession } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
+  const pendingCalcRef = useRef<string | null>(null);
+  const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const invalidateKeys = (keys: string[][]) => {
+    keys.forEach(key => queryClient.invalidateQueries({ queryKey: key }));
+  };
 
   const createSession = async (data: {
     sport: string;
@@ -73,7 +86,6 @@ export function usePerformanceSession() {
     try {
       if (!user) throw new Error('Not authenticated');
 
-      // Section 2: 7-day retroactive validation
       const daysDiff = Math.floor((Date.now() - new Date(data.session_date).getTime()) / 86400000);
       if (daysDiff > 7) {
         toast({ title: 'Too far back', description: 'Sessions can only be logged up to 7 days in the past.', variant: 'destructive' });
@@ -109,11 +121,10 @@ export function usePerformanceSession() {
 
       if (error) throw error;
 
-      // Section 4: Smart daily log write — preserve manual day_status
+      // Smart daily log write
       const isGame = ['game', 'live_scrimmage'].includes(data.session_type);
       const cnsLoad = data.drill_blocks.reduce((sum: number, db: DrillBlock) => {
-        const baseLoad = db.volume * (db.execution_grade / 80) * 2;
-        return sum + baseLoad;
+        return sum + db.volume * (db.execution_grade / 80) * 2;
       }, 0);
 
       const { data: existingLog } = await supabase
@@ -124,13 +135,11 @@ export function usePerformanceSession() {
         .maybeSingle();
 
       if (existingLog) {
-        // Only update CNS load + game_logged, preserve manual day_status
         await supabase.from('athlete_daily_log').update({
           cns_load_actual: Math.round(cnsLoad),
           game_logged: isGame || existingLog.game_logged,
         }).eq('id', existingLog.id);
       } else {
-        // No manual entry exists, create with auto day_status
         await supabase.from('athlete_daily_log').insert({
           user_id: user.id,
           entry_date: data.session_date,
@@ -149,7 +158,6 @@ export function usePerformanceSession() {
         .is('deleted_at', null);
       if (todaySessions && todaySessions.length >= 5) {
         toast({ title: '⚠️ Volume Spike', description: '5+ sessions today. Consider recovery.', variant: 'destructive' });
-        // Write governance flag for overload
         await supabase.from('governance_flags').insert({
           user_id: user.id,
           flag_type: 'volume_spike',
@@ -160,7 +168,7 @@ export function usePerformanceSession() {
         });
       }
 
-      // Check 14-day overload
+      // 14-day overload check
       const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0];
       const { data: recentLogs } = await supabase
         .from('athlete_daily_log')
@@ -171,7 +179,6 @@ export function usePerformanceSession() {
         const allHeavy = recentLogs.every(l => ['full_training', 'game_only'].includes(l.day_status));
         if (allHeavy) {
           toast({ title: '⚠️ Overload Risk', description: '14 consecutive heavy days. Schedule recovery.', variant: 'destructive' });
-          // Write governance flag for overload risk
           await supabase.from('governance_flags').insert({
             user_id: user.id,
             flag_type: 'overload_risk',
@@ -183,30 +190,54 @@ export function usePerformanceSession() {
         }
       }
 
-      // Retroactive recalculation
+      // Latest-wins: tag this calculation
+      const calcId = crypto.randomUUID();
+      pendingCalcRef.current = calcId;
+
+      // Clear any pending recovery timer from a previous call
+      if (recoveryTimerRef.current) {
+        clearTimeout(recoveryTimerRef.current);
+        recoveryTimerRef.current = null;
+      }
+
+      // Invoke calculate-session (server owns HIE execution)
       const today = new Date().toISOString().split('T')[0];
+      let calcResult: any = null;
+
       if (data.session_date < today) {
-        await supabase.functions.invoke('calculate-session', {
+        const { data: r } = await supabase.functions.invoke('calculate-session', {
           headers: authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {},
           body: { retroactive: true, date: data.session_date },
         });
-      }
-
-      // Trigger calculate-session edge function (only for non-retroactive; retroactive call above already handles this date)
-      if (data.session_date >= today && authSession?.access_token) {
-        await supabase.functions.invoke('calculate-session', {
+        calcResult = r;
+      } else if (authSession?.access_token) {
+        const { data: r } = await supabase.functions.invoke('calculate-session', {
           headers: { Authorization: `Bearer ${authSession.access_token}` },
           body: { session_id: session.id },
         });
+        calcResult = r;
       }
 
-      // Broad invalidation of all analytics keys after session save
-      const analyticsKeys = [
-        ['recent-sessions'], ['day-sessions'], ['calendar'],
-        ['hie-snapshot'], ['progressive-gate'], ['delta-analytics'],
-        ['split-analytics-composites'], ['fatigue-state'], ['latest-session-ts'],
-      ];
-      analyticsKeys.forEach(key => queryClient.invalidateQueries({ queryKey: key }));
+      // Latest-wins check: if another session superseded this one, skip invalidation
+      if (pendingCalcRef.current !== calcId) return session;
+
+      // Always invalidate session-related keys
+      invalidateKeys(SESSION_KEYS);
+
+      // Conditional analytics invalidation based on server response
+      const hieCompleted = calcResult?.hie_completed === true;
+
+      if (hieCompleted) {
+        invalidateKeys(ANALYTICS_KEYS);
+      } else {
+        // Schedule a single delayed recovery invalidation (15s)
+        recoveryTimerRef.current = setTimeout(() => {
+          if (pendingCalcRef.current === calcId) {
+            invalidateKeys(ANALYTICS_KEYS);
+          }
+          recoveryTimerRef.current = null;
+        }, 15_000);
+      }
 
       toast({ title: 'Session saved', description: 'Your practice session has been recorded.' });
       return session;
