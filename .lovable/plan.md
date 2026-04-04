@@ -1,97 +1,53 @@
 
 
-# Production-Grade Session Linking — State Machine Architecture
+# Session Linking — Gold Standard Patches
 
-## Overview
+## Database Migration (single migration with all 4 patches)
 
-Replace the current ad-hoc linking system with a deterministic, server-owned state machine. All transitions happen through atomic RPCs. The client becomes a thin UI layer that calls 3 RPCs and nothing else.
+### Schema Changes
+- Add `claimed_at TIMESTAMPTZ NULL` and `linked_at TIMESTAMPTZ NULL` columns
+- Drop `used_at` column (replaced by `claimed_at`/`linked_at`)
+- Add status CHECK constraint: `('pending','claimed','linked','expired')`
+- Update any existing `status = 'active'` rows to `'linked'` before adding constraint
 
-## Database Migration
+### Patch 1: Replace `attach_session_to_link` (new RPC)
+Create the function exactly as specified — row lock, COALESCE for idempotent assignment, self-healing bidirectional update, status guard.
 
-### Schema changes to `live_ab_links`
+### Patch 2: Duplicate session attach prevention
+```sql
+CREATE UNIQUE INDEX one_creator_session_per_link ON live_ab_links (id) WHERE creator_session_id IS NOT NULL;
+CREATE UNIQUE INDEX one_joiner_session_per_link ON live_ab_links (id) WHERE joiner_session_id IS NOT NULL;
+```
 
-- Add `claimed_at TIMESTAMPTZ NULL` column
-- Add `linked_at TIMESTAMPTZ NULL` column  
-- Replace `status` check constraint: `pending → claimed → linked → expired → failed`
-- Add partial unique index: `UNIQUE(creator_user_id) WHERE status IN ('pending', 'claimed')` — enforces one active link per user
-- Drop `used_at` column (replaced by `claimed_at` / `linked_at`)
+### Patch 3: Replace `create_ab_link` and `claim_ab_link`
 
-### New/replaced RPCs
+**`create_ab_link(p_user_id, p_sport, p_link_code)`**: Expires all existing pending/claimed links for user (including expired ones past `expires_at`), inserts new row with `status='pending'`, `expires_at = now() + 2h`.
 
-**A. `create_ab_link(p_user_id UUID, p_sport TEXT, p_link_code TEXT)`**
-- Expires all existing `pending`/`claimed` links for this user
-- Inserts new row with `status = 'pending'`, `expires_at = now() + 2h`
-- Returns the new row
-- Replaces: client-side `cancel_pending_links` + raw INSERT
+**`claim_ab_link(p_code, p_user_id)`**: Atomic UPDATE with `expires_at > now()` guard. Also pre-cleans expired links. Sets `status='claimed'`, `claimed_at=now()`.
 
-**B. `claim_ab_link(p_code TEXT, p_user_id UUID)`** (rewrite)
-- Single UPDATE with `WHERE status = 'pending' AND joiner_user_id IS NULL AND creator_user_id != p_user_id AND expires_at > now()`
-- Sets `status = 'claimed'`, `joiner_user_id`, `claimed_at = now()`
-- Returns the updated row (empty set = invalid/expired/self/already claimed)
-
-**C. `attach_session_to_link(p_user_id UUID, p_link_code TEXT, p_session_id UUID)`** (new, replaces `update_link_session_id`)
-- `SELECT ... FOR UPDATE` locks the link row
-- Rejects if status not in `('pending', 'claimed')` — idempotent re-entry allowed if status is `'linked'` and session already attached
-- Sets `creator_session_id` or `joiner_session_id` based on which user is calling
-- Reloads the row; if BOTH session IDs are now present:
-  - Updates both `performance_sessions.linked_session_id` to point at each other
-  - Sets `status = 'linked'`, `linked_at = now()`
-- All within one transaction — no partial state possible
-
-**D. Drop `cancel_pending_links`** (absorbed into `create_ab_link`)
-**E. Drop `update_link_session_id`** (replaced by `attach_session_to_link`)
-
-### Cleanup function
-- `expire_stale_links()`: `UPDATE ... SET status = 'expired' WHERE status IN ('pending','claimed') AND expires_at < now()`
+### Patch 4: Drop `cancel_pending_links` and `update_link_session_id`
+These are superseded by the new RPCs.
 
 ## Client Changes
 
 ### `LiveAbLinkPanel.tsx`
-- **Generate**: Call `create_ab_link` RPC instead of raw INSERT + `cancel_pending_links`
-- **Join**: Call `claim_ab_link` — status is now `'claimed'` not `'active'`. Remove `linked_session_id` from callback (not available at claim time)
-- **onLinkEstablished** signature simplifies to just `(code: string)` — no `linkedSessionId` param
+Already calls `create_ab_link` and `claim_ab_link` — no changes needed (already updated in prior iteration).
 
-### `PracticeHub.tsx` (post-save)
-- Replace `update_link_session_id` RPC call with `attach_session_to_link`
-- Remove `linked_session_id` from `createSession()` call — linking is server-side only
-- Remove `sessionConfig.linked_session_id` usage entirely
+### `PracticeHub.tsx`
+Already calls `attach_session_to_link` — no changes needed.
 
-### `usePerformanceSession.ts`
-- Remove `linked_session_id` from the insert payload (server handles it via `attach_session_to_link`)
-- Keep `link_code` in the insert (stored for reference, not for linking logic)
-
-### `SessionConfig` type (`SessionConfigPanel.tsx`)
-- Remove `linked_session_id` property from the interface
-- Remove any code setting it
-
-### `useLiveAbSync.ts`
-- No changes needed — it already activates when `linkedSessionId` is provided. In the new model, this will be activated after status becomes `'linked'` (future enhancement, not blocking)
-
-### `useLiveRepBroadcast.ts`
-- No changes — already correctly uses `link_code` for broadcast channel
-
-## State Machine Summary
-
-```text
-  pending ──(claim_ab_link)──→ claimed ──(both attach)──→ linked
-     │                            │
-     └──(expires_at)──→ expired   └──(expires_at)──→ expired
-```
+### `SessionConfigPanel.tsx` / `usePerformanceSession.ts`
+Already correct from prior iteration — `linked_session_id` removed from client payloads.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| New migration | Schema updates + 3 RPCs + cleanup function |
-| `src/components/practice/LiveAbLinkPanel.tsx` | Use `create_ab_link` RPC; simplify join callback |
-| `src/pages/PracticeHub.tsx` | Replace `update_link_session_id` with `attach_session_to_link`; remove `linked_session_id` from session insert |
-| `src/hooks/usePerformanceSession.ts` | Remove `linked_session_id` from insert payload |
-| `src/components/practice/SessionConfigPanel.tsx` | Remove `linked_session_id` from `SessionConfig` type |
+| New migration | All 4 patches: schema, 3 RPCs, 2 indexes, drop old functions |
 
 ## What Does NOT Change
-- `useLiveRepBroadcast.ts` — already correct (broadcast via `link_code`)
-- `useLiveAbSync.ts` — unchanged
-- Edge functions — unchanged
-- Lock system — unchanged
-- Analytics/HIE system — unchanged
+- `LiveAbLinkPanel.tsx` (already correct)
+- `PracticeHub.tsx` (already correct)
+- Edge functions unchanged
+- Lock system unchanged
 
