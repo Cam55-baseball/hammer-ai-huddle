@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder, motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -508,16 +508,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const setUrlParam = useCallback((key: string, value: string | null) => {
-    const params = new URLSearchParams(window.location.search);
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    const qs = params.toString();
-    window.history.replaceState({}, '', qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
-  }, []);
+    setSearchParams(prev => {
+      if (value) {
+        prev.set(key, value);
+      } else {
+        prev.delete(key);
+      }
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const handleDetailClose = useCallback((open: boolean) => {
     setDetailDialogOpen(open);
@@ -538,9 +540,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Restore dialog state from URL on mount
   useEffect(() => {
     if (loading) return;
-    const params = new URLSearchParams(window.location.search);
-    const activityId = params.get('activityId');
-    const folderItemId = params.get('folderItemId');
+    const activityId = searchParams.get('activityId');
+    const folderItemId = searchParams.get('folderItemId');
     const allGamePlanTasks: GamePlanTask[] = tasks;
 
     if (activityId) {
