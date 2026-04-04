@@ -11,6 +11,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { MealLogCard, MealLogData } from './MealLogCard';
 import { MicronutrientPanel } from './MicronutrientPanel';
 import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
+import { NutritionScoreCard } from './NutritionScoreCard';
+import { DeficiencyAlert } from './DeficiencyAlert';
 import { toast } from 'sonner';
 
 interface NutritionDailyLogProps {
