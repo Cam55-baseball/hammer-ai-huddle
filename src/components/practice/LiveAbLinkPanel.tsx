@@ -79,10 +79,8 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
 
       setLinked(true);
       setGeneratedCode(code);
-      // creator_session_id may be null if creator hasn't saved yet — that's OK,
-      // realtime uses link_code for broadcast and defers session sync
-      onLinkEstablished(code, (link as any).creator_session_id ?? undefined);
-      toast({ title: 'Linked!', description: 'Sessions are now connected.' });
+      onLinkEstablished(code);
+      toast({ title: 'Claimed!', description: 'Session link claimed. Save to complete.' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {

@@ -412,13 +412,11 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         {showLinkPanel && (
           <LiveAbLinkPanel
             linkCode={linkCode}
-            onLinkEstablished={(code, sessionId) => {
+            onLinkEstablished={(code) => {
               setLinkCode(code);
-              if (sessionId) setLinkedSessionId(sessionId);
             }}
             onUnlink={() => {
               setLinkCode(null);
-              setLinkedSessionId(undefined);
             }}
           />
         )}
