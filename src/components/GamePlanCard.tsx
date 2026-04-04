@@ -2542,8 +2542,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                    toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
                    handleFolderLoggerClose(false);
                 }}
-                onEdit={() => {
-                  setFolderLoggerOpen(false);
+               onEdit={() => {
+                   handleFolderLoggerClose(false);
                   setFolderItemEditOpen(true);
                 }}
                 onSaveTime={(time, reminder) => {
