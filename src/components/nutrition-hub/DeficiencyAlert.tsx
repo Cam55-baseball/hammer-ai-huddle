@@ -216,9 +216,9 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
         </p>
 
         {/* Current day alerts */}
-        {alerts && alerts.length > 0 && (
+        {issues.length > 0 && (
           <div className="space-y-1.5">
-            {alerts.map(item => {
+            {issues.map(item => {
               const cfg = levelConfig[item.level];
               return (
                 <div key={item.key} className={cn('rounded-md px-2.5 py-1.5', cfg.bg)}>
