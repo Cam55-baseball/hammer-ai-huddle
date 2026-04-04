@@ -144,6 +144,7 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       return {
         total,
         confidenceLabel: allLowConfidence ? 'low' : avgConfidenceWeight >= 0.85 ? 'high' : 'medium',
+        microCoverage: { withMicros: mealsWithMicros, total: totalMeals },
         breakdown: {
           micro: Math.round(microScore),
           hydration: Math.round(hydrationScore),
