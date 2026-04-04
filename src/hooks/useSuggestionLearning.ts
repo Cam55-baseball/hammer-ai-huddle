@@ -20,8 +20,8 @@ export function useSuggestionLearning() {
     queryKey: ['suggestionInteractions', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from('nutrition_suggestion_interactions' as any)
+      const { data, error } = await (supabase as any)
+        .from('nutrition_suggestion_interactions')
         .select('nutrient_key, food_name, action')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
