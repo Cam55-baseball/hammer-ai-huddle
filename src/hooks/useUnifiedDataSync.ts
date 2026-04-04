@@ -153,6 +153,9 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const lastEventRef = useRef<{ table: string; ts: number }>({ table: '', ts: 0 });
+  const reconnectAttemptRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const invalidateRelatedQueries = useCallback((tableName: string) => {
     const relatedQueryKeys = TABLE_QUERY_MAPPINGS[tableName];
@@ -170,23 +173,25 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
     old: any;
   }) => {
     const { table } = payload;
-    
-    // Invalidate related queries
+
+    // 500ms deduplication guard
+    const now = Date.now();
+    if (lastEventRef.current.table === table && now - lastEventRef.current.ts < 500) {
+      return;
+    }
+    lastEventRef.current = { table, ts: now };
+
     invalidateRelatedQueries(table);
-    
-    // Call optional callback
+
     if (onDataChange) {
       onDataChange(table, payload);
     }
   }, [invalidateRelatedQueries, onDataChange]);
 
-  useEffect(() => {
-    if (!user || !enabled) return;
+  const setupChannel = useCallback(() => {
+    if (!user) return null;
 
-    // Create a single channel for all table subscriptions
     const channel = supabase.channel(`unified-sync-${user.id}`);
-
-    // Subscribe to all tables that affect cross-module data
     const tablesToWatch = Object.keys(TABLE_QUERY_MAPPINGS);
 
     tablesToWatch.forEach(table => {
@@ -198,8 +203,8 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
           table,
           filter: `user_id=eq.${user.id}`,
         },
-        (payload) => handleDatabaseChange({ 
-          ...payload, 
+        (payload) => handleDatabaseChange({
+          ...payload,
           table,
           eventType: payload.eventType,
           new: payload.new,
@@ -208,22 +213,73 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
       );
     });
 
+    return channel;
+  }, [user, handleDatabaseChange]);
+
+  const attemptReconnect = useCallback(() => {
+    const MAX_ATTEMPTS = 5;
+    if (reconnectAttemptRef.current >= MAX_ATTEMPTS) {
+      console.warn('[UnifiedDataSync] Max reconnect attempts reached, invalidating critical keys');
+      queryClient.invalidateQueries({ queryKey: ['hie-snapshot'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['day-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['delta-analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['fatigue-state'] });
+      reconnectAttemptRef.current = 0;
+      return;
+    }
+
+    const delay = Math.pow(2, reconnectAttemptRef.current) * 1000; // 1s, 2s, 4s, 8s, 16s
+    reconnectAttemptRef.current += 1;
+
+    reconnectTimerRef.current = setTimeout(() => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+      const newChannel = setupChannel();
+      if (newChannel) {
+        newChannel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[UnifiedDataSync] Reconnected successfully');
+            reconnectAttemptRef.current = 0;
+          } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            attemptReconnect();
+          }
+        });
+        channelRef.current = newChannel;
+      }
+    }, delay);
+  }, [setupChannel, queryClient]);
+
+  useEffect(() => {
+    if (!user || !enabled) return;
+
+    const channel = setupChannel();
+    if (!channel) return;
+
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         console.log('[UnifiedDataSync] Subscribed to cross-module sync');
+        reconnectAttemptRef.current = 0;
+      } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+        console.warn('[UnifiedDataSync] Channel error/closed, attempting reconnect');
+        attemptReconnect();
       }
     });
 
     channelRef.current = channel;
 
     return () => {
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [user, enabled, handleDatabaseChange]);
-
+  }, [user, enabled, setupChannel, attemptReconnect]);
   // Manual invalidation methods for imperative use
   const invalidateModule = useCallback((module: 'gamePlan' | 'nutrition' | 'vault' | 'texVision' | 'mindFuel' | 'all') => {
     const moduleQueryKeys: Record<string, string[][]> = {

@@ -1,8 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export interface WeaknessCluster {
   area: string;
@@ -56,10 +55,8 @@ export interface HIESnapshot {
 }
 
 export function useHIESnapshot() {
-  const { user, session } = useAuth();
-  const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const autoRefreshTriggered = useRef(false);
   const reconciliationTriggered = useRef(false);
 
   const query = useQuery({
@@ -109,37 +106,17 @@ export function useHIESnapshot() {
     staleTime: 30 * 1000,
   });
 
-  const refreshMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error('Not authenticated');
-      const { data, error } = await supabase.functions.invoke('hie-analyze', {
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-        body: { user_id: user.id, sport: 'baseball' },
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
-      toast({ title: 'Analysis updated', description: 'Your development snapshot has been refreshed.' });
-    },
-    onError: (err: any) => {
-      toast({ title: 'Analysis failed', description: err.message, variant: 'destructive' });
-    },
-  });
-
-  // ── SESSION-AWARE RECONCILIATION ──
-  // If latest session is newer than snapshot computed_at by >10s, auto-refresh
+  // ── SESSION-AWARE RECONCILIATION (invalidation only, never compute) ──
   useEffect(() => {
-    if (!query.data || !latestSessionQuery.data || reconciliationTriggered.current || refreshMutation.isPending) return;
+    if (!query.data || !latestSessionQuery.data || reconciliationTriggered.current) return;
     const computedAt = new Date(query.data.computed_at).getTime();
     const latestSession = new Date(latestSessionQuery.data).getTime();
     const drift = latestSession - computedAt;
     if (drift > 10_000) {
       reconciliationTriggered.current = true;
-      refreshMutation.mutate();
+      queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
     }
-  }, [query.data, latestSessionQuery.data]);
+  }, [query.data, latestSessionQuery.data, queryClient, user?.id]);
 
   // Reset reconciliation flag when snapshot updates
   useEffect(() => {
@@ -148,26 +125,30 @@ export function useHIESnapshot() {
     }
   }, [query.data?.computed_at]);
 
-  // ── STALE DATA AUTO-REFRESH (24h fallback) ──
+  // ── STALE DATA AUTO-REFRESH (24h fallback — invalidation only) ──
   useEffect(() => {
-    if (!query.data || autoRefreshTriggered.current || refreshMutation.isPending) return;
+    if (!query.data) return;
     const computedAt = new Date(query.data.computed_at).getTime();
     const staleThreshold = 24 * 60 * 60 * 1000;
     if (Date.now() - computedAt > staleThreshold) {
-      autoRefreshTriggered.current = true;
-      refreshMutation.mutate();
+      queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
     }
-  }, [query.data]);
+  }, [query.data, queryClient, user?.id]);
 
   const isStale = query.data
     ? Date.now() - new Date(query.data.computed_at).getTime() > 24 * 60 * 60 * 1000
     : false;
 
+  // Manual refresh triggers query invalidation only (server owns computation)
+  const refreshAnalysis = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
+  }, [queryClient, user?.id]);
+
   return {
     snapshot: query.data,
     isLoading: query.isLoading,
-    refreshAnalysis: refreshMutation.mutate,
-    isRefreshing: refreshMutation.isPending,
+    refreshAnalysis,
+    isRefreshing: query.isFetching,
     isStale,
     computedAt: query.data?.computed_at ?? null,
   };
