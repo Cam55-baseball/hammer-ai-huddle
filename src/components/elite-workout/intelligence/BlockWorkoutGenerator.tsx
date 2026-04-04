@@ -266,6 +266,11 @@ export function BlockWorkoutGenerator({
                   <Loader2 className="h-4 w-4 animate-spin" />
                   {t('eliteWorkout.generator.generating', 'Generating...')}
                 </>
+              ) : !subscriptionReady ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('eliteWorkout.generator.checkingAccess', 'Checking access...')}
+                </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
