@@ -93,10 +93,23 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
 
       // 3. Deficiency-free rate (30%): only from days WITH micro data
       const daysWithMicros = allDates.filter(d => dayMap.get(d)?.hasMicros).length;
+
+      // Hard guard: zero micro days = insufficient data
+      if (daysWithMicros === 0) {
+        return {
+          score: null,
+          status: 'insufficient_data' as const,
+          stabilityScore: 0,
+          loggingFrequency,
+          deficiencyFreeRate: 0,
+          daysAnalyzed: daysLogged,
+        };
+      }
+
       let deficiencyFreeDays = 0;
       for (const date of allDates) {
         const day = dayMap.get(date);
-        if (!day || !day.hasMicros) continue; // exclude macro-only days
+        if (!day || !day.hasMicros) continue;
         const hasDeficiency = MICRO_KEYS.some(key => {
           const rda = RDA[key] * rdaMultiplier;
           return (day.micros[key] || 0) < rda * 0.25;
@@ -116,6 +129,7 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
 
       return {
         score,
+        status: 'active' as const,
         stabilityScore,
         loggingFrequency,
         deficiencyFreeRate,
