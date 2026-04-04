@@ -87,7 +87,6 @@ const Auth = () => {
           });
         } else if (data.user) {
           // Multi-factor onboarding check
-          const { supabase } = await import("@/integrations/supabase/client");
           
           const [profileCheck, subscriptionCheck, rolesCheck, scoutAppCheck] = await Promise.all([
             // Check if user has a profile with essential data
