@@ -83,6 +83,7 @@ export function useBlockWorkoutGenerator() {
     }
 
     generatingRef.current = true;
+    const currentRequestId = ++requestIdRef.current;
     setIsGenerating(true);
     setError(null);
 
@@ -100,12 +101,11 @@ export function useBlockWorkoutGenerator() {
         throw new Error(fnError.message);
       }
 
-      // Fix 3: Null response hardening
-      if (!data) {
+      // Strict response validation
+      if (!data || typeof data !== 'object') {
         throw new Error('No response from server');
       }
 
-      // Fix 4: Safe parsing
       try {
         if (data.error) {
           if (data.error.includes('Rate limits')) {
