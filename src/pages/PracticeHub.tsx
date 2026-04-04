@@ -301,7 +301,6 @@ export default function PracticeHub() {
           rep_source: sessionConfig.rep_source,
         },
         link_code: sessionConfig.link_code,
-        linked_session_id: sessionConfig.linked_session_id,
         micro_layer_data: reps.length > 0 ? reps : undefined,
       });
 
