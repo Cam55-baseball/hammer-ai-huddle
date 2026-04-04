@@ -1,111 +1,68 @@
 
 
-# Advantage Layer — Precision Guidance System
+# Advantage Layer — Elite Refinement
 
-## Summary
-Create a new `GuidancePanel` component and supporting hook that derives actionable guidance strictly from existing scored data. Adds a craving-driven suggestion feature. No new scoring logic — pure read from existing computations.
+## Changes
 
-## New Files
+### 1. `src/hooks/useNutritionGuidance.ts` — Score-Impact Ranking + Compressed Output
 
-### 1. `src/constants/nutrientPerformanceMap.ts`
-Fixed mapping of nutrients to athlete-relevant outcomes:
+**Prioritization upgrade**: Rank limiting factors by `(100 - percent) * microWeight / 13` — this approximates actual score points recoverable per nutrient. Nutrients with adaptive priority multipliers from baseline get an additional boost.
+
+**Food suggestions upgrade**: Query top 2 foods (not 3) for the primary limiting nutrient. For each food, also check if it covers the second limiting nutrient — if so, label it as "dual-benefit". Select columns for both limiting nutrient values to compute density ranking.
+
+**Nudge compression**: Return max 1 nudge. Priority order: progress delta > coverage warning > consistency prompt. Progress nudge reframed: `"Micronutrient coverage improved +X% — higher scoring potential unlocked"`.
+
+**Suppressed state message**: Change to `"Guidance unavailable — log verified foods to unlock"`.
+
+### 2. `src/components/nutrition-hub/GuidancePanel.tsx` — Decision-Grade Display
+
+**Limiting factors**: Reframe impact from passive (`"Recovery / sleep quality"`) to active (`"Low magnesium may reduce recovery quality"`). Show score impact estimate: `"~X pts recoverable"`.
+
+**Food suggestions**: Each item shows: food name + which nutrients it fixes + why (e.g., "highest combined density" or "fastest single-source correction"). Max 2 items.
+
+**Nudges**: Max 1, with outcome framing.
+
+**Zero data**: Single line only — no card chrome, no empty panels.
+
+### 3. `src/components/nutrition-hub/CravingGuidance.tsx` — Tighten Alignment
+
+**Constraint**: Craving suggestions must intersect with top 2 limiting factors (from guidance hook). Pass limiting factor keys as prop. Filter `deficientKeys` to only those in limiting factors.
+
+**No match**: Show `"No aligned foods found — prioritize nutrient correction first"` instead of generic message.
+
+**Zero data**: Don't render the card at all (not even suppressed state) — hard stop per requirement.
+
+### 4. `src/components/nutrition-hub/DeficiencyAlert.tsx` — Supplement Intelligence
+
+**Supplement differentiation**: For nutrients at optimal/excess when supplements are present, distinguish:
+- If food-derived intake < 25% RDA → `"Covered via supplement only — whole-food sources improve absorption"`
+- If food-derived intake >= 25% RDA → `"Supported by food + supplement"`
+
+Show as small inline label below the nutrient row. One line only, no over-messaging.
+
+### 5. `src/constants/nutrientPerformanceMap.ts` — Impact Reframing
+
+Add `NUTRIENT_IMPACT_ACTIVE` map with direct physiological framing:
 ```typescript
-export const NUTRIENT_IMPACT: Record<string, string> = {
-  magnesium_mg: 'Recovery / sleep quality',
-  iron_mg: 'Energy / oxygen transport',
-  vitamin_b12_mcg: 'Cognitive function / energy',
-  vitamin_c_mg: 'Immune support / recovery',
-  potassium_mg: 'Hydration / muscle function',
-  calcium_mg: 'Bone strength / muscle contraction',
-  zinc_mg: 'Immune function / tissue repair',
-  vitamin_d_mcg: 'Bone health / immune support',
-  vitamin_a_mcg: 'Vision / immune support',
-  folate_mcg: 'Cell repair / energy metabolism',
-  vitamin_b6_mg: 'Protein metabolism / energy',
-  vitamin_e_mg: 'Antioxidant / cell protection',
-  vitamin_k_mcg: 'Blood clotting / bone health',
-};
+magnesium_mg: 'Low magnesium may reduce recovery quality'
+iron_mg: 'Low iron may limit energy output'
+// etc.
 ```
 
-### 2. `src/hooks/useNutritionGuidance.ts`
-Hook that consumes existing query data (score breakdown, deficiency alerts, micro coverage) and computes:
-
-- **Top 2 limiting factors** — reads `NutritionScoreCard` breakdown to identify lowest-scoring dimension (micro/hydration/macro/variety), then drills into specific nutrients from deficiency data
-- **Fastest path to improvement** — queries `nutrition_food_database` for top foods matching the limiting nutrients
-- **Suppression** — returns `null` guidance if `microCoverage.withMicros === 0`
-- **Behavioral nudges**:
-  - If `microCoverage < 50%` → "Increase verified foods to unlock full nutrient tracking"
-  - If consistency is `null` → "Log nutrient-complete meals to activate consistency scoring"
-  - If coverage improved vs yesterday → "+X% micronutrient coverage vs yesterday"
-
-Data sources: reuses `nutritionScore`, `deficiencyAlerts`, `micronutrients` query keys already cached by existing components. No new DB queries for score computation.
-
-### 3. `src/components/nutrition-hub/GuidancePanel.tsx`
-Renders the guidance output. Structure:
-
-```
-┌─────────────────────────────────┐
-│ ⚡ How to Improve Your Score    │
-│                                 │
-│ Top limiting factors:           │
-│  1. Magnesium (12% RDA)        │
-│     → Recovery / sleep quality  │
-│  2. Iron (34% RDA)             │
-│     → Energy / oxygen transport │
-│                                 │
-│ Fastest path:                   │
-│  • Spinach (high Mg + Iron)     │
-│  • Pumpkin seeds (Mg + Zinc)    │
-│                                 │
-│ ┌─ Nudge ─────────────────────┐ │
-│ │ +22% micro coverage vs      │ │
-│ │ yesterday                   │ │
-│ └─────────────────────────────┘ │
-│                                 │
-│ When micros = 0:                │
-│ "Guidance unavailable —         │
-│  insufficient micronutrient     │
-│  data"                          │
-└─────────────────────────────────┘
-```
-
-Suppressed entirely when micro coverage = 0 (shows single "unavailable" message instead).
-
-### 4. `src/components/nutrition-hub/CravingGuidance.tsx`
-Small input + response card:
-
-- Text input or quick-pick chips: "Sweet", "Salty", "Crunchy", "Chocolate"
-- On submit: reads current deficiency data from cached query
-- Matches craving category to foods from `nutrition_food_database` that are high in deficient nutrients
-- Returns 2-3 specific foods with nutrient alignment explanation
-- **Suppressed** when `microCoverage = 0` — shows "Log verified foods to unlock craving guidance"
-- No AI calls — pure DB lookup + deterministic matching
-
-### 5. Supplement Handling (in existing `DeficiencyAlert.tsx`)
-- Already included in daily micro totals (existing behavior is correct)
-- Add visual distinction: if a nutrient reaches RDA primarily via supplements, show "covered via supplement" label
-- Still show "Consider whole-food sources" nudge for supplement-covered nutrients
-
-## Modified Files
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/constants/nutrientPerformanceMap.ts` | New — fixed nutrient→outcome mappings |
-| `src/hooks/useNutritionGuidance.ts` | New — guidance computation hook |
-| `src/components/nutrition-hub/GuidancePanel.tsx` | New — guidance UI |
-| `src/components/nutrition-hub/CravingGuidance.tsx` | New — craving-driven suggestions |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Add `<GuidancePanel />` and `<CravingGuidance />` below NutritionScoreCard |
-| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Add "covered via supplement" label + whole-food nudge |
+| `src/constants/nutrientPerformanceMap.ts` | Add `NUTRIENT_IMPACT_ACTIVE` map |
+| `src/hooks/useNutritionGuidance.ts` | Score-weighted ranking, dual-nutrient food query, 1-nudge limit, progress reframing |
+| `src/components/nutrition-hub/GuidancePanel.tsx` | Active impact framing, food justification, score-pts display, compressed layout |
+| `src/components/nutrition-hub/CravingGuidance.tsx` | Filter by limiting factors, stricter no-match message, hard-stop on zero data |
+| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Supplement-only vs food+supplement distinction |
+| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Pass limiting factor keys to CravingGuidance |
 
-## Suppression Rules (enforced in hook)
-- `microCoverage.withMicros === 0` → all guidance returns `{ status: 'suppressed', message: 'Guidance unavailable — insufficient micronutrient data' }`
-- All confidence labels pass through from existing data — no re-computation
-- No estimation of missing micros
-
-## What This Does NOT Do
-- No new scoring logic
-- No AI API calls (craving guidance is pure DB lookup)
-- No new database tables or migrations
-- No simulated or estimated data
-- Every output traceable to a stored value
+## Compression Rules Enforced
+- Max 2 limiting factors
+- Max 2 food suggestions
+- Max 1 nudge
+- Zero-data = single line, no card
 
