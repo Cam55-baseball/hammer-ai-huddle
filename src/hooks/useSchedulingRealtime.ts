@@ -32,6 +32,17 @@ export function useSchedulingRealtime() {
       }
       queryClient.invalidateQueries({ queryKey: ['calendar'] });
       queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['hie-snapshot'] });
+      queryClient.invalidateQueries({ queryKey: ['progressive-gate'] });
+      queryClient.invalidateQueries({ queryKey: ['delta-analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['split-analytics-composites'] });
+      queryClient.invalidateQueries({ queryKey: ['latest-session-ts'] });
+    };
+
+    const invalidateHIESnapshot = () => {
+      queryClient.invalidateQueries({ queryKey: ['hie-snapshot'] });
+      queryClient.invalidateQueries({ queryKey: ['progressive-gate'] });
+      queryClient.invalidateQueries({ queryKey: ['delta-analytics'] });
     };
 
     const channel = supabase
