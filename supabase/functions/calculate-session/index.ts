@@ -485,16 +485,79 @@ serve(async (req) => {
 
     const result = await processSession(supabase, user.id, session_id);
 
-    // Auto-trigger HIE analysis after session computation
-    try {
-      await supabase.functions.invoke('hie-analyze', {
-        body: { user_id: user.id, sport: 'baseball' },
-      });
-    } catch (hieErr) {
-      console.warn('HIE auto-trigger failed (non-blocking):', hieErr);
+    // ── Deterministic HIE execution with atomic lock ──
+    let hie_completed = false;
+
+    const lockAcquired = await supabase
+      .rpc('try_acquire_hie_lock', { p_user_id: user.id, p_stale_seconds: 120 })
+      .then((r: any) => r.data === true)
+      .catch(() => false);
+
+    if (!lockAcquired) {
+      // Another execution owns the lock — request rerun
+      await supabase
+        .from('hie_execution_locks')
+        .update({ rerun_requested: true })
+        .eq('user_id', user.id);
+      // hie_completed = false signals client analysis is pending
+    } else {
+      try {
+        // Loop until no more reruns requested
+        let shouldRun = true;
+        while (shouldRun) {
+          // Extend lock timestamp before each run (prevents stale takeover)
+          await supabase
+            .from('hie_execution_locks')
+            .update({ locked_at: new Date().toISOString(), rerun_requested: false })
+            .eq('user_id', user.id);
+
+          // 3-attempt retry with backoff
+          let runSucceeded = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              await supabase.functions.invoke('hie-analyze', {
+                body: { user_id: user.id, sport: 'baseball' },
+              });
+              runSucceeded = true;
+              hie_completed = true;
+              break;
+            } catch (hieErr) {
+              console.warn(`HIE attempt ${attempt + 1}/3 failed:`, hieErr);
+              if (attempt < 2) await new Promise(r => setTimeout(r, [2000, 5000, 10000][attempt]));
+            }
+          }
+
+          // Check if rerun was requested during this execution
+          const { data: lockState } = await supabase
+            .from('hie_execution_locks')
+            .select('rerun_requested')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          shouldRun = lockState?.rerun_requested === true;
+
+          if (!runSucceeded && !shouldRun) {
+            // All retries failed and no rerun pending — log governance flag
+            await supabase.from('governance_flags').insert({
+              user_id: user.id,
+              flag_type: 'hie_analysis_failed',
+              severity: 'warning',
+              status: 'pending',
+              source_session_id: session_id,
+              details: { attempts: 3, timestamp: new Date().toISOString() },
+            }).catch(() => {});
+          }
+        }
+      } finally {
+        // GUARANTEED lock release — even on unexpected errors
+        await supabase
+          .from('hie_execution_locks')
+          .delete()
+          .eq('user_id', user.id);
+      }
     }
 
-    return new Response(JSON.stringify({ success: true, ...result }), {
+    return new Response(JSON.stringify({ success: true, hie_completed, ...result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
