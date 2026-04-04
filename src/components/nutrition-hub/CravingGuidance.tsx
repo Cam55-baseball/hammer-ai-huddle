@@ -54,13 +54,14 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
         }
       }
 
+      if (limitingFactorKeys.length === 0) return [];
+
       const cravingNutrients = CRAVING_NUTRIENT_MAP[selectedCraving] || [];
       const deficientKeys = cravingNutrients.filter(key => {
         const rda = RDA[key];
         if (!rda) return false;
-        const isDeficient = ((totals[key] || 0) / rda) < 0.75;
-        const isLimiting = limitingFactorKeys.length === 0 || limitingFactorKeys.includes(key);
-        return isDeficient && isLimiting;
+        const isDeficient = ((totals[key] || 0) / rda) < 0.40;
+        return isDeficient && limitingFactorKeys.includes(key);
       });
 
       if (deficientKeys.length === 0) return [];
