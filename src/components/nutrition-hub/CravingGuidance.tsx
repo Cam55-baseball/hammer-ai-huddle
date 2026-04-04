@@ -18,7 +18,8 @@ const RDA: Record<string, number> = {
 
 interface CravingGuidanceProps {
   date: Date;
-  microCoverage: number; // 0 = no micro data
+  microCoverage: number;
+  limitingFactorKeys?: string[];
 }
 
 interface CravingSuggestion {
@@ -27,18 +28,17 @@ interface CravingSuggestion {
   impact: string;
 }
 
-export function CravingGuidance({ date, microCoverage }: CravingGuidanceProps) {
+export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }: CravingGuidanceProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [selectedCraving, setSelectedCraving] = useState<string | null>(null);
   const dateStr = format(date, 'yyyy-MM-dd');
 
   const { data: suggestions, isLoading } = useQuery({
-    queryKey: ['cravingGuidance', selectedCraving, dateStr, user?.id],
+    queryKey: ['cravingGuidance', selectedCraving, dateStr, user?.id, limitingFactorKeys],
     queryFn: async (): Promise<CravingSuggestion[]> => {
       if (!user || !selectedCraving) return [];
 
-      // Get today's micro totals to find deficiencies
       const { data: logs } = await supabase
         .from('vault_nutrition_logs')
         .select('micros')
@@ -54,17 +54,17 @@ export function CravingGuidance({ date, microCoverage }: CravingGuidanceProps) {
         }
       }
 
-      // Get craving-relevant nutrients that are also deficient
       const cravingNutrients = CRAVING_NUTRIENT_MAP[selectedCraving] || [];
       const deficientKeys = cravingNutrients.filter(key => {
         const rda = RDA[key];
         if (!rda) return false;
-        return ((totals[key] || 0) / rda) < 0.75;
+        const isDeficient = ((totals[key] || 0) / rda) < 0.75;
+        const isLimiting = limitingFactorKeys.length === 0 || limitingFactorKeys.includes(key);
+        return isDeficient && isLimiting;
       });
 
       if (deficientKeys.length === 0) return [];
 
-      // Query foods high in the most deficient nutrient
       const topDeficient = deficientKeys[0];
       const { data: foods } = await supabase
         .from('nutrition_food_database')
@@ -85,22 +85,8 @@ export function CravingGuidance({ date, microCoverage }: CravingGuidanceProps) {
     enabled: !!user && !!selectedCraving && microCoverage > 0,
   });
 
-  // Suppressed when no micro data
-  if (microCoverage === 0) {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          <p className="text-sm font-semibold flex items-center gap-1.5">
-            <Cookie className="h-4 w-4 text-muted-foreground" />
-            Craving Guidance
-          </p>
-          <p className="text-xs text-muted-foreground italic mt-1.5">
-            Log verified foods to unlock craving guidance
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Hard stop: don't render at all when no micro data
+  if (microCoverage === 0) return null;
 
   return (
     <Card>
@@ -122,7 +108,6 @@ export function CravingGuidance({ date, microCoverage }: CravingGuidanceProps) {
           )}
         </div>
 
-        {/* Craving chips */}
         <div className="flex flex-wrap gap-1.5">
           {CRAVING_OPTIONS.map(opt => (
             <Button
@@ -137,7 +122,6 @@ export function CravingGuidance({ date, microCoverage }: CravingGuidanceProps) {
           ))}
         </div>
 
-        {/* Results */}
         {selectedCraving && (
           <div className="space-y-1">
             {isLoading ? (
@@ -161,7 +145,7 @@ export function CravingGuidance({ date, microCoverage }: CravingGuidanceProps) {
               </>
             ) : (
               <p className="text-xs text-muted-foreground italic">
-                No nutrient-aligned suggestions — your levels look good for this craving category
+                No aligned foods found — prioritize nutrient correction first
               </p>
             )}
           </div>

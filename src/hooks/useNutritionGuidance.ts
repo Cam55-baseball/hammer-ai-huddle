@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, subDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { NUTRIENT_IMPACT } from '@/constants/nutrientPerformanceMap';
+import { NUTRIENT_IMPACT_ACTIVE } from '@/constants/nutrientPerformanceMap';
 
 const RDA: Record<string, number> = {
   vitamin_a_mcg: 900, vitamin_c_mg: 90, vitamin_d_mcg: 15, vitamin_e_mg: 15,
@@ -10,16 +10,21 @@ const RDA: Record<string, number> = {
   calcium_mg: 1000, iron_mg: 8, magnesium_mg: 420, potassium_mg: 2600, zinc_mg: 11,
 };
 
+const MICRO_WEIGHT = 40; // micro dimension weight in scoring
+const NUTRIENT_COUNT = 13;
+
 export interface LimitingFactor {
   key: string;
   label: string;
   percent: number;
   impact: string;
+  ptsRecoverable: number;
 }
 
 export interface GuidanceFood {
   name: string;
-  nutrients: string[]; // which limiting nutrients this food helps
+  nutrients: string[];
+  justification: string;
 }
 
 export interface NutritionGuidance {
@@ -41,7 +46,6 @@ export function useNutritionGuidance(date: Date, rdaMultiplier: number = 1.0) {
     queryFn: async (): Promise<NutritionGuidance> => {
       if (!user) return { status: 'suppressed', message: 'Not authenticated', limitingFactors: [], foodSuggestions: [], nudges: [] };
 
-      // Fetch today's logs
       const { data: logs, error } = await supabase
         .from('vault_nutrition_logs')
         .select('micros, data_confidence, data_source, supplements')
@@ -53,7 +57,6 @@ export function useNutritionGuidance(date: Date, rdaMultiplier: number = 1.0) {
         return { status: 'suppressed', message: 'No meals logged today', limitingFactors: [], foodSuggestions: [], nudges: [] };
       }
 
-      // Micro coverage check
       const mealsWithMicros = logs.filter((l: any) => {
         const m = l.micros as Record<string, number> | null;
         return m && Object.keys(m).length > 0;
@@ -62,7 +65,7 @@ export function useNutritionGuidance(date: Date, rdaMultiplier: number = 1.0) {
       if (mealsWithMicros === 0) {
         return {
           status: 'suppressed',
-          message: 'Guidance unavailable — insufficient micronutrient data',
+          message: 'Guidance unavailable — log verified foods to unlock',
           limitingFactors: [],
           foodSuggestions: [],
           nudges: [],
@@ -79,57 +82,86 @@ export function useNutritionGuidance(date: Date, rdaMultiplier: number = 1.0) {
         }
       }
 
-      // Compute % RDA for each nutrient and find top 2 limiting factors
+      // Get baseline adaptive multipliers if available
+      const baselineData = queryClient.getQueryData(['nutritionBaseline']) as any;
+      const adaptiveMultipliers: Record<string, number> = baselineData?.adaptiveMultipliers || {};
+
+      // Score-impact ranking: (100 - percent) * MICRO_WEIGHT / NUTRIENT_COUNT * priority
       const nutrientScores = Object.entries(RDA).map(([key, rda]) => {
         const current = totals[key] || 0;
         const adjustedRda = rda * rdaMultiplier;
-        const percent = Math.round((current / adjustedRda) * 100);
+        const percent = Math.min(100, Math.round((current / adjustedRda) * 100));
+        const priority = adaptiveMultipliers[key] || 1.0;
+        const gap = 100 - percent;
+        const ptsRecoverable = Math.round((gap * MICRO_WEIGHT / NUTRIENT_COUNT) * priority) / 100;
         const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
           .replace(/ Mcg$/, '').replace(/ Mg$/, '');
-        return { key, label, percent, impact: NUTRIENT_IMPACT[key] || '' };
+        return {
+          key,
+          label,
+          percent,
+          impact: NUTRIENT_IMPACT_ACTIVE[key] || '',
+          ptsRecoverable: Math.round(ptsRecoverable * 10) / 10,
+        };
       });
 
+      // Rank by score impact (pts recoverable), take top 2
       const limitingFactors = nutrientScores
         .filter(n => n.percent < 75)
-        .sort((a, b) => a.percent - b.percent)
+        .sort((a, b) => b.ptsRecoverable - a.ptsRecoverable)
         .slice(0, 2);
 
-      // Fetch food suggestions for limiting nutrients
+      // Fetch food suggestions — max 2, with dual-benefit detection
       let foodSuggestions: GuidanceFood[] = [];
       if (limitingFactors.length > 0) {
         const topKey = limitingFactors[0].key;
+        const secondKey = limitingFactors.length > 1 ? limitingFactors[1].key : null;
+        const selectCols = secondKey ? `name, ${topKey}, ${secondKey}` : `name, ${topKey}`;
+
         try {
           const { data: foods } = await supabase
             .from('nutrition_food_database')
-            .select('name')
+            .select(selectCols)
             .gt(topKey, 0)
             .order(topKey, { ascending: false })
-            .limit(3);
+            .limit(5);
 
-          foodSuggestions = (foods || []).map((f: any) => ({
-            name: f.name,
-            nutrients: limitingFactors.filter(lf => lf.key === topKey || limitingFactors.length === 1).map(lf => lf.label),
-          }));
+          if (foods && foods.length > 0) {
+            // Check for dual-benefit foods first
+            const dualBenefit = secondKey
+              ? foods.filter((f: any) => f[secondKey] > 0)
+              : [];
+
+            if (dualBenefit.length > 0) {
+              const best = dualBenefit[0] as any;
+              foodSuggestions.push({
+                name: best.name,
+                nutrients: [limitingFactors[0].label, limitingFactors[1]?.label].filter(Boolean),
+                justification: 'Highest combined density per serving',
+              });
+            }
+
+            // Fill remaining slots (max 2 total)
+            for (const f of foods as any[]) {
+              if (foodSuggestions.length >= 2) break;
+              if (foodSuggestions.some(s => s.name === f.name)) continue;
+              foodSuggestions.push({
+                name: f.name,
+                nutrients: [limitingFactors[0].label],
+                justification: 'Fastest single-source correction',
+              });
+            }
+          }
         } catch {
           // Non-blocking
         }
       }
 
-      // Behavioral nudges
+      // Max 1 nudge — priority: progress > coverage > consistency
       const nudges: string[] = [];
       const microCoverageRatio = mealsWithMicros / logs.length;
 
-      if (microCoverageRatio < 0.5) {
-        nudges.push('Increase verified foods to unlock full nutrient tracking');
-      }
-
-      // Check consistency — look for cached consistency data
-      const consistencyData = queryClient.getQueryData(['nutritionConsistency']) as any;
-      if (!consistencyData || consistencyData?.score === null) {
-        nudges.push('Log nutrient-complete meals to activate consistency scoring');
-      }
-
-      // Yesterday comparison
+      // Yesterday comparison (highest priority nudge)
       try {
         const { data: yesterdayLogs } = await supabase
           .from('vault_nutrition_logs')
@@ -145,18 +177,31 @@ export function useNutritionGuidance(date: Date, rdaMultiplier: number = 1.0) {
           const yesterdayCoverage = yesterdayWithMicros / yesterdayLogs.length;
           const delta = Math.round((microCoverageRatio - yesterdayCoverage) * 100);
           if (delta > 0) {
-            nudges.push(`+${delta}% micronutrient coverage vs yesterday`);
+            nudges.push(`+${delta}% micronutrient coverage — higher scoring potential unlocked`);
           }
         }
       } catch {
         // Non-blocking
       }
 
+      // Coverage warning (second priority)
+      if (nudges.length === 0 && microCoverageRatio < 0.5) {
+        nudges.push('Increase verified foods to unlock full nutrient tracking');
+      }
+
+      // Consistency prompt (third priority)
+      if (nudges.length === 0) {
+        const consistencyData = queryClient.getQueryData(['nutritionConsistency']) as any;
+        if (!consistencyData || consistencyData?.score === null) {
+          nudges.push('Log nutrient-complete meals to activate consistency scoring');
+        }
+      }
+
       return {
         status: 'active',
         limitingFactors,
         foodSuggestions,
-        nudges,
+        nudges: nudges.slice(0, 1), // enforce max 1
       };
     },
     enabled: !!user,

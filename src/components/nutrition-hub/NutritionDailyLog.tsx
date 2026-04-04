@@ -16,6 +16,8 @@ import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { GuidancePanel } from './GuidancePanel';
 import { CravingGuidance } from './CravingGuidance';
+import { useNutritionGuidance } from '@/hooks/useNutritionGuidance';
+import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +35,7 @@ export function NutritionDailyLog({
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { config } = usePerformanceMode();
   
   const [internalDate, setInternalDate] = useState(new Date());
 
@@ -111,6 +114,10 @@ export function NutritionDailyLog({
   }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
 
   const mealsWithMicros = meals.filter(m => m.micros && Object.keys(m.micros).length > 0).length;
+
+  // Get guidance data for limiting factor keys
+  const { data: guidanceData } = useNutritionGuidance(currentDate, config.rdaMultiplier);
+  const limitingFactorKeys = guidanceData?.limitingFactors.map(f => f.key) || [];
 
   // Aggregate confidence
   const confidenceLevels = meals.map(m => m.dataConfidence || 'low');
@@ -239,7 +246,7 @@ export function NutritionDailyLog({
             <DeficiencyAlert date={currentDate} />
 
             {/* Craving Guidance — nutrient-aligned suggestions */}
-            <CravingGuidance date={currentDate} microCoverage={mealsWithMicros} />
+            <CravingGuidance date={currentDate} microCoverage={mealsWithMicros} limitingFactorKeys={limitingFactorKeys} />
 
             {/* Nutrition Trends (7/14/30-day intelligence) */}
             <NutritionTrendsCard />
