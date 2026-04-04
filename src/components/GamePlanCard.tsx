@@ -2531,9 +2531,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             <>
               <CustomActivityDetailDialog
                 open={folderLoggerOpen}
-                onOpenChange={(open) => {
-                  setFolderLoggerOpen(open);
-                }}
+                onOpenChange={handleFolderLoggerClose}
                 task={pseudoTask}
                 taskTime={folderTaskTime}
                 taskReminder={folderTaskReminder}
