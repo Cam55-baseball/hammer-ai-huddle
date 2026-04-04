@@ -43,7 +43,21 @@ export function DataBuildingGate({ children }: DataGateProps) {
     enabled: !!user,
   });
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="p-6">
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   const sessionCount = data?.sessionCount ?? 0;
   const settings = data?.settings;
