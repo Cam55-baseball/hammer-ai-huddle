@@ -20,6 +20,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthStable, setIsAuthStable] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      const timeout = setTimeout(() => setIsAuthStable(true), 0);
+      return () => clearTimeout(timeout);
+    } else {
+      setIsAuthStable(false);
+    }
+  }, [loading]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
