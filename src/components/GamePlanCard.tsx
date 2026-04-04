@@ -508,11 +508,74 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
 
+  const setUrlParam = useCallback((key: string, value: string | null) => {
+    const params = new URLSearchParams(window.location.search);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    const qs = params.toString();
+    window.history.replaceState({}, '', qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
+  }, []);
+
+  const handleDetailClose = useCallback((open: boolean) => {
+    setDetailDialogOpen(open);
+    if (!open) {
+      setSelectedCustomTask(null);
+      setUrlParam('activityId', null);
+    }
+  }, [setUrlParam]);
+
+  const handleFolderLoggerClose = useCallback((open: boolean) => {
+    setFolderLoggerOpen(open);
+    if (!open) {
+      setSelectedFolderTask(null);
+      setUrlParam('folderItemId', null);
+    }
+  }, [setUrlParam]);
+
+  // Restore dialog state from URL on mount
+  useEffect(() => {
+    if (loading) return;
+    const allTasks = [...tasks, ...customActivities, ...folderTasks.map(ft => ft as unknown as GamePlanTask)];
+    if (!allTasks.length) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const activityId = params.get('activityId');
+    const folderItemId = params.get('folderItemId');
+
+    if (activityId) {
+      const match = [...tasks, ...customActivities].find(t => t.id === activityId);
+      if (match?.taskType === 'custom' && match.customActivityData) {
+        setSelectedCustomTask(match);
+        setDetailDialogOpen(true);
+        toast.info("Resuming your last activity");
+      } else {
+        setUrlParam('activityId', null);
+      }
+    }
+
+    if (folderItemId) {
+      const match = [...tasks, ...customActivities].find(t => t.folderItemData?.itemId === folderItemId);
+      if (match?.folderItemData) {
+        setSelectedFolderTask(match);
+        setFolderLoggerOpen(true);
+        toast.info("Resuming your last activity");
+      } else {
+        setUrlParam('folderItemId', null);
+      }
+    }
+  // Run only once when data loads
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
   const handleTaskClick = (task: GamePlanTask) => {
     // Handle folder items - open performance logger dialog
     if (task.folderItemData) {
       setSelectedFolderTask(task);
       setFolderLoggerOpen(true);
+      setUrlParam('folderItemId', task.folderItemData.itemId);
       return;
     }
 
@@ -520,6 +583,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     if (task.taskType === 'custom' && task.customActivityData) {
       setSelectedCustomTask(task);
       setDetailDialogOpen(true);
+      setUrlParam('activityId', task.id);
       return;
     }
 
