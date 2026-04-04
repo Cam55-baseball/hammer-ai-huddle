@@ -93,15 +93,10 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
       toast.error(t('nutrition.invalidAmount', 'Please enter a valid amount'));
       return;
     }
-    setIsLogging(true);
-    try {
-      await addWater(amount);
-      toast.success(t('nutrition.waterAdded', 'Added {{amount}}oz water', { amount }));
-      setCustomWaterAmount('');
-      setWaterDialogOpen(false);
-    } finally {
-      setIsLogging(false);
-    }
+    // Open liquid picker for custom amounts
+    setPendingWaterAmount(amount);
+    setLiquidPickerOpen(true);
+    setWaterDialogOpen(false);
   };
 
   const handleLogMeal = () => {
