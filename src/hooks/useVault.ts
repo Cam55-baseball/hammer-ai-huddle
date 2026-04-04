@@ -716,11 +716,29 @@ export function useVault() {
   // Save nutrition log (insert new entry each time)
   const saveNutritionLog = useCallback(async (logData: Omit<VaultNutritionLog, 'id' | 'logged_at'>) => {
     if (!user) return { success: false };
+
+    // Guard: empty/incomplete micros → null, force low confidence
+    const REQUIRED_MICRO_KEYS = [
+      'vitamin_a_mcg', 'vitamin_c_mg', 'vitamin_d_mcg', 'vitamin_e_mg',
+      'vitamin_k_mcg', 'vitamin_b6_mg', 'vitamin_b12_mcg', 'folate_mcg',
+      'calcium_mg', 'iron_mg', 'magnesium_mg', 'potassium_mg', 'zinc_mg',
+    ];
+    const sanitizedData = { ...logData };
+    if (sanitizedData.micros != null && typeof sanitizedData.micros === 'object') {
+      const micros = sanitizedData.micros as Record<string, unknown>;
+      const hasData = Object.values(micros).some(v => typeof v === 'number' && v > 0);
+      const isComplete = REQUIRED_MICRO_KEYS.every(k => typeof micros[k] === 'number');
+      if (!hasData || !isComplete) {
+        sanitizedData.micros = null;
+        sanitizedData.data_confidence = 'low';
+      }
+    }
+
     const { error } = await supabase.from('vault_nutrition_logs').insert({
-      user_id: user.id, 
-      entry_date: today, 
+      user_id: user.id,
+      entry_date: today,
       logged_at: new Date().toISOString(),
-      ...logData,
+      ...sanitizedData,
     });
     if (!error) {
       await updateStreak();
