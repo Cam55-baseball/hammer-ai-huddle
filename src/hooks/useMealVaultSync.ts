@@ -210,7 +210,24 @@ export function useMealVaultSync() {
 
       if (error) throw error;
 
-      // Wire effectiveness tracking: check if any logged food matches a recently accepted suggestion
+      // Stage AI-sourced items in unverified_foods for review
+      try {
+        const aiItems = meals.items.filter(i => i.source === 'ai' && i.micros && Object.keys(i.micros).length > 0);
+        if (aiItems.length > 0) {
+          const unverifiedInserts = aiItems.map(item => ({
+            food_name: item.name,
+            micros: item.micros,
+            serving_size: item.servingSize || '1 serving',
+            source: 'ai',
+            submitted_by: user.id,
+          }));
+          await supabase.from('unverified_foods').insert(unverifiedInserts as any);
+        }
+      } catch (e) {
+        console.warn('Unverified foods staging failed (non-blocking):', e);
+      }
+
+
       try {
         const foodNames = meals.items.map(i => i.name.toLowerCase());
         const { data: recentAccepted } = await (supabase as any)
