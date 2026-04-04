@@ -58,6 +58,14 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       const avgConfidenceWeight = confidenceValues.reduce((a: number, b: number) => a + b, 0) / confidenceValues.length;
       const allLowConfidence = confidenceValues.every((v: number) => v <= 0.4);
 
+      // Data coverage: count meals with actual micro data
+      const mealsWithMicros = data.filter((l: any) => {
+        const m = l.micros as Record<string, number> | null;
+        return m && Object.keys(m).length > 0;
+      }).length;
+      const totalMeals = data.length;
+      const microCoverage = totalMeals > 0 ? mealsWithMicros / totalMeals : 0;
+
       // 1. Micronutrient completeness with adaptive weighting
       const microTotals: Record<string, number> = {};
       for (const log of data) {
@@ -77,7 +85,8 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
           weightedMet += weight;
         }
       }
-      const microScore = (weightedMet / totalWeight) * config.microWeight * avgConfidenceWeight;
+      // Apply coverage factor: partial micro data = reduced micro score
+      const microScore = (weightedMet / totalWeight) * config.microWeight * avgConfidenceWeight * microCoverage;
 
       // 2. Hydration quality
       const hydrationScore = (qualityPercent / 100) * config.hydrationWeight;
