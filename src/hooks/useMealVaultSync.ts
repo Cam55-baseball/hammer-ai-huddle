@@ -181,6 +181,10 @@ export function useMealVaultSync() {
       const microsComplete = REQUIRED_MICRO_KEYS.every(k => typeof aggregatedMicros[k] === 'number' && aggregatedMicros[k] >= 0);
       const hasMicrosData = Object.keys(aggregatedMicros).length > 0 && Object.values(aggregatedMicros).some(v => v > 0);
 
+      // Guard: empty micros object → null, force low confidence when no micros
+      const finalMicros = (microsComplete && hasMicrosData) ? aggregatedMicros : null;
+      const finalConfidence = finalMicros ? dataConfidence : 'low';
+
       // Insert to vault_nutrition_logs
       const { error } = await supabase
         .from('vault_nutrition_logs')
@@ -199,8 +203,8 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-      micros: (microsComplete && hasMicrosData) ? aggregatedMicros : null,
-          data_confidence: (microsComplete && hasMicrosData) ? dataConfidence : 'low',
+          micros: finalMicros,
+          data_confidence: finalConfidence,
           data_source: dataSource,
         } as any);
 
