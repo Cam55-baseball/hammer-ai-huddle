@@ -227,6 +227,21 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
               </Button>
             ))}
           </div>
+
+          {/* Other liquid button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs"
+            disabled={isLogging}
+            onClick={() => {
+              setPendingWaterAmount(8);
+              setLiquidPickerOpen(true);
+            }}
+          >
+            {t('nutrition.otherLiquid', 'Log other liquid...')}
+          </Button>
+
           <Dialog open={waterDialogOpen} onOpenChange={setWaterDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full text-xs">
@@ -254,6 +269,42 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
                 >
                   {t('nutrition.add', 'Add')}
                 </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Liquid Type Picker Dialog */}
+          <Dialog open={liquidPickerOpen} onOpenChange={setLiquidPickerOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {t('nutrition.selectLiquidType', 'What are you drinking?')} ({pendingWaterAmount}oz)
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-2 py-4">
+                {LIQUID_TYPES.map((lt) => (
+                  <Button
+                    key={lt.value}
+                    variant="outline"
+                    className={cn(
+                      "justify-start gap-2 h-auto py-2.5",
+                      lt.defaultQuality === 'filler' && "border-amber-500/30"
+                    )}
+                    disabled={isLogging}
+                    onClick={() => handleLiquidLog(lt.value)}
+                  >
+                    <span>{lt.emoji}</span>
+                    <div className="text-left">
+                      <span className="text-sm">{lt.label}</span>
+                      <span className={cn(
+                        "block text-[10px]",
+                        lt.defaultQuality === 'quality' ? "text-emerald-500" : "text-amber-500"
+                      )}>
+                        {lt.defaultQuality === 'quality' ? '● Quality' : '● Filler'}
+                      </span>
+                    </div>
+                  </Button>
+                ))}
               </div>
             </DialogContent>
           </Dialog>

@@ -110,7 +110,12 @@ MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
                       protein_g: { type: "number" },
                       carbs_g: { type: "number" },
                       fats_g: { type: "number" },
-                      hydration_oz: { type: "number", description: "Total fluid ounces if beverages mentioned (water, juice, coffee, tea, milk, soda, etc.)" },
+                      hydration_oz: { type: "number", description: "Total fluid ounces if beverages mentioned" },
+                      micros: {
+                        type: "object",
+                        description: "Aggregated micronutrients across all foods. Same keys as per-food micros.",
+                        additionalProperties: { type: "number" },
+                      },
                     },
                     required: ["calories", "protein_g", "carbs_g", "fats_g", "hydration_oz"],
                   },
