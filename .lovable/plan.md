@@ -1,58 +1,42 @@
 
 
-# Router-Safe URL State — Replace `window.history.replaceState` with `useSearchParams`
+# Fix: Preview Authentication — Module Import Failure
 
-## Problem
-`GamePlanCard.tsx` uses `window.history.replaceState` and `window.location.search` to manage URL query params. This bypasses React Router, causing potential state desync and breaking back/forward navigation.
+## Root Cause
 
-## Changes
-
-### `src/components/GamePlanCard.tsx`
-
-**1. Import `useSearchParams`:**
+`src/pages/Auth.tsx` line 89 uses a **dynamic import** after sign-in:
 ```typescript
-import { useNavigate, useSearchParams } from 'react-router-dom';
+const { supabase } = await import("@/integrations/supabase/client");
 ```
 
-**2. Add hook at component top:**
+In the preview environment, dynamic imports go through a proxy that can intermittently fail, producing the "Importing a module script failed" error. This kills the entire post-login flow (onboarding checks, navigation).
+
+The supabase client is already a static module used everywhere else in the app. There is no reason to dynamically import it here.
+
+## Fix
+
+**File: `src/pages/Auth.tsx`**
+
+1. Add static import at the top of the file:
 ```typescript
-const [searchParams, setSearchParams] = useSearchParams();
+import { supabase } from "@/integrations/supabase/client";
 ```
 
-**3. Replace `setUrlParam` helper (lines 511-520):**
+2. Remove the dynamic import on line 89:
 ```typescript
-const setUrlParam = useCallback((key: string, value: string | null) => {
-  setSearchParams(prev => {
-    if (value) {
-      prev.set(key, value);
-    } else {
-      prev.delete(key);
-    }
-    return prev;
-  }, { replace: true });
-}, [setSearchParams]);
+// DELETE: const { supabase } = await import("@/integrations/supabase/client");
 ```
 
-**4. Replace restore effect (lines 539-569) — read from `searchParams` instead of `window.location.search`:**
-```typescript
-useEffect(() => {
-  if (loading) return;
-  const activityId = searchParams.get('activityId');
-  const folderItemId = searchParams.get('folderItemId');
-  // ... rest of restore logic unchanged
-}, [loading]);
-```
-
-**5. `App.tsx` line 19** — the `_cb` cleanup is outside the router, so it stays as `window.history.replaceState` (correct — it runs before `BrowserRouter` mounts).
+The rest of the sign-in logic (the `Promise.all` with profile/subscription/role checks) remains unchanged — it just uses the already-imported `supabase` client directly.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/GamePlanCard.tsx` | Replace `window.history.replaceState` / `window.location.search` with `useSearchParams` |
+| `src/pages/Auth.tsx` | Replace dynamic `await import()` with static import of supabase client |
 
-## What This Enables
-- Back button closes dialog, forward reopens it
-- URL state reactive to React Router
-- No manual DOM API usage inside routed components
+## Impact
+- Eliminates the "Importing a module script failed" error in preview
+- Sign-in flow works end-to-end in both preview and production
+- Zero behavioral change — same queries, same routing logic
 
