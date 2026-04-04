@@ -1,53 +1,42 @@
 
 
-# Session Linking — Gold Standard Patches
+# Fix Session Uniqueness Indexes
 
-## Database Migration (single migration with all 4 patches)
+## Problem
+The current indexes are on `(id)` which is already the PK — they provide zero protection. A session could theoretically be attached to multiple links.
 
-### Schema Changes
-- Add `claimed_at TIMESTAMPTZ NULL` and `linked_at TIMESTAMPTZ NULL` columns
-- Drop `used_at` column (replaced by `claimed_at`/`linked_at`)
-- Add status CHECK constraint: `('pending','claimed','linked','expired')`
-- Update any existing `status = 'active'` rows to `'linked'` before adding constraint
+## Fix (single migration)
 
-### Patch 1: Replace `attach_session_to_link` (new RPC)
-Create the function exactly as specified — row lock, COALESCE for idempotent assignment, self-healing bidirectional update, status guard.
+Drop the two broken indexes and create correct ones:
 
-### Patch 2: Duplicate session attach prevention
 ```sql
-CREATE UNIQUE INDEX one_creator_session_per_link ON live_ab_links (id) WHERE creator_session_id IS NOT NULL;
-CREATE UNIQUE INDEX one_joiner_session_per_link ON live_ab_links (id) WHERE joiner_session_id IS NOT NULL;
+-- Drop broken indexes
+DROP INDEX IF EXISTS public.one_creator_session_per_link;
+DROP INDEX IF EXISTS public.one_joiner_session_per_link;
+
+-- Each session can only be attached as creator to ONE link
+CREATE UNIQUE INDEX uniq_creator_session_per_link
+  ON public.live_ab_links (creator_session_id)
+  WHERE creator_session_id IS NOT NULL;
+
+-- Each session can only be attached as joiner to ONE link
+CREATE UNIQUE INDEX uniq_joiner_session_per_link
+  ON public.live_ab_links (joiner_session_id)
+  WHERE joiner_session_id IS NOT NULL;
 ```
 
-### Patch 3: Replace `create_ab_link` and `claim_ab_link`
-
-**`create_ab_link(p_user_id, p_sport, p_link_code)`**: Expires all existing pending/claimed links for user (including expired ones past `expires_at`), inserts new row with `status='pending'`, `expires_at = now() + 2h`.
-
-**`claim_ab_link(p_code, p_user_id)`**: Atomic UPDATE with `expires_at > now()` guard. Also pre-cleans expired links. Sets `status='claimed'`, `claimed_at=now()`.
-
-### Patch 4: Drop `cancel_pending_links` and `update_link_session_id`
-These are superseded by the new RPCs.
-
-## Client Changes
-
-### `LiveAbLinkPanel.tsx`
-Already calls `create_ab_link` and `claim_ab_link` — no changes needed (already updated in prior iteration).
-
-### `PracticeHub.tsx`
-Already calls `attach_session_to_link` — no changes needed.
-
-### `SessionConfigPanel.tsx` / `usePerformanceSession.ts`
-Already correct from prior iteration — `linked_session_id` removed from client payloads.
+This ensures:
+- A given session ID can only appear once as `creator_session_id` across all links
+- A given session ID can only appear once as `joiner_session_id` across all links
+- Combined with the existing `COALESCE` in `attach_session_to_link`, this makes the system fully airtight
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| New migration | All 4 patches: schema, 3 RPCs, 2 indexes, drop old functions |
+| New migration | Drop 2 broken indexes, create 2 correct unique indexes |
 
 ## What Does NOT Change
-- `LiveAbLinkPanel.tsx` (already correct)
-- `PracticeHub.tsx` (already correct)
-- Edge functions unchanged
-- Lock system unchanged
+- `attach_session_to_link` — already has COALESCE protection
+- All other RPCs, client code, edge functions unchanged
 
