@@ -723,7 +723,7 @@ export function useVault() {
       'vitamin_k_mcg', 'vitamin_b6_mg', 'vitamin_b12_mcg', 'folate_mcg',
       'calcium_mg', 'iron_mg', 'magnesium_mg', 'potassium_mg', 'zinc_mg',
     ];
-    const sanitizedData = { ...logData };
+    const sanitizedData: any = { ...logData };
     if (sanitizedData.micros != null && typeof sanitizedData.micros === 'object') {
       const micros = sanitizedData.micros as Record<string, unknown>;
       const hasData = Object.values(micros).some(v => typeof v === 'number' && v > 0);
