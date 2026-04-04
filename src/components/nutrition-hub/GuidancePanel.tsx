@@ -89,23 +89,7 @@ export function GuidancePanel({ date }: GuidancePanelProps) {
           </div>
         )}
 
-        {/* Max 1 nudge with outcome framing */}
-        {guidance.nudges.length > 0 && (
-          <div className="pt-1 border-t border-border/50">
-            <div className="flex items-center gap-1.5 text-[11px]">
-              {guidance.nudges[0].startsWith('+') ? (
-                <TrendingUp className="h-3 w-3 text-emerald-500 shrink-0" />
-              ) : (
-                <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0" />
-              )}
-              <span className={cn(
-                guidance.nudges[0].startsWith('+') ? 'text-emerald-600 font-medium' : 'text-muted-foreground'
-              )}>
-                {guidance.nudges[0]}
-              </span>
-            </div>
-          </div>
-        )}
+        {/* Nudges moved to NutritionFeedbackStrip for unified noise control */}
       </CardContent>
     </Card>
   );

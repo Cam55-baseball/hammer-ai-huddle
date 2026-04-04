@@ -12,6 +12,7 @@ import { MealLogCard, MealLogData } from './MealLogCard';
 import { MicronutrientPanel } from './MicronutrientPanel';
 import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
+import { NutritionFeedbackStrip } from './NutritionFeedbackStrip';
 import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { GuidancePanel } from './GuidancePanel';
