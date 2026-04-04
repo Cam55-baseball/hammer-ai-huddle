@@ -72,7 +72,7 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
         .select('name')
         .gt(topDeficient, 0)
         .order(topDeficient, { ascending: false })
-        .limit(3);
+        .limit(2);
 
       const label = topDeficient.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
         .replace(/ Mcg$/, '').replace(/ Mg$/, '');

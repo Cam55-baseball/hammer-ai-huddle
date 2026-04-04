@@ -21,19 +21,19 @@ export const NUTRIENT_IMPACT: Record<string, string> = {
 
 /** Active physiological framing — used when a nutrient is a limiting factor */
 export const NUTRIENT_IMPACT_ACTIVE: Record<string, string> = {
-  magnesium_mg: 'Low magnesium may reduce recovery quality',
-  iron_mg: 'Low iron may limit energy output',
-  vitamin_b12_mcg: 'Low B12 may impair cognitive function',
-  vitamin_c_mg: 'Low vitamin C may weaken immune response',
-  potassium_mg: 'Low potassium may impair muscle function',
-  calcium_mg: 'Low calcium may compromise bone integrity',
-  zinc_mg: 'Low zinc may slow tissue repair',
-  vitamin_d_mcg: 'Low vitamin D may reduce bone and immune health',
-  vitamin_a_mcg: 'Low vitamin A may affect vision and immunity',
-  folate_mcg: 'Low folate may slow cell repair',
-  vitamin_b6_mg: 'Low B6 may reduce protein metabolism',
-  vitamin_e_mg: 'Low vitamin E may reduce cell protection',
-  vitamin_k_mcg: 'Low vitamin K may impair clotting function',
+  magnesium_mg: 'Low magnesium limits recovery quality',
+  iron_mg: 'Low iron limits energy output',
+  vitamin_b12_mcg: 'Low B12 limits cognitive function',
+  vitamin_c_mg: 'Low vitamin C weakens immune response',
+  potassium_mg: 'Low potassium impairs muscle function',
+  calcium_mg: 'Low calcium limits bone strength',
+  zinc_mg: 'Low zinc slows tissue repair',
+  vitamin_d_mcg: 'Low vitamin D reduces bone and immune health',
+  vitamin_a_mcg: 'Low vitamin A impairs vision and immunity',
+  folate_mcg: 'Low folate slows cell repair',
+  vitamin_b6_mg: 'Low B6 reduces protein metabolism',
+  vitamin_e_mg: 'Low vitamin E reduces cell protection',
+  vitamin_k_mcg: 'Low vitamin K impairs clotting function',
 };
 
 /** Craving category → nutrient keys most commonly associated */
