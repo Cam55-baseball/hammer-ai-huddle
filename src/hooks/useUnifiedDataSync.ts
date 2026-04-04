@@ -153,7 +153,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const lastEventRef = useRef<{ table: string; ts: number }>({ table: '', ts: 0 });
+  const lastEventRef = useRef<{ table: string; eventType: string; rowId: string; ts: number }>({ table: '', eventType: '', rowId: '', ts: 0 });
   const reconnectAttemptRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -174,12 +174,18 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   }) => {
     const { table } = payload;
 
-    // 500ms deduplication guard
+    // 500ms deduplication guard — granular by (table, eventType, rowId)
+    const rowId = payload.new?.id || payload.old?.id || '';
     const now = Date.now();
-    if (lastEventRef.current.table === table && now - lastEventRef.current.ts < 500) {
+    if (
+      lastEventRef.current.table === table &&
+      lastEventRef.current.eventType === payload.eventType &&
+      lastEventRef.current.rowId === rowId &&
+      now - lastEventRef.current.ts < 500
+    ) {
       return;
     }
-    lastEventRef.current = { table, ts: now };
+    lastEventRef.current = { table, eventType: payload.eventType, rowId, ts: now };
 
     invalidateRelatedQueries(table);
 
@@ -222,8 +228,6 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
       console.warn('[UnifiedDataSync] Max reconnect attempts reached, invalidating critical keys');
       queryClient.invalidateQueries({ queryKey: ['hie-snapshot'] });
       queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['day-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['delta-analytics'] });
       queryClient.invalidateQueries({ queryKey: ['fatigue-state'] });
       reconnectAttemptRef.current = 0;
       return;

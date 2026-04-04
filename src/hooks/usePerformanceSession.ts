@@ -228,6 +228,10 @@ export function usePerformanceSession() {
       const hieCompleted = calcResult?.hie_completed === true;
 
       if (hieCompleted) {
+        if (recoveryTimerRef.current) {
+          clearTimeout(recoveryTimerRef.current);
+          recoveryTimerRef.current = null;
+        }
         invalidateKeys(ANALYTICS_KEYS);
       } else {
         // Schedule a single delayed recovery invalidation (15s)
