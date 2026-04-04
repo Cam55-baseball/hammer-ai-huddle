@@ -44,6 +44,7 @@ export function useBlockWorkoutGenerator() {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const generatingRef = useRef(false);
   const mountedRef = useRef(true);
+  const requestIdRef = useRef(0);
 
   // Fix 1: Subscription ready state
   const subscriptionReady = initialized && !subLoading && !ownerLoading;
