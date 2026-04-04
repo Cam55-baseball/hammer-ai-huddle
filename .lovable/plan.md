@@ -1,65 +1,82 @@
 
 
-# Fix: Second Insert Path Missing Micros Guard
+# Elite UI Exposure — Precision Data Transparency
 
-## Problem Found
-There are **two** code paths that insert into `vault_nutrition_logs`:
+## Summary
+Surface data source, confidence, micronutrient coverage, and insufficient-data states across the Daily Log UI. No new scoring logic. Pure reflection of existing backend truth.
 
-1. **`useMealVaultSync.ts`** (line 189) — has the `{}` → `null` guard ✅
-2. **`useVault.ts`** (line 719) — spreads `logData` directly with **NO guard** ❌
+## Changes
 
-The spirulina smoothie (`micros = '{}'`, `data_confidence = 'medium'`) was inserted via the `useVault.ts` path, bypassing all integrity checks.
+### 1. MealLogCard — Data Source Badge + Always-Visible Micros
 
-## Fix — `src/hooks/useVault.ts` (line ~717-724)
+**File**: `src/components/nutrition-hub/MealLogCard.tsx`
 
-Add the same guard before insert:
+- Extend `MealLogData` interface: add `dataSource?: string | null`, `dataConfidence?: string | null`
+- Show inline badge next to meal title:
+  - `data_source = 'database'` → green "Verified" badge
+  - `data_source = 'ai'` → amber "AI Estimated" badge
+  - `data_source = 'mixed'` → amber "Mixed" badge
+  - null/unknown → grey "Manual" badge
+- Show micronutrient grid **expanded by default** (not collapsed) when micros exist. Remove the toggle button — micros are always visible when present.
+- When `micros` is null, show explicit text: "No micronutrient data" in muted style
+- Show confidence as a small label: "High confidence" / "Estimated" / "Low confidence"
 
-```typescript
-const saveNutritionLog = useCallback(async (logData: Omit<VaultNutritionLog, 'id' | 'logged_at'>) => {
-  if (!user) return { success: false };
+### 2. NutritionDailyLog — Pass Source + Confidence to Cards + Coverage Summary
 
-  // Guard: empty micros → null, force low confidence
-  const REQUIRED_MICRO_KEYS = [
-    'vitamin_a_mcg', 'vitamin_c_mg', 'vitamin_d_mcg', 'vitamin_e_mg',
-    'vitamin_k_mcg', 'vitamin_b6_mg', 'vitamin_b12_mcg', 'folate_mcg',
-    'calcium_mg', 'iron_mg', 'magnesium_mg', 'potassium_mg', 'zinc_mg',
-  ];
-  let sanitizedData = { ...logData };
-  if (sanitizedData.micros != null && typeof sanitizedData.micros === 'object') {
-    const micros = sanitizedData.micros as Record<string, unknown>;
-    const hasData = Object.values(micros).some(v => typeof v === 'number' && v > 0);
-    const isComplete = REQUIRED_MICRO_KEYS.every(k => typeof micros[k] === 'number');
-    if (!hasData || !isComplete) {
-      sanitizedData.micros = null;
-      sanitizedData.data_confidence = 'low';
-    }
-  }
+**File**: `src/components/nutrition-hub/NutritionDailyLog.tsx`
 
-  const { error } = await supabase.from('vault_nutrition_logs').insert({
-    user_id: user.id,
-    entry_date: today,
-    logged_at: new Date().toISOString(),
-    ...sanitizedData,
-  });
-  // ... rest unchanged
-```
+- Map `data_source` and `data_confidence` from DB rows into `MealLogData`
+- In the Day Totals section, replace the existing micro coverage badge with a clearer line:
+  - "X/Y meals with micronutrient data" (already partially there, make more explicit)
+  - Show aggregate confidence: "Data confidence: High/Mixed/Low" derived from meal-level values
+- When all meals have `micros = null`, show in Day Totals: "No micronutrient data logged today" instead of hiding
 
-## Database Fix — Clean the leaked row
+### 3. MicronutrientPanel — Show All 13 Nutrients Always
 
-```sql
-UPDATE vault_nutrition_logs
-SET micros = null, data_confidence = 'low'
-WHERE micros::text = '{}';
-```
+**File**: `src/components/nutrition-hub/MicronutrientPanel.tsx`
+
+- Currently filters to `current > 0` and hides entirely when no data — change behavior:
+  - When zero micro data exists: show explicit message "No micronutrient data available — log verified foods to track"
+  - When partial data: show ALL 13 nutrients, with 0-intake ones displayed as "0 / RDA" in muted style
+  - Remove collapsible wrapper — panel is always open (no hiding core data per requirement)
+
+### 4. NutritionScoreCard — Explainable Breakdown
+
+**File**: `src/components/nutrition-hub/NutritionScoreCard.tsx`
+
+- Already shows micro coverage badge and confidence badge — no structural changes needed
+- Add a single line below the breakdown grid when `microCoverage.withMicros < microCoverage.total`:
+  - "Score reduced: X/Y meals lack micronutrient data"
+- Already handles `consistency = null` with "insufficient data" message — verified correct
+
+### 5. DeficiencyAlert — Explicit No-Data State
+
+**File**: `src/components/nutrition-hub/DeficiencyAlert.tsx`
+
+- Currently returns `null` when `Object.keys(totals).length === 0` — change to show:
+  - "Nutrient analysis unavailable — no micronutrient data logged today"
+- This prevents silent absence from being mistaken for "no deficiencies"
+
+### 6. NutritionTrendsCard — Already Correct
+
+- Already shows "Trend analysis unavailable — insufficient micronutrient data" for `insufficient_data` status
+- No changes needed
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/useVault.ts` | Add micros `{}` → `null` guard in `saveNutritionLog` |
-| DB migration | Clean any remaining `{}` micros rows |
+| `src/components/nutrition-hub/MealLogCard.tsx` | Add data source badge, confidence label, always-show micros, explicit null-micro message |
+| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Pass `dataSource`/`dataConfidence` to cards, explicit coverage in Day Totals |
+| `src/components/nutrition-hub/MicronutrientPanel.tsx` | Show all 13 nutrients always, remove collapsible, explicit no-data message |
+| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Add score-reduction explanation line |
+| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Show explicit "unavailable" message instead of hiding |
 
-## Verification
+## What This Does NOT Do
 
-After deploy, both insert paths enforce the same rule: incomplete micros → `null` + `low` confidence. No `{}` can leak through.
+- No new scoring logic
+- No simulated or estimated micros
+- No new database queries
+- No decorative elements
+- Every element maps directly to a stored value
 
