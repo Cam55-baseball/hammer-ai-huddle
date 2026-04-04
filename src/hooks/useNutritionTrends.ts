@@ -223,6 +223,7 @@ export function useNutritionTrends(rdaMultiplier = 1.0) {
         nudges,
         predictedRisks: trends.filter(t => t.predictedRisk),
         daysAnalyzed: days.length,
+        status: 'active' as const,
       };
     },
     enabled: !!user,
