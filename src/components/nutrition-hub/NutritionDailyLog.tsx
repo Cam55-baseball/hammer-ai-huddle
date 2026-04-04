@@ -9,6 +9,8 @@ import { format, addDays, subDays, isToday } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { MealLogCard, MealLogData } from './MealLogCard';
+import { MicronutrientPanel } from './MicronutrientPanel';
+import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { toast } from 'sonner';
 
 interface NutritionDailyLogProps {
