@@ -185,6 +185,37 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
               </div>
             )}
 
+            {/* Micronutrient drill-down */}
+            {hasMicros && (
+              <div className="space-y-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs justify-between"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMicros(!showMicros);
+                  }}
+                >
+                  <span>Micronutrients ({Object.keys(meal.micros!).length})</span>
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", showMicros && "rotate-180")} />
+                </Button>
+                {showMicros && (
+                  <div className="grid grid-cols-2 gap-1 text-xs">
+                    {Object.entries(meal.micros!).map(([key, val]) => {
+                      const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/ Mcg$/, ' (mcg)').replace(/ Mg$/, ' (mg)');
+                      return (
+                        <div key={key} className="flex justify-between px-2 py-1 rounded bg-muted/50">
+                          <span className="text-muted-foreground truncate">{label}</span>
+                          <span className="font-medium">{Math.round((val as number) * 10) / 10}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex gap-2 pt-2">
               {onEdit && (

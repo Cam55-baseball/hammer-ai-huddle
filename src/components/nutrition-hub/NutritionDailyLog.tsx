@@ -211,6 +211,12 @@ export function NutritionDailyLog({
                 </div>
               </div>
             </div>
+
+            {/* Hydration Quality Breakdown */}
+            <HydrationQualityBreakdown />
+
+            {/* Micronutrient Panel */}
+            <MicronutrientPanel date={currentDate} />
           </>
         )}
       </CardContent>
