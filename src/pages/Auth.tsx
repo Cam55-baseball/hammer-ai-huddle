@@ -11,6 +11,7 @@ import { Info, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
+import { supabase } from "@/integrations/supabase/client";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
