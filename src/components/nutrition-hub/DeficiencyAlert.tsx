@@ -270,6 +270,13 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
                       ))}
                     </div>
                   )}
+                  {/* Supplement label */}
+                  {supplementLabels[item.key] && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 ml-4 flex items-center gap-1">
+                      <Pill className="h-2.5 w-2.5 shrink-0" />
+                      {supplementLabels[item.key]}
+                    </p>
+                  )}
                 </div>
               );
             })}
