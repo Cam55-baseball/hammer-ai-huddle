@@ -162,7 +162,7 @@ export default function AnalyzeVideo() {
       return;
     }
     
-    if (!user) {
+    if (!user && !session) {
       navigate("/auth", { replace: true });
       return;
     }

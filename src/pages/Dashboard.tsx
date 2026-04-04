@@ -124,13 +124,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
+    if (!user && !session) {
       navigate("/auth", { replace: true });
       return;
     }
-    refetch();
-    loadProgress();
-  }, [authLoading, user, navigate]);
+    if (user) {
+      refetch();
+      loadProgress();
+    }
+  }, [authLoading, user, session, navigate]);
   
   // Detect sport from subscribed modules if localStorage is empty
   useEffect(() => {

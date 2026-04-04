@@ -74,9 +74,11 @@ const ProfileSetup = () => {
   const isCoachOrScout = selectedRole === 'Scout/Coach';
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { session } = useAuth();
+
   useEffect(() => {
     if (loading) return;
-    if (!user) {
+    if (!user && !session) {
       navigate("/auth", { replace: true });
       return;
     }
