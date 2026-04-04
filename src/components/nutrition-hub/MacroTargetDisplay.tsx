@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Flame, Beef, Wheat, Droplets, Cookie } from 'lucide-react';
 import { useDailyNutritionTargets } from '@/hooks/useDailyNutritionTargets';
+import { useHydration } from '@/hooks/useHydration';
 import { cn } from '@/lib/utils';
 
 interface MacroTargetDisplayProps {
