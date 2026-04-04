@@ -2030,7 +2030,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onEdit={() => {
           if (selectedCustomTask) {
             handleCustomActivityFullEdit(selectedCustomTask);
-            setDetailDialogOpen(false);
+            handleDetailClose(false);
           }
         }}
         onSaveTime={(time, reminder) => {
