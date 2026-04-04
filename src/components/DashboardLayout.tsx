@@ -88,6 +88,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Initialize hydration reminders globally so they work across all pages
   useHydrationReminders();
+  // Cross-module realtime sync for all dashboard pages
+  useUnifiedDataSync();
 
   useEffect(() => {
     const fetchTutorialStatus = async () => {

@@ -122,6 +122,13 @@ export function useSchedulingRealtime() {
         table: 'game_plan_locked_days',
         filter: `user_id=eq.${user.id}`,
       }, invalidateScheduling)
+      // --- HIE snapshots: propagate analysis completion to dashboard ---
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'hie_snapshots',
+        filter: `user_id=eq.${user.id}`,
+      }, invalidateHIESnapshot)
       .subscribe();
 
     return () => {

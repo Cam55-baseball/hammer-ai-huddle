@@ -125,6 +125,18 @@ const TABLE_QUERY_MAPPINGS: Record<string, string[][]> = {
   'physio_adult_tracking': [
     ['physioAdultTracking'],
   ],
+
+  // Performance sessions affect all analytics
+  'performance_sessions': [
+    ['hie-snapshot'], ['progressive-gate'], ['delta-analytics'],
+    ['recent-sessions'], ['day-sessions'], ['fatigue-state'], ['calendar'],
+    ['split-analytics-composites'], ['latest-session-ts'],
+  ],
+
+  // HIE snapshots affect dashboard analytics
+  'hie_snapshots': [
+    ['hie-snapshot'], ['progressive-gate'], ['delta-analytics'],
+  ],
 };
 
 interface UseUnifiedDataSyncOptions {
