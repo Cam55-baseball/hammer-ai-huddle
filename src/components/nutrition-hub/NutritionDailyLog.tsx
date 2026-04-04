@@ -9,6 +9,8 @@ import { format, addDays, subDays, isToday } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { MealLogCard, MealLogData } from './MealLogCard';
+import { MicronutrientPanel } from './MicronutrientPanel';
+import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { toast } from 'sonner';
 
 interface NutritionDailyLogProps {
@@ -66,6 +68,7 @@ export function NutritionDailyLog({
         supplements: Array.isArray(log.supplements) ? log.supplements as string[] : null,
         mealTime: (log as any).meal_time ?? null,
         digestionNotes: (log as any).digestion_notes ?? null,
+        micros: (log as any).micros ?? null,
       })) as MealLogData[];
     },
     enabled: !!user,
@@ -208,6 +211,12 @@ export function NutritionDailyLog({
                 </div>
               </div>
             </div>
+
+            {/* Hydration Quality Breakdown */}
+            <HydrationQualityBreakdown />
+
+            {/* Micronutrient Panel */}
+            <MicronutrientPanel date={currentDate} />
           </>
         )}
       </CardContent>

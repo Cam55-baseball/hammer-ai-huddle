@@ -10,6 +10,7 @@ export interface FoodItem {
   carbs_g: number;
   fats_g: number;
   confidence?: 'high' | 'medium' | 'low';
+  micros?: Record<string, number>;
 }
 
 export interface SmartFoodResult {
@@ -20,6 +21,7 @@ export interface SmartFoodResult {
     carbs_g: number;
     fats_g: number;
     hydration_oz: number;
+    micros?: Record<string, number>;
   };
   source: 'database' | 'ai';
   confidenceSummary?: 'high' | 'medium' | 'low';

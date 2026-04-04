@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Flame, Beef, Wheat, Droplets, Cookie } from 'lucide-react';
 import { useDailyNutritionTargets } from '@/hooks/useDailyNutritionTargets';
+import { useHydration } from '@/hooks/useHydration';
 import { cn } from '@/lib/utils';
 
 interface MacroTargetDisplayProps {
@@ -66,6 +67,7 @@ export function MacroTargetDisplay({
 }: MacroTargetDisplayProps) {
   const { t } = useTranslation();
   const { targets, loading, isProfileComplete, hasActiveGoal } = useDailyNutritionTargets(consumed);
+  const { qualityPercent, todayTotal } = useHydration();
 
   // Helper to get translated goal type
   const getGoalTypeLabel = (goalType: string) => {
@@ -234,14 +236,21 @@ export function MacroTargetDisplay({
           />
           
           {showHydration && (
-            <MacroItem
-              icon={<Droplets className="w-4 h-4 text-blue-500" />}
-              label="Hydration"
-              current={targets.consumedHydration}
-              target={targets.hydration}
-              unit="oz"
-              color="bg-blue-500/10"
-            />
+            <>
+              <MacroItem
+                icon={<Droplets className="w-4 h-4 text-blue-500" />}
+                label="Hydration"
+                current={targets.consumedHydration}
+                target={targets.hydration}
+                unit="oz"
+                color="bg-blue-500/10"
+              />
+              {todayTotal > 0 && (
+                <p className="text-xs text-muted-foreground ml-10 -mt-1">
+                  {qualityPercent}% quality hydration
+                </p>
+              )}
+            </>
           )}
         </div>
 

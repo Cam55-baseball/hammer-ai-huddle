@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Droplets, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState } from 'react';
+import { getLiquidTypeInfo } from '@/constants/hydrationClassification';
+import { cn } from '@/lib/utils';
 
 const QUICK_ADD_OPTIONS = [8, 16, 24, 32];
 
@@ -22,10 +24,11 @@ export function HydrationTrackerWidget() {
     addWater,
     deleteLog,
     loading,
+    qualityPercent,
   } = useHydration();
 
   const handleAddWater = async (amount: number) => {
-    await addWater(amount);
+    await addWater(amount, 'water', 'quality');
   };
 
   const handleDeleteLog = async (logId: string) => {
@@ -50,6 +53,11 @@ export function HydrationTrackerWidget() {
             <p className="text-2xl font-bold text-blue-500">{todayTotal} oz</p>
             <p className="text-sm text-muted-foreground">of {dailyGoal} oz goal</p>
             <Progress value={progress} className="mt-2" />
+            {todayTotal > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {qualityPercent}% quality hydration
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -71,20 +79,27 @@ export function HydrationTrackerWidget() {
           {todayLogs.length > 0 && (
             <div className="space-y-1 max-h-32 overflow-y-auto">
               <p className="text-xs font-medium text-muted-foreground">Today's entries</p>
-              {todayLogs.map(log => (
-                <div key={log.id} className="flex items-center justify-between text-xs p-1.5 rounded bg-muted/50">
-                  <span>{format(new Date(log.logged_at), 'h:mm a')}</span>
-                  <span className="font-medium">{log.amount_oz} oz</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5 text-destructive hover:text-destructive"
-                    onClick={() => handleDeleteLog(log.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
+              {todayLogs.map(log => {
+                const info = getLiquidTypeInfo((log as any).liquid_type || 'water');
+                const isFiller = (log as any).quality_class === 'filler';
+                return (
+                  <div key={log.id} className={cn(
+                    "flex items-center justify-between text-xs p-1.5 rounded",
+                    isFiller ? "bg-amber-500/10" : "bg-muted/50"
+                  )}>
+                    <span>{info?.emoji || '💧'} {format(new Date(log.logged_at), 'h:mm a')}</span>
+                    <span className="font-medium">{log.amount_oz} oz</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteLog(log.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           )}
 

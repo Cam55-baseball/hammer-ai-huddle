@@ -10,6 +10,8 @@ export interface HydrationLog {
   amount_oz: number;
   log_date: string;
   logged_at: string;
+  liquid_type?: string;
+  quality_class?: string;
 }
 
 export interface HydrationSettings {
@@ -145,7 +147,7 @@ export function useHydration() {
   }, [user, settings, todayTotal, dailyGoal]);
 
   // Add water
-  const addWater = useCallback(async (amount: number): Promise<boolean> => {
+  const addWater = useCallback(async (amount: number, liquidType?: string, qualityClass?: string): Promise<boolean> => {
     if (!user) return false;
 
     try {
@@ -155,7 +157,9 @@ export function useHydration() {
           user_id: user.id,
           amount_oz: amount,
           log_date: today,
-        });
+          liquid_type: liquidType || 'water',
+          quality_class: qualityClass || 'quality',
+        } as any);
 
       if (error) throw error;
 
@@ -282,6 +286,15 @@ export function useHydration() {
   const progress = dailyGoal > 0 ? Math.min((todayTotal / dailyGoal) * 100, 100) : 0;
   const remaining = Math.max(dailyGoal - todayTotal, 0);
 
+  // Compute quality vs filler totals
+  const qualityTotal = todayLogs
+    .filter(l => (l as any).quality_class !== 'filler')
+    .reduce((sum, l) => sum + Number(l.amount_oz), 0);
+  const fillerTotal = todayLogs
+    .filter(l => (l as any).quality_class === 'filler')
+    .reduce((sum, l) => sum + Number(l.amount_oz), 0);
+  const qualityPercent = todayTotal > 0 ? Math.round((qualityTotal / todayTotal) * 100) : 100;
+
   return {
     // Data
     todayLogs,
@@ -293,6 +306,9 @@ export function useHydration() {
     progress,
     remaining,
     goalReached: todayTotal >= dailyGoal,
+    qualityTotal,
+    fillerTotal,
+    qualityPercent,
     
     // Actions
     addWater,

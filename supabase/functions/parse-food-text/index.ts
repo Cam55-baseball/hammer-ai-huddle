@@ -53,6 +53,11 @@ Be conservative with estimates - use typical serving sizes unless specified.
 Confidence levels: "high" for common foods with known values, "medium" for estimates, "low" for unusual items.
 For beverages (water, juice, coffee, tea, milk, soda, etc.), estimate fluid ounces. One glass = 8oz, one bottle = 16oz.
 
+MICRONUTRIENTS: For each food item, estimate key micronutrients using USDA reference data:
+- Vitamins: vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg, vitamin_b6_mg, vitamin_b12_mcg, folate_mcg
+- Minerals: calcium_mg, iron_mg, magnesium_mg, potassium_mg, zinc_mg
+Only include micronutrients that are meaningfully present (>1% RDA per serving). Omit zeros.
+
 MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
 - Morning items (eggs, bacon, oatmeal, cereal, toast, pancakes, waffles, coffee, orange juice) → "breakfast"
 - Midday items (sandwich, salad, soup, burger, wrap, lunch) → "lunch"  
@@ -88,6 +93,11 @@ MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
                         carbs_g: { type: "number", description: "Carbohydrates in grams" },
                         fats_g: { type: "number", description: "Fats in grams" },
                         confidence: { type: "string", enum: ["high", "medium", "low"] },
+                        micros: {
+                          type: "object",
+                          description: "Micronutrients present in meaningful amounts. Keys: vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg, vitamin_b6_mg, vitamin_b12_mcg, folate_mcg, calcium_mg, iron_mg, magnesium_mg, potassium_mg, zinc_mg. Only include non-zero values.",
+                          additionalProperties: { type: "number" },
+                        },
                       },
                       required: ["name", "quantity", "unit", "calories", "protein_g", "carbs_g", "fats_g", "confidence"],
                     },
@@ -100,7 +110,12 @@ MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
                       protein_g: { type: "number" },
                       carbs_g: { type: "number" },
                       fats_g: { type: "number" },
-                      hydration_oz: { type: "number", description: "Total fluid ounces if beverages mentioned (water, juice, coffee, tea, milk, soda, etc.)" },
+                      hydration_oz: { type: "number", description: "Total fluid ounces if beverages mentioned" },
+                      micros: {
+                        type: "object",
+                        description: "Aggregated micronutrients across all foods. Same keys as per-food micros.",
+                        additionalProperties: { type: "number" },
+                      },
                     },
                     required: ["calories", "protein_g", "carbs_g", "fats_g", "hydration_oz"],
                   },

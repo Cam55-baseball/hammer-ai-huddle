@@ -147,6 +147,19 @@ export function useMealVaultSync() {
         ...meals.supplements.map(s => s.name),
       ].filter(Boolean);
 
+      // Aggregate micronutrients from meal items (if available via AI parsing)
+      const aggregatedMicros: Record<string, number> = {};
+      for (const item of meals.items) {
+        const itemMicros = (item as any).micros;
+        if (itemMicros && typeof itemMicros === 'object') {
+          for (const [key, val] of Object.entries(itemMicros)) {
+            if (typeof val === 'number' && val > 0) {
+              aggregatedMicros[key] = (aggregatedMicros[key] || 0) + val;
+            }
+          }
+        }
+      }
+
       // Insert to vault_nutrition_logs
       const { error } = await supabase
         .from('vault_nutrition_logs')
@@ -165,7 +178,8 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-        });
+          micros: Object.keys(aggregatedMicros).length > 0 ? aggregatedMicros : null,
+        } as any);
 
       if (error) throw error;
 

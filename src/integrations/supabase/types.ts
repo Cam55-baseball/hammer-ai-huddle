@@ -1962,22 +1962,28 @@ export type Database = {
         Row: {
           amount_oz: number
           id: string
+          liquid_type: string | null
           log_date: string | null
           logged_at: string | null
+          quality_class: string | null
           user_id: string
         }
         Insert: {
           amount_oz: number
           id?: string
+          liquid_type?: string | null
           log_date?: string | null
           logged_at?: string | null
+          quality_class?: string | null
           user_id: string
         }
         Update: {
           amount_oz?: number
           id?: string
+          liquid_type?: string | null
           log_date?: string | null
           logged_at?: string | null
+          quality_class?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2867,6 +2873,7 @@ export type Database = {
         Row: {
           barcode: string | null
           brand: string | null
+          calcium_mg: number | null
           calories_per_serving: number | null
           carbs_g: number | null
           created_at: string | null
@@ -2874,18 +2881,31 @@ export type Database = {
           external_id: string | null
           fats_g: number | null
           fiber_g: number | null
+          folate_mcg: number | null
           id: string
+          iron_mg: number | null
+          magnesium_mg: number | null
           name: string
+          potassium_mg: number | null
           protein_g: number | null
           serving_size: string | null
           serving_size_grams: number | null
           sodium_mg: number | null
           source: string | null
           sugar_g: number | null
+          vitamin_a_mcg: number | null
+          vitamin_b12_mcg: number | null
+          vitamin_b6_mg: number | null
+          vitamin_c_mg: number | null
+          vitamin_d_mcg: number | null
+          vitamin_e_mg: number | null
+          vitamin_k_mcg: number | null
+          zinc_mg: number | null
         }
         Insert: {
           barcode?: string | null
           brand?: string | null
+          calcium_mg?: number | null
           calories_per_serving?: number | null
           carbs_g?: number | null
           created_at?: string | null
@@ -2893,18 +2913,31 @@ export type Database = {
           external_id?: string | null
           fats_g?: number | null
           fiber_g?: number | null
+          folate_mcg?: number | null
           id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
           name: string
+          potassium_mg?: number | null
           protein_g?: number | null
           serving_size?: string | null
           serving_size_grams?: number | null
           sodium_mg?: number | null
           source?: string | null
           sugar_g?: number | null
+          vitamin_a_mcg?: number | null
+          vitamin_b12_mcg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_mcg?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_mcg?: number | null
+          zinc_mg?: number | null
         }
         Update: {
           barcode?: string | null
           brand?: string | null
+          calcium_mg?: number | null
           calories_per_serving?: number | null
           carbs_g?: number | null
           created_at?: string | null
@@ -2912,14 +2945,26 @@ export type Database = {
           external_id?: string | null
           fats_g?: number | null
           fiber_g?: number | null
+          folate_mcg?: number | null
           id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
           name?: string
+          potassium_mg?: number | null
           protein_g?: number | null
           serving_size?: string | null
           serving_size_grams?: number | null
           sodium_mg?: number | null
           source?: string | null
           sugar_g?: number | null
+          vitamin_a_mcg?: number | null
+          vitamin_b12_mcg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_mcg?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_mcg?: number | null
+          zinc_mg?: number | null
         }
         Relationships: []
       }

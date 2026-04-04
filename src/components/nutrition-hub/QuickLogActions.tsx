@@ -14,8 +14,8 @@ import { RecipeIngredient } from '@/hooks/useRecipes';
 import { BarcodeScanner } from './BarcodeScanner';
 import { FoodSearchResult } from '@/hooks/useFoodSearch';
 import { MealTypeSelector, MEAL_TYPES } from './MealTypeSelector';
-
 import { PhotoFoodLogger } from './PhotoFoodLogger';
+import { LIQUID_TYPES, classifyLiquid } from '@/constants/hydrationClassification';
 
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
@@ -36,6 +36,9 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
   const [isLogging, setIsLogging] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [mealTypeSelectorOpen, setMealTypeSelectorOpen] = useState(false);
+  const [selectedLiquidType, setSelectedLiquidType] = useState('water');
+  const [liquidPickerOpen, setLiquidPickerOpen] = useState(false);
+  const [pendingWaterAmount, setPendingWaterAmount] = useState<number | null>(null);
   
   // Store pending items waiting for meal type selection
   const pendingItemsRef = useRef<RecipeIngredient[] | null>(null);
@@ -58,10 +61,27 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
   };
 
   const handleQuickWater = async (amount: number) => {
+    // Default "water" = instant log, no picker needed
     setIsLogging(true);
     try {
-      await addWater(amount);
+      await addWater(amount, 'water', 'quality');
       toast.success(t('nutrition.waterAdded', 'Added {{amount}}oz water', { amount }));
+    } finally {
+      setIsLogging(false);
+    }
+  };
+
+  const handleLiquidLog = async (liquidType: string) => {
+    if (!pendingWaterAmount) return;
+    setIsLogging(true);
+    try {
+      const quality = classifyLiquid(liquidType);
+      await addWater(pendingWaterAmount, liquidType, quality);
+      const info = LIQUID_TYPES.find(lt => lt.value === liquidType);
+      toast.success(`Added ${pendingWaterAmount}oz ${info?.label || liquidType}`);
+      setLiquidPickerOpen(false);
+      setPendingWaterAmount(null);
+      setSelectedLiquidType('water');
     } finally {
       setIsLogging(false);
     }
@@ -73,15 +93,10 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
       toast.error(t('nutrition.invalidAmount', 'Please enter a valid amount'));
       return;
     }
-    setIsLogging(true);
-    try {
-      await addWater(amount);
-      toast.success(t('nutrition.waterAdded', 'Added {{amount}}oz water', { amount }));
-      setCustomWaterAmount('');
-      setWaterDialogOpen(false);
-    } finally {
-      setIsLogging(false);
-    }
+    // Open liquid picker for custom amounts
+    setPendingWaterAmount(amount);
+    setLiquidPickerOpen(true);
+    setWaterDialogOpen(false);
   };
 
   const handleLogMeal = () => {
@@ -212,6 +227,21 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
               </Button>
             ))}
           </div>
+
+          {/* Other liquid button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs"
+            disabled={isLogging}
+            onClick={() => {
+              setPendingWaterAmount(8);
+              setLiquidPickerOpen(true);
+            }}
+          >
+            {t('nutrition.otherLiquid', 'Log other liquid...')}
+          </Button>
+
           <Dialog open={waterDialogOpen} onOpenChange={setWaterDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full text-xs">
@@ -239,6 +269,42 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
                 >
                   {t('nutrition.add', 'Add')}
                 </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Liquid Type Picker Dialog */}
+          <Dialog open={liquidPickerOpen} onOpenChange={setLiquidPickerOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {t('nutrition.selectLiquidType', 'What are you drinking?')} ({pendingWaterAmount}oz)
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-2 py-4">
+                {LIQUID_TYPES.map((lt) => (
+                  <Button
+                    key={lt.value}
+                    variant="outline"
+                    className={cn(
+                      "justify-start gap-2 h-auto py-2.5",
+                      lt.defaultQuality === 'filler' && "border-amber-500/30"
+                    )}
+                    disabled={isLogging}
+                    onClick={() => handleLiquidLog(lt.value)}
+                  >
+                    <span>{lt.emoji}</span>
+                    <div className="text-left">
+                      <span className="text-sm">{lt.label}</span>
+                      <span className={cn(
+                        "block text-[10px]",
+                        lt.defaultQuality === 'quality' ? "text-emerald-500" : "text-amber-500"
+                      )}>
+                        {lt.defaultQuality === 'quality' ? '● Quality' : '● Filler'}
+                      </span>
+                    </div>
+                  </Button>
+                ))}
               </div>
             </DialogContent>
           </Dialog>

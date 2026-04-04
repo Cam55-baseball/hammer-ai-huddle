@@ -21,6 +21,7 @@ export interface MealLogData {
   supplements?: string[] | null;
   mealTime?: string | null;
   digestionNotes?: string | null;
+  micros?: Record<string, number> | null;
 }
 
 interface MealLogCardProps {
@@ -53,6 +54,7 @@ const KNOWN_TAG_VALUES = new Set(DIGESTION_TAGS.map(t => t.value));
 export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [showMicros, setShowMicros] = useState(false);
 
   const mealTypeKey = meal.mealType?.toLowerCase().replace('-', '_') || 'snack';
   const mealTypeColor = MEAL_TYPE_COLORS[mealTypeKey] || MEAL_TYPE_COLORS.snack;
@@ -60,6 +62,7 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
 
   const hasMacros = meal.proteinG || meal.carbsG || meal.fatsG;
   const hasSupplements = meal.supplements && meal.supplements.length > 0;
+  const hasMicros = meal.micros && Object.keys(meal.micros).length > 0;
 
   // Parse digestion notes into chips (known tags) + freeform text
   const parsedDigestionNotes = meal.digestionNotes
@@ -179,6 +182,37 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
                     </span>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Micronutrient drill-down */}
+            {hasMicros && (
+              <div className="space-y-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs justify-between"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMicros(!showMicros);
+                  }}
+                >
+                  <span>Micronutrients ({Object.keys(meal.micros!).length})</span>
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", showMicros && "rotate-180")} />
+                </Button>
+                {showMicros && (
+                  <div className="grid grid-cols-2 gap-1 text-xs">
+                    {Object.entries(meal.micros!).map(([key, val]) => {
+                      const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/ Mcg$/, ' (mcg)').replace(/ Mg$/, ' (mg)');
+                      return (
+                        <div key={key} className="flex justify-between px-2 py-1 rounded bg-muted/50">
+                          <span className="text-muted-foreground truncate">{label}</span>
+                          <span className="font-medium">{Math.round((val as number) * 10) / 10}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
