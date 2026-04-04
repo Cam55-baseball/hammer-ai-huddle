@@ -206,6 +206,41 @@ export function useMealVaultSync() {
 
       if (error) throw error;
 
+      // Wire effectiveness tracking: check if any logged food matches a recently accepted suggestion
+      try {
+        const foodNames = meals.items.map(i => i.name.toLowerCase());
+        const { data: recentAccepted } = await (supabase as any)
+          .from('nutrition_suggestion_interactions')
+          .select('nutrient_key, food_name')
+          .eq('user_id', user.id)
+          .eq('action', 'accepted')
+          .is('effectiveness_delta', null)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (recentAccepted && recentAccepted.length > 0) {
+          for (const suggestion of recentAccepted) {
+            if (foodNames.some(fn => fn.includes(suggestion.food_name.toLowerCase()))) {
+              // Match found — mark effectiveness with a positive delta
+              // The actual nutrient improvement requires comparing before/after,
+              // but the presence of the food itself indicates follow-through
+              await (supabase as any)
+                .from('nutrition_suggestion_interactions')
+                .update({ effectiveness_delta: 1 })
+                .eq('user_id', user.id)
+                .eq('nutrient_key', suggestion.nutrient_key)
+                .eq('food_name', suggestion.food_name)
+                .eq('action', 'accepted')
+                .is('effectiveness_delta', null)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            }
+          }
+        }
+      } catch (effErr) {
+        console.warn('Effectiveness tracking failed (non-blocking):', effErr);
+      }
+
       // Invalidate all nutrition-related queries for E2E sync
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
