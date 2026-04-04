@@ -246,7 +246,7 @@ export function NutritionDailyLog({
             <DeficiencyAlert date={currentDate} />
 
             {/* Craving Guidance — nutrient-aligned suggestions */}
-            <CravingGuidance date={currentDate} microCoverage={mealsWithMicros} />
+            <CravingGuidance date={currentDate} microCoverage={mealsWithMicros} limitingFactorKeys={limitingFactorKeys} />
 
             {/* Nutrition Trends (7/14/30-day intelligence) */}
             <NutritionTrendsCard />
