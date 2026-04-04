@@ -70,6 +70,7 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
       const { data: foods } = await supabase
         .from('nutrition_food_database')
         .select('name')
+        .contains('food_category', [selectedCraving])
         .gt(topDeficient, 0)
         .order(topDeficient, { ascending: false })
         .limit(2);
