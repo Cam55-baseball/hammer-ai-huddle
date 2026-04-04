@@ -11,6 +11,7 @@ import { Menu, ShoppingBag, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHydrationReminders } from "@/hooks/useHydrationReminders";
+import { useUnifiedDataSync } from "@/hooks/useUnifiedDataSync";
 
 interface DashboardLayoutProps {
   children: ReactNode;
