@@ -1,42 +1,23 @@
 
 
-# Fix Session Uniqueness Indexes
+# Update `attach_session_to_link` — Gold Version
 
-## Problem
-The current indexes are on `(id)` which is already the PK — they provide zero protection. A session could theoretically be attached to multiple links.
+## Single Migration
 
-## Fix (single migration)
+Replace the existing function with the user's provided version. Key differences from current:
 
-Drop the two broken indexes and create correct ones:
-
-```sql
--- Drop broken indexes
-DROP INDEX IF EXISTS public.one_creator_session_per_link;
-DROP INDEX IF EXISTS public.one_joiner_session_per_link;
-
--- Each session can only be attached as creator to ONE link
-CREATE UNIQUE INDEX uniq_creator_session_per_link
-  ON public.live_ab_links (creator_session_id)
-  WHERE creator_session_id IS NOT NULL;
-
--- Each session can only be attached as joiner to ONE link
-CREATE UNIQUE INDEX uniq_joiner_session_per_link
-  ON public.live_ab_links (joiner_session_id)
-  WHERE joiner_session_id IS NOT NULL;
-```
-
-This ensures:
-- A given session ID can only appear once as `creator_session_id` across all links
-- A given session ID can only appear once as `joiner_session_id` across all links
-- Combined with the existing `COALESCE` in `attach_session_to_link`, this makes the system fully airtight
+1. **Status check moved before participant check** — rejects expired/failed links earlier
+2. **Accepts `'linked'` status for re-entry** — allows safe retries after completion
+3. **New global session uniqueness guard (step 3)** — queries `live_ab_links` to ensure `p_session_id` doesn't exist in ANY other link row, preventing cross-link contamination at the SQL level (defense-in-depth alongside the unique indexes)
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| New migration | Drop 2 broken indexes, create 2 correct unique indexes |
+| New migration | `CREATE OR REPLACE FUNCTION public.attach_session_to_link` with the exact SQL provided |
 
 ## What Does NOT Change
-- `attach_session_to_link` — already has COALESCE protection
-- All other RPCs, client code, edge functions unchanged
+- Client code (already calls this RPC correctly)
+- Other RPCs, indexes, schema
+- Edge functions, lock system
 
