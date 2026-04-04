@@ -82,15 +82,19 @@ export function useNutritionBaseline(rdaMultiplier = 1.0) {
       const daysWithMicros = microDays.length;
       if (daysWithData === 0) return null;
 
-      // Compute per-nutrient baseline
+      // Compute per-nutrient baseline (only from days with micro data)
       const adaptiveMultipliers: Record<string, number> = {};
       const nutrients: NutrientBaseline[] = MICRO_KEYS.map(key => {
         const rda = RDA[key] * rdaMultiplier;
-        const dailyValues = days.map(d => d[key] || 0);
-        const avgIntake = dailyValues.reduce((a, b) => a + b, 0) / daysWithData;
+        if (daysWithMicros === 0) {
+          adaptiveMultipliers[key] = 1.0;
+          return { key, avgIntake: 0, rdaPercent: 0, chronicLow: false, priorityMultiplier: 1.0 };
+        }
+        const dailyValues = microDays.map(d => d[key] || 0);
+        const avgIntake = dailyValues.reduce((a, b) => a + b, 0) / daysWithMicros;
         const rdaPercent = Math.round((avgIntake / rda) * 100);
         const belowCount = dailyValues.filter(v => v < rda * 0.5).length;
-        const chronicLow = belowCount / daysWithData > 0.6;
+        const chronicLow = belowCount / daysWithMicros > 0.6;
         const priorityMultiplier = chronicLow ? 1.3 : 1.0;
         adaptiveMultipliers[key] = priorityMultiplier;
 
