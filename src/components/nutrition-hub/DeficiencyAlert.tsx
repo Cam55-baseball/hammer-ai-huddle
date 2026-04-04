@@ -70,11 +70,7 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
         .eq('user_id', user.id)
         .eq('entry_date', dateStr);
 
-      const { data, error } = await supabase
-        .from('vault_nutrition_logs')
-        .select('micros')
-        .eq('user_id', user.id)
-        .eq('entry_date', dateStr);
+      // Note: data/error already fetched above
 
       if (error) throw error;
 
