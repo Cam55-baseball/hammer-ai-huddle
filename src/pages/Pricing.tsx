@@ -14,7 +14,7 @@ const Pricing = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const state = location.state as { sport?: string; tier?: string };
   
   const [selectedSport, setSelectedSport] = useState<string>(
@@ -22,13 +22,13 @@ const Pricing = () => {
   );
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
+    if (!authLoading && isAuthStable && !user && !session) {
       navigate("/auth", { 
+        replace: true,
         state: { returnTo: '/pricing', sport: selectedSport }
       });
     }
-  }, [user, authLoading, navigate, selectedSport]);
+  }, [user, session, authLoading, isAuthStable, navigate, selectedSport]);
 
   const handleSelectTier = (tierKey: string) => {
     localStorage.setItem('selectedSport', selectedSport);

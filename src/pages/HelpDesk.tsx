@@ -36,15 +36,15 @@ const quickLinks = [
 
 export default function HelpDesk() {
   const { t } = useTranslation();
-  const { user, loading } = useAuth();
+  const { user, session, loading, isAuthStable } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
+    if (!loading && isAuthStable && !user && !session) {
+      navigate("/auth", { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, session, loading, isAuthStable, navigate]);
 
   const faqCategories: FaqCategory[] = useMemo(() => [
     {

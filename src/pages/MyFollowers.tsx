@@ -5,13 +5,14 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { ConnectionsTab } from "@/components/connections/ConnectionsTab";
 
 export default function MyFollowers() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) navigate("/auth");
-  }, [user, authLoading, navigate]);
+    if (!authLoading && isAuthStable && !user && !session) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, session, authLoading, isAuthStable, navigate]);
 
   if (authLoading) {
     return (

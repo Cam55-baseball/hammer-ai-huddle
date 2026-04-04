@@ -123,16 +123,17 @@ export default function Dashboard() {
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user && !session) {
-      navigate("/auth", { replace: true });
-      return;
+    if (!authLoading && isAuthStable) {
+      if (!user && !session) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+      if (user) {
+        refetch();
+        loadProgress();
+      }
     }
-    if (user) {
-      refetch();
-      loadProgress();
-    }
-  }, [authLoading, user, session, navigate]);
+  }, [authLoading, isAuthStable, user, session, navigate]);
   
   // Detect sport from subscribed modules if localStorage is empty
   useEffect(() => {

@@ -12,7 +12,7 @@ import { PickoffAnalysis } from '@/components/pickoff-trainer/PickoffAnalysis';
 type Phase = 'setup' | 'live' | 'summary' | 'analysis';
 
 const PickoffTrainer = () => {
-  const { user, loading } = useAuth();
+  const { user, session, loading, isAuthStable } = useAuth();
   const { sport } = useSportTheme();
   const { createSession, saving } = usePerformanceSession();
   const navigate = useNavigate();
@@ -23,6 +23,12 @@ const PickoffTrainer = () => {
   const [signalType, setSignalType] = useState<SignalType>('color');
   const [reps, setReps] = useState<PickoffRep[]>([]);
 
+  useEffect(() => {
+    if (!loading && isAuthStable && !user && !session) {
+      navigate("/auth", { replace: true });
+    }
+  }, [loading, isAuthStable, user, session, navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -30,7 +36,7 @@ const PickoffTrainer = () => {
       </div>
     );
   }
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return null;
   if (sport !== 'baseball') return <Navigate to="/dashboard" replace />;
 
   const handleStart = (b: string, c: string, st: SignalType) => {

@@ -7,14 +7,13 @@ import { useAuth } from "@/hooks/useAuth";
 
 const SelectUserRole = () => {
   const navigate = useNavigate();
-  const { user, loading, signOut } = useAuth();
+  const { user, session, loading, isAuthStable, signOut } = useAuth();
 
   useEffect(() => {
-    // Redirect to auth if not logged in
-    if (!loading && !user) {
-      navigate("/auth");
+    if (!loading && isAuthStable && !user && !session) {
+      navigate("/auth", { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, session, loading, isAuthStable, navigate]);
 
   const handleRoleSelect = (role: 'player' | 'scout') => {
     localStorage.setItem('userRole', role);

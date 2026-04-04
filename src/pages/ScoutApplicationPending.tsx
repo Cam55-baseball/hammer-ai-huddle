@@ -11,13 +11,14 @@ import { CheckCircle, XCircle, Clock } from "lucide-react";
 export default function ScoutApplicationPending() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const [status, setStatus] = useState<"pending" | "approved" | "rejected" | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
+    if (authLoading || !isAuthStable) return;
+    if (!user && !session) {
+      navigate("/auth", { replace: true });
       return;
     }
 
