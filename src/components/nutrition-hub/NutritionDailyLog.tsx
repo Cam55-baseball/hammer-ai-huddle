@@ -16,6 +16,8 @@ import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { GuidancePanel } from './GuidancePanel';
 import { CravingGuidance } from './CravingGuidance';
+import { useNutritionGuidance } from '@/hooks/useNutritionGuidance';
+import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
