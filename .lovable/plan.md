@@ -1,38 +1,85 @@
 
 
-# Trend Engine Truth Enforcement
+# Execute Data Integrity Migration + Pipeline Fixes
 
-## Current State (Already Partially Correct)
-- `useNutritionTrends` line 101: `if (!micros) continue` — null-micro logs already skipped from `dayMap`
-- Line 117: `if (days.length === 0) return null` — zero-micro scenario returns null
-- `NutritionTrendsCard` line 28: `if (!trends) return null` — card hidden entirely
+## Database State (PROVEN)
+- **156 rows**: `micros = '{}'` with `data_confidence = 'medium'` — CORRUPTED
+- **0 rows** in `unverified_foods` — pipeline never writes here
+- All 156 rows have `data_source = 'ai'`
 
-**Gap**: When zero micro data exists, the card silently disappears. This is inconsistent with the `useNutritionConsistency` pattern which returns `status: 'insufficient_data'`. The user wants explicit communication rather than silence.
+## Step 1: Database Migration (requires approval)
 
-## Changes
+```sql
+-- Fix 1: Convert empty object micros to null
+UPDATE vault_nutrition_logs
+SET micros = null
+WHERE micros::text = '{}';
 
-### 1. `src/hooks/useNutritionTrends.ts`
-- Add `status: 'active' | 'insufficient_data'` to the return type
-- Change line 117 from `return null` to return a structured object with `status: 'insufficient_data'`, empty arrays, and `daysAnalyzed: 0`
-- Add `status: 'active'` to the normal return object
+-- Fix 2: Force low confidence on null-micros rows
+UPDATE vault_nutrition_logs
+SET data_confidence = 'low'
+WHERE micros IS NULL;
+```
 
-### 2. `src/components/nutrition-hub/NutritionTrendsCard.tsx`
-- Update the guard (line 28) to check `trends.status === 'insufficient_data'`
-- When insufficient data: render the card shell with a single message: "Trend analysis unavailable — insufficient micronutrient data"
-- Keep the `daysAnalyzed < 3` guard to hide entirely when not enough logging days
-- When status is `insufficient_data`, do NOT render any %, deficiency, predictions, or nudges
+Expected: 156 rows updated in each statement.
 
-## Behavior After Fix
+## Step 2: Code Guard in `useMealVaultSync.ts`
 
-| Scenario | Before | After |
-|----------|--------|-------|
-| Zero micro data, 3+ log days | Card hidden (silent) | Card shows "Trend analysis unavailable" message |
-| Zero micro data, <3 log days | Card hidden | Card hidden (unchanged) |
-| Has micro data | Normal display | Normal display (unchanged) |
+Prevent future `{}` micros from being stored. Before the insert, add:
+
+```typescript
+// Guard: empty micros object → null
+const finalMicros = (microsComplete && hasMicrosData) ? aggregatedMicros : null;
+const finalConfidence = finalMicros ? dataConfidence : 'low';
+```
+
+Use `finalMicros` and `finalConfidence` in the insert instead of the inline expressions.
+
+## Step 3: Unverified Foods Pipeline in `useMealVaultSync.ts`
+
+After the vault insert succeeds, add a non-blocking side-effect:
+
+```typescript
+// Stage AI-sourced items in unverified_foods for review
+try {
+  const aiItems = meals.items.filter(i => i.source === 'ai' && i.micros);
+  if (aiItems.length > 0) {
+    const unverifiedInserts = aiItems.map(item => ({
+      food_name: item.name,
+      micros: item.micros,
+      serving_size: item.servingSize || '1 serving',
+      source: 'ai',
+      submitted_by: user.id,
+    }));
+    await supabase.from('unverified_foods').insert(unverifiedInserts);
+  }
+} catch (e) {
+  console.warn('Unverified foods staging failed (non-blocking):', e);
+}
+```
+
+## Step 4: Post-Migration Verification Queries
+
+```sql
+-- Must return 0
+SELECT COUNT(*) FROM vault_nutrition_logs WHERE micros::text = '{}';
+
+-- Must return 0
+SELECT COUNT(*) FROM vault_nutrition_logs WHERE micros IS NULL AND data_confidence != 'low';
+
+-- Sample corrected rows
+SELECT micros, data_confidence, meal_title FROM vault_nutrition_logs WHERE data_confidence = 'low' LIMIT 3;
+```
 
 ## Files Changed
+
 | File | Change |
 |------|--------|
-| `src/hooks/useNutritionTrends.ts` | Add `status` field, return structured insufficient_data object instead of null |
-| `src/components/nutrition-hub/NutritionTrendsCard.tsx` | Show explicit "unavailable" message for insufficient_data status |
+| DB migration | Clean 156 corrupted rows |
+| `src/hooks/useMealVaultSync.ts` | Add `{}` → `null` guard, force `low` confidence on null micros, add unverified_foods staging |
+
+## Execution Order
+1. Run migration (fix existing data)
+2. Apply code guards (prevent future corruption)
+3. Run verification queries (prove fix)
 
