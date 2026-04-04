@@ -108,6 +108,13 @@ export function NutritionDailyLog({
     fats: acc.fats + (meal.fatsG || 0),
   }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
 
+  const mealsWithMicros = meals.filter(m => m.micros && Object.keys(m.micros).length > 0).length;
+  const microCoverageColor = mealsWithMicros === meals.length
+    ? 'bg-emerald-500/10 text-emerald-600'
+    : mealsWithMicros === 0
+      ? 'bg-destructive/10 text-destructive'
+      : 'bg-amber-500/10 text-amber-600';
+
   return (
     <Card>
       <CardHeader className="pb-3">
