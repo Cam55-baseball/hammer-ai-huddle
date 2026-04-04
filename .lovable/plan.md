@@ -1,81 +1,82 @@
 
 
-# Fix: Auth State Flicker Causing Force-Redirects
+# Auth Stability — Stabilization Guard + Remaining Redirect Fixes
 
-## Root Cause
+## Problem
+1. **No stabilization window**: Even with `!user && !session`, a redirect can fire in the same render tick that `loading` flips to `false`, before React has committed the auth state.
+2. **5 pages still use `!user` alone** (no `session` check): `HelpDesk`, `SelectUserRole`, `MyFollowers`, `ScoutApplicationPending`, `SelectModules`, `Pricing`, `PickoffTrainer`.
+3. **Activity edit context**: Activities are edited via dialogs inside `GamePlanCard` on the Dashboard page — there are no separate `/game-plan/activity/:id` routes. The fix is ensuring the Dashboard itself never redirects during token refresh, which the stabilization guard solves.
 
-**`useAuth` is a standalone hook, not a context.** Each of the 206 call sites creates its own independent `useState` for `user`, `session`, and `loading`. When the Supabase token refreshes (on tab return, background→foreground, or periodic refresh), `onAuthStateChange` fires across all instances. Each instance independently transitions through `user=null` before settling back to the valid user.
+## Changes
 
-The Dashboard (line 127) watches `user` in a `useEffect` and immediately navigates to `/auth` when `user` is `null` — even during a transient token refresh cycle. This is the direct cause of both bugs.
+### 1. `src/contexts/AuthContext.tsx` — Add `isAuthStable` flag
 
-**Bug 1** (Edit activity → redirect): Opening the activity detail dialog triggers a re-render cascade. If a token refresh happens to coincide (Supabase refreshes tokens proactively), the Dashboard's `useEffect` catches the transient null and redirects.
+Add a derived `isAuthStable` boolean to the context. It starts `false` and becomes `true` one tick after `loading` becomes `false`:
 
-**Bug 2** (Tab switch → redirect): Returning to the tab triggers `TOKEN_REFRESHED`. The `onAuthStateChange` callback sets `user` to `session?.user ?? null`. If the callback fires with `event=TOKEN_REFRESHED` before the session is fully resolved, `user` flickers to `null`, triggering the redirect.
-
-## Fix Strategy
-
-### 1. Convert `useAuth` to a React Context (single source of truth)
-
-Create `src/contexts/AuthContext.tsx`:
-- One `onAuthStateChange` listener for the entire app
-- One `getSession()` call on mount
-- All 206 consumers read from context instead of maintaining independent state
-- No more state drift or flicker across components
-
-Update `src/hooks/useAuth.ts` to re-export from context (preserves all existing imports).
-
-### 2. Guard redirects against transient null states
-
-In `Dashboard.tsx` (and all other pages with auth redirects):
-- Add a `session` check alongside `user` — only redirect when `session === null` AND `loading === false`
-- Add a stabilization delay: do not redirect within the first render cycle after `loading` becomes `false`
-
-Specifically, change Dashboard line 125-133 from:
 ```typescript
-if (authLoading) return;
-if (!user) { navigate("/auth", { replace: true }); return; }
-```
-to:
-```typescript
-if (authLoading) return;
-if (!user && !session) { navigate("/auth", { replace: true }); return; }
+const [isAuthStable, setIsAuthStable] = useState(false);
+
+useEffect(() => {
+  if (!loading) {
+    const timeout = setTimeout(() => setIsAuthStable(true), 0);
+    return () => clearTimeout(timeout);
+  } else {
+    setIsAuthStable(false);
+  }
+}, [loading]);
 ```
 
-Apply same pattern to: `Profile.tsx`, `ProfileSetup.tsx`, `AnalyzeVideo.tsx`.
+Expose `isAuthStable` in the context type and provider value.
 
-### 3. Prevent token refresh from clearing user state
+### 2. All pages with auto-redirects — Use stabilized guard
 
-In the new AuthContext, handle `onAuthStateChange` more carefully:
+Every page that auto-redirects to `/auth` gets the same pattern:
+
 ```typescript
-onAuthStateChange((event, newSession) => {
-  if (event === 'TOKEN_REFRESHED' && !newSession) return; // skip transient null
-  if (event === 'SIGNED_OUT') { setUser(null); setSession(null); }
-  else { setSession(newSession); setUser(newSession?.user ?? null); }
-  setLoading(false);
-});
+const { user, session, loading, isAuthStable } = useAuth();
+
+useEffect(() => {
+  if (!loading && isAuthStable && !user && !session) {
+    navigate("/auth", { replace: true });
+  }
+}, [loading, isAuthStable, user, session, navigate]);
 ```
 
-### 4. React Query — already safe
-`refetchOnWindowFocus` is globally `false` in `App.tsx` (line 109). The two hooks that override it (`useDaySessions`, `useRecentSessions`) only refetch data — they don't trigger navigation. No changes needed.
+Pages to update:
 
-### 5. No visibility change handlers exist
-Confirmed: no `visibilitychange` or `window.focus/blur` listeners in the codebase. No changes needed.
+| Page | Current guard | Fix |
+|------|--------------|-----|
+| `Dashboard.tsx` | `!user && !session` | Add `isAuthStable` |
+| `Profile.tsx` | `!user && !session` | Add `isAuthStable` |
+| `ProfileSetup.tsx` | `!user && !session` | Add `isAuthStable` |
+| `AnalyzeVideo.tsx` | `!user && !session` | Add `isAuthStable` |
+| `HelpDesk.tsx` | `!user` only | Add `session` + `isAuthStable` |
+| `SelectUserRole.tsx` | `!user` only | Add `session` + `isAuthStable` |
+| `MyFollowers.tsx` | `!user` only | Add `session` + `isAuthStable` |
+| `ScoutApplicationPending.tsx` | `!user`, no loading guard | Add `loading` + `session` + `isAuthStable` |
+| `SelectModules.tsx` | `!user` only | Add `session` + `isAuthStable` |
+| `Pricing.tsx` | `!user` only | Add `session` + `isAuthStable` |
+| `PickoffTrainer.tsx` | `!user` (JSX Navigate) | Convert to `useEffect` guard with full pattern |
+
+### 3. Route persistence — Not applicable
+
+Activity editing uses dialogs within the Dashboard page, not separate routes. The stabilization guard on Dashboard is the fix — it prevents the Dashboard from unmounting (which would close dialogs) during token refresh. No URL-based activity routes or sessionStorage needed.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/contexts/AuthContext.tsx` | **New** — single auth state provider |
-| `src/hooks/useAuth.ts` | Rewrite to consume AuthContext (API unchanged) |
-| `src/App.tsx` | Wrap app in `AuthProvider` |
-| `src/pages/Dashboard.tsx` | Guard redirect with `session` check |
-| `src/pages/Profile.tsx` | Same guard |
-| `src/pages/ProfileSetup.tsx` | Same guard |
-| `src/pages/AnalyzeVideo.tsx` | Same guard |
-
-## What This Does NOT Do
-- No route structure changes
-- No new dependencies
-- No database changes
-- All 206 `useAuth()` call sites continue working without modification
+| `src/contexts/AuthContext.tsx` | Add `isAuthStable` state + expose in context |
+| `src/hooks/useAuth.ts` | Already re-exports context (no change needed) |
+| `src/pages/Dashboard.tsx` | Add `isAuthStable` to guard |
+| `src/pages/Profile.tsx` | Add `isAuthStable` to guard |
+| `src/pages/ProfileSetup.tsx` | Add `isAuthStable` to guard |
+| `src/pages/AnalyzeVideo.tsx` | Add `isAuthStable` to guard |
+| `src/pages/HelpDesk.tsx` | Add `session` + `isAuthStable` to guard |
+| `src/pages/SelectUserRole.tsx` | Add `session` + `isAuthStable` to guard |
+| `src/pages/MyFollowers.tsx` | Add `session` + `isAuthStable` to guard |
+| `src/pages/ScoutApplicationPending.tsx` | Add `loading` + `session` + `isAuthStable` to guard |
+| `src/pages/SelectModules.tsx` | Add `session` + `isAuthStable` to guard |
+| `src/pages/Pricing.tsx` | Add `session` + `isAuthStable` to guard |
+| `src/pages/PickoffTrainer.tsx` | Convert to `useEffect` guard with full pattern |
 
