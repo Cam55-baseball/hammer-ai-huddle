@@ -538,15 +538,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Restore dialog state from URL on mount
   useEffect(() => {
     if (loading) return;
-    const allTasks = [...tasks, ...customActivities, ...folderTasks.map(ft => ft as unknown as GamePlanTask)];
-    if (!allTasks.length) return;
-
     const params = new URLSearchParams(window.location.search);
     const activityId = params.get('activityId');
     const folderItemId = params.get('folderItemId');
+    const allGamePlanTasks = [...tasks, ...customActivities];
 
     if (activityId) {
-      const match = [...tasks, ...customActivities].find(t => t.id === activityId);
+      const match = allGamePlanTasks.find(t => t.id === activityId);
       if (match?.taskType === 'custom' && match.customActivityData) {
         setSelectedCustomTask(match);
         setDetailDialogOpen(true);
@@ -557,7 +555,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
 
     if (folderItemId) {
-      const match = [...tasks, ...customActivities].find(t => t.folderItemData?.itemId === folderItemId);
+      const match = allGamePlanTasks.find(t => t.folderItemData?.itemId === folderItemId);
       if (match?.folderItemData) {
         setSelectedFolderTask(match);
         setFolderLoggerOpen(true);
