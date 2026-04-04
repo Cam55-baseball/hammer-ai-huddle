@@ -307,7 +307,7 @@ export default function PracticeHub() {
       // Attach session to link state machine (handles bidirectional linking atomically)
       if (sessionConfig.link_code && result.id && user?.id) {
         try {
-          await supabase.rpc('attach_session_to_link', {
+          await supabase.rpc('attach_session_to_link' as any, {
             p_user_id: user.id,
             p_link_code: sessionConfig.link_code,
             p_session_id: result.id,

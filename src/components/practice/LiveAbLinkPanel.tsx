@@ -41,7 +41,7 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
     setLoading(true);
     try {
       const code = generateCode();
-      const { data: result, error } = await supabase.rpc('create_ab_link', {
+      const { data: result, error } = await supabase.rpc('create_ab_link' as any, {
         p_user_id: user.id,
         p_sport: sport || 'baseball',
         p_link_code: code,
