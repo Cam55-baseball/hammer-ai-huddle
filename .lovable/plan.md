@@ -1,42 +1,55 @@
 
 
-# Fix: Preview Authentication — Module Import Failure
+# Fix: Preview Module Import Failure After Sign-In
 
 ## Root Cause
 
-`src/pages/Auth.tsx` line 89 uses a **dynamic import** after sign-in:
-```typescript
-const { supabase } = await import("@/integrations/supabase/client");
+The failing URL from the runtime error is:
+```
+/node_modules/.vite/deps/chunk-ZMLY2J2T.js?v=0b4ef1c3
 ```
 
-In the preview environment, dynamic imports go through a proxy that can intermittently fail, producing the "Importing a module script failed" error. This kills the entire post-login flow (onboarding checks, navigation).
+This is a **Vite pre-bundled dependency chunk**, not a page file. When the user signs in and the app navigates to `/dashboard`, React Router triggers the lazy import for the Dashboard page. That page's dependency tree includes chunks from `.vite/deps/` that the preview proxy intermittently fails to serve (returning HTML or a network error instead of JS).
 
-The supabase client is already a static module used everywhere else in the app. There is no reason to dynamically import it here.
+The Auth page itself loads fine because its chunks were already fetched during initial page load. The problem is exclusively with chunks needed by pages loaded **after** navigation.
 
-## Fix
+## Fix — Static Import Critical Post-Auth Pages
 
-**File: `src/pages/Auth.tsx`**
+Convert `Dashboard` and `ScoutDashboard` from lazy to static imports. These are the two pages users land on after sign-in (based on role). Making them static ensures their entire dependency tree is resolved at initial page load — before auth ever completes.
 
-1. Add static import at the top of the file:
+All other pages remain lazy-loaded (they're navigated to from within the app after the initial load succeeds, which is more reliable).
+
+### `src/App.tsx`
+
+**1. Add static imports** (after existing imports, before `lazyWithRetry` definitions):
 ```typescript
-import { supabase } from "@/integrations/supabase/client";
+import Dashboard from "./pages/Dashboard";
+import ScoutDashboard from "./pages/ScoutDashboard";
 ```
 
-2. Remove the dynamic import on line 89:
+**2. Remove their lazy definitions** (delete lines 56 and 63):
 ```typescript
-// DELETE: const { supabase } = await import("@/integrations/supabase/client");
+// DELETE: const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+// DELETE: const ScoutDashboard = lazyWithRetry(() => import("./pages/ScoutDashboard"));
 ```
 
-The rest of the sign-in logic (the `Promise.all` with profile/subscription/role checks) remains unchanged — it just uses the already-imported `supabase` client directly.
+No route changes needed — the JSX references `<Dashboard />` and `<ScoutDashboard />` remain identical.
+
+## Why This Works
+- Static imports are resolved by Vite's module graph at page load time
+- All dependency chunks for Dashboard/ScoutDashboard load with the initial bundle
+- No dynamic fetch is needed after sign-in completes
+- Other lazy pages still benefit from code splitting (they load from already-warm connections)
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/Auth.tsx` | Replace dynamic `await import()` with static import of supabase client |
+| `src/App.tsx` | Static import Dashboard + ScoutDashboard, remove their `lazyWithRetry` definitions |
 
-## Impact
-- Eliminates the "Importing a module script failed" error in preview
-- Sign-in flow works end-to-end in both preview and production
-- Zero behavioral change — same queries, same routing logic
+## What This Does NOT Do
+- No new dependencies
+- No route changes
+- No auth logic changes
+- No Vite config changes
 
