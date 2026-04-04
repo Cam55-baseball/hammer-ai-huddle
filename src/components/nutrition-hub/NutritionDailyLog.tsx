@@ -14,6 +14,8 @@ import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
 import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
+import { useNutritionConsistency } from '@/hooks/useNutritionConsistency';
+import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import { toast } from 'sonner';
 
 interface NutritionDailyLogProps {

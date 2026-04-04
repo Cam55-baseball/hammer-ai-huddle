@@ -1,13 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle2, TrendingDown, Lightbulb } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, TrendingDown, Lightbulb, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import { useNutritionTrends } from '@/hooks/useNutritionTrends';
+import { useNutritionBaseline } from '@/hooks/useNutritionBaseline';
+import { useSuggestionLearning } from '@/hooks/useSuggestionLearning';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const RDA: Record<string, { amount: number; unit: string; label: string }> = {
   vitamin_a_mcg: { amount: 900, unit: 'mcg', label: 'Vitamin A' },
@@ -50,10 +53,12 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
   const { user } = useAuth();
   const { config } = usePerformanceMode();
   const { data: trendData } = useNutritionTrends(config.rdaMultiplier);
+  const { data: baseline } = useNutritionBaseline(config.rdaMultiplier);
+  const { getPersonalizedRanking, trackInteraction } = useSuggestionLearning();
   const dateStr = format(date || new Date(), 'yyyy-MM-dd');
 
   const { data: alerts } = useQuery({
-    queryKey: ['deficiencyAlerts', dateStr, user?.id, config.rdaMultiplier],
+    queryKey: ['deficiencyAlerts', dateStr, user?.id, config.rdaMultiplier, baseline?.adaptiveMultipliers],
     queryFn: async () => {
       if (!user) return null;
 
@@ -76,18 +81,30 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
 
       if (Object.keys(totals).length === 0) return null;
 
+      const adaptiveMultipliers = baseline?.adaptiveMultipliers || {};
+
       const alertItems = Object.entries(RDA).map(([key, rda]) => {
         const adjustedRda = rda.amount * config.rdaMultiplier;
         const current = totals[key] || 0;
         const percent = Math.round((current / adjustedRda) * 100);
         const level = getLevel(percent);
-        return { key, label: rda.label, percent, level, current: Math.round(current * 10) / 10, rda: adjustedRda, unit: rda.unit };
+        const priority = adaptiveMultipliers[key] || 1.0;
+        return { key, label: rda.label, percent, level, current: Math.round(current * 10) / 10, rda: adjustedRda, unit: rda.unit, priority };
       });
 
-      const issues = alertItems.filter(a => a.level === 'deficient' || a.level === 'low');
+      const issues = alertItems
+        .filter(a => a.level === 'deficient' || a.level === 'low')
+        .sort((a, b) => {
+          // Sort by severity × priority multiplier
+          const severityA = a.level === 'deficient' ? 2 : 1;
+          const severityB = b.level === 'deficient' ? 2 : 1;
+          return (severityB * b.priority) - (severityA * a.priority);
+        })
+        .slice(0, 2); // Priority engine: top 2 only
+
       if (issues.length === 0) return null;
 
-      // Fetch corrective food suggestions
+      // Fetch personalized food suggestions
       const issuesWithSuggestions = await Promise.all(
         issues.map(async (issue) => {
           try {
@@ -96,9 +113,13 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
               .select('*')
               .gt(issue.key, 0)
               .order(issue.key, { ascending: false })
-              .limit(3);
+              .limit(5);
 
-            const suggestions = (foods || []).map((f: any) => f.name);
+            const ranked = getPersonalizedRanking(
+              issue.key,
+              (foods || []).map((f: any) => ({ name: f.name, ...f }))
+            );
+            const suggestions = ranked.slice(0, 3).map((f: any) => f.name);
             return { ...issue, suggestions };
           } catch {
             return { ...issue, suggestions: [] as string[] };
@@ -117,12 +138,25 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
 
   if ((!alerts || alerts.length === 0) && predictedRisks.length === 0) return null;
 
+  const handleAccept = (nutrientKey: string, foodName: string) => {
+    trackInteraction(nutrientKey, foodName, 'accepted');
+  };
+
+  const handleDismiss = (nutrientKey: string, foodName: string) => {
+    trackInteraction(nutrientKey, foodName, 'dismissed');
+  };
+
   return (
     <Card>
       <CardContent className="p-4 space-y-2">
         <p className="text-sm font-semibold flex items-center gap-1.5">
           <TrendingDown className="h-4 w-4 text-amber-500" />
           {t('nutrition.deficiencyAlerts', 'Nutrient Alerts')}
+          {baseline && (
+            <span className="text-[10px] font-normal text-muted-foreground ml-auto">
+              Personalized
+            </span>
+          )}
         </p>
 
         {/* Current day alerts */}
@@ -140,16 +174,39 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
                         <CheckCircle2 className="h-3 w-3 opacity-50" />
                       )}
                       {item.label}
+                      {(item as any).priority > 1 && (
+                        <span className="text-[9px] bg-amber-500/20 px-1 rounded">priority</span>
+                      )}
                     </span>
                     <span className={cn('font-semibold', cfg.color)}>
                       {item.percent}% RDA ({item.current}{item.unit})
                     </span>
                   </div>
                   {item.suggestions && item.suggestions.length > 0 && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <Lightbulb className="h-2.5 w-2.5 text-amber-500 shrink-0" />
-                      Try: {item.suggestions.join(', ')}
-                    </p>
+                    <div className="mt-1 space-y-0.5">
+                      {item.suggestions.map((food, idx) => (
+                        <div key={idx} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <Lightbulb className="h-2.5 w-2.5 text-amber-500 shrink-0" />
+                          <span className="flex-1 truncate">{food}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 p-0"
+                            onClick={() => handleAccept(item.key, food)}
+                          >
+                            <Check className="h-2.5 w-2.5 text-emerald-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 p-0"
+                            onClick={() => handleDismiss(item.key, food)}
+                          >
+                            <X className="h-2.5 w-2.5 text-muted-foreground" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               );
