@@ -200,8 +200,13 @@ export function usePerformanceSession() {
         });
       }
 
-      // Invalidate recent sessions
-      queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
+      // Broad invalidation of all analytics keys after session save
+      const analyticsKeys = [
+        ['recent-sessions'], ['day-sessions'], ['calendar'],
+        ['hie-snapshot'], ['progressive-gate'], ['delta-analytics'],
+        ['split-analytics-composites'], ['fatigue-state'], ['latest-session-ts'],
+      ];
+      analyticsKeys.forEach(key => queryClient.invalidateQueries({ queryKey: key }));
 
       toast({ title: 'Session saved', description: 'Your practice session has been recorded.' });
       return session;

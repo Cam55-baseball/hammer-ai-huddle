@@ -60,6 +60,7 @@ export function useHIESnapshot() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const autoRefreshTriggered = useRef(false);
+  const reconciliationTriggered = useRef(false);
 
   const query = useQuery({
     queryKey: ['hie-snapshot', user?.id],
@@ -88,6 +89,26 @@ export function useHIESnapshot() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // ── LATEST SESSION TIMESTAMP ──
+  const latestSessionQuery = useQuery({
+    queryKey: ['latest-session-ts', user?.id],
+    queryFn: async (): Promise<string | null> => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('performance_sessions')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.created_at ?? null;
+    },
+    enabled: !!user,
+    staleTime: 30 * 1000,
+  });
+
   const refreshMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
@@ -107,12 +128,31 @@ export function useHIESnapshot() {
     },
   });
 
-  // ── STALE DATA AUTO-REFRESH ──
-  // If snapshot is older than 24 hours, auto-trigger refresh once
+  // ── SESSION-AWARE RECONCILIATION ──
+  // If latest session is newer than snapshot computed_at by >10s, auto-refresh
+  useEffect(() => {
+    if (!query.data || !latestSessionQuery.data || reconciliationTriggered.current || refreshMutation.isPending) return;
+    const computedAt = new Date(query.data.computed_at).getTime();
+    const latestSession = new Date(latestSessionQuery.data).getTime();
+    const drift = latestSession - computedAt;
+    if (drift > 10_000) {
+      reconciliationTriggered.current = true;
+      refreshMutation.mutate();
+    }
+  }, [query.data, latestSessionQuery.data]);
+
+  // Reset reconciliation flag when snapshot updates
+  useEffect(() => {
+    if (query.data) {
+      reconciliationTriggered.current = false;
+    }
+  }, [query.data?.computed_at]);
+
+  // ── STALE DATA AUTO-REFRESH (24h fallback) ──
   useEffect(() => {
     if (!query.data || autoRefreshTriggered.current || refreshMutation.isPending) return;
     const computedAt = new Date(query.data.computed_at).getTime();
-    const staleThreshold = 24 * 60 * 60 * 1000; // 24 hours
+    const staleThreshold = 24 * 60 * 60 * 1000;
     if (Date.now() - computedAt > staleThreshold) {
       autoRefreshTriggered.current = true;
       refreshMutation.mutate();
@@ -129,5 +169,6 @@ export function useHIESnapshot() {
     refreshAnalysis: refreshMutation.mutate,
     isRefreshing: refreshMutation.isPending,
     isStale,
+    computedAt: query.data?.computed_at ?? null,
   };
 }

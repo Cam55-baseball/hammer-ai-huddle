@@ -11,6 +11,7 @@ import { Menu, ShoppingBag, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHydrationReminders } from "@/hooks/useHydrationReminders";
+import { useUnifiedDataSync } from "@/hooks/useUnifiedDataSync";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -87,6 +88,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Initialize hydration reminders globally so they work across all pages
   useHydrationReminders();
+  // Cross-module realtime sync for all dashboard pages
+  useUnifiedDataSync();
 
   useEffect(() => {
     const fetchTutorialStatus = async () => {
