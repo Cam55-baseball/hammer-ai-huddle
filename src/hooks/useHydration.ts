@@ -10,6 +10,8 @@ export interface HydrationLog {
   amount_oz: number;
   log_date: string;
   logged_at: string;
+  liquid_type?: string;
+  quality_class?: string;
 }
 
 export interface HydrationSettings {
