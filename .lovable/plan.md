@@ -1,69 +1,81 @@
 
 
-# Performance Habit Engine — Final Signal Discipline
+# Fix: Auth State Flicker Causing Force-Redirects
 
-## Problem
-Current implementation has two issues:
-1. Streak badge renders as a separate line but is not counted toward the 3-line budget
-2. Identity does NOT override reward — both can appear simultaneously when streak ≥3
-3. The return logic has a confusing fallback (`finalProgression ?? (finalIdentity ? null : progression)`) that can leak signals
+## Root Cause
 
-## Changes
+**`useAuth` is a standalone hook, not a context.** Each of the 206 call sites creates its own independent `useState` for `user`, `session`, and `loading`. When the Supabase token refreshes (on tab return, background→foreground, or periodic refresh), `onAuthStateChange` fires across all instances. Each instance independently transitions through `user=null` before settling back to the valid user.
 
-### 1. `src/hooks/useNutritionFeedback.ts` — Enforce strict priority stack
+The Dashboard (line 127) watches `user` in a `useEffect` and immediately navigates to `/auth` when `user` is `null` — even during a transient token refresh cycle. This is the direct cause of both bugs.
 
-Replace the signal selection logic (lines 232-245) with four exclusive cases:
+**Bug 1** (Edit activity → redirect): Opening the activity detail dialog triggers a re-render cascade. If a token refresh happens to coincide (Supabase refreshes tokens proactively), the Dashboard's `useEffect` catches the transient null and redirects.
 
-**CASE C — Streak ≥3 (Identity overrides all):**
-- `reward = null` (suppressed)
-- `progression = null` (suppressed)
-- `nudge = null` (suppressed)
-- `identityFrame = computed value`
-- `goal = computed value`
-- Streak badge + Identity + Goal = 3 lines
+**Bug 2** (Tab switch → redirect): Returning to the tab triggers `TOKEN_REFRESHED`. The `onAuthStateChange` callback sets `user` to `session?.user ?? null`. If the callback fires with `event=TOKEN_REFRESHED` before the session is fully resolved, `user` flickers to `null`, triggering the redirect.
 
-**CASE A — Improvement, no streak:**
-- `reward = computed`
-- `nudge = 'Strong correction — keep this pattern'`
-- `progression = computed (if exists)`
-- `identityFrame = null`
-- Lines: Reward + Progression (if exists) + Goal = max 3
+## Fix Strategy
 
-**CASE B — No improvement, no streak:**
-- `reward = null`
-- `nudge = computed`
-- `progression = null` (no reward means no progression worth showing)
-- `identityFrame = null`
-- Lines: Nudge + Goal = 2
+### 1. Convert `useAuth` to a React Context (single source of truth)
 
-**CASE D — Zero data:**
-- Single goal line only (already implemented)
+Create `src/contexts/AuthContext.tsx`:
+- One `onAuthStateChange` listener for the entire app
+- One `getSession()` call on mount
+- All 206 consumers read from context instead of maintaining independent state
+- No more state drift or flicker across components
 
-Also suppress nudge in CASE A — reward IS the emotional signal, nudge is redundant.
+Update `src/hooks/useAuth.ts` to re-export from context (preserves all existing imports).
 
-### 2. `src/components/nutrition-hub/NutritionFeedbackStrip.tsx` — Streak counts as line 1
+### 2. Guard redirects against transient null states
 
-Restructure rendering to enforce strict 3-line max where streak badge IS line 1 when active:
+In `Dashboard.tsx` (and all other pages with auth redirects):
+- Add a `session` check alongside `user` — only redirect when `session === null` AND `loading === false`
+- Add a stabilization delay: do not redirect within the first render cycle after `loading` becomes `false`
 
-**When streak ≥3 (CASE C):**
-- Line 1: Streak badge (🔥 X-day streak)
-- Line 2: Identity frame (✦ italic)
-- Line 3: Goal (◎)
+Specifically, change Dashboard line 125-133 from:
+```typescript
+if (authLoading) return;
+if (!user) { navigate("/auth", { replace: true }); return; }
+```
+to:
+```typescript
+if (authLoading) return;
+if (!user && !session) { navigate("/auth", { replace: true }); return; }
+```
 
-**When reward exists (CASE A):**
-- Line 1: Reward (✓ green)
-- Line 2: Progression (↑ if exists, otherwise omitted)
-- Line 3: Goal (◎)
+Apply same pattern to: `Profile.tsx`, `ProfileSetup.tsx`, `AnalyzeVideo.tsx`.
 
-**When no improvement (CASE B):**
-- Line 1: Nudge (⚠)
-- Line 2: Goal (◎)
+### 3. Prevent token refresh from clearing user state
 
-Remove the separate streak badge block that currently renders independently above the signal lines.
+In the new AuthContext, handle `onAuthStateChange` more carefully:
+```typescript
+onAuthStateChange((event, newSession) => {
+  if (event === 'TOKEN_REFRESHED' && !newSession) return; // skip transient null
+  if (event === 'SIGNED_OUT') { setUser(null); setSession(null); }
+  else { setSession(newSession); setUser(newSession?.user ?? null); }
+  setLoading(false);
+});
+```
+
+### 4. React Query — already safe
+`refetchOnWindowFocus` is globally `false` in `App.tsx` (line 109). The two hooks that override it (`useDaySessions`, `useRecentSessions`) only refetch data — they don't trigger navigation. No changes needed.
+
+### 5. No visibility change handlers exist
+Confirmed: no `visibilitychange` or `window.focus/blur` listeners in the codebase. No changes needed.
 
 ## Files Changed
+
 | File | Change |
 |------|--------|
-| `src/hooks/useNutritionFeedback.ts` | Replace signal selection with 4 exclusive cases |
-| `src/components/nutrition-hub/NutritionFeedbackStrip.tsx` | Streak as line 1, strict 3-line rendering |
+| `src/contexts/AuthContext.tsx` | **New** — single auth state provider |
+| `src/hooks/useAuth.ts` | Rewrite to consume AuthContext (API unchanged) |
+| `src/App.tsx` | Wrap app in `AuthProvider` |
+| `src/pages/Dashboard.tsx` | Guard redirect with `session` check |
+| `src/pages/Profile.tsx` | Same guard |
+| `src/pages/ProfileSetup.tsx` | Same guard |
+| `src/pages/AnalyzeVideo.tsx` | Same guard |
+
+## What This Does NOT Do
+- No route structure changes
+- No new dependencies
+- No database changes
+- All 206 `useAuth()` call sites continue working without modification
 
