@@ -147,8 +147,14 @@ export function useHydration() {
   }, [user, settings, todayTotal, dailyGoal]);
 
   // Add water
-  const addWater = useCallback(async (amount: number, liquidType?: string, qualityClass?: string): Promise<boolean> => {
+  const addWater = useCallback(async (amount: number, liquidType: string, qualityClass: string): Promise<boolean> => {
     if (!user) return false;
+
+    if (!liquidType || !qualityClass) {
+      console.error('addWater: liquidType and qualityClass are required');
+      toast.error('Liquid classification is required');
+      return false;
+    }
 
     try {
       const { error } = await supabase
@@ -157,8 +163,8 @@ export function useHydration() {
           user_id: user.id,
           amount_oz: amount,
           log_date: today,
-          liquid_type: liquidType || 'water',
-          quality_class: qualityClass || 'quality',
+          liquid_type: liquidType,
+          quality_class: qualityClass,
         } as any);
 
       if (error) throw error;
