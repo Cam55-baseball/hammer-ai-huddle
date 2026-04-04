@@ -115,6 +115,10 @@ export function NutritionDailyLog({
 
   const mealsWithMicros = meals.filter(m => m.micros && Object.keys(m.micros).length > 0).length;
 
+  // Get guidance data for limiting factor keys
+  const { data: guidanceData } = useNutritionGuidance(currentDate, config.rdaMultiplier);
+  const limitingFactorKeys = guidanceData?.limitingFactors.map(f => f.key) || [];
+
   // Aggregate confidence
   const confidenceLevels = meals.map(m => m.dataConfidence || 'low');
   const allHigh = confidenceLevels.every(c => c === 'high');
