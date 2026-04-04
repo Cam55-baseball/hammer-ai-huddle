@@ -57,7 +57,7 @@ export interface HIESnapshot {
 export function useHIESnapshot() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const reconciliationTriggered = useRef(false);
+  const lastInvalidationRef = useRef(0);
 
   const query = useQuery({
     queryKey: ['hie-snapshot', user?.id],
@@ -106,34 +106,55 @@ export function useHIESnapshot() {
     staleTime: 30 * 1000,
   });
 
-  // ── SESSION-AWARE RECONCILIATION (invalidation only, never compute) ──
+  // ── SESSION-AWARE RECONCILIATION (cooldown + visibility + online guards) ──
   useEffect(() => {
-    if (!query.data || !latestSessionQuery.data || reconciliationTriggered.current) return;
+    if (!query.data || !latestSessionQuery.data) return;
+    if (document.visibilityState !== 'visible') return;
+    if (!navigator.onLine) return;
+
+    const now = Date.now();
+    if (now - lastInvalidationRef.current < 5000) return;
+
     const computedAt = new Date(query.data.computed_at).getTime();
     const latestSession = new Date(latestSessionQuery.data).getTime();
-    const drift = latestSession - computedAt;
-    if (drift > 10_000) {
-      reconciliationTriggered.current = true;
+
+    if (latestSession > computedAt + 10_000) {
+      lastInvalidationRef.current = now;
       queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
     }
   }, [query.data, latestSessionQuery.data, queryClient, user?.id]);
 
-  // Reset reconciliation flag when fetch completes (prevents deadlock on network failure)
-  useEffect(() => {
-    if (!query.isFetching) {
-      reconciliationTriggered.current = false;
-    }
-  }, [query.isFetching]);
-
   // ── STALE DATA AUTO-REFRESH (24h fallback — invalidation only) ──
   useEffect(() => {
     if (!query.data) return;
+    if (!navigator.onLine) return;
+
     const computedAt = new Date(query.data.computed_at).getTime();
     const staleThreshold = 24 * 60 * 60 * 1000;
     if (Date.now() - computedAt > staleThreshold) {
       queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
     }
   }, [query.data, queryClient, user?.id]);
+
+  // ── RESUME TRIGGERS (visibilitychange + online) ──
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
+      }
+    };
+    const handleOnline = () => {
+      queryClient.invalidateQueries({ queryKey: ['hie-snapshot', user?.id] });
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [queryClient, user?.id]);
 
   const isStale = query.data
     ? Date.now() - new Date(query.data.computed_at).getTime() > 24 * 60 * 60 * 1000

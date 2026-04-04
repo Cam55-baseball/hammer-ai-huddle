@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth';
  * When data changes in one table, these related queries should be invalidated
  */
 const TABLE_QUERY_MAPPINGS: Record<string, string[][]> = {
-  // Check-in data affects recommendations, game plan, nutrition
   'vault_focus_quizzes': [
     ['gamePlan'],
     ['workoutRecommendations'],
@@ -16,128 +15,100 @@ const TABLE_QUERY_MAPPINGS: Record<string, string[][]> = {
     ['recoveryStatus'],
     ['dailyReadiness'],
   ],
-  
-  // Workout notes affect vault, recap readiness
   'vault_workout_notes': [
     ['vaultWorkouts'],
     ['recapProgress'],
     ['trainingVolume'],
   ],
-  
-  // Nutrition affects energy predictions, recovery
   'vault_nutrition_logs': [
     ['nutritionLogs'],
     ['nutritionTargets'],
     ['dailyEnergy'],
     ['macroProgress'],
   ],
-  
-  // Weight entries affect body composition, nutrition targets
   'weight_entries': [
     ['weightHistory'],
     ['bodyComposition'],
     ['nutritionTargets'],
     ['tdeeCalculation'],
   ],
-  
-  // Custom activities affect game plan, recap
   'custom_activity_logs': [
     ['gamePlan'],
     ['customActivities'],
     ['recapProgress'],
     ['trainingVolume'],
   ],
-  
-  // Tex Vision affects visual training stats
   'tex_vision_drill_results': [
     ['texVisionProgress'],
     ['texVisionMetrics'],
     ['recapProgress'],
   ],
-  
-  // Video analysis affects skill progression
   'videos': [
     ['videoAnalysis'],
     ['skillProgression'],
     ['recapProgress'],
   ],
-  
-  // Mind Fuel affects mental readiness
   'mindfulness_sessions': [
     ['mindFuelProgress'],
     ['mentalReadiness'],
     ['recapProgress'],
   ],
-  
   'emotion_tracking': [
     ['emotionHistory'],
     ['mentalReadiness'],
     ['recapProgress'],
   ],
-  
   'mental_health_journal': [
     ['journalEntries'],
     ['mentalReadiness'],
     ['mindFuelProgress'],
   ],
-  
-  // Hydration affects recovery predictions
   'hydration_logs': [
     ['hydrationProgress'],
     ['dailyHydration'],
     ['recoveryStatus'],
   ],
-  
-  // Program progress affects game plan
   'sub_module_progress': [
     ['programProgress'],
     ['gamePlan'],
     ['trainingVolume'],
   ],
-  
-  // Stress assessments affect recovery recommendations
   'stress_assessments': [
     ['stressHistory'],
     ['mentalReadiness'],
     ['recoveryStatus'],
   ],
-  
-  // Skip settings affect game plan display
   'calendar_skipped_items': [
     ['gamePlan'],
     ['calendarEvents'],
     ['customActivities'],
   ],
-
-  // Physio reports affect badges and banners
   'physio_daily_reports': [
     ['physioDailyReport'],
     ['physioGamePlanBadges'],
   ],
-
-  // Physio profile affects badges and adult tracking
   'physio_health_profiles': [
     ['physioProfile'],
     ['physioGamePlanBadges'],
   ],
-
-  // Adult tracking
   'physio_adult_tracking': [
     ['physioAdultTracking'],
   ],
-
-  // Performance sessions affect all analytics
   'performance_sessions': [
     ['hie-snapshot'], ['progressive-gate'], ['delta-analytics'],
     ['recent-sessions'], ['day-sessions'], ['fatigue-state'], ['calendar'],
     ['split-analytics-composites'], ['latest-session-ts'],
   ],
-
-  // HIE snapshots affect dashboard analytics
   'hie_snapshots': [
     ['hie-snapshot'], ['progressive-gate'], ['delta-analytics'],
   ],
 };
+
+const CRITICAL_KEYS: string[][] = [
+  ['hie-snapshot'],
+  ['recent-sessions'],
+  ['fatigue-state'],
+];
 
 interface UseUnifiedDataSyncOptions {
   enabled?: boolean;
@@ -153,18 +124,42 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const lastEventRef = useRef<{ table: string; eventType: string; rowId: string; ts: number }>({ table: '', eventType: '', rowId: '', ts: 0 });
+  const lastEventMapRef = useRef<Map<string, number>>(new Map());
   const reconnectAttemptRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+
+  // ── PER-ROW DEDUP ──
+  const shouldProcessEvent = useCallback((table: string, eventType: string, rowId: string): boolean => {
+    const key = `${table}:${eventType}:${rowId}`;
+    const now = Date.now();
+    const last = lastEventMapRef.current.get(key);
+    if (last && now - last < 500) return false;
+    lastEventMapRef.current.set(key, now);
+    if (lastEventMapRef.current.size > 1000) {
+      lastEventMapRef.current.clear();
+    }
+    return true;
+  }, []);
+
+  // ── BROADCAST TO OTHER TABS ──
+  const broadcastInvalidate = useCallback((queryKey: string[]) => {
+    try {
+      broadcastChannelRef.current?.postMessage({ type: 'invalidate', key: queryKey });
+    } catch {
+      // BroadcastChannel may be closed
+    }
+  }, []);
 
   const invalidateRelatedQueries = useCallback((tableName: string) => {
     const relatedQueryKeys = TABLE_QUERY_MAPPINGS[tableName];
     if (relatedQueryKeys) {
       relatedQueryKeys.forEach(queryKey => {
         queryClient.invalidateQueries({ queryKey });
+        broadcastInvalidate(queryKey);
       });
     }
-  }, [queryClient]);
+  }, [queryClient, broadcastInvalidate]);
 
   const handleDatabaseChange = useCallback((payload: {
     eventType: string;
@@ -173,26 +168,16 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
     old: any;
   }) => {
     const { table } = payload;
-
-    // 500ms deduplication guard — granular by (table, eventType, rowId)
     const rowId = payload.new?.id || payload.old?.id || '';
-    const now = Date.now();
-    if (
-      lastEventRef.current.table === table &&
-      lastEventRef.current.eventType === payload.eventType &&
-      lastEventRef.current.rowId === rowId &&
-      now - lastEventRef.current.ts < 500
-    ) {
-      return;
-    }
-    lastEventRef.current = { table, eventType: payload.eventType, rowId, ts: now };
+
+    if (!shouldProcessEvent(table, payload.eventType, rowId)) return;
 
     invalidateRelatedQueries(table);
 
     if (onDataChange) {
       onDataChange(table, payload);
     }
-  }, [invalidateRelatedQueries, onDataChange]);
+  }, [shouldProcessEvent, invalidateRelatedQueries, onDataChange]);
 
   const setupChannel = useCallback(() => {
     if (!user) return null;
@@ -226,14 +211,15 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
     const MAX_ATTEMPTS = 5;
     if (reconnectAttemptRef.current >= MAX_ATTEMPTS) {
       console.warn('[UnifiedDataSync] Max reconnect attempts reached, invalidating critical keys');
-      queryClient.invalidateQueries({ queryKey: ['hie-snapshot'] });
-      queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['fatigue-state'] });
+      CRITICAL_KEYS.forEach(key => {
+        queryClient.invalidateQueries({ queryKey: key });
+        broadcastInvalidate(key);
+      });
       reconnectAttemptRef.current = 0;
       return;
     }
 
-    const delay = Math.pow(2, reconnectAttemptRef.current) * 1000; // 1s, 2s, 4s, 8s, 16s
+    const delay = Math.pow(2, reconnectAttemptRef.current) * 1000;
     reconnectAttemptRef.current += 1;
 
     reconnectTimerRef.current = setTimeout(() => {
@@ -246,6 +232,10 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
           if (status === 'SUBSCRIBED') {
             console.log('[UnifiedDataSync] Reconnected successfully');
             reconnectAttemptRef.current = 0;
+            if (reconnectTimerRef.current) {
+              clearTimeout(reconnectTimerRef.current);
+              reconnectTimerRef.current = null;
+            }
           } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
             attemptReconnect();
           }
@@ -253,8 +243,9 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
         channelRef.current = newChannel;
       }
     }, delay);
-  }, [setupChannel, queryClient]);
+  }, [setupChannel, queryClient, broadcastInvalidate]);
 
+  // ── MAIN REALTIME SUBSCRIPTION ──
   useEffect(() => {
     if (!user || !enabled) return;
 
@@ -284,6 +275,26 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
       }
     };
   }, [user, enabled, setupChannel, attemptReconnect]);
+
+  // ── MULTI-TAB BROADCAST CHANNEL ──
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+
+    const bc = new BroadcastChannel('data-sync');
+    broadcastChannelRef.current = bc;
+
+    bc.onmessage = (event) => {
+      if (event.data?.type === 'invalidate' && Array.isArray(event.data.key)) {
+        queryClient.invalidateQueries({ queryKey: event.data.key });
+      }
+    };
+
+    return () => {
+      bc.close();
+      broadcastChannelRef.current = null;
+    };
+  }, [queryClient]);
+
   // Manual invalidation methods for imperative use
   const invalidateModule = useCallback((module: 'gamePlan' | 'nutrition' | 'vault' | 'texVision' | 'mindFuel' | 'all') => {
     const moduleQueryKeys: Record<string, string[][]> = {
@@ -292,7 +303,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
       vault: [['vaultWorkouts'], ['recapProgress'], ['weightHistory'], ['bodyComposition']],
       texVision: [['texVisionProgress'], ['texVisionMetrics']],
       mindFuel: [['mindFuelProgress'], ['mentalReadiness'], ['emotionHistory'], ['journalEntries']],
-      all: [], // Will invalidate everything
+      all: [],
     };
 
     if (module === 'all') {
@@ -317,18 +328,13 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
 
 /**
  * Hook for checking cross-system recovery status
- * Aggregates data from multiple modules to determine overall recovery state
  */
 export function useRecoveryStatus() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const getRecoveryStatus = useCallback(async () => {
     if (!user) return null;
 
-    const today = new Date().toISOString().split('T')[0];
-
-    // Fetch latest check-in data
     const { data: latestQuiz } = await supabase
       .from('vault_focus_quizzes')
       .select('sleep_quality, stress_level, pain_location, pain_scales, physical_readiness, perceived_recovery')
@@ -357,7 +363,6 @@ export function useRecoveryStatus() {
     const physicalReadiness = latestQuiz.physical_readiness || 3;
     const perceivedRecovery = latestQuiz.perceived_recovery || 3;
 
-    // Determine if recovery should be recommended
     let suggestRecovery = false;
     let reason: string | null = null;
 
@@ -378,7 +383,6 @@ export function useRecoveryStatus() {
       reason = 'low_recovery';
     }
 
-    // Calculate average pain if scales exist
     let avgPainLevel = 0;
     if (painScales && Object.keys(painScales).length > 0) {
       avgPainLevel = Object.values(painScales).reduce((sum, v) => sum + v, 0) / Object.keys(painScales).length;
