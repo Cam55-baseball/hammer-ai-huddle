@@ -128,9 +128,11 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const reconnectAttemptRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
+  const tabIdRef = useRef(crypto.randomUUID());
 
   // ── PER-ROW DEDUP ──
   const shouldProcessEvent = useCallback((table: string, eventType: string, rowId: string): boolean => {
+    if (!rowId) return true;
     const key = `${table}:${eventType}:${rowId}`;
     const now = Date.now();
     const last = lastEventMapRef.current.get(key);
@@ -145,7 +147,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   // ── BROADCAST TO OTHER TABS ──
   const broadcastInvalidate = useCallback((queryKey: string[]) => {
     try {
-      broadcastChannelRef.current?.postMessage({ type: 'invalidate', key: queryKey });
+      broadcastChannelRef.current?.postMessage({ type: 'invalidate', key: queryKey, source: tabIdRef.current });
     } catch {
       // BroadcastChannel may be closed
     }
@@ -284,6 +286,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
     broadcastChannelRef.current = bc;
 
     bc.onmessage = (event) => {
+      if (event.data?.source === tabIdRef.current) return;
       if (event.data?.type === 'invalidate' && Array.isArray(event.data.key)) {
         queryClient.invalidateQueries({ queryKey: event.data.key });
       }
