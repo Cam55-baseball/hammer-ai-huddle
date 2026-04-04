@@ -215,11 +215,27 @@ export function useMealVaultSync() {
         const aiItems = meals.items.filter(i => i.source === 'ai' && i.micros && Object.keys(i.micros).length > 0);
         if (aiItems.length > 0) {
           const unverifiedInserts = aiItems.map(item => ({
-            food_name: item.name,
-            micros: item.micros,
+            name: item.name,
+            calories_per_serving: item.calories || null,
+            protein_g: item.protein || null,
+            carbs_g: item.carbs || null,
+            fats_g: item.fats || null,
             serving_size: (item as any).servingSize || '1 serving',
+            confidence_level: item.confidence || 'medium',
             source: 'ai',
-            submitted_by: user.id,
+            vitamin_a_mcg: item.micros?.vitamin_a_mcg ?? null,
+            vitamin_c_mg: item.micros?.vitamin_c_mg ?? null,
+            vitamin_d_mcg: item.micros?.vitamin_d_mcg ?? null,
+            vitamin_e_mg: item.micros?.vitamin_e_mg ?? null,
+            vitamin_k_mcg: item.micros?.vitamin_k_mcg ?? null,
+            vitamin_b6_mg: item.micros?.vitamin_b6_mg ?? null,
+            vitamin_b12_mcg: item.micros?.vitamin_b12_mcg ?? null,
+            folate_mcg: item.micros?.folate_mcg ?? null,
+            calcium_mg: item.micros?.calcium_mg ?? null,
+            iron_mg: item.micros?.iron_mg ?? null,
+            magnesium_mg: item.micros?.magnesium_mg ?? null,
+            potassium_mg: item.micros?.potassium_mg ?? null,
+            zinc_mg: item.micros?.zinc_mg ?? null,
           }));
           await supabase.from('unverified_foods').insert(unverifiedInserts as any);
         }
