@@ -2018,7 +2018,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       {/* Custom Activity Detail Dialog */}
       <CustomActivityDetailDialog
         open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
+        onOpenChange={handleDetailClose}
         task={selectedCustomTask}
         taskTime={selectedCustomTask ? taskTimes[selectedCustomTask.id] || null : null}
         taskReminder={selectedCustomTask ? taskReminders[selectedCustomTask.id] || null : null}
