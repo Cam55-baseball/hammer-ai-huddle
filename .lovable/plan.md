@@ -1,99 +1,69 @@
 
 
-# User Lock-In Layer — Performance Habit Engine
+# Performance Habit Engine — Final Signal Discipline
 
-## Summary
-Add a lightweight behavioral feedback system that rewards real nutrient improvements, tracks micro-coverage streaks, shows daily micro-goals, and provides context-aware identity framing — all derived from existing data. No new tables, no fake signals.
+## Problem
+Current implementation has two issues:
+1. Streak badge renders as a separate line but is not counted toward the 3-line budget
+2. Identity does NOT override reward — both can appear simultaneously when streak ≥3
+3. The return logic has a confusing fallback (`finalProgression ?? (finalIdentity ? null : progression)`) that can leak signals
 
-## Architecture
-All new components are pure read-only consumers of existing `vault_nutrition_logs` and guidance data. One new hook (`useNutritionFeedback`) aggregates all signals and enforces the "max 1 nudge + 1 reward + 1 goal" noise rule.
+## Changes
 
-## New Files
+### 1. `src/hooks/useNutritionFeedback.ts` — Enforce strict priority stack
 
-### 1. `src/hooks/useNutritionFeedback.ts` — Central Feedback Engine
-Single hook that computes all behavioral signals from existing data:
+Replace the signal selection logic (lines 232-245) with four exclusive cases:
 
-- **Action→Reward**: Compares current day's micro totals against state *before* the latest meal. If a limiting nutrient improved, emits a reward signal: `{ nutrient: 'Calcium', deltaPercent: 19, scoreGain: 2.1, outcome: 'recovery potential improved' }`.
-- **Micro-Progression**: Computes today vs yesterday micro coverage delta. Only emits when positive change exists.
-- **Consistency Streak**: Counts consecutive days with ≥50% micro coverage (≥7/13 nutrients above 50% RDA). Reads from `vault_nutrition_logs` for last 14 days. Resets on zero-micro day.
-- **Identity Frame**: Emits 1 identity line when streak ≥3 or score ≥70. Pool of 4 rotating messages keyed to `dateStr` for determinism. No fake praise — threshold-gated.
-- **Smart Nudge**: State-aware, single nudge (replaces static nudges in GuidancePanel):
-  - If nutrient improved this session → "Strong correction — keep this pattern"
-  - If latest meal has no micros → "Low micronutrient density — consider adding one high-impact food"
-  - If streak about to break (1 day gap) → "Log one nutrient-complete meal to maintain your streak"
-- **Daily Micro-Goal**: Derives from top limiting factor: "1 more calcium-rich food to reach 60%" or "Add 1 verified meal to unlock full scoring" (when 0 micros).
-- **Zero-Friction Re-entry**: When 0 micros today, all other signals suppressed. Only goal shown: "Log 1 verified meal to activate full tracking".
-- **Noise Rule**: Returns max 1 of each signal type. Hook consumers render at most 3 lines total.
+**CASE C — Streak ≥3 (Identity overrides all):**
+- `reward = null` (suppressed)
+- `progression = null` (suppressed)
+- `nudge = null` (suppressed)
+- `identityFrame = computed value`
+- `goal = computed value`
+- Streak badge + Identity + Goal = 3 lines
 
-Inputs: `date`, `meals` (from existing query), `guidanceData` (from `useNutritionGuidance`).
+**CASE A — Improvement, no streak:**
+- `reward = computed`
+- `nudge = 'Strong correction — keep this pattern'`
+- `progression = computed (if exists)`
+- `identityFrame = null`
+- Lines: Reward + Progression (if exists) + Goal = max 3
 
-### 2. `src/components/nutrition-hub/NutritionFeedbackStrip.tsx` — Compact UI
-Renders below GuidancePanel in NutritionDailyLog. Lightweight strip, not a card:
+**CASE B — No improvement, no streak:**
+- `reward = null`
+- `nudge = computed`
+- `progression = null` (no reward means no progression worth showing)
+- `identityFrame = null`
+- Lines: Nudge + Goal = 2
 
-```
-Layout (max 3 lines):
-┌──────────────────────────────────────────┐
-│ ✓ +19% Calcium → recovery improved      │  ← reward (green, only if action taken)
-│ ↑ Calcium: 22% → 41% today              │  ← progression (only if delta exists)
-│ ◎ 1 more calcium-rich food to reach 60%  │  ← goal (always, if data exists)
-└──────────────────────────────────────────┘
-```
+**CASE D — Zero data:**
+- Single goal line only (already implemented)
 
-- Streak badge inline: "3-day streak" pill when active
-- Identity line replaces progression line when streak ≥3 (max 1 line, rotates daily)
-- Smart nudge replaces reward line when no improvement detected
-- Zero-data state: single line "Log 1 verified meal to activate full tracking"
-- No card chrome — just a `div` with subtle `bg-muted/30` and `rounded-lg`
+Also suppress nudge in CASE A — reward IS the emotional signal, nudge is redundant.
 
-## Modified Files
+### 2. `src/components/nutrition-hub/NutritionFeedbackStrip.tsx` — Streak counts as line 1
 
-### 3. `src/components/nutrition-hub/NutritionDailyLog.tsx`
-- Import and render `<NutritionFeedbackStrip />` between `<GuidancePanel />` and `<HydrationQualityBreakdown />`
-- Pass `meals`, `guidanceData`, and `currentDate` as props
+Restructure rendering to enforce strict 3-line max where streak badge IS line 1 when active:
 
-### 4. `src/components/nutrition-hub/GuidancePanel.tsx`
-- Remove the nudge section (moved to FeedbackStrip for unified noise control)
-- Keep limiting factors and food suggestions unchanged
+**When streak ≥3 (CASE C):**
+- Line 1: Streak badge (🔥 X-day streak)
+- Line 2: Identity frame (✦ italic)
+- Line 3: Goal (◎)
 
-## Data Flow
-```text
-vault_nutrition_logs (existing)
-        │
-        ├──→ useNutritionGuidance (existing) → limitingFactors, foodSuggestions
-        │
-        └──→ useNutritionFeedback (new)
-                ├── reward signal (before/after latest meal comparison)
-                ├── progression (today vs yesterday delta)
-                ├── streak (14-day lookback, ≥50% micro coverage)
-                ├── identity frame (streak/score gated)
-                ├── smart nudge (state-aware, single)
-                └── daily goal (from top limiting factor)
-                        │
-                        ▼
-              NutritionFeedbackStrip (new) — max 3 lines rendered
-```
+**When reward exists (CASE A):**
+- Line 1: Reward (✓ green)
+- Line 2: Progression (↑ if exists, otherwise omitted)
+- Line 3: Goal (◎)
 
-## Noise Budget (Enforced)
-| Signal | Max | Condition |
-|--------|-----|-----------|
-| Reward | 1 | Only when nutrient improved this session |
-| Progression/Identity | 1 | Progression if delta exists, else identity if streak ≥3 |
-| Nudge | 1 | Moved from GuidancePanel, state-aware |
-| Goal | 1 | Always (derived from limiting factor or zero-data) |
-| **Total visible** | **3** | Reward + Progression/Identity + Goal. Nudge replaces reward when no improvement. |
+**When no improvement (CASE B):**
+- Line 1: Nudge (⚠)
+- Line 2: Goal (◎)
+
+Remove the separate streak badge block that currently renders independently above the signal lines.
 
 ## Files Changed
 | File | Change |
 |------|--------|
-| `src/hooks/useNutritionFeedback.ts` | New — central feedback engine |
-| `src/components/nutrition-hub/NutritionFeedbackStrip.tsx` | New — compact 3-line UI strip |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Add FeedbackStrip between GuidancePanel and HydrationQualityBreakdown |
-| `src/components/nutrition-hub/GuidancePanel.tsx` | Remove nudge section (moved to FeedbackStrip) |
-
-## What This Does NOT Do
-- No new database tables or migrations
-- No simulated data or fake progress
-- No toast notifications or modals
-- No new API calls beyond existing `vault_nutrition_logs` queries
-- Identity framing only appears when behavior justifies it
+| `src/hooks/useNutritionFeedback.ts` | Replace signal selection with 4 exclusive cases |
+| `src/components/nutrition-hub/NutritionFeedbackStrip.tsx` | Streak as line 1, strict 3-line rendering |
 
