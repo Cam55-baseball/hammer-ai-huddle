@@ -2885,6 +2885,7 @@ export type Database = {
           fats_g: number | null
           fiber_g: number | null
           folate_mcg: number | null
+          food_category: string[] | null
           id: string
           iron_mg: number | null
           magnesium_mg: number | null
@@ -2917,6 +2918,7 @@ export type Database = {
           fats_g?: number | null
           fiber_g?: number | null
           folate_mcg?: number | null
+          food_category?: string[] | null
           id?: string
           iron_mg?: number | null
           magnesium_mg?: number | null
@@ -2949,6 +2951,7 @@ export type Database = {
           fats_g?: number | null
           fiber_g?: number | null
           folate_mcg?: number | null
+          food_category?: string[] | null
           id?: string
           iron_mg?: number | null
           magnesium_mg?: number | null
