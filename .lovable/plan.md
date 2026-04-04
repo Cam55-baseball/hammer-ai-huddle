@@ -1,39 +1,65 @@
 
 
-# Advantage Layer — Final Precision Lock
+# Craving Engine — Behavioral Intelligence Fix
+
+## Problem
+The craving engine currently queries foods by nutrient density alone, ignoring taste profile. This produces nutritionally correct but behaviorally wrong suggestions (e.g., Parmesan for a "sweet" craving).
+
+## Solution
+Add a `food_category` text array column to `nutrition_food_database`, populate all 139 foods with taste tags, then filter the craving query by category match.
 
 ## Changes
 
-### 1. `src/constants/nutrientPerformanceMap.ts` — Direct Impact Language
-Replace all "may reduce/limit/impair" with direct physiological statements:
+### 1. Database Migration — Add `food_category` column + populate
+
+Add `food_category text[]` to `nutrition_food_database`.
+
+Populate via UPDATE statements mapping each food to one or more categories: `sweet`, `salty`, `savory`, `crunchy`, `chocolate`.
+
+Category assignments (key examples):
+- **sweet**: Apple, Banana, Blueberries, Dark Chocolate, Grapes, Honey, Mango, Maple Syrup, Orange, Peach, Pineapple, Strawberries, Watermelon, Chocolate Milk, Granola, Greek Yogurt, Overnight Oats, Waffle, Pancake
+- **salty**: Bacon, Pretzels, Popcorn, Chips, Soy Sauce, Ham, Sausage, Salsa, Hummus, Cheddar Cheese, Parmesan, Mozzarella
+- **savory**: Beef Steak, Grilled Chicken, Ground Turkey, Pork Chop, Tilapia, Shrimp, Tuna, Eggs, Tofu, Lentils, Black Beans, Edamame, Broccoli, Asparagus, Mushrooms
+- **crunchy**: Almonds, Cashews, Walnuts, Trail Mix, Popcorn, Pretzels, Chips, Rice Cakes, Carrots, Celery, Bell Pepper, BBQ Seeds, Chia Seeds
+- **chocolate**: Dark Chocolate, Chocolate Milk, RX Bar (Chocolate)
+
+Foods can have multiple tags (e.g., Dark Chocolate = `{sweet, chocolate}`, Popcorn = `{salty, crunchy}`).
+
+### 2. `src/components/nutrition-hub/CravingGuidance.tsx` — Filter by category
+
+Update the food query (line 70-75) to add a `.contains('food_category', [selectedCraving])` filter:
+
+```typescript
+const { data: foods } = await supabase
+  .from('nutrition_food_database')
+  .select('name')
+  .contains('food_category', [selectedCraving])
+  .gt(topDeficient, 0)
+  .order(topDeficient, { ascending: false })
+  .limit(2);
 ```
-magnesium_mg: 'Low magnesium limits recovery quality'
-iron_mg: 'Low iron limits energy output'
-calcium_mg: 'Low calcium limits bone strength'
-// etc — all 13 rewritten, no hedging
-```
 
-### 2. `src/hooks/useNutritionGuidance.ts` — Tighten Score Label
-Change `ptsRecoverable` display format from `~X pts` to `+X score gain potential` (stored as string in a new `ptsLabel` field on `LimitingFactor`).
+### 3. No-match microcopy
 
-### 3. `src/components/nutrition-hub/GuidancePanel.tsx` — Decision Context Microcopy
-- First limiting factor gets label: `"Highest impact nutrient to improve score"`
-- Score display changes from `~{pts}pts` to `+{pts} score gain potential`
+The existing no-match message stays: `"No aligned foods found — prioritize nutrient correction first"`
 
-### 4. `src/components/nutrition-hub/CravingGuidance.tsx` — Hard Constraints
-- **Max 2 suggestions** (change `.limit(3)` → `.limit(2)` on line 74)
-- **Tighten deficiency threshold**: change `< 0.75` to `< 0.40` on line 61
-- When `limitingFactorKeys` is empty (no limiting factors computed), return empty — don't fall back to all nutrients
+Add a subtle explanation line below it:
+`"Your craving may not align with your body's highest nutrient need today"`
 
-### 5. Food Quality — No Code Change Needed
-Food ranking already uses `.order(topKey, { ascending: false })` which ranks by nutrient density. The database content determines quality — fortified items rank naturally lower when nutrient density is the sort key. No code change required here; this is a data quality concern.
+### 4. Types update
+
+The `food_category` column will be auto-reflected in the generated Supabase types after migration.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/constants/nutrientPerformanceMap.ts` | Direct impact language (remove "may") |
-| `src/hooks/useNutritionGuidance.ts` | Add `ptsLabel` field to LimitingFactor |
-| `src/components/nutrition-hub/GuidancePanel.tsx` | Show `+X score gain potential`, add "Highest impact" label to first factor |
-| `src/components/nutrition-hub/CravingGuidance.tsx` | Max 2 suggestions, <40% RDA threshold, require limitingFactorKeys |
+| DB migration | Add `food_category text[]`, populate all 139 foods |
+| `src/components/nutrition-hub/CravingGuidance.tsx` | Add `.contains('food_category', [selectedCraving])` filter + no-match microcopy |
+
+## What This Does NOT Do
+- No new tables
+- No changes to scoring logic
+- No changes to nutrient thresholds or limiting factor ranking
+- No fallback to behaviorally incorrect foods
 
