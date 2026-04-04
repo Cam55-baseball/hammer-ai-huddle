@@ -1844,6 +1844,24 @@ export type Database = {
         }
         Relationships: []
       }
+      hie_execution_locks: {
+        Row: {
+          locked_at: string
+          rerun_requested: boolean
+          user_id: string
+        }
+        Insert: {
+          locked_at?: string
+          rerun_requested?: boolean
+          user_id: string
+        }
+        Update: {
+          locked_at?: string
+          rerun_requested?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       hie_snapshots: {
         Row: {
           before_after_trends: Json | null
@@ -7389,6 +7407,10 @@ export type Database = {
           cutoff_date: string
           deleted_count: number
         }[]
+      }
+      try_acquire_hie_lock: {
+        Args: { p_stale_seconds?: number; p_user_id: string }
+        Returns: boolean
       }
       user_has_role: {
         Args: {
