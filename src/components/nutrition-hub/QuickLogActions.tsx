@@ -61,10 +61,27 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
   };
 
   const handleQuickWater = async (amount: number) => {
+    // Default "water" = instant log, no picker needed
     setIsLogging(true);
     try {
-      await addWater(amount);
+      await addWater(amount, 'water', 'quality');
       toast.success(t('nutrition.waterAdded', 'Added {{amount}}oz water', { amount }));
+    } finally {
+      setIsLogging(false);
+    }
+  };
+
+  const handleLiquidLog = async (liquidType: string) => {
+    if (!pendingWaterAmount) return;
+    setIsLogging(true);
+    try {
+      const quality = classifyLiquid(liquidType);
+      await addWater(pendingWaterAmount, liquidType, quality);
+      const info = LIQUID_TYPES.find(lt => lt.value === liquidType);
+      toast.success(`Added ${pendingWaterAmount}oz ${info?.label || liquidType}`);
+      setLiquidPickerOpen(false);
+      setPendingWaterAmount(null);
+      setSelectedLiquidType('water');
     } finally {
       setIsLogging(false);
     }
