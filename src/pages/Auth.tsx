@@ -11,6 +11,7 @@ import { Info, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
+import { supabase } from "@/integrations/supabase/client";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -86,7 +87,6 @@ const Auth = () => {
           });
         } else if (data.user) {
           // Multi-factor onboarding check
-          const { supabase } = await import("@/integrations/supabase/client");
           
           const [profileCheck, subscriptionCheck, rolesCheck, scoutAppCheck] = await Promise.all([
             // Check if user has a profile with essential data
