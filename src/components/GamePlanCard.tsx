@@ -540,9 +540,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Restore dialog state from URL on mount
   useEffect(() => {
     if (loading) return;
-    const params = new URLSearchParams(window.location.search);
-    const activityId = params.get('activityId');
-    const folderItemId = params.get('folderItemId');
+    const activityId = searchParams.get('activityId');
+    const folderItemId = searchParams.get('folderItemId');
     const allGamePlanTasks: GamePlanTask[] = tasks;
 
     if (activityId) {
