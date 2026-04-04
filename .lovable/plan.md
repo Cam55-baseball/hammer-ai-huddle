@@ -1,56 +1,63 @@
 
 
-# System Resurrection — Fix Micronutrient Pipeline + Wire Effectiveness Tracking
+# Controlled Data Degradation + Scoring Integrity Lock
 
-## Proven Root Cause
+## Current State
 
-**156 vault_nutrition_logs rows exist. ALL have `micros: {}` (empty object). Zero have real micronutrient data.**
+**Already correct:**
+- `NutritionScoreCard` (line 65): `if (!micros) continue` — null-micros rows already excluded from micro totals
+- `DeficiencyAlert` (line 76): `if (!micros) continue` — null-micros rows already excluded
+- `useNutritionTrends` (line 100): `if (!micros) continue` — null-micros rows already excluded
+- `useMealVaultSync` (line 202): stores `null` when micros incomplete
 
-The pipeline breaks at two points:
+**Gaps to fix:**
+1. **Confidence override missing**: `useMealVaultSync` line 172 derives confidence from item-level values but does NOT force `'low'` when final micros is null
+2. **useNutritionBaseline**: processes ALL rows including null-micros ones — corrupts adaptive multipliers
+3. **useNutritionConsistency**: counts null-micros days in deficiency-free rate (a day with no micros could pass as "deficiency-free")
+4. **NutritionScoreCard**: no data coverage penalty — a day with 3 macro-only meals and 1 micro meal scores the same micro% as 4 micro meals
+5. **No data quality indicator** in UI — user can't see how many meals have micro data
 
-### Break Point 1: AI micros not reaching MealData items
-`useSmartFoodLookup` enriches `data.foods[].micros` from DB lookups (line 250), but when these foods are added to `MealData.items[]` in `MealLoggingDialog`, the `micros` property is NOT part of the `MealItem` type — it gets silently dropped. The vault sync then reads `(item as any).micros` and finds nothing.
+## Changes
 
-### Break Point 2: Quick Entry path has zero micros
-Quick entry (line 244) creates a bare `MealData.items[]` with only calories/protein/carbs/fats — no micros at all. This is the majority of real user logs.
+### 1. `src/hooks/useMealVaultSync.ts`
+**Line 203**: After computing `dataConfidence`, add override:
+```
+if final micros is null → force data_confidence = 'low'
+```
+This ensures macro-only entries never claim high/medium confidence.
 
-### Break Point 3: `trackEffectiveness()` is dead code
-Defined in `useSuggestionLearning.ts` but never called anywhere else in the codebase.
+### 2. `src/hooks/useNutritionBaseline.ts`
+Filter to only include rows where `micros` is non-null and non-empty before computing nutrient averages, chronic-low detection, and adaptive multipliers. Macro-only rows should still count toward `daysWithData` for frequency stats but must be excluded from all micronutrient calculations.
 
-## Fixes
+### 3. `src/hooks/useNutritionConsistency.ts`
+- **Deficiency-free rate**: Only count days that HAVE micro data. Days with null micros are excluded from both numerator and denominator (not counted as "deficiency-free" or "deficient").
+- **Score stability**: Daily micro coverage scores for days without micro data should be excluded from std deviation calculation (not counted as 0).
 
-### 1. MealLoggingDialog — Pass micros from SmartFoodLookup to MealData items
+### 4. `src/components/nutrition-hub/NutritionScoreCard.tsx`
+Add **data coverage factor** to micro scoring:
+- Count meals with micros vs total meals
+- `microCoverage = mealsWithMicros / totalMeals`
+- Apply: `microScore = microScore * microCoverage`
+- This means: 1/4 meals with micros → micro score reduced to 25% of its value
+- Display coverage indicator: "2/4 meals verified"
 
-When smart food lookup returns results, the micros must be included on each item added to `mealData.items[]`. Currently `MealItem` type likely lacks `micros` — add it and ensure the food-add handler copies micros through.
+### 5. `src/components/nutrition-hub/NutritionDailyLog.tsx`
+Add a small data quality badge below Day Totals showing: `"X of Y meals have micronutrient data"` with color coding (green if 100%, amber if partial, red if 0%).
 
-### 2. MealLoggingDialog — DB-enrich Quick Entry micros
-
-For quick entry path: after user enters food name/macros, do a DB lookup (`lookupMicrosFromDb`) for the meal title and attach micros to the item before syncing. If no DB match, log with `data_confidence: 'low'` and `micros: null`.
-
-### 3. useMealVaultSync — Fix `undefined` micros storage
-
-Line 203: `micros: (microsComplete && hasMicrosData) ? aggregatedMicros : undefined` — when `undefined`, Supabase stores `{}` (empty object) instead of `null`. Change to explicit `null` so the DB accurately reflects "no micro data."
-
-### 4. Wire trackEffectiveness into meal logging flow
-
-In `MealLoggingDialog` or `useMealVaultSync`, after successful meal save:
-- Query `nutrition_suggestion_interactions` for recent `accepted` suggestions for this user
-- Compare logged food names against accepted suggestion food names
-- If match found, compute the nutrient improvement (current day's intake vs previous day) and call `trackEffectiveness()`
-
-### 5. Seed 14 days of realistic nutrition logs with real micros
-
-Insert ~30 rows into `vault_nutrition_logs` with complete micros data (derived from the 75 seeded DB foods). This immediately activates: baseline model, consistency scoring, trend engine, deficiency detection.
-
-## Files
+## Summary
 
 | File | Change |
 |------|--------|
-| `src/types/customActivity.ts` | Add `micros` to `MealItem` interface |
-| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Pass micros from SmartFoodLookup results to MealData items; add DB micro lookup for quick entry |
-| `src/hooks/useMealVaultSync.ts` | Change `undefined` to `null` for missing micros; add effectiveness tracking call after save |
-| DB seed (via insert tool) | Insert 14 days × 2-3 meals of realistic nutrition logs with full micros |
+| `useMealVaultSync.ts` | Force `data_confidence: 'low'` when micros is null |
+| `useNutritionBaseline.ts` | Exclude null-micros rows from micro calculations |
+| `useNutritionConsistency.ts` | Exclude null-micros days from deficiency-free rate and stability |
+| `NutritionScoreCard.tsx` | Add micro coverage factor + "X/Y verified" display |
+| `NutritionDailyLog.tsx` | Add data quality badge |
 
-## No edge function changes needed
-The edge function schema is correct (all 13 keys required). The AI does return micros — the problem is downstream in the client pipeline.
+## What This Prevents
+- Macro-only meals inflating micro scores → blocked by coverage factor
+- Null-micros days counting as "deficiency-free" → excluded from consistency
+- High confidence on macro-only entries → forced to low
+- Adaptive multipliers corrupted by null data → filtered out
+- User unaware of data gaps → visible quality indicator
 
