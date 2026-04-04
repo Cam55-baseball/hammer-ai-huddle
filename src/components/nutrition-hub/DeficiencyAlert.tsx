@@ -85,6 +85,12 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
 
       if (Object.keys(totals).length === 0) return null;
 
+      // Detect if supplements were logged
+      const hasSupplements = (data || []).some((log: any) => {
+        const supps = log.supplements;
+        return Array.isArray(supps) && supps.length > 0;
+      });
+
       const adaptiveMultipliers = baseline?.adaptiveMultipliers || {};
 
       const alertItems = Object.entries(RDA).map(([key, rda]) => {
@@ -93,8 +99,14 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
         const percent = Math.round((current / adjustedRda) * 100);
         const level = getLevel(percent);
         const priority = adaptiveMultipliers[key] || 1.0;
-        return { key, label: rda.label, percent, level, current: Math.round(current * 10) / 10, rda: adjustedRda, unit: rda.unit, priority };
+        const impact = NUTRIENT_IMPACT[key] || '';
+        return { key, label: rda.label, percent, level, current: Math.round(current * 10) / 10, rda: adjustedRda, unit: rda.unit, priority, impact };
       });
+
+      // Identify nutrients at optimal+ that may be supplement-driven
+      const supplementCovered = hasSupplements
+        ? alertItems.filter(a => a.level === 'optimal' || a.level === 'excess').map(a => a.key)
+        : [];
 
       const issues = alertItems
         .filter(a => a.level === 'deficient' || a.level === 'low')
