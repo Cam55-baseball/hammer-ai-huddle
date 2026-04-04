@@ -104,9 +104,32 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
       });
 
       // Identify nutrients at optimal+ that may be supplement-driven
-      const supplementCovered = hasSupplements
-        ? alertItems.filter(a => a.level === 'optimal' || a.level === 'excess').map(a => a.key)
-        : [];
+      // Compute food-only totals to differentiate supplement-only vs food+supplement
+      const foodOnlyTotals: Record<string, number> = {};
+      for (const log of data || []) {
+        const supps = (log as any).supplements;
+        const hasSupplement = Array.isArray(supps) && supps.length > 0;
+        if (hasSupplement) continue; // skip supplement-containing logs
+        const micros = log.micros as Record<string, number> | null;
+        if (!micros) continue;
+        for (const [k, v] of Object.entries(micros)) {
+          if (typeof v === 'number') foodOnlyTotals[k] = (foodOnlyTotals[k] || 0) + v;
+        }
+      }
+
+      const supplementLabels: Record<string, string> = {};
+      if (hasSupplements) {
+        for (const item of alertItems) {
+          if (item.level === 'optimal' || item.level === 'excess') {
+            const foodRatio = (foodOnlyTotals[item.key] || 0) / (item.rda || 1);
+            if (foodRatio < 0.25) {
+              supplementLabels[item.key] = 'Covered via supplement only — whole-food sources improve absorption';
+            } else {
+              supplementLabels[item.key] = 'Supported by food + supplement';
+            }
+          }
+        }
+      }
 
       const issues = alertItems
         .filter(a => a.level === 'deficient' || a.level === 'low')
