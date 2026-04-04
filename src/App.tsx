@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 
 // Clean up cache-busting param after successful load
