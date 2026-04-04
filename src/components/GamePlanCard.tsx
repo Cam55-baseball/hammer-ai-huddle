@@ -2697,7 +2697,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 handleFolderLoggerClose(false);
               }}
               onEdit={() => {
-                setFolderLoggerOpen(false);
+                handleFolderLoggerClose(false);
                 setFolderItemEditOpen(true);
               }}
               onSaveTime={(time, reminder) => {
