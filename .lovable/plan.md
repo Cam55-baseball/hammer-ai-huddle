@@ -1,83 +1,46 @@
 
 
-# Final 3 Fixes — Eliminate Last Race Conditions
+# Gold Architecture — Final Hardening
 
-## Fix 1: Clear recovery timer on success path (`usePerformanceSession.ts`)
+## What's Already Correct
+- `usePerformanceSession.ts` — fully matches spec (latest-wins, conditional invalidation, timer-safe)
+- Lock system, edge functions, DB schema — all complete
 
-**Problem**: If Session A schedules a 15s recovery timer, then Session B completes with `hie_completed = true`, the old timer from A still fires — causing unnecessary refetches and UI flicker.
+## What Needs Updating
 
-**Current code** (lines 197-201) already clears the timer *before* calling calculate-session. But it does NOT clear it again on the success path (line 230-231).
+### 1. `useHIESnapshot.ts` — Reconciliation Hardening
 
-**Fix**: Inside the `if (hieCompleted)` branch (line 230), clear the recovery timer before invalidating analytics keys.
+**Current gaps vs gold spec:**
+- No visibility check (runs in background tabs, wasting queries)
+- No online check (fires invalidations while offline)
+- Boolean `reconciliationTriggered` flag instead of cooldown-based throttle (5s)
+- No resume triggers (visibilitychange / online events to catch up after sleep)
 
-```typescript
-if (hieCompleted) {
-  if (recoveryTimerRef.current) {
-    clearTimeout(recoveryTimerRef.current);
-    recoveryTimerRef.current = null;
-  }
-  invalidateKeys(ANALYTICS_KEYS);
-}
-```
+**Changes:**
+- Replace `reconciliationTriggered` ref with `lastInvalidationRef` (timestamp-based 5s cooldown)
+- Add `document.visibilityState` and `navigator.onLine` guards to reconciliation effect
+- Add `navigator.onLine` guard to 24h stale fallback
+- Remove the `isFetching` reset effect (no longer needed with cooldown model)
+- Add resume triggers: `visibilitychange` → invalidate `['hie-snapshot']`, `online` → same
 
-Lines 230-231 → expand to include timer cleanup.
+### 2. `useUnifiedDataSync.ts` — Per-Row Dedup Map + Multi-Tab Sync
 
----
+**Current gaps:**
+- Single-ref dedup only tracks one event at a time — concurrent events on different rows/tables can collide
+- No multi-tab synchronization (tabs fight each other)
+- No reconnect timer cleanup on successful reconnect
 
-## Fix 2: Reset reconciliation flag on fetch completion (`useHIESnapshot.ts`)
+**Changes:**
+- Replace `lastEventRef` (single object) with `lastEventMapRef` (Map keyed by `table:eventType:rowId`)
+- Add memory leak guard (clear map at 1000 entries)
+- Add BroadcastChannel (`data-sync`) for multi-tab invalidation propagation
+- Wrap `invalidateRelatedQueries` to also broadcast to other tabs
+- Listen for broadcasts from other tabs and invalidate locally
+- Clear `reconnectTimerRef` on successful reconnect
 
-**Problem**: `reconciliationTriggered.current = true` blocks future reconciliation attempts. Current reset (lines 122-126) triggers on `computed_at` change — but if the invalidation fails (network issue, suspended tab), the flag stays `true` forever, deadlocking reconciliation.
+### 3. `usePerformanceSession.ts` — No Changes
 
-**Fix**: Replace the `computed_at`-based reset with a fetch-state-based reset. When the query finishes fetching (regardless of outcome), unlock the flag.
-
-```typescript
-useEffect(() => {
-  if (!query.isFetching) {
-    reconciliationTriggered.current = false;
-  }
-}, [query.isFetching]);
-```
-
-Lines 122-126 → replace with the above.
-
----
-
-## Fix 3: Granular realtime deduplication (`useUnifiedDataSync.ts`)
-
-**Problem**: Current dedup uses only `table` name (line 179). This drops legitimate events — e.g., an INSERT followed by an UPDATE on the same table within 500ms (common when `calculate-session` writes derived fields after insert).
-
-**Fix**: Track `(table, eventType, rowId)` instead of just `table`. Only dedup truly identical events.
-
-Change `lastEventRef` type and comparison:
-
-```typescript
-const lastEventRef = useRef<{ table: string; eventType: string; rowId: string; ts: number }>(
-  { table: '', eventType: '', rowId: '', ts: 0 }
-);
-
-// In handleDatabaseChange:
-const rowId = payload.new?.id || payload.old?.id || '';
-const now = Date.now();
-if (
-  lastEventRef.current.table === table &&
-  lastEventRef.current.eventType === payload.eventType &&
-  lastEventRef.current.rowId === rowId &&
-  now - lastEventRef.current.ts < 500
-) {
-  return;
-}
-lastEventRef.current = { table, eventType: payload.eventType, rowId, ts: now };
-```
-
-Lines 156, 178-182 → update ref type and comparison logic.
-
-Also: Remove `['delta-analytics']` and `['day-sessions']` from reconnect fallback (lines 223-226) since delta-analytics is derived from snapshot and day-sessions is session-scoped. Final fallback set:
-
-```typescript
-queryClient.invalidateQueries({ queryKey: ['hie-snapshot'] });
-queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
-queryClient.invalidateQueries({ queryKey: ['fatigue-state'] });
-```
+Already matches the gold spec exactly.
 
 ---
 
@@ -85,11 +48,11 @@ queryClient.invalidateQueries({ queryKey: ['fatigue-state'] });
 
 | File | Change |
 |------|--------|
-| `src/hooks/usePerformanceSession.ts` | Clear recovery timer in success branch (lines 230-231) |
-| `src/hooks/useHIESnapshot.ts` | Reset reconciliation flag based on `isFetching` (lines 122-126) |
-| `src/hooks/useUnifiedDataSync.ts` | Granular dedup with `(table, eventType, rowId)` (lines 156, 178-182); trim reconnect fallback keys (lines 223-227) |
+| `src/hooks/useHIESnapshot.ts` | Cooldown-based reconciliation, visibility/online guards, resume triggers |
+| `src/hooks/useUnifiedDataSync.ts` | Map-based per-row dedup, BroadcastChannel multi-tab sync, reconnect cleanup |
 
 ## What Does NOT Change
+- `usePerformanceSession.ts` (already correct)
 - Zero formula modifications
 - Zero database/migration changes
 - Edge functions unchanged
