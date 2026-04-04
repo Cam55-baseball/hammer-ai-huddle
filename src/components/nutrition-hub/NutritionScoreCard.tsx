@@ -228,6 +228,12 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
                 <p className="text-xs font-semibold">{score.breakdown.optimization}/5</p>
               </div>
             </div>
+            {/* Score reduction explanation */}
+            {score.microCoverage && score.microCoverage.withMicros < score.microCoverage.total && (
+              <p className="text-[10px] text-muted-foreground italic mt-1">
+                Score reduced: {score.microCoverage.total - score.microCoverage.withMicros}/{score.microCoverage.total} meals lack micronutrient data
+              </p>
+            )}
             {/* Consistency badge */}
             {consistency && consistency.daysAnalyzed >= 3 && (
               <div className="mt-1.5 flex items-center gap-1.5">

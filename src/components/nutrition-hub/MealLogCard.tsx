@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Clock, Trash2, Edit2, Utensils } from 'lucide-react';
+import { ChevronDown, Clock, Trash2, Edit2, Utensils, ShieldCheck, Bot, FileQuestion } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DIGESTION_TAGS } from '@/constants/nutritionLogging';
@@ -22,6 +22,8 @@ export interface MealLogData {
   mealTime?: string | null;
   digestionNotes?: string | null;
   micros?: Record<string, number> | null;
+  dataSource?: string | null;
+  dataConfidence?: string | null;
 }
 
 interface MealLogCardProps {
@@ -48,13 +50,24 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
   post_workout: 'Post-Workout',
 };
 
+const SOURCE_BADGE: Record<string, { label: string; cls: string; icon: typeof ShieldCheck }> = {
+  database: { label: 'Verified', cls: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/30', icon: ShieldCheck },
+  ai: { label: 'AI Estimated', cls: 'text-amber-600 bg-amber-500/10 border-amber-500/30', icon: Bot },
+  mixed: { label: 'Mixed', cls: 'text-amber-600 bg-amber-500/10 border-amber-500/30', icon: Bot },
+};
+
+const CONFIDENCE_LABEL: Record<string, { text: string; cls: string }> = {
+  high: { text: 'High confidence', cls: 'text-emerald-600' },
+  medium: { text: 'Estimated', cls: 'text-amber-600' },
+  low: { text: 'Low confidence', cls: 'text-destructive' },
+};
+
 // Set of known tag values for chip rendering
 const KNOWN_TAG_VALUES = new Set(DIGESTION_TAGS.map(t => t.value));
 
 export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [showMicros, setShowMicros] = useState(false);
 
   const mealTypeKey = meal.mealType?.toLowerCase().replace('-', '_') || 'snack';
   const mealTypeColor = MEAL_TYPE_COLORS[mealTypeKey] || MEAL_TYPE_COLORS.snack;
@@ -63,6 +76,15 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
   const hasMacros = meal.proteinG || meal.carbsG || meal.fatsG;
   const hasSupplements = meal.supplements && meal.supplements.length > 0;
   const hasMicros = meal.micros && Object.keys(meal.micros).length > 0;
+
+  // Data source badge
+  const sourceKey = meal.dataSource || 'manual';
+  const sourceBadge = SOURCE_BADGE[sourceKey] || { label: 'Manual', cls: 'text-muted-foreground bg-muted/50 border-border', icon: FileQuestion };
+  const SourceIcon = sourceBadge.icon;
+
+  // Confidence label
+  const confidenceKey = meal.dataConfidence || 'low';
+  const confidence = CONFIDENCE_LABEL[confidenceKey] || CONFIDENCE_LABEL.low;
 
   // Parse digestion notes into chips (known tags) + freeform text
   const parsedDigestionNotes = meal.digestionNotes
@@ -88,7 +110,7 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
 
             {/* Main content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-medium truncate">
                   {meal.mealTitle || mealTypeLabel}
                 </span>
@@ -97,6 +119,11 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
                     {mealTypeLabel}
                   </Badge>
                 )}
+                {/* Data source badge */}
+                <Badge variant="outline" className={cn("text-[10px] gap-0.5 py-0", sourceBadge.cls)}>
+                  <SourceIcon className="h-2.5 w-2.5" />
+                  {sourceBadge.label}
+                </Badge>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                 <Clock className="h-3 w-3 flex-shrink-0" />
@@ -107,6 +134,8 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
                     displayTime
                   )}
                 </span>
+                <span className="mx-0.5">·</span>
+                <span className={cn("text-[10px]", confidence.cls)}>{confidence.text}</span>
               </div>
             </div>
 
@@ -185,36 +214,27 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
               </div>
             )}
 
-            {/* Micronutrient drill-down */}
-            {hasMicros && (
-              <div className="space-y-1.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-xs justify-between"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMicros(!showMicros);
-                  }}
-                >
-                  <span>Micronutrients ({Object.keys(meal.micros!).length})</span>
-                  <ChevronDown className={cn("h-3 w-3 transition-transform", showMicros && "rotate-180")} />
-                </Button>
-                {showMicros && (
-                  <div className="grid grid-cols-2 gap-1 text-xs">
-                    {Object.entries(meal.micros!).map(([key, val]) => {
-                      const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/ Mcg$/, ' (mcg)').replace(/ Mg$/, ' (mg)');
-                      return (
-                        <div key={key} className="flex justify-between px-2 py-1 rounded bg-muted/50">
-                          <span className="text-muted-foreground truncate">{label}</span>
-                          <span className="font-medium">{Math.round((val as number) * 10) / 10}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Micronutrient data — always visible */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">Micronutrients</p>
+              {hasMicros ? (
+                <div className="grid grid-cols-2 gap-1 text-xs">
+                  {Object.entries(meal.micros!).map(([key, val]) => {
+                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).replace(/ Mcg$/, ' (mcg)').replace(/ Mg$/, ' (mg)');
+                    return (
+                      <div key={key} className="flex justify-between px-2 py-1 rounded bg-muted/50">
+                        <span className="text-muted-foreground truncate">{label}</span>
+                        <span className="font-medium">{Math.round((val as number) * 10) / 10}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic px-2 py-1.5 rounded bg-muted/30">
+                  No micronutrient data
+                </p>
+              )}
+            </div>
 
             {/* Actions */}
             <div className="flex gap-2 pt-2">

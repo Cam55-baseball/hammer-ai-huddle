@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,12 +12,10 @@ import { MealLogCard, MealLogData } from './MealLogCard';
 import { MicronutrientPanel } from './MicronutrientPanel';
 import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
-import { Badge } from '@/components/ui/badge';
 import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
-import { useNutritionConsistency } from '@/hooks/useNutritionConsistency';
-import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface NutritionDailyLogProps {
   date?: Date;
@@ -74,6 +72,8 @@ export function NutritionDailyLog({
         mealTime: (log as any).meal_time ?? null,
         digestionNotes: (log as any).digestion_notes ?? null,
         micros: (log as any).micros ?? null,
+        dataSource: (log as any).data_source ?? null,
+        dataConfidence: (log as any).data_confidence ?? null,
       })) as MealLogData[];
     },
     enabled: !!user,
@@ -109,11 +109,17 @@ export function NutritionDailyLog({
   }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
 
   const mealsWithMicros = meals.filter(m => m.micros && Object.keys(m.micros).length > 0).length;
-  const microCoverageColor = mealsWithMicros === meals.length
-    ? 'bg-emerald-500/10 text-emerald-600'
-    : mealsWithMicros === 0
-      ? 'bg-destructive/10 text-destructive'
-      : 'bg-amber-500/10 text-amber-600';
+
+  // Aggregate confidence
+  const confidenceLevels = meals.map(m => m.dataConfidence || 'low');
+  const allHigh = confidenceLevels.every(c => c === 'high');
+  const allLow = confidenceLevels.every(c => c === 'low');
+  const aggregateConfidence = allHigh ? 'High' : allLow ? 'Low' : 'Mixed';
+  const aggregateConfidenceColor = allHigh
+    ? 'text-emerald-600'
+    : allLow
+      ? 'text-destructive'
+      : 'text-amber-600';
 
   return (
     <Card>
@@ -174,9 +180,11 @@ export function NutritionDailyLog({
                 <p className="text-xs font-medium text-muted-foreground">
                   {t('nutrition.dayTotals', 'Day Totals')}
                 </p>
-                <Badge variant="outline" className={`text-[10px] ${microCoverageColor}`}>
-                  {mealsWithMicros}/{meals.length} micro data
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-[10px] font-medium", aggregateConfidenceColor)}>
+                    {aggregateConfidence}
+                  </span>
+                </div>
               </div>
               <div className="grid grid-cols-4 gap-2 text-center">
                 <div>
@@ -195,6 +203,24 @@ export function NutritionDailyLog({
                   <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{totals.fats}g</p>
                   <p className="text-xs text-muted-foreground">fats</p>
                 </div>
+              </div>
+              {/* Micro coverage line */}
+              <div className="mt-2 pt-2 border-t border-border/50">
+                {mealsWithMicros === 0 ? (
+                  <p className="text-[11px] text-destructive italic">
+                    No micronutrient data logged today
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    <span className={cn(
+                      "font-semibold",
+                      mealsWithMicros === meals.length ? 'text-emerald-600' : 'text-amber-600'
+                    )}>
+                      {mealsWithMicros}/{meals.length}
+                    </span>
+                    {' '}meals with micronutrient data
+                  </p>
+                )}
               </div>
             </div>
 
