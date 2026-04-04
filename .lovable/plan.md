@@ -1,99 +1,150 @@
 
 
-# Restore Code Splitting for Dashboard Routes — Preload Strategy
+# Atomic HIE Execution Lock — Final Deterministic Fixes
 
-## Problem
-Dashboard and ScoutDashboard are statically imported in `App.tsx`, pulling ~685 and ~672 lines of code plus all their dependencies into the main bundle (inflating it from ~2.5MB to ~3.91MB). We need code splitting back without reintroducing the preview proxy failure.
+## Current State
+`calculate-session/index.ts` lines 488-495: single fire-and-forget `hie-analyze` call with no locking, no retries, no rerun guarantee.
 
-## Root Cause of Original Failure (Why We Can't Just Revert)
-The preview proxy intermittently fails to fetch Vite dependency chunks (`/node_modules/.vite/deps/chunk-*.js`) **on-demand during navigation**. The key insight: the failure happens when chunks are fetched *reactively* (user clicks → navigate → lazy load triggers → chunk fetch fails). If chunks are fetched *proactively* at boot, they're already cached in the browser by the time navigation happens.
+## Changes
 
-## Solution: Lazy Import + Eager Preload
+### 1. Database Migration — Lock Table + Atomic Acquire Function
 
-**Strategy**: Use `lazy()` for code splitting in the route tree, but trigger the imports immediately at module load time (not on navigation). This gives us:
-- Separate chunks in the production build (restored code splitting)
-- Chunks fetched at app boot, not at navigation time
-- If the preload fails, `lazyWithRetry` handles it with 3 retries before the user ever navigates
+```sql
+CREATE TABLE public.hie_execution_locks (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  locked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  rerun_requested BOOLEAN NOT NULL DEFAULT false
+);
 
-### File 1: `src/App.tsx`
+ALTER TABLE public.hie_execution_locks ENABLE ROW LEVEL SECURITY;
 
-Remove the static imports on lines 13-14:
-```typescript
-// REMOVE:
-// import Dashboard from "./pages/Dashboard";
-// import ScoutDashboard from "./pages/ScoutDashboard";
+-- Atomic lock acquisition: returns true if lock was acquired, false if already held
+CREATE OR REPLACE FUNCTION public.try_acquire_hie_lock(p_user_id UUID, p_stale_seconds INT DEFAULT 120)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  acquired BOOLEAN;
+BEGIN
+  -- Delete stale locks first
+  DELETE FROM hie_execution_locks
+  WHERE user_id = p_user_id
+    AND locked_at < now() - (p_stale_seconds || ' seconds')::interval;
+
+  -- Atomic insert — ON CONFLICT DO NOTHING means only one caller wins
+  INSERT INTO hie_execution_locks (user_id, locked_at, rerun_requested)
+  VALUES (p_user_id, now(), false)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  GET DIAGNOSTICS acquired = ROW_COUNT;
+  -- ROW_COUNT = 1 means we inserted (acquired). 0 means lock already held.
+  RETURN acquired > 0;
+END;
+$$;
 ```
 
-Add preloaded lazy imports (after the `lazyWithRetry` helper):
-```typescript
-// Preloaded lazy imports — triggers fetch at boot, not on navigation
-const dashboardImport = () => import("./pages/Dashboard");
-const scoutDashboardImport = () => import("./pages/ScoutDashboard");
+This guarantees exactly one caller acquires the lock — no SELECT→UPSERT race.
 
-// Fire preloads immediately at module load time
-const dashboardPreload = dashboardImport();
-const scoutDashboardPreload = scoutDashboardImport();
+### 2. Edge Function Change — `supabase/functions/calculate-session/index.ts` (lines 488-495)
 
-// Lazy components that resolve from the already-in-flight preload
-const Dashboard = lazy(() => dashboardPreload.catch(() => dashboardImport()));
-const ScoutDashboard = lazy(() => scoutDashboardPreload.catch(() => scoutDashboardImport()));
-```
-
-How this works:
-1. `dashboardPreload = dashboardImport()` fires the fetch **immediately** when `App.tsx` loads
-2. `lazy(() => dashboardPreload)` resolves from the already-completed (or in-flight) promise
-3. `.catch(() => dashboardImport())` retries once if the preload failed
-4. The route still uses `<Suspense>` with `<PageLoadingSkeleton />` as fallback
-5. In production: Vite outputs separate chunks for Dashboard and ScoutDashboard
-6. In preview: the fetch fires at boot — by the time the user signs in and navigates, the module is already cached in the browser
-
-### File 2: `vite.config.ts`
-
-Add `manualChunks` to the build config to create predictable, stable chunks:
+Replace fire-and-forget with lock-based loop:
 
 ```typescript
-build: {
-  chunkSizeWarningLimit: 1500,
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-        'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-tooltip', '@radix-ui/react-tabs', '@radix-ui/react-select'],
-        'vendor-query': ['@tanstack/react-query'],
-        'vendor-supabase': ['@supabase/supabase-js'],
-        'vendor-i18n': ['i18next', 'react-i18next'],
-      },
-    },
-  },
-},
+// ── Deterministic HIE execution with atomic lock ──
+let hie_completed = false;
+
+const lockAcquired = await supabase
+  .rpc('try_acquire_hie_lock', { p_user_id: user.id, p_stale_seconds: 120 })
+  .then(r => r.data === true)
+  .catch(() => false);
+
+if (!lockAcquired) {
+  // Another execution owns the lock — request rerun
+  await supabase
+    .from('hie_execution_locks')
+    .update({ rerun_requested: true })
+    .eq('user_id', user.id);
+  // hie_completed = false signals client analysis is pending
+} else {
+  try {
+    // Loop until no more reruns requested
+    let shouldRun = true;
+    while (shouldRun) {
+      // Extend lock timestamp before each run
+      await supabase
+        .from('hie_execution_locks')
+        .update({ locked_at: new Date().toISOString(), rerun_requested: false })
+        .eq('user_id', user.id);
+
+      // 3-attempt retry with backoff
+      let runSucceeded = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await supabase.functions.invoke('hie-analyze', {
+            body: { user_id: user.id, sport: 'baseball' },
+          });
+          runSucceeded = true;
+          hie_completed = true;
+          break;
+        } catch (hieErr) {
+          console.warn(`HIE attempt ${attempt + 1}/3 failed:`, hieErr);
+          if (attempt < 2) await new Promise(r => setTimeout(r, [2000, 5000, 10000][attempt]));
+        }
+      }
+
+      // Check if rerun was requested during this execution
+      const { data: lockState } = await supabase
+        .from('hie_execution_locks')
+        .select('rerun_requested')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      shouldRun = lockState?.rerun_requested === true;
+
+      if (!runSucceeded && !shouldRun) {
+        // All retries failed and no rerun pending — log governance flag
+        await supabase.from('governance_flags').insert({
+          user_id: user.id,
+          flag_type: 'hie_analysis_failed',
+          severity: 'warning',
+          status: 'pending',
+          source_session_id: session_id,
+          details: { attempts: 3, timestamp: new Date().toISOString() },
+        }).catch(() => {});
+      }
+    }
+  } finally {
+    // GUARANTEED lock release — even on unexpected errors
+    await supabase
+      .from('hie_execution_locks')
+      .delete()
+      .eq('user_id', user.id);
+  }
+}
 ```
 
-This separates vendor libraries into stable chunks that rarely change, improving cache hit rates across deploys. Dashboard and ScoutDashboard will naturally become their own chunks via the dynamic imports.
+### How It Works
 
-## Expected Bundle Impact
+| Scenario | Behavior |
+|----------|----------|
+| Single session | RPC acquires lock → run → release |
+| 10 sessions in 10s | Session 1 acquires lock. Sessions 2-10 fail acquire → set `rerun_requested`. Session 1 finishes → sees flag → resets flag → runs again → checks again → flag is false → exits loop → releases lock. Exactly 2 runs, all 10 sessions covered. |
+| Session arrives during rerun | Sets `rerun_requested` again → loop continues for another iteration |
+| Crash mid-execution | `finally` releases lock. If process dies before `finally`, 2-min stale cleanup in RPC handles it on next call. |
+| Long execution | `locked_at` extended at loop top → prevents premature stale-lock takeover |
+| Two simultaneous acquires | `INSERT ON CONFLICT DO NOTHING` — only one gets `ROW_COUNT = 1`. Atomic. |
 
-| Chunk | Before (static) | After (preload+split) |
-|-------|-----------------|----------------------|
-| Main `index-*.js` | ~3.91 MB | ~2.0-2.5 MB |
-| `Dashboard-*.js` | (in main) | ~150-250 KB |
-| `ScoutDashboard-*.js` | (in main) | ~150-250 KB |
-| `vendor-react-*.js` | (in main) | ~300 KB |
-| `vendor-ui-*.js` | (in main) | ~200 KB |
-| `vendor-supabase-*.js` | (in main) | ~100 KB |
-| Total network | Same | Same (preloaded at boot) |
-
-## Why This Will NOT Reintroduce the Module Import Failure
-
-1. **Preload fires at boot, not on navigation** — chunks are fetched immediately when `App.tsx` loads, well before the user signs in
-2. **Catch + retry on preload** — if the initial preload fails (proxy hiccup), the `.catch()` retries the import
-3. **`Suspense` + `PageLoadingSkeleton`** — if both attempts are still in flight when the user navigates, they see a loading skeleton (not an error)
-4. **Production is unaffected** — content-hashed static files from CDN, no proxy involved
-5. **Preview stability** — by the time auth completes (2-5 seconds), the preloaded chunks are long cached
-
-## Files Changed
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Replace static Dashboard/ScoutDashboard imports with preloaded lazy imports |
-| `vite.config.ts` | Add `rollupOptions.output.manualChunks` for vendor splitting |
+| New migration | `hie_execution_locks` table + `try_acquire_hie_lock` RPC |
+| `supabase/functions/calculate-session/index.ts` | Replace lines 488-495 with atomic lock + loop-until-stable + guaranteed release |
+
+### What Does NOT Change
+- Zero formula modifications
+- `hie-analyze` function unchanged
+- All other approved changes (client invalidation, reconciliation, realtime hardening) remain as planned
 
