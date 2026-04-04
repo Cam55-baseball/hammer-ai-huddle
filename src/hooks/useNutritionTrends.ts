@@ -188,17 +188,17 @@ export function useNutritionTrends(rdaMultiplier = 1.0) {
       const nudges: SmartNudge[] = [];
       for (const dt of deficientTrends) {
         try {
-          const col = dt.key;
+          const col = dt.key as keyof typeof RDA;
           const { data: foods } = await supabase
             .from('nutrition_food_database')
-            .select(`name, ${col}`)
+            .select('*')
             .gt(col, 0)
             .order(col, { ascending: false })
             .limit(1);
 
           if (foods && foods.length > 0) {
-            const food = foods[0];
-            const amount = Math.round((food as any)[col] * 10) / 10;
+            const food = foods[0] as any;
+            const amount = Math.round((food[col] || 0) * 10) / 10;
             const unit = col.includes('mcg') ? 'mcg' : 'mg';
             nudges.push({
               message: `Add ${food.name} for +${amount}${unit} ${dt.label}`,
