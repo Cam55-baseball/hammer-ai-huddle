@@ -10,6 +10,8 @@ import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton"
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
+import Dashboard from "./pages/Dashboard";
+import ScoutDashboard from "./pages/ScoutDashboard";
 
 // Clean up cache-busting param after successful load
 const cleanupCacheBustParam = () => {
