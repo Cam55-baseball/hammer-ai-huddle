@@ -1177,7 +1177,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         
         {/* Status indicator - clickable for custom activities with prominent styling */}
         <button
-          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { setSelectedFolderTask(task); setFolderLoggerOpen(true); } else if (isCustom) handleCustomActivityToggle(task); }}
+          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { setSelectedFolderTask(task); setFolderLoggerOpen(true); setUrlParam('folderItemId', task.folderItemData.itemId); } else if (isCustom) handleCustomActivityToggle(task); }}
           disabled={!isCustom}
           className={cn(
             "flex-shrink-0 rounded-full flex items-center justify-center transition-all",
