@@ -1,6 +1,12 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+const MICRO_KEYS = [
+  "vitamin_a_mcg", "vitamin_c_mg", "vitamin_d_mcg", "vitamin_e_mg",
+  "vitamin_k_mcg", "vitamin_b6_mg", "vitamin_b12_mcg", "folate_mcg",
+  "calcium_mg", "iron_mg", "magnesium_mg", "potassium_mg", "zinc_mg",
+] as const;
+
 export interface FoodItem {
   name: string;
   quantity: number;
@@ -43,7 +49,6 @@ const DB_MATCH_THRESHOLD = 0.6;
 const DEBOUNCE_MS = 800;
 const resultCache = new Map<string, SmartFoodResult>();
 
-// Sanitize query for safe PostgREST ilike search
 function sanitizeForDbQuery(input: string): string {
   return input.replace(/[%,*()'"]/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -51,16 +56,59 @@ function sanitizeForDbQuery(input: string): string {
 function calculateSimilarity(query: string, target: string): number {
   const q = query.toLowerCase().trim();
   const t = target.toLowerCase().trim();
-  
   if (t === q) return 1.0;
   if (t.startsWith(q) || q.startsWith(t)) return 0.85;
-  
   const qTokens = new Set(q.split(/\s+/));
   const tTokens = new Set(t.split(/\s+/));
   const intersection = [...qTokens].filter(x => tTokens.has(x)).length;
   const union = new Set([...qTokens, ...tTokens]).size;
-  
   return union > 0 ? intersection / union : 0;
+}
+
+/** Extract micronutrients from a DB row into a clean object */
+function extractMicrosFromDbRow(row: any): Record<string, number> | undefined {
+  const micros: Record<string, number> = {};
+  let hasData = false;
+  for (const key of MICRO_KEYS) {
+    const val = row[key];
+    if (typeof val === 'number' && val > 0) {
+      micros[key] = val;
+      hasData = true;
+    } else {
+      micros[key] = 0;
+    }
+  }
+  return hasData ? micros : undefined;
+}
+
+/** Try to find a food in the DB by name and return its micros */
+async function lookupMicrosFromDb(foodName: string): Promise<Record<string, number> | undefined> {
+  const sanitized = sanitizeForDbQuery(foodName);
+  if (!sanitized) return undefined;
+
+  const { data } = await supabase
+    .from('nutrition_food_database')
+    .select('*')
+    .ilike('name', `%${sanitized}%`)
+    .limit(5);
+
+  if (!data || data.length === 0) return undefined;
+
+  // Find best match
+  let bestMatch: any = null;
+  let bestScore = 0;
+  for (const item of data) {
+    const score = calculateSimilarity(foodName, item.name);
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = item;
+    }
+  }
+
+  if (bestMatch && bestScore >= 0.4) {
+    return extractMicrosFromDbRow(bestMatch);
+  }
+  return undefined;
 }
 
 export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
@@ -88,7 +136,6 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
       return;
     }
 
-    // Check cache first
     const cacheKey = trimmed.toLowerCase();
     if (resultCache.has(cacheKey)) {
       setResult(resultCache.get(cacheKey)!);
@@ -104,10 +151,8 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
       try {
         // Phase 1: Search local database
         setStatus('searching_db');
-        
-        // Sanitize for safe PostgREST query (removes commas, %, etc.)
         const sanitized = sanitizeForDbQuery(trimmed);
-        
+
         const { data: dbResults, error: dbError } = await supabase
           .from('nutrition_food_database')
           .select('*')
@@ -118,19 +163,17 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           console.warn('[useSmartFoodLookup] DB search error:', dbError);
         }
 
-        // Find best match
-        let bestMatch: typeof dbResults extends (infer T)[] ? T : never | null = null;
+        let bestMatch: any = null;
         let bestScore = 0;
 
         if (dbResults && dbResults.length > 0) {
           for (const item of dbResults) {
             const nameScore = calculateSimilarity(trimmed, item.name);
             const brandScore = item.brand ? calculateSimilarity(trimmed, item.brand) : 0;
-            const combinedScore = item.brand 
-              ? calculateSimilarity(trimmed, `${item.brand} ${item.name}`) 
+            const combinedScore = item.brand
+              ? calculateSimilarity(trimmed, `${item.brand} ${item.name}`)
               : nameScore;
             const score = Math.max(nameScore, brandScore, combinedScore);
-            
             if (score > bestScore) {
               bestScore = score;
               bestMatch = item;
@@ -138,8 +181,10 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           }
         }
 
-        // If good DB match, use it
+        // If good DB match, use it with micros from DB
         if (bestMatch && bestScore >= DB_MATCH_THRESHOLD) {
+          const dbMicros = extractMicrosFromDbRow(bestMatch);
+
           const dbResult: SmartFoodResult = {
             foods: [{
               name: bestMatch.name,
@@ -150,6 +195,7 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
               carbs_g: bestMatch.carbs_g || 0,
               fats_g: bestMatch.fats_g || 0,
               confidence: 'high',
+              micros: dbMicros,
             }],
             totals: {
               calories: bestMatch.calories_per_serving || 0,
@@ -157,11 +203,12 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
               carbs_g: bestMatch.carbs_g || 0,
               fats_g: bestMatch.fats_g || 0,
               hydration_oz: 0,
+              micros: dbMicros,
             },
             source: 'database',
             confidenceSummary: 'high',
           };
-          
+
           resultCache.set(cacheKey, dbResult);
           setResult(dbResult);
           setStatus('ready');
@@ -177,8 +224,6 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
 
         if (fnError) {
           console.error('[useSmartFoodLookup] AI function error:', fnError);
-          
-          // Handle specific error codes
           const errorMessage = fnError.message || '';
           if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
             setError('Rate limit reached. Try again in a moment.');
@@ -197,6 +242,34 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           setError(data.error);
           setStatus('error');
           return;
+        }
+
+        // DB-first micro enrichment: for each AI food item, try DB lookup for micros
+        if (data.foods && data.foods.length > 0) {
+          for (const food of data.foods) {
+            const dbMicros = await lookupMicrosFromDb(food.name);
+            if (dbMicros) {
+              food.micros = dbMicros;
+              food.confidence = 'high';
+            }
+          }
+
+          // Re-aggregate totals micros from enriched per-food micros
+          const aggregatedMicros: Record<string, number> = {};
+          let hasMicros = false;
+          for (const food of data.foods) {
+            if (food.micros && typeof food.micros === 'object') {
+              for (const [key, val] of Object.entries(food.micros)) {
+                if (typeof val === 'number' && val > 0) {
+                  aggregatedMicros[key] = (aggregatedMicros[key] || 0) + val;
+                  hasMicros = true;
+                }
+              }
+            }
+          }
+          if (hasMicros) {
+            data.totals = { ...data.totals, micros: aggregatedMicros };
+          }
         }
 
         // Determine overall confidence
