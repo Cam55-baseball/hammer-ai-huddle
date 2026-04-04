@@ -203,6 +203,18 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
               <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', confidenceBadge.cls)}>
                 {confidenceBadge.text}
               </span>
+              {score.microCoverage && (
+                <span className={cn(
+                  'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
+                  score.microCoverage.withMicros === score.microCoverage.total
+                    ? 'text-emerald-600 bg-emerald-500/10'
+                    : score.microCoverage.withMicros === 0
+                      ? 'text-destructive bg-destructive/10'
+                      : 'text-amber-600 bg-amber-500/10'
+                )}>
+                  {score.microCoverage.withMicros}/{score.microCoverage.total} verified
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-5 gap-1 mt-1.5">
               {breakdownItems.map(([label, val, max]) => (

@@ -170,9 +170,14 @@ export function NutritionDailyLog({
 
             {/* Day totals */}
             <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
-              <p className="text-xs font-medium text-muted-foreground mb-2">
-                {t('nutrition.dayTotals', 'Day Totals')}
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {t('nutrition.dayTotals', 'Day Totals')}
+                </p>
+                <Badge variant="outline" className={`text-[10px] ${microCoverageColor}`}>
+                  {mealsWithMicros}/{meals.length} micro data
+                </Badge>
+              </div>
               <div className="grid grid-cols-4 gap-2 text-center">
                 <div>
                   <p className="text-lg font-bold">{totals.calories}</p>
