@@ -58,6 +58,14 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       const avgConfidenceWeight = confidenceValues.reduce((a: number, b: number) => a + b, 0) / confidenceValues.length;
       const allLowConfidence = confidenceValues.every((v: number) => v <= 0.4);
 
+      // Data coverage: count meals with actual micro data
+      const mealsWithMicros = data.filter((l: any) => {
+        const m = l.micros as Record<string, number> | null;
+        return m && Object.keys(m).length > 0;
+      }).length;
+      const totalMeals = data.length;
+      const microCoverage = totalMeals > 0 ? mealsWithMicros / totalMeals : 0;
+
       // 1. Micronutrient completeness with adaptive weighting
       const microTotals: Record<string, number> = {};
       for (const log of data) {
@@ -77,7 +85,8 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
           weightedMet += weight;
         }
       }
-      const microScore = (weightedMet / totalWeight) * config.microWeight * avgConfidenceWeight;
+      // Apply coverage factor: partial micro data = reduced micro score
+      const microScore = (weightedMet / totalWeight) * config.microWeight * avgConfidenceWeight * microCoverage;
 
       // 2. Hydration quality
       const hydrationScore = (qualityPercent / 100) * config.hydrationWeight;
@@ -135,6 +144,7 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       return {
         total,
         confidenceLabel: allLowConfidence ? 'low' : avgConfidenceWeight >= 0.85 ? 'high' : 'medium',
+        microCoverage: { withMicros: mealsWithMicros, total: totalMeals },
         breakdown: {
           micro: Math.round(microScore),
           hydration: Math.round(hydrationScore),
@@ -193,6 +203,18 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
               <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', confidenceBadge.cls)}>
                 {confidenceBadge.text}
               </span>
+              {score.microCoverage && (
+                <span className={cn(
+                  'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
+                  score.microCoverage.withMicros === score.microCoverage.total
+                    ? 'text-emerald-600 bg-emerald-500/10'
+                    : score.microCoverage.withMicros === 0
+                      ? 'text-destructive bg-destructive/10'
+                      : 'text-amber-600 bg-amber-500/10'
+                )}>
+                  {score.microCoverage.withMicros}/{score.microCoverage.total} verified
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-5 gap-1 mt-1.5">
               {breakdownItems.map(([label, val, max]) => (

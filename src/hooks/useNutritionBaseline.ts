@@ -52,41 +52,49 @@ export function useNutritionBaseline(rdaMultiplier = 1.0) {
       if (error) throw error;
       if (!data || data.length === 0) return null;
 
-      // Aggregate per day
-      const dayMap = new Map<string, Record<string, number>>();
+      // Aggregate per day — separate micro-days from all days
+      const dayMicroMap = new Map<string, Record<string, number>>();
       const foodCounts = new Map<string, number>();
+      const allDays = new Set<string>();
 
       for (const log of data) {
         const dateKey = log.entry_date;
-        if (!dayMap.has(dateKey)) dayMap.set(dateKey, {});
-        const day = dayMap.get(dateKey)!;
+        allDays.add(dateKey);
 
+        // Only aggregate micros from rows that actually have micro data
         const micros = log.micros as Record<string, number> | null;
-        if (micros) {
+        if (micros && Object.keys(micros).length > 0) {
+          if (!dayMicroMap.has(dateKey)) dayMicroMap.set(dateKey, {});
+          const day = dayMicroMap.get(dateKey)!;
           for (const [k, v] of Object.entries(micros)) {
             if (typeof v === 'number') day[k] = (day[k] || 0) + v;
           }
         }
 
-        // Track food frequency
+        // Track food frequency (all rows)
         if (log.meal_title) {
           foodCounts.set(log.meal_title, (foodCounts.get(log.meal_title) || 0) + 1);
         }
       }
 
-      const days = Array.from(dayMap.values());
-      const daysWithData = days.length;
+      const microDays = Array.from(dayMicroMap.values());
+      const daysWithData = allDays.size;
+      const daysWithMicros = microDays.length;
       if (daysWithData === 0) return null;
 
-      // Compute per-nutrient baseline
+      // Compute per-nutrient baseline (only from days with micro data)
       const adaptiveMultipliers: Record<string, number> = {};
       const nutrients: NutrientBaseline[] = MICRO_KEYS.map(key => {
         const rda = RDA[key] * rdaMultiplier;
-        const dailyValues = days.map(d => d[key] || 0);
-        const avgIntake = dailyValues.reduce((a, b) => a + b, 0) / daysWithData;
+        if (daysWithMicros === 0) {
+          adaptiveMultipliers[key] = 1.0;
+          return { key, avgIntake: 0, rdaPercent: 0, chronicLow: false, priorityMultiplier: 1.0 };
+        }
+        const dailyValues = microDays.map(d => d[key] || 0);
+        const avgIntake = dailyValues.reduce((a, b) => a + b, 0) / daysWithMicros;
         const rdaPercent = Math.round((avgIntake / rda) * 100);
         const belowCount = dailyValues.filter(v => v < rda * 0.5).length;
-        const chronicLow = belowCount / daysWithData > 0.6;
+        const chronicLow = belowCount / daysWithMicros > 0.6;
         const priorityMultiplier = chronicLow ? 1.3 : 1.0;
         adaptiveMultipliers[key] = priorityMultiplier;
 
@@ -105,8 +113,8 @@ export function useNutritionBaseline(rdaMultiplier = 1.0) {
         .slice(0, 10)
         .map(([name]) => name);
 
-      // Score range (simple proxy: count how many nutrients meet >50% RDA per day)
-      const dailyScores = days.map(day => {
+      // Score range (only from days with micro data)
+      const dailyScores = microDays.map(day => {
         let met = 0;
         for (const key of MICRO_KEYS) {
           const rda = RDA[key] * rdaMultiplier;

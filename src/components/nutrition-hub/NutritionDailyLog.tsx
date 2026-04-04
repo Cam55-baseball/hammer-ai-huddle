@@ -12,6 +12,7 @@ import { MealLogCard, MealLogData } from './MealLogCard';
 import { MicronutrientPanel } from './MicronutrientPanel';
 import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
+import { Badge } from '@/components/ui/badge';
 import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { useNutritionConsistency } from '@/hooks/useNutritionConsistency';
@@ -107,6 +108,13 @@ export function NutritionDailyLog({
     fats: acc.fats + (meal.fatsG || 0),
   }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
 
+  const mealsWithMicros = meals.filter(m => m.micros && Object.keys(m.micros).length > 0).length;
+  const microCoverageColor = mealsWithMicros === meals.length
+    ? 'bg-emerald-500/10 text-emerald-600'
+    : mealsWithMicros === 0
+      ? 'bg-destructive/10 text-destructive'
+      : 'bg-amber-500/10 text-amber-600';
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -162,9 +170,14 @@ export function NutritionDailyLog({
 
             {/* Day totals */}
             <div className="mt-4 p-3 rounded-lg bg-muted/50 border">
-              <p className="text-xs font-medium text-muted-foreground mb-2">
-                {t('nutrition.dayTotals', 'Day Totals')}
-              </p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {t('nutrition.dayTotals', 'Day Totals')}
+                </p>
+                <Badge variant="outline" className={`text-[10px] ${microCoverageColor}`}>
+                  {mealsWithMicros}/{meals.length} micro data
+                </Badge>
+              </div>
               <div className="grid grid-cols-4 gap-2 text-center">
                 <div>
                   <p className="text-lg font-bold">{totals.calories}</p>
