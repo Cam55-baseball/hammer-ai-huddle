@@ -63,6 +63,13 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
     queryFn: async () => {
       if (!user) return null;
 
+      // Fetch logs with supplements info
+      const { data, error } = await supabase
+        .from('vault_nutrition_logs')
+        .select('micros, supplements')
+        .eq('user_id', user.id)
+        .eq('entry_date', dateStr);
+
       const { data, error } = await supabase
         .from('vault_nutrition_logs')
         .select('micros')
