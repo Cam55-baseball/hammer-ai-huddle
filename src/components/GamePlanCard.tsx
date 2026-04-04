@@ -508,16 +508,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const setUrlParam = useCallback((key: string, value: string | null) => {
-    const params = new URLSearchParams(window.location.search);
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    const qs = params.toString();
-    window.history.replaceState({}, '', qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
-  }, []);
+    setSearchParams(prev => {
+      if (value) {
+        prev.set(key, value);
+      } else {
+        prev.delete(key);
+      }
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const handleDetailClose = useCallback((open: boolean) => {
     setDetailDialogOpen(open);
