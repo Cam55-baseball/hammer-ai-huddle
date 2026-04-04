@@ -20,6 +20,12 @@ const RDA: Record<string, number> = {
   calcium_mg: 1000, iron_mg: 8, magnesium_mg: 420, potassium_mg: 2600, zinc_mg: 11,
 };
 
+const CONFIDENCE_WEIGHT: Record<string, number> = {
+  high: 1.0,
+  medium: 0.7,
+  low: 0.4,
+};
+
 interface NutritionScoreCardProps {
   date?: Date;
 }
@@ -37,12 +43,17 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
 
       const { data, error } = await supabase
         .from('vault_nutrition_logs')
-        .select('micros, calories, protein_g, carbs_g, fats_g, meal_title')
+        .select('micros, calories, protein_g, carbs_g, fats_g, meal_title, data_confidence, data_source')
         .eq('user_id', user.id)
         .eq('entry_date', dateStr);
 
       if (error) throw error;
       if (!data || data.length === 0) return null;
+
+      // Determine average confidence weight
+      const confidenceValues = data.map((l: any) => CONFIDENCE_WEIGHT[l.data_confidence || 'medium'] || 0.7);
+      const avgConfidenceWeight = confidenceValues.reduce((a: number, b: number) => a + b, 0) / confidenceValues.length;
+      const allLowConfidence = confidenceValues.every((v: number) => v <= 0.4);
 
       // 1. Micronutrient completeness (40%)
       const microTotals: Record<string, number> = {};
@@ -56,12 +67,12 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       const microsMeetingRda = MICRO_KEYS.filter(
         k => (microTotals[k] || 0) >= RDA[k] * 0.5
       ).length;
-      const microScore = (microsMeetingRda / 13) * 40;
+      const microScore = (microsMeetingRda / 13) * 40 * avgConfidenceWeight;
 
       // 2. Hydration quality (20%)
       const hydrationScore = (qualityPercent / 100) * 20;
 
-      // 3. Macro balance (25%) — ratio closeness to 30/40/30 P/C/F
+      // 3. Macro balance (25%)
       const totalP = data.reduce((s, l) => s + (l.protein_g || 0), 0);
       const totalC = data.reduce((s, l) => s + (l.carbs_g || 0), 0);
       const totalF = data.reduce((s, l) => s + (l.fats_g || 0), 0);
@@ -82,10 +93,14 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       const uniqueFoods = new Set(data.map(l => l.meal_title).filter(Boolean));
       const varietyScore = Math.min(uniqueFoods.size / 4, 1) * 15;
 
-      const total = Math.round(microScore + hydrationScore + macroScore + varietyScore);
+      let total = Math.round(microScore + hydrationScore + macroScore + varietyScore);
+
+      // Cap: low-confidence-only days cannot exceed 60
+      if (allLowConfidence && total > 60) total = 60;
 
       return {
         total,
+        confidenceLabel: allLowConfidence ? 'low' : avgConfidenceWeight >= 0.85 ? 'high' : 'medium',
         breakdown: {
           micro: Math.round(microScore),
           hydration: Math.round(hydrationScore),
@@ -105,6 +120,12 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       ? 'text-amber-500'
       : 'text-destructive';
 
+  const confidenceBadge = score.confidenceLabel === 'high'
+    ? { text: 'Verified', cls: 'text-emerald-600 bg-emerald-500/10' }
+    : score.confidenceLabel === 'low'
+      ? { text: 'Low Confidence', cls: 'text-destructive bg-destructive/10' }
+      : { text: 'Estimated', cls: 'text-amber-600 bg-amber-500/10' };
+
   return (
     <Card>
       <CardContent className="p-4">
@@ -116,10 +137,15 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
             <span className={cn('text-xl font-bold', colorClass)}>{score.total}</span>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold flex items-center gap-1.5">
-              <Trophy className="h-4 w-4 text-primary" />
-              {t('nutrition.nutritionScore', 'Nutrition Score')}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold flex items-center gap-1.5">
+                <Trophy className="h-4 w-4 text-primary" />
+                {t('nutrition.nutritionScore', 'Nutrition Score')}
+              </p>
+              <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', confidenceBadge.cls)}>
+                {confidenceBadge.text}
+              </span>
+            </div>
             <div className="grid grid-cols-4 gap-1 mt-1.5">
               {([
                 ['Micros', score.breakdown.micro, 40],
