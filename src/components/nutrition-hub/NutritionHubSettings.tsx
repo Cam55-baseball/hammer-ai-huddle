@@ -42,6 +42,7 @@ export function NutritionHubSettings({
   const { t } = useTranslation();
   const { activeGoal, createGoal } = useAthleteGoals();
   const { biometrics, refetch: refetchTDEE } = useTDEE();
+  const { performanceMode, setPerformanceMode, isLoading: perfLoading } = usePerformanceMode();
   
   const [selectedGoal, setSelectedGoal] = useState<GoalType>(
     activeGoal?.goalType || 'maintain'
