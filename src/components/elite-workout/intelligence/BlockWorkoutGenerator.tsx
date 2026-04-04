@@ -135,14 +135,14 @@ export function BlockWorkoutGenerator({
   const [selectedFocus, setSelectedFocus] = useState<string>('');
   const [customGoal, setCustomGoal] = useState('');
   
-  const { generateExercises, isGenerating, result, clearResult, convertToEnhancedExercises } = useBlockWorkoutGenerator();
+  const { generateExercises, isGenerating, result, clearResult, convertToEnhancedExercises, subscriptionReady } = useBlockWorkoutGenerator();
   const { data: goals, isLoading: goalsLoading } = useAthleteGoalsAggregated(personalize);
 
   const blockConfig = BLOCK_TYPE_CONFIGS[block.blockType];
   const questionConfig = BLOCK_QUESTIONS[block.blockType];
   
   const focusValue = questionConfig.isCustom ? customGoal : selectedFocus;
-  const canGenerate = focusValue.length > 0 && (!personalize || !goalsLoading);
+  const canGenerate = subscriptionReady && focusValue.length > 0 && (!personalize || !goalsLoading);
 
   const handleGenerate = async () => {
     const generatedResult = await generateExercises({
@@ -265,6 +265,11 @@ export function BlockWorkoutGenerator({
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   {t('eliteWorkout.generator.generating', 'Generating...')}
+                </>
+              ) : !subscriptionReady ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('eliteWorkout.generator.checkingAccess', 'Checking access...')}
                 </>
               ) : (
                 <>
