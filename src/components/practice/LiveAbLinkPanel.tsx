@@ -40,6 +40,9 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
     if (!user) return;
     setLoading(true);
     try {
+      // Cancel any existing pending links for this user
+      await supabase.rpc('cancel_pending_links', { p_user_id: user.id });
+
       const code = generateCode();
       const { error } = await supabase.from('live_ab_links' as any).insert({
         link_code: code,
@@ -64,50 +67,25 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
     setLoading(true);
     try {
       const code = joinInput.trim().toUpperCase();
-      // Look up pending link
-      const { data: link, error: lookupErr } = await supabase
-        .from('live_ab_links' as any)
-        .select('*')
-        .eq('link_code', code)
-        .in('status', ['pending', 'active'])
-        .maybeSingle();
 
-      if (lookupErr) throw lookupErr;
+      // Atomic claim — handles expiration, self-join guard, and race conditions in one statement
+      const { data: claimed, error: claimErr } = await supabase
+        .rpc('claim_ab_link', { p_code: code, p_user_id: user.id });
+
+      if (claimErr) throw claimErr;
+
+      const link = Array.isArray(claimed) ? claimed[0] : claimed;
       if (!link) {
-        toast({ title: 'Invalid Code', description: 'Code not found, expired, or already used.', variant: 'destructive' });
+        toast({ title: 'Invalid Code', description: 'Code not found, expired, already used, or is your own.', variant: 'destructive' });
         setLoading(false);
         return;
       }
-
-      // Check if code is expired (older than 2 hours)
-      const createdAt = new Date((link as any).created_at);
-      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-      if (createdAt < twoHoursAgo) {
-        await supabase
-          .from('live_ab_links' as any)
-          .update({ status: 'expired' })
-          .eq('id', (link as any).id);
-        toast({ title: 'Code Expired', description: 'This link code has expired. Please generate a new one.', variant: 'destructive' });
-        setLoading(false);
-        return;
-      }
-      if ((link as any).creator_user_id === user.id) {
-        toast({ title: 'Error', description: 'Cannot join your own session.', variant: 'destructive' });
-        setLoading(false);
-        return;
-      }
-
-      // Update link to active
-      const { error: updateErr } = await supabase
-        .from('live_ab_links' as any)
-        .update({ joiner_user_id: user.id, status: 'active', used_at: new Date().toISOString() })
-        .eq('id', (link as any).id);
-
-      if (updateErr) throw updateErr;
 
       setLinked(true);
       setGeneratedCode(code);
-      onLinkEstablished(code, (link as any).creator_session_id);
+      // creator_session_id may be null if creator hasn't saved yet — that's OK,
+      // realtime uses link_code for broadcast and defers session sync
+      onLinkEstablished(code, (link as any).creator_session_id ?? undefined);
       toast({ title: 'Linked!', description: 'Sessions are now connected.' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

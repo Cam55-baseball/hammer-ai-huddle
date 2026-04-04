@@ -7369,6 +7369,29 @@ export type Database = {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
       }
+      cancel_pending_links: { Args: { p_user_id: string }; Returns: undefined }
+      claim_ab_link: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: {
+          created_at: string | null
+          creator_session_id: string | null
+          creator_user_id: string
+          expires_at: string | null
+          id: string
+          joiner_session_id: string | null
+          joiner_user_id: string | null
+          link_code: string
+          sport: string
+          status: string
+          used_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "live_ab_links"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       folder_allows_coach_edit: {
@@ -7411,6 +7434,10 @@ export type Database = {
       try_acquire_hie_lock: {
         Args: { p_stale_seconds?: number; p_user_id: string }
         Returns: boolean
+      }
+      update_link_session_id: {
+        Args: { p_link_code: string; p_session_id: string; p_user_id: string }
+        Returns: undefined
       }
       user_has_role: {
         Args: {

@@ -305,20 +305,17 @@ export default function PracticeHub() {
         micro_layer_data: reps.length > 0 ? reps : undefined,
       });
 
-      // Update live_ab_links with session ID for bidirectional linking
-      if (sessionConfig.link_code && result.id) {
-        const { data: linkRow } = await supabase
-          .from('live_ab_links')
-          .select('id, creator_user_id')
-          .eq('link_code', sessionConfig.link_code)
-          .maybeSingle();
-
-        if (linkRow) {
-          const isCreator = linkRow.creator_user_id === user?.id;
-          await supabase
-            .from('live_ab_links')
-            .update(isCreator ? { creator_session_id: result.id } : { joiner_session_id: result.id })
-            .eq('id', linkRow.id);
+      // Bidirectional linking: updates live_ab_links + both performance_sessions rows
+      if (sessionConfig.link_code && result.id && user?.id) {
+        try {
+          await supabase.rpc('update_link_session_id', {
+            p_link_code: sessionConfig.link_code,
+            p_user_id: user.id,
+            p_session_id: result.id,
+          });
+        } catch (linkErr) {
+          console.error('[PracticeHub] Bidirectional link update failed:', linkErr);
+          // Non-fatal — session is saved, link update can be retried
         }
       }
 
