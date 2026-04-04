@@ -148,7 +148,7 @@ export function useMealVaultSync() {
         ...meals.supplements.map(s => s.name),
       ].filter(Boolean);
 
-      // Aggregate micronutrients from meal items (if available via AI parsing)
+      // Aggregate micronutrients from meal items using typed micros property
       const aggregatedMicros: Record<string, number> = {};
       const REQUIRED_MICRO_KEYS = [
         'vitamin_a_mcg', 'vitamin_c_mg', 'vitamin_d_mcg', 'vitamin_e_mg',
@@ -156,9 +156,8 @@ export function useMealVaultSync() {
         'calcium_mg', 'iron_mg', 'magnesium_mg', 'potassium_mg', 'zinc_mg',
       ];
       for (const item of meals.items) {
-        const itemMicros = (item as any).micros;
-        if (itemMicros && typeof itemMicros === 'object') {
-          for (const [key, val] of Object.entries(itemMicros)) {
+        if (item.micros && typeof item.micros === 'object') {
+          for (const [key, val] of Object.entries(item.micros)) {
             if (typeof val === 'number' && val > 0) {
               aggregatedMicros[key] = (aggregatedMicros[key] || 0) + val;
             }
@@ -166,17 +165,17 @@ export function useMealVaultSync() {
         }
       }
 
-      // Determine data confidence from food item sources
-      const itemConfidences = meals.items.map((item: any) => item.confidence || 'low');
-      const allHigh = itemConfidences.length > 0 && itemConfidences.every((c: string) => c === 'high');
-      const anyLow = itemConfidences.some((c: string) => c === 'low');
+      // Determine data confidence from food item typed confidence
+      const itemConfidences = meals.items.map((item) => item.confidence || 'low');
+      const allHigh = itemConfidences.length > 0 && itemConfidences.every((c) => c === 'high');
+      const anyLow = itemConfidences.some((c) => c === 'low');
       const dataConfidence = allHigh ? 'high' : anyLow ? 'low' : 'medium';
 
-      // Determine data source
-      const itemSources = meals.items.map((item: any) => item.source || 'ai');
-      const allDb = itemSources.every((s: string) => s === 'database');
-      const allAi = itemSources.every((s: string) => s === 'ai');
-      const dataSource = allDb ? 'database' : allAi ? 'ai' : 'mixed';
+      // Determine data source from food item typed source
+      const itemSources = meals.items.map((item) => item.source || 'manual');
+      const allDb = itemSources.every((s) => s === 'database');
+      const allManual = itemSources.every((s) => s === 'manual');
+      const dataSource = allDb ? 'database' : allManual ? 'manual' : 'mixed';
 
       // Validate micros: only store if complete (all 13 keys present with values)
       const microsComplete = REQUIRED_MICRO_KEYS.every(k => typeof aggregatedMicros[k] === 'number' && aggregatedMicros[k] >= 0);
