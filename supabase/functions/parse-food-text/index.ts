@@ -53,6 +53,11 @@ Be conservative with estimates - use typical serving sizes unless specified.
 Confidence levels: "high" for common foods with known values, "medium" for estimates, "low" for unusual items.
 For beverages (water, juice, coffee, tea, milk, soda, etc.), estimate fluid ounces. One glass = 8oz, one bottle = 16oz.
 
+MICRONUTRIENTS: For each food item, estimate key micronutrients using USDA reference data:
+- Vitamins: vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg, vitamin_b6_mg, vitamin_b12_mcg, folate_mcg
+- Minerals: calcium_mg, iron_mg, magnesium_mg, potassium_mg, zinc_mg
+Only include micronutrients that are meaningfully present (>1% RDA per serving). Omit zeros.
+
 MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
 - Morning items (eggs, bacon, oatmeal, cereal, toast, pancakes, waffles, coffee, orange juice) → "breakfast"
 - Midday items (sandwich, salad, soup, burger, wrap, lunch) → "lunch"  
