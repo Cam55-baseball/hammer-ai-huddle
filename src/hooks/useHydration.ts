@@ -147,7 +147,7 @@ export function useHydration() {
   }, [user, settings, todayTotal, dailyGoal]);
 
   // Add water
-  const addWater = useCallback(async (amount: number): Promise<boolean> => {
+  const addWater = useCallback(async (amount: number, liquidType?: string, qualityClass?: string): Promise<boolean> => {
     if (!user) return false;
 
     try {
@@ -157,7 +157,9 @@ export function useHydration() {
           user_id: user.id,
           amount_oz: amount,
           log_date: today,
-        });
+          liquid_type: liquidType || 'water',
+          quality_class: qualityClass || 'quality',
+        } as any);
 
       if (error) throw error;
 
