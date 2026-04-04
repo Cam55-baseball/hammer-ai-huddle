@@ -132,6 +132,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
 
   // ── PER-ROW DEDUP ──
   const shouldProcessEvent = useCallback((table: string, eventType: string, rowId: string): boolean => {
+    if (!rowId) return true;
     const key = `${table}:${eventType}:${rowId}`;
     const now = Date.now();
     const last = lastEventMapRef.current.get(key);
