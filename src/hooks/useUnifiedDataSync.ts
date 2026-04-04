@@ -228,8 +228,6 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
       console.warn('[UnifiedDataSync] Max reconnect attempts reached, invalidating critical keys');
       queryClient.invalidateQueries({ queryKey: ['hie-snapshot'] });
       queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['day-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['delta-analytics'] });
       queryClient.invalidateQueries({ queryKey: ['fatigue-state'] });
       reconnectAttemptRef.current = 0;
       return;
