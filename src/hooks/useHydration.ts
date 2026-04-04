@@ -286,6 +286,15 @@ export function useHydration() {
   const progress = dailyGoal > 0 ? Math.min((todayTotal / dailyGoal) * 100, 100) : 0;
   const remaining = Math.max(dailyGoal - todayTotal, 0);
 
+  // Compute quality vs filler totals
+  const qualityTotal = todayLogs
+    .filter(l => (l as any).quality_class !== 'filler')
+    .reduce((sum, l) => sum + Number(l.amount_oz), 0);
+  const fillerTotal = todayLogs
+    .filter(l => (l as any).quality_class === 'filler')
+    .reduce((sum, l) => sum + Number(l.amount_oz), 0);
+  const qualityPercent = todayTotal > 0 ? Math.round((qualityTotal / todayTotal) * 100) : 100;
+
   return {
     // Data
     todayLogs,
@@ -297,6 +306,9 @@ export function useHydration() {
     progress,
     remaining,
     goalReached: todayTotal >= dailyGoal,
+    qualityTotal,
+    fillerTotal,
+    qualityPercent,
     
     // Actions
     addWater,
