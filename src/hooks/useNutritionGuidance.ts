@@ -19,6 +19,7 @@ export interface LimitingFactor {
   percent: number;
   impact: string;
   ptsRecoverable: number;
+  ptsLabel: string;
 }
 
 export interface GuidanceFood {
