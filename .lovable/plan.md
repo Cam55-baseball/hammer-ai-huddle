@@ -1,119 +1,122 @@
 
 
-# Adaptive Intelligence + Performance Engine Layer
+# Personalization + Auto-Optimization Engine
 
-## Current State
+## What Exists
+- `useNutritionTrends` — 7/14/30-day rolling averages, trend slopes, behavioral patterns, smart nudges
+- `DeficiencyAlert` — current-day + predictive deficiency detection with food suggestions
+- `NutritionScoreCard` — 0-100 daily score with confidence weighting + optimization sub-score
+- `usePerformanceMode` — stricter targets toggle
+- `consistencyIndex.ts` — consistency scoring for athlete_daily_log (not nutrition-specific)
+- No suggestion tracking, no user baseline model, no adaptive targets, no recommendation learning
 
-- **NutritionScoreCard**: Daily 0-100 score with confidence weighting — single-day only, no trends
-- **DeficiencyAlert**: Single-day RDA comparison with food suggestions — reactive, no prediction
-- **NutritionWeeklySummary**: Macro averages with week-over-week comparison — no micro/hydration trends
-- **AIMealSuggestions**: AI-powered meal gap suggestions based on macro gaps — no micro-aware corrections
-- **No performance mode, no optimization score, no behavioral pattern detection, no nudges**
+## Database Migration
+
+### New table: `nutrition_suggestion_interactions`
+Tracks which food suggestions user accepts/ignores for learning loop + effectiveness tracking.
+
+```sql
+CREATE TABLE public.nutrition_suggestion_interactions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  nutrient_key text NOT NULL,
+  food_name text NOT NULL,
+  action text NOT NULL CHECK (action IN ('accepted', 'ignored', 'dismissed')),
+  effectiveness_delta numeric,  -- score change after acceptance
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.nutrition_suggestion_interactions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users manage own interactions" ON public.nutrition_suggestion_interactions
+  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+```
+
+No other schema changes needed — all baseline/trend data is computed from existing `vault_nutrition_logs` + `hydration_logs`.
+
+## New Files
+
+### 1. `src/hooks/useNutritionBaseline.ts`
+Computes per-user personal baseline from 30-day `vault_nutrition_logs`:
+- **Average intake** per nutrient (personal "normal")
+- **Hydration quality avg %**
+- **Score range** (avg, min, max from last 30 days)
+- **Frequently logged foods** (top 10 by count)
+- **Adaptive target emphasis**: if user is chronically low in a nutrient (>60% of days below 50% RDA), that nutrient gets a 1.3x priority multiplier in scoring and nudges
+- Uses React Query, single 30-day fetch, all computation client-side
+
+### 2. `src/hooks/useSuggestionLearning.ts`
+- `trackInteraction(nutrientKey, foodName, action)` — records accept/ignore/dismiss
+- `getPersonalizedSuggestions(nutrientKey)` — queries `nutrition_food_database` for foods rich in that nutrient, then re-ranks by:
+  1. Previously accepted foods first (from interactions table)
+  2. Never-ignored foods next
+  3. Frequently-ignored foods suppressed (shown last or hidden after 3+ ignores)
+- `trackEffectiveness(nutrientKey, foodName, scoreDelta)` — stores whether the accepted food actually improved the score
+
+### 3. `src/hooks/useNutritionConsistency.ts`
+Nutrition-specific Consistency Score (0-100):
+- **Score stability** (40%): std deviation of daily nutrition scores over 14 days — lower deviation = higher consistency
+- **Logging frequency** (30%): % of last 14 days with logged meals
+- **Deficiency frequency** (30%): % of days WITHOUT any deficient nutrients
+- Computed from existing data, no new tables needed
+
+## Enhanced Files
+
+### 4. `src/components/nutrition-hub/DeficiencyAlert.tsx`
+- Import `useSuggestionLearning`
+- Replace static food suggestions with personalized ones from `getPersonalizedSuggestions`
+- Add accept/dismiss buttons on each suggestion
+- On accept: call `trackInteraction('accepted')` + pass food to onAddFood
+- On dismiss: call `trackInteraction('dismissed')`
+- **Priority engine**: sort deficiencies by severity × duration (from trends) × adaptive multiplier (from baseline). Show only top 2.
+- **Context-aware**: check current hour — morning suggestions favor breakfast foods, evening favor dinner/snack foods (tag foods by meal_type in DB query)
+
+### 5. `src/components/nutrition-hub/NutritionScoreCard.tsx`
+- Import `useNutritionBaseline` for adaptive target emphasis
+- Apply baseline's priority multipliers to micro score calculation (chronically-low nutrients weighted higher)
+- Import `useNutritionConsistency`
+- Add "Consistency" display below score (small badge: "14-day consistency: 72")
+
+### 6. `src/components/nutrition-hub/NutritionTrendsCard.tsx`
+- Import `useNutritionBaseline`
+- Show "Personal Baseline" section: "Your avg Magnesium: 180mg (43% RDA) — below your baseline"
+- Show adaptive nudges that prioritize chronically-low nutrients
+- Use learned suggestion rankings from `useSuggestionLearning`
+
+### 7. `src/components/nutrition-hub/NutritionDailyLog.tsx`
+- Import + display `NutritionConsistencyBadge` (inline) showing 14-day consistency score
+- No structural changes, just add the badge near the score card
 
 ## Architecture
 
 ```text
-vault_nutrition_logs (existing, has micros + data_confidence)
-hydration_logs (existing, has liquid_type + quality_class)
+vault_nutrition_logs (30 days)
          ↓
-  NutritionTrendEngine hook (NEW)
-    → queries 7/14/30-day rolling windows
-    → computes micro trends, hydration quality trends, score trends
-    → detects behavioral patterns (weekend drops, chronic gaps)
-    → predicts deficiency risk from trend slopes
+useNutritionBaseline  →  personal averages, adaptive multipliers
+useNutritionConsistency  →  14-day consistency score
          ↓
-  UI Components
-    → NutritionTrends card (trends + predictions + nudges)
-    → Enhanced DeficiencyAlert (predictive warnings)
-    → Real-time correction suggestions in NutritionDailyLog
-    → Performance Mode toggle in NutritionHubSettings
-    → Optimization Score in NutritionScoreCard
+DeficiencyAlert  →  priority-ranked deficiencies (top 2 only)
+                 →  personalized food suggestions (learned)
+                 →  context-aware (time of day)
+         ↓
+useSuggestionLearning  →  tracks accept/ignore
+                       →  re-ranks suggestions
+                       →  tracks effectiveness
 ```
 
-## Changes
-
-### 1. New Hook: `useNutritionTrends.ts`
-
-Core intelligence engine. Queries `vault_nutrition_logs` for last 30 days, computes:
-
-- **Rolling averages** (7/14/30-day) for each of 13 micros, hydration quality %, nutrition score
-- **Trend detection**: linear slope over 7-day windows → "trending up/down/stable"
-- **Predictive deficiency**: if a nutrient's 7-day avg is <50% RDA AND trending down → "risk of deficiency"
-- **Behavioral patterns**: group by day-of-week, detect consistent gaps (e.g., "iron drops on weekends")
-- **Frequently missed nutrients**: nutrients below 50% RDA on >60% of logged days
-- **Smart nudges**: pick top 1-2 actionable corrections from DB foods based on biggest current gap
-
-Uses React Query with 60s staleTime for performance. Single query fetches 30 days of data, all computation is client-side.
-
-### 2. New Hook: `usePerformanceMode.ts`
-
-Reads/writes a `performance_mode` boolean from `athlete_mpi_settings` (add column via migration). When enabled:
-- RDA targets increase by 25%
-- Hydration weight in score increases from 20% to 30%
-- Deficiency tolerance threshold drops from 75% to 85%
-- Score calculation becomes stricter (macro deviation penalty doubles)
-
-### 3. DB Migration
-
-```sql
-ALTER TABLE public.athlete_mpi_settings
-  ADD COLUMN IF NOT EXISTS performance_mode boolean DEFAULT false;
-```
-
-### 4. New Component: `NutritionTrendsCard.tsx`
-
-Compact card showing:
-- 7-day micro trend arrows (up/down/stable) for top deficient nutrients
-- Predictive warnings ("Magnesium trending low — risk in 3-5 days")
-- Behavioral patterns ("Iron consistently low on weekends")
-- 1-2 smart nudges ("Quick win: add spinach to improve magnesium")
-
-Placed in `NutritionDailyLog` below DeficiencyAlert.
-
-### 5. Enhanced `DeficiencyAlert.tsx`
-
-Add predictive mode:
-- Accept trend data from `useNutritionTrends`
-- Show "Predicted Risk" alerts alongside current-day alerts
-- Different styling (dashed border, "trending" icon) for predictions vs current
-
-### 6. Enhanced `NutritionScoreCard.tsx` — Optimization Score
-
-Add sub-score: "Optimization" — measures how well user corrected deficiencies during the day:
-- Compare first-half-of-day micros vs end-of-day micros
-- If user improved gaps after initial logging → optimization bonus
-- Display as 5th breakdown column
-
-Also integrate performance mode multiplier.
-
-### 7. Real-Time Correction in `NutritionDailyLog.tsx`
-
-After meals are displayed, show a compact "Quick Wins" section:
-- Based on current day's deficiencies
-- Suggest 2-3 specific foods from DB to fill biggest gaps
-- "Add banana to improve potassium (+422mg)"
-
-### 8. Performance Mode Toggle in `NutritionHubSettings.tsx`
-
-Add a switch: "Performance Mode" with description "Stricter targets for competitive athletes". Reads/writes via `usePerformanceMode`.
-
-## Files Summary
+## Summary
 
 | File | Change |
 |------|--------|
-| Migration | Add `performance_mode` to `athlete_mpi_settings` |
-| `src/hooks/useNutritionTrends.ts` | **NEW** — Trend engine, predictions, patterns, nudges |
-| `src/hooks/usePerformanceMode.ts` | **NEW** — Performance mode read/write |
-| `src/components/nutrition-hub/NutritionTrendsCard.tsx` | **NEW** — Trends, predictions, patterns, nudges UI |
-| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Add predictive warnings from trend data |
-| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Add optimization sub-score + performance mode |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Integrate TrendsCard + quick wins |
-| `src/components/nutrition-hub/NutritionHubSettings.tsx` | Add performance mode toggle |
+| Migration | Create `nutrition_suggestion_interactions` table |
+| `src/hooks/useNutritionBaseline.ts` | **NEW** — personal baseline + adaptive target multipliers |
+| `src/hooks/useSuggestionLearning.ts` | **NEW** — recommendation learning loop + effectiveness |
+| `src/hooks/useNutritionConsistency.ts` | **NEW** — 14-day nutrition consistency score |
+| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Personalized suggestions, priority engine (top 2), context-aware |
+| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Adaptive scoring + consistency badge |
+| `src/components/nutrition-hub/NutritionTrendsCard.tsx` | Personal baseline display + learned nudges |
+| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Consistency score badge |
 
 ## Performance
-
-- Single 30-day query (one DB call), all trend/pattern computation client-side
-- React Query 60s staleTime prevents redundant fetches
+- All baselines computed client-side from single 30-day query (already cached by useNutritionTrends)
+- Suggestion interactions table is write-light (1 row per suggestion click)
 - No AI calls — all intelligence is deterministic math on stored data
-- No additional edge functions needed
 
