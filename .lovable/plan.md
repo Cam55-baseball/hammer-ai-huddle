@@ -1,106 +1,119 @@
 
 
-# Nutrition Hub — Trust Layer + Data Confidence System
+# Adaptive Intelligence + Performance Engine Layer
 
 ## Current State
 
-1. **`micros_incomplete` flag** exists in `useMealVaultSync.ts` line 183 — soft failure, allows empty micros
-2. **No confidence tracking** — food items have `confidence` in `FoodItem` interface but it's not stored in `vault_nutrition_logs`
-3. **DB pollution risk** — `useSmartFoodLookup.ts` lines 276-300 insert AI foods directly into `nutrition_food_database` with no validation gate
-4. **DeficiencyAlert** detects issues but offers no corrective suggestions
-5. **NutritionScoreCard** does not weight by confidence
-6. **No audit trail** — source/confidence not stored per nutrition log
+- **NutritionScoreCard**: Daily 0-100 score with confidence weighting — single-day only, no trends
+- **DeficiencyAlert**: Single-day RDA comparison with food suggestions — reactive, no prediction
+- **NutritionWeeklySummary**: Macro averages with week-over-week comparison — no micro/hydration trends
+- **AIMealSuggestions**: AI-powered meal gap suggestions based on macro gaps — no micro-aware corrections
+- **No performance mode, no optimization score, no behavioral pattern detection, no nudges**
 
 ## Architecture
 
 ```text
-Food Input → AI Parse → DB Enrichment → Confidence Assignment
-                                       ↓
-                            HIGH (DB match) → store directly
-                            MEDIUM (AI + valid structure) → store with flag
-                            LOW (AI incomplete) → stage in unverified_foods
-                                       ↓
-                            Nutrition Score weights by confidence
-                            DeficiencyAlert suggests corrective foods
+vault_nutrition_logs (existing, has micros + data_confidence)
+hydration_logs (existing, has liquid_type + quality_class)
+         ↓
+  NutritionTrendEngine hook (NEW)
+    → queries 7/14/30-day rolling windows
+    → computes micro trends, hydration quality trends, score trends
+    → detects behavioral patterns (weekend drops, chronic gaps)
+    → predicts deficiency risk from trend slopes
+         ↓
+  UI Components
+    → NutritionTrends card (trends + predictions + nudges)
+    → Enhanced DeficiencyAlert (predictive warnings)
+    → Real-time correction suggestions in NutritionDailyLog
+    → Performance Mode toggle in NutritionHubSettings
+    → Optimization Score in NutritionScoreCard
 ```
 
 ## Changes
 
-### 1. DB Migration — Add `unverified_foods` staging table + confidence columns
+### 1. New Hook: `useNutritionTrends.ts`
+
+Core intelligence engine. Queries `vault_nutrition_logs` for last 30 days, computes:
+
+- **Rolling averages** (7/14/30-day) for each of 13 micros, hydration quality %, nutrition score
+- **Trend detection**: linear slope over 7-day windows → "trending up/down/stable"
+- **Predictive deficiency**: if a nutrient's 7-day avg is <50% RDA AND trending down → "risk of deficiency"
+- **Behavioral patterns**: group by day-of-week, detect consistent gaps (e.g., "iron drops on weekends")
+- **Frequently missed nutrients**: nutrients below 50% RDA on >60% of logged days
+- **Smart nudges**: pick top 1-2 actionable corrections from DB foods based on biggest current gap
+
+Uses React Query with 60s staleTime for performance. Single query fetches 30 days of data, all computation is client-side.
+
+### 2. New Hook: `usePerformanceMode.ts`
+
+Reads/writes a `performance_mode` boolean from `athlete_mpi_settings` (add column via migration). When enabled:
+- RDA targets increase by 25%
+- Hydration weight in score increases from 20% to 30%
+- Deficiency tolerance threshold drops from 75% to 85%
+- Score calculation becomes stricter (macro deviation penalty doubles)
+
+### 3. DB Migration
 
 ```sql
--- Staging table for AI-generated foods pending validation
-CREATE TABLE public.unverified_foods (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  calories_per_serving numeric,
-  protein_g numeric, carbs_g numeric, fats_g numeric,
-  serving_size text,
-  vitamin_a_mcg numeric DEFAULT 0, vitamin_c_mg numeric DEFAULT 0,
-  vitamin_d_mcg numeric DEFAULT 0, vitamin_e_mg numeric DEFAULT 0,
-  vitamin_k_mcg numeric DEFAULT 0, vitamin_b6_mg numeric DEFAULT 0,
-  vitamin_b12_mcg numeric DEFAULT 0, folate_mcg numeric DEFAULT 0,
-  calcium_mg numeric DEFAULT 0, iron_mg numeric DEFAULT 0,
-  magnesium_mg numeric DEFAULT 0, potassium_mg numeric DEFAULT 0,
-  zinc_mg numeric DEFAULT 0,
-  confidence_level text DEFAULT 'low' CHECK (confidence_level IN ('high','medium','low')),
-  source text DEFAULT 'ai',
-  created_at timestamptz DEFAULT now(),
-  promoted_at timestamptz
-);
-
-ALTER TABLE public.unverified_foods ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone can read unverified foods" ON public.unverified_foods FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Authenticated can insert" ON public.unverified_foods FOR INSERT TO authenticated WITH CHECK (true);
+ALTER TABLE public.athlete_mpi_settings
+  ADD COLUMN IF NOT EXISTS performance_mode boolean DEFAULT false;
 ```
 
-Add confidence + source columns to `vault_nutrition_logs`:
-```sql
-ALTER TABLE public.vault_nutrition_logs
-  ADD COLUMN IF NOT EXISTS data_confidence text DEFAULT 'medium',
-  ADD COLUMN IF NOT EXISTS data_source text DEFAULT 'ai';
-```
+### 4. New Component: `NutritionTrendsCard.tsx`
 
-### 2. `useSmartFoodLookup.ts` — Route AI foods to staging table + assign confidence
+Compact card showing:
+- 7-day micro trend arrows (up/down/stable) for top deficient nutrients
+- Predictive warnings ("Magnesium trending low — risk in 3-5 days")
+- Behavioral patterns ("Iron consistently low on weekends")
+- 1-2 smart nudges ("Quick win: add spinach to improve magnesium")
 
-- Replace direct insert into `nutrition_food_database` (lines 276-300) with insert into `unverified_foods`
-- Add validation gate: check all 13 micro keys present, values within realistic USDA ranges (e.g., vitamin_a_mcg 0-10000, iron_mg 0-100)
-- Only promote to `nutrition_food_database` if confidence is 'high' (DB-enriched)
-- Assign confidence per food: DB match → 'high', AI with valid micros → 'medium', AI with empty/partial micros → 'low'
+Placed in `NutritionDailyLog` below DeficiencyAlert.
 
-### 3. `useMealVaultSync.ts` — Store confidence + source, remove `micros_incomplete`
+### 5. Enhanced `DeficiencyAlert.tsx`
 
-- Replace `micros_incomplete` (line 183) with `data_confidence` and `data_source`
-- Determine confidence from food items: if all 'high' → 'high', if any 'low' → 'low', else 'medium'
-- Store `data_source: 'database' | 'ai' | 'mixed'` based on food resolution
-- If micros empty AND all items are low confidence: still allow meal log (macros valuable) but set `micros: null` and `data_confidence: 'low'`
+Add predictive mode:
+- Accept trend data from `useNutritionTrends`
+- Show "Predicted Risk" alerts alongside current-day alerts
+- Different styling (dashed border, "trending" icon) for predictions vs current
 
-### 4. `NutritionScoreCard.tsx` — Confidence weighting
+### 6. Enhanced `NutritionScoreCard.tsx` — Optimization Score
 
-- Query `data_confidence` alongside existing fields
-- Apply weight multiplier: high=1.0, medium=0.7, low=0.4
-- Low-confidence-only days cannot score above 60
+Add sub-score: "Optimization" — measures how well user corrected deficiencies during the day:
+- Compare first-half-of-day micros vs end-of-day micros
+- If user improved gaps after initial logging → optimization bonus
+- Display as 5th breakdown column
 
-### 5. `DeficiencyAlert.tsx` — Add corrective food suggestions
+Also integrate performance mode multiplier.
 
-- When a nutrient is 'deficient' or 'low', query `nutrition_food_database` for top 3 foods richest in that nutrient
-- Display as "Try: Spinach, Almonds, Dark Chocolate" below each alert
-- Only suggest from DB foods (high confidence)
+### 7. Real-Time Correction in `NutritionDailyLog.tsx`
 
-### 6. No anti-drift periodic validation
+After meals are displayed, show a compact "Quick Wins" section:
+- Based on current day's deficiencies
+- Suggest 2-3 specific foods from DB to fill biggest gaps
+- "Add banana to improve potassium (+422mg)"
 
-This would require a cron job or background process. Instead: confidence is tracked per entry, and DB-resolved foods naturally upgrade confidence on re-lookup. This is self-correcting by design.
+### 8. Performance Mode Toggle in `NutritionHubSettings.tsx`
+
+Add a switch: "Performance Mode" with description "Stricter targets for competitive athletes". Reads/writes via `usePerformanceMode`.
 
 ## Files Summary
 
 | File | Change |
 |------|--------|
-| Migration | Create `unverified_foods` table, add `data_confidence`/`data_source` to `vault_nutrition_logs` |
-| `src/hooks/useSmartFoodLookup.ts` | Route AI foods to `unverified_foods` with validation gate |
-| `src/hooks/useMealVaultSync.ts` | Replace `micros_incomplete` with confidence/source tracking |
-| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Weight score by confidence |
-| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Add corrective food suggestions from DB |
+| Migration | Add `performance_mode` to `athlete_mpi_settings` |
+| `src/hooks/useNutritionTrends.ts` | **NEW** — Trend engine, predictions, patterns, nudges |
+| `src/hooks/usePerformanceMode.ts` | **NEW** — Performance mode read/write |
+| `src/components/nutrition-hub/NutritionTrendsCard.tsx` | **NEW** — Trends, predictions, patterns, nudges UI |
+| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Add predictive warnings from trend data |
+| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Add optimization sub-score + performance mode |
+| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Integrate TrendsCard + quick wins |
+| `src/components/nutrition-hub/NutritionHubSettings.tsx` | Add performance mode toggle |
 
-## No edge function changes
-The explicit 13-key micro schema is already correct.
+## Performance
+
+- Single 30-day query (one DB call), all trend/pattern computation client-side
+- React Query 60s staleTime prevents redundant fetches
+- No AI calls — all intelligence is deterministic math on stored data
+- No additional edge functions needed
 
