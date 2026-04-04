@@ -93,6 +93,11 @@ MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
                         carbs_g: { type: "number", description: "Carbohydrates in grams" },
                         fats_g: { type: "number", description: "Fats in grams" },
                         confidence: { type: "string", enum: ["high", "medium", "low"] },
+                        micros: {
+                          type: "object",
+                          description: "Micronutrients present in meaningful amounts. Keys: vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg, vitamin_b6_mg, vitamin_b12_mcg, folate_mcg, calcium_mg, iron_mg, magnesium_mg, potassium_mg, zinc_mg. Only include non-zero values.",
+                          additionalProperties: { type: "number" },
+                        },
                       },
                       required: ["name", "quantity", "unit", "calories", "protein_g", "carbs_g", "fats_g", "confidence"],
                     },
