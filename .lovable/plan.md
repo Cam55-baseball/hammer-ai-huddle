@@ -1,82 +1,111 @@
 
 
-# Elite UI Exposure — Precision Data Transparency
+# Advantage Layer — Precision Guidance System
 
 ## Summary
-Surface data source, confidence, micronutrient coverage, and insufficient-data states across the Daily Log UI. No new scoring logic. Pure reflection of existing backend truth.
+Create a new `GuidancePanel` component and supporting hook that derives actionable guidance strictly from existing scored data. Adds a craving-driven suggestion feature. No new scoring logic — pure read from existing computations.
 
-## Changes
+## New Files
 
-### 1. MealLogCard — Data Source Badge + Always-Visible Micros
+### 1. `src/constants/nutrientPerformanceMap.ts`
+Fixed mapping of nutrients to athlete-relevant outcomes:
+```typescript
+export const NUTRIENT_IMPACT: Record<string, string> = {
+  magnesium_mg: 'Recovery / sleep quality',
+  iron_mg: 'Energy / oxygen transport',
+  vitamin_b12_mcg: 'Cognitive function / energy',
+  vitamin_c_mg: 'Immune support / recovery',
+  potassium_mg: 'Hydration / muscle function',
+  calcium_mg: 'Bone strength / muscle contraction',
+  zinc_mg: 'Immune function / tissue repair',
+  vitamin_d_mcg: 'Bone health / immune support',
+  vitamin_a_mcg: 'Vision / immune support',
+  folate_mcg: 'Cell repair / energy metabolism',
+  vitamin_b6_mg: 'Protein metabolism / energy',
+  vitamin_e_mg: 'Antioxidant / cell protection',
+  vitamin_k_mcg: 'Blood clotting / bone health',
+};
+```
 
-**File**: `src/components/nutrition-hub/MealLogCard.tsx`
+### 2. `src/hooks/useNutritionGuidance.ts`
+Hook that consumes existing query data (score breakdown, deficiency alerts, micro coverage) and computes:
 
-- Extend `MealLogData` interface: add `dataSource?: string | null`, `dataConfidence?: string | null`
-- Show inline badge next to meal title:
-  - `data_source = 'database'` → green "Verified" badge
-  - `data_source = 'ai'` → amber "AI Estimated" badge
-  - `data_source = 'mixed'` → amber "Mixed" badge
-  - null/unknown → grey "Manual" badge
-- Show micronutrient grid **expanded by default** (not collapsed) when micros exist. Remove the toggle button — micros are always visible when present.
-- When `micros` is null, show explicit text: "No micronutrient data" in muted style
-- Show confidence as a small label: "High confidence" / "Estimated" / "Low confidence"
+- **Top 2 limiting factors** — reads `NutritionScoreCard` breakdown to identify lowest-scoring dimension (micro/hydration/macro/variety), then drills into specific nutrients from deficiency data
+- **Fastest path to improvement** — queries `nutrition_food_database` for top foods matching the limiting nutrients
+- **Suppression** — returns `null` guidance if `microCoverage.withMicros === 0`
+- **Behavioral nudges**:
+  - If `microCoverage < 50%` → "Increase verified foods to unlock full nutrient tracking"
+  - If consistency is `null` → "Log nutrient-complete meals to activate consistency scoring"
+  - If coverage improved vs yesterday → "+X% micronutrient coverage vs yesterday"
 
-### 2. NutritionDailyLog — Pass Source + Confidence to Cards + Coverage Summary
+Data sources: reuses `nutritionScore`, `deficiencyAlerts`, `micronutrients` query keys already cached by existing components. No new DB queries for score computation.
 
-**File**: `src/components/nutrition-hub/NutritionDailyLog.tsx`
+### 3. `src/components/nutrition-hub/GuidancePanel.tsx`
+Renders the guidance output. Structure:
 
-- Map `data_source` and `data_confidence` from DB rows into `MealLogData`
-- In the Day Totals section, replace the existing micro coverage badge with a clearer line:
-  - "X/Y meals with micronutrient data" (already partially there, make more explicit)
-  - Show aggregate confidence: "Data confidence: High/Mixed/Low" derived from meal-level values
-- When all meals have `micros = null`, show in Day Totals: "No micronutrient data logged today" instead of hiding
+```
+┌─────────────────────────────────┐
+│ ⚡ How to Improve Your Score    │
+│                                 │
+│ Top limiting factors:           │
+│  1. Magnesium (12% RDA)        │
+│     → Recovery / sleep quality  │
+│  2. Iron (34% RDA)             │
+│     → Energy / oxygen transport │
+│                                 │
+│ Fastest path:                   │
+│  • Spinach (high Mg + Iron)     │
+│  • Pumpkin seeds (Mg + Zinc)    │
+│                                 │
+│ ┌─ Nudge ─────────────────────┐ │
+│ │ +22% micro coverage vs      │ │
+│ │ yesterday                   │ │
+│ └─────────────────────────────┘ │
+│                                 │
+│ When micros = 0:                │
+│ "Guidance unavailable —         │
+│  insufficient micronutrient     │
+│  data"                          │
+└─────────────────────────────────┘
+```
 
-### 3. MicronutrientPanel — Show All 13 Nutrients Always
+Suppressed entirely when micro coverage = 0 (shows single "unavailable" message instead).
 
-**File**: `src/components/nutrition-hub/MicronutrientPanel.tsx`
+### 4. `src/components/nutrition-hub/CravingGuidance.tsx`
+Small input + response card:
 
-- Currently filters to `current > 0` and hides entirely when no data — change behavior:
-  - When zero micro data exists: show explicit message "No micronutrient data available — log verified foods to track"
-  - When partial data: show ALL 13 nutrients, with 0-intake ones displayed as "0 / RDA" in muted style
-  - Remove collapsible wrapper — panel is always open (no hiding core data per requirement)
+- Text input or quick-pick chips: "Sweet", "Salty", "Crunchy", "Chocolate"
+- On submit: reads current deficiency data from cached query
+- Matches craving category to foods from `nutrition_food_database` that are high in deficient nutrients
+- Returns 2-3 specific foods with nutrient alignment explanation
+- **Suppressed** when `microCoverage = 0` — shows "Log verified foods to unlock craving guidance"
+- No AI calls — pure DB lookup + deterministic matching
 
-### 4. NutritionScoreCard — Explainable Breakdown
+### 5. Supplement Handling (in existing `DeficiencyAlert.tsx`)
+- Already included in daily micro totals (existing behavior is correct)
+- Add visual distinction: if a nutrient reaches RDA primarily via supplements, show "covered via supplement" label
+- Still show "Consider whole-food sources" nudge for supplement-covered nutrients
 
-**File**: `src/components/nutrition-hub/NutritionScoreCard.tsx`
-
-- Already shows micro coverage badge and confidence badge — no structural changes needed
-- Add a single line below the breakdown grid when `microCoverage.withMicros < microCoverage.total`:
-  - "Score reduced: X/Y meals lack micronutrient data"
-- Already handles `consistency = null` with "insufficient data" message — verified correct
-
-### 5. DeficiencyAlert — Explicit No-Data State
-
-**File**: `src/components/nutrition-hub/DeficiencyAlert.tsx`
-
-- Currently returns `null` when `Object.keys(totals).length === 0` — change to show:
-  - "Nutrient analysis unavailable — no micronutrient data logged today"
-- This prevents silent absence from being mistaken for "no deficiencies"
-
-### 6. NutritionTrendsCard — Already Correct
-
-- Already shows "Trend analysis unavailable — insufficient micronutrient data" for `insufficient_data` status
-- No changes needed
-
-## Files Changed
+## Modified Files
 
 | File | Change |
 |------|--------|
-| `src/components/nutrition-hub/MealLogCard.tsx` | Add data source badge, confidence label, always-show micros, explicit null-micro message |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Pass `dataSource`/`dataConfidence` to cards, explicit coverage in Day Totals |
-| `src/components/nutrition-hub/MicronutrientPanel.tsx` | Show all 13 nutrients always, remove collapsible, explicit no-data message |
-| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Add score-reduction explanation line |
-| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Show explicit "unavailable" message instead of hiding |
+| `src/constants/nutrientPerformanceMap.ts` | New — fixed nutrient→outcome mappings |
+| `src/hooks/useNutritionGuidance.ts` | New — guidance computation hook |
+| `src/components/nutrition-hub/GuidancePanel.tsx` | New — guidance UI |
+| `src/components/nutrition-hub/CravingGuidance.tsx` | New — craving-driven suggestions |
+| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Add `<GuidancePanel />` and `<CravingGuidance />` below NutritionScoreCard |
+| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Add "covered via supplement" label + whole-food nudge |
+
+## Suppression Rules (enforced in hook)
+- `microCoverage.withMicros === 0` → all guidance returns `{ status: 'suppressed', message: 'Guidance unavailable — insufficient micronutrient data' }`
+- All confidence labels pass through from existing data — no re-computation
+- No estimation of missing micros
 
 ## What This Does NOT Do
-
 - No new scoring logic
-- No simulated or estimated micros
-- No new database queries
-- No decorative elements
-- Every element maps directly to a stored value
+- No AI API calls (craving guidance is pure DB lookup)
+- No new database tables or migrations
+- No simulated or estimated data
+- Every output traceable to a stored value
 
