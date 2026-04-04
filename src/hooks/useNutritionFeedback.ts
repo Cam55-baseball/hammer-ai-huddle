@@ -229,17 +229,41 @@ export function useNutritionFeedback(
       }
     }
 
-    // --- NOISE RULE: progression vs identity (max 1) ---
-    // If streak ≥3, identity replaces progression
-    const finalProgression = streak >= 3 ? null : progression;
-    const finalIdentity = streak >= 3 ? identityFrame : null;
+    // --- STRICT PRIORITY STACK (4 exclusive cases) ---
 
+    // CASE C — Streak ≥3: Identity overrides reward/progression/nudge
+    if (streak >= 3) {
+      return {
+        reward: null,
+        progression: null,
+        streak,
+        identityFrame: identityFrame,
+        nudge: null,
+        goal,
+        zeroData: false,
+      };
+    }
+
+    // CASE A — Improvement detected, no streak
+    if (reward) {
+      return {
+        reward,
+        progression,
+        streak,
+        identityFrame: null,
+        nudge: null, // reward IS the emotional signal
+        goal,
+        zeroData: false,
+      };
+    }
+
+    // CASE B — No improvement, no streak
     return {
-      reward: reward,
-      progression: finalProgression ?? (finalIdentity ? null : progression),
+      reward: null,
+      progression: null,
       streak,
-      identityFrame: finalIdentity,
-      nudge: reward ? nudge : nudge, // max 1 nudge
+      identityFrame: null,
+      nudge,
       goal,
       zeroData: false,
     };
