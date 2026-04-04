@@ -40,15 +40,11 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
     if (!user) return;
     setLoading(true);
     try {
-      // Cancel any existing pending links for this user
-      await supabase.rpc('cancel_pending_links', { p_user_id: user.id });
-
       const code = generateCode();
-      const { error } = await supabase.from('live_ab_links' as any).insert({
-        link_code: code,
-        creator_user_id: user.id,
-        sport: sport || 'baseball',
-        status: 'pending',
+      const { data: result, error } = await supabase.rpc('create_ab_link', {
+        p_user_id: user.id,
+        p_sport: sport || 'baseball',
+        p_link_code: code,
       });
       if (error) throw error;
       setGeneratedCode(code);
