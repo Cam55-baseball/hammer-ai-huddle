@@ -1,122 +1,56 @@
 
 
-# Personalization + Auto-Optimization Engine
+# System Resurrection — Fix Micronutrient Pipeline + Wire Effectiveness Tracking
 
-## What Exists
-- `useNutritionTrends` — 7/14/30-day rolling averages, trend slopes, behavioral patterns, smart nudges
-- `DeficiencyAlert` — current-day + predictive deficiency detection with food suggestions
-- `NutritionScoreCard` — 0-100 daily score with confidence weighting + optimization sub-score
-- `usePerformanceMode` — stricter targets toggle
-- `consistencyIndex.ts` — consistency scoring for athlete_daily_log (not nutrition-specific)
-- No suggestion tracking, no user baseline model, no adaptive targets, no recommendation learning
+## Proven Root Cause
 
-## Database Migration
+**156 vault_nutrition_logs rows exist. ALL have `micros: {}` (empty object). Zero have real micronutrient data.**
 
-### New table: `nutrition_suggestion_interactions`
-Tracks which food suggestions user accepts/ignores for learning loop + effectiveness tracking.
+The pipeline breaks at two points:
 
-```sql
-CREATE TABLE public.nutrition_suggestion_interactions (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  nutrient_key text NOT NULL,
-  food_name text NOT NULL,
-  action text NOT NULL CHECK (action IN ('accepted', 'ignored', 'dismissed')),
-  effectiveness_delta numeric,  -- score change after acceptance
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE public.nutrition_suggestion_interactions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users manage own interactions" ON public.nutrition_suggestion_interactions
-  FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-```
+### Break Point 1: AI micros not reaching MealData items
+`useSmartFoodLookup` enriches `data.foods[].micros` from DB lookups (line 250), but when these foods are added to `MealData.items[]` in `MealLoggingDialog`, the `micros` property is NOT part of the `MealItem` type — it gets silently dropped. The vault sync then reads `(item as any).micros` and finds nothing.
 
-No other schema changes needed — all baseline/trend data is computed from existing `vault_nutrition_logs` + `hydration_logs`.
+### Break Point 2: Quick Entry path has zero micros
+Quick entry (line 244) creates a bare `MealData.items[]` with only calories/protein/carbs/fats — no micros at all. This is the majority of real user logs.
 
-## New Files
+### Break Point 3: `trackEffectiveness()` is dead code
+Defined in `useSuggestionLearning.ts` but never called anywhere else in the codebase.
 
-### 1. `src/hooks/useNutritionBaseline.ts`
-Computes per-user personal baseline from 30-day `vault_nutrition_logs`:
-- **Average intake** per nutrient (personal "normal")
-- **Hydration quality avg %**
-- **Score range** (avg, min, max from last 30 days)
-- **Frequently logged foods** (top 10 by count)
-- **Adaptive target emphasis**: if user is chronically low in a nutrient (>60% of days below 50% RDA), that nutrient gets a 1.3x priority multiplier in scoring and nudges
-- Uses React Query, single 30-day fetch, all computation client-side
+## Fixes
 
-### 2. `src/hooks/useSuggestionLearning.ts`
-- `trackInteraction(nutrientKey, foodName, action)` — records accept/ignore/dismiss
-- `getPersonalizedSuggestions(nutrientKey)` — queries `nutrition_food_database` for foods rich in that nutrient, then re-ranks by:
-  1. Previously accepted foods first (from interactions table)
-  2. Never-ignored foods next
-  3. Frequently-ignored foods suppressed (shown last or hidden after 3+ ignores)
-- `trackEffectiveness(nutrientKey, foodName, scoreDelta)` — stores whether the accepted food actually improved the score
+### 1. MealLoggingDialog — Pass micros from SmartFoodLookup to MealData items
 
-### 3. `src/hooks/useNutritionConsistency.ts`
-Nutrition-specific Consistency Score (0-100):
-- **Score stability** (40%): std deviation of daily nutrition scores over 14 days — lower deviation = higher consistency
-- **Logging frequency** (30%): % of last 14 days with logged meals
-- **Deficiency frequency** (30%): % of days WITHOUT any deficient nutrients
-- Computed from existing data, no new tables needed
+When smart food lookup returns results, the micros must be included on each item added to `mealData.items[]`. Currently `MealItem` type likely lacks `micros` — add it and ensure the food-add handler copies micros through.
 
-## Enhanced Files
+### 2. MealLoggingDialog — DB-enrich Quick Entry micros
 
-### 4. `src/components/nutrition-hub/DeficiencyAlert.tsx`
-- Import `useSuggestionLearning`
-- Replace static food suggestions with personalized ones from `getPersonalizedSuggestions`
-- Add accept/dismiss buttons on each suggestion
-- On accept: call `trackInteraction('accepted')` + pass food to onAddFood
-- On dismiss: call `trackInteraction('dismissed')`
-- **Priority engine**: sort deficiencies by severity × duration (from trends) × adaptive multiplier (from baseline). Show only top 2.
-- **Context-aware**: check current hour — morning suggestions favor breakfast foods, evening favor dinner/snack foods (tag foods by meal_type in DB query)
+For quick entry path: after user enters food name/macros, do a DB lookup (`lookupMicrosFromDb`) for the meal title and attach micros to the item before syncing. If no DB match, log with `data_confidence: 'low'` and `micros: null`.
 
-### 5. `src/components/nutrition-hub/NutritionScoreCard.tsx`
-- Import `useNutritionBaseline` for adaptive target emphasis
-- Apply baseline's priority multipliers to micro score calculation (chronically-low nutrients weighted higher)
-- Import `useNutritionConsistency`
-- Add "Consistency" display below score (small badge: "14-day consistency: 72")
+### 3. useMealVaultSync — Fix `undefined` micros storage
 
-### 6. `src/components/nutrition-hub/NutritionTrendsCard.tsx`
-- Import `useNutritionBaseline`
-- Show "Personal Baseline" section: "Your avg Magnesium: 180mg (43% RDA) — below your baseline"
-- Show adaptive nudges that prioritize chronically-low nutrients
-- Use learned suggestion rankings from `useSuggestionLearning`
+Line 203: `micros: (microsComplete && hasMicrosData) ? aggregatedMicros : undefined` — when `undefined`, Supabase stores `{}` (empty object) instead of `null`. Change to explicit `null` so the DB accurately reflects "no micro data."
 
-### 7. `src/components/nutrition-hub/NutritionDailyLog.tsx`
-- Import + display `NutritionConsistencyBadge` (inline) showing 14-day consistency score
-- No structural changes, just add the badge near the score card
+### 4. Wire trackEffectiveness into meal logging flow
 
-## Architecture
+In `MealLoggingDialog` or `useMealVaultSync`, after successful meal save:
+- Query `nutrition_suggestion_interactions` for recent `accepted` suggestions for this user
+- Compare logged food names against accepted suggestion food names
+- If match found, compute the nutrient improvement (current day's intake vs previous day) and call `trackEffectiveness()`
 
-```text
-vault_nutrition_logs (30 days)
-         ↓
-useNutritionBaseline  →  personal averages, adaptive multipliers
-useNutritionConsistency  →  14-day consistency score
-         ↓
-DeficiencyAlert  →  priority-ranked deficiencies (top 2 only)
-                 →  personalized food suggestions (learned)
-                 →  context-aware (time of day)
-         ↓
-useSuggestionLearning  →  tracks accept/ignore
-                       →  re-ranks suggestions
-                       →  tracks effectiveness
-```
+### 5. Seed 14 days of realistic nutrition logs with real micros
 
-## Summary
+Insert ~30 rows into `vault_nutrition_logs` with complete micros data (derived from the 75 seeded DB foods). This immediately activates: baseline model, consistency scoring, trend engine, deficiency detection.
+
+## Files
 
 | File | Change |
 |------|--------|
-| Migration | Create `nutrition_suggestion_interactions` table |
-| `src/hooks/useNutritionBaseline.ts` | **NEW** — personal baseline + adaptive target multipliers |
-| `src/hooks/useSuggestionLearning.ts` | **NEW** — recommendation learning loop + effectiveness |
-| `src/hooks/useNutritionConsistency.ts` | **NEW** — 14-day nutrition consistency score |
-| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Personalized suggestions, priority engine (top 2), context-aware |
-| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Adaptive scoring + consistency badge |
-| `src/components/nutrition-hub/NutritionTrendsCard.tsx` | Personal baseline display + learned nudges |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Consistency score badge |
+| `src/types/customActivity.ts` | Add `micros` to `MealItem` interface |
+| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Pass micros from SmartFoodLookup results to MealData items; add DB micro lookup for quick entry |
+| `src/hooks/useMealVaultSync.ts` | Change `undefined` to `null` for missing micros; add effectiveness tracking call after save |
+| DB seed (via insert tool) | Insert 14 days × 2-3 meals of realistic nutrition logs with full micros |
 
-## Performance
-- All baselines computed client-side from single 30-day query (already cached by useNutritionTrends)
-- Suggestion interactions table is write-light (1 row per suggestion click)
-- No AI calls — all intelligence is deterministic math on stored data
+## No edge function changes needed
+The edge function schema is correct (all 13 keys required). The AI does return micros — the problem is downstream in the client pipeline.
 
