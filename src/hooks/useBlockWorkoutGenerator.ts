@@ -142,15 +142,15 @@ export function useBlockWorkoutGenerator() {
         const isAuthError = msg.includes('Rate limits') || msg.includes('Payment required') || msg.includes("plan doesn't include");
 
         if (!isAuthError) {
-          // Fix 6: Retry once after 1 second for non-auth failures
           await new Promise(r => setTimeout(r, 1000));
-          if (!mountedRef.current) return null;
+          if (!mountedRef.current || currentRequestId !== requestIdRef.current) return null;
           generatedData = await attemptGenerate();
         } else {
           throw firstErr;
         }
       }
 
+      if (currentRequestId !== requestIdRef.current) return null;
       if (mountedRef.current && generatedData) {
         setResult(generatedData);
       }
