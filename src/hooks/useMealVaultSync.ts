@@ -45,8 +45,8 @@ export function useMealVaultSync() {
       if (hydrationData.entries && hydrationData.entries.length > 0) {
         for (const entry of hydrationData.entries) {
           const amountOz = convertToOz(entry.amount, hydrationData.unit);
-          const entryLiquidType = (entry as any).liquidType || 'water';
-          const entryQualityClass = (entry as any).qualityClass || 'quality';
+          const entryLiquidType: string = (entry as any).liquidType ?? 'water';
+          const entryQualityClass: string = (entry as any).qualityClass ?? 'quality';
           await addWater(amountOz, entryLiquidType, entryQualityClass);
         }
       } else if (hydrationData.amount > 0) {
@@ -180,7 +180,7 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-          micros: Object.keys(aggregatedMicros).length > 0 ? aggregatedMicros : null,
+          micros: Object.keys(aggregatedMicros).length > 0 && Object.values(aggregatedMicros).some(v => v > 0) ? aggregatedMicros : null,
         } as any);
 
       if (error) throw error;
