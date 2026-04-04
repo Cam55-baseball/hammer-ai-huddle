@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy } from 'lucide-react';
+import { Trophy, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useHydration } from '@/hooks/useHydration';
+import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import { cn } from '@/lib/utils';
 
 const MICRO_KEYS = [
@@ -34,28 +35,29 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { qualityPercent, progress: hydrationProgress } = useHydration();
+  const { performanceMode, config } = usePerformanceMode();
   const dateStr = format(date || new Date(), 'yyyy-MM-dd');
 
   const { data: score } = useQuery({
-    queryKey: ['nutritionScore', dateStr, user?.id, qualityPercent, hydrationProgress],
+    queryKey: ['nutritionScore', dateStr, user?.id, qualityPercent, hydrationProgress, performanceMode],
     queryFn: async () => {
       if (!user) return null;
 
       const { data, error } = await supabase
         .from('vault_nutrition_logs')
-        .select('micros, calories, protein_g, carbs_g, fats_g, meal_title, data_confidence, data_source')
+        .select('micros, calories, protein_g, carbs_g, fats_g, meal_title, data_confidence, data_source, logged_at')
         .eq('user_id', user.id)
         .eq('entry_date', dateStr);
 
       if (error) throw error;
       if (!data || data.length === 0) return null;
 
-      // Determine average confidence weight
+      // Confidence weight
       const confidenceValues = data.map((l: any) => CONFIDENCE_WEIGHT[l.data_confidence || 'medium'] || 0.7);
       const avgConfidenceWeight = confidenceValues.reduce((a: number, b: number) => a + b, 0) / confidenceValues.length;
       const allLowConfidence = confidenceValues.every((v: number) => v <= 0.4);
 
-      // 1. Micronutrient completeness (40%)
+      // 1. Micronutrient completeness
       const microTotals: Record<string, number> = {};
       for (const log of data) {
         const micros = log.micros as Record<string, number> | null;
@@ -65,14 +67,14 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
         }
       }
       const microsMeetingRda = MICRO_KEYS.filter(
-        k => (microTotals[k] || 0) >= RDA[k] * 0.5
+        k => (microTotals[k] || 0) >= RDA[k] * config.rdaMultiplier * 0.5
       ).length;
-      const microScore = (microsMeetingRda / 13) * 40 * avgConfidenceWeight;
+      const microScore = (microsMeetingRda / 13) * config.microWeight * avgConfidenceWeight;
 
-      // 2. Hydration quality (20%)
-      const hydrationScore = (qualityPercent / 100) * 20;
+      // 2. Hydration quality
+      const hydrationScore = (qualityPercent / 100) * config.hydrationWeight;
 
-      // 3. Macro balance (25%)
+      // 3. Macro balance
       const totalP = data.reduce((s, l) => s + (l.protein_g || 0), 0);
       const totalC = data.reduce((s, l) => s + (l.carbs_g || 0), 0);
       const totalF = data.reduce((s, l) => s + (l.fats_g || 0), 0);
@@ -86,14 +88,53 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
         const cDev = Math.abs(cRatio - 0.40);
         const fDev = Math.abs(fRatio - 0.30);
         const avgDev = (pDev + cDev + fDev) / 3;
-        macroScore = Math.max(0, (1 - avgDev * 3)) * 25;
+        const penalty = config.macroDeviationPenalty;
+        macroScore = Math.max(0, (1 - avgDev * penalty)) * config.macroWeight;
       }
 
-      // 4. Variety (15%)
+      // 4. Variety
       const uniqueFoods = new Set(data.map(l => l.meal_title).filter(Boolean));
-      const varietyScore = Math.min(uniqueFoods.size / 4, 1) * 15;
+      const varietyScore = Math.min(uniqueFoods.size / 4, 1) * config.varietyWeight;
 
-      let total = Math.round(microScore + hydrationScore + macroScore + varietyScore);
+      // 5. Optimization sub-score (bonus up to 5 pts)
+      // Measures if user corrected gaps throughout the day
+      let optimizationBonus = 0;
+      if (data.length >= 2) {
+        const sorted = [...data].sort((a, b) => (a.logged_at || '').localeCompare(b.logged_at || ''));
+        const midpoint = Math.floor(sorted.length / 2);
+        const firstHalf = sorted.slice(0, midpoint);
+        const secondHalf = sorted.slice(midpoint);
+
+        const firstMicros: Record<string, number> = {};
+        const secondMicros: Record<string, number> = {};
+        for (const log of firstHalf) {
+          const m = log.micros as Record<string, number> | null;
+          if (m) for (const [k, v] of Object.entries(m)) if (typeof v === 'number') firstMicros[k] = (firstMicros[k] || 0) + v;
+        }
+        for (const log of secondHalf) {
+          const m = log.micros as Record<string, number> | null;
+          if (m) for (const [k, v] of Object.entries(m)) if (typeof v === 'number') secondMicros[k] = (secondMicros[k] || 0) + v;
+        }
+
+        // Count how many deficient-in-first-half nutrients were improved in second half
+        let improved = 0;
+        let deficientFirst = 0;
+        for (const key of MICRO_KEYS) {
+          const rda = RDA[key] * config.rdaMultiplier;
+          if ((firstMicros[key] || 0) < rda * 0.3) {
+            deficientFirst++;
+            if ((secondMicros[key] || 0) > (firstMicros[key] || 0) * 0.5) {
+              improved++;
+            }
+          }
+        }
+        if (deficientFirst > 0) {
+          optimizationBonus = Math.round((improved / deficientFirst) * 5);
+        }
+      }
+
+      let total = Math.round(microScore + hydrationScore + macroScore + varietyScore + optimizationBonus);
+      total = Math.min(total, 100);
 
       // Cap: low-confidence-only days cannot exceed 60
       if (allLowConfidence && total > 60) total = 60;
@@ -106,6 +147,7 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
           hydration: Math.round(hydrationScore),
           macro: Math.round(macroScore),
           variety: Math.round(varietyScore),
+          optimization: optimizationBonus,
         },
       };
     },
@@ -126,6 +168,13 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       ? { text: 'Low Confidence', cls: 'text-destructive bg-destructive/10' }
       : { text: 'Estimated', cls: 'text-amber-600 bg-amber-500/10' };
 
+  const breakdownItems: [string, number, number][] = [
+    ['Micros', score.breakdown.micro, config.microWeight],
+    ['Hydration', score.breakdown.hydration, config.hydrationWeight],
+    ['Macros', score.breakdown.macro, config.macroWeight],
+    ['Variety', score.breakdown.variety, config.varietyWeight],
+  ];
+
   return (
     <Card>
       <CardContent className="p-4">
@@ -142,22 +191,27 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
                 <Trophy className="h-4 w-4 text-primary" />
                 {t('nutrition.nutritionScore', 'Nutrition Score')}
               </p>
+              {performanceMode && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-0.5">
+                  <Zap className="h-2.5 w-2.5" />
+                  PRO
+                </span>
+              )}
               <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', confidenceBadge.cls)}>
                 {confidenceBadge.text}
               </span>
             </div>
-            <div className="grid grid-cols-4 gap-1 mt-1.5">
-              {([
-                ['Micros', score.breakdown.micro, 40],
-                ['Hydration', score.breakdown.hydration, 20],
-                ['Macros', score.breakdown.macro, 25],
-                ['Variety', score.breakdown.variety, 15],
-              ] as [string, number, number][]).map(([label, val, max]) => (
+            <div className="grid grid-cols-5 gap-1 mt-1.5">
+              {breakdownItems.map(([label, val, max]) => (
                 <div key={label} className="text-center">
                   <p className="text-[10px] text-muted-foreground">{label}</p>
                   <p className="text-xs font-semibold">{val}/{max}</p>
                 </div>
               ))}
+              <div className="text-center">
+                <p className="text-[10px] text-muted-foreground">Optim</p>
+                <p className="text-xs font-semibold">{score.breakdown.optimization}/5</p>
+              </div>
             </div>
           </div>
         </div>

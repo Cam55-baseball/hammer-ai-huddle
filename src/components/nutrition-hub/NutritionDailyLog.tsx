@@ -13,6 +13,7 @@ import { MicronutrientPanel } from './MicronutrientPanel';
 import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
 import { DeficiencyAlert } from './DeficiencyAlert';
+import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { toast } from 'sonner';
 
 interface NutritionDailyLogProps {
@@ -43,7 +44,6 @@ export function NutritionDailyLog({
     }
   };
 
-  // Use React Query for automatic cache synchronization
   const { data: meals = [], isLoading: loading } = useQuery({
     queryKey: ['nutritionLogs', dateStr, user?.id],
     queryFn: async () => {
@@ -85,7 +85,6 @@ export function NutritionDailyLog({
 
       if (error) throw error;
 
-      // Invalidate to refresh list and macro totals
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
       toast.success('Meal deleted');
@@ -99,7 +98,6 @@ export function NutritionDailyLog({
   const goToNextDay = () => handleDateChange(addDays(currentDate, 1));
   const goToToday = () => handleDateChange(new Date());
 
-  // Calculate totals
   const totals = meals.reduce((acc, meal) => ({
     calories: acc.calories + (meal.calories || 0),
     protein: acc.protein + (meal.proteinG || 0),
@@ -116,36 +114,19 @@ export function NutritionDailyLog({
             {t('nutrition.dailyLog', 'Daily Log')}
           </CardTitle>
           
-          {/* Date navigation */}
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={goToPreviousDay}
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={goToPreviousDay}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
             <Button
               variant={isToday(currentDate) ? 'secondary' : 'ghost'}
               size="sm"
               className="min-w-[100px]"
               onClick={goToToday}
             >
-              {isToday(currentDate) 
-                ? t('common.today', 'Today')
-                : format(currentDate, 'MMM d')
-              }
+              {isToday(currentDate) ? t('common.today', 'Today') : format(currentDate, 'MMM d')}
             </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={goToNextDay}
-              disabled={isToday(currentDate)}
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={goToNextDay} disabled={isToday(currentDate)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -171,15 +152,9 @@ export function NutritionDailyLog({
           </div>
         ) : (
           <>
-            {/* Meal cards */}
             <div className="space-y-2">
               {meals.map((meal) => (
-                <MealLogCard
-                  key={meal.id}
-                  meal={meal}
-                  onEdit={onEditMeal}
-                  onDelete={handleDeleteMeal}
-                />
+                <MealLogCard key={meal.id} meal={meal} onEdit={onEditMeal} onDelete={handleDeleteMeal} />
               ))}
             </div>
 
@@ -194,21 +169,15 @@ export function NutritionDailyLog({
                   <p className="text-xs text-muted-foreground">cal</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {totals.protein}g
-                  </p>
+                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{totals.protein}g</p>
                   <p className="text-xs text-muted-foreground">protein</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                    {totals.carbs}g
-                  </p>
+                  <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{totals.carbs}g</p>
                   <p className="text-xs text-muted-foreground">carbs</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                    {totals.fats}g
-                  </p>
+                  <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{totals.fats}g</p>
                   <p className="text-xs text-muted-foreground">fats</p>
                 </div>
               </div>
@@ -217,11 +186,14 @@ export function NutritionDailyLog({
             {/* Nutrition Score */}
             <NutritionScoreCard date={currentDate} />
 
-            {/* Hydration Quality Breakdown */}
+            {/* Hydration Quality */}
             <HydrationQualityBreakdown />
 
-            {/* Deficiency Alerts */}
+            {/* Deficiency Alerts (current + predictive) */}
             <DeficiencyAlert date={currentDate} />
+
+            {/* Nutrition Trends (7/14/30-day intelligence) */}
+            <NutritionTrendsCard />
 
             {/* Micronutrient Panel */}
             <MicronutrientPanel date={currentDate} />

@@ -10,9 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { Settings, ChevronRight } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Settings, ChevronRight, Zap } from 'lucide-react';
 import { useAthleteGoals } from '@/hooks/useAthleteGoals';
 import { useTDEE } from '@/hooks/useTDEE';
+import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import type { GoalType } from '@/utils/tdeeCalculations';
 import { toast } from 'sonner';
 
@@ -40,6 +42,7 @@ export function NutritionHubSettings({
   const { t } = useTranslation();
   const { activeGoal, createGoal } = useAthleteGoals();
   const { biometrics, refetch: refetchTDEE } = useTDEE();
+  const { performanceMode, setPerformanceMode, isLoading: perfLoading } = usePerformanceMode();
   
   const [selectedGoal, setSelectedGoal] = useState<GoalType>(
     activeGoal?.goalType || 'maintain'
@@ -160,6 +163,31 @@ export function NutritionHubSettings({
           >
             {saving ? t('common.loading') : t('nutrition.settings.updateGoal')}
           </Button>
+
+          <Separator />
+
+          {/* Performance Mode */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <Zap className="h-4 w-4 text-primary" />
+                  {t('nutrition.settings.performanceMode', 'Performance Mode')}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t('nutrition.settings.performanceModeDesc', 'Stricter targets for competitive athletes')}
+                </p>
+              </div>
+              <Switch
+                checked={performanceMode}
+                onCheckedChange={(checked) => {
+                  setPerformanceMode(checked);
+                  toast.success(checked ? 'Performance Mode enabled' : 'Performance Mode disabled');
+                }}
+                disabled={perfLoading}
+              />
+            </div>
+          </div>
 
           <Separator />
 

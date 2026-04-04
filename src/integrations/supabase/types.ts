@@ -483,6 +483,7 @@ export type Database = {
           is_pro_verified: boolean | null
           is_switch_hitter: boolean | null
           league_tier: string | null
+          performance_mode: boolean | null
           post_season_end_date: string | null
           post_season_start_date: string | null
           preseason_end_date: string | null
@@ -521,6 +522,7 @@ export type Database = {
           is_pro_verified?: boolean | null
           is_switch_hitter?: boolean | null
           league_tier?: string | null
+          performance_mode?: boolean | null
           post_season_end_date?: string | null
           post_season_start_date?: string | null
           preseason_end_date?: string | null
@@ -559,6 +561,7 @@ export type Database = {
           is_pro_verified?: boolean | null
           is_switch_hitter?: boolean | null
           league_tier?: string | null
+          performance_mode?: boolean | null
           post_season_end_date?: string | null
           post_season_start_date?: string | null
           preseason_end_date?: string | null
