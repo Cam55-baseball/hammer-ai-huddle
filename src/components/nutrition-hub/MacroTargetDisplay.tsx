@@ -236,14 +236,21 @@ export function MacroTargetDisplay({
           />
           
           {showHydration && (
-            <MacroItem
-              icon={<Droplets className="w-4 h-4 text-blue-500" />}
-              label="Hydration"
-              current={targets.consumedHydration}
-              target={targets.hydration}
-              unit="oz"
-              color="bg-blue-500/10"
-            />
+            <>
+              <MacroItem
+                icon={<Droplets className="w-4 h-4 text-blue-500" />}
+                label="Hydration"
+                current={targets.consumedHydration}
+                target={targets.hydration}
+                unit="oz"
+                color="bg-blue-500/10"
+              />
+              {todayTotal > 0 && (
+                <p className="text-xs text-muted-foreground ml-10 -mt-1">
+                  {qualityPercent}% quality hydration
+                </p>
+              )}
+            </>
           )}
         </div>
 
