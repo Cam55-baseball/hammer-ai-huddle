@@ -12,6 +12,7 @@ import { MealLogCard, MealLogData } from './MealLogCard';
 import { MicronutrientPanel } from './MicronutrientPanel';
 import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
+import { Badge } from '@/components/ui/badge';
 import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { useNutritionConsistency } from '@/hooks/useNutritionConsistency';
