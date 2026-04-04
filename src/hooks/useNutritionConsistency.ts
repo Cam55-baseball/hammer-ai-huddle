@@ -16,7 +16,8 @@ const RDA: Record<string, number> = {
 };
 
 export interface ConsistencyData {
-  score: number; // 0-100
+  score: number | null;
+  status: 'active' | 'insufficient_data';
   stabilityScore: number;
   loggingFrequency: number;
   deficiencyFreeRate: number;
