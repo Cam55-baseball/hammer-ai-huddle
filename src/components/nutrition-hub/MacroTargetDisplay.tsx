@@ -67,6 +67,7 @@ export function MacroTargetDisplay({
 }: MacroTargetDisplayProps) {
   const { t } = useTranslation();
   const { targets, loading, isProfileComplete, hasActiveGoal } = useDailyNutritionTargets(consumed);
+  const { qualityPercent, todayTotal } = useHydration();
 
   // Helper to get translated goal type
   const getGoalTypeLabel = (goalType: string) => {
