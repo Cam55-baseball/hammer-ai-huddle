@@ -1,9 +1,17 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Minus, AlertTriangle, Lightbulb, BarChart3, Brain } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, AlertTriangle, Lightbulb, BarChart3, Brain, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNutritionTrends, type TrendDirection, type NutrientTrend } from '@/hooks/useNutritionTrends';
+import { useNutritionTrends, type TrendDirection } from '@/hooks/useNutritionTrends';
 import { usePerformanceMode } from '@/hooks/usePerformanceMode';
+import { useNutritionBaseline } from '@/hooks/useNutritionBaseline';
+
+const MICRO_LABELS: Record<string, string> = {
+  vitamin_a_mcg: 'Vit A', vitamin_c_mg: 'Vit C', vitamin_d_mcg: 'Vit D',
+  vitamin_e_mg: 'Vit E', vitamin_k_mcg: 'Vit K', vitamin_b6_mg: 'B6',
+  vitamin_b12_mcg: 'B12', folate_mcg: 'Folate', calcium_mg: 'Calcium',
+  iron_mg: 'Iron', magnesium_mg: 'Mag', potassium_mg: 'Potassium', zinc_mg: 'Zinc',
+};
 
 const trendIcon = (dir: TrendDirection) => {
   if (dir === 'up') return <TrendingUp className="h-3 w-3 text-emerald-500" />;
@@ -15,6 +23,7 @@ export function NutritionTrendsCard() {
   const { t } = useTranslation();
   const { config } = usePerformanceMode();
   const { data: trends } = useNutritionTrends(config.rdaMultiplier);
+  const { data: baseline } = useNutritionBaseline(config.rdaMultiplier);
 
   if (!trends || trends.daysAnalyzed < 3) return null;
 
@@ -23,8 +32,11 @@ export function NutritionTrendsCard() {
     .sort((a, b) => a.rdaPercent7 - b.rdaPercent7)
     .slice(0, 4);
 
+  // Chronically low from baseline
+  const chronicLow = baseline?.nutrients.filter(n => n.chronicLow).slice(0, 2) || [];
+
   const hasContent = topDeficient.length > 0 || trends.predictedRisks.length > 0
-    || trends.patterns.length > 0 || trends.nudges.length > 0;
+    || trends.patterns.length > 0 || trends.nudges.length > 0 || chronicLow.length > 0;
 
   if (!hasContent) return null;
 
@@ -38,6 +50,20 @@ export function NutritionTrendsCard() {
             {trends.daysAnalyzed}d analyzed
           </span>
         </p>
+
+        {/* Personal baseline alerts */}
+        {chronicLow.length > 0 && (
+          <div className="space-y-1">
+            {chronicLow.map(n => (
+              <div key={n.key} className="flex items-center gap-1.5 rounded-md bg-destructive/5 border border-destructive/20 px-2.5 py-1.5">
+                <User className="h-3 w-3 text-destructive/60 shrink-0" />
+                <span className="text-[11px] text-destructive">
+                  {MICRO_LABELS[n.key] || n.key}: avg {n.avgIntake} ({n.rdaPercent}% RDA) — chronically low
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* 7-day micro trends */}
         {topDeficient.length > 0 && (

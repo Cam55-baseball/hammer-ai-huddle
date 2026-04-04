@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, Zap } from 'lucide-react';
+import { Trophy, Zap, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useHydration } from '@/hooks/useHydration';
 import { usePerformanceMode } from '@/hooks/usePerformanceMode';
+import { useNutritionBaseline } from '@/hooks/useNutritionBaseline';
+import { useNutritionConsistency } from '@/hooks/useNutritionConsistency';
 import { cn } from '@/lib/utils';
 
 const MICRO_KEYS = [
@@ -22,9 +24,7 @@ const RDA: Record<string, number> = {
 };
 
 const CONFIDENCE_WEIGHT: Record<string, number> = {
-  high: 1.0,
-  medium: 0.7,
-  low: 0.4,
+  high: 1.0, medium: 0.7, low: 0.4,
 };
 
 interface NutritionScoreCardProps {
@@ -36,10 +36,12 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
   const { user } = useAuth();
   const { qualityPercent, progress: hydrationProgress } = useHydration();
   const { performanceMode, config } = usePerformanceMode();
+  const { data: baseline } = useNutritionBaseline(config.rdaMultiplier);
+  const { data: consistency } = useNutritionConsistency(config.rdaMultiplier);
   const dateStr = format(date || new Date(), 'yyyy-MM-dd');
 
   const { data: score } = useQuery({
-    queryKey: ['nutritionScore', dateStr, user?.id, qualityPercent, hydrationProgress, performanceMode],
+    queryKey: ['nutritionScore', dateStr, user?.id, qualityPercent, hydrationProgress, performanceMode, baseline?.adaptiveMultipliers],
     queryFn: async () => {
       if (!user) return null;
 
@@ -52,12 +54,11 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       if (error) throw error;
       if (!data || data.length === 0) return null;
 
-      // Confidence weight
       const confidenceValues = data.map((l: any) => CONFIDENCE_WEIGHT[l.data_confidence || 'medium'] || 0.7);
       const avgConfidenceWeight = confidenceValues.reduce((a: number, b: number) => a + b, 0) / confidenceValues.length;
       const allLowConfidence = confidenceValues.every((v: number) => v <= 0.4);
 
-      // 1. Micronutrient completeness
+      // 1. Micronutrient completeness with adaptive weighting
       const microTotals: Record<string, number> = {};
       for (const log of data) {
         const micros = log.micros as Record<string, number> | null;
@@ -66,10 +67,17 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
           if (typeof v === 'number') microTotals[k] = (microTotals[k] || 0) + v;
         }
       }
-      const microsMeetingRda = MICRO_KEYS.filter(
-        k => (microTotals[k] || 0) >= RDA[k] * config.rdaMultiplier * 0.5
-      ).length;
-      const microScore = (microsMeetingRda / 13) * config.microWeight * avgConfidenceWeight;
+      const adaptiveMultipliers = baseline?.adaptiveMultipliers || {};
+      let weightedMet = 0;
+      let totalWeight = 0;
+      for (const k of MICRO_KEYS) {
+        const weight = adaptiveMultipliers[k] || 1.0;
+        totalWeight += weight;
+        if ((microTotals[k] || 0) >= RDA[k] * config.rdaMultiplier * 0.5) {
+          weightedMet += weight;
+        }
+      }
+      const microScore = (weightedMet / totalWeight) * config.microWeight * avgConfidenceWeight;
 
       // 2. Hydration quality
       const hydrationScore = (qualityPercent / 100) * config.hydrationWeight;
@@ -81,15 +89,10 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       const totalCal = totalP * 4 + totalC * 4 + totalF * 9;
       let macroScore = 0;
       if (totalCal > 0) {
-        const pRatio = (totalP * 4) / totalCal;
-        const cRatio = (totalC * 4) / totalCal;
-        const fRatio = (totalF * 9) / totalCal;
-        const pDev = Math.abs(pRatio - 0.30);
-        const cDev = Math.abs(cRatio - 0.40);
-        const fDev = Math.abs(fRatio - 0.30);
-        const avgDev = (pDev + cDev + fDev) / 3;
-        const penalty = config.macroDeviationPenalty;
-        macroScore = Math.max(0, (1 - avgDev * penalty)) * config.macroWeight;
+        const pDev = Math.abs((totalP * 4) / totalCal - 0.30);
+        const cDev = Math.abs((totalC * 4) / totalCal - 0.40);
+        const fDev = Math.abs((totalF * 9) / totalCal - 0.30);
+        macroScore = Math.max(0, (1 - ((pDev + cDev + fDev) / 3) * config.macroDeviationPenalty)) * config.macroWeight;
       }
 
       // 4. Variety
@@ -97,14 +100,12 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
       const varietyScore = Math.min(uniqueFoods.size / 4, 1) * config.varietyWeight;
 
       // 5. Optimization sub-score (bonus up to 5 pts)
-      // Measures if user corrected gaps throughout the day
       let optimizationBonus = 0;
       if (data.length >= 2) {
         const sorted = [...data].sort((a, b) => (a.logged_at || '').localeCompare(b.logged_at || ''));
         const midpoint = Math.floor(sorted.length / 2);
         const firstHalf = sorted.slice(0, midpoint);
         const secondHalf = sorted.slice(midpoint);
-
         const firstMicros: Record<string, number> = {};
         const secondMicros: Record<string, number> = {};
         for (const log of firstHalf) {
@@ -115,28 +116,20 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
           const m = log.micros as Record<string, number> | null;
           if (m) for (const [k, v] of Object.entries(m)) if (typeof v === 'number') secondMicros[k] = (secondMicros[k] || 0) + v;
         }
-
-        // Count how many deficient-in-first-half nutrients were improved in second half
         let improved = 0;
         let deficientFirst = 0;
         for (const key of MICRO_KEYS) {
           const rda = RDA[key] * config.rdaMultiplier;
           if ((firstMicros[key] || 0) < rda * 0.3) {
             deficientFirst++;
-            if ((secondMicros[key] || 0) > (firstMicros[key] || 0) * 0.5) {
-              improved++;
-            }
+            if ((secondMicros[key] || 0) > (firstMicros[key] || 0) * 0.5) improved++;
           }
         }
-        if (deficientFirst > 0) {
-          optimizationBonus = Math.round((improved / deficientFirst) * 5);
-        }
+        if (deficientFirst > 0) optimizationBonus = Math.round((improved / deficientFirst) * 5);
       }
 
       let total = Math.round(microScore + hydrationScore + macroScore + varietyScore + optimizationBonus);
       total = Math.min(total, 100);
-
-      // Cap: low-confidence-only days cannot exceed 60
       if (allLowConfidence && total > 60) total = 60;
 
       return {
@@ -186,7 +179,7 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
             <span className={cn('text-xl font-bold', colorClass)}>{score.total}</span>
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <p className="text-sm font-semibold flex items-center gap-1.5">
                 <Trophy className="h-4 w-4 text-primary" />
                 {t('nutrition.nutritionScore', 'Nutrition Score')}
@@ -213,6 +206,21 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
                 <p className="text-xs font-semibold">{score.breakdown.optimization}/5</p>
               </div>
             </div>
+            {/* Consistency badge */}
+            {consistency && consistency.daysAnalyzed >= 3 && (
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <BarChart3 className="h-3 w-3 text-primary/60" />
+                <span className="text-[10px] text-muted-foreground">
+                  14-day consistency:
+                </span>
+                <span className={cn(
+                  'text-[10px] font-semibold',
+                  consistency.score >= 70 ? 'text-emerald-500' : consistency.score >= 40 ? 'text-amber-500' : 'text-destructive'
+                )}>
+                  {consistency.score}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

@@ -3148,6 +3148,36 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_suggestion_interactions: {
+        Row: {
+          action: string
+          created_at: string | null
+          effectiveness_delta: number | null
+          food_name: string
+          id: string
+          nutrient_key: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          effectiveness_delta?: number | null
+          food_name: string
+          id?: string
+          nutrient_key: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          effectiveness_delta?: number | null
+          food_name?: string
+          id?: string
+          nutrient_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           id: string
