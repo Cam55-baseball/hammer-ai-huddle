@@ -20,7 +20,7 @@ const ProfileSetup = () => {
   const location = useLocation();
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthStable } = useAuth();
   const locationState = location.state as { role?: string; sport?: string; module?: string };
 
   // Read from both possible localStorage keys for role
