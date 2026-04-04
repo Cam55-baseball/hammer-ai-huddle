@@ -79,8 +79,12 @@ export function useNutritionConsistency(rdaMultiplier = 1.0) {
         }
         dailyScores.push(Math.round((met / 13) * 100));
       }
-      let stabilityScore = 100;
-      if (dailyScores.length >= 2) {
+      let stabilityScore = 0;
+      if (dailyScores.length === 0) {
+        stabilityScore = 0;
+      } else if (dailyScores.length === 1) {
+        stabilityScore = 50;
+      } else {
         const mean = dailyScores.reduce((a, b) => a + b, 0) / dailyScores.length;
         const variance = dailyScores.reduce((sum, s) => sum + (s - mean) ** 2, 0) / dailyScores.length;
         const stdDev = Math.sqrt(variance);
