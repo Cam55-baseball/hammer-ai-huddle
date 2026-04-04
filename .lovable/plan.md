@@ -1,46 +1,43 @@
 
 
-# Gold Architecture — Final Hardening
+# Final 3 Micro-Fixes — Gold Architecture Completion
 
-## What's Already Correct
-- `usePerformanceSession.ts` — fully matches spec (latest-wins, conditional invalidation, timer-safe)
-- Lock system, edge functions, DB schema — all complete
+## Fix 1: BroadcastChannel Echo Loop Prevention (`useUnifiedDataSync.ts`)
 
-## What Needs Updating
+**Problem**: Tab A invalidates → broadcasts → Tab B invalidates → broadcasts back → Tab A invalidates again. Dedup partially protects but is not a guaranteed guard.
 
-### 1. `useHIESnapshot.ts` — Reconciliation Hardening
+**Fix**: Generate a stable `TAB_ID` per hook instance. Tag every broadcast message with `source: TAB_ID`. On receive, ignore messages from self.
 
-**Current gaps vs gold spec:**
-- No visibility check (runs in background tabs, wasting queries)
-- No online check (fires invalidations while offline)
-- Boolean `reconciliationTriggered` flag instead of cooldown-based throttle (5s)
-- No resume triggers (visibilitychange / online events to catch up after sleep)
+- Line 130: Add `const tabIdRef = useRef(crypto.randomUUID());` 
+- Line 148: Change broadcast to include `source: tabIdRef.current`
+- Line 287: Add guard `if (event.data.source === tabIdRef.current) return`
 
-**Changes:**
-- Replace `reconciliationTriggered` ref with `lastInvalidationRef` (timestamp-based 5s cooldown)
-- Add `document.visibilityState` and `navigator.onLine` guards to reconciliation effect
-- Add `navigator.onLine` guard to 24h stale fallback
-- Remove the `isFetching` reset effect (no longer needed with cooldown model)
-- Add resume triggers: `visibilitychange` → invalidate `['hie-snapshot']`, `online` → same
+## Fix 2: Reconciliation Cooldown Reset on Snapshot Change (`useHIESnapshot.ts`)
 
-### 2. `useUnifiedDataSync.ts` — Per-Row Dedup Map + Multi-Tab Sync
+**Problem**: If the snapshot updates but falls within the 5s cooldown window, reconciliation is unnecessarily delayed on the next check.
 
-**Current gaps:**
-- Single-ref dedup only tracks one event at a time — concurrent events on different rows/tables can collide
-- No multi-tab synchronization (tabs fight each other)
-- No reconnect timer cleanup on successful reconnect
+**Fix**: Reset `lastInvalidationRef` to 0 when `computed_at` changes, so the next reconciliation check runs immediately.
 
-**Changes:**
-- Replace `lastEventRef` (single object) with `lastEventMapRef` (Map keyed by `table:eventType:rowId`)
-- Add memory leak guard (clear map at 1000 entries)
-- Add BroadcastChannel (`data-sync`) for multi-tab invalidation propagation
-- Wrap `invalidateRelatedQueries` to also broadcast to other tabs
-- Listen for broadcasts from other tabs and invalidate locally
-- Clear `reconnectTimerRef` on successful reconnect
+- Add after line 125:
+```typescript
+useEffect(() => {
+  lastInvalidationRef.current = 0;
+}, [query.data?.computed_at]);
+```
 
-### 3. `usePerformanceSession.ts` — No Changes
+## Fix 3: Missing rowId Dedup Bypass (`useUnifiedDataSync.ts`)
 
-Already matches the gold spec exactly.
+**Problem**: If `payload.new?.id` and `payload.old?.id` are both undefined, rowId becomes `''`, collapsing all such events into one dedup key and dropping legitimate events.
+
+**Fix**: In `shouldProcessEvent`, if rowId is empty, skip dedup entirely (return `true`).
+
+- Line 133-134: Add early return:
+```typescript
+const shouldProcessEvent = useCallback((table: string, eventType: string, rowId: string): boolean => {
+  if (!rowId) return true; // unknown row — always process
+  const key = `${table}:${eventType}:${rowId}`;
+  ...
+```
 
 ---
 
@@ -48,14 +45,12 @@ Already matches the gold spec exactly.
 
 | File | Change |
 |------|--------|
-| `src/hooks/useHIESnapshot.ts` | Cooldown-based reconciliation, visibility/online guards, resume triggers |
-| `src/hooks/useUnifiedDataSync.ts` | Map-based per-row dedup, BroadcastChannel multi-tab sync, reconnect cleanup |
+| `src/hooks/useUnifiedDataSync.ts` | Tab ID source tagging on BroadcastChannel; empty rowId bypass in dedup |
+| `src/hooks/useHIESnapshot.ts` | Reset cooldown ref when `computed_at` changes |
 
 ## What Does NOT Change
-- `usePerformanceSession.ts` (already correct)
-- Zero formula modifications
+- `usePerformanceSession.ts` (already gold-complete)
 - Zero database/migration changes
 - Edge functions unchanged
 - Lock system unchanged
-- `useSchedulingRealtime.ts` unchanged
 
