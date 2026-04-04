@@ -1,14 +1,23 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Droplets, Sparkles, AlertTriangle } from 'lucide-react';
+import { Droplets, Sparkles, AlertTriangle, Gauge } from 'lucide-react';
 import { useHydration } from '@/hooks/useHydration';
+import { cn } from '@/lib/utils';
 
 export function HydrationQualityBreakdown() {
   const { t } = useTranslation();
-  const { todayTotal, qualityTotal, fillerTotal, qualityPercent } = useHydration();
+  const { todayTotal, qualityTotal, fillerTotal, qualityPercent, progress } = useHydration();
 
   if (todayTotal === 0) return null;
+
+  // Hydration Efficiency Score: quality weight 60%, goal progress 40%
+  const efficiencyScore = Math.round((qualityPercent / 100) * 60 + (Math.min(progress, 100) / 100) * 40);
+  const scoreColor = efficiencyScore >= 70
+    ? 'text-emerald-500'
+    : efficiencyScore >= 40
+      ? 'text-amber-500'
+      : 'text-destructive';
 
   return (
     <Card>
@@ -18,7 +27,13 @@ export function HydrationQualityBreakdown() {
             <Droplets className="h-4 w-4 text-blue-500" />
             {t('nutrition.hydrationQuality', 'Hydration Quality')}
           </p>
-          <span className="text-xs text-muted-foreground">{todayTotal} oz total</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{todayTotal} oz</span>
+            <span className={cn('flex items-center gap-0.5 text-xs font-bold', scoreColor)}>
+              <Gauge className="h-3 w-3" />
+              {efficiencyScore}
+            </span>
+          </div>
         </div>
 
         {/* Quality bar */}

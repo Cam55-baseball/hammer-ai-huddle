@@ -179,7 +179,8 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-          micros: Object.keys(aggregatedMicros).length > 0 && Object.values(aggregatedMicros).some(v => v > 0) ? aggregatedMicros : null,
+          micros: Object.keys(aggregatedMicros).length > 0 && Object.values(aggregatedMicros).some(v => v > 0) ? aggregatedMicros : undefined,
+          micros_incomplete: !(Object.keys(aggregatedMicros).length >= 13 && Object.values(aggregatedMicros).some(v => v > 0)),
         } as any);
 
       if (error) throw error;
