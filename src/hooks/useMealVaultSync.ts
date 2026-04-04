@@ -150,6 +150,11 @@ export function useMealVaultSync() {
 
       // Aggregate micronutrients from meal items (if available via AI parsing)
       const aggregatedMicros: Record<string, number> = {};
+      const REQUIRED_MICRO_KEYS = [
+        'vitamin_a_mcg', 'vitamin_c_mg', 'vitamin_d_mcg', 'vitamin_e_mg',
+        'vitamin_k_mcg', 'vitamin_b6_mg', 'vitamin_b12_mcg', 'folate_mcg',
+        'calcium_mg', 'iron_mg', 'magnesium_mg', 'potassium_mg', 'zinc_mg',
+      ];
       for (const item of meals.items) {
         const itemMicros = (item as any).micros;
         if (itemMicros && typeof itemMicros === 'object') {
@@ -160,6 +165,22 @@ export function useMealVaultSync() {
           }
         }
       }
+
+      // Determine data confidence from food item sources
+      const itemConfidences = meals.items.map((item: any) => item.confidence || 'low');
+      const allHigh = itemConfidences.length > 0 && itemConfidences.every((c: string) => c === 'high');
+      const anyLow = itemConfidences.some((c: string) => c === 'low');
+      const dataConfidence = allHigh ? 'high' : anyLow ? 'low' : 'medium';
+
+      // Determine data source
+      const itemSources = meals.items.map((item: any) => item.source || 'ai');
+      const allDb = itemSources.every((s: string) => s === 'database');
+      const allAi = itemSources.every((s: string) => s === 'ai');
+      const dataSource = allDb ? 'database' : allAi ? 'ai' : 'mixed';
+
+      // Validate micros: only store if complete (all 13 keys present with values)
+      const microsComplete = REQUIRED_MICRO_KEYS.every(k => typeof aggregatedMicros[k] === 'number' && aggregatedMicros[k] >= 0);
+      const hasMicrosData = Object.keys(aggregatedMicros).length > 0 && Object.values(aggregatedMicros).some(v => v > 0);
 
       // Insert to vault_nutrition_logs
       const { error } = await supabase
@@ -179,8 +200,9 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-          micros: Object.keys(aggregatedMicros).length > 0 && Object.values(aggregatedMicros).some(v => v > 0) ? aggregatedMicros : undefined,
-          micros_incomplete: !(Object.keys(aggregatedMicros).length >= 13 && Object.values(aggregatedMicros).some(v => v > 0)),
+          micros: (microsComplete && hasMicrosData) ? aggregatedMicros : undefined,
+          data_confidence: dataConfidence,
+          data_source: dataSource,
         } as any);
 
       if (error) throw error;

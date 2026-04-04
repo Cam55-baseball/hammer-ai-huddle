@@ -272,27 +272,47 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           }
         }
 
-        // Dynamic DB expansion: insert new foods with valid micros into nutrition_food_database
+        // Dynamic DB expansion: route AI foods to unverified_foods staging table
         if (data.foods && data.foods.length > 0) {
           for (const food of data.foods) {
-            if (food.micros && typeof food.micros === 'object' && Object.keys(food.micros).length >= 13) {
-              // Check if this food already exists
-              const { data: existing } = await supabase
+            if (food.micros && typeof food.micros === 'object') {
+              const microKeys = MICRO_KEYS as readonly string[];
+              const hasAll13 = microKeys.every(k => typeof food.micros[k] === 'number');
+              
+              // Validate realistic USDA ranges
+              const MICRO_RANGES: Record<string, [number, number]> = {
+                vitamin_a_mcg: [0, 10000], vitamin_c_mg: [0, 2000], vitamin_d_mcg: [0, 250],
+                vitamin_e_mg: [0, 1000], vitamin_k_mcg: [0, 1000], vitamin_b6_mg: [0, 100],
+                vitamin_b12_mcg: [0, 500], folate_mcg: [0, 2000], calcium_mg: [0, 3000],
+                iron_mg: [0, 100], magnesium_mg: [0, 1000], potassium_mg: [0, 8000], zinc_mg: [0, 100],
+              };
+              const withinRange = hasAll13 && microKeys.every(k => {
+                const val = food.micros[k];
+                const [min, max] = MICRO_RANGES[k] || [0, 99999];
+                return typeof val === 'number' && val >= min && val <= max;
+              });
+
+              const confidenceLevel = withinRange ? 'medium' : 'low';
+
+              // Check if already in main DB or staging
+              const { data: existingMain } = await supabase
                 .from('nutrition_food_database')
                 .select('id')
                 .ilike('name', food.name)
                 .limit(1);
 
-              if (!existing || existing.length === 0) {
-                await supabase.from('nutrition_food_database').insert({
+              if (!existingMain || existingMain.length === 0) {
+                // Insert into staging table — never directly into main DB
+                await supabase.from('unverified_foods').insert({
                   name: food.name,
                   calories_per_serving: food.calories,
                   protein_g: food.protein_g,
                   carbs_g: food.carbs_g,
                   fats_g: food.fats_g,
                   serving_size: `${food.quantity} ${food.unit}`,
-                  source: 'ai_expanded',
-                  ...food.micros,
+                  confidence_level: confidenceLevel,
+                  source: 'ai',
+                  ...(hasAll13 ? food.micros : {}),
                 } as any);
               }
             }
