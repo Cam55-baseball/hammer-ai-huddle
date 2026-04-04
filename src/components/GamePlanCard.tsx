@@ -2538,9 +2538,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 categoryLabel={selectedFolderTask.folderItemData.folderName}
                 hideEdit={!selectedFolderTask.folderItemData.isOwner}
                 onComplete={() => {
-                  toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
-                  toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
-                  setFolderLoggerOpen(false);
+                   toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
+                   toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+                   handleFolderLoggerClose(false);
                 }}
                 onEdit={() => {
                   setFolderLoggerOpen(false);
