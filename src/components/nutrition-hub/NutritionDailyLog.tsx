@@ -14,6 +14,8 @@ import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
 import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
+import { GuidancePanel } from './GuidancePanel';
+import { CravingGuidance } from './CravingGuidance';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -227,11 +229,17 @@ export function NutritionDailyLog({
             {/* Nutrition Score */}
             <NutritionScoreCard date={currentDate} />
 
+            {/* Guidance Panel — precision actionable feedback */}
+            <GuidancePanel date={currentDate} />
+
             {/* Hydration Quality */}
             <HydrationQualityBreakdown />
 
             {/* Deficiency Alerts (current + predictive) */}
             <DeficiencyAlert date={currentDate} />
+
+            {/* Craving Guidance — nutrient-aligned suggestions */}
+            <CravingGuidance date={currentDate} microCoverage={mealsWithMicros} />
 
             {/* Nutrition Trends (7/14/30-day intelligence) */}
             <NutritionTrendsCard />

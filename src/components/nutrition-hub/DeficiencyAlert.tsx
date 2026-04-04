@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle2, TrendingDown, Lightbulb, Check, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, TrendingDown, Lightbulb, Check, X, Pill } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +11,7 @@ import { useNutritionBaseline } from '@/hooks/useNutritionBaseline';
 import { useSuggestionLearning } from '@/hooks/useSuggestionLearning';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { NUTRIENT_IMPACT } from '@/constants/nutrientPerformanceMap';
 
 const RDA: Record<string, { amount: number; unit: string; label: string }> = {
   vitamin_a_mcg: { amount: 900, unit: 'mcg', label: 'Vitamin A' },
@@ -62,11 +63,14 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
     queryFn: async () => {
       if (!user) return null;
 
+      // Fetch logs with supplements info
       const { data, error } = await supabase
         .from('vault_nutrition_logs')
-        .select('micros')
+        .select('micros, supplements')
         .eq('user_id', user.id)
         .eq('entry_date', dateStr);
+
+      // Note: data/error already fetched above
 
       if (error) throw error;
 
@@ -81,6 +85,12 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
 
       if (Object.keys(totals).length === 0) return null;
 
+      // Detect if supplements were logged
+      const hasSupplements = (data || []).some((log: any) => {
+        const supps = log.supplements;
+        return Array.isArray(supps) && supps.length > 0;
+      });
+
       const adaptiveMultipliers = baseline?.adaptiveMultipliers || {};
 
       const alertItems = Object.entries(RDA).map(([key, rda]) => {
@@ -89,8 +99,14 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
         const percent = Math.round((current / adjustedRda) * 100);
         const level = getLevel(percent);
         const priority = adaptiveMultipliers[key] || 1.0;
-        return { key, label: rda.label, percent, level, current: Math.round(current * 10) / 10, rda: adjustedRda, unit: rda.unit, priority };
+        const impact = NUTRIENT_IMPACT[key] || '';
+        return { key, label: rda.label, percent, level, current: Math.round(current * 10) / 10, rda: adjustedRda, unit: rda.unit, priority, impact };
       });
+
+      // Identify nutrients at optimal+ that may be supplement-driven
+      const supplementCovered = hasSupplements
+        ? alertItems.filter(a => a.level === 'optimal' || a.level === 'excess').map(a => a.key)
+        : [];
 
       const issues = alertItems
         .filter(a => a.level === 'deficient' || a.level === 'low')
@@ -196,6 +212,12 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
                       {item.percent}% RDA ({item.current}{item.unit})
                     </span>
                   </div>
+                  {/* Performance impact label */}
+                  {(item as any).impact && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 ml-4">
+                      → {(item as any).impact}
+                    </p>
+                  )}
                   {item.suggestions && item.suggestions.length > 0 && (
                     <div className="mt-1 space-y-0.5">
                       {item.suggestions.map((food, idx) => (
