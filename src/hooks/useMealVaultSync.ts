@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHydration } from '@/hooks/useHydration';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { MealData, Vitamin, Supplement } from '@/types/customActivity';
+import { MealData, Vitamin, Supplement, MealItem } from '@/types/customActivity';
 
 interface MealVaultSyncOptions {
   syncToVault?: boolean;
