@@ -19,6 +19,7 @@ export interface LimitingFactor {
   percent: number;
   impact: string;
   ptsRecoverable: number;
+  ptsLabel: string;
 }
 
 export interface GuidanceFood {
@@ -96,12 +97,14 @@ export function useNutritionGuidance(date: Date, rdaMultiplier: number = 1.0) {
         const ptsRecoverable = Math.round((gap * MICRO_WEIGHT / NUTRIENT_COUNT) * priority) / 100;
         const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
           .replace(/ Mcg$/, '').replace(/ Mg$/, '');
+        const rounded = Math.round(ptsRecoverable * 10) / 10;
         return {
           key,
           label,
           percent,
           impact: NUTRIENT_IMPACT_ACTIVE[key] || '',
-          ptsRecoverable: Math.round(ptsRecoverable * 10) / 10,
+          ptsRecoverable: rounded,
+          ptsLabel: `+${rounded} score gain potential`,
         };
       });
 

@@ -39,8 +39,13 @@ export function GuidancePanel({ date }: GuidancePanelProps) {
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
               Top Limiting Factors
             </p>
-            {guidance.limitingFactors.map((factor) => (
+            {guidance.limitingFactors.map((factor, idx) => (
               <div key={factor.key} className="rounded-md bg-muted/50 px-2.5 py-2">
+                {idx === 0 && (
+                  <p className="text-[9px] font-semibold text-primary uppercase tracking-wider mb-1">
+                    Highest impact nutrient to improve score
+                  </p>
+                )}
                 <div className="flex items-center gap-1.5 text-xs">
                   <Target className="h-3 w-3 text-amber-500 shrink-0" />
                   <span className="font-medium">{factor.label}</span>
@@ -51,7 +56,7 @@ export function GuidancePanel({ date }: GuidancePanelProps) {
                     {factor.percent}% RDA
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    ~{factor.ptsRecoverable}pts
+                    {factor.ptsLabel}
                   </span>
                 </div>
                 {factor.impact && (
