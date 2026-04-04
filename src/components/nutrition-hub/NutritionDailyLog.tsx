@@ -66,6 +66,7 @@ export function NutritionDailyLog({
         supplements: Array.isArray(log.supplements) ? log.supplements as string[] : null,
         mealTime: (log as any).meal_time ?? null,
         digestionNotes: (log as any).digestion_notes ?? null,
+        micros: (log as any).micros ?? null,
       })) as MealLogData[];
     },
     enabled: !!user,
