@@ -34,9 +34,6 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
   const [selectedCraving, setSelectedCraving] = useState<string | null>(null);
   const dateStr = format(date, 'yyyy-MM-dd');
 
-  // Hard stop: don't render at all when no micro data
-  if (microCoverage === 0) return null;
-
   const { data: suggestions, isLoading } = useQuery({
     queryKey: ['cravingGuidance', selectedCraving, dateStr, user?.id, limitingFactorKeys],
     queryFn: async (): Promise<CravingSuggestion[]> => {
@@ -57,13 +54,11 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
         }
       }
 
-      // Craving nutrients intersected with limiting factors
       const cravingNutrients = CRAVING_NUTRIENT_MAP[selectedCraving] || [];
       const deficientKeys = cravingNutrients.filter(key => {
         const rda = RDA[key];
         if (!rda) return false;
         const isDeficient = ((totals[key] || 0) / rda) < 0.75;
-        // Must also be a top limiting factor if we have limiting factor data
         const isLimiting = limitingFactorKeys.length === 0 || limitingFactorKeys.includes(key);
         return isDeficient && isLimiting;
       });
@@ -90,6 +85,9 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
     enabled: !!user && !!selectedCraving && microCoverage > 0,
   });
 
+  // Hard stop: don't render at all when no micro data
+  if (microCoverage === 0) return null;
+
   return (
     <Card>
       <CardContent className="p-4 space-y-2.5">
@@ -110,7 +108,6 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
           )}
         </div>
 
-        {/* Craving chips */}
         <div className="flex flex-wrap gap-1.5">
           {CRAVING_OPTIONS.map(opt => (
             <Button
@@ -125,7 +122,6 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
           ))}
         </div>
 
-        {/* Results */}
         {selectedCraving && (
           <div className="space-y-1">
             {isLoading ? (

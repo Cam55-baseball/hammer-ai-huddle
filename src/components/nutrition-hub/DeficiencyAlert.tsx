@@ -166,7 +166,7 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
         })
       );
 
-      return issuesWithSuggestions;
+      return { issues: issuesWithSuggestions, supplementLabels };
     },
     enabled: !!user,
   });
