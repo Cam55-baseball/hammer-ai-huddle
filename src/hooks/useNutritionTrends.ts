@@ -114,7 +114,15 @@ export function useNutritionTrends(rdaMultiplier = 1.0) {
       }
 
       const days = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-      if (days.length === 0) return null;
+      if (days.length === 0) return {
+        trends: [],
+        frequentlyMissed: [],
+        patterns: [],
+        nudges: [],
+        predictedRisks: [],
+        daysAnalyzed: 0,
+        status: 'insufficient_data' as const,
+      };
 
       // Compute per-nutrient trends
       const trends: NutrientTrend[] = MICRO_KEYS.map(key => {
@@ -215,6 +223,7 @@ export function useNutritionTrends(rdaMultiplier = 1.0) {
         nudges,
         predictedRisks: trends.filter(t => t.predictedRisk),
         daysAnalyzed: days.length,
+        status: 'active' as const,
       };
     },
     enabled: !!user,

@@ -27,6 +27,22 @@ export function NutritionTrendsCard() {
 
   if (!trends || trends.daysAnalyzed < 3) return null;
 
+  if (trends.status === 'insufficient_data') {
+    return (
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <p className="text-sm font-semibold flex items-center gap-1.5">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            {t('nutrition.trends', 'Nutrition Trends')}
+          </p>
+          <p className="text-[11px] text-muted-foreground italic">
+            Trend analysis unavailable — insufficient micronutrient data
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const topDeficient = trends.trends
     .filter(tr => tr.rdaPercent7 < 75)
     .sort((a, b) => a.rdaPercent7 - b.rdaPercent7)
