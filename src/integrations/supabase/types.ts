@@ -5549,6 +5549,87 @@ export type Database = {
           },
         ]
       }
+      unverified_foods: {
+        Row: {
+          calcium_mg: number | null
+          calories_per_serving: number | null
+          carbs_g: number | null
+          confidence_level: string | null
+          created_at: string | null
+          fats_g: number | null
+          folate_mcg: number | null
+          id: string
+          iron_mg: number | null
+          magnesium_mg: number | null
+          name: string
+          potassium_mg: number | null
+          promoted_at: string | null
+          protein_g: number | null
+          serving_size: string | null
+          source: string | null
+          vitamin_a_mcg: number | null
+          vitamin_b12_mcg: number | null
+          vitamin_b6_mg: number | null
+          vitamin_c_mg: number | null
+          vitamin_d_mcg: number | null
+          vitamin_e_mg: number | null
+          vitamin_k_mcg: number | null
+          zinc_mg: number | null
+        }
+        Insert: {
+          calcium_mg?: number | null
+          calories_per_serving?: number | null
+          carbs_g?: number | null
+          confidence_level?: string | null
+          created_at?: string | null
+          fats_g?: number | null
+          folate_mcg?: number | null
+          id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
+          name: string
+          potassium_mg?: number | null
+          promoted_at?: string | null
+          protein_g?: number | null
+          serving_size?: string | null
+          source?: string | null
+          vitamin_a_mcg?: number | null
+          vitamin_b12_mcg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_mcg?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_mcg?: number | null
+          zinc_mg?: number | null
+        }
+        Update: {
+          calcium_mg?: number | null
+          calories_per_serving?: number | null
+          carbs_g?: number | null
+          confidence_level?: string | null
+          created_at?: string | null
+          fats_g?: number | null
+          folate_mcg?: number | null
+          id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
+          name?: string
+          potassium_mg?: number | null
+          promoted_at?: string | null
+          protein_g?: number | null
+          serving_size?: string | null
+          source?: string | null
+          vitamin_a_mcg?: number | null
+          vitamin_b12_mcg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_mcg?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_mcg?: number | null
+          zinc_mg?: number | null
+        }
+        Relationships: []
+      }
       user_food_history: {
         Row: {
           created_at: string | null
@@ -6115,6 +6196,8 @@ export type Database = {
           calories: number | null
           carbs_g: number | null
           created_at: string | null
+          data_confidence: string | null
+          data_source: string | null
           digestion_notes: string | null
           energy_level: number | null
           entry_date: string
@@ -6135,6 +6218,8 @@ export type Database = {
           calories?: number | null
           carbs_g?: number | null
           created_at?: string | null
+          data_confidence?: string | null
+          data_source?: string | null
           digestion_notes?: string | null
           energy_level?: number | null
           entry_date?: string
@@ -6155,6 +6240,8 @@ export type Database = {
           calories?: number | null
           carbs_g?: number | null
           created_at?: string | null
+          data_confidence?: string | null
+          data_source?: string | null
           digestion_notes?: string | null
           energy_level?: number | null
           entry_date?: string
