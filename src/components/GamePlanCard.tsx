@@ -508,11 +508,72 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
 
+  const setUrlParam = useCallback((key: string, value: string | null) => {
+    const params = new URLSearchParams(window.location.search);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    const qs = params.toString();
+    window.history.replaceState({}, '', qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
+  }, []);
+
+  const handleDetailClose = useCallback((open: boolean) => {
+    setDetailDialogOpen(open);
+    if (!open) {
+      setSelectedCustomTask(null);
+      setUrlParam('activityId', null);
+    }
+  }, [setUrlParam]);
+
+  const handleFolderLoggerClose = useCallback((open: boolean) => {
+    setFolderLoggerOpen(open);
+    if (!open) {
+      setSelectedFolderTask(null);
+      setUrlParam('folderItemId', null);
+    }
+  }, [setUrlParam]);
+
+  // Restore dialog state from URL on mount
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const activityId = params.get('activityId');
+    const folderItemId = params.get('folderItemId');
+    const allGamePlanTasks: GamePlanTask[] = tasks;
+
+    if (activityId) {
+      const match = allGamePlanTasks.find(t => t.id === activityId);
+      if (match?.taskType === 'custom' && match.customActivityData) {
+        setSelectedCustomTask(match);
+        setDetailDialogOpen(true);
+        toast.info("Resuming your last activity");
+      } else {
+        setUrlParam('activityId', null);
+      }
+    }
+
+    if (folderItemId) {
+      const match = allGamePlanTasks.find(t => t.folderItemData?.itemId === folderItemId);
+      if (match?.folderItemData) {
+        setSelectedFolderTask(match);
+        setFolderLoggerOpen(true);
+        toast.info("Resuming your last activity");
+      } else {
+        setUrlParam('folderItemId', null);
+      }
+    }
+  // Run only once when data loads
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
   const handleTaskClick = (task: GamePlanTask) => {
     // Handle folder items - open performance logger dialog
     if (task.folderItemData) {
       setSelectedFolderTask(task);
       setFolderLoggerOpen(true);
+      setUrlParam('folderItemId', task.folderItemData.itemId);
       return;
     }
 
@@ -520,6 +581,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     if (task.taskType === 'custom' && task.customActivityData) {
       setSelectedCustomTask(task);
       setDetailDialogOpen(true);
+      setUrlParam('activityId', task.id);
       return;
     }
 
@@ -1115,7 +1177,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         
         {/* Status indicator - clickable for custom activities with prominent styling */}
         <button
-          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { setSelectedFolderTask(task); setFolderLoggerOpen(true); } else if (isCustom) handleCustomActivityToggle(task); }}
+          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { setSelectedFolderTask(task); setFolderLoggerOpen(true); setUrlParam('folderItemId', task.folderItemData.itemId); } else if (isCustom) handleCustomActivityToggle(task); }}
           disabled={!isCustom}
           className={cn(
             "flex-shrink-0 rounded-full flex items-center justify-center transition-all",
@@ -1956,7 +2018,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       {/* Custom Activity Detail Dialog */}
       <CustomActivityDetailDialog
         open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
+        onOpenChange={handleDetailClose}
         task={selectedCustomTask}
         taskTime={selectedCustomTask ? taskTimes[selectedCustomTask.id] || null : null}
         taskReminder={selectedCustomTask ? taskReminders[selectedCustomTask.id] || null : null}
@@ -1968,7 +2030,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onEdit={() => {
           if (selectedCustomTask) {
             handleCustomActivityFullEdit(selectedCustomTask);
-            setDetailDialogOpen(false);
+            handleDetailClose(false);
           }
         }}
         onSaveTime={(time, reminder) => {
@@ -2125,7 +2187,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onSkipTask={() => {
           if (selectedCustomTask) {
             handleSkipTask(selectedCustomTask.id);
-            setDetailDialogOpen(false);
+            handleDetailClose(false);
           }
         }}
         onSavePerformanceData={async (data) => {
@@ -2469,21 +2531,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             <>
               <CustomActivityDetailDialog
                 open={folderLoggerOpen}
-                onOpenChange={(open) => {
-                  setFolderLoggerOpen(open);
-                }}
+                onOpenChange={handleFolderLoggerClose}
                 task={pseudoTask}
                 taskTime={folderTaskTime}
                 taskReminder={folderTaskReminder}
                 categoryLabel={selectedFolderTask.folderItemData.folderName}
                 hideEdit={!selectedFolderTask.folderItemData.isOwner}
                 onComplete={() => {
-                  toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
-                  toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
-                  setFolderLoggerOpen(false);
+                   toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
+                   toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+                   handleFolderLoggerClose(false);
                 }}
-                onEdit={() => {
-                  setFolderLoggerOpen(false);
+               onEdit={() => {
+                   handleFolderLoggerClose(false);
                   setFolderItemEditOpen(true);
                 }}
                 onSaveTime={(time, reminder) => {
@@ -2522,7 +2582,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 }}
                 onSkipTask={() => {
                   handleSkipTask(selectedFolderTask.id);
-                  setFolderLoggerOpen(false);
+                   handleFolderLoggerClose(false);
                 }}
               />
               {item && (
@@ -2625,9 +2685,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           <>
             <CustomActivityDetailDialog
               open={folderLoggerOpen}
-              onOpenChange={(open) => {
-                setFolderLoggerOpen(open);
-              }}
+              onOpenChange={handleFolderLoggerClose}
               task={pseudoTask}
               taskTime={folderTaskTime}
               taskReminder={folderTaskReminder}
@@ -2636,10 +2694,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               onComplete={() => {
                 toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
                 toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
-                setFolderLoggerOpen(false);
+                handleFolderLoggerClose(false);
               }}
               onEdit={() => {
-                setFolderLoggerOpen(false);
+                handleFolderLoggerClose(false);
                 setFolderItemEditOpen(true);
               }}
               onSaveTime={(time, reminder) => {
@@ -2670,7 +2728,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               }}
               onSkipTask={() => {
                 handleSkipTask(selectedFolderTask.id);
-                setFolderLoggerOpen(false);
+                handleFolderLoggerClose(false);
               }}
             />
             {item && (
