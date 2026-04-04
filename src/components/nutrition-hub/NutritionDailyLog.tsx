@@ -240,6 +240,9 @@ export function NutritionDailyLog({
             {/* Guidance Panel — precision actionable feedback */}
             <GuidancePanel date={currentDate} />
 
+            {/* Feedback Strip — reward, progression, streak, goal */}
+            <NutritionFeedbackStrip date={currentDate} meals={meals} guidanceData={guidanceData} />
+
             {/* Hydration Quality */}
             <HydrationQualityBreakdown />
 
