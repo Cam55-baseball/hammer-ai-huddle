@@ -80,7 +80,6 @@ export function usePerformanceSession() {
     fatigue_state?: any;
     micro_layer_data?: any;
     link_code?: string;
-    linked_session_id?: string;
   }) => {
     setSaving(true);
     try {
@@ -114,7 +113,6 @@ export function usePerformanceSession() {
           fatigue_state_at_session: data.fatigue_state as any,
           micro_layer_data: data.micro_layer_data as any,
           link_code: data.link_code,
-          linked_session_id: data.linked_session_id,
         })
         .select()
         .single();

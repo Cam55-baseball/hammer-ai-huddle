@@ -38,7 +38,6 @@ export interface SessionConfig {
   opponent_level?: string;
   fielding_position?: string;
   link_code?: string;
-  linked_session_id?: string;
   bat_size?: string;
   bat_type?: string;
 }
@@ -99,7 +98,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
   const [customRepSource, setCustomRepSource] = useState('');
   const [competitionLevel, setCompetitionLevel] = useState<string | undefined>();
   const [linkCode, setLinkCode] = useState<string | null>(null);
-  const [linkedSessionId, setLinkedSessionId] = useState<string | undefined>();
   const [batSize, setBatSize] = useState<string>('');
   const [batType, setBatType] = useState<string>('');
   const [customBatType, setCustomBatType] = useState<string>('');
@@ -198,7 +196,6 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       competition_level: competitionLevel,
       fielding_position: isFielding ? fieldingPosition : undefined,
       link_code: linkCode ?? undefined,
-      linked_session_id: linkedSessionId,
       bat_size: isHitting && batSize ? batSize : undefined,
       bat_type: isHitting ? (batType === 'custom' ? customBatType || undefined : batType || undefined) : undefined,
     });
@@ -415,13 +412,11 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
         {showLinkPanel && (
           <LiveAbLinkPanel
             linkCode={linkCode}
-            onLinkEstablished={(code, sessionId) => {
+            onLinkEstablished={(code) => {
               setLinkCode(code);
-              if (sessionId) setLinkedSessionId(sessionId);
             }}
             onUnlink={() => {
               setLinkCode(null);
-              setLinkedSessionId(undefined);
             }}
           />
         )}

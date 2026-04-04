@@ -301,21 +301,19 @@ export default function PracticeHub() {
           rep_source: sessionConfig.rep_source,
         },
         link_code: sessionConfig.link_code,
-        linked_session_id: sessionConfig.linked_session_id,
         micro_layer_data: reps.length > 0 ? reps : undefined,
       });
 
-      // Bidirectional linking: updates live_ab_links + both performance_sessions rows
+      // Attach session to link state machine (handles bidirectional linking atomically)
       if (sessionConfig.link_code && result.id && user?.id) {
         try {
-          await supabase.rpc('update_link_session_id', {
-            p_link_code: sessionConfig.link_code,
+          await supabase.rpc('attach_session_to_link' as any, {
             p_user_id: user.id,
+            p_link_code: sessionConfig.link_code,
             p_session_id: result.id,
           });
         } catch (linkErr) {
-          console.error('[PracticeHub] Bidirectional link update failed:', linkErr);
-          // Non-fatal — session is saved, link update can be retried
+          console.error('[PracticeHub] attach_session_to_link failed:', linkErr);
         }
       }
 

@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 
 interface LiveAbLinkPanelProps {
   linkCode: string | null;
-  onLinkEstablished: (code: string, linkedSessionId?: string) => void;
+  onLinkEstablished: (code: string) => void;
   onUnlink: () => void;
 }
 
@@ -40,15 +40,11 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
     if (!user) return;
     setLoading(true);
     try {
-      // Cancel any existing pending links for this user
-      await supabase.rpc('cancel_pending_links', { p_user_id: user.id });
-
       const code = generateCode();
-      const { error } = await supabase.from('live_ab_links' as any).insert({
-        link_code: code,
-        creator_user_id: user.id,
-        sport: sport || 'baseball',
-        status: 'pending',
+      const { data: result, error } = await supabase.rpc('create_ab_link' as any, {
+        p_user_id: user.id,
+        p_sport: sport || 'baseball',
+        p_link_code: code,
       });
       if (error) throw error;
       setGeneratedCode(code);
@@ -83,10 +79,8 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
 
       setLinked(true);
       setGeneratedCode(code);
-      // creator_session_id may be null if creator hasn't saved yet — that's OK,
-      // realtime uses link_code for broadcast and defers session sync
-      onLinkEstablished(code, (link as any).creator_session_id ?? undefined);
-      toast({ title: 'Linked!', description: 'Sessions are now connected.' });
+      onLinkEstablished(code);
+      toast({ title: 'Claimed!', description: 'Session link claimed. Save to complete.' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
