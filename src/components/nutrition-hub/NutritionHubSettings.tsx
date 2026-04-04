@@ -166,6 +166,31 @@ export function NutritionHubSettings({
 
           <Separator />
 
+          {/* Performance Mode */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <Zap className="h-4 w-4 text-primary" />
+                  {t('nutrition.settings.performanceMode', 'Performance Mode')}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t('nutrition.settings.performanceModeDesc', 'Stricter targets for competitive athletes')}
+                </p>
+              </div>
+              <Switch
+                checked={performanceMode}
+                onCheckedChange={(checked) => {
+                  setPerformanceMode(checked);
+                  toast.success(checked ? 'Performance Mode enabled' : 'Performance Mode disabled');
+                }}
+                disabled={perfLoading}
+              />
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Edit Profile Link */}
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
