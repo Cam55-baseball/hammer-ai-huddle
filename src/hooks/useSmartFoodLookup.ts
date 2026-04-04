@@ -272,6 +272,33 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           }
         }
 
+        // Dynamic DB expansion: insert new foods with valid micros into nutrition_food_database
+        if (data.foods && data.foods.length > 0) {
+          for (const food of data.foods) {
+            if (food.micros && typeof food.micros === 'object' && Object.keys(food.micros).length >= 13) {
+              // Check if this food already exists
+              const { data: existing } = await supabase
+                .from('nutrition_food_database')
+                .select('id')
+                .ilike('name', food.name)
+                .limit(1);
+
+              if (!existing || existing.length === 0) {
+                await supabase.from('nutrition_food_database').insert({
+                  name: food.name,
+                  calories_per_serving: food.calories,
+                  protein_g: food.protein_g,
+                  carbs_g: food.carbs_g,
+                  fats_g: food.fats_g,
+                  serving_size: `${food.quantity} ${food.unit}`,
+                  source: 'ai_expanded',
+                  ...food.micros,
+                } as any);
+              }
+            }
+          }
+        }
+
         // Determine overall confidence
         let confidenceSummary: 'high' | 'medium' | 'low' = 'medium';
         if (data.foods && data.foods.length > 0) {

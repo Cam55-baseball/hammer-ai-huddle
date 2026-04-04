@@ -214,8 +214,14 @@ export function NutritionDailyLog({
               </div>
             </div>
 
+            {/* Nutrition Score */}
+            <NutritionScoreCard date={currentDate} />
+
             {/* Hydration Quality Breakdown */}
             <HydrationQualityBreakdown />
+
+            {/* Deficiency Alerts */}
+            <DeficiencyAlert date={currentDate} />
 
             {/* Micronutrient Panel */}
             <MicronutrientPanel date={currentDate} />
