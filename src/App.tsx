@@ -62,7 +62,7 @@ const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
 const VideoLibraryPlayer = lazyWithRetry(() => import("./pages/VideoLibraryPlayer"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
-const ScoutDashboard = lazyWithRetry(() => import("./pages/ScoutDashboard"));
+
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
 const Profile = lazyWithRetry(() => import("./pages/Profile"));
