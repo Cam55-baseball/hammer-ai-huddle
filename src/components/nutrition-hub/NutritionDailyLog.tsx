@@ -14,6 +14,8 @@ import { HydrationQualityBreakdown } from './HydrationQualityBreakdown';
 import { NutritionScoreCard } from './NutritionScoreCard';
 import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
+import { GuidancePanel } from './GuidancePanel';
+import { CravingGuidance } from './CravingGuidance';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
