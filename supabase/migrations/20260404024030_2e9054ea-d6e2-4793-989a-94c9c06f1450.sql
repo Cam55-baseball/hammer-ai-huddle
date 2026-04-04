@@ -1,0 +1,1 @@
+ALTER TABLE public.athlete_mpi_settings ADD COLUMN IF NOT EXISTS performance_mode boolean DEFAULT false;
