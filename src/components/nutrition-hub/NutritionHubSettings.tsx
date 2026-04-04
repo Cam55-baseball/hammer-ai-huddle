@@ -10,9 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { Settings, ChevronRight } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Settings, ChevronRight, Zap } from 'lucide-react';
 import { useAthleteGoals } from '@/hooks/useAthleteGoals';
 import { useTDEE } from '@/hooks/useTDEE';
+import { usePerformanceMode } from '@/hooks/usePerformanceMode';
 import type { GoalType } from '@/utils/tdeeCalculations';
 import { toast } from 'sonner';
 
