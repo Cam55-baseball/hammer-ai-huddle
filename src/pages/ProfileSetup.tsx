@@ -77,7 +77,7 @@ const ProfileSetup = () => {
   const { session } = useAuth();
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || !isAuthStable) return;
     if (!user && !session) {
       navigate("/auth", { replace: true });
       return;

@@ -157,8 +157,7 @@ export default function AnalyzeVideo() {
   }, [refetch]);
 
   useEffect(() => {
-    // Wait for auth, subscription, and initialization to complete
-    if (authLoading || subLoading || !initialized) {
+    if (authLoading || subLoading || !initialized || !isAuthStable) {
       return;
     }
     

@@ -131,7 +131,7 @@ export default function Profile() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (authLoading || ownerLoading) return;
+    if (authLoading || ownerLoading || !isAuthStable) return;
     
     if (!user && !session) {
       navigate("/auth", { replace: true });
