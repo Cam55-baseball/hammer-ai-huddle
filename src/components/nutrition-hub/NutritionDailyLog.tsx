@@ -35,6 +35,7 @@ export function NutritionDailyLog({
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { config } = usePerformanceMode();
   
   const [internalDate, setInternalDate] = useState(new Date());
 
