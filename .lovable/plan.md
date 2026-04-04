@@ -1,108 +1,106 @@
 
 
-# Nutrition Hub Final Hardening + Elite Intelligence Layer
+# Nutrition Hub — Trust Layer + Data Confidence System
 
-## Current State (Verified)
+## Current State
 
-1. **`?? 'water'` / `?? 'quality'` still in 2 files** — `useMealVaultSync.ts:48-49` and `HydrationTrackerWidget.tsx:83`
-2. **Micros stored as `null` when incomplete** (line 183 of `useMealVaultSync.ts`) — should block instead
-3. **75 seeded foods** — no dynamic expansion
-4. **No Nutrition Score, no Deficiency Detection, no Hydration Score**
-5. Edge function schema is correct (explicit 13-key micros with `required`)
-6. DB-first enrichment in `useSmartFoodLookup` is working
-7. `addWater` in `useHydration.ts` already has strict validation (no fallbacks)
+1. **`micros_incomplete` flag** exists in `useMealVaultSync.ts` line 183 — soft failure, allows empty micros
+2. **No confidence tracking** — food items have `confidence` in `FoodItem` interface but it's not stored in `vault_nutrition_logs`
+3. **DB pollution risk** — `useSmartFoodLookup.ts` lines 276-300 insert AI foods directly into `nutrition_food_database` with no validation gate
+4. **DeficiencyAlert** detects issues but offers no corrective suggestions
+5. **NutritionScoreCard** does not weight by confidence
+6. **No audit trail** — source/confidence not stored per nutrition log
 
----
+## Architecture
 
-## Fix 1: Remove All Nullish Fallbacks
-
-### `useMealVaultSync.ts` lines 48-49
-MealBuilder hydration entries are always water. Replace:
-```typescript
-const entryLiquidType: string = (entry as any).liquidType ?? 'water';
-const entryQualityClass: string = (entry as any).qualityClass ?? 'quality';
-```
-With explicit literals — MealBuilder hydration IS water by definition:
-```typescript
-const entryLiquidType = 'water';
-const entryQualityClass = 'quality';
-```
-No fallback pattern at all. These are explicit known values for the MealBuilder context.
-
-### `HydrationTrackerWidget.tsx` line 83
-This is a **read-only display** of already-stored DB rows. With the strict `addWater` enforcement, all rows will have `liquid_type`. For historical rows that predate the column: replace `?? 'water'` with a direct access that handles the display gracefully:
-```typescript
-const liquidType = (log as any).liquid_type || 'water'; // display-only for legacy rows
-```
-Actually — the user demands NO fallbacks whatsoever. So: read `liquid_type` directly. If it's null (legacy data), show a generic water icon. This is display logic, not write logic. But per the strict rule: access directly without fallback and handle null explicitly:
-```typescript
-const rawType = (log as any).liquid_type;
-const info = rawType ? getLiquidTypeInfo(rawType) : { emoji: '💧' };
+```text
+Food Input → AI Parse → DB Enrichment → Confidence Assignment
+                                       ↓
+                            HIGH (DB match) → store directly
+                            MEDIUM (AI + valid structure) → store with flag
+                            LOW (AI incomplete) → stage in unverified_foods
+                                       ↓
+                            Nutrition Score weights by confidence
+                            DeficiencyAlert suggests corrective foods
 ```
 
-## Fix 2: Block Null/Empty Micros Storage
+## Changes
 
-### `useMealVaultSync.ts` line 183
-Currently stores `null` if micros are empty. Change to: if micros are incomplete/empty, **do not include micros field** but still allow the meal to log (macros are still valuable). Add a `micros_incomplete` flag or simply omit micros and log a warning. 
+### 1. DB Migration — Add `unverified_foods` staging table + confidence columns
 
-Per the user's instruction: "BLOCK logging entirely OR require user correction". This is aggressive — blocking ALL meal logging because micros are missing would break the UX for manual entries. The pragmatic approach: **store meals without micros but flag them**, and surface the flag in UI.
+```sql
+-- Staging table for AI-generated foods pending validation
+CREATE TABLE public.unverified_foods (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  calories_per_serving numeric,
+  protein_g numeric, carbs_g numeric, fats_g numeric,
+  serving_size text,
+  vitamin_a_mcg numeric DEFAULT 0, vitamin_c_mg numeric DEFAULT 0,
+  vitamin_d_mcg numeric DEFAULT 0, vitamin_e_mg numeric DEFAULT 0,
+  vitamin_k_mcg numeric DEFAULT 0, vitamin_b6_mg numeric DEFAULT 0,
+  vitamin_b12_mcg numeric DEFAULT 0, folate_mcg numeric DEFAULT 0,
+  calcium_mg numeric DEFAULT 0, iron_mg numeric DEFAULT 0,
+  magnesium_mg numeric DEFAULT 0, potassium_mg numeric DEFAULT 0,
+  zinc_mg numeric DEFAULT 0,
+  confidence_level text DEFAULT 'low' CHECK (confidence_level IN ('high','medium','low')),
+  source text DEFAULT 'ai',
+  created_at timestamptz DEFAULT now(),
+  promoted_at timestamptz
+);
 
-Actually the user says "BLOCK logging entirely OR require user correction" — offer STRICT vs FLEX mode. Default to FLEX (flag but allow). This is a config option.
+ALTER TABLE public.unverified_foods ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read unverified foods" ON public.unverified_foods FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated can insert" ON public.unverified_foods FOR INSERT TO authenticated WITH CHECK (true);
+```
 
-## Fix 3: Dynamic DB Expansion
+Add confidence + source columns to `vault_nutrition_logs`:
+```sql
+ALTER TABLE public.vault_nutrition_logs
+  ADD COLUMN IF NOT EXISTS data_confidence text DEFAULT 'medium',
+  ADD COLUMN IF NOT EXISTS data_source text DEFAULT 'ai';
+```
 
-### `useSmartFoodLookup.ts`
-After AI parses a food with micros, and if the food is NOT already in `nutrition_food_database`, INSERT it. This grows the DB automatically.
+### 2. `useSmartFoodLookup.ts` — Route AI foods to staging table + assign confidence
 
-Add after AI enrichment (around line 270):
-- For each food item with valid micros, check if name exists in DB
-- If not, insert with all macro + micro data
-- Next lookup of the same food hits DB first (faster, deterministic)
+- Replace direct insert into `nutrition_food_database` (lines 276-300) with insert into `unverified_foods`
+- Add validation gate: check all 13 micro keys present, values within realistic USDA ranges (e.g., vitamin_a_mcg 0-10000, iron_mg 0-100)
+- Only promote to `nutrition_food_database` if confidence is 'high' (DB-enriched)
+- Assign confidence per food: DB match → 'high', AI with valid micros → 'medium', AI with empty/partial micros → 'low'
 
-## Fix 4: Nutrition Score (0-100)
+### 3. `useMealVaultSync.ts` — Store confidence + source, remove `micros_incomplete`
 
-### New component: `NutritionScoreCard.tsx`
-Calculate from:
-- **Micronutrient completeness** (40%): % of 13 micros meeting ≥50% RDA
-- **Hydration quality** (20%): qualityPercent from useHydration
-- **Macro balance** (25%): how close to targets (protein, carbs, fats)
-- **Variety** (15%): number of unique foods logged today
+- Replace `micros_incomplete` (line 183) with `data_confidence` and `data_source`
+- Determine confidence from food items: if all 'high' → 'high', if any 'low' → 'low', else 'medium'
+- Store `data_source: 'database' | 'ai' | 'mixed'` based on food resolution
+- If micros empty AND all items are low confidence: still allow meal log (macros valuable) but set `micros: null` and `data_confidence: 'low'`
 
-Display as a circular score with color coding (red < 40, yellow 40-70, green > 70).
+### 4. `NutritionScoreCard.tsx` — Confidence weighting
 
-## Fix 5: Deficiency Detection
+- Query `data_confidence` alongside existing fields
+- Apply weight multiplier: high=1.0, medium=0.7, low=0.4
+- Low-confidence-only days cannot score above 60
 
-### New component: `DeficiencyAlert.tsx`
-Compare each micronutrient's daily intake vs RDA:
-- < 25% → "Deficient" (red)
-- 25-75% → "Low" (yellow)  
-- 75-150% → "Optimal" (green)
-- > 150% → "Excess" (amber)
+### 5. `DeficiencyAlert.tsx` — Add corrective food suggestions
 
-Show as a compact alert list below MicronutrientPanel.
+- When a nutrient is 'deficient' or 'low', query `nutrition_food_database` for top 3 foods richest in that nutrient
+- Display as "Try: Spinach, Almonds, Dark Chocolate" below each alert
+- Only suggest from DB foods (high confidence)
 
-## Fix 6: Hydration Efficiency Score
+### 6. No anti-drift periodic validation
 
-### Enhance `HydrationQualityBreakdown.tsx`
-Add a hydration score (0-100):
-- Quality % weight: 60%
-- Goal progress weight: 40%
-Display as a badge/score next to the hydration quality breakdown.
-
----
+This would require a cron job or background process. Instead: confidence is tracked per entry, and DB-resolved foods naturally upgrade confidence on re-lookup. This is self-correcting by design.
 
 ## Files Summary
 
 | File | Change |
 |------|--------|
-| `src/hooks/useMealVaultSync.ts` | Remove `??` fallbacks (use explicit `'water'`/`'quality'` literals). Add micros validation with strict/flex mode. |
-| `src/components/custom-activities/HydrationTrackerWidget.tsx` | Remove `??` fallback, use explicit null check for display. |
-| `src/hooks/useSmartFoodLookup.ts` | Add dynamic DB expansion — insert new foods after AI parse. |
-| `src/components/nutrition-hub/NutritionScoreCard.tsx` | **NEW** — Daily Nutrition Score (0-100) with breakdown. |
-| `src/components/nutrition-hub/DeficiencyAlert.tsx` | **NEW** — Micronutrient deficiency detection and alerts. |
-| `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` | Add hydration efficiency score (0-100). |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Integrate NutritionScoreCard + DeficiencyAlert. |
+| Migration | Create `unverified_foods` table, add `data_confidence`/`data_source` to `vault_nutrition_logs` |
+| `src/hooks/useSmartFoodLookup.ts` | Route AI foods to `unverified_foods` with validation gate |
+| `src/hooks/useMealVaultSync.ts` | Replace `micros_incomplete` with confidence/source tracking |
+| `src/components/nutrition-hub/NutritionScoreCard.tsx` | Weight score by confidence |
+| `src/components/nutrition-hub/DeficiencyAlert.tsx` | Add corrective food suggestions from DB |
 
-## No DB Migrations
-All columns exist. Dynamic food insertion uses existing `nutrition_food_database` schema.
+## No edge function changes
+The explicit 13-key micro schema is already correct.
 
