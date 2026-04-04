@@ -124,6 +124,11 @@ export function useHIESnapshot() {
     }
   }, [query.data, latestSessionQuery.data, queryClient, user?.id]);
 
+  // Reset cooldown when snapshot updates so next reconciliation check runs immediately
+  useEffect(() => {
+    lastInvalidationRef.current = 0;
+  }, [query.data?.computed_at]);
+
   // ── STALE DATA AUTO-REFRESH (24h fallback — invalidation only) ──
   useEffect(() => {
     if (!query.data) return;

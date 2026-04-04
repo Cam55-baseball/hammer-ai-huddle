@@ -286,6 +286,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
     broadcastChannelRef.current = bc;
 
     bc.onmessage = (event) => {
+      if (event.data?.source === tabIdRef.current) return;
       if (event.data?.type === 'invalidate' && Array.isArray(event.data.key)) {
         queryClient.invalidateQueries({ queryKey: event.data.key });
       }
