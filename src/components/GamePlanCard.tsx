@@ -2187,7 +2187,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onSkipTask={() => {
           if (selectedCustomTask) {
             handleSkipTask(selectedCustomTask.id);
-            setDetailDialogOpen(false);
+            handleDetailClose(false);
           }
         }}
         onSavePerformanceData={async (data) => {
