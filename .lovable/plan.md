@@ -1,112 +1,108 @@
 
 
-# Nutrition Hub System Hardening — DB-First Micros + Silent Default Removal
+# Nutrition Hub Final Hardening + Elite Intelligence Layer
 
-## Current State (Proven)
+## Current State (Verified)
 
-1. **Micronutrients completely broken**: Edge function uses `additionalProperties: { type: "number" }` for micros schema — Gemini Flash ignores this and returns `micros: {}`. Retry also fails. Zero micronutrient data has ever been stored.
-2. **DB has micro columns but zero data**: `nutrition_food_database` has 64 rows, all 13 micro columns are NULL for every row.
-3. **Silent defaults still active**: `useMealVaultSync.ts` lines 48-49 use `|| 'water'` and `|| 'quality'`. `HydrationTrackerWidget.tsx` line 83 uses `|| 'water'` for display.
-4. **UI is dead**: `MicronutrientPanel` and `MealLogCard` micro drill-down never render because no data exists.
+1. **`?? 'water'` / `?? 'quality'` still in 2 files** — `useMealVaultSync.ts:48-49` and `HydrationTrackerWidget.tsx:83`
+2. **Micros stored as `null` when incomplete** (line 183 of `useMealVaultSync.ts`) — should block instead
+3. **75 seeded foods** — no dynamic expansion
+4. **No Nutrition Score, no Deficiency Detection, no Hydration Score**
+5. Edge function schema is correct (explicit 13-key micros with `required`)
+6. DB-first enrichment in `useSmartFoodLookup` is working
+7. `addWater` in `useHydration.ts` already has strict validation (no fallbacks)
 
-## Architecture Change
+---
 
-```text
-BEFORE:  Food text → AI (sole source) → empty micros → stored → dead UI
-AFTER:   Food text → AI (parse items only) → DB lookup per item → micros from DB
-                                            → if no DB match → AI micros (explicit schema)
-                                            → if still empty → store with micros_incomplete flag
-```
+## Fix 1: Remove All Nullish Fallbacks
 
-**Key shift**: AI role is ONLY to parse text into structured food items. Micronutrient values come from the local database first, AI second (with explicit per-property schema).
-
-## Changes
-
-### 1. Seed `nutrition_food_database` with USDA micronutrient data
-
-Run a script (via `code--exec`) using the AI gateway to generate USDA-based micronutrient values for common foods, then INSERT into the existing 64 rows + add ~50 common foods (eggs, chicken breast, rice, broccoli, orange juice, milk, etc.) with full micro data.
-
-This is a data insert, not a schema change.
-
-### 2. Fix Edge Function — Explicit Micro Schema (`parse-food-text/index.ts`)
-
-**Replace** `additionalProperties: { type: "number" }` with explicit properties for all 13 micro keys:
-
+### `useMealVaultSync.ts` lines 48-49
+MealBuilder hydration entries are always water. Replace:
 ```typescript
-micros: {
-  type: "object",
-  properties: {
-    vitamin_a_mcg: { type: "number" },
-    vitamin_c_mg: { type: "number" },
-    vitamin_d_mcg: { type: "number" },
-    vitamin_e_mg: { type: "number" },
-    vitamin_k_mcg: { type: "number" },
-    vitamin_b6_mg: { type: "number" },
-    vitamin_b12_mcg: { type: "number" },
-    folate_mcg: { type: "number" },
-    calcium_mg: { type: "number" },
-    iron_mg: { type: "number" },
-    magnesium_mg: { type: "number" },
-    potassium_mg: { type: "number" },
-    zinc_mg: { type: "number" },
-  },
-  required: [all 13 keys]
-}
+const entryLiquidType: string = (entry as any).liquidType ?? 'water';
+const entryQualityClass: string = (entry as any).qualityClass ?? 'quality';
 ```
-
-This forces Gemini to populate each field. Remove the retry loop (no longer needed — explicit schema works or DB fallback handles it).
-
-### 3. Add DB-First Micro Resolution (`useSmartFoodLookup.ts`)
-
-When a DB match is found (line 142), extract micronutrients from the matched row and include them in the result:
-
+With explicit literals — MealBuilder hydration IS water by definition:
 ```typescript
-micros: {
-  vitamin_a_mcg: bestMatch.vitamin_a_mcg || 0,
-  vitamin_c_mg: bestMatch.vitamin_c_mg || 0,
-  // ... all 13
-}
+const entryLiquidType = 'water';
+const entryQualityClass = 'quality';
 ```
+No fallback pattern at all. These are explicit known values for the MealBuilder context.
 
-When AI results come back, for each food item: attempt a DB lookup by name to get micros. If DB has micros, use those instead of AI values.
-
-### 4. Remove Silent Defaults
-
-**`useMealVaultSync.ts` lines 48-49**: Replace `|| 'water'` / `|| 'quality'` with explicit values. MealBuilder hydration entries are always water-based, so use `'water'` and `'quality'` as direct string literals (not fallbacks):
-
+### `HydrationTrackerWidget.tsx` line 83
+This is a **read-only display** of already-stored DB rows. With the strict `addWater` enforcement, all rows will have `liquid_type`. For historical rows that predate the column: replace `?? 'water'` with a direct access that handles the display gracefully:
 ```typescript
-const entryLiquidType = (entry as any).liquidType ?? 'water';  // NO — still a default
+const liquidType = (log as any).liquid_type || 'water'; // display-only for legacy rows
+```
+Actually — the user demands NO fallbacks whatsoever. So: read `liquid_type` directly. If it's null (legacy data), show a generic water icon. This is display logic, not write logic. But per the strict rule: access directly without fallback and handle null explicitly:
+```typescript
+const rawType = (log as any).liquid_type;
+const info = rawType ? getLiquidTypeInfo(rawType) : { emoji: '💧' };
 ```
 
-Actually: change to explicit `'water'` and `'quality'` without any fallback pattern, since MealBuilder hydration IS water by definition. Or better: make MealBuilder entries carry explicit `liquidType`/`qualityClass` fields.
+## Fix 2: Block Null/Empty Micros Storage
 
-Line 55 already uses `addWater(amountOz, 'water', 'quality')` — this is an explicit value, not a fallback. Lines 48-49 need the same treatment: remove the `||` pattern and use explicit values directly.
+### `useMealVaultSync.ts` line 183
+Currently stores `null` if micros are empty. Change to: if micros are incomplete/empty, **do not include micros field** but still allow the meal to log (macros are still valuable). Add a `micros_incomplete` flag or simply omit micros and log a warning. 
 
-**`HydrationTrackerWidget.tsx` line 83**: Change `(log as any).liquid_type || 'water'` to `(log as any).liquid_type ?? 'water'` — this is a display fallback for historical data that may lack the column. Acceptable as a read-only display default, but should use `??` (nullish coalescing) not `||`.
+Per the user's instruction: "BLOCK logging entirely OR require user correction". This is aggressive — blocking ALL meal logging because micros are missing would break the UX for manual entries. The pragmatic approach: **store meals without micros but flag them**, and surface the flag in UI.
 
-### 5. Micro Validation in `useMealVaultSync.ts`
+Actually the user says "BLOCK logging entirely OR require user correction" — offer STRICT vs FLEX mode. Default to FLEX (flag but allow). This is a config option.
 
-Before storing `micros` in `vault_nutrition_logs`, validate that the object contains at least some meaningful values. If micros is empty or all zeros, store `null` with a flag or log a warning — do NOT store `{}`.
+## Fix 3: Dynamic DB Expansion
 
-Current code (line 183) already checks `Object.keys(aggregatedMicros).length > 0` — this is correct but needs to also check that values are non-zero.
+### `useSmartFoodLookup.ts`
+After AI parses a food with micros, and if the food is NOT already in `nutrition_food_database`, INSERT it. This grows the DB automatically.
 
-### 6. No New DB Migrations
+Add after AI enrichment (around line 270):
+- For each food item with valid micros, check if name exists in DB
+- If not, insert with all macro + micro data
+- Next lookup of the same food hits DB first (faster, deterministic)
 
-All columns already exist. The seeding is a data INSERT operation.
+## Fix 4: Nutrition Score (0-100)
+
+### New component: `NutritionScoreCard.tsx`
+Calculate from:
+- **Micronutrient completeness** (40%): % of 13 micros meeting ≥50% RDA
+- **Hydration quality** (20%): qualityPercent from useHydration
+- **Macro balance** (25%): how close to targets (protein, carbs, fats)
+- **Variety** (15%): number of unique foods logged today
+
+Display as a circular score with color coding (red < 40, yellow 40-70, green > 70).
+
+## Fix 5: Deficiency Detection
+
+### New component: `DeficiencyAlert.tsx`
+Compare each micronutrient's daily intake vs RDA:
+- < 25% → "Deficient" (red)
+- 25-75% → "Low" (yellow)  
+- 75-150% → "Optimal" (green)
+- > 150% → "Excess" (amber)
+
+Show as a compact alert list below MicronutrientPanel.
+
+## Fix 6: Hydration Efficiency Score
+
+### Enhance `HydrationQualityBreakdown.tsx`
+Add a hydration score (0-100):
+- Quality % weight: 60%
+- Goal progress weight: 40%
+Display as a badge/score next to the hydration quality breakdown.
+
+---
 
 ## Files Summary
 
 | File | Change |
 |------|--------|
-| `supabase/functions/parse-food-text/index.ts` | Replace `additionalProperties` with explicit 13-key micro schema + required array. Remove retry loop. |
-| `src/hooks/useSmartFoodLookup.ts` | Extract micros from DB match. Post-AI: attempt DB lookup per food for micro enrichment. |
-| `src/hooks/useMealVaultSync.ts` | Remove `\|\| 'water'` and `\|\| 'quality'` on lines 48-49. Use explicit values. |
-| `src/components/custom-activities/HydrationTrackerWidget.tsx` | Change `\|\| 'water'` to `?? 'water'` for display (historical data compat). |
-| Data seed script | INSERT ~100 common foods with full USDA micro data into `nutrition_food_database`. |
+| `src/hooks/useMealVaultSync.ts` | Remove `??` fallbacks (use explicit `'water'`/`'quality'` literals). Add micros validation with strict/flex mode. |
+| `src/components/custom-activities/HydrationTrackerWidget.tsx` | Remove `??` fallback, use explicit null check for display. |
+| `src/hooks/useSmartFoodLookup.ts` | Add dynamic DB expansion — insert new foods after AI parse. |
+| `src/components/nutrition-hub/NutritionScoreCard.tsx` | **NEW** — Daily Nutrition Score (0-100) with breakdown. |
+| `src/components/nutrition-hub/DeficiencyAlert.tsx` | **NEW** — Micronutrient deficiency detection and alerts. |
+| `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` | Add hydration efficiency score (0-100). |
+| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Integrate NutritionScoreCard + DeficiencyAlert. |
 
-## Performance Impact
-
-- **Faster**: Removing AI retry loop eliminates 2-4 second delay on every food parse
-- **DB lookup**: Already happens (Phase 1 of SmartFoodLookup). Adding micro extraction to existing query = zero additional latency
-- **Deterministic**: DB micros are static USDA values, not AI estimates
+## No DB Migrations
+All columns exist. Dynamic food insertion uses existing `nutrition_food_database` schema.
 
