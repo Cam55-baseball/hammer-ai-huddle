@@ -217,7 +217,7 @@ export function useMealVaultSync() {
           const unverifiedInserts = aiItems.map(item => ({
             food_name: item.name,
             micros: item.micros,
-            serving_size: item.servingSize || '1 serving',
+            serving_size: (item as any).servingSize || '1 serving',
             source: 'ai',
             submitted_by: user.id,
           }));
