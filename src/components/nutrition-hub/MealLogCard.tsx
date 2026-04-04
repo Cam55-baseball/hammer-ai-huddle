@@ -21,6 +21,7 @@ export interface MealLogData {
   supplements?: string[] | null;
   mealTime?: string | null;
   digestionNotes?: string | null;
+  micros?: Record<string, number> | null;
 }
 
 interface MealLogCardProps {
