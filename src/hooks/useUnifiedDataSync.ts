@@ -174,12 +174,18 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   }) => {
     const { table } = payload;
 
-    // 500ms deduplication guard
+    // 500ms deduplication guard — granular by (table, eventType, rowId)
+    const rowId = payload.new?.id || payload.old?.id || '';
     const now = Date.now();
-    if (lastEventRef.current.table === table && now - lastEventRef.current.ts < 500) {
+    if (
+      lastEventRef.current.table === table &&
+      lastEventRef.current.eventType === payload.eventType &&
+      lastEventRef.current.rowId === rowId &&
+      now - lastEventRef.current.ts < 500
+    ) {
       return;
     }
-    lastEventRef.current = { table, ts: now };
+    lastEventRef.current = { table, eventType: payload.eventType, rowId, ts: now };
 
     invalidateRelatedQueries(table);
 
