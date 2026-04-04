@@ -1,80 +1,38 @@
 
 
-# Consistency Score Integrity Fix
+# Trend Engine Truth Enforcement
 
-## Problem
-Line 81: `stabilityScore = 100` when zero micro days exist rewards absence of data with perfect stability. Combined with `loggingFrequency = 100` for daily loggers, this yields score = 70 (green zone) with zero micronutrient data.
+## Current State (Already Partially Correct)
+- `useNutritionTrends` line 101: `if (!micros) continue` — null-micro logs already skipped from `dayMap`
+- Line 117: `if (days.length === 0) return null` — zero-micro scenario returns null
+- `NutritionTrendsCard` line 28: `if (!trends) return null` — card hidden entirely
+
+**Gap**: When zero micro data exists, the card silently disappears. This is inconsistent with the `useNutritionConsistency` pattern which returns `status: 'insufficient_data'`. The user wants explicit communication rather than silence.
 
 ## Changes
 
-### 1. `src/hooks/useNutritionConsistency.ts`
+### 1. `src/hooks/useNutritionTrends.ts`
+- Add `status: 'active' | 'insufficient_data'` to the return type
+- Change line 117 from `return null` to return a structured object with `status: 'insufficient_data'`, empty arrays, and `daysAnalyzed: 0`
+- Add `status: 'active'` to the normal return object
 
-**Update interface** — make `score` nullable, add `status` field:
-```typescript
-export interface ConsistencyData {
-  score: number | null;
-  status: 'active' | 'insufficient_data';
-  stabilityScore: number;
-  loggingFrequency: number;
-  deficiencyFreeRate: number;
-  daysAnalyzed: number;
-}
-```
+### 2. `src/components/nutrition-hub/NutritionTrendsCard.tsx`
+- Update the guard (line 28) to check `trends.status === 'insufficient_data'`
+- When insufficient data: render the card shell with a single message: "Trend analysis unavailable — insufficient micronutrient data"
+- Keep the `daysAnalyzed < 3` guard to hide entirely when not enough logging days
+- When status is `insufficient_data`, do NOT render any %, deficiency, predictions, or nudges
 
-**Early return when zero micro days** — after computing `daysWithMicros` (line 90), add:
-```typescript
-if (daysWithMicros === 0) {
-  return {
-    score: null,
-    status: 'insufficient_data',
-    stabilityScore: 0,
-    loggingFrequency,
-    deficiencyFreeRate: 0,
-    daysAnalyzed: daysLogged,
-  };
-}
-```
+## Behavior After Fix
 
-**Fix stability defaults** — replace line 81-82:
-```typescript
-let stabilityScore = 0;
-if (dailyScores.length === 0) {
-  stabilityScore = 0;
-} else if (dailyScores.length === 1) {
-  stabilityScore = 50;
-} else {
-  // existing std dev calculation
-}
-```
+| Scenario | Before | After |
+|----------|--------|-------|
+| Zero micro data, 3+ log days | Card hidden (silent) | Card shows "Trend analysis unavailable" message |
+| Zero micro data, <3 log days | Card hidden | Card hidden (unchanged) |
+| Has micro data | Normal display | Normal display (unchanged) |
 
-**Add `status: 'active'`** to the normal return object.
-
-### 2. `src/components/nutrition-hub/NutritionScoreCard.tsx`
-
-Update the consistency badge (lines 232-244) to handle null score:
-```typescript
-{consistency && consistency.daysAnalyzed >= 3 && (
-  <div className="mt-1.5 flex items-center gap-1.5">
-    <BarChart3 className="h-3 w-3 text-primary/60" />
-    {consistency.score !== null ? (
-      <>
-        <span className="text-[10px] text-muted-foreground">14-day consistency:</span>
-        <span className={cn('text-[10px] font-semibold', /* existing color logic */)}>
-          {consistency.score}
-        </span>
-      </>
-    ) : (
-      <span className="text-[10px] text-muted-foreground italic">
-        Consistency unavailable — insufficient micronutrient data
-      </span>
-    )}
-  </div>
-)}
-```
-
-## Verification
-
-**Zero-micro scenario** → `score: null`, status `insufficient_data`, UI shows "unavailable" message.
-**1 micro day** → `stabilityScore: 50`, score ≈ 30 (amber), not inflated.
-**2+ micro days** → normal std dev calculation, no change.
+## Files Changed
+| File | Change |
+|------|--------|
+| `src/hooks/useNutritionTrends.ts` | Add `status` field, return structured insufficient_data object instead of null |
+| `src/components/nutrition-hub/NutritionTrendsCard.tsx` | Show explicit "unavailable" message for insufficient_data status |
 
