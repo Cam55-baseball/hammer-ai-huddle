@@ -11,6 +11,7 @@ import { useNutritionBaseline } from '@/hooks/useNutritionBaseline';
 import { useSuggestionLearning } from '@/hooks/useSuggestionLearning';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { NUTRIENT_IMPACT } from '@/constants/nutrientPerformanceMap';
 
 const RDA: Record<string, { amount: number; unit: string; label: string }> = {
   vitamin_a_mcg: { amount: 900, unit: 'mcg', label: 'Vitamin A' },
