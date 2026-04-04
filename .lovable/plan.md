@@ -1,55 +1,53 @@
 
 
-# Fix: Preview Module Import Failure After Sign-In
+# AI Workout Generator — Production Hardening
 
-## Root Cause
+## Changes
 
-The failing URL from the runtime error is:
-```
-/node_modules/.vite/deps/chunk-ZMLY2J2T.js?v=0b4ef1c3
-```
+### File 1: `src/hooks/useBlockWorkoutGenerator.ts` — Full rewrite of the hook
 
-This is a **Vite pre-bundled dependency chunk**, not a page file. When the user signs in and the app navigates to `/dashboard`, React Router triggers the lazy import for the Dashboard page. That page's dependency tree includes chunks from `.vite/deps/` that the preview proxy intermittently fails to serve (returning HTML or a network error instead of JS).
+**Fix 1 — Subscription loading guard**
+- Import `loading` and `initialized` from `useSubscription()`, `loading` from `useOwnerAccess()`
+- Expose `subscriptionReady` = `initialized && !ownerLoading`
+- Block `generateExercises` early if `!subscriptionReady` — return null, no toast
+- Only then check `!isOwner && modules.length === 0`
 
-The Auth page itself loads fine because its chunks were already fetched during initial page load. The problem is exclusively with chunks needed by pages loaded **after** navigation.
+**Fix 2 — Request deduplication with AbortController**
+- Add `useRef<AbortController | null>(null)` 
+- At start of `generateExercises`: abort previous controller, create new one
+- Pass `signal` to `supabase.functions.invoke` via the `body` isn't possible — instead use the `isGenerating` state as a hard lock: if `isGenerating` is already true, return null immediately (supabase-js doesn't support AbortController on `functions.invoke`)
+- On unmount, abort any in-flight request via cleanup ref
 
-## Fix — Static Import Critical Post-Auth Pages
+**Fix 3 — Null response hardening**
+- After `supabase.functions.invoke`, check `if (!data)` → throw `"No response from server"`
+- Then check `if (data.error)` with existing logic
 
-Convert `Dashboard` and `ScoutDashboard` from lazy to static imports. These are the two pages users land on after sign-in (based on role). Making them static ensures their entire dependency tree is resolved at initial page load — before auth ever completes.
+**Fix 4 — Safe parsing**
+- Wrap the `data.error` check and `setResult(data)` in a try/catch that catches any property access failures
+- Throw `"Failed to generate workout — invalid AI response"`
 
-All other pages remain lazy-loaded (they're navigated to from within the app after the initial load succeeds, which is more reliable).
+**Fix 5 — User-facing error UX**  
+- No subscription: `"Your plan doesn't include workout generation"`
+- Network/fetch error (includes "Failed to fetch", "network"): `"Connection issue — please try again"`
+- AI/parse error (everything else): `"We couldn't generate your workout — retry in a moment"`
 
-### `src/App.tsx`
+**Fix 6 — Retry logic**
+- On non-auth failure, wait 1 second and retry once automatically
+- Track retry count to prevent infinite loops
 
-**1. Add static imports** (after existing imports, before `lazyWithRetry` definitions):
-```typescript
-import Dashboard from "./pages/Dashboard";
-import ScoutDashboard from "./pages/ScoutDashboard";
-```
+**Return values**: Add `subscriptionReady` to the returned object
 
-**2. Remove their lazy definitions** (delete lines 56 and 63):
-```typescript
-// DELETE: const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
-// DELETE: const ScoutDashboard = lazyWithRetry(() => import("./pages/ScoutDashboard"));
-```
+### File 2: `src/components/elite-workout/intelligence/BlockWorkoutGenerator.tsx` — UI guard
 
-No route changes needed — the JSX references `<Dashboard />` and `<ScoutDashboard />` remain identical.
-
-## Why This Works
-- Static imports are resolved by Vite's module graph at page load time
-- All dependency chunks for Dashboard/ScoutDashboard load with the initial bundle
-- No dynamic fetch is needed after sign-in completes
-- Other lazy pages still benefit from code splitting (they load from already-warm connections)
+- Destructure `subscriptionReady` from `useBlockWorkoutGenerator()`
+- Update `canGenerate` to include `subscriptionReady`
+- When `!subscriptionReady`, show "Checking access..." on the button instead of "Generate Exercises"
+- Button already uses `disabled={isGenerating || !canGenerate}` — this naturally covers the loading state
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Static import Dashboard + ScoutDashboard, remove their `lazyWithRetry` definitions |
-
-## What This Does NOT Do
-- No new dependencies
-- No route changes
-- No auth logic changes
-- No Vite config changes
+| `src/hooks/useBlockWorkoutGenerator.ts` | Loading guard, dedup lock, null check, safe parse, retry, error UX |
+| `src/components/elite-workout/intelligence/BlockWorkoutGenerator.tsx` | Disable button + "Checking access..." while subscription loads |
 
