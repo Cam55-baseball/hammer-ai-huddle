@@ -33,7 +33,7 @@ export default function AnalyzeVideo() {
   const { module } = useParams<{ module: string }>();
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || (localStorage.getItem('selectedSport') as string) || "baseball";
-  const { user, session, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { modules: subscribedModules, loading: subLoading, initialized, refetch, hasAccessForSport } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
