@@ -136,7 +136,21 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
     r => !alerts?.some(a => a.key === r.key)
   ) || [];
 
-  if ((!alerts || alerts.length === 0) && predictedRisks.length === 0) return null;
+  if ((!alerts || alerts.length === 0) && predictedRisks.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-4">
+          <p className="text-sm font-semibold flex items-center gap-1.5">
+            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            {t('nutrition.deficiencyAlerts', 'Nutrient Alerts')}
+          </p>
+          <p className="text-xs text-muted-foreground italic mt-1.5">
+            Nutrient analysis unavailable — no micronutrient data logged today
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleAccept = (nutrientKey: string, foodName: string) => {
     trackInteraction(nutrientKey, foodName, 'accepted');
