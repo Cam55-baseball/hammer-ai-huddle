@@ -73,20 +73,33 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
     }
   };
 
-  const handleLiquidLog = async (liquidType: string) => {
-    if (!pendingWaterAmount) return;
+  const handleLiquidSelect = (liquidType: string) => {
+    const quality = classifyLiquid(liquidType);
+    setPendingLiquid({ type: liquidType, quality });
+  };
+
+  const handleLiquidConfirm = async () => {
+    if (!pendingWaterAmount || !pendingLiquid) return;
     setIsLogging(true);
     try {
-      const quality = classifyLiquid(liquidType);
-      await addWater(pendingWaterAmount, liquidType, quality);
-      const info = LIQUID_TYPES.find(lt => lt.value === liquidType);
-      toast.success(`Added ${pendingWaterAmount}oz ${info?.label || liquidType}`);
+      await addWater(pendingWaterAmount, pendingLiquid.type, pendingLiquid.quality);
+      const info = LIQUID_TYPES.find(lt => lt.value === pendingLiquid.type);
+      toast.success(`Added ${pendingWaterAmount}oz ${info?.label || pendingLiquid.type}`);
       setLiquidPickerOpen(false);
       setPendingWaterAmount(null);
+      setPendingLiquid(null);
       setSelectedLiquidType('water');
     } finally {
       setIsLogging(false);
     }
+  };
+
+  const toggleQualityOverride = () => {
+    if (!pendingLiquid) return;
+    setPendingLiquid({
+      ...pendingLiquid,
+      quality: pendingLiquid.quality === 'quality' ? 'filler' : 'quality',
+    });
   };
 
   const handleCustomWater = async () => {
