@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useHydration } from '@/hooks/useHydration';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { MealData, Vitamin, Supplement } from '@/types/customActivity';
+import { MealData, Vitamin, Supplement, MealItem } from '@/types/customActivity';
 
 interface MealVaultSyncOptions {
   syncToVault?: boolean;
@@ -148,7 +148,7 @@ export function useMealVaultSync() {
         ...meals.supplements.map(s => s.name),
       ].filter(Boolean);
 
-      // Aggregate micronutrients from meal items (if available via AI parsing)
+      // Aggregate micronutrients from meal items using typed micros property
       const aggregatedMicros: Record<string, number> = {};
       const REQUIRED_MICRO_KEYS = [
         'vitamin_a_mcg', 'vitamin_c_mg', 'vitamin_d_mcg', 'vitamin_e_mg',
@@ -156,9 +156,8 @@ export function useMealVaultSync() {
         'calcium_mg', 'iron_mg', 'magnesium_mg', 'potassium_mg', 'zinc_mg',
       ];
       for (const item of meals.items) {
-        const itemMicros = (item as any).micros;
-        if (itemMicros && typeof itemMicros === 'object') {
-          for (const [key, val] of Object.entries(itemMicros)) {
+        if (item.micros && typeof item.micros === 'object') {
+          for (const [key, val] of Object.entries(item.micros)) {
             if (typeof val === 'number' && val > 0) {
               aggregatedMicros[key] = (aggregatedMicros[key] || 0) + val;
             }
@@ -166,17 +165,17 @@ export function useMealVaultSync() {
         }
       }
 
-      // Determine data confidence from food item sources
-      const itemConfidences = meals.items.map((item: any) => item.confidence || 'low');
-      const allHigh = itemConfidences.length > 0 && itemConfidences.every((c: string) => c === 'high');
-      const anyLow = itemConfidences.some((c: string) => c === 'low');
+      // Determine data confidence from food item typed confidence
+      const itemConfidences = meals.items.map((item) => item.confidence || 'low');
+      const allHigh = itemConfidences.length > 0 && itemConfidences.every((c) => c === 'high');
+      const anyLow = itemConfidences.some((c) => c === 'low');
       const dataConfidence = allHigh ? 'high' : anyLow ? 'low' : 'medium';
 
-      // Determine data source
-      const itemSources = meals.items.map((item: any) => item.source || 'ai');
-      const allDb = itemSources.every((s: string) => s === 'database');
-      const allAi = itemSources.every((s: string) => s === 'ai');
-      const dataSource = allDb ? 'database' : allAi ? 'ai' : 'mixed';
+      // Determine data source from food item typed source
+      const itemSources = meals.items.map((item) => item.source || 'manual');
+      const allDb = itemSources.every((s) => s === 'database');
+      const allManual = itemSources.every((s) => s === 'manual');
+      const dataSource = allDb ? 'database' : allManual ? 'manual' : 'mixed';
 
       // Validate micros: only store if complete (all 13 keys present with values)
       const microsComplete = REQUIRED_MICRO_KEYS.every(k => typeof aggregatedMicros[k] === 'number' && aggregatedMicros[k] >= 0);
@@ -200,12 +199,47 @@ export function useMealVaultSync() {
           meal_type: mealType || null,
           meal_title: mealTitle || null,
           meal_time: mealTime || null,
-          micros: (microsComplete && hasMicrosData) ? aggregatedMicros : undefined,
+          micros: (microsComplete && hasMicrosData) ? aggregatedMicros : null,
           data_confidence: dataConfidence,
           data_source: dataSource,
         } as any);
 
       if (error) throw error;
+
+      // Wire effectiveness tracking: check if any logged food matches a recently accepted suggestion
+      try {
+        const foodNames = meals.items.map(i => i.name.toLowerCase());
+        const { data: recentAccepted } = await (supabase as any)
+          .from('nutrition_suggestion_interactions')
+          .select('nutrient_key, food_name')
+          .eq('user_id', user.id)
+          .eq('action', 'accepted')
+          .is('effectiveness_delta', null)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (recentAccepted && recentAccepted.length > 0) {
+          for (const suggestion of recentAccepted) {
+            if (foodNames.some(fn => fn.includes(suggestion.food_name.toLowerCase()))) {
+              // Match found — mark effectiveness with a positive delta
+              // The actual nutrient improvement requires comparing before/after,
+              // but the presence of the food itself indicates follow-through
+              await (supabase as any)
+                .from('nutrition_suggestion_interactions')
+                .update({ effectiveness_delta: 1 })
+                .eq('user_id', user.id)
+                .eq('nutrient_key', suggestion.nutrient_key)
+                .eq('food_name', suggestion.food_name)
+                .eq('action', 'accepted')
+                .is('effectiveness_delta', null)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            }
+          }
+        }
+      } catch (effErr) {
+        console.warn('Effectiveness tracking failed (non-blocking):', effErr);
+      }
 
       // Invalidate all nutrition-related queries for E2E sync
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
