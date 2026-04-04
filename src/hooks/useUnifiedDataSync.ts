@@ -153,7 +153,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const lastEventRef = useRef<{ table: string; ts: number }>({ table: '', ts: 0 });
+  const lastEventRef = useRef<{ table: string; eventType: string; rowId: string; ts: number }>({ table: '', eventType: '', rowId: '', ts: 0 });
   const reconnectAttemptRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

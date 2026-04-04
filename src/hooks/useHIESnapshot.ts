@@ -118,12 +118,12 @@ export function useHIESnapshot() {
     }
   }, [query.data, latestSessionQuery.data, queryClient, user?.id]);
 
-  // Reset reconciliation flag when snapshot updates
+  // Reset reconciliation flag when fetch completes (prevents deadlock on network failure)
   useEffect(() => {
-    if (query.data) {
+    if (!query.isFetching) {
       reconciliationTriggered.current = false;
     }
-  }, [query.data?.computed_at]);
+  }, [query.isFetching]);
 
   // ── STALE DATA AUTO-REFRESH (24h fallback — invalidation only) ──
   useEffect(() => {
