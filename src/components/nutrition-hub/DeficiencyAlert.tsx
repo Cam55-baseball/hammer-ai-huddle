@@ -171,11 +171,14 @@ export function DeficiencyAlert({ date }: DeficiencyAlertProps) {
     enabled: !!user,
   });
 
+  const issues = alerts?.issues || [];
+  const supplementLabels = alerts?.supplementLabels || {};
+
   const predictedRisks = trendData?.predictedRisks?.filter(
-    r => !alerts?.some(a => a.key === r.key)
+    r => !issues.some(a => a.key === r.key)
   ) || [];
 
-  if ((!alerts || alerts.length === 0) && predictedRisks.length === 0) {
+  if (issues.length === 0 && predictedRisks.length === 0) {
     return (
       <Card>
         <CardContent className="p-4">
