@@ -1,83 +1,58 @@
 
 
-# UI State Persistence — Activity Dialog Survives Refresh
+# Router-Safe URL State — Replace `window.history.replaceState` with `useSearchParams`
 
 ## Problem
-`detailDialogOpen` and `selectedCustomTask` are ephemeral `useState` in `GamePlanCard.tsx`. Any refresh, crash, or re-render that unmounts the component loses the open dialog state.
-
-## Solution — URL Search Params (Option A)
-
-Use `?activityId=custom-{templateId}` on the Dashboard URL. On mount, if the param exists, find the matching task and reopen the dialog. On close, clear the param.
-
-This also covers folder items (`folderLoggerOpen` + `selectedFolderTask`) using `?folderId={itemId}`.
+`GamePlanCard.tsx` uses `window.history.replaceState` and `window.location.search` to manage URL query params. This bypasses React Router, causing potential state desync and breaking back/forward navigation.
 
 ## Changes
 
 ### `src/components/GamePlanCard.tsx`
 
-**On task click (line ~520-523):**
-When opening the detail dialog, also update the URL:
+**1. Import `useSearchParams`:**
 ```typescript
-setSelectedCustomTask(task);
-setDetailDialogOpen(true);
-const params = new URLSearchParams(window.location.search);
-params.set('activityId', task.id);
-window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+import { useNavigate, useSearchParams } from 'react-router-dom';
 ```
 
-**On dialog close:**
-Clear the URL param whenever `detailDialogOpen` becomes false:
+**2. Add hook at component top:**
 ```typescript
-const handleDetailClose = (open: boolean) => {
-  setDetailDialogOpen(open);
-  if (!open) {
-    setSelectedCustomTask(null);
-    const params = new URLSearchParams(window.location.search);
-    params.delete('activityId');
-    window.history.replaceState({}, '', window.location.pathname);
-  }
-};
+const [searchParams, setSearchParams] = useSearchParams();
 ```
 
-**On mount — restore from URL (new useEffect):**
-After tasks load, check URL for `activityId`:
+**3. Replace `setUrlParam` helper (lines 511-520):**
+```typescript
+const setUrlParam = useCallback((key: string, value: string | null) => {
+  setSearchParams(prev => {
+    if (value) {
+      prev.set(key, value);
+    } else {
+      prev.delete(key);
+    }
+    return prev;
+  }, { replace: true });
+}, [setSearchParams]);
+```
+
+**4. Replace restore effect (lines 539-569) — read from `searchParams` instead of `window.location.search`:**
 ```typescript
 useEffect(() => {
-  if (loading || !tasks.length) return;
-  const params = new URLSearchParams(window.location.search);
-  const activityId = params.get('activityId');
-  if (!activityId) return;
-  
-  const allTasks = [...tasks, ...customActivities];
-  const match = allTasks.find(t => t.id === activityId);
-  if (match?.taskType === 'custom' && match.customActivityData) {
-    setSelectedCustomTask(match);
-    setDetailDialogOpen(true);
-    toast.info("Resuming your last activity");
-  } else {
-    // Stale ID — clear it
-    params.delete('activityId');
-    window.history.replaceState({}, '', window.location.pathname);
-  }
-}, [loading, tasks, customActivities]);
+  if (loading) return;
+  const activityId = searchParams.get('activityId');
+  const folderItemId = searchParams.get('folderItemId');
+  // ... rest of restore logic unchanged
+}, [loading]);
 ```
 
-**Same pattern for folder items** using `?folderItemId=` param.
-
-### Wire up the close handler
-Replace `onOpenChange={setDetailDialogOpen}` (line ~1959) with `onOpenChange={handleDetailClose}`.
-
-Also clear URL param on Skip action (line ~2128) and Edit action (line ~1971).
+**5. `App.tsx` line 19** — the `_cb` cleanup is outside the router, so it stays as `window.history.replaceState` (correct — it runs before `BrowserRouter` mounts).
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/GamePlanCard.tsx` | Add URL param persistence for detail dialog open/close/restore |
+| `src/components/GamePlanCard.tsx` | Replace `window.history.replaceState` / `window.location.search` with `useSearchParams` |
 
-## What This Does NOT Do
-- No new routes or pages
-- No new dependencies
-- No database changes
-- No changes to auth logic
+## What This Enables
+- Back button closes dialog, forward reopens it
+- URL state reactive to React Router
+- No manual DOM API usage inside routed components
 
