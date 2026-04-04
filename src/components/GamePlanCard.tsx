@@ -541,7 +541,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const params = new URLSearchParams(window.location.search);
     const activityId = params.get('activityId');
     const folderItemId = params.get('folderItemId');
-    const allGamePlanTasks = [...tasks, ...customActivities];
+    const allGamePlanTasks: GamePlanTask[] = tasks;
 
     if (activityId) {
       const match = allGamePlanTasks.find(t => t.id === activityId);
