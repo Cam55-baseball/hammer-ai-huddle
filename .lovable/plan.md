@@ -1,53 +1,60 @@
 
 
-# AI Workout Generator — Production Hardening
+# AI Workout Generator — Final Hardening (Stale Response + Retry Safety)
 
-## Changes
+## What's Missing
 
-### File 1: `src/hooks/useBlockWorkoutGenerator.ts` — Full rewrite of the hook
+The current hook has a `generatingRef` lock and `mountedRef` guard but lacks:
+1. **Request ID tracking** — a second request can start after the first completes but before its state update commits, letting a late retry overwrite fresh data.
+2. **Retry uses no staleness check** — the 1-second retry doesn't verify it's still the active request.
+3. **Response validation is loose** — checks `Array.isArray(data.exercises)` but doesn't validate `typeof data === 'object'`.
 
-**Fix 1 — Subscription loading guard**
-- Import `loading` and `initialized` from `useSubscription()`, `loading` from `useOwnerAccess()`
-- Expose `subscriptionReady` = `initialized && !ownerLoading`
-- Block `generateExercises` early if `!subscriptionReady` — return null, no toast
-- Only then check `!isOwner && modules.length === 0`
+## Changes — `src/hooks/useBlockWorkoutGenerator.ts`
 
-**Fix 2 — Request deduplication with AbortController**
-- Add `useRef<AbortController | null>(null)` 
-- At start of `generateExercises`: abort previous controller, create new one
-- Pass `signal` to `supabase.functions.invoke` via the `body` isn't possible — instead use the `isGenerating` state as a hard lock: if `isGenerating` is already true, return null immediately (supabase-js doesn't support AbortController on `functions.invoke`)
-- On unmount, abort any in-flight request via cleanup ref
+### 1. Add `requestIdRef`
+```typescript
+const requestIdRef = useRef(0);
+```
 
-**Fix 3 — Null response hardening**
-- After `supabase.functions.invoke`, check `if (!data)` → throw `"No response from server"`
-- Then check `if (data.error)` with existing logic
+### 2. Increment at request start (after the `generatingRef` lock, line 84)
+```typescript
+const currentRequestId = ++requestIdRef.current;
+```
 
-**Fix 4 — Safe parsing**
-- Wrap the `data.error` check and `setResult(data)` in a try/catch that catches any property access failures
-- Throw `"Failed to generate workout — invalid AI response"`
+### 3. Stale-response guard before state updates
+At line 153, before `setResult`:
+```typescript
+if (currentRequestId !== requestIdRef.current) return null;
+```
 
-**Fix 5 — User-facing error UX**  
-- No subscription: `"Your plan doesn't include workout generation"`
-- Network/fetch error (includes "Failed to fetch", "network"): `"Connection issue — please try again"`
-- AI/parse error (everything else): `"We couldn't generate your workout — retry in a moment"`
+### 4. Stale-response guard before retry (line 146)
+```typescript
+if (!mountedRef.current || currentRequestId !== requestIdRef.current) return null;
+```
 
-**Fix 6 — Retry logic**
-- On non-auth failure, wait 1 second and retry once automatically
-- Track retry count to prevent infinite loops
+### 5. Strict response validation (replace lines 102-122)
+```typescript
+if (!data || typeof data !== 'object') {
+  throw new Error('No response from server');
+}
+if (data.error) { /* existing error handling */ }
+if (!data.exercises || !Array.isArray(data.exercises)) {
+  throw new Error('Invalid response format');
+}
+```
 
-**Return values**: Add `subscriptionReady` to the returned object
-
-### File 2: `src/components/elite-workout/intelligence/BlockWorkoutGenerator.tsx` — UI guard
-
-- Destructure `subscriptionReady` from `useBlockWorkoutGenerator()`
-- Update `canGenerate` to include `subscriptionReady`
-- When `!subscriptionReady`, show "Checking access..." on the button instead of "Generate Exercises"
-- Button already uses `disabled={isGenerating || !canGenerate}` — this naturally covers the loading state
+### 6. Clean state reset in `finally`
+Already correct — `generatingRef.current = false` and `setIsGenerating(false)` run at all exit points. No change needed.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/useBlockWorkoutGenerator.ts` | Loading guard, dedup lock, null check, safe parse, retry, error UX |
-| `src/components/elite-workout/intelligence/BlockWorkoutGenerator.tsx` | Disable button + "Checking access..." while subscription loads |
+| `src/hooks/useBlockWorkoutGenerator.ts` | Add `requestIdRef`, stale-response guards before retry and before `setResult`, strict `typeof` validation on response |
+
+## Result
+- **No stale responses**: only the latest `requestId` can write to state
+- **No double execution**: `generatingRef` lock unchanged
+- **No invalid data reaches UI**: strict object + array validation before use
+- **Retry is safe**: checks `requestId` before executing
 
