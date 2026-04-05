@@ -1910,13 +1910,17 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Transfer Time (sec)</Label>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       placeholder="e.g. 0.75"
                       value={current.catcher_transfer_time_sec ?? ''}
-                      onChange={e => updateField('catcher_transfer_time_sec', e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={e => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                          updateField('catcher_transfer_time_sec', v === '' ? undefined : v.endsWith('.') ? v : parseFloat(v));
+                        }
+                      }}
                       className="h-8 text-xs"
-                      min={0}
-                      step="0.01"
                     />
                   </div>
                   <div>
