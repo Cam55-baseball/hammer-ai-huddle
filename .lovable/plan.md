@@ -1,74 +1,68 @@
 
 
-# Layer 18 + Layer 19 (Upgraded) — Tests 56–65
+# Layer 20 — Calibration Enforcement & Truth Lock (Tests 66–70)
 
-## Prerequisite: Layer 18 Must Exist First
+Append after line 2141 in `src/test/engine-invariants.test.ts`.
 
-Layer 18 is missing. It will be implemented as **Benchmark Coverage & Edge Geometry** (Tests 56–60), bridging from Layer 17's adversarial robustness to Layer 19's population-scale validation.
+## Tests
 
-## Seeded RNG Utility
+| Test | Purpose | Key Assertion |
+|------|---------|---------------|
+| 66 | Distribution compression detection | stdDev ≥ 7.5 across 2,000 seeded profiles |
+| 67 | Elite visibility with targeted profiles | ≥15% of intentionally high-end profiles score ≥70 overall |
+| 68 | Tool equity enforcement | Spread ≤10 AND no single tool's average exceeds 40% of total tool average sum |
+| 69 | Scaling sensitivity | +10% improvement on all inputs → ≥+5 overall increase |
+| 70 | Inversion resistance | 10 pairs of strictly-ordered profiles must always rank correctly |
 
-A deterministic `seededRandom(seed)` function will be added to the helpers section, returning a closure that produces reproducible pseudo-random numbers. All randomized tests in Layer 19 (and Layer 18 where needed) will use this instead of `Math.random`.
+## Test Details
 
-```text
-function seededRandom(seed: number): () => number {
-  // Simple LCG: deterministic, reproducible, debuggable
-  let s = seed;
-  return () => { s = (s * 1664525 + 1013904223) & 0x7fffffff; return s / 0x7fffffff; };
-}
-```
+### Test 66: Distribution Compression Detection
+- Uses `seededRandom(2024)`, 2,000 uniform profiles via existing `generateProfile`
+- Computes stdDev of overall grades
+- Asserts `stdDev ≥ 7.5` — if the system compresses grades into a narrow band, this fails
+- **If it fails**: Fix the benchmark spacing in `gradeBenchmarks.ts` to widen the grade spread, not the test threshold
 
----
+### Test 67: Elite Visibility with Targeted Profiles
+- Generate 200 profiles where ALL metrics are set to the top 20% of their range (e.g., EV 99–110, 60yd 6.2–6.6)
+- Assert ≥15% (≥30 profiles) score overall ≥70
+- This is NOT a random population test — it's a targeted test proving the system CAN produce elite grades when inputs warrant them
+- **If it fails**: The benchmark ceiling in `gradeBenchmarks.ts` is too restrictive or tool averaging is suppressing elite signals
 
-## Layer 18 — Benchmark Coverage & Edge Geometry (Tests 56–60)
+### Test 68: Tool Equity Enforcement
+- Uses `seededRandom(5555)`, 2,000 profiles
+- Compute per-tool averages
+- Assert: `max - min ≤ 10`
+- Assert: no single tool average exceeds 40% of the sum of all tool averages (prevents one tool from dominating the composite)
+- **If it fails**: Position weight profiles or metric-to-tool mappings have systemic bias
 
-| Test | Purpose |
-|------|---------|
-| 56 | **Benchmark Point Coverage** — Every metric with benchmarks has at least 3 points per age band per sport. Validates the data layer completeness. |
-| 57 | **Interpolation Boundary Precision** — Raw values exactly at benchmark anchor points return the exact defined grade (no off-by-one from rounding). |
-| 58 | **Age Band Fallback Correctness** — When a specific age band has no benchmarks, the fallback chain selects the nearest band and still produces valid grades. |
-| 59 | **Sport Differentiation Proof** — For every metric with both baseball and softball benchmarks, at least one age band produces different grades for the same raw value. |
-| 60 | **Bilateral Metric Symmetry** — Left/right bilateral inputs that are identical produce the same grade as a single non-bilateral input. Asymmetric L/R correctly averages. |
+### Test 69: Scaling Sensitivity
+- Define 5 baseline profiles at different skill levels (weak, below-avg, avg, above-avg, strong)
+- For each, create an improved version where every metric improves by 10% (higher-is-better × 1.10, lower-is-better × 0.90)
+- Assert: improved overall ≥ baseline overall + 5
+- **If it fails**: Benchmark curve is too flat in certain regions — fix by adding steeper interpolation points
 
----
+### Test 70: Inversion Resistance (Pairwise)
+- Define 10 profile pairs where Profile A is strictly better than Profile B on every metric
+- Assert: `overall_A > overall_B` for all 10 pairs
+- Pairs span the full range (floor-level, low, mid-low, mid, mid-high, high, elite boundary, elite, super-elite, max)
+- **If it fails**: Fundamental interpolation or aggregation bug — fix the engine, not the test
 
-## Layer 19 — Scale, Distribution & Population Reality (Tests 61–65, Upgraded)
+## Engine Fixes (if tests fail)
 
-All 5 upgrades applied:
+The plan includes conditional fixes to make the system pass honestly:
 
-### Test 61: 10,000-Profile Monte Carlo (with seeded RNG + performance guard)
-- Uses `seededRandom(1337)` for full reproducibility
-- Wraps loop with `performance.now()` timing
-- Asserts total runtime ≤ 2000ms (generous for CI; tightened from 500ms to avoid flaky CI failures)
-- Zero crashes, all grades ∈ [20, 80], no NaN
-
-### Test 62: Population Distribution Sanity (with variance + floor/ceiling)
-- Uses `seededRandom(42)` 
-- 2,000 profiles, computes mean overall
-- Asserts mean ∈ [40, 55]
-- Computes standard deviation, asserts stdDev ∈ [8, 18]
-- Asserts ≥5% of population scores ≤35 (floor spread)
-- Asserts ≥5% of population scores ≥60 (ceiling spread)
-
-### Test 63: Elite Rarity (seeded)
-- Uses `seededRandom(7777)`
-- 2,000 profiles, <5% score overall ≥70
-
-### Test 64: Tool Balance — No Systemic Bias (seeded)
-- Uses `seededRandom(9999)`
-- 2,000 profiles, max-min tool average spread ≤8
-
-### Test 65: Percentile Ordering Integrity
-- Deterministic (hardcoded profiles) — no RNG needed
-- weak < mid < strong overall
-
----
+1. **stdDev < 7.5 (Test 66)**: Widen benchmark point spacing in `gradeBenchmarks.ts` — increase the raw-value gap between grade 20 and grade 80 anchor points
+2. **Elite suppression (Test 67)**: Check if `Math.round` in tool averaging clips elite grades — if 3 tools at 71 and 2 at 69 average to 70.2 → rounds to 70, that's fine. If the issue is benchmark ceilings, extend 80-grade anchor points to more achievable raw values
+3. **Tool inequity (Test 68)**: Audit metric coverage per tool — if `arm` has 4 metrics and `hit` has 3, the averaging denominator differs, potentially causing bias
+4. **Flat sensitivity (Test 69)**: Add intermediate benchmark points (grade 35, 50, 60) where curves are too flat
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/test/engine-invariants.test.ts` | Add seededRandom helper near top; append Layer 18 (Tests 56–60) and Layer 19 (Tests 61–65) after line 1829 |
+| `src/test/engine-invariants.test.ts` | Append Layer 20 (Tests 66–70) after line 2141 |
+| `src/data/gradeBenchmarks.ts` | Potentially adjust benchmark spacing if Tests 66/67/69 fail |
+| `src/lib/gradeEngine.ts` | No changes expected unless interpolation bug found |
 
-Total after this: **65 invariant tests across 19 layers**.
+Total after this: **70 invariant tests across 20 layers**.
 
