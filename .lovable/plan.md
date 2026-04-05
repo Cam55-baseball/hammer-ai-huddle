@@ -1,108 +1,85 @@
 
 
-# Invariant Test Suite — Performance Intelligence Engine
+# Layers 7–10: Adversarial Invariant Suite
 
-## Architecture
+Append 4 new `describe` blocks (Tests 21–30) to `src/test/engine-invariants.test.ts`.
 
-One test file: `src/test/engine-invariants.test.ts`
-Uses Vitest (already in project). Pure logic tests — no UI, no Supabase, no network.
+## Layer 7 — Adversarial Fuzz Testing (Tests 21–23)
 
-Imports the 4 engine modules directly and runs all 20 layers.
+**Test 21: 10,000-Case Randomized Simulation**
+- Generate 10,000 random result sets (random metric subsets, random raw values within plausible ranges)
+- For each: call `rawToGrade`, `computeToolGrades`, `generateReport`
+- Assert invariants on every case:
+  - All grades ∈ [20, 80] or null
+  - No NaN anywhere in output
+  - No thrown exceptions
+  - Tool grades ∈ [20, 80] or null
+  - Overall ∈ [20, 80] or null
+  - Strengths never overlap with limiting factors (same metric key)
 
-## Test Structure (6 Layers, 20 Tests)
+**Test 22: Type Corruption Fuzz**
+- Feed results with: `undefined`, `null`, empty string, objects, arrays, booleans, negative numbers, extremely large numbers as metric values
+- Assert: no crash, no NaN leak, all outputs valid or null
 
-### Layer 1 — Mathematical Integrity
+**Test 23: Position × Sport × Age Exhaustive Sweep**
+- All 14 positions × 2 sports × 4 age bands = 112 combinations
+- Fixed result set, run `computeToolGrades` and `generateReport` on each
+- Assert: no crash, all grades valid, overall always within [20, 80] or null
 
-**Test 1: Monotonic Sweep**
-For every metric key in `GRADE_BENCHMARKS`, sweep from `min` to `max` in small steps. Assert grades are strictly monotonic (non-decreasing for `higherIsBetter`, non-increasing otherwise). Covers both baseball and softball, all age bands.
+## Layer 8 — Truth Consistency Validation (Tests 24–26)
 
-**Test 2: Boundary Flood**
-Feed `rawToGrade` with: `NaN`, `Infinity`, `-Infinity`, `-1000`, `0`, `9999`, `undefined` cast to number. Assert every output is either `null` or within `[20, 80]`. No crashes.
+**Test 24: Truth Inversion Test**
+- For every metric with benchmarks: set value to produce grade ~80, then set to produce grade ~20
+- Generate report for each
+- Assert: the 80-grade metric NEVER appears in limiting factors; the 20-grade metric NEVER appears in top strengths
+- This is the core "contradictions are mathematically impossible" proof
 
-**Test 3: Determinism**
-Run `rawToGrade` 1000 times with identical inputs. Assert all outputs identical. Same for `computeToolGrades` and `generateReport`.
+**Test 25: Strength/Limiter Mutual Exclusion**
+- Run 1,000 random result sets through `generateReport`
+- Assert: no metric key appears in BOTH `topStrengths` and `limitingFactors` simultaneously
+- Zero tolerance — if even one overlap exists, test fails
 
-**Test 4: Tool Isolation**
-Build a full result set (15 metrics). Compute tool grades. Remove one metric at a time. Assert: only the tool containing that metric changes. No unexpected jumps in unrelated tools. Removed metric's tool grade either changes slightly or becomes null — never increases influence.
+**Test 26: Grade Ordering Consistency**
+- For any two metrics A and B where gradeA > gradeB:
+  - A must rank higher (or equal) in strengths sorting
+  - B must rank higher (or equal) in limiters sorting
+- Run across 500 random result sets
 
-### Layer 2 — Engine Truth Validation
+## Layer 9 — Weight Normalization Enforcement (Tests 27–28)
 
-**Test 5: Causal Flip**
-Start with a low `mb_rotational_throw` (grade ~30). Generate report → confirm it's a limiting factor. Increase only that metric to grade ~70. Regenerate → confirm it's gone from limiting factors and a different metric takes its place.
+**Test 27: Weight Sum Validation**
+- For every position profile in `POSITION_TOOL_PROFILES`: assert tool weights sum to exactly 1.0 (within floating point tolerance ±0.001)
+- If weights don't sum to 1.0, overall grade computation is mathematically incorrect
 
-**Test 6: Contradiction**
-Feed elite exit velo (100mph → ~80 grade) + terrible rotational power (5ft → ~20 grade). Assert: rotational power appears as limiting factor with causal message linking it to exit velocity. System does NOT label both as strengths.
+**Test 28: Overall = Exact Weighted Average**
+- For 500 random result sets: manually compute `sum(toolGrade[i] * weight[i]) / sum(weights where grade != null)`
+- Assert: equals `computeToolGrades().overall` exactly (within ±1 for rounding)
+- This proves overall is never fabricated
 
-**Test 7: Sensitivity**
-Change `bat_speed` from 64 to 65. Assert grade change ≤ 3 points. Assert tool grade change ≤ 2 points. No wild swings.
+## Layer 10 — Projection Realism Constraints (Tests 29–30)
 
-**Test 8: Projection Reality (Plateau)**
-Feed 3 test cycles with identical values (e.g., `tee_exit_velocity: 85` all three). Run `computeTrends`. Assert trend = `'plateaued'`. Assert projection is `null` (no fake prediction).
+**Test 29: Projection Realism Bounds**
+- Run 1,000 trend computations with various improvement rates
+- Assert:
+  - No projection predicts reaching a grade > 80
+  - No projection predicts negative weeks
+  - Plateau trends NEVER produce "Reach X" projections
+  - Regressing trends NEVER produce positive projections
+  - Projection weeks must be > 0 and < 520 (10 years max — beyond is meaningless)
 
-### Layer 3 — Data Integrity
+**Test 30: Trend Classification Consistency**
+- Generate 500 random 3-cycle histories
+- Assert:
+  - If cycle3 > cycle1 by meaningful amount → trend != 'regressing'
+  - If cycle3 < cycle1 by meaningful amount → trend != 'improving'
+  - If all cycles equal → trend = 'plateaued'
+  - Rate sign matches trend direction (positive rate = improving, negative = regressing)
 
-**Test 9: Schema Chaos**
-Feed `gradeAllResults` with: `{ "ten_yard_dash": "fast" as any, "exit_velo": null as any, "random_key": 999, "_metadata": 42, "tee_exit_velocity": 85 }`. Assert: no crash, only `tee_exit_velocity` produces a valid grade, all others ignored.
+## Summary
 
-**Test 10: Historical Compatibility (v1/v2)**
-Feed results with v1 keys (`ten_yard_dash`, `tee_exit_velocity`) and v2 keys mixed. Assert all valid keys grade correctly. Unknown keys return null.
-
-**Test 11: Bilateral Conflict**
-Feed `sl_broad_jump_left: 95` (elite) and `sl_broad_jump_right: 45` (poor). Compute tool grades. Assert: the tool uses the average, not just one side. Assert the average is ~midpoint grade, not blindly 80.
-
-### Layer 4 — Tier & Sport Truth
-
-**Test 12: Sport Flip**
-Same raw data, run as baseball then softball. Assert: grades differ (benchmarks differ). Assert: raw inputs identical, grade outputs NOT identical for at least speed and velo metrics.
-
-**Test 13: Tier Degradation**
-Run the same athlete at 3 tier levels (14 free metrics, 30 paid, 40 elite). Assert: core tool grades (from overlapping metrics) remain within ±5 points. Conclusions don't wildly flip. More data = more precision, not contradiction.
-
-### Layer 5 — Intelligence Coherence
-
-**Test 14: Empty State**
-Feed empty results `{}` to `generateReport`. Assert: no crash, all tool grades null, empty strengths, empty limiting factors, training priority is the fallback message.
-
-**Test 15: Partial Data (3 metrics)**
-Feed only `ten_yard_dash`, `tee_exit_velocity`, `long_toss_distance`. Assert: produces valid report. Only tools with contributing metrics get grades. Others are null. No overconfident language.
-
-**Test 16: Adaptive Focus — No History**
-Call `getNextTestFocus([])`. Assert: returns empty prioritized/reduced with "Complete your first test" message.
-
-**Test 17: Adaptive Focus — Shift After Improvement**
-Cycle 1: metric A is grade 30 → prioritized. Cycle 2: metric A improves to 70 → should move to reduced. Assert priority shifts correctly.
-
-### Layer 6 — Longitudinal Engine
-
-**Test 18: Trend Improving**
-3 cycles: grade 40 → 47 → 55. Assert trend = `'improving'`, rate > 1.5, projection not null.
-
-**Test 19: Trend Regressing**
-3 cycles: grade 60 → 55 → 48. Assert trend = `'regressing'`, rate < -1.5, projection contains "Declining".
-
-**Test 20: Insufficient History**
-1 cycle only. Assert `computeTrends` returns empty array.
-
-## Implementation Details
-
-- Single file: `src/test/engine-invariants.test.ts`
-- No mocks needed — all engines are pure functions
-- Uses `describe` blocks per layer
-- Imports: `rawToGrade`, `gradeAllResults` from `gradeEngine`; `computeToolGrades` from `positionToolProfiles`; `generateReport` from `testIntelligenceEngine`; `getNextTestFocus` from `adaptiveTestPriority`; `computeTrends` from `longitudinalEngine`; `GRADE_BENCHMARKS` from `gradeBenchmarks`; `METRIC_BY_KEY`, `PERFORMANCE_METRICS` from `performanceTestRegistry`
-- Tests 9-11 (concurrency, lock, crash recovery, realtime) from the user's Layer 3 require live Supabase infrastructure — these will be documented as integration test stubs that can be run against the edge functions separately
-
-## What This Does NOT Cover (and Why)
-
-Tests 9-12 from user's **Layer 3** (session storm, concurrency locks, crash recovery, realtime failure) and **Layer 6** (UI truth) are infrastructure/integration tests that require:
-- Live Supabase edge functions
-- WebSocket connections
-- Concurrent HTTP requests
-
-These cannot run as Vitest unit tests. They would be separate edge function test scripts. The 20 tests above cover all **pure logic invariants** — the things that must mathematically never lie.
-
-## Files
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/test/engine-invariants.test.ts` | Create — 20 invariant tests across 6 layers |
+| `src/test/engine-invariants.test.ts` | Append Layers 7–10 (Tests 21–30) after line 512 |
+
+Total: 10 new tests, including the 10,000-case fuzz simulation and truth inversion proof. After this, the suite covers 30 invariant tests across 10 layers.
 
