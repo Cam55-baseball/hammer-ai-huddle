@@ -47,7 +47,7 @@ export function GameSummaryView({ plays, teamName, opponentName, sport = 'baseba
 
         <TabsContent value="batters" className="space-y-3 mt-3">
           {batterStats.map(bs => (
-            <PlayerGameCard key={bs.name} stats={bs} />
+            <PlayerGameCard key={bs.name} stats={bs} sport={sport} />
           ))}
           {batterStats.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-8">No batter data recorded</p>
