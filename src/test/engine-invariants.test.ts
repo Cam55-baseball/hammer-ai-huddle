@@ -9,7 +9,7 @@ import { computeToolGrades, POSITION_TOOL_PROFILES, type ToolName, type ToolProf
 import { generateReport } from '@/lib/testIntelligenceEngine';
 import { getNextTestFocus } from '@/lib/adaptiveTestPriority';
 import { computeTrends } from '@/lib/longitudinalEngine';
-import { GRADE_BENCHMARKS } from '@/data/gradeBenchmarks';
+import { GRADE_BENCHMARKS, type AgeBand } from '@/data/gradeBenchmarks';
 import { METRIC_BY_KEY, PERFORMANCE_METRICS } from '@/data/performanceTestRegistry';
 
 // ── Helpers ──────────────────────────────────────────────
