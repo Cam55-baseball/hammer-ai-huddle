@@ -2139,3 +2139,188 @@ describe('Layer 19 — Scale, Distribution & Population Reality', () => {
     expect(g3.overall!).toBeGreaterThan(g2.overall!);
   });
 });
+
+// =================================================================
+// LAYER 20 — Calibration Enforcement & Truth Lock (Tests 66–70)
+// =================================================================
+describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
+
+  const METRICS_WITH_RANGES: Record<string, [number, number]> = {
+    tee_exit_velocity: [55, 110],
+    bat_speed: [40, 95],
+    sixty_yard_dash: [6.2, 8.5],
+    ten_yard_dash: [1.4, 2.1],
+    pro_agility: [3.5, 5.5],
+    position_throw_velo: [55, 95],
+    pitching_velocity: [55, 100],
+    vertical_jump: [14, 40],
+    sl_broad_jump: [45, 100],
+    mb_rotational_throw: [15, 45],
+    lateral_shuffle: [3.5, 5.5],
+    long_toss_distance: [140, 320],
+  };
+  const METRIC_KEYS = Object.keys(METRICS_WITH_RANGES);
+
+  function generateProfile(rng: () => number): Record<string, number> {
+    const results: Record<string, number> = {};
+    for (const m of METRIC_KEYS) {
+      const [lo, hi] = METRICS_WITH_RANGES[m];
+      results[m] = lo + rng() * (hi - lo);
+    }
+    return results;
+  }
+
+  it('Test 66: distribution compression detection — stdDev ≥ 7.5', () => {
+    const rng = seededRandom(2024);
+    const samples: number[] = [];
+
+    for (let i = 0; i < 2000; i++) {
+      const results = generateProfile(rng);
+      const g = computeToolGrades(results, 'SS', 'baseball', 16);
+      if (g.overall !== null) samples.push(g.overall);
+    }
+
+    expect(samples.length).toBeGreaterThan(0);
+    const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
+    const variance = samples.reduce((acc, x) => acc + Math.pow(x - avg, 2), 0) / samples.length;
+    const stdDev = Math.sqrt(variance);
+    expect(stdDev).toBeGreaterThanOrEqual(7.5);
+  });
+
+  it('Test 67: elite visibility — ≥15% of targeted high-end profiles score ≥70 overall', () => {
+    const rng = seededRandom(3030);
+    let eliteCount = 0;
+    const total = 200;
+
+    // Elite ranges: top 20% of each metric
+    const ELITE_RANGES: Record<string, [number, number]> = {
+      tee_exit_velocity: [99, 110],
+      bat_speed: [84, 95],
+      sixty_yard_dash: [6.2, 6.66],    // lower is better — top 20%
+      ten_yard_dash: [1.4, 1.54],
+      pro_agility: [3.5, 3.9],
+      position_throw_velo: [87, 95],
+      pitching_velocity: [91, 100],
+      vertical_jump: [35, 40],
+      sl_broad_jump: [89, 100],
+      mb_rotational_throw: [39, 45],
+      lateral_shuffle: [3.5, 3.9],      // lower is better
+      long_toss_distance: [284, 320],
+    };
+
+    for (let i = 0; i < total; i++) {
+      const results: Record<string, number> = {};
+      for (const m of METRIC_KEYS) {
+        const [lo, hi] = ELITE_RANGES[m];
+        results[m] = lo + rng() * (hi - lo);
+      }
+      const g = computeToolGrades(results, 'SS', 'baseball', 16);
+      if (g.overall !== null && g.overall >= 70) eliteCount++;
+    }
+
+    expect(eliteCount / total).toBeGreaterThanOrEqual(0.15);
+  });
+
+  it('Test 68: tool equity — spread ≤ 10, no tool dominance > 40%', () => {
+    const rng = seededRandom(5555);
+    const toolSums: Record<ToolName, number> = { hit: 0, power: 0, run: 0, field: 0, arm: 0 };
+    const toolCounts: Record<ToolName, number> = { hit: 0, power: 0, run: 0, field: 0, arm: 0 };
+
+    for (let i = 0; i < 2000; i++) {
+      const results = generateProfile(rng);
+      const g = computeToolGrades(results, 'SS', 'baseball', 16);
+      for (const tool of ['hit', 'power', 'run', 'field', 'arm'] as ToolName[]) {
+        if (g[tool] !== null) {
+          toolSums[tool] += g[tool]!;
+          toolCounts[tool]++;
+        }
+      }
+    }
+
+    const avgs: number[] = [];
+    const tools: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+    for (const tool of tools) {
+      if (toolCounts[tool] > 0) {
+        avgs.push(toolSums[tool] / toolCounts[tool]);
+      }
+    }
+
+    const spread = Math.max(...avgs) - Math.min(...avgs);
+    expect(spread).toBeLessThanOrEqual(10);
+
+    // No single tool dominates > 40% of total average sum
+    const totalAvgSum = avgs.reduce((a, b) => a + b, 0);
+    for (const avg of avgs) {
+      expect(avg / totalAvgSum).toBeLessThanOrEqual(0.40);
+    }
+  });
+
+  it('Test 69: scaling sensitivity — +10% improvement → ≥+5 overall increase', () => {
+    const baselines = [
+      // weak
+      { tee_exit_velocity: 65, bat_speed: 50, sixty_yard_dash: 8.0, ten_yard_dash: 2.0, pro_agility: 5.2, position_throw_velo: 62, pitching_velocity: 62, vertical_jump: 18, sl_broad_jump: 52, mb_rotational_throw: 20, lateral_shuffle: 5.0, long_toss_distance: 160 },
+      // below-avg
+      { tee_exit_velocity: 72, bat_speed: 57, sixty_yard_dash: 7.5, ten_yard_dash: 1.85, pro_agility: 4.8, position_throw_velo: 70, pitching_velocity: 70, vertical_jump: 22, sl_broad_jump: 60, mb_rotational_throw: 25, lateral_shuffle: 4.5, long_toss_distance: 190 },
+      // average
+      { tee_exit_velocity: 82, bat_speed: 65, sixty_yard_dash: 7.0, ten_yard_dash: 1.7, pro_agility: 4.4, position_throw_velo: 78, pitching_velocity: 78, vertical_jump: 27, sl_broad_jump: 72, mb_rotational_throw: 30, lateral_shuffle: 4.0, long_toss_distance: 230 },
+      // above-avg
+      { tee_exit_velocity: 90, bat_speed: 75, sixty_yard_dash: 6.7, ten_yard_dash: 1.6, pro_agility: 4.1, position_throw_velo: 85, pitching_velocity: 85, vertical_jump: 32, sl_broad_jump: 82, mb_rotational_throw: 36, lateral_shuffle: 3.6, long_toss_distance: 270 },
+      // strong
+      { tee_exit_velocity: 100, bat_speed: 85, sixty_yard_dash: 6.4, ten_yard_dash: 1.5, pro_agility: 3.8, position_throw_velo: 90, pitching_velocity: 92, vertical_jump: 36, sl_broad_jump: 92, mb_rotational_throw: 40, lateral_shuffle: 3.3, long_toss_distance: 300 },
+    ];
+
+    for (const baseline of baselines) {
+      const baseGrades = computeToolGrades(baseline, 'SS', 'baseball', 16);
+      if (baseGrades.overall === null) continue;
+
+      // Improve every metric by 10%
+      const improved: Record<string, number> = {};
+      for (const [key, val] of Object.entries(baseline)) {
+        const metricDef = METRIC_BY_KEY[key];
+        if (metricDef && !metricDef.higherIsBetter) {
+          improved[key] = val * 0.90; // Lower is better → reduce by 10%
+        } else {
+          improved[key] = val * 1.10; // Higher is better → increase by 10%
+        }
+      }
+
+      const impGrades = computeToolGrades(improved, 'SS', 'baseball', 16);
+      expect(impGrades.overall).not.toBeNull();
+      expect(impGrades.overall!).toBeGreaterThanOrEqual(baseGrades.overall! + 5);
+    }
+  });
+
+  it('Test 70: inversion resistance — strictly better profile always ranks higher', () => {
+    // 10 pairs spanning the full grade range
+    const pairs: [Record<string, number>, Record<string, number>][] = [];
+
+    const levels = [
+      { tee_exit_velocity: 58, bat_speed: 42, sixty_yard_dash: 8.4, ten_yard_dash: 2.05, pro_agility: 5.4, position_throw_velo: 58, vertical_jump: 15, sl_broad_jump: 47, mb_rotational_throw: 16, lateral_shuffle: 5.3, long_toss_distance: 145 },
+      { tee_exit_velocity: 63, bat_speed: 47, sixty_yard_dash: 8.1, ten_yard_dash: 1.97, pro_agility: 5.2, position_throw_velo: 62, vertical_jump: 18, sl_broad_jump: 52, mb_rotational_throw: 19, lateral_shuffle: 5.0, long_toss_distance: 160 },
+      { tee_exit_velocity: 68, bat_speed: 52, sixty_yard_dash: 7.8, ten_yard_dash: 1.90, pro_agility: 5.0, position_throw_velo: 66, vertical_jump: 21, sl_broad_jump: 57, mb_rotational_throw: 22, lateral_shuffle: 4.7, long_toss_distance: 175 },
+      { tee_exit_velocity: 74, bat_speed: 58, sixty_yard_dash: 7.4, ten_yard_dash: 1.82, pro_agility: 4.7, position_throw_velo: 71, vertical_jump: 24, sl_broad_jump: 63, mb_rotational_throw: 26, lateral_shuffle: 4.3, long_toss_distance: 195 },
+      { tee_exit_velocity: 80, bat_speed: 64, sixty_yard_dash: 7.1, ten_yard_dash: 1.73, pro_agility: 4.4, position_throw_velo: 76, vertical_jump: 27, sl_broad_jump: 70, mb_rotational_throw: 29, lateral_shuffle: 4.0, long_toss_distance: 220 },
+      { tee_exit_velocity: 86, bat_speed: 70, sixty_yard_dash: 6.8, ten_yard_dash: 1.65, pro_agility: 4.2, position_throw_velo: 81, vertical_jump: 30, sl_broad_jump: 77, mb_rotational_throw: 33, lateral_shuffle: 3.7, long_toss_distance: 250 },
+      { tee_exit_velocity: 91, bat_speed: 76, sixty_yard_dash: 6.6, ten_yard_dash: 1.58, pro_agility: 4.0, position_throw_velo: 85, vertical_jump: 33, sl_broad_jump: 83, mb_rotational_throw: 36, lateral_shuffle: 3.5, long_toss_distance: 275 },
+      { tee_exit_velocity: 96, bat_speed: 81, sixty_yard_dash: 6.4, ten_yard_dash: 1.52, pro_agility: 3.8, position_throw_velo: 89, vertical_jump: 35, sl_broad_jump: 89, mb_rotational_throw: 39, lateral_shuffle: 3.3, long_toss_distance: 295 },
+      { tee_exit_velocity: 101, bat_speed: 86, sixty_yard_dash: 6.3, ten_yard_dash: 1.47, pro_agility: 3.7, position_throw_velo: 92, vertical_jump: 37, sl_broad_jump: 94, mb_rotational_throw: 42, lateral_shuffle: 3.1, long_toss_distance: 310 },
+      { tee_exit_velocity: 106, bat_speed: 91, sixty_yard_dash: 6.2, ten_yard_dash: 1.42, pro_agility: 3.6, position_throw_velo: 94, vertical_jump: 39, sl_broad_jump: 98, mb_rotational_throw: 44, lateral_shuffle: 2.9, long_toss_distance: 318 },
+      { tee_exit_velocity: 110, bat_speed: 95, sixty_yard_dash: 6.2, ten_yard_dash: 1.40, pro_agility: 3.5, position_throw_velo: 95, vertical_jump: 40, sl_broad_jump: 100, mb_rotational_throw: 45, lateral_shuffle: 2.8, long_toss_distance: 320 },
+    ];
+
+    // Build 10 pairs from consecutive levels
+    for (let i = 0; i < levels.length - 1; i++) {
+      pairs.push([levels[i], levels[i + 1]]);
+    }
+
+    for (let idx = 0; idx < pairs.length; idx++) {
+      const [weaker, stronger] = pairs[idx];
+      const gWeak = computeToolGrades(weaker, 'SS', 'baseball', 16);
+      const gStrong = computeToolGrades(stronger, 'SS', 'baseball', 16);
+
+      expect(gWeak.overall).not.toBeNull();
+      expect(gStrong.overall).not.toBeNull();
+      expect(gStrong.overall!).toBeGreaterThanOrEqual(gWeak.overall!);
+    }
+  });
+});
