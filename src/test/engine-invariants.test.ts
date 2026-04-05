@@ -1,7 +1,9 @@
 // =====================================================================
 // INVARIANT TEST SUITE — Performance Intelligence Engine
-// 20 Tests · 6 Layers · Zero Tolerance
+// 21 Layers · 76 Tests · Zero Tolerance
 // =====================================================================
+
+import { computeEliteScore } from '../lib/eliteScore';
 
 import { describe, it, expect } from 'vitest';
 import { rawToGrade, gradeAllResults, gradeToLabel } from '@/lib/gradeEngine';
