@@ -103,10 +103,20 @@ function SortableFieldItem({
           ) : (
             <Input
               value={field.value}
-              onChange={(e) => onUpdate({ value: e.target.value })}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (field.type === 'number') {
+                  if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                    onUpdate({ value: v });
+                  }
+                } else {
+                  onUpdate({ value: v });
+                }
+              }}
               placeholder={field.type === 'number' ? t('customActivity.customFields.numberPlaceholder', 'e.g. 4.2') : t('customActivity.customFields.valuePlaceholder')}
               className="h-9"
-              type={field.type === 'number' ? 'number' : field.type === 'time' ? 'time' : 'text'}
+              type={field.type === 'number' ? 'text' : field.type === 'time' ? 'time' : 'text'}
+              inputMode={field.type === 'number' ? 'decimal' : undefined}
             />
           )}
           <Select

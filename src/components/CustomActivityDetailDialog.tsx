@@ -850,9 +850,15 @@ export function CustomActivityDetailDialog({
                                 />
                               ) : field.type === 'number' ? (
                                 <Input
-                                  type="number"
+                                  type="text"
+                                  inputMode="decimal"
                                   value={getFieldValue(field.id)}
-                                  onChange={(e) => handleLocalFieldChange(field.id, e.target.value)}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                                      handleLocalFieldChange(field.id, v);
+                                    }
+                                  }}
                                   placeholder={field.value || t('customActivity.customFields.numberPlaceholder', 'e.g. 4.2')}
                                   disabled={savingFieldIds.has(field.id)}
                                   className="h-7 w-28 text-sm"
