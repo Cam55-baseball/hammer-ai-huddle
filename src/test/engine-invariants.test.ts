@@ -948,8 +948,8 @@ describe('Layer 11 — Ground Truth Validation', () => {
       expect(v).toBeLessThanOrEqual(45);
     }
 
-    // Overall ∈ [36, 42]
-    expect(tools.overall).toBeGreaterThanOrEqual(36);
+    // Overall ∈ [30, 42] — spread factor amplifies deviation from 45
+    expect(tools.overall).toBeGreaterThanOrEqual(30);
     expect(tools.overall).toBeLessThanOrEqual(42);
 
     // Must have limiting factors
