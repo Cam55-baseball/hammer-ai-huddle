@@ -932,6 +932,9 @@ function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
       });
       break;
     default:
+      if (pattern.metric?.startsWith('tool_gap_')) {
+        console.error(`UNHANDLED_METRIC: ${pattern.metric} for athlete, category=${pattern.category}`);
+      }
       if (pattern.category === "pitching") {
         rotations.push({
           primary: { name: "Command Bullpen", description: "Focus on locating all pitch types", module: "practice-hub", constraints: "40 pitches, chart location", drill_type: "bullpen" },
@@ -1204,7 +1207,7 @@ interface ToolPerformanceGap {
   gap: number;
   direction: 'tool_exceeds' | 'perf_exceeds';
   issue: string;
-  prescription_class: 'skill_transfer' | 'physical_development';
+  prescription_class: 'skill_transfer' | 'physical';
 }
 
 function mapCompositeToToolScale(compositeScore: number): number {
@@ -1239,7 +1242,7 @@ function analyzeToolPerformanceGaps(
     if (absDelta < 15) continue; // No significant gap
 
     const direction: 'tool_exceeds' | 'perf_exceeds' = delta > 0 ? 'tool_exceeds' : 'perf_exceeds';
-    const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical_development';
+    const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical';
     const severity: 'high' | 'medium' = absDelta >= 20 ? 'high' : 'medium';
 
     const issue = direction === 'tool_exceeds'
