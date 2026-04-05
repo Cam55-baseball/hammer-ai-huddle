@@ -188,3 +188,6 @@ verify_jwt = false
 
 [functions.hie-verify]
 verify_jwt = false
+
+[functions.verify-link-integrity]
+verify_jwt = false
