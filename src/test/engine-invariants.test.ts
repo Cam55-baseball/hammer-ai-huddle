@@ -908,14 +908,23 @@ describe('Layer 11 — Ground Truth Validation', () => {
     long_toss_distance: 140, position_throw_velo: 50, lateral_shuffle: 5.5,
   };
 
-  it('Test 31: Elite Baseball SS — tool grades reflect real-world elite', () => {
+  it('Test 31: Elite Baseball SS — tightened tool grade bands', () => {
     const report = generateReport(ELITE_SS, 'SS', 'baseball', 16);
     const tools = report.toolGrades;
 
-    // Elite SS: Hit 69, Arm 69, Run 56, Power 51, Field 50, Overall 60
-    expect(tools.hit).toBeGreaterThanOrEqual(60);
-    expect(tools.arm).toBeGreaterThanOrEqual(60);
-    expect(tools.overall).toBeGreaterThanOrEqual(55);
+    // Tightened: exact bands from real output (Hit=69, Arm=69, Power=51, Run=56, Field=50, Overall=60)
+    expect(tools.overall).toBeGreaterThanOrEqual(58);
+    expect(tools.overall).toBeLessThanOrEqual(62);
+    expect(tools.hit).toBeGreaterThanOrEqual(65);
+    expect(tools.hit).toBeLessThanOrEqual(75);
+    expect(tools.arm).toBeGreaterThanOrEqual(63);
+    expect(tools.arm).toBeLessThanOrEqual(75);
+
+    // No tool below 45 for an elite profile
+    const toolVals = [tools.hit, tools.power, tools.run, tools.field, tools.arm].filter(v => v !== null) as number[];
+    for (const v of toolVals) {
+      expect(v).toBeGreaterThanOrEqual(45);
+    }
 
     // Top strengths should include hitting or arm metrics
     const strengthKeys = report.topStrengths.map(s => s.key);
@@ -925,26 +934,26 @@ describe('Layer 11 — Ground Truth Validation', () => {
     expect(hitOrArm).toBe(true);
   });
 
-  it('Test 32: Average 14u Freshman — grades cluster around average', () => {
+  it('Test 32: Average 14u Freshman — tightened average bands', () => {
     const report = generateReport(AVG_14U, 'SS', 'baseball', 13);
     const tools = report.toolGrades;
 
-    // All tools should be in 30-55 range (average zone)
+    // Tightened: all tools ∈ [30, 45] (real output: 34-41)
     const toolVals = [tools.hit, tools.power, tools.run, tools.field, tools.arm].filter(v => v !== null) as number[];
     for (const v of toolVals) {
-      expect(v).toBeGreaterThanOrEqual(25);
-      expect(v).toBeLessThanOrEqual(55);
+      expect(v).toBeGreaterThanOrEqual(30);
+      expect(v).toBeLessThanOrEqual(45);
     }
 
-    // Overall in average range
-    expect(tools.overall).toBeGreaterThanOrEqual(30);
-    expect(tools.overall).toBeLessThanOrEqual(52);
+    // Overall ∈ [36, 42]
+    expect(tools.overall).toBeGreaterThanOrEqual(36);
+    expect(tools.overall).toBeLessThanOrEqual(42);
 
-    // Must have limiting factors (average players always have development areas)
+    // Must have limiting factors
     expect(report.limitingFactors.length).toBeGreaterThan(0);
   });
 
-  it('Test 33: Below-Average with One Standout — run dominates but overall stays low', () => {
+  it('Test 33: Below-Average with One Standout — tightened gap enforcement', () => {
     const report = generateReport(BELOW_AVG_RUN_STANDOUT, 'SS', 'baseball', 16);
     const tools = report.toolGrades;
 
@@ -952,13 +961,17 @@ describe('Layer 11 — Ground Truth Validation', () => {
     const nonNullTools = (['hit', 'power', 'run', 'field', 'arm'] as ToolName[])
       .filter(t => tools[t] !== null)
       .map(t => ({ tool: t, grade: tools[t]! }));
-    const maxTool = nonNullTools.sort((a, b) => b.grade - a.grade)[0];
-    expect(maxTool.tool).toBe('run');
+    const sorted = nonNullTools.sort((a, b) => b.grade - a.grade);
+    expect(sorted[0].tool).toBe('run');
 
-    // Overall must NOT be elite — one tool cannot mask weakness
-    expect(tools.overall).toBeLessThan(40);
+    // Tightened: Run tool ≥ next highest + 8 (real: run=35, field=25 → gap=10)
+    expect(sorted[0].grade).toBeGreaterThanOrEqual(sorted[1].grade + 8);
 
-    // Training priority should NOT reference speed/run (it's already their strength)
+    // Overall ∈ [23, 30] (real: 25)
+    expect(tools.overall).toBeGreaterThanOrEqual(23);
+    expect(tools.overall).toBeLessThanOrEqual(30);
+
+    // Training priority should NOT reference speed/run
     expect(report.trainingPriority.toLowerCase()).not.toContain('60-yard');
     expect(report.trainingPriority.toLowerCase()).not.toContain('sprint');
   });
