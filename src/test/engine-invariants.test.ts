@@ -1540,3 +1540,278 @@ describe('Layer 16 — External Truth Validation', () => {
     }
   });
 });
+
+// =====================================================================
+// LAYER 17 — ADVERSARIAL ROBUSTNESS + SYSTEM INVARIANCE LOCK
+// =====================================================================
+
+describe('Layer 17 — Adversarial Robustness', () => {
+  // Test 50: Frankenstein Profiles (Extreme Imbalance)
+  it('Test 50: one-tool-dominant profiles cannot inflate overall', () => {
+    const profiles = [
+      {
+        name: 'Track Freak',
+        results: {
+          sixty_yard_dash: 6.1, ten_yard_dash: 1.35, pro_agility: 3.7,
+          tee_exit_velocity: 65, bat_speed: 50, position_throw_velo: 65,
+        },
+        dominantTool: 'run' as const,
+      },
+      {
+        name: 'Raw Power',
+        results: {
+          tee_exit_velocity: 110, bat_speed: 90,
+          sixty_yard_dash: 7.6, pro_agility: 5.0, position_throw_velo: 65,
+        },
+        dominantTool: 'power' as const,
+      },
+      {
+        name: 'Arm-Only Pitcher',
+        results: {
+          pitching_velocity: 97, position_throw_velo: 95,
+          sixty_yard_dash: 7.8, tee_exit_velocity: 65, bat_speed: 50,
+        },
+        dominantTool: 'arm' as const,
+      },
+    ];
+
+    for (const profile of profiles) {
+      const grades = computeToolGrades(profile.results, 'SS', 'baseball', 18);
+      const tools: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+
+      // Dominant tool should be strong
+      const dominantGrade = grades[profile.dominantTool];
+      expect(dominantGrade).not.toBeNull();
+
+      // Non-dominant tools should be weak or null
+      for (const tool of tools) {
+        if (tool === profile.dominantTool) continue;
+        const g = grades[tool];
+        if (g !== null) {
+          expect(g).toBeLessThanOrEqual(55); // weak-to-average at best
+        }
+      }
+
+      // Overall must not be inflated by one tool
+      if (grades.overall !== null) {
+        expect(grades.overall).toBeLessThanOrEqual(60);
+      }
+    }
+  });
+
+  // Test 51: Tool Monotonicity Across 3 Cycles
+  it('Test 51: improving all metrics → tool grades and overall never regress', () => {
+    const cycle1 = {
+      tee_exit_velocity: 70, bat_speed: 55, sixty_yard_dash: 7.5,
+      ten_yard_dash: 1.85, pro_agility: 4.8, position_throw_velo: 65,
+      vertical_jump: 18, sl_broad_jump: 60, mb_rotational_throw: 20,
+      fielding_exchange_time: 1.2, lateral_shuffle: 5.0,
+    };
+    const cycle2 = {
+      tee_exit_velocity: 80, bat_speed: 65, sixty_yard_dash: 7.1,
+      ten_yard_dash: 1.72, pro_agility: 4.5, position_throw_velo: 75,
+      vertical_jump: 24, sl_broad_jump: 72, mb_rotational_throw: 28,
+      fielding_exchange_time: 1.0, lateral_shuffle: 4.6,
+    };
+    const cycle3 = {
+      tee_exit_velocity: 95, bat_speed: 78, sixty_yard_dash: 6.6,
+      ten_yard_dash: 1.58, pro_agility: 4.0, position_throw_velo: 88,
+      vertical_jump: 32, sl_broad_jump: 90, mb_rotational_throw: 38,
+      fielding_exchange_time: 0.8, lateral_shuffle: 4.1,
+    };
+
+    const g1 = computeToolGrades(cycle1, 'SS', 'baseball', 16);
+    const g2 = computeToolGrades(cycle2, 'SS', 'baseball', 16);
+    const g3 = computeToolGrades(cycle3, 'SS', 'baseball', 16);
+
+    const tools: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+    for (const tool of tools) {
+      if (g1[tool] !== null && g2[tool] !== null) {
+        expect(g2[tool]!).toBeGreaterThanOrEqual(g1[tool]!);
+      }
+      if (g2[tool] !== null && g3[tool] !== null) {
+        expect(g3[tool]!).toBeGreaterThanOrEqual(g2[tool]!);
+      }
+    }
+
+    if (g1.overall !== null && g2.overall !== null) {
+      expect(g2.overall).toBeGreaterThanOrEqual(g1.overall);
+    }
+    if (g2.overall !== null && g3.overall !== null) {
+      expect(g3.overall).toBeGreaterThanOrEqual(g2.overall);
+    }
+  });
+
+  // Test 52: Missing Data Chaos
+  it('Test 52: sparse profiles (3–6 metrics) never crash or produce NaN', () => {
+    const allMetrics = [
+      'tee_exit_velocity', 'bat_speed', 'sixty_yard_dash', 'ten_yard_dash',
+      'pro_agility', 'position_throw_velo', 'pitching_velocity', 'vertical_jump',
+      'sl_broad_jump', 'mb_rotational_throw', 'fielding_exchange_time',
+      'lateral_shuffle', 'long_toss_distance', 'thirty_yard_dash',
+    ];
+    const ranges: Record<string, [number, number]> = {
+      tee_exit_velocity: [55, 110], bat_speed: [40, 95], sixty_yard_dash: [6.2, 8.5],
+      ten_yard_dash: [1.4, 2.1], pro_agility: [3.5, 5.5], position_throw_velo: [55, 95],
+      pitching_velocity: [55, 100], vertical_jump: [14, 38], sl_broad_jump: [48, 100],
+      mb_rotational_throw: [15, 45], fielding_exchange_time: [0.6, 1.5],
+      lateral_shuffle: [3.5, 5.5], long_toss_distance: [150, 320],
+      thirty_yard_dash: [3.5, 5.0],
+    };
+
+    let seed = 7777;
+    const seededRandom = () => { seed = (seed * 16807 + 0) % 2147483647; return seed / 2147483647; };
+
+    for (let i = 0; i < 50; i++) {
+      const metricCount = 3 + Math.floor(seededRandom() * 4); // 3–6
+      const shuffled = [...allMetrics].sort(() => seededRandom() - 0.5);
+      const chosen = shuffled.slice(0, metricCount);
+
+      const results: Record<string, number> = {};
+      for (const key of chosen) {
+        const [lo, hi] = ranges[key];
+        results[key] = lo + seededRandom() * (hi - lo);
+      }
+
+      // Must not crash
+      const toolGrades = computeToolGrades(results, 'SS', 'baseball', 16);
+      const report = generateReport(results, 'SS', 'baseball', 16);
+
+      const tools: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+      for (const tool of tools) {
+        const g = toolGrades[tool];
+        if (g !== null) {
+          expect(g).toBeGreaterThanOrEqual(20);
+          expect(g).toBeLessThanOrEqual(80);
+          expect(Number.isNaN(g)).toBe(false);
+        }
+      }
+
+      if (toolGrades.overall !== null) {
+        expect(toolGrades.overall).toBeGreaterThanOrEqual(20);
+        expect(toolGrades.overall).toBeLessThanOrEqual(80);
+        expect(Number.isNaN(toolGrades.overall)).toBe(false);
+      }
+
+      // Report fields must not be NaN
+      for (const mg of report.metricGrades) {
+        expect(Number.isNaN(mg.grade)).toBe(false);
+      }
+    }
+  });
+
+  // Test 53: Weighting Stability (No Single Metric Hijack)
+  it('Test 53: spiking one metric cannot swing a tool by more than 12 points', () => {
+    const baseline = {
+      tee_exit_velocity: 85, bat_speed: 70, avg_exit_velo_bp: 80,
+      sixty_yard_dash: 7.0, ten_yard_dash: 1.7, pro_agility: 4.3,
+      position_throw_velo: 78, vertical_jump: 25, sl_broad_jump: 75,
+      mb_rotational_throw: 28, fielding_exchange_time: 1.0, lateral_shuffle: 4.4,
+    };
+
+    const baseGrades = computeToolGrades(baseline, 'SS', 'baseball', 16);
+
+    // Spike EV from 85 → 110
+    const spiked = { ...baseline, tee_exit_velocity: 110 };
+    const spikedGrades = computeToolGrades(spiked, 'SS', 'baseball', 16);
+
+    // Hit tool increase ≤ 12
+    if (baseGrades.hit !== null && spikedGrades.hit !== null) {
+      expect(spikedGrades.hit - baseGrades.hit).toBeLessThanOrEqual(12);
+    }
+
+    // Overall increase ≤ 5
+    if (baseGrades.overall !== null && spikedGrades.overall !== null) {
+      expect(spikedGrades.overall - baseGrades.overall).toBeLessThanOrEqual(5);
+    }
+  });
+
+  // Test 54: Cross-Tool Independence
+  it('Test 54: improving speed metrics does not decrease other tools', () => {
+    const baseline = {
+      tee_exit_velocity: 85, bat_speed: 70, avg_exit_velo_bp: 80,
+      sixty_yard_dash: 7.2, ten_yard_dash: 1.78, pro_agility: 4.5,
+      position_throw_velo: 78, pitching_velocity: 80,
+      vertical_jump: 25, sl_broad_jump: 75, mb_rotational_throw: 28,
+      fielding_exchange_time: 1.0, lateral_shuffle: 4.5,
+    };
+
+    const improved = {
+      ...baseline,
+      sixty_yard_dash: 6.4,  // much faster
+      ten_yard_dash: 1.52,   // much faster
+      pro_agility: 3.8,      // much quicker
+    };
+
+    const baseGrades = computeToolGrades(baseline, 'SS', 'baseball', 16);
+    const improvedGrades = computeToolGrades(improved, 'SS', 'baseball', 16);
+
+    // Run must increase
+    if (baseGrades.run !== null && improvedGrades.run !== null) {
+      expect(improvedGrades.run).toBeGreaterThan(baseGrades.run);
+    }
+
+    // Hit, Power, Arm must NOT decrease
+    for (const tool of ['hit', 'power', 'arm'] as ToolName[]) {
+      if (baseGrades[tool] !== null && improvedGrades[tool] !== null) {
+        expect(improvedGrades[tool]!).toBeGreaterThanOrEqual(baseGrades[tool]!);
+      }
+    }
+
+    // Overall must not decrease
+    if (baseGrades.overall !== null && improvedGrades.overall !== null) {
+      expect(improvedGrades.overall).toBeGreaterThanOrEqual(baseGrades.overall);
+    }
+  });
+
+  // Test 55: Out-of-Distribution Guardrails
+  it('Test 55: impossible/invalid inputs never crash, grades stay in [20,80]', () => {
+    const insaneInputs = {
+      sixty_yard_dash: 4.0,    // impossible speed
+      tee_exit_velocity: 140,  // impossible power
+      bat_speed: -10,          // negative
+      vertical_jump: 0,        // zero
+      pitching_velocity: 999,  // absurd
+      ten_yard_dash: 0.5,      // impossible
+      pro_agility: 1.0,        // impossible
+      position_throw_velo: 200,// absurd
+      sl_broad_jump: 200,      // absurd
+      mb_rotational_throw: -5, // negative
+    };
+
+    // rawToGrade must not crash, must clamp to [20, 80]
+    for (const [key, value] of Object.entries(insaneInputs)) {
+      const grade = rawToGrade(key, value, 'baseball', 18);
+      if (grade !== null) {
+        expect(grade).toBeGreaterThanOrEqual(20);
+        expect(grade).toBeLessThanOrEqual(80);
+        expect(Number.isNaN(grade)).toBe(false);
+      }
+    }
+
+    // computeToolGrades must not crash
+    const toolGrades = computeToolGrades(insaneInputs, 'SS', 'baseball', 18);
+    const tools: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+    for (const tool of tools) {
+      const g = toolGrades[tool];
+      if (g !== null) {
+        expect(g).toBeGreaterThanOrEqual(20);
+        expect(g).toBeLessThanOrEqual(80);
+        expect(Number.isNaN(g)).toBe(false);
+      }
+    }
+    if (toolGrades.overall !== null) {
+      expect(Number.isNaN(toolGrades.overall)).toBe(false);
+    }
+
+    // generateReport must not crash
+    const report = generateReport(insaneInputs, 'SS', 'baseball', 18);
+    expect(report).toBeDefined();
+    expect(report.metricGrades.length).toBeGreaterThan(0);
+    for (const mg of report.metricGrades) {
+      expect(Number.isNaN(mg.grade)).toBe(false);
+      expect(mg.grade).toBeGreaterThanOrEqual(20);
+      expect(mg.grade).toBeLessThanOrEqual(80);
+    }
+  });
+});
