@@ -849,6 +849,88 @@ function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
         ],
       });
       break;
+    // ── Tool-Performance Gap: skill_transfer cases
+    case "tool_gap_hit_skill_transfer":
+      rotations.push({
+        primary: { name: "Live BP Situational Hitting", description: "Game-speed at-bats focusing on pitch recognition and application", module: "practice-hub", constraints: "15 ABs, track contact quality", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Vision-to-Swing Drill", description: "Pitch recognition followed by immediate swing decisions", module: "tex-vision", constraints: "20 pitches, timed response", drill_type: "recognition" },
+        ],
+      });
+      break;
+    case "tool_gap_power_skill_transfer":
+      rotations.push({
+        primary: { name: "High-Intent BP", description: "Max-effort swings with intent to drive, tracking exit velo", module: "practice-hub", constraints: "10 swings, measure EV", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Overload/Underload Swings", description: "Alternate heavy and light bat swings for power transfer", module: "practice-hub", constraints: "3 sets × 6 swings each weight", drill_type: "power_transfer" },
+        ],
+      });
+      break;
+    case "tool_gap_run_skill_transfer":
+      rotations.push({
+        primary: { name: "Lead-Off Read Drill", description: "Practice reading pitcher cues for optimal jump timing", module: "practice-hub", constraints: "10 reps, video review", drill_type: "baserunning" },
+        alternatives: [
+          { name: "Situational Baserunning", description: "Game scenarios with go/no-go decisions under time pressure", module: "practice-hub", constraints: "8 scenarios, timed", drill_type: "decision" },
+        ],
+      });
+      break;
+    case "tool_gap_field_skill_transfer":
+      rotations.push({
+        primary: { name: "Game-Speed Fungo", description: "Fielding reps at game speed with timed exchanges", module: "practice-hub", constraints: "20 reps, clock exchange time", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Pressure Fielding Circuit", description: "Rapid-fire ground balls with throw-to-base requirements", module: "practice-hub", constraints: "15 reps, scorecard", drill_type: "pressure" },
+        ],
+      });
+      break;
+    case "tool_gap_arm_skill_transfer":
+      rotations.push({
+        primary: { name: "Target Throwing from Position", description: "Throws to bases from game-position fielding", module: "practice-hub", constraints: "15 throws, chart accuracy", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Accuracy Long Toss", description: "Long toss with target zones for accuracy transfer", module: "practice-hub", constraints: "20 throws, track accuracy %", drill_type: "arm_accuracy" },
+        ],
+      });
+      break;
+    // ── Tool-Performance Gap: physical_development cases
+    case "tool_gap_hit_physical":
+      rotations.push({
+        primary: { name: "Bat Speed Overload Training", description: "Heavy bat drills to increase raw bat speed", module: "practice-hub", constraints: "3 sets × 8 swings, heavy bat", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Tee Precision Work", description: "Focus on barrel accuracy at various heights and depths", module: "practice-hub", constraints: "30 swings, target zones", drill_type: "mechanics" },
+        ],
+      });
+      break;
+    case "tool_gap_power_physical":
+      rotations.push({
+        primary: { name: "Explosive Strength Circuit", description: "Med ball throws, plyometrics, and jump training for power development", module: "speed-lab", constraints: "3 circuits, max effort", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Lower Body Power Complex", description: "Squat jumps, broad jumps, and rotational throws", module: "speed-lab", constraints: "4 sets × 5 reps each", drill_type: "strength" },
+        ],
+      });
+      break;
+    case "tool_gap_run_physical":
+      rotations.push({
+        primary: { name: "Sprint Mechanics Lab", description: "Focus on acceleration mechanics and stride efficiency", module: "speed-lab", constraints: "6 × 30yd sprints, video review", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Pro Agility Work", description: "Lateral quickness and change-of-direction training", module: "speed-lab", constraints: "8 reps, timed", drill_type: "agility" },
+        ],
+      });
+      break;
+    case "tool_gap_field_physical":
+      rotations.push({
+        primary: { name: "Lateral Shuffle Circuit", description: "Improve lateral range and first-step quickness", module: "speed-lab", constraints: "4 sets × 10 shuffles each direction", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Agility Cone Drill", description: "Multi-directional cone patterns for fielding range", module: "speed-lab", constraints: "6 patterns, timed", drill_type: "agility" },
+        ],
+      });
+      break;
+    case "tool_gap_arm_physical":
+      rotations.push({
+        primary: { name: "Weighted Ball Program", description: "Progressive weighted ball throwing for arm strength", module: "practice-hub", constraints: "Prescribed weight progression, 25 throws", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Long Toss Program", description: "Structured long toss to build arm strength and endurance", module: "practice-hub", constraints: "Build to max distance, 30 throws", drill_type: "arm_strength" },
+        ],
+      });
+      break;
     default:
       if (pattern.category === "pitching") {
         rotations.push({
