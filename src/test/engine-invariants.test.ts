@@ -1314,43 +1314,84 @@ describe('Layer 16 — External Truth Validation', () => {
     ).toBe(true);
   });
 
-  it('Test 46: Coach Sanity Check — 100 random profiles, near-zero contradictions', () => {
-    const allKeys = Object.keys(METRIC_BY_KEY);
-    let flags = 0;
+  it('Test 46: Coach Sanity Check — 100 correlated profiles, ≤2 contradictions', () => {
+    // Correlated profile generator: base athleticism drives all metrics
+    function generateCorrelatedProfile(): Record<string, number> {
+      const base = Math.random(); // 0=poor, 1=elite
+      const noise = () => (Math.random() - 0.5) * 0.2; // ±10% noise
 
-    for (let i = 0; i < 100; i++) {
-      // Random full-ish profile (8-15 metrics)
-      const results: Record<string, number> = {};
-      const numMetrics = 8 + Math.floor(Math.random() * 8);
-      const shuffled = [...allKeys].sort(() => Math.random() - 0.5);
-      for (let j = 0; j < Math.min(numMetrics, shuffled.length); j++) {
-        const def = METRIC_BY_KEY[shuffled[j]];
-        if (!def) continue;
-        // Generate within plausible range
-        const range = def.higherIsBetter !== false
-          ? { min: 10, max: 120 }
-          : { min: 1.0, max: 10.0 };
-        results[shuffled[j]] = range.min + Math.random() * (range.max - range.min);
-      }
+      const speedFactor = Math.max(0, Math.min(1, base * 0.85 + noise()));
+      const powerFactor = Math.max(0, Math.min(1, base * 0.90 + noise()));
+      const armFactor = Math.max(0, Math.min(1, base * 0.80 + noise()));
+      const agilityFactor = Math.max(0, Math.min(1, speedFactor * 0.85 + noise()));
 
-      const tg = computeToolGrades(results, 'SS', 'baseball', 18);
-      const tools = (['hit', 'power', 'run', 'field', 'arm'] as ToolName[])
-        .map(t => tg[t])
-        .filter(v => v !== null) as number[];
+      // Higher-is-better: lerp between floor and elite
+      const lerp = (factor: number, floor: number, elite: number) =>
+        floor + factor * (elite - floor);
 
-      if (tools.length < 3 || tg.overall === null) continue;
-
-      const below40 = tools.filter(t => t < 40).length;
-      const above60 = tools.filter(t => t > 60).length;
-
-      // Flag: overall > 60 but ≥2 tools < 40
-      if (tg.overall > 60 && below40 >= 2) flags++;
-      // Flag: overall < 40 but ≥2 tools > 60
-      if (tg.overall < 40 && above60 >= 2) flags++;
+      return {
+        // Speed cluster (correlated)
+        sixty_yard_dash: lerp(1 - speedFactor, 6.2, 8.0), // lower is better
+        ten_yard_dash: lerp(1 - speedFactor, 1.4, 2.1),
+        pro_agility: lerp(1 - agilityFactor, 3.8, 5.2),
+        lateral_shuffle: lerp(1 - agilityFactor, 3.8, 5.8),
+        // Power cluster (correlated)
+        tee_exit_velocity: lerp(powerFactor, 60, 110),
+        bat_speed: lerp(powerFactor * 0.90 + noise(), 48, 89),
+        vertical_jump: lerp(powerFactor, 18, 40),
+        mb_rotational_throw: lerp(powerFactor, 12, 32),
+        sl_broad_jump_left: lerp(powerFactor, 45, 95),
+        sl_broad_jump_right: lerp(powerFactor, 43, 93),
+        // Arm cluster (correlated)
+        position_throw_velo: lerp(armFactor, 50, 95),
+        pitching_velocity: lerp(armFactor * 0.80 + noise(), 55, 100),
+        long_toss_distance: lerp(armFactor, 130, 320),
+      };
     }
 
-    // Near-zero tolerance (≤5% for fully random profiles with extreme ranges)
-    expect(flags).toBeLessThanOrEqual(5);
+    let flags = 0;
+    const diagnostics: Array<{
+      index: number;
+      overall: number;
+      tools: Record<string, number | null>;
+      below40: string[];
+      above60: string[];
+    }> = [];
+
+    for (let i = 0; i < 100; i++) {
+      const results = generateCorrelatedProfile();
+      const tg = computeToolGrades(results, 'SS', 'baseball', 18);
+      const toolNames: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+      const toolValues = toolNames
+        .map(t => ({ name: t, grade: tg[t] }))
+        .filter(v => v.grade !== null) as { name: ToolName; grade: number }[];
+
+      if (toolValues.length < 3 || tg.overall === null) continue;
+
+      const below40 = toolValues.filter(t => t.grade < 40);
+      const above60 = toolValues.filter(t => t.grade > 60);
+
+      let flagged = false;
+      if (tg.overall > 60 && below40.length >= 2) flagged = true;
+      if (tg.overall < 40 && above60.length >= 2) flagged = true;
+
+      if (flagged) {
+        flags++;
+        diagnostics.push({
+          index: i,
+          overall: tg.overall,
+          tools: { hit: tg.hit, power: tg.power, run: tg.run, field: tg.field, arm: tg.arm },
+          below40: below40.map(t => `${t.name}:${t.grade}`),
+          above60: above60.map(t => `${t.name}:${t.grade}`),
+        });
+      }
+    }
+
+    if (diagnostics.length > 0) {
+      console.warn('Coach Red Flag Diagnostics:', JSON.stringify(diagnostics, null, 2));
+    }
+
+    expect(flags).toBeLessThanOrEqual(2);
   });
 
   it('Test 47: Tightened Ground Truth — validates exact bands (redundant with 31-33 tightening)', () => {
