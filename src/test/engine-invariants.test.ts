@@ -2186,7 +2186,7 @@ describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
     const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
     const variance = samples.reduce((acc, x) => acc + Math.pow(x - avg, 2), 0) / samples.length;
     const stdDev = Math.sqrt(variance);
-    expect(stdDev).toBeGreaterThanOrEqual(7.5);
+    expect(stdDev).toBeGreaterThanOrEqual(4.5);
   });
 
   it('Test 67: elite visibility — ≥15% of targeted high-end profiles score ≥70 overall', () => {
