@@ -1369,7 +1369,17 @@ Deno.serve(async (req) => {
     const drillCatalog = new Map<string, string>();
     (drillCatalogRows ?? []).forEach((d: any) => drillCatalog.set(d.name, d.id));
 
-    // 10. Existing prescriptions for adaptive loop
+    // 10. Vault performance tests (tool grades for gap detection)
+    const { data: vaultTests } = await supabase
+      .from("vault_performance_tests")
+      .select("tool_grades, test_date")
+      .eq("user_id", user_id)
+      .not("tool_grades", "is", null)
+      .order("test_date", { ascending: false })
+      .limit(1);
+    const latestToolGrades = vaultTests?.[0]?.tool_grades as Record<string, number | null> | null;
+
+    // 11. Existing prescriptions for adaptive loop
     const { data: existingPrescriptions } = await supabase
       .from('drill_prescriptions')
       .select('id, drill_name, weakness_area, pre_score, effectiveness_score, adherence_count, targeted_metric, weakness_metric, pre_weakness_value')
