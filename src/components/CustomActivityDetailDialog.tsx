@@ -287,6 +287,7 @@ export function CustomActivityDetailDialog({
         if (latestValue !== undefined) {
           handleUpdateFieldValue(fieldId, latestValue);
           savedFieldIds.current.add(fieldId);
+          console.debug('[CustomActivity Save]', { fieldId, value: latestValue, source: 'debounce' });
         }
         return prev; // Keep local value as source of truth
       });
