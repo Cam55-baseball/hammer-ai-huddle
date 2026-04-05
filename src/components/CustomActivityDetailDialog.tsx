@@ -229,9 +229,13 @@ export function CustomActivityDetailDialog({
         clearTimeout(debounceTimers.current[fieldId]);
       });
       // Flush only fields that haven't been saved since last edit
+      console.debug('[CustomActivity Flush]', { localFieldValues, savedFieldIds: [...savedFieldIds.current] });
       Object.entries(localFieldValues).forEach(([fieldId, value]) => {
         if (value !== undefined && !savedFieldIds.current.has(fieldId) && onUpdateFieldValueRef.current) {
           onUpdateFieldValueRef.current(fieldId, value);
+          console.debug('[CustomActivity Save]', { fieldId, value, source: 'flush' });
+        } else if (savedFieldIds.current.has(fieldId)) {
+          console.debug('[CustomActivity Flush Skip]', { fieldId, reason: 'already saved' });
         }
       });
       debounceTimers.current = {};
