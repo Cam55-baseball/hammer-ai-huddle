@@ -4,6 +4,7 @@ import type { BatterStats } from '@/hooks/useGameAnalytics';
 
 interface PlayerGameCardProps {
   stats: BatterStats;
+  sport?: 'baseball' | 'softball';
 }
 
 function Stat({ label, value }: { label: string; value: string | number }) {
