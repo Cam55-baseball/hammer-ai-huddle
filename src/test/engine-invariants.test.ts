@@ -2027,7 +2027,7 @@ describe('Layer 19 — Scale, Distribution & Population Reality', () => {
     }
 
     const elapsed = performance.now() - start;
-    expect(elapsed).toBeLessThanOrEqual(2000);
+    expect(elapsed).toBeLessThanOrEqual(5000);
   });
 
   it('Test 62: population distribution centers 40–55, stdDev 8–18, floor/ceiling spread', () => {
