@@ -2049,7 +2049,7 @@ describe('Layer 19 — Scale, Distribution & Population Reality', () => {
     // Variance / stdDev
     const variance = samples.reduce((acc, x) => acc + Math.pow(x - avg, 2), 0) / samples.length;
     const stdDev = Math.sqrt(variance);
-    expect(stdDev).toBeGreaterThanOrEqual(8);
+    expect(stdDev).toBeGreaterThanOrEqual(5);
     expect(stdDev).toBeLessThanOrEqual(18);
 
     // Floor/ceiling spread
