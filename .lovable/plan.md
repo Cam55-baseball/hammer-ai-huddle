@@ -1,64 +1,148 @@
 
 
-# Fix Tool-Performance Gap Metric Naming + Verification (Tests 77–79)
+# Zero-Tolerance Impact Verification — Tool Gap System
 
-## Phase 1 — Fix
+## 1. COMPETITION TEST
 
-**File: `supabase/functions/hie-analyze/index.ts`**
+### Sorting Formula (lines 1448-1457)
 
-Line 1242: Change `prescriptionClass` assignment so `perf_exceeds` produces `'physical'` instead of `'physical_development'`:
+```text
+score = severityWeight × (1 + gameBonus + fatigueBonus)
 
-```typescript
-const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical';
+severityWeight: high=3, medium=2, low=1
+gameBonus: +0.5 if data_points.context === 'game_gap'
+fatigueBonus: +0.3 if metric === 'fatigue_dropoff'
+tool_gap bonus: NONE (0)
 ```
 
-Line 1207: Update type to match:
-```typescript
-prescription_class: 'skill_transfer' | 'physical';
-```
+### Effective Scores by Pattern Type
 
-This ensures `tool_gap_${tool}_${prescriptionClass}` generates `tool_gap_field_physical` (matching switch case at line 918) instead of `tool_gap_field_physical_development` (unhandled).
+| Pattern Type | Severity | Score |
+|-------------|----------|-------|
+| Traditional (game_gap context) | high | **4.5** |
+| Fatigue dropoff | high | **3.9** |
+| Traditional (no bonus) | high | **3.0** |
+| **Tool gap** | **high** | **3.0** |
+| Traditional (game_gap) | medium | **3.0** |
+| **Tool gap** | **medium** | **2.0** |
+| Traditional (no bonus) | medium | **2.0** |
 
-No switch cases modified. Fix is at the source.
+### 3 Simulated Athletes
 
-## Phase 2 — Edge Protection
+**Athlete A** — Hitter with game-gap AND tool gap
+| # | Pattern | Severity | Score | Type |
+|---|---------|----------|-------|------|
+| 1 | inside_weakness (game_gap context) | high | 4.5 | traditional |
+| 2 | chase_rate_high | high | 3.0 | traditional |
+| 3 | tool_gap_hit_skill_transfer (delta=22) | high | 3.0 | **tool_gap** |
+| 4 | whiff_rate_elevated | medium | 2.0 | traditional |
+| 5 | tool_gap_power_physical (delta=16) | medium | 2.0 | tool_gap |
 
-In the `default` case of `buildDrillRotations` (line 934), add logging for unhandled tool_gap metrics:
+**Primary limiter**: inside_weakness (traditional WINS)
+**Tool gap rank**: #3 (in weakness_clusters: YES)
 
-```typescript
-default:
-  if (pattern.metric?.startsWith('tool_gap_')) {
-    console.error(`UNHANDLED_METRIC: ${pattern.metric} for pattern category ${pattern.category}`);
-  }
-  if (pattern.category === "pitching") { ... }
-  break;
-```
+**Athlete B** — No game-context patterns, strong tool gap
+| # | Pattern | Severity | Score |
+|---|---------|----------|-------|
+| 1 | tool_gap_field_skill_transfer (delta=25) | high | 3.0 |
+| 2 | exchange_time_slow | high | 3.0 |
+| 3 | fatigue_dropoff | medium | 2.6 |
+| 4 | tool_gap_arm_physical (delta=18) | medium | 2.0 |
 
-This ensures no `tool_gap_*` metric silently falls through.
+**Primary limiter**: TIE between tool_gap and exchange_time (sort is stable — whichever appears first in the concat wins). Tool gap patterns are appended LAST in line 1447, so traditional pattern wins ties.
+**Tool gap rank**: #2 (in weakness_clusters: YES)
 
-## Phase 3 — Invariant Tests (77–79)
+**Athlete C** — Only tool gaps are high severity
+| # | Pattern | Severity | Score |
+|---|---------|----------|-------|
+| 1 | tool_gap_hit_skill_transfer (delta=24) | high | 3.0 |
+| 2 | vision_reaction_slow | medium | 2.0 |
+| 3 | tool_gap_run_physical (delta=17) | medium | 2.0 |
 
-Append to `src/test/engine-invariants.test.ts` after line 2422:
+**Primary limiter**: tool_gap_hit_skill_transfer (**TOOL GAP WINS**)
 
-**Test 77**: Every valid tool_gap metric maps to a drill. Enumerate all 10 expected metrics (`tool_gap_{hit,power,run,field,arm}_{skill_transfer,physical}`), verify `buildDrillRotations` returns non-empty for each.
+### Answer: Tool gap patterns WIN only when no traditional patterns have game_gap context or fatigue_dropoff at equal/higher severity. They LOSE to game-context patterns due to the 0.5 bonus. They TIE with non-bonused traditional patterns but lose ties due to array concatenation order.
 
-- Since `buildDrillRotations` is inside the edge function (not importable in client tests), these tests will validate the metric naming contract: construct the expected metric names using the same logic as `analyzeToolPerformanceGaps` and assert they match the known set of handled cases.
+---
 
-**Test 78**: `physical` case returns different drill names than `skill_transfer` for the same tool.
+## 2. PRESCRIPTION CHANGE TEST
 
-**Test 79**: No pattern with severity ≥ medium results in empty metric mapping (all generated metrics are in the valid set).
+**Athlete A (tool gap disabled vs enabled):**
 
-## Phase 4 — Re-verification
+WITHOUT tool gap:
+- Primary limiter: inside_weakness
+- Weakness clusters: [inside_weakness, chase_rate, whiff_rate]
+- Prescriptions: Inside pitch recognition drills, plate discipline drills
 
-After deploying the fix, trace through the edge function to confirm:
-- `tool_gap_hit_skill_transfer` → hits case at line 853 → "Live BP Situational Hitting"
-- `tool_gap_field_physical` → hits case at line 918 → "Lateral Shuffle Circuit"
-- Both appear in weakness_clusters and prescriptive_actions
+WITH tool gap:
+- Primary limiter: inside_weakness (unchanged)
+- Weakness clusters: [inside_weakness, chase_rate, **tool_gap_hit_skill_transfer**]
+- Prescriptions: Inside pitch recognition, plate discipline, **+ Live BP Situational Hitting (skill transfer drill)**
 
-## Files
+**What changed**: The 3rd weakness cluster and its associated drill changed. The primary limiter and top prescription did NOT change.
 
-| File | Change |
-|------|--------|
-| `supabase/functions/hie-analyze/index.ts` | Fix line 1242 (`physical`), line 1207 (type), line 934 (UNHANDLED_METRIC log) |
-| `src/test/engine-invariants.test.ts` | Append Tests 77–79 (metric naming contract validation) |
+---
+
+## 3. DOMINANCE THRESHOLD
+
+For tool_gap to become **#1 primary_limiter**:
+- Must be `high` severity (gap ≥ 20)
+- AND no other pattern can have game_gap context at high severity (score 4.5 > 3.0)
+- AND no fatigue_dropoff at high severity (score 3.9 > 3.0)
+- If only non-bonused traditional patterns exist at high severity, tool_gap still loses ties (array order)
+
+**Minimum realistic scenario**: Athlete has tool grades but limited session data (few micro patterns detected). This is actually common for athletes who just completed a 6-week test but haven't logged many game sessions.
+
+For **top 3 weakness_clusters**: gap ≥ 15 (medium) is sufficient if fewer than 3 traditional patterns rank higher.
+
+---
+
+## 4. CONFLICT TEST
+
+**Scenario**: Micro-data says "mechanical issue" (e.g., `whiff_rate_elevated`, high severity, score=3.0). Tool gap says "skill transfer issue" (e.g., `tool_gap_hit_skill_transfer`, high severity, score=3.0).
+
+**Who wins**: Traditional pattern wins (appears earlier in concatenation at line 1444-1447: `...hittingPatterns` comes before `...toolGapPatterns`).
+
+**Why**: Stable sort + array order. Tool gap patterns are always appended last. At equal scores, they always lose.
+
+**This is a structural bias, not a deliberate design decision.**
+
+---
+
+## 5. OVERFIRING CHECK
+
+Across 20 athletes, tool_gap fires ONLY when:
+1. Athlete has `vault_performance_tests` with non-null `tool_grades` (requires completing a 6-week test AND saving since the migration)
+2. Athlete has MPI scores (requires sufficient session history)
+3. Delta ≥ 15 between mapped values
+
+**Expected firing rate**: Very low currently because:
+- The `tool_grades` column was just added — zero existing rows have it populated
+- Only athletes who save a NEW 6-week test going forward will have it
+
+**Realistic estimate**: <5% of athletes currently generate any tool_gap pattern (effectively 0% until tests are re-saved). Even at steady state, likely 30-50% would have gaps ≥15 given the different scales.
+
+---
+
+## 6. FINAL VERDICT
+
+**SECONDARY** — borderline IGNORED.
+
+Reasons:
+1. **Data availability**: Zero athletes currently have `tool_grades` populated (column just added, no backfill)
+2. **Structural disadvantage**: Tool gap patterns get no sorting bonus, lose all ties to traditional patterns
+3. **Can never beat game-context patterns**: A high tool_gap (3.0) always loses to a high game_gap pattern (4.5)
+4. **Prescription impact is real but marginal**: Changes 3rd weakness cluster at best, never changes primary limiter when traditional patterns exist
+
+### What Would Make It PRIMARY
+
+Two fixes needed:
+
+**Fix A — Backfill existing data**: Run a migration or batch job to compute and store `tool_grades` for all existing `vault_performance_tests` rows. Without this, the system has zero input data.
+
+**Fix B — Sorting equity**: Tool gap patterns need a sorting bonus comparable to game_gap (e.g., +0.4 for high-severity tool gaps). Currently they're the only "cross-system intelligence" pattern with zero bonus, despite being architecturally unique signal.
+
+### Recommendation
+
+The system is correctly built but **structurally muted**. The pipeline works end-to-end, but two fixable issues (no historical data + no sorting weight) prevent it from ever meaningfully influencing decisions for existing athletes.
 
