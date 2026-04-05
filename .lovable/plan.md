@@ -1,56 +1,80 @@
 
 
-# Fix System to Pass Invariants — Not Tests
+# Layer 17 — Adversarial Robustness + System Invariance Lock (Tests 50–55)
 
-## Problem Summary
-5 corrections needed: realistic correlated profiles for Test 46, band-based assertions for Test 47, new monotonic progression test, MLB anchor stability proof, and contradiction root-cause logging.
+Append one new `describe` block with 6 tests to `src/test/engine-invariants.test.ts`.
 
-## Changes (single file: `src/test/engine-invariants.test.ts`)
+## Test 50: Frankenstein Profiles (Extreme Imbalance)
 
-### 1. Test 46 — Correlated Profile Generator (lines 1309–1346)
-Replace the random generator with a correlated profile builder:
-- Base athleticism score (0–1) drives all metrics
-- Speed ↔ agility: fast 60yd correlates with fast pro_agility (r ≈ 0.85)
-- Exit velo ↔ bat speed: high EV correlates with high bat speed (r ≈ 0.90)
-- Arm strength ↔ throw velo: high position throw correlates with high pitch velo (r ≈ 0.80)
-- Add ±10% noise per metric for realism
-- Restore original spec: `expect(flags).toBeLessThanOrEqual(2)`
-- Add root-cause logging: when a flag fires, capture the full profile + tool breakdown in a diagnostics array, log which tool grades caused the contradiction
+Three hardcoded one-dimensional profiles graded as SS:
 
-### 2. Test 47 — Replace Hardcoded with Bands (lines 1348–1388)
-- Elite SS Overall: `±2` (58–62 instead of exact 60)
-- Elite SS Hit/Arm: `±5` (64–74 instead of exact 69)
-- Average 14u Overall: `±2` (36–40)
-- Below-avg Overall: `±2` (23–27)
-- Below-avg Run: `±5` (30–40)
-- Run advantage over others: `≥ 5` (relaxed from 8 to account for band tolerance)
+| Profile | Dominant Tool | Key Inputs |
+|---------|--------------|------------|
+| Track Freak | Run | 60yd: 6.1, 10yd: 1.35, agility: 3.7, EV: 65, bat: 50, throw: 65 |
+| Raw Power | Hit/Power | EV: 110, bat: 90, 60yd: 7.6, agility: 5.0, throw: 65 |
+| Arm-Only Pitcher | Arm | pitch: 97, throw: 95, 60yd: 7.8, EV: 65, bat: 50 |
 
-### 3. Test 49 — Monotonic Progression (new, append after Test 48)
-- Define a single athlete with 3 cycles where every raw metric improves monotonically
-- For higher-is-better: cycle1 < cycle2 < cycle3
-- For lower-is-better (times): cycle1 > cycle2 > cycle3
-- Compute grades for each cycle
-- Assert: grade(cycle3) ≥ grade(cycle2) ≥ grade(cycle1) for every metric
-- Zero tolerance — any regression is a system failure
+Assertions per profile:
+- Dominant tool grade ≥ 70
+- Non-dominant tools ≤ 40
+- Overall ≤ 60 (one tool cannot inflate overall)
 
-### 4. Test 43 Enhancement — MLB Anchor Stability (modify existing test)
-- After the current assertions, add a 100-iteration loop running the exact same MLB average inputs
-- Assert every iteration produces identical grades (proving determinism + no drift)
-- This is a compile-time proof since the functions are pure, but formalizes the invariant
+## Test 51: Tool Monotonicity Across 3 Cycles
 
-### 5. Contradiction Root-Cause Logging (within Test 46)
-- When a flag fires, push diagnostic object: `{ profileIndex, results, toolGrades, overall, below40Tools, above60Tools }`
-- After the loop, if any flags exist, log the full diagnostics array via `console.warn`
-- The test still fails on `> 2` flags, but now provides actionable debugging output
+Define 3 full result sets (weak → medium → strong) where ALL metrics improve monotonically. Compute `computeToolGrades` for each cycle.
 
-## Technical Notes
-- No engine files are modified — this fixes the system's test harness to properly validate the system
-- The correlated profile generator is the key fix: random uncorrelated profiles are unrealistic and don't represent real athletes
-- Band-based assertions in Test 47 prevent brittleness while maintaining tight tolerances
+Assertions:
+- For each of the 5 tools: `tool_cycle3 ≥ tool_cycle2 ≥ tool_cycle1`
+- `overall_cycle3 ≥ overall_cycle2 ≥ overall_cycle1`
+- This closes the gap where Test 49 only checked individual metric grades, not tool-level aggregates.
+
+## Test 52: Missing Data Chaos
+
+Generate 50 profiles with only 3–6 random metrics each. For each:
+- Assert: no crash, no NaN in any tool grade or overall
+- Assert: tools with zero contributing metrics return `null` (not 0)
+- Assert: overall is non-null if ≥1 tool has data
+- Assert: all non-null grades ∈ [20, 80]
+
+## Test 53: Weighting Stability (No Single Metric Hijack)
+
+Fix a baseline hitting profile. Then spike ONE metric (e.g., `tee_exit_velocity` from 85 → 110) while keeping all others constant.
+
+Assertions:
+- Hit tool increase ≤ 12 points from the spike
+- Overall increase ≤ 5 points
+- Proves no single metric can hijack a tool or overall grade
+
+## Test 54: Cross-Tool Independence
+
+Fix a full profile. Then improve ONLY speed metrics (60yd, 10yd, pro_agility) significantly.
+
+Assertions:
+- Run tool increases
+- Hit, Power, Arm tools do NOT decrease (zero coupling)
+- Field tool may increase slightly (shares lateral_shuffle/pro_agility) — that's valid
+- Overall increases or stays same
+
+## Test 55: Out-of-Distribution Guardrails
+
+Feed impossible/invalid inputs:
+- `sixty_yard_dash: 4.0` (impossible speed)
+- `tee_exit_velocity: 140` (impossible power)
+- `bat_speed: -10` (negative/invalid)
+- `vertical_jump: 0`
+- `pitching_velocity: 999`
+
+Assertions:
+- Zero crashes
+- All returned grades ∈ [20, 80] (clamped by engine)
+- `generateReport` completes without error
+- No NaN in any output field
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/test/engine-invariants.test.ts` | Rewrite Tests 46, 47; enhance Test 43; append Test 49 |
+| `src/test/engine-invariants.test.ts` | Append Layer 17 (Tests 50–55) after line 1542 |
+
+Total after this: 55 invariant tests across 17 layers.
 
