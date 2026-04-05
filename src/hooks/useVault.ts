@@ -1015,11 +1015,30 @@ export function useVault() {
       ...(handedness?.batting ? { _batting_side: handedness.batting } : {}),
     };
     
+    // Compute tool grades for gap detection
+    let toolGradesPayload: Record<string, any> | null = null;
+    try {
+      const { data: mpiSettings } = await supabase
+        .from('athlete_mpi_settings')
+        .select('primary_position, date_of_birth')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const position = mpiSettings?.primary_position || 'UT';
+      const dob = mpiSettings?.date_of_birth;
+      const age = dob ? Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 86400000)) : null;
+      const tg = computeToolGrades(results, position, 'baseball', age);
+      toolGradesPayload = { hit: tg.hit, power: tg.power, run: tg.run, field: tg.field, arm: tg.arm, overall: tg.overall };
+    } catch (e) {
+      console.warn('Tool grade computation failed, saving without:', e);
+    }
+
     const { error } = await supabase.from('vault_performance_tests').insert({
       user_id: user.id, test_type: testType, sport: 'baseball', module: testType, 
       results: enhancedResults, previous_results: lastTest?.results || null,
       next_entry_date: nextEntryDate.toISOString().split('T')[0],
       schema_version: 2,
+      tool_grades: toolGradesPayload,
     } as any);
     if (!error) await fetchPerformanceTests();
     return { success: !error };
