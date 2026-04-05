@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// ─── Types ───────────────────────────────────────────────────────────
+
 export interface PromoScene {
   id: string;
   title: string;
@@ -52,6 +54,8 @@ export interface RenderJob {
   output_url: string | null;
   created_at: string;
 }
+
+// ─── Constants ───────────────────────────────────────────────────────
 
 const AUDIENCE_GOAL_MAP: Record<string, Record<string, string[]>> = {
   player: {
@@ -109,6 +113,8 @@ export const FORMAT_CONFIGS: Record<string, { label: string; aspect: string; wid
   hero: { label: 'Website Hero', aspect: '16:9', width: 1920, height: 1080 },
 };
 
+// ─── Queries ─────────────────────────────────────────────────────────
+
 export function usePromoScenes() {
   return useQuery({
     queryKey: ['promo-scenes'],
@@ -148,8 +154,15 @@ export function useRenderQueue() {
       if (error) throw error;
       return (data || []) as unknown as RenderJob[];
     },
+    refetchInterval: (query) => {
+      const jobs = query.state.data as RenderJob[] | undefined;
+      const hasActive = jobs?.some(j => j.status === 'queued' || j.status === 'processing');
+      return hasActive ? 5000 : false;
+    },
   });
 }
+
+// ─── Mutations ───────────────────────────────────────────────────────
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
@@ -193,23 +206,35 @@ export function useQueueRender() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ projectId, format }: { projectId: string; format: string }) => {
+      // Insert queue row
       const { data, error } = await supabase
         .from('promo_render_queue')
         .insert({ project_id: projectId, format, status: 'queued' } as any)
         .select()
         .single();
       if (error) throw error;
+
       // Update project status
       await supabase
         .from('promo_projects')
         .update({ status: 'rendering' } as any)
         .eq('id', projectId);
-      return data;
+
+      // Invoke edge function for validation + payload assembly
+      const { data: renderData, error: fnErr } = await supabase.functions.invoke('render-promo', {
+        body: { queue_id: data.id },
+      });
+
+      if (fnErr) {
+        toast({ title: 'Validation Error', description: fnErr.message, variant: 'destructive' });
+      }
+
+      return { queueRow: data, renderPayload: renderData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promo-render-queue'] });
       queryClient.invalidateQueries({ queryKey: ['promo-projects'] });
-      toast({ title: 'Render Queued', description: 'Video render job has been queued' });
+      toast({ title: 'Render Queued', description: 'Video render job has been validated and queued' });
     },
     onError: (err: any) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
