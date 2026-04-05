@@ -40,13 +40,14 @@ function interpolate(raw: number, points: BenchmarkPoint[], higherIsBetter: bool
     }
   } else {
     // Lower raw = higher grade (times, etc.)
-    // sorted is ascending by raw but grades go from high to low
-    if (raw >= sorted[0].raw) return sorted[0].grade;
-    if (raw <= sorted[sorted.length - 1].raw) return sorted[sorted.length - 1].grade;
+    // sorted ascending by raw: [1.55(80), 1.65(65), ..., 2.2(20)]
+    // grades decrease as raw increases
+    if (raw <= sorted[0].raw) return sorted[0].grade;
+    if (raw >= sorted[sorted.length - 1].raw) return sorted[sorted.length - 1].grade;
 
     for (let i = 0; i < sorted.length - 1; i++) {
-      if (raw <= sorted[i].raw && raw >= sorted[i + 1].raw) {
-        const t = (sorted[i].raw - raw) / (sorted[i].raw - sorted[i + 1].raw);
+      if (raw >= sorted[i].raw && raw <= sorted[i + 1].raw) {
+        const t = (raw - sorted[i].raw) / (sorted[i + 1].raw - sorted[i].raw);
         return Math.round(sorted[i].grade + t * (sorted[i + 1].grade - sorted[i].grade));
       }
     }
