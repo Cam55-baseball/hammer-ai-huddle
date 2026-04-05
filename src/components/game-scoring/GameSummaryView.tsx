@@ -11,6 +11,7 @@ interface GameSummaryViewProps {
   plays: any[];
   teamName: string;
   opponentName: string;
+  sport?: 'baseball' | 'softball';
 }
 
 export function GameSummaryView({ plays, teamName, opponentName }: GameSummaryViewProps) {
