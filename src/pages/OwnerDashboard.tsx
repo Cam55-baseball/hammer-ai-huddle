@@ -916,6 +916,11 @@ const OwnerDashboard = () => {
             <VideoLibraryManager />
           )}
 
+          {/* Promo Engine Section */}
+          {activeSection === 'promo-engine' && (
+            <PromoEngineTab />
+          )}
+
           {/* Player Search Section */}
           {activeSection === 'player-search' && (
             <div className="space-y-4">
