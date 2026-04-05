@@ -14,7 +14,7 @@ interface GameSummaryViewProps {
   sport?: 'baseball' | 'softball';
 }
 
-export function GameSummaryView({ plays, teamName, opponentName }: GameSummaryViewProps) {
+export function GameSummaryView({ plays, teamName, opponentName, sport = 'baseball' }: GameSummaryViewProps) {
   const { batterStats, pitcherStats, teamScore, heatMapData, contactHeatMap } = useGameAnalytics(plays);
 
   const allSpray = plays
