@@ -1,119 +1,127 @@
 
 
-# Phase 3 — Production Connection
+# Phase 4 — Fully Automated Render Pipeline
 
-## Architecture
+## Critical Architecture Constraint
 
-The rendering pipeline cannot run inside an edge function (60s timeout, no Chromium). Instead, the edge function `render-promo` will act as a **queue processor** that:
+Fully automated rendering (button click → MP4) requires a compute environment with Chromium + ffmpeg that runs outside edge functions. Edge functions have a 60-second timeout and no browser runtime. There are two viable paths:
 
-1. Reads queued jobs from `promo_render_queue`
-2. Loads project + scene data from DB
-3. Executes the Remotion render script via a child process (within the sandbox for now)
-4. Uploads the MP4 to Supabase Storage
-5. Updates DB with public URL
+**Option A: Remotion Lambda (AWS)**
+- Requires AWS account with a deployed Remotion Lambda function
+- Edge function calls `renderMediaOnLambda()` → returns S3 URL
+- True serverless, parallel rendering, production-grade
+- Needs 3 secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `REMOTION_LAMBDA_FUNCTION_NAME`
 
-Since edge functions cannot run Remotion (no Chromium, no Node), the actual architecture is:
+**Option B: External Render API (Creatomate / Shotstack / custom server)**
+- Edge function sends scene data via HTTP POST
+- External service renders and returns URL via webhook
+- Simpler setup but requires a paid third-party service
 
-```text
-Admin UI                    Edge Function              Remotion (sandbox CLI)
-─────────                   ─────────────              ────────────────────
-Queue Render ──→ insert     render-promo ──→           Not callable from edge
-  into queue     row        (cannot render)            
+Both options require infrastructure you provision outside Lovable. Neither can be fully set up within the sandbox alone.
+
+## What I Will Build Now
+
+Everything needed so that once you provide AWS credentials (or an external render API key), the system is fully autonomous. Zero manual steps after credential setup.
+
+### 1. Render Orchestration Edge Function (`render-promo` rewrite)
+
+Current: validates payload, marks as processing, returns. Nothing renders.
+
+New behavior:
+- Validates project (scene_key mapping, sim_data, non-empty sequence)
+- Marks job as `processing`
+- Calls Remotion Lambda via `@remotion/lambda` client SDK to trigger render
+- Stores Lambda `renderId` in `render_metadata`
+- Returns immediately (Lambda runs async)
+
+Fallback: If Lambda is not configured, falls back to storing the assembled payload in `render_metadata` and marking as `awaiting_render` (for manual/external trigger).
+
+### 2. Render Status Checker Edge Function (`check-render-status`)
+
+New edge function that:
+- Accepts `{ queue_id }` or polls all `processing` jobs
+- Calls `getRenderProgress()` from Remotion Lambda SDK
+- On completion: downloads output from S3, uploads to `promo-videos` storage bucket, updates `output_url`
+- On failure: marks job as `failed` with error message
+- Designed to be called via cron (every 30s) or from client polling
+
+### 3. Retry + Timeout Logic
+
+Database changes:
+- Add `retry_count` (int, default 0) and `max_retries` (int, default 2) to `promo_render_queue`
+- Add `render_id` (text, nullable) for Lambda render tracking
+
+Edge function logic:
+- If `status = 'processing'` and `started_at` > 5 minutes ago → mark `failed` (timeout)
+- If `status = 'failed'` and `retry_count < max_retries` → reset to `queued`, increment `retry_count`
+- If `retry_count >= max_retries` → mark `permanently_failed`
+
+### 4. Automated Queue Trigger
+
+Option: Database webhook (pg_net) on INSERT to `promo_render_queue` that calls `render-promo` edge function automatically. This eliminates the client needing to invoke the edge function after insert.
+
+```sql
+-- Trigger render-promo on queue insert via pg_net
+CREATE OR REPLACE FUNCTION public.trigger_render_on_queue_insert()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  PERFORM net.http_post(
+    url := current_setting('app.supabase_url') || '/functions/v1/render-promo',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || current_setting('app.supabase_anon_key')
+    ),
+    body := jsonb_build_object('queue_id', NEW.id)
+  );
+  RETURN NEW;
+END;
+$$;
 ```
 
-**Revised approach**: The edge function `render-promo` handles validation, status updates, and scene data assembly. The actual render is triggered client-side via `supabase.functions.invoke()` which returns the assembled scene data, and the render itself happens via the existing CLI script. For true automation, we build the edge function to:
+This means: client inserts a queue row → DB trigger fires → edge function validates + dispatches to Lambda → done. True automation.
 
-1. Validate the project (scene_key mapping, sim_data presence, non-empty sequence)
-2. Assemble the full `INPUT_JSON` payload (resolving scene_key → sim_data from DB)
-3. Return the payload for CLI rendering OR mark as ready
+### 5. Client-Side Changes
 
-**However**, given sandbox constraints, the most practical production path is:
+`useQueueRender` simplified:
+- Insert queue row only (trigger handles the rest)
+- Remove manual `supabase.functions.invoke('render-promo')` call
 
-- Edge function `render-promo`: validates, assembles data, stores assembled payload in render_metadata
-- Admin UI polls queue status via React Query refetch
-- For **this phase**: render is triggered via the admin clicking "Render Now" which calls the edge function for validation + data assembly, then we execute the render in the sandbox and upload to storage
+`useRenderQueue` already has 5s polling — kept as-is for status updates.
 
-**Storage**: Create a `promo-videos` bucket (public) for rendered MP4s.
+ExportManager: no changes needed (already shows video preview + status).
 
-## Implementation
+### 6. Scheduled Stale Job Cleanup
 
-### 1. Storage Bucket
-- Create `promo-videos` public bucket via migration
-
-### 2. Edge Function: `render-promo`
-Validates and assembles render payload:
-- Accepts `{ queue_id }` 
-- Loads queue row → project → scenes
-- Validates: no empty sequence, all scene_keys have mapped components, all sim_data present
-- Assembles full `sceneSequence` array with `durationInFrames` computed from `duration_variant`
-- Updates queue status to `processing`
-- Returns assembled payload
-- On validation failure: sets queue to `failed` with `error_message`
-
-### 3. Four New Remotion Scene Components
-
-**MPIEngineScene** — consumes `{ metrics: {name, value, grade}[], overallScore }` 
-- Radial gauges animating per metric
-- Overall score counter
-- Grade badges spring in
-
-**TexVisionDrillScene** — consumes `{ targetSequence: string[], reactionTimes: number[], accuracy }` 
-- Simulated drill targets appearing/disappearing
-- Reaction time counter
-- Accuracy ring filling
-
-**VaultProgressScene** — consumes `{ beforeLabel, afterLabel, progressPercent, timeframe }` 
-- Side-by-side comparison frames sliding in
-- Progress bar filling
-- Timeframe label
-
-**CTACloserScene** — consumes `{ headline, subtext, url }` 
-- Brand logo/text slam in
-- URL/CTA text fades in
-- Pulsing accent glow
-
-### 4. MainVideo.tsx Update
-- Add all 4 new scene_keys to `SCENE_MAP`
-- Add validation: throw error if unknown `sceneKey` encountered
-
-### 5. Render Script Update
-- After render completes, upload MP4 to Supabase Storage `promo-videos` bucket
-- Update `promo_render_queue` row: status → `complete`, `output_url` → public URL
-- Update `promo_projects` row: status → `complete`, `output_url` → public URL
-- On failure: update queue row with `failed` + error_message
-
-### 6. usePromoEngine Hook Updates
-- `useQueueRender`: after inserting queue row, invoke `render-promo` edge function for validation
-- Add `useRenderQueue` polling: `refetchInterval: 5000` when any job is `queued` or `processing`
-- Add `useTriggerRender` hook that calls the edge function
-
-### 7. ExportManager Updates
-- Add video preview (`<video>` element) when `output_url` exists
-- Add realtime polling for active renders
-- Show error messages for failed renders
-- Disable re-render while processing
-
-### 8. Validation in Render Script
-- Check every `sceneKey` exists in `SCENE_MAP` — abort with error if not
-- Check every entry has non-empty `simData` — abort if missing
-- Check `sceneSequence` is non-empty — abort if empty
+Cron job (every 2 minutes) that calls `check-render-status`:
+- Times out stuck `processing` jobs
+- Retries eligible `failed` jobs
+- Finalizes completed Lambda renders
 
 ## Files
 
 | File | Change |
 |------|--------|
-| DB migration | Create `promo-videos` storage bucket |
-| `supabase/functions/render-promo/index.ts` | New: validate + assemble render payload |
-| `remotion/src/scenes/MPIEngineScene.tsx` | New scene component |
-| `remotion/src/scenes/TexVisionDrillScene.tsx` | New scene component |
-| `remotion/src/scenes/VaultProgressScene.tsx` | New scene component |
-| `remotion/src/scenes/CTACloserScene.tsx` | New scene component |
-| `remotion/src/MainVideo.tsx` | Add 4 scene_keys to SCENE_MAP + validation |
-| `remotion/scripts/render-remotion.mjs` | Add storage upload + DB status updates |
-| `src/hooks/usePromoEngine.ts` | Add polling, trigger hook, validation invoke |
-| `src/components/promo-engine/ExportManager.tsx` | Video preview, polling, error display |
+| DB migration | Add `retry_count`, `max_retries`, `render_id` to `promo_render_queue`. Add `trigger_render_on_queue_insert` trigger via pg_net. |
+| `supabase/functions/render-promo/index.ts` | Rewrite: validate → call Remotion Lambda → store render_id |
+| `supabase/functions/check-render-status/index.ts` | New: poll Lambda progress, finalize completed renders, timeout stuck jobs, retry failed |
+| `src/hooks/usePromoEngine.ts` | Simplify `useQueueRender` (insert only, trigger handles dispatch) |
 
-## Constraints
-- Actual automated rendering from button click requires either a server process or external service (Remotion Lambda). For this phase, the edge function validates and assembles the payload; rendering is triggered as a CLI step that can be executed in the sandbox. The admin UI will show the correct status flow.
-- True one-click-to-video automation requires infrastructure beyond edge functions (no Chromium available). This phase builds all the pieces so that wiring to an external renderer is a single integration point change.
+## What Requires Your Action
+
+Before this system is fully autonomous, you need to:
+
+1. **Set up Remotion Lambda on AWS** — deploy the Lambda function and S3 bucket using Remotion's CLI (`npx remotion lambda sites create` + `npx remotion lambda functions deploy`)
+2. **Provide 3 secrets**: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `REMOTION_LAMBDA_FUNCTION_NAME` (plus optionally `REMOTION_LAMBDA_REGION` and `REMOTION_S3_BUCKET`)
+3. **Deploy the Remotion bundle to S3** — the Lambda function renders from a deployed site URL
+
+Once those are in place, the pipeline is fully autonomous: click → render → video URL.
+
+## What Ships Immediately (No AWS Required)
+
+Even before Lambda credentials are added:
+- DB trigger auto-invokes `render-promo` on queue insert (no client-side invoke needed)
+- Full validation runs automatically
+- Retry + timeout logic is active
+- Jobs that can't render are marked `failed` with clear message: "Render service not configured"
+- The moment AWS credentials are added, rendering activates with zero code changes
 
