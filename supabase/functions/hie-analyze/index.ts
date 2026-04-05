@@ -1428,10 +1428,20 @@ Deno.serve(async (req) => {
     const gamePracticePatterns = detectGamePracticeGap(allMicroReps);
     const fatiguePatterns = detectFatigueDropoff(sessions ?? []);
 
+    // ── TOOL-PERFORMANCE GAP PATTERNS ──
+    const latestMPIForGap = mpiScores?.[0];
+    const toolGapPatterns = analyzeToolPerformanceGaps(latestToolGrades, {
+      bqi: latestMPIForGap?.composite_bqi ?? undefined,
+      fqi: latestMPIForGap?.composite_fqi ?? undefined,
+      pei: latestMPIForGap?.composite_pei ?? undefined,
+      decision: latestMPIForGap?.composite_decision ?? undefined,
+      competitive: latestMPIForGap?.composite_competitive ?? undefined,
+    });
+
     const allPatterns = [
       ...hittingPatterns, ...fieldingPatterns, ...pitchingPatterns,
       ...speedPatterns, ...timingPatterns, ...visionPatterns, ...baserunningPatterns,
-      ...gamePracticePatterns, ...fatiguePatterns,
+      ...gamePracticePatterns, ...fatiguePatterns, ...toolGapPatterns,
     ].sort((a, b) => {
       const sevWeight: Record<string, number> = { high: 3, medium: 2, low: 1 };
       const aGameBonus = a.data_points?.context === 'game_gap' ? 0.5 : 0;
