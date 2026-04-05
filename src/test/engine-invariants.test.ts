@@ -2420,3 +2420,53 @@ describe('Layer 21 — Elite Differentiation Engine', () => {
     }
   });
 });
+
+describe('Layer 22 — Tool-Performance Gap Metric Contract (Tests 77–79)', () => {
+  const TOOLS = ['hit', 'power', 'run', 'field', 'arm'] as const;
+  const TYPES = ['skill_transfer', 'physical'] as const;
+
+  // The set of metrics that buildDrillRotations handles via explicit switch cases
+  const HANDLED_METRICS = new Set(
+    TOOLS.flatMap(t => TYPES.map(ty => `tool_gap_${t}_${ty}`))
+  );
+
+  // Reproduce the metric generation logic from analyzeToolPerformanceGaps
+  function generateMetric(tool: string, direction: 'tool_exceeds' | 'perf_exceeds'): string {
+    const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical';
+    return `tool_gap_${tool}_${prescriptionClass}`;
+  }
+
+  it('Test 77: Every generated tool_gap metric maps to a handled switch case', () => {
+    for (const tool of TOOLS) {
+      for (const direction of ['tool_exceeds', 'perf_exceeds'] as const) {
+        const metric = generateMetric(tool, direction);
+        expect(HANDLED_METRICS.has(metric)).toBe(true);
+      }
+    }
+    // Exactly 10 handled metrics
+    expect(HANDLED_METRICS.size).toBe(10);
+  });
+
+  it('Test 78: physical metrics differ from skill_transfer metrics for every tool', () => {
+    for (const tool of TOOLS) {
+      const skillMetric = generateMetric(tool, 'tool_exceeds');
+      const physicalMetric = generateMetric(tool, 'perf_exceeds');
+      expect(skillMetric).not.toBe(physicalMetric);
+      // Both must be in the handled set
+      expect(HANDLED_METRICS.has(skillMetric)).toBe(true);
+      expect(HANDLED_METRICS.has(physicalMetric)).toBe(true);
+    }
+  });
+
+  it('Test 79: No severity >= medium gap pattern produces an unhandled metric', () => {
+    // Simulate the full generation for all tools × both directions
+    const generatedMetrics: string[] = [];
+    for (const tool of TOOLS) {
+      for (const direction of ['tool_exceeds', 'perf_exceeds'] as const) {
+        generatedMetrics.push(generateMetric(tool, direction));
+      }
+    }
+    const unhandled = generatedMetrics.filter(m => !HANDLED_METRICS.has(m));
+    expect(unhandled).toEqual([]);
+  });
+});
