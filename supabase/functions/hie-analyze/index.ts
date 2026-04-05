@@ -1239,7 +1239,7 @@ function analyzeToolPerformanceGaps(
     if (absDelta < 15) continue; // No significant gap
 
     const direction: 'tool_exceeds' | 'perf_exceeds' = delta > 0 ? 'tool_exceeds' : 'perf_exceeds';
-    const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical_development';
+    const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical';
     const severity: 'high' | 'medium' = absDelta >= 20 ? 'high' : 'medium';
 
     const issue = direction === 'tool_exceeds'
