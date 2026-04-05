@@ -2328,3 +2328,95 @@ describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
     }
   });
 });
+
+// =====================================================================
+// LAYER 21 — Elite Differentiation Engine (Tests 71–76)
+// =====================================================================
+describe('Layer 21 — Elite Differentiation Engine', () => {
+
+  it('Test 71: No Regression — eliteOverall >= overall for diverse profiles', () => {
+    const profiles = [
+      { overall: 45, tools: { hit: 45, power: 45, run: 45, field: 45, arm: 45 } },
+      { overall: 50, tools: { hit: 55, power: 60, run: 40, field: 45, arm: 50 } },
+      { overall: 55, tools: { hit: 60, power: 65, run: 50, field: 45, arm: 55 } },
+      { overall: 60, tools: { hit: 70, power: 55, run: 60, field: 55, arm: 60 } },
+      { overall: 65, tools: { hit: 72, power: 68, run: 60, field: 55, arm: 65 } },
+      { overall: 70, tools: { hit: 75, power: 70, run: 65, field: 68, arm: 72 } },
+      { overall: 40, tools: { hit: 40, power: 40, run: 40, field: 40, arm: 40 } },
+      { overall: 42, tools: { hit: 50, power: 35, run: 42, field: 38, arm: 45 } },
+      { overall: 55, tools: { hit: 78, power: 40, run: 50, field: 45, arm: 55 } },
+      { overall: null, tools: { hit: 60, power: 60, run: 60, field: 60, arm: 60 } },
+    ];
+
+    for (const p of profiles) {
+      const elite = computeEliteScore(p);
+      if (p.overall === null) {
+        expect(elite).toBeNull();
+      } else {
+        expect(elite).not.toBeNull();
+        expect(elite!).toBeGreaterThanOrEqual(p.overall);
+      }
+    }
+  });
+
+  it('Test 72: Low Players Stay Low — overall < 40 returns overall unchanged', () => {
+    const lowProfiles = [
+      { overall: 20, tools: { hit: 20, power: 20, run: 20, field: 20, arm: 20 } },
+      { overall: 25, tools: { hit: 30, power: 25, run: 20, field: 22, arm: 28 } },
+      { overall: 30, tools: { hit: 35, power: 30, run: 25, field: 28, arm: 32 } },
+      { overall: 35, tools: { hit: 40, power: 35, run: 30, field: 32, arm: 38 } },
+      { overall: 39, tools: { hit: 45, power: 38, run: 35, field: 36, arm: 41 } },
+    ];
+
+    for (const p of lowProfiles) {
+      const elite = computeEliteScore(p);
+      expect(elite).toBe(p.overall);
+    }
+  });
+
+  it('Test 73: Star Tool Boost — one tool ≥75 increases eliteOverall', () => {
+    const withStar = { overall: 58, tools: { hit: 76, power: 55, run: 50, field: 55, arm: 54 } };
+    const withoutStar = { overall: 58, tools: { hit: 65, power: 55, run: 55, field: 55, arm: 60 } };
+
+    const eliteStar = computeEliteScore(withStar)!;
+    const eliteNoStar = computeEliteScore(withoutStar)!;
+
+    expect(eliteStar).toBeGreaterThan(eliteNoStar);
+  });
+
+  it('Test 74: Balanced Athlete Boost — 3+ tools ≥65 gets synergy', () => {
+    const balanced = { overall: 60, tools: { hit: 66, power: 67, run: 65, field: 50, arm: 52 } };
+    const unbalanced = { overall: 60, tools: { hit: 72, power: 48, run: 60, field: 55, arm: 65 } };
+
+    const eliteBalanced = computeEliteScore(balanced)!;
+    const eliteUnbalanced = computeEliteScore(unbalanced)!;
+
+    // Balanced has 3 tools ≥65 → synergyBoost = 2
+    expect(eliteBalanced).toBeGreaterThan(60);
+  });
+
+  it('Test 75: Outlier Detection — high variance profile boosted vs flat', () => {
+    const spikyProfile = { overall: 53, tools: { hit: 78, power: 45, run: 45, field: 45, arm: 52 } };
+    const flatProfile = { overall: 53, tools: { hit: 55, power: 53, run: 52, field: 53, arm: 52 } };
+
+    const eliteSpiky = computeEliteScore(spikyProfile)!;
+    const eliteFlat = computeEliteScore(flatProfile)!;
+
+    expect(eliteSpiky).toBeGreaterThan(eliteFlat);
+  });
+
+  it('Test 76: Cap Integrity — eliteOverall never exceeds 80', () => {
+    const extremeProfiles = [
+      { overall: 75, tools: { hit: 80, power: 78, run: 76, field: 75, arm: 78 } },
+      { overall: 78, tools: { hit: 80, power: 80, run: 78, field: 78, arm: 80 } },
+      { overall: 80, tools: { hit: 80, power: 80, run: 80, field: 80, arm: 80 } },
+      { overall: 72, tools: { hit: 80, power: 80, run: 75, field: 70, arm: 78 } },
+      { overall: 70, tools: { hit: 80, power: 78, run: 65, field: 68, arm: 72 } },
+    ];
+
+    for (const p of extremeProfiles) {
+      const elite = computeEliteScore(p)!;
+      expect(elite).toBeLessThanOrEqual(80);
+    }
+  });
+});
