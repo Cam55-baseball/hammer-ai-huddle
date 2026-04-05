@@ -1,148 +1,74 @@
 
 
-# Zero-Tolerance Impact Verification — Tool Gap System
+# Backfill Tool Grades & Live Validation
 
-## 1. COMPETITION TEST
+## Current State (from production DB)
 
-### Sorting Formula (lines 1448-1457)
+- **6 rows** in `vault_performance_tests`, **0 have tool_grades**
+- **3 unique users** with vault tests; only **1 user** (`95de827d-7418-460b-8b79-267bf79bdca4`) also has HIE snapshots
+- All athletes have `primary_position = NULL` and `date_of_birth = NULL` → `computeToolGrades` will use default `UT` profile
 
-```text
-score = severityWeight × (1 + gameBonus + fatigueBonus)
+## Phase 1 — Backfill Script
 
-severityWeight: high=3, medium=2, low=1
-gameBonus: +0.5 if data_points.context === 'game_gap'
-fatigueBonus: +0.3 if metric === 'fatigue_dropoff'
-tool_gap bonus: NONE (0)
-```
+Create and run a one-time Node.js script (`/tmp/backfill-tool-grades.ts`) that:
 
-### Effective Scores by Pattern Type
+1. Queries all `vault_performance_tests` rows where `tool_grades IS NULL`
+2. Joins `athlete_mpi_settings` for `primary_position`, `date_of_birth`, `sport`
+3. For each row, imports the same `computeToolGrades` logic (copy the pure function into the script since edge functions can't import from `src/`)
+4. Filters `results` to only numeric values (strips `_batting_side`, `_throwing_hand` prefixes)
+5. Computes tool grades and UPSERTs via `psql` INSERT/UPDATE
 
-| Pattern Type | Severity | Score |
-|-------------|----------|-------|
-| Traditional (game_gap context) | high | **4.5** |
-| Fatigue dropoff | high | **3.9** |
-| Traditional (no bonus) | high | **3.0** |
-| **Tool gap** | **high** | **3.0** |
-| Traditional (game_gap) | medium | **3.0** |
-| **Tool gap** | **medium** | **2.0** |
-| Traditional (no bonus) | medium | **2.0** |
+Since we only have **read + insert** access via psql (no UPDATE), we'll use the **Supabase insert tool** to run UPDATE statements for each row.
 
-### 3 Simulated Athletes
+Alternatively: Create a **small edge function** (`backfill-tool-grades`) that:
+- Reads all vault tests with NULL tool_grades
+- Recomputes using the same grading logic already available server-side
+- Updates each row
 
-**Athlete A** — Hitter with game-gap AND tool gap
-| # | Pattern | Severity | Score | Type |
-|---|---------|----------|-------|------|
-| 1 | inside_weakness (game_gap context) | high | 4.5 | traditional |
-| 2 | chase_rate_high | high | 3.0 | traditional |
-| 3 | tool_gap_hit_skill_transfer (delta=22) | high | 3.0 | **tool_gap** |
-| 4 | whiff_rate_elevated | medium | 2.0 | traditional |
-| 5 | tool_gap_power_physical (delta=16) | medium | 2.0 | tool_gap |
+This is cleaner because the grading logic (benchmarks, interpolation) lives client-side and would need to be duplicated. Instead, we'll use the **insert tool** to run 6 UPDATE statements directly, computing the grades via the script first.
 
-**Primary limiter**: inside_weakness (traditional WINS)
-**Tool gap rank**: #3 (in weakness_clusters: YES)
+**Approach**: Run a Node.js script that contains the `computeToolGrades` + `rawToGrade` logic (copied from source), processes the 6 rows of results data we already queried, then outputs the UPDATE SQL statements. Execute those via the insert tool.
 
-**Athlete B** — No game-context patterns, strong tool gap
-| # | Pattern | Severity | Score |
-|---|---------|----------|-------|
-| 1 | tool_gap_field_skill_transfer (delta=25) | high | 3.0 |
-| 2 | exchange_time_slow | high | 3.0 |
-| 3 | fatigue_dropoff | medium | 2.6 |
-| 4 | tool_gap_arm_physical (delta=18) | medium | 2.0 |
+### Output
+- Before: 6 total rows, 0 with tool_grades
+- After: 6 total rows, 6 with tool_grades (or fewer if some results don't map to any graded metrics)
 
-**Primary limiter**: TIE between tool_gap and exchange_time (sort is stable — whichever appears first in the concat wins). Tool gap patterns are appended LAST in line 1447, so traditional pattern wins ties.
-**Tool gap rank**: #2 (in weakness_clusters: YES)
+## Phase 2 — Live Validation
 
-**Athlete C** — Only tool gaps are high severity
-| # | Pattern | Severity | Score |
-|---|---------|----------|-------|
-| 1 | tool_gap_hit_skill_transfer (delta=24) | high | 3.0 |
-| 2 | vision_reaction_slow | medium | 2.0 |
-| 3 | tool_gap_run_physical (delta=17) | medium | 2.0 |
+After backfill, for the **1 athlete with both systems** (`95de827d-7418-460b-8b79-267bf79bdca4`):
 
-**Primary limiter**: tool_gap_hit_skill_transfer (**TOOL GAP WINS**)
+1. Query their tool_grades from DB
+2. Query their latest HIE snapshot (primary_limiter, weakness_clusters, prescriptive_actions)
+3. Invoke `hie-analyze` via curl to trigger a fresh analysis
+4. Query the NEW HIE snapshot and compare before vs after
+5. Show full trace: tool_grades → MPI composites → gap patterns → sorted patterns → primary_limiter → prescriptions
 
-### Answer: Tool gap patterns WIN only when no traditional patterns have game_gap context or fatigue_dropoff at equal/higher severity. They LOSE to game-context patterns due to the 0.5 bonus. They TIE with non-bonused traditional patterns but lose ties due to array concatenation order.
+For the other 2 users (no HIE snapshots), show their computed tool_grades only.
 
----
+## Phase 3 — Real Impact Numbers
 
-## 2. PRESCRIPTION CHANGE TEST
+After backfill + re-analysis:
+- Count athletes generating ≥1 tool_gap pattern
+- Count athletes with gaps ≥15
+- Count where tool_gap enters top 3 weakness_clusters
+- Count where tool_gap becomes primary_limiter
 
-**Athlete A (tool gap disabled vs enabled):**
+**Honest expectation**: With only 1 athlete having both vault tests AND session data, impact will be limited to that single athlete. The system is structurally sound but the user base is small.
 
-WITHOUT tool gap:
-- Primary limiter: inside_weakness
-- Weakness clusters: [inside_weakness, chase_rate, whiff_rate]
-- Prescriptions: Inside pitch recognition drills, plate discipline drills
+## Files
 
-WITH tool gap:
-- Primary limiter: inside_weakness (unchanged)
-- Weakness clusters: [inside_weakness, chase_rate, **tool_gap_hit_skill_transfer**]
-- Prescriptions: Inside pitch recognition, plate discipline, **+ Live BP Situational Hitting (skill transfer drill)**
+| File | Change |
+|------|--------|
+| `/tmp/backfill.js` | One-time script to compute tool grades for 6 rows |
+| DB (via insert tool) | 6 UPDATE statements to populate tool_grades |
+| No codebase changes | Backfill only, no engine modifications |
 
-**What changed**: The 3rd weakness cluster and its associated drill changed. The primary limiter and top prescription did NOT change.
+## Technical Detail
 
----
+The script will replicate:
+- `rawToGrade()` from `src/lib/gradeEngine.ts` (piecewise linear interpolation)
+- `computeToolGrades()` from `src/data/positionToolProfiles.ts` (tool mapping + weighted average)
+- Benchmark data from `src/data/gradeBenchmarks.ts`
 
-## 3. DOMINANCE THRESHOLD
-
-For tool_gap to become **#1 primary_limiter**:
-- Must be `high` severity (gap ≥ 20)
-- AND no other pattern can have game_gap context at high severity (score 4.5 > 3.0)
-- AND no fatigue_dropoff at high severity (score 3.9 > 3.0)
-- If only non-bonused traditional patterns exist at high severity, tool_gap still loses ties (array order)
-
-**Minimum realistic scenario**: Athlete has tool grades but limited session data (few micro patterns detected). This is actually common for athletes who just completed a 6-week test but haven't logged many game sessions.
-
-For **top 3 weakness_clusters**: gap ≥ 15 (medium) is sufficient if fewer than 3 traditional patterns rank higher.
-
----
-
-## 4. CONFLICT TEST
-
-**Scenario**: Micro-data says "mechanical issue" (e.g., `whiff_rate_elevated`, high severity, score=3.0). Tool gap says "skill transfer issue" (e.g., `tool_gap_hit_skill_transfer`, high severity, score=3.0).
-
-**Who wins**: Traditional pattern wins (appears earlier in concatenation at line 1444-1447: `...hittingPatterns` comes before `...toolGapPatterns`).
-
-**Why**: Stable sort + array order. Tool gap patterns are always appended last. At equal scores, they always lose.
-
-**This is a structural bias, not a deliberate design decision.**
-
----
-
-## 5. OVERFIRING CHECK
-
-Across 20 athletes, tool_gap fires ONLY when:
-1. Athlete has `vault_performance_tests` with non-null `tool_grades` (requires completing a 6-week test AND saving since the migration)
-2. Athlete has MPI scores (requires sufficient session history)
-3. Delta ≥ 15 between mapped values
-
-**Expected firing rate**: Very low currently because:
-- The `tool_grades` column was just added — zero existing rows have it populated
-- Only athletes who save a NEW 6-week test going forward will have it
-
-**Realistic estimate**: <5% of athletes currently generate any tool_gap pattern (effectively 0% until tests are re-saved). Even at steady state, likely 30-50% would have gaps ≥15 given the different scales.
-
----
-
-## 6. FINAL VERDICT
-
-**SECONDARY** — borderline IGNORED.
-
-Reasons:
-1. **Data availability**: Zero athletes currently have `tool_grades` populated (column just added, no backfill)
-2. **Structural disadvantage**: Tool gap patterns get no sorting bonus, lose all ties to traditional patterns
-3. **Can never beat game-context patterns**: A high tool_gap (3.0) always loses to a high game_gap pattern (4.5)
-4. **Prescription impact is real but marginal**: Changes 3rd weakness cluster at best, never changes primary limiter when traditional patterns exist
-
-### What Would Make It PRIMARY
-
-Two fixes needed:
-
-**Fix A — Backfill existing data**: Run a migration or batch job to compute and store `tool_grades` for all existing `vault_performance_tests` rows. Without this, the system has zero input data.
-
-**Fix B — Sorting equity**: Tool gap patterns need a sorting bonus comparable to game_gap (e.g., +0.4 for high-severity tool gaps). Currently they're the only "cross-system intelligence" pattern with zero bonus, despite being architecturally unique signal.
-
-### Recommendation
-
-The system is correctly built but **structurally muted**. The pipeline works end-to-end, but two fixable issues (no historical data + no sorting weight) prevent it from ever meaningfully influencing decisions for existing athletes.
+All 6 rows and their results are already known from the DB query above, so the computation can be done deterministically.
 
