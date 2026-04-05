@@ -1,120 +1,133 @@
 
 
-# FINAL SHIP CHECKLIST — VERIFICATION RESULTS
+# Cinematic Promo Engine — Implementation Plan
 
-## 1. Effectiveness Engine — Learning Integrity ✅ PASS
+## Architecture
 
-| Gate | Code Reference | Status |
-|------|---------------|--------|
-| Positive improvement → positive score | L1769-1772: direction-aware formula | ✅ |
-| Accuracy ↑ → positive | `currentWS.score - preVal` (not in HIGHER_IS_WORSE) | ✅ |
-| Reaction time ↓ → positive | `preVal - currentWS.score` (in HIGHER_IS_WORSE) | ✅ |
-| Regression → negative | Same formulas, symmetric | ✅ |
-| No sign inversions | HIGHER_IS_WORSE set + `tool_gap_` prefix check at L1769 | ✅ |
-| Pattern disappearance → `effectiveness = preVal` | L1774-1778: `else if (preVal != null) { effectivenessScore = preVal; }` | ✅ |
-| MPI fallback only when no weakness match | L1781: `if (effectivenessScore == null && ...)` | ✅ |
-
-Production proof: Reaction 656→598 = +58, Accuracy 36→55 = +19, Pattern removal = max improvement.
-
----
-
-## 2. Weakness Engine — True Signal Change ✅ PASS
-
-| Gate | Evidence | Status |
-|------|----------|--------|
-| Scores change only with data change | Stateless recomputation from session/drill data each run | ✅ |
-| TEX drills affect TEX patterns only | `analyzeTexVisionResults` reads `tex_vision_drill_results`, not composites (Test 88) | ✅ |
-| Composites alone don't move vision/reaction | Proven: micro-only insert → no pattern change | ✅ |
-| No phantom learning | DELETE→INSERT cycle at L1467-1473: full replace, deterministic | ✅ |
-
----
-
-## 3. Context Engine — Strict & Contained ✅ PASS
-
-| Gate | Code Reference | Status |
-|------|---------------|--------|
-| `_session_type` on 100% of reps | L1415: `allMicroReps.push({ ...rep, _session_type: sessionType })` | ✅ |
-| Null defaults to `personal_practice` | L1412: `s.session_type \|\| 'personal_practice'` | ✅ |
-| Context logic ONLY in `detectGamePracticeGap` | Search: `_session_type` appears in only 2 locations (L531-532, L1415) | ✅ |
-| Requires ≥5 game + ≥5 practice | L533: `if (gameReps.length < 5 \|\| practiceReps.length < 5) return []` | ✅ |
-| Zero output below threshold | Returns empty array, no partial influence | ✅ |
-| No other system references `_session_type` | Confirmed: 11 matches, all in `detectGamePracticeGap` or the attachment line | ✅ |
-
----
-
-## 4. Continuation Token — Deterministic Resume ✅ PASS
-
-| Gate | Code Reference | Status |
-|------|---------------|--------|
-| Resume index from latest token + matching sport + 24h | L233-248: query with `.eq('action', 'nightly_mpi_continuation').gte('created_at', oneDayAgo)`, sport check at L244 | ✅ |
-| Loop starts at `resumeFrom` | L258: `for (let batchStart = resumeFrom; ...)` | ✅ |
-| `nightly_mpi_batch_start` audit log | L251-256: logs `batch_start: resumeFrom` | ✅ |
-| `nightly_mpi_complete` includes `resumed_from` | L907: `resumed_from: resumeFrom` | ✅ |
-| API response includes `resumed_from` | L929: `{ success: true, resumed_from: resumeFrom, ... }` | ✅ |
-| Test harness verifies injection | `hie-verify-continuation` injects `resume_from: 2`, checks `batch_start === 2` | ✅ |
-
-Three surfaces (audit log + completion log + response) all emit `resumed_from`.
-
----
-
-## 5. Data Persistence — No Silent Loss ✅ PASS
-
-| Gate | Code Reference | Status |
-|------|---------------|--------|
-| Writes ALL patterns | L1462: `allPatterns.map(p => ...)` — no slice, no limit | ✅ |
-| DELETE→INSERT correct | L1467-1472: delete by `user_id`, then insert all rows | ✅ |
-| No truncation bugs | Full array mapping, no top-N filtering | ✅ |
-
----
-
-## 6. Test Coverage — Critical Invariants ✅ PASS
-
-| Test | Covers | Status |
-|------|--------|--------|
-| 85 (4 cases) | Direction normalization: accuracy↑=+19, reaction↓=+58, tool_gap↓=+38, accuracy↓=-19 | ✅ |
-| 86 (2 cases) | Pattern resolution: missing post → `effectiveness = preVal` | ✅ |
-| 87 | Session type propagation: all reps get `_session_type`, null→`personal_practice` | ✅ |
-| 88 | TEX isolation: analysis function takes drill results, not session composites | ✅ |
-
-92/92 tests passing.
-
----
-
-## 7. No Hidden Coupling ✅ PASS
-
-| Gate | Evidence | Status |
-|------|----------|--------|
-| Effectiveness uses only weakness_scores + prescription pre-values | L1764-1778: reads `weaknessScoreRows` and `pre_weakness_value` only | ✅ |
-| Context does NOT influence vision, reaction, tool gaps | `_session_type` referenced only in `detectGamePracticeGap` (search confirmed) | ✅ |
-| TEX reads only `tex_vision_drill_results` | Function signature and Test 88 confirm isolation | ✅ |
-
----
-
-## 🚨 RED FLAG CHECK
-
-| Flag | Status |
-|------|--------|
-| Effectiveness contradicts reality | ❌ Not present — direction-normalized |
-| Patterns change without new data | ❌ Not present — stateless recompute |
-| `_session_type` missing on any rep | ❌ Not present — always attached with fallback |
-| Resume index not observable | ❌ Not present — 3 surfaces emit it |
-| Implicit assumptions | ❌ Not present — all thresholds explicit in code |
-
----
-
-## 🟢 SHIP DECISION
+The system is a code-generated video pipeline using Remotion. Admin builds videos from a library of pre-defined scene templates, each simulating real app features with clean data. The admin UI lives inside the Owner Dashboard. Rendering infrastructure is stubbed for future external service (Remotion Lambda/Creatomate) — for now, scene preview and configuration are fully functional.
 
 ```text
-SYSTEM STATE: PRODUCTION-SAFE
-
-  Effectiveness Engine:  VERIFIED — direction-normalized, resolution-aware
-  Weakness Engine:       VERIFIED — deterministic, causally isolated
-  Context Engine:        VERIFIED — strict threshold, zero leakage
-  Continuation Token:    VERIFIED — observable on 3 surfaces
-  Data Persistence:      VERIFIED — full pattern write, no truncation
-  Test Coverage:         VERIFIED — 92/92 green
-  Coupling:              VERIFIED — no cross-contamination
-
-  Verified, deterministic, and observable.
+┌─────────────────────────────────────────────────┐
+│              Owner Dashboard                     │
+│  ┌───────────┐  ┌───────────┐  ┌──────────────┐ │
+│  │ Scene     │  │ Story     │  │ Export       │ │
+│  │ Library   │→ │ Builder   │→ │ Manager      │ │
+│  └───────────┘  └───────────┘  └──────────────┘ │
+│       ↓              ↓              ↓            │
+│  ┌──────────────────────────────────────────┐    │
+│  │        Scene Template Registry           │    │
+│  │  (Remotion components per feature)       │    │
+│  └──────────────────────────────────────────┘    │
+│       ↓                                          │
+│  ┌──────────────────────────────────────────┐    │
+│  │     Render Pipeline (future external)    │    │
+│  └──────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────┘
 ```
+
+## Database Schema
+
+**New tables (3):**
+
+1. **`promo_scenes`** — Scene template registry
+   - `id`, `title`, `feature_area` (vault, tex-vision, dashboard, etc.), `duration_variant` (3s/7s/15s), `description`, `scene_key` (maps to Remotion component), `thumbnail_url`, `sim_data` (jsonb — clean mock data for simulation), `status` (active/outdated/draft), `tags[]`, `created_at`, `updated_at`
+
+2. **`promo_projects`** — Assembled video projects
+   - `id`, `title`, `target_audience` (player/parent/coach/scout/program), `video_goal` (awareness/conversion/feature_highlight), `target_duration` (15/30/60), `scene_sequence` (jsonb array of scene refs with per-scene overrides), `format` (tiktok/reels/shorts/youtube/hero), `status` (draft/rendering/complete/failed), `output_url`, `render_metadata` (jsonb), `created_at`, `updated_at`
+
+3. **`promo_render_queue`** — Render job tracking (future external pipeline)
+   - `id`, `project_id` (FK), `format`, `status` (queued/processing/complete/failed), `started_at`, `completed_at`, `error_message`, `output_url`
+
+RLS: All three tables gated to owner role only.
+
+## Implementation Steps
+
+### Step 1: Database & Schema
+- Create 3 tables with owner-only RLS policies
+- Seed `promo_scenes` with scene definitions for key features (Dashboard, TEX Vision, Vault, MPI, Video Library, Game Scoring, Practice Hub, etc.)
+
+### Step 2: Scene Template System (Remotion)
+- Create `remotion/` directory with Remotion project setup
+- Build reusable scene components that simulate app UI:
+  - `DashboardScene` — MPI scores animating in, grade cards appearing
+  - `TexVisionScene` — Vision drill with accuracy tracking
+  - `VaultScene` — Progress photos side-by-side comparison
+  - `MPIScene` — Grade engine computing and displaying results
+  - `VideoLibraryScene` — Browsing and searching video content
+  - `GameScoringScene` — Live pitch-by-pitch scoring
+  - `PracticeHubScene` — Session logging with drill blocks
+  - `HookScene` — Problem statement with stats
+  - `CTAScene` — Call to action with branding
+- Each scene uses simulated data (from `sim_data` in DB) and Remotion animations
+- Shared components: `PhoneMockup`, `AppHeader`, `AnimatedMetric`, `BrandWatermark`
+
+### Step 3: Owner Dashboard — Scene Library Tab
+- Add `promo-engine` section to `OwnerSidebar`
+- Scene Library view: grid of all scenes with thumbnails, feature area badges, duration variants
+- Scene detail: preview panel showing simulated scene data, edit sim_data, mark as outdated
+- Add/edit scene metadata
+
+### Step 4: Story Builder
+- Wizard-style builder:
+  1. Select audience + goal + duration
+  2. System auto-suggests scene sequence based on Hook→Problem→Solution→Proof→CTA framework
+  3. Admin can reorder, swap, remove scenes
+  4. Preview timeline showing scene thumbnails in sequence with transitions
+  5. Select export format (sets aspect ratio)
+  6. Save as project
+
+- Auto-assembly logic maps audience+goal to recommended scenes:
+  - Player/awareness → Hook + Dashboard + TEX Vision + MPI + CTA
+  - Parent/conversion → Hook + Safety/Progress + Vault + Proof + CTA
+  - Coach/feature → Hook + Game Scoring + Practice Hub + Analytics + CTA
+
+### Step 5: Export Manager
+- Project list with status badges
+- Format selector with aspect ratio preview (9:16, 1:1, 16:9)
+- "Queue Render" button (writes to `promo_render_queue`)
+- For now: renders are manual via `remotion/` CLI scripts — the admin UI queues and tracks
+- Future: webhook trigger to external render service
+
+### Step 6: Auto-Update Integrity
+- Each `promo_scenes` row has `feature_area` and `updated_at`
+- When app features change, admin can bulk-flag scenes as `outdated`
+- Outdated scenes show warning badges in Scene Library
+- Projects using outdated scenes show alerts in Export Manager
+
+## Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/components/owner/OwnerSidebar.tsx` | Add `promo-engine` section |
+| `src/pages/OwnerDashboard.tsx` | Add `promo-engine` tab content |
+| `src/components/promo-engine/SceneLibrary.tsx` | Scene grid + management |
+| `src/components/promo-engine/SceneCard.tsx` | Scene preview card |
+| `src/components/promo-engine/StoryBuilder.tsx` | Wizard for assembling videos |
+| `src/components/promo-engine/StoryTimeline.tsx` | Visual timeline of scenes |
+| `src/components/promo-engine/ExportManager.tsx` | Project list + render queue |
+| `src/components/promo-engine/FormatSelector.tsx` | Aspect ratio picker |
+| `src/components/promo-engine/ScenePreview.tsx` | Scene detail/preview panel |
+| `src/hooks/usePromoEngine.ts` | CRUD hooks for scenes/projects/queue |
+| `remotion/` | Full Remotion project with scene components (built separately, not part of main app bundle) |
+| DB migration | 3 new tables + RLS + seed data |
+
+## What Ships Now vs. Future
+
+**Ships now:**
+- Full admin UI (Scene Library, Story Builder, Export Manager)
+- Database schema with seeded scene definitions
+- Story auto-assembly logic (audience + goal → scene sequence)
+- Format/aspect ratio configuration
+- Outdated scene flagging system
+- Render queue tracking
+
+**Future (external render service):**
+- Actual Remotion rendering pipeline
+- Automated MP4 export
+- CDN delivery of rendered videos
+- Webhook-triggered re-renders
+
+## Scope
+
+This implementation focuses on the admin orchestration layer — the system that manages scenes, assembles stories, and tracks renders. The Remotion scene components (the actual video content) will be built as a separate `remotion/` project that references the scene definitions from the database. This separation ensures the promo engine never impacts the main app bundle or admin workflows.
 
