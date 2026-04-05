@@ -212,10 +212,19 @@ export function CustomActivityDetailDialog({
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const { canSendActivities, loading: accessLoading } = useScoutAccess();
 
-  // Clean up debounce timers on unmount or dialog close
+  // Flush pending debounced values on dialog close, then clean up
   useEffect(() => {
     if (!open) {
-      Object.values(debounceTimers.current).forEach(clearTimeout);
+      // Clear all pending timers
+      Object.keys(debounceTimers.current).forEach(fieldId => {
+        clearTimeout(debounceTimers.current[fieldId]);
+      });
+      // Flush any unsaved local values immediately before cleanup
+      Object.entries(localFieldValues).forEach(([fieldId, value]) => {
+        if (value !== undefined && onUpdateFieldValue) {
+          onUpdateFieldValue(fieldId, value);
+        }
+      });
       debounceTimers.current = {};
       setLocalFieldValues({});
     }
