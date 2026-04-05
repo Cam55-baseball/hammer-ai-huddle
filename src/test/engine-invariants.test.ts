@@ -2002,7 +2002,7 @@ describe('Layer 19 — Scale, Distribution & Population Reality', () => {
     return results;
   }
 
-  it('Test 61: 10,000-profile Monte Carlo — zero crashes, all grades valid, perf ≤ 2000ms', () => {
+  it('Test 61: 10,000-profile Monte Carlo — zero crashes, all grades valid, perf ≤ 5000ms', () => {
     const rng = seededRandom(1337);
     const start = performance.now();
 
