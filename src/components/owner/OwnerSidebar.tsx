@@ -28,6 +28,7 @@ export type OwnerSection =
   | 'scout-applications' 
   | 'videos' 
   | 'video-library'
+  | 'promo-engine'
   | 'subscriptions' 
   | 'settings' 
   | 'player-search';
