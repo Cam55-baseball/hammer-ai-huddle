@@ -2158,6 +2158,8 @@ describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
     mb_rotational_throw: [15, 45],
     lateral_shuffle: [3.5, 5.5],
     long_toss_distance: [140, 320],
+    fielding_exchange_time: [0.85, 2.2],
+    sl_balance_eyes_closed: [8, 75],
   };
   const METRIC_KEYS = Object.keys(METRICS_WITH_RANGES);
 
