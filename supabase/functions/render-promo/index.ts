@@ -16,6 +16,14 @@ const DURATION_MAP: Record<string, number> = {
   "15s": 450,
 };
 
+const FORMAT_CONFIGS: Record<string, { width: number; height: number }> = {
+  tiktok: { width: 1080, height: 1920 },
+  reels: { width: 1080, height: 1920 },
+  shorts: { width: 1080, height: 1920 },
+  youtube: { width: 1920, height: 1080 },
+  hero: { width: 1920, height: 1080 },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -131,40 +139,153 @@ Deno.serve(async (req) => {
     }
 
     // Build payload
+    const format = project.format || queueRow.format || "tiktok";
+    const formatConfig = FORMAT_CONFIGS[format] || FORMAT_CONFIGS.tiktok;
     const payload = {
       title: project.title,
-      format: project.format || queueRow.format,
+      format,
+      width: formatConfig.width,
+      height: formatConfig.height,
       sceneSequence: assembledSequence,
     };
 
-    // Mark as processing and store payload
-    await supabase
-      .from("promo_render_queue")
-      .update({
-        status: "processing",
-        started_at: new Date().toISOString(),
-      })
-      .eq("id", queue_id);
+    // --- Attempt Remotion Lambda dispatch ---
+    const awsAccessKey = Deno.env.get("AWS_ACCESS_KEY_ID");
+    const awsSecretKey = Deno.env.get("AWS_SECRET_ACCESS_KEY");
+    const lambdaFunctionName = Deno.env.get("REMOTION_LAMBDA_FUNCTION_NAME");
+    const lambdaRegion = Deno.env.get("REMOTION_LAMBDA_REGION") || "us-east-1";
+    const s3Bucket = Deno.env.get("REMOTION_S3_BUCKET");
+    const remotionSiteUrl = Deno.env.get("REMOTION_SITE_URL");
 
-    await supabase
-      .from("promo_projects")
-      .update({
-        status: "rendering",
-        render_metadata: payload,
-      })
-      .eq("id", project.id);
+    const lambdaConfigured = awsAccessKey && awsSecretKey && lambdaFunctionName;
 
-    return new Response(
-      JSON.stringify({ success: true, payload }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  } catch (err) {
+    if (lambdaConfigured) {
+      // Mark as processing
+      await supabase
+        .from("promo_render_queue")
+        .update({
+          status: "processing",
+          started_at: new Date().toISOString(),
+        })
+        .eq("id", queue_id);
+
+      await supabase
+        .from("promo_projects")
+        .update({
+          status: "rendering",
+          render_metadata: { ...payload, lambda_region: lambdaRegion },
+        })
+        .eq("id", project.id);
+
+      // Invoke Lambda via AWS API
+      try {
+        const lambdaPayload = {
+          type: "start",
+          serveUrl: remotionSiteUrl,
+          composition: "main",
+          codec: "h264",
+          inputProps: { sceneSequence: assembledSequence },
+          imageFormat: "jpeg",
+          maxRetries: 1,
+          privacy: "public",
+          outName: `promo-${queue_id}.mp4`,
+          ...(s3Bucket ? { forceBucketName: s3Bucket } : {}),
+        };
+
+        // Sign and invoke Lambda function
+        const lambdaUrl = `https://lambda.${lambdaRegion}.amazonaws.com/2015-03-31/functions/${lambdaFunctionName}/invocations`;
+        
+        const encoder = new TextEncoder();
+        const bodyStr = JSON.stringify(lambdaPayload);
+        const now = new Date();
+        const dateStamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+        const shortDate = dateStamp.substring(0, 8);
+
+        // AWS Signature V4 signing
+        const algorithm = "AWS4-HMAC-SHA256";
+        const credentialScope = `${shortDate}/${lambdaRegion}/lambda/aws4_request`;
+        const canonicalUri = `/2015-03-31/functions/${lambdaFunctionName}/invocations`;
+        
+        const bodyHash = await sha256Hex(bodyStr);
+        const canonicalHeaders = `content-type:application/json\nhost:lambda.${lambdaRegion}.amazonaws.com\nx-amz-date:${dateStamp}\n`;
+        const signedHeaders = "content-type;host;x-amz-date";
+        const canonicalRequest = `POST\n${canonicalUri}\n\n${canonicalHeaders}\n${signedHeaders}\n${bodyHash}`;
+        
+        const stringToSign = `${algorithm}\n${dateStamp}\n${credentialScope}\n${await sha256Hex(canonicalRequest)}`;
+        
+        const signingKey = await getSignatureKey(awsSecretKey!, shortDate, lambdaRegion, "lambda");
+        const signature = await hmacHex(signingKey, stringToSign);
+        
+        const authHeader = `${algorithm} Credential=${awsAccessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+        const lambdaResponse = await fetch(lambdaUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Amz-Date": dateStamp,
+            "Authorization": authHeader,
+            "X-Amz-Invocation-Type": "RequestResponse",
+          },
+          body: bodyStr,
+        });
+
+        const lambdaResult = await lambdaResponse.json();
+        const renderId = lambdaResult?.renderId || lambdaResult?.id || null;
+
+        // Store render_id for status polling
+        await supabase
+          .from("promo_render_queue")
+          .update({ render_id: renderId })
+          .eq("id", queue_id);
+
+        return new Response(
+          JSON.stringify({ success: true, mode: "lambda", renderId, payload }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (lambdaErr: any) {
+        await failJob(supabase, queue_id, project.id, `Lambda invocation failed: ${lambdaErr.message}`);
+        return new Response(
+          JSON.stringify({ error: `Lambda error: ${lambdaErr.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      // Lambda NOT configured — mark as awaiting_render with assembled payload
+      await supabase
+        .from("promo_render_queue")
+        .update({
+          status: "failed",
+          error_message: "Render service not configured. Add AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and REMOTION_LAMBDA_FUNCTION_NAME secrets to enable automated rendering.",
+        })
+        .eq("id", queue_id);
+
+      await supabase
+        .from("promo_projects")
+        .update({
+          status: "draft",
+          render_metadata: payload,
+        })
+        .eq("id", project.id);
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          mode: "unconfigured",
+          message: "Render service not configured. Payload assembled and stored in render_metadata. Add AWS Lambda credentials to enable automated rendering.",
+          payload,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+  } catch (err: any) {
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
+
+// --- Helpers ---
 
 async function failJob(supabase: any, queueId: string, projectId: string, errorMessage: string) {
   await supabase
@@ -176,4 +297,27 @@ async function failJob(supabase: any, queueId: string, projectId: string, errorM
     .from("promo_projects")
     .update({ status: "failed" })
     .eq("id", projectId);
+}
+
+async function sha256Hex(message: string): Promise<string> {
+  const data = new TextEncoder().encode(message);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function hmacSha256(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
+  const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(message));
+}
+
+async function hmacHex(key: ArrayBuffer, message: string): Promise<string> {
+  const sig = await hmacSha256(key, message);
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function getSignatureKey(secretKey: string, dateStamp: string, region: string, service: string): Promise<ArrayBuffer> {
+  const kDate = await hmacSha256(new TextEncoder().encode("AWS4" + secretKey).buffer, dateStamp);
+  const kRegion = await hmacSha256(kDate, region);
+  const kService = await hmacSha256(kRegion, service);
+  return await hmacSha256(kService, "aws4_request");
 }
