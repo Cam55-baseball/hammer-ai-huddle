@@ -1,99 +1,46 @@
 
 
-# Field Diagram + Spray Chart — Elite Redesign
+# Field Diagram & Spray Chart — Verification Results
 
-## Current Issues
+## What I Found
 
-**Field Diagram:**
-- Infield dirt is a rotated polygon — real fields have a rounded dirt cutout with curved edges behind the bases
-- No batter's boxes, catcher's circle, or on-deck circles
-- Mowing stripes are vertical rectangles — real stripes follow the outfield arc
-- Warning track is a single stroke arc — should be a filled band
-- Position zones use a separate normalized coordinate system (0-1) that doesn't align with the actual field geometry (pixel coords), causing visual drift
-- Home plate shape is wrong (should be a pentagon with specific MLB dimensions)
-- No backstop/foul territory detail behind home
+### Code Quality: STRONG ✅
 
-**Spray Chart:**
-- No sport differentiation — same geometry for baseball and softball
-- Foul lines are nearly horizontal (wrong angle — should be 90° apart at 45° each)
-- Field outline is a quadratic bezier — should be an arc from home plate
-- No field rendering underneath — just dots on a blank canvas
-- Jitter uses `Math.random()` causing re-renders to shift dots
+The implementation is architecturally correct:
+
+1. **Geometry Engine** (`fieldGeometry.ts`) — Real math-based, sport-parameterized. Baseball uses 90ft/60.5ft/330ft, softball uses 60ft/43ft/220ft. All positions computed from home plate origin using trigonometry, not hardcoded pixel positions.
+
+2. **FieldPositionDiagram** — 15-layer SVG with realistic rendering: fair territory wedge, mowing stripes, warning track band, infield dirt with basepath corridors, MLB pentagon home plate, batter's boxes, catcher's circle, pitcher's mound with rubber.
+
+3. **SprayChart** — Uses geometry engine for sport-specific proportions, deterministic jitter (hash-based, no `Math.random()`), correct 45° foul lines, mini-field background.
+
+4. **Coordinate unification** — Both rendering and interaction use the same `getFieldGeometry()` output. Player positions are computed as `positionsNormalized[position]`, eliminating drift.
+
+### Visual Proof: BLOCKED BY UI FLOW
+
+The field diagram is inside `mode === 'advanced'` conditional (line 1541 of `RepScorer.tsx`). Standard mode does not show it. I could not reach it through browser automation without completing several form steps and switching to advanced mode.
+
+### Issues Found: 2
+
+**Issue 1: Field diagram only visible in advanced mode**
+The "Mark Field Position" collapsible is gated behind `mode === 'advanced'`. Most users in "Standard Logging" mode will never see the field diagram. This is a UX accessibility problem — the field diagram should be available in standard mode too, since marking field position is a core interaction.
+
+**Issue 2: `type="number"` on inputs in RepScorer fielding section**
+Lines 1599, 1893, 1905 still use `type="number"` for decimal inputs (glove-to-glove time, pop time, transfer time). These suffer from the SAME decimal input bug we just fixed in CustomActivityDetailDialog — browser stripping of "9." and mobile keyboard issues.
 
 ## Plan
 
-### 1. Shared Field Geometry Engine
+### Fix 1: Move Field Diagram out of advanced-only block
+Move the "Mark Field Position" collapsible (lines 1972-1989) outside the `mode === 'advanced'` conditional so it appears in all fielding modes. It's already collapsible so it won't clutter the form.
 
-Create `src/components/game-scoring/fieldGeometry.ts`:
-- Single source of truth for all field math
-- Sport-parameterized: baseball (90ft bases, 60'6" mound, ~330-400ft fences) vs softball (60ft bases, 43ft mound, ~200-220ft fences)
-- All positions computed from home plate origin using real proportional ratios
-- Exports: `getFieldGeometry(sport, viewboxSize)` returning all computed points
-- Position zones computed from the SAME geometry (no separate coordinate system)
+### Fix 2: Fix decimal inputs in RepScorer
+Change `type="number"` to `type="text"` with `inputMode="decimal"` and add the same regex validation pattern on lines 1599, 1893, 1905.
 
-### 2. Field Diagram Redesign (`FieldPositionDiagram.tsx`)
-
-**Rendering layers (bottom to top):**
-1. Dark green background (foul territory)
-2. Fair territory wedge — proper 90° fan from home plate with arc-following mowing stripes using a radial clip pattern
-3. Warning track — filled arc band (not a stroke), dirt-brown color
-4. Outfield fence — darker green arc with subtle thickness
-5. Infield dirt — realistic shape: rounded square behind bases with semi-circle extensions behind 1B, 2B area, 3B, and a full dirt circle around the mound
-6. Infield grass — the interior cutout (also rounded, not a sharp polygon)
-7. Basepaths — chalk lines connecting bases
-8. Batter's boxes — two rectangles flanking home plate
-9. Bases — proper white squares at correct positions
-10. Home plate — correct MLB pentagon (17" wide, pointed toward pitcher)
-11. Mound — dirt circle with rubber rectangle
-12. Position labels — computed from field geometry, not a separate map
-
-**Interaction:**
-- Keep existing pointer drag system (it works well)
-- Position zones now derive from the geometry engine — no drift
-- Dot labels use `pointerEvents: none` (already correct)
-
-### 3. Spray Chart Redesign (`SprayChart.tsx`)
-
-**Key changes:**
-- Accept `sport` prop (default 'baseball')
-- Use `getFieldGeometry()` for field proportions
-- Render a mini field underneath the dots (same visual language as the diagram):
-  - Fair territory wedge with grass coloring
-  - Infield dirt shape
-  - Foul lines at true 45° angles
-  - Outfield arc at sport-correct distance
-- Fix foul line angles: both lines at 45° from home plate (total 90° spread)
-- Replace `Math.random()` jitter with deterministic hash-based jitter (seeded from index) to prevent re-render shifting
-- Spray point distance scaling uses sport-specific outfield depth
-
-### 4. Coordinate System Unification
-
-**Before:** `POSITION_ZONES` used 0-1 normalized coords mapped independently of field geometry → visual misalignment.
-
-**After:** All position defaults computed from the geometry engine:
-```
-SS position = midpoint(2B, 3B) shifted toward home by 15%
-CF position = home + (outfield_radius * 0.65) at 0° angle
-etc.
-```
-
-This guarantees positions land visually where they should on the rendered field.
-
-### 5. Files Changed
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/game-scoring/fieldGeometry.ts` | **NEW** — shared geometry engine |
-| `src/components/game-scoring/FieldPositionDiagram.tsx` | Full rewrite using geometry engine, realistic layered rendering |
-| `src/components/game-scoring/SprayChart.tsx` | Add `sport` prop, mini field background, fix angles, deterministic jitter |
-| `src/components/game-scoring/PlayerGameCard.tsx` | Pass sport to SprayChart |
-| `src/components/game-scoring/GameSummaryView.tsx` | Pass sport to SprayChart |
+| `src/components/practice/RepScorer.tsx` | Move field diagram out of advanced block; fix 3 decimal input fields |
 
-### 6. What Stays the Same
-
-- Component API shape (props interface)
-- Drag interaction mechanics (pointer capture system)
-- `onUpdate` callback format `{ playerPos, ballPos }`
-- Normalized 0-1 coordinate storage format
-- Color coding for spray chart hit types
+No changes needed to `fieldGeometry.ts`, `FieldPositionDiagram.tsx`, or `SprayChart.tsx` — those are solid.
 
