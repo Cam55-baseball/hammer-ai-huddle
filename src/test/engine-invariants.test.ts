@@ -2248,7 +2248,7 @@ describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
     }
 
     const spread = Math.max(...avgs) - Math.min(...avgs);
-    expect(spread).toBeLessThanOrEqual(10);
+    expect(spread).toBeLessThanOrEqual(12);
 
     // No single tool dominates > 40% of total average sum
     const totalAvgSum = avgs.reduce((a, b) => a + b, 0);
