@@ -1204,7 +1204,7 @@ interface ToolPerformanceGap {
   gap: number;
   direction: 'tool_exceeds' | 'perf_exceeds';
   issue: string;
-  prescription_class: 'skill_transfer' | 'physical_development';
+  prescription_class: 'skill_transfer' | 'physical';
 }
 
 function mapCompositeToToolScale(compositeScore: number): number {
