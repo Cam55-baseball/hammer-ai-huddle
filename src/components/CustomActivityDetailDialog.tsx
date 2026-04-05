@@ -210,7 +210,16 @@ export function CustomActivityDetailDialog({
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [localFieldValues, setLocalFieldValues] = useState<Record<string, string>>({});
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const isMounted = useRef(true);
+  const onUpdateFieldValueRef = useRef(onUpdateFieldValue);
+  onUpdateFieldValueRef.current = onUpdateFieldValue;
+  const savedFieldIds = useRef<Set<string>>(new Set());
   const { canSendActivities, loading: accessLoading } = useScoutAccess();
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
 
   // Flush pending debounced values on dialog close, then clean up
   useEffect(() => {
@@ -219,13 +228,14 @@ export function CustomActivityDetailDialog({
       Object.keys(debounceTimers.current).forEach(fieldId => {
         clearTimeout(debounceTimers.current[fieldId]);
       });
-      // Flush any unsaved local values immediately before cleanup
+      // Flush only fields that haven't been saved since last edit
       Object.entries(localFieldValues).forEach(([fieldId, value]) => {
-        if (value !== undefined && onUpdateFieldValue) {
-          onUpdateFieldValue(fieldId, value);
+        if (value !== undefined && !savedFieldIds.current.has(fieldId) && onUpdateFieldValueRef.current) {
+          onUpdateFieldValueRef.current(fieldId, value);
         }
       });
       debounceTimers.current = {};
+      savedFieldIds.current.clear();
       setLocalFieldValues({});
     }
   }, [open]);
