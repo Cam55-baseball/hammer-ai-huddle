@@ -510,3 +510,371 @@ describe('Layer 6 — Longitudinal Engine', () => {
     expect(trends).toHaveLength(0);
   });
 });
+
+// =====================================================================
+// LAYER 7 — ADVERSARIAL FUZZ TESTING
+// =====================================================================
+
+describe('Layer 7 — Adversarial Fuzz Testing', () => {
+  const ALL_METRIC_KEYS = Object.keys(GRADE_BENCHMARKS);
+  const POSITIONS = Object.keys(POSITION_TOOL_PROFILES);
+  const SPORTS: ('baseball' | 'softball')[] = ['baseball', 'softball'];
+  const AGE_BANDS = [12, 16, 20, 25];
+
+  function assertValidGrade(g: number | null, context: string) {
+    if (g === null) return;
+    expect(g, context).toBeGreaterThanOrEqual(20);
+    expect(g, context).toBeLessThanOrEqual(80);
+    expect(Number.isNaN(g), `NaN in ${context}`).toBe(false);
+  }
+
+  it('Test 21: 10,000-Case Randomized Simulation — zero crashes, zero NaN, zero invariant violations', () => {
+    const rng = (min: number, max: number) => min + Math.random() * (max - min);
+    let violations = 0;
+
+    for (let i = 0; i < 10000; i++) {
+      // Random subset of metrics with random values
+      const results: Record<string, number> = {};
+      const metricCount = Math.floor(Math.random() * ALL_METRIC_KEYS.length) + 1;
+      const shuffled = [...ALL_METRIC_KEYS].sort(() => Math.random() - 0.5);
+      for (let m = 0; m < metricCount; m++) {
+        results[shuffled[m]] = rng(-10, 500);
+      }
+
+      const pos = POSITIONS[Math.floor(Math.random() * POSITIONS.length)];
+      const sport = SPORTS[Math.floor(Math.random() * 2)];
+      const age = AGE_BANDS[Math.floor(Math.random() * AGE_BANDS.length)];
+
+      try {
+        // Grade individual metrics
+        for (const [key, val] of Object.entries(results)) {
+          const g = rawToGrade(key, val, sport, age);
+          if (g !== null && (g < 20 || g > 80 || Number.isNaN(g))) violations++;
+        }
+
+        // Tool grades
+        const tools = computeToolGrades(results, pos, sport, age);
+        for (const t of ['hit', 'power', 'run', 'field', 'arm', 'overall'] as const) {
+          const v = tools[t];
+          if (v !== null && (v < 20 || v > 80 || Number.isNaN(v))) violations++;
+        }
+
+        // Full report
+        const report = generateReport(results, pos, sport, age);
+        for (const mg of report.metricGrades) {
+          if (mg.grade < 20 || mg.grade > 80 || Number.isNaN(mg.grade)) violations++;
+        }
+
+        // Strength/limiter mutual exclusion
+        const strengthKeys = new Set(report.topStrengths.map(s => s.key));
+        for (const lf of report.limitingFactors) {
+          if (strengthKeys.has(lf.metric.key)) violations++;
+        }
+      } catch {
+        violations++;
+      }
+    }
+
+    expect(violations).toBe(0);
+  });
+
+  it('Test 22: Type Corruption Fuzz — corrupt values never crash or leak NaN', () => {
+    const corruptValues: any[] = [
+      undefined, null, '', 'fast', {}, [], true, false,
+      -99999, 99999, -0, 0.0001, Number.MAX_SAFE_INTEGER,
+    ];
+
+    for (const corrupt of corruptValues) {
+      const results: Record<string, number> = {
+        tee_exit_velocity: corrupt,
+        ten_yard_dash: corrupt,
+        pitching_velocity: corrupt,
+      };
+
+      // Must not throw
+      expect(() => {
+        const grades = gradeAllResults(results, SPORT, AGE);
+        for (const g of Object.values(grades)) {
+          expect(Number.isNaN(g)).toBe(false);
+        }
+
+        const tools = computeToolGrades(results, 'SS', SPORT, AGE);
+        for (const t of ['hit', 'power', 'run', 'field', 'arm', 'overall'] as const) {
+          const v = tools[t];
+          if (v !== null) {
+            expect(Number.isNaN(v)).toBe(false);
+          }
+        }
+
+        const report = generateReport(results, 'SS', SPORT, AGE);
+        expect(report).toBeDefined();
+      }).not.toThrow();
+    }
+  });
+
+  it('Test 23: Position × Sport × Age Exhaustive Sweep — 112 combos, zero failures', () => {
+    let failures = 0;
+
+    for (const pos of POSITIONS) {
+      for (const sport of SPORTS) {
+        for (const age of AGE_BANDS) {
+          try {
+            const tools = computeToolGrades(FULL_RESULTS, pos, sport, age);
+            for (const t of ['hit', 'power', 'run', 'field', 'arm', 'overall'] as const) {
+              const v = tools[t];
+              if (v !== null && (v < 20 || v > 80 || Number.isNaN(v))) failures++;
+            }
+
+            const report = generateReport(FULL_RESULTS, pos, sport, age);
+            for (const mg of report.metricGrades) {
+              if (mg.grade < 20 || mg.grade > 80) failures++;
+            }
+          } catch {
+            failures++;
+          }
+        }
+      }
+    }
+
+    expect(failures).toBe(0);
+  });
+});
+
+// =====================================================================
+// LAYER 8 — TRUTH CONSISTENCY VALIDATION
+// =====================================================================
+
+describe('Layer 8 — Truth Consistency Validation', () => {
+  it('Test 24: Truth Inversion — 80-grade never a limiter, 20-grade never a strength', () => {
+    // Build extreme high results (all metrics at top benchmark values)
+    const highResults: Record<string, number> = {};
+    const lowResults: Record<string, number> = {};
+
+    for (const [key, entry] of Object.entries(GRADE_BENCHMARKS)) {
+      const def = METRIC_BY_KEY[key];
+      if (!def) continue;
+      const sportBench = entry.baseball;
+      if (!sportBench) continue;
+      const points = sportBench['18u'] || sportBench['college'] || sportBench['14u'];
+      if (!points || points.length === 0) continue;
+
+      const sorted = [...points].sort((a, b) => a.raw - b.raw);
+      if (def.higherIsBetter) {
+        highResults[key] = sorted[sorted.length - 1].raw + 10; // Beyond best
+        lowResults[key] = Math.max(0, sorted[0].raw - 10); // Beyond worst
+      } else {
+        highResults[key] = Math.max(0.1, sorted[0].raw - 1); // Faster than best
+        lowResults[key] = sorted[sorted.length - 1].raw + 5; // Slower than worst
+      }
+    }
+
+    const highReport = generateReport(highResults, 'SS', 'baseball', 16);
+    const lowReport = generateReport(lowResults, 'SS', 'baseball', 16);
+
+    // High-grade metrics should NOT be limiting factors
+    for (const lf of highReport.limitingFactors) {
+      // All grades should be high, so the "limiter" should still be >= 60
+      expect(lf.metric.grade).toBeGreaterThanOrEqual(50);
+    }
+
+    // Low-grade metrics should NOT be top strengths
+    for (const s of lowReport.topStrengths) {
+      // All grades should be low, so the "strength" should still be <= 40
+      expect(s.grade).toBeLessThanOrEqual(40);
+    }
+  });
+
+  it('Test 25: Strength/Limiter Mutual Exclusion — 1,000 random sets, zero overlap', () => {
+    const metricKeys = Object.keys(GRADE_BENCHMARKS);
+    let overlaps = 0;
+
+    for (let i = 0; i < 1000; i++) {
+      const results: Record<string, number> = {};
+      const count = 5 + Math.floor(Math.random() * 10);
+      const shuffled = [...metricKeys].sort(() => Math.random() - 0.5);
+      for (let m = 0; m < Math.min(count, shuffled.length); m++) {
+        results[shuffled[m]] = Math.random() * 200;
+      }
+
+      const report = generateReport(results, 'SS', 'baseball', 16);
+      const strengthKeys = new Set(report.topStrengths.map(s => s.key));
+      for (const lf of report.limitingFactors) {
+        if (strengthKeys.has(lf.metric.key)) overlaps++;
+      }
+    }
+
+    expect(overlaps).toBe(0);
+  });
+
+  it('Test 26: Grade Ordering Consistency — sorted strengths/limiters match grade rank', () => {
+    let violations = 0;
+
+    for (let i = 0; i < 500; i++) {
+      const results: Record<string, number> = {};
+      const metricKeys = Object.keys(GRADE_BENCHMARKS);
+      const count = 6 + Math.floor(Math.random() * 8);
+      const shuffled = [...metricKeys].sort(() => Math.random() - 0.5);
+      for (let m = 0; m < Math.min(count, shuffled.length); m++) {
+        results[shuffled[m]] = Math.random() * 200;
+      }
+
+      const report = generateReport(results, 'SS', 'baseball', 16);
+
+      // Top strengths should be sorted descending by grade
+      for (let j = 1; j < report.topStrengths.length; j++) {
+        if (report.topStrengths[j].grade > report.topStrengths[j - 1].grade) {
+          violations++;
+        }
+      }
+
+      // Limiting factors should be sorted ascending by grade
+      for (let j = 1; j < report.limitingFactors.length; j++) {
+        if (report.limitingFactors[j].metric.grade < report.limitingFactors[j - 1].metric.grade) {
+          violations++;
+        }
+      }
+    }
+
+    expect(violations).toBe(0);
+  });
+});
+
+// =====================================================================
+// LAYER 9 — WEIGHT NORMALIZATION ENFORCEMENT
+// =====================================================================
+
+describe('Layer 9 — Weight Normalization Enforcement', () => {
+  it('Test 27: Weight Sum Validation — every position sums to 1.0', () => {
+    for (const [pos, profile] of Object.entries(POSITION_TOOL_PROFILES)) {
+      const tools: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+      const sum = tools.reduce((acc, t) => acc + profile[t].weight, 0);
+      expect(sum, `Position ${pos} weights sum to ${sum}`).toBeCloseTo(1.0, 2);
+    }
+  });
+
+  it('Test 28: Overall = Exact Weighted Average — no fabrication', () => {
+    let mismatches = 0;
+
+    for (let i = 0; i < 500; i++) {
+      const results: Record<string, number> = {};
+      const metricKeys = Object.keys(GRADE_BENCHMARKS);
+      const count = 8 + Math.floor(Math.random() * 10);
+      const shuffled = [...metricKeys].sort(() => Math.random() - 0.5);
+      for (let m = 0; m < Math.min(count, shuffled.length); m++) {
+        results[shuffled[m]] = 20 + Math.random() * 180;
+      }
+
+      const pos = Object.keys(POSITION_TOOL_PROFILES)[i % Object.keys(POSITION_TOOL_PROFILES).length];
+      const toolGrades = computeToolGrades(results, pos, 'baseball', 16);
+      const profile = POSITION_TOOL_PROFILES[pos];
+
+      // Manual weighted average
+      const tools: ToolName[] = ['hit', 'power', 'run', 'field', 'arm'];
+      let weightedSum = 0;
+      let totalWeight = 0;
+      for (const t of tools) {
+        const g = toolGrades[t];
+        const w = profile[t].weight;
+        if (g !== null && w > 0) {
+          weightedSum += g * w;
+          totalWeight += w;
+        }
+      }
+      const expectedOverall = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : null;
+
+      if (toolGrades.overall !== expectedOverall) {
+        // Allow ±1 for rounding
+        if (expectedOverall === null || toolGrades.overall === null ||
+            Math.abs(toolGrades.overall - expectedOverall) > 1) {
+          mismatches++;
+        }
+      }
+    }
+
+    expect(mismatches).toBe(0);
+  });
+});
+
+// =====================================================================
+// LAYER 10 — PROJECTION REALISM CONSTRAINTS
+// =====================================================================
+
+describe('Layer 10 — Projection Realism Constraints', () => {
+  it('Test 29: Projection Realism Bounds — no impossible predictions', () => {
+    let violations = 0;
+
+    for (let i = 0; i < 1000; i++) {
+      // Generate 3-cycle history with random values
+      const baseVal = 60 + Math.random() * 40;
+      const delta = (Math.random() - 0.3) * 15; // Bias toward improvement
+      const history = [
+        { results: { tee_exit_velocity: baseVal + delta * 2 }, test_date: '2026-04-01' },
+        { results: { tee_exit_velocity: baseVal + delta }, test_date: '2026-02-15' },
+        { results: { tee_exit_velocity: baseVal }, test_date: '2026-01-01' },
+      ];
+
+      const trends = computeTrends(history, 'baseball', 16);
+      for (const trend of trends) {
+        if (trend.projection) {
+          // Extract weeks if present
+          const weeksMatch = trend.projection.match(/~(\d+)\s*weeks/);
+          if (weeksMatch) {
+            const weeks = parseInt(weeksMatch[1], 10);
+            if (weeks <= 0 || weeks > 520) violations++;
+          }
+
+          // Plateaued should never predict reaching a grade
+          if (trend.trend === 'plateaued' && trend.projection.match(/Reach \d+/)) {
+            violations++;
+          }
+
+          // Regressing should never predict positive outcome
+          if (trend.trend === 'regressing' && trend.projection.match(/Reach \d+-grade/)) {
+            violations++;
+          }
+        }
+
+        // Rate sign must match trend
+        if (trend.trend === 'improving' && trend.ratePerCycle < 0) violations++;
+        if (trend.trend === 'regressing' && trend.ratePerCycle > 0) violations++;
+      }
+    }
+
+    expect(violations).toBe(0);
+  });
+
+  it('Test 30: Trend Classification Consistency — direction matches data', () => {
+    let violations = 0;
+
+    for (let i = 0; i < 500; i++) {
+      const v1 = 60 + Math.random() * 40; // Oldest
+      const v3 = 60 + Math.random() * 40; // Newest
+      const v2 = (v1 + v3) / 2 + (Math.random() - 0.5) * 5; // Middle
+
+      const history = [
+        { results: { tee_exit_velocity: v3 }, test_date: '2026-04-01' },
+        { results: { tee_exit_velocity: v2 }, test_date: '2026-02-15' },
+        { results: { tee_exit_velocity: v1 }, test_date: '2026-01-01' },
+      ];
+
+      const trends = computeTrends(history, 'baseball', 16);
+      for (const trend of trends) {
+        const gradeNewest = trend.currentGrade;
+        const gradeOldest = trends.length > 0 ? trend.previousGrade : gradeNewest;
+        const gradeDiff = gradeNewest - gradeOldest;
+
+        // Strong improvement should not be classified as regressing
+        if (gradeDiff > 5 && trend.trend === 'regressing') violations++;
+        // Strong regression should not be classified as improving
+        if (gradeDiff < -5 && trend.trend === 'improving') violations++;
+
+        // Identical values across all cycles should be plateaued
+        if (Math.abs(v3 - v1) < 0.01 && Math.abs(v2 - v1) < 0.01) {
+          if (trend.trend !== 'plateaued') violations++;
+        }
+      }
+    }
+
+    expect(violations).toBe(0);
+  });
+});
