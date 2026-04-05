@@ -247,6 +247,14 @@ serve(async (req) => {
         }
       }
 
+      // Log the starting batch index for resume verification
+      await supabase.from('audit_log').insert({
+        user_id: '00000000-0000-0000-0000-000000000000',
+        action: 'nightly_mpi_batch_start',
+        table_name: 'mpi_scores',
+        metadata: { sport, batch_start: resumeFrom, total_athletes: athletes.length, timestamp: new Date().toISOString() },
+      });
+
       for (let batchStart = resumeFrom; batchStart < athletes.length; batchStart += BATCH_SIZE) {
         // Check runtime budget — stop if approaching 50s limit
         if (Date.now() - nightlyStartTime > 50000) {
