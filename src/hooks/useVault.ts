@@ -1018,7 +1018,8 @@ export function useVault() {
       user_id: user.id, test_type: testType, sport: 'baseball', module: testType, 
       results: enhancedResults, previous_results: lastTest?.results || null,
       next_entry_date: nextEntryDate.toISOString().split('T')[0],
-    });
+      schema_version: 2,
+    } as any);
     if (!error) await fetchPerformanceTests();
     return { success: !error };
   }, [user, performanceTests, fetchPerformanceTests]);

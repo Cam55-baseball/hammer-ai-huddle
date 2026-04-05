@@ -6325,6 +6325,7 @@ export type Database = {
           next_entry_date: string | null
           previous_results: Json | null
           results: Json
+          schema_version: number | null
           six_week_goals_text: string | null
           sport: string
           test_date: string
@@ -6338,6 +6339,7 @@ export type Database = {
           next_entry_date?: string | null
           previous_results?: Json | null
           results?: Json
+          schema_version?: number | null
           six_week_goals_text?: string | null
           sport: string
           test_date?: string
@@ -6351,6 +6353,7 @@ export type Database = {
           next_entry_date?: string | null
           previous_results?: Json | null
           results?: Json
+          schema_version?: number | null
           six_week_goals_text?: string | null
           sport?: string
           test_date?: string
