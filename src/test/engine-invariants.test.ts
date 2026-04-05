@@ -878,3 +878,293 @@ describe('Layer 10 — Projection Realism Constraints', () => {
     expect(violations).toBe(0);
   });
 });
+
+// =====================================================================
+// LAYER 11 — GROUND TRUTH VALIDATION
+// =====================================================================
+
+describe('Layer 11 — Ground Truth Validation', () => {
+  const ELITE_SS: Record<string, number> = {
+    ten_yard_dash: 1.55, sixty_yard_dash: 6.7, pro_agility: 3.9,
+    vertical_jump: 32, sl_broad_jump_left: 85, sl_broad_jump_right: 83,
+    mb_rotational_throw: 28, mb_situp_throw: 18, seated_chest_pass: 24,
+    tee_exit_velocity: 95, bat_speed: 75, pitching_velocity: 88,
+    long_toss_distance: 280, position_throw_velo: 88, lateral_shuffle: 4.0,
+  };
+
+  const AVG_14U: Record<string, number> = {
+    ten_yard_dash: 2.0, sixty_yard_dash: 8.0, pro_agility: 4.8,
+    vertical_jump: 20, sl_broad_jump_left: 55, sl_broad_jump_right: 53,
+    mb_rotational_throw: 16, mb_situp_throw: 10, seated_chest_pass: 14,
+    tee_exit_velocity: 65, bat_speed: 52, pitching_velocity: 60,
+    long_toss_distance: 160, position_throw_velo: 55, lateral_shuffle: 5.2,
+  };
+
+  const BELOW_AVG_RUN_STANDOUT: Record<string, number> = {
+    ten_yard_dash: 2.1, sixty_yard_dash: 6.5, pro_agility: 5.0,
+    vertical_jump: 18, sl_broad_jump_left: 50, sl_broad_jump_right: 48,
+    mb_rotational_throw: 14, mb_situp_throw: 8, seated_chest_pass: 12,
+    tee_exit_velocity: 58, bat_speed: 48, pitching_velocity: 55,
+    long_toss_distance: 140, position_throw_velo: 50, lateral_shuffle: 5.5,
+  };
+
+  it('Test 31: Elite Baseball SS — tool grades reflect real-world elite', () => {
+    const report = generateReport(ELITE_SS, 'SS', 'baseball', 16);
+    const tools = report.toolGrades;
+
+    // Elite SS: Hit 69, Arm 69, Run 56, Power 51, Field 50, Overall 60
+    expect(tools.hit).toBeGreaterThanOrEqual(60);
+    expect(tools.arm).toBeGreaterThanOrEqual(60);
+    expect(tools.overall).toBeGreaterThanOrEqual(55);
+
+    // Top strengths should include hitting or arm metrics
+    const strengthKeys = report.topStrengths.map(s => s.key);
+    const hitOrArm = strengthKeys.some(k =>
+      ['tee_exit_velocity', 'bat_speed', 'position_throw_velo', 'pitching_velocity', 'long_toss_distance'].includes(k)
+    );
+    expect(hitOrArm).toBe(true);
+  });
+
+  it('Test 32: Average 14u Freshman — grades cluster around average', () => {
+    const report = generateReport(AVG_14U, 'SS', 'baseball', 13);
+    const tools = report.toolGrades;
+
+    // All tools should be in 30-55 range (average zone)
+    const toolVals = [tools.hit, tools.power, tools.run, tools.field, tools.arm].filter(v => v !== null) as number[];
+    for (const v of toolVals) {
+      expect(v).toBeGreaterThanOrEqual(25);
+      expect(v).toBeLessThanOrEqual(55);
+    }
+
+    // Overall in average range
+    expect(tools.overall).toBeGreaterThanOrEqual(30);
+    expect(tools.overall).toBeLessThanOrEqual(52);
+
+    // Must have limiting factors (average players always have development areas)
+    expect(report.limitingFactors.length).toBeGreaterThan(0);
+  });
+
+  it('Test 33: Below-Average with One Standout — run dominates but overall stays low', () => {
+    const report = generateReport(BELOW_AVG_RUN_STANDOUT, 'SS', 'baseball', 16);
+    const tools = report.toolGrades;
+
+    // Run tool must be the highest
+    const nonNullTools = (['hit', 'power', 'run', 'field', 'arm'] as ToolName[])
+      .filter(t => tools[t] !== null)
+      .map(t => ({ tool: t, grade: tools[t]! }));
+    const maxTool = nonNullTools.sort((a, b) => b.grade - a.grade)[0];
+    expect(maxTool.tool).toBe('run');
+
+    // Overall must NOT be elite — one tool cannot mask weakness
+    expect(tools.overall).toBeLessThan(40);
+
+    // Training priority should NOT reference speed/run (it's already their strength)
+    expect(report.trainingPriority.toLowerCase()).not.toContain('60-yard');
+    expect(report.trainingPriority.toLowerCase()).not.toContain('sprint');
+  });
+});
+
+// =====================================================================
+// LAYER 12 — SNAPSHOT INVARIANCE
+// =====================================================================
+
+describe('Layer 12 — Snapshot Invariance', () => {
+  it('Test 34: Report Snapshot Freeze — exact output for fixed inputs', () => {
+    const report = generateReport(FULL_RESULTS, 'SS', SPORT, AGE);
+
+    // Frozen tool grades
+    expect(report.toolGrades).toEqual({
+      hit: 45, power: 37, run: 39, field: 38, arm: 46, overall: 42,
+    });
+
+    // Frozen top strengths (by key)
+    expect(report.topStrengths.map(s => s.key)).toEqual([
+      'pro_agility', 'position_throw_velo', 'vertical_jump',
+    ]);
+
+    // Frozen limiting factors (by key)
+    expect(report.limitingFactors.map(l => l.metric.key)).toEqual([
+      'mb_situp_throw', 'lateral_shuffle', 'mb_rotational_throw',
+    ]);
+  });
+
+  it('Test 35: Tool Grade Snapshot Freeze — every position overall locked', () => {
+    const FROZEN_OVERALLS: Record<string, number | null> = {
+      SS: 42, C: 42, '1B': 40, '2B': 41, '3B': 41,
+      CF: 41, LF: 41, RF: 41, P: 43, DH: 41,
+      UT: 41, UTIL: 41, DP: 41, SLAPPER: 42,
+    };
+
+    for (const [pos, expectedOverall] of Object.entries(FROZEN_OVERALLS)) {
+      const tg = computeToolGrades(FULL_RESULTS, pos, SPORT, AGE);
+      expect(tg.overall).toBe(expectedOverall);
+    }
+  });
+});
+
+// =====================================================================
+// LAYER 13 — DETERMINISTIC REPLAY
+// =====================================================================
+
+describe('Layer 13 — Deterministic Replay', () => {
+  const HISTORY_3_CYCLE = [
+    { results: { tee_exit_velocity: 85, sixty_yard_dash: 7.0, position_throw_velo: 78 }, test_date: '2026-04-01' },
+    { results: { tee_exit_velocity: 82, sixty_yard_dash: 7.1, position_throw_velo: 76 }, test_date: '2026-02-15' },
+    { results: { tee_exit_velocity: 78, sixty_yard_dash: 7.3, position_throw_velo: 75 }, test_date: '2026-01-01' },
+  ];
+
+  const FROZEN_TRENDS = [
+    { k: 'tee_exit_velocity', trend: 'improving', rate: 5.5, cur: 51, prev: 45 },
+    { k: 'sixty_yard_dash', trend: 'improving', rate: 4.5, cur: 48, prev: 45 },
+    { k: 'position_throw_velo', trend: 'improving', rate: 3, cur: 53, prev: 49 },
+  ];
+
+  it('Test 36: Session Replay — 3-cycle trend computation is deterministic', () => {
+    for (let run = 0; run < 100; run++) {
+      const trends = computeTrends(HISTORY_3_CYCLE, 'baseball', 16);
+
+      expect(trends.length).toBe(3);
+      for (let i = 0; i < trends.length; i++) {
+        expect(trends[i].metricKey).toBe(FROZEN_TRENDS[i].k);
+        expect(trends[i].trend).toBe(FROZEN_TRENDS[i].trend);
+        expect(trends[i].ratePerCycle).toBe(FROZEN_TRENDS[i].rate);
+        expect(trends[i].currentGrade).toBe(FROZEN_TRENDS[i].cur);
+        expect(trends[i].previousGrade).toBe(FROZEN_TRENDS[i].prev);
+      }
+    }
+  });
+
+  it('Test 37: Adaptive Priority Replay — focus list is deterministic', () => {
+    const history = [
+      { results: { tee_exit_velocity: 85, sixty_yard_dash: 8.5, position_throw_velo: 78, bat_speed: 68 }, test_date: '2026-04-01' },
+      { results: { tee_exit_velocity: 80, sixty_yard_dash: 7.5, position_throw_velo: 76, bat_speed: 65 }, test_date: '2026-02-15' },
+    ];
+
+    const FROZEN_PRIORITIZED = ['sixty_yard_dash', 'tee_exit_velocity', 'position_throw_velo', 'bat_speed'];
+
+    for (let run = 0; run < 100; run++) {
+      const focus = getNextTestFocus(history, 'baseball', 16);
+      expect(focus.prioritized.map(p => p.key)).toEqual(FROZEN_PRIORITIZED);
+    }
+  });
+});
+
+// =====================================================================
+// LAYER 14 — CROSS-ENGINE CONSISTENCY
+// =====================================================================
+
+describe('Layer 14 — Cross-Engine Consistency', () => {
+  it('Test 38: Grade Engine ↔ Intelligence Engine — metric grades agree exactly', () => {
+    const standalone = gradeAllResults(FULL_RESULTS, SPORT, AGE);
+    const report = generateReport(FULL_RESULTS, 'SS', SPORT, AGE);
+
+    // Every metric in the report must match gradeAllResults
+    for (const mg of report.metricGrades) {
+      expect(mg.grade).toBe(standalone[mg.key]);
+    }
+
+    // Top strengths must be the 3 highest from standalone
+    const sortedKeys = Object.entries(standalone)
+      .sort(([, a], [, b]) => b - a)
+      .map(([k]) => k);
+    const top3 = sortedKeys.slice(0, 3);
+    expect(report.topStrengths.map(s => s.key)).toEqual(top3);
+  });
+
+  it('Test 39: Tool Grades ↔ Report Tool Grades — zero divergence', () => {
+    const standalone = computeToolGrades(FULL_RESULTS, 'SS', SPORT, AGE);
+    const report = generateReport(FULL_RESULTS, 'SS', SPORT, AGE);
+
+    expect(report.toolGrades.hit).toBe(standalone.hit);
+    expect(report.toolGrades.power).toBe(standalone.power);
+    expect(report.toolGrades.run).toBe(standalone.run);
+    expect(report.toolGrades.field).toBe(standalone.field);
+    expect(report.toolGrades.arm).toBe(standalone.arm);
+    expect(report.toolGrades.overall).toBe(standalone.overall);
+  });
+});
+
+// =====================================================================
+// LAYER 15 — INTEGRATION KILL TESTS
+// =====================================================================
+
+describe('Layer 15 — Integration Kill Tests', () => {
+  it('Test 40: Concurrent Computation Determinism — 100 parallel calls identical', async () => {
+    const promises = Array.from({ length: 100 }, () =>
+      Promise.resolve(JSON.stringify(generateReport(FULL_RESULTS, 'SS', SPORT, AGE)))
+    );
+    const results = await Promise.all(promises);
+    const baseline = results[0];
+    for (const r of results) {
+      expect(r).toBe(baseline);
+    }
+
+    // Same for computeToolGrades
+    const tgPromises = Array.from({ length: 100 }, () =>
+      Promise.resolve(JSON.stringify(computeToolGrades(FULL_RESULTS, 'SS', SPORT, AGE)))
+    );
+    const tgResults = await Promise.all(tgPromises);
+    const tgBaseline = tgResults[0];
+    for (const r of tgResults) {
+      expect(r).toBe(tgBaseline);
+    }
+  });
+
+  it('Test 41: Partial Failure Cascade — progressive metric removal never crashes', () => {
+    const keys = Object.keys(FULL_RESULTS);
+    let current = { ...FULL_RESULTS };
+
+    for (let i = 0; i < keys.length; i++) {
+      const report = generateReport(current, 'SS', SPORT, AGE);
+
+      // No NaN in any output
+      for (const mg of report.metricGrades) {
+        expect(Number.isNaN(mg.grade)).toBe(false);
+      }
+      const tools = report.toolGrades;
+      for (const t of ['hit', 'power', 'run', 'field', 'arm', 'overall'] as const) {
+        if (tools[t] !== null) {
+          expect(Number.isNaN(tools[t]!)).toBe(false);
+          expect(tools[t]!).toBeGreaterThanOrEqual(20);
+          expect(tools[t]!).toBeLessThanOrEqual(80);
+        }
+      }
+
+      // Remove one metric
+      const next = { ...current };
+      delete next[keys[i]];
+      current = next;
+    }
+
+    // Empty results should produce null tools
+    const emptyReport = generateReport({}, 'SS', SPORT, AGE);
+    expect(emptyReport.toolGrades.overall).toBeNull();
+    expect(emptyReport.metricGrades.length).toBe(0);
+  });
+
+  it('Test 42: Extreme Volume Stress — 50,000 random cases in <10s', () => {
+    const allKeys = Object.keys(METRIC_BY_KEY);
+    const start = performance.now();
+    let violations = 0;
+
+    for (let i = 0; i < 50000; i++) {
+      const results: Record<string, number> = {};
+      const numMetrics = 1 + Math.floor(Math.random() * 8);
+      for (let j = 0; j < numMetrics; j++) {
+        const key = allKeys[Math.floor(Math.random() * allKeys.length)];
+        results[key] = Math.random() * 200;
+      }
+
+      const tg = computeToolGrades(results, 'SS', 'baseball', 16);
+      for (const t of ['hit', 'power', 'run', 'field', 'arm', 'overall'] as const) {
+        if (tg[t] !== null) {
+          if (Number.isNaN(tg[t]!) || tg[t]! < 20 || tg[t]! > 80) violations++;
+        }
+      }
+    }
+
+    const elapsed = performance.now() - start;
+    expect(violations).toBe(0);
+    expect(elapsed).toBeLessThan(10000); // 10s ceiling
+  });
+});
