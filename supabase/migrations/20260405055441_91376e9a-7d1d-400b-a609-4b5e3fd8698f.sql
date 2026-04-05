@@ -1,0 +1,1 @@
+ALTER TABLE public.vault_performance_tests ADD COLUMN IF NOT EXISTS schema_version integer DEFAULT 2;
