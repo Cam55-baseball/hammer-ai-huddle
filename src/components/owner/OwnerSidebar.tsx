@@ -67,6 +67,7 @@ export const OwnerSidebar = ({
     { id: 'scout-applications', label: 'Scout Applications', icon: UserPlus, badgeCount: pendingScoutApplications },
     { id: 'videos', label: 'Recent Videos', icon: Video },
     { id: 'video-library', label: 'Video Library', icon: Library },
+    { id: 'promo-engine', label: 'Promo Engine', icon: Film },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'player-search', label: 'Player Search', icon: Search },
