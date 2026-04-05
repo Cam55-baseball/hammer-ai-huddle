@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       throw new Error("No authorization header");
     }
 
-    const supabase = createClient(supabaseUrl!, supabaseKey!);
+    const supabase = createClient(supabaseUrl!, supabaseKey!, { auth: { persistSession: false } });
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
