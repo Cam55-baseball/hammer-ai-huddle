@@ -1597,12 +1597,16 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     From Glove to Glove (seconds)
                   </Label>
                   <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="e.g. 1.85"
                     value={current.glove_to_glove_sec ?? ''}
-                    onChange={e => updateField('glove_to_glove_sec', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                        updateField('glove_to_glove_sec', v === '' ? undefined : v.endsWith('.') ? v : parseFloat(v));
+                      }
+                    }}
                     className="h-8 text-xs"
                   />
                   <p className="text-[10px] text-muted-foreground mt-1">
@@ -1890,25 +1894,33 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Pop Time (sec)</Label>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       placeholder="e.g. 1.95"
                       value={current.catcher_pop_time_sec ?? ''}
-                      onChange={e => updateField('catcher_pop_time_sec', e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={e => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                          updateField('catcher_pop_time_sec', v === '' ? undefined : v.endsWith('.') ? v : parseFloat(v));
+                        }
+                      }}
                       className="h-8 text-xs"
-                      min={0}
-                      step="0.01"
                     />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Transfer Time (sec)</Label>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="decimal"
                       placeholder="e.g. 0.75"
                       value={current.catcher_transfer_time_sec ?? ''}
-                      onChange={e => updateField('catcher_transfer_time_sec', e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={e => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                          updateField('catcher_transfer_time_sec', v === '' ? undefined : v.endsWith('.') ? v : parseFloat(v));
+                        }
+                      }}
                       className="h-8 text-xs"
-                      min={0}
-                      step="0.01"
                     />
                   </div>
                   <div>
@@ -1969,7 +1981,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {/* Field Position Diagram — collapsible */}
+              </>
+              )}
+
+              {/* Field Position Diagram — always available, collapsible */}
               <Collapsible>
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-1.5">
                   <MapPin className="h-3.5 w-3.5" />
@@ -1986,10 +2001,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     }}
                   />
                 </CollapsibleContent>
-               </Collapsible>
-
-              </>
-              )}
+              </Collapsible>
             </>
           )}
 
