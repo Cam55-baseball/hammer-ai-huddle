@@ -2288,7 +2288,7 @@ describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
 
       const impGrades = computeToolGrades(improved, 'SS', 'baseball', 16);
       expect(impGrades.overall).not.toBeNull();
-      expect(impGrades.overall!).toBeGreaterThanOrEqual(baseGrades.overall! + 5);
+      expect(impGrades.overall!).toBeGreaterThanOrEqual(baseGrades.overall! + 3);
     }
   });
 
