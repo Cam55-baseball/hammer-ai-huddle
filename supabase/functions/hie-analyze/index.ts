@@ -1193,6 +1193,79 @@ function buildFallbackWeekPlan(weaknesses: WeaknessCluster[], readinessScore: nu
 }
 
 // ═══════════════════════════════════════════════════════════════
+// TOOL-PERFORMANCE GAP DETECTION
+// ═══════════════════════════════════════════════════════════════
+
+interface ToolPerformanceGap {
+  tool: string;
+  tool_grade: number;
+  perf_output: number;
+  perf_source: string;
+  gap: number;
+  direction: 'tool_exceeds' | 'perf_exceeds';
+  issue: string;
+  prescription_class: 'skill_transfer' | 'physical_development';
+}
+
+function mapCompositeToToolScale(compositeScore: number): number {
+  // Map 0-100 composite → 20-80 tool scale
+  return Math.round(20 + (compositeScore / 100) * 60);
+}
+
+function analyzeToolPerformanceGaps(
+  toolGrades: Record<string, number | null> | null,
+  composites: { bqi?: number; fqi?: number; pei?: number; decision?: number; competitive?: number },
+): MicroPattern[] {
+  if (!toolGrades) return [];
+  const patterns: MicroPattern[] = [];
+
+  const mappings: { tool: string; perfKey: keyof typeof composites; perfLabel: string }[] = [
+    { tool: 'hit', perfKey: 'bqi', perfLabel: 'BQI' },
+    { tool: 'power', perfKey: 'bqi', perfLabel: 'BQI (power output)' },
+    { tool: 'field', perfKey: 'fqi', perfLabel: 'FQI' },
+    { tool: 'arm', perfKey: 'pei', perfLabel: 'PEI' },
+    { tool: 'run', perfKey: 'competitive', perfLabel: 'Competitive Index' },
+  ];
+
+  for (const { tool, perfKey, perfLabel } of mappings) {
+    const tg = toolGrades[tool];
+    const perfRaw = composites[perfKey];
+    if (tg == null || perfRaw == null) continue;
+
+    const perfMapped = mapCompositeToToolScale(perfRaw);
+    const delta = tg - perfMapped;
+    const absDelta = Math.abs(delta);
+
+    if (absDelta < 15) continue; // No significant gap
+
+    const direction: 'tool_exceeds' | 'perf_exceeds' = delta > 0 ? 'tool_exceeds' : 'perf_exceeds';
+    const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical_development';
+    const severity: 'high' | 'medium' = absDelta >= 20 ? 'high' : 'medium';
+
+    const issue = direction === 'tool_exceeds'
+      ? `${tool.charAt(0).toUpperCase() + tool.slice(1)} tool (${tg}) not translating to ${perfLabel} (${perfMapped})`
+      : `${perfLabel} performance (${perfMapped}) exceeding ${tool} tool (${tg}) — ceiling risk`;
+
+    const metricName = `tool_gap_${tool}_${prescriptionClass}`;
+
+    patterns.push({
+      category: 'tool_performance_gap',
+      metric: metricName,
+      value: absDelta,
+      threshold: 15,
+      severity,
+      description: issue,
+      data_points: {
+        tool, tool_grade: tg, perf_output: perfMapped, perf_source: perfLabel,
+        gap: delta, direction, prescription_class: prescriptionClass,
+      },
+    });
+  }
+
+  return patterns;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN HANDLER
 // ═══════════════════════════════════════════════════════════════
 
