@@ -8,8 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film } from "lucide-react";
 import { VideoLibraryManager } from "@/components/owner/VideoLibraryManager";
+import { PromoEngineTab } from "@/components/promo-engine/PromoEngineTab";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
@@ -47,6 +48,7 @@ const sectionLabels: Record<OwnerSection, string> = {
   'scout-applications': 'Scout Applications',
   'videos': 'Recent Videos',
   'video-library': 'Video Library Manager',
+  'promo-engine': 'Promo Engine',
   'subscriptions': 'Subscriptions',
   'settings': 'Settings',
   'player-search': 'Player Search',
@@ -454,6 +456,7 @@ const OwnerDashboard = () => {
               {activeSection === 'subscriptions' && 'Active module subscriptions'}
               {activeSection === 'settings' && 'Configure app-wide settings'}
               {activeSection === 'player-search' && 'Search and view player profiles'}
+              {activeSection === 'promo-engine' && 'Build and manage cinematic promotional videos'}
             </p>
           </div>
 
@@ -911,6 +914,11 @@ const OwnerDashboard = () => {
           {/* Video Library Manager Section */}
           {activeSection === 'video-library' && (
             <VideoLibraryManager />
+          )}
+
+          {/* Promo Engine Section */}
+          {activeSection === 'promo-engine' && (
+            <PromoEngineTab />
           )}
 
           {/* Player Search Section */}

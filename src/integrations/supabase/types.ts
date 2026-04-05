@@ -3842,6 +3842,140 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_projects: {
+        Row: {
+          created_at: string
+          format: string
+          id: string
+          output_url: string | null
+          render_metadata: Json | null
+          scene_sequence: Json
+          status: string
+          target_audience: string
+          target_duration: number
+          title: string
+          updated_at: string
+          video_goal: string
+        }
+        Insert: {
+          created_at?: string
+          format?: string
+          id?: string
+          output_url?: string | null
+          render_metadata?: Json | null
+          scene_sequence?: Json
+          status?: string
+          target_audience: string
+          target_duration?: number
+          title: string
+          updated_at?: string
+          video_goal: string
+        }
+        Update: {
+          created_at?: string
+          format?: string
+          id?: string
+          output_url?: string | null
+          render_metadata?: Json | null
+          scene_sequence?: Json
+          status?: string
+          target_audience?: string
+          target_duration?: number
+          title?: string
+          updated_at?: string
+          video_goal?: string
+        }
+        Relationships: []
+      }
+      promo_render_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          format: string
+          id: string
+          output_url: string | null
+          project_id: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          format: string
+          id?: string
+          output_url?: string | null
+          project_id: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          format?: string
+          id?: string
+          output_url?: string | null
+          project_id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_render_queue_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "promo_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_scenes: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_variant: string
+          feature_area: string
+          id: string
+          scene_key: string
+          sim_data: Json
+          status: string
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_variant?: string
+          feature_area: string
+          id?: string
+          scene_key: string
+          sim_data?: Json
+          status?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_variant?: string
+          feature_area?: string
+          id?: string
+          scene_key?: string
+          sim_data?: Json
+          status?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       roadmap_milestones: {
         Row: {
           badge_icon: string | null
