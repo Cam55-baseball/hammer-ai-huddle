@@ -57,40 +57,63 @@ Deno.serve(async (req) => {
       results.nightly_response = { error: e.message };
     }
 
-    // Step 4: Check post-state — look for processing logs
-    // The nightly function logs "nightly_mpi_batch" entries in audit_log
-    const { data: batchLogs } = await supabase
+    // Step 4: Check nightly_mpi_batch_start — the NEW audit log proving resume index
+    const { data: batchStartLogs } = await supabase
       .from("audit_log")
       .select("id, action, metadata, created_at")
-      .in("action", ["nightly_mpi_batch", "nightly_mpi_complete", "nightly_mpi_timeout", "nightly_mpi_continuation"])
+      .eq("action", "nightly_mpi_batch_start")
       .order("created_at", { ascending: false })
-      .limit(10);
-    results.post_audit_logs = batchLogs;
+      .limit(3);
 
-    // Step 5: Check which athletes were processed (from nightly response)
-    // The nightly function returns processed count and details
-    if (nightlyResult && typeof nightlyResult === "object") {
-      const nr = nightlyResult as Record<string, unknown>;
-      results.resume_proof = {
-        expected_start_index: 2,
-        nightly_reported_processed: nr.processed ?? nr.athletes_processed ?? "unknown",
-        nightly_reported_skipped: nr.skipped ?? "unknown",
+    results.batch_start_logs = batchStartLogs;
+
+    // Verify the batch_start matches injected resume_from
+    if (batchStartLogs && batchStartLogs.length > 0) {
+      const latestMeta = batchStartLogs[0].metadata as any;
+      const actualBatchStart = latestMeta?.batch_start;
+      results.resume_verification = {
+        injected_resume_from: 2,
+        actual_batch_start: actualBatchStart,
+        match: actualBatchStart === 2,
+        verdict: actualBatchStart === 2
+          ? "PASS — nightly resumed at correct index"
+          : `FAIL — expected batch_start=2, got ${actualBatchStart}`,
+      };
+    } else {
+      results.resume_verification = {
+        verdict: "FAIL — no nightly_mpi_batch_start log found",
       };
     }
 
-    // Step 6: Cleanup — delete the fake token we inserted
-    // We can identify it by the specific metadata
-    const { data: fakeTokens } = await supabase
+    // Step 5: Check completion log for resumed_from field
+    const { data: completionLogs } = await supabase
       .from("audit_log")
-      .select("id")
-      .eq("action", "nightly_mpi_continuation")
-      .eq("user_id", "00000000-0000-0000-0000-000000000000");
-    
-    if (fakeTokens && fakeTokens.length > 0) {
-      // We cannot delete from audit_log via client (immutable by design)
-      // Just note it for transparency
-      results.cleanup = `${fakeTokens.length} test token(s) remain in audit_log (immutable table)`;
+      .select("id, action, metadata, created_at")
+      .eq("action", "nightly_mpi_complete")
+      .order("created_at", { ascending: false })
+      .limit(3);
+    results.completion_logs = completionLogs;
+
+    if (completionLogs && completionLogs.length > 0) {
+      const completionMeta = completionLogs[0].metadata as any;
+      results.completion_resumed_from = {
+        resumed_from_in_completion: completionMeta?.resumed_from,
+        match: completionMeta?.resumed_from === 2,
+      };
     }
+
+    // Step 6: Check nightly response for resumed_from
+    if (nightlyResult && typeof nightlyResult === "object") {
+      const nr = nightlyResult as Record<string, unknown>;
+      results.response_proof = {
+        resumed_from_in_response: nr.resumed_from,
+        athletes_processed: nr.athletes_processed,
+        match: nr.resumed_from === 2,
+      };
+    }
+
+    // Step 7: Cleanup note
+    results.cleanup = "Test tokens remain in audit_log (immutable table)";
 
     return new Response(
       JSON.stringify({ timestamp: new Date().toISOString(), results }),
