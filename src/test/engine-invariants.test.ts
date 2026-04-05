@@ -1823,7 +1823,319 @@ describe('Layer 17 — Adversarial Robustness', () => {
     for (const mg of report.metricGrades) {
       expect(Number.isNaN(mg.grade)).toBe(false);
       expect(mg.grade).toBeGreaterThanOrEqual(20);
-      expect(mg.grade).toBeLessThanOrEqual(80);
+    expect(mg.grade).toBeLessThanOrEqual(80);
     }
+  });
+});
+
+// ── Seeded RNG Utility ───────────────────────────────────
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+
+// =================================================================
+// LAYER 18 — Benchmark Coverage & Edge Geometry (Tests 56–60)
+// =================================================================
+describe('Layer 18 — Benchmark Coverage & Edge Geometry', () => {
+
+  it('Test 56: every metric with benchmarks has ≥3 points per age band per sport', () => {
+    for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
+      for (const sport of ['baseball', 'softball'] as const) {
+        const sportBench = entry[sport];
+        for (const [ageBand, points] of Object.entries(sportBench)) {
+          if (points && points.length > 0) {
+            expect(points.length).toBeGreaterThanOrEqual(3);
+          }
+        }
+      }
+    }
+  });
+
+  it('Test 57: raw values at benchmark anchors return exact defined grades', () => {
+    // For every metric, feed in exact anchor raw values and verify grades match
+    for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
+      const metricDef = METRIC_BY_KEY[metricKey];
+      if (!metricDef) continue;
+
+      for (const sport of ['baseball', 'softball'] as const) {
+        const sportBench = entry[sport];
+        for (const [ageBand, points] of Object.entries(sportBench)) {
+          if (!points || points.length === 0) continue;
+
+          // Map age band to an age number for lookup
+          const ageMap: Record<string, number> = { '14u': 13, '18u': 17, college: 20, pro: 25 };
+          const age = ageMap[ageBand] ?? 17;
+
+          for (const pt of points) {
+            const grade = rawToGrade(metricKey, pt.raw, sport, age);
+            expect(grade).not.toBeNull();
+            // Allow ±1 for rounding
+            expect(Math.abs(grade! - pt.grade)).toBeLessThanOrEqual(1);
+          }
+        }
+      }
+    }
+  });
+
+  it('Test 58: age band fallback produces valid grades when exact band missing', () => {
+    // Find a metric that has benchmarks for 'college' but test with an age that maps to 'pro'
+    // If 'pro' is missing, fallback should still work
+    for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
+      const metricDef = METRIC_BY_KEY[metricKey];
+      if (!metricDef) continue;
+
+      for (const sport of ['baseball', 'softball'] as const) {
+        const sportBench = entry[sport];
+        if (Object.keys(sportBench).length === 0) continue;
+
+        // Get a raw value from any available band
+        const anyBand = Object.values(sportBench).find(p => p && p.length > 0);
+        if (!anyBand) continue;
+        const testRaw = anyBand[Math.floor(anyBand.length / 2)].raw;
+
+        // Test all age values — should never return null if any band exists
+        for (const testAge of [10, 15, 17, 20, 25]) {
+          const grade = rawToGrade(metricKey, testRaw, sport, testAge);
+          expect(grade).not.toBeNull();
+          expect(grade!).toBeGreaterThanOrEqual(20);
+          expect(grade!).toBeLessThanOrEqual(80);
+        }
+      }
+    }
+  });
+
+  it('Test 59: baseball and softball benchmarks differ for at least one age band', () => {
+    let anyDifference = false;
+
+    for (const [metricKey, entry] of Object.entries(GRADE_BENCHMARKS)) {
+      const bbBands = Object.keys(entry.baseball);
+      const sbBands = Object.keys(entry.softball);
+      const sharedBands = bbBands.filter(b => sbBands.includes(b));
+
+      if (sharedBands.length === 0) continue;
+
+      for (const band of sharedBands) {
+        const bbPoints = entry.baseball[band as AgeBand];
+        const sbPoints = entry.softball[band as AgeBand];
+        if (!bbPoints || !sbPoints) continue;
+
+        // Use a mid-range raw from baseball benchmarks
+        const midRaw = bbPoints[Math.floor(bbPoints.length / 2)].raw;
+        const ageMap: Record<string, number> = { '14u': 13, '18u': 17, college: 20, pro: 25 };
+        const age = ageMap[band] ?? 17;
+
+        const bbGrade = rawToGrade(metricKey, midRaw, 'baseball', age);
+        const sbGrade = rawToGrade(metricKey, midRaw, 'softball', age);
+
+        if (bbGrade !== null && sbGrade !== null && bbGrade !== sbGrade) {
+          anyDifference = true;
+        }
+      }
+    }
+
+    expect(anyDifference).toBe(true);
+  });
+
+  it('Test 60: bilateral metric symmetry and asymmetric averaging', () => {
+    // Identical L/R should equal single metric grade
+    const symmetricResults: Record<string, number> = {
+      sl_broad_jump_left: 72,
+      sl_broad_jump_right: 72,
+    };
+    const singleResult: Record<string, number> = {
+      sl_broad_jump: 72,
+    };
+
+    const symGrades = computeToolGrades(symmetricResults, 'SS', 'baseball', 16);
+    const singleGrades = computeToolGrades(singleResult, 'SS', 'baseball', 16);
+
+    // Power tool should produce equal results for symmetric bilateral vs single
+    if (symGrades.power !== null && singleGrades.power !== null) {
+      expect(Math.abs(symGrades.power - singleGrades.power)).toBeLessThanOrEqual(2);
+    }
+
+    // Asymmetric L/R should average
+    const asymResults: Record<string, number> = {
+      sl_broad_jump_left: 60,
+      sl_broad_jump_right: 84,
+    };
+    const asymGrades = computeToolGrades(asymResults, 'SS', 'baseball', 16);
+    // The averaged raw feeds should produce a result between grading each individually
+    if (asymGrades.power !== null) {
+      expect(asymGrades.power).toBeGreaterThanOrEqual(20);
+      expect(asymGrades.power).toBeLessThanOrEqual(80);
+    }
+  });
+});
+
+// =================================================================
+// LAYER 19 — Scale, Distribution & Population Reality (Tests 61–65)
+// =================================================================
+describe('Layer 19 — Scale, Distribution & Population Reality', () => {
+
+  const METRICS_WITH_RANGES: Record<string, [number, number]> = {
+    tee_exit_velocity: [55, 110],
+    bat_speed: [40, 95],
+    sixty_yard_dash: [6.2, 8.5],
+    ten_yard_dash: [1.4, 2.1],
+    pro_agility: [3.5, 5.5],
+    position_throw_velo: [55, 95],
+    pitching_velocity: [55, 100],
+    vertical_jump: [14, 40],
+    sl_broad_jump: [45, 100],
+    mb_rotational_throw: [15, 45],
+    lateral_shuffle: [3.5, 5.5],
+    long_toss_distance: [140, 320],
+  };
+  const METRIC_KEYS = Object.keys(METRICS_WITH_RANGES);
+
+  function generateProfile(rng: () => number): Record<string, number> {
+    const results: Record<string, number> = {};
+    for (const m of METRIC_KEYS) {
+      const [lo, hi] = METRICS_WITH_RANGES[m];
+      results[m] = lo + rng() * (hi - lo);
+    }
+    return results;
+  }
+
+  it('Test 61: 10,000-profile Monte Carlo — zero crashes, all grades valid, perf ≤ 2000ms', () => {
+    const rng = seededRandom(1337);
+    const start = performance.now();
+
+    for (let i = 0; i < 10000; i++) {
+      const results = generateProfile(rng);
+      const tg = computeToolGrades(results, 'SS', 'baseball', 16);
+
+      for (const key of ['hit', 'power', 'run', 'field', 'arm'] as ToolName[]) {
+        const g = tg[key];
+        if (g !== null) {
+          expect(g).toBeGreaterThanOrEqual(20);
+          expect(g).toBeLessThanOrEqual(80);
+          expect(Number.isNaN(g)).toBe(false);
+        }
+      }
+
+      if (tg.overall !== null) {
+        expect(tg.overall).toBeGreaterThanOrEqual(20);
+        expect(tg.overall).toBeLessThanOrEqual(80);
+        expect(Number.isNaN(tg.overall)).toBe(false);
+      }
+    }
+
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThanOrEqual(2000);
+  });
+
+  it('Test 62: population distribution centers 40–55, stdDev 8–18, floor/ceiling spread', () => {
+    const rng = seededRandom(42);
+    const samples: number[] = [];
+
+    for (let i = 0; i < 2000; i++) {
+      const results = generateProfile(rng);
+      const g = computeToolGrades(results, 'SS', 'baseball', 16);
+      if (g.overall !== null) samples.push(g.overall);
+    }
+
+    expect(samples.length).toBeGreaterThan(0);
+
+    const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
+    expect(avg).toBeGreaterThanOrEqual(40);
+    expect(avg).toBeLessThanOrEqual(55);
+
+    // Variance / stdDev
+    const variance = samples.reduce((acc, x) => acc + Math.pow(x - avg, 2), 0) / samples.length;
+    const stdDev = Math.sqrt(variance);
+    expect(stdDev).toBeGreaterThanOrEqual(8);
+    expect(stdDev).toBeLessThanOrEqual(18);
+
+    // Floor/ceiling spread
+    const floorCount = samples.filter(s => s <= 35).length;
+    const ceilCount = samples.filter(s => s >= 60).length;
+    expect(floorCount / samples.length).toBeGreaterThanOrEqual(0.05);
+    expect(ceilCount / samples.length).toBeGreaterThanOrEqual(0.05);
+  });
+
+  it('Test 63: elite grades (≥70) remain rare (<5%)', () => {
+    const rng = seededRandom(7777);
+    let eliteCount = 0;
+    const total = 2000;
+
+    for (let i = 0; i < total; i++) {
+      const results = generateProfile(rng);
+      const g = computeToolGrades(results, 'SS', 'baseball', 16);
+      if (g.overall !== null && g.overall >= 70) {
+        eliteCount++;
+      }
+    }
+
+    expect(eliteCount / total).toBeLessThanOrEqual(0.05);
+  });
+
+  it('Test 64: no tool dominates distribution across population', () => {
+    const rng = seededRandom(9999);
+    const totals = { hit: 0, power: 0, run: 0, field: 0, arm: 0 };
+    const counts = { hit: 0, power: 0, run: 0, field: 0, arm: 0 };
+    const count = 2000;
+
+    for (let i = 0; i < count; i++) {
+      const results = generateProfile(rng);
+      const g = computeToolGrades(results, 'SS', 'baseball', 16);
+
+      for (const tool of ['hit', 'power', 'run', 'field', 'arm'] as ToolName[]) {
+        if (g[tool] !== null) {
+          totals[tool] += g[tool]!;
+          counts[tool]++;
+        }
+      }
+    }
+
+    const avgs = (['hit', 'power', 'run', 'field', 'arm'] as ToolName[])
+      .filter(t => counts[t] > 0)
+      .map(t => totals[t] / counts[t]);
+
+    const max = Math.max(...avgs);
+    const min = Math.min(...avgs);
+
+    expect(max - min).toBeLessThanOrEqual(8);
+  });
+
+  it('Test 65: better raw profiles consistently rank higher', () => {
+    const weak = {
+      tee_exit_velocity: 65,
+      bat_speed: 50,
+      sixty_yard_dash: 7.8,
+      pro_agility: 5.0,
+      position_throw_velo: 60,
+    };
+
+    const mid = {
+      tee_exit_velocity: 80,
+      bat_speed: 65,
+      sixty_yard_dash: 7.0,
+      pro_agility: 4.3,
+      position_throw_velo: 75,
+    };
+
+    const strong = {
+      tee_exit_velocity: 95,
+      bat_speed: 80,
+      sixty_yard_dash: 6.6,
+      pro_agility: 4.0,
+      position_throw_velo: 88,
+    };
+
+    const g1 = computeToolGrades(weak, 'SS', 'baseball', 16);
+    const g2 = computeToolGrades(mid, 'SS', 'baseball', 16);
+    const g3 = computeToolGrades(strong, 'SS', 'baseball', 16);
+
+    expect(g1.overall).not.toBeNull();
+    expect(g2.overall).not.toBeNull();
+    expect(g3.overall).not.toBeNull();
+    expect(g2.overall!).toBeGreaterThan(g1.overall!);
+    expect(g3.overall!).toBeGreaterThan(g2.overall!);
   });
 });
