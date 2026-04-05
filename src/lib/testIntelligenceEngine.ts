@@ -106,8 +106,11 @@ export function generateReport(
   const sorted = [...metricGrades].sort((a, b) => b.grade - a.grade);
   const topStrengths = sorted.slice(0, 3);
 
-  // 4. Find top 3 limiting factors (lowest grades with causal links)
-  const weakest = [...metricGrades].sort((a, b) => a.grade - b.grade);
+  // 4. Find top 3 limiting factors (lowest grades with causal links, excluding strengths)
+  const strengthKeys = new Set(topStrengths.map(s => s.key));
+  const weakest = [...metricGrades]
+    .filter(m => !strengthKeys.has(m.key))
+    .sort((a, b) => a.grade - b.grade);
   const limitingFactors: { metric: MetricGradeResult; blocks: string }[] = [];
   
   for (const metric of weakest) {

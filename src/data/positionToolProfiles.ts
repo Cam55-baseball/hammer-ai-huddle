@@ -39,11 +39,11 @@ export const POSITION_TOOL_PROFILES: Record<string, ToolProfile> = {
     arm:   { weight: 0.35, metrics: ARM_METRICS },
   },
   '1B': {
-    hit:   { weight: 0.20, metrics: HIT_METRICS },
-    power: { weight: 0.30, metrics: POWER_METRICS },
+    hit:   { weight: 0.25, metrics: HIT_METRICS },
+    power: { weight: 0.35, metrics: POWER_METRICS },
     run:   { weight: 0.05, metrics: RUN_METRICS },
-    field: { weight: 0.20, metrics: FIELD_METRICS },
-    arm:   { weight: 0.05, metrics: ARM_METRICS },
+    field: { weight: 0.25, metrics: FIELD_METRICS },
+    arm:   { weight: 0.10, metrics: ARM_METRICS },
   },
   '2B': {
     hit:   { weight: 0.25, metrics: HIT_METRICS },
@@ -88,8 +88,8 @@ export const POSITION_TOOL_PROFILES: Record<string, ToolProfile> = {
     arm:   { weight: 0.60, metrics: ARM_METRICS },
   },
   DH: {
-    hit:   { weight: 0.35, metrics: HIT_METRICS },
-    power: { weight: 0.35, metrics: POWER_METRICS },
+    hit:   { weight: 0.50, metrics: HIT_METRICS },
+    power: { weight: 0.50, metrics: POWER_METRICS },
     run:   { weight: 0.00, metrics: RUN_METRICS },
     field: { weight: 0.00, metrics: FIELD_METRICS },
     arm:   { weight: 0.00, metrics: ARM_METRICS },
@@ -109,8 +109,8 @@ export const POSITION_TOOL_PROFILES: Record<string, ToolProfile> = {
     arm:   { weight: 0.20, metrics: ARM_METRICS },
   },
   DP: {
-    hit:   { weight: 0.35, metrics: HIT_METRICS },
-    power: { weight: 0.35, metrics: POWER_METRICS },
+    hit:   { weight: 0.50, metrics: HIT_METRICS },
+    power: { weight: 0.50, metrics: POWER_METRICS },
     run:   { weight: 0.00, metrics: RUN_METRICS },
     field: { weight: 0.00, metrics: FIELD_METRICS },
     arm:   { weight: 0.00, metrics: ARM_METRICS },
