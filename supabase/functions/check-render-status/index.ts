@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -23,18 +28,21 @@ Deno.serve(async (req) => {
 
     const results: any[] = [];
 
+    console.log(`[check-render-status] Starting status check. Lambda configured: ${!!lambdaConfigured}`);
+
     // 1. Timeout stuck processing jobs
     const { data: stuckJobs } = await supabase
       .from("promo_render_queue")
       .select("*")
       .eq("status", "processing");
 
+    console.log(`[check-render-status] Found ${stuckJobs?.length || 0} processing jobs`);
+
     for (const job of stuckJobs || []) {
       const startedAt = new Date(job.started_at).getTime();
       const elapsed = Date.now() - startedAt;
 
       if (elapsed > TIMEOUT_MS) {
-        // Check if retryable
         if (job.retry_count < job.max_retries) {
           await supabase
             .from("promo_render_queue")
@@ -69,6 +77,8 @@ Deno.serve(async (req) => {
       // If Lambda is configured and job has a render_id, check Lambda status
       if (lambdaConfigured && job.render_id) {
         try {
+          console.log(`[check-render-status] Checking Lambda progress for render_id: ${job.render_id}`);
+
           const progress = await checkLambdaProgress(
             awsAccessKey!,
             awsSecretKey!,
@@ -77,11 +87,17 @@ Deno.serve(async (req) => {
             job.render_id
           );
 
+          console.log(`[check-render-status] Progress for ${job.render_id}: done=${progress.done}, progress=${progress.overallProgress}, fatal=${progress.fatalError || 'none'}`);
+
           if (progress.done && progress.outputUrl) {
+            console.log(`[check-render-status] Render complete! Downloading from: ${progress.outputUrl}`);
+
             // Download from S3 and upload to Supabase storage
             const videoResponse = await fetch(progress.outputUrl);
             const videoBlob = await videoResponse.blob();
             const storagePath = `renders/${job.project_id}/${job.id}.mp4`;
+
+            console.log(`[check-render-status] Uploading to storage: ${storagePath} (${videoBlob.size} bytes)`);
 
             await supabase.storage
               .from("promo-videos")
@@ -95,6 +111,8 @@ Deno.serve(async (req) => {
               .getPublicUrl(storagePath);
 
             const publicUrl = urlData.publicUrl;
+
+            console.log(`[check-render-status] Public URL: ${publicUrl}`);
 
             // Update queue and project
             await supabase
@@ -116,6 +134,8 @@ Deno.serve(async (req) => {
 
             results.push({ id: job.id, action: "completed", output_url: publicUrl });
           } else if (progress.fatalError) {
+            console.error(`[check-render-status] Fatal error for ${job.render_id}: ${progress.fatalError}`);
+
             if (job.retry_count < job.max_retries) {
               await supabase
                 .from("promo_render_queue")
@@ -148,6 +168,7 @@ Deno.serve(async (req) => {
             results.push({ id: job.id, action: "still_processing", progress: progress.overallProgress });
           }
         } catch (err: any) {
+          console.error(`[check-render-status] Lambda check error for ${job.id}: ${err.message}`);
           results.push({ id: job.id, action: "lambda_check_error", error: err.message });
         }
       }
@@ -175,11 +196,14 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log(`[check-render-status] Processed ${results.length} jobs`);
+
     return new Response(
       JSON.stringify({ processed: results.length, results }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
+    console.error(`[check-render-status] Unhandled error: ${err.message}`);
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
