@@ -1753,16 +1753,28 @@ Deno.serve(async (req) => {
               await supabase.from('drill_prescriptions').update({ targeted_metric: exMetric }).eq('id', ex.id);
             }
           }
+          // Direction map: metrics where higher value = worse performance
+          const HIGHER_IS_WORSE = new Set([
+            'slow_reaction_time', 'fatigue_dropoff', 'chase_rate_high',
+            'practice_game_gap',
+          ]);
           let effectivenessScore: number | null = null;
           let postWeaknessValue: number | null = null;
           if (exMetric) {
             const currentWS = weaknessScoreRows.find(w => w.weakness_metric === exMetric);
+            const preVal = (ex as any).pre_weakness_value ?? (ex as any).pre_score;
             if (currentWS) {
               postWeaknessValue = currentWS.score;
-              const preVal = (ex as any).pre_weakness_value ?? (ex as any).pre_score;
               if (preVal != null) {
-                effectivenessScore = preVal - currentWS.score; // positive = improvement
+                const higherIsWorse = HIGHER_IS_WORSE.has(exMetric) || exMetric.startsWith('tool_gap_');
+                effectivenessScore = higherIsWorse
+                  ? preVal - currentWS.score   // lower score = improvement = positive
+                  : currentWS.score - preVal;  // higher score = improvement = positive
               }
+            } else if (preVal != null) {
+              // Pattern resolved — no longer detected = max improvement
+              postWeaknessValue = 0;
+              effectivenessScore = preVal;
             }
           }
           // Fall back to MPI-level if no weakness-specific data

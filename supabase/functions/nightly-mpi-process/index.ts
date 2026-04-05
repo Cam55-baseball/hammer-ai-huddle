@@ -247,6 +247,14 @@ serve(async (req) => {
         }
       }
 
+      // Log the starting batch index for resume verification
+      await supabase.from('audit_log').insert({
+        user_id: '00000000-0000-0000-0000-000000000000',
+        action: 'nightly_mpi_batch_start',
+        table_name: 'mpi_scores',
+        metadata: { sport, batch_start: resumeFrom, total_athletes: athletes.length, timestamp: new Date().toISOString() },
+      });
+
       for (let batchStart = resumeFrom; batchStart < athletes.length; batchStart += BATCH_SIZE) {
         // Check runtime budget — stop if approaching 50s limit
         if (Date.now() - nightlyStartTime > 50000) {
@@ -896,6 +904,7 @@ serve(async (req) => {
       metadata: {
         timestamp: new Date().toISOString(),
         athletes_processed: totalProcessed,
+        resumed_from: resumeFrom,
         duration_ms: Date.now() - nightlyStartTime,
       },
     });
@@ -917,7 +926,7 @@ serve(async (req) => {
     }
 
     console.log('[nightly-mpi] Complete.');
-    return new Response(JSON.stringify({ success: true, timestamp: new Date().toISOString() }), {
+    return new Response(JSON.stringify({ success: true, resumed_from: resumeFrom, athletes_processed: totalProcessed, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
