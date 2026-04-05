@@ -693,8 +693,8 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 60, grade: 55 }, { raw: 65, grade: 65 }, { raw: 73, grade: 80 },
       ],
       '18u': [
-        { raw: 48, grade: 20 }, { raw: 54, grade: 30 }, { raw: 62, grade: 45 },
-        { raw: 67, grade: 55 }, { raw: 74, grade: 65 }, { raw: 82, grade: 80 },
+        { raw: 48, grade: 20 }, { raw: 55, grade: 30 }, { raw: 64, grade: 45 },
+        { raw: 69, grade: 55 }, { raw: 74, grade: 65 }, { raw: 82, grade: 80 },
       ],
       college: [
         { raw: 52, grade: 20 }, { raw: 59, grade: 30 }, { raw: 68, grade: 45 },
