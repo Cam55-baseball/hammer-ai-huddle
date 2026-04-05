@@ -456,6 +456,7 @@ const OwnerDashboard = () => {
               {activeSection === 'subscriptions' && 'Active module subscriptions'}
               {activeSection === 'settings' && 'Configure app-wide settings'}
               {activeSection === 'player-search' && 'Search and view player profiles'}
+              {activeSection === 'promo-engine' && 'Build and manage cinematic promotional videos'}
             </p>
           </div>
 
