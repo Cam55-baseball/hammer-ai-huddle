@@ -6330,6 +6330,7 @@ export type Database = {
           sport: string
           test_date: string
           test_type: string
+          tool_grades: Json | null
           user_id: string
         }
         Insert: {
@@ -6344,6 +6345,7 @@ export type Database = {
           sport: string
           test_date?: string
           test_type: string
+          tool_grades?: Json | null
           user_id: string
         }
         Update: {
@@ -6358,6 +6360,7 @@ export type Database = {
           sport?: string
           test_date?: string
           test_type?: string
+          tool_grades?: Json | null
           user_id?: string
         }
         Relationships: []
