@@ -39,7 +39,7 @@ export function PlayerGameCard({ stats, sport = 'baseball' }: PlayerGameCardProp
         {stats.sprayData.length > 0 && (
           <div>
             <span className="text-xs font-medium text-muted-foreground">Spray Chart</span>
-            <SprayChart data={stats.sprayData} size={160} />
+            <SprayChart data={stats.sprayData} size={160} sport={sport} />
           </div>
         )}
       </CardContent>
