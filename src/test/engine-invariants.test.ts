@@ -1235,6 +1235,14 @@ describe('Layer 16 — External Truth Validation', () => {
       expect(grade).not.toBeNull();
       expect(grade!).toBeLessThanOrEqual(22);
     }
+
+    // MLB Anchor Stability — 100 iterations, zero drift
+    for (let iter = 0; iter < 100; iter++) {
+      for (const [key, raw] of Object.entries(mlbAverages)) {
+        const grade = rawToGrade(key, raw, 'baseball', 25);
+        expect(Math.abs(grade! - 45)).toBeLessThanOrEqual(2);
+      }
+    }
   });
 
   it('Test 44: Cross-Age Progression Reality — younger age = higher grade for same raw', () => {
