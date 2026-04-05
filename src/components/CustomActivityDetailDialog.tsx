@@ -257,12 +257,13 @@ export function CustomActivityDetailDialog({
     if (debounceTimers.current[fieldId]) {
       clearTimeout(debounceTimers.current[fieldId]);
     }
-    debounceTimers.current[fieldId] = setTimeout(async () => {
-      await handleUpdateFieldValue(fieldId, value);
+    debounceTimers.current[fieldId] = setTimeout(() => {
       setLocalFieldValues(prev => {
-        const next = { ...prev };
-        delete next[fieldId];
-        return next;
+        const latestValue = prev[fieldId];
+        if (latestValue !== undefined) {
+          handleUpdateFieldValue(fieldId, latestValue);
+        }
+        return prev; // Keep local value as source of truth
       });
       delete debounceTimers.current[fieldId];
     }, 800);
