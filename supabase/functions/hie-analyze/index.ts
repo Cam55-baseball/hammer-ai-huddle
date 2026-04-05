@@ -932,6 +932,9 @@ function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
       });
       break;
     default:
+      if (pattern.metric?.startsWith('tool_gap_')) {
+        console.error(`UNHANDLED_METRIC: ${pattern.metric} for athlete, category=${pattern.category}`);
+      }
       if (pattern.category === "pitching") {
         rotations.push({
           primary: { name: "Command Bullpen", description: "Focus on locating all pitch types", module: "practice-hub", constraints: "40 pitches, chart location", drill_type: "bullpen" },
