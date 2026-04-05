@@ -1449,10 +1449,12 @@ Deno.serve(async (req) => {
       const sevWeight: Record<string, number> = { high: 3, medium: 2, low: 1 };
       const aGameBonus = a.data_points?.context === 'game_gap' ? 0.5 : 0;
       const aFatigueBonus = a.metric === 'fatigue_dropoff' ? 0.3 : 0;
+      const aToolGapBonus = a.metric?.startsWith('tool_gap_') ? 0.4 : 0;
       const bGameBonus = b.data_points?.context === 'game_gap' ? 0.5 : 0;
       const bFatigueBonus = b.metric === 'fatigue_dropoff' ? 0.3 : 0;
-      const aScore = (sevWeight[a.severity] ?? 1) * (1 + aGameBonus + aFatigueBonus);
-      const bScore = (sevWeight[b.severity] ?? 1) * (1 + bGameBonus + bFatigueBonus);
+      const bToolGapBonus = b.metric?.startsWith('tool_gap_') ? 0.4 : 0;
+      const aScore = (sevWeight[a.severity] ?? 1) * (1 + aGameBonus + aFatigueBonus + aToolGapBonus);
+      const bScore = (sevWeight[b.severity] ?? 1) * (1 + bGameBonus + bFatigueBonus + bToolGapBonus);
       return bScore - aScore;
     });
 
