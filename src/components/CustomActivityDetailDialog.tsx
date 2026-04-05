@@ -257,12 +257,13 @@ export function CustomActivityDetailDialog({
     if (debounceTimers.current[fieldId]) {
       clearTimeout(debounceTimers.current[fieldId]);
     }
-    debounceTimers.current[fieldId] = setTimeout(async () => {
-      await handleUpdateFieldValue(fieldId, value);
+    debounceTimers.current[fieldId] = setTimeout(() => {
       setLocalFieldValues(prev => {
-        const next = { ...prev };
-        delete next[fieldId];
-        return next;
+        const latestValue = prev[fieldId];
+        if (latestValue !== undefined) {
+          handleUpdateFieldValue(fieldId, latestValue);
+        }
+        return prev; // Keep local value as source of truth
       });
       delete debounceTimers.current[fieldId];
     }, 800);
@@ -849,9 +850,15 @@ export function CustomActivityDetailDialog({
                                 />
                               ) : field.type === 'number' ? (
                                 <Input
-                                  type="number"
+                                  type="text"
+                                  inputMode="decimal"
                                   value={getFieldValue(field.id)}
-                                  onChange={(e) => handleLocalFieldChange(field.id, e.target.value)}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                                      handleLocalFieldChange(field.id, v);
+                                    }
+                                  }}
                                   placeholder={field.value || t('customActivity.customFields.numberPlaceholder', 'e.g. 4.2')}
                                   disabled={savingFieldIds.has(field.id)}
                                   className="h-7 w-28 text-sm"
