@@ -908,14 +908,23 @@ describe('Layer 11 — Ground Truth Validation', () => {
     long_toss_distance: 140, position_throw_velo: 50, lateral_shuffle: 5.5,
   };
 
-  it('Test 31: Elite Baseball SS — tool grades reflect real-world elite', () => {
+  it('Test 31: Elite Baseball SS — tightened tool grade bands', () => {
     const report = generateReport(ELITE_SS, 'SS', 'baseball', 16);
     const tools = report.toolGrades;
 
-    // Elite SS: Hit 69, Arm 69, Run 56, Power 51, Field 50, Overall 60
-    expect(tools.hit).toBeGreaterThanOrEqual(60);
-    expect(tools.arm).toBeGreaterThanOrEqual(60);
-    expect(tools.overall).toBeGreaterThanOrEqual(55);
+    // Tightened: exact bands from real output (Hit=69, Arm=69, Power=51, Run=56, Field=50, Overall=60)
+    expect(tools.overall).toBeGreaterThanOrEqual(58);
+    expect(tools.overall).toBeLessThanOrEqual(62);
+    expect(tools.hit).toBeGreaterThanOrEqual(65);
+    expect(tools.hit).toBeLessThanOrEqual(75);
+    expect(tools.arm).toBeGreaterThanOrEqual(63);
+    expect(tools.arm).toBeLessThanOrEqual(75);
+
+    // No tool below 45 for an elite profile
+    const toolVals = [tools.hit, tools.power, tools.run, tools.field, tools.arm].filter(v => v !== null) as number[];
+    for (const v of toolVals) {
+      expect(v).toBeGreaterThanOrEqual(45);
+    }
 
     // Top strengths should include hitting or arm metrics
     const strengthKeys = report.topStrengths.map(s => s.key);
@@ -925,26 +934,26 @@ describe('Layer 11 — Ground Truth Validation', () => {
     expect(hitOrArm).toBe(true);
   });
 
-  it('Test 32: Average 14u Freshman — grades cluster around average', () => {
+  it('Test 32: Average 14u Freshman — tightened average bands', () => {
     const report = generateReport(AVG_14U, 'SS', 'baseball', 13);
     const tools = report.toolGrades;
 
-    // All tools should be in 30-55 range (average zone)
+    // Tightened: all tools ∈ [30, 45] (real output: 34-41)
     const toolVals = [tools.hit, tools.power, tools.run, tools.field, tools.arm].filter(v => v !== null) as number[];
     for (const v of toolVals) {
-      expect(v).toBeGreaterThanOrEqual(25);
-      expect(v).toBeLessThanOrEqual(55);
+      expect(v).toBeGreaterThanOrEqual(30);
+      expect(v).toBeLessThanOrEqual(45);
     }
 
-    // Overall in average range
-    expect(tools.overall).toBeGreaterThanOrEqual(30);
-    expect(tools.overall).toBeLessThanOrEqual(52);
+    // Overall ∈ [36, 42]
+    expect(tools.overall).toBeGreaterThanOrEqual(36);
+    expect(tools.overall).toBeLessThanOrEqual(42);
 
-    // Must have limiting factors (average players always have development areas)
+    // Must have limiting factors
     expect(report.limitingFactors.length).toBeGreaterThan(0);
   });
 
-  it('Test 33: Below-Average with One Standout — run dominates but overall stays low', () => {
+  it('Test 33: Below-Average with One Standout — tightened gap enforcement', () => {
     const report = generateReport(BELOW_AVG_RUN_STANDOUT, 'SS', 'baseball', 16);
     const tools = report.toolGrades;
 
@@ -952,13 +961,17 @@ describe('Layer 11 — Ground Truth Validation', () => {
     const nonNullTools = (['hit', 'power', 'run', 'field', 'arm'] as ToolName[])
       .filter(t => tools[t] !== null)
       .map(t => ({ tool: t, grade: tools[t]! }));
-    const maxTool = nonNullTools.sort((a, b) => b.grade - a.grade)[0];
-    expect(maxTool.tool).toBe('run');
+    const sorted = nonNullTools.sort((a, b) => b.grade - a.grade);
+    expect(sorted[0].tool).toBe('run');
 
-    // Overall must NOT be elite — one tool cannot mask weakness
-    expect(tools.overall).toBeLessThan(40);
+    // Tightened: Run tool ≥ next highest + 8 (real: run=35, field=25 → gap=10)
+    expect(sorted[0].grade).toBeGreaterThanOrEqual(sorted[1].grade + 8);
 
-    // Training priority should NOT reference speed/run (it's already their strength)
+    // Overall ∈ [23, 30] (real: 25)
+    expect(tools.overall).toBeGreaterThanOrEqual(23);
+    expect(tools.overall).toBeLessThanOrEqual(30);
+
+    // Training priority should NOT reference speed/run
     expect(report.trainingPriority.toLowerCase()).not.toContain('60-yard');
     expect(report.trainingPriority.toLowerCase()).not.toContain('sprint');
   });
@@ -1166,5 +1179,257 @@ describe('Layer 15 — Integration Kill Tests', () => {
     const elapsed = performance.now() - start;
     expect(violations).toBe(0);
     expect(elapsed).toBeLessThan(10000); // 10s ceiling
+  });
+});
+
+// =====================================================================
+// LAYER 16 — EXTERNAL TRUTH VALIDATION
+// =====================================================================
+
+describe('Layer 16 — External Truth Validation', () => {
+  it('Test 43: MLB Benchmark Validation — averages grade to exactly 45, elite ≥70, floor ≤22', () => {
+    // MLB average raw values → must grade to exactly 45 (anchor point)
+    const mlbAverages: Record<string, number> = {
+      sixty_yard_dash: 6.7,
+      tee_exit_velocity: 88,
+      pitching_velocity: 90,
+      position_throw_velo: 84,
+      bat_speed: 71,
+      vertical_jump: 31,
+    };
+
+    for (const [key, raw] of Object.entries(mlbAverages)) {
+      const grade = rawToGrade(key, raw, 'baseball', 25);
+      expect(grade).not.toBeNull();
+      expect(Math.abs(grade! - 45)).toBeLessThanOrEqual(2);
+    }
+
+    // Elite raw values → must grade ≥ 70
+    const eliteRaws: Record<string, number> = {
+      sixty_yard_dash: 6.2,
+      tee_exit_velocity: 110,
+      pitching_velocity: 100,
+      position_throw_velo: 95,
+      bat_speed: 85,
+      vertical_jump: 40,
+    };
+
+    for (const [key, raw] of Object.entries(eliteRaws)) {
+      const grade = rawToGrade(key, raw, 'baseball', 25);
+      expect(grade).not.toBeNull();
+      expect(grade!).toBeGreaterThanOrEqual(70);
+    }
+
+    // Floor raw values → must grade ≤ 22
+    const floorRaws: Record<string, number> = {
+      sixty_yard_dash: 8.0,
+      tee_exit_velocity: 60,
+      pitching_velocity: 68,
+      position_throw_velo: 60,
+      bat_speed: 50,
+      vertical_jump: 18,
+    };
+
+    for (const [key, raw] of Object.entries(floorRaws)) {
+      const grade = rawToGrade(key, raw, 'baseball', 25);
+      expect(grade).not.toBeNull();
+      expect(grade!).toBeLessThanOrEqual(22);
+    }
+  });
+
+  it('Test 44: Cross-Age Progression Reality — younger age = higher grade for same raw', () => {
+    // Same raw performance is more impressive at younger age bands
+    const testCases: { key: string; raw: number }[] = [
+      { key: 'tee_exit_velocity', raw: 80 },
+      { key: 'sixty_yard_dash', raw: 7.2 },
+      { key: 'vertical_jump', raw: 26 },
+      { key: 'bat_speed', raw: 65 },
+      { key: 'pitching_velocity', raw: 78 },
+    ];
+
+    for (const { key, raw } of testCases) {
+      const g12 = rawToGrade(key, raw, 'baseball', 12);  // 14u band
+      const g16 = rawToGrade(key, raw, 'baseball', 16);  // 18u band
+      const g20 = rawToGrade(key, raw, 'baseball', 20);  // college band
+
+      expect(g12).not.toBeNull();
+      expect(g16).not.toBeNull();
+      expect(g20).not.toBeNull();
+
+      // Younger = higher grade (or equal if benchmarks happen to match)
+      expect(g12!).toBeGreaterThanOrEqual(g16!);
+      expect(g16!).toBeGreaterThanOrEqual(g20!);
+
+      // Must show meaningful progression (not all equal)
+      expect(g12! - g20!).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it('Test 45: Edge Case Realism — Speed Specialist and Power Slugger archetypes', () => {
+    // SPEED SPECIALIST: elite speed, poor hitting/power
+    const speedSpec: Record<string, number> = {
+      sixty_yard_dash: 6.2, ten_yard_dash: 1.38,
+      tee_exit_velocity: 70, bat_speed: 55, position_throw_velo: 68,
+      vertical_jump: 22, pro_agility: 3.8,
+    };
+    const speedReport = generateReport(speedSpec, 'CF', 'baseball', 20);
+
+    expect(speedReport.toolGrades.run).toBeGreaterThanOrEqual(70);
+    expect(speedReport.toolGrades.hit).toBeLessThanOrEqual(35);
+    expect(speedReport.toolGrades.power).toBeLessThanOrEqual(35);
+    // Overall NOT elite (one-dimensional)
+    expect(speedReport.toolGrades.overall).toBeLessThan(65);
+
+    // Training priority references hitting weakness, not speed
+    const priority = speedReport.trainingPriority.toLowerCase();
+    expect(priority).not.toContain('60-yard');
+    expect(priority).not.toContain('sprint');
+
+    // POWER SLUGGER: elite hitting, poor speed
+    const powerSlug: Record<string, number> = {
+      tee_exit_velocity: 107, bat_speed: 89,
+      sixty_yard_dash: 7.5, ten_yard_dash: 1.9, pro_agility: 4.9,
+      vertical_jump: 34, position_throw_velo: 80,
+    };
+    const powerReport = generateReport(powerSlug, '1B', 'baseball', 22);
+
+    expect(powerReport.toolGrades.hit).toBeGreaterThanOrEqual(65);
+    expect(powerReport.toolGrades.power).toBeGreaterThanOrEqual(55);
+    expect(powerReport.toolGrades.run).toBeLessThanOrEqual(30);
+    // Overall NOT elite
+    expect(powerReport.toolGrades.overall).toBeLessThan(65);
+
+    // Training priority references speed/run weakness
+    const pPriority = powerReport.trainingPriority.toLowerCase();
+    expect(
+      pPriority.includes('dash') || pPriority.includes('run') || pPriority.includes('speed')
+    ).toBe(true);
+  });
+
+  it('Test 46: Coach Sanity Check — 100 random profiles, near-zero contradictions', () => {
+    const allKeys = Object.keys(METRIC_BY_KEY);
+    let flags = 0;
+
+    for (let i = 0; i < 100; i++) {
+      // Random full-ish profile (8-15 metrics)
+      const results: Record<string, number> = {};
+      const numMetrics = 8 + Math.floor(Math.random() * 8);
+      const shuffled = [...allKeys].sort(() => Math.random() - 0.5);
+      for (let j = 0; j < Math.min(numMetrics, shuffled.length); j++) {
+        const def = METRIC_BY_KEY[shuffled[j]];
+        if (!def) continue;
+        // Generate within plausible range
+        const range = def.higherIsBetter !== false
+          ? { min: 10, max: 120 }
+          : { min: 1.0, max: 10.0 };
+        results[shuffled[j]] = range.min + Math.random() * (range.max - range.min);
+      }
+
+      const tg = computeToolGrades(results, 'SS', 'baseball', 18);
+      const tools = (['hit', 'power', 'run', 'field', 'arm'] as ToolName[])
+        .map(t => tg[t])
+        .filter(v => v !== null) as number[];
+
+      if (tools.length < 3 || tg.overall === null) continue;
+
+      const below40 = tools.filter(t => t < 40).length;
+      const above60 = tools.filter(t => t > 60).length;
+
+      // Flag: overall > 60 but ≥2 tools < 40
+      if (tg.overall > 60 && below40 >= 2) flags++;
+      // Flag: overall < 40 but ≥2 tools > 60
+      if (tg.overall < 40 && above60 >= 2) flags++;
+    }
+
+    // Near-zero tolerance (≤5% for fully random profiles with extreme ranges)
+    expect(flags).toBeLessThanOrEqual(5);
+  });
+
+  it('Test 47: Tightened Ground Truth — validates exact bands (redundant with 31-33 tightening)', () => {
+    // Elite SS: exact validation
+    const ELITE_SS_PROFILE: Record<string, number> = {
+      ten_yard_dash: 1.55, sixty_yard_dash: 6.7, pro_agility: 3.9,
+      vertical_jump: 32, sl_broad_jump_left: 85, sl_broad_jump_right: 83,
+      mb_rotational_throw: 28, mb_situp_throw: 18, seated_chest_pass: 24,
+      tee_exit_velocity: 95, bat_speed: 75, pitching_velocity: 88,
+      long_toss_distance: 280, position_throw_velo: 88, lateral_shuffle: 4.0,
+    };
+    const ssTools = computeToolGrades(ELITE_SS_PROFILE, 'SS', 'baseball', 16);
+    expect(ssTools.overall).toBe(60);
+    expect(ssTools.hit).toBe(69);
+    expect(ssTools.arm).toBe(69);
+
+    // Average 14u: exact validation
+    const AVG_14U_PROFILE: Record<string, number> = {
+      ten_yard_dash: 2.0, sixty_yard_dash: 8.0, pro_agility: 4.8,
+      vertical_jump: 20, sl_broad_jump_left: 55, sl_broad_jump_right: 53,
+      mb_rotational_throw: 16, mb_situp_throw: 10, seated_chest_pass: 14,
+      tee_exit_velocity: 65, bat_speed: 52, pitching_velocity: 60,
+      long_toss_distance: 160, position_throw_velo: 55, lateral_shuffle: 5.2,
+    };
+    const avgTools = computeToolGrades(AVG_14U_PROFILE, 'SS', 'baseball', 13);
+    expect(avgTools.overall).toBe(38);
+
+    // Below-avg standout: exact validation
+    const BELOW_AVG_PROFILE: Record<string, number> = {
+      ten_yard_dash: 2.1, sixty_yard_dash: 6.5, pro_agility: 5.0,
+      vertical_jump: 18, sl_broad_jump_left: 50, sl_broad_jump_right: 48,
+      mb_rotational_throw: 14, mb_situp_throw: 8, seated_chest_pass: 12,
+      tee_exit_velocity: 58, bat_speed: 48, pitching_velocity: 55,
+      long_toss_distance: 140, position_throw_velo: 50, lateral_shuffle: 5.5,
+    };
+    const belowTools = computeToolGrades(BELOW_AVG_PROFILE, 'SS', 'baseball', 16);
+    expect(belowTools.overall).toBe(25);
+    expect(belowTools.run).toBe(35);
+    // Run is highest by ≥8 points
+    const others = [belowTools.hit, belowTools.power, belowTools.field, belowTools.arm]
+      .filter(v => v !== null) as number[];
+    expect(belowTools.run! - Math.max(...others)).toBeGreaterThanOrEqual(8);
+  });
+
+  it('Test 48: Full Pipeline Performance — 1000 profiles × 3 cycles in <5s', () => {
+    const allKeys = Object.keys(METRIC_BY_KEY);
+    const start = performance.now();
+    let crashes = 0;
+
+    for (let i = 0; i < 1000; i++) {
+      try {
+        // Generate 3-cycle history
+        const history = Array.from({ length: 3 }, (_, cycle) => {
+          const results: Record<string, number> = {};
+          const numMetrics = 5 + Math.floor(Math.random() * 10);
+          for (let j = 0; j < numMetrics; j++) {
+            const key = allKeys[Math.floor(Math.random() * allKeys.length)];
+            const base = 20 + Math.random() * 80;
+            results[key] = base + cycle * (Math.random() * 5); // slight progression
+          }
+          return {
+            results,
+            test_date: new Date(2026, 0, 1 + cycle * 42).toISOString().split('T')[0],
+          };
+        });
+
+        // Full pipeline
+        const report = generateReport(history[0].results, 'SS', 'baseball', 16);
+        const trends = computeTrends(history, 'baseball', 16);
+        const focus = getNextTestFocus(history, 'baseball', 16);
+
+        // Basic validity
+        if (report.toolGrades.overall !== null) {
+          if (Number.isNaN(report.toolGrades.overall)) crashes++;
+          if (report.toolGrades.overall < 20 || report.toolGrades.overall > 80) crashes++;
+        }
+        for (const t of trends) {
+          if (Number.isNaN(t.currentGrade) || Number.isNaN(t.ratePerCycle)) crashes++;
+        }
+        if (focus.prioritized.some(p => !p.key || !p.label)) crashes++;
+      } catch {
+        crashes++;
+      }
+    }
+
+    const elapsed = performance.now() - start;
+    expect(crashes).toBe(0);
+    expect(elapsed).toBeLessThan(5000);
   });
 });
