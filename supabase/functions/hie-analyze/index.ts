@@ -849,6 +849,88 @@ function buildDrillRotations(pattern: MicroPattern): DrillRotation[] {
         ],
       });
       break;
+    // ── Tool-Performance Gap: skill_transfer cases
+    case "tool_gap_hit_skill_transfer":
+      rotations.push({
+        primary: { name: "Live BP Situational Hitting", description: "Game-speed at-bats focusing on pitch recognition and application", module: "practice-hub", constraints: "15 ABs, track contact quality", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Vision-to-Swing Drill", description: "Pitch recognition followed by immediate swing decisions", module: "tex-vision", constraints: "20 pitches, timed response", drill_type: "recognition" },
+        ],
+      });
+      break;
+    case "tool_gap_power_skill_transfer":
+      rotations.push({
+        primary: { name: "High-Intent BP", description: "Max-effort swings with intent to drive, tracking exit velo", module: "practice-hub", constraints: "10 swings, measure EV", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Overload/Underload Swings", description: "Alternate heavy and light bat swings for power transfer", module: "practice-hub", constraints: "3 sets × 6 swings each weight", drill_type: "power_transfer" },
+        ],
+      });
+      break;
+    case "tool_gap_run_skill_transfer":
+      rotations.push({
+        primary: { name: "Lead-Off Read Drill", description: "Practice reading pitcher cues for optimal jump timing", module: "practice-hub", constraints: "10 reps, video review", drill_type: "baserunning" },
+        alternatives: [
+          { name: "Situational Baserunning", description: "Game scenarios with go/no-go decisions under time pressure", module: "practice-hub", constraints: "8 scenarios, timed", drill_type: "decision" },
+        ],
+      });
+      break;
+    case "tool_gap_field_skill_transfer":
+      rotations.push({
+        primary: { name: "Game-Speed Fungo", description: "Fielding reps at game speed with timed exchanges", module: "practice-hub", constraints: "20 reps, clock exchange time", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Pressure Fielding Circuit", description: "Rapid-fire ground balls with throw-to-base requirements", module: "practice-hub", constraints: "15 reps, scorecard", drill_type: "pressure" },
+        ],
+      });
+      break;
+    case "tool_gap_arm_skill_transfer":
+      rotations.push({
+        primary: { name: "Target Throwing from Position", description: "Throws to bases from game-position fielding", module: "practice-hub", constraints: "15 throws, chart accuracy", drill_type: "skill_transfer" },
+        alternatives: [
+          { name: "Accuracy Long Toss", description: "Long toss with target zones for accuracy transfer", module: "practice-hub", constraints: "20 throws, track accuracy %", drill_type: "arm_accuracy" },
+        ],
+      });
+      break;
+    // ── Tool-Performance Gap: physical_development cases
+    case "tool_gap_hit_physical":
+      rotations.push({
+        primary: { name: "Bat Speed Overload Training", description: "Heavy bat drills to increase raw bat speed", module: "practice-hub", constraints: "3 sets × 8 swings, heavy bat", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Tee Precision Work", description: "Focus on barrel accuracy at various heights and depths", module: "practice-hub", constraints: "30 swings, target zones", drill_type: "mechanics" },
+        ],
+      });
+      break;
+    case "tool_gap_power_physical":
+      rotations.push({
+        primary: { name: "Explosive Strength Circuit", description: "Med ball throws, plyometrics, and jump training for power development", module: "speed-lab", constraints: "3 circuits, max effort", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Lower Body Power Complex", description: "Squat jumps, broad jumps, and rotational throws", module: "speed-lab", constraints: "4 sets × 5 reps each", drill_type: "strength" },
+        ],
+      });
+      break;
+    case "tool_gap_run_physical":
+      rotations.push({
+        primary: { name: "Sprint Mechanics Lab", description: "Focus on acceleration mechanics and stride efficiency", module: "speed-lab", constraints: "6 × 30yd sprints, video review", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Pro Agility Work", description: "Lateral quickness and change-of-direction training", module: "speed-lab", constraints: "8 reps, timed", drill_type: "agility" },
+        ],
+      });
+      break;
+    case "tool_gap_field_physical":
+      rotations.push({
+        primary: { name: "Lateral Shuffle Circuit", description: "Improve lateral range and first-step quickness", module: "speed-lab", constraints: "4 sets × 10 shuffles each direction", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Agility Cone Drill", description: "Multi-directional cone patterns for fielding range", module: "speed-lab", constraints: "6 patterns, timed", drill_type: "agility" },
+        ],
+      });
+      break;
+    case "tool_gap_arm_physical":
+      rotations.push({
+        primary: { name: "Weighted Ball Program", description: "Progressive weighted ball throwing for arm strength", module: "practice-hub", constraints: "Prescribed weight progression, 25 throws", drill_type: "physical_development" },
+        alternatives: [
+          { name: "Long Toss Program", description: "Structured long toss to build arm strength and endurance", module: "practice-hub", constraints: "Build to max distance, 30 throws", drill_type: "arm_strength" },
+        ],
+      });
+      break;
     default:
       if (pattern.category === "pitching") {
         rotations.push({
@@ -1111,6 +1193,79 @@ function buildFallbackWeekPlan(weaknesses: WeaknessCluster[], readinessScore: nu
 }
 
 // ═══════════════════════════════════════════════════════════════
+// TOOL-PERFORMANCE GAP DETECTION
+// ═══════════════════════════════════════════════════════════════
+
+interface ToolPerformanceGap {
+  tool: string;
+  tool_grade: number;
+  perf_output: number;
+  perf_source: string;
+  gap: number;
+  direction: 'tool_exceeds' | 'perf_exceeds';
+  issue: string;
+  prescription_class: 'skill_transfer' | 'physical_development';
+}
+
+function mapCompositeToToolScale(compositeScore: number): number {
+  // Map 0-100 composite → 20-80 tool scale
+  return Math.round(20 + (compositeScore / 100) * 60);
+}
+
+function analyzeToolPerformanceGaps(
+  toolGrades: Record<string, number | null> | null,
+  composites: { bqi?: number; fqi?: number; pei?: number; decision?: number; competitive?: number },
+): MicroPattern[] {
+  if (!toolGrades) return [];
+  const patterns: MicroPattern[] = [];
+
+  const mappings: { tool: string; perfKey: keyof typeof composites; perfLabel: string }[] = [
+    { tool: 'hit', perfKey: 'bqi', perfLabel: 'BQI' },
+    { tool: 'power', perfKey: 'bqi', perfLabel: 'BQI (power output)' },
+    { tool: 'field', perfKey: 'fqi', perfLabel: 'FQI' },
+    { tool: 'arm', perfKey: 'pei', perfLabel: 'PEI' },
+    { tool: 'run', perfKey: 'competitive', perfLabel: 'Competitive Index' },
+  ];
+
+  for (const { tool, perfKey, perfLabel } of mappings) {
+    const tg = toolGrades[tool];
+    const perfRaw = composites[perfKey];
+    if (tg == null || perfRaw == null) continue;
+
+    const perfMapped = mapCompositeToToolScale(perfRaw);
+    const delta = tg - perfMapped;
+    const absDelta = Math.abs(delta);
+
+    if (absDelta < 15) continue; // No significant gap
+
+    const direction: 'tool_exceeds' | 'perf_exceeds' = delta > 0 ? 'tool_exceeds' : 'perf_exceeds';
+    const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical_development';
+    const severity: 'high' | 'medium' = absDelta >= 20 ? 'high' : 'medium';
+
+    const issue = direction === 'tool_exceeds'
+      ? `${tool.charAt(0).toUpperCase() + tool.slice(1)} tool (${tg}) not translating to ${perfLabel} (${perfMapped})`
+      : `${perfLabel} performance (${perfMapped}) exceeding ${tool} tool (${tg}) — ceiling risk`;
+
+    const metricName = `tool_gap_${tool}_${prescriptionClass}`;
+
+    patterns.push({
+      category: 'tool_performance_gap',
+      metric: metricName,
+      value: absDelta,
+      threshold: 15,
+      severity,
+      description: issue,
+      data_points: {
+        tool, tool_grade: tg, perf_output: perfMapped, perf_source: perfLabel,
+        gap: delta, direction, prescription_class: prescriptionClass,
+      },
+    });
+  }
+
+  return patterns;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN HANDLER
 // ═══════════════════════════════════════════════════════════════
 
@@ -1179,7 +1334,7 @@ Deno.serve(async (req) => {
     // 5. Settings
     const { data: settings } = await supabase
       .from("athlete_mpi_settings")
-      .select("coach_validation_met, primary_coach_id, primary_batting_side")
+      .select("coach_validation_met, primary_coach_id, primary_batting_side, primary_throwing_hand, primary_position, date_of_birth")
       .eq("user_id", user_id)
       .maybeSingle();
 
@@ -1214,7 +1369,17 @@ Deno.serve(async (req) => {
     const drillCatalog = new Map<string, string>();
     (drillCatalogRows ?? []).forEach((d: any) => drillCatalog.set(d.name, d.id));
 
-    // 10. Existing prescriptions for adaptive loop
+    // 10. Vault performance tests (tool grades for gap detection)
+    const { data: vaultTests } = await supabase
+      .from("vault_performance_tests")
+      .select("tool_grades, test_date")
+      .eq("user_id", user_id)
+      .not("tool_grades", "is", null)
+      .order("test_date", { ascending: false })
+      .limit(1);
+    const latestToolGrades = vaultTests?.[0]?.tool_grades as Record<string, number | null> | null;
+
+    // 11. Existing prescriptions for adaptive loop
     const { data: existingPrescriptions } = await supabase
       .from('drill_prescriptions')
       .select('id, drill_name, weakness_area, pre_score, effectiveness_score, adherence_count, targeted_metric, weakness_metric, pre_weakness_value')
@@ -1263,10 +1428,20 @@ Deno.serve(async (req) => {
     const gamePracticePatterns = detectGamePracticeGap(allMicroReps);
     const fatiguePatterns = detectFatigueDropoff(sessions ?? []);
 
+    // ── TOOL-PERFORMANCE GAP PATTERNS ──
+    const latestMPIForGap = mpiScores?.[0];
+    const toolGapPatterns = analyzeToolPerformanceGaps(latestToolGrades, {
+      bqi: latestMPIForGap?.composite_bqi ?? undefined,
+      fqi: latestMPIForGap?.composite_fqi ?? undefined,
+      pei: latestMPIForGap?.composite_pei ?? undefined,
+      decision: latestMPIForGap?.composite_decision ?? undefined,
+      competitive: latestMPIForGap?.composite_competitive ?? undefined,
+    });
+
     const allPatterns = [
       ...hittingPatterns, ...fieldingPatterns, ...pitchingPatterns,
       ...speedPatterns, ...timingPatterns, ...visionPatterns, ...baserunningPatterns,
-      ...gamePracticePatterns, ...fatiguePatterns,
+      ...gamePracticePatterns, ...fatiguePatterns, ...toolGapPatterns,
     ].sort((a, b) => {
       const sevWeight: Record<string, number> = { high: 3, medium: 2, low: 1 };
       const aGameBonus = a.data_points?.context === 'game_gap' ? 0.5 : 0;
