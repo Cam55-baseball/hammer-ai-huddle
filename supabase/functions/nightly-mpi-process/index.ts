@@ -904,6 +904,7 @@ serve(async (req) => {
       metadata: {
         timestamp: new Date().toISOString(),
         athletes_processed: totalProcessed,
+        resumed_from: resumeFrom,
         duration_ms: Date.now() - nightlyStartTime,
       },
     });
