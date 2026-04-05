@@ -109,8 +109,8 @@ export const POSITION_TOOL_PROFILES: Record<string, ToolProfile> = {
     arm:   { weight: 0.20, metrics: ARM_METRICS },
   },
   DP: {
-    hit:   { weight: 0.35, metrics: HIT_METRICS },
-    power: { weight: 0.35, metrics: POWER_METRICS },
+    hit:   { weight: 0.50, metrics: HIT_METRICS },
+    power: { weight: 0.50, metrics: POWER_METRICS },
     run:   { weight: 0.00, metrics: RUN_METRICS },
     field: { weight: 0.00, metrics: FIELD_METRICS },
     arm:   { weight: 0.00, metrics: ARM_METRICS },
