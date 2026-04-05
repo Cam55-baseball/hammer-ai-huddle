@@ -1597,12 +1597,16 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     From Glove to Glove (seconds)
                   </Label>
                   <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="e.g. 1.85"
                     value={current.glove_to_glove_sec ?? ''}
-                    onChange={e => updateField('glove_to_glove_sec', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                        updateField('glove_to_glove_sec', v === '' ? undefined : v.endsWith('.') ? v : parseFloat(v));
+                      }
+                    }}
                     className="h-8 text-xs"
                   />
                   <p className="text-[10px] text-muted-foreground mt-1">
