@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   ArrowLeft,
-  Library
+  Library,
+  Film
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
