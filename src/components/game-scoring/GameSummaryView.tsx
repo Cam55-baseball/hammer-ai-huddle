@@ -88,7 +88,7 @@ export function GameSummaryView({ plays, teamName, opponentName, sport = 'baseba
                 <CardTitle className="text-xs">Team Spray Chart</CardTitle>
               </CardHeader>
               <CardContent className="flex justify-center pb-3">
-                <SprayChart data={allSpray} size={200} />
+                <SprayChart data={allSpray} size={200} sport={sport} />
               </CardContent>
             </Card>
 
