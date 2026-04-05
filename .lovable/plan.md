@@ -1,151 +1,155 @@
 
 
-# Proof-Level Verification — 3 Critical Systems
+# System Validity Verification — 3 Unresolved Gaps
 
-## 1. EFFECTIVENESS ENGINE
+## 1. EFFECTIVENESS ENGINE — REAL LEARNING
 
-### WHERE weakness_scores IS WRITTEN (hie-analyze)
-- **Lines 1461-1473**: After sorting `allPatterns`, each pattern is mapped to a row `{user_id, weakness_metric: p.metric, score: p.value, computed_at}`. Previous rows for the athlete are DELETEd (line 1467-1470), then fresh rows INSERTed (line 1472).
+### Current Production State (Athlete 95de827d)
 
-### WHERE weakness_scores IS READ FOR EFFECTIVENESS
-- **Lines 1744-1780**: The effectiveness loop iterates `existingPrescriptions` (unresolved `drill_prescriptions`). For each prescription:
-  - Line 1748: Reads `targeted_metric` (or falls back to `weakness_metric`)
-  - Line 1759: Looks up `currentWS = weaknessScoreRows.find(w => w.weakness_metric === exMetric)`
-  - Line 1761: `postWeaknessValue = currentWS.score`
-  - Line 1762-1764: **Effectiveness calculation**:
-    ```
-    effectiveness_score = pre_weakness_value - currentWS.score
-    ```
-    (positive = improvement, i.e., the weakness value decreased)
-  - **Line 1769**: MPI fallback — ONLY if `effectivenessScore == null` (no weakness-specific match):
-    ```
-    effectiveness_score = mpiScore - ex.pre_score
-    ```
+All 3 active prescriptions show `effectiveness_score = 0`:
 
-### TRACE (athlete 95de827d)
-```
-Pattern: tool_gap_run_physical
-  → Written to weakness_scores: metric=tool_gap_run_physical, score=17
-  → Prescription: "Sprint Mechanics Lab", targeted_metric=tool_gap_run_physical
-  → pre_weakness_value = 17 (set at prescription creation)
-  → Next HIE run: currentWS found (metric match), postWeaknessValue = new score
-  → effectiveness_score = 17 - new_score (weakness-specific, NOT MPI)
-  → MPI fallback SKIPPED (line 1769 only fires if effectivenessScore == null)
+```text
+targeted_metric          | pre_weakness_value | post_weakness_value | effectiveness_score
+slow_reaction_time       | 656                | 656                 | 0
+vision_accuracy_low      | 36                 | 36                  | 0
+tool_gap_run_physical    | 17                 | 17                  | 0
 ```
 
-### VERDICT: IMPLEMENTED CORRECTLY
-The system uses weakness-specific scores as PRIMARY, MPI as FALLBACK ONLY. The exact line is 1764: `effectivenessScore = preVal - currentWS.score`. MPI fallback at line 1769 only fires when no weakness_score matches the prescription's targeted_metric.
+### Why: No Learning Has Occurred
+
+The effectiveness engine formula (L1764): `effectiveness_score = pre_weakness_value - currentWS.score`
+
+For this to produce a non-zero result, the athlete's **weakness_score must change between HIE runs**. The weakness_score changes ONLY when the **underlying session data produces different pattern values**.
+
+This athlete's 9 sessions have identical composite_indexes across recent runs (BQI=50, Decision=50, PEI=52.5 for the last 4 sessions). The same input → same patterns → same weakness_scores → effectiveness_score = 0.
+
+### What Would Trigger Real Learning
+
+A new session with different performance data (e.g., BQI=65 instead of 50) would:
+1. Change the composite averages
+2. Produce different pattern values (e.g., vision_accuracy_low score drops from 36 to 28)
+3. `effectiveness_score = 36 - 28 = 8` (positive = improvement)
+
+### Verdict
+
+**The calculation is correct. The system is NOT learning because no new training data has been added.** The engine is a stateless recomputation — it recalculates from scratch each run. "Learning" requires the athlete to actually train and log new sessions with different performance data.
+
+### Proof Plan
+
+To prove real learning, we will:
+1. Add one new session for the athlete with improved composite values (e.g., BQI=65)
+2. Run `hie-analyze`
+3. Show that `weakness_scores` change and `effectiveness_score ≠ 0`
+
+This is a data operation, not a code change.
 
 ---
 
-## 2. CONTEXT ENGINE (Game vs Practice)
+## 2. CONTEXT ENGINE — NON-BINARY USAGE
 
-### allMicroReps WITH session_type
-- **Lines 1408-1417**: Each session's `micro_layer_data` reps are spread with `_session_type` attached:
-  ```typescript
-  allMicroReps.push({ ...rep, _session_type: sessionType });
-  ```
-  Where `sessionType = s.session_type || 'personal_practice'`
+### Current Production State
 
-### Game vs Practice Split
-- **Lines 530-547** (`detectGamePracticeGap`):
-  ```typescript
-  const gameReps = allReps.filter(r => ['game','live_scrimmage','live_abs'].includes(r._session_type));
-  const practiceReps = allReps.filter(r => !['game','live_scrimmage','live_abs'].includes(r._session_type));
-  ```
-  Requires ≥5 reps in EACH bucket. Computes weak-contact % for each, gap = gameWeak - practiceWeak.
+```text
+Total sessions: 18
+Game sessions:  0
+```
 
-### Pattern Generation
-- Fires when `gap > 20`. Output:
-  ```json
-  {
-    "metric": "practice_game_gap",
-    "value": 28,
-    "severity": "medium",  // or "high" if gap > 35
-    "data_points": { "game_weak_pct": 55, "practice_weak_pct": 27, "context": "game_gap" }
-  }
-  ```
+### Code Truth (L533)
 
-### Ranking Influence
-- **Line 1450**: `practice_game_gap` gets a **+0.5 sorting bonus** via `data_points.context === 'game_gap'`
-- Effective sort score: medium + game_gap = `2 × 1.5 = 3.0` (ties with high-severity patterns)
-- High severity + game_gap = `3 × 1.5 = 4.5` (outranks everything)
+```typescript
+if (gameReps.length < 5 || practiceReps.length < 5) return [];
+```
 
-### Prescription Mapping
-- **Lines 830-835**: Maps to "Pressure Simulation BP" drill with situational constraints.
+**Context has ZERO effect until the threshold is met.** This is binary — not gradual. There is no partial influence from 3 game reps. The function returns an empty array and the pattern is never generated.
 
-### VERDICT: IMPLEMENTED CORRECTLY
-`_session_type` is attached at line 1415, split at lines 531-532, pattern generated at 540-545, ranking bonus applied at 1450, prescription mapped at 830. Full pipeline confirmed.
+### Is This a Bug?
 
-### CURRENT PRODUCTION STATUS: DORMANT
-The target athlete (`95de827d`) has 9 sessions — all `personal_practice`. Zero game/scrimmage sessions exist. The `detectGamePracticeGap` function correctly returns `[]` (requires ≥5 game reps). The logic is correct but has no game data to act on.
+No. It is a deliberate design choice to prevent noisy signals from insufficient sample sizes. With 3 game reps, any weak-contact percentage would be statistically meaningless (1 bad rep = 33% swing).
+
+### What We Can Verify
+
+- Confirm that `_session_type` is correctly attached to reps (code trace at L1415 already verified)
+- Confirm that with 0 game sessions, `detectGamePracticeGap` returns `[]` — which it does
+- Confirm that context has no hidden influence elsewhere in the pipeline
+
+### Other Context Usage
+
+`_session_type` is ONLY used in `detectGamePracticeGap`. It does not influence:
+- Vision accuracy detection
+- Reaction time detection
+- Fatigue drop-off detection
+- Tool gap detection
+- Sorting weights (except via the `game_gap` context tag after pattern generation)
+
+### Verdict
+
+**Context has zero effect until ≥5 game reps AND ≥5 practice reps.** This is confirmed by code and production data. There is no partial or gradual influence. This is intentional.
 
 ---
 
-## 3. NIGHTLY CONTINUATION TOKEN
+## 3. CONTINUATION TOKEN — REAL RESUME VALIDATION
 
-### READ Query
-- **Lines 233-238** (`nightly-mpi-process`):
-  ```typescript
-  const { data: continuationLog } = await supabase.from('audit_log')
-    .select('metadata')
-    .eq('action', 'nightly_mpi_continuation')
-    .eq('table_name', 'mpi_scores')
-    .gte('created_at', oneDayAgo)
-    .order('created_at', { ascending: false })
-    .limit(1);
-  ```
+### Current Production State
 
-### Starting Index Resolution
-- **Lines 241-248**:
-  ```typescript
-  let resumeFrom = 0;
-  if (continuationLog && continuationLog.length > 0) {
-    const contMeta = continuationLog[0].metadata;
-    if (contMeta?.sport === sport && typeof contMeta?.resume_from === 'number') {
-      resumeFrom = contMeta.resume_from;
-    }
-  }
-  ```
-
-### Timeout → Token Write
-- **Lines 251-268**: When `Date.now() - nightlyStartTime > 50000` (50s budget):
-  1. Logs `nightly_mpi_timeout` with `{processed, remaining}`
-  2. Inserts `nightly_mpi_continuation` with `{sport, resume_from: batchStart, total_athletes}`
-  3. `break` exits the loop
-
-### Resume Flow
-```
-Invocation 1:
-  - 200 athletes, BATCH_SIZE=50
-  - Processes batches 0-49, 50-99, 100-149
-  - At batch 150: elapsed > 50s → timeout
-  - Writes: audit_log { action: nightly_mpi_continuation, metadata: { resume_from: 150, sport: 'baseball' } }
-  - break
-
-Invocation 2 (next cron):
-  - Reads continuationLog → metadata.resume_from = 150
-  - resumeFrom = 150
-  - Loop starts at batchStart = 150
-  - Processes 150-199
-  - Completes normally (no continuation token written)
+```text
+Continuation tokens in audit_log: 0
+Timeout events in audit_log: 0
 ```
 
-### VERDICT: IMPLEMENTED CORRECTLY
-The continuation token is scoped by sport AND time (`gte: oneDayAgo`), ordered `DESC` to get the latest, and only accepted if `resume_from` is a number. The `for` loop starts at `resumeFrom` (line 250), not 0.
+The system has never timed out because only 3 athletes exist. Processing completes in <1 second.
 
-### CANNOT SIMULATE LIVE
-A real simulation requires invoking `nightly-mpi-process` with a forced timeout (only 3 athletes exist, processing completes in <1s). The logic is structurally proven by code trace. A live proof would require 100+ athletes or artificially lowering the 50s budget threshold.
+### Why We Cannot Simulate Live
+
+The timeout check (L252) uses `Date.now() - nightlyStartTime > 50000`. To force a timeout we would need to either:
+- Add 100+ athletes with session data (not feasible as a test)
+- Modify the edge function to lower the timeout threshold (code change to production)
+
+### What We Can Prove
+
+**Code-level correctness** (already verified):
+- Read token: L233-238 queries `audit_log` for `nightly_mpi_continuation` within last 24h
+- Set resume index: L241-248 sets `resumeFrom` from token metadata
+- Loop starts at `resumeFrom`: L250 `for (let batchStart = resumeFrom; ...)`
+- Write token on timeout: L262-267 stores `resume_from: batchStart`
+
+**Edge cases handled:**
+- No token exists → `resumeFrom = 0` (default)
+- Stale token (>24h) → filtered out by `gte('created_at', oneDayAgo)`
+- Wrong sport → filtered by `contMeta?.sport === sport`
+- Non-numeric resume_from → filtered by `typeof contMeta?.resume_from === 'number'`
+
+### Proposed Simulation
+
+Create a **test-only edge function** (`hie-verify-continuation`) that:
+1. Inserts a fake continuation token with `resume_from: 2`
+2. Calls `nightly-mpi-process` 
+3. Checks that the first batch starts at index 2 (via audit_log output)
+4. Cleans up the fake token
+
+This would prove resume behavior without modifying production code.
+
+### Verdict
+
+**Cannot be proven with real data at current scale.** Code trace is complete and correct. Live simulation requires either a test harness edge function or sufficient athlete volume to trigger a real timeout.
 
 ---
 
-## Summary
+## Implementation Plan
 
-| System | Code Status | Production Status |
-|--------|-------------|-------------------|
-| Effectiveness Engine | **CORRECT** — weakness-specific at L1764, MPI fallback at L1769 | **ACTIVE** — fires on every HIE run for prescriptions with `targeted_metric` |
-| Context Engine (Game vs Practice) | **CORRECT** — `_session_type` attached L1415, split L531-532, +0.5 bonus L1450 | **DORMANT** — 0 game sessions in production data |
-| Continuation Token | **CORRECT** — read L233-238, resume L250, write L262-267 | **UNTESTED** — only 3 athletes, never hits 50s budget |
+| Step | Action | Type |
+|------|--------|------|
+| 1 | Insert a new session for athlete `95de827d` with improved composites (BQI=65) | Data operation |
+| 2 | Run `hie-analyze` for the athlete | Edge function call |
+| 3 | Query `weakness_scores` and `drill_prescriptions` to show `effectiveness_score ≠ 0` | DB query |
+| 4 | Confirm context engine returns `[]` with 0 game reps (already proven) | No action needed |
+| 5 | Create `hie-verify-continuation` edge function for resume simulation | New edge function |
+| 6 | Run continuation test: insert token → invoke nightly → verify start index | Edge function call |
 
-No code changes needed. All three systems are correctly implemented. Two are blocked by insufficient production data volume (no game sessions, too few athletes to trigger timeout).
+## Files
+
+| File | Change |
+|------|--------|
+| `supabase/functions/hie-verify-continuation/index.ts` | New edge function for continuation token simulation |
+| No changes to existing edge functions | Verification only |
+| No schema changes | Data operations only |
 
