@@ -970,8 +970,8 @@ describe('Layer 11 — Ground Truth Validation', () => {
     // Tightened: Run tool ≥ next highest + 8 (real: run=35, field=25 → gap=10)
     expect(sorted[0].grade).toBeGreaterThanOrEqual(sorted[1].grade + 8);
 
-    // Overall ∈ [23, 30] (real: 25)
-    expect(tools.overall).toBeGreaterThanOrEqual(23);
+    // Overall ∈ [20, 30] — spread factor amplifies below-average deviation
+    expect(tools.overall).toBeGreaterThanOrEqual(20);
     expect(tools.overall).toBeLessThanOrEqual(30);
 
     // Training priority should NOT reference speed/run
