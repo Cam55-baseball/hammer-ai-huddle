@@ -1,74 +1,61 @@
 
 
-# Backfill Tool Grades & Live Validation
+# Backfill MPI Scores & Activate Tool-Performance Gap System
 
-## Current State (from production DB)
+## Current State
+- **mpi_scores**: 0 rows
+- **performance_sessions**: 18 sessions across 3 athletes
+- **tool_grades**: Populated for all 6 vault test rows (backfilled previously)
+- **Target athlete** (95de827d): 9 sessions + tool_grades = `{arm: 80, hit: null, run: 20, field: null, power: 36, overall: 46}`
 
-- **6 rows** in `vault_performance_tests`, **0 have tool_grades**
-- **3 unique users** with vault tests; only **1 user** (`95de827d-7418-460b-8b79-267bf79bdca4`) also has HIE snapshots
-- All athletes have `primary_position = NULL` and `date_of_birth = NULL` → `computeToolGrades` will use default `UT` profile
+## Phase 1 — Backfill MPI Scores
 
-## Phase 1 — Backfill Script
+Run a Node.js script that replicates the **exact nightly-mpi-process logic** (lines 284-305):
 
-Create and run a one-time Node.js script (`/tmp/backfill-tool-grades.ts`) that:
+1. For each of the 3 athletes with sessions, query all `performance_sessions` (90-day window)
+2. Compute game-weighted composite averages (1.5x for game/scrimmage, 1.0x otherwise)
+3. Apply MPI weights: BQI=0.25, FQI=0.15, PEI=0.20, Decision=0.20, Competitive=0.20
+4. No tier/age/position modifiers (all athletes have NULL settings)
+5. INSERT into `mpi_scores` using the insert tool with today's date
 
-1. Queries all `vault_performance_tests` rows where `tool_grades IS NULL`
-2. Joins `athlete_mpi_settings` for `primary_position`, `date_of_birth`, `sport`
-3. For each row, imports the same `computeToolGrades` logic (copy the pure function into the script since edge functions can't import from `src/`)
-4. Filters `results` to only numeric values (strips `_batting_side`, `_throwing_hand` prefixes)
-5. Computes tool grades and UPSERTs via `psql` INSERT/UPDATE
+For athlete 95de827d (9 sessions), the composites will average out to roughly:
+- BQI ~77, FQI ~73, PEI ~79, Decision ~78, Competitive ~78
+- These map via `mapCompositeToToolScale(x) = 20 + (x/100)*60` to tool scale: BQI→66, FQI→64, PEI→67, Competitive→67
 
-Since we only have **read + insert** access via psql (no UPDATE), we'll use the **Supabase insert tool** to run UPDATE statements for each row.
+Then tool_grades `{arm: 80, run: 20, power: 36}` vs mapped composites:
+- **arm (80) vs PEI mapped (67)** → delta 13, below 15 threshold → no pattern
+- **run (20) vs Competitive mapped (67)** → delta -47, **HIGH severity perf_exceeds** → `tool_gap_run_physical`
+- **power (36) vs BQI mapped (66)** → delta -30, **HIGH severity perf_exceeds** → `tool_gap_power_physical`
 
-Alternatively: Create a **small edge function** (`backfill-tool-grades`) that:
-- Reads all vault tests with NULL tool_grades
-- Recomputes using the same grading logic already available server-side
-- Updates each row
+**This will generate real tool_gap patterns.**
 
-This is cleaner because the grading logic (benchmarks, interpolation) lives client-side and would need to be duplicated. Instead, we'll use the **insert tool** to run 6 UPDATE statements directly, computing the grades via the script first.
+## Phase 2 — Re-run HIE for Target Athlete
 
-**Approach**: Run a Node.js script that contains the `computeToolGrades` + `rawToGrade` logic (copied from source), processes the 6 rows of results data we already queried, then outputs the UPDATE SQL statements. Execute those via the insert tool.
+After inserting mpi_scores, invoke `hie-analyze` for athlete 95de827d and query the resulting HIE snapshot to show:
+- Generated tool_gap patterns
+- Sorted allPatterns top 5
+- primary_limiter before vs after
+- weakness_clusters before vs after
+- prescriptive_actions before vs after
 
-### Output
-- Before: 6 total rows, 0 with tool_grades
-- After: 6 total rows, 6 with tool_grades (or fewer if some results don't map to any graded metrics)
+## Phase 3 — Report Real Impact Metrics
 
-## Phase 2 — Live Validation
+Query production data to answer:
+- Athletes with BOTH tool_grades AND mpi_scores
+- Athletes generating tool_gap patterns
+- % with gap ≥15
+- Cases where tool_gap enters top 3 / becomes primary_limiter
 
-After backfill, for the **1 athlete with both systems** (`95de827d-7418-460b-8b79-267bf79bdca4`):
+## Implementation
 
-1. Query their tool_grades from DB
-2. Query their latest HIE snapshot (primary_limiter, weakness_clusters, prescriptive_actions)
-3. Invoke `hie-analyze` via curl to trigger a fresh analysis
-4. Query the NEW HIE snapshot and compare before vs after
-5. Show full trace: tool_grades → MPI composites → gap patterns → sorted patterns → primary_limiter → prescriptions
-
-For the other 2 users (no HIE snapshots), show their computed tool_grades only.
-
-## Phase 3 — Real Impact Numbers
-
-After backfill + re-analysis:
-- Count athletes generating ≥1 tool_gap pattern
-- Count athletes with gaps ≥15
-- Count where tool_gap enters top 3 weakness_clusters
-- Count where tool_gap becomes primary_limiter
-
-**Honest expectation**: With only 1 athlete having both vault tests AND session data, impact will be limited to that single athlete. The system is structurally sound but the user base is small.
-
-## Files
-
-| File | Change |
+| Step | Action |
 |------|--------|
-| `/tmp/backfill.js` | One-time script to compute tool grades for 6 rows |
-| DB (via insert tool) | 6 UPDATE statements to populate tool_grades |
-| No codebase changes | Backfill only, no engine modifications |
+| 1 | Run script to compute weighted composite averages for 3 athletes from their sessions |
+| 2 | INSERT 3 rows into `mpi_scores` via insert tool (one per athlete, today's date) |
+| 3 | Verify count: mpi_scores before=0, after=3 |
+| 4 | Invoke `hie-analyze` for athlete 95de827d via curl |
+| 5 | Query new HIE snapshot and compare to previous |
+| 6 | Report activation metrics |
 
-## Technical Detail
-
-The script will replicate:
-- `rawToGrade()` from `src/lib/gradeEngine.ts` (piecewise linear interpolation)
-- `computeToolGrades()` from `src/data/positionToolProfiles.ts` (tool mapping + weighted average)
-- Benchmark data from `src/data/gradeBenchmarks.ts`
-
-All 6 rows and their results are already known from the DB query above, so the computation can be done deterministically.
+No codebase changes. Data operations only.
 
