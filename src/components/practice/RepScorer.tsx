@@ -1981,7 +1981,10 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 />
               </div>
 
-              {/* Field Position Diagram — collapsible */}
+              </>
+              )}
+
+              {/* Field Position Diagram — always available, collapsible */}
               <Collapsible>
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-1.5">
                   <MapPin className="h-3.5 w-3.5" />
@@ -1998,10 +2001,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     }}
                   />
                 </CollapsibleContent>
-               </Collapsible>
-
-              </>
-              )}
+              </Collapsible>
             </>
           )}
 
