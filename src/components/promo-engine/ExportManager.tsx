@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Play, Download, Clock, AlertTriangle, Film, ExternalLink } from 'lucide-react';
+import { Trash2, Play, Download, Clock, AlertTriangle, Film, Loader2 } from 'lucide-react';
 import {
   usePromoProjects,
   useRenderQueue,
@@ -40,6 +40,10 @@ export const ExportManager = () => {
     return seq.reduce((sum: number, item: any) => sum + getDurationForVariant(item.duration_variant), 0);
   };
 
+  const getLatestJob = (projectId: string) => {
+    return renderJobs.find(j => j.project_id === projectId);
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   }
@@ -54,16 +58,27 @@ export const ExportManager = () => {
             {renderJobs.slice(0, 5).map(job => (
               <div key={job.id} className="flex items-center justify-between text-sm bg-muted/50 rounded-md p-2">
                 <div className="flex items-center gap-2">
-                  <Film className="h-4 w-4 text-muted-foreground" />
+                  {job.status === 'processing' ? (
+                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                  ) : (
+                    <Film className="h-4 w-4 text-muted-foreground" />
+                  )}
                   <span className="font-mono text-xs">{job.format}</span>
                 </div>
-                <Badge variant={
-                  job.status === 'complete' ? 'outline' :
-                  job.status === 'failed' ? 'destructive' :
-                  job.status === 'processing' ? 'default' : 'secondary'
-                } className="text-xs">
-                  {job.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {job.error_message && (
+                    <span className="text-xs text-destructive truncate max-w-[200px]" title={job.error_message}>
+                      {job.error_message}
+                    </span>
+                  )}
+                  <Badge variant={
+                    job.status === 'complete' ? 'outline' :
+                    job.status === 'failed' ? 'destructive' :
+                    job.status === 'processing' ? 'default' : 'secondary'
+                  } className="text-xs">
+                    {job.status}
+                  </Badge>
+                </div>
               </div>
             ))}
           </div>
@@ -76,8 +91,9 @@ export const ExportManager = () => {
           const outdated = hasOutdatedScenes(project);
           const formatConfig = FORMAT_CONFIGS[project.format];
           const statusConfig = STATUS_BADGES[project.status] || STATUS_BADGES.draft;
-          const projectJobs = renderJobs.filter(j => j.project_id === project.id);
+          const latestJob = getLatestJob(project.id);
           const seq = (project.scene_sequence || []) as any[];
+          const isRendering = project.status === 'rendering' || latestJob?.status === 'processing';
 
           return (
             <Card key={project.id} className="p-5 space-y-4">
@@ -104,6 +120,25 @@ export const ExportManager = () => {
                 <Badge variant={statusConfig.variant} className="text-xs">{statusConfig.label}</Badge>
               </div>
 
+              {/* Failed job error */}
+              {latestJob?.status === 'failed' && latestJob.error_message && (
+                <div className="text-xs text-destructive bg-destructive/10 rounded-md p-2.5">
+                  <strong>Error:</strong> {latestJob.error_message}
+                </div>
+              )}
+
+              {/* Video preview */}
+              {project.output_url && (
+                <div className="rounded-lg overflow-hidden border bg-black">
+                  <video
+                    src={project.output_url}
+                    controls
+                    className="w-full max-h-[400px]"
+                    preload="metadata"
+                  />
+                </div>
+              )}
+
               {/* Scene sequence mini-preview */}
               <div className="flex gap-1 overflow-x-auto pb-1">
                 {seq.map((item: any, i: number) => (
@@ -120,9 +155,13 @@ export const ExportManager = () => {
                   size="sm"
                   className="gap-1.5"
                   onClick={() => queueRender.mutate({ projectId: project.id, format: project.format })}
-                  disabled={queueRender.isPending || project.status === 'rendering'}
+                  disabled={queueRender.isPending || isRendering}
                 >
-                  <Play className="h-3.5 w-3.5" /> Queue Render
+                  {isRendering ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Rendering...</>
+                  ) : (
+                    <><Play className="h-3.5 w-3.5" /> Queue Render</>
+                  )}
                 </Button>
 
                 {project.output_url && (
