@@ -4,6 +4,7 @@ import type { BatterStats } from '@/hooks/useGameAnalytics';
 
 interface PlayerGameCardProps {
   stats: BatterStats;
+  sport?: 'baseball' | 'softball';
 }
 
 function Stat({ label, value }: { label: string; value: string | number }) {
@@ -15,7 +16,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-export function PlayerGameCard({ stats }: PlayerGameCardProps) {
+export function PlayerGameCard({ stats, sport = 'baseball' }: PlayerGameCardProps) {
   return (
     <Card>
       <CardHeader className="py-2 px-3">
@@ -38,7 +39,7 @@ export function PlayerGameCard({ stats }: PlayerGameCardProps) {
         {stats.sprayData.length > 0 && (
           <div>
             <span className="text-xs font-medium text-muted-foreground">Spray Chart</span>
-            <SprayChart data={stats.sprayData} size={160} />
+            <SprayChart data={stats.sprayData} size={160} sport={sport} />
           </div>
         )}
       </CardContent>

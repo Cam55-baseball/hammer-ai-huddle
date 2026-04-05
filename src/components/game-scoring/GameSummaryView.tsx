@@ -11,9 +11,10 @@ interface GameSummaryViewProps {
   plays: any[];
   teamName: string;
   opponentName: string;
+  sport?: 'baseball' | 'softball';
 }
 
-export function GameSummaryView({ plays, teamName, opponentName }: GameSummaryViewProps) {
+export function GameSummaryView({ plays, teamName, opponentName, sport = 'baseball' }: GameSummaryViewProps) {
   const { batterStats, pitcherStats, teamScore, heatMapData, contactHeatMap } = useGameAnalytics(plays);
 
   const allSpray = plays
@@ -46,7 +47,7 @@ export function GameSummaryView({ plays, teamName, opponentName }: GameSummaryVi
 
         <TabsContent value="batters" className="space-y-3 mt-3">
           {batterStats.map(bs => (
-            <PlayerGameCard key={bs.name} stats={bs} />
+            <PlayerGameCard key={bs.name} stats={bs} sport={sport} />
           ))}
           {batterStats.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-8">No batter data recorded</p>
@@ -87,7 +88,7 @@ export function GameSummaryView({ plays, teamName, opponentName }: GameSummaryVi
                 <CardTitle className="text-xs">Team Spray Chart</CardTitle>
               </CardHeader>
               <CardContent className="flex justify-center pb-3">
-                <SprayChart data={allSpray} size={200} />
+                <SprayChart data={allSpray} size={200} sport={sport} />
               </CardContent>
             </Card>
 
