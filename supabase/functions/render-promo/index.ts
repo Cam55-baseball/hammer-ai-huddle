@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 const VALID_SCENE_KEYS = [
   "hook-problem",
@@ -38,6 +43,8 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log(`[render-promo] Processing queue_id: ${queue_id}`);
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -52,6 +59,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (qErr || !queueRow) {
+      console.error(`[render-promo] Queue job not found: ${queue_id}`);
       return new Response(
         JSON.stringify({ error: "Queue job not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -59,6 +67,7 @@ Deno.serve(async (req) => {
     }
 
     if (queueRow.status !== "queued") {
+      console.log(`[render-promo] Job status is '${queueRow.status}', skipping`);
       return new Response(
         JSON.stringify({ error: `Job status is '${queueRow.status}', expected 'queued'` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -82,7 +91,6 @@ Deno.serve(async (req) => {
 
     const sequence = project.scene_sequence || [];
 
-    // Validate non-empty
     if (!Array.isArray(sequence) || sequence.length === 0) {
       await failJob(supabase, queue_id, project.id, "Scene sequence is empty");
       return new Response(
@@ -160,6 +168,8 @@ Deno.serve(async (req) => {
     const lambdaConfigured = awsAccessKey && awsSecretKey && lambdaFunctionName;
 
     if (lambdaConfigured) {
+      console.log(`[render-promo] Lambda configured. Dispatching render for queue_id: ${queue_id}`);
+
       // Mark as processing
       await supabase
         .from("promo_render_queue")
@@ -177,7 +187,7 @@ Deno.serve(async (req) => {
         })
         .eq("id", project.id);
 
-      // Invoke Lambda via AWS API
+      // Invoke Lambda — type: "start" returns immediately with renderId
       try {
         const lambdaPayload = {
           type: "start",
@@ -192,10 +202,7 @@ Deno.serve(async (req) => {
           ...(s3Bucket ? { forceBucketName: s3Bucket } : {}),
         };
 
-        // Sign and invoke Lambda function
         const lambdaUrl = `https://lambda.${lambdaRegion}.amazonaws.com/2015-03-31/functions/${lambdaFunctionName}/invocations`;
-        
-        const encoder = new TextEncoder();
         const bodyStr = JSON.stringify(lambdaPayload);
         const now = new Date();
         const dateStamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
@@ -205,18 +212,20 @@ Deno.serve(async (req) => {
         const algorithm = "AWS4-HMAC-SHA256";
         const credentialScope = `${shortDate}/${lambdaRegion}/lambda/aws4_request`;
         const canonicalUri = `/2015-03-31/functions/${lambdaFunctionName}/invocations`;
-        
+
         const bodyHash = await sha256Hex(bodyStr);
         const canonicalHeaders = `content-type:application/json\nhost:lambda.${lambdaRegion}.amazonaws.com\nx-amz-date:${dateStamp}\n`;
         const signedHeaders = "content-type;host;x-amz-date";
         const canonicalRequest = `POST\n${canonicalUri}\n\n${canonicalHeaders}\n${signedHeaders}\n${bodyHash}`;
-        
+
         const stringToSign = `${algorithm}\n${dateStamp}\n${credentialScope}\n${await sha256Hex(canonicalRequest)}`;
-        
+
         const signingKey = await getSignatureKey(awsSecretKey!, shortDate, lambdaRegion, "lambda");
         const signature = await hmacHex(signingKey, stringToSign);
-        
+
         const authHeader = `${algorithm} Credential=${awsAccessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+        console.log(`[render-promo] Invoking Lambda: ${lambdaFunctionName}`);
 
         const lambdaResponse = await fetch(lambdaUrl, {
           method: "POST",
@@ -229,8 +238,20 @@ Deno.serve(async (req) => {
           body: bodyStr,
         });
 
-        const lambdaResult = await lambdaResponse.json();
+        const lambdaResultText = await lambdaResponse.text();
+        console.log(`[render-promo] Lambda response status: ${lambdaResponse.status}`);
+        console.log(`[render-promo] Lambda response body: ${lambdaResultText.substring(0, 500)}`);
+
+        let lambdaResult: any;
+        try {
+          lambdaResult = JSON.parse(lambdaResultText);
+        } catch {
+          lambdaResult = {};
+        }
+
         const renderId = lambdaResult?.renderId || lambdaResult?.id || null;
+
+        console.log(`[render-promo] Got renderId: ${renderId}`);
 
         // Store render_id for status polling
         await supabase
@@ -243,6 +264,7 @@ Deno.serve(async (req) => {
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } catch (lambdaErr: any) {
+        console.error(`[render-promo] Lambda invocation failed: ${lambdaErr.message}`);
         await failJob(supabase, queue_id, project.id, `Lambda invocation failed: ${lambdaErr.message}`);
         return new Response(
           JSON.stringify({ error: `Lambda error: ${lambdaErr.message}` }),
@@ -250,7 +272,7 @@ Deno.serve(async (req) => {
         );
       }
     } else {
-      // Lambda NOT configured — mark as awaiting_render with assembled payload
+      console.log(`[render-promo] Lambda NOT configured. Missing credentials.`);
       await supabase
         .from("promo_render_queue")
         .update({
@@ -271,13 +293,14 @@ Deno.serve(async (req) => {
         JSON.stringify({
           success: false,
           mode: "unconfigured",
-          message: "Render service not configured. Payload assembled and stored in render_metadata. Add AWS Lambda credentials to enable automated rendering.",
+          message: "Render service not configured.",
           payload,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (err: any) {
+    console.error(`[render-promo] Unhandled error: ${err.message}`);
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -288,6 +311,7 @@ Deno.serve(async (req) => {
 // --- Helpers ---
 
 async function failJob(supabase: any, queueId: string, projectId: string, errorMessage: string) {
+  console.error(`[render-promo] Failing job ${queueId}: ${errorMessage}`);
   await supabase
     .from("promo_render_queue")
     .update({ status: "failed", error_message: errorMessage })
