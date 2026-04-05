@@ -206,7 +206,7 @@ export function useQueueRender() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ projectId, format }: { projectId: string; format: string }) => {
-      // Insert queue row
+      // Insert queue row — DB trigger automatically invokes render-promo edge function
       const { data, error } = await supabase
         .from('promo_render_queue')
         .insert({ project_id: projectId, format, status: 'queued' } as any)
@@ -220,16 +220,7 @@ export function useQueueRender() {
         .update({ status: 'rendering' } as any)
         .eq('id', projectId);
 
-      // Invoke edge function for validation + payload assembly
-      const { data: renderData, error: fnErr } = await supabase.functions.invoke('render-promo', {
-        body: { queue_id: data.id },
-      });
-
-      if (fnErr) {
-        toast({ title: 'Validation Error', description: fnErr.message, variant: 'destructive' });
-      }
-
-      return { queueRow: data, renderPayload: renderData };
+      return { queueRow: data };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promo-render-queue'] });
