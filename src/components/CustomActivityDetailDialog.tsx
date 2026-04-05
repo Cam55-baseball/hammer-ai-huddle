@@ -273,6 +273,7 @@ export function CustomActivityDetailDialog({
   // Debounced field change handler for text/number inputs
   const handleLocalFieldChange = (fieldId: string, value: string) => {
     setLocalFieldValues(prev => ({ ...prev, [fieldId]: value }));
+    savedFieldIds.current.delete(fieldId); // New edit invalidates saved status
     if (debounceTimers.current[fieldId]) {
       clearTimeout(debounceTimers.current[fieldId]);
     }
@@ -281,6 +282,7 @@ export function CustomActivityDetailDialog({
         const latestValue = prev[fieldId];
         if (latestValue !== undefined) {
           handleUpdateFieldValue(fieldId, latestValue);
+          savedFieldIds.current.add(fieldId);
         }
         return prev; // Keep local value as source of truth
       });
@@ -289,16 +291,18 @@ export function CustomActivityDetailDialog({
   };
 
   const handleUpdateFieldValue = async (fieldId: string, value: string) => {
-    if (!onUpdateFieldValue) return;
+    if (!onUpdateFieldValueRef.current) return;
     setSavingFieldIds(prev => new Set(prev).add(fieldId));
     try {
-      await onUpdateFieldValue(fieldId, value);
+      await onUpdateFieldValueRef.current(fieldId, value);
     } finally {
-      setSavingFieldIds(prev => {
-        const next = new Set(prev);
-        next.delete(fieldId);
-        return next;
-      });
+      if (isMounted.current) {
+        setSavingFieldIds(prev => {
+          const next = new Set(prev);
+          next.delete(fieldId);
+          return next;
+        });
+      }
     }
   };
 
