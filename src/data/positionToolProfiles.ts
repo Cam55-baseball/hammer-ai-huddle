@@ -196,8 +196,6 @@ export function computeToolGrades(
   }
 
   // Compute overall as weighted average of non-null tool grades
-  // Apply spread-preserving amplification centered at 45 (MLB average)
-  // to counteract compression from multi-tool averaging (CLT effect)
   let weightedSum = 0;
   let totalWeight = 0;
   
@@ -210,10 +208,7 @@ export function computeToolGrades(
     }
   }
 
-  const rawOverall = totalWeight > 0 ? weightedSum / totalWeight : null;
-  const overall = rawOverall !== null
-    ? Math.round(Math.max(20, Math.min(80, 45 + (rawOverall - 45) * 1.4)))
-    : null;
+  const overall = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : null;
 
   return { ...toolGrades, overall };
 }
