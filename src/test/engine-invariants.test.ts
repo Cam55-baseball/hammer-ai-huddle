@@ -2470,3 +2470,106 @@ describe('Layer 22 — Tool-Performance Gap Metric Contract (Tests 77–79)', ()
     expect(unhandled).toEqual([]);
   });
 });
+
+// =====================================================================
+// LAYER 23 — Tool-Performance Gap Threshold & Safety (Tests 80–84)
+// =====================================================================
+
+describe('Layer 23 — Tool-Performance Gap Threshold & Safety (Tests 80–84)', () => {
+  const TOOL_COMPOSITE_MAP: Record<string, string> = {
+    hit: 'bqi', power: 'bqi', run: 'competitive', field: 'fqi', arm: 'pei',
+  };
+
+  function mapCompositeToToolScale(compositeValue: number): number {
+    return Math.round(20 + (compositeValue / 100) * 60);
+  }
+
+  interface GapPattern {
+    metric: string;
+    delta: number;
+    direction: 'tool_exceeds' | 'perf_exceeds';
+    severity: 'high' | 'medium' | 'low';
+    prescriptionClass: 'skill_transfer' | 'physical';
+  }
+
+  function analyzeGaps(
+    toolGrades: Record<string, number | null>,
+    composites: Record<string, number | null>,
+  ): GapPattern[] {
+    const patterns: GapPattern[] = [];
+    for (const [tool, compositeKey] of Object.entries(TOOL_COMPOSITE_MAP)) {
+      const toolVal = toolGrades[tool];
+      const compVal = composites[compositeKey];
+      if (toolVal == null || compVal == null) continue;
+      const mapped = mapCompositeToToolScale(compVal);
+      const delta = toolVal - mapped;
+      const absDelta = Math.abs(delta);
+      if (absDelta < 15) continue;
+      const direction: 'tool_exceeds' | 'perf_exceeds' = delta > 0 ? 'tool_exceeds' : 'perf_exceeds';
+      const severity: 'high' | 'medium' | 'low' = absDelta >= 20 ? 'high' : 'medium';
+      const prescriptionClass = direction === 'tool_exceeds' ? 'skill_transfer' : 'physical';
+      patterns.push({
+        metric: `tool_gap_${tool}_${prescriptionClass}`,
+        delta: absDelta,
+        direction,
+        severity,
+        prescriptionClass,
+      });
+    }
+    return patterns;
+  }
+
+  it('Test 80: Delta < 15 produces zero patterns (false positive guard)', () => {
+    const result = analyzeGaps(
+      { hit: 65, power: 62, run: 60, field: 58, arm: 70 },
+      { bqi: 75, fqi: 70, pei: 80, competitive: 72 }, // mapped: bqi→65, fqi→62, pei→68, comp→63
+    );
+    // All deltas: hit 65-65=0, power 62-65=-3, run 60-63=-3, field 58-62=-4, arm 70-68=2
+    expect(result).toEqual([]);
+  });
+
+  it('Test 81: Delta = 15 produces exactly one pattern at medium severity', () => {
+    // run tool=48, competitive=80 → mapped=68, delta=|48-68|=20 → high (not 15)
+    // Need exact: run tool=53, competitive=80 → mapped=68, delta=|53-68|=15 → medium
+    const result = analyzeGaps(
+      { hit: null, power: null, run: 53, field: null, arm: null },
+      { bqi: null, fqi: null, pei: null, competitive: 80 },
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].severity).toBe('medium');
+    expect(result[0].delta).toBe(15);
+    expect(result[0].metric).toBe('tool_gap_run_physical');
+  });
+
+  it('Test 82: Delta >= 20 produces pattern at high severity', () => {
+    // run tool=40, competitive=80 → mapped=68, delta=|40-68|=28 → high
+    const result = analyzeGaps(
+      { hit: null, power: null, run: 40, field: null, arm: null },
+      { bqi: null, fqi: null, pei: null, competitive: 80 },
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].severity).toBe('high');
+    expect(result[0].delta).toBe(28);
+    expect(result[0].metric).toBe('tool_gap_run_physical');
+  });
+
+  it('Test 83: Null tool grades return empty array', () => {
+    const result = analyzeGaps(
+      { hit: null, power: null, run: null, field: null, arm: null },
+      { bqi: 80, fqi: 75, pei: 70, competitive: 85 },
+    );
+    expect(result).toEqual([]);
+  });
+
+  it('Test 84: Null composite values skip that mapping (partial data safety)', () => {
+    // Only competitive is non-null, and run has a big gap
+    const result = analyzeGaps(
+      { hit: 80, power: 80, run: 20, field: 80, arm: 80 },
+      { bqi: null, fqi: null, pei: null, competitive: 80 },
+    );
+    // Only run should fire (competitive mapped=68, delta=|20-68|=48)
+    expect(result).toHaveLength(1);
+    expect(result[0].metric).toBe('tool_gap_run_physical');
+    expect(result[0].severity).toBe('high');
+  });
+});
