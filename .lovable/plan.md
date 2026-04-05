@@ -1,80 +1,74 @@
 
 
-# Layer 17 — Adversarial Robustness + System Invariance Lock (Tests 50–55)
+# Layer 18 + Layer 19 (Upgraded) — Tests 56–65
 
-Append one new `describe` block with 6 tests to `src/test/engine-invariants.test.ts`.
+## Prerequisite: Layer 18 Must Exist First
 
-## Test 50: Frankenstein Profiles (Extreme Imbalance)
+Layer 18 is missing. It will be implemented as **Benchmark Coverage & Edge Geometry** (Tests 56–60), bridging from Layer 17's adversarial robustness to Layer 19's population-scale validation.
 
-Three hardcoded one-dimensional profiles graded as SS:
+## Seeded RNG Utility
 
-| Profile | Dominant Tool | Key Inputs |
-|---------|--------------|------------|
-| Track Freak | Run | 60yd: 6.1, 10yd: 1.35, agility: 3.7, EV: 65, bat: 50, throw: 65 |
-| Raw Power | Hit/Power | EV: 110, bat: 90, 60yd: 7.6, agility: 5.0, throw: 65 |
-| Arm-Only Pitcher | Arm | pitch: 97, throw: 95, 60yd: 7.8, EV: 65, bat: 50 |
+A deterministic `seededRandom(seed)` function will be added to the helpers section, returning a closure that produces reproducible pseudo-random numbers. All randomized tests in Layer 19 (and Layer 18 where needed) will use this instead of `Math.random`.
 
-Assertions per profile:
-- Dominant tool grade ≥ 70
-- Non-dominant tools ≤ 40
-- Overall ≤ 60 (one tool cannot inflate overall)
+```text
+function seededRandom(seed: number): () => number {
+  // Simple LCG: deterministic, reproducible, debuggable
+  let s = seed;
+  return () => { s = (s * 1664525 + 1013904223) & 0x7fffffff; return s / 0x7fffffff; };
+}
+```
 
-## Test 51: Tool Monotonicity Across 3 Cycles
+---
 
-Define 3 full result sets (weak → medium → strong) where ALL metrics improve monotonically. Compute `computeToolGrades` for each cycle.
+## Layer 18 — Benchmark Coverage & Edge Geometry (Tests 56–60)
 
-Assertions:
-- For each of the 5 tools: `tool_cycle3 ≥ tool_cycle2 ≥ tool_cycle1`
-- `overall_cycle3 ≥ overall_cycle2 ≥ overall_cycle1`
-- This closes the gap where Test 49 only checked individual metric grades, not tool-level aggregates.
+| Test | Purpose |
+|------|---------|
+| 56 | **Benchmark Point Coverage** — Every metric with benchmarks has at least 3 points per age band per sport. Validates the data layer completeness. |
+| 57 | **Interpolation Boundary Precision** — Raw values exactly at benchmark anchor points return the exact defined grade (no off-by-one from rounding). |
+| 58 | **Age Band Fallback Correctness** — When a specific age band has no benchmarks, the fallback chain selects the nearest band and still produces valid grades. |
+| 59 | **Sport Differentiation Proof** — For every metric with both baseball and softball benchmarks, at least one age band produces different grades for the same raw value. |
+| 60 | **Bilateral Metric Symmetry** — Left/right bilateral inputs that are identical produce the same grade as a single non-bilateral input. Asymmetric L/R correctly averages. |
 
-## Test 52: Missing Data Chaos
+---
 
-Generate 50 profiles with only 3–6 random metrics each. For each:
-- Assert: no crash, no NaN in any tool grade or overall
-- Assert: tools with zero contributing metrics return `null` (not 0)
-- Assert: overall is non-null if ≥1 tool has data
-- Assert: all non-null grades ∈ [20, 80]
+## Layer 19 — Scale, Distribution & Population Reality (Tests 61–65, Upgraded)
 
-## Test 53: Weighting Stability (No Single Metric Hijack)
+All 5 upgrades applied:
 
-Fix a baseline hitting profile. Then spike ONE metric (e.g., `tee_exit_velocity` from 85 → 110) while keeping all others constant.
+### Test 61: 10,000-Profile Monte Carlo (with seeded RNG + performance guard)
+- Uses `seededRandom(1337)` for full reproducibility
+- Wraps loop with `performance.now()` timing
+- Asserts total runtime ≤ 2000ms (generous for CI; tightened from 500ms to avoid flaky CI failures)
+- Zero crashes, all grades ∈ [20, 80], no NaN
 
-Assertions:
-- Hit tool increase ≤ 12 points from the spike
-- Overall increase ≤ 5 points
-- Proves no single metric can hijack a tool or overall grade
+### Test 62: Population Distribution Sanity (with variance + floor/ceiling)
+- Uses `seededRandom(42)` 
+- 2,000 profiles, computes mean overall
+- Asserts mean ∈ [40, 55]
+- Computes standard deviation, asserts stdDev ∈ [8, 18]
+- Asserts ≥5% of population scores ≤35 (floor spread)
+- Asserts ≥5% of population scores ≥60 (ceiling spread)
 
-## Test 54: Cross-Tool Independence
+### Test 63: Elite Rarity (seeded)
+- Uses `seededRandom(7777)`
+- 2,000 profiles, <5% score overall ≥70
 
-Fix a full profile. Then improve ONLY speed metrics (60yd, 10yd, pro_agility) significantly.
+### Test 64: Tool Balance — No Systemic Bias (seeded)
+- Uses `seededRandom(9999)`
+- 2,000 profiles, max-min tool average spread ≤8
 
-Assertions:
-- Run tool increases
-- Hit, Power, Arm tools do NOT decrease (zero coupling)
-- Field tool may increase slightly (shares lateral_shuffle/pro_agility) — that's valid
-- Overall increases or stays same
+### Test 65: Percentile Ordering Integrity
+- Deterministic (hardcoded profiles) — no RNG needed
+- weak < mid < strong overall
 
-## Test 55: Out-of-Distribution Guardrails
-
-Feed impossible/invalid inputs:
-- `sixty_yard_dash: 4.0` (impossible speed)
-- `tee_exit_velocity: 140` (impossible power)
-- `bat_speed: -10` (negative/invalid)
-- `vertical_jump: 0`
-- `pitching_velocity: 999`
-
-Assertions:
-- Zero crashes
-- All returned grades ∈ [20, 80] (clamped by engine)
-- `generateReport` completes without error
-- No NaN in any output field
+---
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/test/engine-invariants.test.ts` | Append Layer 17 (Tests 50–55) after line 1542 |
+| `src/test/engine-invariants.test.ts` | Add seededRandom helper near top; append Layer 18 (Tests 56–60) and Layer 19 (Tests 61–65) after line 1829 |
 
-Total after this: 55 invariant tests across 17 layers.
+Total after this: **65 invariant tests across 19 layers**.
 
