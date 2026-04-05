@@ -1497,4 +1497,46 @@ describe('Layer 16 — External Truth Validation', () => {
     expect(crashes).toBe(0);
     expect(elapsed).toBeLessThan(5000);
   });
+
+  it('Test 49: Monotonic Progression — improving raw never lowers grade', () => {
+    // 3 cycles with monotonically improving metrics
+    const higherIsBetter: Record<string, [number, number, number]> = {
+      tee_exit_velocity: [75, 85, 95],
+      bat_speed: [60, 68, 76],
+      vertical_jump: [24, 28, 33],
+      pitching_velocity: [72, 80, 88],
+      position_throw_velo: [65, 75, 85],
+      mb_rotational_throw: [18, 23, 28],
+      long_toss_distance: [180, 230, 280],
+      sl_broad_jump: [55, 70, 85],
+    };
+
+    const lowerIsBetter: Record<string, [number, number, number]> = {
+      sixty_yard_dash: [7.8, 7.2, 6.7],
+      ten_yard_dash: [1.85, 1.70, 1.55],
+      pro_agility: [4.8, 4.3, 3.9],
+    };
+
+    // Higher-is-better: raw goes up, grade must not go down
+    for (const [key, [r1, r2, r3]] of Object.entries(higherIsBetter)) {
+      const g1 = rawToGrade(key, r1, 'baseball', 16);
+      const g2 = rawToGrade(key, r2, 'baseball', 16);
+      const g3 = rawToGrade(key, r3, 'baseball', 16);
+      if (g1 === null || g2 === null || g3 === null) continue;
+
+      expect(g2).toBeGreaterThanOrEqual(g1);
+      expect(g3).toBeGreaterThanOrEqual(g2);
+    }
+
+    // Lower-is-better: raw goes down, grade must not go down
+    for (const [key, [r1, r2, r3]] of Object.entries(lowerIsBetter)) {
+      const g1 = rawToGrade(key, r1, 'baseball', 16);
+      const g2 = rawToGrade(key, r2, 'baseball', 16);
+      const g3 = rawToGrade(key, r3, 'baseball', 16);
+      if (g1 === null || g2 === null || g3 === null) continue;
+
+      expect(g2).toBeGreaterThanOrEqual(g1);
+      expect(g3).toBeGreaterThanOrEqual(g2);
+    }
+  });
 });
