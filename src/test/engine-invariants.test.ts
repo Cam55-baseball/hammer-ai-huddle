@@ -780,10 +780,7 @@ describe('Layer 9 — Weight Normalization Enforcement', () => {
           totalWeight += w;
         }
       }
-      const rawOverall = totalWeight > 0 ? weightedSum / totalWeight : null;
-      const expectedOverall = rawOverall !== null
-        ? Math.round(Math.max(20, Math.min(80, 45 + (rawOverall - 45) * 1.4)))
-        : null;
+      const expectedOverall = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : null;
 
       if (toolGrades.overall !== expectedOverall) {
         // Allow ±1 for rounding
