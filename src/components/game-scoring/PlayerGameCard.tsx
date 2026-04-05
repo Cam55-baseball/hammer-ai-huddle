@@ -16,7 +16,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-export function PlayerGameCard({ stats }: PlayerGameCardProps) {
+export function PlayerGameCard({ stats, sport = 'baseball' }: PlayerGameCardProps) {
   return (
     <Card>
       <CardHeader className="py-2 px-3">
