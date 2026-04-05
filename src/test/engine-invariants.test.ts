@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { rawToGrade, gradeAllResults, gradeToLabel } from '@/lib/gradeEngine';
-import { computeToolGrades, type ToolName } from '@/data/positionToolProfiles';
+import { computeToolGrades, POSITION_TOOL_PROFILES, type ToolName, type ToolProfile } from '@/data/positionToolProfiles';
 import { generateReport } from '@/lib/testIntelligenceEngine';
 import { getNextTestFocus } from '@/lib/adaptiveTestPriority';
 import { computeTrends } from '@/lib/longitudinalEngine';
