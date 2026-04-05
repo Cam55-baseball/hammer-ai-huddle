@@ -1,41 +1,37 @@
 
 
-# Wire Remotion Lambda — Production Connection
+# Set Up Cron Job for `check-render-status`
 
-## Critical Bugs to Fix
+## What This Does
 
-### 1. `render-promo`: Lambda Invocation Type Must Be Async
-The current code uses `X-Amz-Invocation-Type: RequestResponse` (synchronous). Remotion renders take 30-120 seconds. Edge functions timeout at 60 seconds. This will **always fail**.
-
-**Fix**: Change to `X-Amz-Invocation-Type: Event` (async fire-and-forget). Lambda runs in background, returns 202 immediately. The `check-render-status` cron handles completion.
-
-Since the invocation is now async (no response body with `renderId`), we need a deterministic `renderId`. Remotion Lambda with `type: "start"` returns the renderId in the synchronous response — but with async invocation we don't get that. 
-
-**Alternative approach**: Keep `RequestResponse` but use a **two-phase** pattern — the Lambda `type: "start"` call itself is fast (returns immediately with a `renderId`, doesn't wait for the render). The render happens asynchronously on Lambda's side. So `RequestResponse` is actually correct here — the Lambda function returns quickly with the render ID. The actual rendering continues in the background on AWS.
-
-After re-examining: Remotion Lambda's `type: "start"` endpoint is designed to return immediately with `{ renderId, bucketName }`. It does NOT block until render completes. So `RequestResponse` is correct. The edge function should complete within a few seconds.
-
-### 2. CORS Import Path
-Both functions import from `https://esm.sh/@supabase/supabase-js@2.95.0/cors` — this may not resolve correctly on esm.sh. Replace with inline CORS headers to be safe.
-
-### 3. `check-render-status`: Status field name
-Remotion Lambda `getRenderProgress` returns `overallProgress` (0-1), `outputFile`, `fatalErrorEncountered`, and `done`. The current code checks these correctly.
-
-## Secrets to Add
-- `REMOTION_LAMBDA_FUNCTION_NAME`: `remotion-render-4-0-445-mem2048mb-disk2048mb-240sec`
-- `REMOTION_SITE_URL`: `https://remotionlambda-useast1-u55gl2kp0l.s3.us-east-1.amazonaws.com/sites/y83e0po6rd/index.html`
+Creates a scheduled job that calls the `check-render-status` edge function every minute. This is what closes the automation loop — after `render-promo` dispatches a job to Lambda, the cron job polls for completion and finalizes the video.
 
 ## Changes
 
-| File | Change |
-|------|--------|
-| `supabase/functions/render-promo/index.ts` | Fix CORS import to inline headers. Add logging for Lambda dispatch. Ensure `render_id` column (not just `render_metadata`) stores the renderId. |
-| `supabase/functions/check-render-status/index.ts` | Fix CORS import to inline headers. Add logging for status checks. |
+### 1. Enable Required Extensions
+Ensure `pg_cron` and `pg_net` extensions are enabled (pg_net is already used by the DB trigger).
 
-## Verification After Deploy
-1. Add the 2 secrets via tool
-2. Deploy both edge functions
-3. Trigger a render from admin UI
-4. Monitor `check-render-status` logs for Lambda polling
-5. Confirm video URL appears in DB and UI
+### 2. Create Cron Schedule
+Using `cron.schedule`, set up a per-minute invocation of `check-render-status`:
+
+```sql
+select cron.schedule(
+  'check-render-status-every-minute',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url := 'https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/check-render-status',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5c2lrYnNqYWxmdmp3cXpraWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5OTYyNjAsImV4cCI6MjA3NjU3MjI2MH0.TzgAEk17xlK_qAC4uRHFJTd9SoG5jRNInCUBIuEgA7A"}'::jsonb,
+    body := concat('{"time": "', now(), '"}')::jsonb
+  ) as request_id;
+  $$
+);
+```
+
+### 3. Add `check-render-status` to config.toml
+Add `verify_jwt = false` so the cron job (which uses the anon key) can invoke it without a user JWT.
+
+## Result
+
+Every minute, the system automatically checks all `processing` jobs against Lambda, downloads completed videos, uploads to storage, and updates the DB. The full automation loop is: **Queue Render → trigger fires render-promo → Lambda starts → cron polls check-render-status → video finalized**.
 
