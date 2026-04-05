@@ -1,85 +1,106 @@
 
 
-# Layers 7–10: Adversarial Invariant Suite
+# Layers 11–15: Ground Truth, Snapshot Invariance, Deterministic Replay, Cross-Engine Consistency, Integration Kill Tests
 
-Append 4 new `describe` blocks (Tests 21–30) to `src/test/engine-invariants.test.ts`.
+Append 5 new `describe` blocks (Tests 31–40) to `src/test/engine-invariants.test.ts`.
 
-## Layer 7 — Adversarial Fuzz Testing (Tests 21–23)
+## Layer 11 — Ground Truth Validation (Tests 31–33)
 
-**Test 21: 10,000-Case Randomized Simulation**
-- Generate 10,000 random result sets (random metric subsets, random raw values within plausible ranges)
-- For each: call `rawToGrade`, `computeToolGrades`, `generateReport`
-- Assert invariants on every case:
-  - All grades ∈ [20, 80] or null
-  - No NaN anywhere in output
-  - No thrown exceptions
-  - Tool grades ∈ [20, 80] or null
-  - Overall ∈ [20, 80] or null
-  - Strengths never overlap with limiting factors (same metric key)
+**Test 31: Real Athlete Profile — Elite Baseball SS**
+- Hardcode a real-world elite SS profile: 1.55s 10yd, 6.7s 60yd, 95mph exit velo, 88mph throw, 32" vert, etc.
+- Assert: Run tool ≥ 65, Arm tool ≥ 60, Hit tool ≥ 60, Overall ≥ 60
+- Assert: No metric grades below 50 (elite profile must not produce below-average grades)
+- Assert: Top strengths include speed or arm metrics (real-world expectation)
 
-**Test 22: Type Corruption Fuzz**
-- Feed results with: `undefined`, `null`, empty string, objects, arrays, booleans, negative numbers, extremely large numbers as metric values
-- Assert: no crash, no NaN leak, all outputs valid or null
+**Test 32: Real Athlete Profile — Average 14u Freshman**
+- Hardcode average freshman: 2.0s 10yd, 8.0s 60yd, 65mph exit velo, 55mph throw, 20" vert
+- Assert: All tool grades cluster around 40–50 (average range)
+- Assert: Overall ∈ [38, 52]
+- Assert: Limiting factors exist (average players always have development areas)
 
-**Test 23: Position × Sport × Age Exhaustive Sweep**
-- All 14 positions × 2 sports × 4 age bands = 112 combinations
-- Fixed result set, run `computeToolGrades` and `generateReport` on each
-- Assert: no crash, all grades valid, overall always within [20, 80] or null
+**Test 33: Real Athlete Profile — Below-Average with One Standout**
+- Profile: mostly poor metrics except elite 60yd dash (6.5s)
+- Assert: Run tool is clearly the highest tool grade
+- Assert: Run-related metrics appear in top strengths
+- Assert: Overall is NOT elite (one tool cannot mask weakness)
+- Assert: Training priority does NOT reference speed/run
 
-## Layer 8 — Truth Consistency Validation (Tests 24–26)
+## Layer 12 — Snapshot Invariance (Tests 34–35)
 
-**Test 24: Truth Inversion Test**
-- For every metric with benchmarks: set value to produce grade ~80, then set to produce grade ~20
-- Generate report for each
-- Assert: the 80-grade metric NEVER appears in limiting factors; the 20-grade metric NEVER appears in top strengths
-- This is the core "contradictions are mathematically impossible" proof
+**Test 34: Report Snapshot Freeze**
+- Run `generateReport` with FULL_RESULTS (the existing fixture) for baseball SS age 16
+- Hardcode the EXACT expected output: specific tool grades, specific top 3 strengths keys, specific limiting factor keys, specific training priority substring
+- Assert: output matches snapshot exactly
+- If this test ever breaks without a code change → the engine drifted (impossible in deterministic code, but proves it)
 
-**Test 25: Strength/Limiter Mutual Exclusion**
-- Run 1,000 random result sets through `generateReport`
-- Assert: no metric key appears in BOTH `topStrengths` and `limitingFactors` simultaneously
-- Zero tolerance — if even one overlap exists, test fails
+**Test 35: Tool Grade Snapshot Freeze**
+- Run `computeToolGrades` with FULL_RESULTS for every position in `POSITION_TOOL_PROFILES`
+- Hardcode expected overall grade for each position (compute once, freeze as constants)
+- Assert: every position's overall matches the frozen value exactly
+- This locks the weight system against silent regressions
 
-**Test 26: Grade Ordering Consistency**
-- For any two metrics A and B where gradeA > gradeB:
-  - A must rank higher (or equal) in strengths sorting
-  - B must rank higher (or equal) in limiters sorting
-- Run across 500 random result sets
+## Layer 13 — Deterministic Replay (Tests 36–37)
 
-## Layer 9 — Weight Normalization Enforcement (Tests 27–28)
+**Test 36: Session Replay — 3-Cycle History**
+- Define 3 test entries with specific raw values and dates
+- Run `computeTrends` → freeze exact output (trend direction, rate, projection text for each metric)
+- Assert: output matches frozen snapshot
+- Run again 100 times → assert identical every time
 
-**Test 27: Weight Sum Validation**
-- For every position profile in `POSITION_TOOL_PROFILES`: assert tool weights sum to exactly 1.0 (within floating point tolerance ±0.001)
-- If weights don't sum to 1.0, overall grade computation is mathematically incorrect
+**Test 37: Adaptive Priority Replay**
+- Define 2-cycle history with specific values (one metric improved, one declined)
+- Run `getNextTestFocus` → freeze exact prioritized/reduced lists
+- Assert: output matches frozen snapshot
+- The declined metric must be prioritized; the improved metric must be in reduced (if grade > 65)
 
-**Test 28: Overall = Exact Weighted Average**
-- For 500 random result sets: manually compute `sum(toolGrade[i] * weight[i]) / sum(weights where grade != null)`
-- Assert: equals `computeToolGrades().overall` exactly (within ±1 for rounding)
-- This proves overall is never fabricated
+## Layer 14 — Cross-Engine Consistency (Tests 38–39)
 
-## Layer 10 — Projection Realism Constraints (Tests 29–30)
+**Test 38: Grade Engine ↔ Intelligence Engine Agreement**
+- Run `gradeAllResults` on FULL_RESULTS
+- Run `generateReport` on same FULL_RESULTS
+- Assert: every metric grade in the report matches `gradeAllResults` output exactly
+- Assert: report's topStrengths are the 3 highest grades from `gradeAllResults`
+- Assert: report's limitingFactors are from the lowest grades (excluding strengths)
 
-**Test 29: Projection Realism Bounds**
-- Run 1,000 trend computations with various improvement rates
-- Assert:
-  - No projection predicts reaching a grade > 80
-  - No projection predicts negative weeks
-  - Plateau trends NEVER produce "Reach X" projections
-  - Regressing trends NEVER produce positive projections
-  - Projection weeks must be > 0 and < 520 (10 years max — beyond is meaningless)
+**Test 39: Tool Grades ↔ Report Tool Grades Agreement**
+- Run `computeToolGrades` standalone
+- Run `generateReport` (which calls `computeToolGrades` internally)
+- Assert: every tool grade in the report matches standalone computation exactly
+- Assert: overall matches exactly
+- This proves no internal computation divergence
 
-**Test 30: Trend Classification Consistency**
-- Generate 500 random 3-cycle histories
-- Assert:
-  - If cycle3 > cycle1 by meaningful amount → trend != 'regressing'
-  - If cycle3 < cycle1 by meaningful amount → trend != 'improving'
-  - If all cycles equal → trend = 'plateaued'
-  - Rate sign matches trend direction (positive rate = improving, negative = regressing)
+## Layer 15 — Integration Kill Tests (Tests 40–42)
 
-## Summary
+**Test 40: Concurrent Computation Determinism**
+- Launch 100 parallel `Promise.all` calls to `computeToolGrades` + `generateReport` with identical inputs
+- Assert: all 100 results are byte-identical (JSON.stringify comparison)
+- Proves no shared mutable state between calls
+
+**Test 41: Partial Failure Cascade**
+- Start with full results → compute report (baseline)
+- Progressively remove one metric at a time and recompute
+- Assert: at each step, remaining tool grades are valid (no NaN, no crash)
+- Assert: when the last metric of a tool is removed, that tool becomes null
+- Assert: overall adjusts proportionally (never jumps erratically)
+
+**Test 42: Extreme Volume Stress**
+- Generate 50,000 random result sets
+- Run `computeToolGrades` on each
+- Assert: zero NaN, zero crashes, all grades ∈ [20, 80] or null
+- Assert: completes in < 10 seconds (performance bound)
+
+## Implementation Notes
+
+- Snapshot values will be computed once by running the engines during test creation, then hardcoded as constants
+- The snapshot tests (34–37) serve as regression anchors — they break only if engine logic changes
+- Test 40 uses `Promise.all` to verify no race conditions in pure functions
+- Test 42 adds a performance ceiling assertion
+
+## Files
 
 | File | Change |
 |------|--------|
-| `src/test/engine-invariants.test.ts` | Append Layers 7–10 (Tests 21–30) after line 512 |
+| `src/test/engine-invariants.test.ts` | Append Layers 11–15 (Tests 31–42) after line 880 |
 
-Total: 10 new tests, including the 10,000-case fuzz simulation and truth inversion proof. After this, the suite covers 30 invariant tests across 10 layers.
+Total after this: 42 invariant tests across 15 layers.
 
