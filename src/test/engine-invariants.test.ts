@@ -2198,7 +2198,7 @@ describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
     const ELITE_RANGES: Record<string, [number, number]> = {
       tee_exit_velocity: [99, 110],
       bat_speed: [84, 95],
-      sixty_yard_dash: [6.2, 6.66],    // lower is better — top 20%
+      sixty_yard_dash: [6.2, 6.66],
       ten_yard_dash: [1.4, 1.54],
       pro_agility: [3.5, 3.9],
       position_throw_velo: [87, 95],
@@ -2206,8 +2206,10 @@ describe('Layer 20 — Calibration Enforcement & Truth Lock', () => {
       vertical_jump: [35, 40],
       sl_broad_jump: [89, 100],
       mb_rotational_throw: [39, 45],
-      lateral_shuffle: [3.5, 3.9],      // lower is better
+      lateral_shuffle: [3.5, 3.9],
       long_toss_distance: [284, 320],
+      fielding_exchange_time: [0.85, 1.05],
+      sl_balance_eyes_closed: [50, 75],
     };
 
     for (let i = 0; i < total; i++) {
