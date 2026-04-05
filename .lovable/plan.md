@@ -1,106 +1,119 @@
 
 
-# Phase 1 & 2 — Remotion Foundation + Local Render Proof
+# Phase 3 — Production Connection
 
 ## Architecture
 
+The rendering pipeline cannot run inside an edge function (60s timeout, no Chromium). Instead, the edge function `render-promo` will act as a **queue processor** that:
+
+1. Reads queued jobs from `promo_render_queue`
+2. Loads project + scene data from DB
+3. Executes the Remotion render script via a child process (within the sandbox for now)
+4. Uploads the MP4 to Supabase Storage
+5. Updates DB with public URL
+
+Since edge functions cannot run Remotion (no Chromium, no Node), the actual architecture is:
+
 ```text
-remotion/                          # Standalone Remotion project (NOT in main app bundle)
-├── package.json
-├── tsconfig.json
-├── scripts/
-│   └── render-remotion.mjs        # Programmatic render script (accepts project ID via env)
-├── src/
-│   ├── index.ts                   # registerRoot entry
-│   ├── Root.tsx                   # Composition registration
-│   ├── MainVideo.tsx              # Dynamic scene sequencer (reads scene_sequence prop)
-│   ├── scenes/
-│   │   ├── HookProblemScene.tsx   # "90% of athletes train blind" — kinetic typography
-│   │   └── DashboardHeroScene.tsx # MPI score + grade cards animating in
-│   └── components/
-│       ├── PhoneMockup.tsx        # iPhone frame wrapper
-│       └── AnimatedMetric.tsx     # Reusable number/grade reveal
-└── public/
+Admin UI                    Edge Function              Remotion (sandbox CLI)
+─────────                   ─────────────              ────────────────────
+Queue Render ──→ insert     render-promo ──→           Not callable from edge
+  into queue     row        (cannot render)            
 ```
 
-## Implementation Steps
+**Revised approach**: The edge function `render-promo` handles validation, status updates, and scene data assembly. The actual render is triggered client-side via `supabase.functions.invoke()` which returns the assembled scene data, and the render itself happens via the existing CLI script. For true automation, we build the edge function to:
 
-### Step 1: Initialize Remotion Project
-- `mkdir -p remotion && cd remotion && bun init -y`
-- Install: `remotion`, `@remotion/cli`, `@remotion/renderer`, `@remotion/bundler`, `@remotion/compositor-linux-x64-musl`, `@remotion/transitions`, `@remotion/google-fonts`, `react`, `react-dom`, `typescript`, `@types/react`, `@supabase/supabase-js`
-- Fix compositor binary (musl→gnu copy), symlink ffmpeg/ffprobe
-- Create `tsconfig.json` with `jsx: "react-jsx"`, `module: "Preserve"`
+1. Validate the project (scene_key mapping, sim_data presence, non-empty sequence)
+2. Assemble the full `INPUT_JSON` payload (resolving scene_key → sim_data from DB)
+3. Return the payload for CLI rendering OR mark as ready
 
-### Step 2: Build Two Scene Components
+**However**, given sandbox constraints, the most practical production path is:
 
-**HookProblemScene** — consumes `sim_data: { headline, subtext, stats[] }`
-- Dark background with subtle gradient
-- Headline slams in via spring (large kinetic type)
-- Stats stagger in below with counter animation
-- Subtext fades in last as emotional anchor
-- All animation via `useCurrentFrame()` + `interpolate()`/`spring()`
+- Edge function `render-promo`: validates, assembles data, stores assembled payload in render_metadata
+- Admin UI polls queue status via React Query refetch
+- For **this phase**: render is triggered via the admin clicking "Render Now" which calls the edge function for validation + data assembly, then we execute the render in the sandbox and upload to storage
 
-**DashboardHeroScene** — consumes `sim_data: { mpiScore, grades, streak }`
-- Phone mockup frame containing simulated dashboard UI
-- MPI score counts up from 0 to target value
-- Grade cards (A-, A, B+) spring in with stagger
-- Streak badge pulses in
-- Clean, app-realistic visual style
+**Storage**: Create a `promo-videos` bucket (public) for rendered MP4s.
 
-### Step 3: Dynamic Scene Sequencer (MainVideo.tsx)
-- Accepts `sceneSequence` prop: array of `{ sceneKey, simData, durationInFrames }`
-- Maps `sceneKey` → component (`hook-problem` → HookProblemScene, etc.)
-- Renders scenes via `<TransitionSeries>` with wipe transitions
-- Each scene receives its `simData` as props
+## Implementation
 
-### Step 4: Root Composition
-- Registers composition `id="main"` at 1080×1920 (9:16 default), 30fps
-- Default props include a sample 2-scene sequence for standalone testing
-- Duration calculated from scene sequence
+### 1. Storage Bucket
+- Create `promo-videos` public bucket via migration
 
-### Step 5: Render Script (`scripts/render-remotion.mjs`)
-- Reads `PROJECT_ID` from env
-- Connects to Supabase directly (using supabase-js with service role or anon key + the project's URL from env)
-- Loads `promo_projects` row → gets `scene_sequence` and `format`
-- Loads matching `promo_scenes` rows → injects `sim_data`
-- Sets composition dimensions from `FORMAT_CONFIGS` (9:16 vs 16:9)
-- Renders via `@remotion/renderer` programmatic API
-- Outputs to `/mnt/documents/{project_title}.mp4`
-- Uses `chromeMode: "chrome-for-testing"`, `muted: true`, `concurrency: 1`
+### 2. Edge Function: `render-promo`
+Validates and assembles render payload:
+- Accepts `{ queue_id }` 
+- Loads queue row → project → scenes
+- Validates: no empty sequence, all scene_keys have mapped components, all sim_data present
+- Assembles full `sceneSequence` array with `durationInFrames` computed from `duration_variant`
+- Updates queue status to `processing`
+- Returns assembled payload
+- On validation failure: sets queue to `failed` with `error_message`
 
-### Step 6: End-to-End Proof
-1. Create a test project in DB with 2 scenes (hook-problem + dashboard-hero)
-2. Run: `cd remotion && PROJECT_ID=<uuid> node scripts/render-remotion.mjs`
-3. Verify: MP4 exists, duration matches expected (~14s for two 7s scenes), file size > 0
-4. Report exact output path and file size
+### 3. Four New Remotion Scene Components
 
-## Files to Create
+**MPIEngineScene** — consumes `{ metrics: {name, value, grade}[], overallScore }` 
+- Radial gauges animating per metric
+- Overall score counter
+- Grade badges spring in
 
-| File | Purpose |
-|------|---------|
-| `remotion/package.json` | Remotion project deps |
-| `remotion/tsconfig.json` | TS config for Remotion |
-| `remotion/src/index.ts` | Entry point |
-| `remotion/src/Root.tsx` | Composition registration |
-| `remotion/src/MainVideo.tsx` | Dynamic scene sequencer |
-| `remotion/src/scenes/HookProblemScene.tsx` | Hook scene with kinetic typography |
-| `remotion/src/scenes/DashboardHeroScene.tsx` | Dashboard simulation scene |
-| `remotion/src/components/PhoneMockup.tsx` | Phone frame wrapper |
-| `remotion/src/components/AnimatedMetric.tsx` | Animated number/grade component |
-| `remotion/scripts/render-remotion.mjs` | DB-driven render script |
+**TexVisionDrillScene** — consumes `{ targetSequence: string[], reactionTimes: number[], accuracy }` 
+- Simulated drill targets appearing/disappearing
+- Reaction time counter
+- Accuracy ring filling
 
-## What This Proves
+**VaultProgressScene** — consumes `{ beforeLabel, afterLabel, progressPercent, timeframe }` 
+- Side-by-side comparison frames sliding in
+- Progress bar filling
+- Timeframe label
 
-- Remotion pipeline is functional end-to-end
-- `sim_data` flows from DB → render script → scene component → video frame
-- Scene sequencing is dynamic (driven by `scene_sequence` JSON)
-- Format configuration works (aspect ratio, dimensions)
-- Foundation is extensible — adding scenes is just adding a component + mapping
+**CTACloserScene** — consumes `{ headline, subtext, url }` 
+- Brand logo/text slam in
+- URL/CTA text fades in
+- Pulsing accent glow
 
-## What This Does NOT Do
+### 4. MainVideo.tsx Update
+- Add all 4 new scene_keys to `SCENE_MAP`
+- Add validation: throw error if unknown `sceneKey` encountered
 
-- Does not build all 10 scene types (only 2)
-- Does not implement cloud/Lambda rendering
-- Does not wire the admin UI "Queue Render" button to actual rendering
-- Does not include audio/music
+### 5. Render Script Update
+- After render completes, upload MP4 to Supabase Storage `promo-videos` bucket
+- Update `promo_render_queue` row: status → `complete`, `output_url` → public URL
+- Update `promo_projects` row: status → `complete`, `output_url` → public URL
+- On failure: update queue row with `failed` + error_message
+
+### 6. usePromoEngine Hook Updates
+- `useQueueRender`: after inserting queue row, invoke `render-promo` edge function for validation
+- Add `useRenderQueue` polling: `refetchInterval: 5000` when any job is `queued` or `processing`
+- Add `useTriggerRender` hook that calls the edge function
+
+### 7. ExportManager Updates
+- Add video preview (`<video>` element) when `output_url` exists
+- Add realtime polling for active renders
+- Show error messages for failed renders
+- Disable re-render while processing
+
+### 8. Validation in Render Script
+- Check every `sceneKey` exists in `SCENE_MAP` — abort with error if not
+- Check every entry has non-empty `simData` — abort if missing
+- Check `sceneSequence` is non-empty — abort if empty
+
+## Files
+
+| File | Change |
+|------|--------|
+| DB migration | Create `promo-videos` storage bucket |
+| `supabase/functions/render-promo/index.ts` | New: validate + assemble render payload |
+| `remotion/src/scenes/MPIEngineScene.tsx` | New scene component |
+| `remotion/src/scenes/TexVisionDrillScene.tsx` | New scene component |
+| `remotion/src/scenes/VaultProgressScene.tsx` | New scene component |
+| `remotion/src/scenes/CTACloserScene.tsx` | New scene component |
+| `remotion/src/MainVideo.tsx` | Add 4 scene_keys to SCENE_MAP + validation |
+| `remotion/scripts/render-remotion.mjs` | Add storage upload + DB status updates |
+| `src/hooks/usePromoEngine.ts` | Add polling, trigger hook, validation invoke |
+| `src/components/promo-engine/ExportManager.tsx` | Video preview, polling, error display |
+
+## Constraints
+- Actual automated rendering from button click requires either a server process or external service (Remotion Lambda). For this phase, the edge function validates and assembles the payload; rendering is triggered as a CLI step that can be executed in the sandbox. The admin UI will show the correct status flow.
+- True one-click-to-video automation requires infrastructure beyond edge functions (no Chromium available). This phase builds all the pieces so that wiring to an external renderer is a single integration point change.
 
