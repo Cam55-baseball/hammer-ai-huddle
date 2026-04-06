@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { getRenderProgress } from "npm:@remotion/lambda@4.0.445/client";
+import { getRenderProgress } from "npm:@remotion/lambda-client@4.0.445";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
