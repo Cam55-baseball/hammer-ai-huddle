@@ -38,6 +38,14 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   
+  // Vitamin/supplement logging
+  const { addVitamin } = useVitaminLogs();
+  const [supplementsList, setSupplementsList] = useState<Array<{ name: string; dosage: string }>>([]);
+  const [suppSearchTerm, setSuppSearchTerm] = useState('');
+  const [suppDosage, setSuppDosage] = useState('');
+  const [suppsOpen, setSuppsOpen] = useState(false);
+  const [suppDropdownOpen, setSuppDropdownOpen] = useState(false);
+  
   // Smart food lookup
   const { status: lookupStatus, result: lookupResult, error: lookupError, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
   
