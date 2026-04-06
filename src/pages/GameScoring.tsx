@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { GameSetupForm } from '@/components/game-scoring/GameSetupForm';
 import { LiveScorebook } from '@/components/game-scoring/LiveScorebook';
@@ -73,35 +73,6 @@ export default function GameScoring() {
       </DashboardLayout>
     );
   }
-
-  const handleSetup = useCallback(async (setup: GameSetup) => {
-    // Override global sport context to match the game being scored
-    dispatchSportChange(setup.sport);
-    const id = await createGame(setup);
-    if (id) {
-      setGameData(setup);
-      setPhase('scoring');
-    }
-  }, [createGame]);
-
-  const handlePlayRecorded = useCallback(async (plays: GamePlay[]) => {
-    if (!gameId) return;
-    for (const play of plays) {
-      await addPlay({ ...play, game_id: gameId });
-    }
-    // Refresh plays
-    const updated = await getPlays(gameId);
-    setAllPlays(updated);
-  }, [gameId, addPlay, getPlays]);
-
-  const handleComplete = useCallback(async () => {
-    if (!gameId || !gameData) return;
-    const plays = await getPlays(gameId);
-    setAllPlays(plays);
-    await completeGame(gameId, { completed_at: new Date().toISOString() });
-    await syncGameToPlayerStats(gameId, gameData);
-    setPhase('summary');
-  }, [gameId, gameData, getPlays, completeGame, syncGameToPlayerStats]);
 
   const startingPitcherName = gameData?.lineup.find(p => p.id === gameData.starting_pitcher_id)?.name || gameData?.lineup[0]?.name || '';
 
