@@ -442,8 +442,23 @@ export function VitaminSupplementTracker({ compact = false }: VitaminSupplementT
                               )}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                              {vitamin.dosage && (
-                                <span className="text-xs text-muted-foreground">{vitamin.dosage} {vitamin.unit}</span>
+                              {vitamin.dosage !== null ? (
+                                <EditableCell
+                                  value={vitamin.dosage ? `${vitamin.dosage} ${vitamin.unit}` : null}
+                                  placeholder="Add dosage"
+                                  onSave={async (val) => {
+                                    const cleaned = val.replace(new RegExp(`\\s*${vitamin.unit}\\s*$`, 'i'), '').trim();
+                                    await updateVitamin(vitamin.id, { dosage: cleaned || undefined });
+                                  }}
+                                />
+                              ) : (
+                                <EditableCell
+                                  value={null}
+                                  placeholder="Add dosage"
+                                  onSave={async (val) => {
+                                    await updateVitamin(vitamin.id, { dosage: val.trim() || undefined });
+                                  }}
+                                />
                               )}
                               {vitamin.purpose && (
                                 <Badge variant="outline" className="text-xs py-0 h-4">{vitamin.purpose}</Badge>
