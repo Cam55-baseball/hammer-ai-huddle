@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { renderMediaOnLambda } from "npm:@remotion/lambda-client@4.0.445";
+import { renderMediaOnLambda, getCompositionsOnLambda } from "npm:@remotion/lambda-client@4.0.445";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -186,6 +186,35 @@ Deno.serve(async (req) => {
     console.log(`[render-promo] Lambda configured. Dispatching render via @remotion/lambda@4.0.445 for queue_id: ${queue_id}`);
     console.log(`[render-promo] function=${lambdaFunctionName}, region=${lambdaRegion}, serveUrl=${remotionSiteUrl}`);
 
+    // --- Discover available compositions ---
+    let compositionId = "main";
+    let compositionIds: string[] = [];
+    try {
+      console.log(`[render-promo] Discovering compositions from serveUrl...`);
+      const compositions = await getCompositionsOnLambda({
+        region: lambdaRegion as any,
+        functionName: lambdaFunctionName!,
+        serveUrl: remotionSiteUrl!,
+        inputProps: { sceneSequence: assembledSequence },
+      });
+      compositionIds = compositions.map((c: any) => c.id);
+      console.log(`[render-promo] Available compositions: ${JSON.stringify(compositionIds)}`);
+
+      if (compositions.length === 0) {
+        await failJob(supabase, queue_id, project.id, "No compositions found in Remotion bundle");
+        return new Response(
+          JSON.stringify({ error: "No compositions found in Remotion bundle" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      compositionId = compositionIds[0];
+      console.log(`[render-promo] Using composition: '${compositionId}'`);
+    } catch (discoverErr: any) {
+      console.warn(`[render-promo] Composition discovery failed, falling back to 'main': ${discoverErr?.message || discoverErr}`);
+      compositionId = "main";
+    }
+
     // Mark as processing
     await supabase
       .from("promo_render_queue")
@@ -199,7 +228,7 @@ Deno.serve(async (req) => {
       .from("promo_projects")
       .update({
         status: "rendering",
-        render_metadata: { ...payload, lambda_region: lambdaRegion },
+        render_metadata: { ...payload, lambda_region: lambdaRegion, compositionId, compositionIds },
       })
       .eq("id", project.id);
 
@@ -208,7 +237,7 @@ Deno.serve(async (req) => {
         region: lambdaRegion as any,
         functionName: lambdaFunctionName!,
         serveUrl: remotionSiteUrl!,
-        composition: "main",
+        composition: compositionId,
         codec: "h264",
         inputProps: { sceneSequence: assembledSequence },
         imageFormat: "jpeg",
@@ -235,7 +264,7 @@ Deno.serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, payload }),
+        JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, compositionId, compositionIds, payload }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (lambdaErr: any) {
