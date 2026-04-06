@@ -4,13 +4,44 @@ import { GameSetupForm } from '@/components/game-scoring/GameSetupForm';
 import { LiveScorebook } from '@/components/game-scoring/LiveScorebook';
 import { GameSummaryView } from '@/components/game-scoring/GameSummaryView';
 import { useGameScoring, type GameSetup, type GamePlay } from '@/hooks/useGameScoring';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Construction } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { dispatchSportChange } from '@/contexts/SportThemeContext';
 
 type GamePhase = 'setup' | 'scoring' | 'summary';
 
 export default function GameScoring() {
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
+
+  if (ownerLoading || adminLoading) {
+    return (
+      <DashboardLayout>
+        <div className="container max-w-5xl mx-auto py-6 px-4">
+          <Skeleton className="h-8 w-48 mb-4" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!isOwner && !isAdmin) {
+    return (
+      <DashboardLayout>
+        <Card className="max-w-md mx-auto mt-20 text-center p-8">
+          <Construction className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-xl font-bold">Game Hub Locked</h2>
+          <p className="text-muted-foreground mt-2">
+            Closed temporarily for renovations.
+          </p>
+        </Card>
+      </DashboardLayout>
+    );
+  }
   const [phase, setPhase] = useState<GamePhase>('setup');
   const [gameData, setGameData] = useState<GameSetup | null>(null);
   const [allPlays, setAllPlays] = useState<any[]>([]);
