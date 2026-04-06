@@ -1,43 +1,40 @@
 
 
-# Lock Game Hub for Non-Admin/Non-Owner Users
+# Add Vitamin & Supplement Logging to Quick Nutrition Log Dialog
 
 ## What This Does
 
-Wraps the Game Hub page (`/game-scoring`) with a role check. Players, scouts, and coaches see a "Closed temporarily for renovations" message. Owners and admins retain full access.
+Adds a collapsible "Vitamins & Supplements" section to the `QuickNutritionLogDialog` (the "Log Meal" dialog on the Game Plan). Users can add one or more vitamins/supplements alongside their meal entry. These get saved to the existing `vault_vitamin_logs` table using the existing `useVitaminLogs` hook.
 
 ## Changes
 
-### 1. Modify `src/pages/GameScoring.tsx`
+### 1. Modify `src/components/QuickNutritionLogDialog.tsx`
 
-- Import `useOwnerAccess`, `useAdminAccess`, and UI components (`Construction` icon, `Card`)
-- After the hooks load, check `isOwner || isAdmin`
-- If neither: render a locked-out card with a construction icon and the message "Closed temporarily for renovations."
-- If owner/admin: render the existing Game Hub as-is
-- Show a loading skeleton while roles are being checked
+- Import `useVitaminLogs` and its types (`CreateVitaminInput`)
+- Import `SUPPLEMENT_REFERENCE` and `SUPPLEMENT_NAMES` from `VitaminSupplementTracker.tsx` (or extract to shared constants)
+- Add state for a list of supplements to log: `supplements: Array<{ name: string; dosage: string }>`
+- Add a collapsible section (similar to "Digestion Notes") between the Energy Level and Save button:
+  - Header: "Vitamins & Supplements (optional)" with a `Pill` icon
+  - An autocomplete/select input for supplement name (from `SUPPLEMENT_NAMES`)
+  - A dosage input that auto-fills the suggested range from `SUPPLEMENT_REFERENCE`
+  - An "Add" button to push to the list
+  - Show added supplements as removable badges/chips
+- On save (`handleSave`): after saving the nutrition log, iterate through the supplements list and call `addVitamin()` for each one
+- Reset supplements list in `resetForm()`
 
-### Technical Detail
+### 2. Extract shared supplement data (minor refactor)
 
-```tsx
-const { isOwner, loading: ownerLoading } = useOwnerAccess();
-const { isAdmin, loading: adminLoading } = useAdminAccess();
+Move `SUPPLEMENT_REFERENCE` and `SUPPLEMENT_NAMES` from `VitaminSupplementTracker.tsx` to a new file `src/constants/supplements.ts` so both components can import from a single source of truth.
 
-if (ownerLoading || adminLoading) return <DashboardLayout><Skeleton /></DashboardLayout>;
+## No database changes needed
 
-if (!isOwner && !isAdmin) {
-  return (
-    <DashboardLayout>
-      <Card className="max-w-md mx-auto mt-20 text-center p-8">
-        <Construction className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold">Game Hub Locked</h2>
-        <p className="text-muted-foreground mt-2">
-          Closed temporarily for renovations.
-        </p>
-      </Card>
-    </DashboardLayout>
-  );
-}
-```
+The `vault_vitamin_logs` table already exists and supports all required fields.
 
-No database changes needed. Single file edit.
+## Technical Detail
+
+The supplement section UI will be a `Collapsible` with:
+- A combobox-style input listing known supplements (with free-text for custom ones)
+- Auto-populated dosage from the reference data
+- Each added supplement shown as a chip with an X to remove
+- On save, each supplement is inserted via `useVitaminLogs().addVitamin()` with today's date and timing based on the selected meal type (breakfast → `with_breakfast`, etc.)
 
