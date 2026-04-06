@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { getRenderProgress } from "npm:@remotion/lambda-client@4.0.261";
+import { getRenderProgress } from "npm:@remotion/lambda-client@4.0.445";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
 
     const lambdaFunctionName = Deno.env.get("REMOTION_LAMBDA_FUNCTION_NAME");
     const lambdaRegion = Deno.env.get("REMOTION_LAMBDA_REGION") || "us-east-1";
-    const s3Bucket = Deno.env.get("REMOTION_S3_BUCKET");
+    const s3BucketEnv = Deno.env.get("REMOTION_S3_BUCKET");
     const lambdaConfigured = !!lambdaFunctionName;
 
     const results: any[] = [];
@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
               error_message: `No render_id after ${Math.round(elapsed / 1000)}s — Lambda dispatch failed (retry ${job.retry_count + 1}/${job.max_retries})`,
               started_at: null,
               render_id: null,
+              render_metadata: {},
             })
             .eq("id", job.id);
           results.push({ id: job.id, action: "retried_no_render_id", retry: job.retry_count + 1 });
@@ -84,6 +85,7 @@ Deno.serve(async (req) => {
               error_message: `Timed out after ${Math.round(elapsed / 1000)}s (retry ${job.retry_count + 1}/${job.max_retries})`,
               started_at: null,
               render_id: null,
+              render_metadata: {},
             })
             .eq("id", job.id);
           results.push({ id: job.id, action: "retried", retry: job.retry_count + 1 });
@@ -106,12 +108,13 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // If Lambda is configured and job has a render_id, check progress via official client
+      // If Lambda is configured and job has a render_id, check progress
       if (lambdaConfigured && job.render_id) {
         try {
-          console.log(`[check-render-status] Checking Lambda progress for render_id: ${job.render_id}`);
+          // Read bucketName from queue metadata first, fall back to env
+          const bucketName = job.render_metadata?.bucketName || s3BucketEnv;
 
-          const bucketName = job.render_metadata?.bucketName || s3Bucket;
+          console.log(`[check-render-status] Checking Lambda progress for render_id: ${job.render_id}, bucket: ${bucketName || "auto"}`);
 
           const progress = await getRenderProgress({
             renderId: job.render_id,
@@ -120,7 +123,7 @@ Deno.serve(async (req) => {
             region: lambdaRegion as any,
           });
 
-          console.log(`[check-render-status] Progress for ${job.render_id}: done=${progress.done}, progress=${progress.overallProgress}, fatal=${progress.fatalErrorEncountered || 'none'}`);
+          console.log(`[check-render-status] Progress for ${job.render_id}: done=${progress.done}, progress=${progress.overallProgress}, fatal=${progress.fatalErrorEncountered || "none"}`);
 
           if (progress.done && progress.outputFile) {
             console.log(`[check-render-status] Render complete! Output: ${progress.outputFile}`);
@@ -179,6 +182,7 @@ Deno.serve(async (req) => {
                   error_message: `Lambda error: ${errorMsg} (retry ${job.retry_count + 1}/${job.max_retries})`,
                   started_at: null,
                   render_id: null,
+                  render_metadata: {},
                 })
                 .eq("id", job.id);
               results.push({ id: job.id, action: "retried_after_error" });
@@ -224,6 +228,7 @@ Deno.serve(async (req) => {
             error_message: null,
             started_at: null,
             render_id: null,
+            render_metadata: {},
           })
           .eq("id", job.id);
         results.push({ id: job.id, action: "retry_queued", retry: job.retry_count + 1 });

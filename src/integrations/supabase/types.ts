@@ -3898,6 +3898,7 @@ export type Database = {
           output_url: string | null
           project_id: string
           render_id: string | null
+          render_metadata: Json | null
           retry_count: number
           started_at: string | null
           status: string
@@ -3912,6 +3913,7 @@ export type Database = {
           output_url?: string | null
           project_id: string
           render_id?: string | null
+          render_metadata?: Json | null
           retry_count?: number
           started_at?: string | null
           status?: string
@@ -3926,6 +3928,7 @@ export type Database = {
           output_url?: string | null
           project_id?: string
           render_id?: string | null
+          render_metadata?: Json | null
           retry_count?: number
           started_at?: string | null
           status?: string

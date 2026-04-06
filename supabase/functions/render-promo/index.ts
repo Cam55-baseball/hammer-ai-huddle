@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { renderMediaOnLambda } from "npm:@remotion/lambda-client@4.0.261";
+import { renderMediaOnLambda } from "npm:@remotion/lambda-client@4.0.445";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -158,102 +158,94 @@ Deno.serve(async (req) => {
       sceneSequence: assembledSequence,
     };
 
-    // --- Attempt Remotion Lambda dispatch ---
+    // --- Validate required secrets ---
     const awsAccessKey = Deno.env.get("AWS_ACCESS_KEY_ID");
     const awsSecretKey = Deno.env.get("AWS_SECRET_ACCESS_KEY");
+    const awsSessionToken = Deno.env.get("AWS_SESSION_TOKEN");
     const lambdaFunctionName = Deno.env.get("REMOTION_LAMBDA_FUNCTION_NAME");
     const lambdaRegion = Deno.env.get("REMOTION_LAMBDA_REGION") || "us-east-1";
     const s3Bucket = Deno.env.get("REMOTION_S3_BUCKET");
     const remotionSiteUrl = Deno.env.get("REMOTION_SITE_URL");
 
-    const lambdaConfigured = awsAccessKey && awsSecretKey && lambdaFunctionName;
+    const missingSecrets: string[] = [];
+    if (!awsAccessKey) missingSecrets.push("AWS_ACCESS_KEY_ID");
+    if (!awsSecretKey) missingSecrets.push("AWS_SECRET_ACCESS_KEY");
+    if (!lambdaFunctionName) missingSecrets.push("REMOTION_LAMBDA_FUNCTION_NAME");
+    if (!remotionSiteUrl) missingSecrets.push("REMOTION_SITE_URL");
 
-    if (lambdaConfigured) {
-      console.log(`[render-promo] Lambda configured. Dispatching render via @remotion/lambda-client for queue_id: ${queue_id}`);
+    if (missingSecrets.length > 0) {
+      const msg = `Missing required secrets: ${missingSecrets.join(", ")}`;
+      console.error(`[render-promo] ${msg}`);
+      await failJob(supabase, queue_id, project.id, msg);
+      return new Response(
+        JSON.stringify({ error: msg }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-      // Mark as processing
-      await supabase
+    console.log(`[render-promo] Lambda configured. Dispatching render via @remotion/lambda@4.0.445 for queue_id: ${queue_id}`);
+    console.log(`[render-promo] function=${lambdaFunctionName}, region=${lambdaRegion}, serveUrl=${remotionSiteUrl}`);
+
+    // Mark as processing
+    await supabase
+      .from("promo_render_queue")
+      .update({
+        status: "processing",
+        started_at: new Date().toISOString(),
+      })
+      .eq("id", queue_id);
+
+    await supabase
+      .from("promo_projects")
+      .update({
+        status: "rendering",
+        render_metadata: { ...payload, lambda_region: lambdaRegion },
+      })
+      .eq("id", project.id);
+
+    try {
+      const { renderId, bucketName } = await renderMediaOnLambda({
+        region: lambdaRegion as any,
+        functionName: lambdaFunctionName!,
+        serveUrl: remotionSiteUrl!,
+        composition: "main",
+        codec: "h264",
+        inputProps: { sceneSequence: assembledSequence },
+        imageFormat: "jpeg",
+        maxRetries: 1,
+        privacy: "public",
+        outName: `promo-${queue_id}.mp4`,
+        ...(s3Bucket ? { forceBucketName: s3Bucket } : {}),
+      });
+
+      console.log(`[render-promo] Got renderId: ${renderId}, bucketName: ${bucketName}`);
+
+      // Persist render_id and bucket immediately
+      const { error: updateErr } = await supabase
         .from("promo_render_queue")
         .update({
-          status: "processing",
-          started_at: new Date().toISOString(),
+          render_id: renderId,
+          render_metadata: { bucketName },
         })
         .eq("id", queue_id);
 
-      await supabase
-        .from("promo_projects")
-        .update({
-          status: "rendering",
-          render_metadata: { ...payload, lambda_region: lambdaRegion },
-        })
-        .eq("id", project.id);
-
-      try {
-        console.log(`[render-promo] Calling renderMediaOnLambda: function=${lambdaFunctionName}, region=${lambdaRegion}, serveUrl=${remotionSiteUrl}`);
-
-        const { renderId, bucketName } = await renderMediaOnLambda({
-          region: lambdaRegion as any,
-          functionName: lambdaFunctionName!,
-          serveUrl: remotionSiteUrl!,
-          composition: "main",
-          codec: "h264",
-          inputProps: { sceneSequence: assembledSequence },
-          imageFormat: "jpeg",
-          maxRetries: 1,
-          privacy: "public",
-          outName: `promo-${queue_id}.mp4`,
-          ...(s3Bucket ? { forceBucketName: s3Bucket } : {}),
-        });
-
-        console.log(`[render-promo] Got renderId: ${renderId}, bucketName: ${bucketName}`);
-
-        // Store render_id and bucket for status polling
-        await supabase
-          .from("promo_render_queue")
-          .update({
-            render_id: renderId,
-            render_metadata: { bucketName },
-          })
-          .eq("id", queue_id);
-
-        return new Response(
-          JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, payload }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      } catch (lambdaErr: any) {
-        console.error(`[render-promo] renderMediaOnLambda failed: ${lambdaErr.message}`);
-        await failJob(supabase, queue_id, project.id, `Lambda invocation failed: ${lambdaErr.message}`);
-        return new Response(
-          JSON.stringify({ error: `Lambda error: ${lambdaErr.message}` }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (updateErr) {
+        console.error(`[render-promo] Failed to persist render_id: ${updateErr.message}`);
+        // Don't fail the job — the render is running on Lambda. Log and continue.
       }
-    } else {
-      console.log(`[render-promo] Lambda NOT configured. Missing credentials.`);
-      await supabase
-        .from("promo_render_queue")
-        .update({
-          status: "failed",
-          error_message: "Render service not configured. Add AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and REMOTION_LAMBDA_FUNCTION_NAME secrets to enable automated rendering.",
-        })
-        .eq("id", queue_id);
-
-      await supabase
-        .from("promo_projects")
-        .update({
-          status: "draft",
-          render_metadata: payload,
-        })
-        .eq("id", project.id);
 
       return new Response(
-        JSON.stringify({
-          success: false,
-          mode: "unconfigured",
-          message: "Render service not configured.",
-          payload,
-        }),
+        JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, payload }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (lambdaErr: any) {
+      const errorDetail = lambdaErr?.message || String(lambdaErr);
+      console.error(`[render-promo] renderMediaOnLambda failed: ${errorDetail}`);
+      console.error(`[render-promo] Full error:`, JSON.stringify(lambdaErr, Object.getOwnPropertyNames(lambdaErr)));
+      await failJob(supabase, queue_id, project.id, `Lambda invocation failed: ${errorDetail}`);
+      return new Response(
+        JSON.stringify({ error: `Lambda error: ${errorDetail}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (err: any) {
