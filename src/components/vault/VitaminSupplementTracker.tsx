@@ -227,7 +227,7 @@ interface VitaminSupplementTrackerProps {
 
 export function VitaminSupplementTracker({ compact = false }: VitaminSupplementTrackerProps) {
   const { t } = useTranslation();
-  const { vitamins, weeklyAdherence, loading, takenCount, addVitamin, markVitaminTaken, deleteVitamin } = useVitaminLogs();
+  const { vitamins, weeklyAdherence, loading, takenCount, addVitamin, updateVitamin, markVitaminTaken, deleteVitamin } = useVitaminLogs();
   const [isOpen, setIsOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
