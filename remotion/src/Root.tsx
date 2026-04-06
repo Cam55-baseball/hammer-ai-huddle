@@ -39,7 +39,7 @@ const totalDuration =
 
 export const RemotionRoot = () => (
   <Composition
-    id="main"
+    id="MainVideo"
     component={MainVideo}
     durationInFrames={totalDuration}
     fps={30}

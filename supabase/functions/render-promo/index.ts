@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
       console.log(`[render-promo] Using composition: '${compositionId}'`);
     } catch (discoverErr: any) {
       console.warn(`[render-promo] Composition discovery failed, falling back to 'main': ${discoverErr?.message || discoverErr}`);
-      compositionId = "main";
+      compositionId = "MainVideo";
     }
 
     // Mark as processing
