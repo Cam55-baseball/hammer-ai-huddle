@@ -13,6 +13,7 @@ import { Pill, Plus, Check, ChevronDown, Trash2, Clock, Info, Leaf, Zap, Dumbbel
 import { useVitaminLogs, VitaminTiming, VitaminCategory, VitaminUnit, CreateVitaminInput } from '@/hooks/useVitaminLogs';
 import { cn } from '@/lib/utils';
 import { SUPPLEMENT_REFERENCE, SUPPLEMENT_NAMES } from '@/constants/supplements';
+import { EditableCell } from '@/components/EditableCell';
 import type { SupplementRef } from '@/constants/supplements';
 
 // ─── Options ─────────────────────────────────────────────────────────────────
@@ -226,7 +227,7 @@ interface VitaminSupplementTrackerProps {
 
 export function VitaminSupplementTracker({ compact = false }: VitaminSupplementTrackerProps) {
   const { t } = useTranslation();
-  const { vitamins, weeklyAdherence, loading, takenCount, addVitamin, markVitaminTaken, deleteVitamin } = useVitaminLogs();
+  const { vitamins, weeklyAdherence, loading, takenCount, addVitamin, updateVitamin, markVitaminTaken, deleteVitamin } = useVitaminLogs();
   const [isOpen, setIsOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -441,8 +442,23 @@ export function VitaminSupplementTracker({ compact = false }: VitaminSupplementT
                               )}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                              {vitamin.dosage && (
-                                <span className="text-xs text-muted-foreground">{vitamin.dosage} {vitamin.unit}</span>
+                              {vitamin.dosage !== null ? (
+                                <EditableCell
+                                  value={vitamin.dosage ? `${vitamin.dosage} ${vitamin.unit}` : null}
+                                  placeholder="Add dosage"
+                                  onSave={async (val) => {
+                                    const cleaned = val.replace(new RegExp(`\\s*${vitamin.unit}\\s*$`, 'i'), '').trim();
+                                    await updateVitamin(vitamin.id, { dosage: cleaned || undefined });
+                                  }}
+                                />
+                              ) : (
+                                <EditableCell
+                                  value={null}
+                                  placeholder="Add dosage"
+                                  onSave={async (val) => {
+                                    await updateVitamin(vitamin.id, { dosage: val.trim() || undefined });
+                                  }}
+                                />
                               )}
                               {vitamin.purpose && (
                                 <Badge variant="outline" className="text-xs py-0 h-4">{vitamin.purpose}</Badge>

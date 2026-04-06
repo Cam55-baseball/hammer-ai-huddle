@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format, subDays } from 'date-fns';
 
@@ -63,66 +64,65 @@ export interface WeeklyAdherence {
   total: number;
 }
 
+function mapVitamin(data: any): VitaminLog {
+  return {
+    id: data.id,
+    userId: data.user_id,
+    entryDate: data.entry_date,
+    vitaminName: data.vitamin_name,
+    dosage: data.dosage,
+    timing: data.timing as VitaminTiming | null,
+    takenAt: data.taken_at,
+    taken: data.taken || false,
+    isRecurring: data.is_recurring || false,
+    category: (data.category as VitaminCategory) || 'supplement',
+    unit: (data.unit as VitaminUnit) || 'mg',
+    purpose: data.purpose || null,
+    createdAt: data.created_at
+  };
+}
+
 export function useVitaminLogs(date?: Date) {
   const { user } = useAuth();
-  const [vitamins, setVitamins] = useState<VitaminLog[]>([]);
-  const [todayVitamins, setTodayVitamins] = useState<VitaminLog[]>([]);
-  const [weeklyAdherence, setWeeklyAdherence] = useState<WeeklyAdherence[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const targetDate = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
 
-  const fetchVitamins = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
+  // Fetch vitamins via react-query
+  const { data: vitamins = [], isLoading: loading } = useQuery({
+    queryKey: ['vitaminLogs', targetDate, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
       const { data, error } = await supabase
         .from('vault_vitamin_logs')
         .select('*')
         .eq('user_id', user.id)
         .eq('entry_date', targetDate)
         .order('created_at', { ascending: true });
-
       if (error) throw error;
+      return (data || []).map(mapVitamin);
+    },
+    enabled: !!user?.id,
+  });
 
-      const mappedVitamins: VitaminLog[] = (data || []).map(mapVitamin);
-
-      setVitamins(mappedVitamins);
-      
-      const today = format(new Date(), 'yyyy-MM-dd');
-      if (targetDate === today) {
-        setTodayVitamins(mappedVitamins);
-      }
-    } catch (error) {
-      console.error('Error fetching vitamin logs:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.id, targetDate]);
-
-  const fetchWeeklyAdherence = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
+  // Weekly adherence via react-query
+  const { data: weeklyAdherence = [] } = useQuery({
+    queryKey: ['vitaminAdherence', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
       const days: WeeklyAdherence[] = [];
       const today = new Date();
-
       for (let i = 6; i >= 0; i--) {
         const d = subDays(today, i);
         const dateStr = format(d, 'yyyy-MM-dd');
         days.push({ date: dateStr, taken: 0, total: 0 });
       }
-
-      const startDate = days[0].date;
-      const endDate = days[6].date;
-
       const { data } = await supabase
         .from('vault_vitamin_logs')
         .select('entry_date, taken')
         .eq('user_id', user.id)
-        .gte('entry_date', startDate)
-        .lte('entry_date', endDate);
-
+        .gte('entry_date', days[0].date)
+        .lte('entry_date', days[6].date);
       if (data) {
         data.forEach(row => {
           const day = days.find(d => d.date === row.entry_date);
@@ -132,78 +132,20 @@ export function useVitaminLogs(date?: Date) {
           }
         });
       }
+      return days;
+    },
+    enabled: !!user?.id,
+  });
 
-      setWeeklyAdherence(days);
-    } catch (error) {
-      console.error('Error fetching weekly adherence:', error);
-    }
-  }, [user?.id]);
+  const todayVitamins = targetDate === format(new Date(), 'yyyy-MM-dd') ? vitamins : [];
 
-  const generateRecurringVitamins = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const { data: recurring } = await supabase
-        .from('vault_vitamin_logs')
-        .select('vitamin_name, dosage, timing, category, unit, purpose')
-        .eq('user_id', user.id)
-        .eq('is_recurring', true)
-        .order('created_at', { ascending: false });
-
-      if (!recurring || recurring.length === 0) return;
-
-      const { data: existing } = await supabase
-        .from('vault_vitamin_logs')
-        .select('vitamin_name')
-        .eq('user_id', user.id)
-        .eq('entry_date', targetDate);
-
-      const existingNames = new Set((existing || []).map(e => e.vitamin_name));
-      
-      const uniqueRecurring = new Map<string, typeof recurring[0]>();
-      recurring.forEach(v => {
-        if (!existingNames.has(v.vitamin_name) && !uniqueRecurring.has(v.vitamin_name)) {
-          uniqueRecurring.set(v.vitamin_name, v);
-        }
-      });
-
-      if (uniqueRecurring.size === 0) return;
-
-      const newEntries = Array.from(uniqueRecurring.values()).map(v => ({
-        user_id: user.id,
-        entry_date: targetDate,
-        vitamin_name: v.vitamin_name,
-        dosage: v.dosage,
-        timing: v.timing,
-        category: v.category || 'supplement',
-        unit: v.unit || 'mg',
-        purpose: v.purpose,
-        is_recurring: true,
-        taken: false
-      }));
-
-      await supabase.from('vault_vitamin_logs').insert(newEntries);
-      await fetchVitamins();
-    } catch (error) {
-      console.error('Error generating recurring vitamins:', error);
-    }
-  }, [user?.id, targetDate, fetchVitamins]);
-
-  useEffect(() => {
-    fetchVitamins();
-    fetchWeeklyAdherence();
-  }, [fetchVitamins, fetchWeeklyAdherence]);
-
-  useEffect(() => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    if (targetDate === today) {
-      generateRecurringVitamins();
-    }
-  }, [targetDate, generateRecurringVitamins]);
+  const invalidateAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['vitaminLogs'] });
+    queryClient.invalidateQueries({ queryKey: ['vitaminAdherence'] });
+  }, [queryClient]);
 
   const addVitamin = async (input: CreateVitaminInput): Promise<VitaminLog | null> => {
     if (!user?.id) return null;
-
     try {
       const { data, error } = await supabase
         .from('vault_vitamin_logs')
@@ -221,11 +163,8 @@ export function useVitaminLogs(date?: Date) {
         })
         .select()
         .single();
-
       if (error) throw error;
-
-      await fetchVitamins();
-      await fetchWeeklyAdherence();
+      invalidateAll();
       toast.success('Supplement added');
       return mapVitamin(data);
     } catch (error) {
@@ -235,23 +174,35 @@ export function useVitaminLogs(date?: Date) {
     }
   };
 
-  const markVitaminTaken = async (vitaminId: string, taken: boolean = true): Promise<boolean> => {
+  const updateVitamin = async (vitaminId: string, fields: { dosage?: string; timing?: VitaminTiming }): Promise<boolean> => {
     if (!user?.id) return false;
-
     try {
       const { error } = await supabase
         .from('vault_vitamin_logs')
-        .update({
-          taken,
-          taken_at: taken ? new Date().toISOString() : null
-        })
+        .update(fields)
         .eq('id', vitaminId)
         .eq('user_id', user.id);
-
       if (error) throw error;
+      invalidateAll();
+      toast.success('Updated');
+      return true;
+    } catch (error) {
+      console.error('Error updating vitamin:', error);
+      toast.error('Failed to update');
+      return false;
+    }
+  };
 
-      await fetchVitamins();
-      await fetchWeeklyAdherence();
+  const markVitaminTaken = async (vitaminId: string, taken: boolean = true): Promise<boolean> => {
+    if (!user?.id) return false;
+    try {
+      const { error } = await supabase
+        .from('vault_vitamin_logs')
+        .update({ taken, taken_at: taken ? new Date().toISOString() : null })
+        .eq('id', vitaminId)
+        .eq('user_id', user.id);
+      if (error) throw error;
+      invalidateAll();
       return true;
     } catch (error) {
       console.error('Error updating vitamin:', error);
@@ -262,18 +213,14 @@ export function useVitaminLogs(date?: Date) {
 
   const deleteVitamin = async (vitaminId: string): Promise<boolean> => {
     if (!user?.id) return false;
-
     try {
       const { error } = await supabase
         .from('vault_vitamin_logs')
         .delete()
         .eq('id', vitaminId)
         .eq('user_id', user.id);
-
       if (error) throw error;
-
-      await fetchVitamins();
-      await fetchWeeklyAdherence();
+      invalidateAll();
       toast.success('Supplement removed');
       return true;
     } catch (error) {
@@ -293,29 +240,12 @@ export function useVitaminLogs(date?: Date) {
     weeklyAdherence,
     loading,
     addVitamin,
+    updateVitamin,
     markVitaminTaken,
     deleteVitamin,
     takenCount,
     totalCount,
     allTaken,
-    refetch: fetchVitamins
-  };
-}
-
-function mapVitamin(data: any): VitaminLog {
-  return {
-    id: data.id,
-    userId: data.user_id,
-    entryDate: data.entry_date,
-    vitaminName: data.vitamin_name,
-    dosage: data.dosage,
-    timing: data.timing as VitaminTiming | null,
-    takenAt: data.taken_at,
-    taken: data.taken || false,
-    isRecurring: data.is_recurring || false,
-    category: (data.category as VitaminCategory) || 'supplement',
-    unit: (data.unit as VitaminUnit) || 'mg',
-    purpose: data.purpose || null,
-    createdAt: data.created_at
+    refetch: invalidateAll
   };
 }
