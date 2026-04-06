@@ -9,12 +9,14 @@ import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2, Sparkles, Database, ChevronDown, Clock } from 'lucide-react';
+import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2, Sparkles, Database, ChevronDown, Clock, Pill, Plus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
+import { useVitaminLogs, type VitaminTiming } from '@/hooks/useVitaminLogs';
 import { toast } from 'sonner';
 import { DIGESTION_TAGS, convertMealTime, toggleDigestionTagInNotes } from '@/constants/nutritionLogging';
+import { SUPPLEMENT_REFERENCE, SUPPLEMENT_NAMES } from '@/constants/supplements';
 
 interface QuickNutritionLogDialogProps {
   open: boolean;
