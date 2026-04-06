@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { getRenderProgress } from "npm:@remotion/lambda-client@4.0.261";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,15 +21,14 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const awsAccessKey = Deno.env.get("AWS_ACCESS_KEY_ID");
-    const awsSecretKey = Deno.env.get("AWS_SECRET_ACCESS_KEY");
     const lambdaFunctionName = Deno.env.get("REMOTION_LAMBDA_FUNCTION_NAME");
     const lambdaRegion = Deno.env.get("REMOTION_LAMBDA_REGION") || "us-east-1";
-    const lambdaConfigured = awsAccessKey && awsSecretKey && lambdaFunctionName;
+    const s3Bucket = Deno.env.get("REMOTION_S3_BUCKET");
+    const lambdaConfigured = !!lambdaFunctionName;
 
     const results: any[] = [];
 
-    console.log(`[check-render-status] Starting status check. Lambda configured: ${!!lambdaConfigured}`);
+    console.log(`[check-render-status] Starting status check. Lambda configured: ${lambdaConfigured}`);
 
     // 1. Timeout stuck processing jobs
     const { data: stuckJobs } = await supabase
@@ -106,26 +106,27 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // If Lambda is configured and job has a render_id, check Lambda status
+      // If Lambda is configured and job has a render_id, check progress via official client
       if (lambdaConfigured && job.render_id) {
         try {
           console.log(`[check-render-status] Checking Lambda progress for render_id: ${job.render_id}`);
 
-          const progress = await checkLambdaProgress(
-            awsAccessKey!,
-            awsSecretKey!,
-            lambdaFunctionName!,
-            lambdaRegion,
-            job.render_id
-          );
+          const bucketName = job.render_metadata?.bucketName || s3Bucket;
 
-          console.log(`[check-render-status] Progress for ${job.render_id}: done=${progress.done}, progress=${progress.overallProgress}, fatal=${progress.fatalError || 'none'}`);
+          const progress = await getRenderProgress({
+            renderId: job.render_id,
+            functionName: lambdaFunctionName!,
+            bucketName: bucketName || undefined,
+            region: lambdaRegion as any,
+          });
 
-          if (progress.done && progress.outputUrl) {
-            console.log(`[check-render-status] Render complete! Downloading from: ${progress.outputUrl}`);
+          console.log(`[check-render-status] Progress for ${job.render_id}: done=${progress.done}, progress=${progress.overallProgress}, fatal=${progress.fatalErrorEncountered || 'none'}`);
+
+          if (progress.done && progress.outputFile) {
+            console.log(`[check-render-status] Render complete! Output: ${progress.outputFile}`);
 
             // Download from S3 and upload to Supabase storage
-            const videoResponse = await fetch(progress.outputUrl);
+            const videoResponse = await fetch(progress.outputFile);
             const videoBlob = await videoResponse.blob();
             const storagePath = `renders/${job.project_id}/${job.id}.mp4`;
 
@@ -165,8 +166,9 @@ Deno.serve(async (req) => {
               .eq("id", job.project_id);
 
             results.push({ id: job.id, action: "completed", output_url: publicUrl });
-          } else if (progress.fatalError) {
-            console.error(`[check-render-status] Fatal error for ${job.render_id}: ${progress.fatalError}`);
+          } else if (progress.fatalErrorEncountered) {
+            const errorMsg = progress.errors?.[0]?.message || "Unknown Lambda error";
+            console.error(`[check-render-status] Fatal error for ${job.render_id}: ${errorMsg}`);
 
             if (job.retry_count < job.max_retries) {
               await supabase
@@ -174,7 +176,7 @@ Deno.serve(async (req) => {
                 .update({
                   status: "queued",
                   retry_count: job.retry_count + 1,
-                  error_message: `Lambda error: ${progress.fatalError} (retry ${job.retry_count + 1}/${job.max_retries})`,
+                  error_message: `Lambda error: ${errorMsg} (retry ${job.retry_count + 1}/${job.max_retries})`,
                   started_at: null,
                   render_id: null,
                 })
@@ -185,7 +187,7 @@ Deno.serve(async (req) => {
                 .from("promo_render_queue")
                 .update({
                   status: "permanently_failed",
-                  error_message: `Lambda error: ${progress.fatalError}. Max retries exhausted.`,
+                  error_message: `Lambda error: ${errorMsg}. Max retries exhausted.`,
                 })
                 .eq("id", job.id);
 
@@ -242,81 +244,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
-// Check Remotion Lambda render progress
-async function checkLambdaProgress(
-  accessKey: string,
-  secretKey: string,
-  functionName: string,
-  region: string,
-  renderId: string
-): Promise<{ done: boolean; outputUrl?: string; fatalError?: string; overallProgress?: number }> {
-  const payload = JSON.stringify({
-    type: "status",
-    renderId,
-  });
-
-  const lambdaUrl = `https://lambda.${region}.amazonaws.com/2015-03-31/functions/${functionName}/invocations`;
-  const now = new Date();
-  const dateStamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const shortDate = dateStamp.substring(0, 8);
-
-  const algorithm = "AWS4-HMAC-SHA256";
-  const credentialScope = `${shortDate}/${region}/lambda/aws4_request`;
-  const canonicalUri = `/2015-03-31/functions/${functionName}/invocations`;
-
-  const bodyHash = await sha256Hex(payload);
-  const canonicalHeaders = `content-type:application/json\nhost:lambda.${region}.amazonaws.com\nx-amz-date:${dateStamp}\n`;
-  const signedHeaders = "content-type;host;x-amz-date";
-  const canonicalRequest = `POST\n${canonicalUri}\n\n${canonicalHeaders}\n${signedHeaders}\n${bodyHash}`;
-
-  const stringToSign = `${algorithm}\n${dateStamp}\n${credentialScope}\n${await sha256Hex(canonicalRequest)}`;
-  const signingKey = await getSignatureKey(secretKey, shortDate, region, "lambda");
-  const signature = await hmacHex(signingKey, stringToSign);
-  const authHeader = `${algorithm} Credential=${accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-  const response = await fetch(lambdaUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Amz-Date": dateStamp,
-      "Authorization": authHeader,
-      "X-Amz-Invocation-Type": "RequestResponse",
-    },
-    body: payload,
-  });
-
-  const result = await response.json();
-
-  if (result.done) {
-    return { done: true, outputUrl: result.outputFile || result.outputUrl };
-  }
-  if (result.fatalErrorEncountered) {
-    return { done: false, fatalError: result.errors?.[0]?.message || "Unknown Lambda error" };
-  }
-  return { done: false, overallProgress: result.overallProgress || 0 };
-}
-
-// --- Crypto helpers ---
-async function sha256Hex(message: string): Promise<string> {
-  const data = new TextEncoder().encode(message);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function hmacSha256(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
-  const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(message));
-}
-
-async function hmacHex(key: ArrayBuffer, message: string): Promise<string> {
-  const sig = await hmacSha256(key, message);
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function getSignatureKey(secretKey: string, dateStamp: string, region: string, service: string): Promise<ArrayBuffer> {
-  const kDate = await hmacSha256(new TextEncoder().encode("AWS4" + secretKey).buffer, dateStamp);
-  const kRegion = await hmacSha256(kDate, region);
-  const kService = await hmacSha256(kRegion, service);
-  return await hmacSha256(kService, "aws4_request");
-}

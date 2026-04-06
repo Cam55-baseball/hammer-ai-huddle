@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { renderMediaOnLambda } from "npm:@remotion/lambda-client@4.0.261";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -168,7 +169,7 @@ Deno.serve(async (req) => {
     const lambdaConfigured = awsAccessKey && awsSecretKey && lambdaFunctionName;
 
     if (lambdaConfigured) {
-      console.log(`[render-promo] Lambda configured. Dispatching render for queue_id: ${queue_id}`);
+      console.log(`[render-promo] Lambda configured. Dispatching render via @remotion/lambda-client for queue_id: ${queue_id}`);
 
       // Mark as processing
       await supabase
@@ -187,11 +188,13 @@ Deno.serve(async (req) => {
         })
         .eq("id", project.id);
 
-      // Invoke Lambda — type: "start" returns immediately with renderId
       try {
-        const lambdaPayload = {
-          type: "start",
-          serveUrl: remotionSiteUrl,
+        console.log(`[render-promo] Calling renderMediaOnLambda: function=${lambdaFunctionName}, region=${lambdaRegion}, serveUrl=${remotionSiteUrl}`);
+
+        const { renderId, bucketName } = await renderMediaOnLambda({
+          region: lambdaRegion as any,
+          functionName: lambdaFunctionName!,
+          serveUrl: remotionSiteUrl!,
           composition: "main",
           codec: "h264",
           inputProps: { sceneSequence: assembledSequence },
@@ -200,135 +203,25 @@ Deno.serve(async (req) => {
           privacy: "public",
           outName: `promo-${queue_id}.mp4`,
           ...(s3Bucket ? { forceBucketName: s3Bucket } : {}),
-        };
+        });
 
-        const lambdaUrl = `https://lambda.${lambdaRegion}.amazonaws.com/2015-03-31/functions/${lambdaFunctionName}/invocations`;
-        const bodyStr = JSON.stringify(lambdaPayload);
-        const now = new Date();
-        const dateStamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-        const shortDate = dateStamp.substring(0, 8);
+        console.log(`[render-promo] Got renderId: ${renderId}, bucketName: ${bucketName}`);
 
-        // AWS Signature V4 signing
-        const algorithm = "AWS4-HMAC-SHA256";
-        const credentialScope = `${shortDate}/${lambdaRegion}/lambda/aws4_request`;
-        const canonicalUri = `/2015-03-31/functions/${lambdaFunctionName}/invocations`;
-
-        const bodyHash = await sha256Hex(bodyStr);
-        const canonicalHeaders = `content-type:application/json\nhost:lambda.${lambdaRegion}.amazonaws.com\nx-amz-date:${dateStamp}\n`;
-        const signedHeaders = "content-type;host;x-amz-date";
-        const canonicalRequest = `POST\n${canonicalUri}\n\n${canonicalHeaders}\n${signedHeaders}\n${bodyHash}`;
-
-        const stringToSign = `${algorithm}\n${dateStamp}\n${credentialScope}\n${await sha256Hex(canonicalRequest)}`;
-
-        const signingKey = await getSignatureKey(awsSecretKey!, shortDate, lambdaRegion, "lambda");
-        const signature = await hmacHex(signingKey, stringToSign);
-
-        const authHeader = `${algorithm} Credential=${awsAccessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-        console.log(`[render-promo] Invoking Lambda: ${lambdaFunctionName}`);
-
-        // Retry logic with exponential backoff for Lambda cold starts
-        const MAX_ATTEMPTS = 3;
-        const TIMEOUT_MS = 120000; // 120s per attempt
-        const BACKOFF_MS = [5000, 10000]; // wait 5s after 1st timeout, 10s after 2nd
-
-        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-        let lambdaResponse: Response | undefined;
-        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-          try {
-            console.log(`[render-promo] Lambda attempt ${attempt}/${MAX_ATTEMPTS}`);
-            lambdaResponse = await fetch(lambdaUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Amz-Date": dateStamp,
-                "Authorization": authHeader,
-                "X-Amz-Invocation-Type": "RequestResponse",
-              },
-              body: bodyStr,
-              signal: controller.signal,
-            });
-            clearTimeout(timeoutId);
-            break; // success — exit retry loop
-          } catch (fetchErr: any) {
-            clearTimeout(timeoutId);
-            if (fetchErr.name === "AbortError") {
-              if (attempt < MAX_ATTEMPTS) {
-                const waitMs = BACKOFF_MS[attempt - 1];
-                console.warn(`[render-promo] Attempt ${attempt} timed out after ${TIMEOUT_MS / 1000}s. Retrying in ${waitMs / 1000}s...`);
-                await sleep(waitMs);
-                continue;
-              }
-              // All attempts exhausted — mark job failed
-              const timeoutMsg = `Lambda invocation timed out after ${MAX_ATTEMPTS} attempts (${TIMEOUT_MS / 1000}s each). Lambda may need a larger timeout or warmer configuration.`;
-              console.error(`[render-promo] ${timeoutMsg}`);
-              await supabase
-                .from("promo_render_queue")
-                .update({ status: "failed", error_message: timeoutMsg })
-                .eq("id", queue_id);
-              await supabase
-                .from("promo_projects")
-                .update({ status: "failed" })
-                .eq("id", project.id);
-              return new Response(
-                JSON.stringify({ error: timeoutMsg }),
-                { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-              );
-            }
-            throw fetchErr;
-          }
-        }
-
-        const lambdaResultText = await lambdaResponse.text();
-        console.log(`[render-promo] Lambda response status: ${lambdaResponse.status}`);
-        console.log(`[render-promo] Lambda response body: ${lambdaResultText.substring(0, 1000)}`);
-
-        if (!lambdaResponse.ok) {
-          const errMsg = `Lambda returned HTTP ${lambdaResponse.status}: ${lambdaResultText.substring(0, 200)}`;
-          console.error(`[render-promo] ${errMsg}`);
-          await failJob(supabase, queue_id, project.id, errMsg);
-          return new Response(
-            JSON.stringify({ error: errMsg }),
-            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        let lambdaResult: any;
-        try {
-          lambdaResult = JSON.parse(lambdaResultText);
-        } catch {
-          lambdaResult = {};
-        }
-
-        const renderId = lambdaResult?.renderId || lambdaResult?.id || null;
-        console.log(`[render-promo] Got renderId: ${renderId}`);
-
-        if (!renderId) {
-          const errMsg = `Lambda responded but no renderId found. Body: ${lambdaResultText.substring(0, 300)}`;
-          console.error(`[render-promo] ${errMsg}`);
-          await failJob(supabase, queue_id, project.id, errMsg);
-          return new Response(
-            JSON.stringify({ error: errMsg }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        // Store render_id for status polling
+        // Store render_id and bucket for status polling
         await supabase
           .from("promo_render_queue")
-          .update({ render_id: renderId })
+          .update({
+            render_id: renderId,
+            render_metadata: { bucketName },
+          })
           .eq("id", queue_id);
 
         return new Response(
-          JSON.stringify({ success: true, mode: "lambda", renderId, payload }),
+          JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, payload }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } catch (lambdaErr: any) {
-        console.error(`[render-promo] Lambda invocation failed: ${lambdaErr.message}`);
+        console.error(`[render-promo] renderMediaOnLambda failed: ${lambdaErr.message}`);
         await failJob(supabase, queue_id, project.id, `Lambda invocation failed: ${lambdaErr.message}`);
         return new Response(
           JSON.stringify({ error: `Lambda error: ${lambdaErr.message}` }),
@@ -385,27 +278,4 @@ async function failJob(supabase: any, queueId: string, projectId: string, errorM
     .from("promo_projects")
     .update({ status: "failed" })
     .eq("id", projectId);
-}
-
-async function sha256Hex(message: string): Promise<string> {
-  const data = new TextEncoder().encode(message);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function hmacSha256(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
-  const cryptoKey = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(message));
-}
-
-async function hmacHex(key: ArrayBuffer, message: string): Promise<string> {
-  const sig = await hmacSha256(key, message);
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function getSignatureKey(secretKey: string, dateStamp: string, region: string, service: string): Promise<ArrayBuffer> {
-  const kDate = await hmacSha256(new TextEncoder().encode("AWS4" + secretKey).buffer, dateStamp);
-  const kRegion = await hmacSha256(kDate, region);
-  const kService = await hmacSha256(kRegion, service);
-  return await hmacSha256(kService, "aws4_request");
 }
