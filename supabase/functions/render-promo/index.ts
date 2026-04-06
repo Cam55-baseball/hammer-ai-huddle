@@ -227,47 +227,61 @@ Deno.serve(async (req) => {
 
         console.log(`[render-promo] Invoking Lambda: ${lambdaFunctionName}`);
 
-        // 50s timeout to stay under edge function 60s limit
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 50000);
+        // Retry logic with exponential backoff for Lambda cold starts
+        const MAX_ATTEMPTS = 3;
+        const TIMEOUT_MS = 120000; // 120s per attempt
+        const BACKOFF_MS = [5000, 10000]; // wait 5s after 1st timeout, 10s after 2nd
 
-        let lambdaResponse: Response;
-        try {
-          lambdaResponse = await fetch(lambdaUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Amz-Date": dateStamp,
-              "Authorization": authHeader,
-              "X-Amz-Invocation-Type": "RequestResponse",
-            },
-            body: bodyStr,
-            signal: controller.signal,
-          });
-        } catch (fetchErr: any) {
-          clearTimeout(timeoutId);
-          if (fetchErr.name === "AbortError") {
-            const timeoutMsg = "Lambda invocation timed out after 50s. Lambda may be cold-starting. Will retry.";
-            console.error(`[render-promo] ${timeoutMsg}`);
-            await supabase
-              .from("promo_render_queue")
-              .update({
-                status: "failed",
-                error_message: timeoutMsg,
-              })
-              .eq("id", queue_id);
-            await supabase
-              .from("promo_projects")
-              .update({ status: "failed" })
-              .eq("id", project.id);
-            return new Response(
-              JSON.stringify({ error: timeoutMsg }),
-              { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
+        const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+        let lambdaResponse: Response | undefined;
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+          try {
+            console.log(`[render-promo] Lambda attempt ${attempt}/${MAX_ATTEMPTS}`);
+            lambdaResponse = await fetch(lambdaUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Amz-Date": dateStamp,
+                "Authorization": authHeader,
+                "X-Amz-Invocation-Type": "RequestResponse",
+              },
+              body: bodyStr,
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            break; // success — exit retry loop
+          } catch (fetchErr: any) {
+            clearTimeout(timeoutId);
+            if (fetchErr.name === "AbortError") {
+              if (attempt < MAX_ATTEMPTS) {
+                const waitMs = BACKOFF_MS[attempt - 1];
+                console.warn(`[render-promo] Attempt ${attempt} timed out after ${TIMEOUT_MS / 1000}s. Retrying in ${waitMs / 1000}s...`);
+                await sleep(waitMs);
+                continue;
+              }
+              // All attempts exhausted — mark job failed
+              const timeoutMsg = `Lambda invocation timed out after ${MAX_ATTEMPTS} attempts (${TIMEOUT_MS / 1000}s each). Lambda may need a larger timeout or warmer configuration.`;
+              console.error(`[render-promo] ${timeoutMsg}`);
+              await supabase
+                .from("promo_render_queue")
+                .update({ status: "failed", error_message: timeoutMsg })
+                .eq("id", queue_id);
+              await supabase
+                .from("promo_projects")
+                .update({ status: "failed" })
+                .eq("id", project.id);
+              return new Response(
+                JSON.stringify({ error: timeoutMsg }),
+                { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+              );
+            }
+            throw fetchErr;
           }
-          throw fetchErr;
         }
-        clearTimeout(timeoutId);
 
         const lambdaResultText = await lambdaResponse.text();
         console.log(`[render-promo] Lambda response status: ${lambdaResponse.status}`);
