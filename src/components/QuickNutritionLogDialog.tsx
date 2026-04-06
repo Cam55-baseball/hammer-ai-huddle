@@ -221,6 +221,20 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
 
       if (error) throw error;
 
+      // Save any added vitamins/supplements
+      const timing = mealTypeToTiming(mealType);
+      for (const supp of supplementsList) {
+        const ref = SUPPLEMENT_REFERENCE[supp.name];
+        await addVitamin({
+          vitaminName: supp.name,
+          dosage: supp.dosage || undefined,
+          timing,
+          category: ref?.category || 'supplement',
+          unit: ref?.unit || 'mg',
+          isRecurring: false,
+        });
+      }
+
       // Invalidate all nutrition-related queries for E2E sync
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
