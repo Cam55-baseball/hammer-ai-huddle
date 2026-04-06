@@ -1,0 +1,1 @@
+ALTER TABLE public.promo_render_queue ADD COLUMN IF NOT EXISTS render_metadata jsonb DEFAULT '{}'::jsonb;
