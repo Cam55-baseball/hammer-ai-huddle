@@ -22,6 +22,33 @@ export default function GameScoring() {
   const [allPlays, setAllPlays] = useState<any[]>([]);
   const { gameId, saving, createGame, addPlay, getPlays, completeGame, syncGameToPlayerStats } = useGameScoring();
 
+  const handleSetup = useCallback(async (setup: GameSetup) => {
+    dispatchSportChange(setup.sport);
+    const id = await createGame(setup);
+    if (id) {
+      setGameData(setup);
+      setPhase('scoring');
+    }
+  }, [createGame]);
+
+  const handlePlayRecorded = useCallback(async (plays: GamePlay[]) => {
+    if (!gameId) return;
+    for (const play of plays) {
+      await addPlay({ ...play, game_id: gameId });
+    }
+    const updated = await getPlays(gameId);
+    setAllPlays(updated);
+  }, [gameId, addPlay, getPlays]);
+
+  const handleComplete = useCallback(async () => {
+    if (!gameId || !gameData) return;
+    const plays = await getPlays(gameId);
+    setAllPlays(plays);
+    await completeGame(gameId, { completed_at: new Date().toISOString() });
+    await syncGameToPlayerStats(gameId, gameData);
+    setPhase('summary');
+  }, [gameId, gameData, getPlays, completeGame, syncGameToPlayerStats]);
+
   if (ownerLoading || adminLoading) {
     return (
       <DashboardLayout>
