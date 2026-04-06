@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, payload }),
+        JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, compositionId, compositionIds, payload }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (lambdaErr: any) {
