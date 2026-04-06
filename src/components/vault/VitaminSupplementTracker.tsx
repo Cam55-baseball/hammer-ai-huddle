@@ -13,6 +13,7 @@ import { Pill, Plus, Check, ChevronDown, Trash2, Clock, Info, Leaf, Zap, Dumbbel
 import { useVitaminLogs, VitaminTiming, VitaminCategory, VitaminUnit, CreateVitaminInput } from '@/hooks/useVitaminLogs';
 import { cn } from '@/lib/utils';
 import { SUPPLEMENT_REFERENCE, SUPPLEMENT_NAMES } from '@/constants/supplements';
+import { EditableCell } from '@/components/EditableCell';
 import type { SupplementRef } from '@/constants/supplements';
 
 // ─── Options ─────────────────────────────────────────────────────────────────

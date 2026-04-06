@@ -238,6 +238,11 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
       // Invalidate all nutrition-related queries for E2E sync
       queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
       queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+      // Sync vitamin logs across components (Nutrition Hub, Vault, etc.)
+      if (supplementsList.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ['vitaminLogs'] });
+        queryClient.invalidateQueries({ queryKey: ['vitaminAdherence'] });
+      }
 
       toast.success(t('vault.nutrition.mealLogged'));
       resetForm();
