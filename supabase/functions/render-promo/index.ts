@@ -3,8 +3,7 @@ import { renderMediaOnLambda, getCompositionsOnLambda } from "npm:@remotion/lamb
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const VALID_SCENE_KEYS = [
@@ -38,19 +37,17 @@ Deno.serve(async (req) => {
   try {
     const { queue_id } = await req.json();
     if (!queue_id) {
-      return new Response(
-        JSON.stringify({ error: "queue_id is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "queue_id is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`[render-promo] Processing queue_id: ${queue_id}`);
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { persistSession: false } }
-    );
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+      auth: { persistSession: false },
+    });
 
     // Load queue row
     const { data: queueRow, error: qErr } = await supabase
@@ -61,18 +58,18 @@ Deno.serve(async (req) => {
 
     if (qErr || !queueRow) {
       console.error(`[render-promo] Queue job not found: ${queue_id}`);
-      return new Response(
-        JSON.stringify({ error: "Queue job not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Queue job not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     if (queueRow.status !== "queued") {
       console.log(`[render-promo] Job status is '${queueRow.status}', skipping`);
-      return new Response(
-        JSON.stringify({ error: `Job status is '${queueRow.status}', expected 'queued'` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: `Job status is '${queueRow.status}', expected 'queued'` }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Load project
@@ -84,28 +81,25 @@ Deno.serve(async (req) => {
 
     if (pErr || !project) {
       await failJob(supabase, queue_id, queueRow.project_id, "Project not found");
-      return new Response(
-        JSON.stringify({ error: "Project not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Project not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const sequence = project.scene_sequence || [];
 
     if (!Array.isArray(sequence) || sequence.length === 0) {
       await failJob(supabase, queue_id, project.id, "Scene sequence is empty");
-      return new Response(
-        JSON.stringify({ error: "Scene sequence is empty" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Scene sequence is empty" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Load all scenes referenced
     const sceneIds = sequence.map((s: any) => s.scene_id).filter(Boolean);
-    const { data: scenes } = await supabase
-      .from("promo_scenes")
-      .select("*")
-      .in("id", sceneIds);
+    const { data: scenes } = await supabase.from("promo_scenes").select("*").in("id", sceneIds);
 
     const sceneMap = new Map((scenes || []).map((s: any) => [s.id, s]));
 
@@ -141,10 +135,10 @@ Deno.serve(async (req) => {
     if (errors.length > 0) {
       const errorMsg = errors.join("; ");
       await failJob(supabase, queue_id, project.id, errorMsg);
-      return new Response(
-        JSON.stringify({ error: errorMsg }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: errorMsg }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Build payload
@@ -177,13 +171,15 @@ Deno.serve(async (req) => {
       const msg = `Missing required secrets: ${missingSecrets.join(", ")}`;
       console.error(`[render-promo] ${msg}`);
       await failJob(supabase, queue_id, project.id, msg);
-      return new Response(
-        JSON.stringify({ error: msg }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: msg }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    console.log(`[render-promo] Lambda configured. Dispatching render via @remotion/lambda@4.0.445 for queue_id: ${queue_id}`);
+    console.log(
+      `[render-promo] Lambda configured. Dispatching render via @remotion/lambda@4.0.445 for queue_id: ${queue_id}`,
+    );
     console.log(`[render-promo] function=${lambdaFunctionName}, region=${lambdaRegion}, serveUrl=${remotionSiteUrl}`);
 
     // --- Discover available compositions ---
@@ -202,16 +198,18 @@ Deno.serve(async (req) => {
 
       if (compositions.length === 0) {
         await failJob(supabase, queue_id, project.id, "No compositions found in Remotion bundle");
-        return new Response(
-          JSON.stringify({ error: "No compositions found in Remotion bundle" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "No compositions found in Remotion bundle" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       compositionId = compositionIds[0];
       console.log(`[render-promo] Using composition: '${compositionId}'`);
     } catch (discoverErr: any) {
-      console.warn(`[render-promo] Composition discovery failed, falling back to 'main': ${discoverErr?.message || discoverErr}`);
+      console.warn(
+        `[render-promo] Composition discovery failed, falling back to 'main': ${discoverErr?.message || discoverErr}`,
+      );
       compositionId = "MainVideo";
     }
 
@@ -237,7 +235,7 @@ Deno.serve(async (req) => {
         region: lambdaRegion as any,
         functionName: lambdaFunctionName!,
         serveUrl: remotionSiteUrl!,
-        composition: compositionId,
+        composition: MyComp,
         codec: "h264",
         inputProps: { sceneSequence: assembledSequence },
         imageFormat: "jpeg",
@@ -265,24 +263,24 @@ Deno.serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true, mode: "lambda", renderId, bucketName, compositionId, compositionIds, payload }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     } catch (lambdaErr: any) {
       const errorDetail = lambdaErr?.message || String(lambdaErr);
       console.error(`[render-promo] renderMediaOnLambda failed: ${errorDetail}`);
       console.error(`[render-promo] Full error:`, JSON.stringify(lambdaErr, Object.getOwnPropertyNames(lambdaErr)));
       await failJob(supabase, queue_id, project.id, `Lambda invocation failed: ${errorDetail}`);
-      return new Response(
-        JSON.stringify({ error: `Lambda error: ${errorDetail}` }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: `Lambda error: ${errorDetail}` }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
   } catch (err: any) {
     console.error(`[render-promo] Unhandled error: ${err.message}`);
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
 
@@ -290,13 +288,7 @@ Deno.serve(async (req) => {
 
 async function failJob(supabase: any, queueId: string, projectId: string, errorMessage: string) {
   console.error(`[render-promo] Failing job ${queueId}: ${errorMessage}`);
-  await supabase
-    .from("promo_render_queue")
-    .update({ status: "failed", error_message: errorMessage })
-    .eq("id", queueId);
+  await supabase.from("promo_render_queue").update({ status: "failed", error_message: errorMessage }).eq("id", queueId);
 
-  await supabase
-    .from("promo_projects")
-    .update({ status: "failed" })
-    .eq("id", projectId);
+  await supabase.from("promo_projects").update({ status: "failed" }).eq("id", projectId);
 }
