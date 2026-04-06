@@ -227,20 +227,61 @@ Deno.serve(async (req) => {
 
         console.log(`[render-promo] Invoking Lambda: ${lambdaFunctionName}`);
 
-        const lambdaResponse = await fetch(lambdaUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Amz-Date": dateStamp,
-            "Authorization": authHeader,
-            "X-Amz-Invocation-Type": "RequestResponse",
-          },
-          body: bodyStr,
-        });
+        // 50s timeout to stay under edge function 60s limit
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 50000);
+
+        let lambdaResponse: Response;
+        try {
+          lambdaResponse = await fetch(lambdaUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Amz-Date": dateStamp,
+              "Authorization": authHeader,
+              "X-Amz-Invocation-Type": "RequestResponse",
+            },
+            body: bodyStr,
+            signal: controller.signal,
+          });
+        } catch (fetchErr: any) {
+          clearTimeout(timeoutId);
+          if (fetchErr.name === "AbortError") {
+            const timeoutMsg = "Lambda invocation timed out after 50s. Lambda may be cold-starting. Will retry.";
+            console.error(`[render-promo] ${timeoutMsg}`);
+            await supabase
+              .from("promo_render_queue")
+              .update({
+                status: "failed",
+                error_message: timeoutMsg,
+              })
+              .eq("id", queue_id);
+            await supabase
+              .from("promo_projects")
+              .update({ status: "failed" })
+              .eq("id", project.id);
+            return new Response(
+              JSON.stringify({ error: timeoutMsg }),
+              { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          throw fetchErr;
+        }
+        clearTimeout(timeoutId);
 
         const lambdaResultText = await lambdaResponse.text();
         console.log(`[render-promo] Lambda response status: ${lambdaResponse.status}`);
-        console.log(`[render-promo] Lambda response body: ${lambdaResultText.substring(0, 500)}`);
+        console.log(`[render-promo] Lambda response body: ${lambdaResultText.substring(0, 1000)}`);
+
+        if (!lambdaResponse.ok) {
+          const errMsg = `Lambda returned HTTP ${lambdaResponse.status}: ${lambdaResultText.substring(0, 200)}`;
+          console.error(`[render-promo] ${errMsg}`);
+          await failJob(supabase, queue_id, project.id, errMsg);
+          return new Response(
+            JSON.stringify({ error: errMsg }),
+            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
         let lambdaResult: any;
         try {
@@ -250,8 +291,17 @@ Deno.serve(async (req) => {
         }
 
         const renderId = lambdaResult?.renderId || lambdaResult?.id || null;
-
         console.log(`[render-promo] Got renderId: ${renderId}`);
+
+        if (!renderId) {
+          const errMsg = `Lambda responded but no renderId found. Body: ${lambdaResultText.substring(0, 300)}`;
+          console.error(`[render-promo] ${errMsg}`);
+          await failJob(supabase, queue_id, project.id, errMsg);
+          return new Response(
+            JSON.stringify({ error: errMsg }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
         // Store render_id for status polling
         await supabase

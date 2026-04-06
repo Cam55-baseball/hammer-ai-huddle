@@ -42,6 +42,38 @@ Deno.serve(async (req) => {
       const startedAt = new Date(job.started_at).getTime();
       const elapsed = Date.now() - startedAt;
 
+      // Handle jobs stuck without a render_id (dispatch failed silently)
+      if (!job.render_id && elapsed > 2 * 60 * 1000) {
+        console.warn(`[check-render-status] Job ${job.id} has no render_id after ${Math.round(elapsed / 1000)}s — dispatch likely failed`);
+        if (job.retry_count < job.max_retries) {
+          await supabase
+            .from("promo_render_queue")
+            .update({
+              status: "queued",
+              retry_count: job.retry_count + 1,
+              error_message: `No render_id after ${Math.round(elapsed / 1000)}s — Lambda dispatch failed (retry ${job.retry_count + 1}/${job.max_retries})`,
+              started_at: null,
+              render_id: null,
+            })
+            .eq("id", job.id);
+          results.push({ id: job.id, action: "retried_no_render_id", retry: job.retry_count + 1 });
+        } else {
+          await supabase
+            .from("promo_render_queue")
+            .update({
+              status: "permanently_failed",
+              error_message: `No render_id received. Lambda dispatch failed. Max retries (${job.max_retries}) exhausted.`,
+            })
+            .eq("id", job.id);
+          await supabase
+            .from("promo_projects")
+            .update({ status: "failed" })
+            .eq("id", job.project_id);
+          results.push({ id: job.id, action: "permanently_failed_no_render_id" });
+        }
+        continue;
+      }
+
       if (elapsed > TIMEOUT_MS) {
         if (job.retry_count < job.max_retries) {
           await supabase
