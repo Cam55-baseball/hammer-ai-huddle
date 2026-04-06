@@ -136,9 +136,45 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
     setEnergyLevel(5);
     setDigestionNotes('');
     setDigestionOpen(false);
+    setSupplementsList([]);
+    setSuppSearchTerm('');
+    setSuppDosage('');
+    setSuppsOpen(false);
+    setSuppDropdownOpen(false);
     touchedFields.current.clear();
     clearLookup();
   };
+
+  const mealTypeToTiming = (mt: string): VitaminTiming | undefined => {
+    const map: Record<string, VitaminTiming> = {
+      breakfast: 'with_breakfast',
+      lunch: 'with_lunch',
+      dinner: 'with_dinner',
+    };
+    return map[mt] || 'morning';
+  };
+
+  const addSuppToList = () => {
+    const name = suppSearchTerm.trim();
+    if (!name) return;
+    if (supplementsList.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+      toast.error('Already added');
+      return;
+    }
+    setSupplementsList(prev => [...prev, { name, dosage: suppDosage }]);
+    setSuppSearchTerm('');
+    setSuppDosage('');
+    setSuppDropdownOpen(false);
+  };
+
+  const removeSuppFromList = (idx: number) => {
+    setSupplementsList(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const filteredSuppNames = SUPPLEMENT_NAMES.filter(n =>
+    n.toLowerCase().includes(suppSearchTerm.toLowerCase()) &&
+    !supplementsList.some(s => s.name.toLowerCase() === n.toLowerCase())
+  );
 
   const applyPreset = (preset: typeof MACRO_PRESETS[0]) => {
     setCalories(preset.calories.toString());
