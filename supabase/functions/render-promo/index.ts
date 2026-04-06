@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
     console.log(`[render-promo] function=${lambdaFunctionName}, region=${lambdaRegion}, serveUrl=${remotionSiteUrl}`);
 
     // --- Discover available compositions ---
-    let compositionId = "main";
+    let compositionId = "MainVideo";
     let compositionIds: string[] = [];
     try {
       console.log(`[render-promo] Discovering compositions from serveUrl...`);
