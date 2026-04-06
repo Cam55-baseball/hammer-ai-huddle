@@ -17,6 +17,10 @@ type GamePhase = 'setup' | 'scoring' | 'summary';
 export default function GameScoring() {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
+  const [phase, setPhase] = useState<GamePhase>('setup');
+  const [gameData, setGameData] = useState<GameSetup | null>(null);
+  const [allPlays, setAllPlays] = useState<any[]>([]);
+  const { gameId, saving, createGame, addPlay, getPlays, completeGame, syncGameToPlayerStats } = useGameScoring();
 
   if (ownerLoading || adminLoading) {
     return (
@@ -42,10 +46,6 @@ export default function GameScoring() {
       </DashboardLayout>
     );
   }
-  const [phase, setPhase] = useState<GamePhase>('setup');
-  const [gameData, setGameData] = useState<GameSetup | null>(null);
-  const [allPlays, setAllPlays] = useState<any[]>([]);
-  const { gameId, saving, createGame, addPlay, getPlays, completeGame, syncGameToPlayerStats } = useGameScoring();
 
   const handleSetup = useCallback(async (setup: GameSetup) => {
     // Override global sport context to match the game being scored
