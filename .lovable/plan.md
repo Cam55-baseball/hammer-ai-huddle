@@ -1,81 +1,62 @@
 
+Goal
 
-# Replace Manual AWS Signing with @remotion/lambda Client
+Restore reliable promo render dispatch so `render-promo` returns and stores a `render_id` immediately.
 
-## Problem
-The manual AWS Signature V4 implementation in both `render-promo` and `check-render-status` edge functions is failing, preventing Lambda dispatch and status polling.
+What I found
 
-## Solution
-Replace all manual AWS signing code with the official `@remotion/lambda-client` package, which Remotion specifically built for Deno/Supabase Edge Functions. This package exports `renderMediaOnLambda` and `getRenderProgress` — exactly the two operations we need.
+- The codebase already no longer contains manual AWS Signature V4 or direct `fetch()`-based Lambda invocation logic.
+- `render-promo` already calls `renderMediaOnLambda()` and `check-render-status` already calls `getRenderProgress()`.
+- Logs show `render-promo` reaches `Calling renderMediaOnLambda...` and then stops; `check-render-status` later reports `no render_id after 120s`.
+- The biggest likely issue is Remotion version drift: the edge functions import `4.0.261`, while the configured Lambda function is `remotion-render-4-0-445-...`.
+- There is also a queue persistence bug: the code tries to write `render_metadata` to `promo_render_queue`, but that column does not exist in the current schema. So even if Remotion returns a `renderId`, it may still fail to persist.
+- There is no `REMOTION_S3_BUCKET` secret configured, so storing the returned `bucketName` on the queue row is important for polling.
 
-## Changes
+Plan
 
-### 1. `supabase/functions/render-promo/index.ts`
+1. Align the Remotion client with the deployed Lambda
+   - Change both edge functions to use the documented import path `npm:@remotion/lambda@4.0.445/client` (matching the configured Lambda version), not `npm:@remotion/lambda-client@4.0.261`.
+   - Keep using only `renderMediaOnLambda()` and `getRenderProgress()`; no direct AWS request signing or Lambda `fetch()` path will remain.
 
-**Remove:** All AWS SigV4 helpers (`sha256Hex`, `hmacSha256`, `hmacHex`, `getSignatureKey`), manual Lambda URL construction, manual header signing, and the retry loop around the raw fetch.
+2. Harden `render-promo`
+   - Validate required backend secrets before dispatch: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `REMOTION_LAMBDA_FUNCTION_NAME`, `REMOTION_SITE_URL`, and region.
+   - Support `AWS_SESSION_TOKEN` if the AWS credentials are temporary.
+   - Improve error capture so if the Remotion client fails, the real error is written back instead of leaving the job stuck in `processing`.
 
-**Add:** Import `renderMediaOnLambda` and `speculateFunctionName` from `npm:@remotion/lambda-client@4.0.261`.
+3. Fix render tracking persistence
+   - Add a small queue-level metadata field via migration (recommended: `render_metadata jsonb default '{}'::jsonb`) because the code already expects to store `bucketName` on `promo_render_queue`.
+   - After `renderMediaOnLambda()` returns, save both `render_id` and `bucketName` immediately.
+   - Check and handle backend update errors explicitly so a failed row update cannot silently drop the `renderId`.
 
-Replace lines 190-337 (the Lambda dispatch block) with:
+4. Tighten `check-render-status`
+   - Keep `getRenderProgress()` as the status mechanism.
+   - Read `bucketName` from `promo_render_queue.render_metadata` first, then fall back to `REMOTION_S3_BUCKET` if that secret is added later.
+   - Keep the existing completed-video download/upload flow; that remaining `fetch()` is only for downloading the finished mp4, not for invoking AWS.
 
-```typescript
-import { renderMediaOnLambda, speculateFunctionName } from "npm:@remotion/lambda-client@4.0.261";
+5. Version hygiene
+   - Align the local Remotion app version with the same Remotion version used by the configured Lambda/site so future deployments do not drift back out of compatibility.
 
-// Inside the Lambda dispatch block:
-const { renderId, bucketName } = await renderMediaOnLambda({
-  region: lambdaRegion,
-  functionName: lambdaFunctionName,
-  serveUrl: remotionSiteUrl,
-  composition: "main",
-  codec: "h264",
-  inputProps: { sceneSequence: assembledSequence },
-  imageFormat: "jpeg",
-  maxRetries: 1,
-  privacy: "public",
-  outName: `promo-${queue_id}.mp4`,
-  ...(s3Bucket ? { forceBucketName: s3Bucket } : {}),
-});
+Files to update
+
+- `supabase/functions/render-promo/index.ts`
+- `supabase/functions/check-render-status/index.ts`
+- `remotion/package.json`
+- one backend migration for `promo_render_queue.render_metadata`
+
+Technical detail
+
+```text
+Current failing path:
+queue row inserted
+-> render-promo marks job processing
+-> renderMediaOnLambda() is called
+-> no renderId is returned or persisted
+-> check-render-status sees a processing job with null render_id after 120s
+
+Expected path after the fix:
+queue row inserted
+-> renderMediaOnLambda() returns quickly with renderId + bucketName
+-> queue row is updated immediately
+-> check-render-status polls with getRenderProgress()
+-> completed mp4 is copied to promo-videos and URLs are saved
 ```
-
-This call returns immediately with a `renderId` — no timeout issues since it's an async dispatch by design. The 120s retry loop becomes unnecessary.
-
-Keep the existing error handling: wrap in try/catch, call `failJob` on error.
-
-### 2. `supabase/functions/check-render-status/index.ts`
-
-**Remove:** The `checkLambdaProgress` function and all AWS SigV4 crypto helpers.
-
-**Add:** Import `getRenderProgress` from `npm:@remotion/lambda-client@4.0.261`.
-
-Replace the `checkLambdaProgress` call with:
-
-```typescript
-import { getRenderProgress } from "npm:@remotion/lambda-client@4.0.261";
-
-const progress = await getRenderProgress({
-  renderId: job.render_id,
-  functionName: lambdaFunctionName,
-  bucketName: s3Bucket || undefined,
-  region: lambdaRegion,
-});
-```
-
-Map the response fields: `progress.done`, `progress.outputFile`, `progress.fatalErrorEncountered`, `progress.overallProgress`.
-
-### 3. Environment Variables
-
-The `@remotion/lambda-client` reads `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` from the environment automatically — no changes needed to secrets.
-
-`REMOTION_S3_BUCKET` is passed as `bucketName` to `getRenderProgress` (required for status checks). Ensure this secret is set.
-
-## Files
-
-| File | Change |
-|------|--------|
-| `supabase/functions/render-promo/index.ts` | Replace manual SigV4 + fetch with `renderMediaOnLambda()`. Remove retry loop (async dispatch doesn't timeout). Remove all crypto helpers. |
-| `supabase/functions/check-render-status/index.ts` | Replace `checkLambdaProgress()` + manual SigV4 with `getRenderProgress()`. Remove all crypto helpers. |
-
-## Why This Fixes the Problem
-
-`renderMediaOnLambda` uses the Remotion Lambda wire protocol correctly — it sends a `type: "start"` payload and the Lambda function returns a `renderId` immediately (within 1-3 seconds). The actual rendering happens asynchronously on Lambda. There's no cold-start timeout issue because the initial dispatch is fast; the heavy rendering happens after the response.
-
