@@ -525,6 +525,91 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
             </CollapsibleContent>
           </Collapsible>
 
+          {/* Vitamins & Supplements */}
+          <Collapsible open={suppsOpen} onOpenChange={setSuppsOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full">
+              <Pill className="h-3 w-3" />
+              <ChevronDown className={`h-3 w-3 transition-transform ${suppsOpen ? 'rotate-180' : ''}`} />
+              Vitamins & Supplements <span className="text-muted-foreground/60">(optional)</span>
+              {supplementsList.length > 0 && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-auto">{supplementsList.length}</Badge>
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3 space-y-3">
+              {/* Search + Add */}
+              <div className="relative">
+                <Input
+                  placeholder="Search supplements..."
+                  value={suppSearchTerm}
+                  onChange={(e) => {
+                    setSuppSearchTerm(e.target.value);
+                    setSuppDropdownOpen(e.target.value.length > 0);
+                  }}
+                  onFocus={() => suppSearchTerm.length > 0 && setSuppDropdownOpen(true)}
+                  className="h-8 text-xs"
+                />
+                {suppDropdownOpen && filteredSuppNames.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg max-h-[150px] overflow-y-auto">
+                    {filteredSuppNames.slice(0, 8).map(name => {
+                      const ref = SUPPLEMENT_REFERENCE[name];
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                          onClick={() => {
+                            setSuppSearchTerm(name);
+                            setSuppDosage(ref?.dosageRange || '');
+                            setSuppDropdownOpen(false);
+                          }}
+                        >
+                          <span className="font-medium">{name}</span>
+                          {ref && <span className="text-muted-foreground ml-1">({ref.dosageRange})</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Dosage (e.g. 500 mg)"
+                  value={suppDosage}
+                  onChange={(e) => setSuppDosage(e.target.value)}
+                  className="h-8 text-xs flex-1"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={addSuppToList}
+                  disabled={!suppSearchTerm.trim()}
+                  className="h-8 px-2"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+
+              {/* Added supplements chips */}
+              {supplementsList.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {supplementsList.map((s, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs gap-1 pr-1">
+                      {s.name}{s.dosage ? ` • ${s.dosage}` : ''}
+                      <button
+                        type="button"
+                        onClick={() => removeSuppFromList(idx)}
+                        className="ml-0.5 hover:text-destructive transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+
           {/* Save Button */}
           <Button 
             onClick={handleSave} 
