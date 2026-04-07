@@ -1185,35 +1185,101 @@ export type Database = {
           },
         ]
       }
+      drill_tag_map: {
+        Row: {
+          drill_id: string
+          tag_id: string
+        }
+        Insert: {
+          drill_id: string
+          tag_id: string
+        }
+        Update: {
+          drill_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drill_tag_map_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drill_tag_map_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "drill_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drill_tags: {
+        Row: {
+          category: Database["public"]["Enums"]["drill_tag_category"]
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["drill_tag_category"]
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["drill_tag_category"]
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       drills: {
         Row: {
+          ai_context: string | null
           created_at: string | null
           default_constraints: Json | null
+          description: string | null
           difficulty_levels: string[] | null
           id: string
+          is_active: boolean
           module: string
           name: string
+          premium: boolean
           skill_target: string | null
+          sport: string
           video_url: string | null
         }
         Insert: {
+          ai_context?: string | null
           created_at?: string | null
           default_constraints?: Json | null
+          description?: string | null
           difficulty_levels?: string[] | null
           id?: string
+          is_active?: boolean
           module: string
           name: string
+          premium?: boolean
           skill_target?: string | null
+          sport?: string
           video_url?: string | null
         }
         Update: {
+          ai_context?: string | null
           created_at?: string | null
           default_constraints?: Json | null
+          description?: string | null
           difficulty_levels?: string[] | null
           id?: string
+          is_active?: boolean
           module?: string
           name?: string
+          premium?: boolean
           skill_target?: string | null
+          sport?: string
           video_url?: string | null
         }
         Relationships: []
@@ -7630,6 +7696,13 @@ export type Database = {
       app_role: "owner" | "admin" | "coach" | "player" | "recruiter" | "scout"
       batting_side: "R" | "L" | "B"
       commitment_status: "committed" | "uncommitted"
+      drill_tag_category:
+        | "skill"
+        | "body_part"
+        | "equipment"
+        | "intensity"
+        | "phase"
+        | "position"
       module_type: "hitting" | "pitching" | "throwing"
       sport_type: "baseball" | "softball"
       throwing_hand: "R" | "L" | "B"
@@ -7765,6 +7838,14 @@ export const Constants = {
       app_role: ["owner", "admin", "coach", "player", "recruiter", "scout"],
       batting_side: ["R", "L", "B"],
       commitment_status: ["committed", "uncommitted"],
+      drill_tag_category: [
+        "skill",
+        "body_part",
+        "equipment",
+        "intensity",
+        "phase",
+        "position",
+      ],
       module_type: ["hitting", "pitching", "throwing"],
       sport_type: ["baseball", "softball"],
       throwing_hand: ["R", "L", "B"],
