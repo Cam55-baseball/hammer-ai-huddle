@@ -7,16 +7,31 @@ export type SeasonStatus = 'in_season' | 'preseason' | 'post_season';
 
 interface SeasonData {
   season_status: SeasonStatus;
-  season_start_date: string | null;
-  season_end_date: string | null;
+  preseason_start_date: string | null;
+  preseason_end_date: string | null;
+  in_season_start_date: string | null;
+  in_season_end_date: string | null;
+  post_season_start_date: string | null;
+  post_season_end_date: string | null;
 }
+
+type SeasonUpdates = Partial<{
+  season_status: SeasonStatus;
+  preseason_start_date: string | null;
+  preseason_end_date: string | null;
+  in_season_start_date: string | null;
+  in_season_end_date: string | null;
+  post_season_start_date: string | null;
+  post_season_end_date: string | null;
+}>;
 
 export function useSeasonStatus() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const queryKey = ['season-status', user?.id];
 
   const query = useQuery({
-    queryKey: ['season-status', user?.id],
+    queryKey,
     queryFn: async (): Promise<SeasonData> => {
       if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase
@@ -25,68 +40,55 @@ export function useSeasonStatus() {
         .eq('user_id', user.id)
         .maybeSingle();
       if (error) throw error;
-      const status = ((data as any)?.season_status as SeasonStatus) ?? 'in_season';
-      // Map current season phase to its date range
-      let startDate: string | null = null;
-      let endDate: string | null = null;
-      if (data) {
-        const d = data as any;
-        if (status === 'in_season') {
-          startDate = d.in_season_start_date;
-          endDate = d.in_season_end_date;
-        } else if (status === 'preseason') {
-          startDate = d.preseason_start_date;
-          endDate = d.preseason_end_date;
-        } else if (status === 'post_season') {
-          startDate = d.post_season_start_date;
-          endDate = d.post_season_end_date;
-        }
-      }
       return {
-        season_status: status,
-        season_start_date: startDate ?? null,
-        season_end_date: endDate ?? null,
+        season_status: (data?.season_status as SeasonStatus) ?? 'in_season',
+        preseason_start_date: data?.preseason_start_date ?? null,
+        preseason_end_date: data?.preseason_end_date ?? null,
+        in_season_start_date: data?.in_season_start_date ?? null,
+        in_season_end_date: data?.in_season_end_date ?? null,
+        post_season_start_date: data?.post_season_start_date ?? null,
+        post_season_end_date: data?.post_season_end_date ?? null,
       };
     },
     enabled: !!user,
   });
 
   const mutation = useMutation({
-    mutationFn: async (updates: Partial<SeasonData>) => {
+    mutationFn: async (updates: SeasonUpdates) => {
       if (!user) throw new Error('Not authenticated');
-      // Map generic start/end to season-specific columns
-      const dbUpdates: Record<string, any> = {};
-      if (updates.season_status) dbUpdates.season_status = updates.season_status;
-      // Use current or updated status to determine which date columns to write
-      const targetStatus = updates.season_status ?? query.data?.season_status ?? 'in_season';
-      if (updates.season_start_date !== undefined) {
-        if (targetStatus === 'in_season') dbUpdates.in_season_start_date = updates.season_start_date;
-        else if (targetStatus === 'preseason') dbUpdates.preseason_start_date = updates.season_start_date;
-        else if (targetStatus === 'post_season') dbUpdates.post_season_start_date = updates.season_start_date;
-      }
-      if (updates.season_end_date !== undefined) {
-        if (targetStatus === 'in_season') dbUpdates.in_season_end_date = updates.season_end_date;
-        else if (targetStatus === 'preseason') dbUpdates.preseason_end_date = updates.season_end_date;
-        else if (targetStatus === 'post_season') dbUpdates.post_season_end_date = updates.season_end_date;
-      }
       const { error } = await supabase
         .from('athlete_mpi_settings')
-        .update(dbUpdates)
+        .update(updates)
         .eq('user_id', user.id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['season-status', user?.id] });
+    onMutate: async (updates) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<SeasonData>(queryKey);
+      if (previous) {
+        queryClient.setQueryData<SeasonData>(queryKey, { ...previous, ...updates });
+      }
+      return { previous };
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
       toast.error('Failed to save season status');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   return {
     seasonStatus: query.data?.season_status ?? 'in_season',
-    seasonStartDate: query.data?.season_start_date ?? null,
-    seasonEndDate: query.data?.season_end_date ?? null,
+    preseasonStartDate: query.data?.preseason_start_date ?? null,
+    preseasonEndDate: query.data?.preseason_end_date ?? null,
+    inSeasonStartDate: query.data?.in_season_start_date ?? null,
+    inSeasonEndDate: query.data?.in_season_end_date ?? null,
+    postSeasonStartDate: query.data?.post_season_start_date ?? null,
+    postSeasonEndDate: query.data?.post_season_end_date ?? null,
     isLoading: query.isLoading,
     updateSeasonStatus: mutation.mutate,
   };
