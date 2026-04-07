@@ -1108,6 +1108,32 @@ export type Database = {
         }
         Relationships: []
       }
+      drill_positions: {
+        Row: {
+          drill_id: string
+          id: string
+          position: string
+        }
+        Insert: {
+          drill_id: string
+          id?: string
+          position: string
+        }
+        Update: {
+          drill_id?: string
+          id?: string
+          position?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drill_positions_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drill_prescriptions: {
         Row: {
           adherence_count: number | null
@@ -1189,14 +1215,17 @@ export type Database = {
         Row: {
           drill_id: string
           tag_id: string
+          weight: number
         }
         Insert: {
           drill_id: string
           tag_id: string
+          weight?: number
         }
         Update: {
           drill_id?: string
           tag_id?: string
+          weight?: number
         }
         Relationships: [
           {
@@ -1236,50 +1265,94 @@ export type Database = {
         }
         Relationships: []
       }
+      drill_usage_tracking: {
+        Row: {
+          drill_id: string
+          id: string
+          success_rating: number | null
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          drill_id: string
+          id?: string
+          success_rating?: number | null
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          drill_id?: string
+          id?: string
+          success_rating?: number | null
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drill_usage_tracking_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drills: {
         Row: {
           ai_context: string | null
           created_at: string | null
+          created_by: string | null
           default_constraints: Json | null
           description: string | null
           difficulty_levels: string[] | null
           id: string
           is_active: boolean
+          is_published: boolean
           module: string
           name: string
           premium: boolean
           skill_target: string | null
           sport: string
+          subscription_tier_required: string | null
+          updated_at: string | null
           video_url: string | null
         }
         Insert: {
           ai_context?: string | null
           created_at?: string | null
+          created_by?: string | null
           default_constraints?: Json | null
           description?: string | null
           difficulty_levels?: string[] | null
           id?: string
           is_active?: boolean
+          is_published?: boolean
           module: string
           name: string
           premium?: boolean
           skill_target?: string | null
           sport?: string
+          subscription_tier_required?: string | null
+          updated_at?: string | null
           video_url?: string | null
         }
         Update: {
           ai_context?: string | null
           created_at?: string | null
+          created_by?: string | null
           default_constraints?: Json | null
           description?: string | null
           difficulty_levels?: string[] | null
           id?: string
           is_active?: boolean
+          is_published?: boolean
           module?: string
           name?: string
           premium?: boolean
           skill_target?: string | null
           sport?: string
+          subscription_tier_required?: string | null
+          updated_at?: string | null
           video_url?: string | null
         }
         Relationships: []
@@ -3372,6 +3445,7 @@ export type Database = {
           created_at: string
           data_density_level: number | null
           deleted_at: string | null
+          detected_issues: string[] | null
           drill_blocks: Json
           edited_at: string | null
           effective_grade: number | null
@@ -3413,6 +3487,7 @@ export type Database = {
           created_at?: string
           data_density_level?: number | null
           deleted_at?: string | null
+          detected_issues?: string[] | null
           drill_blocks?: Json
           edited_at?: string | null
           effective_grade?: number | null
@@ -3454,6 +3529,7 @@ export type Database = {
           created_at?: string
           data_density_level?: number | null
           deleted_at?: string | null
+          detected_issues?: string[] | null
           drill_blocks?: Json
           edited_at?: string | null
           effective_grade?: number | null
@@ -7703,6 +7779,8 @@ export type Database = {
         | "intensity"
         | "phase"
         | "position"
+        | "error_type"
+        | "situation"
       module_type: "hitting" | "pitching" | "throwing"
       sport_type: "baseball" | "softball"
       throwing_hand: "R" | "L" | "B"
@@ -7845,6 +7923,8 @@ export const Constants = {
         "intensity",
         "phase",
         "position",
+        "error_type",
+        "situation",
       ],
       module_type: ["hitting", "pitching", "throwing"],
       sport_type: ["baseball", "softball"],
