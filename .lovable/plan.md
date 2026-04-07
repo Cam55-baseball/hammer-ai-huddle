@@ -1,89 +1,75 @@
 
 
-# Fix Calendar ↔ Game Plan Sync: Skipped/Removed Activities Still Showing
+# Fix Custom Activity & Hammers Modality Editing on Game Plan
 
-## Problem
+## Problems Found
 
-The calendar has three gaps that cause it to show activities that the user has already skipped, removed, or deleted from their Game Plan:
+1. **Cannot clear optional fields**: `updateTemplate` in `useCustomActivities.ts` uses `if (data.X !== undefined)` for every field. When a user removes duration, intensity, or distance, those values are `undefined` in the save payload and get silently skipped — the old values persist in the database.
 
-1. **Weekly skip days ignored**: The Game Plan uses `calendar_skipped_items` as the single source of truth for "which days of the week should this task NOT appear." The calendar **never reads this table**, so tasks skipped on e.g. Tuesdays and Thursdays still show every day.
+2. **Double success toast on edit**: `updateTemplate` shows "Activity updated" toast (line 292), and `GamePlanCard`'s `onSave` shows a second "Activity saved" toast (line 1964). Users see two toasts stacked.
 
-2. **Deleted custom templates still appear**: Custom activity templates with `deleted_at IS NOT NULL` are not filtered out when the calendar generates recurring events from templates.
+3. **CalendarDaySheet closes dialog even on failure**: The edit handler at line 917 calls `setEditDialogOpen(false)` unconditionally — if the update fails, the dialog still closes and the user loses their changes.
 
-3. **Removed-from-Game-Plan templates still appear**: Templates with `display_on_game_plan = false` correctly skip the template-based recurring events, but their existing `custom_activity_logs` still show on the calendar even if the user removed the activity from their plan.
+4. **CalendarDaySheet missing `onDelete` prop**: The `CustomActivityBuilderDialog` in `CalendarDaySheet` doesn't pass `onDelete`, so users editing from the calendar can't delete the activity.
 
 ## Changes
 
-### `src/hooks/useCalendar.ts`
+### 1. `src/hooks/useCustomActivities.ts` — Fix field clearing logic
 
-**1. Fetch `calendar_skipped_items` alongside existing queries**
-
-Add a new parallel query in `fetchEventsForRange` (around line 293, next to `gamePlanSkipsRes`):
+Replace the `if (data.X !== undefined)` pattern with a check that includes explicit `null` values. Use `Object.prototype.hasOwnProperty` or check `key in data` to determine if a field was provided, so `undefined` and `null` values are properly sent to the DB as `null`:
 
 ```typescript
-supabase
-  .from('calendar_skipped_items')
-  .select('item_id, item_type, skip_days')
-  .eq('user_id', user.id),
-```
+const fieldsToCopy = [
+  'title', 'description', 'icon', 'color', 'exercises', 'meals',
+  'custom_fields', 'duration_minutes', 'intensity', 'distance_value',
+  'distance_unit', 'pace_value', 'intervals', 'is_favorited',
+  'recurring_days', 'recurring_active', 'activity_type',
+  'embedded_running_sessions', 'display_nickname', 'custom_logo_url',
+  'reminder_enabled', 'reminder_time', 'display_on_game_plan',
+  'display_days', 'display_time', 'specific_dates'
+];
 
-**2. Build a skip-day lookup map after the fetch**
-
-After the `gamePlanSkipSet` construction (around line 308), build a map from the results:
-
-```typescript
-const calendarSkipMap = new Map<string, number[]>();
-if (calendarSkipItemsRes.data) {
-  calendarSkipItemsRes.data.forEach(skip => {
-    calendarSkipMap.set(`${skip.item_type}:${skip.item_id}`, skip.skip_days || []);
-  });
+const updateData: Record<string, unknown> = {};
+for (const field of fieldsToCopy) {
+  if (field in data) {
+    updateData[field] = (data as any)[field] ?? null;
+  }
 }
 ```
 
-**3. Filter recurring template events using skip days**
+This ensures clearing a field (setting it to `undefined`) correctly writes `null` to the DB.
 
-In the custom templates loop (line 366), add a skip-day check alongside the existing `recurringDays.includes(dayOfWeek)` check:
+### 2. `src/components/GamePlanCard.tsx` — Remove duplicate toast
 
-```typescript
-// Check if this day is skipped via calendar_skipped_items
-const templateSkipKey = `custom_activity:template-${template.id}`;
-const templateSkipDays = calendarSkipMap.get(templateSkipKey) || [];
-if (templateSkipDays.includes(dayOfWeek)) return; // skipped for this weekday
-```
+Remove `toast.success(t('customActivity.saved'))` from the `onSave` handler (line 1964), since `updateTemplate` already shows its own success toast.
 
-**4. Filter system/game-plan tasks using skip days**
+### 3. `src/components/calendar/CalendarDaySheet.tsx` — Guard dialog close on success
 
-In the task schedules loop (line 474), the default daily tasks loop (line 508), and the module-gated tasks section (line 549), add the same check:
+Check the return value of `updateTemplate` before closing the dialog:
 
 ```typescript
-const skipKey = `game_plan:${taskId}`;
-const skipDays = calendarSkipMap.get(skipKey) || [];
-if (skipDays.includes(dayOfWeek)) continue;
+onSave={async (data) => {
+  const templateId = selectedTask.customActivityData?.template?.id;
+  if (templateId) {
+    updateSelectedTaskOptimistically(data);
+    const success = await updateTemplate(templateId, data);
+    if (success) {
+      setEditDialogOpen(false);
+      onRefresh?.();
+    }
+  }
+}}
 ```
 
-Also apply to program-type tasks in the sub_module_progress loop (line 618):
+### 4. `src/components/calendar/CalendarDaySheet.tsx` — Add `onDelete` prop
 
-```typescript
-const progSkipKey = `program:${programTaskId}`;
-const progSkipDays = calendarSkipMap.get(progSkipKey) || [];
-if (progSkipDays.includes(dayOfWeek)) return;
-```
+Pass `onDelete` to the `CustomActivityBuilderDialog` so users can delete activities when editing from the calendar view.
 
-**5. Filter out deleted templates**
-
-In the custom templates query (line 238), add `.is('deleted_at', null)` to exclude soft-deleted templates. This prevents deleted activities from generating recurring calendar events.
-
-**6. Consolidate with existing date-specific skip filter**
-
-The existing filter at line 731–744 already handles `game_plan_skipped_tasks` (date-specific skips). The new weekly skip filtering happens earlier during event generation, so both mechanisms work together: weekly skips prevent events from being created, and date-specific skips remove any that slip through.
-
-## Summary of root cause
-
-The Game Plan saves weekly skip schedules to `calendar_skipped_items`, but the calendar never reads that table — it only reads `game_plan_skipped_tasks` (date-specific skips). This single missing query is why skipped activities keep appearing.
-
-## Files affected
+## Files
 
 | File | Change |
 |------|--------|
-| `src/hooks/useCalendar.ts` | Add `calendar_skipped_items` query, build skip map, apply filtering to all event generation loops, filter deleted templates |
+| `src/hooks/useCustomActivities.ts` | Fix `updateTemplate` to use `in` checks so cleared fields write `null` to DB |
+| `src/components/GamePlanCard.tsx` | Remove duplicate success toast on edit |
+| `src/components/calendar/CalendarDaySheet.tsx` | Guard dialog close on success; add `onDelete` prop |
 
