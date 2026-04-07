@@ -315,6 +315,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         });
       }
 
+      // Build weekly skip-day lookup map from calendar_skipped_items
+      const calendarSkipMap = new Map<string, number[]>();
+      if (calendarSkipItemsRes.data) {
+        (calendarSkipItemsRes.data as { item_id: string; item_type: string; skip_days: number[] }[]).forEach(skip => {
+          calendarSkipMap.set(`${skip.item_type}:${skip.item_id}`, skip.skip_days || []);
+        });
+      }
+
       // Build date-specific order map
       const dateOrdersMap: Record<string, CalendarDayOrder> = {};
       if (dayOrdersRes.data) {
