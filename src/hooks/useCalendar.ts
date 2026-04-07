@@ -577,6 +577,10 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             // Apply smart default schedule: only show on recommended days when no custom schedule
             const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
             if (defaultDays && !defaultDays.includes(dayOfWeek)) return;
+
+            // Check weekly skip days from calendar_skipped_items
+            const gatedSkipDays = calendarSkipMap.get(`game_plan:${taskId}`) || [];
+            if (gatedSkipDays.includes(dayOfWeek)) return;
             
             const alreadyExists = aggregatedEvents[dateKey].some(
               e => e.source === taskId && e.type === 'game_plan'
