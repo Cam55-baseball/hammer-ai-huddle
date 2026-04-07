@@ -244,36 +244,22 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     if (!user) return false;
 
     try {
+      const fieldsToCopy = [
+        'title', 'description', 'icon', 'color', 'exercises', 'meals',
+        'custom_fields', 'duration_minutes', 'intensity', 'distance_value',
+        'distance_unit', 'pace_value', 'intervals', 'is_favorited',
+        'recurring_days', 'recurring_active', 'activity_type',
+        'embedded_running_sessions', 'display_nickname', 'custom_logo_url',
+        'reminder_enabled', 'reminder_time', 'display_on_game_plan',
+        'display_days', 'display_time', 'specific_dates'
+      ];
+
       const updateData: Record<string, unknown> = {};
-      
-      if (data.title !== undefined) updateData.title = data.title;
-      if (data.description !== undefined) updateData.description = data.description;
-      if (data.icon !== undefined) updateData.icon = data.icon;
-      if (data.color !== undefined) updateData.color = data.color;
-      if (data.exercises !== undefined) updateData.exercises = data.exercises;
-      if (data.meals !== undefined) updateData.meals = data.meals;
-      if (data.custom_fields !== undefined) updateData.custom_fields = data.custom_fields;
-      if (data.duration_minutes !== undefined) updateData.duration_minutes = data.duration_minutes;
-      if (data.intensity !== undefined) updateData.intensity = data.intensity;
-      if (data.distance_value !== undefined) updateData.distance_value = data.distance_value;
-      if (data.distance_unit !== undefined) updateData.distance_unit = data.distance_unit;
-      if (data.pace_value !== undefined) updateData.pace_value = data.pace_value;
-      if (data.intervals !== undefined) updateData.intervals = data.intervals;
-      if (data.is_favorited !== undefined) updateData.is_favorited = data.is_favorited;
-      if (data.recurring_days !== undefined) updateData.recurring_days = data.recurring_days;
-      if (data.recurring_active !== undefined) updateData.recurring_active = data.recurring_active;
-      if (data.activity_type !== undefined) updateData.activity_type = data.activity_type;
-      // Add missing fields
-      if (data.embedded_running_sessions !== undefined) updateData.embedded_running_sessions = data.embedded_running_sessions;
-      if (data.display_nickname !== undefined) updateData.display_nickname = data.display_nickname;
-      if (data.custom_logo_url !== undefined) updateData.custom_logo_url = data.custom_logo_url;
-      if (data.reminder_enabled !== undefined) updateData.reminder_enabled = data.reminder_enabled;
-      if (data.reminder_time !== undefined) updateData.reminder_time = data.reminder_time;
-      // Schedule display settings
-      if (data.display_on_game_plan !== undefined) updateData.display_on_game_plan = data.display_on_game_plan;
-      if (data.display_days !== undefined) updateData.display_days = data.display_days;
-      if (data.display_time !== undefined) updateData.display_time = data.display_time;
-      if (data.specific_dates !== undefined) updateData.specific_dates = data.specific_dates;
+      for (const field of fieldsToCopy) {
+        if (field in data) {
+          updateData[field] = (data as any)[field] ?? null;
+        }
+      }
 
       console.log('[useCustomActivities] Updating template:', id, updateData);
       

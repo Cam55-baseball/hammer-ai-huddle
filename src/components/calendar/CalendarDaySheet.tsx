@@ -284,7 +284,7 @@ export function CalendarDaySheet({
   
   const { sport: themeSport } = useSportTheme();
   const selectedSportForEdit = sport || themeSport || 'baseball';
-  const { updateTemplate } = useCustomActivities(selectedSportForEdit);
+  const { updateTemplate, deleteTemplate } = useCustomActivities(selectedSportForEdit);
   
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [selectedEventForSkip, setSelectedEventForSkip] = useState<CalendarEvent | null>(null);
@@ -912,10 +912,20 @@ export function CalendarDaySheet({
               // OPTIMISTIC UPDATE: Apply changes immediately
               updateSelectedTaskOptimistically(data as Partial<import('@/types/customActivity').CustomActivityTemplate>);
               // Persist in background
-              await updateTemplate(templateId, data);
+              const success = await updateTemplate(templateId, data);
+              if (success) {
+                setEditDialogOpen(false);
+                onRefresh?.();
+              }
             }
-            setEditDialogOpen(false);
-            onRefresh?.();
+          }}
+          onDelete={async (id: string) => {
+            const success = await deleteTemplate(id);
+            if (success) {
+              setEditDialogOpen(false);
+              onRefresh?.();
+            }
+            return success;
           }}
         />
       )}
