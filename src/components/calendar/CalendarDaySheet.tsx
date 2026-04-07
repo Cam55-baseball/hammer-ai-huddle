@@ -919,13 +919,13 @@ export function CalendarDaySheet({
               }
             }
           }}
-          onDelete={async () => {
-            const templateId = selectedTask.customActivityData?.template?.id;
-            if (templateId) {
-              await deleteTemplate(templateId);
+          onDelete={async (id: string) => {
+            const success = await deleteTemplate(id);
+            if (success) {
               setEditDialogOpen(false);
               onRefresh?.();
             }
+            return success;
           }}
         />
       )}
