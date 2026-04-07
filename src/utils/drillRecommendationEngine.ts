@@ -150,11 +150,11 @@ export function computeDrillRecommendations(
     const varietyBonus = seenModules.has(item.drill.module) ? 0 : 15;
     seenModules.add(item.drill.module);
 
-    const finalScore = item.total + varietyBonus;
     const finalBreakdown: ScoreBreakdown = {
       ...item.breakdown,
       variety: varietyBonus,
     };
+    const finalScore = finalBreakdown.skillMatch + finalBreakdown.tagRelevance + finalBreakdown.difficultyFit + finalBreakdown.variety;
 
     scored.push({
       drill: item.drill,
