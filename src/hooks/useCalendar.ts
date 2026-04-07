@@ -651,7 +651,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           // Add program events on scheduled days across the month
           daysInRange.forEach(day => {
             const dayOfWeek = getDay(day);
-            if (scheduledDays.includes(dayOfWeek)) {
+            if (!scheduledDays.includes(dayOfWeek)) return;
+
+            // Check weekly skip days from calendar_skipped_items
+            const progSkipDays = calendarSkipMap.get(`program:${programTaskId}`) || [];
+            if (progSkipDays.includes(dayOfWeek)) return;
+
+            {
               const dateKey = format(day, 'yyyy-MM-dd');
               if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
               
