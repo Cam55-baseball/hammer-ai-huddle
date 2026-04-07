@@ -1,54 +1,34 @@
 
 
-# Fix Season Phase Date Saving
+# Auto-Detect Active Season Phase from Dates
 
-## Problems Found
-
-1. **Race condition in mutation**: When a user switches season status (e.g. to "preseason") and then sets a date, the mutation reads `query.data?.season_status` to determine which DB column to write. But `query.data` may still hold the old status because the invalidation/refetch hasn't completed yet. This causes the date to be saved to the wrong column (e.g. `in_season_start_date` instead of `preseason_start_date`).
-
-2. **UI only shows dates for the active phase**: The user wants to set dates for all three phases, but the component only shows one pair of date pickers mapped to whichever phase is currently selected. When switching phases, previously saved dates appear lost because they were written to the wrong columns.
-
-3. **No optimistic state**: After changing status, the UI waits for a full refetch before reflecting the new phase. During that window, date changes target the wrong phase.
+## Problem
+The "(active)" label is determined solely by the `season_status` field in the database, which is manually set by clicking the phase toggle. It does not consider whether today's date actually falls within a phase's start/end range. So even though Pre-Season ended March 13 and today is April 7, Pre-Season still shows as active.
 
 ## Solution
+Add date-based auto-detection logic to `useSeasonStatus.ts`. After fetching the season data, compute which phase today falls within and automatically update `season_status` in the database if it's stale. This keeps the active label accurate without requiring manual switching.
+
+## Changes
 
 ### `src/hooks/useSeasonStatus.ts`
+- Add a helper function `detectCurrentPhase(data: SeasonData): SeasonStatus | null` that checks if today's date falls within any phase's start/end range (inclusive).
+- After the query resolves, if a phase is detected and it differs from the stored `season_status`, automatically call `updateSeasonStatus({ season_status: detectedPhase })`.
+- Use a `useEffect` with a ref guard to avoid infinite update loops — only auto-correct once per data fetch.
 
-- **Return all six date fields** individually (`preseasonStartDate`, `preseasonEndDate`, `inSeasonStartDate`, `inSeasonEndDate`, `postSeasonStartDate`, `postSeasonEndDate`) instead of mapping to generic `season_start_date`/`season_end_date`.
-- **Accept explicit column names** in the mutation instead of inferring which column to write based on the current status. The mutation will accept a flat partial of all season columns directly (e.g. `{ preseason_start_date: '2025-01-15' }`).
-- **Add optimistic updates** via `onMutate` to immediately update the cache, preventing stale reads.
-- Remove `as any` casts since the columns exist in the generated types.
+```
+function detectCurrentPhase(data):
+  today = format(new Date(), 'yyyy-MM-dd')
+  for each phase (preseason, in_season, post_season):
+    if start <= today <= end: return phase
+  return null
+```
 
 ### `src/components/calendar/SeasonStatusSelector.tsx`
+No changes needed — it already reads `seasonStatus` from the hook, so once the hook auto-corrects it, the UI updates automatically.
 
-- **Show date pickers for all three phases** in an expandable section, each clearly labeled (Pre-Season dates, In-Season dates, Post-Season dates).
-- Each date picker writes directly to its specific DB column (e.g. `preseason_start_date`) — no ambiguity.
-- Highlight the active phase's date section.
-- Keep the phase toggle at the top unchanged.
-
-## Technical Detail
-
-Current broken flow:
-```text
-User clicks "Pre-Season" → mutation({season_status: 'preseason'})
-  → query invalidated, refetch starts
-User clicks Start Date → mutation({season_start_date: '2025-03-01'})
-  → targetStatus = query.data?.season_status (STALE: still 'in_season')
-  → writes to in_season_start_date instead of preseason_start_date ❌
-```
-
-Fixed flow:
-```text
-User clicks "Pre-Season" → mutation({season_status: 'preseason'})
-  → optimistic update, cache immediately shows 'preseason'
-User sets Pre-Season Start → mutation({preseason_start_date: '2025-03-01'})
-  → writes directly to preseason_start_date ✅
-```
-
-## Files
+### Single file change
 
 | File | Change |
 |------|--------|
-| `src/hooks/useSeasonStatus.ts` | Return all 6 date fields; accept explicit column names; add optimistic updates |
-| `src/components/calendar/SeasonStatusSelector.tsx` | Show per-phase date pickers; write to explicit columns |
+| `src/hooks/useSeasonStatus.ts` | Add `detectCurrentPhase` helper; add `useEffect` to auto-update `season_status` when today falls within a different phase's date range |
 
