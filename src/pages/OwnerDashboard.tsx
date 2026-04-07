@@ -49,6 +49,7 @@ const sectionLabels: Record<OwnerSection, string> = {
   'videos': 'Recent Videos',
   'video-library': 'Video Library Manager',
   'promo-engine': 'Promo Engine',
+  'drill-cms': 'Drill CMS',
   'subscriptions': 'Subscriptions',
   'settings': 'Settings',
   'player-search': 'Player Search',
