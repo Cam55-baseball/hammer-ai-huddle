@@ -539,6 +539,10 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           
           const taskDef = SYSTEM_TASKS[taskId];
           if (!taskDef) return;
+
+          // Check weekly skip days from calendar_skipped_items
+          const defaultSkipDays = calendarSkipMap.get(`game_plan:${taskId}`) || [];
+          if (defaultSkipDays.includes(dayOfWeek)) return;
           
           // Check if already exists from another source
           const alreadyExists = aggregatedEvents[dateKey].some(
