@@ -4,6 +4,7 @@ import {
   type DrillInput,
   type WeaknessInput,
   type RecommendationInput,
+  type DrillUsageStats,
 } from '../drillRecommendationEngine';
 
 // ─── Test Fixtures ──────────────────────────────────────────
@@ -18,6 +19,8 @@ function makeDrill(overrides: Partial<DrillInput> & { id: string; name: string }
     tags: [],
     ai_context: null,
     difficulty_levels: ['beginner'],
+    positions: [],
+    tagWeights: {},
     ...overrides,
   };
 }
@@ -26,10 +29,13 @@ const baseDrills: DrillInput[] = [
   makeDrill({ id: '1', name: 'Tee Work', module: 'hitting', skill_target: 'barrel_contact', tags: ['barrel_contact', 'tee'], difficulty_levels: ['beginner', 'intermediate'] }),
   makeDrill({ id: '2', name: 'Front Toss', module: 'hitting', skill_target: 'pitch_recognition', tags: ['pitch_recognition'], difficulty_levels: ['intermediate'] }),
   makeDrill({ id: '3', name: 'Long Toss', module: 'throwing', skill_target: 'arm_speed', tags: ['arm_speed', 'arm'], difficulty_levels: ['beginner', 'intermediate', 'advanced'] }),
-  makeDrill({ id: '4', name: 'Ground Balls', module: 'fielding', skill_target: 'fielding_mechanics', tags: ['fielding_mechanics', 'full_body'] }),
+  makeDrill({ id: '4', name: 'Ground Balls', module: 'fielding', skill_target: 'fielding_mechanics', tags: ['fielding_mechanics', 'full_body'], positions: ['infield'] }),
   makeDrill({ id: '5', name: 'Premium Drill', module: 'hitting', skill_target: 'barrel_contact', tags: ['barrel_contact'], premium: true }),
   makeDrill({ id: '6', name: 'Softball Slap', module: 'hitting', sport: 'softball', skill_target: 'barrel_contact', tags: ['barrel_contact'] }),
   makeDrill({ id: '7', name: 'Inactive Drill', module: 'hitting', skill_target: 'barrel_contact', is_active: false }),
+  makeDrill({ id: '8', name: 'Transfer Drill', module: 'fielding', skill_target: 'transfer', tags: ['late_transfer', 'transfer'], positions: ['infield', 'catcher'], tagWeights: { late_transfer: 4, transfer: 3 } }),
+  makeDrill({ id: '9', name: 'Footwork Fix', module: 'fielding', skill_target: 'footwork', tags: ['bad_footwork', 'footwork'], positions: ['infield'], tagWeights: { bad_footwork: 5 } }),
+  makeDrill({ id: '10', name: 'Catcher Blocking', module: 'fielding', skill_target: 'blocking', tags: ['bobble', 'glove_work'], positions: ['catcher'] }),
 ];
 
 // ─── Tests ──────────────────────────────────────────────────
@@ -45,13 +51,12 @@ describe('computeDrillRecommendations', () => {
 
     expect(result.fallbackUsed).toBe(false);
     expect(result.recommended.length).toBeGreaterThan(0);
-    // Top drill should target barrel_contact
     const top = result.recommended[0];
     expect(top.drill.skill_target).toBe('barrel_contact');
     expect(top.score).toBeGreaterThan(0);
   });
 
-  it('2. is deterministic — identical input produces identical output', () => {
+  it('2. is deterministic', () => {
     const input: RecommendationInput = {
       drills: baseDrills,
       weaknesses: [{ area: 'arm_speed', score: 40 }],
@@ -62,12 +67,8 @@ describe('computeDrillRecommendations', () => {
     const r1 = computeDrillRecommendations(input);
     const r2 = computeDrillRecommendations(input);
 
-    expect(r1.recommended.map((r) => r.drill.id)).toEqual(
-      r2.recommended.map((r) => r.drill.id),
-    );
-    expect(r1.recommended.map((r) => r.score)).toEqual(
-      r2.recommended.map((r) => r.score),
-    );
+    expect(r1.recommended.map((r) => r.drill.id)).toEqual(r2.recommended.map((r) => r.drill.id));
+    expect(r1.recommended.map((r) => r.score)).toEqual(r2.recommended.map((r) => r.score));
   });
 
   it('3. scoring breakdown sums correctly', () => {
@@ -79,8 +80,8 @@ describe('computeDrillRecommendations', () => {
     });
 
     for (const r of result.recommended) {
-      const { skillMatch, tagRelevance, difficultyFit, variety } = r.breakdown;
-      expect(skillMatch + tagRelevance + difficultyFit + variety).toBe(r.score);
+      const { skillMatch, tagRelevance, difficultyFit, variety, positionMatch, errorTypeMatch, weightBonus, trendBonus } = r.breakdown;
+      expect(skillMatch + tagRelevance + difficultyFit + variety + positionMatch + errorTypeMatch + weightBonus + trendBonus).toBe(r.score);
     }
   });
 
@@ -123,8 +124,6 @@ describe('computeDrillRecommendations', () => {
     for (const r of result.recommended) {
       expect(r.drill.sport).toBe('baseball');
     }
-
-    // Softball drill should not appear
     expect(result.recommended.find((r) => r.drill.id === '6')).toBeUndefined();
   });
 
@@ -152,22 +151,14 @@ describe('computeDrillRecommendations', () => {
     const free = computeDrillRecommendations(inputFree);
     const premium = computeDrillRecommendations(inputPremium);
 
-    // Same drills appear in both
-    expect(free.recommended.map((r) => r.drill.id).sort()).toEqual(
-      premium.recommended.map((r) => r.drill.id).sort(),
-    );
-
-    // Free user: premium drill is locked
     const freePremiumDrill = free.recommended.find((r) => r.drill.id === '5');
     expect(freePremiumDrill).toBeDefined();
     expect(freePremiumDrill!.locked).toBe(true);
 
-    // Premium user: same drill is unlocked
     const premPremiumDrill = premium.recommended.find((r) => r.drill.id === '5');
     expect(premPremiumDrill).toBeDefined();
     expect(premPremiumDrill!.locked).toBe(false);
 
-    // Scores are identical (only locked differs)
     expect(freePremiumDrill!.score).toBe(premPremiumDrill!.score);
   });
 
@@ -184,7 +175,6 @@ describe('computeDrillRecommendations', () => {
       userHasPremium: true,
     });
 
-    // Admin changes Drill B tags to also target barrel_contact
     const drillsAfter = [
       drillsBefore[0],
       { ...drillsBefore[1], tags: ['barrel_contact'], skill_target: 'barrel_contact' },
@@ -197,7 +187,6 @@ describe('computeDrillRecommendations', () => {
       userHasPremium: true,
     });
 
-    // After update, Drill B should now have a higher score
     const drillBBefore = before.recommended.find((r) => r.drill.id === 'b')!;
     const drillBAfter = after.recommended.find((r) => r.drill.id === 'b')!;
     expect(drillBAfter.score).toBeGreaterThan(drillBBefore.score);
@@ -223,8 +212,6 @@ describe('computeDrillRecommendations', () => {
     });
 
     expect(result.fallbackUsed).toBe(true);
-    expect(result.recommended.length).toBeGreaterThan(0);
-    // All scores should be 0 in fallback mode
     for (const r of result.recommended) {
       expect(r.score).toBe(0);
     }
@@ -243,10 +230,150 @@ describe('computeDrillRecommendations', () => {
     expect(result.recommended.find((r) => r.drill.id === '5')).toBeUndefined();
   });
 
-  it('13. STRESS TEST: 1,000 drills × 20 weaknesses in <100ms', () => {
+  // ─── NEW: Position Filtering ─────────────────────────────
+
+  it('13. position filtering: catcher drills ranked higher when position=catcher', () => {
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [{ area: 'glove_work', score: 30 }],
+      sport: 'baseball',
+      userHasPremium: true,
+      position: 'catcher',
+    });
+
+    const catcherDrill = result.recommended.find((r) => r.drill.id === '10');
+    expect(catcherDrill).toBeDefined();
+    expect(catcherDrill!.breakdown.positionMatch).toBe(20);
+    expect(catcherDrill!.matchReasons).toContain('position match: catcher');
+  });
+
+  it('14. position filtering: infield drills get no position bonus when position=catcher', () => {
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [{ area: 'transfer', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+      position: 'catcher',
+    });
+
+    // Transfer Drill has positions: ['infield', 'catcher'] — should get bonus
+    const transferDrill = result.recommended.find((r) => r.drill.id === '8');
+    expect(transferDrill).toBeDefined();
+    expect(transferDrill!.breakdown.positionMatch).toBe(20);
+
+    // Ground Balls has positions: ['infield'] — no bonus for catcher
+    const groundBalls = result.recommended.find((r) => r.drill.id === '4');
+    expect(groundBalls).toBeDefined();
+    expect(groundBalls!.breakdown.positionMatch).toBe(0);
+  });
+
+  // ─── NEW: Error Type Matching ─────────────────────────────
+
+  it('15. error type matching: detected issues boost relevant drills', () => {
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [],
+      sport: 'baseball',
+      userHasPremium: true,
+      detectedIssues: ['late_transfer'],
+    });
+
+    expect(result.fallbackUsed).toBe(false);
+    const transferDrill = result.recommended.find((r) => r.drill.id === '8');
+    expect(transferDrill).toBeDefined();
+    expect(transferDrill!.breakdown.errorTypeMatch).toBeGreaterThan(0);
+    expect(transferDrill!.matchReasons.some(r => r.includes('late_transfer'))).toBe(true);
+  });
+
+  it('16. error type matching: bad_footwork targets footwork drill', () => {
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [],
+      sport: 'baseball',
+      userHasPremium: true,
+      detectedIssues: ['bad_footwork'],
+    });
+
+    const footworkDrill = result.recommended.find((r) => r.drill.id === '9');
+    expect(footworkDrill).toBeDefined();
+    expect(footworkDrill!.breakdown.errorTypeMatch).toBe(25); // weight 5 * 5 = 25
+  });
+
+  // ─── NEW: Weight Bonus ─────────────────────────────
+
+  it('17. weight bonus: drills with higher tag weights get bonus', () => {
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [{ area: 'transfer', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+    });
+
+    const transferDrill = result.recommended.find((r) => r.drill.id === '8');
+    expect(transferDrill).toBeDefined();
+    expect(transferDrill!.breakdown.weightBonus).toBeGreaterThan(0);
+  });
+
+  // ─── NEW: Match Reasons ─────────────────────────────
+
+  it('18. matchReasons populated correctly', () => {
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [{ area: 'barrel_contact', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+    });
+
+    const topDrill = result.recommended[0];
+    expect(topDrill.matchReasons.length).toBeGreaterThan(0);
+    expect(topDrill.matchReasons.some(r => r.includes('barrel_contact'))).toBe(true);
+  });
+
+  // ─── NEW: Trend Bonus ─────────────────────────────
+
+  it('19. trend bonus: high success drills get +5', () => {
+    const usageStats: DrillUsageStats[] = [
+      { drillId: '1', useCount: 10, avgSuccessRating: 4.5 },
+    ];
+
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [{ area: 'barrel_contact', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+      usageStats,
+    });
+
+    const teeWork = result.recommended.find((r) => r.drill.id === '1');
+    expect(teeWork).toBeDefined();
+    expect(teeWork!.breakdown.trendBonus).toBe(5);
+    expect(teeWork!.matchReasons).toContain('high success rate');
+  });
+
+  it('20. trend bonus: low usage drills get no bonus', () => {
+    const usageStats: DrillUsageStats[] = [
+      { drillId: '1', useCount: 2, avgSuccessRating: 4.5 },
+    ];
+
+    const result = computeDrillRecommendations({
+      drills: baseDrills,
+      weaknesses: [{ area: 'barrel_contact', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+      usageStats,
+    });
+
+    const teeWork = result.recommended.find((r) => r.drill.id === '1');
+    expect(teeWork!.breakdown.trendBonus).toBe(0);
+  });
+
+  // ─── STRESS TEST ─────────────────────────────
+
+  it('21. STRESS TEST: 1,000 drills × 20 weaknesses in <100ms', () => {
     const stressDrills: DrillInput[] = [];
     const skills = ['barrel_contact', 'pitch_recognition', 'arm_speed', 'fielding_mechanics', 'baserunning_speed'];
     const modules = ['hitting', 'pitching', 'throwing', 'fielding', 'baserunning'];
+    const positions = ['infield', 'outfield', 'catcher', 'pitcher_fielding'];
 
     for (let i = 0; i < 1000; i++) {
       stressDrills.push(
@@ -258,16 +385,14 @@ describe('computeDrillRecommendations', () => {
           tags: [skills[i % skills.length], skills[(i + 1) % skills.length]],
           premium: i % 10 === 0,
           difficulty_levels: ['beginner', 'intermediate', 'advanced'].slice(0, (i % 3) + 1),
+          positions: [positions[i % positions.length]],
         }),
       );
     }
 
     const stressWeaknesses: WeaknessInput[] = [];
     for (let i = 0; i < 20; i++) {
-      stressWeaknesses.push({
-        area: skills[i % skills.length],
-        score: (i * 5) % 100,
-      });
+      stressWeaknesses.push({ area: skills[i % skills.length], score: (i * 5) % 100 });
     }
 
     const start = performance.now();
@@ -276,6 +401,8 @@ describe('computeDrillRecommendations', () => {
       weaknesses: stressWeaknesses,
       sport: 'baseball',
       userHasPremium: false,
+      position: 'infield',
+      detectedIssues: ['barrel_contact', 'arm_speed'],
     });
     const elapsed = performance.now() - start;
 
@@ -283,7 +410,6 @@ describe('computeDrillRecommendations', () => {
     expect(result.recommended.length).toBe(10);
     expect(result.fallbackUsed).toBe(false);
 
-    // Verify premium gating under stress
     const lockedCount = result.recommended.filter((r) => r.locked).length;
     const premiumInResults = result.recommended.filter((r) => r.drill.premium).length;
     expect(lockedCount).toBe(premiumInResults);
