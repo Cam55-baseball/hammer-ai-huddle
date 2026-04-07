@@ -223,6 +223,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         dayOrdersRes,
         scheduledPracticeRes,
         gamePlanSkipsRes,
+        calendarSkipItemsRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
@@ -237,6 +238,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .from('custom_activity_templates')
           .select('*')
           .eq('user_id', user.id)
+          .is('deleted_at', null)
           .or(`sport.eq.${sport},sport.is.null`),
         
         // Custom activity logs (actual scheduled activities)
@@ -297,6 +299,12 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('skip_date', startStr)
           .lte('skip_date', endStr),
+
+        // Weekly skip days from calendar_skipped_items
+        supabase
+          .from('calendar_skipped_items')
+          .select('item_id, item_type, skip_days')
+          .eq('user_id', user.id),
       ]);
 
       // Build game plan skip set: "taskId:date" for fast lookup
