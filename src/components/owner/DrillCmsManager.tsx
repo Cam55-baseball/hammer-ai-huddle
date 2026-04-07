@@ -185,7 +185,7 @@ export function DrillCmsManager() {
                       <TableCell>
                         <Badge
                           variant={drill.is_published ? 'default' : 'outline'}
-                          className={cn('text-[10px]', drill.is_published && 'bg-emerald-600')}
+                          className={cn('text-[10px]', drill.is_published && 'bg-primary')}
                         >
                           {drill.is_published ? 'Published' : 'Draft'}
                         </Badge>

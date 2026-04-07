@@ -25,9 +25,9 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
     const { error } = await supabase.from('vault_saved_drills').insert({
       user_id: user.id,
       drill_name: drill.name,
-      module: drill.module,
-      drill_type: drill.skill_target || drill.module,
-      constraints: drill.ai_context ? { ai_context: drill.ai_context } : {},
+      drill_description: drill.ai_context || null,
+      module_origin: drill.module,
+      sport: drill.sport,
     });
     if (error) {
       toast.error('Failed to save drill');
