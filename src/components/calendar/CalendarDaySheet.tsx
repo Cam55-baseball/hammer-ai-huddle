@@ -284,7 +284,7 @@ export function CalendarDaySheet({
   
   const { sport: themeSport } = useSportTheme();
   const selectedSportForEdit = sport || themeSport || 'baseball';
-  const { updateTemplate } = useCustomActivities(selectedSportForEdit);
+  const { updateTemplate, deleteTemplate } = useCustomActivities(selectedSportForEdit);
   
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [selectedEventForSkip, setSelectedEventForSkip] = useState<CalendarEvent | null>(null);
