@@ -59,6 +59,7 @@ import { VaultCorrelationAnalysisCard } from '@/components/vault/VaultCorrelatio
 import { VaultWellnessGoalsCard, checkWellnessGoalsAndNotify } from '@/components/vault/VaultWellnessGoalsCard';
 import { checkPainPatternAndNotify } from '@/components/vault/VaultPainPatternAlert';
 import { VaultTexVisionCard } from '@/components/vault/VaultTexVisionCard';
+import { VaultDrillWork } from '@/components/vault/VaultDrillWork';
 
 
 import { useAuth } from '@/hooks/useAuth';
@@ -469,6 +470,13 @@ export default function Vault() {
 
               {/* Physio Adult Tracking Section */}
               <PhysioAdultTrackingSection />
+
+              {/* Drill Work Section */}
+              <VaultDrillWork
+                savedDrills={savedDrills}
+                onDeleteDrill={deleteSavedDrill}
+                sport={userSport}
+              />
 
               {/* Daily Check-In Container */}
               <div className="rounded-xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-background p-4 sm:p-6 space-y-4">
