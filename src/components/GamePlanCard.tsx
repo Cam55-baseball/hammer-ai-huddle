@@ -32,6 +32,7 @@ import { GamePlanPushDayDialog } from '@/components/game-plan/GamePlanPushDayDia
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
+import { QuickNoteDialog } from '@/components/game-plan/QuickNoteDialog';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
 import { FolderItemEditDialog } from '@/components/folders/FolderItemEditDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
@@ -105,6 +106,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { skipDay, pushForwardOneDay, pushToDate, replaceDay, undoLastAction } = useRescheduleEngine();
   
   const [quickLogOpen, setQuickLogOpen] = useState(false);
+  const [quickNoteOpen, setQuickNoteOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
@@ -2788,6 +2790,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         replaceDay={replaceDay}
         undoLastAction={undoLastAction}
       />
+
+      {/* Quick Note Dialog */}
+      <QuickNoteDialog open={quickNoteOpen} onOpenChange={setQuickNoteOpen} />
     </Card>
   );
 }
