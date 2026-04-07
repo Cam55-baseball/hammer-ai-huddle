@@ -912,10 +912,20 @@ export function CalendarDaySheet({
               // OPTIMISTIC UPDATE: Apply changes immediately
               updateSelectedTaskOptimistically(data as Partial<import('@/types/customActivity').CustomActivityTemplate>);
               // Persist in background
-              await updateTemplate(templateId, data);
+              const success = await updateTemplate(templateId, data);
+              if (success) {
+                setEditDialogOpen(false);
+                onRefresh?.();
+              }
             }
-            setEditDialogOpen(false);
-            onRefresh?.();
+          }}
+          onDelete={async () => {
+            const templateId = selectedTask.customActivityData?.template?.id;
+            if (templateId) {
+              await deleteTemplate(templateId);
+              setEditDialogOpen(false);
+              onRefresh?.();
+            }
           }}
         />
       )}

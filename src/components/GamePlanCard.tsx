@@ -1961,7 +1961,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             // Update existing template
             result = await updateTemplate(editingTemplate.id, data);
             if (result) {
-              toast.success(t('customActivity.saved'));
               refetch();
               setEditingTemplate(null);
             }
