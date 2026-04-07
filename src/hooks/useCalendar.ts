@@ -223,6 +223,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         dayOrdersRes,
         scheduledPracticeRes,
         gamePlanSkipsRes,
+        calendarSkipItemsRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
@@ -237,6 +238,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .from('custom_activity_templates')
           .select('*')
           .eq('user_id', user.id)
+          .is('deleted_at', null)
           .or(`sport.eq.${sport},sport.is.null`),
         
         // Custom activity logs (actual scheduled activities)
@@ -297,6 +299,12 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('skip_date', startStr)
           .lte('skip_date', endStr),
+
+        // Weekly skip days from calendar_skipped_items
+        supabase
+          .from('calendar_skipped_items')
+          .select('item_id, item_type, skip_days')
+          .eq('user_id', user.id),
       ]);
 
       // Build game plan skip set: "taskId:date" for fast lookup
@@ -304,6 +312,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
       if (gamePlanSkipsRes.data) {
         gamePlanSkipsRes.data.forEach((skip: { task_id: string; skip_date: string }) => {
           gamePlanSkipSet.add(`${skip.task_id}:${skip.skip_date}`);
+        });
+      }
+
+      // Build weekly skip-day lookup map from calendar_skipped_items
+      const calendarSkipMap = new Map<string, number[]>();
+      if (calendarSkipItemsRes.data) {
+        (calendarSkipItemsRes.data as { item_id: string; item_type: string; skip_days: number[] }[]).forEach(skip => {
+          calendarSkipMap.set(`${skip.item_type}:${skip.item_id}`, skip.skip_days || []);
         });
       }
 
@@ -364,7 +380,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           
           daysInRange.forEach(day => {
             const dayOfWeek = getDay(day);
-            if (recurringDays.includes(dayOfWeek)) {
+            if (!recurringDays.includes(dayOfWeek)) return;
+
+            // Check if this day is skipped via calendar_skipped_items
+            const templateSkipDays = calendarSkipMap.get(`custom_activity:template-${template.id}`) || [];
+            if (templateSkipDays.includes(dayOfWeek)) return;
+
+            if (true) {
               const dateKey = format(day, 'yyyy-MM-dd');
               if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
               
@@ -471,7 +493,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           
           daysInRange.forEach(day => {
             const dayOfWeek = getDay(day);
-            if (displayDays.includes(dayOfWeek)) {
+            if (!displayDays.includes(dayOfWeek)) return;
+
+            // Check weekly skip days from calendar_skipped_items
+            const taskSkipDays = calendarSkipMap.get(`game_plan:${schedule.task_id}`) || [];
+            if (taskSkipDays.includes(dayOfWeek)) return;
+
+            {
               const dateKey = format(day, 'yyyy-MM-dd');
               if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
               
@@ -511,6 +539,10 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           
           const taskDef = SYSTEM_TASKS[taskId];
           if (!taskDef) return;
+
+          // Check weekly skip days from calendar_skipped_items
+          const defaultSkipDays = calendarSkipMap.get(`game_plan:${taskId}`) || [];
+          if (defaultSkipDays.includes(dayOfWeek)) return;
           
           // Check if already exists from another source
           const alreadyExists = aggregatedEvents[dateKey].some(
@@ -545,6 +577,10 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             // Apply smart default schedule: only show on recommended days when no custom schedule
             const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
             if (defaultDays && !defaultDays.includes(dayOfWeek)) return;
+
+            // Check weekly skip days from calendar_skipped_items
+            const gatedSkipDays = calendarSkipMap.get(`game_plan:${taskId}`) || [];
+            if (gatedSkipDays.includes(dayOfWeek)) return;
             
             const alreadyExists = aggregatedEvents[dateKey].some(
               e => e.source === taskId && e.type === 'game_plan'
@@ -615,7 +651,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           // Add program events on scheduled days across the month
           daysInRange.forEach(day => {
             const dayOfWeek = getDay(day);
-            if (scheduledDays.includes(dayOfWeek)) {
+            if (!scheduledDays.includes(dayOfWeek)) return;
+
+            // Check weekly skip days from calendar_skipped_items
+            const progSkipDays = calendarSkipMap.get(`program:${programTaskId}`) || [];
+            if (progSkipDays.includes(dayOfWeek)) return;
+
+            {
               const dateKey = format(day, 'yyyy-MM-dd');
               if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
               
