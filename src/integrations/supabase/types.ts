@@ -1108,6 +1108,47 @@ export type Database = {
         }
         Relationships: []
       }
+      drill_assignments: {
+        Row: {
+          assigned_at: string | null
+          coach_id: string
+          completed: boolean | null
+          completed_at: string | null
+          drill_id: string
+          id: string
+          notes: string | null
+          player_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          coach_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          drill_id: string
+          id?: string
+          notes?: string | null
+          player_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          coach_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          drill_id?: string
+          id?: string
+          notes?: string | null
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drill_assignments_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drill_positions: {
         Row: {
           drill_id: string
