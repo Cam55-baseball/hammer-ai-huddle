@@ -162,10 +162,16 @@ export function DrillCmsManager() {
                   <Dumbbell className="h-5 w-5 text-primary" />
                   Drill Library
                 </CardTitle>
-                <Button onClick={handleCreate} size="sm" className="gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Create Drill
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button onClick={handleAutoPopulate} size="sm" variant="outline" className="gap-1.5" disabled={autoPopulating}>
+                    {autoPopulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                    Auto-Populate
+                  </Button>
+                  <Button onClick={handleCreate} size="sm" className="gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    Create Drill
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
