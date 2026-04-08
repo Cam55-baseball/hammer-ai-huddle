@@ -1,101 +1,58 @@
 
 
-# Defensive Drill Library — Final Workflow Implementation
+# Upgrade Game Session Detail Dialog — Rich Analytics View
 
-## What's Changing
+## Problem
 
-Three updates to match the new workflow:
+When viewing a completed game in Players Club, the `GameSessionDetailDialog` shows:
+- A basic score card (if `team_runs` exists in `game_summary`)
+- Raw JSON dump for everything else
+- A flat lineup list
 
-1. **Auto-populate goes live immediately** — AI-generated drills skip the pending queue and insert directly into the `drills` table with full tags/positions.
-2. **Coach drill assignment** — New `drill_assignments` table lets coaches assign drills to linked players. Coaches cannot edit/delete library drills.
-3. **CMS role enforcement** — Only owner can add/edit/delete drills. Coach view is read-only + assign.
+Meanwhile, the live `GameSummaryView` (shown at end of game scoring) has rich batter cards, pitcher stats, spray charts, heat maps, and pitch usage charts — but none of that data is saved or re-rendered in the Players Club view.
 
-## Current State
+## Solution
 
-- `generate-drills` edge function inserts into `pending_drills` → owner reviews → accepts to `drills`. **Needs to change**: insert directly into `drills`.
-- No `drill_assignments` table exists.
-- `DrillCmsManager` has no role checks — it's in owner dashboard only, but coach assignment UI doesn't exist.
-- `FixYourGame` is the player-facing recommendation UI. Coach-facing assignment flow doesn't exist.
+Two changes:
 
----
+### 1. Save rich analytics into `game_summary` at game completion
 
-## Phase 1 — Database
+Currently `completeGame` saves only `{ completed_at: "..." }`. Change `handleComplete` in `GameScoring.tsx` to compute full analytics (batter stats, pitcher stats, team score, spray data, pitch usage) and persist them into `game_summary` so historical games have all the data needed for rendering.
 
-### New table: `drill_assignments`
-```sql
-CREATE TABLE public.drill_assignments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  drill_id uuid REFERENCES public.drills(id) ON DELETE CASCADE NOT NULL,
-  coach_id uuid NOT NULL,
-  player_id uuid NOT NULL,
-  assigned_at timestamptz DEFAULT now(),
-  notes text,
-  completed boolean DEFAULT false,
-  completed_at timestamptz
-);
-```
-RLS: Coach can insert/select for their linked players. Player can select their own assignments.
+### 2. Rebuild `GameSessionDetailDialog` with rich display
 
-### Keep `pending_drills` table
-Still useful for manual AI generation from CMS, but auto-populate path bypasses it.
+Replace the raw JSON fallback with a proper tabbed summary (matching the live `GameSummaryView` style):
 
----
+- **Score card** — large team vs opponent score display with W/L badge
+- **Batters tab** — per-player stat cards (AVG/OBP/SLG/OPS, PA/H/RBI/K%/BB%, spray chart)
+- **Pitchers tab** — pitch count, strike %, velocity, pitch type breakdown
+- **Charts tab** — spray chart, pitch usage bar chart
+- **Lineup tab** — batting order with positions (existing, cleaned up)
 
-## Phase 2 — Update `generate-drills` Edge Function
+For games that were completed before this change (no rich data in `game_summary`), fetch `game_plays` from the database and compute analytics on the fly.
 
-Change the function to:
-1. Insert validated drills directly into `drills` table (not `pending_drills`)
-2. Insert tag mappings into `drill_tag_map` (look up tag IDs by name)
-3. Insert positions into `drill_positions`
-4. Set `is_active = true`, `is_published = true`
+## Technical Details
 
-Keep deduplication logic. Keep validation (reject if missing tags/level).
+### File: `src/pages/GameScoring.tsx`
+- In `handleComplete`, compute analytics from plays using the same logic as `useGameAnalytics`, then pass the serialized batter/pitcher/score data into `completeGame(gameId, { ...richSummary })`.
 
----
+### File: `src/components/GameSessionDetailDialog.tsx`
+- Complete rewrite. Accept `session` prop as before.
+- If `game_summary` contains rich data (`batterStats`, `pitcherStats`, `teamScore`), render directly.
+- If not, fetch `game_plays` for that `session.id` from the database, run through `useGameAnalytics`, and render.
+- Use `Tabs` with Batters/Pitchers/Charts tabs.
+- Reuse `PlayerGameCard`, `PitcherTracker`, `SprayChart` components (already built for `GameSummaryView`).
+- Keep the meta section (sport badge, date, venue, innings) at top.
 
-## Phase 3 — Coach Assignment UI
-
-### New component: `src/components/coach/CoachDrillAssign.tsx`
-- Coach sees the drill library (read-only) filtered by sport/position/level
-- "Assign" button opens a player selector (from `scout_follows` linked players)
-- Optional notes field
-- Inserts into `drill_assignments`
-
-### New component: `src/components/practice/AssignedDrills.tsx`
-- Player sees drills assigned to them by coaches
-- Can mark as completed
-- Shows coach name and notes
-
----
-
-## Phase 4 — Owner CMS Updates
-
-### `DrillCmsManager.tsx`
-- "Pending Review" tab becomes "AI Generated" — still shows pending drills from manual "Generate" button clicks
-- Add "Auto-Populate Library" button that calls `generate-drills` and inserts directly (no review needed)
-- Existing manual "Generate Drills" button in PendingDrillsQueue still works for owner review flow
-
-### `PendingDrillsQueue.tsx`
-- Keep as-is for owner manual review workflow (secondary path)
-
----
-
-## Phase 5 — Integration Points
-
-### Player Vault / Practice Hub
-- Add "Assigned by Coach" section showing `drill_assignments` for current user
-- Sits alongside "Fix Your Game" recommendations
-
----
+### File: `src/hooks/useGamePlays.ts` (new)
+- Simple hook: given a `gameId`, fetches all `game_plays` rows ordered by `created_at`.
+- Used as fallback when `game_summary` lacks rich data.
 
 ## Files Summary
 
 | File | Action |
 |------|--------|
-| Migration SQL | Create `drill_assignments` table with RLS |
-| `supabase/functions/generate-drills/index.ts` | Insert directly into `drills` + `drill_tag_map` + `drill_positions` |
-| `src/components/coach/CoachDrillAssign.tsx` | New — coach drill assignment UI |
-| `src/components/practice/AssignedDrills.tsx` | New — player assigned drills view |
-| `src/components/owner/DrillCmsManager.tsx` | Add auto-populate button |
-| `src/hooks/useDrillAssignments.ts` | New — fetch/create assignments |
+| `src/pages/GameScoring.tsx` | Save rich analytics into `game_summary` on completion |
+| `src/components/GameSessionDetailDialog.tsx` | Full rewrite with tabbed batter/pitcher/chart display |
+| `src/hooks/useGamePlays.ts` | New — fetch historical game plays for fallback rendering |
 
