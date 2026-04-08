@@ -23,6 +23,25 @@ export function DrillCmsManager() {
   const [search, setSearch] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingDrillId, setEditingDrillId] = useState<string | null>(null);
+  const [autoPopulating, setAutoPopulating] = useState(false);
+
+  const handleAutoPopulate = async () => {
+    setAutoPopulating(true);
+    try {
+      const { data, error } = await supabaseClient.functions.invoke('generate-drills', {
+        body: { sport: 'baseball', module: 'fielding', count: 5, mode: 'auto' },
+      });
+      if (error) throw error;
+      toast.success(`Auto-populated ${data?.generated ?? 0} new drills`);
+      queryClient.invalidateQueries({ queryKey: ['owner-drills-cms'] });
+      queryClient.invalidateQueries({ queryKey: ['owner-drill-positions'] });
+      queryClient.invalidateQueries({ queryKey: ['owner-drill-tags'] });
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to auto-populate');
+    } finally {
+      setAutoPopulating(false);
+    }
+  };
 
   const { data: drills, isLoading } = useQuery({
     queryKey: ['owner-drills-cms'],
