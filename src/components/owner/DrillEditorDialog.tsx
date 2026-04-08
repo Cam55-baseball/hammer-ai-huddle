@@ -209,10 +209,10 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
       }
 
       if (isEditing && drillId) {
-        const { error } = await supabase.from('drills').update(drillData).eq('id', drillId);
+        const { error } = await supabase.from('drills').update(drillData as any).eq('id', drillId);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from('drills').insert(drillData).select('id').single();
+        const { data, error } = await supabase.from('drills').insert(drillData as any).select('id').single();
         if (error) throw error;
         finalDrillId = data.id;
       }
