@@ -1269,6 +1269,7 @@ export type Database = {
         Row: {
           drill_id: string
           id: string
+          performance_improved: boolean | null
           success_rating: number | null
           used_at: string | null
           user_id: string
@@ -1276,6 +1277,7 @@ export type Database = {
         Insert: {
           drill_id: string
           id?: string
+          performance_improved?: boolean | null
           success_rating?: number | null
           used_at?: string | null
           user_id: string
@@ -1283,6 +1285,7 @@ export type Database = {
         Update: {
           drill_id?: string
           id?: string
+          performance_improved?: boolean | null
           success_rating?: number | null
           used_at?: string | null
           user_id?: string
@@ -1311,10 +1314,13 @@ export type Database = {
           module: string
           name: string
           premium: boolean
+          progression_level: number
           skill_target: string | null
           sport: string
+          sport_modifier: number
           subscription_tier_required: string | null
           updated_at: string | null
+          version: number
           video_url: string | null
         }
         Insert: {
@@ -1330,10 +1336,13 @@ export type Database = {
           module: string
           name: string
           premium?: boolean
+          progression_level?: number
           skill_target?: string | null
           sport?: string
+          sport_modifier?: number
           subscription_tier_required?: string | null
           updated_at?: string | null
+          version?: number
           video_url?: string | null
         }
         Update: {
@@ -1349,10 +1358,13 @@ export type Database = {
           module?: string
           name?: string
           premium?: boolean
+          progression_level?: number
           skill_target?: string | null
           sport?: string
+          sport_modifier?: number
           subscription_tier_required?: string | null
           updated_at?: string | null
+          version?: number
           video_url?: string | null
         }
         Relationships: []
@@ -3427,6 +3439,57 @@ export type Database = {
           updated_at?: string
           verified?: boolean | null
           verified_by?: string | null
+        }
+        Relationships: []
+      }
+      pending_drills: {
+        Row: {
+          ai_context: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          module: string
+          positions: string[] | null
+          progression_level: number
+          rejection_reason: string | null
+          skill_target: string | null
+          source: string
+          sport: string
+          status: string
+          tags: Json
+          title: string
+        }
+        Insert: {
+          ai_context?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          module?: string
+          positions?: string[] | null
+          progression_level?: number
+          rejection_reason?: string | null
+          skill_target?: string | null
+          source?: string
+          sport?: string
+          status?: string
+          tags?: Json
+          title: string
+        }
+        Update: {
+          ai_context?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          module?: string
+          positions?: string[] | null
+          progression_level?: number
+          rejection_reason?: string | null
+          skill_target?: string | null
+          source?: string
+          sport?: string
+          status?: string
+          tags?: Json
+          title?: string
         }
         Relationships: []
       }
