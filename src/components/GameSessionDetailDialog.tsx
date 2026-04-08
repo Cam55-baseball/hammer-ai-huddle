@@ -37,17 +37,17 @@ interface Props {
 }
 
 export function GameSessionDetailDialog({ session, open, onClose }: Props) {
-  if (!session) return null;
-
-  const summary = session.game_summary as any;
-  const lineup = Array.isArray(session.lineup) ? session.lineup : [];
+  const summary = session?.game_summary as any;
+  const lineup = session ? (Array.isArray(session.lineup) ? session.lineup : []) : [];
   const hasRichData = summary?.batterStats && summary?.pitcherStats;
-  const sport = (session.sport as 'baseball' | 'softball') || 'baseball';
+  const sport = (session?.sport as 'baseball' | 'softball') || 'baseball';
 
   // Fallback: fetch raw plays for old games without rich summary
-  const needsFallback = open && !hasRichData && session.status === 'completed';
+  const needsFallback = open && !!session && !hasRichData && session.status === 'completed';
   const { plays: rawPlays, loading: playsLoading } = useGamePlays(needsFallback ? session.id : null);
   const fallbackAnalytics = useGameAnalytics(needsFallback ? rawPlays : []);
+
+  if (!session) return null;
 
   // Resolve data source
   const batterStats = hasRichData ? summary.batterStats : fallbackAnalytics.batterStats;
