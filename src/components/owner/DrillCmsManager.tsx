@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Pencil, Trash2, Copy, Dumbbell } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Copy, Dumbbell, Zap, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { DrillEditorDialog } from './DrillEditorDialog';
 import { PendingDrillsQueue } from './PendingDrillsQueue';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,25 @@ export function DrillCmsManager() {
   const [search, setSearch] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingDrillId, setEditingDrillId] = useState<string | null>(null);
+  const [autoPopulating, setAutoPopulating] = useState(false);
+
+  const handleAutoPopulate = async () => {
+    setAutoPopulating(true);
+    try {
+      const { data, error } = await supabaseClient.functions.invoke('generate-drills', {
+        body: { sport: 'baseball', module: 'fielding', count: 5, mode: 'auto' },
+      });
+      if (error) throw error;
+      toast.success(`Auto-populated ${data?.generated ?? 0} new drills`);
+      queryClient.invalidateQueries({ queryKey: ['owner-drills-cms'] });
+      queryClient.invalidateQueries({ queryKey: ['owner-drill-positions'] });
+      queryClient.invalidateQueries({ queryKey: ['owner-drill-tags'] });
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to auto-populate');
+    } finally {
+      setAutoPopulating(false);
+    }
+  };
 
   const { data: drills, isLoading } = useQuery({
     queryKey: ['owner-drills-cms'],
@@ -142,10 +162,16 @@ export function DrillCmsManager() {
                   <Dumbbell className="h-5 w-5 text-primary" />
                   Drill Library
                 </CardTitle>
-                <Button onClick={handleCreate} size="sm" className="gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Create Drill
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button onClick={handleAutoPopulate} size="sm" variant="outline" className="gap-1.5" disabled={autoPopulating}>
+                    {autoPopulating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                    Auto-Populate
+                  </Button>
+                  <Button onClick={handleCreate} size="sm" className="gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    Create Drill
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
