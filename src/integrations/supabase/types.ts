@@ -5029,6 +5029,83 @@ export type Database = {
         }
         Relationships: []
       }
+      sprint_analyses: {
+        Row: {
+          acceleration_profile: Json | null
+          ai_model: string | null
+          confidence_score: number | null
+          created_at: string | null
+          distance_key: string
+          frame_count: number | null
+          grade_20_80: number | null
+          grade_breakdown: Json | null
+          id: string
+          processing_time_ms: number | null
+          session_id: string | null
+          split_times: Json | null
+          sport: string
+          steps_per_split: Json | null
+          total_steps: number | null
+          total_time_sec: number | null
+          user_id: string
+          validation_reasons: string[] | null
+          validation_status: string
+          video_url: string
+        }
+        Insert: {
+          acceleration_profile?: Json | null
+          ai_model?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          distance_key: string
+          frame_count?: number | null
+          grade_20_80?: number | null
+          grade_breakdown?: Json | null
+          id?: string
+          processing_time_ms?: number | null
+          session_id?: string | null
+          split_times?: Json | null
+          sport?: string
+          steps_per_split?: Json | null
+          total_steps?: number | null
+          total_time_sec?: number | null
+          user_id: string
+          validation_reasons?: string[] | null
+          validation_status?: string
+          video_url: string
+        }
+        Update: {
+          acceleration_profile?: Json | null
+          ai_model?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          distance_key?: string
+          frame_count?: number | null
+          grade_20_80?: number | null
+          grade_breakdown?: Json | null
+          id?: string
+          processing_time_ms?: number | null
+          session_id?: string | null
+          split_times?: Json | null
+          sport?: string
+          steps_per_split?: Json | null
+          total_steps?: number | null
+          total_time_sec?: number | null
+          user_id?: string
+          validation_reasons?: string[] | null
+          validation_status?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprint_analyses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "speed_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stress_assessments: {
         Row: {
           assessment_date: string | null
