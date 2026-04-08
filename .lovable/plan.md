@@ -1,165 +1,196 @@
 
 
-# Speed Tracking Engine — System Audit & Build Plan
+# Defensive Drill Progression System — Elite Coaching Intelligence
 
-## SECTION 1 — CURRENT SYSTEM AUDIT
+## What We're Building
 
-| Capability | Status | Location |
-|---|---|---|
-| Video recording | **YES** | `src/components/RealTimePlayback.tsx` — MediaRecorder + getUserMedia, WebM/MP4 capture |
-| Video upload | **YES** | `src/components/speed-lab/SpeedTimeEntry.tsx` (manual time entry), `RealTimePlayback.tsx` (upload to `videos` storage bucket) |
-| Frame extraction | **YES** | `src/lib/frameExtraction.ts` — canvas-based JPEG extraction at configurable timestamps |
-| Pose detection (feet tracking) | **NO** | No MediaPipe, TensorFlow, or OpenCV anywhere in codebase |
-| Event detection (motion start, crossing) | **NO** | No motion/line detection logic exists |
-| Timing engine using frame timestamps | **NO** | Times are entered manually or via partner stopwatch (`PartnerTimer.tsx`) |
-| Sprint/speed tracking features | **PARTIAL** | Speed Lab exists with manual time entry, step counting, stride analytics, PB tracking, RPE, 20-80 grading via `gradeBenchmarks.ts`. But NO video-based automatic timing. |
+Upgrading the existing drill system from a flat library into a 4-layer progression engine that thinks like an elite coach: auto-populated seed drills, development-tier filtering, outcome-to-drill mapping, and challenge-zone scoring.
 
-### What Already Exists and Works Well
-- **Sport-specific distances**: Baseball (10/30/60yd), Softball (7/20/40yd) in `src/data/speedLabProgram.ts`
-- **20-80 grading scale**: Full benchmark tables by age band in `src/data/gradeBenchmarks.ts`
-- **Database**: `speed_sessions` table with distances (JSONB), steps_per_rep, RPE, personal bests
-- **35+ drill library**, session templates, readiness adjustment, CNS recovery lockout
-- **Partner timer**: Real-time stopwatch with coach/parent mode
+## Current State
 
-### What Does NOT Exist (Marked Missing)
-- Computer vision pipeline (pose detection, feet tracking)
-- Automatic start/split/finish detection from video
-- Anti-cheat validation (rolling start, camera angle, incomplete run)
-- Video-based timing engine
-- Split times table
-- Step counting from video
-- Acceleration profile computation
+- **drills table**: 29 rows, has sport/ai_context/premium/is_active/is_published/description. No `progression_level`.
+- **drill_tags**: 47 tags across 8 categories (skill, body_part, equipment, intensity, phase, position, error_type, situation). All good.
+- **drill_tag_map**: junction with weight column. Working.
+- **drill_positions**: exists. Working.
+- **drill_usage_tracking**: exists with success_rating. Working.
+- **Engine**: Pure function scoring across 8 axes. No progression-level awareness.
+- **Admin CMS**: Full CRUD with tag weights, positions, publish toggle. No progression level field.
+- **Player UI**: FixYourGame, DrillDetailDialog, FieldingIssueSelector all functional.
+
+**Missing**: progression_level column, AI drill generation pipeline, owner review queue, challenge-zone scoring, auto-seed system, sport-specific modifiers.
 
 ---
 
-## SECTION 2-9 — BUILD PLAN
+## Phase 1 — Schema Changes (Migration)
 
-### Critical Architecture Decision
-
-**Computer vision (pose detection, feet tracking, line crossing) cannot run in-browser at production quality.** MediaPipe Pose runs at ~15 FPS on mobile — far too slow for frame-accurate sprint timing at 30-60 FPS. Professional systems (Freelap, DASHR) use hardware sensors.
-
-**Recommended approach**: Use AI vision via an edge function. User uploads sprint video → edge function extracts frames → sends to Gemini vision model → returns detected start/split/finish timestamps, step count, and validation results.
-
-This is the same pattern used by `RealTimePlayback.tsx` (video → frame extraction → AI analysis).
-
----
-
-### Phase 1 — Database Schema (Migration)
-
+### 1A. Add `progression_level` to `drills`
 ```sql
--- Sprint analysis results table
-CREATE TABLE public.sprint_analyses (
+ALTER TABLE public.drills
+  ADD COLUMN progression_level int NOT NULL DEFAULT 4
+    CONSTRAINT drills_progression_level_range 
+    CHECK (progression_level >= 1 AND progression_level <= 7);
+```
+Levels: 1=Tee Ball, 2=Youth, 3=Middle School, 4=High School, 5=College, 6=Pro, 7=Elite
+
+### 1B. Add `sport_modifier` to `drills`
+```sql
+ALTER TABLE public.drills
+  ADD COLUMN sport_modifier numeric NOT NULL DEFAULT 1.0;
+```
+Allows softball-specific drills to get a priority boost (e.g., slow roller = 1.15 in softball).
+
+### 1C. Add `version` to `drills`
+```sql
+ALTER TABLE public.drills
+  ADD COLUMN version int NOT NULL DEFAULT 1;
+```
+Every edit increments version for audit trail.
+
+### 1D. Create `pending_drills` table (AI review queue)
+```sql
+CREATE TABLE public.pending_drills (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  session_id uuid REFERENCES speed_sessions(id) ON DELETE SET NULL,
-  video_url text NOT NULL,
+  title text NOT NULL,
+  description text,
   sport text NOT NULL DEFAULT 'baseball',
-  distance_key text NOT NULL,           -- '60y', '30y', '10y', '40y', '20y', '7y'
-  
-  -- Timing results
-  total_time_sec numeric,
-  split_times jsonb DEFAULT '[]',       -- [{distance: "10y", time_sec: 1.52}, ...]
-  
-  -- Step analysis
-  total_steps int,
-  steps_per_split jsonb DEFAULT '[]',   -- [{distance: "10y", steps: 6}, ...]
-  
-  -- Acceleration profile
-  acceleration_profile jsonb DEFAULT '{}', -- {peak_velocity_mps, time_to_peak_sec, decel_detected}
-  
-  -- Validation
-  validation_status text NOT NULL DEFAULT 'pending', -- pending, pass, fail
-  validation_reasons text[] DEFAULT '{}',
-  
-  -- Grading
-  grade_20_80 int,
-  grade_breakdown jsonb DEFAULT '{}',   -- {raw_time, age_band, percentile}
-  
-  -- AI analysis metadata
-  ai_model text,
-  frame_count int,
-  processing_time_ms int,
-  confidence_score numeric,
-  
+  positions text[] DEFAULT '{}',
+  progression_level int NOT NULL DEFAULT 4,
+  tags jsonb NOT NULL DEFAULT '{}',
+  ai_context text,
+  module text NOT NULL DEFAULT 'fielding',
+  skill_target text,
+  source text NOT NULL DEFAULT 'ai',
+  status text NOT NULL DEFAULT 'pending',
+  rejection_reason text,
   created_at timestamptz DEFAULT now()
 );
-
-ALTER TABLE public.sprint_analyses ENABLE ROW LEVEL SECURITY;
--- Standard user CRUD policies
-
-CREATE INDEX idx_sprint_analyses_user ON public.sprint_analyses(user_id, created_at DESC);
 ```
+RLS: owner-only read/write.
 
-### Phase 2 — Edge Function: `analyze-sprint`
-
-**New file**: `supabase/functions/analyze-sprint/index.ts`
-
-Pipeline:
-1. Receive video URL + sport + distance_key
-2. Download video from storage
-3. Extract 15-20 frames at high density (every ~0.1s for a 6-8s clip)
-4. Send frames to Gemini 2.5 Pro vision with a structured prompt:
-   - Detect exact frame of first movement (start)
-   - Detect split crossing points based on distance markers
-   - Count visible steps
-   - Check for rolling start, incomplete run, camera angle issues
-5. Parse structured JSON response
-6. Compute splits, total time, acceleration profile
-7. Grade using existing `GRADE_BENCHMARKS` logic (ported to edge function)
-8. Write results to `sprint_analyses` table
-9. Return full analysis
-
-**Anti-cheat validation** (built into AI prompt):
-- Stationary position before start → PASS/FAIL
-- Rolling start detection → FAIL with reason
-- Deceleration before finish line → FAIL
-- Camera angle assessment (side view required) → FAIL if overhead/behind
-
-### Phase 3 — Client-Side Sprint Analysis Component
-
-**New file**: `src/components/speed-lab/SprintVideoAnalysis.tsx`
-
-- Video upload button within Speed Lab session flow
-- Calls `analyze-sprint` edge function
-- Displays results: times, splits, steps, grade, validation status
-- Saves to `sprint_analyses` and optionally links to `speed_sessions`
-
-**Edit**: `src/components/speed-lab/SpeedTimeEntry.tsx`
-- Add "Analyze Video" button alongside manual time entry
-- When analysis completes, auto-populate time and step fields
-
-### Phase 4 — Grading Integration
-
-The 20-80 grading already exists in `src/data/gradeBenchmarks.ts` with full age-band tables for all speed distances. The edge function will port this interpolation logic to compute grades server-side. Client displays the grade from `sprint_analyses.grade_20_80`.
-
-### Phase 5 — Sprint History & Results Display
-
-**New file**: `src/components/speed-lab/SprintAnalysisResults.tsx`
-- Displays full breakdown: total time, splits, steps per split, stride analytics, grade
-- Validation badge (PASS/FAIL with reasons)
-- Acceleration profile visualization
-
-**Edit**: `src/components/speed-lab/SpeedSessionHistory.tsx`
-- Show analysis results alongside manual entries
-- Link to video playback
+### 1E. Add `performance_improved` to `drill_usage_tracking`
+```sql
+ALTER TABLE public.drill_usage_tracking
+  ADD COLUMN performance_improved boolean;
+```
 
 ---
 
-## Honest Assessment (Section 9 — Zero-Tolerance)
+## Phase 2 — Seed Foundational Drills
 
-| Component | Status After Build |
-|---|---|
-| Upload → Processing → Results | **FULLY BUILT** — video upload triggers edge function, results written to DB, displayed in UI |
-| Frame extraction | **BUILT** — reuses existing `frameExtraction.ts` pattern, adapted for sprint density |
-| Pose/feet detection | **AI-DELEGATED** — Gemini vision analyzes frames for body position, not local ML model. This is production-grade for the use case. |
-| Start/split/finish detection | **AI-DELEGATED** — structured prompt extracts timestamps from visual analysis |
-| Step counting | **AI-DELEGATED** — counted from frame sequence analysis |
-| Anti-cheat validation | **BUILT** — 4 validation checks with PASS/FAIL + reasons |
-| Timing engine | **BUILT** — frame-timestamp-based elapsed time computation |
-| 20-80 grading | **ALREADY EXISTS** — `gradeBenchmarks.ts` has complete tables |
-| Database | **BUILT** — `sprint_analyses` table with splits, steps, validation, grading |
+Use the insert tool to populate ~30-40 foundational drills across progression levels, tagged and weighted. Examples:
 
-**What is NOT possible in-browser**: True sub-frame-accurate timing (±0.01s) from phone video. Phone cameras record at 30 FPS = 0.033s resolution. This is stated transparently. Professional timing systems use 1000 Hz sensors. The AI-vision approach provides ~0.05s accuracy which is suitable for training feedback but not official timing.
+| Drill | Level | Positions | Error Tags |
+|-------|-------|-----------|------------|
+| Two-Hand Fielding | 1 (Tee Ball) | infield, outfield | bobble, dropped_ball |
+| Basic Glove Presentation | 2 (Youth) | infield | glove_work |
+| Backhand Ground Ball | 4 (HS) | shortstop, third_base | bad_footwork |
+| Slow Roller Charge | 5 (College) | third_base, shortstop | slow_reaction |
+| Double Play Feed Pivot | 5 (College) | second_base, shortstop | late_transfer |
+| Bare Hand Exchange | 6 (Pro) | all infield | late_transfer |
+
+Each gets full ai_context, tags with weights, and positions.
+
+---
+
+## Phase 3 — Upgrade Recommendation Engine
+
+### `src/utils/drillRecommendationEngine.ts`
+
+**New fields on DrillInput:**
+- `progression_level: number` (1-7)
+- `sport_modifier: number`
+
+**New field on RecommendationInput:**
+- `userLevel?: number` (1-7, derived from profile age/competition level)
+
+**New scoring axis in ScoreBreakdown:**
+- `progressionFit: number` (0-20)
+
+**Challenge-zone logic:**
+```typescript
+// Optimal: drill level matches user level or is 1 above
+const diff = drill.progression_level - userLevel;
+if (diff === 0 || diff === 1) progressionFit = 20;
+else if (diff === -1) progressionFit = 12;
+else if (diff === 2) progressionFit = 8;
+else if (diff < -1 || diff > 2) progressionFit = 0; // too easy or too hard
+```
+
+**Sport modifier applied:**
+```typescript
+finalScore = Math.round(rawScore * drill.sport_modifier);
+```
+
+**Escalation logic (repeated issues):**
+- If `detectedIssues` contains an issue the user has logged 3+ times (from usageStats context), boost drills one progression level higher.
+
+**Fallback enhancement:**
+- When no matches, return fundamental drills filtered by position and progression level instead of alphabetical.
+
+---
+
+## Phase 4 — AI Drill Generation Edge Function
+
+### `supabase/functions/generate-drills/index.ts`
+
+Uses Lovable AI (Gemini) with structured tool-calling output:
+
+**Input**: sport, module, target_issues (optional)
+**Process**:
+1. Call Gemini with strict schema requiring: title, description, sport, positions[], progression_level, tags (error_type[], skill[], situation[]), ai_context, module, skill_target
+2. Validate response: reject if missing tags, no progression level, no clear outcome
+3. Deduplicate against existing drill names
+4. Insert into `pending_drills` table with `status: 'pending'`
+
+**Output**: count of drills generated and queued
+
+---
+
+## Phase 5 — Owner Review Queue UI
+
+### `src/components/owner/PendingDrillsQueue.tsx` (New)
+
+- Table showing pending AI-generated drills
+- Each row: title, sport, level, tags preview
+- Actions: Accept (creates real drill + tags + positions), Edit (opens editor pre-filled), Reject (with reason)
+- Accept auto-enriches tags by suggesting related tags based on existing tag co-occurrence
+
+### Update `DrillCmsManager.tsx`
+- Add tab/section toggle: "Library" | "Pending Review" (with count badge)
+
+---
+
+## Phase 6 — Update DrillEditorDialog
+
+Add to the form:
+- **Progression Level**: Select dropdown (Tee Ball through Elite)
+- **Sport Modifier**: Number input with tooltip explaining priority boost
+- **Version**: Read-only display showing current version (auto-increments on save)
+
+Update save logic to increment `version` on update.
+
+---
+
+## Phase 7 — Update Data Fetching Hook
+
+### `src/hooks/useDrillRecommendations.ts`
+
+- Map `progression_level` and `sport_modifier` into `DrillInput`
+- Derive `userLevel` from profile data (age band → level mapping)
+- Pass to engine
+
+---
+
+## Phase 8 — Update Tests
+
+### `src/utils/__tests__/drillRecommendationEngine.test.ts`
+
+Add tests:
+- Progression fit: user level 4 → level 4 drill scores higher than level 1
+- Challenge zone: level 5 drill for level 4 user gets 20pts, level 7 gets 0pts
+- Sport modifier: 1.15 modifier boosts final score by 15%
+- Fallback returns position-filtered fundamentals
+- Escalation: repeated issue boosts higher-level drills
 
 ---
 
@@ -167,10 +198,13 @@ The 20-80 grading already exists in `src/data/gradeBenchmarks.ts` with full age-
 
 | File | Action |
 |------|--------|
-| Migration SQL | Create `sprint_analyses` table |
-| `supabase/functions/analyze-sprint/index.ts` | New — AI vision pipeline + validation + grading |
-| `src/components/speed-lab/SprintVideoAnalysis.tsx` | New — upload + trigger analysis UI |
-| `src/components/speed-lab/SprintAnalysisResults.tsx` | New — results display |
-| `src/components/speed-lab/SpeedTimeEntry.tsx` | Add "Analyze Video" option |
-| `src/components/speed-lab/SpeedSessionHistory.tsx` | Show analysis results |
+| Migration SQL | Add progression_level, sport_modifier, version to drills; create pending_drills |
+| Data insert | Seed ~30 foundational drills with tags, positions, progression levels |
+| `src/utils/drillRecommendationEngine.ts` | Add progressionFit axis, sport modifier, challenge-zone logic, enhanced fallback |
+| `src/utils/__tests__/drillRecommendationEngine.test.ts` | Add progression/modifier/escalation tests |
+| `src/hooks/useDrillRecommendations.ts` | Map new fields, derive userLevel |
+| `supabase/functions/generate-drills/index.ts` | New — AI drill generation with validation |
+| `src/components/owner/PendingDrillsQueue.tsx` | New — review queue UI |
+| `src/components/owner/DrillCmsManager.tsx` | Add pending review tab |
+| `src/components/owner/DrillEditorDialog.tsx` | Add progression level, sport modifier, version fields |
 
