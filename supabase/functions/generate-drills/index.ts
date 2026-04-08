@@ -22,7 +22,7 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const { sport = "baseball", module = "fielding", count = 5, target_issues } = await req.json();
+    const { sport = "baseball", module = "fielding", count = 5, target_issues, mode = "auto" } = await req.json();
 
     // Fetch existing drill names to deduplicate
     const { data: existingDrills } = await supabase
@@ -33,7 +33,7 @@ serve(async (req) => {
       (existingDrills || []).map((d: any) => d.name.toLowerCase())
     );
 
-    // Also check pending
+    // Also check pending (for manual mode)
     const { data: pendingDrills } = await supabase
       .from("pending_drills")
       .select("title")
@@ -41,6 +41,15 @@ serve(async (req) => {
       .eq("status", "pending");
     for (const p of pendingDrills || []) {
       existingNames.add(p.title.toLowerCase());
+    }
+
+    // Fetch all tags for lookup
+    const { data: allTags } = await supabase
+      .from("drill_tags")
+      .select("id, name, category");
+    const tagLookup = new Map<string, { id: string; category: string }>();
+    for (const t of allTags || []) {
+      tagLookup.set(t.name.toLowerCase(), { id: t.id, category: t.category });
     }
 
     const issueContext = target_issues?.length
@@ -144,36 +153,118 @@ serve(async (req) => {
     const parsed = JSON.parse(toolCall.function.arguments);
     const generatedDrills = parsed.drills || [];
 
-    // Validate and insert into pending_drills
     let insertedCount = 0;
+
     for (const drill of generatedDrills) {
-      // Validation
+      // Validation: must have title, tags with at least 1 error + 1 skill, and progression_level
       if (!drill.title || !drill.tags || !drill.progression_level) continue;
       if (!drill.tags.error_type?.length && !drill.tags.skill?.length) continue;
       if (existingNames.has(drill.title.toLowerCase())) continue;
 
-      const { error } = await supabase.from("pending_drills").insert({
-        title: drill.title,
-        description: drill.description || null,
-        sport: drill.sport || sport,
-        positions: drill.positions || [],
-        progression_level: Math.min(7, Math.max(1, drill.progression_level)),
-        tags: drill.tags,
-        ai_context: drill.ai_context || null,
-        module: drill.module || module,
-        skill_target: drill.skill_target || null,
-        source: "ai",
-        status: "pending",
-      });
+      if (mode === "auto") {
+        // AUTO MODE: Insert directly into drills table
+        const { data: inserted, error: drillError } = await supabase
+          .from("drills")
+          .insert({
+            name: drill.title,
+            description: drill.description || null,
+            sport: drill.sport || sport,
+            module: drill.module || module,
+            progression_level: Math.min(7, Math.max(1, drill.progression_level)),
+            skill_target: drill.skill_target || null,
+            ai_context: drill.ai_context || null,
+            is_active: true,
+            is_published: true,
+            premium: false,
+            version: 1,
+            sport_modifier: 1.0,
+          })
+          .select("id")
+          .single();
 
-      if (!error) {
+        if (drillError || !inserted) {
+          console.error("Failed to insert drill:", drill.title, drillError);
+          continue;
+        }
+
+        const drillId = inserted.id;
+
+        // Insert positions
+        if (drill.positions?.length) {
+          const posRows = drill.positions.map((p: string) => ({
+            drill_id: drillId,
+            position: p.toLowerCase().replace(/\s+/g, "_"),
+          }));
+          await supabase.from("drill_positions").insert(posRows);
+        }
+
+        // Insert tag mappings
+        const allTagEntries: { name: string; weight: number }[] = [];
+        for (const tagName of drill.tags.error_type || []) {
+          allTagEntries.push({ name: tagName, weight: 3 });
+        }
+        for (const tagName of drill.tags.skill || []) {
+          allTagEntries.push({ name: tagName, weight: 2 });
+        }
+        for (const tagName of drill.tags.situation || []) {
+          allTagEntries.push({ name: tagName, weight: 1 });
+        }
+
+        for (const entry of allTagEntries) {
+          const found = tagLookup.get(entry.name.toLowerCase());
+          if (found) {
+            await supabase.from("drill_tag_map").insert({
+              drill_id: drillId,
+              tag_id: found.id,
+              weight: entry.weight,
+            });
+          } else {
+            // Create the tag if it doesn't exist
+            const category = entry.weight === 3 ? "error_type" : entry.weight === 2 ? "skill" : "situation";
+            const { data: newTag } = await supabase
+              .from("drill_tags")
+              .insert({ name: entry.name.toLowerCase(), category })
+              .select("id")
+              .single();
+            if (newTag) {
+              tagLookup.set(entry.name.toLowerCase(), { id: newTag.id, category });
+              await supabase.from("drill_tag_map").insert({
+                drill_id: drillId,
+                tag_id: newTag.id,
+                weight: entry.weight,
+              });
+            }
+          }
+        }
+
         insertedCount++;
         existingNames.add(drill.title.toLowerCase());
+
+      } else {
+        // MANUAL MODE: Insert into pending_drills for owner review
+        const { error } = await supabase.from("pending_drills").insert({
+          title: drill.title,
+          description: drill.description || null,
+          sport: drill.sport || sport,
+          positions: drill.positions || [],
+          progression_level: Math.min(7, Math.max(1, drill.progression_level)),
+          tags: drill.tags,
+          ai_context: drill.ai_context || null,
+          module: drill.module || module,
+          skill_target: drill.skill_target || null,
+          source: "ai",
+          status: "pending",
+        });
+
+        if (!error) {
+          insertedCount++;
+          existingNames.add(drill.title.toLowerCase());
+        }
       }
     }
 
     return new Response(
-      JSON.stringify({ generated: insertedCount, total_returned: generatedDrills.length }),
+      JSON.stringify({ generated: insertedCount, total_returned: generatedDrills.length, mode }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
