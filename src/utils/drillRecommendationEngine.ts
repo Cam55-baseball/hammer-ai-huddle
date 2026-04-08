@@ -20,6 +20,8 @@ export interface DrillInput {
   description?: string | null;
   is_published?: boolean;
   subscription_tier_required?: string;
+  progression_level?: number;   // 1-7
+  sport_modifier?: number;      // default 1.0
 }
 
 export interface WeaknessInput {
@@ -43,6 +45,7 @@ export interface RecommendationInput {
   position?: string;
   detectedIssues?: string[];
   usageStats?: DrillUsageStats[];
+  userLevel?: number; // 1-7 progression level
 }
 
 export interface ScoreBreakdown {
@@ -54,6 +57,7 @@ export interface ScoreBreakdown {
   errorTypeMatch: number;  // 0-25
   weightBonus: number;     // 0-10
   trendBonus: number;      // 0-5
+  progressionFit: number;  // 0-20
 }
 
 export interface ScoredDrill {
@@ -82,11 +86,21 @@ const EMPTY_BREAKDOWN: ScoreBreakdown = {
   errorTypeMatch: 0,
   weightBonus: 0,
   trendBonus: 0,
+  progressionFit: 0,
 };
 
 function sumBreakdown(b: ScoreBreakdown): number {
   return b.skillMatch + b.tagRelevance + b.difficultyFit + b.variety +
-    b.positionMatch + b.errorTypeMatch + b.weightBonus + b.trendBonus;
+    b.positionMatch + b.errorTypeMatch + b.weightBonus + b.trendBonus +
+    b.progressionFit;
+}
+
+function computeProgressionFit(drillLevel: number, userLevel: number): number {
+  const diff = drillLevel - userLevel;
+  if (diff === 0 || diff === 1) return 20;
+  if (diff === -1) return 12;
+  if (diff === 2) return 8;
+  return 0; // too easy or too hard
 }
 
 function scoreDrillAgainstInput(
@@ -95,6 +109,7 @@ function scoreDrillAgainstInput(
   detectedIssues: string[],
   position: string | undefined,
   usageMap: Map<string, DrillUsageStats>,
+  userLevel: number | undefined,
 ): { breakdown: ScoreBreakdown; matchReasons: string[] } {
   const breakdown = { ...EMPTY_BREAKDOWN };
   const matchReasons: string[] = [];
@@ -113,7 +128,6 @@ function scoreDrillAgainstInput(
         break;
       }
     }
-    // Also check ai_context
     if (drill.ai_context && normalizeStr(drill.ai_context).includes(normalizedIssue)) {
       breakdown.errorTypeMatch = Math.max(breakdown.errorTypeMatch, 15);
       if (!matchReasons.some(r => r.includes(issue))) {
@@ -162,7 +176,7 @@ function scoreDrillAgainstInput(
     }
   }
 
-  // --- Weight bonus (average of all tag weights above 1) ---
+  // --- Weight bonus ---
   if (drill.tagWeights) {
     const weights = Object.values(drill.tagWeights);
     const aboveOne = weights.filter(w => w > 1);
@@ -174,6 +188,14 @@ function scoreDrillAgainstInput(
 
   // --- Difficulty fit ---
   breakdown.difficultyFit = Math.min(15, (drill.difficulty_levels?.length ?? 0) * 5);
+
+  // --- Progression fit ---
+  if (userLevel != null && drill.progression_level != null) {
+    breakdown.progressionFit = computeProgressionFit(drill.progression_level, userLevel);
+    if (breakdown.progressionFit >= 20) {
+      matchReasons.push(`optimal level match`);
+    }
+  }
 
   // --- Trend bonus ---
   const usage = usageMap.get(drill.id);
@@ -197,6 +219,7 @@ export function computeDrillRecommendations(
     position,
     detectedIssues = [],
     usageStats = [],
+    userLevel,
   } = input;
 
   if (!drills || drills.length === 0) {
@@ -217,7 +240,24 @@ export function computeDrillRecommendations(
   const hasInput = (weaknesses && weaknesses.length > 0) || detectedIssues.length > 0;
 
   if (!hasInput) {
-    const fallback = [...eligible]
+    // Enhanced fallback: filter by position and progression level, then sort by name
+    let fallbackDrills = [...eligible];
+    if (position) {
+      const posFiltered = fallbackDrills.filter(d =>
+        d.positions && d.positions.some(p => normalizeStr(p) === normalizeStr(position))
+      );
+      if (posFiltered.length > 0) fallbackDrills = posFiltered;
+    }
+    if (userLevel != null) {
+      const levelFiltered = fallbackDrills.filter(d => {
+        const dl = d.progression_level ?? 4;
+        const diff = dl - userLevel;
+        return diff >= -1 && diff <= 2;
+      });
+      if (levelFiltered.length > 0) fallbackDrills = levelFiltered;
+    }
+
+    const fallback = fallbackDrills
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, 10)
       .map((drill) => ({
@@ -233,7 +273,7 @@ export function computeDrillRecommendations(
   // First pass: score without variety
   const preScored = eligible.map((drill) => {
     const { breakdown, matchReasons } = scoreDrillAgainstInput(
-      drill, weaknesses, detectedIssues, position, usageMap,
+      drill, weaknesses, detectedIssues, position, usageMap, userLevel,
     );
     return { drill, breakdown, matchReasons };
   });
@@ -254,7 +294,10 @@ export function computeDrillRecommendations(
     seenModules.add(item.drill.module);
 
     const finalBreakdown: ScoreBreakdown = { ...item.breakdown, variety: varietyBonus };
-    const finalScore = sumBreakdown(finalBreakdown);
+    // Apply sport modifier
+    const sportMod = item.drill.sport_modifier ?? 1.0;
+    const rawScore = sumBreakdown(finalBreakdown);
+    const finalScore = Math.round(rawScore * sportMod);
 
     scored.push({
       drill: item.drill,

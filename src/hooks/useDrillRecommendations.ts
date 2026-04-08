@@ -93,6 +93,8 @@ export function useDrillRecommendations(options: UseDrillRecommendationsOptions)
           description: d.description,
           is_published: d.is_published,
           subscription_tier_required: d.subscription_tier_required,
+          progression_level: (d as any).progression_level ?? 4,
+          sport_modifier: Number((d as any).sport_modifier) || 1.0,
         };
       });
     },

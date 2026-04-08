@@ -6,10 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Pencil, Trash2, Copy, Dumbbell } from 'lucide-react';
 import { toast } from 'sonner';
 import { DrillEditorDialog } from './DrillEditorDialog';
+import { PendingDrillsQueue } from './PendingDrillsQueue';
 import { cn } from '@/lib/utils';
+
+const PROGRESSION_LABELS: Record<number, string> = {
+  1: 'Tee Ball', 2: 'Youth', 3: 'MS', 4: 'HS', 5: 'College', 6: 'Pro', 7: 'Elite',
+};
 
 export function DrillCmsManager() {
   const queryClient = useQueryClient();
@@ -102,115 +108,150 @@ export function DrillCmsManager() {
     setEditorOpen(true);
   };
 
+  // Pending drills count
+  const { data: pendingCount } = useQuery({
+    queryKey: ['pending-drills-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('pending_drills')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      if (error) return 0;
+      return count ?? 0;
+    },
+  });
+
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <CardTitle className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-primary" />
-              Drill Library
-            </CardTitle>
-            <Button onClick={handleCreate} size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Create Drill
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search drills..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+      <Tabs defaultValue="library">
+        <TabsList>
+          <TabsTrigger value="library">Library</TabsTrigger>
+          <TabsTrigger value="pending" className="gap-1.5">
+            Pending Review
+            {(pendingCount ?? 0) > 0 && (
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{pendingCount}</Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-          {/* Table */}
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground animate-pulse">Loading drills...</div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {search ? 'No drills match your search' : 'No drills yet. Create your first drill!'}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead className="hidden sm:table-cell">Sport</TableHead>
-                    <TableHead className="hidden md:table-cell">Positions</TableHead>
-                    <TableHead className="hidden lg:table-cell">Tags</TableHead>
-                    <TableHead>Tier</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[120px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((drill) => (
-                    <TableRow key={drill.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">
-                        {drill.name}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell capitalize">
-                        {drill.sport}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex gap-1 flex-wrap">
-                          {getPositions(drill.id).slice(0, 2).map(p => (
-                            <Badge key={p} variant="outline" className="text-[10px] capitalize">
-                              {p.replace(/_/g, ' ')}
+        <TabsContent value="library">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <CardTitle className="flex items-center gap-2">
+                  <Dumbbell className="h-5 w-5 text-primary" />
+                  Drill Library
+                </CardTitle>
+                <Button onClick={handleCreate} size="sm" className="gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  Create Drill
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search drills..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground animate-pulse">Loading drills...</div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {search ? 'No drills match your search' : 'No drills yet. Create your first drill!'}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead className="hidden sm:table-cell">Sport</TableHead>
+                        <TableHead className="hidden md:table-cell">Level</TableHead>
+                        <TableHead className="hidden md:table-cell">Positions</TableHead>
+                        <TableHead className="hidden lg:table-cell">Tags</TableHead>
+                        <TableHead>Tier</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[120px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((drill) => (
+                        <TableRow key={drill.id}>
+                          <TableCell className="font-medium max-w-[200px] truncate">
+                            {drill.name}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell capitalize">
+                            {drill.sport}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <Badge variant="outline" className="text-[10px]">
+                              {PROGRESSION_LABELS[(drill as any).progression_level] ?? 'HS'}
                             </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <div className="flex gap-1 flex-wrap max-w-[200px]">
-                          {getTags(drill.id).slice(0, 3).map((tag: string) => (
-                            <Badge key={tag} variant="secondary" className="text-[10px]">
-                              {tag.replace(/_/g, ' ')}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="flex gap-1 flex-wrap">
+                              {getPositions(drill.id).slice(0, 2).map(p => (
+                                <Badge key={p} variant="outline" className="text-[10px] capitalize">
+                                  {p.replace(/_/g, ' ')}
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <div className="flex gap-1 flex-wrap max-w-[200px]">
+                              {getTags(drill.id).slice(0, 3).map((tag: string) => (
+                                <Badge key={tag} variant="secondary" className="text-[10px]">
+                                  {tag.replace(/_/g, ' ')}
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={drill.premium ? 'default' : 'secondary'} className="text-[10px]">
+                              {drill.premium ? 'Premium' : 'Free'}
                             </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={drill.premium ? 'default' : 'secondary'} className="text-[10px]">
-                          {drill.premium ? 'Premium' : 'Free'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={drill.is_published ? 'default' : 'outline'}
-                          className={cn('text-[10px]', drill.is_published && 'bg-primary')}
-                        >
-                          {drill.is_published ? 'Published' : 'Draft'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleEdit(drill.id)}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => duplicateMutation.mutate(drill.id)}>
-                            <Copy className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(drill.id)}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={drill.is_published ? 'default' : 'outline'}
+                              className={cn('text-[10px]', drill.is_published && 'bg-primary')}
+                            >
+                              {drill.is_published ? 'Published' : 'Draft'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleEdit(drill.id)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => duplicateMutation.mutate(drill.id)}>
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteMutation.mutate(drill.id)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pending">
+          <PendingDrillsQueue />
+        </TabsContent>
+      </Tabs>
 
       <DrillEditorDialog
         open={editorOpen}

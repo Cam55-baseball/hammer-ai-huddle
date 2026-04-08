@@ -1269,6 +1269,7 @@ export type Database = {
         Row: {
           drill_id: string
           id: string
+          performance_improved: boolean | null
           success_rating: number | null
           used_at: string | null
           user_id: string
@@ -1276,6 +1277,7 @@ export type Database = {
         Insert: {
           drill_id: string
           id?: string
+          performance_improved?: boolean | null
           success_rating?: number | null
           used_at?: string | null
           user_id: string
@@ -1283,6 +1285,7 @@ export type Database = {
         Update: {
           drill_id?: string
           id?: string
+          performance_improved?: boolean | null
           success_rating?: number | null
           used_at?: string | null
           user_id?: string
@@ -1311,10 +1314,13 @@ export type Database = {
           module: string
           name: string
           premium: boolean
+          progression_level: number
           skill_target: string | null
           sport: string
+          sport_modifier: number
           subscription_tier_required: string | null
           updated_at: string | null
+          version: number
           video_url: string | null
         }
         Insert: {
@@ -1330,10 +1336,13 @@ export type Database = {
           module: string
           name: string
           premium?: boolean
+          progression_level?: number
           skill_target?: string | null
           sport?: string
+          sport_modifier?: number
           subscription_tier_required?: string | null
           updated_at?: string | null
+          version?: number
           video_url?: string | null
         }
         Update: {
@@ -1349,10 +1358,13 @@ export type Database = {
           module?: string
           name?: string
           premium?: boolean
+          progression_level?: number
           skill_target?: string | null
           sport?: string
+          sport_modifier?: number
           subscription_tier_required?: string | null
           updated_at?: string | null
+          version?: number
           video_url?: string | null
         }
         Relationships: []
@@ -3430,6 +3442,57 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_drills: {
+        Row: {
+          ai_context: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          module: string
+          positions: string[] | null
+          progression_level: number
+          rejection_reason: string | null
+          skill_target: string | null
+          source: string
+          sport: string
+          status: string
+          tags: Json
+          title: string
+        }
+        Insert: {
+          ai_context?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          module?: string
+          positions?: string[] | null
+          progression_level?: number
+          rejection_reason?: string | null
+          skill_target?: string | null
+          source?: string
+          sport?: string
+          status?: string
+          tags?: Json
+          title: string
+        }
+        Update: {
+          ai_context?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          module?: string
+          positions?: string[] | null
+          progression_level?: number
+          rejection_reason?: string | null
+          skill_target?: string | null
+          source?: string
+          sport?: string
+          status?: string
+          tags?: Json
+          title?: string
+        }
+        Relationships: []
+      }
       performance_sessions: {
         Row: {
           age_play_up_bonus: number | null
@@ -5028,6 +5091,83 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      sprint_analyses: {
+        Row: {
+          acceleration_profile: Json | null
+          ai_model: string | null
+          confidence_score: number | null
+          created_at: string | null
+          distance_key: string
+          frame_count: number | null
+          grade_20_80: number | null
+          grade_breakdown: Json | null
+          id: string
+          processing_time_ms: number | null
+          session_id: string | null
+          split_times: Json | null
+          sport: string
+          steps_per_split: Json | null
+          total_steps: number | null
+          total_time_sec: number | null
+          user_id: string
+          validation_reasons: string[] | null
+          validation_status: string
+          video_url: string
+        }
+        Insert: {
+          acceleration_profile?: Json | null
+          ai_model?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          distance_key: string
+          frame_count?: number | null
+          grade_20_80?: number | null
+          grade_breakdown?: Json | null
+          id?: string
+          processing_time_ms?: number | null
+          session_id?: string | null
+          split_times?: Json | null
+          sport?: string
+          steps_per_split?: Json | null
+          total_steps?: number | null
+          total_time_sec?: number | null
+          user_id: string
+          validation_reasons?: string[] | null
+          validation_status?: string
+          video_url: string
+        }
+        Update: {
+          acceleration_profile?: Json | null
+          ai_model?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          distance_key?: string
+          frame_count?: number | null
+          grade_20_80?: number | null
+          grade_breakdown?: Json | null
+          id?: string
+          processing_time_ms?: number | null
+          session_id?: string | null
+          split_times?: Json | null
+          sport?: string
+          steps_per_split?: Json | null
+          total_steps?: number | null
+          total_time_sec?: number | null
+          user_id?: string
+          validation_reasons?: string[] | null
+          validation_status?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sprint_analyses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "speed_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stress_assessments: {
         Row: {

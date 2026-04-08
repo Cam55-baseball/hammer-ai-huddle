@@ -19,6 +19,15 @@ import { cn } from '@/lib/utils';
 
 const POSITIONS = ['infield', 'outfield', 'catcher', 'pitcher_fielding', 'first_base', 'shortstop', 'second_base', 'third_base'];
 const DIFFICULTY_LEVELS = ['beginner', 'intermediate', 'advanced', 'elite'];
+const PROGRESSION_LEVELS = [
+  { value: 1, label: 'Tee Ball' },
+  { value: 2, label: 'Youth' },
+  { value: 3, label: 'Middle School' },
+  { value: 4, label: 'High School' },
+  { value: 5, label: 'College' },
+  { value: 6, label: 'Pro' },
+  { value: 7, label: 'Elite' },
+];
 
 interface DrillEditorDialogProps {
   open: boolean;
@@ -54,6 +63,9 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
   const [tagSelections, setTagSelections] = useState<TagSelection[]>([]);
   const [showWeights, setShowWeights] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [progressionLevel, setProgressionLevel] = useState(4);
+  const [sportModifier, setSportModifier] = useState(1.0);
+  const [version, setVersion] = useState(1);
 
   // Fetch all available tags
   const { data: allTags } = useQuery({
@@ -108,13 +120,18 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
       setPremium(existingDrill.premium || false);
       setIsPublished(existingDrill.is_published || false);
       setDifficultyLevels(existingDrill.difficulty_levels ?? ['beginner']);
+      setProgressionLevel((existingDrill as any).progression_level ?? 4);
+      setSportModifier(Number((existingDrill as any).sport_modifier) || 1.0);
+      setVersion((existingDrill as any).version ?? 1);
     } else if (!drillId) {
-      // Reset for create
       setName(''); setVideoUrl(''); setSport('baseball'); setModule('fielding');
       setSkillTarget(''); setDescription(''); setAiContext('');
       setPremium(false); setIsPublished(false);
       setSelectedPositions([]);
       setDifficultyLevels(['beginner']);
+      setProgressionLevel(4);
+      setSportModifier(1.0);
+      setVersion(1);
     }
   }, [existingDrill, drillId]);
 
@@ -170,7 +187,7 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
     try {
       let finalDrillId = drillId;
 
-      const drillData = {
+      const drillData: Record<string, any> = {
         name: name.trim(),
         video_url: videoUrl.trim() || null,
         sport,
@@ -183,13 +200,19 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
         difficulty_levels: difficultyLevels,
         created_by: user?.id || null,
         updated_at: new Date().toISOString(),
+        progression_level: progressionLevel,
+        sport_modifier: sportModifier,
       };
 
+      if (isEditing) {
+        drillData.version = version + 1;
+      }
+
       if (isEditing && drillId) {
-        const { error } = await supabase.from('drills').update(drillData).eq('id', drillId);
+        const { error } = await supabase.from('drills').update(drillData as any).eq('id', drillId);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from('drills').insert(drillData).select('id').single();
+        const { data, error } = await supabase.from('drills').insert(drillData as any).select('id').single();
         if (error) throw error;
         finalDrillId = data.id;
       }
@@ -333,6 +356,37 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
                   ))}
                 </div>
               </div>
+
+              {/* Progression Level */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Progression Level</Label>
+                  <Select value={String(progressionLevel)} onValueChange={(v) => setProgressionLevel(Number(v))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {PROGRESSION_LEVELS.map(l => (
+                        <SelectItem key={l.value} value={String(l.value)}>{l.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Sport Modifier</Label>
+                  <Input
+                    type="number"
+                    step="0.05"
+                    min="0.5"
+                    max="2.0"
+                    value={sportModifier}
+                    onChange={(e) => setSportModifier(Number(e.target.value) || 1.0)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">Priority boost (1.0 = normal)</p>
+                </div>
+              </div>
+
+              {isEditing && (
+                <p className="text-xs text-muted-foreground">Version: {version}</p>
+              )}
             </section>
 
             <Separator />
