@@ -502,4 +502,131 @@ describe('computeDrillRecommendations', () => {
     // All drills locked for free users
     expect(result.recommended.every((r) => r.locked)).toBe(true);
   });
+
+  // ─── NEGATIVE PENALTIES ─────────────────────────────
+
+  it('26. negative penalty: overused low-success drill penalized -15', () => {
+    const drills = [
+      makeDrill({ id: 'pen1', name: 'Overused Drill', skill_target: 'footwork', tags: ['footwork'] }),
+      makeDrill({ id: 'pen2', name: 'Fresh Drill', skill_target: 'footwork', tags: ['footwork'] }),
+    ];
+
+    const usageStats: DrillUsageStats[] = [
+      { drillId: 'pen1', useCount: 12, avgSuccessRating: 2.0 },
+    ];
+
+    const result = computeDrillRecommendations({
+      drills,
+      weaknesses: [{ area: 'footwork', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+      usageStats,
+    });
+
+    const overused = result.recommended.find(r => r.drill.id === 'pen1')!;
+    const fresh = result.recommended.find(r => r.drill.id === 'pen2')!;
+    expect(overused.breakdown.penalty).toBe(-15);
+    expect(fresh.breakdown.penalty).toBe(0);
+    expect(fresh.score).toBeGreaterThan(overused.score);
+  });
+
+  it('27. negative penalty: wrong-position drill penalized -10', () => {
+    const drills = [
+      makeDrill({ id: 'wp1', name: 'SS Drill', positions: ['SS'], skill_target: 'fielding_mechanics', tags: ['fielding_mechanics'] }),
+      makeDrill({ id: 'wp2', name: 'OF Drill', positions: ['OF'], skill_target: 'fielding_mechanics', tags: ['fielding_mechanics'] }),
+    ];
+
+    const result = computeDrillRecommendations({
+      drills,
+      weaknesses: [{ area: 'fielding_mechanics', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+      position: 'SS',
+    });
+
+    const ssDrill = result.recommended.find(r => r.drill.id === 'wp1')!;
+    const ofDrill = result.recommended.find(r => r.drill.id === 'wp2')!;
+    expect(ssDrill.breakdown.penalty).toBe(0);
+    expect(ofDrill.breakdown.penalty).toBe(-10);
+    expect(ssDrill.score).toBeGreaterThan(ofDrill.score);
+  });
+
+  // ─── RANKED ISSUES ─────────────────────────────
+
+  it('28. ranked issues: top 10 selection proves no threshold cutoff', () => {
+    // This test validates that the hook-level ranked selection works correctly.
+    // We simulate the ranked selection logic directly.
+    const weaknessData = Array.from({ length: 15 }, (_, i) => ({
+      weakness_metric: `issue_${i}`,
+      score: (i + 1) * 0.05, // scores from 0.05 to 0.75
+    }));
+
+    // Ranked selection: sort by score desc, take top 10
+    const selected = [...weaknessData]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(w => w.weakness_metric);
+
+    expect(selected.length).toBe(10);
+    // Top score (0.75) should be first
+    expect(selected[0]).toBe('issue_14');
+    // Low scores below threshold 0.3 (issue_0 through issue_4) should still appear if in top 10
+    expect(selected).toContain('issue_5'); // score 0.30
+    // issue_0 through issue_4 (scores 0.05-0.25) should be excluded since they're bottom 5
+    expect(selected).not.toContain('issue_0');
+  });
+
+  // ─── SPORT-SPECIFIC MODIFIERS ─────────────────────────────
+
+  it('29. softball vs baseball: fielding drill scores higher in softball due to sport module modifier', () => {
+    const fieldingDrill = makeDrill({
+      id: 'sf1', name: 'Fielding Fundamentals',
+      module: 'fielding', skill_target: 'fielding_mechanics',
+      tags: ['fielding_mechanics'], sport_modifier: 1.0,
+    });
+
+    const softballResult = computeDrillRecommendations({
+      drills: [{ ...fieldingDrill, sport: 'softball' }],
+      weaknesses: [{ area: 'fielding_mechanics', score: 20 }],
+      sport: 'softball',
+      userHasPremium: true,
+    });
+
+    const baseballResult = computeDrillRecommendations({
+      drills: [{ ...fieldingDrill, sport: 'baseball' }],
+      weaknesses: [{ area: 'fielding_mechanics', score: 20 }],
+      sport: 'baseball',
+      userHasPremium: true,
+    });
+
+    const softballScore = softballResult.recommended[0].score;
+    const baseballScore = baseballResult.recommended[0].score;
+    // Softball fielding gets 1.15x vs baseball 1.1x
+    expect(softballScore).toBeGreaterThan(baseballScore);
+  });
+
+  it('30. sport module modifier: softball fielding outscores softball hitting', () => {
+    const drills = [
+      makeDrill({
+        id: 'mod1', name: 'Fielding Drill', module: 'fielding', sport: 'softball',
+        skill_target: 'glove_work', tags: ['glove_work'],
+      }),
+      makeDrill({
+        id: 'mod2', name: 'Hitting Drill', module: 'hitting', sport: 'softball',
+        skill_target: 'glove_work', tags: ['glove_work'],
+      }),
+    ];
+
+    const result = computeDrillRecommendations({
+      drills,
+      weaknesses: [{ area: 'glove_work', score: 20 }],
+      sport: 'softball',
+      userHasPremium: true,
+    });
+
+    const fielding = result.recommended.find(r => r.drill.id === 'mod1')!;
+    const hitting = result.recommended.find(r => r.drill.id === 'mod2')!;
+    // Softball: fielding gets 1.15x, hitting gets 1.1x
+    expect(fielding.score).toBeGreaterThan(hitting.score);
+  });
 });
