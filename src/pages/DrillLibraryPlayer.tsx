@@ -171,7 +171,7 @@ export default function DrillLibraryPlayer() {
             score: 0,
             locked: !userHasPremium,
             matchReasons: selectedDrill.matchReasons,
-            breakdown: { skillMatch: 0, tagRelevance: 0, difficultyFit: 0, variety: 0, positionMatch: 0, errorTypeMatch: 0, weightBonus: 0, trendBonus: 0, sportModifier: 1 },
+            breakdown: { skillMatch: 0, tagRelevance: 0, difficultyFit: 0, variety: 0, positionMatch: 0, errorTypeMatch: 0, weightBonus: 0, trendBonus: 0, progressionFit: 0 },
           } : null}
         />
       </SubscriptionGate>
