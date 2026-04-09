@@ -1,50 +1,100 @@
 
 
-# Final Stability Audit — 3 Issues Found, 3 Fixes
+# Player Defensive Drill Library — Full Implementation
 
-## Issue 1: `refreshCustomActivities()` fires from broadcast even on the same tab
+## Overview
 
-`useCustomActivities` broadcasts with `CUSTOM_ACTIVITIES_TAB_ID`. `useGamePlan` filters with `GAME_PLAN_TAB_ID`. These are **different UUIDs** in the same tab — so the same-tab broadcast from `useCustomActivities` is NOT filtered by `useGamePlan`'s listener. Result: `refreshCustomActivities()` fires immediately from the broadcast AND again from the 400ms setTimeout in GamePlanCard.
+Add a new player-facing "Defensive Drill Library" page at `/drill-library` with filtered, intelligent drill browsing. Players see drills matched to their sport, position, and progression level, with AI-driven "Recommended For You" badges.
 
-**Fix**: Use a single shared `TAB_ID` across all hooks in the same tab. Create a tiny module `src/utils/tabId.ts`:
-```typescript
-export const TAB_ID = crypto.randomUUID();
+## 1. Sidebar Navigation Update
+
+**File: `src/components/AppSidebar.tsx`**
+
+After the Video Library entry (line ~300), add a "Drill Library" item visible to any subscribed user (same condition as Video Library):
+
 ```
-Import this in `useCustomActivities.ts`, `useGamePlan.ts`, and `useUnifiedDataSync.ts` instead of generating separate IDs per hook.
+{ key: 'drill-library', title: 'Drill Library', url: '/drill-library', icon: Dumbbell }
+```
 
-## Issue 2: Triple refresh on a single edit
+## 2. New Hook: `usePlayerDrillLibrary`
 
-After one successful edit, the current flow triggers:
-1. `useCustomActivities`: `setTimeout(fetchTemplates, 400)` — refetches templates
-2. `useGamePlan` broadcast listener: `refreshCustomActivities()` — immediate refetch (because TAB_IDs differ)
-3. `GamePlanCard`: `setTimeout(refreshCustomActivities, 400)` — another refetch
+**File: `src/hooks/usePlayerDrillLibrary.ts`** (new)
 
-With Fix 1 (shared TAB_ID), item 2 is eliminated. But items 1 and 3 still both fire at 400ms.
+Fetches drills with intelligent filtering:
+- Reads player's `sport`, `primary_position` from `athlete_mpi_settings`, and `experience_level` from `profiles`
+- Maps experience_level to progression range (Beginner→1-3, Intermediate→3-5, Advanced/high_school→4-6, Professional→5-7)
+- Queries `drills` table with `is_published = true`, `is_active = true`, `sport` match, `progression_level` within range
+- Joins `drill_positions` to filter by player position (with fallback: if no drills match position, expand to all positions)
+- Joins `drill_tag_map` + `drill_tags` for tag data
+- Fetches player's `weakness_scores` from latest HIE run to compute "recommended for you" flags (tag intersection with detected issues)
+- Returns: `drills`, `loading`, `filters` (sort, position override, search), `playerContext`
+- Sort options: Recommended (default — scored drills first), Level, Recently Added
 
-**Fix**: Remove the `setTimeout(() => fetchTemplates(), 400)` from `useCustomActivities.updateTemplate` (line 296). The GamePlanCard already handles the delayed refresh via `refreshCustomActivities()`. The `useCustomActivities` hook's local `templates` state was already patched optimistically (line 282-284) — that's sufficient for the TemplatesGrid consumer.
+## 3. New Page: `DrillLibraryPlayer`
 
-## Issue 3: Dual state remains a drift risk under edge cases
+**File: `src/pages/DrillLibraryPlayer.tsx`** (new)
 
-`useCustomActivities.templates` and `useGamePlan.customActivities` are separate `useState` arrays. The optimistic patch in `useCustomActivities` (line 282) updates `templates`, while `updateOptimisticActivity` in `useGamePlan` updates `customActivities`. If one succeeds and the other is stale, they drift.
+Layout:
+- `DashboardLayout` wrapper
+- Top bar: Search input, sort dropdown (Recommended / Level / Recently Added), position filter chips
+- Grid of drill cards (responsive 1-2-3 columns)
+- Subscription gate: if no active subscription, show blurred overlay with upgrade CTA
 
-**Fix**: This is mitigated by Fix 1 + Fix 2 (single delayed refresh ensures both converge). Add a final safety: in `useCustomActivities.updateTemplate`, after the DB write succeeds, also call `refreshCustomActivities` (from GamePlan context) via the broadcast. With Fix 1's shared TAB_ID, the broadcast won't trigger on the same tab — so the GamePlanCard's `setTimeout(refreshCustomActivities, 400)` remains the sole delayed refresh. This is already the case after Fix 1+2. No additional code needed — just confirm the flow.
+**Drill Card** shows:
+- Video thumbnail (first frame or placeholder with `Play` icon)
+- Title
+- Position badges (SS, OF, etc.)
+- Progression level badge (mapped: 1-2→Youth, 3→Middle School, 4→High School, 5→College, 6-7→Pro)
+- Short "What this helps fix" (truncated `ai_context`, max 60 chars)
+- "Recommended For You" badge if `drill.tags ∩ player.detectedIssues > 0`
+
+## 4. Drill Detail Dialog (reuse + extend)
+
+**File: `src/components/practice/DrillDetailDialog.tsx`** (minor update)
+
+Already shows video, description, AI context, tags, positions, difficulty, save-to-vault. Add:
+- "Recommended For You" section if the drill matches player weaknesses (pass `isRecommended` + `matchReasons` as optional props)
+- No changes to lock logic (already gates on `!userHasPremium`)
+
+## 5. Route Registration
+
+**File: `src/App.tsx`**
+
+Add lazy import and route:
+```
+const DrillLibraryPlayer = lazy(() => import('./pages/DrillLibraryPlayer'));
+<Route path="/drill-library" element={<DrillLibraryPlayer />} />
+```
+
+## 6. Progression Level Mapping Utility
+
+**File: `src/utils/progressionMapping.ts`** (new)
+
+```
+experienceLevel → progression range
+Beginner → [1, 3]
+Intermediate → [3, 5]
+high_school / Advanced → [4, 6]
+Professional / professional → [5, 7]
+default → [2, 5]
+```
+
+Also maps progression numbers to display labels (Youth, Middle School, High School, College, Pro/Elite).
+
+## Permissions
+
+- Players: view + filter + search (read-only). No add/edit/delete.
+- Video content gated behind subscription (existing `locked = !userHasPremium` logic).
+- Owner/Coach: same view works for them too; they already have CMS/assignment elsewhere.
 
 ## Files Summary
 
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/utils/tabId.ts` | **New** — export single `TAB_ID = crypto.randomUUID()` |
-| `src/hooks/useCustomActivities.ts` | Import shared `TAB_ID`; remove `setTimeout(fetchTemplates, 400)` (line 296); remove local `CUSTOM_ACTIVITIES_TAB_ID` |
-| `src/hooks/useGamePlan.ts` | Import shared `TAB_ID`; remove local `GAME_PLAN_TAB_ID` |
-| `src/hooks/useUnifiedDataSync.ts` | Import shared `TAB_ID`; remove local `tabIdRef` |
-
-## Result After Fixes
-
-A single edit triggers exactly:
-1. Optimistic patch in both `useCustomActivities` (templates) and `useGamePlan` (customActivities) — instant
-2. DB write — awaited
-3. One `setTimeout(refreshCustomActivities, 400)` from GamePlanCard — confirms DB state
-4. Broadcast to other tabs only (same-tab filtered by shared TAB_ID)
-
-Zero redundant refreshes. Single source of confirmed persistence before any refresh.
+| `src/utils/progressionMapping.ts` | New — level mapping utility |
+| `src/hooks/usePlayerDrillLibrary.ts` | New — filtered drill fetch with recommendations |
+| `src/pages/DrillLibraryPlayer.tsx` | New — player drill library page |
+| `src/components/AppSidebar.tsx` | Add Drill Library nav item |
+| `src/App.tsx` | Add route `/drill-library` |
+| `src/components/practice/DrillDetailDialog.tsx` | Minor — accept optional recommendation context |
 
