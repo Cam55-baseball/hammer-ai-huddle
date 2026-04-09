@@ -31,12 +31,19 @@ export function useDrillRecommendations(options: UseDrillRecommendationsOptions)
     queryKey: ['drills-with-tags', sport],
     queryFn: async () => {
       // Fetch drills
-      const { data: drills, error: drillsError } = await supabase
+      let query = supabase
         .from('drills')
         .select('*')
         .eq('sport', sport)
         .eq('is_active', true)
         .eq('is_published', true);
+
+      // Backend subscription filtering: don't return premium drills to free users
+      if (!userHasPremium) {
+        query = query.eq('premium', false);
+      }
+
+      const { data: drills, error: drillsError } = await query;
 
       if (drillsError) throw drillsError;
       if (!drills) return [];
