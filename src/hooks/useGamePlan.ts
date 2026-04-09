@@ -786,17 +786,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     );
   }, []);
 
-  // Listen for cross-tab custom-activity-updated broadcasts
-  useEffect(() => {
-    if (typeof BroadcastChannel === 'undefined') return;
-    const bc = new BroadcastChannel('data-sync');
-    bc.onmessage = (event) => {
-      if (event.data?.type === 'custom-activity-updated') {
-        refreshCustomActivities();
-      }
-    };
-    return () => bc.close();
-  }, [refreshCustomActivities]);
+
 
   // Lightweight refresh: only re-queries custom_activity_templates + custom_activity_logs
   const refreshCustomActivities = useCallback(async () => {
