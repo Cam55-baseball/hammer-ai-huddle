@@ -82,10 +82,12 @@ describe('computeDrillRecommendations', () => {
     });
 
     for (const r of result.recommended) {
-      const { skillMatch, tagRelevance, difficultyFit, variety, positionMatch, errorTypeMatch, weightBonus, trendBonus, progressionFit } = r.breakdown;
-      const expectedRaw = skillMatch + tagRelevance + difficultyFit + variety + positionMatch + errorTypeMatch + weightBonus + trendBonus + progressionFit;
+      const { skillMatch, tagRelevance, difficultyFit, variety, positionMatch, errorTypeMatch, weightBonus, trendBonus, progressionFit, penalty } = r.breakdown;
+      const expectedRaw = skillMatch + tagRelevance + difficultyFit + variety + positionMatch + errorTypeMatch + weightBonus + trendBonus + progressionFit + penalty;
       const sportMod = r.drill.sport_modifier ?? 1.0;
-      expect(r.score).toBe(Math.round(expectedRaw * sportMod));
+      // Sport module modifier applied on top
+      const moduleMod = r.drill.module === 'fielding' ? 1.1 : r.drill.module === 'throwing' ? 1.05 : 1.0;
+      expect(r.score).toBe(Math.max(0, Math.round(expectedRaw * sportMod * moduleMod)));
     }
   });
 
