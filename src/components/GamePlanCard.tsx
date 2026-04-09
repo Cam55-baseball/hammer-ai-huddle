@@ -1969,17 +1969,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onSave={async (data, scheduleForToday) => {
           let result;
           if (editingTemplate) {
+            // Snapshot for rollback
+            const previousTemplate = customActivities.find(a => a.template.id === editingTemplate.id)?.template;
             // Optimistic update: patch UI immediately before DB write
             updateOptimisticActivity(editingTemplate.id, data as Partial<CustomActivityTemplate>);
             // Update existing template
             result = await updateTemplate(editingTemplate.id, data);
             if (result) {
-              // Lightweight refresh instead of full refetch
-              refreshCustomActivities();
               setEditingTemplate(null);
-            } else {
-              // Rollback: full refresh on failure
-              refreshCustomActivities();
+            } else if (previousTemplate) {
+              // Instant rollback to previous state
+              updateOptimisticActivity(editingTemplate.id, previousTemplate);
             }
           } else {
             // Create new template
