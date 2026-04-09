@@ -105,6 +105,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   } = useDailySummaryNotification();
   const { skipDay, pushForwardOneDay, pushToDate, replaceDay, undoLastAction } = useRescheduleEngine();
   
+  // Guard against overlapping optimistic updates from rapid double-clicks
+  const isUpdatingRef = useRef(false);
+
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quickNoteOpen, setQuickNoteOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
