@@ -111,6 +111,7 @@ const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStea
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
+const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
 
 const queryClient = new QueryClient({
   defaultOptions: {

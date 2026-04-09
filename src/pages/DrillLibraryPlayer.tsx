@@ -165,6 +165,8 @@ export default function DrillLibraryPlayer() {
               tags: selectedDrill.tags,
               positions: selectedDrill.positions,
               difficulty_levels: selectedDrill.difficulty_levels || [],
+              skill_target: null,
+              is_active: true,
             },
             score: 0,
             locked: !userHasPremium,

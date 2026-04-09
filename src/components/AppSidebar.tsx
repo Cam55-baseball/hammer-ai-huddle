@@ -298,6 +298,7 @@ export function AppSidebar() {
     // Video Library - visible to any subscribed user
     if (showAll || modules.length > 0) {
       items.push({ key: 'video-library', title: 'Video Library', url: '/video-library', icon: Library });
+      items.push({ key: 'drill-library', title: 'Drill Library', url: '/drill-library', icon: Dumbbell });
     }
 
     return items;
