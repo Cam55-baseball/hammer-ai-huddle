@@ -1,79 +1,50 @@
 
 
-# Final Stability Fixes — 5 Targeted Patches
+# Final Stability Audit — 3 Issues Found, 3 Fixes
 
-## Fix 1: BroadcastChannel source tagging to prevent same-tab double refresh
+## Issue 1: `refreshCustomActivities()` fires from broadcast even on the same tab
 
-**Problem**: `useCustomActivities` broadcasts `custom-activity-updated` without a `source` field (line 288). `useGamePlan` listens (line 874) but doesn't filter by source — so the same tab that just did the optimistic update also triggers `refreshCustomActivities()`, causing a redundant fetch.
+`useCustomActivities` broadcasts with `CUSTOM_ACTIVITIES_TAB_ID`. `useGamePlan` filters with `GAME_PLAN_TAB_ID`. These are **different UUIDs** in the same tab — so the same-tab broadcast from `useCustomActivities` is NOT filtered by `useGamePlan`'s listener. Result: `refreshCustomActivities()` fires immediately from the broadcast AND again from the 400ms setTimeout in GamePlanCard.
 
-**Fix**:
-- In `useCustomActivities.ts`: Add a module-level `TAB_ID = crypto.randomUUID()` and include `source: TAB_ID` in the broadcast message.
-- In `useGamePlan.ts` (line 870-880): Add a module-level `TAB_ID` and skip messages where `event.data.source === TAB_ID`.
-- In `useUnifiedDataSync.ts` (line 294): Already filters by `source` for `invalidate` messages but NOT for `custom-activity-updated`. Add `source` check there too.
-
-## Fix 2: Delayed background refresh after successful update
-
-**Problem**: After optimistic update + DB write, there's no safety net to guarantee UI matches DB if the optimistic patch was slightly off (e.g., server-side defaults).
-
-**Fix in `useCustomActivities.ts`**: After successful update (line 283, after toast), add:
+**Fix**: Use a single shared `TAB_ID` across all hooks in the same tab. Create a tiny module `src/utils/tabId.ts`:
 ```typescript
-setTimeout(() => fetchTemplates(), 400);
+export const TAB_ID = crypto.randomUUID();
 ```
-This 400ms delayed refresh silently corrects any drift without blocking UX.
+Import this in `useCustomActivities.ts`, `useGamePlan.ts`, and `useUnifiedDataSync.ts` instead of generating separate IDs per hook.
 
-**Fix in `GamePlanCard.tsx`**: After successful `updateTemplate` (line 1978-1979), add:
-```typescript
-setTimeout(() => refreshCustomActivities(), 400);
-```
+## Issue 2: Triple refresh on a single edit
 
-## Fix 3: Confirm single source of truth
+After one successful edit, the current flow triggers:
+1. `useCustomActivities`: `setTimeout(fetchTemplates, 400)` — refetches templates
+2. `useGamePlan` broadcast listener: `refreshCustomActivities()` — immediate refetch (because TAB_IDs differ)
+3. `GamePlanCard`: `setTimeout(refreshCustomActivities, 400)` — another refetch
 
-**Current state**: `useCustomActivities` has `templates` state (line 23), `useGamePlan` has `customActivities` state (line 102). Both fetch from `custom_activity_templates` independently. This IS dual state.
+With Fix 1 (shared TAB_ID), item 2 is eliminated. But items 1 and 3 still both fire at 400ms.
 
-**Fix**: Full unification into React Query would be ideal but is a large refactor. Pragmatic fix: In `useGamePlan`, the `customActivities` state is the **display** source for GamePlanCard (it merges templates with today's logs). In `useCustomActivities`, `templates` is the **management** source for TemplatesGrid. They serve different consumers. The real issue is sync — which Fix 1 + Fix 2 solve. Add a comment in both hooks documenting this relationship.
+**Fix**: Remove the `setTimeout(() => fetchTemplates(), 400)` from `useCustomActivities.updateTemplate` (line 296). The GamePlanCard already handles the delayed refresh via `refreshCustomActivities()`. The `useCustomActivities` hook's local `templates` state was already patched optimistically (line 282-284) — that's sufficient for the TemplatesGrid consumer.
 
-## Fix 4: `isUpdating` guard to prevent overlapping optimistic updates
+## Issue 3: Dual state remains a drift risk under edge cases
 
-**Problem**: Rapid double-clicks on save could fire two concurrent `updateTemplate` calls, each doing optimistic patches that collide.
+`useCustomActivities.templates` and `useGamePlan.customActivities` are separate `useState` arrays. The optimistic patch in `useCustomActivities` (line 282) updates `templates`, while `updateOptimisticActivity` in `useGamePlan` updates `customActivities`. If one succeeds and the other is stale, they drift.
 
-**Fix in `GamePlanCard.tsx`**: Add `isUpdatingRef = useRef(false)` guard around the edit save handler:
-```typescript
-const isUpdatingRef = useRef(false);
-// In onSave:
-if (isUpdatingRef.current) return;
-isUpdatingRef.current = true;
-try {
-  // ... existing optimistic + update logic
-} finally {
-  isUpdatingRef.current = false;
-}
-```
-
-## Fix 5: Dynamic performance score weights by session module
-
-**Problem**: Weights are static — `bqi` gets 1.5x regardless of whether the session is hitting, pitching, or defense.
-
-**Fix in `useSessionInsights.ts`**: Replace static `METRIC_WEIGHTS` with a function:
-```typescript
-const MODULE_WEIGHTS: Record<string, Record<string, number>> = {
-  hitting: { bqi: 1.5, pei: 1.5, competitive_execution: 1.4, decision: 1.3 },
-  pitching: { fqi: 1.5, pei: 1.5, competitive_execution: 1.4, command: 1.3 },
-  defense: { fqi: 1.5, decision: 1.4, competitive_execution: 1.3 },
-};
-
-function getWeights(module: string) {
-  return MODULE_WEIGHTS[module] ?? MODULE_WEIGHTS.hitting;
-}
-```
-Pass `sessionModule` into `computeWeightedScore`.
+**Fix**: This is mitigated by Fix 1 + Fix 2 (single delayed refresh ensures both converge). Add a final safety: in `useCustomActivities.updateTemplate`, after the DB write succeeds, also call `refreshCustomActivities` (from GamePlan context) via the broadcast. With Fix 1's shared TAB_ID, the broadcast won't trigger on the same tab — so the GamePlanCard's `setTimeout(refreshCustomActivities, 400)` remains the sole delayed refresh. This is already the case after Fix 1+2. No additional code needed — just confirm the flow.
 
 ## Files Summary
 
-| File | Fix # | Change |
-|------|-------|--------|
-| `src/hooks/useCustomActivities.ts` | 1, 2 | Add TAB_ID to broadcast source; add 400ms delayed fetchTemplates |
-| `src/hooks/useGamePlan.ts` | 1, 2, 3 | Filter broadcast by source; add delayed refreshCustomActivities; add state docs |
-| `src/hooks/useUnifiedDataSync.ts` | 1 | Add source check for `custom-activity-updated` messages |
-| `src/components/GamePlanCard.tsx` | 2, 4 | Add delayed refresh; add isUpdatingRef guard |
-| `src/hooks/useSessionInsights.ts` | 5 | Dynamic weights by session module |
+| File | Change |
+|------|--------|
+| `src/utils/tabId.ts` | **New** — export single `TAB_ID = crypto.randomUUID()` |
+| `src/hooks/useCustomActivities.ts` | Import shared `TAB_ID`; remove `setTimeout(fetchTemplates, 400)` (line 296); remove local `CUSTOM_ACTIVITIES_TAB_ID` |
+| `src/hooks/useGamePlan.ts` | Import shared `TAB_ID`; remove local `GAME_PLAN_TAB_ID` |
+| `src/hooks/useUnifiedDataSync.ts` | Import shared `TAB_ID`; remove local `tabIdRef` |
+
+## Result After Fixes
+
+A single edit triggers exactly:
+1. Optimistic patch in both `useCustomActivities` (templates) and `useGamePlan` (customActivities) — instant
+2. DB write — awaited
+3. One `setTimeout(refreshCustomActivities, 400)` from GamePlanCard — confirms DB state
+4. Broadcast to other tabs only (same-tab filtered by shared TAB_ID)
+
+Zero redundant refreshes. Single source of confirmed persistence before any refresh.
 
