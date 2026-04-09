@@ -73,7 +73,7 @@ const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, updateOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
@@ -1969,11 +1969,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onSave={async (data, scheduleForToday) => {
           let result;
           if (editingTemplate) {
+            // Optimistic update: patch UI immediately before DB write
+            updateOptimisticActivity(editingTemplate.id, data as Partial<CustomActivityTemplate>);
             // Update existing template
             result = await updateTemplate(editingTemplate.id, data);
             if (result) {
-              refetch();
+              // Lightweight refresh instead of full refetch
+              refreshCustomActivities();
               setEditingTemplate(null);
+            } else {
+              // Rollback: full refresh on failure
+              refreshCustomActivities();
             }
           } else {
             // Create new template
