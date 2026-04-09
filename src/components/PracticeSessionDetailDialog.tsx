@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trophy, Target, ArrowRight, ChevronDown, FileText, Activity } from 'lucide-react';
 import { getGradeLabel } from '@/lib/gradeLabel';
-import { generateInsights } from '@/lib/sessionInsights';
+import { useSessionInsights } from '@/hooks/useSessionInsights';
 import { cn } from '@/lib/utils';
 
 const TAG_STYLES: Record<string, string> = {
@@ -60,17 +60,6 @@ interface PracticeSessionDetailDialogProps {
   session: PracticeSession | null;
   open: boolean;
   onClose: () => void;
-}
-
-function computePerformanceScore(composites: Record<string, number> | null): { score: number; label: string; color: string } | null {
-  if (!composites || Object.keys(composites).length === 0) return null;
-  const values = Object.values(composites).filter(v => typeof v === 'number' && !isNaN(v));
-  if (values.length === 0) return null;
-  const avg = values.reduce((s, v) => s + v, 0) / values.length;
-  const score = Math.round(avg);
-  if (score >= 60) return { score, label: 'Elite', color: 'text-green-500' };
-  if (score >= 40) return { score, label: 'Solid', color: 'text-amber-500' };
-  return { score, label: 'Developing', color: 'text-red-500' };
 }
 
 function DrillBlockCard({ block, index }: { block: DrillBlock; index: number }) {
@@ -139,20 +128,13 @@ function DrillBlockCard({ block, index }: { block: DrillBlock; index: number }) 
 
 export function PracticeSessionDetailDialog({ session, open, onClose }: PracticeSessionDetailDialogProps) {
   const { t } = useTranslation();
+  const { insights, perfScore, drillBlocks } = useSessionInsights(session);
 
-  if (!session) return null;
+  if (!session || !insights) return null;
 
-  const drillBlocks: DrillBlock[] = Array.isArray(session.drill_blocks) ? session.drill_blocks : [];
-  const composites = (session.composite_indexes as Record<string, number> | null) ?? {};
   const sessionModule = session.module || 'hitting';
   const grade = session.effective_grade ?? session.coach_grade;
-
-  const insights = generateInsights(composites, drillBlocks, sessionModule, {
-    sessionDate: session.session_date,
-    sessionType: session.session_type ?? undefined,
-  });
   const tagStyle = TAG_STYLES[insights.sessionTag] ?? TAG_STYLES['Solid Work'];
-  const perfScore = computePerformanceScore(Object.keys(composites).length > 0 ? composites : null);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -229,7 +211,7 @@ export function PracticeSessionDetailDialog({ session, open, onClose }: Practice
                     <Activity className="h-3.5 w-3.5" />
                     {t('playersClub.drillBlocks', 'Drill Blocks')} ({drillBlocks.length})
                   </h4>
-                  {drillBlocks.map((block, i) => (
+                  {drillBlocks.map((block: any, i: number) => (
                     <DrillBlockCard key={block.id || i} block={block} index={i} />
                   ))}
                 </div>
