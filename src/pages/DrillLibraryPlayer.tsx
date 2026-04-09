@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, Star, Search } from 'lucide-react';
-import { BaseballGloveIcon } from '@/components/icons/BaseballGloveIcon';
+import { Play, Star, Search, Shield } from 'lucide-react';
+
 import { usePlayerDrillLibrary, type SortOption, type LibraryDrill } from '@/hooks/usePlayerDrillLibrary';
 import { DrillDetailDialog } from '@/components/practice/DrillDetailDialog';
 import { getProgressionLabel } from '@/utils/progressionMapping';
@@ -82,7 +82,7 @@ export default function DrillLibraryPlayer() {
         <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <BaseballGloveIcon className="h-6 w-6 text-primary" />
+            <Shield className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">Drill Library</h1>
           </div>
 
@@ -143,7 +143,7 @@ export default function DrillLibraryPlayer() {
             </div>
           ) : drills.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
-              <BaseballGloveIcon className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <Shield className="h-12 w-12 mx-auto mb-3 opacity-40" />
               <p className="font-medium">No drills found</p>
               <p className="text-sm mt-1">Try adjusting your search or filters.</p>
             </div>
