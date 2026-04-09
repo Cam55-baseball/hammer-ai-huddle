@@ -49,8 +49,8 @@ export interface RecommendationInput {
 }
 
 export interface ScoreBreakdown {
-  skillMatch: number;      // 0-40
-  tagRelevance: number;    // 0-30
+  skillMatch: number;      // 0-60 (raised ceiling for rank multiplier)
+  tagRelevance: number;    // 0-45
   difficultyFit: number;   // 0-15
   variety: number;         // 0-15
   positionMatch: number;   // 0-20
@@ -72,6 +72,8 @@ export interface RecommendationOutput {
   recommended: ScoredDrill[];
   fallbackUsed: boolean;
 }
+
+/* ── Helpers ────────────────────────────────────────────────── */
 
 function normalizeStr(s: string): string {
   return s.toLowerCase().replace(/[_\-\s]+/g, '');
@@ -103,9 +105,31 @@ function computeProgressionFit(drillLevel: number, userLevel: number): number {
   return 0; // too easy or too hard
 }
 
+/* ── Weakness ranking ──────────────────────────────────────── */
+
+interface RankedWeakness extends WeaknessInput {
+  rankMultiplier: number;
+}
+
+const RANK_MULTIPLIERS = [1.5, 1.3, 1.1];
+
+/**
+ * Sort weaknesses by severity (lowest score = worst) and assign
+ * rank multipliers so the most critical weaknesses weigh more.
+ */
+export function rankWeaknesses(weaknesses: WeaknessInput[]): RankedWeakness[] {
+  const sorted = [...weaknesses].sort((a, b) => a.score - b.score);
+  return sorted.map((w, i) => ({
+    ...w,
+    rankMultiplier: i < RANK_MULTIPLIERS.length ? RANK_MULTIPLIERS[i] : 1.0,
+  }));
+}
+
+/* ── Per-drill scoring ─────────────────────────────────────── */
+
 function scoreDrillAgainstInput(
   drill: DrillInput,
-  weaknesses: WeaknessInput[],
+  rankedWeaknesses: RankedWeakness[],
   detectedIssues: string[],
   position: string | undefined,
   usageMap: Map<string, DrillUsageStats>,
@@ -136,13 +160,14 @@ function scoreDrillAgainstInput(
     }
   }
 
-  // --- Skill match from weaknesses ---
-  for (const w of weaknesses) {
+  // --- Skill match from ranked weaknesses ---
+  for (const w of rankedWeaknesses) {
     const normalizedArea = normalizeStr(w.area);
     const urgency = Math.max(0, 100 - w.score) / 100;
+    const weighted = urgency * w.rankMultiplier;
 
     if (drill.skill_target && normalizeStr(drill.skill_target) === normalizedArea) {
-      const pts = Math.round(40 * urgency);
+      const pts = Math.round(40 * weighted);
       if (pts > breakdown.skillMatch) {
         breakdown.skillMatch = pts;
         matchReasons.push(`targets ${w.area}`);
@@ -151,7 +176,7 @@ function scoreDrillAgainstInput(
 
     for (const tag of drill.tags) {
       if (normalizeStr(tag) === normalizedArea) {
-        const pts = Math.round(30 * urgency);
+        const pts = Math.round(30 * weighted);
         if (pts > breakdown.tagRelevance) {
           breakdown.tagRelevance = pts;
         }
@@ -160,11 +185,14 @@ function scoreDrillAgainstInput(
     }
 
     if (drill.ai_context && normalizeStr(drill.ai_context).includes(normalizedArea)) {
-      breakdown.tagRelevance = Math.max(breakdown.tagRelevance, Math.round(20 * urgency));
+      breakdown.tagRelevance = Math.max(
+        breakdown.tagRelevance,
+        Math.round(20 * weighted),
+      );
     }
   }
 
-  // --- Position matching ---
+  // --- Position matching (strict: empty positions = no match) ---
   if (position && drill.positions && drill.positions.length > 0) {
     const normalizedPosition = normalizeStr(position);
     for (const p of drill.positions) {
@@ -193,7 +221,7 @@ function scoreDrillAgainstInput(
   if (userLevel != null && drill.progression_level != null) {
     breakdown.progressionFit = computeProgressionFit(drill.progression_level, userLevel);
     if (breakdown.progressionFit >= 20) {
-      matchReasons.push(`optimal level match`);
+      matchReasons.push('optimal level match');
     }
   }
 
@@ -206,6 +234,8 @@ function scoreDrillAgainstInput(
 
   return { breakdown, matchReasons };
 }
+
+/* ── Main recommendation function ──────────────────────────── */
 
 export function computeDrillRecommendations(
   input: RecommendationInput,
@@ -240,14 +270,21 @@ export function computeDrillRecommendations(
   const hasInput = (weaknesses && weaknesses.length > 0) || detectedIssues.length > 0;
 
   if (!hasInput) {
-    // Enhanced fallback: filter by position and progression level, then sort by name
+    // Fallback: filter by position (strict) and progression level
     let fallbackDrills = [...eligible];
+
     if (position) {
+      // Strict: only drills that explicitly list this position
       const posFiltered = fallbackDrills.filter(d =>
-        d.positions && d.positions.some(p => normalizeStr(p) === normalizeStr(position))
+        d.positions && d.positions.length > 0 &&
+        d.positions.some(p => normalizeStr(p) === normalizeStr(position))
       );
-      if (posFiltered.length > 0) fallbackDrills = posFiltered;
+      // If none match, THEN include drills with no positions as generic fallback
+      if (posFiltered.length > 0) {
+        fallbackDrills = posFiltered;
+      }
     }
+
     if (userLevel != null) {
       const levelFiltered = fallbackDrills.filter(d => {
         const dl = d.progression_level ?? 4;
@@ -264,16 +301,19 @@ export function computeDrillRecommendations(
         drill,
         score: 0,
         breakdown: { ...EMPTY_BREAKDOWN },
-      locked: !userHasPremium,
-      matchReasons: [] as string[],
+        locked: !userHasPremium,
+        matchReasons: [] as string[],
       }));
     return { recommended: fallback, fallbackUsed: true };
   }
 
+  // Rank weaknesses by severity
+  const ranked = rankWeaknesses(weaknesses);
+
   // First pass: score without variety
   const preScored = eligible.map((drill) => {
     const { breakdown, matchReasons } = scoreDrillAgainstInput(
-      drill, weaknesses, detectedIssues, position, usageMap, userLevel,
+      drill, ranked, detectedIssues, position, usageMap, userLevel,
     );
     return { drill, breakdown, matchReasons };
   });
@@ -294,7 +334,6 @@ export function computeDrillRecommendations(
     seenModules.add(item.drill.module);
 
     const finalBreakdown: ScoreBreakdown = { ...item.breakdown, variety: varietyBonus };
-    // Apply sport modifier
     const sportMod = item.drill.sport_modifier ?? 1.0;
     const rawScore = sumBreakdown(finalBreakdown);
     const finalScore = Math.round(rawScore * sportMod);
