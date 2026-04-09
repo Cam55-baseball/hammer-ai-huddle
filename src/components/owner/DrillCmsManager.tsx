@@ -201,7 +201,7 @@ export function DrillCmsManager() {
                         <TableHead className="hidden md:table-cell">Level</TableHead>
                         <TableHead className="hidden md:table-cell">Positions</TableHead>
                         <TableHead className="hidden lg:table-cell">Tags</TableHead>
-                        <TableHead>Tier</TableHead>
+                        <TableHead>Access</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="w-[120px]">Actions</TableHead>
                       </TableRow>
@@ -239,8 +239,8 @@ export function DrillCmsManager() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={drill.premium ? 'default' : 'secondary'} className="text-[10px]">
-                              {drill.premium ? 'Premium' : 'Free'}
+                            <Badge variant="default" className="text-[10px]">
+                              Subscription
                             </Badge>
                           </TableCell>
                           <TableCell>

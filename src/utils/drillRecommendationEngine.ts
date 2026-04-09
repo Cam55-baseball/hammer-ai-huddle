@@ -264,8 +264,8 @@ export function computeDrillRecommendations(
         drill,
         score: 0,
         breakdown: { ...EMPTY_BREAKDOWN },
-        locked: drill.premium && !userHasPremium,
-        matchReasons: [] as string[],
+      locked: !userHasPremium,
+      matchReasons: [] as string[],
       }));
     return { recommended: fallback, fallbackUsed: true };
   }
@@ -303,7 +303,7 @@ export function computeDrillRecommendations(
       drill: item.drill,
       score: finalScore,
       breakdown: finalBreakdown,
-      locked: item.drill.premium && !userHasPremium,
+      locked: !userHasPremium,
       matchReasons: item.matchReasons,
     });
   }

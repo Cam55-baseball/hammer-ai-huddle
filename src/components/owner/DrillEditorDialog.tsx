@@ -472,12 +472,12 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
             {/* Access Control */}
             <section className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground">Access & Publishing</h3>
-              <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/50">
                 <div>
-                  <Label className="text-sm font-medium">Premium Drill</Label>
-                  <p className="text-xs text-muted-foreground">Requires subscription to access</p>
+                  <Label className="text-sm font-medium">Subscription Gated</Label>
+                  <p className="text-xs text-muted-foreground">All drills require an active subscription</p>
                 </div>
-                <Switch checked={premium} onCheckedChange={setPremium} />
+                <Badge variant="default" className="text-xs">Always</Badge>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>

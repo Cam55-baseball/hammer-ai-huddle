@@ -143,7 +143,7 @@ describe('computeDrillRecommendations', () => {
     expect(result.fallbackUsed).toBe(true);
   });
 
-  it('8. subscription gating: free user sees premium drills as locked', () => {
+  it('8. subscription gating: ALL drills locked for free users', () => {
     const inputFree: RecommendationInput = {
       drills: baseDrills,
       weaknesses: [{ area: 'barrel_contact', score: 20 }],
@@ -155,15 +155,16 @@ describe('computeDrillRecommendations', () => {
     const free = computeDrillRecommendations(inputFree);
     const premium = computeDrillRecommendations(inputPremium);
 
-    const freePremiumDrill = free.recommended.find((r) => r.drill.id === '5');
-    expect(freePremiumDrill).toBeDefined();
-    expect(freePremiumDrill!.locked).toBe(true);
+    // Every drill is locked for free users
+    expect(free.recommended.every((r) => r.locked)).toBe(true);
 
-    const premPremiumDrill = premium.recommended.find((r) => r.drill.id === '5');
-    expect(premPremiumDrill).toBeDefined();
-    expect(premPremiumDrill!.locked).toBe(false);
+    // No drill is locked for premium users
+    expect(premium.recommended.every((r) => !r.locked)).toBe(true);
 
-    expect(freePremiumDrill!.score).toBe(premPremiumDrill!.score);
+    // Scores are identical regardless of subscription
+    const freeDrill = free.recommended.find((r) => r.drill.id === '5');
+    const premDrill = premium.recommended.find((r) => r.drill.id === '5');
+    expect(freeDrill!.score).toBe(premDrill!.score);
   });
 
   it('9. admin tag update simulation: changed tags produce different results', () => {
@@ -498,8 +499,7 @@ describe('computeDrillRecommendations', () => {
     expect(result.recommended.length).toBe(10);
     expect(result.fallbackUsed).toBe(false);
 
-    const lockedCount = result.recommended.filter((r) => r.locked).length;
-    const premiumInResults = result.recommended.filter((r) => r.drill.premium).length;
-    expect(lockedCount).toBe(premiumInResults);
+    // All drills locked for free users
+    expect(result.recommended.every((r) => r.locked)).toBe(true);
   });
 });
