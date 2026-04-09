@@ -1967,6 +1967,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         template={editingTemplate}
         presetActivityType={presetActivityType}
         onSave={async (data, scheduleForToday) => {
+          // Guard against overlapping updates from rapid double-clicks
+          if (isUpdatingRef.current) return;
+          isUpdatingRef.current = true;
+          try {
           let result;
           if (editingTemplate) {
             // Snapshot for rollback
@@ -1977,6 +1981,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             result = await updateTemplate(editingTemplate.id, data);
             if (result) {
               setEditingTemplate(null);
+              // Delayed background refresh to guarantee DB/UI consistency
+              setTimeout(() => refreshCustomActivities(), 400);
             } else if (previousTemplate) {
               // Instant rollback to previous state
               updateOptimisticActivity(editingTemplate.id, previousTemplate);

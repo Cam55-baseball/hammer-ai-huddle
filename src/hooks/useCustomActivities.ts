@@ -17,6 +17,9 @@ import { format } from 'date-fns';
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { calculateCustomActivityLoad } from '@/utils/customActivityLoadCalculation';
 
+// Unique per-tab ID to prevent same-tab broadcast echo
+const CUSTOM_ACTIVITIES_TAB_ID = crypto.randomUUID();
+
 export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -282,12 +285,15 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
       toast.success(t('customActivity.updated'));
       
-      // Broadcast to other tabs
+      // Broadcast to other tabs (include source to prevent same-tab echo)
       try {
         const bc = new BroadcastChannel('data-sync');
-        bc.postMessage({ type: 'custom-activity-updated', templateId: id });
+        bc.postMessage({ type: 'custom-activity-updated', templateId: id, source: CUSTOM_ACTIVITIES_TAB_ID });
         bc.close();
       } catch {}
+
+      // Delayed background refresh to guarantee DB/UI consistency
+      setTimeout(() => fetchTemplates(), 400);
       
       return true;
     } catch (error: any) {
