@@ -111,6 +111,7 @@ const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStea
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
+const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -198,6 +199,7 @@ const App = () => {
               <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
+              <Route path="/drill-library" element={<DrillLibraryPlayer />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
