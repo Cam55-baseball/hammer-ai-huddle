@@ -49,7 +49,7 @@ export interface RecommendationInput {
 }
 
 export interface ScoreBreakdown {
-  skillMatch: number;      // 0-60 (raised ceiling for rank multiplier)
+  skillMatch: number;      // 0-60
   tagRelevance: number;    // 0-45
   difficultyFit: number;   // 0-15
   variety: number;         // 0-15
@@ -58,6 +58,7 @@ export interface ScoreBreakdown {
   weightBonus: number;     // 0-10
   trendBonus: number;      // 0-5
   progressionFit: number;  // 0-20
+  penalty: number;         // -20 to 0
 }
 
 export interface ScoredDrill {
@@ -89,12 +90,13 @@ const EMPTY_BREAKDOWN: ScoreBreakdown = {
   weightBonus: 0,
   trendBonus: 0,
   progressionFit: 0,
+  penalty: 0,
 };
 
 function sumBreakdown(b: ScoreBreakdown): number {
   return b.skillMatch + b.tagRelevance + b.difficultyFit + b.variety +
     b.positionMatch + b.errorTypeMatch + b.weightBonus + b.trendBonus +
-    b.progressionFit;
+    b.progressionFit + b.penalty;
 }
 
 function computeProgressionFit(drillLevel: number, userLevel: number): number {
@@ -103,6 +105,19 @@ function computeProgressionFit(drillLevel: number, userLevel: number): number {
   if (diff === -1) return 12;
   if (diff === 2) return 8;
   return 0; // too easy or too hard
+}
+
+/* ── Sport-level module modifiers ──────────────────────────── */
+
+const SPORT_MODULE_MODIFIERS: Record<string, Record<string, number>> = {
+  baseball: { fielding: 1.1, throwing: 1.05, hitting: 1.0, pitching: 1.0, baserunning: 1.0 },
+  softball: { fielding: 1.15, hitting: 1.1, throwing: 1.0, pitching: 1.0, baserunning: 1.0 },
+};
+
+function getSportModuleModifier(sport: string, module: string): number {
+  const sportMods = SPORT_MODULE_MODIFIERS[sport];
+  if (!sportMods) return 1.0;
+  return sportMods[module] ?? 1.0;
 }
 
 /* ── Weakness ranking ──────────────────────────────────────── */
@@ -123,6 +138,38 @@ export function rankWeaknesses(weaknesses: WeaknessInput[]): RankedWeakness[] {
     ...w,
     rankMultiplier: i < RANK_MULTIPLIERS.length ? RANK_MULTIPLIERS[i] : 1.0,
   }));
+}
+
+/* ── Negative penalty computation ──────────────────────────── */
+
+function computePenalty(
+  drill: DrillInput,
+  position: string | undefined,
+  usageMap: Map<string, DrillUsageStats>,
+): number {
+  let penalty = 0;
+
+  const usage = usageMap.get(drill.id);
+
+  // Overused + low success: drill isn't working
+  if (usage && usage.useCount >= 10 && usage.avgSuccessRating < 2.5) {
+    penalty -= 15;
+  }
+  // Stale: mediocre returns
+  else if (usage && usage.useCount >= 8 && usage.avgSuccessRating >= 2.5 && usage.avgSuccessRating <= 3.5) {
+    penalty -= 8;
+  }
+
+  // Wrong-position penalty: drill has positions but NONE match player
+  if (position && drill.positions && drill.positions.length > 0) {
+    const normalizedPosition = normalizeStr(position);
+    const hasMatch = drill.positions.some(p => normalizeStr(p) === normalizedPosition);
+    if (!hasMatch) {
+      penalty -= 10;
+    }
+  }
+
+  return Math.max(-20, penalty);
 }
 
 /* ── Per-drill scoring ─────────────────────────────────────── */
@@ -232,6 +279,16 @@ function scoreDrillAgainstInput(
     matchReasons.push('high success rate');
   }
 
+  // --- Negative penalties ---
+  breakdown.penalty = computePenalty(drill, position, usageMap);
+  if (breakdown.penalty <= -15) {
+    matchReasons.push('penalized: overused with low success');
+  } else if (breakdown.penalty <= -10) {
+    matchReasons.push('penalized: position mismatch');
+  } else if (breakdown.penalty <= -8) {
+    matchReasons.push('penalized: stale drill');
+  }
+
   return { breakdown, matchReasons };
 }
 
@@ -325,7 +382,7 @@ export function computeDrillRecommendations(
     return scoreB - scoreA || a.drill.name.localeCompare(b.drill.name);
   });
 
-  // Second pass: apply variety bonus
+  // Second pass: apply variety bonus + sport module modifier
   const seenModules = new Set<string>();
   const scored: ScoredDrill[] = [];
 
@@ -334,9 +391,10 @@ export function computeDrillRecommendations(
     seenModules.add(item.drill.module);
 
     const finalBreakdown: ScoreBreakdown = { ...item.breakdown, variety: varietyBonus };
-    const sportMod = item.drill.sport_modifier ?? 1.0;
+    const drillSportMod = item.drill.sport_modifier ?? 1.0;
+    const moduleMod = getSportModuleModifier(sport, item.drill.module);
     const rawScore = sumBreakdown(finalBreakdown);
-    const finalScore = Math.round(rawScore * sportMod);
+    const finalScore = Math.max(0, Math.round(rawScore * drillSportMod * moduleMod));
 
     scored.push({
       drill: item.drill,
