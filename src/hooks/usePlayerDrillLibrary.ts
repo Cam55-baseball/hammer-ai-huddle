@@ -60,8 +60,10 @@ export function usePlayerDrillLibrary() {
       const sport = mpiRes.data?.sport || 'baseball';
       const position = mpiRes.data?.primary_position || null;
       const experienceLevel = profileRes.data?.experience_level || null;
+      // Ranked selection: sort by score desc, take top 10, no arbitrary threshold
       const detectedIssues = (weaknessRes.data || [])
-        .filter(w => w.score > 0.3)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
         .map(w => w.weakness_metric);
 
       setPlayerContext({ sport, position, experienceLevel, detectedIssues });
@@ -78,6 +80,11 @@ export function usePlayerDrillLibrary() {
         .eq('sport', sport)
         .gte('progression_level', range[0])
         .lte('progression_level', range[1]);
+
+      // Backend subscription filtering: don't return premium drills to free users
+      if (!userHasPremium) {
+        query = query.eq('premium', false);
+      }
 
       let { data: drillRows, error } = await query;
 
