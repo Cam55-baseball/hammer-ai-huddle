@@ -775,6 +775,17 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }, []);
 
+  // Optimistic update: immediately patch a template in the custom activities list
+  const updateOptimisticActivity = useCallback((templateId: string, updates: Partial<CustomActivityTemplate>) => {
+    setCustomActivities(prev =>
+      prev.map(a =>
+        a.template.id === templateId
+          ? { ...a, template: { ...a.template, ...updates } }
+          : a
+      )
+    );
+  }, []);
+
   // Lightweight refresh: only re-queries custom_activity_templates + custom_activity_logs
   const refreshCustomActivities = useCallback(async () => {
     if (!user) return;
@@ -1383,6 +1394,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     loading,
     refetch: fetchTaskStatus,
     addOptimisticActivity,
+    updateOptimisticActivity,
     refreshCustomActivities,
     toggleFolderItemCompletion,
     saveFolderCheckboxState,
