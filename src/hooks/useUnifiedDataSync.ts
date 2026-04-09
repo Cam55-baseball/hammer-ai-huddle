@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { TAB_ID } from '@/utils/tabId';
 
 /**
  * Cross-module query key mappings
