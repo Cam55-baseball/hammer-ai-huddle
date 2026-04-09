@@ -289,8 +289,6 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         bc.close();
       } catch {}
       
-      // Background refresh to ensure consistency
-      fetchTemplates();
       return true;
     } catch (error: any) {
       console.error('[useCustomActivities] Error updating template:', error);

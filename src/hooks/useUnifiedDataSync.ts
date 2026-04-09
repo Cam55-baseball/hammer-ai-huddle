@@ -290,6 +290,11 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
       if (event.data?.type === 'invalidate' && Array.isArray(event.data.key)) {
         queryClient.invalidateQueries({ queryKey: event.data.key });
       }
+      // Handle custom-activity-updated from other tabs
+      if (event.data?.type === 'custom-activity-updated') {
+        queryClient.invalidateQueries({ queryKey: ['customActivities'] });
+        queryClient.invalidateQueries({ queryKey: ['gamePlan'] });
+      }
     };
 
     return () => {
