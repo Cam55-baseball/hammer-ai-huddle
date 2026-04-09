@@ -275,8 +275,22 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         return false;
       }
 
+      // Optimistic local update: patch templates immediately
+      setTemplates(prev =>
+        prev.map(tmpl => tmpl.id === id ? { ...tmpl, ...data } as CustomActivityTemplate : tmpl)
+      );
+
       toast.success(t('customActivity.updated'));
-      await fetchTemplates();
+      
+      // Broadcast to other tabs
+      try {
+        const bc = new BroadcastChannel('data-sync');
+        bc.postMessage({ type: 'custom-activity-updated', templateId: id });
+        bc.close();
+      } catch {}
+      
+      // Background refresh to ensure consistency
+      fetchTemplates();
       return true;
     } catch (error: any) {
       console.error('[useCustomActivities] Error updating template:', error);
