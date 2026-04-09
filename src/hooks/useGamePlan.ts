@@ -8,6 +8,9 @@ import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from
 import { getTodayDate } from '@/utils/dateUtils';
 import { ActivityFolder, ActivityFolderItem, getCurrentCycleWeek } from '@/types/activityFolder';
 
+// Unique per-tab ID to filter out same-tab broadcast echoes
+const GAME_PLAN_TAB_ID = crypto.randomUUID();
+
 export interface FolderGamePlanTask {
   folderId: string;
   folderName: string;
@@ -867,12 +870,14 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     setCustomActivities(deduped);
   }, [user, selectedSport, folderTasks]);
 
-  // Listen for cross-tab custom-activity-updated broadcasts
+  // Listen for cross-tab custom-activity-updated broadcasts (skip same-tab events)
+  // NOTE: customActivities state here is the DISPLAY source for GamePlanCard (merged with logs).
+  // useCustomActivities.templates is the MANAGEMENT source for TemplatesGrid. Sync via broadcast.
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
     const bc = new BroadcastChannel('data-sync');
     bc.onmessage = (event) => {
-      if (event.data?.type === 'custom-activity-updated') {
+      if (event.data?.type === 'custom-activity-updated' && event.data?.source !== GAME_PLAN_TAB_ID) {
         refreshCustomActivities();
       }
     };

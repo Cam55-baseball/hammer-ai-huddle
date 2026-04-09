@@ -1,14 +1,16 @@
 import { useMemo } from 'react';
 import { generateInsights, SessionInsights } from '@/lib/sessionInsights';
 
-// Weighted scoring — core performance indexes carry more weight
-const METRIC_WEIGHTS: Record<string, number> = {
-  bqi: 1.5,
-  pei: 1.5,
-  fqi: 1.5,
-  competitive_execution: 1.4,
-  decision: 1.3,
+// Dynamic weights per session module — core metrics for each discipline carry more weight
+const MODULE_WEIGHTS: Record<string, Record<string, number>> = {
+  hitting: { bqi: 1.5, pei: 1.5, competitive_execution: 1.4, decision: 1.3 },
+  pitching: { fqi: 1.5, pei: 1.5, competitive_execution: 1.4, command: 1.3 },
+  defense: { fqi: 1.5, decision: 1.4, competitive_execution: 1.3 },
 };
+
+function getWeights(module: string): Record<string, number> {
+  return MODULE_WEIGHTS[module] ?? MODULE_WEIGHTS.hitting;
+}
 
 interface PerformanceScore {
   score: number;
@@ -40,14 +42,15 @@ interface PracticeSession {
   effective_grade?: number | null;
 }
 
-function computeWeightedScore(composites: Record<string, number>): PerformanceScore | null {
+function computeWeightedScore(composites: Record<string, number>, module: string): PerformanceScore | null {
   const entries = Object.entries(composites).filter(([, v]) => typeof v === 'number' && !isNaN(v));
   if (entries.length === 0) return null;
 
+  const weights = getWeights(module);
   let weightedSum = 0;
   let totalWeight = 0;
   for (const [key, value] of entries) {
-    const w = METRIC_WEIGHTS[key] ?? 1.0;
+    const w = weights[key] ?? 1.0;
     weightedSum += value * w;
     totalWeight += w;
   }
@@ -72,7 +75,7 @@ export function useSessionInsights(session: PracticeSession | null) {
     });
 
     const perfScore = Object.keys(composites).length > 0
-      ? computeWeightedScore(composites)
+      ? computeWeightedScore(composites, sessionModule)
       : null;
 
     return { insights, perfScore, drillBlocks, composites };
