@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { TAB_ID } from '@/utils/tabId';
 
 /**
  * Cross-module query key mappings
@@ -128,7 +129,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const reconnectAttemptRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
-  const tabIdRef = useRef(crypto.randomUUID());
+  const tabIdRef = useRef(TAB_ID);
 
   // ── PER-ROW DEDUP ──
   const shouldProcessEvent = useCallback((table: string, eventType: string, rowId: string): boolean => {

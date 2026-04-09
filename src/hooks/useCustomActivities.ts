@@ -17,8 +17,7 @@ import { format } from 'date-fns';
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { calculateCustomActivityLoad } from '@/utils/customActivityLoadCalculation';
 
-// Unique per-tab ID to prevent same-tab broadcast echo
-const CUSTOM_ACTIVITIES_TAB_ID = crypto.randomUUID();
+import { TAB_ID } from '@/utils/tabId';
 
 export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
@@ -288,12 +287,12 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       // Broadcast to other tabs (include source to prevent same-tab echo)
       try {
         const bc = new BroadcastChannel('data-sync');
-        bc.postMessage({ type: 'custom-activity-updated', templateId: id, source: CUSTOM_ACTIVITIES_TAB_ID });
+        bc.postMessage({ type: 'custom-activity-updated', templateId: id, source: TAB_ID });
         bc.close();
       } catch {}
 
-      // Delayed background refresh to guarantee DB/UI consistency
-      setTimeout(() => fetchTemplates(), 400);
+      // No delayed fetchTemplates here — GamePlanCard handles the single delayed refresh
+      // via refreshCustomActivities(). Local templates are already patched optimistically above.
       
       return true;
     } catch (error: any) {
