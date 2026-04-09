@@ -35,7 +35,8 @@ export function useDrillRecommendations(options: UseDrillRecommendationsOptions)
         .from('drills')
         .select('*')
         .eq('sport', sport)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('is_published', true);
 
       if (drillsError) throw drillsError;
       if (!drills) return [];

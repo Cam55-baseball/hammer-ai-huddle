@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { getProgressionRange, expandRange } from '@/utils/progressionMapping';
 
 export type SortOption = 'recommended' | 'level' | 'recent';
@@ -32,6 +33,9 @@ interface PlayerContext {
 
 export function usePlayerDrillLibrary() {
   const { user } = useAuth();
+  const { modules: subscribedModules } = useSubscription();
+  const userHasPremium = subscribedModules.length > 0;
+
   const [drills, setDrills] = useState<LibraryDrill[]>([]);
   const [loading, setLoading] = useState(true);
   const [playerContext, setPlayerContext] = useState<PlayerContext>({
@@ -131,16 +135,19 @@ export function usePlayerDrillLibrary() {
           ...d,
           positions,
           tags,
+          // Strip video_url for non-premium users
+          video_url: userHasPremium ? d.video_url : null,
           isRecommended: matchingTags.length > 0,
           matchReasons: matchingTags.map(t => `Addresses your ${t.replace(/_/g, ' ')} weakness`),
         };
       });
 
-      // Filter by position if player has one (keep all if none match)
+      // Filter by position (strict: exclude drills with no positions)
       if (position && !positionFilter) {
         const posFiltered = libraryDrills.filter(
-          d => d.positions.length === 0 || d.positions.includes(position)
+          d => d.positions.includes(position)
         );
+        // Fallback: if no drills match position, show all
         setDrills(posFiltered.length > 0 ? posFiltered : libraryDrills);
       } else {
         setDrills(libraryDrills);
@@ -150,7 +157,7 @@ export function usePlayerDrillLibrary() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, positionFilter]);
+  }, [user?.id, positionFilter, userHasPremium]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -159,7 +166,9 @@ export function usePlayerDrillLibrary() {
     let result = [...drills];
 
     if (positionFilter) {
-      result = result.filter(d => d.positions.length === 0 || d.positions.includes(positionFilter));
+      // Strict: only drills that explicitly list this position
+      const posFiltered = result.filter(d => d.positions.includes(positionFilter));
+      result = posFiltered.length > 0 ? posFiltered : result;
     }
 
     if (search.trim()) {
