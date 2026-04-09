@@ -128,7 +128,7 @@ export function useUnifiedDataSync(options: UseUnifiedDataSyncOptions = {}) {
   const reconnectAttemptRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
-  const tabIdRef = useRef(crypto.randomUUID());
+  const tabIdRef = useRef(TAB_ID);
 
   // ── PER-ROW DEDUP ──
   const shouldProcessEvent = useCallback((table: string, eventType: string, rowId: string): boolean => {

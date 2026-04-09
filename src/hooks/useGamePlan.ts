@@ -8,8 +8,7 @@ import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from
 import { getTodayDate } from '@/utils/dateUtils';
 import { ActivityFolder, ActivityFolderItem, getCurrentCycleWeek } from '@/types/activityFolder';
 
-// Unique per-tab ID to filter out same-tab broadcast echoes
-const GAME_PLAN_TAB_ID = crypto.randomUUID();
+import { TAB_ID } from '@/utils/tabId';
 
 export interface FolderGamePlanTask {
   folderId: string;
@@ -877,7 +876,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     if (typeof BroadcastChannel === 'undefined') return;
     const bc = new BroadcastChannel('data-sync');
     bc.onmessage = (event) => {
-      if (event.data?.type === 'custom-activity-updated' && event.data?.source !== GAME_PLAN_TAB_ID) {
+      if (event.data?.type === 'custom-activity-updated' && event.data?.source !== TAB_ID) {
         refreshCustomActivities();
       }
     };
