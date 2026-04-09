@@ -2025,6 +2025,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             }
           }
           return result;
+          } finally {
+            isUpdatingRef.current = false;
+          }
         }}
         onDelete={async (id) => {
           const success = await deleteActivityTemplate(id || editingTemplate?.id || '');
