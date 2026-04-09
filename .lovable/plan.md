@@ -1,100 +1,72 @@
 
 
-# Player Defensive Drill Library — Full Implementation
+# Upgrade Drill Recommendation Engine — Weighted Scoring, Backend Filtering, Position Fix, Dynamic Weakness Ranking + Test Proof
 
-## Overview
+## Issues to Fix
 
-Add a new player-facing "Defensive Drill Library" page at `/drill-library` with filtered, intelligent drill browsing. Players see drills matched to their sport, position, and progression level, with AI-driven "Recommended For You" badges.
+1. **No weighted scoring**: Weaknesses are treated equally regardless of severity. A score-20 weakness should dominate over a score-60 weakness.
+2. **No backend subscription filtering**: `useDrillRecommendations` fetches ALL drills client-side; `usePlayerDrillLibrary` also fetches all published drills without checking subscription status.
+3. **Null-position leakage**: Drills with `positions: []` (no positions assigned) pass through position filters — a drill meant for no specific position shouldn't match position-filtered queries.
+4. **Static weakness ranking**: All weaknesses contribute equally to scoring. Weaknesses should be ranked by severity (lowest score = highest priority) with diminishing weight.
 
-## 1. Sidebar Navigation Update
+## Implementation
 
-**File: `src/components/AppSidebar.tsx`**
+### 1. Weighted Weakness Ranking in Engine
 
-After the Video Library entry (line ~300), add a "Drill Library" item visible to any subscribed user (same condition as Video Library):
+**File: `src/utils/drillRecommendationEngine.ts`**
 
-```
-{ key: 'drill-library', title: 'Drill Library', url: '/drill-library', icon: Dumbbell }
-```
+Add a `rankWeaknesses` function that sorts weaknesses by score ascending (worst first) and applies a rank multiplier:
+- Rank 1 (worst): 1.5x urgency
+- Rank 2: 1.3x
+- Rank 3: 1.1x
+- Rank 4+: 1.0x
 
-## 2. New Hook: `usePlayerDrillLibrary`
+Update `scoreDrillAgainstInput` to accept ranked weaknesses with their multipliers. The `skillMatch` and `tagRelevance` calculations multiply the urgency by the rank weight, increasing the score ceiling for the most critical weaknesses.
 
-**File: `src/hooks/usePlayerDrillLibrary.ts`** (new)
+### 2. Null-Position Leakage Fix
 
-Fetches drills with intelligent filtering:
-- Reads player's `sport`, `primary_position` from `athlete_mpi_settings`, and `experience_level` from `profiles`
-- Maps experience_level to progression range (Beginner→1-3, Intermediate→3-5, Advanced/high_school→4-6, Professional→5-7)
-- Queries `drills` table with `is_published = true`, `is_active = true`, `sport` match, `progression_level` within range
-- Joins `drill_positions` to filter by player position (with fallback: if no drills match position, expand to all positions)
-- Joins `drill_tag_map` + `drill_tags` for tag data
-- Fetches player's `weakness_scores` from latest HIE run to compute "recommended for you" flags (tag intersection with detected issues)
-- Returns: `drills`, `loading`, `filters` (sort, position override, search), `playerContext`
-- Sort options: Recommended (default — scored drills first), Level, Recently Added
+**File: `src/utils/drillRecommendationEngine.ts`**
 
-## 3. New Page: `DrillLibraryPlayer`
+In `scoreDrillAgainstInput`, the position matching block (line 168) currently gives 0 points to drills with empty positions — which is fine. But in the **fallback path** (line 246), drills with `positions: []` pass through the position filter. Fix: when position is provided, exclude drills with empty positions from position-filtered results (they should only appear if no position-specific drills exist).
 
-**File: `src/pages/DrillLibraryPlayer.tsx`** (new)
+**File: `src/hooks/usePlayerDrillLibrary.ts`**
 
-Layout:
-- `DashboardLayout` wrapper
-- Top bar: Search input, sort dropdown (Recommended / Level / Recently Added), position filter chips
-- Grid of drill cards (responsive 1-2-3 columns)
-- Subscription gate: if no active subscription, show blurred overlay with upgrade CTA
+Line 141: `d.positions.length === 0 || d.positions.includes(position)` — this leaks null-position drills. Change to strict: `d.positions.includes(position)`. Keep the existing fallback (if no drills match, show all).
 
-**Drill Card** shows:
-- Video thumbnail (first frame or placeholder with `Play` icon)
-- Title
-- Position badges (SS, OF, etc.)
-- Progression level badge (mapped: 1-2→Youth, 3→Middle School, 4→High School, 5→College, 6-7→Pro)
-- Short "What this helps fix" (truncated `ai_context`, max 60 chars)
-- "Recommended For You" badge if `drill.tags ∩ player.detectedIssues > 0`
+Line 162: Same fix in the `filteredDrills` memo.
 
-## 4. Drill Detail Dialog (reuse + extend)
+### 3. Backend Subscription Filtering
 
-**File: `src/components/practice/DrillDetailDialog.tsx`** (minor update)
+**File: `src/hooks/useDrillRecommendations.ts`**
 
-Already shows video, description, AI context, tags, positions, difficulty, save-to-vault. Add:
-- "Recommended For You" section if the drill matches player weaknesses (pass `isRecommended` + `matchReasons` as optional props)
-- No changes to lock logic (already gates on `!userHasPremium`)
+Add `is_published = true` filter to the drills query (line 36) — currently only checks `is_active`, missing `is_published`. This ensures unpublished drills never reach the client.
 
-## 5. Route Registration
+**File: `src/hooks/usePlayerDrillLibrary.ts`**
 
-**File: `src/App.tsx`**
+Already filters by `is_published = true` ✅. But strip `video_url` from response for non-subscribers:
+- After building `libraryDrills`, if user doesn't have premium, set `video_url: null` on all drills.
+- Import and check subscription status via `useSubscription`.
 
-Add lazy import and route:
-```
-const DrillLibraryPlayer = lazy(() => import('./pages/DrillLibraryPlayer'));
-<Route path="/drill-library" element={<DrillLibraryPlayer />} />
-```
+### 4. Test File with 3 Scenarios
 
-## 6. Progression Level Mapping Utility
+**File: `src/utils/__tests__/drillRecommendationEngine.test.ts`** (new)
 
-**File: `src/utils/progressionMapping.ts`** (new)
+Three deterministic test scenarios proving scoring outputs:
 
-```
-experienceLevel → progression range
-Beginner → [1, 3]
-Intermediate → [3, 5]
-high_school / Advanced → [4, 6]
-Professional / professional → [5, 7]
-default → [2, 5]
-```
+**Scenario A — Severe Weakness Prioritization**: Player has two weaknesses (score 15 and score 75). Verify drill matching the severe weakness scores higher than drill matching the mild weakness.
 
-Also maps progression numbers to display labels (Youth, Middle School, High School, College, Pro/Elite).
+**Scenario B — Position Filtering + Null Position Exclusion**: Player is SS. Three drills: one SS-tagged, one OF-tagged, one with no positions. Verify SS drill ranks first, no-position drill does NOT get position points, and OF drill scores 0 for position.
 
-## Permissions
+**Scenario C — Progression Level + Detected Issue Combo**: Player at level 4 with detected issue "slow_hands". Drill A is level 4 with "slow_hands" tag. Drill B is level 7 with "slow_hands" tag. Verify Drill A scores higher due to progression fit despite same tag match.
 
-- Players: view + filter + search (read-only). No add/edit/delete.
-- Video content gated behind subscription (existing `locked = !userHasPremium` logic).
-- Owner/Coach: same view works for them too; they already have CMS/assignment elsewhere.
+Each test asserts exact breakdown values and final score ordering.
 
 ## Files Summary
 
 | File | Action |
 |------|--------|
-| `src/utils/progressionMapping.ts` | New — level mapping utility |
-| `src/hooks/usePlayerDrillLibrary.ts` | New — filtered drill fetch with recommendations |
-| `src/pages/DrillLibraryPlayer.tsx` | New — player drill library page |
-| `src/components/AppSidebar.tsx` | Add Drill Library nav item |
-| `src/App.tsx` | Add route `/drill-library` |
-| `src/components/practice/DrillDetailDialog.tsx` | Minor — accept optional recommendation context |
+| `src/utils/drillRecommendationEngine.ts` | Add ranked weakness weighting, fix null-position in fallback |
+| `src/hooks/usePlayerDrillLibrary.ts` | Strict position filtering, strip video_url for non-subscribers |
+| `src/hooks/useDrillRecommendations.ts` | Add `is_published` filter to query |
+| `src/utils/__tests__/drillRecommendationEngine.test.ts` | New — 3 test scenarios proving scoring |
 
