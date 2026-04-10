@@ -69,7 +69,16 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: `You are an elite baseball/softball defensive coaching expert. Generate unique, practical defensive drills. Each drill must have a clear purpose, specific positions it helps, and a progression level from 1-7 (1=Tee Ball, 2=Youth, 3=Middle School, 4=High School, 5=College, 6=Pro, 7=Elite). Drills must be unique and not duplicates of: ${Array.from(existingNames).slice(0, 50).join(", ")}`,
+              content: `You are an elite baseball/softball defensive coaching expert. Generate unique, practical defensive drills with FIELD-READY instructions. Each drill must have a clear purpose, specific positions it helps, and a progression level from 1-7 (1=Tee Ball, 2=Youth, 3=Middle School, 4=High School, 5=College, 6=Pro, 7=Elite). Drills must be unique and not duplicates of: ${Array.from(existingNames).slice(0, 50).join(", ")}
+
+INSTRUCTION REQUIREMENTS:
+- Setup MUST include: exact distances (feet/yards), required equipment, starting body position, recommended reps
+- Execution MUST have 5+ steps describing EXACT body mechanics, timing, and movement directions
+- Coaching cues MUST be short (3-6 words), usable in real-time
+- Mistakes MUST describe specific bad habits with body positioning details
+- Progression MUST increase difficulty via speed, reaction, movement, constraint, or pressure
+- BANNED phrases: "work on", "focus on", "improve", "practice", "try to"
+- USE action verbs: "drive", "explode", "snap", "drop", "rotate", "extend"`,
             },
             {
               role: "user",
@@ -110,10 +119,22 @@ serve(async (req) => {
                           ai_context: { type: "string" },
                           module: { type: "string" },
                           skill_target: { type: "string" },
+                          instructions: {
+                            type: "object",
+                            properties: {
+                              purpose: { type: "string" },
+                              setup: { type: "string" },
+                              execution: { type: "array", items: { type: "string" } },
+                              coaching_cues: { type: "array", items: { type: "string" } },
+                              mistakes: { type: "array", items: { type: "string" } },
+                              progression: { type: "array", items: { type: "string" } },
+                            },
+                            required: ["purpose", "setup", "execution", "coaching_cues", "mistakes", "progression"],
+                          },
                         },
                         required: [
                           "title", "description", "sport", "positions",
-                          "progression_level", "tags", "ai_context", "module", "skill_target",
+                          "progression_level", "tags", "ai_context", "module", "skill_target", "instructions",
                         ],
                       },
                     },
@@ -173,6 +194,7 @@ serve(async (req) => {
             progression_level: Math.min(7, Math.max(1, drill.progression_level)),
             skill_target: drill.skill_target || null,
             ai_context: drill.ai_context || null,
+            instructions: drill.instructions || null,
             is_active: true,
             is_published: true,
             premium: false,

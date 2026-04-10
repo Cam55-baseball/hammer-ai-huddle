@@ -34,15 +34,8 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
       ? (drill as any).instructions
       : null;
 
-  const instructions: DrillInstructions | null = rawInstructions
-    ?? (drill.description ? {
-      purpose: drill.description,
-      setup: 'Standard drill setup',
-      execution: [drill.description],
-      coaching_cues: [],
-      mistakes: [],
-      progression: []
-    } : null);
+  // Only use real structured instructions — no fake fallbacks
+  const instructions: DrillInstructions | null = rawInstructions;
 
   const handleSaveToVault = async () => {
     if (!user?.id) return;
