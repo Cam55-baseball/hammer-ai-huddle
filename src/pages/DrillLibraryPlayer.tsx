@@ -15,30 +15,34 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
 
 function DrillCard({ drill, onClick }: { drill: LibraryDrill; onClick: () => void }) {
+  const hasVideo = drill.video_url && drill.video_url.trim() !== '';
+
   return (
     <button
       onClick={onClick}
       className="group relative flex flex-col rounded-xl border border-border bg-card text-left transition-all hover:shadow-lg hover:border-primary/30 focus-visible:ring-2 focus-visible:ring-ring overflow-hidden"
     >
-      {/* Thumbnail */}
-      <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
-        {drill.video_url && drill.video_url.trim() !== '' ? (
-          <video src={drill.video_url} preload="metadata" className="w-full h-full object-cover" muted />
-        ) : (
-          <Play className="h-8 w-8 text-muted-foreground" />
-        )}
-        {drill.isRecommended && (
-          <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] gap-1">
-            <Star className="h-3 w-3" /> Recommended
-          </Badge>
-        )}
-        <Badge variant="outline" className="absolute top-2 right-2 bg-background/80 text-[10px]">
-          {getProgressionLabel(drill.progression_level)}
-        </Badge>
-      </div>
+      {/* Thumbnail — only if video exists */}
+      {hasVideo && (
+        <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
+          <video src={drill.video_url!} preload="metadata" className="w-full h-full object-cover" muted />
+        </div>
+      )}
 
       {/* Body */}
       <div className="flex-1 p-3 space-y-2">
+        {/* Badges row */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {drill.isRecommended && (
+            <Badge className="bg-primary text-primary-foreground text-[10px] gap-1">
+              <Star className="h-3 w-3" /> Recommended
+            </Badge>
+          )}
+          <Badge variant="outline" className="text-[10px]">
+            {getProgressionLabel(drill.progression_level)}
+          </Badge>
+        </div>
+
         <h3 className="font-semibold text-sm text-foreground line-clamp-1">{drill.name}</h3>
 
         {drill.ai_context && (

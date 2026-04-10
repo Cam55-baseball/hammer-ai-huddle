@@ -29,10 +29,20 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
   const { drill, locked, matchReasons } = scoredDrill;
 
   const hasVideo = drill.video_url && drill.video_url.trim() !== '';
-  const instructions: DrillInstructions | null =
+  const rawInstructions: DrillInstructions | null =
     (drill as any).instructions && typeof (drill as any).instructions === 'object' && !Array.isArray((drill as any).instructions)
       ? (drill as any).instructions
       : null;
+
+  const instructions: DrillInstructions | null = rawInstructions
+    ?? (drill.description ? {
+      purpose: drill.description,
+      setup: 'Standard drill setup',
+      execution: [drill.description],
+      coaching_cues: [],
+      mistakes: [],
+      progression: []
+    } : null);
 
   const handleSaveToVault = async () => {
     if (!user?.id) return;
