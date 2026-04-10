@@ -22,7 +22,7 @@ function DrillCard({ drill, onClick }: { drill: LibraryDrill; onClick: () => voi
     >
       {/* Thumbnail */}
       <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
-        {drill.video_url ? (
+        {drill.video_url && drill.video_url.trim() !== '' ? (
           <video src={drill.video_url} preload="metadata" className="w-full h-full object-cover" muted />
         ) : (
           <Play className="h-8 w-8 text-muted-foreground" />

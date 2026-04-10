@@ -18,6 +18,7 @@ export interface LibraryDrill {
   difficulty_levels: string[] | null;
   premium: boolean;
   created_at: string | null;
+  instructions: Record<string, any> | null;
   positions: string[];
   tags: string[];
   isRecommended: boolean;
@@ -74,7 +75,7 @@ export function usePlayerDrillLibrary() {
       // 3. Fetch drills
       let query = supabase
         .from('drills')
-        .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at')
+        .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at, instructions')
         .eq('is_published', true)
         .eq('is_active', true)
         .eq('sport', sport)
@@ -93,7 +94,7 @@ export function usePlayerDrillLibrary() {
         const expanded = expandRange(range);
         const fallback = await supabase
           .from('drills')
-          .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at')
+          .select('id, name, description, ai_context, video_url, module, sport, progression_level, difficulty_levels, premium, created_at, instructions')
           .eq('is_published', true)
           .eq('is_active', true)
           .eq('sport', sport)
