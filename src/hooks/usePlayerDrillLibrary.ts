@@ -141,6 +141,7 @@ export function usePlayerDrillLibrary() {
         const matchingTags = tags.filter(t => issueSet.has(t.toLowerCase()));
         return {
           ...d,
+          instructions: (d.instructions && typeof d.instructions === 'object' && !Array.isArray(d.instructions)) ? d.instructions as Record<string, any> : null,
           positions,
           tags,
           // Strip video_url for non-premium users
