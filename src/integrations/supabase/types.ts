@@ -1350,6 +1350,7 @@ export type Database = {
           description: string | null
           difficulty_levels: string[] | null
           id: string
+          instructions: Json | null
           is_active: boolean
           is_published: boolean
           module: string
@@ -1372,6 +1373,7 @@ export type Database = {
           description?: string | null
           difficulty_levels?: string[] | null
           id?: string
+          instructions?: Json | null
           is_active?: boolean
           is_published?: boolean
           module: string
@@ -1394,6 +1396,7 @@ export type Database = {
           description?: string | null
           difficulty_levels?: string[] | null
           id?: string
+          instructions?: Json | null
           is_active?: boolean
           is_published?: boolean
           module?: string
