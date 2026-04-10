@@ -20,6 +20,7 @@ export interface DrillInput {
   description?: string | null;
   is_published?: boolean;
   subscription_tier_required?: string;
+  instructions?: Record<string, any> | null;
   progression_level?: number;   // 1-7
   sport_modifier?: number;      // default 1.0
 }
