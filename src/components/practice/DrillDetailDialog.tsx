@@ -1,12 +1,20 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Lock, Play, ExternalLink } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Star, Lock, Play, Target, ListOrdered, MessageCircle, AlertTriangle, TrendingUp, Wrench } from 'lucide-react';
 import type { ScoredDrill } from '@/utils/drillRecommendationEngine';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+
+interface DrillInstructions {
+  purpose?: string;
+  setup?: string;
+  execution?: string[];
+  coaching_cues?: string[];
+  mistakes?: string[];
+  progression?: string[];
+}
 
 interface DrillDetailDialogProps {
   open: boolean;
@@ -18,7 +26,13 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
   const { user } = useAuth();
 
   if (!scoredDrill) return null;
-  const { drill, locked, matchReasons, breakdown } = scoredDrill;
+  const { drill, locked, matchReasons } = scoredDrill;
+
+  const hasVideo = drill.video_url && drill.video_url.trim() !== '';
+  const instructions: DrillInstructions | null =
+    (drill as any).instructions && typeof (drill as any).instructions === 'object' && !Array.isArray((drill as any).instructions)
+      ? (drill as any).instructions
+      : null;
 
   const handleSaveToVault = async () => {
     if (!user?.id) return;
@@ -64,27 +78,106 @@ export function DrillDetailDialog({ open, onOpenChange, scoredDrill }: DrillDeta
                 </Button>
               </div>
             </div>
-          ) : drill.video_url ? (
+          ) : hasVideo ? (
             <div className="aspect-video rounded-lg overflow-hidden bg-black">
               <video
-                src={drill.video_url}
+                src={drill.video_url!}
                 controls
                 className="w-full h-full object-contain"
                 onPlay={handleTrackUsage}
               />
             </div>
-          ) : (
-            <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-              <Play className="h-8 w-8 text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">No video available</span>
-            </div>
-          )}
+          ) : null}
 
           {/* Description */}
           {drill.description && (
             <div className="space-y-1">
               <h4 className="text-sm font-semibold text-foreground">Description</h4>
               <p className="text-sm text-muted-foreground">{drill.description}</p>
+            </div>
+          )}
+
+          {/* Structured Instructions */}
+          {instructions && (
+            <div className="space-y-3 border-t border-border pt-3">
+              {instructions.purpose && (
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                    <Target className="h-4 w-4" /> Purpose
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{instructions.purpose}</p>
+                </div>
+              )}
+
+              {instructions.setup && (
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                    <Wrench className="h-4 w-4" /> Setup
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{instructions.setup}</p>
+                </div>
+              )}
+
+              {instructions.execution && instructions.execution.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                    <ListOrdered className="h-4 w-4" /> Execution
+                  </h4>
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                    {instructions.execution.map((step, i) => (
+                      <li key={i} className="leading-relaxed">{step}</li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {instructions.coaching_cues && instructions.coaching_cues.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" /> Coaching Cues
+                  </h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    {instructions.coaching_cues.map((cue, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-primary mt-1.5 shrink-0">•</span>
+                        <span className="italic">"{cue}"</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {instructions.mistakes && instructions.mistakes.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" /> Common Mistakes
+                  </h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    {instructions.mistakes.map((mistake, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-destructive mt-1.5 shrink-0">✕</span>
+                        {mistake}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {instructions.progression && instructions.progression.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> Progression
+                  </h4>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    {instructions.progression.map((prog, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-primary mt-1.5 shrink-0">→</span>
+                        {prog}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
