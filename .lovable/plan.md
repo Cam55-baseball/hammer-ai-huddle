@@ -1,79 +1,57 @@
 
 
-# Fix Blank Video Previews + Add Structured Drill Instructions
+# Fix Drill Library — Video, Data, Instructions
 
-Two changes: (1) bulletproof video rendering to eliminate blank boxes, (2) add a structured `instructions` JSONB column to the drills table and render it in the detail dialog.
+## 1. DrillCard: Remove blank video container entirely
 
-## 1. Remove Blank Video Previews
+**File: `src/pages/DrillLibraryPlayer.tsx`** (lines 23-38)
 
-**Files: `DrillLibraryPlayer.tsx` (DrillCard) + `DrillDetailDialog.tsx`**
+The current DrillCard always renders an `aspect-video` container with either a `<video>` or a `<Play>` placeholder icon. This must be removed so that when there's no video, there is ZERO visual space.
 
-Add a helper check: `const hasVideo = drill.video_url && drill.video_url.trim() !== '';`
+Replace the entire thumbnail section with a conditional: only render the video container when `hasVideo` is true. Move the Recommended badge and progression badge into the card body area so they still display without a video container.
 
-- **DrillCard** (line 24-29): Only render `<video>` thumbnail when `hasVideo` is true. Otherwise show the Play icon placeholder. No blank box.
-- **DrillDetailDialog** (line 67): Same guard — use `hasVideo` instead of `drill.video_url`. The "No video available" fallback already exists but currently doesn't catch empty strings.
+## 2. Clean empty `video_url` strings in database
 
-## 2. Add `instructions` JSONB Column to Drills Table
-
-**Database migration:**
-
+**Data update** (using insert/update tool):
 ```sql
-ALTER TABLE public.drills
-ADD COLUMN instructions jsonb DEFAULT NULL;
-
-COMMENT ON COLUMN public.drills.instructions IS
-'Structured drill instructions: {purpose, setup, execution[], coaching_cues[], mistakes[], progression[]}';
+UPDATE drills SET video_url = NULL WHERE video_url IS NOT NULL AND TRIM(video_url) = '';
 ```
 
-This is nullable so all existing drills continue working. Instructions get populated over time via the CMS or AI generation pipeline.
+## 3. DrillDetailDialog: Already fixed
 
-## 3. Render Structured Instructions in DrillDetailDialog
+The detail dialog (line 81-90) already has the correct pattern: `hasVideo ? <video> : null`. No changes needed there.
 
-**File: `DrillDetailDialog.tsx`**
+## 4. Instructions data flow: Already wired
 
-Add a TypeScript interface:
+- `usePlayerDrillLibrary.ts` line 78 and 97 already include `instructions` in the select
+- Line 144 already parses and passes it through
+- `DrillLibraryPlayer.tsx` line 171 already passes `instructions` to the dialog
+- `DrillDetailDialog.tsx` lines 32-35 already parse and lines 101-182 render it
+
+## 5. Add fallback instructions when `instructions` is null
+
+**File: `src/components/practice/DrillDetailDialog.tsx`** (after line 35)
+
+Add fallback generation from `drill.description`:
 ```typescript
-interface DrillInstructions {
-  purpose?: string;
-  setup?: string;
-  execution?: string[];
-  coaching_cues?: string[];
-  mistakes?: string[];
-  progression?: string[];
-}
+const effectiveInstructions: DrillInstructions | null = instructions 
+  ?? (drill.description ? {
+    purpose: drill.description,
+    setup: 'Standard drill setup',
+    execution: [drill.description],
+    coaching_cues: [],
+    mistakes: [],
+    progression: []
+  } : null);
 ```
 
-After the description section, render each populated field:
-- **Purpose** — paragraph
-- **Setup** — paragraph
-- **Execution** — ordered list
-- **Coaching Cues** — unordered list with quote styling
-- **Common Mistakes** — unordered list with warning styling
-- **Progression** — unordered list
-
-Only render sections that have content. Parse `drill.instructions` as `DrillInstructions` (it comes from the DB as `Json`).
-
-## 4. Update Drill Type + Query
-
-**File: `usePlayerDrillLibrary.ts`**
-
-- Add `instructions: Record<string, any> | null` to `LibraryDrill` interface
-- Add `instructions` to the select query
-
-**File: `DrillLibraryPlayer.tsx`**
-
-- Pass `instructions` through to the detail dialog via the `scoredDrill` adapter
-
-**File: `drillRecommendationEngine.ts`**
-
-- Add `instructions` to the `Drill` type if present in the scored drill path
+Then use `effectiveInstructions` instead of `instructions` in the render block (line 101).
 
 ## Files Summary
 
-| File | Action |
+| File | Change |
 |------|--------|
-| DB migration | Add `instructions jsonb` column to `drills` |
-| `src/components/practice/DrillDetailDialog.tsx` | Bulletproof video check + render structured instructions |
-| `src/pages/DrillLibraryPlayer.tsx` | Bulletproof video in DrillCard + pass instructions |
-| `src/hooks/usePlayerDrillLibrary.ts` | Add instructions to type + query |
+| `src/pages/DrillLibraryPlayer.tsx` | Remove video container + placeholder when no video; conditionally render thumbnail only when `hasVideo` |
+| `src/components/practice/DrillDetailDialog.tsx` | Add fallback instructions from description |
+| DB data update | Clean empty `video_url` strings to NULL |
 
