@@ -168,6 +168,7 @@ export default function DrillLibraryPlayer() {
               difficulty_levels: selectedDrill.difficulty_levels || [],
               skill_target: null,
               is_active: true,
+              instructions: selectedDrill.instructions,
             },
             score: 0,
             locked: !userHasPremium,
