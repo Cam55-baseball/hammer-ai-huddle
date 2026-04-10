@@ -1,57 +1,77 @@
 
 
-# Fix Drill Library — Video, Data, Instructions
+# Fix Drill Instruction System — Full Population + Quality Enforcement
 
-## 1. DrillCard: Remove blank video container entirely
+## Problem
+All 88 active drills have `instructions = null`. The current fallback generates useless content like "Standard drill setup". No drill is field-ready.
 
-**File: `src/pages/DrillLibraryPlayer.tsx`** (lines 23-38)
+## Plan
 
-The current DrillCard always renders an `aspect-video` container with either a `<video>` or a `<Play>` placeholder icon. This must be removed so that when there's no video, there is ZERO visual space.
+### 1. Create `populate-drill-instructions` Edge Function (NEW)
+**File: `supabase/functions/populate-drill-instructions/index.ts`**
 
-Replace the entire thumbnail section with a conditional: only render the video container when `hasVideo` is true. Move the Recommended badge and progression badge into the card body area so they still display without a video container.
+A batch endpoint that:
+- Fetches drills where `instructions IS NULL` (or all drills if `force=true`)
+- Processes them in batches of 5 via the AI gateway
+- For each drill, sends name + description + skill_target + module + sport to AI with a strict schema requiring:
+  - `purpose`: WHY this drill matters in a game context
+  - `setup`: distance, equipment, starting position, reps
+  - `execution`: minimum 5 numbered steps with exact body mechanics
+  - `coaching_cues`: 3+ short real-time cues
+  - `mistakes`: 3+ specific bad habits
+  - `progression`: 3+ ways to increase difficulty
+- Validates output (rejects if execution < 4 steps or setup lacks distance/equipment)
+- Writes validated instructions directly to the `drills.instructions` JSONB column
+- Returns count of updated drills
+- Protected by `Owner_Key` header check so only you can trigger it
 
-## 2. Clean empty `video_url` strings in database
+### 2. Update `generate-drills` Edge Function
+**File: `supabase/functions/generate-drills/index.ts`**
 
-**Data update** (using insert/update tool):
-```sql
-UPDATE drills SET video_url = NULL WHERE video_url IS NOT NULL AND TRIM(video_url) = '';
+Add `instructions` to the tool schema so all NEW drills are generated with full instructions from the start:
+```
+instructions: {
+  type: "object",
+  properties: {
+    purpose: { type: "string" },
+    setup: { type: "string" },
+    execution: { type: "array", items: { type: "string" }, minItems: 4 },
+    coaching_cues: { type: "array", items: { type: "string" }, minItems: 3 },
+    mistakes: { type: "array", items: { type: "string" }, minItems: 3 },
+    progression: { type: "array", items: { type: "string" }, minItems: 3 }
+  },
+  required: ["purpose", "setup", "execution", "coaching_cues", "mistakes", "progression"]
+}
 ```
 
-## 3. DrillDetailDialog: Already fixed
+Update the system prompt to enforce actionable content (no vague phrases). Include `instructions` in the insert payload for both auto and manual modes.
 
-The detail dialog (line 81-90) already has the correct pattern: `hasVideo ? <video> : null`. No changes needed there.
+### 3. Fix `DrillDetailDialog` Fallback
+**File: `src/components/practice/DrillDetailDialog.tsx`**
 
-## 4. Instructions data flow: Already wired
+Replace the current weak fallback (lines 37-45) with a smarter one:
+- If `instructions` exists and has real content → use it
+- If `instructions` is null → show ONLY the description paragraph (no fake "Standard drill setup")
+- Remove the fallback that generates fake instruction objects from description text
 
-- `usePlayerDrillLibrary.ts` line 78 and 97 already include `instructions` in the select
-- Line 144 already parses and passes it through
-- `DrillLibraryPlayer.tsx` line 171 already passes `instructions` to the dialog
-- `DrillDetailDialog.tsx` lines 32-35 already parse and lines 101-182 render it
+This ensures no misleading content is shown. Once the population script runs, all drills will have real instructions.
 
-## 5. Add fallback instructions when `instructions` is null
-
-**File: `src/components/practice/DrillDetailDialog.tsx`** (after line 35)
-
-Add fallback generation from `drill.description`:
-```typescript
-const effectiveInstructions: DrillInstructions | null = instructions 
-  ?? (drill.description ? {
-    purpose: drill.description,
-    setup: 'Standard drill setup',
-    execution: [drill.description],
-    coaching_cues: [],
-    mistakes: [],
-    progression: []
-  } : null);
-```
-
-Then use `effectiveInstructions` instead of `instructions` in the render block (line 101).
+### 4. Run Population Script
+After the edge function deploys, invoke it to populate all 88 drills with AI-generated, field-ready instructions. This will be done via a `curl` call to the deployed function with the Owner_Key.
 
 ## Files Summary
 
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/pages/DrillLibraryPlayer.tsx` | Remove video container + placeholder when no video; conditionally render thumbnail only when `hasVideo` |
-| `src/components/practice/DrillDetailDialog.tsx` | Add fallback instructions from description |
-| DB data update | Clean empty `video_url` strings to NULL |
+| `supabase/functions/populate-drill-instructions/index.ts` | NEW — batch AI instruction generator |
+| `supabase/functions/generate-drills/index.ts` | Add `instructions` to schema + insert |
+| `src/components/practice/DrillDetailDialog.tsx` | Remove weak fallback, show description only when no instructions |
+
+## Technical Details
+
+- AI model: `google/gemini-2.5-flash` (good balance of quality and speed for 88 drills)
+- Batch size: 5 drills per AI call to stay within token limits
+- Validation: reject any instruction where `execution.length < 4` or setup doesn't mention distance/equipment
+- The system prompt will explicitly ban vague phrases ("work on", "focus on", "improve") and require exact distances, equipment, body positions
+- Owner_Key authentication prevents unauthorized access
 
