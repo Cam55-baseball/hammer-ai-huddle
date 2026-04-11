@@ -194,3 +194,6 @@ verify_jwt = false
 
 [functions.check-render-status]
 verify_jwt = false
+
+[functions.populate-drill-instructions]
+verify_jwt = false
