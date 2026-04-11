@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { LessonList } from "@/components/baserunning-iq/LessonList";
 import { LessonDetail } from "@/components/baserunning-iq/LessonDetail";
+import { DailyDecision } from "@/components/baserunning-iq/DailyDecision";
 import { useBaserunningProgress } from "@/hooks/useBaserunningProgress";
 import { Brain } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
