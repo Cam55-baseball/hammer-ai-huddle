@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Scenario {
@@ -90,9 +90,32 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
         </div>
 
         {showResult && (
-          <div className={cn("flex items-start gap-2 p-3 rounded-lg text-sm", isCorrect ? "bg-green-500/10" : "bg-destructive/10")}>
-            {isCorrect ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" /> : <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />}
-            <p>{current.explanation}</p>
+          <div className="space-y-3">
+            {!isCorrect && selected && current.wrong_explanations && (current.wrong_explanations as Record<string, string>)[selected] && (
+              <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-destructive/10">
+                <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-destructive">Why "{selected}" fails:</p>
+                  <p>{(current.wrong_explanations as Record<string, string>)[selected]}</p>
+                </div>
+              </div>
+            )}
+            <div className={cn("flex items-start gap-2 p-3 rounded-lg text-sm", isCorrect ? "bg-green-500/10" : "bg-muted")}>
+              <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-green-600">Correct: "{current.correct_answer}"</p>
+                <p>{current.explanation}</p>
+              </div>
+            </div>
+            {current.game_consequence && (
+              <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-primary/10">
+                <Target className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-primary">Next Play:</p>
+                  <p>{current.game_consequence}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
