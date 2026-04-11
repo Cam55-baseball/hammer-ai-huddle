@@ -829,33 +829,39 @@ export type Database = {
           created_at: string
           difficulty: string
           explanation: string
+          game_consequence: string | null
           id: string
           lesson_id: string
           options: Json
           scenario_text: string
           sport: string
+          wrong_explanations: Json | null
         }
         Insert: {
           correct_answer: string
           created_at?: string
           difficulty?: string
           explanation: string
+          game_consequence?: string | null
           id?: string
           lesson_id: string
           options?: Json
           scenario_text: string
           sport?: string
+          wrong_explanations?: Json | null
         }
         Update: {
           correct_answer?: string
           created_at?: string
           difficulty?: string
           explanation?: string
+          game_consequence?: string | null
           id?: string
           lesson_id?: string
           options?: Json
           scenario_text?: string
           sport?: string
+          wrong_explanations?: Json | null
         }
         Relationships: [
           {
