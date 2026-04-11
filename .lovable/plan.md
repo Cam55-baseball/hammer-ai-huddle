@@ -1,71 +1,80 @@
 
 
-# Baserunning IQ Stress Test Plan
+# Daily Baserunning Decision System
 
-## What We'll Do
+## Summary
+Add a daily challenge system to Baserunning IQ: 1–3 random scenarios per day, streak tracking, 7-day performance stats, and no-repeat logic within 7 days.
 
-A comprehensive stress test: bulk-insert 100 lessons + 300 scenarios, simulate 50 concurrent user completions, then run adversarial tests (wrong sport, duplicate IDs, null values). Finally, audit data integrity and report all failures and fixes.
+## 1. Database
 
-## Pre-Test State
-- 5 lessons, 5 scenarios, 0 progress records
-- Indexes: PK on all tables, UNIQUE on `(user_id, lesson_id)`, index on `user_id` and `lesson_id`
-- No CHECK constraints on `sport` or `level` columns (text fields with defaults)
-- No foreign key from `baserunning_progress.user_id` to `auth.users` (by design)
+### New table: `baserunning_daily_attempts`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid PK | default gen_random_uuid() |
+| user_id | uuid NOT NULL | |
+| scenario_id | uuid FK → baserunning_scenarios | ON DELETE CASCADE |
+| correct | boolean NOT NULL | |
+| response_time_ms | int NOT NULL | |
+| created_at | timestamptz default now() | |
 
-## Execution Steps
+**RLS:** SELECT/INSERT for `auth.uid() = user_id`
 
-### Step 1: Bulk Insert 100 Lessons + 300 Scenarios
-- Script generates 100 lessons: 35 baseball, 35 softball, 30 both; mixed levels
-- 300 scenarios: 3 per lesson, with valid options arrays and correct_answer matching one option
-- Insert via `psql` or migration data insert tool
-- Verify counts match exactly
+**Index:** `(user_id, created_at DESC)` for streak/history queries
 
-### Step 2: Simulate 50 Concurrent User Completions
-- Generate 50 fake user UUIDs
-- Insert 50 × random subset of lessons into `baserunning_progress` with `completed=true` and scores
-- Test upsert idempotency: re-insert same (user_id, lesson_id) pairs with different scores — confirm UNIQUE constraint handles it (latest wins)
-- Check for deadlocks or constraint violations
+## 2. New Hook: `useBaserunningDaily.ts`
 
-### Step 3: Data Integrity Audit
-- Verify all 300 scenarios have valid `lesson_id` FK references
-- Verify all progress records reference existing lessons
-- Check completion % calculation correctness for 5 random users
-- Confirm sport filtering: `WHERE sport IN ('baseball','both')` returns exactly 65 lessons, `('softball','both')` returns exactly 65
+Handles all daily decision logic:
+- **Fetch today's scenarios**: Query `baserunning_scenarios` filtered by sport, excluding scenario IDs the user attempted in the last 7 days, random order, limit 3
+- **Submit attempt**: Insert into `baserunning_daily_attempts` with correctness + response time
+- **Streak calculation**: Count consecutive days (backwards from today) where user has ≥1 attempt. Break = streak resets to 0
+- **Last 7 days stats**: Accuracy % and avg response time from attempts in past 7 days
+- **Today completed**: Check if user already has attempts today (skip challenge if so)
 
-### Step 4: Adversarial Tests
+## 3. New Component: `DailyDecision.tsx`
 
-| Test | Expected Result |
-|------|----------------|
-| Query `sport = 'football'` | 0 rows returned |
-| Insert lesson with `sport = NULL` | **PASS** — column is NOT NULL, will reject |
-| Insert scenario with non-existent `lesson_id` | **FAIL or PASS** — need to check if FK constraint exists |
-| Insert duplicate `(user_id, lesson_id)` progress | Handled by UNIQUE constraint |
-| Insert progress with `user_id = NULL` | Rejected — NOT NULL |
+Placed at TOP of `/baserunning-iq` page (above lesson list, only when no active lesson):
 
-### Step 5: Performance Measurement
-- Time the lesson list query (100+ lessons with sport filter)
-- Time scenario fetch for a single lesson (3 scenarios)
-- Time progress fetch for a user with 50 completions
+**Layout:**
+- Header: "Today's Decision" with flame/streak icon
+- Stats bar: Current streak | 7-day accuracy | Avg response time
+- If not completed today: scenario card with timed answer buttons + instant feedback
+- If completed today: summary card showing today's results with "Come back tomorrow"
 
-### Step 6: Report
-- All pass/fail results
-- Identified weak points
-- Suggested fixes (likely: add CHECK constraints on sport/level/difficulty, add FK on scenarios.lesson_id if missing)
+**Interaction:**
+- Timer starts when scenario appears (tracks response_time_ms)
+- User selects answer → immediate feedback (correct/incorrect + explanation)
+- After all scenarios done → save attempts, update streak display
+- Uses existing `ScenarioBlock`-style answer UI for consistency
 
-## Weakness Already Identified (Pre-Test)
+## 4. Page Integration
 
-1. **No CHECK constraint on `sport`** — any string accepted (e.g., 'football', 'xyz'). Fix: add CHECK constraint.
-2. **No CHECK constraint on `level`** — same issue. Fix: add CHECK.
-3. **No CHECK constraint on `difficulty`** — same. Fix: add CHECK.
-4. **No FK constraint on `baserunning_scenarios.lesson_id`** — need to verify; if missing, orphan scenarios possible.
-5. **Missing index on `baserunning_lessons.sport`** — sport filter queries will table-scan at scale. Fix: add index.
-6. **Progress completion % counts ALL user progress** regardless of sport filter — could show misleading % if user switches sports.
+In `BaserunningIQ.tsx`, import and render `<DailyDecision />` above the lesson list when no active lesson is selected. Pass `sport` prop.
 
-## Files Changed
-None — this is a data-only stress test + migration for constraint fixes.
+## 5. Files
 
-## Deliverables
-- Full pass/fail table for all tests
-- Query timing results
-- Migration SQL for any fixes needed
+| File | Action |
+|------|--------|
+| `supabase/migrations/` | New migration: table + RLS + index |
+| `src/hooks/useBaserunningDaily.ts` | New: daily logic hook |
+| `src/components/baserunning-iq/DailyDecision.tsx` | New: daily challenge UI |
+| `src/pages/BaserunningIQ.tsx` | Edit: add DailyDecision above lessons |
+
+## 6. No-Repeat Logic (SQL in hook)
+
+```sql
+-- Scenarios NOT attempted in last 7 days, filtered by sport
+SELECT * FROM baserunning_scenarios
+WHERE (sport = $sport OR sport = 'both')
+  AND id NOT IN (
+    SELECT scenario_id FROM baserunning_daily_attempts
+    WHERE user_id = $uid AND created_at > now() - interval '7 days'
+  )
+ORDER BY random() LIMIT 3
+```
+
+Implemented via Supabase JS with `.not('id', 'in', recentIds)`.
+
+## 7. Streak Calculation
+
+Client-side: fetch all attempt dates for user, group by date, count consecutive days backwards from today. Cached via React Query with 5-min stale time.
 
