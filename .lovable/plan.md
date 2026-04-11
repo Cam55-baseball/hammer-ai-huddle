@@ -1,79 +1,51 @@
 
 
-# Baserunning IQ Level System
+# First-Time User Onboarding Flow for Baserunning IQ
 
 ## Summary
-Add a dynamically computed player level (Rookie → 0.01%) based on lesson completion, scenario accuracy, and daily streak. Display with a progress bar on the main page. No new database table — purely client-side computation from existing data.
+Show a focused onboarding screen when a user has zero completed lessons AND zero daily attempts. After clicking "Start Training", auto-load the first lesson. Skips permanently once the user completes any lesson or daily attempt.
 
-## Level Tiers & Thresholds
+## Detection Logic
+In `BaserunningIQ.tsx`, derive `isFirstTime` from existing hook data:
+```
+isFirstTime = completedLessons === 0 && todayAttempts.length === 0 && streak === 0 && !isLoading
+```
+No database changes needed — uses data already available from `useBaserunningProgress` and `useBaserunningDaily`.
 
-| Level | Points Required | Badge Color |
-|-------|----------------|-------------|
-| Rookie | 0 | gray |
-| Reactive | 100 | blue |
-| Instinctive | 300 | purple |
-| Elite | 600 | amber/gold |
-| 0.01% | 1000 | gradient red/gold |
+## New File: `src/components/baserunning-iq/OnboardingHero.tsx`
 
-## Scoring Formula
+Full-page hero card with:
+- Brain icon + title "Build Your Baserunning IQ"
+- Subtitle "Master decisions that separate average from elite"
+- 3 quick bullet points (what they'll learn)
+- "Start Training" button that calls `onStart()`
 
-Points are computed from three existing data sources:
+Clean, centered layout matching existing page style.
 
-1. **Lesson Completion** (max ~500 pts): `completedLessons × 50` (capped contribution)
-2. **Scenario Accuracy** (max ~300 pts): `(7-day accuracy% / 100) × 300` from daily attempts stats
-3. **Daily Streak** (max ~200 pts): `min(streak, 20) × 10` (capped at 20 days)
+## Modified File: `src/pages/BaserunningIQ.tsx`
 
-Total = sum of all three. Level is determined by which threshold range the total falls in. Progress bar shows % toward next tier.
+- Import `OnboardingHero` and pull `todayAttempts` from `useBaserunningDaily`
+- Add `isFirstTime` check: `completedLessons === 0 && todayAttempts.length === 0 && streak === 0`
+- When `isFirstTime && !activeLessonId && !isLoading`:
+  - Render `<OnboardingHero onStart={handleStart} />` instead of normal page content
+- `handleStart` finds the lesson with `order_index === 0` (or first lesson) and sets it as `activeLessonId`
+- Once user completes that lesson → progress is saved → `isFirstTime` becomes false → normal page renders on return
 
-## New Files
-
-### `src/utils/baserunningLevel.ts`
-- `computeBaserunningLevel(completionPct, accuracy, streak)` → `{ level, label, points, nextThreshold, progressToNext, color }`
-- Pure function, no DB calls — computes from values already available in hooks
-
-### `src/components/baserunning-iq/LevelBadge.tsx`
-- Compact card showing: level icon + name, points total, animated progress bar to next level
-- Gradient styling per tier for visual punch
-- Placed between the header and DailyDecision on the main page
-
-## Modified Files
-
-### `src/pages/BaserunningIQ.tsx`
-- Import `LevelBadge` and `computeBaserunningLevel`
-- Pass `completionPct` from `useBaserunningProgress` + `stats.accuracy` and `streak` from `useBaserunningDaily` into the level computation
-- Render `<LevelBadge />` between the page header and DailyDecision
-
-### `src/hooks/useBaserunningDaily.ts`
-- No changes needed — already exports `streak` and `stats.accuracy`
-
-## UI Layout (main page, no active lesson)
-
+## Flow
 ```text
-┌─ Header: "Baserunning IQ" ─────────────┐
-│                                          │
-│ ┌─ LevelBadge ─────────────────────────┐│
-│ │ ⭐ REACTIVE  ·  145 pts              ││
-│ │ [████████░░░░░░░] 45% to Instinctive ││
-│ └──────────────────────────────────────┘│
-│                                          │
-│ ┌─ DailyDecision ──────────────────────┐│
-│ │ ...                                   ││
-│ └──────────────────────────────────────┘│
-│                                          │
-│ ┌─ LessonList ─────────────────────────┐│
-│ │ ...                                   ││
-│ └──────────────────────────────────────┘│
-└──────────────────────────────────────────┘
+User visits /baserunning-iq (first time)
+  → Sees OnboardingHero
+  → Clicks "Start Training"
+  → First lesson loads (LessonDetail)
+  → Completes lesson → progress saved
+  → Returns to main page → normal view (LevelBadge + Daily + Lessons)
 ```
 
-## Instant Update Behavior
-Level is recomputed on every render from reactive query data. When a lesson is completed or a daily scenario answered, React Query invalidation triggers re-render → level updates instantly with no additional DB call.
-
 ## Files Summary
-
 | File | Action |
 |------|--------|
-| `src/utils/baserunningLevel.ts` | New — level computation logic |
-| `src/components/baserunning-iq/LevelBadge.tsx` | New — level display component |
-| `src/pages/BaserunningIQ.tsx` | Edit — integrate LevelBadge with data from both hooks |
+| `src/components/baserunning-iq/OnboardingHero.tsx` | New — onboarding screen |
+| `src/pages/BaserunningIQ.tsx` | Edit — add first-time detection + render onboarding |
+
+No database changes. No new tables. Pure client-side logic from existing data.
 
