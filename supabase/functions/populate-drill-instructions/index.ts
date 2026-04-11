@@ -56,6 +56,7 @@ serve(async (req) => {
     const force = body.force === true;
     const batchSize = body.batch_size || 5;
     const limit = body.limit || 100;
+    const offset = body.offset || 0;
 
     // Fetch drills needing instructions
     let query = supabase
@@ -63,7 +64,7 @@ serve(async (req) => {
       .select("id, name, description, skill_target, module, sport, ai_context, progression_level")
       .eq("is_active", true)
       .order("created_at", { ascending: true })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     if (!force) {
       query = query.is("instructions", null);
@@ -108,27 +109,53 @@ serve(async (req) => {
             messages: [
               {
                 role: "system",
-                content: `You are an elite baseball/softball coaching expert who writes FIELD-READY drill instructions. Every instruction must enable a player to perform the drill perfectly WITHOUT watching a video.
+                content: `You are an elite baseball/softball coaching expert who writes GAME-SPEED, FIELD-READY drill instructions. Every instruction set must enable a player to execute the drill PERFECTLY at full intensity WITHOUT a video and WITHOUT a coach present.
 
-ABSOLUTE RULES:
-- Setup MUST include: exact distances (in feet/yards), required equipment, starting body position, and recommended reps
-- Execution MUST have 5+ numbered steps describing EXACT body mechanics, timing, and movement directions
-- Coaching cues MUST be short (3-6 words), usable in real-time during practice
-- Mistakes MUST describe specific bad habits with body positioning details
-- Progression MUST increase difficulty via speed, reaction, movement, constraint, or pressure
+ELITE STANDARD — EVERY DRILL MUST MEET ALL OF THESE:
 
-BANNED PHRASES (never use these):
-- "work on", "focus on", "improve", "practice", "try to", "make sure to"
-- Any vague language that doesn't describe physical movement
+═══ SETUP (mandatory fields) ═══
+- Exact distances in feet or yards (e.g., "15 feet", "60 feet 6 inches")
+- All required equipment listed explicitly
+- Starting stance described with body part positions (feet, hands, hips, eyes)
+- Specific reps AND sets (e.g., "3 sets of 8 reps" not just "multiple reps")
 
-REQUIRED LANGUAGE:
-- Use action verbs: "drive", "explode", "snap", "drop", "rotate", "extend"
-- Include body parts: "hips", "glove hand", "back foot", "throwing shoulder"
-- Specify directions: "laterally", "at 45 degrees", "toward the target", "across your body"`,
+═══ EXECUTION (minimum 6 steps, no exceptions) ═══
+Each step MUST contain ALL THREE:
+1. A specific body movement (which body part does what)
+2. A direction (laterally, forward, at 45°, toward target, across body)
+3. Timing or sequencing (on the signal, simultaneously, after contact, as the ball releases)
+NO STEP may be vague or omit any of these three elements.
+
+═══ COACHING CUES (3–5 cues, each 3–6 words) ═══
+- Must be yellable mid-rep by a coach
+- Imperative voice, action verbs only
+- Examples: "Snap glove to midline!", "Explode through the ball!", "Eyes locked on release!"
+- NOT instructional paragraphs — short, sharp commands
+
+═══ MISTAKES (3+ entries, each with THREE parts) ═══
+Each mistake must describe:
+1. The incorrect body movement (what goes wrong physically)
+2. Why it happens (the root cause)
+3. What it causes (the game consequence)
+
+═══ PROGRESSION (3+ entries, each with specific mechanism) ═══
+Each must specify the EXACT difficulty increase using one of:
+- Speed (e.g., "reduce reaction window from 2s to 0.8s")
+- Reaction (e.g., "add random directional calls")
+- Movement (e.g., "start from a full sprint instead of standing")
+- Pressure (e.g., "add a runner on base forcing urgency")
+- Constraint (e.g., "use only backhand, no forehand allowed")
+NO generic "make it harder" — every progression must be concrete and measurable.
+
+═══ BANNED LANGUAGE (automatic fail if found) ═══
+NEVER use: "focus on", "work on", "improve", "practice", "try to", "make sure to", "be sure to", "remember to", "concentrate on", "pay attention to", "aim for", "strive to", "attempt to"
+
+═══ REQUIRED VERBS ═══
+Use these: drive, explode, snap, rotate, extend, plant, fire, whip, rip, punch, load, transfer, engage, brace, attack, funnel, channel, lock, release, clear`,
               },
               {
                 role: "user",
-                content: `Generate detailed, field-ready instructions for these ${batch.length} drills:\n\n${drillDescriptions}\n\nReturn structured data using the generate_instructions function. Each drill's instructions must be complete enough for a player to execute perfectly without any video.`,
+                content: `Generate ELITE-LEVEL, field-ready instructions for these ${batch.length} drills. Every drill must meet ALL standards above — 6+ execution steps, specific distances, reps/sets, yellable cues, detailed mistakes with causes, and concrete progressions.\n\n${drillDescriptions}\n\nReturn structured data using the generate_instructions function.`,
               },
             ],
             tools: [
@@ -137,7 +164,7 @@ REQUIRED LANGUAGE:
                 function: {
                   name: "generate_instructions",
                   description:
-                    "Generate field-ready drill instructions for each drill",
+                    "Generate elite field-ready drill instructions for each drill",
                   parameters: {
                     type: "object",
                     properties: {
@@ -158,31 +185,36 @@ REQUIRED LANGUAGE:
                             setup: {
                               type: "string",
                               description:
-                                "EXACT setup: distances in feet, equipment needed, starting body position, recommended reps/sets.",
+                                "EXACT setup with: distances in feet/yards, all equipment, starting stance with body positions (feet/hands/hips/eyes), specific reps AND sets.",
                             },
                             execution: {
                               type: "array",
                               items: { type: "string" },
+                              minItems: 6,
                               description:
-                                "5+ step-by-step instructions with exact body mechanics. Each step must describe a specific physical movement.",
+                                "MINIMUM 6 step-by-step instructions. EACH step must include: specific body movement + direction + timing/sequencing. No vague steps allowed.",
                             },
                             coaching_cues: {
                               type: "array",
                               items: { type: "string" },
+                              minItems: 3,
+                              maxItems: 5,
                               description:
-                                "3+ short (3-6 word) cues a coach would yell during reps.",
+                                "3-5 short (3-6 word) cues a coach yells MID-REP. Imperative voice, action verbs only.",
                             },
                             mistakes: {
                               type: "array",
                               items: { type: "string" },
+                              minItems: 3,
                               description:
-                                "3+ specific bad habits with body positioning details.",
+                                "3+ mistakes. EACH must state: (1) the incorrect movement, (2) why it happens, (3) what game consequence it causes.",
                             },
                             progression: {
                               type: "array",
                               items: { type: "string" },
+                              minItems: 3,
                               description:
-                                "3+ ways to increase difficulty: speed, reaction, movement, constraint, or pressure.",
+                                "3+ progressions using specific mechanisms: speed, reaction, movement, pressure, or constraint. Each must be concrete and measurable.",
                             },
                           },
                           required: [
@@ -214,10 +246,9 @@ REQUIRED LANGUAGE:
         const errText = await response.text();
         console.error(`AI error for batch ${i / batchSize}:`, response.status, errText);
         if (response.status === 429) {
-          // Wait and retry
           console.log("Rate limited, waiting 30s...");
           await new Promise((r) => setTimeout(r, 30000));
-          i -= batchSize; // retry this batch
+          i -= batchSize;
           continue;
         }
         errors.push(`Batch ${i / batchSize}: AI error ${response.status}`);
@@ -250,31 +281,50 @@ REQUIRED LANGUAGE:
 
         const drill = batch[drillIdx];
 
-        // Validate quality
-        if (!inst.execution || inst.execution.length < 4) {
-          console.warn(`Drill "${drill.name}": execution too short (${inst.execution?.length || 0} steps), skipping`);
+        // ELITE validation gate — minimum 6 execution steps
+        if (!inst.execution || inst.execution.length < 6) {
+          console.warn(`FAIL "${drill.name}": execution only ${inst.execution?.length || 0} steps (need 6+), skipping`);
           failedCount++;
           continue;
         }
         if (!inst.coaching_cues || inst.coaching_cues.length < 3) {
-          console.warn(`Drill "${drill.name}": too few coaching cues, skipping`);
+          console.warn(`FAIL "${drill.name}": only ${inst.coaching_cues?.length || 0} cues (need 3+), skipping`);
+          failedCount++;
+          continue;
+        }
+        if (!inst.mistakes || inst.mistakes.length < 3) {
+          console.warn(`FAIL "${drill.name}": only ${inst.mistakes?.length || 0} mistakes (need 3+), skipping`);
+          failedCount++;
+          continue;
+        }
+        if (!inst.progression || inst.progression.length < 3) {
+          console.warn(`FAIL "${drill.name}": only ${inst.progression?.length || 0} progressions (need 3+), skipping`);
           failedCount++;
           continue;
         }
         if (!inst.setup) {
-          console.warn(`Drill "${drill.name}": missing setup, skipping`);
+          console.warn(`FAIL "${drill.name}": missing setup, skipping`);
           failedCount++;
           continue;
         }
 
-        // Build clean instructions object
+        // Banned phrase check
+        const bannedPhrases = ["focus on", "work on", "improve", "practice", "try to", "make sure to", "be sure to", "remember to", "concentrate on", "pay attention to"];
+        const allText = JSON.stringify(inst).toLowerCase();
+        const foundBanned = bannedPhrases.filter(p => allText.includes(p));
+        if (foundBanned.length > 0) {
+          console.warn(`FAIL "${drill.name}": contains banned phrases: ${foundBanned.join(", ")}, skipping`);
+          failedCount++;
+          continue;
+        }
+
         const instructions = {
           purpose: inst.purpose,
           setup: inst.setup,
           execution: inst.execution,
           coaching_cues: inst.coaching_cues,
-          mistakes: inst.mistakes || [],
-          progression: inst.progression || [],
+          mistakes: inst.mistakes,
+          progression: inst.progression,
         };
 
         const { error: updateErr } = await supabase
@@ -287,11 +337,11 @@ REQUIRED LANGUAGE:
           failedCount++;
         } else {
           updatedCount++;
-          console.log(`✓ Updated: ${drill.name}`);
+          console.log(`✓ ELITE: ${drill.name} (${inst.execution.length} steps, ${inst.coaching_cues.length} cues)`);
         }
       }
 
-      // Small delay between batches to avoid rate limits
+      // Delay between batches
       if (i + batchSize < drills.length) {
         await new Promise((r) => setTimeout(r, 2000));
       }
