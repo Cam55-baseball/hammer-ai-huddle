@@ -11,6 +11,8 @@ interface Scenario {
   explanation: string;
   options: string[];
   difficulty: string;
+  wrong_explanations?: Record<string, string> | null;
+  game_consequence?: string | null;
 }
 
 interface ScenarioBlockProps {

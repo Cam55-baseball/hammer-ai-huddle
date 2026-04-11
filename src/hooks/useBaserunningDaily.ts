@@ -11,6 +11,8 @@ interface DailyScenario {
   options: string[];
   difficulty: string;
   lesson_id: string;
+  wrong_explanations: Record<string, string> | null;
+  game_consequence: string | null;
 }
 
 interface DailyAttempt {
