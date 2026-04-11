@@ -56,6 +56,7 @@ serve(async (req) => {
     const force = body.force === true;
     const batchSize = body.batch_size || 5;
     const limit = body.limit || 100;
+    const offset = body.offset || 0;
 
     // Fetch drills needing instructions
     let query = supabase
