@@ -11,7 +11,7 @@ interface Scenario {
   explanation: string;
   options: string[];
   difficulty: string;
-  wrong_explanations?: Record<string, string> | null;
+  wrong_explanations?: Record<string, string> | unknown;
   game_consequence?: string | null;
 }
 
