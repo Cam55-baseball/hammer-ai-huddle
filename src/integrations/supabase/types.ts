@@ -717,6 +717,41 @@ export type Database = {
         }
         Relationships: []
       }
+      baserunning_daily_attempts: {
+        Row: {
+          correct: boolean
+          created_at: string
+          id: string
+          response_time_ms: number
+          scenario_id: string
+          user_id: string
+        }
+        Insert: {
+          correct: boolean
+          created_at?: string
+          id?: string
+          response_time_ms: number
+          scenario_id: string
+          user_id: string
+        }
+        Update: {
+          correct?: boolean
+          created_at?: string
+          id?: string
+          response_time_ms?: number
+          scenario_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baserunning_daily_attempts_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "baserunning_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       baserunning_lessons: {
         Row: {
           content: string
