@@ -64,7 +64,7 @@ serve(async (req) => {
       .select("id, name, description, skill_target, module, sport, ai_context, progression_level")
       .eq("is_active", true)
       .order("created_at", { ascending: true })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     if (!force) {
       query = query.is("instructions", null);
