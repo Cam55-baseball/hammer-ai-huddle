@@ -717,6 +717,121 @@ export type Database = {
         }
         Relationships: []
       }
+      baserunning_lessons: {
+        Row: {
+          content: string
+          created_at: string
+          elite_cue: string | null
+          game_transfer: string | null
+          id: string
+          level: string
+          order_index: number
+          sport: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          elite_cue?: string | null
+          game_transfer?: string | null
+          id?: string
+          level?: string
+          order_index?: number
+          sport?: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          elite_cue?: string | null
+          game_transfer?: string | null
+          id?: string
+          level?: string
+          order_index?: number
+          sport?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      baserunning_progress: {
+        Row: {
+          completed: boolean
+          id: string
+          last_attempt_at: string
+          lesson_id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          id?: string
+          last_attempt_at?: string
+          lesson_id: string
+          score?: number
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          id?: string
+          last_attempt_at?: string
+          lesson_id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baserunning_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "baserunning_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      baserunning_scenarios: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          difficulty: string
+          explanation: string
+          id: string
+          lesson_id: string
+          options: Json
+          scenario_text: string
+          sport: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          difficulty?: string
+          explanation: string
+          id?: string
+          lesson_id: string
+          options?: Json
+          scenario_text: string
+          sport?: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          difficulty?: string
+          explanation?: string
+          id?: string
+          lesson_id?: string
+          options?: Json
+          scenario_text?: string
+          sport?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baserunning_scenarios_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "baserunning_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_day_orders: {
         Row: {
           created_at: string
