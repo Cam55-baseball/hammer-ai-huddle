@@ -37,7 +37,7 @@ serve(async (req) => {
             .from("user_roles")
             .select("role")
             .eq("user_id", data.user.id)
-            .eq("role", "owner")
+            .in("role", ["owner", "admin"])
             .eq("status", "active")
             .maybeSingle();
           authorized = !!role;
