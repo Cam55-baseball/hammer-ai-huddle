@@ -22,10 +22,15 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Auth check - Owner_Key header OR authenticated owner user
+    // Auth check - Owner_Key header, OWNER_INIT_KEY header, or authenticated owner/admin user
     const ownerKey = req.headers.get("x-owner-key") || req.headers.get("Owner_Key");
     const expectedKey = Deno.env.get("Owner_Key");
+    const initKey = req.headers.get("x-init-key");
+    const expectedInitKey = Deno.env.get("OWNER_INIT_KEY");
     let authorized = !!(expectedKey && ownerKey === expectedKey);
+    if (!authorized && expectedInitKey && initKey === expectedInitKey) {
+      authorized = true;
+    }
 
     if (!authorized) {
       const authHeader = req.headers.get("Authorization");
