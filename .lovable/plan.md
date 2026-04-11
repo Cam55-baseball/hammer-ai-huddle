@@ -1,122 +1,64 @@
 
 
-# Baserunning IQ — Full Implementation Plan
+# Baserunning IQ Module — Verification Report
 
-## Summary
-Add a structured learning + decision engine for baserunning IQ as a submodule inside both 5Tool Player and Golden 2Way. Three new database tables, one new page, sidebar/landing page integration, and sport-filtered content with persistent progress tracking.
+## 1. Database Structure ✅ PASS
 
-## 1. Database Tables (Migration)
+All 3 tables exist with correct schemas:
+- `baserunning_lessons` — 9 columns (id, title, content, sport, level, order_index, elite_cue, game_transfer, created_at)
+- `baserunning_scenarios` — 9 columns (id, lesson_id, scenario_text, sport, difficulty, correct_answer, explanation, options, created_at)
+- `baserunning_progress` — 7 columns (id, user_id, lesson_id, completed, score, last_attempt_at) with UNIQUE(user_id, lesson_id)
 
-### `baserunning_lessons`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | default gen_random_uuid() |
-| title | text NOT NULL | |
-| content | text NOT NULL | rich text / markdown |
-| sport | text NOT NULL | 'baseball', 'softball', or 'both' |
-| level | text NOT NULL | 'beginner', 'advanced', 'elite' |
-| order_index | int NOT NULL default 0 | |
-| elite_cue | text | short coach cue |
-| game_transfer | text | how it applies in-game |
-| created_at | timestamptz default now() | |
+**RLS Policies** — all correct:
+- Lessons: SELECT for `authenticated` (read-only content)
+- Scenarios: SELECT for `authenticated` (read-only content)
+- Progress: SELECT/INSERT/UPDATE restricted to `auth.uid() = user_id`
 
-### `baserunning_scenarios`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | default gen_random_uuid() |
-| lesson_id | uuid FK → baserunning_lessons | ON DELETE CASCADE |
-| scenario_text | text NOT NULL | |
-| sport | text NOT NULL | 'baseball', 'softball', 'both' |
-| difficulty | text NOT NULL | 'easy', 'game_speed', 'elite' |
-| correct_answer | text NOT NULL | |
-| explanation | text NOT NULL | |
-| options | jsonb NOT NULL default '[]' | array of answer choices |
-| created_at | timestamptz default now() | |
+**Current data: 0 lessons, 0 scenarios** — needs test data population.
 
-### `baserunning_progress`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | default gen_random_uuid() |
-| user_id | uuid NOT NULL | references auth.users via profile pattern |
-| lesson_id | uuid FK → baserunning_lessons | ON DELETE CASCADE |
-| completed | boolean default false | |
-| score | int default 0 | |
-| last_attempt_at | timestamptz default now() | |
-| UNIQUE(user_id, lesson_id) | | |
+## 2. Sport Filtering ✅ PASS (code-verified)
 
-**RLS Policies:**
-- `baserunning_lessons` and `baserunning_scenarios`: SELECT for authenticated users (read-only content)
-- `baserunning_progress`: full CRUD for `auth.uid() = user_id`
+- `useBaserunningProgress.ts` queries with `.or('sport.eq.${sport},sport.eq.both')` — correct
+- `LessonDetail.tsx` scenario query uses same filter — correct
+- Baseball users see `baseball` + `both` lessons only
+- Softball users see `softball` + `both` lessons only
 
-## 2. New Route & Page
+## 3. UI Placement ✅ PASS
 
-**Route:** `/baserunning-iq`
+- **AppSidebar.tsx**: "Baserunning IQ" entry present in BOTH 5Tool Player (line 221) and Golden 2Way (line 243) sub-module arrays
+- **FiveToolPlayer.tsx**: Tile with Brain icon, correct route `/baserunning-iq`
+- **GoldenTwoWay.tsx**: Tile with Brain icon, correct route `/baserunning-iq`
+- **App.tsx**: Route registered at `/baserunning-iq` (line 201), lazy-loaded
 
-**Page:** `src/pages/BaserunningIQ.tsx`
-- Uses `DashboardLayout`
-- Fetches lessons filtered by user sport (`baseball`, `softball`, or `both`)
-- Shows lesson list with completion progress
-- Clicking a lesson opens lesson detail view with:
-  - Title, content, highlighted elite cue, game transfer section
-  - Scenario training block at bottom (quiz-style)
-- Progress persisted to `baserunning_progress` table
+## 4. Progress Tracking ✅ PASS (code-verified)
 
-**Components:**
-- `src/components/baserunning-iq/LessonList.tsx` — lesson cards with progress indicators
-- `src/components/baserunning-iq/LessonDetail.tsx` — full lesson view
-- `src/components/baserunning-iq/ScenarioBlock.tsx` — interactive quiz with answer selection, feedback, explanation
+- `useBaserunningProgress.ts` uses `upsert` with `onConflict: "user_id,lesson_id"` — idempotent
+- Invalidates query cache on success — UI updates immediately
+- Completion % calculated as `completed / total lessons * 100`
+- Score persisted per lesson via `markComplete` mutation
 
-## 3. Sidebar Integration
+## 5. Performance ✅ PASS (architecture)
 
-In `src/components/AppSidebar.tsx`, add to both the 5Tool Player and Golden 2Way subModules arrays:
-```
-{ title: 'Baserunning IQ', url: '/baserunning-iq', icon: Brain, description: 'Baserunning decision training' }
-```
+- Lessons fetched with single query + sport filter (indexed by default on text columns)
+- Scenarios fetched only when a lesson is selected (lazy load)
+- React Query caching prevents redundant fetches
+- No N+1 queries — progress loaded in one batch query
 
-## 4. Landing Page Cards
+## 6. Issues Found
 
-In both `src/pages/FiveToolPlayer.tsx` and `src/pages/GoldenTwoWay.tsx`, add a new tile:
-```
-{
-  key: "baserunning-iq",
-  icon: Brain,
-  label: "Baserunning IQ",
-  description: "Learn elite baserunning decisions and test your game IQ",
-  getRoute: () => "/baserunning-iq",
-}
-```
-Card shows progress % fetched from `baserunning_progress` and a "Continue" button.
+### BLOCKING: No test data
+Tables are empty. The module will show "No lessons available yet" until populated.
 
-## 5. Sport Filtering Logic
+### Action Required
+Insert 5 test lessons (mixed sports) and 5 linked scenarios to enable end-to-end testing. This requires using the data insert tool.
 
-All queries filter with: `sport = selectedSport OR sport = 'both'`
+## Recommended Next Step
 
-Applied at:
-- Lesson list fetch
-- Scenario fetch within lessons
-- Progress calculations (only count lessons matching sport filter)
+Populate the database with:
+- 2 baseball-only lessons
+- 2 softball-only lessons  
+- 1 "both" lesson
+- 1-2 scenarios per lesson with options array
 
-## 6. App.tsx Route Registration
-
-Add lazy import and route:
-```
-const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
-<Route path="/baserunning-iq" element={<BaserunningIQ />} />
-```
-
-## 7. Hook for Progress
-
-`src/hooks/useBaserunningProgress.ts` — fetches user progress, calculates completion %, exposes `markComplete` and `updateScore` mutations via react-query.
-
-## Files Changed
-- `supabase/migrations/` — new migration for 3 tables + RLS
-- `src/pages/BaserunningIQ.tsx` — new
-- `src/components/baserunning-iq/LessonList.tsx` — new
-- `src/components/baserunning-iq/LessonDetail.tsx` — new
-- `src/components/baserunning-iq/ScenarioBlock.tsx` — new
-- `src/hooks/useBaserunningProgress.ts` — new
-- `src/App.tsx` — add route
-- `src/components/AppSidebar.tsx` — add to 5Tool + Golden 2Way subModules
-- `src/pages/FiveToolPlayer.tsx` — add tile
-- `src/pages/GoldenTwoWay.tsx` — add tile
+Then do a live browser test to confirm the full flow renders correctly.
 
