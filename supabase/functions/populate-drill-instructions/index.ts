@@ -13,16 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // Auth check
-    const ownerKey = req.headers.get("x-owner-key") || req.headers.get("Owner_Key");
-    const expectedKey = Deno.env.get("Owner_Key");
-    if (!expectedKey || ownerKey !== expectedKey) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -31,6 +21,36 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false },
     });
+
+    // Auth check - Owner_Key header OR authenticated owner user
+    const ownerKey = req.headers.get("x-owner-key") || req.headers.get("Owner_Key");
+    const expectedKey = Deno.env.get("Owner_Key");
+    let authorized = !!(expectedKey && ownerKey === expectedKey);
+
+    if (!authorized) {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const token = authHeader.replace("Bearer ", "");
+        const { data } = await supabase.auth.getUser(token);
+        if (data?.user) {
+          const { data: role } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", data.user.id)
+            .eq("role", "owner")
+            .eq("status", "active")
+            .maybeSingle();
+          authorized = !!role;
+        }
+      }
+    }
+
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const body = await req.json().catch(() => ({}));
     const force = body.force === true;
