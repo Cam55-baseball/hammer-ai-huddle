@@ -4,6 +4,7 @@ import { LessonList } from "@/components/baserunning-iq/LessonList";
 import { LessonDetail } from "@/components/baserunning-iq/LessonDetail";
 import { DailyDecision } from "@/components/baserunning-iq/DailyDecision";
 import { LevelBadge } from "@/components/baserunning-iq/LevelBadge";
+import { OnboardingHero } from "@/components/baserunning-iq/OnboardingHero";
 import { useBaserunningProgress } from "@/hooks/useBaserunningProgress";
 import { useBaserunningDaily } from "@/hooks/useBaserunningDaily";
 import { computeBaserunningLevel } from "@/utils/baserunningLevel";
@@ -13,20 +14,30 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function BaserunningIQ() {
   const selectedSport = localStorage.getItem("selectedSport") || "baseball";
   const { lessons, progress, completionPct, markComplete, isLoading } = useBaserunningProgress(selectedSport);
-  const { streak, stats } = useBaserunningDaily(selectedSport);
+  const { streak, stats, todayAttempts } = useBaserunningDaily(selectedSport);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
   const completedLessons = progress.filter((p) => p.completed).length;
   const level = computeBaserunningLevel(completedLessons, stats.accuracy, streak);
+  const isFirstTime = completedLessons === 0 && todayAttempts.length === 0 && streak === 0 && !isLoading;
 
   const handleComplete = (lessonId: string, score: number) => {
     markComplete.mutate({ lessonId, score });
   };
 
+  const handleOnboardingStart = () => {
+    const firstLesson = lessons.find((l) => l.order_index === 0) ?? lessons[0];
+    if (firstLesson) setActiveLessonId(firstLesson.id);
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto space-y-6 py-4">
-        {!activeLessonId && (
+        {isFirstTime && !activeLessonId && (
+          <OnboardingHero onStart={handleOnboardingStart} />
+        )}
+
+        {!isFirstTime && !activeLessonId && (
           <>
             <div className="text-center space-y-2">
               <div className="flex items-center justify-center gap-2">
