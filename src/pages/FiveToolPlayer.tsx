@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, Eye, Zap, ArrowRight, Footprints } from "lucide-react";
+import { Target, Dumbbell, Eye, Zap, ArrowRight, Footprints, Brain } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
@@ -67,6 +67,15 @@ const tiles = [
     getRoute: () => "/softball-stealing",
     baseballOnly: false,
     softballOnly: true,
+  },
+  {
+    key: "baserunning-iq",
+    icon: Brain,
+    label: "Baserunning IQ",
+    description: "Learn elite baserunning decisions and test your game IQ",
+    getRoute: () => "/baserunning-iq",
+    baseballOnly: false,
+    softballOnly: false,
   },
 ];
 

@@ -109,6 +109,7 @@ const GameScoring = lazyWithRetry(() => import("./pages/GameScoring"));
 const BaseStealingTrainer = lazyWithRetry(() => import("./pages/BaseStealingTrainer"));
 const SoftballStealingTrainer = lazyWithRetry(() => import("./pages/SoftballStealingTrainer"));
 const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
+const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
@@ -197,6 +198,7 @@ const App = () => {
               <Route path="/base-stealing" element={<BaseStealingTrainer />} />
               <Route path="/softball-stealing" element={<SoftballStealingTrainer />} />
               <Route path="/pickoff-trainer" element={<PickoffTrainer />} />
+              <Route path="/baserunning-iq" element={<BaserunningIQ />} />
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
               <Route path="/drill-library" element={<DrillLibraryPlayer />} />
