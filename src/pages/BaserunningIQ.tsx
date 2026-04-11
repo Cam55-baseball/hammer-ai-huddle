@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { LessonList } from "@/components/baserunning-iq/LessonList";
 import { LessonDetail } from "@/components/baserunning-iq/LessonDetail";
+import { DailyDecision } from "@/components/baserunning-iq/DailyDecision";
 import { useBaserunningProgress } from "@/hooks/useBaserunningProgress";
 import { Brain } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +30,8 @@ export default function BaserunningIQ() {
                 Learn elite baserunning decisions and test your game IQ
               </p>
             </div>
+
+            <DailyDecision sport={selectedSport} />
 
             {isLoading ? (
               <div className="space-y-3">
