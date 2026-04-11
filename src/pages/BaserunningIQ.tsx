@@ -3,14 +3,21 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { LessonList } from "@/components/baserunning-iq/LessonList";
 import { LessonDetail } from "@/components/baserunning-iq/LessonDetail";
 import { DailyDecision } from "@/components/baserunning-iq/DailyDecision";
+import { LevelBadge } from "@/components/baserunning-iq/LevelBadge";
 import { useBaserunningProgress } from "@/hooks/useBaserunningProgress";
+import { useBaserunningDaily } from "@/hooks/useBaserunningDaily";
+import { computeBaserunningLevel } from "@/utils/baserunningLevel";
 import { Brain } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function BaserunningIQ() {
   const selectedSport = localStorage.getItem("selectedSport") || "baseball";
   const { lessons, progress, completionPct, markComplete, isLoading } = useBaserunningProgress(selectedSport);
+  const { streak, stats } = useBaserunningDaily(selectedSport);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+
+  const completedLessons = progress.filter((p) => p.completed).length;
+  const level = computeBaserunningLevel(completedLessons, stats.accuracy, streak);
 
   const handleComplete = (lessonId: string, score: number) => {
     markComplete.mutate({ lessonId, score });
@@ -30,6 +37,8 @@ export default function BaserunningIQ() {
                 Learn elite baserunning decisions and test your game IQ
               </p>
             </div>
+
+            <LevelBadge level={level} />
 
             <DailyDecision sport={selectedSport} />
 
