@@ -1,77 +1,64 @@
 
 
-# Fix Drill Instruction System — Full Population + Quality Enforcement
+# Invoke populate-drill-instructions Edge Function
 
 ## Problem
-All 88 active drills have `instructions = null`. The current fallback generates useless content like "Standard drill setup". No drill is field-ready.
+The `curl_edge_functions` tool cannot inject actual secret values into headers — it sends the literal string `{{Owner_Key}}`. The function's auth check compares the header against `Deno.env.get("Owner_Key")`, so the request gets 401.
 
-## Plan
+## Solution
+Temporarily add a secondary auth path to the edge function that accepts the **logged-in user's JWT** (already auto-injected by the `curl_edge_functions` tool) and verifies they have the `owner` role in the database. This avoids changing the architecture — the `Owner_Key` path stays intact for external use.
 
-### 1. Create `populate-drill-instructions` Edge Function (NEW)
-**File: `supabase/functions/populate-drill-instructions/index.ts`**
+### Step 1: Update `populate-drill-instructions/index.ts` auth block
 
-A batch endpoint that:
-- Fetches drills where `instructions IS NULL` (or all drills if `force=true`)
-- Processes them in batches of 5 via the AI gateway
-- For each drill, sends name + description + skill_target + module + sport to AI with a strict schema requiring:
-  - `purpose`: WHY this drill matters in a game context
-  - `setup`: distance, equipment, starting position, reps
-  - `execution`: minimum 5 numbered steps with exact body mechanics
-  - `coaching_cues`: 3+ short real-time cues
-  - `mistakes`: 3+ specific bad habits
-  - `progression`: 3+ ways to increase difficulty
-- Validates output (rejects if execution < 4 steps or setup lacks distance/equipment)
-- Writes validated instructions directly to the `drills.instructions` JSONB column
-- Returns count of updated drills
-- Protected by `Owner_Key` header check so only you can trigger it
+Add a fallback after the Owner_Key check: if no valid Owner_Key header, check if the request has a valid JWT from an owner-role user.
 
-### 2. Update `generate-drills` Edge Function
-**File: `supabase/functions/generate-drills/index.ts`**
+```typescript
+// Auth check - Owner_Key header OR authenticated owner user
+const ownerKey = req.headers.get("x-owner-key") || req.headers.get("Owner_Key");
+const expectedKey = Deno.env.get("Owner_Key");
+let authorized = expectedKey && ownerKey === expectedKey;
 
-Add `instructions` to the tool schema so all NEW drills are generated with full instructions from the start:
-```
-instructions: {
-  type: "object",
-  properties: {
-    purpose: { type: "string" },
-    setup: { type: "string" },
-    execution: { type: "array", items: { type: "string" }, minItems: 4 },
-    coaching_cues: { type: "array", items: { type: "string" }, minItems: 3 },
-    mistakes: { type: "array", items: { type: "string" }, minItems: 3 },
-    progression: { type: "array", items: { type: "string" }, minItems: 3 }
-  },
-  required: ["purpose", "setup", "execution", "coaching_cues", "mistakes", "progression"]
+if (!authorized) {
+  // Fallback: check if caller is an authenticated owner
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data } = await supabase.auth.getUser(token);
+    if (data?.user) {
+      const { data: role } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .eq("role", "owner")
+        .eq("status", "active")
+        .maybeSingle();
+      authorized = !!role;
+    }
+  }
+}
+
+if (!authorized) {
+  return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    status: 401,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 ```
 
-Update the system prompt to enforce actionable content (no vague phrases). Include `instructions` in the insert payload for both auto and manual modes.
+### Step 2: Deploy the updated function
 
-### 3. Fix `DrillDetailDialog` Fallback
-**File: `src/components/practice/DrillDetailDialog.tsx`**
+### Step 3: Invoke via `curl_edge_functions`
 
-Replace the current weak fallback (lines 37-45) with a smarter one:
-- If `instructions` exists and has real content → use it
-- If `instructions` is null → show ONLY the description paragraph (no fake "Standard drill setup")
-- Remove the fallback that generates fake instruction objects from description text
+The tool auto-injects the logged-in user's auth token. Since the user is the owner, the fallback auth path will succeed.
 
-This ensures no misleading content is shown. Once the population script runs, all drills will have real instructions.
+```
+POST /populate-drill-instructions
+body: {"batch_size": 5, "limit": 100}
+```
 
-### 4. Run Population Script
-After the edge function deploys, invoke it to populate all 88 drills with AI-generated, field-ready instructions. This will be done via a `curl` call to the deployed function with the Owner_Key.
+### Step 4: Verify results
 
-## Files Summary
+Check logs and query the database to confirm drills were populated.
 
-| File | Action |
-|------|--------|
-| `supabase/functions/populate-drill-instructions/index.ts` | NEW — batch AI instruction generator |
-| `supabase/functions/generate-drills/index.ts` | Add `instructions` to schema + insert |
-| `src/components/practice/DrillDetailDialog.tsx` | Remove weak fallback, show description only when no instructions |
-
-## Technical Details
-
-- AI model: `google/gemini-2.5-flash` (good balance of quality and speed for 88 drills)
-- Batch size: 5 drills per AI call to stay within token limits
-- Validation: reject any instruction where `execution.length < 4` or setup doesn't mention distance/equipment
-- The system prompt will explicitly ban vague phrases ("work on", "focus on", "improve") and require exact distances, equipment, body positions
-- Owner_Key authentication prevents unauthorized access
+### No other files change. The Owner_Key path remains for future external calls.
 
