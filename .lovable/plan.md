@@ -1,64 +1,71 @@
 
 
-# Baserunning IQ Module — Verification Report
+# Baserunning IQ Stress Test Plan
 
-## 1. Database Structure ✅ PASS
+## What We'll Do
 
-All 3 tables exist with correct schemas:
-- `baserunning_lessons` — 9 columns (id, title, content, sport, level, order_index, elite_cue, game_transfer, created_at)
-- `baserunning_scenarios` — 9 columns (id, lesson_id, scenario_text, sport, difficulty, correct_answer, explanation, options, created_at)
-- `baserunning_progress` — 7 columns (id, user_id, lesson_id, completed, score, last_attempt_at) with UNIQUE(user_id, lesson_id)
+A comprehensive stress test: bulk-insert 100 lessons + 300 scenarios, simulate 50 concurrent user completions, then run adversarial tests (wrong sport, duplicate IDs, null values). Finally, audit data integrity and report all failures and fixes.
 
-**RLS Policies** — all correct:
-- Lessons: SELECT for `authenticated` (read-only content)
-- Scenarios: SELECT for `authenticated` (read-only content)
-- Progress: SELECT/INSERT/UPDATE restricted to `auth.uid() = user_id`
+## Pre-Test State
+- 5 lessons, 5 scenarios, 0 progress records
+- Indexes: PK on all tables, UNIQUE on `(user_id, lesson_id)`, index on `user_id` and `lesson_id`
+- No CHECK constraints on `sport` or `level` columns (text fields with defaults)
+- No foreign key from `baserunning_progress.user_id` to `auth.users` (by design)
 
-**Current data: 0 lessons, 0 scenarios** — needs test data population.
+## Execution Steps
 
-## 2. Sport Filtering ✅ PASS (code-verified)
+### Step 1: Bulk Insert 100 Lessons + 300 Scenarios
+- Script generates 100 lessons: 35 baseball, 35 softball, 30 both; mixed levels
+- 300 scenarios: 3 per lesson, with valid options arrays and correct_answer matching one option
+- Insert via `psql` or migration data insert tool
+- Verify counts match exactly
 
-- `useBaserunningProgress.ts` queries with `.or('sport.eq.${sport},sport.eq.both')` — correct
-- `LessonDetail.tsx` scenario query uses same filter — correct
-- Baseball users see `baseball` + `both` lessons only
-- Softball users see `softball` + `both` lessons only
+### Step 2: Simulate 50 Concurrent User Completions
+- Generate 50 fake user UUIDs
+- Insert 50 × random subset of lessons into `baserunning_progress` with `completed=true` and scores
+- Test upsert idempotency: re-insert same (user_id, lesson_id) pairs with different scores — confirm UNIQUE constraint handles it (latest wins)
+- Check for deadlocks or constraint violations
 
-## 3. UI Placement ✅ PASS
+### Step 3: Data Integrity Audit
+- Verify all 300 scenarios have valid `lesson_id` FK references
+- Verify all progress records reference existing lessons
+- Check completion % calculation correctness for 5 random users
+- Confirm sport filtering: `WHERE sport IN ('baseball','both')` returns exactly 65 lessons, `('softball','both')` returns exactly 65
 
-- **AppSidebar.tsx**: "Baserunning IQ" entry present in BOTH 5Tool Player (line 221) and Golden 2Way (line 243) sub-module arrays
-- **FiveToolPlayer.tsx**: Tile with Brain icon, correct route `/baserunning-iq`
-- **GoldenTwoWay.tsx**: Tile with Brain icon, correct route `/baserunning-iq`
-- **App.tsx**: Route registered at `/baserunning-iq` (line 201), lazy-loaded
+### Step 4: Adversarial Tests
 
-## 4. Progress Tracking ✅ PASS (code-verified)
+| Test | Expected Result |
+|------|----------------|
+| Query `sport = 'football'` | 0 rows returned |
+| Insert lesson with `sport = NULL` | **PASS** — column is NOT NULL, will reject |
+| Insert scenario with non-existent `lesson_id` | **FAIL or PASS** — need to check if FK constraint exists |
+| Insert duplicate `(user_id, lesson_id)` progress | Handled by UNIQUE constraint |
+| Insert progress with `user_id = NULL` | Rejected — NOT NULL |
 
-- `useBaserunningProgress.ts` uses `upsert` with `onConflict: "user_id,lesson_id"` — idempotent
-- Invalidates query cache on success — UI updates immediately
-- Completion % calculated as `completed / total lessons * 100`
-- Score persisted per lesson via `markComplete` mutation
+### Step 5: Performance Measurement
+- Time the lesson list query (100+ lessons with sport filter)
+- Time scenario fetch for a single lesson (3 scenarios)
+- Time progress fetch for a user with 50 completions
 
-## 5. Performance ✅ PASS (architecture)
+### Step 6: Report
+- All pass/fail results
+- Identified weak points
+- Suggested fixes (likely: add CHECK constraints on sport/level/difficulty, add FK on scenarios.lesson_id if missing)
 
-- Lessons fetched with single query + sport filter (indexed by default on text columns)
-- Scenarios fetched only when a lesson is selected (lazy load)
-- React Query caching prevents redundant fetches
-- No N+1 queries — progress loaded in one batch query
+## Weakness Already Identified (Pre-Test)
 
-## 6. Issues Found
+1. **No CHECK constraint on `sport`** — any string accepted (e.g., 'football', 'xyz'). Fix: add CHECK constraint.
+2. **No CHECK constraint on `level`** — same issue. Fix: add CHECK.
+3. **No CHECK constraint on `difficulty`** — same. Fix: add CHECK.
+4. **No FK constraint on `baserunning_scenarios.lesson_id`** — need to verify; if missing, orphan scenarios possible.
+5. **Missing index on `baserunning_lessons.sport`** — sport filter queries will table-scan at scale. Fix: add index.
+6. **Progress completion % counts ALL user progress** regardless of sport filter — could show misleading % if user switches sports.
 
-### BLOCKING: No test data
-Tables are empty. The module will show "No lessons available yet" until populated.
+## Files Changed
+None — this is a data-only stress test + migration for constraint fixes.
 
-### Action Required
-Insert 5 test lessons (mixed sports) and 5 linked scenarios to enable end-to-end testing. This requires using the data insert tool.
-
-## Recommended Next Step
-
-Populate the database with:
-- 2 baseball-only lessons
-- 2 softball-only lessons  
-- 1 "both" lesson
-- 1-2 scenarios per lesson with options array
-
-Then do a live browser test to confirm the full flow renders correctly.
+## Deliverables
+- Full pass/fail table for all tests
+- Query timing results
+- Migration SQL for any fixes needed
 
