@@ -1,59 +1,79 @@
 
 
-# Upgrade Scenario Feedback System
+# Baserunning IQ Level System
 
 ## Summary
-Add per-wrong-answer explanations and game consequences to every scenario, turning each into a full coaching moment.
+Add a dynamically computed player level (Rookie → 0.01%) based on lesson completion, scenario accuracy, and daily streak. Display with a progress bar on the main page. No new database table — purely client-side computation from existing data.
 
-## 1. Database Migration
+## Level Tiers & Thresholds
 
-Add two columns to `baserunning_scenarios`:
+| Level | Points Required | Badge Color |
+|-------|----------------|-------------|
+| Rookie | 0 | gray |
+| Reactive | 100 | blue |
+| Instinctive | 300 | purple |
+| Elite | 600 | amber/gold |
+| 0.01% | 1000 | gradient red/gold |
 
-```sql
-ALTER TABLE baserunning_scenarios
-  ADD COLUMN wrong_explanations jsonb DEFAULT '{}'::jsonb,
-  ADD COLUMN game_consequence text;
-```
+## Scoring Formula
 
-- `wrong_explanations`: JSON object keyed by wrong answer text → explanation string. Example: `{"Hold at second": "Holding here lets the defense reset...", "Try for home": "Without reading the cutoff..."}`
-- `game_consequence`: Text describing what happens on the next play if the correct decision is made
+Points are computed from three existing data sources:
 
-## 2. UI Changes — 3 Files
+1. **Lesson Completion** (max ~500 pts): `completedLessons × 50` (capped contribution)
+2. **Scenario Accuracy** (max ~300 pts): `(7-day accuracy% / 100) × 300` from daily attempts stats
+3. **Daily Streak** (max ~200 pts): `min(streak, 20) × 10` (capped at 20 days)
 
-### `ScenarioBlock.tsx` — Enhanced feedback panel
-When user answers:
-- **Correct**: Show existing `explanation` (why it wins) + `game_consequence` (what happens next)
-- **Wrong**: Show the specific `wrong_explanations[selected]` message for their choice, then the correct explanation below, plus `game_consequence`
+Total = sum of all three. Level is determined by which threshold range the total falls in. Progress bar shows % toward next tier.
 
-Layout after answer:
+## New Files
+
+### `src/utils/baserunningLevel.ts`
+- `computeBaserunningLevel(completionPct, accuracy, streak)` → `{ level, label, points, nextThreshold, progressToNext, color }`
+- Pure function, no DB calls — computes from values already available in hooks
+
+### `src/components/baserunning-iq/LevelBadge.tsx`
+- Compact card showing: level icon + name, points total, animated progress bar to next level
+- Gradient styling per tier for visual punch
+- Placed between the header and DailyDecision on the main page
+
+## Modified Files
+
+### `src/pages/BaserunningIQ.tsx`
+- Import `LevelBadge` and `computeBaserunningLevel`
+- Pass `completionPct` from `useBaserunningProgress` + `stats.accuracy` and `streak` from `useBaserunningDaily` into the level computation
+- Render `<LevelBadge />` between the page header and DailyDecision
+
+### `src/hooks/useBaserunningDaily.ts`
+- No changes needed — already exports `streak` and `stats.accuracy`
+
+## UI Layout (main page, no active lesson)
+
 ```text
-┌─────────────────────────────────────┐
-│ ✗ Why "Hold at second" fails:       │
-│   [wrong_explanations[selected]]    │
-│                                     │
-│ ✓ Correct: "Tag and advance"        │
-│   [explanation]                     │
-│                                     │
-│ 🎯 Next Play:                       │
-│   [game_consequence]                │
-└─────────────────────────────────────┘
+┌─ Header: "Baserunning IQ" ─────────────┐
+│                                          │
+│ ┌─ LevelBadge ─────────────────────────┐│
+│ │ ⭐ REACTIVE  ·  145 pts              ││
+│ │ [████████░░░░░░░] 45% to Instinctive ││
+│ └──────────────────────────────────────┘│
+│                                          │
+│ ┌─ DailyDecision ──────────────────────┐│
+│ │ ...                                   ││
+│ └──────────────────────────────────────┘│
+│                                          │
+│ ┌─ LessonList ─────────────────────────┐│
+│ │ ...                                   ││
+│ └──────────────────────────────────────┘│
+└──────────────────────────────────────────┘
 ```
 
-### `DailyDecision.tsx` — Same enhanced feedback
-Apply identical feedback rendering in the daily decision flow (lines ~155-160 where feedback is shown).
+## Instant Update Behavior
+Level is recomputed on every render from reactive query data. When a lesson is completed or a daily scenario answered, React Query invalidation triggers re-render → level updates instantly with no additional DB call.
 
-### `useBaserunningDaily.ts` — Update type
-Add `wrong_explanations` and `game_consequence` to the `DailyScenario` interface.
+## Files Summary
 
-## 3. Files Changed
-
-| File | Change |
+| File | Action |
 |------|--------|
-| Migration SQL | Add `wrong_explanations` (jsonb) + `game_consequence` (text) columns |
-| `src/components/baserunning-iq/ScenarioBlock.tsx` | Enhanced feedback panel with wrong-answer-specific + consequence |
-| `src/components/baserunning-iq/DailyDecision.tsx` | Same enhanced feedback |
-| `src/hooks/useBaserunningDaily.ts` | Update interface |
-
-## 4. Seed Data Update
-Update existing 5 scenarios with sample `wrong_explanations` and `game_consequence` values so the feature is immediately visible.
+| `src/utils/baserunningLevel.ts` | New — level computation logic |
+| `src/components/baserunning-iq/LevelBadge.tsx` | New — level display component |
+| `src/pages/BaserunningIQ.tsx` | Edit — integrate LevelBadge with data from both hooks |
 
