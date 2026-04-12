@@ -1,51 +1,39 @@
 
 
-# First-Time User Onboarding Flow for Baserunning IQ
+# Enhance Daily Decision with Pressure Mechanics
 
 ## Summary
-Show a focused onboarding screen when a user has zero completed lessons AND zero daily attempts. After clicking "Start Training", auto-load the first lesson. Skips permanently once the user completes any lesson or daily attempt.
+Add three dynamic status messages above the DailyDecision component: streak-lost alert, pre-miss warning, and perfect-day celebration. All derived from existing hook data — no database changes.
 
-## Detection Logic
-In `BaserunningIQ.tsx`, derive `isFirstTime` from existing hook data:
-```
-isFirstTime = completedLessons === 0 && todayAttempts.length === 0 && streak === 0 && !isLoading
-```
-No database changes needed — uses data already available from `useBaserunningProgress` and `useBaserunningDaily`.
+## State Logic
 
-## New File: `src/components/baserunning-iq/OnboardingHero.tsx`
+Using data already available from `useBaserunningDaily`:
 
-Full-page hero card with:
-- Brain icon + title "Build Your Baserunning IQ"
-- Subtitle "Master decisions that separate average from elite"
-- 3 quick bullet points (what they'll learn)
-- "Start Training" button that calls `onStart()`
+| State | Condition | Message |
+|-------|-----------|---------|
+| **Streak Lost** | `streak === 0 && attempts.length > 0 && !completedToday` | "Streak Lost. Start Again." |
+| **Pre-Miss Warning** | `streak > 0 && !completedToday` | "Complete today to keep your {streak}-day streak alive" |
+| **Perfect Day** | `completedToday && all today's attempts correct` | "Perfect Read Day" |
+| **No message** | `completedToday && not all correct`, or first-time user | Nothing shown |
 
-Clean, centered layout matching existing page style.
+## New Hook Export
 
-## Modified File: `src/pages/BaserunningIQ.tsx`
+Add `streakLost` boolean to `useBaserunningDaily` return: `true` when user has past attempts but streak is 0 and hasn't completed today. This avoids showing "Streak Lost" to brand-new users.
 
-- Import `OnboardingHero` and pull `todayAttempts` from `useBaserunningDaily`
-- Add `isFirstTime` check: `completedLessons === 0 && todayAttempts.length === 0 && streak === 0`
-- When `isFirstTime && !activeLessonId && !isLoading`:
-  - Render `<OnboardingHero onStart={handleStart} />` instead of normal page content
-- `handleStart` finds the lesson with `order_index === 0` (or first lesson) and sets it as `activeLessonId`
-- Once user completes that lesson → progress is saved → `isFirstTime` becomes false → normal page renders on return
+## New Component: `src/components/baserunning-iq/PressureBanner.tsx`
 
-## Flow
-```text
-User visits /baserunning-iq (first time)
-  → Sees OnboardingHero
-  → Clicks "Start Training"
-  → First lesson loads (LessonDetail)
-  → Completes lesson → progress saved
-  → Returns to main page → normal view (LevelBadge + Daily + Lessons)
-```
+A small alert-style banner rendered above DailyDecision. Three visual variants:
+- **Streak Lost**: Red/destructive styling, `AlertTriangle` icon
+- **Pre-Miss Warning**: Amber/warning styling, `Flame` icon, pulsing subtle animation
+- **Perfect Day**: Green/success styling, `Crown` icon, celebratory feel
 
-## Files Summary
-| File | Action |
+## Files Changed
+
+| File | Change |
 |------|--------|
-| `src/components/baserunning-iq/OnboardingHero.tsx` | New — onboarding screen |
-| `src/pages/BaserunningIQ.tsx` | Edit — add first-time detection + render onboarding |
+| `src/components/baserunning-iq/PressureBanner.tsx` | New — dynamic status banner |
+| `src/hooks/useBaserunningDaily.ts` | Add `streakLost` + `isPerfectDay` to return |
+| `src/pages/BaserunningIQ.tsx` | Render `PressureBanner` above `DailyDecision` |
 
-No database changes. No new tables. Pure client-side logic from existing data.
+No database changes.
 
