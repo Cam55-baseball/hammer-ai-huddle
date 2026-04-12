@@ -1,32 +1,37 @@
 
 
-# Weekly Performance Snapshot for Baserunning IQ
+# Replace Chapter 1 Content — Baserunning IQ
 
 ## Summary
-Add a "Your Last 7 Days" stats card below the DailyDecision section on the main page, using data already computed in `useBaserunningDaily` (accuracy, total, avgTime, streak). Add an auto-generated insight line based on accuracy + speed.
+Delete existing Chapter 1 lessons (order_index=1) and their linked scenarios, then insert the two new elite lessons (baseball + softball) and 8 scenarios (4 per sport).
 
-## New Component: `src/components/baserunning-iq/WeeklySnapshot.tsx`
+## What Gets Deleted
+- **Lesson**: `a0000001-0000-0000-0000-000000000001` — "Reading the Pitcher's Move" (baseball, order_index=1)
+- **Lesson**: `a0000001-0000-0000-0000-000000000003` — "Slap-and-Run Baserunning" (softball, order_index=1)
+- **Scenarios**: `b0000001-...0001` and `b0000001-...0003` (linked to those lessons)
+- No user progress references these lessons (0 rows).
 
-Card with:
-- Title: "Your Last 7 Days"
-- 4-stat grid: Accuracy %, Total Decisions, Avg Response Time, Current Streak
-- Insight line below stats — dynamically chosen from accuracy + avgTime thresholds:
-  - accuracy >= 80 && avgTime < 5000ms: "You're reacting faster than most players — elite instincts forming"
-  - accuracy >= 80: "Strong reads — now work on speeding up your decisions"
-  - accuracy >= 50: "You're guessing — slow down and read the play earlier"
-  - else: "Focus on the fundamentals — review lessons before your next session"
-- Only renders when `stats.total > 0` (skip for brand-new users)
+## What Gets Inserted
 
-## Modified: `src/pages/BaserunningIQ.tsx`
+### Lessons (2)
+| Title | Sport | Level | order_index |
+|-------|-------|-------|-------------|
+| Understanding the Runner's Baseline (Baseball) | baseball | beginner | 1 |
+| Understanding the Runner's Baseline (Softball) | softball | beginner | 1 |
 
-- Import and render `<WeeklySnapshot>` below `<DailyDecision>`, passing `stats` and `streak` from `useBaserunningDaily`
+Both include `elite_cue` and `game_transfer` fields as specified.
 
-## Files
+### Scenarios (8)
+- **4 baseball** scenarios (easy, game_speed, elite, mistake) linked to the baseball lesson
+- **4 softball** scenarios (easy, game_speed, elite, mistake) linked to the softball lesson
+- All include `options` (jsonb), `wrong_explanations` (jsonb), and `game_consequence`
 
-| File | Action |
-|------|--------|
-| `src/components/baserunning-iq/WeeklySnapshot.tsx` | New |
-| `src/pages/BaserunningIQ.tsx` | Add WeeklySnapshot below DailyDecision |
+## Implementation
+Single database migration that:
+1. Deletes scenarios for old Chapter 1 lessons (CASCADE from lesson_id FK, or explicit delete)
+2. Deletes old Chapter 1 lessons
+3. Inserts 2 new lessons with known UUIDs
+4. Inserts 8 scenarios referencing those lesson UUIDs
 
-No database changes. All data already available from `useBaserunningDaily` hook's `stats` object and `streak`.
+No code changes needed — the existing UI already renders lessons, scenarios, elite cues, game transfers, wrong explanations, and game consequences.
 
