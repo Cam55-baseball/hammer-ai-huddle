@@ -7,6 +7,7 @@ import { LevelBadge } from "@/components/baserunning-iq/LevelBadge";
 import { OnboardingHero } from "@/components/baserunning-iq/OnboardingHero";
 import { useBaserunningProgress } from "@/hooks/useBaserunningProgress";
 import { useBaserunningDaily } from "@/hooks/useBaserunningDaily";
+import { PressureBanner } from "@/components/baserunning-iq/PressureBanner";
 import { computeBaserunningLevel } from "@/utils/baserunningLevel";
 import { Brain } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function BaserunningIQ() {
   const selectedSport = localStorage.getItem("selectedSport") || "baseball";
   const { lessons, progress, completionPct, markComplete, isLoading } = useBaserunningProgress(selectedSport);
-  const { streak, stats, todayAttempts } = useBaserunningDaily(selectedSport);
+  const { streak, stats, todayAttempts, completedToday, streakLost, isPerfectDay } = useBaserunningDaily(selectedSport);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
   const completedLessons = progress.filter((p) => p.completed).length;
@@ -51,6 +52,7 @@ export default function BaserunningIQ() {
 
             <LevelBadge level={level} />
 
+            <PressureBanner streak={streak} completedToday={completedToday} streakLost={streakLost} isPerfectDay={isPerfectDay} />
             <DailyDecision sport={selectedSport} />
 
             {isLoading ? (

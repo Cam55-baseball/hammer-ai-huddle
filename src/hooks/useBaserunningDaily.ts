@@ -139,11 +139,16 @@ export function useBaserunningDaily(sport: string) {
     },
   });
 
+  const streakLost = streak === 0 && attempts.length > 0 && !completedToday;
+  const isPerfectDay = completedToday && todayAttempts.length > 0 && todayAttempts.every((a) => a.correct);
+
   return {
     scenarios: scenariosQuery.data ?? [],
     todayAttempts,
     completedToday,
     streak,
+    streakLost,
+    isPerfectDay,
     stats,
     submitAttempt,
     isLoading: attemptsQuery.isLoading || scenariosQuery.isLoading,
