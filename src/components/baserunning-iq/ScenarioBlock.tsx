@@ -45,13 +45,26 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
 
   const handleNext = () => {
     if (isLast) {
-      onComplete(correctCount + (isCorrect ? 0 : 0)); // already counted
+      setShowSummary(true);
       return;
     }
     setCurrentIdx((i) => i + 1);
     setSelected(null);
     setShowResult(false);
   };
+
+  if (showSummary) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold">Scenario Training</h3>
+        <SessionSummary
+          correctCount={correctCount}
+          totalCount={scenarios.length}
+          onContinue={() => onComplete(correctCount)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
