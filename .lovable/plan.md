@@ -1,37 +1,62 @@
 
 
-# Replace Chapter 1 Content — Baserunning IQ
+# Insert Chapters 2–6 Baserunning IQ Lessons & Scenarios
 
-## Summary
-Delete existing Chapter 1 lessons (order_index=1) and their linked scenarios, then insert the two new elite lessons (baseball + softball) and 8 scenarios (4 per sport).
+## Current State
+- **Chapter 1** (order_index=1): 2 lessons + 8 scenarios — KEEP
+- **Old chapters** (order_index 2–3): 3 legacy lessons + 3 scenarios — REPLACE (0 user progress)
 
 ## What Gets Deleted
-- **Lesson**: `a0000001-0000-0000-0000-000000000001` — "Reading the Pitcher's Move" (baseball, order_index=1)
-- **Lesson**: `a0000001-0000-0000-0000-000000000003` — "Slap-and-Run Baserunning" (softball, order_index=1)
-- **Scenarios**: `b0000001-...0001` and `b0000001-...0003` (linked to those lessons)
-- No user progress references these lessons (0 rows).
+| Lesson ID | Title | order_index |
+|-----------|-------|-------------|
+| `a0000001-...0002` | Secondary Leads & Reads | 2 |
+| `a0000001-...0004` | Drop-Ball Wild Pitch Reads | 2 |
+| `a0000001-...0005` | Tagging Up: Decision Framework | 3 |
+
+Plus their 3 linked scenarios. No user progress affected.
 
 ## What Gets Inserted
 
-### Lessons (2)
-| Title | Sport | Level | order_index |
-|-------|-------|-------|-------------|
-| Understanding the Runner's Baseline (Baseball) | baseball | beginner | 1 |
-| Understanding the Runner's Baseline (Softball) | softball | beginner | 1 |
+### 9 Lessons (order_index 2–10)
 
-Both include `elite_cue` and `game_transfer` fields as specified.
+| # | Title | Sport | Level | order_index |
+|---|-------|-------|-------|-------------|
+| 1 | Sprint Through the Base (Baseball) | baseball | beginner | 2 |
+| 2 | Sprint Through the Base (Softball) | softball | beginner | 3 |
+| 3 | Never Slide Into First (Baseball) | baseball | advanced | 4 |
+| 4 | Never Slide Into First (Softball) | softball | advanced | 5 |
+| 5 | Right Foot Turn Mechanics (Baseball) | baseball | advanced | 6 |
+| 6 | Right Foot Turn Mechanics (Softball) | softball | advanced | 7 |
+| 7 | Leads at First | both | beginner | 8 |
+| 8 | Leads at Second | both | advanced | 9 |
+| 9 | Leads at Third | both | elite | 10 |
 
-### Scenarios (8)
-- **4 baseball** scenarios (easy, game_speed, elite, mistake) linked to the baseball lesson
-- **4 softball** scenarios (easy, game_speed, elite, mistake) linked to the softball lesson
-- All include `options` (jsonb), `wrong_explanations` (jsonb), and `game_consequence`
+All include `elite_cue` and `game_transfer` as specified.
+
+### ~32 Scenarios (3–4 per lesson)
+
+Each lesson gets 4 scenarios covering `easy`, `game_speed`, `elite`, `mistake` difficulties with:
+- `options` (4 choices each)
+- `correct_answer`
+- `wrong_explanations` (per incorrect option)
+- `game_consequence`
+- Correct `sport` matching the lesson
+
+Sport-specific lessons get sport-specific scenarios. "both" lessons get `sport = 'both'`.
 
 ## Implementation
-Single database migration that:
-1. Deletes scenarios for old Chapter 1 lessons (CASCADE from lesson_id FK, or explicit delete)
-2. Deletes old Chapter 1 lessons
-3. Inserts 2 new lessons with known UUIDs
-4. Inserts 8 scenarios referencing those lesson UUIDs
+Single data operation that:
+1. Deletes scenarios for old order_index 2–3 lessons
+2. Deletes the 3 old lessons
+3. Inserts 9 new lessons with deterministic UUIDs
+4. Inserts ~36 scenarios (4 per lesson) referencing those UUIDs
 
-No code changes needed — the existing UI already renders lessons, scenarios, elite cues, game transfers, wrong explanations, and game consequences.
+No schema or code changes needed — existing UI handles all fields.
+
+## Verification
+After insert, confirm:
+- 11 total lessons (2 ch1 + 9 new)
+- ~44 total scenarios (8 ch1 + 36 new)
+- Sport filtering returns correct subsets
+- Order is sequential 1–10
 
