@@ -8,6 +8,7 @@ import { OnboardingHero } from "@/components/baserunning-iq/OnboardingHero";
 import { useBaserunningProgress } from "@/hooks/useBaserunningProgress";
 import { useBaserunningDaily } from "@/hooks/useBaserunningDaily";
 import { PressureBanner } from "@/components/baserunning-iq/PressureBanner";
+import { WeeklySnapshot } from "@/components/baserunning-iq/WeeklySnapshot";
 import { computeBaserunningLevel } from "@/utils/baserunningLevel";
 import { Brain } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,6 +55,7 @@ export default function BaserunningIQ() {
 
             <PressureBanner streak={streak} completedToday={completedToday} streakLost={streakLost} isPerfectDay={isPerfectDay} />
             <DailyDecision sport={selectedSport} />
+            <WeeklySnapshot stats={stats} streak={streak} />
 
             {isLoading ? (
               <div className="space-y-3">
