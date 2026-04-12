@@ -1,39 +1,40 @@
 
 
-# Enhance Daily Decision with Pressure Mechanics
+# Post-Session Summary for Baserunning IQ
 
 ## Summary
-Add three dynamic status messages above the DailyDecision component: streak-lost alert, pre-miss warning, and perfect-day celebration. All derived from existing hook data — no database changes.
+Add a summary card that appears after completing a lesson's scenarios or finishing the Daily Decision session, showing performance verdict, stats, coaching insight, and CTAs.
 
-## State Logic
+## New File: `src/components/baserunning-iq/SessionSummary.tsx`
 
-Using data already available from `useBaserunningDaily`:
+A card/modal component accepting:
+- `correctCount`, `totalCount`, `avgTimeMs?` (optional, only for daily), `onContinue`, `onDismiss`
 
-| State | Condition | Message |
-|-------|-----------|---------|
-| **Streak Lost** | `streak === 0 && attempts.length > 0 && !completedToday` | "Streak Lost. Start Again." |
-| **Pre-Miss Warning** | `streak > 0 && !completedToday` | "Complete today to keep your {streak}-day streak alive" |
-| **Perfect Day** | `completedToday && all today's attempts correct` | "Perfect Read Day" |
-| **No message** | `completedToday && not all correct`, or first-time user | Nothing shown |
+**Layout:**
+1. **Verdict** — "Elite Reads Today" (>=80% accuracy) or "Needs Sharpening" (<80%), with matching icon/color
+2. **Stats row** — Accuracy %, decisions completed, avg response time (if provided)
+3. **Coaching Insight** — High accuracy: "You're seeing the game early — keep trusting your reads" / Low: "You're reacting late — focus on reading angles earlier"
+4. **CTAs** — "Continue Training" (calls onContinue) and "Come Back Tomorrow" (calls onDismiss)
 
-## New Hook Export
+## Modified Files
 
-Add `streakLost` boolean to `useBaserunningDaily` return: `true` when user has past attempts but streak is 0 and hasn't completed today. This avoids showing "Streak Lost" to brand-new users.
+### `src/components/baserunning-iq/ScenarioBlock.tsx` (Lesson scenarios)
+- Instead of calling `onComplete(score)` immediately on last scenario finish, show `<SessionSummary>` inline
+- Track score internally, render summary when all scenarios done
+- "Continue Training" calls the existing `onComplete` callback
 
-## New Component: `src/components/baserunning-iq/PressureBanner.tsx`
+### `src/components/baserunning-iq/DailyDecision.tsx` (Daily scenarios)
+- Replace the current `finished` state card with `<SessionSummary>`
+- Pass avg response time from `sessionResults`
+- "Continue Training" scrolls to lessons / dismisses; "Come Back Tomorrow" keeps the completed state
 
-A small alert-style banner rendered above DailyDecision. Three visual variants:
-- **Streak Lost**: Red/destructive styling, `AlertTriangle` icon
-- **Pre-Miss Warning**: Amber/warning styling, `Flame` icon, pulsing subtle animation
-- **Perfect Day**: Green/success styling, `Crown` icon, celebratory feel
+## Files Summary
 
-## Files Changed
-
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/components/baserunning-iq/PressureBanner.tsx` | New — dynamic status banner |
-| `src/hooks/useBaserunningDaily.ts` | Add `streakLost` + `isPerfectDay` to return |
-| `src/pages/BaserunningIQ.tsx` | Render `PressureBanner` above `DailyDecision` |
+| `src/components/baserunning-iq/SessionSummary.tsx` | New — reusable summary component |
+| `src/components/baserunning-iq/ScenarioBlock.tsx` | Edit — show summary after last scenario |
+| `src/components/baserunning-iq/DailyDecision.tsx` | Edit — replace finished card with summary |
 
 No database changes.
 
