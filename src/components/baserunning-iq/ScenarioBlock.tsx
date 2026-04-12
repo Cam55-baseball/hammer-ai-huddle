@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SessionSummary } from "./SessionSummary";
 
 interface Scenario {
   id: string;
@@ -25,6 +26,7 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [showSummary, setShowSummary] = useState(false);
 
   if (!scenarios.length) return null;
 
