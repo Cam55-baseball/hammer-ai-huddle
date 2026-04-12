@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Flame, Target, Clock, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBaserunningDaily } from "@/hooks/useBaserunningDaily";
+import { SessionSummary } from "./SessionSummary";
 
 interface DailyDecisionProps {
   sport: string;
@@ -67,18 +68,19 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
     const correct = sessionResults.filter((r) => r.correct).length;
     const avgTime = Math.round(sessionResults.reduce((s, r) => s + r.timeMs, 0) / sessionResults.length);
     return (
-      <Card className="p-5 space-y-4 border-primary/20 bg-primary/5">
+      <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-primary" />
-          <h3 className="text-lg font-bold">Today's Decision — Complete!</h3>
+          <Flame className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-bold">Today's Decision</h3>
         </div>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <StatBox icon={<Flame className="h-4 w-4" />} label="Streak" value={`${streak}d`} />
-          <StatBox icon={<Target className="h-4 w-4" />} label="Score" value={`${correct}/${sessionResults.length}`} />
-          <StatBox icon={<Clock className="h-4 w-4" />} label="Avg Time" value={`${(avgTime / 1000).toFixed(1)}s`} />
-        </div>
-        <p className="text-sm text-muted-foreground text-center">Come back tomorrow to keep your streak alive!</p>
-      </Card>
+        <SessionSummary
+          correctCount={correct}
+          totalCount={sessionResults.length}
+          avgTimeMs={avgTime}
+          onContinue={() => {}}
+          onDismiss={() => {}}
+        />
+      </div>
     );
   }
 

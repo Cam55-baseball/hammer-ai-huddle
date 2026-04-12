@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SessionSummary } from "./SessionSummary";
 
 interface Scenario {
   id: string;
@@ -25,6 +26,7 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [showSummary, setShowSummary] = useState(false);
 
   if (!scenarios.length) return null;
 
@@ -43,13 +45,26 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
 
   const handleNext = () => {
     if (isLast) {
-      onComplete(correctCount + (isCorrect ? 0 : 0)); // already counted
+      setShowSummary(true);
       return;
     }
     setCurrentIdx((i) => i + 1);
     setSelected(null);
     setShowResult(false);
   };
+
+  if (showSummary) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold">Scenario Training</h3>
+        <SessionSummary
+          correctCount={correctCount}
+          totalCount={scenarios.length}
+          onContinue={() => onComplete(correctCount)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
