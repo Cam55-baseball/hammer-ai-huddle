@@ -1,49 +1,53 @@
 
 
-# Insert Chapter 12 — "Never Surrender: Mastering the Art of the Rundown"
+# Double Scenario Depth: 4 → 8 Per Lesson
 
-## Source Material
-Two uploaded PDFs containing:
-- **Lesson PDF**: Chapter 12 content covering rundown ("pickle") strategy — extending the play, forcing errors, controlled movements, eye contact, strategic angles
-- **Quiz PDF**: 3 quiz questions about rundown tactics
+## Current State
+- 17 lessons, 68 scenarios (4 per lesson)
+- Difficulty constraint: `easy`, `game_speed`, `elite`, `mistake`
 
-## What Gets Inserted
+## Changes Required
 
-### 2 Lessons (order_index = 13)
+### Schema Change (Migration)
+Add `reaction_time` to the difficulty check constraint:
+```sql
+ALTER TABLE public.baserunning_scenarios DROP CONSTRAINT chk_scenarios_difficulty;
+ALTER TABLE public.baserunning_scenarios ADD CONSTRAINT chk_scenarios_difficulty
+  CHECK (difficulty = ANY (ARRAY['easy','game_speed','elite','mistake','reaction_time']));
+```
 
-| Title | Sport | Level |
-|-------|-------|-------|
-| Never Surrender: Mastering the Art of the Rundown (Baseball) | baseball | advanced |
-| Never Surrender: Mastering the Art of the Rundown (Softball) | softball | advanced |
+### Data Insert: 68 New Scenarios
+4 new scenarios per lesson across all 17 lessons:
 
-**Content** (adapted from PDF): Covers rundown tactical overview, key objectives (extend play, force errors, maintain awareness), techniques (controlled movements, eye contact, strategic angles).
+| New Difficulty | Description |
+|---|---|
+| `game_speed` | Advanced — faster decision, less obvious correct answer |
+| `elite` | Pressure + deception element |
+| `mistake` | Common player error trap |
+| `reaction_time` | Minimal info, instant decision required |
 
-**elite_cue**: "Stay alive. Make them throw."
+Each scenario includes: `options` (3-4 choices), `correct_answer`, `wrong_explanations`, `game_consequence`.
 
-**game_transfer**: Applies to pickoffs, delayed steals gone wrong, any rundown between bases. Softball version emphasizes shorter distances and faster transfers.
+Content will be generated per lesson topic and sport-specific (baseball scenarios reference MLB-style play; softball scenarios reference shorter basepaths, slap hitting, faster transfers). `sport = 'both'` lessons (Leads at First/Second/Third) get universal scenarios.
 
-### 8 Scenarios (4 per lesson)
+### Lesson Breakdown (17 lessons × 4 new scenarios)
+1. Understanding the Runner's Baseline — Baseball (4) + Softball (4)
+2. Sprint Through the Base — Baseball (4) + Softball (4)
+3. Never Slide Into First — Baseball (4) + Softball (4)
+4. Right Foot Turn Mechanics — Baseball (4) + Softball (4)
+5. Leads at First (both) (4)
+6. Leads at Second (both) (4)
+7. Double or Nothing — Baseball (4) + Softball (4)
+8. Run Like It Counts — Baseball (4) + Softball (4)
+9. Leads at Third (both) (4)
+10. Never Surrender: Rundown — Baseball (4) + Softball (4)
 
-Built from the 3 quiz questions plus one additional scenario to complete the 4-difficulty set:
+### Post-Insert Verification
+- Confirm 136 total scenarios
+- Confirm each lesson has exactly 8 scenarios
+- Confirm difficulty distribution: each lesson has 2× game_speed, 2× elite, 2× mistake, 1× easy, 1× reaction_time
+- Sport filtering integrity check
 
-| # | Difficulty | Source | Scenario Summary |
-|---|-----------|--------|-----------------|
-| 1 | easy | Quiz Q1 | Caught in rundown — primary objective? |
-| 2 | game_speed | Quiz Q2 | Least effective technique in rundown? |
-| 3 | elite | Quiz Q3 | How to force a defensive error? |
-| 4 | mistake | Generated | Runner panics and sprints straight — consequence? |
-
-Each with `options` (3-4 choices), `correct_answer`, `wrong_explanations`, `game_consequence`. Softball variants adjust for shorter basepaths and faster fielder transfers.
-
-## Implementation
-Single data insert:
-1. Insert 2 lessons with deterministic UUIDs at `order_index = 13`
-2. Insert 8 scenarios (4 baseball, 4 softball) linked to those lessons
-
-No existing data modified. No code changes needed.
-
-## Post-Insert Verification
-- Confirm 17 total lessons
-- Confirm 68 total scenarios
-- Confirm sport filtering integrity
+### No Code Changes
+Existing UI renders any number of scenarios per lesson dynamically.
 
