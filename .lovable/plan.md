@@ -1,53 +1,34 @@
 
 
-# Double Scenario Depth: 4 → 8 Per Lesson
+# Refine Weak Elite Scenario: Double or Nothing (Baseball)
 
-## Current State
-- 17 lessons, 68 scenarios (4 per lesson)
-- Difficulty constraint: `easy`, `game_speed`, `elite`, `mistake`
+## Current Problem
+Scenario `f1000001-0000-0000-0000-000000000003` is abstract:
+- **Text**: "You push aggressively toward second knowing the throw may go elsewhere."
+- **Correct answer**: "Bait a throw to create chaos"
+- No runner position, no outs, no ball location, no defensive action. Single-variable read.
 
-## Changes Required
+## Replacement Scenario
 
-### Schema Change (Migration)
-Add `reaction_time` to the difficulty check constraint:
-```sql
-ALTER TABLE public.baserunning_scenarios DROP CONSTRAINT chk_scenarios_difficulty;
-ALTER TABLE public.baserunning_scenarios ADD CONSTRAINT chk_scenarios_difficulty
-  CHECK (difficulty = ANY (ARRAY['easy','game_speed','elite','mistake','reaction_time']));
-```
+**scenario_text**: "Runner on first, 1 out. You hit a sharp single to right field. Rounding first hard, you see the right fielder charging the ball on the grass while the runner ahead of you is being waved to third. The shortstop is cheating toward second, but the second baseman is still covering the cutoff relay. Do you take second?"
 
-### Data Insert: 68 New Scenarios
-4 new scenarios per lesson across all 17 lessons:
+**options**:
+1. "Take second aggressively — the SS is vacating coverage and the throw is going to third"
+2. "Hold at first — the right fielder is charging and could throw behind you"
+3. "Stop between first and second to draw a throw and buy time for the lead runner"
+4. "Sprint to second no matter what — you always take the extra base"
 
-| New Difficulty | Description |
-|---|---|
-| `game_speed` | Advanced — faster decision, less obvious correct answer |
-| `elite` | Pressure + deception element |
-| `mistake` | Common player error trap |
-| `reaction_time` | Minimal info, instant decision required |
+**correct_answer**: "Take second aggressively — the SS is vacating coverage and the throw is going to third"
 
-Each scenario includes: `options` (3-4 choices), `correct_answer`, `wrong_explanations`, `game_consequence`.
+**wrong_explanations**:
+- "Hold at first — the right fielder is charging and could throw behind you" → "The RF's momentum is toward home/third. A snap throw behind you is low-percentage and the SS has vacated. You're giving up a free base."
+- "Stop between first and second to draw a throw and buy time for the lead runner" → "Stopping in no-man's land with 1 out creates a force/tag situation. The lead runner is already being waved — your job is to take the open base, not manufacture a rundown."
+- "Sprint to second no matter what — you always take the extra base" → "Blind aggression ignores the read. If the SS had stayed at second or the RF fielded cleanly on the dirt, you'd be out. The decision is right HERE, but the reason matters."
 
-Content will be generated per lesson topic and sport-specific (baseball scenarios reference MLB-style play; softball scenarios reference shorter basepaths, slap hitting, faster transfers). `sport = 'both'` lessons (Leads at First/Second/Third) get universal scenarios.
+**game_consequence**: "Runner takes second on the throw to third. With runners at 2nd and 3rd with 1 out, the next batter's sac fly scores both runs."
 
-### Lesson Breakdown (17 lessons × 4 new scenarios)
-1. Understanding the Runner's Baseline — Baseball (4) + Softball (4)
-2. Sprint Through the Base — Baseball (4) + Softball (4)
-3. Never Slide Into First — Baseball (4) + Softball (4)
-4. Right Foot Turn Mechanics — Baseball (4) + Softball (4)
-5. Leads at First (both) (4)
-6. Leads at Second (both) (4)
-7. Double or Nothing — Baseball (4) + Softball (4)
-8. Run Like It Counts — Baseball (4) + Softball (4)
-9. Leads at Third (both) (4)
-10. Never Surrender: Rundown — Baseball (4) + Softball (4)
-
-### Post-Insert Verification
-- Confirm 136 total scenarios
-- Confirm each lesson has exactly 8 scenarios
-- Confirm difficulty distribution: each lesson has 2× game_speed, 2× elite, 2× mistake, 1× easy, 1× reaction_time
-- Sport filtering integrity check
-
-### No Code Changes
-Existing UI renders any number of scenarios per lesson dynamically.
+## What Changes
+- Single UPDATE to scenario `f1000001-0000-0000-0000-000000000003`
+- No other scenarios touched
+- Multi-variable read: RF charge direction + SS positioning + throw destination + lead runner action
 
