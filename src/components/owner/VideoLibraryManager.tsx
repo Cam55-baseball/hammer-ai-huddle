@@ -1,13 +1,20 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash2, Edit, BarChart3, Tags } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2, Pencil, BarChart3, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VideoUploadForm } from "./VideoUploadForm";
+import { VideoEditForm } from "./VideoEditForm";
 import { TagManager } from "./TagManager";
 import { VideoAnalytics } from "./VideoAnalytics";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import {
   AlertDialog,
@@ -21,8 +28,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function VideoLibraryManager() {
-  const [showUploadForm, setShowUploadForm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<LibraryVideo | null>(null);
   const { videos, tags, refetch } = useVideoLibrary({ limit: 100 });
   const { deleteVideo } = useVideoLibraryAdmin();
 
@@ -77,14 +84,24 @@ export function VideoLibraryManager() {
                       <span>Type: {video.video_type}</span>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="shrink-0 text-destructive hover:text-destructive"
-                    onClick={() => setDeleteTarget(video.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setEditTarget(video)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => setDeleteTarget(video.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))
@@ -103,6 +120,26 @@ export function VideoLibraryManager() {
           <VideoAnalytics />
         </TabsContent>
       </Tabs>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editTarget} onOpenChange={open => !open && setEditTarget(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Video</DialogTitle>
+          </DialogHeader>
+          {editTarget && (
+            <VideoEditForm
+              video={editTarget}
+              tags={tags}
+              onSuccess={() => {
+                setEditTarget(null);
+                refetch();
+              }}
+              onCancel={() => setEditTarget(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent>
