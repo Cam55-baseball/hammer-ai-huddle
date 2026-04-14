@@ -60,7 +60,11 @@ export function VideoLibraryManager() {
           {videos.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
               <p>No videos yet. Add your first video to get started.</p>
-              <Button className="mt-3" onClick={() => setShowUploadForm(true)}>
+              <Button className="mt-3" asChild>
+                <a href="#" onClick={(e) => { e.preventDefault(); document.querySelector<HTMLButtonElement>('[data-value="upload"]')?.click(); }}>
+                  <Plus className="h-4 w-4 mr-2" /> Add Video
+                </a>
+              </Button>
                 <Plus className="h-4 w-4 mr-2" /> Add Video
               </Button>
             </Card>
