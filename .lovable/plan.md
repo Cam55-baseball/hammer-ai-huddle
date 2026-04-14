@@ -1,34 +1,60 @@
 
 
-# Refine Weak Elite Scenario: Double or Nothing (Baseball)
+# System Completion: Chapters 11–12 → Lessons 18–25
 
-## Current Problem
-Scenario `f1000001-0000-0000-0000-000000000003` is abstract:
-- **Text**: "You push aggressively toward second knowing the throw may go elsewhere."
-- **Correct answer**: "Bait a throw to create chaos"
-- No runner position, no outs, no ball location, no defensive action. Single-variable read.
+## Phase 1 — Clean Range
+No lessons exist at order_index >= 18. No cleanup needed.
 
-## Replacement Scenario
+## Phase 2 — Insert 8 Lessons (order_index 18–25)
 
-**scenario_text**: "Runner on first, 1 out. You hit a sharp single to right field. Rounding first hard, you see the right fielder charging the ball on the grass while the runner ahead of you is being waved to third. The shortstop is cheating toward second, but the second baseman is still covering the cutoff relay. Do you take second?"
+All lessons use `sport = 'both'`. Deterministic UUIDs `d18xxxxx` through `d25xxxxx`.
 
-**options**:
-1. "Take second aggressively — the SS is vacating coverage and the throw is going to third"
-2. "Hold at first — the right fielder is charging and could throw behind you"
-3. "Stop between first and second to draw a throw and buy time for the lead runner"
-4. "Sprint to second no matter what — you always take the extra base"
+| order_index | Title | Level |
+|---|---|---|
+| 18 | Secondary Leads & Reaction Movement | advanced |
+| 19 | Pitch-to-Pitch Adjustment System | advanced |
+| 20 | Pitch Recognition → First Move | elite |
+| 21 | Ball-in-Dirt Reaction System | elite |
+| 22 | Rundown Survival System | elite |
+| 23 | Trailing Runner Intelligence | elite |
+| 24 | Chaos Base Running (Broken Plays) | elite |
+| 25 | Elite Game Awareness (Full Field Processing) | elite |
 
-**correct_answer**: "Take second aggressively — the SS is vacating coverage and the throw is going to third"
+Each includes concise decision-focused `content`, `elite_cue`, and `game_transfer`.
 
-**wrong_explanations**:
-- "Hold at first — the right fielder is charging and could throw behind you" → "The RF's momentum is toward home/third. A snap throw behind you is low-percentage and the SS has vacated. You're giving up a free base."
-- "Stop between first and second to draw a throw and buy time for the lead runner" → "Stopping in no-man's land with 1 out creates a force/tag situation. The lead runner is already being waved — your job is to take the open base, not manufacture a rundown."
-- "Sprint to second no matter what — you always take the extra base" → "Blind aggression ignores the read. If the SS had stayed at second or the RF fielded cleanly on the dirt, you'd be out. The decision is right HERE, but the reason matters."
+## Phase 3 — Insert 32 Scenarios (4 per lesson)
 
-**game_consequence**: "Runner takes second on the throw to third. With runners at 2nd and 3rd with 1 out, the next batter's sac fly scores both runs."
+Difficulty per lesson: `easy`, `game_speed`, `elite`, `mistake`.
 
-## What Changes
-- Single UPDATE to scenario `f1000001-0000-0000-0000-000000000003`
-- No other scenarios touched
-- Multi-variable read: RF charge direction + SS positioning + throw destination + lead runner action
+All scenarios written as live-game reads — no "What should you do?" phrasing. Each includes:
+- `scenario_text`: situational, pressure-based
+- `options`: 4 distinct choices
+- `correct_answer`, `explanation`
+- `wrong_explanations`: keyed to each wrong option
+- `game_consequence`: next-play outcome
+
+## Phase 4 — Sport Adaptation
+Lessons set to `sport = 'both'`. Scenario text references universal reads. Where relevant, scenarios naturally accommodate both baseball (longer windows) and softball (faster reactions) since they use `both`.
+
+## Phase 5 — Verification Queries
+After insert, run:
+1. `SELECT COUNT(*) FROM baserunning_lessons` → expect 25
+2. `SELECT order_index, COUNT(*) FROM baserunning_lessons GROUP BY order_index ORDER BY order_index` → 1–25 sequential
+3. `SELECT lesson_id, COUNT(*) FROM baserunning_scenarios GROUP BY lesson_id` → every lesson has ≥4
+4. `SELECT COUNT(*) FROM baserunning_scenarios` → expect 168
+5. Orphan check: scenarios with no matching lesson
+6. Sample 2 full scenarios as JSON proof
+7. Confirm DailyDecision compatibility (sport filter includes `both`)
+
+## Implementation
+- Single data insert operation (no schema changes needed)
+- No code changes — existing UI renders dynamically
+- DailyDecision hook already queries `sport.eq.both` so new scenarios appear automatically
+
+## Post-Insert Deliverables
+- Total lesson count
+- Total scenario count
+- 2 full sample scenarios (JSON)
+- Sport filtering confirmation
+- DailyDecision compatibility confirmation
 
