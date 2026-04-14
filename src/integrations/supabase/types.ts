@@ -7631,6 +7631,50 @@ export type Database = {
           },
         ]
       }
+      video_versions: {
+        Row: {
+          file_size_bytes: number | null
+          id: string
+          is_active: boolean
+          replaced_at: string | null
+          uploaded_at: string
+          version_number: number
+          video_id: string
+          video_type: string
+          video_url: string
+        }
+        Insert: {
+          file_size_bytes?: number | null
+          id?: string
+          is_active?: boolean
+          replaced_at?: string | null
+          uploaded_at?: string
+          version_number?: number
+          video_id: string
+          video_type?: string
+          video_url: string
+        }
+        Update: {
+          file_size_bytes?: number | null
+          id?: string
+          is_active?: boolean
+          replaced_at?: string | null
+          uploaded_at?: string
+          version_number?: number
+          video_id?: string
+          video_type?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_versions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
           ai_analysis: Json | null
@@ -8095,6 +8139,15 @@ export type Database = {
           cutoff_date: string
           deleted_count: number
         }[]
+      }
+      replace_video_version: {
+        Args: {
+          p_file_size?: number
+          p_new_url: string
+          p_video_id: string
+          p_video_type?: string
+        }
+        Returns: string
       }
       try_acquire_hie_lock: {
         Args: { p_stale_seconds?: number; p_user_id: string }

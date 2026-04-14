@@ -101,6 +101,49 @@ export function useVideoLibraryAdmin() {
     return true;
   }, []);
 
+  const replaceVideoFile = useCallback(async (videoId: string, file: File) => {
+    if (!user) return null;
+    setUploading(true);
+    try {
+      const validation = validateVideoFile(file);
+      if (!validation.valid) {
+        toast({ title: 'Invalid file', description: validation.error, variant: 'destructive' });
+        return null;
+      }
+
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+      const ts = Date.now();
+      const path = `${user.id}/library/${videoId}_v${ts}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(path, file, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('videos').getPublicUrl(path);
+      const newUrl = urlData.publicUrl;
+
+      const { data, error } = await supabase.rpc('replace_video_version', {
+        p_video_id: videoId,
+        p_new_url: newUrl,
+        p_video_type: 'upload',
+        p_file_size: file.size,
+      } as any);
+
+      if (error) throw error;
+
+      toast({ title: 'Video replaced', description: 'New version is now active.' });
+      return data;
+    } catch (err: any) {
+      console.error('Error replacing video:', err);
+      toast({ title: 'Error', description: err.message || 'Failed to replace video', variant: 'destructive' });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  }, [user]);
+
   const deleteVideo = useCallback(async (videoId: string) => {
     const { error } = await supabase
       .from('library_videos')
@@ -188,6 +231,7 @@ export function useVideoLibraryAdmin() {
   return {
     uploadVideo,
     updateVideo,
+    replaceVideoFile,
     deleteVideo,
     addTag,
     deleteTag,
