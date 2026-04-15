@@ -446,6 +446,9 @@ Always respond using the generate_training_block function.`
       })),
     }));
 
+    // Generate idempotency key to prevent duplicate generation from retries
+    const idempotencyKey = crypto.randomUUID();
+
     const { data: blockId, error: rpcErr } = await supabase.rpc('insert_training_block_atomic', {
       p_user_id: user.id,
       p_goal: generated.goal || goal,
@@ -459,10 +462,18 @@ Always respond using the generate_training_block function.`
       },
       p_workouts: workoutsPayload,
       p_pending_goal_block_id: pendingBlock?.id || null,
+      p_idempotency_key: idempotencyKey,
     });
 
     if (rpcErr) {
       console.error("Atomic insert failed:", rpcErr);
+      if (rpcErr.message?.includes('active_block_exists')) {
+        return new Response(JSON.stringify({
+          error: 'Active training block exists. Complete or archive it before generating a new one.',
+        }), {
+          status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       throw new Error(`Failed to create training block: ${rpcErr.message}`);
     }
 
