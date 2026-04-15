@@ -104,6 +104,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
   const [folderTasks, setFolderTasks] = useState<FolderGamePlanTask[]>([]);
   const [scheduledSessions, setScheduledSessions] = useState<any[]>([]);
+  const [isDayComplete, setIsDayComplete] = useState(false);
 
   const [activeProgramStatuses, setActiveProgramStatuses] = useState<Record<string, string>>({});
 
@@ -1407,6 +1408,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     folderTasks,
     completedCount,
     totalCount: tasks.length,
+    isDayComplete,
     daysUntilRecap,
     recapProgress,
     loading,
