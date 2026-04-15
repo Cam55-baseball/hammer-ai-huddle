@@ -244,20 +244,29 @@ export function useCalendarActivityDetail(
 
     // Store previous state for rollback
     const previousTask = selectedTask;
+    const template = selectedTask.customActivityData.template;
     const currentLog = selectedTask.customActivityData.log;
     const currentData = (currentLog?.performance_data as Record<string, unknown>) || {};
     const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
     const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
     const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
 
-    // OPTIMISTIC UPDATE: Immediately update UI
+    // DERIVE COMPLETION: activity is complete when ALL checkable items are checked
+    const allCheckableIds = getAllCheckableIds(template);
+    const derivedCompleted = allCheckableIds.length > 0 
+      ? allCheckableIds.every(id => newCheckboxStates[id] === true)
+      : (currentLog?.completed || false);
+    const derivedCompletedAt = derivedCompleted ? new Date().toISOString() : null;
+
+    // OPTIMISTIC UPDATE: Immediately update UI with derived completion
     setSelectedTask({
       ...selectedTask,
+      completed: derivedCompleted,
       customActivityData: {
         ...selectedTask.customActivityData,
         log: currentLog 
-          ? { ...currentLog, performance_data: newPerformanceData } as CustomActivityLog
-          : { id: 'pending', template_id: currentTemplateId, completed: false, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
+          ? { ...currentLog, performance_data: newPerformanceData, completed: derivedCompleted, completed_at: derivedCompletedAt } as CustomActivityLog
+          : { id: 'pending', template_id: currentTemplateId, completed: derivedCompleted, completed_at: derivedCompletedAt, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
       }
     });
 
@@ -286,7 +295,8 @@ export function useCalendarActivityDetail(
               template_id: currentTemplateId,
               user_id: user.id,
               entry_date: dateStr,
-              completed: false,
+              completed: derivedCompleted,
+              completed_at: derivedCompletedAt,
             })
             .select()
             .single();
@@ -296,11 +306,18 @@ export function useCalendarActivityDetail(
 
       if (!log) return;
 
-      // Persist checkbox states
+      // Persist checkbox states AND derived completion in single update
       await supabase
         .from('custom_activity_logs')
-        .update({ performance_data: newPerformanceData })
+        .update({ 
+          performance_data: newPerformanceData,
+          completed: derivedCompleted,
+          completed_at: derivedCompletedAt,
+        })
         .eq('id', log.id);
+
+      // Trigger game plan refresh so completion propagates
+      onRefresh?.();
 
     } catch (err) {
       console.error('Error toggling checkbox:', err);
@@ -308,7 +325,7 @@ export function useCalendarActivityDetail(
       setSelectedTask(previousTask);
       toast.error('Failed to save');
     }
-  }, [currentTemplateId, currentDate, selectedTask]);
+  }, [currentTemplateId, currentDate, selectedTask, onRefresh]);
 
   // Quick complete for calendar cards without opening detail dialog
   const quickComplete = useCallback(async (event: CalendarEvent, date: Date): Promise<boolean> => {
