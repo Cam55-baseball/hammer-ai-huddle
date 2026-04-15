@@ -1,72 +1,113 @@
 
 
-# Full Scenario Repair: Structure, Balance, and Deduplication
+# System Intelligence Upgrade: Dedup, Quality, Schema, Code Hardening
 
-## Current State
-- **232 total scenarios**, 75 are `mistake` difficulty
-- **17 scenarios have only 2 options** (all `mistake`, all in lessons 1–13)
-- **Concept duplication**: 4 scenarios repeat "SPRINT THROUGH vs SLIDE" (lessons 2–5), 5 repeat "GO vs HOLD on error/bobble" (lessons 1, 6–10)
-- Mistake type distribution is heavily skewed toward over-aggressive/hesitation binary choices
+## Summary
 
-## Phase 1 — Structural Fix (17 scenarios)
+Five interconnected fixes: (1) reduce slide-into-first from 7→2 scenarios, (2) upgrade generic wrong_explanations, (3) add `mistake_type` column and backfill, (4) add `answer_id` column for stable matching, (5) sport-specific softball rewrites.
 
-Expand all 17 two-option scenarios to 4 options each. Every scenario gets:
-- 1 correct answer (unchanged)
-- 3 distinct wrong answers: one hesitation-based, one over-aggressive, one misread/panic
-- `wrong_explanations` JSONB updated with all 3 keys
-- `correct_answer` verified to match one option exactly
+---
 
-| ID | Lesson | Current Binary | New Options Added |
-|---|---|---|---|
-| `f101...04` (×2) | L1 BB/SB | GO/HOLD on bobble | +hesitation read, +misread angle, +panic retreat |
-| `f102...04` | L2 BB | SPRINT/SLIDE | +decelerate to read, +dive headfirst, +veer wide |
-| `f102...04` | L3 SB | SPRINT/SLIDE | +pump arms and lean, +hook slide, +slow to time |
-| `f103...04` (×2) | L4-5 BB/SB | SPRINT/SLIDE | +pop-up slide, +stutter-step, +barrel roll |
-| `f104...04` (×2) | L6-7 BB/SB | GO/HOLD on wall | +check halfway, +round but wait, +sprint then stop |
-| `f105...04` | L8 | GO/HOLD on passed ball | +freeze and watch, +bluff then hold, +jog casually |
-| `f106...04` | L9 | GO/WAIT on ground ball | +peek then decide, +freeze at bag, +sprint then brake |
-| `f107...04` (×2) | L10 BB/SB | GO/HOLD on error | +read backup, +stutter turn, +stop and watch |
-| `f108...04` (×2) | L11-12 BB/SB | SCORE/HOLD | +hold for coach, +round but brake, +freeze at third |
-| `f109...04` | L13 | TAG/HOLD on fly | +leave early, +sprint blind, +freeze mid-path |
+## 1. Slide-Into-First Reduction (7→2)
 
-## Phase 2 — Concept Deduplication
+**Keep** (1 baseball, 1 softball):
+- `f1030001-...-03` (BB) — "Runner slides headfirst into first base on routine grounder"
+- `f1030002-...-03` (SB) — "Softball player slides headfirst into first on close play at 60-foot base"
 
-**Problem**: "SPRINT THROUGH vs SLIDE into first" appears in 4 separate scenarios (plus 2 more in `game_speed`). "GO vs HOLD on error" appears 5 times.
+**Rewrite** (5 scenarios → new decision types):
 
-**Fix**: Rewrite 6 scenarios to introduce distinct game contexts:
-- Convert 2 "slide into first" scenarios → new contexts (e.g., "reaching for bag vs running through on overthrow", "deciding to dive back vs sprint on pickoff")
-- Convert 2 "GO/HOLD on error" scenarios → new contexts (e.g., "reading relay throw angle", "commit vs bail on delayed steal")
+| ID | Current | New Decision Type |
+|---|---|---|
+| `d2000001-...-12` (BB) | "slides into first, what did they lose" | **Delayed steal read** — Runner at first reads catcher lob-back to pitcher, decides steal window |
+| `f1020001-...-04` (BB) | "sprint through or slide" | **Secondary lead timing** — Runner at second with 2-strike count, secondary shuffle vs freeze on swing-and-miss |
+| `d2000001-...-16` (SB) | "slides headfirst on bunt play" | **Tag-up depth read** — Runner at third on medium fly, reads fielder momentum for scoring decision |
+| `f1020002-...-04` (SB) | "sprint through or slide on bunt" | **First-step reaction vs contact quality** — Runner at first reads bat angle/contact quality for GO/HOLD |
+| `d2000001-...-15` (SB) | "why is sliding worse in softball" | **Slap-game delayed steal** — Runner reads catcher's throw-down habits after slap singles |
 
-## Phase 3 — Mistake Type Balance
+Each rewritten scenario: 4 options, 3 wrong_explanations, game_consequence, sport-specific context.
 
-Current distribution across 75 mistake scenarios (estimated):
-- Hesitation: ~35%
-- Over-aggressive: ~15%
-- Misread: ~30%
-- Panic: ~20%
+## 2. Wrong_Explanation Quality Upgrade
 
-**Target**: ~25% each (18-19 per type)
+**Flagged scenarios** (generic/dismissive language):
+- `d2000001-...-04` — contains "It makes no difference either way"
+- Plus full audit of all 75 mistake scenarios for explanations that fail to describe the player's incorrect thought process
 
-Achieved naturally through Phase 1 (each expanded scenario adds all 3 wrong types) and Phase 2 (new contexts diversify the correct-answer classification).
+**Rewrite standard**: Every wrong_explanation must contain:
+- What the player **thought** was correct
+- What they **failed to process** (the missed read)
+- Why this feels right but loses
 
-## Phase 4 — Validation
+Estimated: ~5-8 scenarios need explanation rewrites beyond the 5 already being replaced.
 
-Return:
-1. `SELECT jsonb_array_length(to_jsonb(options)) as opt_count, COUNT(*) FROM baserunning_scenarios GROUP BY opt_count` → must show only `4: 232`
-2. 10 random updated scenarios as full JSON
-3. List of all 17+ modified scenario IDs
-4. `SELECT DISTINCT difficulty FROM baserunning_scenarios` → only `easy`, `game_speed`, `elite`, `mistake`
+## 3. Schema: Add `mistake_type` Column
 
-## Implementation
+Migration:
+```sql
+CREATE TYPE public.mistake_type AS ENUM ('hesitation', 'misread', 'panic', 'over_aggressive');
 
-- 17 UPDATE statements via insert tool to expand options + wrong_explanations
-- 6 additional UPDATEs to rewrite duplicated concepts
-- No schema changes, no code changes
-- Total: ~23 UPDATE operations
+ALTER TABLE public.baserunning_scenarios
+  ADD COLUMN mistake_type public.mistake_type;
+```
 
-## Expected Final State
-- **232 scenarios**, all with exactly 4 options
-- **0 concept duplicates** across slide/error patterns
-- Balanced mistake type distribution
-- Every `wrong_explanations` has exactly 3 keys matching the 3 wrong options
+Then backfill all 75 mistake scenarios via INSERT tool (UPDATE statements). Classification based on:
+- **hesitation**: correct answer involves committing/going, player freezes
+- **misread**: player reads wrong cue (fielder position, ball trajectory, count)
+- **over_aggressive**: player goes when they should hold/read
+- **panic**: player makes snap decision under time pressure without processing
+
+Target: ~25% each (18-19 per type). Return exact distribution after backfill.
+
+## 4. Schema: Add `answer_id` for Stable Matching
+
+Migration:
+```sql
+ALTER TABLE public.baserunning_scenarios
+  ADD COLUMN answer_options jsonb;
+-- Format: [{"id": "a", "text": "..."}, {"id": "b", "text": "..."}, ...]
+-- correct_answer_id stored as the id value
+
+ALTER TABLE public.baserunning_scenarios
+  ADD COLUMN correct_answer_id text;
+```
+
+Backfill all 232 scenarios: assign `a`, `b`, `c`, `d` IDs to each option. Set `correct_answer_id` to the matching ID.
+
+**Code changes** in `ScenarioBlock.tsx` and `DailyDecision.tsx`:
+- Update `Scenario` interface to include `answer_options` and `correct_answer_id`
+- Change `handleSelect` to compare by ID instead of string
+- Render option text from `answer_options[].text`
+- `wrong_explanations` keyed by answer ID instead of full text string
+- Fallback: if `answer_options` is null, fall back to current `options`/`correct_answer` string matching (backward compat)
+
+**Hook changes** in `useBaserunningDaily.ts`:
+- Update `DailyScenario` interface
+
+## 5. Sport Intelligence: Softball Rewrites
+
+Query all `sport = 'both'` mistake scenarios and identify those where the decision is identical regardless of sport. For scenarios where softball timing differs meaningfully:
+- Add softball-specific versions with 60ft timing windows
+- Reference slap game, shorter reaction compression, catcher pop-time differences
+- Estimated: 3-5 scenarios need softball-specific variants
+
+---
+
+## Implementation Order
+
+1. **Migration**: `mistake_type` enum + column, `answer_options` jsonb + `correct_answer_id` text (1 migration)
+2. **Data: Slide-into-first rewrites** (5 UPDATEs via insert tool)
+3. **Data: Wrong_explanation quality fixes** (~8 UPDATEs)
+4. **Data: Backfill mistake_type** (75 UPDATEs)
+5. **Data: Backfill answer_options + correct_answer_id** (232 UPDATEs)
+6. **Code: Refactor ScenarioBlock.tsx** — answer_id matching with fallback
+7. **Code: Refactor DailyDecision.tsx** — answer_id matching with fallback
+8. **Code: Update useBaserunningDaily.ts** — updated interface
+9. **Data: Softball-specific rewrites** (3-5 UPDATEs)
+10. **Validation**: Return full distribution counts, 10 random samples, diff list
+
+## Technical Details
+
+- All data operations use the insert tool (UPDATE statements)
+- Schema changes via migration tool
+- No breaking changes: fallback to string matching if `answer_options` is null
+- `wrong_explanations` will be dual-keyed during transition (by answer_id and by text) until full backfill confirms
 
