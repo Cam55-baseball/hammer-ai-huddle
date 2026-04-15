@@ -96,7 +96,7 @@ export function LessonDetail({ lessonId, sport, onBack, onComplete, isCompleted,
 
       {scenarios.length > 0 && (
         <ScenarioBlock
-          scenarios={scenarios.map((s) => ({ ...s, options: (s.options as any) || [] }))}
+          scenarios={scenarios.map((s) => ({ ...s, options: (s.options as any) || [], answer_options: (s.answer_options as any) || null, correct_answer_id: s.correct_answer_id || null }))}
           onComplete={(score) => onComplete(lessonId, score)}
         />
       )}
