@@ -7,6 +7,7 @@ import { ContactQualitySelector } from './ContactQualitySelector';
 import { ExitDirectionSelector } from './ExitDirectionSelector';
 import { SituationTagSelector } from './SituationTagSelector';
 import { CountSelector } from './CountSelector';
+import { PitchMovementSelector } from './PitchMovementSelector';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
@@ -41,6 +42,10 @@ export function MicroLayerInput({ sessionType, microLayer }: MicroLayerInputProp
           <div className="space-y-3 rounded-lg border border-dashed p-3">
             {sessionType === 'hitting' && (
               <>
+                <PitchMovementSelector
+                  value={currentRep.pitch_movement?.directions ?? []}
+                  onChange={v => updateField('pitch_movement', { directions: v })}
+                />
                 {isEnhanced && (
                   <div className="grid grid-cols-2 gap-3">
                     <PitchLocationGrid
