@@ -191,8 +191,8 @@ export function useCalendarActivityDetail(
       const newCheckboxStates: Record<string, boolean> = {};
       allCheckableIds.forEach(id => { newCheckboxStates[id] = !allChecked; });
       const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+      // Derive locally for toast only — DB trigger handles completed/completed_at
       const derivedCompleted = !allChecked;
-      const derivedCompletedAt = derivedCompleted ? new Date().toISOString() : null;
 
       try {
         const dateStr = format(currentDate, 'yyyy-MM-dd');
@@ -211,8 +211,6 @@ export function useCalendarActivityDetail(
             .from('custom_activity_logs')
             .update({ 
               performance_data: newPerformanceData,
-              completed: derivedCompleted,
-              completed_at: derivedCompletedAt,
             })
             .eq('id', existingLog.id);
         } else {
@@ -222,8 +220,6 @@ export function useCalendarActivityDetail(
               template_id: currentTemplateId,
               user_id: user.id,
               entry_date: dateStr,
-              completed: derivedCompleted,
-              completed_at: derivedCompletedAt,
               performance_data: newPerformanceData,
             });
         }
@@ -315,12 +311,11 @@ export function useCalendarActivityDetail(
     const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
     const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
 
-    // DERIVE COMPLETION: activity is complete when ALL checkable items are checked
+    // DERIVE COMPLETION locally for optimistic UI only — DB trigger is source of truth
     const allCheckableIds = getAllCheckableIds(template);
     const derivedCompleted = allCheckableIds.length > 0 
       ? allCheckableIds.every(id => newCheckboxStates[id] === true)
       : (currentLog?.completed || false);
-    const derivedCompletedAt = derivedCompleted ? new Date().toISOString() : null;
 
     // OPTIMISTIC UPDATE: Immediately update UI with derived completion
     setSelectedTask({
@@ -329,12 +324,12 @@ export function useCalendarActivityDetail(
       customActivityData: {
         ...selectedTask.customActivityData,
         log: currentLog 
-          ? { ...currentLog, performance_data: newPerformanceData, completed: derivedCompleted, completed_at: derivedCompletedAt } as CustomActivityLog
-          : { id: 'pending', template_id: currentTemplateId, completed: derivedCompleted, completed_at: derivedCompletedAt, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
+          ? { ...currentLog, performance_data: newPerformanceData, completed: derivedCompleted } as CustomActivityLog
+          : { id: 'pending', template_id: currentTemplateId, completed: derivedCompleted, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
       }
     });
 
-    // PERSIST IN BACKGROUND
+    // PERSIST IN BACKGROUND — only send performance_data, trigger handles completed
     try {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
       const { data: { user } } = await supabase.auth.getUser();
@@ -359,8 +354,7 @@ export function useCalendarActivityDetail(
               template_id: currentTemplateId,
               user_id: user.id,
               entry_date: dateStr,
-              completed: derivedCompleted,
-              completed_at: derivedCompletedAt,
+              performance_data: newPerformanceData,
             })
             .select()
             .single();
@@ -370,13 +364,11 @@ export function useCalendarActivityDetail(
 
       if (!log) return;
 
-      // Persist checkbox states AND derived completion in single update
+      // Only send performance_data — DB trigger derives completed/completed_at
       await supabase
         .from('custom_activity_logs')
         .update({ 
           performance_data: newPerformanceData,
-          completed: derivedCompleted,
-          completed_at: derivedCompletedAt,
         })
         .eq('id', log.id);
 
@@ -429,15 +421,12 @@ export function useCalendarActivityDetail(
         const newCheckboxStates: Record<string, boolean> = {};
         allCheckableIds.forEach(id => { newCheckboxStates[id] = !allChecked; });
         const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
-        const derivedCompleted = !allChecked;
 
         if (existingLog) {
           await supabase
             .from('custom_activity_logs')
             .update({
               performance_data: newPerformanceData,
-              completed: derivedCompleted,
-              completed_at: derivedCompleted ? new Date().toISOString() : null,
             })
             .eq('id', existingLog.id);
         } else {
@@ -447,8 +436,6 @@ export function useCalendarActivityDetail(
               template_id: templateId,
               user_id: user.id,
               entry_date: dateStr,
-              completed: derivedCompleted,
-              completed_at: derivedCompleted ? new Date().toISOString() : null,
               performance_data: newPerformanceData,
             });
         }
