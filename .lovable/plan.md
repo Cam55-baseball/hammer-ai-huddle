@@ -1,117 +1,64 @@
 
 
-# Upgrade Post-Practice Session Insights — Elite Coaching Intelligence
+# Upgrade Coaching Report Intelligence Layer — Deep Reasoning Enforcement
 
-## Current State
-The insight engine (`src/lib/sessionInsights.ts`) is purely deterministic: it picks from ~3 template phrases per metric based on whether it's above/below a threshold. Output is limited to one "Win", one "Focus", one "Cue", 3 key metrics, and a session tag. No root cause analysis, no prescriptive drills, no trend comparison, no game transfer context.
+## Summary
+Upgrade the AI prompt, tool schema, TypeScript types, and display UI to enforce deep causal reasoning, cross-section linking, decision quality metrics, and anti-generic filtering. No structural changes — same 7 sections, but with richer data and stricter generation rules.
 
-## Architecture Decision
-This requires AI generation. The deterministic engine cannot produce root cause classification, situational splits, prescriptive drill constraints, or adaptive trend analysis. We will:
-- Create a new edge function `session-insights` that calls Lovable AI with structured tool calling
-- Keep the deterministic engine as an instant fallback (shown while AI loads)
-- Store AI-generated insights in a new `session_insights` table for instant recall on revisit
+## Changes
 
-## Data Available Per Session
-- `composite_indexes`: BQI, PEI, FQI, decision, competitive_execution, barrel_pct, chase_pct, whiff_pct, etc.
-- `drill_blocks[]`: drill_type, intent, volume, execution_grade, outcome_tags, batter_side
-- `session_context`: session_type, module, sport
-- Recent sessions (last 5-10) for trend comparison
+### 1. `src/lib/coachingReportTypes.ts` — Expand `RootCause` interface
 
-## New Interface: `CoachingReport`
-
-```text
-performanceBreakdown: {
-  situationalSplits: { category, metric, value, context }[]
-  patterns: string[]
+Add three new fields to `RootCause`:
+```typescript
+export interface RootCause {
+  issue: string;
+  classification: 'perception' | 'decision' | 'execution' | 'consistency';
+  mechanism: string;   // precise biomechanical/cognitive failure
+  trigger: string;     // when/under what condition
+  failureChain: string; // step-by-step breakdown
+  evidence: string;
 }
-rootCauseAnalysis: {
-  issue: string
-  classification: 'perception' | 'decision' | 'execution' | 'consistency'
-  evidence: string
-}[]
-priorityStack: {
-  rank: number
-  issue: string
-  gameImpact: string
-}[]  // max 3
-prescriptiveFixes: {
-  issue: string
-  drill: string
-  constraint: string
-  cue: string
-}[]
-gameTransfer: {
-  issue: string
-  realWorldImpact: string
-}[]
-adaptiveProgression: {
-  improvements: string[]
-  emergingWeaknesses: string[]
-  primaryLimiter: string
-} | null
-nextSessionFocus: {
-  primaryWeakness: { area: string, repPct: 60 }
-  secondaryIssue: { area: string, repPct: 30 }
-  strengthMaintenance: { area: string, repPct: 10 }
-} | null
 ```
 
-## Implementation Plan
+### 2. `supabase/functions/session-insights/index.ts` — Major prompt + schema upgrade
 
-### 1. Database: `session_insights` table
-Store generated reports for instant recall. Columns: `id`, `session_id` (unique FK), `user_id`, `report` (JSONB), `created_at`. RLS: users read/insert own rows.
+**Tool schema (`coachingReportTool`):**
+- Add `mechanism`, `trigger`, `failure_chain` as required fields in `rootCauseAnalysis` items
 
-### 2. Edge Function: `supabase/functions/session-insights/index.ts`
-- Receives `session_id`
-- Fetches session data + last 10 sessions for trend context
-- Builds a coaching-specific system prompt enforcing the 7-section structure
-- Uses Lovable AI with structured tool calling to extract the `CoachingReport` schema
-- Stores result in `session_insights` table
-- Returns the report
-- Coaching language standard enforced in prompt (high-impact verbs, no weak phrases)
+**System prompt (`buildSystemPrompt`)** — Add these enforcement blocks:
 
-### 3. New Hook: `src/hooks/useCoachingReport.ts`
-- First checks `session_insights` table for cached report
-- If missing, calls edge function
-- Returns `{ report, isGenerating, fallbackInsights }`
-- Fallback = existing deterministic insights (shown instantly)
+- **Root Cause Depth Rules**: mechanism must describe a precise failure (not a symptom), trigger must specify the condition, failure_chain must show the read→decision→movement sequence
+- **Causal Linking Mandate**: The `issue` string must be identical across rootCauseAnalysis, priorityStack, prescriptiveFixes, and gameTransfer. No new issues may appear in later sections. No rewording.
+- **Prescriptive Fix Constraint Quality**: Drill must target the mechanism (not symptom). Constraint must remove the athlete's ability to compensate. Cue must be 3-6 words tied to the mechanism. Invalid examples: "focus on timing", "work on reaction". Valid: "commit before ball contact", "one-step only before throw"
+- **Decision Quality Emphasis**: If decision-making data exists (chase_pct, decision index, hesitation patterns), it MUST appear in performanceBreakdown and rootCauseAnalysis. Evaluate decision speed vs optimal window, correct vs safe decisions, hesitation patterns.
+- **Anti-Generic Filter**: Before finalizing, reject any sentence that (a) could apply to any athlete, (b) does not include a condition (when/where), (c) does not change next-session behavior
+- **Output Self-Check**: Internally verify: Are all issues situation-specific? Does each fix map to a root cause mechanism? Would a top 1% coach actually say this? If not, regenerate.
 
-### 4. Update `src/lib/sessionInsights.ts`
-- Export the new `CoachingReport` type
-- Keep existing `generateInsights` as-is (fallback)
+**Model upgrade**: Switch from `google/gemini-2.5-flash` to `google/gemini-2.5-pro` for deeper reasoning capability.
 
-### 5. Update UI: `PostSessionSummaryV2.tsx`
-- Show deterministic insights immediately (existing cards)
-- Once AI report loads, replace with 7-section layout:
-  - Performance Breakdown (situational splits in a compact table)
-  - Root Cause Analysis (classification badges: Perception/Decision/Execution/Consistency)
-  - Priority Stack (ranked 1-3 with game impact)
-  - Prescriptive Fixes (drill + constraint + cue cards)
-  - Game Transfer (impact statements)
-  - Adaptive Progression (trend arrows, if past data exists)
-  - Next Session Focus (60/30/10 rep allocation bar)
+### 3. `src/components/practice/CoachingReportDisplay.tsx` — Render new fields
 
-### 6. Update UI: `PracticeSessionDetailDialog.tsx`
-- Same 7-section layout when viewing historical sessions
-- Loads from `session_insights` table (instant, no regeneration)
+Update the Root Cause Analysis section to display `mechanism`, `trigger`, and `failureChain`:
 
-### 7. Update memory
-- Update `mem://features/practice-intelligence/session-performance-scoring` with new architecture
+```text
+[Badge: classification] Issue title
+Mechanism: "first step delayed due to late hip read"
+Trigger: "on glove-side ground balls under <0.8s reaction window"  
+Chain: "late visual pickup → delayed weight shift → arm-side compensation"
+Evidence: ...
+```
 
-## Files to Create/Modify
+Each rendered as a labeled line with muted styling beneath the issue title.
 
-| File | Action |
+### 4. Cache invalidation note
+Existing cached reports in `session_insights` will not have the new fields. The display component will render `mechanism`/`trigger`/`failureChain` only when present (optional chaining), so old reports degrade gracefully. New sessions get the upgraded output.
+
+## Files modified
+
+| File | Changes |
 |------|--------|
-| `supabase/migrations/[new].sql` | Create `session_insights` table + RLS |
-| `supabase/functions/session-insights/index.ts` | New edge function |
-| `src/hooks/useCoachingReport.ts` | New hook |
-| `src/lib/sessionInsights.ts` | Add `CoachingReport` type export |
-| `src/components/practice/PostSessionSummaryV2.tsx` | 7-section AI-powered layout |
-| `src/components/PracticeSessionDetailDialog.tsx` | 7-section layout for history |
-
-## Scope Control
-- Deterministic fallback always available (no degradation if AI fails)
-- AI generation only triggers on session completion, not on every view
-- Cached in DB — no repeated AI calls for the same session
-- Coaching language standard enforced (no "focus on", "work on", "try to")
+| `src/lib/coachingReportTypes.ts` | Add `mechanism`, `trigger`, `failureChain` to `RootCause` |
+| `supabase/functions/session-insights/index.ts` | Expand tool schema, upgrade system prompt with 6 enforcement blocks, switch to gemini-2.5-pro |
+| `src/components/practice/CoachingReportDisplay.tsx` | Render mechanism/trigger/failureChain in root cause cards |
 
