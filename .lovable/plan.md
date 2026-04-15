@@ -1,60 +1,120 @@
 
 
-# Final Hardening Pass: 10-Point Implementation
+# .01% Hardening Pass — 8 Fixes
 
-## 1. Migration (single file)
+## 1. Atomic Idempotency (Fix SELECT+INSERT race)
 
-### 1a. Race condition on `insert_training_block_atomic` — wrap INSERT in BEGIN/EXCEPTION block to catch `unique_violation` on `idx_one_active_block` and raise `active_block_exists` instead of crashing.
+Replace the current two-step idempotency check in `insert_training_block_atomic` with `INSERT ... ON CONFLICT (user_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO UPDATE SET updated_at = now() RETURNING id`. If the returned row already had workouts, return that ID without re-inserting children. This eliminates the TOCTOU race between SELECT and INSERT.
 
-### 1b. Idempotency key — `ALTER TABLE training_blocks ADD COLUMN idempotency_key text` + unique partial index on `(user_id, idempotency_key) WHERE idempotency_key IS NOT NULL`. Update `insert_training_block_atomic` to accept `p_idempotency_key text DEFAULT NULL`, check for existing block with matching key before insert, return existing block ID if found.
+## 2. Anon Client with Auth Header (Stop service role for user queries)
 
-### 1c. Harden atomic insert — add pre-insert validation: `jsonb_array_length(p_workouts) = 0 → RAISE EXCEPTION`. Validate each workout has `week_number` not null and `exercises` array exists before any insert.
+In `generate-training-block` and `adapt-training-block`, replace:
+```typescript
+const supabase = createClient(supabaseUrl, supabaseKey); // service role
+```
+With:
+```typescript
+const supabase = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+  global: { headers: { Authorization: authHeader } },
+  auth: { persistSession: false },
+});
+```
+Keep a separate service-role client ONLY for the atomic RPC call in `generate-training-block` (which uses `SECURITY DEFINER`). All user-scoped reads (preferences, blocks, workouts, metrics) go through the anon client with the user's JWT — RLS enforces ownership.
 
-### 1d. Batch adaptation RPCs — create two DB functions:
-- `batch_decrement_sets(p_workout_ids uuid[])` — `UPDATE block_exercises SET sets = GREATEST(1, sets - 1) WHERE workout_id = ANY(p_workout_ids) AND sets > 1`
-- `batch_increment_sets(p_workout_ids uuid[])` — `UPDATE block_exercises SET sets = LEAST(6, sets + 1) WHERE workout_id = ANY(p_workout_ids) AND sets < 6`
-- `batch_deload_exercises(p_workout_ids uuid[])` — `UPDATE block_exercises SET sets = GREATEST(1, ROUND(sets * 0.5)::int), reps = GREATEST(3, ROUND(reps * 0.75)::int) WHERE workout_id = ANY(p_workout_ids)`
+## 3. Ordered Cascade Workout Shifting
 
-### 1e. Replace `reps > 0` constraint with `reps >= 3` — `ALTER TABLE block_exercises DROP CONSTRAINT chk_block_exercises_reps; ADD CONSTRAINT chk_block_exercises_reps_min CHECK (reps >= 3)`
+Replace the current `Promise.all` shifting (which can cause date collisions) with a DB function `shift_workouts_forward`:
+```sql
+CREATE FUNCTION shift_workouts_forward(p_block_id uuid, p_after_date date, p_days int DEFAULT 1)
+RETURNS int AS $$
+  UPDATE block_workouts
+  SET scheduled_date = scheduled_date + p_days
+  WHERE block_id = p_block_id
+    AND scheduled_date > p_after_date
+    AND status = 'scheduled'
+  -- Process in reverse order to prevent collisions
+  -- (Postgres UPDATE processes all rows atomically, no collision risk)
+$$ LANGUAGE sql SECURITY DEFINER;
+```
+Single SQL UPDATE — atomic, no ordering collisions. Replace the Promise.all block in `adapt-training-block` with `supabase.rpc('shift_workouts_forward', ...)`.
 
-### 1f. Missing index — `CREATE INDEX idx_block_workout_metrics_workout_id ON block_workout_metrics(workout_id)`
+## 4. RPE Rules: ≥4 Samples + Rolling Window
 
-### 1g. Status consistency — add `updated_at` column to `training_blocks` (defaulting to `now()`). Update both `update_block_status` and `update_block_status_service` to SET `updated_at = now()` on status change.
+Change RPE filtering from "per week, ≥2 samples" to rolling window:
+- Collect ALL RPE values ordered by workout date
+- Use a sliding window of the last 8 completed workouts (rolling, not weekly)
+- Require ≥4 RPE samples in the window before triggering any rule
+- High RPE: rolling average > 8 across ≥4 samples → decrement
+- Low RPE: rolling average < 5 across ≥4 samples → increment
+- Remove the "2+ weeks" requirement — the rolling window naturally handles this
 
-## 2. Edge Function: `adapt-training-block`
+## 5. Cursor-Based Cron Batching
 
-Replace all 3 `Promise.all` per-row update blocks with single RPC calls:
-- Rule 1 (high RPE): `supabase.rpc('batch_decrement_sets', { p_workout_ids: futureWorkoutIds })`
-- Rule 2 (low RPE): `supabase.rpc('batch_increment_sets', { p_workout_ids: futureWorkoutIds })`
-- Rule 3 (deload): `supabase.rpc('batch_deload_exercises', { p_workout_ids: nextWeekIds })`
+Replace `LIMIT 500` with cursor-based loop in `training-block-notifications`:
+```typescript
+let cursor: string | null = null;
+let totalMarked = 0;
+do {
+  let query = supabase.from('block_workouts')
+    .update({ status: 'missed' })
+    .eq('status', 'scheduled')
+    .lt('scheduled_date', today)
+    .order('id', { ascending: true })
+    .limit(500)
+    .select('id, block_id');
+  if (cursor) query = query.gt('id', cursor);
+  const { data } = await query;
+  if (!data || data.length === 0) break;
+  totalMarked += data.length;
+  cursor = data[data.length - 1].id;
+  // process block status updates...
+} while (true);
+```
+Same pattern for active blocks query and today's workouts.
 
-Remove all `select → Promise.all → update` patterns. Delete placeholder `batch_adjust_exercises` call.
+## 6. UNIQUE(workout_id, ordinal) Constraint
 
-## 3. Edge Function: `generate-training-block`
+Migration:
+```sql
+ALTER TABLE block_exercises
+ADD CONSTRAINT uq_exercise_workout_ordinal UNIQUE (workout_id, ordinal);
+```
+Prevents duplicate ordinals within the same workout.
 
-- Generate `idempotency_key = crypto.randomUUID()` before RPC call
-- Pass `p_idempotency_key` to `insert_training_block_atomic`
-- If RPC returns error containing `active_block_exists`, return 409 with existing block info
-- If RPC returns existing block (idempotency hit), return that block ID
+## 7. DB Constraints for Sets/Reps Upper Bounds
 
-## 4. Edge Function: `training-block-notifications`
+Current: `sets > 0`, `reps >= 3`. Add upper bounds:
+```sql
+ALTER TABLE block_exercises
+DROP CONSTRAINT chk_block_exercises_sets,
+ADD CONSTRAINT chk_block_exercises_sets CHECK (sets BETWEEN 1 AND 10);
 
-- Add `.limit(500)` to the missed-workout update query
-- Add `.limit(500)` to active blocks query for weekly adherence
-- Add `.limit(500)` to today's workouts query
+ALTER TABLE block_exercises
+DROP CONSTRAINT chk_block_exercises_reps_min,
+ADD CONSTRAINT chk_block_exercises_reps CHECK (reps BETWEEN 3 AND 30);
+```
 
-## 5. Frontend: `useTrainingBlock.ts`
+## 8. Optimize update_block_status to Single Query
 
-- Add `useRef` guard in `generateBlock` mutation to prevent double-invoke
-- The mutation's `isPending` state already provides disable-while-loading via react-query; document usage pattern
+Replace current 3 separate COUNT queries with one aggregate:
+```sql
+SELECT
+  count(*) AS total,
+  count(*) FILTER (WHERE status = 'completed') AS completed,
+  count(*) FILTER (WHERE status = 'scheduled') AS remaining
+FROM block_workouts
+WHERE block_id = p_block_id;
+```
+Apply to both `update_block_status` and `update_block_status_service`.
+
+---
 
 ## Files Modified
 
-| File | Action |
-|------|--------|
-| `supabase/migrations/[new].sql` | Create |
-| `supabase/functions/adapt-training-block/index.ts` | Rewrite adaptation rules to use RPCs |
-| `supabase/functions/generate-training-block/index.ts` | Add idempotency key + race condition handling |
-| `supabase/functions/training-block-notifications/index.ts` | Add LIMIT batching |
-| `src/hooks/useTrainingBlock.ts` | Add double-invoke guard |
+| File | Changes |
+|------|---------|
+| `supabase/migrations/[new].sql` | Atomic idempotency rewrite, `shift_workouts_forward` RPC, UNIQUE constraint, sets/reps bounds, optimized status functions |
+| `supabase/functions/generate-training-block/index.ts` | Anon client for reads, service client only for RPC |
+| `supabase/functions/adapt-training-block/index.ts` | Anon client, rolling RPE window, `shift_workouts_forward` RPC |
+| `supabase/functions/training-block-notifications/index.ts` | Cursor-based batching loop |
 
