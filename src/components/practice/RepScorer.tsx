@@ -200,12 +200,12 @@ interface RepScorerProps {
 const LOGGING_MODE_KEY = 'repLogMode';
 
 const contactOptions = [
-  { value: 'miss', label: '❌ Miss', color: 'bg-red-500/20 text-red-700 border-red-300' },
-  { value: 'foul', label: '⚠️ Foul', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
-  { value: 'jammed', label: '🔸 Jammed', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
-  { value: 'end_cap', label: '🔹 End Cap', color: 'bg-yellow-500/20 text-yellow-700 border-yellow-300' },
-  { value: 'hard', label: '💪 Hard', color: 'bg-green-500/20 text-green-700 border-green-300' },
   { value: 'barrel', label: '🔥 Barrel', color: 'bg-primary/20 text-primary border-primary/30' },
+  { value: 'solid', label: '💪 Solid', color: 'bg-green-500/20 text-green-700 border-green-300' },
+  { value: 'flare_burner', label: '✨ Flare/Burner', color: 'bg-emerald-500/20 text-emerald-700 border-emerald-300' },
+  { value: 'misshit_clip', label: '🔸 Miss-hit/Clip', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
+  { value: 'weak', label: '⚠️ Weak', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
+  { value: 'whiff', label: '❌ Whiff', color: 'bg-red-500/20 text-red-700 border-red-300' },
 ];
 
 const directionOptions = [
@@ -960,7 +960,7 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
 
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Contact Quality <span className="text-destructive">*</span></Label>
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5">
                   {contactOptions.map(opt => (
                     <button
                       key={opt.value}
