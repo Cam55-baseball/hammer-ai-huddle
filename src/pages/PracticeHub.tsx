@@ -206,7 +206,7 @@ export default function PracticeHub() {
   // Convert reps into drill blocks for the backend
   const buildDrillBlocks = (): DrillBlock[] => {
     if (reps.length > 0) {
-      const qualityMap: Record<string, number> = { barrel: 70, hard: 60, weak: 40, foul: 30, miss: 20 };
+      const qualityMap: Record<string, number> = { barrel: 70, solid: 60, flare_burner: 55, misshit_clip: 45, weak: 30, whiff: 15 };
       const resultMap: Record<string, number> = { strike: 60, out: 55, ball: 35, hit: 70 };
 
       let totalGrade = 0;

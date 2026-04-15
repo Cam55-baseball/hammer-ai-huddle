@@ -1,12 +1,12 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const options = [
-  { value: 'miss', label: 'Miss' },
-  { value: 'foul', label: 'Foul' },
-  { value: 'jammed', label: 'Jammed' },
-  { value: 'end_cap', label: 'End Cap' },
-  { value: 'hard', label: 'Hard' },
   { value: 'barrel', label: 'Barrel' },
+  { value: 'solid', label: 'Solid' },
+  { value: 'flare_burner', label: 'Flare/Burner' },
+  { value: 'misshit_clip', label: 'Miss-hit/Clip' },
+  { value: 'weak', label: 'Weak' },
+  { value: 'whiff', label: 'Whiff' },
 ] as const;
 
 interface ContactQualitySelectorProps {

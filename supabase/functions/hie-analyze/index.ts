@@ -85,7 +85,7 @@ function analyzeHittingMicro(microReps: any[], drillBlocks: any[], batterSide: s
   // 2. Whiff rate by zone
   const swings = hittingReps.filter((r: any) => r.swing_result && r.swing_result !== 'take');
   const whiffs = swings.filter((r: any) =>
-    r.contact_quality === 'miss' || r.swing_result === 'miss' || r.contact_type === 'swing_miss'
+    r.contact_quality === 'miss' || r.contact_quality === 'whiff' || r.swing_result === 'miss' || r.contact_type === 'swing_miss'
   );
   const whiffRate = swings.length > 0 ? (whiffs.length / swings.length) * 100 : 0;
   if (whiffRate > 25) {

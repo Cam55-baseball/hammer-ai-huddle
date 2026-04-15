@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 export interface MicroLayerData {
   pitch_location?: { row: number; col: number };
   swing_decision?: 'correct' | 'incorrect';
-  contact_quality?: 'miss' | 'foul' | 'weak' | 'hard' | 'barrel';
+  contact_quality?: 'barrel' | 'solid' | 'flare_burner' | 'misshit_clip' | 'weak' | 'whiff';
   exit_direction?: 'pull' | 'middle' | 'oppo' | 'slap_side';
   situation_tag?: { runners: string; outs: number };
   count?: { balls: number; strikes: number };
