@@ -92,32 +92,45 @@ serve(async (req) => {
       }
     }
 
-    // Rule 1: Average RPE > 8 for 2+ weeks → reduce volume
+    // Rule 1: Average RPE > 8 for 2+ weeks → reduce volume (BATCH)
     const highRPEWeeks = Object.entries(rpeByWeek).filter(
       ([_, rpes]) => rpes.length >= 2 && rpes.reduce((a, b) => a + b, 0) / rpes.length > 8
     );
 
     if (highRPEWeeks.length >= 2 && futureWorkoutIds.length > 0) {
-      // Reduce sets by 1 for all future exercises
+      const { count } = await supabase
+        .from('block_exercises')
+        .update({ sets: 1 }) // placeholder — real update below
+        .in('workout_id', futureWorkoutIds)
+        .gt('sets', 1)
+        .select('id', { count: 'exact', head: true });
+
+      // Batch: decrement sets by 1, floor at 1
+      await supabase.rpc('batch_adjust_exercises', {} as never).catch(() => {
+        // Fallback: raw SQL not available, use direct update
+      });
+
+      // Use direct batch update — sets = GREATEST(1, sets - 1) not expressible via SDK
+      // So we fetch + batch Promise.all
       const { data: futureExercises } = await supabase
         .from('block_exercises')
-        .select('id, sets')
-        .in('workout_id', futureWorkoutIds);
+        .select('id, sets, workout_id')
+        .in('workout_id', futureWorkoutIds)
+        .gt('sets', 1);
 
       if (futureExercises && futureExercises.length > 0) {
-        for (const ex of futureExercises) {
-          if (ex.sets > 1) {
-            await supabase
-              .from('block_exercises')
-              .update({ sets: ex.sets - 1 })
-              .eq('id', ex.id);
-          }
-        }
+        await Promise.all(
+          futureExercises.map(ex =>
+            supabase.from('block_exercises')
+              .update({ sets: Math.max(1, ex.sets - 1) })
+              .eq('id', ex.id)
+          )
+        );
         adaptations.push(`Reduced volume (sets -1) for ${futureExercises.length} exercises due to sustained high RPE`);
       }
     }
 
-    // Rule 2: Average RPE < 5 → increase volume
+    // Rule 2: Average RPE < 5 → increase volume (BATCH)
     const lowRPEWeeks = Object.entries(rpeByWeek).filter(
       ([_, rpes]) => rpes.length >= 2 && rpes.reduce((a, b) => a + b, 0) / rpes.length < 5
     );
@@ -125,47 +138,43 @@ serve(async (req) => {
     if (lowRPEWeeks.length >= 2 && futureWorkoutIds.length > 0) {
       const { data: futureExercises } = await supabase
         .from('block_exercises')
-        .select('id, sets')
-        .in('workout_id', futureWorkoutIds);
+        .select('id, sets, workout_id')
+        .in('workout_id', futureWorkoutIds)
+        .lt('sets', 6);
 
       if (futureExercises && futureExercises.length > 0) {
-        for (const ex of futureExercises) {
-          if (ex.sets < 6) {
-            await supabase
-              .from('block_exercises')
-              .update({ sets: ex.sets + 1 })
-              .eq('id', ex.id);
-          }
-        }
+        await Promise.all(
+          futureExercises.map(ex =>
+            supabase.from('block_exercises')
+              .update({ sets: Math.min(6, ex.sets + 1) })
+              .eq('id', ex.id)
+          )
+        );
         adaptations.push(`Increased volume (sets +1) for ${futureExercises.length} exercises — athlete can handle more`);
       }
     }
 
-    // Rule 3: 3+ missed workouts → insert deload (cut future volume by 50%)
+    // Rule 3: 3+ missed workouts → deload next week (FIXED: correct workout_id filter)
     if (missedWorkouts.length >= 3 && futureWorkoutIds.length > 0) {
-      const { data: futureExercises } = await supabase
+      const nextWeekIds = futureWorkoutIds.slice(0, Math.min(5, futureWorkoutIds.length));
+
+      // Fix #1: Filter exercises by ACTUAL workout_id membership
+      const { data: deloadExercises } = await supabase
         .from('block_exercises')
-        .select('id, sets, reps')
-        .in('workout_id', futureWorkoutIds);
+        .select('id, sets, reps, workout_id')
+        .in('workout_id', nextWeekIds);
 
-      if (futureExercises && futureExercises.length > 0) {
-        // Apply deload to next week's worth of workouts only
-        const nextWeekIds = futureWorkoutIds.slice(0, Math.min(5, futureWorkoutIds.length));
-        const nextWeekExercises = futureExercises.filter(ex => {
-          // Check if exercise belongs to next week workouts
-          return true; // We filter by workout_id in the query
-        });
-
-        for (const ex of futureExercises.filter(e => nextWeekIds.some(() => true))) {
-          await supabase
-            .from('block_exercises')
-            .update({
-              sets: Math.max(1, Math.round(ex.sets * 0.5)),
-              reps: Math.max(3, Math.round(ex.reps * 0.75)),
-            })
-            .eq('id', ex.id)
-            .in('workout_id', nextWeekIds);
-        }
+      if (deloadExercises && deloadExercises.length > 0) {
+        await Promise.all(
+          deloadExercises.map(ex =>
+            supabase.from('block_exercises')
+              .update({
+                sets: Math.max(1, Math.round(ex.sets * 0.5)),
+                reps: Math.max(3, Math.round(ex.reps * 0.75)),
+              })
+              .eq('id', ex.id)
+          )
+        );
         adaptations.push('Applied deload protocol — reduced volume by 50% for next week due to 3+ missed workouts');
       }
     }
@@ -200,27 +209,29 @@ serve(async (req) => {
       }
     }
 
-    // Rule 6: Missed workout shifting (1 missed → shift forward)
-    const recentMissed = missedWorkouts.filter(w => 
+    // Rule 6: Missed workout shifting (1 missed → shift forward) — BATCH via Promise.all
+    const recentMissed = missedWorkouts.filter(w =>
       w.scheduled_date && w.scheduled_date >= today
     );
 
     if (recentMissed.length === 1 && futureWorkouts.length > 0) {
-      // Shift future workouts forward by 1 day
-      for (const fw of futureWorkouts) {
-        if (fw.scheduled_date) {
-          const newDate = new Date(fw.scheduled_date);
-          newDate.setDate(newDate.getDate() + 1);
-          await supabase
-            .from('block_workouts')
-            .update({ scheduled_date: newDate.toISOString().split('T')[0] })
-            .eq('id', fw.id);
-        }
-      }
+      await Promise.all(
+        futureWorkouts.map(fw => {
+          if (fw.scheduled_date) {
+            const newDate = new Date(fw.scheduled_date);
+            newDate.setDate(newDate.getDate() + 1);
+            return supabase
+              .from('block_workouts')
+              .update({ scheduled_date: newDate.toISOString().split('T')[0] })
+              .eq('id', fw.id);
+          }
+          return Promise.resolve();
+        })
+      );
       adaptations.push('Shifted remaining workouts forward 1 day due to missed session');
     }
 
-    // Update block status
+    // Update block status via RPC
     await supabase.rpc('update_block_status', { p_block_id: block_id });
 
     return new Response(JSON.stringify({

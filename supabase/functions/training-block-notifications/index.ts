@@ -19,57 +19,24 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const results = { dailyChecks: 0, weeklyFlags: 0, endOfBlockPrompts: 0, missedMarked: 0 };
 
-    // 1. Mark past scheduled workouts as missed
-    const { data: pastWorkouts } = await supabase
+    // Fix #2: Batch mark past scheduled workouts as missed (single UPDATE)
+    const { data: missedResult } = await supabase
       .from('block_workouts')
-      .select('id, block_id')
+      .update({ status: 'missed' })
       .eq('status', 'scheduled')
-      .lt('scheduled_date', today);
+      .lt('scheduled_date', today)
+      .select('block_id');
 
-    if (pastWorkouts && pastWorkouts.length > 0) {
-      for (const pw of pastWorkouts) {
-        await supabase
-          .from('block_workouts')
-          .update({ status: 'missed' })
-          .eq('id', pw.id);
-      }
-      results.missedMarked = pastWorkouts.length;
+    if (missedResult && missedResult.length > 0) {
+      results.missedMarked = missedResult.length;
 
-      // Update block statuses for affected blocks
-      const blockIds = [...new Set(pastWorkouts.map(w => w.block_id))];
-      for (const bid of blockIds) {
-        // Use service role — bypass RLS
-        const { data: block } = await supabase
-          .from('training_blocks')
-          .select('id, status')
-          .eq('id', bid)
-          .single();
-
-        if (block && block.status !== 'archived') {
-          const { data: workouts } = await supabase
-            .from('block_workouts')
-            .select('status')
-            .eq('block_id', bid);
-
-          if (workouts) {
-            const total = workouts.length;
-            const completed = workouts.filter(w => w.status === 'completed').length;
-            const remaining = workouts.filter(w => w.status === 'scheduled').length;
-
-            let newStatus = 'active';
-            if (remaining === 0) newStatus = 'archived';
-            else if (remaining <= 3) newStatus = 'ready_for_regeneration';
-            else if (total > 0 && (completed / total) >= 0.85) newStatus = 'nearing_completion';
-
-            if (newStatus !== block.status) {
-              await supabase
-                .from('training_blocks')
-                .update({ status: newStatus })
-                .eq('id', bid);
-            }
-          }
-        }
-      }
+      // Fix #7: Use single source of truth — call update_block_status_service for each affected block
+      const blockIds = [...new Set(missedResult.map(w => w.block_id))];
+      await Promise.all(
+        blockIds.map(bid =>
+          supabase.rpc('update_block_status_service', { p_block_id: bid })
+        )
+      );
     }
 
     // 2. Check for today's workouts (daily notification data)
