@@ -1050,16 +1050,20 @@ export function CustomActivityDetailDialog({
                   }}
                   className={cn(
                     "flex-1 gap-2 font-bold",
-                    task.completed 
+                    (totalCheckableCount > 0 ? checkedCount === totalCheckableCount : task.completed)
                       ? "bg-muted text-muted-foreground hover:bg-muted" 
                       : ""
                   )}
-                  style={!task.completed ? { backgroundColor: customColor } : undefined}
+                  style={!(totalCheckableCount > 0 ? checkedCount === totalCheckableCount : task.completed) ? { backgroundColor: customColor } : undefined}
                 >
                   <Check className="h-4 w-4" />
-                  {task.completed 
-                    ? t('customActivity.detail.markedComplete') 
-                    : t('customActivity.detail.markComplete')
+                  {totalCheckableCount > 0
+                    ? (checkedCount === totalCheckableCount
+                      ? t('customActivity.detail.uncheckAll', 'Uncheck All')
+                      : t('customActivity.detail.checkAll', 'Check All & Complete'))
+                    : (task.completed 
+                      ? t('customActivity.detail.markedComplete') 
+                      : t('customActivity.detail.markComplete'))
                   }
                 </Button>
               </div>
