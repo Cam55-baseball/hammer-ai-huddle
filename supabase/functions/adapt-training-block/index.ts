@@ -20,11 +20,20 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    // Service client only for auth.getUser + SECURITY DEFINER RPCs
+    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Anon client with user JWT — RLS enforced for all reads
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await serviceClient.auth.getUser(token);
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -82,48 +91,44 @@ serve(async (req) => {
     const futureWorkouts = workouts.filter(w => w.scheduled_date && w.scheduled_date > today && w.status === 'scheduled');
     const futureWorkoutIds = futureWorkouts.map(w => w.id);
 
-    // RPE analysis by week
-    const rpeByWeek: Record<number, number[]> = {};
+    // Rolling RPE window: last 8 completed workouts, require ≥4 samples
+    const completedIds = completedWorkouts.map(w => w.id);
+    const rpeValues: number[] = [];
     for (const m of (metrics || [])) {
-      const workout = workouts.find(w => w.id === m.workout_id);
-      if (workout) {
-        if (!rpeByWeek[workout.week_number]) rpeByWeek[workout.week_number] = [];
-        rpeByWeek[workout.week_number].push(m.rpe);
+      if (completedIds.includes(m.workout_id)) {
+        rpeValues.push(m.rpe);
       }
     }
+    // Take last 8 RPE samples (most recent)
+    const rollingWindow = rpeValues.slice(-8);
 
-    // Rule 1: Average RPE > 8 for 2+ weeks → reduce volume via batch RPC
-    const highRPEWeeks = Object.entries(rpeByWeek).filter(
-      ([_, rpes]) => rpes.length >= 2 && rpes.reduce((a, b) => a + b, 0) / rpes.length > 8
-    );
-
-    if (highRPEWeeks.length >= 2 && futureWorkoutIds.length > 0) {
-      const { data: decremented } = await supabase.rpc('batch_decrement_sets', {
-        p_workout_ids: futureWorkoutIds,
-      });
-      if (decremented && decremented > 0) {
-        adaptations.push(`Reduced volume (sets -1) for ${decremented} exercises due to sustained high RPE`);
+    // Rule 1: Rolling RPE > 8 with ≥4 samples → reduce volume
+    if (rollingWindow.length >= 4 && futureWorkoutIds.length > 0) {
+      const avgRPE = rollingWindow.reduce((a, b) => a + b, 0) / rollingWindow.length;
+      if (avgRPE > 8) {
+        const { data: decremented } = await serviceClient.rpc('batch_decrement_sets', {
+          p_workout_ids: futureWorkoutIds,
+        });
+        if (decremented && decremented > 0) {
+          adaptations.push(`Reduced volume (sets -1) for ${decremented} exercises — rolling RPE avg ${avgRPE.toFixed(1)}`);
+        }
       }
-    }
 
-    // Rule 2: Average RPE < 5 for 2+ weeks → increase volume via batch RPC
-    const lowRPEWeeks = Object.entries(rpeByWeek).filter(
-      ([_, rpes]) => rpes.length >= 2 && rpes.reduce((a, b) => a + b, 0) / rpes.length < 5
-    );
-
-    if (lowRPEWeeks.length >= 2 && futureWorkoutIds.length > 0) {
-      const { data: incremented } = await supabase.rpc('batch_increment_sets', {
-        p_workout_ids: futureWorkoutIds,
-      });
-      if (incremented && incremented > 0) {
-        adaptations.push(`Increased volume (sets +1) for ${incremented} exercises — athlete can handle more`);
+      // Rule 2: Rolling RPE < 5 with ≥4 samples → increase volume
+      if (avgRPE < 5) {
+        const { data: incremented } = await serviceClient.rpc('batch_increment_sets', {
+          p_workout_ids: futureWorkoutIds,
+        });
+        if (incremented && incremented > 0) {
+          adaptations.push(`Increased volume (sets +1) for ${incremented} exercises — rolling RPE avg ${avgRPE.toFixed(1)}`);
+        }
       }
     }
 
     // Rule 3: 3+ missed workouts → deload next week via batch RPC
     if (missedWorkouts.length >= 3 && futureWorkoutIds.length > 0) {
       const nextWeekIds = futureWorkoutIds.slice(0, Math.min(5, futureWorkoutIds.length));
-      const { data: deloaded } = await supabase.rpc('batch_deload_exercises', {
+      const { data: deloaded } = await serviceClient.rpc('batch_deload_exercises', {
         p_workout_ids: nextWeekIds,
       });
       if (deloaded && deloaded > 0) {
@@ -159,29 +164,24 @@ serve(async (req) => {
       }
     }
 
-    // Rule 6: Missed workout shifting (1 missed → shift forward) — batch via Promise.all
+    // Rule 6: Missed workout shifting — atomic SQL via shift_workouts_forward RPC
     const recentMissed = missedWorkouts.filter(w =>
       w.scheduled_date && w.scheduled_date >= today
     );
 
     if (recentMissed.length === 1 && futureWorkouts.length > 0) {
-      await Promise.all(
-        futureWorkouts.map(fw => {
-          if (fw.scheduled_date) {
-            const newDate = new Date(fw.scheduled_date);
-            newDate.setDate(newDate.getDate() + 1);
-            return supabase
-              .from('block_workouts')
-              .update({ scheduled_date: newDate.toISOString().split('T')[0] })
-              .eq('id', fw.id);
-          }
-          return Promise.resolve();
-        })
-      );
-      adaptations.push('Shifted remaining workouts forward 1 day due to missed session');
+      const missedDate = recentMissed[0].scheduled_date!;
+      const { data: shifted } = await serviceClient.rpc('shift_workouts_forward', {
+        p_block_id: block_id,
+        p_after_date: missedDate,
+        p_days: 1,
+      });
+      if (shifted && shifted > 0) {
+        adaptations.push(`Shifted ${shifted} workouts forward 1 day due to missed session`);
+      }
     }
 
-    // Update block status via RPC
+    // Update block status via RPC (user-scoped)
     await supabase.rpc('update_block_status', { p_block_id: block_id });
 
     return new Response(JSON.stringify({
