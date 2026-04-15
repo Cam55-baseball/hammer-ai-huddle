@@ -5,6 +5,8 @@ import { Trophy, Target, ArrowRight } from 'lucide-react';
 import { getGradeLabel } from '@/lib/gradeLabel';
 import { generateInsights } from '@/lib/sessionInsights';
 import { SessionVideosDisplay } from '@/components/practice/SessionVideosDisplay';
+import { useCoachingReport } from '@/hooks/useCoachingReport';
+import { CoachingReportDisplay } from '@/components/practice/CoachingReportDisplay';
 import { cn } from '@/lib/utils';
 
 const TAG_STYLES: Record<string, string> = {
@@ -33,6 +35,10 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
   if (!session) return null;
 
   const grade = session.effective_grade;
+  const drillBlocks = (session.drill_blocks as any[] | null) ?? [];
+  const composites = (session.composite_indexes as Record<string, number> | null) ?? {};
+  const sessionModule = session.module || 'hitting';
+  const hasScores = Object.keys(composites).length > 0;
   const drillBlocks = (session.drill_blocks as any[] | null) ?? [];
   const composites = (session.composite_indexes as Record<string, number> | null) ?? {};
   const sessionModule = session.module || 'hitting';
