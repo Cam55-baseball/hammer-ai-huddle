@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMemo } from "react";
 
+interface AnswerOption {
+  id: string;
+  text: string;
+}
+
 interface DailyScenario {
   id: string;
   scenario_text: string;
@@ -13,6 +18,9 @@ interface DailyScenario {
   lesson_id: string;
   wrong_explanations: Record<string, string> | null;
   game_consequence: string | null;
+  answer_options: AnswerOption[] | null;
+  correct_answer_id: string | null;
+  mistake_type: string | null;
 }
 
 interface DailyAttempt {

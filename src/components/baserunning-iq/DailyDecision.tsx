@@ -10,6 +10,34 @@ interface DailyDecisionProps {
   sport: string;
 }
 
+interface AnswerOption {
+  id: string;
+  text: string;
+}
+
+function getOptions(scenario: any): AnswerOption[] {
+  if (scenario.answer_options && scenario.answer_options.length > 0) {
+    return scenario.answer_options;
+  }
+  return (scenario.options as string[]).map((text: string, i: number) => ({
+    id: String.fromCharCode(97 + i),
+    text,
+  }));
+}
+
+function getCorrectId(scenario: any): string {
+  if (scenario.correct_answer_id) return scenario.correct_answer_id;
+  const opts = getOptions(scenario);
+  const match = opts.find((o) => o.text === scenario.correct_answer);
+  return match?.id ?? opts[0]?.id ?? "a";
+}
+
+function getWrongExplanation(scenario: any, selectedId: string, selectedText: string): string | null {
+  const we = scenario.wrong_explanations as Record<string, string> | null | undefined;
+  if (!we) return null;
+  return we[selectedId] ?? we[selectedText] ?? null;
+}
+
 export function DailyDecision({ sport }: DailyDecisionProps) {
   const {
     scenarios,
@@ -22,20 +50,18 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
   } = useBaserunningDaily(sport);
 
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [sessionResults, setSessionResults] = useState<{ correct: boolean; timeMs: number }[]>([]);
   const [finished, setFinished] = useState(false);
   const startTimeRef = useRef<number>(Date.now());
 
-  // Reset timer when scenario changes
   useEffect(() => {
     startTimeRef.current = Date.now();
   }, [currentIdx]);
 
   if (isLoading) return null;
 
-  // Already completed today
   if (completedToday) {
     const todayCorrect = todayAttempts.filter((a) => a.correct).length;
     return (
@@ -54,7 +80,6 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
     );
   }
 
-  // No scenarios available
   if (scenarios.length === 0 && !isLoading) {
     return (
       <Card className="p-5 text-center text-muted-foreground">
@@ -63,7 +88,6 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
     );
   }
 
-  // Session finished (just completed all scenarios this session)
   if (finished) {
     const correct = sessionResults.filter((r) => r.correct).length;
     const avgTime = Math.round(sessionResults.reduce((s, r) => s + r.timeMs, 0) / sessionResults.length);
@@ -87,14 +111,18 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
   const current = scenarios[currentIdx];
   if (!current) return null;
 
-  const isCorrect = selected === current.correct_answer;
+  const opts = getOptions(current);
+  const correctAnswerId = getCorrectId(current);
+  const isCorrect = selectedId === correctAnswerId;
   const isLast = currentIdx === scenarios.length - 1;
+  const selectedOpt = opts.find((o) => o.id === selectedId);
+  const correctOpt = opts.find((o) => o.id === correctAnswerId);
 
-  const handleSelect = (option: string) => {
+  const handleSelect = (optionId: string) => {
     if (showResult) return;
     const elapsed = Date.now() - startTimeRef.current;
-    const correct = option === current.correct_answer;
-    setSelected(option);
+    const correct = optionId === correctAnswerId;
+    setSelectedId(optionId);
     setShowResult(true);
     setSessionResults((prev) => [...prev, { correct, timeMs: elapsed }]);
     submitAttempt.mutate({
@@ -110,7 +138,7 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
       return;
     }
     setCurrentIdx((i) => i + 1);
-    setSelected(null);
+    setSelectedId(null);
     setShowResult(false);
   };
 
@@ -139,13 +167,13 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
         <p className="text-base font-medium">{current.scenario_text}</p>
 
         <div className="grid gap-2">
-          {(current.options as string[]).map((opt) => {
-            const isThis = selected === opt;
-            const correct = opt === current.correct_answer;
+          {opts.map((opt) => {
+            const isThis = selectedId === opt.id;
+            const correct = opt.id === correctAnswerId;
             return (
               <button
-                key={opt}
-                onClick={() => handleSelect(opt)}
+                key={opt.id}
+                onClick={() => handleSelect(opt.id)}
                 disabled={showResult}
                 className={cn(
                   "text-left px-4 py-3 rounded-lg border transition-all text-sm",
@@ -155,7 +183,7 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
                   !showResult && "border-border"
                 )}
               >
-                {opt}
+                {opt.text}
               </button>
             );
           })}
@@ -163,19 +191,23 @@ export function DailyDecision({ sport }: DailyDecisionProps) {
 
         {showResult && (
           <div className="space-y-3">
-            {!isCorrect && selected && current.wrong_explanations && current.wrong_explanations[selected] && (
-              <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-destructive/10">
-                <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-destructive">Why "{selected}" fails:</p>
-                  <p>{current.wrong_explanations[selected]}</p>
+            {!isCorrect && selectedOpt && (() => {
+              const wrongExp = getWrongExplanation(current, selectedOpt.id, selectedOpt.text);
+              if (!wrongExp) return null;
+              return (
+                <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-destructive/10">
+                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-destructive">Why "{selectedOpt.text}" fails:</p>
+                    <p>{wrongExp}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
             <div className={cn("flex items-start gap-2 p-3 rounded-lg text-sm", isCorrect ? "bg-green-500/10" : "bg-muted")}>
               <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-green-600">Correct: "{current.correct_answer}"</p>
+                <p className="font-semibold text-green-600">Correct: "{correctOpt?.text ?? current.correct_answer}"</p>
                 <p>{current.explanation}</p>
               </div>
             </div>

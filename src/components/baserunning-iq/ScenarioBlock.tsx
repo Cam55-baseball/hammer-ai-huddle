@@ -5,6 +5,11 @@ import { CheckCircle2, XCircle, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SessionSummary } from "./SessionSummary";
 
+interface AnswerOption {
+  id: string;
+  text: string;
+}
+
 interface Scenario {
   id: string;
   scenario_text: string;
@@ -14,6 +19,8 @@ interface Scenario {
   difficulty: string;
   wrong_explanations?: Record<string, string> | unknown;
   game_consequence?: string | null;
+  answer_options?: AnswerOption[] | null;
+  correct_answer_id?: string | null;
 }
 
 interface ScenarioBlockProps {
@@ -21,9 +28,33 @@ interface ScenarioBlockProps {
   onComplete: (score: number) => void;
 }
 
+function getOptions(scenario: Scenario): AnswerOption[] {
+  if (scenario.answer_options && scenario.answer_options.length > 0) {
+    return scenario.answer_options;
+  }
+  return (scenario.options as string[]).map((text, i) => ({
+    id: String.fromCharCode(97 + i),
+    text,
+  }));
+}
+
+function getCorrectId(scenario: Scenario): string {
+  if (scenario.correct_answer_id) return scenario.correct_answer_id;
+  const opts = getOptions(scenario);
+  const match = opts.find((o) => o.text === scenario.correct_answer);
+  return match?.id ?? opts[0]?.id ?? "a";
+}
+
+function getWrongExplanation(scenario: Scenario, selectedId: string, selectedText: string): string | null {
+  const we = scenario.wrong_explanations as Record<string, string> | null | undefined;
+  if (!we) return null;
+  // Try by ID first, then by text
+  return we[selectedId] ?? we[selectedText] ?? null;
+}
+
 export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
@@ -31,14 +62,18 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
   if (!scenarios.length) return null;
 
   const current = scenarios[currentIdx];
-  const isCorrect = selected === current.correct_answer;
+  const opts = getOptions(current);
+  const correctId = getCorrectId(current);
+  const isCorrect = selectedId === correctId;
   const isLast = currentIdx === scenarios.length - 1;
+  const selectedOpt = opts.find((o) => o.id === selectedId);
+  const correctOpt = opts.find((o) => o.id === correctId);
 
-  const handleSelect = (option: string) => {
+  const handleSelect = (optionId: string) => {
     if (showResult) return;
-    setSelected(option);
+    setSelectedId(optionId);
     setShowResult(true);
-    if (option === current.correct_answer) {
+    if (optionId === correctId) {
       setCorrectCount((c) => c + 1);
     }
   };
@@ -49,7 +84,7 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
       return;
     }
     setCurrentIdx((i) => i + 1);
-    setSelected(null);
+    setSelectedId(null);
     setShowResult(false);
   };
 
@@ -82,13 +117,13 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
         <p className="text-base font-medium">{current.scenario_text}</p>
 
         <div className="grid gap-2">
-          {(current.options as string[]).map((opt) => {
-            const isThis = selected === opt;
-            const correct = opt === current.correct_answer;
+          {opts.map((opt) => {
+            const isThis = selectedId === opt.id;
+            const correct = opt.id === correctId;
             return (
               <button
-                key={opt}
-                onClick={() => handleSelect(opt)}
+                key={opt.id}
+                onClick={() => handleSelect(opt.id)}
                 disabled={showResult}
                 className={cn(
                   "text-left px-4 py-3 rounded-lg border transition-all text-sm",
@@ -98,7 +133,7 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
                   !showResult && "border-border"
                 )}
               >
-                {opt}
+                {opt.text}
               </button>
             );
           })}
@@ -106,19 +141,23 @@ export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
 
         {showResult && (
           <div className="space-y-3">
-            {!isCorrect && selected && current.wrong_explanations && (current.wrong_explanations as Record<string, string>)[selected] && (
-              <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-destructive/10">
-                <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-destructive">Why "{selected}" fails:</p>
-                  <p>{(current.wrong_explanations as Record<string, string>)[selected]}</p>
+            {!isCorrect && selectedOpt && (() => {
+              const wrongExp = getWrongExplanation(current, selectedOpt.id, selectedOpt.text);
+              if (!wrongExp) return null;
+              return (
+                <div className="flex items-start gap-2 p-3 rounded-lg text-sm bg-destructive/10">
+                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-destructive">Why "{selectedOpt.text}" fails:</p>
+                    <p>{wrongExp}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
             <div className={cn("flex items-start gap-2 p-3 rounded-lg text-sm", isCorrect ? "bg-green-500/10" : "bg-muted")}>
               <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-green-600">Correct: "{current.correct_answer}"</p>
+                <p className="font-semibold text-green-600">Correct: "{correctOpt?.text ?? current.correct_answer}"</p>
                 <p>{current.explanation}</p>
               </div>
             </div>
