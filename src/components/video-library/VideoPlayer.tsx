@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -38,6 +40,26 @@ export function VideoPlayer({ videoUrl, videoType, title }: VideoPlayerProps) {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
+      </div>
+    );
+  }
+
+  if (videoType === 'external') {
+    return (
+      <div className="aspect-video rounded-lg overflow-hidden bg-muted flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <ExternalLink className="h-10 w-10 text-muted-foreground" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-xs text-muted-foreground truncate max-w-[300px]">{videoUrl}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.open(videoUrl, '_blank', 'noopener,noreferrer')}
+        >
+          <ExternalLink className="h-4 w-4 mr-1" />
+          Open in New Tab
+        </Button>
       </div>
     );
   }
