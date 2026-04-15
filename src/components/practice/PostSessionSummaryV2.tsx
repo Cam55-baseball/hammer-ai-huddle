@@ -174,3 +174,98 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
     </div>
   );
 }
+
+function CoachingReportWithFallback({
+  sessionId,
+  hasScores,
+  finalInsights,
+  colorMap,
+  bgColorMap,
+}: {
+  sessionId: string;
+  hasScores: boolean;
+  finalInsights: any;
+  colorMap: Record<string, string>;
+  bgColorMap: Record<string, string>;
+}) {
+  const { report, isGenerating, error } = useCoachingReport(sessionId, hasScores);
+
+  // If AI report is available, show it
+  if (report) {
+    return <CoachingReportDisplay report={report} isGenerating={false} error={null} />;
+  }
+
+  // If generating, show skeleton + fallback
+  if (isGenerating) {
+    return (
+      <>
+        <CoachingReportDisplay report={null} isGenerating={true} error={null} />
+        <FallbackInsights insights={finalInsights} colorMap={colorMap} bgColorMap={bgColorMap} />
+      </>
+    );
+  }
+
+  // Error or no report — show fallback
+  return <FallbackInsights insights={finalInsights} colorMap={colorMap} bgColorMap={bgColorMap} />;
+}
+
+function FallbackInsights({
+  insights,
+  colorMap,
+  bgColorMap,
+}: {
+  insights: any;
+  colorMap: Record<string, string>;
+  bgColorMap: Record<string, string>;
+}) {
+  return (
+    <>
+      {insights.win && (
+        <Card className="border-green-500/20 bg-green-500/5">
+          <CardContent className="pt-4 pb-4 flex items-start gap-3">
+            <Trophy className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-green-600">Your Win</p>
+              <p className="text-sm font-medium mt-0.5">{insights.win}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {insights.focus && (
+        <Card className="border-amber-500/20 bg-amber-500/5">
+          <CardContent className="pt-4 pb-4 flex items-start gap-3">
+            <Target className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-600">Priority Focus</p>
+              <p className="text-sm font-medium mt-0.5">{insights.focus}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {insights.nextRepCue && (
+        <Card className="border-blue-500/20 bg-blue-500/5">
+          <CardContent className="pt-4 pb-4 flex items-start gap-3">
+            <ArrowRight className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">Next Rep Cue</p>
+              <p className="text-sm font-medium mt-0.5">{insights.nextRepCue}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {insights.keyMetrics.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {insights.keyMetrics.map((m: any) => (
+            <div
+              key={m.label}
+              className={cn('rounded-lg border p-3 text-center', bgColorMap[m.color])}
+            >
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">{m.label}</p>
+              <p className={cn('text-xl font-bold mt-0.5', colorMap[m.color])}>{m.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
