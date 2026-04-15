@@ -8408,6 +8408,10 @@ export type Database = {
         }
         Returns: string
       }
+      shift_workouts_forward: {
+        Args: { p_after_date: string; p_block_id: string; p_days?: number }
+        Returns: number
+      }
       try_acquire_hie_lock: {
         Args: { p_stale_seconds?: number; p_user_id: string }
         Returns: boolean
