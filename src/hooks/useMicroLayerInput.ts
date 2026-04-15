@@ -15,6 +15,7 @@ export interface MicroLayerData {
   in_zone?: boolean;
   batted_ball_type?: 'ground' | 'line' | 'fly' | 'barrel' | 'slow_roller' | 'one_hopper' | 'chopper';
   spin_direction?: 'topspin' | 'backspin' | 'sidespin';
+  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[] };
   swing_intent?: 'mechanical' | 'game_intent' | 'situational' | 'hr_derby';
   execution_score?: number;
   // Fielding micro

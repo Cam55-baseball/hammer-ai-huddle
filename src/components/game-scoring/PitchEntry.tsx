@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
+import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +35,7 @@ export interface PitchData {
   spray_direction?: string;
   contact_quality?: string;
   batted_ball_type?: string;
+  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[] };
 }
 
 export function PitchEntry({ onSubmit, advancedMode, pitchNumber, sport }: PitchEntryProps) {
@@ -47,6 +49,7 @@ export function PitchEntry({ onSubmit, advancedMode, pitchNumber, sport }: Pitch
   const [spray, setSpray] = useState('');
   const [contactQuality, setContactQuality] = useState('');
   const [battedBallType, setBattedBallType] = useState('');
+  const [pitchMovement, setPitchMovement] = useState<('up' | 'down' | 'left' | 'right')[]>([]);
 
   const isInPlay = result === 'in_play_out' || result === 'in_play_hit';
 
@@ -62,6 +65,7 @@ export function PitchEntry({ onSubmit, advancedMode, pitchNumber, sport }: Pitch
       ...(isInPlay && spray && { spray_direction: spray }),
       ...(isInPlay && contactQuality && { contact_quality: contactQuality }),
       ...(isInPlay && battedBallType && { batted_ball_type: battedBallType }),
+      ...(pitchMovement.length > 0 && { pitch_movement: { directions: pitchMovement } }),
     };
     onSubmit(pitch);
     // Reset
@@ -74,6 +78,7 @@ export function PitchEntry({ onSubmit, advancedMode, pitchNumber, sport }: Pitch
     setSpray('');
     setContactQuality('');
     setBattedBallType('');
+    setPitchMovement([]);
   };
 
   return (
@@ -123,6 +128,8 @@ export function PitchEntry({ onSubmit, advancedMode, pitchNumber, sport }: Pitch
           </div>
 
           <PitchLocationGrid value={location} onSelect={setLocation} sport={sport} />
+
+          <PitchMovementSelector value={pitchMovement} onChange={setPitchMovement} />
 
           {isInPlay && (
             <div className="space-y-3 border-t pt-3">
