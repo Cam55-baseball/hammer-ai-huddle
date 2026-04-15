@@ -175,14 +175,75 @@ export function useCalendarActivityDetail(
   }, []);
 
   const handleComplete = useCallback(async () => {
-    if (!currentTemplateId || !currentDate) return;
+    if (!currentTemplateId || !currentDate || !selectedTask?.customActivityData) return;
 
+    const template = selectedTask.customActivityData.template;
+    const allCheckableIds = getAllCheckableIds(template);
+
+    // If there are checkable items, toggle ALL checkboxes instead of manual complete
+    if (allCheckableIds.length > 0) {
+      const currentLog = selectedTask.customActivityData.log;
+      const currentData = (currentLog?.performance_data as Record<string, unknown>) || {};
+      const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+      
+      // Determine target: if all checked → uncheck all, otherwise check all
+      const allChecked = allCheckableIds.every(id => currentCheckboxStates[id] === true);
+      const newCheckboxStates: Record<string, boolean> = {};
+      allCheckableIds.forEach(id => { newCheckboxStates[id] = !allChecked; });
+      const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+      const derivedCompleted = !allChecked;
+      const derivedCompletedAt = derivedCompleted ? new Date().toISOString() : null;
+
+      try {
+        const dateStr = format(currentDate, 'yyyy-MM-dd');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: existingLog } = await supabase
+          .from('custom_activity_logs')
+          .select('*')
+          .eq('template_id', currentTemplateId)
+          .eq('entry_date', dateStr)
+          .maybeSingle();
+
+        if (existingLog) {
+          await supabase
+            .from('custom_activity_logs')
+            .update({ 
+              performance_data: newPerformanceData,
+              completed: derivedCompleted,
+              completed_at: derivedCompletedAt,
+            })
+            .eq('id', existingLog.id);
+        } else {
+          await supabase
+            .from('custom_activity_logs')
+            .insert({
+              template_id: currentTemplateId,
+              user_id: user.id,
+              entry_date: dateStr,
+              completed: derivedCompleted,
+              completed_at: derivedCompletedAt,
+              performance_data: newPerformanceData,
+            });
+        }
+
+        toast.success(derivedCompleted ? 'Activity completed' : 'Activity uncompleted');
+        closeDetailDialog();
+        onRefresh?.();
+      } catch (err) {
+        console.error('Error updating activity:', err);
+        toast.error('Failed to update activity');
+      }
+      return;
+    }
+
+    // NO checkable items → treat as manual toggle (auto-complete edge case)
     try {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if log exists
       const { data: existingLog } = await supabase
         .from('custom_activity_logs')
         .select('*')
@@ -191,13 +252,15 @@ export function useCalendarActivityDetail(
         .maybeSingle();
 
       if (existingLog) {
-        // Toggle completion
+        const newCompleted = !existingLog.completed;
         await supabase
           .from('custom_activity_logs')
-          .update({ completed: !existingLog.completed })
+          .update({ 
+            completed: newCompleted,
+            completed_at: newCompleted ? new Date().toISOString() : null,
+          })
           .eq('id', existingLog.id);
       } else {
-        // Create new log with completed = true
         await supabase
           .from('custom_activity_logs')
           .insert({
@@ -205,6 +268,7 @@ export function useCalendarActivityDetail(
             user_id: user.id,
             entry_date: dateStr,
             completed: true,
+            completed_at: new Date().toISOString(),
           });
       }
 
@@ -215,7 +279,7 @@ export function useCalendarActivityDetail(
       console.error('Error updating activity:', err);
       toast.error('Failed to update activity');
     }
-  }, [currentTemplateId, currentDate, closeDetailDialog, onRefresh]);
+  }, [currentTemplateId, currentDate, selectedTask, closeDetailDialog, onRefresh]);
 
   const handleSaveTime = useCallback(async (time: string | null, reminder: number | null) => {
     if (!currentTemplateId) return;
