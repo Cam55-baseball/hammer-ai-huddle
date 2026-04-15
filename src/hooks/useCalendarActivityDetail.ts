@@ -4,6 +4,7 @@ import { CalendarEvent } from '@/hooks/useCalendar';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
 import { CustomActivityTemplate, CustomActivityLog, CustomActivityWithLog } from '@/types/customActivity';
+import { getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
