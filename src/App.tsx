@@ -113,6 +113,7 @@ const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
+const TrainingBlock = lazyWithRetry(() => import("./pages/TrainingBlock"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
