@@ -1,37 +1,43 @@
 
 
-# Fix Unviewable External Videos in Video Library
+# Update Contact Quality Options for Hitting Sessions
 
-## Problem
-`VideoPlayer.tsx` only handles `youtube` and `vimeo` embeds. Videos with `video_type: 'external'` (X/Twitter, TikTok, etc.) fall through to a `<video>` tag that can't play web page URLs — resulting in a broken black box.
+## Summary
+Replace the current 6-option contact quality set (`miss`, `foul`, `jammed`, `end_cap`, `hard`, `barrel`) with the new standardized 6-option set across all hitting-specific locations. Game scoring (`PitchEntry.tsx`) uses a separate `hard/medium/soft` scale and is **not** touched.
 
-3 affected videos: 1 X/Twitter link, 1 TikTok link, 1 empty URL.
+## New options (in order)
+| Value | Label | Tier | Grade Score |
+|-------|-------|------|-------------|
+| `barrel` | 🔥 Barrel | elite | 70 |
+| `solid` | 💪 Solid | good | 60 |
+| `flare_burner` | ✨ Flare/Burner | good | 55 |
+| `misshit_clip` | 🔸 Miss-hit/Clip | neutral | 45 |
+| `weak` | ⚠️ Weak | poor | 30 |
+| `whiff` | ❌ Whiff | poor | 15 |
 
-## Solution
-Add an `external` fallback path in `VideoPlayer` that displays a styled card with the video title and an "Open in Browser" button, rather than attempting inline playback.
+## Files to change
 
-## Changes
+### 1. `src/components/practice/RepScorer.tsx` (lines 202-209)
+Replace `contactOptions` array with the new 6 options and updated colors. Update grid from `grid-cols-5` → `grid-cols-3` (line 963) for better layout with 6 items.
 
-### `src/components/video-library/VideoPlayer.tsx`
+### 2. `src/components/micro-layer/ContactQualitySelector.tsx` (lines 3-10)
+Replace options array with matching new values/labels.
 
-Add a new branch before the `<video>` fallback:
+### 3. `src/hooks/useMicroLayerInput.ts` (line 6)
+Update the `contact_quality` type union to: `'barrel' | 'solid' | 'flare_burner' | 'misshit_clip' | 'weak' | 'whiff'`
 
-```text
-if videoType === 'external' && videoUrl:
-  → Render a card with:
-    - Title
-    - Truncated URL preview
-    - "Open in New Tab" button (window.open)
-    - ExternalLink icon
+### 4. `src/pages/PracticeHub.tsx` (line 209)
+Update `qualityMap` scoring to include new values:
+```
+{ barrel: 70, solid: 60, flare_burner: 55, misshit_clip: 45, weak: 30, whiff: 15 }
 ```
 
-This keeps the existing YouTube/Vimeo/upload paths untouched and gracefully handles any URL that isn't a direct video file.
+### 5. `supabase/functions/hie-analyze/index.ts` (line 88)
+Add `'whiff'` to whiff detection: `r.contact_quality === 'miss' || r.contact_quality === 'whiff'`
 
-### No other files change
-- `useVideoLibrary.ts` — no changes needed
-- `VideoCard.tsx` — no changes needed (thumbnail fallback already handles missing thumbnails)
-
-| File | Change |
-|------|--------|
-| `src/components/video-library/VideoPlayer.tsx` | Add `external` type rendering path with "Open in New Tab" button |
+### Not changed (correct scope)
+- `PitchEntry.tsx` — game scoring uses separate `hard/medium/soft` scale
+- `outcomeTags.ts` — separate batted ball outcome system, not contact quality
+- No DB migration needed — stored as JSONB strings
+- Historical data untouched — old values (`miss`, `foul`, `jammed`, `end_cap`, `hard`) will still display but won't match new options going forward
 
