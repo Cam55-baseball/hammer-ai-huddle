@@ -19,24 +19,29 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const results = { dailyChecks: 0, weeklyFlags: 0, endOfBlockPrompts: 0, missedMarked: 0 };
 
-    // 1. Cursor-based batch: mark past scheduled workouts as missed
+    // 1. Snapshot-ID batch: select IDs first, then update exactly those rows
     const affectedBlockIds = new Set<string>();
-    let missedCursor: string | null = null;
     do {
-      let query = supabase
+      // Step A: snapshot target IDs (read-only, stable)
+      const { data: targets } = await supabase
         .from('block_workouts')
-        .update({ status: 'missed' })
+        .select('id, block_id')
         .eq('status', 'scheduled')
         .lt('scheduled_date', today)
         .order('id', { ascending: true })
-        .limit(500)
-        .select('id, block_id');
-      if (missedCursor) query = query.gt('id', missedCursor);
-      const { data } = await query;
-      if (!data || data.length === 0) break;
-      results.missedMarked += data.length;
-      for (const w of data) affectedBlockIds.add(w.block_id);
-      missedCursor = data[data.length - 1].id;
+        .limit(500);
+      if (!targets || targets.length === 0) break;
+
+      const targetIds = targets.map(t => t.id);
+
+      // Step B: update exactly those IDs
+      await supabase
+        .from('block_workouts')
+        .update({ status: 'missed' })
+        .in('id', targetIds);
+
+      results.missedMarked += targets.length;
+      for (const w of targets) affectedBlockIds.add(w.block_id);
     } while (true);
 
     // Update status for affected blocks

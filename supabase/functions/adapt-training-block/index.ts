@@ -91,15 +91,18 @@ serve(async (req) => {
     const futureWorkouts = workouts.filter(w => w.scheduled_date && w.scheduled_date > today && w.status === 'scheduled');
     const futureWorkoutIds = futureWorkouts.map(w => w.id);
 
-    // Rolling RPE window: last 8 completed workouts, require ≥4 samples
-    const completedIds = completedWorkouts.map(w => w.id);
+    // Rolling RPE window: sort completed workouts by scheduled_date, then extract RPE in order
+    const completedByDate = [...completedWorkouts].sort((a, b) =>
+      (a.scheduled_date || '').localeCompare(b.scheduled_date || '')
+    );
+    const completedIdOrder = completedByDate.map(w => w.id);
+    const metricsMap = new Map((metrics || []).map(m => [m.workout_id, m.rpe]));
     const rpeValues: number[] = [];
-    for (const m of (metrics || [])) {
-      if (completedIds.includes(m.workout_id)) {
-        rpeValues.push(m.rpe);
-      }
+    for (const wid of completedIdOrder) {
+      const rpe = metricsMap.get(wid);
+      if (rpe !== undefined) rpeValues.push(rpe);
     }
-    // Take last 8 RPE samples (most recent)
+    // Take last 8 RPE samples (most recent by date)
     const rollingWindow = rpeValues.slice(-8);
 
     // Rule 1: Rolling RPE > 8 with ≥4 samples → reduce volume
