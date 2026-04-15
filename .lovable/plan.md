@@ -1,52 +1,72 @@
 
 
-# Fix: Deterministic Answer Options + Intent-Based Mistake Classification
+# Structural Hardening: wrong_explanations Key Alignment + Duplicate Cleanup
 
-## Issue 1: answer_options Determinism
+## Findings
 
-**Current state**: The backfill produced correct data (0 mismatches between `correct_answer` text and `correct_answer_id` mapping across all 232 rows). `options` is a JSONB array with inherent ordering, so the result is stable. However, the SQL used ROW_NUMBER() without ORDER BY — technically non-deterministic.
+### 1. wrong_explanations Key Mismatch — ALL 232 Scenarios Affected
 
-**Fix**: Regenerate all 232 `answer_options` using `WITH ORDINALITY` on `jsonb_array_elements_text(options)` to make the mapping explicitly ordered. This is a safety guarantee — the data won't change, but the SQL will be provably deterministic.
+Every scenario's `wrong_explanations` is keyed by **option text** (e.g., `"The catcher's shift was a decoy..."`) rather than by **answer_option ID** (`"b"`, `"c"`, `"d"`). The code in `getWrongExplanation` tries ID first (`we[selectedId]`), silently fails on all 232 rows, then falls back to text matching (`we[selectedText]`).
 
-**Implementation**: Single UPDATE statement using a CTE with `jsonb_array_elements_text(options) WITH ORDINALITY` to rebuild `answer_options` as `[{"id":"a","text":"..."},{"id":"b","text":"..."},...]` and re-derive `correct_answer_id` by matching `correct_answer` to the ordinality-indexed array.
+This works today but is fragile: if option text is ever edited without updating `wrong_explanations` keys, the explanation silently disappears. The fix requires two changes:
 
----
+**Data fix**: Rekey all 232 `wrong_explanations` from text keys → answer_option ID keys. For each scenario, map the 3 wrong option texts to their corresponding `answer_options[].id` values and rebuild the JSONB object.
 
-## Issue 2: Mistake Type Reclassification
+**Code fix**: Add a dev-mode console warning when `getWrongExplanation` falls through both ID and text lookups, so mismatches are never silent again. This applies to both `ScenarioBlock.tsx` and `DailyDecision.tsx`.
 
-**Current state**: 19/19/19/19 distribution is artificially balanced. Multiple scenarios are misclassified:
+### 2. Near-Duplicate Rundown Scenarios — 3 Redundant
 
-**Examples of wrong classifications** (there are ~15-20 total):
-- Scenarios where correct answer = GO/SCORE/ADVANCE but classified `over_aggressive` (should be `hesitation` — the mistake is failing to go):
-  - `f1010001-...-04` "bobble → GO" — classified `over_aggressive`, should be `hesitation`
-  - `f1010002-...-04` "delayed steal → GO" — classified `over_aggressive`, should be `hesitation`
-  - `f1040001-...-04` "wall carom → TAKE SECOND" — classified `over_aggressive`, should be `hesitation`
-  - `f1050001-...-04` "passed ball → GO" — classified `over_aggressive`, should be `hesitation`
-  - `f1080001-...-04` "2 outs → SCORE" — classified `over_aggressive`, should be `hesitation`
-  - `f1080002-...-04` "60ft → SCORE" — classified `over_aggressive`, should be `hesitation`
-  - etc.
+The "rundown between first and second" concept appears across 3 lessons with nearly identical easy-difficulty scenarios teaching the same decision ("primary objective in a rundown"):
 
-- Scenarios where correct answer = FREEZE/READ but classified `hesitation` (should be `over_aggressive` or `misread`):
-  - `f1020001-...-04` "swing-and-miss → FREEZE AND READ" — classified `hesitation`, should be `over_aggressive`
-  - `f1020002-...-04` "line drive → FREEZE AND READ" — classified `hesitation`, should be `over_aggressive`
+| ID | Lesson | Sport | Decision |
+|---|---|---|---|
+| `645b07dc-...` | L1 (c1000001) | baseball | Fielder jogging toward you — what do you do? |
+| `e1200001-...-01` | L12 (d1200001) | baseball | Primary objective in rundown |
+| `e2200001-...-01` | L22 (d2200000) | both | First baseman running at you — what do you do? |
 
-**Classification rules** (intent-derived):
-- `hesitation`: correct answer requires committing (GO/SCORE/ADVANCE), mistake = player freezes
-- `over_aggressive`: correct answer requires holding (HOLD/FREEZE/READ), mistake = player goes too early
-- `misread`: player reads the wrong cue (wrong fielder, wrong trajectory, wrong count)
-- `panic`: player makes irrational snap decision under pressure (surrender, straight-line rundown, abandon technique)
+L12 is the dedicated rundown lesson — the other two (L1 and L22) duplicate its core concept. Additionally, `f1100001-...-01` (L12 game_speed, baseball) and `e2200001-...-01` (L22 easy, both) have nearly identical scenario text ("first baseman has the ball and is running at you").
 
-**Implementation**: Review all 76 mistake scenarios individually. Update each `mistake_type` based on actual scenario intent. Accept whatever distribution emerges — it will likely skew toward `misread` and `hesitation` given the scenario content.
+**Fix**: Rewrite 2 scenarios:
+- `645b07dc-...` (L1 easy, baseball) → New concept: **reading the overthrow at first** — ball gets past first baseman, runner decides to advance
+- `e2200001-...-01` (L22 easy, both) → New concept: **rundown with trailing runners** — focus shifts from personal survival to advancing the runner behind you
+
+This preserves L12 as the canonical rundown lesson while eliminating the semantic overlap.
 
 ---
 
-## Execution Order
+## Implementation Order
 
-1. Regenerate `answer_options` + `correct_answer_id` for all 232 scenarios using WITH ORDINALITY (1 bulk UPDATE via insert tool)
-2. Reclassify all 76 mistake scenarios by intent (multiple UPDATEs via insert tool)
-3. Return final distribution counts — no rebalancing
+1. **Data: Rekey wrong_explanations** for all 232 scenarios — single bulk UPDATE via insert tool using a CTE that joins `wrong_explanations` text keys to `answer_options` IDs
+2. **Data: Rewrite 2 duplicate rundown scenarios** with new contexts, options, wrong_explanations (ID-keyed), and game_consequence
+3. **Code: Add mismatch warning** in `ScenarioBlock.tsx` and `DailyDecision.tsx` — `console.warn` in development when neither ID nor text lookup finds a match
 
-## No Code Changes Required
+## Technical Details
 
-The `ScenarioBlock.tsx` and `useBaserunningDaily.ts` already handle `answer_options` with fallback. Only data updates.
+Rekey SQL pattern:
+```sql
+-- For each scenario, rebuild wrong_explanations with ID keys
+-- by matching each wrong answer_option's text to the existing text-keyed entries
+UPDATE baserunning_scenarios s
+SET wrong_explanations = (
+  SELECT jsonb_object_agg(ao->>'id', s.wrong_explanations::jsonb->(ao->>'text'))
+  FROM jsonb_array_elements(s.answer_options) ao
+  WHERE ao->>'id' != s.correct_answer_id
+)
+WHERE answer_options IS NOT NULL;
+```
+
+Console warning (dev-only):
+```typescript
+function getWrongExplanation(scenario, selectedId, selectedText) {
+  const we = scenario.wrong_explanations;
+  if (!we) return null;
+  const result = we[selectedId] ?? we[selectedText] ?? null;
+  if (!result && import.meta.env.DEV) {
+    console.warn(`[BaserunningIQ] Missing wrong_explanation for scenario ${scenario.id}, selected: id=${selectedId} text="${selectedText}"`);
+  }
+  return result;
+}
+```
+
+No schema changes. ~234 total UPDATE operations + 2 code file edits.
 
