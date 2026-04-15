@@ -882,6 +882,141 @@ export type Database = {
           },
         ]
       }
+      block_exercises: {
+        Row: {
+          cns_demand: string | null
+          coaching_cues: string[] | null
+          id: string
+          name: string
+          ordinal: number
+          reps: number
+          rest_seconds: number | null
+          sets: number
+          tempo: string | null
+          velocity_intent: string | null
+          weight: number | null
+          workout_id: string
+        }
+        Insert: {
+          cns_demand?: string | null
+          coaching_cues?: string[] | null
+          id?: string
+          name: string
+          ordinal?: number
+          reps?: number
+          rest_seconds?: number | null
+          sets?: number
+          tempo?: string | null
+          velocity_intent?: string | null
+          weight?: number | null
+          workout_id: string
+        }
+        Update: {
+          cns_demand?: string | null
+          coaching_cues?: string[] | null
+          id?: string
+          name?: string
+          ordinal?: number
+          reps?: number
+          rest_seconds?: number | null
+          sets?: number
+          tempo?: string | null
+          velocity_intent?: string | null
+          weight?: number | null
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_exercises_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "block_workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      block_workout_metrics: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          notes: string | null
+          rpe: number
+          user_id: string
+          workout_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          rpe: number
+          user_id: string
+          workout_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          notes?: string | null
+          rpe?: number
+          user_id?: string
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_workout_metrics_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "block_workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      block_workouts: {
+        Row: {
+          block_id: string
+          completed_at: string | null
+          day_label: string
+          estimated_duration: number | null
+          id: string
+          scheduled_date: string | null
+          status: string
+          week_number: number
+          workout_type: string
+        }
+        Insert: {
+          block_id: string
+          completed_at?: string | null
+          day_label: string
+          estimated_duration?: number | null
+          id?: string
+          scheduled_date?: string | null
+          status?: string
+          week_number: number
+          workout_type: string
+        }
+        Update: {
+          block_id?: string
+          completed_at?: string | null
+          day_label?: string
+          estimated_duration?: number | null
+          id?: string
+          scheduled_date?: string | null
+          status?: string
+          week_number?: number
+          workout_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_workouts_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "training_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_day_orders: {
         Row: {
           created_at: string
@@ -6031,6 +6166,45 @@ export type Database = {
         }
         Relationships: []
       }
+      training_blocks: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          generation_metadata: Json | null
+          goal: string
+          id: string
+          pending_goal_change: boolean
+          sport: string
+          start_date: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          generation_metadata?: Json | null
+          goal: string
+          id?: string
+          pending_goal_change?: boolean
+          sport?: string
+          start_date?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          generation_metadata?: Json | null
+          goal?: string
+          id?: string
+          pending_goal_change?: boolean
+          sport?: string
+          start_date?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       training_data: {
         Row: {
           created_at: string
@@ -6073,6 +6247,36 @@ export type Database = {
           title?: string
           updated_at?: string
           video_url?: string
+        }
+        Relationships: []
+      }
+      training_preferences: {
+        Row: {
+          availability: Json
+          equipment: Json
+          experience_level: string
+          goal: string | null
+          injuries: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability?: Json
+          equipment?: Json
+          experience_level?: string
+          goal?: string | null
+          injuries?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability?: Json
+          equipment?: Json
+          experience_level?: string
+          goal?: string | null
+          injuries?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -8162,6 +8366,7 @@ export type Database = {
         Args: { p_stale_seconds?: number; p_user_id: string }
         Returns: boolean
       }
+      update_block_status: { Args: { p_block_id: string }; Returns: string }
       user_has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
