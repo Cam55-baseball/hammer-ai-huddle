@@ -19,51 +19,72 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const results = { dailyChecks: 0, weeklyFlags: 0, endOfBlockPrompts: 0, missedMarked: 0 };
 
-    // Batch mark past scheduled workouts as missed (with LIMIT to prevent full-table locks)
-    const { data: missedResult } = await supabase
-      .from('block_workouts')
-      .update({ status: 'missed' })
-      .eq('status', 'scheduled')
-      .lt('scheduled_date', today)
-      .limit(500)
-      .select('block_id');
+    // 1. Cursor-based batch: mark past scheduled workouts as missed
+    const affectedBlockIds = new Set<string>();
+    let missedCursor: string | null = null;
+    do {
+      let query = supabase
+        .from('block_workouts')
+        .update({ status: 'missed' })
+        .eq('status', 'scheduled')
+        .lt('scheduled_date', today)
+        .order('id', { ascending: true })
+        .limit(500)
+        .select('id, block_id');
+      if (missedCursor) query = query.gt('id', missedCursor);
+      const { data } = await query;
+      if (!data || data.length === 0) break;
+      results.missedMarked += data.length;
+      for (const w of data) affectedBlockIds.add(w.block_id);
+      missedCursor = data[data.length - 1].id;
+    } while (true);
 
-    if (missedResult && missedResult.length > 0) {
-      results.missedMarked = missedResult.length;
-
-      // Single source of truth — call update_block_status_service for each affected block
-      const blockIds = [...new Set(missedResult.map(w => w.block_id))];
+    // Update status for affected blocks
+    if (affectedBlockIds.size > 0) {
       await Promise.all(
-        blockIds.map(bid =>
+        [...affectedBlockIds].map(bid =>
           supabase.rpc('update_block_status_service', { p_block_id: bid })
         )
       );
     }
 
-    // 2. Check for today's workouts (daily notification data)
-    const { data: todayWorkouts } = await supabase
-      .from('block_workouts')
-      .select('id, block_id, workout_type, estimated_duration')
-      .eq('scheduled_date', today)
-      .eq('status', 'scheduled')
-      .limit(500);
+    // 2. Cursor-based: today's workouts
+    let todayCursor: string | null = null;
+    do {
+      let query = supabase
+        .from('block_workouts')
+        .select('id')
+        .eq('scheduled_date', today)
+        .eq('status', 'scheduled')
+        .order('id', { ascending: true })
+        .limit(500);
+      if (todayCursor) query = query.gt('id', todayCursor);
+      const { data } = await query;
+      if (!data || data.length === 0) break;
+      results.dailyChecks += data.length;
+      todayCursor = data[data.length - 1].id;
+    } while (true);
 
-    results.dailyChecks = todayWorkouts?.length || 0;
-
-    // 3. Weekly adherence check (run on Mondays)
+    // 3. Weekly adherence check (Mondays)
     const dayOfWeek = new Date().getDay();
     if (dayOfWeek === 1) {
       const lastWeek = new Date();
       lastWeek.setDate(lastWeek.getDate() - 7);
       const lastWeekStr = lastWeek.toISOString().split('T')[0];
 
-      const { data: activeBlocks } = await supabase
-        .from('training_blocks')
-        .select('id, user_id')
-        .in('status', ['active', 'nearing_completion'])
-        .limit(500);
+      let blockCursor: string | null = null;
+      do {
+        let query = supabase
+          .from('training_blocks')
+          .select('id, user_id')
+          .in('status', ['active', 'nearing_completion'])
+          .order('id', { ascending: true })
+          .limit(500);
+        if (blockCursor) query = query.gt('id', blockCursor);
+        const { data: activeBlocks } = await query;
+        if (!activeBlocks || activeBlocks.length === 0) break;
+        blockCursor = activeBlocks[activeBlocks.length - 1].id;
 
-      if (activeBlocks) {
         for (const ab of activeBlocks) {
           const { data: weekWorkouts } = await supabase
             .from('block_workouts')
@@ -80,17 +101,24 @@ serve(async (req) => {
             }
           }
         }
-      }
+      } while (true);
     }
 
-    // 4. End-of-block prompts
-    const { data: readyBlocks } = await supabase
-      .from('training_blocks')
-      .select('id, user_id')
-      .eq('status', 'ready_for_regeneration')
-      .limit(500);
-
-    results.endOfBlockPrompts = readyBlocks?.length || 0;
+    // 4. End-of-block prompts (cursor-based)
+    let regenerationCursor: string | null = null;
+    do {
+      let query = supabase
+        .from('training_blocks')
+        .select('id')
+        .eq('status', 'ready_for_regeneration')
+        .order('id', { ascending: true })
+        .limit(500);
+      if (regenerationCursor) query = query.gt('id', regenerationCursor);
+      const { data } = await query;
+      if (!data || data.length === 0) break;
+      results.endOfBlockPrompts += data.length;
+      regenerationCursor = data[data.length - 1].id;
+    } while (true);
 
     return new Response(JSON.stringify({ success: true, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
