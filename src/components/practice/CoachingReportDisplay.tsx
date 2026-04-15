@@ -81,12 +81,22 @@ export function CoachingReportDisplay({ report, isGenerating, error }: CoachingR
           <div className="space-y-2">
             {report.rootCauseAnalysis.map((rc, i) => {
               const meta = ROOT_CAUSE_LABELS[rc.classification];
+              const confidenceStyle = rc.confidence === 'high'
+                ? 'bg-green-500/10 text-green-600 border-green-500/20'
+                : rc.confidence === 'medium'
+                  ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                  : 'bg-muted text-muted-foreground border-border';
               return (
                 <div key={i} className="space-y-1 rounded-lg border p-2.5">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", meta?.color)}>
                       {meta?.icon} {meta?.label}
                     </Badge>
+                    {rc.confidence && (
+                      <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", confidenceStyle)}>
+                        {rc.confidence === 'high' ? '🎯' : rc.confidence === 'medium' ? '📊' : '🔍'} {rc.confidence}
+                      </Badge>
+                    )}
                     <span className="text-sm font-medium">{rc.issue}</span>
                   </div>
                   {rc.mechanism && (
@@ -107,6 +117,11 @@ export function CoachingReportDisplay({ report, isGenerating, error }: CoachingR
                   <p className="text-xs text-muted-foreground pl-1">
                     <span className="font-semibold text-foreground/70">Evidence:</span> {rc.evidence}
                   </p>
+                  {rc.dataSignals && rc.dataSignals.length > 0 && (
+                    <p className="text-xs text-muted-foreground pl-1">
+                      <span className="font-semibold text-foreground/70">Data Signals:</span> {rc.dataSignals.join(', ')}
+                    </p>
+                  )}
                 </div>
               );
             })}
