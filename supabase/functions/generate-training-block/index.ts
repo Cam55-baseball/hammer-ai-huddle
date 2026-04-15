@@ -458,7 +458,7 @@ Always respond using the generate_training_block function.`
     // Generate idempotency key to prevent duplicate generation from retries
     const idempotencyKey = crypto.randomUUID();
 
-    const { data: blockId, error: rpcErr } = await supabase.rpc('insert_training_block_atomic', {
+    const { data: blockId, error: rpcErr } = await serviceClient.rpc('insert_training_block_atomic', {
       p_user_id: user.id,
       p_goal: generated.goal || goal,
       p_sport: requestSport || sport,
