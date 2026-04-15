@@ -113,6 +113,7 @@ const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
+const TrainingBlock = lazyWithRetry(() => import("./pages/TrainingBlock"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -202,6 +203,7 @@ const App = () => {
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
               <Route path="/drill-library" element={<DrillLibraryPlayer />} />
+              <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
