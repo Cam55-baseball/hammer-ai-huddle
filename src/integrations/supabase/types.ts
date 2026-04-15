@@ -825,39 +825,48 @@ export type Database = {
       }
       baserunning_scenarios: {
         Row: {
+          answer_options: Json | null
           correct_answer: string
+          correct_answer_id: string | null
           created_at: string
           difficulty: string
           explanation: string
           game_consequence: string | null
           id: string
           lesson_id: string
+          mistake_type: Database["public"]["Enums"]["mistake_type"] | null
           options: Json
           scenario_text: string
           sport: string
           wrong_explanations: Json | null
         }
         Insert: {
+          answer_options?: Json | null
           correct_answer: string
+          correct_answer_id?: string | null
           created_at?: string
           difficulty?: string
           explanation: string
           game_consequence?: string | null
           id?: string
           lesson_id: string
+          mistake_type?: Database["public"]["Enums"]["mistake_type"] | null
           options?: Json
           scenario_text: string
           sport?: string
           wrong_explanations?: Json | null
         }
         Update: {
+          answer_options?: Json | null
           correct_answer?: string
+          correct_answer_id?: string | null
           created_at?: string
           difficulty?: string
           explanation?: string
           game_consequence?: string | null
           id?: string
           lesson_id?: string
+          mistake_type?: Database["public"]["Enums"]["mistake_type"] | null
           options?: Json
           scenario_text?: string
           sport?: string
@@ -8174,6 +8183,7 @@ export type Database = {
         | "position"
         | "error_type"
         | "situation"
+      mistake_type: "hesitation" | "misread" | "panic" | "over_aggressive"
       module_type: "hitting" | "pitching" | "throwing"
       sport_type: "baseball" | "softball"
       throwing_hand: "R" | "L" | "B"
@@ -8319,6 +8329,7 @@ export const Constants = {
         "error_type",
         "situation",
       ],
+      mistake_type: ["hesitation", "misread", "panic", "over_aggressive"],
       module_type: ["hitting", "pitching", "throwing"],
       sport_type: ["baseball", "softball"],
       throwing_hand: ["R", "L", "B"],
