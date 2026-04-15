@@ -1,74 +1,197 @@
 
 
-# Extend Validation Trigger: Exact Key Match + 4-Option Constraint
+# Training Block System: Integration Into Existing Architecture
 
-## Changes
+## Context
 
-Single migration that replaces the existing trigger function with stricter validation:
+This project already has a production-grade training infrastructure:
+- **Hammers Modality** — 24-week block-based workout engine with CNS load tracking
+- **useSchedulingService** — centralized scheduling hub (all mutations audited)
+- **useRescheduleEngine** — deterministic push/skip/undo logic
+- **generate-block-workout** edge function — AI exercise generation via Lovable AI
+- **useAthleteGoalsAggregated** — athlete context aggregation (body goals, pain areas, position)
+- **Calendar + Game Plan** — recurring schedules, skip management, realtime sync
 
-1. **Exact key match**: After confirming all required keys exist, verify `wrong_explanations` has no extra keys beyond the expected incorrect answer IDs. Uses `jsonb_object_keys()` count vs expected count.
+The request introduces a 6-week training block lifecycle system. This must integrate with — not replace — the existing architecture. All scheduling routes through `useSchedulingService`. AI generation uses Lovable AI (not OpenAI directly). Branding uses "Hammer" not "AI."
 
-2. **answer_options length = 4**: Enforce `jsonb_array_length(NEW.answer_options) = 4` when answer_options is non-null.
+---
 
-## Implementation
+## 1. Database Schema (5 new tables)
 
-One migration file:
+### training_blocks
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid pk | |
+| user_id | uuid | NOT NULL |
+| goal | text | NOT NULL |
+| sport | text | 'baseball' or 'softball' |
+| start_date | date | |
+| end_date | date | |
+| status | text | 'active', 'nearing_completion', 'ready_for_regeneration', 'archived' |
+| generation_metadata | jsonb | AI prompt context snapshot |
+| created_at | timestamptz | DEFAULT now() |
 
-```sql
-CREATE OR REPLACE FUNCTION public.validate_wrong_explanations_completeness()
-  RETURNS trigger
-  LANGUAGE plpgsql
-  SECURITY DEFINER
-  SET search_path TO 'public'
-AS $$
-DECLARE
-  opt RECORD;
-  expected_count INT;
-  actual_count INT;
-BEGIN
-  -- Enforce exactly 4 answer options
-  IF NEW.answer_options IS NOT NULL THEN
-    IF jsonb_array_length(NEW.answer_options) != 4 THEN
-      RAISE EXCEPTION 'answer_options must have exactly 4 entries, got % for scenario %',
-        jsonb_array_length(NEW.answer_options), NEW.id;
-    END IF;
-  END IF;
+### block_workouts
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid pk | |
+| block_id | uuid fk → training_blocks | |
+| week_number | int | 1-6 |
+| day_label | text | e.g. 'Monday' |
+| scheduled_date | date | nullable until scheduled |
+| completed_at | timestamptz | nullable |
+| status | text | 'scheduled', 'completed', 'missed' |
+| workout_type | text | e.g. 'upper_push', 'lower_pull' |
+| estimated_duration | int | minutes |
 
-  -- Skip explanation check if any field is null
-  IF NEW.answer_options IS NULL OR NEW.wrong_explanations IS NULL OR NEW.correct_answer_id IS NULL THEN
-    RETURN NEW;
-  END IF;
+### block_exercises
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid pk | |
+| workout_id | uuid fk → block_workouts | |
+| ordinal | int | exercise order |
+| name | text | |
+| sets | int | |
+| reps | int | |
+| weight | float | nullable |
+| tempo | text | nullable |
+| rest_seconds | int | nullable |
+| velocity_intent | text | nullable |
+| cns_demand | text | nullable |
+| coaching_cues | text[] | nullable |
 
-  -- Check every incorrect option ID exists in wrong_explanations
-  expected_count := 0;
-  FOR opt IN SELECT ao->>'id' AS opt_id
-             FROM jsonb_array_elements(NEW.answer_options) ao
-             WHERE ao->>'id' != NEW.correct_answer_id
-  LOOP
-    IF NOT (NEW.wrong_explanations::jsonb ? opt.opt_id) THEN
-      RAISE EXCEPTION 'wrong_explanations missing key "%" for scenario %', opt.opt_id, NEW.id;
-    END IF;
-    expected_count := expected_count + 1;
-  END LOOP;
+### training_preferences
+| Column | Type | Notes |
+|--------|------|-------|
+| user_id | uuid pk | |
+| goal | text | |
+| availability | jsonb | `{"days": [1,2,4,5]}` |
+| equipment | jsonb | `["barbell","bands"]` |
+| injuries | jsonb | `["left_shoulder"]` |
+| experience_level | text | 'beginner', 'intermediate', 'advanced' |
+| updated_at | timestamptz | |
 
-  -- Check no extra keys exist
-  SELECT count(*) INTO actual_count
-  FROM jsonb_object_keys(NEW.wrong_explanations::jsonb);
+### block_workout_metrics
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid pk | |
+| user_id | uuid | |
+| workout_id | uuid fk → block_workouts | |
+| rpe | int | 1-10 |
+| completed | boolean | |
+| notes | text | nullable |
+| created_at | timestamptz | |
 
-  IF actual_count != expected_count THEN
-    RAISE EXCEPTION 'wrong_explanations has % keys but expected % for scenario %',
-      actual_count, expected_count, NEW.id;
-  END IF;
+RLS: All tables scoped to `auth.uid() = user_id`. Standard select/insert/update policies.
 
-  RETURN NEW;
-END;
-$$;
-```
+Validation trigger on `block_workout_metrics`: RPE must be 1-10.
 
-No new trigger needed — the existing `trg_validate_wrong_explanations` already calls this function, so `CREATE OR REPLACE` updates it in place.
+---
 
-## Summary
-- 1 migration (function replacement only)
-- 0 data changes, 0 code changes
-- Enforces: exactly 4 options, exactly 3 wrong_explanation keys matching the 3 incorrect option IDs
+## 2. Edge Function: generate-training-block
+
+New edge function that:
+1. Fetches `training_preferences` for the user
+2. Fetches aggregated goals from existing `useAthleteGoalsAggregated` tables (body goals, pain areas, position)
+3. Calls Lovable AI (google/gemini-2.5-flash) with tool calling to return strict JSON
+4. Inserts into `training_blocks`, `block_workouts`, `block_exercises`
+5. Calls the scheduling function to map workouts to dates
+
+Returns the created block ID. Uses existing auth pattern (getClaims + subscription check matching `generate-block-workout`).
+
+---
+
+## 3. Deterministic Scheduling Function (in edge function)
+
+`scheduleBlockWorkouts(block_id, user_id)` — pure logic, no AI:
+- Reads `training_preferences.availability` (days array)
+- Maps week 1-6 workouts to calendar dates starting from `start_date`
+- Enforces rest spacing: no 3 consecutive heavy days (checks `cns_demand` on exercises)
+- Writes `scheduled_date` on each `block_workouts` row
+- Creates corresponding `calendar_events` entries via direct insert (edge function context)
+
+Missed workout handling (called from adaptation):
+- 1 missed → shift remaining week workouts forward 1 day
+- 2+ missed in a week → compress: drop lowest-priority workout, redistribute
+
+---
+
+## 4. Block Lifecycle Function
+
+`updateBlockStatus(block_id)` — called after workout completion or daily cron:
+- Count completed vs total workouts
+- If ≥85% complete → status = 'nearing_completion'
+- If ≤3 workouts remaining → status = 'ready_for_regeneration'
+- If all done or past end_date → status = 'archived'
+
+Implemented as a database function (`update_block_status`) callable via RPC.
+
+---
+
+## 5. Notification System
+
+Daily cron (pg_cron + pg_net → edge function `training-block-notifications`):
+- Check for workouts scheduled today → push notification data (consumed by existing `useWorkoutNotifications`)
+- Weekly: calculate adherence rate, flag if <60%
+- End-of-block: if status = 'ready_for_regeneration', set a `user_notifications` row prompting next block generation
+
+No new notification infrastructure — hooks into existing notification patterns.
+
+---
+
+## 6. Goal Edit Function
+
+`updateTrainingGoal(user_id, new_goal)`:
+- Updates `training_preferences.goal`
+- If active block exists: does NOT regenerate — stores `pending_goal_change = true` on the block
+- Next block generation picks up the new goal automatically
+- Optional: if <50% through current block, user can opt to regenerate remaining weeks only
+
+---
+
+## 7. Adaptation Engine
+
+Edge function `adapt-training-block`:
+- Inputs: block_id
+- Reads `block_workout_metrics` (RPE, completion)
+- Rules:
+  - Average RPE > 8 for 2+ weeks → reduce volume (sets - 1) for next week
+  - Average RPE < 5 → increase volume (sets + 1) or reps
+  - Specific workout type skipped 2+ times → swap exercise selection via AI call
+  - 3+ missed workouts → insert deload week (50% volume)
+  - No activity 7 days → flag for re-engagement notification
+
+Updates `block_exercises` for future workouts only (never retroactively).
+
+---
+
+## 8. Frontend Integration
+
+- New hook: `useTrainingBlock` — fetches active block, workouts, exercises
+- New hook: `useTrainingPreferences` — CRUD for training preferences
+- New page component: `TrainingBlockView` — displays current block, workout cards, completion tracking
+- Integrate with existing `CalendarView` — block workouts appear as calendar events
+- Completion logging ties into existing performance session flow
+
+---
+
+## Execution Order
+
+1. Migration: Create 5 tables + RLS + validation triggers + `update_block_status` DB function
+2. Edge function: `generate-training-block` (AI generation + scheduling)
+3. Edge function: `adapt-training-block` (adaptation engine)
+4. Edge function: `training-block-notifications` (cron-driven)
+5. Cron job: daily trigger for notifications + status updates
+6. Frontend hooks: `useTrainingBlock`, `useTrainingPreferences`
+7. Frontend components: `TrainingBlockView`, preference editor, block generation UI
+8. Calendar integration: block workouts rendered in existing `CalendarView`
+
+## Hard Constraints Respected
+
+- AI generates structure only — never schedules dates
+- All scheduling is deterministic pure code
+- All AI responses use tool calling for strict JSON
+- All scheduling mutations audit-logged
+- Uses Lovable AI gateway (not OpenAI directly)
+- Branded as "Hammer" in UI, never "AI"
 
