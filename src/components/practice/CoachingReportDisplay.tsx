@@ -82,14 +82,31 @@ export function CoachingReportDisplay({ report, isGenerating, error }: CoachingR
             {report.rootCauseAnalysis.map((rc, i) => {
               const meta = ROOT_CAUSE_LABELS[rc.classification];
               return (
-                <div key={i} className="space-y-0.5">
+                <div key={i} className="space-y-1 rounded-lg border p-2.5">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", meta?.color)}>
                       {meta?.icon} {meta?.label}
                     </Badge>
                     <span className="text-sm font-medium">{rc.issue}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground pl-1">{rc.evidence}</p>
+                  {rc.mechanism && (
+                    <p className="text-xs text-muted-foreground pl-1">
+                      <span className="font-semibold text-foreground/70">Mechanism:</span> {rc.mechanism}
+                    </p>
+                  )}
+                  {rc.trigger && (
+                    <p className="text-xs text-muted-foreground pl-1">
+                      <span className="font-semibold text-foreground/70">Trigger:</span> {rc.trigger}
+                    </p>
+                  )}
+                  {rc.failureChain && (
+                    <p className="text-xs text-muted-foreground pl-1">
+                      <span className="font-semibold text-foreground/70">Chain:</span> {rc.failureChain}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground pl-1">
+                    <span className="font-semibold text-foreground/70">Evidence:</span> {rc.evidence}
+                  </p>
                 </div>
               );
             })}

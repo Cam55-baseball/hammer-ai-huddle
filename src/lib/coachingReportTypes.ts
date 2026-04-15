@@ -10,6 +10,9 @@ export interface SituationalSplit {
 export interface RootCause {
   issue: string;
   classification: 'perception' | 'decision' | 'execution' | 'consistency';
+  mechanism: string;   // precise biomechanical/cognitive failure
+  trigger: string;     // when/under what condition
+  failureChain: string; // step-by-step breakdown
   evidence: string;
 }
 
