@@ -119,6 +119,8 @@ export function useTrainingBlock() {
         toast.error(t('trainingBlock.rateLimited', 'Too many requests — try again shortly'));
       } else if (err.message.includes('Payment required')) {
         toast.error(t('trainingBlock.paymentRequired', 'Hammer credits needed'));
+      } else if (err.message.includes('Active training block exists')) {
+        toast.error(t('trainingBlock.activeExists', 'Complete or archive your current block first'));
       } else {
         toast.error(t('trainingBlock.generateError', 'Failed to generate training block'));
       }
@@ -176,6 +178,22 @@ export function useTrainingBlock() {
     },
   });
 
+  // Archive block
+  const archiveBlock = useMutation({
+    mutationFn: async () => {
+      if (!activeBlock) throw new Error('No active block');
+      const { error } = await supabase
+        .from('training_blocks')
+        .update({ status: 'archived' })
+        .eq('id', activeBlock.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training-block'] });
+      toast.success(t('trainingBlock.archived', 'Training block archived'));
+    },
+  });
+
   // Stats
   const stats = workouts ? {
     total: workouts.length,
@@ -196,5 +214,6 @@ export function useTrainingBlock() {
     generateBlock,
     completeWorkout,
     adaptBlock,
+    archiveBlock,
   };
 }

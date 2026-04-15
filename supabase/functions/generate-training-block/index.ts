@@ -9,21 +9,23 @@ const corsHeaders = {
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+interface WorkoutExercise {
+  name: string;
+  sets: number;
+  reps: number;
+  weight?: number;
+  tempo?: string;
+  rest_seconds?: number;
+  velocity_intent?: string;
+  cns_demand?: string;
+  coaching_cues?: string[];
+}
+
 interface WeekWorkout {
   day: string;
   type: string;
   estimated_duration: number;
-  exercises: Array<{
-    name: string;
-    sets: number;
-    reps: number;
-    weight?: number;
-    tempo?: string;
-    rest_seconds?: number;
-    velocity_intent?: string;
-    cns_demand?: string;
-    coaching_cues?: string[];
-  }>;
+  exercises: WorkoutExercise[];
 }
 
 interface GeneratedBlock {
@@ -35,7 +37,32 @@ interface GeneratedBlock {
   }>;
 }
 
-// ─── Deterministic scheduling engine ───
+// ─── Fix #3: Strict AI response validation ───
+function validateGeneratedBlock(block: GeneratedBlock, workoutsPerWeek: number): void {
+  if (!block.weeks || block.weeks.length !== 6) {
+    throw new Error(`AI returned ${block.weeks?.length ?? 0} weeks — exactly 6 required`);
+  }
+
+  for (const week of block.weeks) {
+    if (!week.workouts || week.workouts.length !== workoutsPerWeek) {
+      throw new Error(`Week ${week.week} has ${week.workouts?.length ?? 0} workouts — expected ${workoutsPerWeek}`);
+    }
+
+    for (const workout of week.workouts) {
+      if (!workout.exercises || workout.exercises.length < 3 || workout.exercises.length > 6) {
+        throw new Error(`Workout "${workout.type}" in week ${week.week} has ${workout.exercises?.length ?? 0} exercises — must be 3-6`);
+      }
+
+      for (const ex of workout.exercises) {
+        if (!ex.name || typeof ex.sets !== 'number' || typeof ex.reps !== 'number' || ex.sets < 1 || ex.reps < 1) {
+          throw new Error(`Invalid exercise in week ${week.week}: ${ex.name || 'unnamed'} — sets and reps required and must be > 0`);
+        }
+      }
+    }
+  }
+}
+
+// ─── Fix #5: Spacing-first deterministic scheduling engine ───
 function scheduleBlockWorkouts(
   weeks: GeneratedBlock['weeks'],
   startDate: Date,
@@ -46,69 +73,109 @@ function scheduleBlockWorkouts(
   scheduled_date: string;
   workout_type: string;
   estimated_duration: number;
-  exercises: WeekWorkout['exercises'];
+  exercises: WorkoutExercise[];
 }> {
+  const sortedDays = [...availableDays].sort((a, b) => a - b);
+
+  // Step 1: Generate ALL valid calendar dates across 6 weeks
+  const allDates: Date[] = [];
+  for (let weekIdx = 0; weekIdx < 6; weekIdx++) {
+    for (const dayNum of sortedDays) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + weekIdx * 7);
+      // Find next occurrence of dayNum in this week
+      const currentDay = d.getDay();
+      let offset = dayNum - currentDay;
+      if (offset < 0) offset += 7;
+      d.setDate(d.getDate() + offset);
+      allDates.push(d);
+    }
+  }
+  // Sort chronologically
+  allDates.sort((a, b) => a.getTime() - b.getTime());
+
+  // Step 2: Flatten all workouts in order
+  const flatWorkouts: Array<{ weekNum: number; workout: WeekWorkout }> = [];
+  for (const week of weeks) {
+    for (const workout of week.workouts) {
+      flatWorkouts.push({ weekNum: week.week, workout });
+    }
+  }
+
+  // Step 3: Assign workouts to dates with CNS spacing
   const scheduled: Array<{
     week_number: number;
     day_label: string;
     scheduled_date: string;
     workout_type: string;
     estimated_duration: number;
-    exercises: WeekWorkout['exercises'];
+    exercises: WorkoutExercise[];
+    isHighCNS: boolean;
   }> = [];
 
-  // Sort available days for consistent ordering
-  const sortedDays = [...availableDays].sort((a, b) => a - b);
+  let dateIdx = 0;
+  for (const { weekNum, workout } of flatWorkouts) {
+    if (dateIdx >= allDates.length) {
+      // Ran out of available dates — append to end
+      const lastDate = allDates[allDates.length - 1];
+      const overflow = new Date(lastDate);
+      overflow.setDate(overflow.getDate() + 1);
+      allDates.push(overflow);
+    }
 
-  for (const week of weeks) {
-    const weekOffset = (week.week - 1) * 7;
-    let workoutIdx = 0;
+    const isHighCNS = workout.exercises.some(e => e.cns_demand === 'high');
+    let assignedDate = allDates[dateIdx];
 
-    for (const workout of week.workouts) {
-      // Map each workout to the next available day
-      const targetDay = sortedDays[workoutIdx % sortedDays.length];
-      const weekStart = new Date(startDate);
-      weekStart.setDate(weekStart.getDate() + weekOffset);
+    // CNS spacing enforcement
+    if (isHighCNS && scheduled.length > 0) {
+      const prev = scheduled[scheduled.length - 1];
+      const prevDate = new Date(prev.scheduled_date);
+      const dayDiff = Math.round((assignedDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
 
-      // Find the next occurrence of targetDay in this week
-      const currentDay = weekStart.getDay();
-      let daysUntilTarget = targetDay - currentDay;
-      if (daysUntilTarget < 0) daysUntilTarget += 7;
-
-      const scheduledDate = new Date(weekStart);
-      scheduledDate.setDate(scheduledDate.getDate() + daysUntilTarget);
-
-      // Enforce rest spacing: no 3 consecutive heavy days
-      if (scheduled.length >= 2) {
-        const prev1 = new Date(scheduled[scheduled.length - 1].scheduled_date);
-        const prev2 = new Date(scheduled[scheduled.length - 2].scheduled_date);
-        const thisDate = scheduledDate;
-
-        const diff1 = Math.abs(thisDate.getTime() - prev1.getTime()) / (1000 * 60 * 60 * 24);
-        const diff2 = Math.abs(prev1.getTime() - prev2.getTime()) / (1000 * 60 * 60 * 24);
-
-        // If all 3 would be consecutive days AND all high CNS
-        if (diff1 <= 1 && diff2 <= 1) {
-          const prevHighCNS = workout.exercises.some(e => e.cns_demand === 'high');
-          if (prevHighCNS) {
-            // Push forward 1 day
-            scheduledDate.setDate(scheduledDate.getDate() + 1);
-          }
+      // Rule: minimum 1 rest day after HIGH CNS workout
+      if (prev.isHighCNS && dayDiff <= 1) {
+        dateIdx++;
+        if (dateIdx < allDates.length) {
+          assignedDate = allDates[dateIdx];
+        } else {
+          assignedDate = new Date(prevDate);
+          assignedDate.setDate(assignedDate.getDate() + 2);
         }
       }
 
-      const dateStr = scheduledDate.toISOString().split('T')[0];
-      scheduled.push({
-        week_number: week.week,
-        day_label: workout.day || DAY_NAMES[scheduledDate.getDay()],
-        scheduled_date: dateStr,
-        workout_type: workout.type,
-        estimated_duration: workout.estimated_duration || 45,
-        exercises: workout.exercises,
-      });
-
-      workoutIdx++;
+      // Rule: no more than 2 HIGH CNS workouts in any 3-day window
+      if (scheduled.length >= 2) {
+        const last3Days = scheduled.filter(s => {
+          const sd = new Date(s.scheduled_date);
+          const diff = Math.round((assignedDate.getTime() - sd.getTime()) / (1000 * 60 * 60 * 24));
+          return diff >= 0 && diff <= 2;
+        });
+        const highCNSIn3Days = last3Days.filter(s => s.isHighCNS).length;
+        if (highCNSIn3Days >= 2) {
+          dateIdx++;
+          if (dateIdx < allDates.length) {
+            assignedDate = allDates[dateIdx];
+          } else {
+            const lastAssigned = new Date(scheduled[scheduled.length - 1].scheduled_date);
+            assignedDate = new Date(lastAssigned);
+            assignedDate.setDate(assignedDate.getDate() + 2);
+          }
+        }
+      }
     }
+
+    const dateStr = assignedDate.toISOString().split('T')[0];
+    scheduled.push({
+      week_number: weekNum,
+      day_label: workout.day || DAY_NAMES[assignedDate.getDay()],
+      scheduled_date: dateStr,
+      workout_type: workout.type,
+      estimated_duration: workout.estimated_duration || 45,
+      exercises: workout.exercises,
+      isHighCNS,
+    });
+
+    dateIdx++;
   }
 
   return scheduled;
@@ -120,7 +187,6 @@ serve(async (req) => {
   }
 
   try {
-    // Auth
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -158,6 +224,32 @@ serve(async (req) => {
       }
     }
 
+    // Fix #8: Check for existing active block — user must archive first
+    const { data: existingBlock } = await supabase
+      .from('training_blocks')
+      .select('id, status, pending_goal_change')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'nearing_completion'])
+      .maybeSingle();
+
+    if (existingBlock) {
+      return new Response(JSON.stringify({
+        error: 'Active training block exists. Complete or archive it before generating a new one.',
+        existing_block_id: existingBlock.id,
+      }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Fix #9: Check pending goal change on ready_for_regeneration blocks
+    const { data: pendingBlock } = await supabase
+      .from('training_blocks')
+      .select('id, pending_goal_change')
+      .eq('user_id', user.id)
+      .eq('status', 'ready_for_regeneration')
+      .eq('pending_goal_change', true)
+      .maybeSingle();
+
     // Fetch training preferences
     const { data: prefs } = await supabase
       .from('training_preferences')
@@ -172,24 +264,22 @@ serve(async (req) => {
     const experienceLevel = prefs?.experience_level || 'intermediate';
 
     // Fetch athlete context
-    const { data: bodyGoal } = await supabase
-      .from('athlete_body_goals').select('goal_type, target_weight_lbs')
-      .eq('user_id', user.id).eq('is_active', true).maybeSingle();
-
-    const { data: mpiSettings } = await supabase
-      .from('athlete_mpi_settings').select('primary_position, sport')
-      .eq('user_id', user.id).maybeSingle();
+    const [{ data: bodyGoal }, { data: mpiSettings }] = await Promise.all([
+      supabase.from('athlete_body_goals').select('goal_type, target_weight_lbs')
+        .eq('user_id', user.id).eq('is_active', true).maybeSingle(),
+      supabase.from('athlete_mpi_settings').select('primary_position, sport')
+        .eq('user_id', user.id).maybeSingle(),
+    ]);
 
     const sport = mpiSettings?.sport || 'baseball';
     const position = mpiSettings?.primary_position || 'athlete';
-
     const { sport: requestSport } = await req.json().catch(() => ({ sport: undefined }));
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const workoutsPerWeek = Math.min(availability.length, 5);
 
-    // Call Lovable AI with tool calling for strict JSON
+    // Call Lovable AI
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -320,70 +410,29 @@ Always respond using the generate_training_block function.`
 
     const generated: GeneratedBlock = JSON.parse(toolCall.function.arguments);
 
-    if (!generated.weeks || generated.weeks.length === 0) {
-      throw new Error('AI returned empty training block');
-    }
+    // Fix #3: Strict validation before any insert
+    validateGeneratedBlock(generated, workoutsPerWeek);
 
     // Deterministic scheduling
     const startDate = new Date();
-    // Start on next Monday
     const dayOfWeek = startDate.getDay();
     const daysUntilMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
     startDate.setDate(startDate.getDate() + daysUntilMonday);
 
     const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 41); // 6 weeks
+    endDate.setDate(endDate.getDate() + 41);
 
     const scheduledWorkouts = scheduleBlockWorkouts(generated.weeks, startDate, availability);
 
-    // Insert training_block
-    const { data: block, error: blockErr } = await supabase
-      .from('training_blocks')
-      .insert({
-        user_id: user.id,
-        goal: generated.goal || goal,
-        sport: requestSport || sport,
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
-        status: 'active',
-        generation_metadata: {
-          model: 'google/gemini-2.5-flash',
-          preferences: { goal, experienceLevel, equipment, injuries, position },
-          generated_at: new Date().toISOString(),
-        },
-      })
-      .select('id')
-      .single();
-
-    if (blockErr || !block) {
-      console.error("Failed to insert training block:", blockErr);
-      throw new Error('Failed to create training block');
-    }
-
-    // Insert workouts + exercises
-    for (const sw of scheduledWorkouts) {
-      const { data: workout, error: workoutErr } = await supabase
-        .from('block_workouts')
-        .insert({
-          block_id: block.id,
-          week_number: sw.week_number,
-          day_label: sw.day_label,
-          scheduled_date: sw.scheduled_date,
-          status: 'scheduled',
-          workout_type: sw.workout_type,
-          estimated_duration: sw.estimated_duration,
-        })
-        .select('id')
-        .single();
-
-      if (workoutErr || !workout) {
-        console.error("Failed to insert workout:", workoutErr);
-        continue;
-      }
-
-      // Insert exercises
-      const exerciseRows = sw.exercises.map((ex, idx) => ({
-        workout_id: workout.id,
+    // Fix #4: Atomic insert via RPC — single transaction
+    const workoutsPayload = scheduledWorkouts.map(sw => ({
+      week_number: sw.week_number,
+      day_label: sw.day_label,
+      scheduled_date: sw.scheduled_date,
+      status: 'scheduled',
+      workout_type: sw.workout_type,
+      estimated_duration: sw.estimated_duration,
+      exercises: sw.exercises.map((ex, idx) => ({
         ordinal: idx,
         name: ex.name,
         sets: ex.sets,
@@ -394,38 +443,48 @@ Always respond using the generate_training_block function.`
         velocity_intent: ex.velocity_intent || null,
         cns_demand: ex.cns_demand || null,
         coaching_cues: ex.coaching_cues || null,
-      }));
+      })),
+    }));
 
-      if (exerciseRows.length > 0) {
-        const { error: exErr } = await supabase
-          .from('block_exercises')
-          .insert(exerciseRows);
-        if (exErr) console.error("Failed to insert exercises:", exErr);
-      }
+    const { data: blockId, error: rpcErr } = await supabase.rpc('insert_training_block_atomic', {
+      p_user_id: user.id,
+      p_goal: generated.goal || goal,
+      p_sport: requestSport || sport,
+      p_start_date: startDate.toISOString().split('T')[0],
+      p_end_date: endDate.toISOString().split('T')[0],
+      p_generation_metadata: {
+        model: 'google/gemini-2.5-flash',
+        preferences: { goal, experienceLevel, equipment, injuries, position },
+        generated_at: new Date().toISOString(),
+      },
+      p_workouts: workoutsPayload,
+      p_pending_goal_block_id: pendingBlock?.id || null,
+    });
 
-      // Create calendar event
-      await supabase.from('calendar_events').insert({
-        user_id: user.id,
-        event_date: sw.scheduled_date,
-        event_type: 'training_block',
-        title: `${sw.workout_type.replace(/_/g, ' ')} — Week ${sw.week_number}`,
-        description: `${sw.exercises.length} exercises · ~${sw.estimated_duration} min`,
-        sport: requestSport || sport,
-        related_id: workout.id,
-        color: '#6366f1',
-      });
+    if (rpcErr) {
+      console.error("Atomic insert failed:", rpcErr);
+      throw new Error(`Failed to create training block: ${rpcErr.message}`);
     }
 
-    // Archive any other active blocks for this user
-    await supabase
-      .from('training_blocks')
-      .update({ status: 'archived' })
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .neq('id', block.id);
+    // Create calendar events (non-critical — outside transaction)
+    const calendarEvents = scheduledWorkouts.map(sw => ({
+      user_id: user.id,
+      event_date: sw.scheduled_date,
+      event_type: 'training_block',
+      title: `${sw.workout_type.replace(/_/g, ' ')} — Week ${sw.week_number}`,
+      description: `${sw.exercises.length} exercises · ~${sw.estimated_duration} min`,
+      sport: requestSport || sport,
+      related_id: blockId,
+      color: '#6366f1',
+    }));
+
+    if (calendarEvents.length > 0) {
+      const { error: calErr } = await supabase.from('calendar_events').insert(calendarEvents);
+      if (calErr) console.error("Calendar event insert failed (non-critical):", calErr);
+    }
 
     return new Response(JSON.stringify({
-      blockId: block.id,
+      blockId,
       totalWorkouts: scheduledWorkouts.length,
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
