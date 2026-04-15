@@ -4,6 +4,7 @@ import { CalendarEvent } from '@/hooks/useCalendar';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
 import { CustomActivityTemplate, CustomActivityLog, CustomActivityWithLog } from '@/types/customActivity';
+import { getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -174,14 +175,75 @@ export function useCalendarActivityDetail(
   }, []);
 
   const handleComplete = useCallback(async () => {
-    if (!currentTemplateId || !currentDate) return;
+    if (!currentTemplateId || !currentDate || !selectedTask?.customActivityData) return;
 
+    const template = selectedTask.customActivityData.template;
+    const allCheckableIds = getAllCheckableIds(template);
+
+    // If there are checkable items, toggle ALL checkboxes instead of manual complete
+    if (allCheckableIds.length > 0) {
+      const currentLog = selectedTask.customActivityData.log;
+      const currentData = (currentLog?.performance_data as Record<string, unknown>) || {};
+      const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+      
+      // Determine target: if all checked → uncheck all, otherwise check all
+      const allChecked = allCheckableIds.every(id => currentCheckboxStates[id] === true);
+      const newCheckboxStates: Record<string, boolean> = {};
+      allCheckableIds.forEach(id => { newCheckboxStates[id] = !allChecked; });
+      const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+      const derivedCompleted = !allChecked;
+      const derivedCompletedAt = derivedCompleted ? new Date().toISOString() : null;
+
+      try {
+        const dateStr = format(currentDate, 'yyyy-MM-dd');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: existingLog } = await supabase
+          .from('custom_activity_logs')
+          .select('*')
+          .eq('template_id', currentTemplateId)
+          .eq('entry_date', dateStr)
+          .maybeSingle();
+
+        if (existingLog) {
+          await supabase
+            .from('custom_activity_logs')
+            .update({ 
+              performance_data: newPerformanceData,
+              completed: derivedCompleted,
+              completed_at: derivedCompletedAt,
+            })
+            .eq('id', existingLog.id);
+        } else {
+          await supabase
+            .from('custom_activity_logs')
+            .insert({
+              template_id: currentTemplateId,
+              user_id: user.id,
+              entry_date: dateStr,
+              completed: derivedCompleted,
+              completed_at: derivedCompletedAt,
+              performance_data: newPerformanceData,
+            });
+        }
+
+        toast.success(derivedCompleted ? 'Activity completed' : 'Activity uncompleted');
+        closeDetailDialog();
+        onRefresh?.();
+      } catch (err) {
+        console.error('Error updating activity:', err);
+        toast.error('Failed to update activity');
+      }
+      return;
+    }
+
+    // NO checkable items → treat as manual toggle (auto-complete edge case)
     try {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if log exists
       const { data: existingLog } = await supabase
         .from('custom_activity_logs')
         .select('*')
@@ -190,13 +252,15 @@ export function useCalendarActivityDetail(
         .maybeSingle();
 
       if (existingLog) {
-        // Toggle completion
+        const newCompleted = !existingLog.completed;
         await supabase
           .from('custom_activity_logs')
-          .update({ completed: !existingLog.completed })
+          .update({ 
+            completed: newCompleted,
+            completed_at: newCompleted ? new Date().toISOString() : null,
+          })
           .eq('id', existingLog.id);
       } else {
-        // Create new log with completed = true
         await supabase
           .from('custom_activity_logs')
           .insert({
@@ -204,6 +268,7 @@ export function useCalendarActivityDetail(
             user_id: user.id,
             entry_date: dateStr,
             completed: true,
+            completed_at: new Date().toISOString(),
           });
       }
 
@@ -214,7 +279,7 @@ export function useCalendarActivityDetail(
       console.error('Error updating activity:', err);
       toast.error('Failed to update activity');
     }
-  }, [currentTemplateId, currentDate, closeDetailDialog, onRefresh]);
+  }, [currentTemplateId, currentDate, selectedTask, closeDetailDialog, onRefresh]);
 
   const handleSaveTime = useCallback(async (time: string | null, reminder: number | null) => {
     if (!currentTemplateId) return;
@@ -243,20 +308,29 @@ export function useCalendarActivityDetail(
 
     // Store previous state for rollback
     const previousTask = selectedTask;
+    const template = selectedTask.customActivityData.template;
     const currentLog = selectedTask.customActivityData.log;
     const currentData = (currentLog?.performance_data as Record<string, unknown>) || {};
     const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
     const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
     const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
 
-    // OPTIMISTIC UPDATE: Immediately update UI
+    // DERIVE COMPLETION: activity is complete when ALL checkable items are checked
+    const allCheckableIds = getAllCheckableIds(template);
+    const derivedCompleted = allCheckableIds.length > 0 
+      ? allCheckableIds.every(id => newCheckboxStates[id] === true)
+      : (currentLog?.completed || false);
+    const derivedCompletedAt = derivedCompleted ? new Date().toISOString() : null;
+
+    // OPTIMISTIC UPDATE: Immediately update UI with derived completion
     setSelectedTask({
       ...selectedTask,
+      completed: derivedCompleted,
       customActivityData: {
         ...selectedTask.customActivityData,
         log: currentLog 
-          ? { ...currentLog, performance_data: newPerformanceData } as CustomActivityLog
-          : { id: 'pending', template_id: currentTemplateId, completed: false, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
+          ? { ...currentLog, performance_data: newPerformanceData, completed: derivedCompleted, completed_at: derivedCompletedAt } as CustomActivityLog
+          : { id: 'pending', template_id: currentTemplateId, completed: derivedCompleted, completed_at: derivedCompletedAt, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
       }
     });
 
@@ -285,7 +359,8 @@ export function useCalendarActivityDetail(
               template_id: currentTemplateId,
               user_id: user.id,
               entry_date: dateStr,
-              completed: false,
+              completed: derivedCompleted,
+              completed_at: derivedCompletedAt,
             })
             .select()
             .single();
@@ -295,11 +370,18 @@ export function useCalendarActivityDetail(
 
       if (!log) return;
 
-      // Persist checkbox states
+      // Persist checkbox states AND derived completion in single update
       await supabase
         .from('custom_activity_logs')
-        .update({ performance_data: newPerformanceData })
+        .update({ 
+          performance_data: newPerformanceData,
+          completed: derivedCompleted,
+          completed_at: derivedCompletedAt,
+        })
         .eq('id', log.id);
+
+      // Trigger game plan refresh so completion propagates
+      onRefresh?.();
 
     } catch (err) {
       console.error('Error toggling checkbox:', err);
@@ -307,11 +389,11 @@ export function useCalendarActivityDetail(
       setSelectedTask(previousTask);
       toast.error('Failed to save');
     }
-  }, [currentTemplateId, currentDate, selectedTask]);
+  }, [currentTemplateId, currentDate, selectedTask, onRefresh]);
 
   // Quick complete for calendar cards without opening detail dialog
+  // For activities WITH checklist items, this checks all items; for those without, it toggles completion
   const quickComplete = useCallback(async (event: CalendarEvent, date: Date): Promise<boolean> => {
-    // Only custom_activity type supports quick complete
     if (event.type !== 'custom_activity') return false;
 
     const templateId = event.source?.replace('template-', '');
@@ -322,6 +404,15 @@ export function useCalendarActivityDetail(
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
+      // Fetch template to check for checkable items
+      const { data: template } = await supabase
+        .from('custom_activity_templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      const allCheckableIds = template ? getAllCheckableIds(template as unknown as CustomActivityTemplate) : [];
+
       // Check for existing log
       const { data: existingLog } = await supabase
         .from('custom_activity_logs')
@@ -330,27 +421,59 @@ export function useCalendarActivityDetail(
         .eq('entry_date', dateStr)
         .maybeSingle();
 
-      if (existingLog) {
-        // Toggle existing
-        const newCompleted = !existingLog.completed;
-        await supabase
-          .from('custom_activity_logs')
-          .update({
-            completed: newCompleted,
-            completed_at: newCompleted ? new Date().toISOString() : null,
-          })
-          .eq('id', existingLog.id);
+      if (allCheckableIds.length > 0) {
+        // Has checklist items → toggle all checkboxes
+        const currentData = (existingLog?.performance_data as Record<string, unknown>) || {};
+        const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+        const allChecked = allCheckableIds.every(id => currentCheckboxStates[id] === true);
+        const newCheckboxStates: Record<string, boolean> = {};
+        allCheckableIds.forEach(id => { newCheckboxStates[id] = !allChecked; });
+        const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+        const derivedCompleted = !allChecked;
+
+        if (existingLog) {
+          await supabase
+            .from('custom_activity_logs')
+            .update({
+              performance_data: newPerformanceData,
+              completed: derivedCompleted,
+              completed_at: derivedCompleted ? new Date().toISOString() : null,
+            })
+            .eq('id', existingLog.id);
+        } else {
+          await supabase
+            .from('custom_activity_logs')
+            .insert({
+              template_id: templateId,
+              user_id: user.id,
+              entry_date: dateStr,
+              completed: derivedCompleted,
+              completed_at: derivedCompleted ? new Date().toISOString() : null,
+              performance_data: newPerformanceData,
+            });
+        }
       } else {
-        // Create new completed log
-        await supabase
-          .from('custom_activity_logs')
-          .insert({
-            template_id: templateId,
-            user_id: user.id,
-            entry_date: dateStr,
-            completed: true,
-            completed_at: new Date().toISOString(),
-          });
+        // No checklist items → simple toggle
+        if (existingLog) {
+          const newCompleted = !existingLog.completed;
+          await supabase
+            .from('custom_activity_logs')
+            .update({
+              completed: newCompleted,
+              completed_at: newCompleted ? new Date().toISOString() : null,
+            })
+            .eq('id', existingLog.id);
+        } else {
+          await supabase
+            .from('custom_activity_logs')
+            .insert({
+              template_id: templateId,
+              user_id: user.id,
+              entry_date: dateStr,
+              completed: true,
+              completed_at: new Date().toISOString(),
+            });
+        }
       }
 
       onRefresh?.();
