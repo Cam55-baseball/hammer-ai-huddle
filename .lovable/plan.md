@@ -1,32 +1,58 @@
 
 
-# DB-Enforced Activity Completion
+# Fix DB Trigger + Game Plan Day Completion
 
-## Architecture
+## Issue 1: `game_plan_days` table does not exist
 
-**Trigger-based derivation**: A `BEFORE INSERT OR UPDATE` trigger on `custom_activity_logs` inspects `performance_data->'checkboxStates'` and automatically sets `completed` and `completed_at`. The frontend never computes or sends these fields when checkboxStates exist.
+The requested `update_game_plan_day_completion` trigger references a `game_plan_days` table that **does not exist** in the database. Game plan completion is computed in-memory by `useGamePlan.ts` from `custom_activity_logs.completed`. There is no persistent day-level completion table.
 
-**No `game_plan_days` table exists** — game plan completion is computed in-memory by `useGamePlan.ts` from `custom_activity_logs.completed`. The DB trigger ensures this column is always correct, so `onRefresh()` remains the propagation mechanism (it re-reads the now-correct DB state). No second trigger needed.
+**Two options:**
 
-## Changes
+**Option A — Create `game_plan_days` table + trigger** (full DB enforcement as requested)
+- Create `game_plan_days(id, user_id, date, is_completed)` with a unique constraint on `(user_id, date)`
+- The trigger would need `user_id` from `custom_activity_logs` to scope correctly
+- Frontend `useGamePlan.ts` would need to read from this table instead of computing in-memory
+- Risk: requires seeding rows for every day, or upsert logic in the trigger
 
-### 1. Migration: `derive_activity_completion` trigger
+**Option B — Skip the day-completion trigger** (pragmatic)
+- The DB trigger on `custom_activity_logs` already guarantees `completed` is correct
+- `useGamePlan.ts` reads the correct `completed` value on refresh — which is now always accurate
+- No new table needed
+
+## What I can do now (fixes 1, 3, 4 — no ambiguity)
+
+Single migration that:
+
+1. **Fix empty checklist**: Replace `derive_activity_completion()` to treat `{}` as incomplete
+2. **Add early-exit guard**: Skip recompute when `performance_data` unchanged on UPDATE
+3. **Widen trigger scope**: Drop and recreate trigger on `BEFORE INSERT OR UPDATE` (not just `OF performance_data`)
 
 ```sql
-CREATE OR REPLACE FUNCTION derive_activity_completion()
+CREATE OR REPLACE FUNCTION public.derive_activity_completion()
 RETURNS TRIGGER AS $$
 DECLARE
+  checkbox_states JSONB;
   all_complete BOOLEAN;
 BEGIN
-  IF NEW.performance_data->'checkboxStates' IS NULL THEN
+  -- Guard: skip if performance_data unchanged
+  IF TG_OP = 'UPDATE' AND NEW.performance_data IS NOT DISTINCT FROM OLD.performance_data THEN
     RETURN NEW;
   END IF;
 
-  SELECT NOT EXISTS (
-    SELECT 1
-    FROM jsonb_each_text(NEW.performance_data->'checkboxStates') kv
-    WHERE kv.value != 'true'
-  ) INTO all_complete;
+  checkbox_states := NEW.performance_data->'checkboxStates';
+
+  IF checkbox_states IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF jsonb_object_length(checkbox_states) = 0 THEN
+    all_complete := FALSE;
+  ELSE
+    SELECT NOT EXISTS (
+      SELECT 1 FROM jsonb_each_text(checkbox_states) kv
+      WHERE kv.value != 'true'
+    ) INTO all_complete;
+  END IF;
 
   NEW.completed := all_complete;
 
@@ -40,60 +66,28 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS trigger_derive_activity_completion ON public.custom_activity_logs;
 
 CREATE TRIGGER trigger_derive_activity_completion
-BEFORE INSERT OR UPDATE OF performance_data
-ON custom_activity_logs
+BEFORE INSERT OR UPDATE
+ON public.custom_activity_logs
 FOR EACH ROW
-EXECUTE FUNCTION derive_activity_completion();
+EXECUTE FUNCTION public.derive_activity_completion();
 ```
 
-- `completed_at` is only set on first completion (preserved if already set)
-- Unchecking any item clears `completed_at`
-- Activities with no `checkboxStates` key are untouched (manual toggle preserved)
+## Decision needed on game plan day completion
 
-### 2. Simplify `useCalendarActivityDetail.ts`
+Do you want me to:
+- **A**: Create a `game_plan_days` table and the day-completion trigger (adds schema complexity, requires frontend changes to read from it)
+- **B**: Skip it — the activity-level trigger guarantees `completed` is always correct, and `useGamePlan.ts` already reads that on refresh
 
-**`handleToggleCheckbox`** (line ~306-392):
-- Remove `derivedCompleted` / `derivedCompletedAt` computation
-- Only send `performance_data` in `.update()` and `.insert()` — remove `completed` and `completed_at` from both
-- Optimistic UI: derive locally for instant feedback (read-only, not persisted) — compute from checkboxStates for the `setSelectedTask` call only
-- After DB write, `onRefresh()` re-reads the trigger-set values
-
-**`handleComplete`** (line ~177-238):
-- When checkable items exist: only send `performance_data` with toggled checkboxStates — remove `completed`/`completed_at` from update/insert
-- When NO checkable items: keep manual `completed` toggle (trigger won't fire since no checkboxStates)
-
-**`quickComplete`** (line ~396-485):
-- Checklist path (line 434-453): only send `performance_data` — remove `completed`/`completed_at`
-- No-checklist path (line 457-476): keep manual `completed` toggle unchanged
-
-### 3. No changes to `CustomActivityDetailDialog.tsx`
-
-Button labels and "Check All / Uncheck All" UX stay exactly as-is. The dialog calls parent handlers which now only send `performance_data`.
-
-### 4. No changes to `GamePlanCard.tsx` checkbox handlers
-
-The folder-item completion paths in `GamePlanCard.tsx` use `folder_item_completions` (separate system) — not affected. The custom activity checkbox paths there also set `completed` manually — these need the same cleanup: only send `performance_data`, let the trigger handle `completed`.
-
-## Files Modified
+## Files modified
 
 | File | Changes |
-|------|--------|
-| `supabase/migrations/[new].sql` | Create `derive_activity_completion()` function + trigger |
-| `src/hooks/useCalendarActivityDetail.ts` | Remove all `derivedCompleted`/`derivedCompletedAt` from DB writes; keep optimistic UI derivation |
-| `src/components/GamePlanCard.tsx` | Remove `completed`/`completed_at` from custom activity checkbox update paths (~lines 2119-2123) |
+|------|---------|
+| `supabase/migrations/[new].sql` | Updated function + widened trigger |
 
-## What stays the same
-- `getAllCheckableIds` utility — still used for optimistic UI and button labels
-- `onRefresh()` calls — still needed for game plan to re-read correct DB state
-- Manual completion for activities without checklists
-- All folder-item completion logic (separate system)
-
-## Edge cases handled
-- No checkboxStates key → trigger skips, manual toggle works
-- Empty checkboxStates `{}` → `NOT EXISTS` returns true → completed = true (auto-complete)
-- `completed_at` preserved on re-check (only set when previously null)
-- Race conditions eliminated — DB is single source of truth
+No frontend changes needed for fixes 1/3/4.
 
