@@ -39,9 +39,6 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
   const composites = (session.composite_indexes as Record<string, number> | null) ?? {};
   const sessionModule = session.module || 'hitting';
   const hasScores = Object.keys(composites).length > 0;
-  const drillBlocks = (session.drill_blocks as any[] | null) ?? [];
-  const composites = (session.composite_indexes as Record<string, number> | null) ?? {};
-  const sessionModule = session.module || 'hitting';
   const insights = generateInsights(composites, drillBlocks, sessionModule, {
     sessionDate: session.session_date,
     sessionType: session.session_type ?? undefined,
