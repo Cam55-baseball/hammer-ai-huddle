@@ -32,13 +32,17 @@ interface SessionDetailDialogProps {
 }
 
 export function SessionDetailDialog({ open, onOpenChange, session }: SessionDetailDialogProps) {
+  const sessionId = session?.id ?? null;
+  const composites = (session?.composite_indexes as Record<string, number> | null) ?? {};
+  const hasScores = Object.keys(composites).length > 0;
+
+  const { report, isGenerating, error } = useCoachingReport(sessionId, hasScores);
+
   if (!session) return null;
 
   const grade = session.effective_grade;
   const drillBlocks = (session.drill_blocks as any[] | null) ?? [];
-  const composites = (session.composite_indexes as Record<string, number> | null) ?? {};
   const sessionModule = session.module || 'hitting';
-  const hasScores = Object.keys(composites).length > 0;
   const insights = generateInsights(composites, drillBlocks, sessionModule, {
     sessionDate: session.session_date,
     sessionType: session.session_type ?? undefined,
@@ -73,40 +77,45 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
         <Separator />
 
         <div className="space-y-3">
-          {/* Win */}
-          {insights.win && (
-            <div className="flex items-start gap-2">
-              <Trophy className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-              <p className="text-sm">{insights.win}</p>
-            </div>
-          )}
+          {/* AI Coaching Report — shown if available, otherwise fallback */}
+          {report ? (
+            <CoachingReportDisplay report={report} isGenerating={false} error={null} />
+          ) : (
+            <>
+              {isGenerating && (
+                <CoachingReportDisplay report={null} isGenerating={true} error={null} />
+              )}
 
-          {/* Focus */}
-          {insights.focus && (
-            <div className="flex items-start gap-2">
-              <Target className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-              <p className="text-sm">{insights.focus}</p>
-            </div>
-          )}
-
-          {/* Next Rep Cue */}
-          {insights.nextRepCue && (
-            <div className="flex items-start gap-2">
-              <ArrowRight className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground italic">{insights.nextRepCue}</p>
-            </div>
-          )}
-
-          {/* Key Metrics */}
-          {insights.keyMetrics.length > 0 && (
-            <div className="flex gap-4 mt-2">
-              {insights.keyMetrics.map((m) => (
-                <div key={m.label} className="text-center">
-                  <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                  <p className={cn('text-sm font-bold', colorMap[m.color])}>{m.value}</p>
+              {/* Fallback deterministic insights */}
+              {insights.win && (
+                <div className="flex items-start gap-2">
+                  <Trophy className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                  <p className="text-sm">{insights.win}</p>
                 </div>
-              ))}
-            </div>
+              )}
+              {insights.focus && (
+                <div className="flex items-start gap-2">
+                  <Target className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-sm">{insights.focus}</p>
+                </div>
+              )}
+              {insights.nextRepCue && (
+                <div className="flex items-start gap-2">
+                  <ArrowRight className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground italic">{insights.nextRepCue}</p>
+                </div>
+              )}
+              {insights.keyMetrics.length > 0 && (
+                <div className="flex gap-4 mt-2">
+                  {insights.keyMetrics.map((m) => (
+                    <div key={m.label} className="text-center">
+                      <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                      <p className={cn('text-sm font-bold', colorMap[m.color])}>{m.value}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {/* Drill Blocks Summary */}
@@ -141,7 +150,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
           {/* Videos */}
           <SessionVideosDisplay sessionId={session.id} />
 
-          {!insights.win && !insights.focus && !session.notes && Object.keys(composites).length === 0 && (
+          {!insights.win && !insights.focus && !session.notes && !hasScores && (
             <p className="text-sm text-muted-foreground italic">No detailed data recorded for this session.</p>
           )}
         </div>
