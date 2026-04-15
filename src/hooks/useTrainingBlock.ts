@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useRef } from 'react';
 
 export interface TrainingBlock {
   id: string;
@@ -48,6 +49,7 @@ export function useTrainingBlock() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const generatingRef = useRef(false);
 
   // Active block
   const { data: activeBlock, isLoading: blockLoading } = useQuery({
@@ -102,12 +104,19 @@ export function useTrainingBlock() {
   // Generate new block
   const generateBlock = useMutation({
     mutationFn: async (sport?: string) => {
-      const { data, error } = await supabase.functions.invoke('generate-training-block', {
-        body: { sport },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
+      // Double-invoke guard
+      if (generatingRef.current) throw new Error('Generation already in progress');
+      generatingRef.current = true;
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-training-block', {
+          body: { sport },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        return data;
+      } finally {
+        generatingRef.current = false;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training-block'] });

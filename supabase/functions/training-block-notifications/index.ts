@@ -19,18 +19,19 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const results = { dailyChecks: 0, weeklyFlags: 0, endOfBlockPrompts: 0, missedMarked: 0 };
 
-    // Fix #2: Batch mark past scheduled workouts as missed (single UPDATE)
+    // Batch mark past scheduled workouts as missed (with LIMIT to prevent full-table locks)
     const { data: missedResult } = await supabase
       .from('block_workouts')
       .update({ status: 'missed' })
       .eq('status', 'scheduled')
       .lt('scheduled_date', today)
+      .limit(500)
       .select('block_id');
 
     if (missedResult && missedResult.length > 0) {
       results.missedMarked = missedResult.length;
 
-      // Fix #7: Use single source of truth — call update_block_status_service for each affected block
+      // Single source of truth — call update_block_status_service for each affected block
       const blockIds = [...new Set(missedResult.map(w => w.block_id))];
       await Promise.all(
         blockIds.map(bid =>
@@ -44,7 +45,8 @@ serve(async (req) => {
       .from('block_workouts')
       .select('id, block_id, workout_type, estimated_duration')
       .eq('scheduled_date', today)
-      .eq('status', 'scheduled');
+      .eq('status', 'scheduled')
+      .limit(500);
 
     results.dailyChecks = todayWorkouts?.length || 0;
 
@@ -58,7 +60,8 @@ serve(async (req) => {
       const { data: activeBlocks } = await supabase
         .from('training_blocks')
         .select('id, user_id')
-        .in('status', ['active', 'nearing_completion']);
+        .in('status', ['active', 'nearing_completion'])
+        .limit(500);
 
       if (activeBlocks) {
         for (const ab of activeBlocks) {
@@ -84,7 +87,8 @@ serve(async (req) => {
     const { data: readyBlocks } = await supabase
       .from('training_blocks')
       .select('id, user_id')
-      .eq('status', 'ready_for_regeneration');
+      .eq('status', 'ready_for_regeneration')
+      .limit(500);
 
     results.endOfBlockPrompts = readyBlocks?.length || 0;
 
