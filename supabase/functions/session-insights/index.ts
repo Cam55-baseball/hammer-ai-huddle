@@ -237,6 +237,15 @@ NEXT SESSION FOCUS:
 - Allocate ~60% reps to primary weakness, ~30% to secondary, ~10% to maintaining strengths
 - Be specific about what each rep block targets
 
+EVIDENCE BINDING (CRITICAL):
+- Every root cause MUST reference exact data signals from the session in the "data_signals" array
+- "data_signals" must reference inputs ACTUALLY PRESENT in the provided data — no fabrication (e.g., "execution_grade 42/80 on backhand drills", "chase_pct at 38%", "composite power_index dropped from 72 to 58 in final block")
+- "confidence" levels: "high" requires ≥2 corroborating data signals; "medium" requires 1 clear signal; "low" means the issue is inferred but not directly measurable from provided data
+- If data does NOT clearly support a mechanism, set confidence to "medium" or "low" — do NOT claim high confidence without evidence
+- If insufficient data exists for a root cause, explicitly state uncertainty in the mechanism/evidence instead of fabricating specifics
+- Low-confidence root causes MUST have their prescriptive fix drill description prefixed with "[Exploratory]" to signal the fix is hypothesis-based
+- NEVER fabricate data signals — every signal must be traceable to a specific number, metric, or pattern in the session data provided
+
 ANTI-GENERIC FILTER (enforce before finalizing):
 - Reject any sentence that could apply to any athlete without modification
 - Reject any sentence that does not include a specific condition (when/where/under what circumstance)
@@ -248,7 +257,9 @@ OUTPUT SELF-CHECK (required internal verification):
 2. Does EACH prescriptive fix directly map to a root cause mechanism (not symptom)?
 3. Is the "issue" string identical across all sections that reference it?
 4. Would a top 1% development coach actually say each sentence?
-5. If any check fails, regenerate that section before outputting`;
+5. Does every root cause have data_signals that reference ACTUAL provided data?
+6. Are confidence levels justified by the number of corroborating signals?
+7. If any check fails, regenerate that section before outputting`;
 }
 
 function buildUserPrompt(
@@ -346,8 +357,10 @@ const coachingReportTool = {
               trigger: { type: "string", description: "Specific condition when this failure occurs" },
               failure_chain: { type: "string", description: "Step-by-step sequence: read → decision → movement breakdown" },
               evidence: { type: "string" },
+              confidence: { type: "string", enum: ["high", "medium", "low"], description: "high=2+ corroborating signals, medium=1 signal, low=inferred" },
+              data_signals: { type: "array", items: { type: "string" }, description: "Exact data references from session (e.g. 'execution_grade 42/80 on backhand drills')" },
             },
-            required: ["issue", "classification", "mechanism", "trigger", "failure_chain", "evidence"],
+            required: ["issue", "classification", "mechanism", "trigger", "failure_chain", "evidence", "confidence", "data_signals"],
           },
         },
         priorityStack: {

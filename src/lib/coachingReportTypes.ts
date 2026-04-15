@@ -14,6 +14,8 @@ export interface RootCause {
   trigger: string;     // when/under what condition
   failureChain: string; // step-by-step breakdown
   evidence: string;
+  confidence: 'high' | 'medium' | 'low';
+  dataSignals: string[];
 }
 
 export interface PriorityItem {
