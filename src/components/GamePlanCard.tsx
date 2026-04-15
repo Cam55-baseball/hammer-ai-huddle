@@ -73,7 +73,7 @@ const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, updateOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, updateOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData, isDayComplete } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
@@ -266,7 +266,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     day: 'numeric' 
   }).toUpperCase();
 
-  const allComplete = completedCount === totalCount && totalCount > 0;
+  const allComplete = isDayComplete;
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   // Create stable dependency key to prevent infinite loops

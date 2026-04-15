@@ -104,6 +104,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
   const [folderTasks, setFolderTasks] = useState<FolderGamePlanTask[]>([]);
   const [scheduledSessions, setScheduledSessions] = useState<any[]>([]);
+  const [isDayComplete, setIsDayComplete] = useState(false);
 
   const [activeProgramStatuses, setActiveProgramStatuses] = useState<Record<string, string>>({});
 
@@ -730,6 +731,16 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         }
       }
 
+      // Fetch day completion from game_plan_days (DB-enforced)
+      const { data: dayData } = await supabase
+        .from('game_plan_days')
+        .select('is_completed')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .maybeSingle();
+      
+      setIsDayComplete(dayData?.is_completed ?? false);
+
     } catch (error) {
       console.error('Error fetching game plan status:', error);
     } finally {
@@ -752,6 +763,30 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     }, 30000); // check every 30 seconds
     return () => clearInterval(interval);
   }, [fetchTaskStatus]);
+
+  // Realtime subscription for game_plan_days — cross-device day completion sync
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`game-plan-days-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'game_plan_days',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const row = (payload.new as any);
+        if (row?.date === getTodayDate()) {
+          setIsDayComplete(row.is_completed ?? false);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   // Run date repair once per day when user is authenticated
   useEffect(() => {
@@ -1407,6 +1442,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     folderTasks,
     completedCount,
     totalCount: tasks.length,
+    isDayComplete,
     daysUntilRecap,
     recapProgress,
     loading,

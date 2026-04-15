@@ -23,6 +23,7 @@ export function useSchedulingRealtime() {
       queryClient.invalidateQueries({ queryKey: ['scheduled-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['task-schedules'] });
       queryClient.invalidateQueries({ queryKey: ['calendar-skips'] });
+      queryClient.invalidateQueries({ queryKey: ['game-plan-days'] });
     };
 
     // Scoped invalidation for performance sessions
