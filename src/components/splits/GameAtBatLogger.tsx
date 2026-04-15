@@ -9,6 +9,7 @@ import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { useDataDensityLevel } from '@/hooks/useDataDensityLevel';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { Plus, Trash2 } from 'lucide-react';
+import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
 
 const RESULTS = ['single', 'double', 'triple', 'home_run', 'walk', 'strikeout', 'flyout', 'groundout', 'lineout', 'hbp', 'sac_fly', 'sac_bunt', 'error', 'fc'] as const;
 
@@ -18,6 +19,7 @@ interface AtBat {
   contactQuality?: string;
   exitDirection?: string;
   pitchLocation?: { row: number; col: number };
+  pitchMovement?: { directions: ('up' | 'down' | 'left' | 'right')[] };
 }
 
 interface GameAtBatLoggerProps {
@@ -34,10 +36,12 @@ export function GameAtBatLogger({ atBats, onAdd, onRemove }: GameAtBatLoggerProp
   const [contactQuality, setContactQuality] = useState<string>();
   const [exitDirection, setExitDirection] = useState<string>();
   const [pitchLoc, setPitchLoc] = useState<{ row: number; col: number }>();
+  const [pitchMovement, setPitchMovement] = useState<('up' | 'down' | 'left' | 'right')[]>([]);
 
   const handleAdd = useCallback(() => {
     if (!result) return;
     const ab: AtBat = { result, count };
+    if (pitchMovement.length > 0) ab.pitchMovement = { directions: pitchMovement };
     if (isAdvanced) {
       if (contactQuality) ab.contactQuality = contactQuality;
       if (exitDirection) ab.exitDirection = exitDirection;
@@ -49,7 +53,8 @@ export function GameAtBatLogger({ atBats, onAdd, onRemove }: GameAtBatLoggerProp
     setContactQuality(undefined);
     setExitDirection(undefined);
     setPitchLoc(undefined);
-  }, [result, count, contactQuality, exitDirection, pitchLoc, isAdvanced, onAdd]);
+    setPitchMovement([]);
+  }, [result, count, contactQuality, exitDirection, pitchLoc, pitchMovement, isAdvanced, onAdd]);
 
   return (
     <Card>
@@ -79,6 +84,8 @@ export function GameAtBatLogger({ atBats, onAdd, onRemove }: GameAtBatLoggerProp
           </Select>
 
           <CountSelector value={count} onChange={setCount} />
+
+          <PitchMovementSelector value={pitchMovement} onChange={setPitchMovement} />
 
           {isAdvanced && (
             <div className="grid grid-cols-2 gap-3">
