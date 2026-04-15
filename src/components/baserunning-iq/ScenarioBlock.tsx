@@ -48,8 +48,11 @@ function getCorrectId(scenario: Scenario): string {
 function getWrongExplanation(scenario: Scenario, selectedId: string, selectedText: string): string | null {
   const we = scenario.wrong_explanations as Record<string, string> | null | undefined;
   if (!we) return null;
-  // Try by ID first, then by text
-  return we[selectedId] ?? we[selectedText] ?? null;
+  const result = we[selectedId] ?? we[selectedText] ?? null;
+  if (!result && import.meta.env.DEV) {
+    console.warn(`[BaserunningIQ] Missing wrong_explanation for scenario ${scenario.id}, selected: id=${selectedId} text="${selectedText}"`);
+  }
+  return result;
 }
 
 export function ScenarioBlock({ scenarios, onComplete }: ScenarioBlockProps) {
