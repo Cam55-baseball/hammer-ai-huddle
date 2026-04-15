@@ -203,6 +203,7 @@ const App = () => {
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
               <Route path="/drill-library" element={<DrillLibraryPlayer />} />
+              <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
