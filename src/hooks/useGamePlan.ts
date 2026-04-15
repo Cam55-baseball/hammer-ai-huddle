@@ -764,6 +764,30 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     return () => clearInterval(interval);
   }, [fetchTaskStatus]);
 
+  // Realtime subscription for game_plan_days — cross-device day completion sync
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`game-plan-days-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'game_plan_days',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const row = (payload.new as any);
+        if (row?.date === getTodayDate()) {
+          setIsDayComplete(row.is_completed ?? false);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   // Run date repair once per day when user is authenticated
   useEffect(() => {
     if (!user?.id) return;
