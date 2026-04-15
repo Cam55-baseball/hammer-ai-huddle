@@ -89,7 +89,7 @@ export function useBaserunningDaily(sport: string) {
 
       // Client-side shuffle and pick 3
       const shuffled = (data ?? []).sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, 3) as DailyScenario[];
+      return shuffled.slice(0, 3) as unknown as DailyScenario[];
     },
   });
 
