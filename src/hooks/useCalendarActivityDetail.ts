@@ -392,8 +392,8 @@ export function useCalendarActivityDetail(
   }, [currentTemplateId, currentDate, selectedTask, onRefresh]);
 
   // Quick complete for calendar cards without opening detail dialog
+  // For activities WITH checklist items, this checks all items; for those without, it toggles completion
   const quickComplete = useCallback(async (event: CalendarEvent, date: Date): Promise<boolean> => {
-    // Only custom_activity type supports quick complete
     if (event.type !== 'custom_activity') return false;
 
     const templateId = event.source?.replace('template-', '');
@@ -404,6 +404,15 @@ export function useCalendarActivityDetail(
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
+      // Fetch template to check for checkable items
+      const { data: template } = await supabase
+        .from('custom_activity_templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      const allCheckableIds = template ? getAllCheckableIds(template as unknown as CustomActivityTemplate) : [];
+
       // Check for existing log
       const { data: existingLog } = await supabase
         .from('custom_activity_logs')
@@ -412,27 +421,59 @@ export function useCalendarActivityDetail(
         .eq('entry_date', dateStr)
         .maybeSingle();
 
-      if (existingLog) {
-        // Toggle existing
-        const newCompleted = !existingLog.completed;
-        await supabase
-          .from('custom_activity_logs')
-          .update({
-            completed: newCompleted,
-            completed_at: newCompleted ? new Date().toISOString() : null,
-          })
-          .eq('id', existingLog.id);
+      if (allCheckableIds.length > 0) {
+        // Has checklist items → toggle all checkboxes
+        const currentData = (existingLog?.performance_data as Record<string, unknown>) || {};
+        const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+        const allChecked = allCheckableIds.every(id => currentCheckboxStates[id] === true);
+        const newCheckboxStates: Record<string, boolean> = {};
+        allCheckableIds.forEach(id => { newCheckboxStates[id] = !allChecked; });
+        const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+        const derivedCompleted = !allChecked;
+
+        if (existingLog) {
+          await supabase
+            .from('custom_activity_logs')
+            .update({
+              performance_data: newPerformanceData,
+              completed: derivedCompleted,
+              completed_at: derivedCompleted ? new Date().toISOString() : null,
+            })
+            .eq('id', existingLog.id);
+        } else {
+          await supabase
+            .from('custom_activity_logs')
+            .insert({
+              template_id: templateId,
+              user_id: user.id,
+              entry_date: dateStr,
+              completed: derivedCompleted,
+              completed_at: derivedCompleted ? new Date().toISOString() : null,
+              performance_data: newPerformanceData,
+            });
+        }
       } else {
-        // Create new completed log
-        await supabase
-          .from('custom_activity_logs')
-          .insert({
-            template_id: templateId,
-            user_id: user.id,
-            entry_date: dateStr,
-            completed: true,
-            completed_at: new Date().toISOString(),
-          });
+        // No checklist items → simple toggle
+        if (existingLog) {
+          const newCompleted = !existingLog.completed;
+          await supabase
+            .from('custom_activity_logs')
+            .update({
+              completed: newCompleted,
+              completed_at: newCompleted ? new Date().toISOString() : null,
+            })
+            .eq('id', existingLog.id);
+        } else {
+          await supabase
+            .from('custom_activity_logs')
+            .insert({
+              template_id: templateId,
+              user_id: user.id,
+              entry_date: dateStr,
+              completed: true,
+              completed_at: new Date().toISOString(),
+            });
+        }
       }
 
       onRefresh?.();
