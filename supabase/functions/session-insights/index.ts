@@ -189,21 +189,40 @@ LANGUAGE STANDARD:
 - Every sentence must be specific, actionable, and behavior-changing
 - If an insight would not change what the athlete does next session, do not include it
 
+ROOT CAUSE DEPTH RULES:
+- "mechanism" must describe a PRECISE biomechanical or cognitive failure — NOT a symptom. Example valid: "first step delayed due to late hip read". Invalid: "slow reaction time"
+- "trigger" must specify the exact CONDITION when it occurs. Example valid: "on glove-side ground balls under <0.8s reaction window". Invalid: "during practice"
+- "failure_chain" must show the step-by-step sequence: read → decision → movement breakdown. Example: "late visual pickup → delayed weight shift → arm-side compensation → rushed throw"
+- If any of these three fields could apply to any athlete in any session, the output is invalid — regenerate
+
 CLASSIFICATION RULES for root cause analysis:
 - Perception: late read, misread, failed to recognize pitch/play type early enough
 - Decision: recognized correctly but chose wrong action or hesitated
 - Execution: correct decision, poor physical outcome (mechanics, timing, coordination)
 - Consistency: performance degraded under fatigue, pressure, or across session phases
 
+CAUSAL LINKING MANDATE (CRITICAL):
+- The "issue" string must be IDENTICAL across rootCauseAnalysis, priorityStack, prescriptiveFixes, and gameTransfer
+- No new issues may appear in later sections that were not established in rootCauseAnalysis
+- No rewording, no drift, no paraphrasing — exact string match required
+- Every prescriptive fix must directly target the mechanism identified in rootCauseAnalysis, not the symptom
+
+PRESCRIPTIVE FIX CONSTRAINT QUALITY:
+- Drill must target the MECHANISM (not the symptom)
+- Constraint must REMOVE the athlete's ability to compensate (e.g., "one-step only before throw", "no gather allowed", "commit before ball contact")
+- Cue must be 3-6 words and tied directly to the mechanism
+- INVALID constraints: "focus on timing", "work on reaction", "be more consistent"
+- If the drill could be used for multiple unrelated issues, it is invalid — be specific
+
+DECISION QUALITY EMPHASIS:
+- If decision-making data exists (chase_pct, decision index, hesitation patterns), it MUST appear in performanceBreakdown AND rootCauseAnalysis
+- Evaluate: decision speed vs optimal window, correct vs safe decisions, hesitation patterns
+- Decision quality failures are distinct from execution failures — classify precisely
+
 PRIORITY STACK RULES:
 - Maximum 3 issues
 - Rank by impact on game performance, not by how bad the number looks
 - Each issue must map directly to a game situation
-
-PRESCRIPTIVE FIX RULES:
-- Every fix must include a specific drill name, a constraint (how to perform it), and a single memorable coaching cue
-- The drill must be immediately actionable in the next session
-- No generic drills — be specific to the failure mechanism
 
 GAME TRANSFER RULES:
 - Tie every issue directly to game outcomes (e.g., "faster double plays", "fewer strikeouts looking", "more hard-hit balls in play")
@@ -216,7 +235,20 @@ ADAPTIVE PROGRESSION:
 
 NEXT SESSION FOCUS:
 - Allocate ~60% reps to primary weakness, ~30% to secondary, ~10% to maintaining strengths
-- Be specific about what each rep block targets`;
+- Be specific about what each rep block targets
+
+ANTI-GENERIC FILTER (enforce before finalizing):
+- Reject any sentence that could apply to any athlete without modification
+- Reject any sentence that does not include a specific condition (when/where/under what circumstance)
+- Reject any sentence that would not change what the athlete does next session
+- If a sentence fails any of these tests, rewrite it with situation-specific detail
+
+OUTPUT SELF-CHECK (required internal verification):
+1. Are ALL issues specific to a measurable situation from THIS session's data?
+2. Does EACH prescriptive fix directly map to a root cause mechanism (not symptom)?
+3. Is the "issue" string identical across all sections that reference it?
+4. Would a top 1% development coach actually say each sentence?
+5. If any check fails, regenerate that section before outputting`;
 }
 
 function buildUserPrompt(
@@ -310,9 +342,12 @@ const coachingReportTool = {
                 type: "string",
                 enum: ["perception", "decision", "execution", "consistency"],
               },
+              mechanism: { type: "string", description: "Precise biomechanical or cognitive failure — not a symptom" },
+              trigger: { type: "string", description: "Specific condition when this failure occurs" },
+              failure_chain: { type: "string", description: "Step-by-step sequence: read → decision → movement breakdown" },
               evidence: { type: "string" },
             },
-            required: ["issue", "classification", "evidence"],
+            required: ["issue", "classification", "mechanism", "trigger", "failure_chain", "evidence"],
           },
         },
         priorityStack: {
