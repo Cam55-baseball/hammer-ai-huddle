@@ -6173,10 +6173,12 @@ export type Database = {
           generation_metadata: Json | null
           goal: string
           id: string
+          idempotency_key: string | null
           pending_goal_change: boolean
           sport: string
           start_date: string | null
           status: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -6185,10 +6187,12 @@ export type Database = {
           generation_metadata?: Json | null
           goal: string
           id?: string
+          idempotency_key?: string | null
           pending_goal_change?: boolean
           sport?: string
           start_date?: string | null
           status?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -6197,10 +6201,12 @@ export type Database = {
           generation_metadata?: Json | null
           goal?: string
           id?: string
+          idempotency_key?: string | null
           pending_goal_change?: boolean
           sport?: string
           start_date?: string | null
           status?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -8263,6 +8269,18 @@ export type Database = {
         Args: { p_link_code: string; p_session_id: string; p_user_id: string }
         Returns: undefined
       }
+      batch_decrement_sets: {
+        Args: { p_workout_ids: string[] }
+        Returns: number
+      }
+      batch_deload_exercises: {
+        Args: { p_workout_ids: string[] }
+        Returns: number
+      }
+      batch_increment_sets: {
+        Args: { p_workout_ids: string[] }
+        Returns: number
+      }
       can_edit_folder_item: {
         Args: { p_folder_item_id: string; p_user_id: string }
         Returns: boolean
@@ -8327,19 +8345,34 @@ export type Database = {
         }
         Returns: boolean
       }
-      insert_training_block_atomic: {
-        Args: {
-          p_end_date: string
-          p_generation_metadata: Json
-          p_goal: string
-          p_pending_goal_block_id?: string
-          p_sport: string
-          p_start_date: string
-          p_user_id: string
-          p_workouts: Json
-        }
-        Returns: string
-      }
+      insert_training_block_atomic:
+        | {
+            Args: {
+              p_end_date: string
+              p_generation_metadata: Json
+              p_goal: string
+              p_pending_goal_block_id?: string
+              p_sport: string
+              p_start_date: string
+              p_user_id: string
+              p_workouts: Json
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_end_date: string
+              p_generation_metadata: Json
+              p_goal: string
+              p_idempotency_key?: string
+              p_pending_goal_block_id?: string
+              p_sport: string
+              p_start_date: string
+              p_user_id: string
+              p_workouts: Json
+            }
+            Returns: string
+          }
       is_linked_coach: {
         Args: { p_coach_id: string; p_player_id: string }
         Returns: boolean
