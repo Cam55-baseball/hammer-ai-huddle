@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMemo } from "react";
 
+interface AnswerOption {
+  id: string;
+  text: string;
+}
+
 interface DailyScenario {
   id: string;
   scenario_text: string;
@@ -13,6 +18,9 @@ interface DailyScenario {
   lesson_id: string;
   wrong_explanations: Record<string, string> | null;
   game_consequence: string | null;
+  answer_options: AnswerOption[] | null;
+  correct_answer_id: string | null;
+  mistake_type: string | null;
 }
 
 interface DailyAttempt {
@@ -81,7 +89,7 @@ export function useBaserunningDaily(sport: string) {
 
       // Client-side shuffle and pick 3
       const shuffled = (data ?? []).sort(() => Math.random() - 0.5);
-      return shuffled.slice(0, 3) as DailyScenario[];
+      return shuffled.slice(0, 3) as unknown as DailyScenario[];
     },
   });
 
