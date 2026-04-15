@@ -731,6 +731,16 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         }
       }
 
+      // Fetch day completion from game_plan_days (DB-enforced)
+      const { data: dayData } = await supabase
+        .from('game_plan_days')
+        .select('is_completed')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .maybeSingle();
+      
+      setIsDayComplete(dayData?.is_completed ?? false);
+
     } catch (error) {
       console.error('Error fetching game plan status:', error);
     } finally {
