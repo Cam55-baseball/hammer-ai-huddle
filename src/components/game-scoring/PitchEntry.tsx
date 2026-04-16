@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
+import { normalizeDirections, deriveMovementKey } from '@/lib/pitchMovementProfile';
 import { cn } from '@/lib/utils';
 
 
@@ -36,7 +37,7 @@ export interface PitchData {
   spray_direction?: string;
   contact_quality?: string;
   batted_ball_type?: string;
-  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[] };
+  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[]; key: string };
   pitch_movement_profile?: string;
 }
 
@@ -67,7 +68,10 @@ export function PitchEntry({ onSubmit, advancedMode, pitchNumber, sport }: Pitch
       ...(isInPlay && spray && { spray_direction: spray }),
       ...(isInPlay && contactQuality && { contact_quality: contactQuality }),
       ...(isInPlay && battedBallType && { batted_ball_type: battedBallType }),
-      ...(pitchMovement.length > 0 && { pitch_movement: { directions: pitchMovement } }),
+      pitch_movement: {
+        directions: normalizeDirections(pitchMovement),
+        key: deriveMovementKey(pitchMovement),
+      },
     };
     onSubmit(pitch);
     // Reset

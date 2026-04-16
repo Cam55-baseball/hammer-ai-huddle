@@ -1,7 +1,6 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
-import { normalizeDirections } from '@/lib/pitchMovementProfile';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -18,7 +17,12 @@ const ARROWS: { dir: Direction; Icon: typeof ArrowUp; gridArea: string }[] = [
 ];
 
 export function PitchMovementSelector({ value, onChange }: PitchMovementSelectorProps) {
-  const orderRef = useRef<Direction[]>([]);
+  const orderRef = useRef<Direction[]>(value);
+
+  // Sync orderRef when value changes externally (load, reset)
+  useEffect(() => {
+    orderRef.current = value;
+  }, [value]);
 
   const toggle = useCallback(
     (dir: Direction) => {
@@ -35,7 +39,7 @@ export function PitchMovementSelector({ value, onChange }: PitchMovementSelector
         orderRef.current = [orderRef.current[1], dir];
         next = value.filter(d => d !== oldest).concat(dir);
       }
-      onChange(normalizeDirections(next));
+      onChange(next);
     },
     [value, onChange],
   );
