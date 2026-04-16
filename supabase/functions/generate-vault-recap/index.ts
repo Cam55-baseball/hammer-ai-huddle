@@ -1397,6 +1397,20 @@ ${isModifiedTraining ? `
    Praise their proactive approach to recovery.
 ` : ''}
 
+═══════════════════════════════════════════════════════════════
+STRENGTH DETECTION RULE (MANDATORY — DO NOT VIOLATE):
+═══════════════════════════════════════════════════════════════
+Combined Weight Lifted: ${combinedWeightLifted.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customWeightLbs.toLocaleString()})
+Strength Exercises Detected: ${strengthExerciseCount} (via weight data or exercise keywords)
+Custom Strength Sessions: ${customStrengthSessions}
+Strength Confidence: ${strengthConfidence}
+
+- If combinedWeightLifted > 0: State "Athlete performed strength training" with confidence
+- If strengthExerciseCount > 0 but no weight data: State "Strength exercises detected (bodyweight/unweighted)"
+- If NEITHER: State "No structured strength training detected in this period"
+- NEVER say "did not lift weights" or "no strength training" if custom exercises include strength-type movements or logged weight
+- Custom activity exercises with weight data are FIRST-CLASS strength evidence
+
 REQUIRED SECTIONS (return as JSON):
 
 1. executive_summary (3-4 sentences): High-level assessment with the most important metrics. ${isRecoveryPhase ? 'Acknowledge the recovery phase and focus on mental/psychological readiness.' : 'Lead with the key finding.'}
