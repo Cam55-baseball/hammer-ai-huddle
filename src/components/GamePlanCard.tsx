@@ -2139,43 +2139,25 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             
             // PERSIST: Save checkbox states to database
             await updateLogPerformanceData(log.id, newPerformanceData);
-            
-            // AUTO-COMPLETE LOGIC: Check if ALL checkable items are now checked
-            const allCheckableIds = getAllCheckableIds(template);
-            
-            if (allCheckableIds.length > 0) {
-              const allChecked = allCheckableIds.every(id => newCheckboxStates[id] === true);
-              const wasCompleted = log.completed;
-              
-              if (allChecked && !wasCompleted) {
-                // Auto-complete with celebration!
-                await toggleComplete(template.id);
-                setSelectedCustomTask(prev => prev ? {
-                  ...prev,
-                  completed: true,
-                  customActivityData: prev.customActivityData ? {
-                    ...prev.customActivityData,
-                    log: { ...prev.customActivityData.log!, completed: true }
-                  } : undefined
-                } : null);
-                triggerCelebration();
-                toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'), {
-                  description: template.title
-                });
-              } else if (!allChecked && wasCompleted) {
-                // Un-complete if a checkbox is unchecked
-                await toggleComplete(template.id);
-                setSelectedCustomTask(prev => prev ? {
-                  ...prev,
-                  completed: false,
-                  customActivityData: prev.customActivityData ? {
-                    ...prev.customActivityData,
-                    log: { ...prev.customActivityData.log!, completed: false }
-                  } : undefined
-                } : null);
-              }
+
+            // DEMOTE rule: if user previously clicked "Mark all complete" (check_all)
+            // and is now unchecking a box, demote completion back to in_progress.
+            const currentState = (log as any).completion_state as string | undefined;
+            const currentMethod = (log as any).completion_method as string | undefined;
+            if (!checked && currentState === 'completed' && currentMethod === 'check_all') {
+              await setCompletionState(template.id, 'in_progress', 'none');
+              setSelectedCustomTask(prev => prev ? {
+                ...prev,
+                completed: false,
+                completionState: 'in_progress',
+                completionMethod: 'none',
+                customActivityData: prev.customActivityData ? {
+                  ...prev.customActivityData,
+                  log: { ...prev.customActivityData.log!, completed: false, completion_state: 'in_progress', completion_method: 'none' } as any,
+                } : undefined,
+              } : null);
             }
-            
+
             // Background refresh (safe - dialog won't unmount)
             refetch();
           } catch (error) {
