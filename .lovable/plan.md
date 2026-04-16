@@ -1,54 +1,41 @@
 
 
-# Fix Pitch Movement Selector — Final 5 Issues
+# Tighten Pitch Movement — Final Polish
 
 ## Summary
-Fix orderRef desync bug, stop normalizing in UI layer, always store movement (including "straight"), store normalized key alongside directions, and properly deprecate old function name.
+Three focused fixes: eliminate duplicate key logic, add strong `MovementKey` type, and use `deriveMovementKey` as single source of truth everywhere.
 
 ## Changes
 
-### 1. Sync orderRef with value — `PitchMovementSelector.tsx`
-Add `useEffect` to sync `orderRef.current = value` whenever `value` changes externally (load, reset). Remove `normalizeDirections` call from `onChange` — emit raw order, normalize only at storage.
-
-### 2. Stop normalizing inside UI toggle — `PitchMovementSelector.tsx`
-Change `onChange(normalizeDirections(next))` → `onChange(next)`. The UI layer preserves insertion order. Normalization moves to save points.
-
-### 3. Always store movement with key — all save points
-Replace conditional `if (pitchMovement.length > 0)` with always-store pattern:
-
+### 1. Add `MovementKey` type — `pitchMovementProfile.ts`
 ```typescript
-import { normalizeDirections, deriveMovementKey } from '@/lib/pitchMovementProfile';
+export type MovementKey =
+  | 'straight' | 'up' | 'down' | 'left' | 'right'
+  | 'down_left' | 'down_right' | 'left_up' | 'right_up';
+```
+Update `deriveMovementKey` return type to `MovementKey`. Update `PROFILE_MAP` to `Record<MovementKey, string>`.
 
-const normalized = normalizeDirections(pitchMovement);
-ab.pitch_movement = {
-  directions: normalized,
-  key: deriveMovementKey(pitchMovement),
-};
+### 2. Fix duplicate key logic — `MicroLayerInput.tsx`
+Line 47 has inline `v.length ? [...v].sort().join('_') : 'straight'` — replace with:
+```typescript
+import { deriveMovementKey } from '@/lib/pitchMovementProfile';
+// ...
+onChange={v => updateField('pitch_movement', { directions: v, key: deriveMovementKey(v) })}
 ```
 
-Update `pitch_movement` type across all interfaces to:
-```typescript
-pitch_movement?: {
-  directions: ('up' | 'down' | 'left' | 'right')[];
-  key: string; // 'straight' | 'down_right' | etc.
-}
-```
-
-### 4. Clean up `pitchMovementProfile.ts`
-- Mark `deriveMovementProfile` with `@deprecated` JSDoc
-- Keep `deriveMovementKey` as the canonical function
-
-### 5. Update type in `useMicroLayerInput.ts`
-Add `key: string` to `pitch_movement` type definition.
+### 3. Update interfaces to use `MovementKey` — 3 files
+Replace `key: string` with `key: MovementKey` in:
+- `useMicroLayerInput.ts` — `MicroLayerData.pitch_movement`
+- `PitchEntry.tsx` — `PitchData.pitch_movement`
+- `GameAtBatLogger.tsx` — `AtBat.pitch_movement`
 
 ## Files
 
-| File | Changes |
+| File | Change |
 |------|--------|
-| `src/components/micro-layer/PitchMovementSelector.tsx` | Add useEffect sync, remove normalize from onChange |
-| `src/lib/pitchMovementProfile.ts` | Add @deprecated to old function |
-| `src/hooks/useMicroLayerInput.ts` | Update pitch_movement type to include key |
-| `src/components/splits/GameAtBatLogger.tsx` | Always store with normalized dirs + key |
-| `src/components/game-scoring/PitchEntry.tsx` | Always store with normalized dirs + key |
-| `src/components/micro-layer/MicroLayerInput.tsx` | No change needed (already delegates to useMicroLayerInput which stores raw) |
+| `src/lib/pitchMovementProfile.ts` | Add `MovementKey` type, update return type |
+| `src/components/micro-layer/MicroLayerInput.tsx` | Replace inline key logic with `deriveMovementKey` |
+| `src/hooks/useMicroLayerInput.ts` | Use `MovementKey` in type |
+| `src/components/game-scoring/PitchEntry.tsx` | Use `MovementKey` in type |
+| `src/components/splits/GameAtBatLogger.tsx` | Use `MovementKey` in type |
 
