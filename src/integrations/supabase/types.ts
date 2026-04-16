@@ -1246,6 +1246,8 @@ export type Database = {
           actual_duration_minutes: number | null
           completed: boolean | null
           completed_at: string | null
+          completion_method: string
+          completion_state: string
           created_at: string | null
           entry_date: string
           id: string
@@ -1261,6 +1263,8 @@ export type Database = {
           actual_duration_minutes?: number | null
           completed?: boolean | null
           completed_at?: string | null
+          completion_method?: string
+          completion_state?: string
           created_at?: string | null
           entry_date?: string
           id?: string
@@ -1276,6 +1280,8 @@ export type Database = {
           actual_duration_minutes?: number | null
           completed?: boolean | null
           completed_at?: string | null
+          completion_method?: string
+          completion_state?: string
           created_at?: string | null
           entry_date?: string
           id?: string
@@ -1865,6 +1871,8 @@ export type Database = {
         Row: {
           completed: boolean | null
           completed_at: string | null
+          completion_method: string
+          completion_state: string
           entry_date: string
           folder_assignment_id: string | null
           folder_item_id: string
@@ -1876,6 +1884,8 @@ export type Database = {
         Insert: {
           completed?: boolean | null
           completed_at?: string | null
+          completion_method?: string
+          completion_state?: string
           entry_date: string
           folder_assignment_id?: string | null
           folder_item_id: string
@@ -1887,6 +1897,8 @@ export type Database = {
         Update: {
           completed?: boolean | null
           completed_at?: string | null
+          completion_method?: string
+          completion_state?: string
           entry_date?: string
           folder_assignment_id?: string | null
           folder_item_id?: string
