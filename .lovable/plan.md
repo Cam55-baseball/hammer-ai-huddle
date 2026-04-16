@@ -1,79 +1,66 @@
 
 
-# Add PitchMovementSelector to Practice Hub Rep Input
+## Why the previous plan didn't finish
 
-## Root Cause
-`PitchMovementSelector` exists in `MicroLayerInput`, `GameAtBatLogger`, and `PitchEntry` — but Practice Hub uses **`src/components/practice/RepScorer.tsx`** for live rep input, which never imports it.
+The selector was added but **placed inside the `{isHitting && (<>...</>)}` fragment** (line 792 opens, line 1135 closes). The selector at line 894 is therefore unreachable in pitching sessions. The plan said "place it once outside both blocks" but it was actually nested inside the hitting branch.
 
-## Target File
-`src/components/practice/RepScorer.tsx` — uses `module === 'hitting'` / `module === 'pitching'` (`isHitting` / `isPitching` flags already on lines 277-278).
+## Two bugs to fix in `src/components/practice/RepScorer.tsx`
 
-## Changes
+### Bug 1 — PitchMovementSelector invisible in pitching sessions
+Currently at lines 894–906, **inside the `isHitting` fragment**. Needs to be moved out.
 
-### 1. Imports (top of file, after line 9)
-```tsx
-import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
-import { normalizeDirections, deriveMovementKey, type MovementKey } from '@/lib/pitchMovementProfile';
-```
+**Fix:** Cut the block from lines 894–906 and re-insert it as a **shared block after the pitching `{isPitching && (<>...</>)}` fragment closes** (after line ~1561 — I'll find exact close line at implementation). It will be gated only by `(isHitting || isPitching)` and live at the same indentation level as the `{isHitting && ...}` and `{isPitching && ...}` blocks themselves. This guarantees a single render path for both modules with zero duplication and no `mode === 'advanced'` gating.
 
-### 2. Extend `ScoredRep` interface
-Add field (keep type identical to other usages):
-```tsx
-pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[]; key: MovementKey };
-```
-Do NOT add `pitch_movement_profile` (per spec).
+### Bug 2 — Duplicate / mislabeled "Pitcher Hand" prompt in pitching sessions
+Root cause: when a pitcher picks `live_bp` rep source, `REQUIRES_THROWER_HAND` (line 136 of `RepSourceSelector.tsx`) fires the sub-field at line 700, labeled "Pitcher Hand". For pitching sessions this is meaningless (already captured at SessionIntentGate) — what's actually needed is the **batter's side**.
 
-### 3. Render the selector — ALWAYS visible for hitting + pitching
-Place a single block placed once outside any `mode === 'advanced'`, `isInPlay`, or other gating, just before the closing of the rep form (after the hitting/pitching field blocks but inside the main form). Condition: `(isHitting || isPitching)` only.
+**Fix:** Change the label and the field it writes based on module:
+- In a **pitching** session → label "Batter Side (L/R)", writes to `current.batter_side` only
+- In a **hitting** session → keep current "Pitcher Hand (L/R)", writes to `thrower_hand` + `pitcher_hand`
 
 ```tsx
-{(isHitting || isPitching) && (
+{needsThrowerHand && !isMachine && (
   <div>
-    <PitchMovementSelector
-      value={current.pitch_movement?.directions ?? []}
-      onChange={(v) =>
-        updateField('pitch_movement', {
-          directions: normalizeDirections(v),
-          key: deriveMovementKey(v),
-        })
-      }
-    />
+    <Label className="text-xs text-muted-foreground mb-1 block">
+      {isPitching ? 'Batter Side (L/R)' : 'Pitcher Hand (L/R)'} <span className="text-destructive">*</span>
+    </Label>
+    <div className="grid grid-cols-2 gap-2">
+      {(['L', 'R'] as const).map(h => {
+        const selected = isPitching ? current.batter_side === h : current.thrower_hand === h;
+        return (
+          <button
+            key={h}
+            type="button"
+            onClick={() => {
+              if (isPitching) {
+                updateField('batter_side', h);
+              } else {
+                updateField('thrower_hand', h);
+                updateField('pitcher_hand', h);
+              }
+            }}
+            className={cn(/* unchanged */)}
+          >
+            {h === 'L' ? 'Left' : 'Right'}
+          </button>
+        );
+      })}
+    </div>
   </div>
 )}
 ```
 
-Best insertion point: right after the pitching `PitchLocationGrid` block (around line ~1248) but pulled out as a shared block placed after both hitting (`isHitting`) and pitching (`isPitching`) sections close — i.e. after line ~1250 (end of pitching `<>` fragment) and before the bunting/throwing/etc. blocks. This guarantees a single render path for both modules, no duplication.
+This also makes the existing "Hitter Side (L/R)" advanced-mode block (lines 1185–1207) redundant for `live_bp`/`game`/`sim_game` — but I'll leave it alone for `flat_ground_vs_hitter`/`bullpen_vs_hitter` (which aren't in `REQUIRES_THROWER_HAND`) so those still get a way to set batter side. No regression.
 
-### 4. Ensure rep persistence in `commitRep` (around line 401-425)
-The spread `...current` already includes `pitch_movement`. Add a default so every committed rep includes it explicitly (`'straight'` when none picked):
-
-```tsx
-...((isHitting || isPitching) && {
-  pitch_movement: current.pitch_movement ?? {
-    directions: [],
-    key: deriveMovementKey([]), // 'straight'
-  },
-}),
-```
-
-### 5. Reset behavior
-The current reset preserves `execution_score`. No change needed — `pitch_movement` resets to `undefined` per rep, which is correct.
-
-## What I Will NOT Touch
-- `MicroLayerInput`, `PitchEntry`, `GameAtBatLogger` — already correct.
-- Inline sort/join logic — `deriveMovementKey()` is the only path used.
-- No `pitch_movement_profile` field reintroduced.
-
-## Verification Plan (after implementation)
-1. Open `/practice` → start hitting session → confirm Movement Direction selector renders in rep form (Quick mode, not gated by Advanced).
-2. Switch module to pitching → confirm same.
-3. Switch to fielding/bunting/throwing/baserunning → confirm selector does NOT render.
-4. Log a rep with a direction selected → confirm `pitch_movement.directions` and `pitch_movement.key` saved.
-5. Log a rep with no direction → confirm `pitch_movement.key === 'straight'` is persisted.
+## Verification (after edits)
+1. Start a **pitching** session → Movement Direction selector renders (Quick mode, not Advanced).
+2. Pick `live_bp` rep source → label says **"Batter Side (L/R)"**, writes to `batter_side`. No "Pitcher Hand" prompt.
+3. Start a **hitting** session → Movement Direction renders; `live_bp` still shows "Pitcher Hand".
+4. Other modules (fielding/bunting/throwing/baserunning) → Movement Direction does NOT render.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | Import selector + helpers, extend `ScoredRep`, render block gated by `(isHitting \|\| isPitching)` only, default `pitch_movement` on commit |
+| `src/components/practice/RepScorer.tsx` | Move PitchMovementSelector block out of `isHitting` fragment to a shared `(isHitting \|\| isPitching)` block; module-aware label + handler for `needsThrowerHand` sub-field |
 
