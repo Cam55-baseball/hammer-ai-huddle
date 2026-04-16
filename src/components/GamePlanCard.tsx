@@ -76,7 +76,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, updateOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData, isDayComplete } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
-  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, setCompletionState, markAllCheckboxesAndComplete, reopenActivity, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
