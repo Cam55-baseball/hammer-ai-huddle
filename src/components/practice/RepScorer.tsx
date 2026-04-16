@@ -1499,6 +1499,21 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             </>
           )}
 
+          {/* ===== SHARED: Movement Direction (hitting + pitching) ===== */}
+          {(isHitting || isPitching) && (
+            <div>
+              <PitchMovementSelector
+                value={current.pitch_movement?.directions ?? []}
+                onChange={(v) =>
+                  updateField('pitch_movement', {
+                    directions: normalizeDirections(v),
+                    key: deriveMovementKey(v),
+                  })
+                }
+              />
+            </div>
+          )}
+
           {/* ===== FIELDING FIELDS ===== */}
           {isFielding && (
             <>
