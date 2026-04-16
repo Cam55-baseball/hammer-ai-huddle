@@ -1,89 +1,77 @@
 
 
-# Harden Custom Activity Strength Logic — 8 Fixes
+# Fix didStrength Logic + Restore Program Session Merging
 
-## Summary
-Fix metric inflation, session double-counting, weak parsing, and AI hallucination risk in the recap edge function. All changes in one file.
+## Problem
+Two critical regressions in current recap logic:
+1. **`didStrength` is wrong** (line 641): Uses `totalWorkouts + combinedStrengthSessions > 0` — but `totalWorkouts` counts ALL `vault_workout_notes` rows, not just strength. A user with only cardio logged could falsely get "did strength training."
+2. **Program strength sessions dropped** (line 631): `combinedStrengthSessions = customStrengthSessions` ignores program workouts entirely, regressing prior unification.
 
-**File**: `supabase/functions/generate-vault-recap/index.ts`
+Plus 2 small upgrades: expand keyword list, add volume threshold to confidence scoring.
 
-## Changes
+## Changes — `supabase/functions/generate-vault-recap/index.ts`
 
-### 1. Fix Weight vs Volume (lines 531-534, 580-584)
-Replace `customWeightLbs` accumulation with `customTopWeightLbs` (tracks max single-exercise weight, not inflated sum):
-
+### 1. Derive `programStrengthSessions` from `vault_workout_notes`
+After line 194, add:
 ```typescript
-let customTopWeightLbs = 0;  // replaces customWeightLbs
-let customVolumeLbs = 0;
+// A program workout counts as strength if it logged weight OR reported weight increases
+const programStrengthSessions = workouts?.filter(w => 
+  (w.total_weight_lifted || 0) > 0 || 
+  (Array.isArray(w.weight_increases) && w.weight_increases.length > 0)
+).length || 0;
 ```
 
-In the exercise loop, replace `customWeightLbs += exWeightLbs * sets` with:
+### 2. Fix session merging (line 631)
+Replace:
 ```typescript
-customTopWeightLbs = Math.max(customTopWeightLbs, exWeightLbs);
-customVolumeLbs += exWeightLbs * sets * (reps || 1);
-```
-
-### 2. Fix Session Double-Counting (line 610)
-Replace `totalWorkouts + customStrengthSessions` with `Set`-based dedup. Since program workouts are a separate table (no overlap possible with custom activity IDs), the real fix is to NOT blindly sum — only count custom sessions that aren't already program workouts. Use:
-```typescript
-const combinedStrengthSessions = totalWorkouts + customStrengthSessions;
-```
-→ Replace with just `customStrengthSessions` for the custom side, keeping program workouts separate:
-```typescript
-// Program workouts are ALL strength by definition in this app
-// Custom strength sessions are additive (different IDs, no overlap)
-// But label them correctly — don't call totalWorkouts "strength" blindly
 const combinedStrengthSessions = customStrengthSessions;
-// totalWorkouts stays separate as "program workouts"
+```
+With true union (program rows and custom logs are different tables — IDs cannot overlap, so a sum is the correct set-union size):
+```typescript
+const combinedStrengthSessions = programStrengthSessions + customStrengthSessions;
 ```
 
-Actually, reviewing the data: `totalWorkouts` = vault_workout_notes (program workouts). `customStrengthSessions` = custom activities with strength. These are genuinely different tables with no ID overlap, so addition is valid BUT the issue is that `totalWorkouts` includes ALL program workouts (not just strength). We'll keep the sum but rename for clarity in the prompt.
-
-### 3. Upgrade Parsing (lines 537-538, 569-578)
-Add `SET_REP_PATTERN` and `AT_WEIGHT_PATTERN` after existing patterns. In the exercise loop, after existing notes parsing, add fallback parsing for `3x8` and `@185` patterns when structured data is missing.
-
-### 4. Normalize Exercise Names (line 588)
-Replace `exName.toLowerCase()` with `exName.toLowerCase().replace(/[^a-z0-9 ]/g, '')` to strip punctuation before keyword matching.
-
-### 5. Fix Combined Metrics (line 609)
-Replace `combinedWeightLifted = totalWeightLifted + customWeightLbs` with:
+### 3. Fix `didStrength` (line 641)
+Replace:
 ```typescript
-const combinedVolumeLbs = totalWeightLifted + customVolumeLbs;
+const didStrength = (totalWorkouts + combinedStrengthSessions) > 0;
 ```
-Update all downstream references from `combinedWeightLifted` → `combinedVolumeLbs`, and from `customWeightLbs` → `customTopWeightLbs`.
-
-### 6. Upgrade Confidence Model (line 611)
-Replace simple ternary with scored model:
+With evidence-based check:
 ```typescript
-let confidenceScore = 0;
-if (customVolumeLbs > 0) confidenceScore += 0.6;
+const didStrength = combinedStrengthSessions > 0 || customVolumeLbs > 0 || totalWeightLifted > 0;
+```
+
+### 4. Expand strength keywords (line 536)
+Add real-world abbreviations: `'db','bb','ohp','incline','decline','chin','lat','tricep','bicep','glute','hamstring','quad','calf'` to `STRENGTH_KEYWORDS`.
+
+### 5. Refine confidence scoring (line 635)
+Replace flat 0.6 with tiered:
+```typescript
+if (customVolumeLbs > 1000) confidenceScore += 0.6;
+else if (customVolumeLbs > 0) confidenceScore += 0.4;
+if (programStrengthSessions > 0) confidenceScore += 0.2; // new signal
 if (strengthExerciseCount > 5) confidenceScore += 0.2;
 if (customActivitiesWithStrength.size > 2) confidenceScore += 0.2;
-const strengthConfidence = confidenceScore >= 0.8 ? 'high' : confidenceScore >= 0.4 ? 'medium' : 'low';
 ```
+(Cap implicit via thresholds; `>= 0.8` high / `>= 0.4` medium retained.)
 
-### 7. Add Truth Fields to Stored Data (lines 1522-1535)
-Add to `workout_stats`:
-```typescript
-did_strength: combinedStrengthSessions > 0,
-strength_reason: customVolumeLbs > 0 ? 'weight_detected' : strengthExerciseCount > 0 ? 'movement_detected' : 'none',
-```
-Replace `custom_weight` → `custom_top_weight: customTopWeightLbs`, `combined_weight` → `combined_volume: combinedVolumeLbs`.
+### 6. Update prompt + stored stats to expose `program_strength_sessions`
+- In `workout_stats` storage block, add `program_strength_sessions: programStrengthSessions`.
+- In AI prompt section showing strength counts, replace the "Custom Strength Sessions Detected" line with two lines:
+  - `Program Strength Sessions: ${programStrengthSessions}`
+  - `Custom Strength Sessions: ${customStrengthSessions}`
+  - `Combined Strength Sessions: ${combinedStrengthSessions}`
 
-### 8. Replace AI Prompt Strength Rule (lines 1400-1412)
-Replace with source-of-truth format:
-```
-STRENGTH DETECTION (SOURCE OF TRUTH):
-- did_strength = ${combinedStrengthSessions > 0} → ...
-- strength_reason = "${strengthReason}"
-- NEVER contradict these fields. Do not infer beyond them.
-```
-
-Update prompt section 1 (lines 1062-1067) and section 13 (lines 1169-1177) to use new variable names. Update fallback summary (line 994) similarly.
+### 7. Note on `totalWeightLifted` semantics
+`vault_workout_notes.total_weight_lifted` is already a per-workout aggregate (treated as volume in existing logic). No rename needed, but add a code comment near line 194 clarifying: `// per-workout aggregate volume from program workouts`.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `supabase/functions/generate-vault-recap/index.ts` | All 8 fixes: metric correction, parsing upgrade, confidence model, prompt hardening |
+| `supabase/functions/generate-vault-recap/index.ts` | Add `programStrengthSessions`, fix `didStrength`, fix session merge, expand keywords, tier confidence, expose new field in prompt + stats |
+
+## Out of Scope
+- Parsing reorder (nice-to-have, current order works for `"3x8 @ 185"` since each pattern is independent)
+- Renaming `totalWeightLifted` (would ripple through stored recap shape)
 
