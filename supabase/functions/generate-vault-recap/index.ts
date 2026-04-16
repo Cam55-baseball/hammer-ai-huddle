@@ -546,10 +546,21 @@ serve(async (req) => {
     const AT_WEIGHT_PATTERN = /@\s*(\d+(?:\.\d+)?)/;
 
     const customActivitiesWithStrength = new Set<string>();
-    
+    // Single source of truth: per-exercise volume distribution (normalized names)
+    const exerciseDistribution: Record<string, number> = {};
+    const normalizeExerciseName = (raw: string): string =>
+      (raw || 'unknown')
+        .toString()
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]/g, '')
+        .replace(/\b(bb|db)\b/g, '')
+        .replace(/\s+/g, ' ')
+        .trim() || 'unknown';
+
     customActivities.forEach((log: any) => {
       const exercises = log.custom_activity_templates?.exercises || [];
       let logHasStrength = false;
+      let logVolume = 0;
       if (Array.isArray(exercises)) {
         exercises.forEach((ex: any) => {
           let sets = ex.sets || 0;
