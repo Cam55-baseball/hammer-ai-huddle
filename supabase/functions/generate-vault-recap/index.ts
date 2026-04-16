@@ -1022,7 +1022,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     let aiContent: any = {
-      executive_summary: `You completed ${combinedStrengthSessions} training sessions over the past 6 weeks${combinedWeightLifted > 0 ? `, with a combined volume of ${combinedWeightLifted.toLocaleString()} lbs` : ''}.`,
+      executive_summary: `You completed ${totalWorkouts} program workouts and ${combinedStrengthSessions} custom strength sessions over the past 6 weeks${combinedVolumeLbs > 0 ? `, with a combined volume of ${combinedVolumeLbs.toLocaleString()} lbs` : ''}.`,
       training_analysis: [],
       recovery_assessment: [],
       mental_performance: [],
@@ -1093,8 +1093,8 @@ COMPREHENSIVE DATA ANALYSIS
 1. TRAINING VOLUME & PROGRESSION
    • Program Workouts: ${totalWorkouts}${isRecoveryPhase ? ' (expected low - athlete recovering)' : ''}
    • Custom Strength Sessions Detected: ${customStrengthSessions}
-   • Combined Weight Lifted: ${combinedWeightLifted.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customWeightLbs.toLocaleString()})
-   • Custom Volume Load: ${customVolumeLbs.toLocaleString()} lbs (sets × reps × weight)
+   • Combined Volume Load: ${combinedVolumeLbs.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customVolumeLbs.toLocaleString()})
+   • Top Weight in Custom Exercises: ${customTopWeightLbs.toLocaleString()} lbs
    • Strength Detection Confidence: ${strengthConfidence}
    • Weight Increases Logged: ${totalWeightIncreases}
    • Week 1 Avg Session: ${Math.round(firstWeekAvgWeight).toLocaleString()} lbs
@@ -1200,7 +1200,7 @@ TRAINING BREAKDOWN BY TYPE:
 EXERCISE ANALYSIS (from workout/practice activities):
     • Total Sets Logged: ${totalSets} across ${Object.keys(exerciseFrequency).length} exercises
     • Total Reps Logged: ${totalReps}
-    • Total Weight Logged in Custom Exercises: ${customWeightLbs.toLocaleString()} lbs
+    • Top Weight in Custom Exercises: ${customTopWeightLbs.toLocaleString()} lbs
     • Total Volume Load (sets × reps × weight): ${customVolumeLbs.toLocaleString()} lbs
     • Strength Exercises Detected: ${strengthExerciseCount} (via weight data or exercise keywords)
     • Exercise Types: ${Object.entries(exerciseTypeDistribution).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None tracked'}
@@ -1429,18 +1429,19 @@ ${isModifiedTraining ? `
 ` : ''}
 
 ═══════════════════════════════════════════════════════════════
-STRENGTH DETECTION RULE (MANDATORY — DO NOT VIOLATE):
+STRENGTH DETECTION (SOURCE OF TRUTH — DO NOT VIOLATE):
 ═══════════════════════════════════════════════════════════════
-Combined Weight Lifted: ${combinedWeightLifted.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customWeightLbs.toLocaleString()})
-Strength Exercises Detected: ${strengthExerciseCount} (via weight data or exercise keywords)
-Custom Strength Sessions: ${customStrengthSessions}
-Strength Confidence: ${strengthConfidence}
+did_strength = ${didStrength}
+strength_reason = "${strengthReason}"
+strength_confidence = "${strengthConfidence}"
+Program Workouts: ${totalWorkouts} | Custom Strength Sessions: ${customStrengthSessions}
+Combined Volume: ${combinedVolumeLbs.toLocaleString()} lbs | Top Custom Weight: ${customTopWeightLbs.toLocaleString()} lbs
 
-- If combinedWeightLifted > 0: State "Athlete performed strength training" with confidence
-- If strengthExerciseCount > 0 but no weight data: State "Strength exercises detected (bodyweight/unweighted)"
-- If NEITHER: State "No structured strength training detected in this period"
-- NEVER say "did not lift weights" or "no strength training" if custom exercises include strength-type movements or logged weight
-- Custom activity exercises with weight data are FIRST-CLASS strength evidence
+- If did_strength = true: State "Athlete performed strength training" with confidence
+- If strength_reason = "weight_detected": Explicit weightlifting occurred
+- If strength_reason = "movement_detected": Strength-type movements detected (bodyweight/unweighted)
+- If did_strength = false: State "No strength evidence detected in this period"
+- NEVER contradict these fields. Do not infer beyond them.
 
 REQUIRED SECTIONS (return as JSON):
 
@@ -1555,11 +1556,13 @@ Return ONLY valid JSON with this exact structure:
       workout_stats: {
         total_workouts: totalWorkouts,
         total_weight: totalWeightLifted,
-        custom_weight: customWeightLbs,
-        combined_weight: combinedWeightLifted,
+        custom_top_weight: customTopWeightLbs,
+        combined_volume: combinedVolumeLbs,
         custom_volume_load: customVolumeLbs,
         strength_sessions_detected: combinedStrengthSessions,
         strength_confidence: strengthConfidence,
+        did_strength: didStrength,
+        strength_reason: strengthReason,
         weight_increases: totalWeightIncreases,
         avg_session_weight: totalWorkouts > 0 ? Math.round(totalWeightLifted / totalWorkouts) : 0,
         strength_change_percent: strengthChangePercent,
