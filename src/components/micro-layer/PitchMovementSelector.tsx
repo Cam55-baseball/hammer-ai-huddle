@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { normalizeDirections } from '@/lib/pitchMovementProfile';
@@ -18,21 +18,29 @@ const ARROWS: { dir: Direction; Icon: typeof ArrowUp; gridArea: string }[] = [
 ];
 
 export function PitchMovementSelector({ value, onChange }: PitchMovementSelectorProps) {
+  const orderRef = useRef<Direction[]>([]);
+
   const toggle = useCallback(
     (dir: Direction) => {
       let next: Direction[];
       if (value.includes(dir)) {
+        orderRef.current = orderRef.current.filter(d => d !== dir);
         next = value.filter(d => d !== dir);
       } else if (value.length < 2) {
+        orderRef.current = [...orderRef.current, dir];
         next = [...value, dir];
       } else {
-        // Replace oldest selection
-        next = [value[1], dir];
+        // Replace oldest based on insertion order
+        const oldest = orderRef.current[0];
+        orderRef.current = [orderRef.current[1], dir];
+        next = value.filter(d => d !== oldest).concat(dir);
       }
       onChange(normalizeDirections(next));
     },
     [value, onChange],
   );
+
+  const atLimit = value.length >= 2;
 
   return (
     <div className="space-y-1">
@@ -57,6 +65,7 @@ export function PitchMovementSelector({ value, onChange }: PitchMovementSelector
                 selected
                   ? 'bg-primary text-primary-foreground border-primary scale-110 shadow-sm'
                   : 'bg-muted/40 text-muted-foreground hover:bg-accent hover:text-accent-foreground border-input',
+                atLimit && !selected && 'opacity-40',
               )}
             >
               <Icon className="h-4 w-4" />

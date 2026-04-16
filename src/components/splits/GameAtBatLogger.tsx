@@ -10,7 +10,7 @@ import { useDataDensityLevel } from '@/hooks/useDataDensityLevel';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { Plus, Trash2 } from 'lucide-react';
 import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
-import { deriveMovementProfile } from '@/lib/pitchMovementProfile';
+
 
 const RESULTS = ['single', 'double', 'triple', 'home_run', 'walk', 'strikeout', 'flyout', 'groundout', 'lineout', 'hbp', 'sac_fly', 'sac_bunt', 'error', 'fc'] as const;
 
@@ -45,7 +45,6 @@ export function GameAtBatLogger({ atBats, onAdd, onRemove }: GameAtBatLoggerProp
     const ab: AtBat = { result, count };
     if (pitchMovement.length > 0) {
       ab.pitch_movement = { directions: pitchMovement };
-      ab.pitch_movement_profile = deriveMovementProfile(pitchMovement);
     }
     if (isAdvanced) {
       if (contactQuality) ab.contactQuality = contactQuality;
