@@ -529,13 +529,15 @@ serve(async (req) => {
     let exerciseFrequency: Record<string, number> = {};
 
     // Strength detection from custom activity exercises
-    let customWeightLbs = 0;
+    let customTopWeightLbs = 0;
     let customVolumeLbs = 0;
     let strengthExerciseCount = 0;
     const BODYWEIGHT_KEYWORDS = ['push-up','pushup','pull-up','pullup','dip','plank','lunge','squat','burpee','sit-up','situp','crunch','pike','pistol'];
     const STRENGTH_KEYWORDS = ['bench','squat','deadlift','press','curl','row','fly','raise','shrug','extension','clean','snatch','jerk','rdl','hip thrust','goblet','farmer','kettlebell','dumbbell','barbell'];
     const WEIGHT_PATTERN = /(\d+(?:\.\d+)?)\s*(?:lbs?|pounds?|kg|kilos?)/i;
     const KG_PATTERN = /(\d+(?:\.\d+)?)\s*(?:kg|kilos?)/i;
+    const SET_REP_PATTERN = /(\d+)\s*x\s*(\d+)/i;
+    const AT_WEIGHT_PATTERN = /@\s*(\d+(?:\.\d+)?)/;
 
     const customActivitiesWithStrength = new Set<string>();
     
@@ -544,10 +546,8 @@ serve(async (req) => {
       let logHasStrength = false;
       if (Array.isArray(exercises)) {
         exercises.forEach((ex: any) => {
-          const sets = ex.sets || 1;
-          const reps = typeof ex.reps === 'number' ? ex.reps : parseInt(ex.reps) || 0;
-          totalSets += sets;
-          totalReps += sets * reps;
+          let sets = ex.sets || 0;
+          let reps = typeof ex.reps === 'number' ? ex.reps : parseInt(ex.reps) || 0;
           
           // Track exercise types
           const exType = ex.type || 'other';
@@ -577,15 +577,36 @@ serve(async (req) => {
             }
           }
 
-          // Accumulate weight
+          // 3. Parse "3x8" from notes when structured sets/reps missing
+          if ((!sets || !reps) && ex.notes && typeof ex.notes === 'string') {
+            const sr = ex.notes.match(SET_REP_PATTERN);
+            if (sr) {
+              if (!sets) sets = parseInt(sr[1]);
+              if (!reps) reps = parseInt(sr[2]);
+            }
+          }
+
+          // 4. Parse "@185" from notes when no weight detected
+          if (exWeightLbs === 0 && ex.notes && typeof ex.notes === 'string') {
+            const atMatch = ex.notes.match(AT_WEIGHT_PATTERN);
+            if (atMatch) exWeightLbs = parseFloat(atMatch[1]);
+          }
+
+          // Default sets to 1 for accumulation after all parsing
+          if (!sets) sets = 1;
+
+          totalSets += sets;
+          totalReps += sets * reps;
+
+          // Accumulate weight — track top-end weight separately from volume
           if (exWeightLbs > 0) {
-            customWeightLbs += exWeightLbs * sets; // weight per set
+            customTopWeightLbs = Math.max(customTopWeightLbs, exWeightLbs);
             customVolumeLbs += exWeightLbs * sets * (reps || 1);
             logHasStrength = true;
             strengthExerciseCount++;
           } else {
-            // 3. Keyword-based detection (bodyweight or strength exercise names)
-            const nameLower = exName.toLowerCase();
+            // 5. Keyword-based detection (bodyweight or strength exercise names)
+            const nameLower = exName.toLowerCase().replace(/[^a-z0-9 ]/g, '');
             const isStrengthByKeyword = STRENGTH_KEYWORDS.some(kw => nameLower.includes(kw));
             const isBodyweightByKeyword = BODYWEIGHT_KEYWORDS.some(kw => nameLower.includes(kw));
             const isStrengthByType = exType === 'strength' || exType === 'plyometric';
@@ -604,13 +625,23 @@ serve(async (req) => {
 
     // ===== COMBINED STRENGTH METRICS =====
     const customStrengthSessions = customActivitiesWithStrength.size;
-    customWeightLbs = Math.round(customWeightLbs);
+    customTopWeightLbs = Math.round(customTopWeightLbs);
     customVolumeLbs = Math.round(customVolumeLbs);
-    const combinedWeightLifted = totalWeightLifted + customWeightLbs;
-    const combinedStrengthSessions = totalWorkouts + customStrengthSessions;
-    const strengthConfidence = customWeightLbs > 0 ? 'high' : strengthExerciseCount > 0 ? 'medium' : 'low';
+    const combinedVolumeLbs = totalWeightLifted + customVolumeLbs;
+    const combinedStrengthSessions = customStrengthSessions; // program workouts reported separately
 
-    console.log(`Custom activity strength: ${customWeightLbs} lbs weight, ${customVolumeLbs} lbs volume, ${strengthExerciseCount} strength exercises, ${customStrengthSessions} sessions, confidence: ${strengthConfidence}`);
+    // Scored confidence model
+    let confidenceScore = 0;
+    if (customVolumeLbs > 0) confidenceScore += 0.6;
+    if (strengthExerciseCount > 5) confidenceScore += 0.2;
+    if (customActivitiesWithStrength.size > 2) confidenceScore += 0.2;
+    const strengthConfidence = confidenceScore >= 0.8 ? 'high' : confidenceScore >= 0.4 ? 'medium' : 'low';
+
+    // Truth fields for AI
+    const didStrength = (totalWorkouts + combinedStrengthSessions) > 0;
+    const strengthReason = customVolumeLbs > 0 ? 'weight_detected' : strengthExerciseCount > 0 ? 'movement_detected' : 'none';
+
+    console.log(`Custom activity strength: top=${customTopWeightLbs}lbs, volume=${customVolumeLbs}lbs, exercises=${strengthExerciseCount}, sessions=${customStrengthSessions}, confidence=${strengthConfidence}, reason=${strengthReason}`);
     
     // Get top 5 most performed exercises
     const topExercises = Object.entries(exerciseFrequency)
@@ -991,7 +1022,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     let aiContent: any = {
-      executive_summary: `You completed ${combinedStrengthSessions} training sessions over the past 6 weeks${combinedWeightLifted > 0 ? `, with a combined volume of ${combinedWeightLifted.toLocaleString()} lbs` : ''}.`,
+      executive_summary: `You completed ${totalWorkouts} program workouts and ${combinedStrengthSessions} custom strength sessions over the past 6 weeks${combinedVolumeLbs > 0 ? `, with a combined volume of ${combinedVolumeLbs.toLocaleString()} lbs` : ''}.`,
       training_analysis: [],
       recovery_assessment: [],
       mental_performance: [],
@@ -1062,8 +1093,8 @@ COMPREHENSIVE DATA ANALYSIS
 1. TRAINING VOLUME & PROGRESSION
    • Program Workouts: ${totalWorkouts}${isRecoveryPhase ? ' (expected low - athlete recovering)' : ''}
    • Custom Strength Sessions Detected: ${customStrengthSessions}
-   • Combined Weight Lifted: ${combinedWeightLifted.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customWeightLbs.toLocaleString()})
-   • Custom Volume Load: ${customVolumeLbs.toLocaleString()} lbs (sets × reps × weight)
+   • Combined Volume Load: ${combinedVolumeLbs.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customVolumeLbs.toLocaleString()})
+   • Top Weight in Custom Exercises: ${customTopWeightLbs.toLocaleString()} lbs
    • Strength Detection Confidence: ${strengthConfidence}
    • Weight Increases Logged: ${totalWeightIncreases}
    • Week 1 Avg Session: ${Math.round(firstWeekAvgWeight).toLocaleString()} lbs
@@ -1169,7 +1200,7 @@ TRAINING BREAKDOWN BY TYPE:
 EXERCISE ANALYSIS (from workout/practice activities):
     • Total Sets Logged: ${totalSets} across ${Object.keys(exerciseFrequency).length} exercises
     • Total Reps Logged: ${totalReps}
-    • Total Weight Logged in Custom Exercises: ${customWeightLbs.toLocaleString()} lbs
+    • Top Weight in Custom Exercises: ${customTopWeightLbs.toLocaleString()} lbs
     • Total Volume Load (sets × reps × weight): ${customVolumeLbs.toLocaleString()} lbs
     • Strength Exercises Detected: ${strengthExerciseCount} (via weight data or exercise keywords)
     • Exercise Types: ${Object.entries(exerciseTypeDistribution).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None tracked'}
@@ -1398,18 +1429,19 @@ ${isModifiedTraining ? `
 ` : ''}
 
 ═══════════════════════════════════════════════════════════════
-STRENGTH DETECTION RULE (MANDATORY — DO NOT VIOLATE):
+STRENGTH DETECTION (SOURCE OF TRUTH — DO NOT VIOLATE):
 ═══════════════════════════════════════════════════════════════
-Combined Weight Lifted: ${combinedWeightLifted.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customWeightLbs.toLocaleString()})
-Strength Exercises Detected: ${strengthExerciseCount} (via weight data or exercise keywords)
-Custom Strength Sessions: ${customStrengthSessions}
-Strength Confidence: ${strengthConfidence}
+did_strength = ${didStrength}
+strength_reason = "${strengthReason}"
+strength_confidence = "${strengthConfidence}"
+Program Workouts: ${totalWorkouts} | Custom Strength Sessions: ${customStrengthSessions}
+Combined Volume: ${combinedVolumeLbs.toLocaleString()} lbs | Top Custom Weight: ${customTopWeightLbs.toLocaleString()} lbs
 
-- If combinedWeightLifted > 0: State "Athlete performed strength training" with confidence
-- If strengthExerciseCount > 0 but no weight data: State "Strength exercises detected (bodyweight/unweighted)"
-- If NEITHER: State "No structured strength training detected in this period"
-- NEVER say "did not lift weights" or "no strength training" if custom exercises include strength-type movements or logged weight
-- Custom activity exercises with weight data are FIRST-CLASS strength evidence
+- If did_strength = true: State "Athlete performed strength training" with confidence
+- If strength_reason = "weight_detected": Explicit weightlifting occurred
+- If strength_reason = "movement_detected": Strength-type movements detected (bodyweight/unweighted)
+- If did_strength = false: State "No strength evidence detected in this period"
+- NEVER contradict these fields. Do not infer beyond them.
 
 REQUIRED SECTIONS (return as JSON):
 
@@ -1524,11 +1556,13 @@ Return ONLY valid JSON with this exact structure:
       workout_stats: {
         total_workouts: totalWorkouts,
         total_weight: totalWeightLifted,
-        custom_weight: customWeightLbs,
-        combined_weight: combinedWeightLifted,
+        custom_top_weight: customTopWeightLbs,
+        combined_volume: combinedVolumeLbs,
         custom_volume_load: customVolumeLbs,
         strength_sessions_detected: combinedStrengthSessions,
         strength_confidence: strengthConfidence,
+        did_strength: didStrength,
+        strength_reason: strengthReason,
         weight_increases: totalWeightIncreases,
         avg_session_weight: totalWorkouts > 0 ? Math.round(totalWeightLifted / totalWorkouts) : 0,
         strength_change_percent: strengthChangePercent,
