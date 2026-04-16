@@ -21,6 +21,8 @@ export interface FolderGamePlanTask {
   completionId?: string;
   isOwner: boolean;
   performanceData?: any;
+  completionState?: 'not_started' | 'in_progress' | 'completed';
+  completionMethod?: 'none' | 'done_button' | 'check_all';
 }
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
@@ -54,6 +56,8 @@ export interface GamePlanTask {
   titleKey: string;
   descriptionKey: string;
   completed: boolean;
+  completionState?: 'not_started' | 'in_progress' | 'completed';
+  completionMethod?: 'none' | 'done_button' | 'check_all';
   icon: LucideIcon;
   link: string;
   module?: 'hitting' | 'pitching' | 'throwing';
