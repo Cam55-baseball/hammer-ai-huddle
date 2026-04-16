@@ -618,12 +618,16 @@ serve(async (req) => {
           // Accumulate weight — track top-end weight separately from volume
           if (exWeightLbs > 0) {
             customTopWeightLbs = Math.max(customTopWeightLbs, exWeightLbs);
-            customVolumeLbs += exWeightLbs * sets * (reps || 1);
+            const vol = exWeightLbs * sets * (reps || 1);
+            customVolumeLbs += vol;
+            logVolume += vol;
+            const key = normalizeExerciseName(ex.name);
+            exerciseDistribution[key] = (exerciseDistribution[key] || 0) + vol;
             logHasStrength = true;
             strengthExerciseCount++;
           } else {
             // 5. Keyword-based detection (bodyweight or strength exercise names)
-            const nameLower = exName.toLowerCase().replace(/[^a-z0-9 ]/g, '');
+            const nameLower = (ex.name || '').toString().toLowerCase().replace(/[^a-z0-9 ]/g, '');
             const isStrengthByKeyword = STRENGTH_KEYWORDS.some(kw => nameLower.includes(kw));
             const isBodyweightByKeyword = BODYWEIGHT_KEYWORDS.some(kw => nameLower.includes(kw));
             const isStrengthByType = exType === 'strength' || exType === 'plyometric';
@@ -635,6 +639,7 @@ serve(async (req) => {
           }
         });
       }
+      log.computed_volume_lbs = Math.round(logVolume);
       if (logHasStrength) {
         customActivitiesWithStrength.add(log.id);
       }
