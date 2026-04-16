@@ -1661,6 +1661,18 @@ Combined Volume: ${combinedVolumeLbs.toLocaleString()} lbs | Top Custom Weight: 
 - If did_strength = false: State "No strength evidence detected in this period"
 - NEVER contradict these fields. Do not infer beyond them.
 
+═══════════════════════════════════════════════════════════════
+COMPUTED INSIGHTS (SOURCE OF TRUTH — DO NOT INFER, ONLY EXPLAIN):
+═══════════════════════════════════════════════════════════════
+${JSON.stringify(computedInsights, null, 2)}
+
+INSTRUCTIONS FOR INSIGHTS:
+- Convert these insights to natural, athlete-facing language in your narrative
+- Do NOT calculate, infer, or contradict these insights
+- Do NOT introduce insights that are not in this list
+- Match tone to impact: high-impact = direct and confident, medium = informative
+- If the list is empty, do NOT fabricate progression/consistency/volume claims
+
 REQUIRED SECTIONS (return as JSON):
 
 1. executive_summary (3-4 sentences): High-level assessment with the most important metrics. ${isRecoveryPhase ? 'Acknowledge the recovery phase and focus on mental/psychological readiness.' : 'Lead with the key finding.'}
