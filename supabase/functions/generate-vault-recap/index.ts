@@ -634,21 +634,38 @@ serve(async (req) => {
     customTopWeightLbs = Math.round(customTopWeightLbs);
     customVolumeLbs = Math.round(customVolumeLbs);
     const combinedVolumeLbs = totalWeightLifted + customVolumeLbs;
-    // Program rows and custom logs come from different tables (no ID overlap) — sum is correct set-union size
-    const combinedStrengthSessions = programStrengthSessions + customStrengthSessions;
 
-    // Scored confidence model (tiered by volume + program signal)
+    // Date-level dedup: a single calendar day with both a program workout and a custom
+    // strength activity counts as ONE strength session (not two). This prevents inflation.
+    const strengthSessionDates = new Set<string>([
+      ...(workouts || [])
+        .filter((w: any) =>
+          (w.total_weight_lifted || 0) > 0 ||
+          (Array.isArray(w.weight_increases) && w.weight_increases.length > 0)
+        )
+        .map((w: any) => new Date(w.entry_date).toDateString()),
+      ...customActivities
+        .filter((a: any) => customActivitiesWithStrength.has(a.id))
+        .map((a: any) => new Date(a.entry_date).toDateString())
+    ]);
+    const combinedStrengthSessions = strengthSessionDates.size;
+
+    // Scored confidence model (tiered by volume + program signal), capped at 1.0
     let confidenceScore = 0;
     if (customVolumeLbs > 1000) confidenceScore += 0.6;
     else if (customVolumeLbs > 0) confidenceScore += 0.4;
     if (programStrengthSessions > 0) confidenceScore += 0.2;
     if (strengthExerciseCount > 5) confidenceScore += 0.2;
     if (customActivitiesWithStrength.size > 2) confidenceScore += 0.2;
+    confidenceScore = Math.min(confidenceScore, 1);
     const strengthConfidence = confidenceScore >= 0.8 ? 'high' : confidenceScore >= 0.4 ? 'medium' : 'low';
 
-    // Truth fields for AI — evidence-based, not raw workout count
-    const didStrength = combinedStrengthSessions > 0 || customVolumeLbs > 0 || totalWeightLifted > 0;
-    const strengthReason = customVolumeLbs > 0 || totalWeightLifted > 0 ? 'weight_detected' : strengthExerciseCount > 0 ? 'movement_detected' : 'none';
+    // Truth fields for AI — threshold-gated to prevent false positives from noise
+    const didStrength =
+      combinedStrengthSessions > 0 ||
+      customVolumeLbs > 500 ||
+      totalWeightLifted > 500;
+    const strengthReason = customVolumeLbs > 500 || totalWeightLifted > 500 ? 'weight_detected' : combinedStrengthSessions > 0 ? 'movement_detected' : 'none';
 
     console.log(`Custom activity strength: top=${customTopWeightLbs}lbs, volume=${customVolumeLbs}lbs, exercises=${strengthExerciseCount}, sessions=${customStrengthSessions}, confidence=${strengthConfidence}, reason=${strengthReason}`);
     
@@ -1103,7 +1120,7 @@ COMPREHENSIVE DATA ANALYSIS
    • Program Workouts: ${totalWorkouts}${isRecoveryPhase ? ' (expected low - athlete recovering)' : ''}
    • Program Strength Sessions: ${programStrengthSessions}
    • Custom Strength Sessions: ${customStrengthSessions}
-   • Combined Strength Sessions: ${combinedStrengthSessions}
+   • Combined Strength Sessions: ${combinedStrengthSessions} (unique training days — date-deduped union of program + custom)
    • Combined Volume Load: ${combinedVolumeLbs.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customVolumeLbs.toLocaleString()})
    • Top Weight in Custom Exercises: ${customTopWeightLbs.toLocaleString()} lbs
    • Strength Detection Confidence: ${strengthConfidence}
@@ -1571,6 +1588,7 @@ Return ONLY valid JSON with this exact structure:
         combined_volume: combinedVolumeLbs,
         custom_volume_load: customVolumeLbs,
         strength_sessions_detected: combinedStrengthSessions,
+        unique_strength_days: combinedStrengthSessions,
         program_strength_sessions: programStrengthSessions,
         custom_strength_sessions: customStrengthSessions,
         strength_confidence: strengthConfidence,
