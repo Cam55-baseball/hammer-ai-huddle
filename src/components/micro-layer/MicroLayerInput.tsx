@@ -40,12 +40,16 @@ export function MicroLayerInput({ sessionType, microLayer }: MicroLayerInputProp
 
           {/* Current rep form */}
           <div className="space-y-3 rounded-lg border border-dashed p-3">
+            {/* Always visible for hitting + pitching */}
+            {(sessionType === 'hitting' || sessionType === 'pitching') && (
+              <PitchMovementSelector
+                value={currentRep.pitch_movement?.directions ?? []}
+                onChange={v => updateField('pitch_movement', { directions: v })}
+              />
+            )}
+
             {sessionType === 'hitting' && (
               <>
-                <PitchMovementSelector
-                  value={currentRep.pitch_movement?.directions ?? []}
-                  onChange={v => updateField('pitch_movement', { directions: v })}
-                />
                 {isEnhanced && (
                   <div className="grid grid-cols-2 gap-3">
                     <PitchLocationGrid
