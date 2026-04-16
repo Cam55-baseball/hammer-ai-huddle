@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { normalizeDirections } from '@/lib/pitchMovementProfile';
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -19,16 +20,19 @@ const ARROWS: { dir: Direction; Icon: typeof ArrowUp; gridArea: string }[] = [
 export function PitchMovementSelector({ value, onChange }: PitchMovementSelectorProps) {
   const toggle = useCallback(
     (dir: Direction) => {
+      let next: Direction[];
       if (value.includes(dir)) {
-        onChange(value.filter(d => d !== dir));
+        next = value.filter(d => d !== dir);
       } else if (value.length < 2) {
-        onChange([...value, dir]);
+        next = [...value, dir];
+      } else {
+        // Replace oldest selection
+        next = [value[1], dir];
       }
+      onChange(normalizeDirections(next));
     },
     [value, onChange],
   );
-
-  const isLocked = value.length >= 2;
 
   return (
     <div className="space-y-1">
@@ -42,20 +46,17 @@ export function PitchMovementSelector({ value, onChange }: PitchMovementSelector
       >
         {ARROWS.map(({ dir, Icon, gridArea }) => {
           const selected = value.includes(dir);
-          const disabled = !selected && isLocked;
           return (
             <button
               key={dir}
               type="button"
-              onClick={() => !disabled && toggle(dir)}
+              onClick={() => toggle(dir)}
               style={{ gridArea }}
               className={cn(
                 'flex items-center justify-center rounded-md border transition-all',
                 selected
                   ? 'bg-primary text-primary-foreground border-primary scale-110 shadow-sm'
-                  : disabled
-                    ? 'bg-muted/20 text-muted-foreground/30 border-transparent cursor-not-allowed'
-                    : 'bg-muted/40 text-muted-foreground hover:bg-accent hover:text-accent-foreground border-input',
+                  : 'bg-muted/40 text-muted-foreground hover:bg-accent hover:text-accent-foreground border-input',
               )}
             >
               <Icon className="h-4 w-4" />

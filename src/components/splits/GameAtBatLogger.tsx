@@ -10,6 +10,7 @@ import { useDataDensityLevel } from '@/hooks/useDataDensityLevel';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { Plus, Trash2 } from 'lucide-react';
 import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
+import { deriveMovementProfile } from '@/lib/pitchMovementProfile';
 
 const RESULTS = ['single', 'double', 'triple', 'home_run', 'walk', 'strikeout', 'flyout', 'groundout', 'lineout', 'hbp', 'sac_fly', 'sac_bunt', 'error', 'fc'] as const;
 
@@ -19,7 +20,8 @@ interface AtBat {
   contactQuality?: string;
   exitDirection?: string;
   pitchLocation?: { row: number; col: number };
-  pitchMovement?: { directions: ('up' | 'down' | 'left' | 'right')[] };
+  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[] };
+  pitch_movement_profile?: string;
 }
 
 interface GameAtBatLoggerProps {
@@ -41,7 +43,10 @@ export function GameAtBatLogger({ atBats, onAdd, onRemove }: GameAtBatLoggerProp
   const handleAdd = useCallback(() => {
     if (!result) return;
     const ab: AtBat = { result, count };
-    if (pitchMovement.length > 0) ab.pitchMovement = { directions: pitchMovement };
+    if (pitchMovement.length > 0) {
+      ab.pitch_movement = { directions: pitchMovement };
+      ab.pitch_movement_profile = deriveMovementProfile(pitchMovement);
+    }
     if (isAdvanced) {
       if (contactQuality) ab.contactQuality = contactQuality;
       if (exitDirection) ab.exitDirection = exitDirection;
@@ -62,7 +67,6 @@ export function GameAtBatLogger({ atBats, onAdd, onRemove }: GameAtBatLoggerProp
         <CardTitle className="text-lg">Game At-Bats</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Logged at-bats */}
         {atBats.map((ab, i) => (
           <div key={i} className="flex items-center justify-between rounded border p-2 text-sm">
             <span className="font-medium capitalize">#{i + 1}: {ab.result.replace('_', ' ')}</span>
@@ -72,7 +76,6 @@ export function GameAtBatLogger({ atBats, onAdd, onRemove }: GameAtBatLoggerProp
           </div>
         ))}
 
-        {/* New at-bat form */}
         <div className="space-y-3 rounded-lg border border-dashed p-3">
           <Select value={result} onValueChange={setResult}>
             <SelectTrigger><SelectValue placeholder="Select result" /></SelectTrigger>
