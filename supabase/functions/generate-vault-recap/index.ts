@@ -191,9 +191,15 @@ serve(async (req) => {
 
     // ========== WORKOUT ANALYSIS ==========
     const totalWorkouts = workouts?.length || 0;
+    // per-workout aggregate volume from program workouts
     const totalWeightLifted = workouts?.reduce((sum, w) => sum + (w.total_weight_lifted || 0), 0) || 0;
     const weightIncreases = workouts?.flatMap(w => w.weight_increases || []) || [];
     const totalWeightIncreases = weightIncreases.length;
+    // A program workout counts as strength if it logged weight OR reported weight increases
+    const programStrengthSessions = workouts?.filter(w =>
+      (w.total_weight_lifted || 0) > 0 ||
+      (Array.isArray(w.weight_increases) && w.weight_increases.length > 0)
+    ).length || 0;
     
     // First vs Last week comparison
     const firstWeekWorkouts = workouts?.filter(w => {
@@ -533,7 +539,7 @@ serve(async (req) => {
     let customVolumeLbs = 0;
     let strengthExerciseCount = 0;
     const BODYWEIGHT_KEYWORDS = ['push-up','pushup','pull-up','pullup','dip','plank','lunge','squat','burpee','sit-up','situp','crunch','pike','pistol'];
-    const STRENGTH_KEYWORDS = ['bench','squat','deadlift','press','curl','row','fly','raise','shrug','extension','clean','snatch','jerk','rdl','hip thrust','goblet','farmer','kettlebell','dumbbell','barbell'];
+    const STRENGTH_KEYWORDS = ['bench','squat','deadlift','press','curl','row','fly','raise','shrug','extension','clean','snatch','jerk','rdl','hip thrust','goblet','farmer','kettlebell','dumbbell','barbell','db','bb','ohp','incline','decline','chin','lat','tricep','bicep','glute','hamstring','quad','calf'];
     const WEIGHT_PATTERN = /(\d+(?:\.\d+)?)\s*(?:lbs?|pounds?|kg|kilos?)/i;
     const KG_PATTERN = /(\d+(?:\.\d+)?)\s*(?:kg|kilos?)/i;
     const SET_REP_PATTERN = /(\d+)\s*x\s*(\d+)/i;
@@ -628,18 +634,21 @@ serve(async (req) => {
     customTopWeightLbs = Math.round(customTopWeightLbs);
     customVolumeLbs = Math.round(customVolumeLbs);
     const combinedVolumeLbs = totalWeightLifted + customVolumeLbs;
-    const combinedStrengthSessions = customStrengthSessions; // program workouts reported separately
+    // Program rows and custom logs come from different tables (no ID overlap) — sum is correct set-union size
+    const combinedStrengthSessions = programStrengthSessions + customStrengthSessions;
 
-    // Scored confidence model
+    // Scored confidence model (tiered by volume + program signal)
     let confidenceScore = 0;
-    if (customVolumeLbs > 0) confidenceScore += 0.6;
+    if (customVolumeLbs > 1000) confidenceScore += 0.6;
+    else if (customVolumeLbs > 0) confidenceScore += 0.4;
+    if (programStrengthSessions > 0) confidenceScore += 0.2;
     if (strengthExerciseCount > 5) confidenceScore += 0.2;
     if (customActivitiesWithStrength.size > 2) confidenceScore += 0.2;
     const strengthConfidence = confidenceScore >= 0.8 ? 'high' : confidenceScore >= 0.4 ? 'medium' : 'low';
 
-    // Truth fields for AI
-    const didStrength = (totalWorkouts + combinedStrengthSessions) > 0;
-    const strengthReason = customVolumeLbs > 0 ? 'weight_detected' : strengthExerciseCount > 0 ? 'movement_detected' : 'none';
+    // Truth fields for AI — evidence-based, not raw workout count
+    const didStrength = combinedStrengthSessions > 0 || customVolumeLbs > 0 || totalWeightLifted > 0;
+    const strengthReason = customVolumeLbs > 0 || totalWeightLifted > 0 ? 'weight_detected' : strengthExerciseCount > 0 ? 'movement_detected' : 'none';
 
     console.log(`Custom activity strength: top=${customTopWeightLbs}lbs, volume=${customVolumeLbs}lbs, exercises=${strengthExerciseCount}, sessions=${customStrengthSessions}, confidence=${strengthConfidence}, reason=${strengthReason}`);
     
@@ -1092,7 +1101,9 @@ COMPREHENSIVE DATA ANALYSIS
 
 1. TRAINING VOLUME & PROGRESSION
    • Program Workouts: ${totalWorkouts}${isRecoveryPhase ? ' (expected low - athlete recovering)' : ''}
-   • Custom Strength Sessions Detected: ${customStrengthSessions}
+   • Program Strength Sessions: ${programStrengthSessions}
+   • Custom Strength Sessions: ${customStrengthSessions}
+   • Combined Strength Sessions: ${combinedStrengthSessions}
    • Combined Volume Load: ${combinedVolumeLbs.toLocaleString()} lbs (Program: ${totalWeightLifted.toLocaleString()} | Custom: ${customVolumeLbs.toLocaleString()})
    • Top Weight in Custom Exercises: ${customTopWeightLbs.toLocaleString()} lbs
    • Strength Detection Confidence: ${strengthConfidence}
@@ -1434,7 +1445,7 @@ STRENGTH DETECTION (SOURCE OF TRUTH — DO NOT VIOLATE):
 did_strength = ${didStrength}
 strength_reason = "${strengthReason}"
 strength_confidence = "${strengthConfidence}"
-Program Workouts: ${totalWorkouts} | Custom Strength Sessions: ${customStrengthSessions}
+Program Workouts: ${totalWorkouts} | Program Strength: ${programStrengthSessions} | Custom Strength: ${customStrengthSessions} | Combined: ${combinedStrengthSessions}
 Combined Volume: ${combinedVolumeLbs.toLocaleString()} lbs | Top Custom Weight: ${customTopWeightLbs.toLocaleString()} lbs
 
 - If did_strength = true: State "Athlete performed strength training" with confidence
@@ -1560,6 +1571,8 @@ Return ONLY valid JSON with this exact structure:
         combined_volume: combinedVolumeLbs,
         custom_volume_load: customVolumeLbs,
         strength_sessions_detected: combinedStrengthSessions,
+        program_strength_sessions: programStrengthSessions,
+        custom_strength_sessions: customStrengthSessions,
         strength_confidence: strengthConfidence,
         did_strength: didStrength,
         strength_reason: strengthReason,
