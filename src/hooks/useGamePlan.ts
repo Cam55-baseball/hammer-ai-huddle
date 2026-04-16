@@ -1584,5 +1584,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     toggleFolderItemCompletion,
     saveFolderCheckboxState,
     saveFolderPerformanceData,
+    setFolderItemCompletionState,
+    markFolderItemAllAndComplete,
+    reopenFolderItem,
   };
 }
