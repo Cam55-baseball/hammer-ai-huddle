@@ -1,66 +1,102 @@
 
 
-## Why the previous plan didn't finish
+# Game Plan Activity Cards — Progress vs Completion Separation
 
-The selector was added but **placed inside the `{isHitting && (<>...</>)}` fragment** (line 792 opens, line 1135 closes). The selector at line 894 is therefore unreachable in pitching sessions. The plan said "place it once outside both blocks" but it was actually nested inside the hitting branch.
+## Core Problem
+A DB trigger (`derive_activity_completion`) currently overwrites `completed` based purely on whether all checkboxes are checked. This conflicts with the new spec: **completion must reflect user intent**, not derived state. Checkbox progress and completion need to become independent.
 
-## Two bugs to fix in `src/components/practice/RepScorer.tsx`
+## Data Model Changes
 
-### Bug 1 — PitchMovementSelector invisible in pitching sessions
-Currently at lines 894–906, **inside the `isHitting` fragment**. Needs to be moved out.
-
-**Fix:** Cut the block from lines 894–906 and re-insert it as a **shared block after the pitching `{isPitching && (<>...</>)}` fragment closes** (after line ~1561 — I'll find exact close line at implementation). It will be gated only by `(isHitting || isPitching)` and live at the same indentation level as the `{isHitting && ...}` and `{isPitching && ...}` blocks themselves. This guarantees a single render path for both modules with zero duplication and no `mode === 'advanced'` gating.
-
-### Bug 2 — Duplicate / mislabeled "Pitcher Hand" prompt in pitching sessions
-Root cause: when a pitcher picks `live_bp` rep source, `REQUIRES_THROWER_HAND` (line 136 of `RepSourceSelector.tsx`) fires the sub-field at line 700, labeled "Pitcher Hand". For pitching sessions this is meaningless (already captured at SessionIntentGate) — what's actually needed is the **batter's side**.
-
-**Fix:** Change the label and the field it writes based on module:
-- In a **pitching** session → label "Batter Side (L/R)", writes to `current.batter_side` only
-- In a **hitting** session → keep current "Pitcher Hand (L/R)", writes to `thrower_hand` + `pitcher_hand`
-
-```tsx
-{needsThrowerHand && !isMachine && (
-  <div>
-    <Label className="text-xs text-muted-foreground mb-1 block">
-      {isPitching ? 'Batter Side (L/R)' : 'Pitcher Hand (L/R)'} <span className="text-destructive">*</span>
-    </Label>
-    <div className="grid grid-cols-2 gap-2">
-      {(['L', 'R'] as const).map(h => {
-        const selected = isPitching ? current.batter_side === h : current.thrower_hand === h;
-        return (
-          <button
-            key={h}
-            type="button"
-            onClick={() => {
-              if (isPitching) {
-                updateField('batter_side', h);
-              } else {
-                updateField('thrower_hand', h);
-                updateField('pitcher_hand', h);
-              }
-            }}
-            className={cn(/* unchanged */)}
-          >
-            {h === 'L' ? 'Left' : 'Right'}
-          </button>
-        );
-      })}
-    </div>
-  </div>
-)}
+### Migration on `custom_activity_logs`
+Add two columns:
+```sql
+ALTER TABLE custom_activity_logs
+  ADD COLUMN completion_state text NOT NULL DEFAULT 'not_started'
+    CHECK (completion_state IN ('not_started','in_progress','completed')),
+  ADD COLUMN completion_method text NOT NULL DEFAULT 'none'
+    CHECK (completion_method IN ('none','done_button','check_all'));
 ```
 
-This also makes the existing "Hitter Side (L/R)" advanced-mode block (lines 1185–1207) redundant for `live_bp`/`game`/`sim_game` — but I'll leave it alone for `flat_ground_vs_hitter`/`bullpen_vs_hitter` (which aren't in `REQUIRES_THROWER_HAND`) so those still get a way to set batter side. No regression.
+Backfill from existing `completed` flag:
+- `completed = true` → `completion_state='completed'`, `completion_method='check_all'` (best guess for legacy)
+- `completed = false` + has any checked boxes → `'in_progress'`
+- otherwise → `'not_started'`
 
-## Verification (after edits)
-1. Start a **pitching** session → Movement Direction selector renders (Quick mode, not Advanced).
-2. Pick `live_bp` rep source → label says **"Batter Side (L/R)"**, writes to `batter_side`. No "Pitcher Hand" prompt.
-3. Start a **hitting** session → Movement Direction renders; `live_bp` still shows "Pitcher Hand".
-4. Other modules (fielding/bunting/throwing/baserunning) → Movement Direction does NOT render.
+### Replace the auto-derive trigger
+Drop `trigger_derive_activity_completion` and replace with a **progress-only** trigger that updates `completion_state` based on checkboxes WITHOUT forcing completion:
 
-## Files
+```text
+On INSERT/UPDATE of performance_data:
+  if completion_state == 'completed': do nothing (preserve user intent)
+  else:
+    anyChecked = any(checkboxStates) == true
+    completion_state = anyChecked ? 'in_progress' : 'not_started'
+    completion_method = 'none'
+```
+
+Keep `completed` column in sync as a derived mirror: `completed := (completion_state = 'completed')` so existing reads keep working.
+
+### Folder items (`folder_item_completions`)
+Same two columns added; same trigger logic. (Folder cards share the checkbox UI in `GamePlanCard`.)
+
+## Frontend Changes
+
+### `CustomActivityDetailDialog.tsx`
+Replace single "Check All & Complete / Uncheck All" button with **two buttons**:
+
+| Button | Label | Variant | Logic |
+|--------|-------|---------|-------|
+| Primary | "Finish for now" | filled | `onDone()` — if any checked → state=`completed`, method=`done_button`. Does NOT auto-check remaining boxes. |
+| Secondary | "Mark all complete" | outline | `onCheckAll()` — sets all `checkboxStates[*] = true`, state=`completed`, method=`check_all`. |
+
+When `completion_state === 'completed'`:
+- Show pill: `'Fully completed'` (method=`check_all` or all boxes checked) or `'Completed (partial)'` (method=`done_button` and some unchecked).
+- Replace primary with **"Reopen"** that flips state back to `in_progress` (or `not_started` if no boxes checked), method=`none`.
+
+Checkbox `onToggleCheckbox` keeps persisting immediately. **Remove the auto-complete and un-complete branches** (lines 2120–2153 in `GamePlanCard.tsx`) — checkbox toggles never change `completion_state` to `completed`. They only flip between `not_started` ↔ `in_progress` (handled server-side by the new trigger).
+
+If user unchecks a box while state is `completed` AND method was `check_all` → frontend explicitly demotes to `in_progress`, method=`none` (the "user previously clicked Check All then unchecks" rule).
+
+### `GamePlanCard.tsx` — wire up new handlers
+Add to `CustomActivityDetailDialog` props:
+- `onDone(): Promise<void>`
+- `onCheckAll(): Promise<void>`
+- `onReopen(): Promise<void>`
+
+Each calls a new method on `useCustomActivities`:
+- `setCompletionState(templateId, state, method, opts?)` — single point of write.
+- `markAllCheckboxesAndComplete(templateId)` — patches `performance_data.checkboxStates` to all true + sets state.
+
+### `useCustomActivities.ts` & `useGamePlan.ts`
+- Read & expose `completion_state`, `completion_method` on each log/task.
+- Derive `task.completed` from `completion_state === 'completed'` (no behavior change for downstream).
+- Add `setCompletionState` and `markAllCheckboxesAndComplete` mutators with optimistic UI.
+- Expose `completion_state` on `GamePlanTask` so the card can render the partial/full pill.
+
+### `useGamePlan.ts` — folder tasks
+Mirror the same on `toggleFolderItemCompletion` / `saveFolderCheckboxState`: split into `markFolderDone` and `markFolderAllComplete`.
+
+### Card list view (collapsed cards in `GamePlanCard.tsx`)
+For activities with `completion_state === 'in_progress'`, show a small progress dot/badge ("In progress · 2/5"). Existing checkmark UI remains for `completed`.
+
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/practice/RepScorer.tsx` | Move PitchMovementSelector block out of `isHitting` fragment to a shared `(isHitting \|\| isPitching)` block; module-aware label + handler for `needsThrowerHand` sub-field |
+| `supabase/migrations/<new>.sql` | Add `completion_state` / `completion_method` columns to `custom_activity_logs` and `folder_item_completions`; backfill; drop & replace `derive_activity_completion` trigger with progress-only version |
+| `src/hooks/useCustomActivities.ts` | Read new columns; add `setCompletionState`, `markAllCheckboxesAndComplete`, `reopenActivity` |
+| `src/hooks/useGamePlan.ts` | Surface `completion_state`/`completion_method` on `GamePlanTask` and folder tasks; equivalents for folder items |
+| `src/components/CustomActivityDetailDialog.tsx` | Split single button into "Finish for now" + "Mark all complete"; add Reopen state; show partial/full pill; new props |
+| `src/components/GamePlanCard.tsx` | Wire `onDone` / `onCheckAll` / `onReopen`; remove auto-complete-on-all-checked logic in `onToggleCheckbox`; demote method to `none` when user unchecks after a check_all; add in-progress badge in card list |
+
+## Non-Negotiables Preserved
+- ✅ Checkbox toggles persist immediately and independently of completion buttons.
+- ✅ Trigger never sets `completion_state='completed'` on its own.
+- ✅ Returning users see prior checkbox state untouched.
+- ✅ `completion_method='done_button'` does NOT auto-check remaining boxes.
+- ✅ Unchecking a box after `check_all` demotes to `in_progress`.
+
+## Out of Scope
+- Section-wide "complete day" UX (already exists via `isDayComplete`).
+- Migration of historical records' `completion_method` beyond best-guess backfill.
 
