@@ -696,29 +696,38 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
           </div>
           )}
 
-          {/* Pitcher handedness sub-field (hitting reps — non-machine) */}
+          {/* Pitcher hand (hitting) / Batter side (pitching) sub-field — non-machine */}
           {needsThrowerHand && !isMachine && (
             <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Pitcher Hand (L/R) <span className="text-destructive">*</span></Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">
+                {isPitching ? 'Batter Side (L/R)' : 'Pitcher Hand (L/R)'} <span className="text-destructive">*</span>
+              </Label>
               <div className="grid grid-cols-2 gap-2">
-                {(['L', 'R'] as const).map(h => (
-                  <button
-                    key={h}
-                    type="button"
-                    onClick={() => {
-                      updateField('thrower_hand', h);
-                      updateField('pitcher_hand', h);
-                    }}
-                    className={cn(
-                      'rounded-md border p-2 text-xs font-medium transition-all',
-                      current.thrower_hand === h
-                        ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
-                        : 'bg-muted/30 border-border hover:bg-muted'
-                    )}
-                  >
-                    {h === 'L' ? 'Left' : 'Right'}
-                  </button>
-                ))}
+                {(['L', 'R'] as const).map(h => {
+                  const selected = isPitching ? current.batter_side === h : current.thrower_hand === h;
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => {
+                        if (isPitching) {
+                          updateField('batter_side', h);
+                        } else {
+                          updateField('thrower_hand', h);
+                          updateField('pitcher_hand', h);
+                        }
+                      }}
+                      className={cn(
+                        'rounded-md border p-2 text-xs font-medium transition-all',
+                        selected
+                          ? 'bg-primary/20 border-primary text-primary ring-1 ring-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted'
+                      )}
+                    >
+                      {h === 'L' ? 'Left' : 'Right'}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
