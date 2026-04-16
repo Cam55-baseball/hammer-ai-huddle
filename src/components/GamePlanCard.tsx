@@ -2056,6 +2056,29 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             handleCustomActivityToggle(selectedCustomTask);
           }
         }}
+        onDone={async () => {
+          if (!selectedCustomTask?.customActivityData) return;
+          const template = selectedCustomTask.customActivityData.template;
+          await setCompletionState(template.id, 'completed', 'done_button');
+          triggerCelebration();
+          toast.success(t('customActivity.markedComplete', 'Marked complete'));
+          refetch();
+        }}
+        onCheckAll={async () => {
+          if (!selectedCustomTask?.customActivityData) return;
+          const template = selectedCustomTask.customActivityData.template;
+          const allIds = getAllCheckableIds(template);
+          await markAllCheckboxesAndComplete(template.id, allIds);
+          triggerCelebration();
+          toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'));
+          refetch();
+        }}
+        onReopen={async () => {
+          if (!selectedCustomTask?.customActivityData) return;
+          const template = selectedCustomTask.customActivityData.template;
+          await reopenActivity(template.id);
+          refetch();
+        }}
         onEdit={() => {
           if (selectedCustomTask) {
             handleCustomActivityFullEdit(selectedCustomTask);
