@@ -1,4 +1,5 @@
 import { useDataDensityLevel } from '@/hooks/useDataDensityLevel';
+import { deriveMovementKey } from '@/lib/pitchMovementProfile';
 import { useMicroLayerInput, MicroLayerData } from '@/hooks/useMicroLayerInput';
 import { DataDensityGate } from './DataDensityGate';
 import { PitchLocationGrid } from './PitchLocationGrid';
@@ -44,7 +45,7 @@ export function MicroLayerInput({ sessionType, microLayer }: MicroLayerInputProp
             {(sessionType === 'hitting' || sessionType === 'pitching') && (
               <PitchMovementSelector
                 value={currentRep.pitch_movement?.directions ?? []}
-                onChange={v => updateField('pitch_movement', { directions: v, key: v.length ? [...v].sort().join('_') : 'straight' })}
+                onChange={v => updateField('pitch_movement', { directions: v, key: deriveMovementKey(v) })}
               />
             )}
 

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
-import { normalizeDirections, deriveMovementKey } from '@/lib/pitchMovementProfile';
+import { normalizeDirections, deriveMovementKey, type MovementKey } from '@/lib/pitchMovementProfile';
 import { cn } from '@/lib/utils';
 
 
@@ -37,7 +37,7 @@ export interface PitchData {
   spray_direction?: string;
   contact_quality?: string;
   batted_ball_type?: string;
-  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[]; key: string };
+  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[]; key: MovementKey };
   pitch_movement_profile?: string;
 }
 
