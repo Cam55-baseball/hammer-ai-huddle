@@ -668,7 +668,197 @@ serve(async (req) => {
     const strengthReason = customVolumeLbs > 500 || totalWeightLifted > 500 ? 'weight_detected' : combinedStrengthSessions > 0 ? 'movement_detected' : 'none';
 
     console.log(`Custom activity strength: top=${customTopWeightLbs}lbs, volume=${customVolumeLbs}lbs, exercises=${strengthExerciseCount}, sessions=${customStrengthSessions}, confidence=${strengthConfidence}, reason=${strengthReason}`);
-    
+
+    // ============================================================
+    // INSIGHT ENGINE — deterministic layer between aggregates and AI
+    // ============================================================
+    type InsightType = 'progression' | 'consistency' | 'volume' | 'imbalance' | 'intensity';
+    interface Insight {
+      type: InsightType;
+      title: string;
+      description: string;
+      confidence: 'high' | 'medium' | 'low';
+      impact: 'high' | 'medium' | 'low';
+      direction?: 'positive' | 'negative' | 'neutral';
+      metric?: { current: number; previous?: number; change?: number; unit?: string };
+    }
+
+    // Build per-week buckets across the 6-week (42-day) window
+    const WEEK_COUNT = 6;
+    const weeklyVolume: number[] = Array(WEEK_COUNT).fill(0);
+    const weeklyStrengthSessions: number[] = Array(WEEK_COUNT).fill(0);
+    const exerciseDistribution: Record<string, number> = {};
+    const weekIndexFor = (dateStr: string): number => {
+      const d = new Date(dateStr);
+      const diffDays = Math.floor((d.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      return Math.max(0, Math.min(WEEK_COUNT - 1, Math.floor(diffDays / 7)));
+    };
+
+    (workouts || []).forEach((w: any) => {
+      const wi = weekIndexFor(w.entry_date);
+      weeklyVolume[wi] += (w.total_weight_lifted || 0);
+    });
+    customActivities.forEach((log: any) => {
+      const wi = weekIndexFor(log.entry_date);
+      const exercises = log.custom_activity_templates?.exercises || [];
+      if (Array.isArray(exercises)) {
+        exercises.forEach((ex: any) => {
+          let sets = ex.sets || 0;
+          let reps = typeof ex.reps === 'number' ? ex.reps : parseInt(ex.reps) || 0;
+          let exWeightLbs = 0;
+          if (ex.weight && typeof ex.weight === 'number' && ex.weight > 0) {
+            const unit = (ex.weightUnit || 'lbs').toLowerCase();
+            exWeightLbs = unit === 'kg' ? ex.weight * 2.20462 : ex.weight;
+          }
+          if (exWeightLbs === 0 && ex.notes && typeof ex.notes === 'string') {
+            const kgMatch = ex.notes.match(KG_PATTERN);
+            const lbMatch = ex.notes.match(WEIGHT_PATTERN);
+            if (kgMatch) exWeightLbs = parseFloat(kgMatch[1]) * 2.20462;
+            else if (lbMatch) exWeightLbs = parseFloat(lbMatch[1]);
+          }
+          if ((!sets || !reps) && ex.notes && typeof ex.notes === 'string') {
+            const sr = ex.notes.match(SET_REP_PATTERN);
+            if (sr) { if (!sets) sets = parseInt(sr[1]); if (!reps) reps = parseInt(sr[2]); }
+          }
+          if (exWeightLbs === 0 && ex.notes && typeof ex.notes === 'string') {
+            const atMatch = ex.notes.match(AT_WEIGHT_PATTERN);
+            if (atMatch) exWeightLbs = parseFloat(atMatch[1]);
+          }
+          if (!sets) sets = 1;
+          if (exWeightLbs > 0) {
+            const vol = exWeightLbs * sets * (reps || 1);
+            weeklyVolume[wi] += vol;
+            const key = (ex.name || 'Unknown').toString().toLowerCase().trim();
+            exerciseDistribution[key] = (exerciseDistribution[key] || 0) + vol;
+          }
+        });
+      }
+    });
+    Array.from(strengthSessionDates).forEach((dateStr) => {
+      const wi = weekIndexFor(dateStr);
+      weeklyStrengthSessions[wi] += 1;
+    });
+
+    const firstHalfVolume = weeklyVolume.slice(0, 3).reduce((a, b) => a + b, 0);
+    const secondHalfVolume = weeklyVolume.slice(3, 6).reduce((a, b) => a + b, 0);
+    const totalSessions = weeklyStrengthSessions.reduce((a, b) => a + b, 0);
+    const avgSessionsPerWeek = totalSessions / WEEK_COUNT;
+    const sessionsVariance = weeklyStrengthSessions.reduce((acc, v) => acc + Math.pow(v - avgSessionsPerWeek, 2), 0) / WEEK_COUNT;
+    const sessionsPerWeekStdDev = Math.sqrt(sessionsVariance);
+
+    const insights: Insight[] = [];
+
+    // A. Progression
+    if (firstHalfVolume > 0 && totalSessions >= 3) {
+      const change = (secondHalfVolume - firstHalfVolume) / firstHalfVolume;
+      if (Math.abs(change) >= 0.1) {
+        const positive = change > 0;
+        insights.push({
+          type: 'progression',
+          direction: positive ? 'positive' : 'negative',
+          impact: Math.abs(change) > 0.2 ? 'high' : 'medium',
+          confidence: strengthSessionDates.size >= 6 ? 'high' : 'medium',
+          metric: { current: Math.round(secondHalfVolume), previous: Math.round(firstHalfVolume), change: Math.round(change * 100), unit: '%' },
+          title: positive ? 'Strength Volume Trending Up' : 'Strength Volume Declined',
+          description: `Lifting volume ${positive ? 'increased' : 'decreased'} by ${Math.abs(Math.round(change * 100))}% from weeks 1–3 to weeks 4–6.`,
+        });
+      }
+    }
+
+    // B. Consistency (need at least 3 sessions to judge)
+    if (totalSessions >= 3) {
+      const lowVariance = sessionsPerWeekStdDev < 1.0;
+      const weeksWithoutSessions = weeklyStrengthSessions.filter(v => v === 0).length;
+      if (lowVariance && avgSessionsPerWeek >= 1) {
+        insights.push({
+          type: 'consistency',
+          direction: 'positive',
+          impact: 'medium',
+          confidence: 'high',
+          metric: { current: Number(avgSessionsPerWeek.toFixed(1)), unit: 'sessions/week' },
+          title: 'Consistent Training Cadence',
+          description: `Trained ${avgSessionsPerWeek.toFixed(1)} sessions/week with low week-to-week variance.`,
+        });
+      } else if (weeksWithoutSessions >= 2) {
+        insights.push({
+          type: 'consistency',
+          direction: 'negative',
+          impact: 'medium',
+          confidence: 'high',
+          metric: { current: weeksWithoutSessions, unit: 'empty weeks' },
+          title: 'Inconsistent Training Pattern',
+          description: `Training was uneven — ${weeksWithoutSessions} of 6 weeks had no strength sessions.`,
+        });
+      }
+    }
+
+    // C. Volume Load
+    if (combinedVolumeLbs > 30000) {
+      insights.push({
+        type: 'volume',
+        direction: 'positive',
+        impact: 'high',
+        confidence: 'high',
+        metric: { current: combinedVolumeLbs, unit: 'lbs' },
+        title: 'High Total Training Load',
+        description: `Moved ${combinedVolumeLbs.toLocaleString()} lbs of total volume across the cycle.`,
+      });
+    } else if (totalSessions > 0 && combinedVolumeLbs < 5000) {
+      insights.push({
+        type: 'volume',
+        direction: 'negative',
+        impact: 'medium',
+        confidence: 'medium',
+        metric: { current: combinedVolumeLbs, unit: 'lbs' },
+        title: 'Low Total Training Load',
+        description: `Total lifting volume of ${combinedVolumeLbs.toLocaleString()} lbs was below typical baseline.`,
+      });
+    }
+
+    // D. Imbalance
+    const totalExerciseVolume = Object.values(exerciseDistribution).reduce((a, b) => a + b, 0);
+    if (totalExerciseVolume > 0) {
+      const sortedEx = Object.entries(exerciseDistribution).sort(([, a], [, b]) => b - a);
+      const [topName, topVol] = sortedEx[0];
+      const share = topVol / totalExerciseVolume;
+      if (share > 0.5 && sortedEx.length >= 2) {
+        insights.push({
+          type: 'imbalance',
+          direction: 'negative',
+          impact: 'medium',
+          confidence: 'medium',
+          metric: { current: Math.round(share * 100), unit: '%' },
+          title: 'Training Distribution Skewed',
+          description: `${Math.round(share * 100)}% of strength volume came from a single exercise (${topName}).`,
+        });
+      }
+    }
+
+    // E. Intensity
+    const maxWeight = Math.max(customTopWeightLbs, ...((workouts || []).map((w: any) => w.max_weight || 0)));
+    if (maxWeight >= 200) {
+      insights.push({
+        type: 'intensity',
+        direction: 'positive',
+        impact: maxWeight >= 300 ? 'high' : 'medium',
+        confidence: 'high',
+        metric: { current: Math.round(maxWeight), unit: 'lbs' },
+        title: 'Heavy Intensity Detected',
+        description: `Top working weight reached ${Math.round(maxWeight).toLocaleString()} lbs — high-intensity lifting present.`,
+      });
+    }
+
+    // Rank + cap
+    const rankScore = (i: Insight) =>
+      ({ high: 3, medium: 2, low: 1 } as const)[i.impact] * 2 +
+      ({ high: 3, medium: 2, low: 1 } as const)[i.confidence];
+    const computedInsights = insights
+      .filter(i => i.confidence !== 'low')
+      .sort((a, b) => rankScore(b) - rankScore(a))
+      .slice(0, 5);
+
+    console.log(`InsightEngine: produced ${computedInsights.length} insights`, computedInsights.map(i => `${i.type}/${i.direction}/${i.impact}`));
+
     // Get top 5 most performed exercises
     const topExercises = Object.entries(exerciseFrequency)
       .sort(([,a], [,b]) => b - a)
