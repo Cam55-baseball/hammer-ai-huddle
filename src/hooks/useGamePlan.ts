@@ -647,17 +647,23 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
         // Fetch completions for today
         const itemIds = todayItems.map(i => i.id);
-        let completionsMap: Record<string, { id: string; completed: boolean; performanceData?: any }> = {};
+        let completionsMap: Record<string, { id: string; completed: boolean; performanceData?: any; completion_state?: string; completion_method?: string }> = {};
         if (itemIds.length > 0) {
           const { data: completionsData } = await supabase
             .from('folder_item_completions')
-            .select('id, folder_item_id, completed, performance_data')
+            .select('id, folder_item_id, completed, performance_data, completion_state, completion_method')
             .eq('user_id', user.id)
             .eq('entry_date', today)
             .in('folder_item_id', itemIds);
           
           (completionsData || []).forEach((c: any) => {
-            completionsMap[c.folder_item_id] = { id: c.id, completed: c.completed, performanceData: c.performance_data };
+            completionsMap[c.folder_item_id] = {
+              id: c.id,
+              completed: c.completed,
+              performanceData: c.performance_data,
+              completion_state: c.completion_state,
+              completion_method: c.completion_method,
+            };
           });
         }
 
@@ -676,6 +682,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
             completionId: completion?.id,
             isOwner: folder.owner_id === user.id,
             performanceData: completion?.performanceData || null,
+            completionState: (completion?.completion_state as any) || 'not_started',
+            completionMethod: (completion?.completion_method as any) || 'none',
           };
         });
 
