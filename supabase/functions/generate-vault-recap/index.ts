@@ -1783,6 +1783,7 @@ Return ONLY valid JSON with this exact structure:
     // Build full recap data with all stats
     const recapData = {
       ...aiContent,
+      computed_insights: computedInsights,
       workout_stats: {
         total_workouts: totalWorkouts,
         total_weight: totalWeightLifted,
