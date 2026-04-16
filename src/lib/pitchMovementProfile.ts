@@ -24,7 +24,7 @@ export const PROFILE_MAP: Record<string, string> = {
   'straight': 'straight',
 };
 
-// Kept for backward compat — delegates to deriveMovementKey
+/** @deprecated Use deriveMovementKey instead — this alias will be removed */
 export function deriveMovementProfile(dirs: Direction[]): string {
   return deriveMovementKey(dirs);
 }
