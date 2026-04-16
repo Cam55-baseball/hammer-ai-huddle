@@ -546,10 +546,21 @@ serve(async (req) => {
     const AT_WEIGHT_PATTERN = /@\s*(\d+(?:\.\d+)?)/;
 
     const customActivitiesWithStrength = new Set<string>();
-    
+    // Single source of truth: per-exercise volume distribution (normalized names)
+    const exerciseDistribution: Record<string, number> = {};
+    const normalizeExerciseName = (raw: string): string =>
+      (raw || 'unknown')
+        .toString()
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]/g, '')
+        .replace(/\b(bb|db)\b/g, '')
+        .replace(/\s+/g, ' ')
+        .trim() || 'unknown';
+
     customActivities.forEach((log: any) => {
       const exercises = log.custom_activity_templates?.exercises || [];
       let logHasStrength = false;
+      let logVolume = 0;
       if (Array.isArray(exercises)) {
         exercises.forEach((ex: any) => {
           let sets = ex.sets || 0;
@@ -607,12 +618,16 @@ serve(async (req) => {
           // Accumulate weight — track top-end weight separately from volume
           if (exWeightLbs > 0) {
             customTopWeightLbs = Math.max(customTopWeightLbs, exWeightLbs);
-            customVolumeLbs += exWeightLbs * sets * (reps || 1);
+            const vol = exWeightLbs * sets * (reps || 1);
+            customVolumeLbs += vol;
+            logVolume += vol;
+            const key = normalizeExerciseName(ex.name);
+            exerciseDistribution[key] = (exerciseDistribution[key] || 0) + vol;
             logHasStrength = true;
             strengthExerciseCount++;
           } else {
             // 5. Keyword-based detection (bodyweight or strength exercise names)
-            const nameLower = exName.toLowerCase().replace(/[^a-z0-9 ]/g, '');
+            const nameLower = (ex.name || '').toString().toLowerCase().replace(/[^a-z0-9 ]/g, '');
             const isStrengthByKeyword = STRENGTH_KEYWORDS.some(kw => nameLower.includes(kw));
             const isBodyweightByKeyword = BODYWEIGHT_KEYWORDS.some(kw => nameLower.includes(kw));
             const isStrengthByType = exType === 'strength' || exType === 'plyometric';
@@ -624,6 +639,7 @@ serve(async (req) => {
           }
         });
       }
+      log.computed_volume_lbs = Math.round(logVolume);
       if (logHasStrength) {
         customActivitiesWithStrength.add(log.id);
       }
@@ -687,7 +703,6 @@ serve(async (req) => {
     const WEEK_COUNT = 6;
     const weeklyVolume: number[] = Array(WEEK_COUNT).fill(0);
     const weeklyStrengthSessions: number[] = Array(WEEK_COUNT).fill(0);
-    const exerciseDistribution: Record<string, number> = {};
     const weekIndexFor = (dateStr: string): number => {
       const d = new Date(dateStr);
       const diffDays = Math.floor((d.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -698,41 +713,10 @@ serve(async (req) => {
       const wi = weekIndexFor(w.entry_date);
       weeklyVolume[wi] += (w.total_weight_lifted || 0);
     });
+    // Single source of truth: use computed_volume_lbs from the main parse pass — no re-parsing
     customActivities.forEach((log: any) => {
       const wi = weekIndexFor(log.entry_date);
-      const exercises = log.custom_activity_templates?.exercises || [];
-      if (Array.isArray(exercises)) {
-        exercises.forEach((ex: any) => {
-          let sets = ex.sets || 0;
-          let reps = typeof ex.reps === 'number' ? ex.reps : parseInt(ex.reps) || 0;
-          let exWeightLbs = 0;
-          if (ex.weight && typeof ex.weight === 'number' && ex.weight > 0) {
-            const unit = (ex.weightUnit || 'lbs').toLowerCase();
-            exWeightLbs = unit === 'kg' ? ex.weight * 2.20462 : ex.weight;
-          }
-          if (exWeightLbs === 0 && ex.notes && typeof ex.notes === 'string') {
-            const kgMatch = ex.notes.match(KG_PATTERN);
-            const lbMatch = ex.notes.match(WEIGHT_PATTERN);
-            if (kgMatch) exWeightLbs = parseFloat(kgMatch[1]) * 2.20462;
-            else if (lbMatch) exWeightLbs = parseFloat(lbMatch[1]);
-          }
-          if ((!sets || !reps) && ex.notes && typeof ex.notes === 'string') {
-            const sr = ex.notes.match(SET_REP_PATTERN);
-            if (sr) { if (!sets) sets = parseInt(sr[1]); if (!reps) reps = parseInt(sr[2]); }
-          }
-          if (exWeightLbs === 0 && ex.notes && typeof ex.notes === 'string') {
-            const atMatch = ex.notes.match(AT_WEIGHT_PATTERN);
-            if (atMatch) exWeightLbs = parseFloat(atMatch[1]);
-          }
-          if (!sets) sets = 1;
-          if (exWeightLbs > 0) {
-            const vol = exWeightLbs * sets * (reps || 1);
-            weeklyVolume[wi] += vol;
-            const key = (ex.name || 'Unknown').toString().toLowerCase().trim();
-            exerciseDistribution[key] = (exerciseDistribution[key] || 0) + vol;
-          }
-        });
-      }
+      weeklyVolume[wi] += log.computed_volume_lbs || 0;
     });
     Array.from(strengthSessionDates).forEach((dateStr) => {
       const wi = weekIndexFor(dateStr);
@@ -834,9 +818,9 @@ serve(async (req) => {
       }
     }
 
-    // E. Intensity
+    // E. Intensity (guarded: requires multiple sessions to avoid one-off lifts triggering)
     const maxWeight = Math.max(customTopWeightLbs, ...((workouts || []).map((w: any) => w.max_weight || 0)));
-    if (maxWeight >= 200) {
+    if (maxWeight >= 200 && strengthSessionDates.size >= 3) {
       insights.push({
         type: 'intensity',
         direction: 'positive',
@@ -857,7 +841,8 @@ serve(async (req) => {
       .sort((a, b) => rankScore(b) - rankScore(a))
       .slice(0, 5);
 
-    console.log(`InsightEngine: produced ${computedInsights.length} insights`, computedInsights.map(i => `${i.type}/${i.direction}/${i.impact}`));
+    console.log('Weekly volume:', weeklyVolume);
+    console.log('Computed insights:', computedInsights);
 
     // Get top 5 most performed exercises
     const topExercises = Object.entries(exerciseFrequency)
