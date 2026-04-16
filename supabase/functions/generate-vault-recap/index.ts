@@ -703,7 +703,6 @@ serve(async (req) => {
     const WEEK_COUNT = 6;
     const weeklyVolume: number[] = Array(WEEK_COUNT).fill(0);
     const weeklyStrengthSessions: number[] = Array(WEEK_COUNT).fill(0);
-    const exerciseDistribution: Record<string, number> = {};
     const weekIndexFor = (dateStr: string): number => {
       const d = new Date(dateStr);
       const diffDays = Math.floor((d.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -714,41 +713,10 @@ serve(async (req) => {
       const wi = weekIndexFor(w.entry_date);
       weeklyVolume[wi] += (w.total_weight_lifted || 0);
     });
+    // Single source of truth: use computed_volume_lbs from the main parse pass — no re-parsing
     customActivities.forEach((log: any) => {
       const wi = weekIndexFor(log.entry_date);
-      const exercises = log.custom_activity_templates?.exercises || [];
-      if (Array.isArray(exercises)) {
-        exercises.forEach((ex: any) => {
-          let sets = ex.sets || 0;
-          let reps = typeof ex.reps === 'number' ? ex.reps : parseInt(ex.reps) || 0;
-          let exWeightLbs = 0;
-          if (ex.weight && typeof ex.weight === 'number' && ex.weight > 0) {
-            const unit = (ex.weightUnit || 'lbs').toLowerCase();
-            exWeightLbs = unit === 'kg' ? ex.weight * 2.20462 : ex.weight;
-          }
-          if (exWeightLbs === 0 && ex.notes && typeof ex.notes === 'string') {
-            const kgMatch = ex.notes.match(KG_PATTERN);
-            const lbMatch = ex.notes.match(WEIGHT_PATTERN);
-            if (kgMatch) exWeightLbs = parseFloat(kgMatch[1]) * 2.20462;
-            else if (lbMatch) exWeightLbs = parseFloat(lbMatch[1]);
-          }
-          if ((!sets || !reps) && ex.notes && typeof ex.notes === 'string') {
-            const sr = ex.notes.match(SET_REP_PATTERN);
-            if (sr) { if (!sets) sets = parseInt(sr[1]); if (!reps) reps = parseInt(sr[2]); }
-          }
-          if (exWeightLbs === 0 && ex.notes && typeof ex.notes === 'string') {
-            const atMatch = ex.notes.match(AT_WEIGHT_PATTERN);
-            if (atMatch) exWeightLbs = parseFloat(atMatch[1]);
-          }
-          if (!sets) sets = 1;
-          if (exWeightLbs > 0) {
-            const vol = exWeightLbs * sets * (reps || 1);
-            weeklyVolume[wi] += vol;
-            const key = (ex.name || 'Unknown').toString().toLowerCase().trim();
-            exerciseDistribution[key] = (exerciseDistribution[key] || 0) + vol;
-          }
-        });
-      }
+      weeklyVolume[wi] += log.computed_volume_lbs || 0;
     });
     Array.from(strengthSessionDates).forEach((dateStr) => {
       const wi = weekIndexFor(dateStr);
