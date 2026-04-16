@@ -44,7 +44,7 @@ export function MicroLayerInput({ sessionType, microLayer }: MicroLayerInputProp
             {(sessionType === 'hitting' || sessionType === 'pitching') && (
               <PitchMovementSelector
                 value={currentRep.pitch_movement?.directions ?? []}
-                onChange={v => updateField('pitch_movement', { directions: v })}
+                onChange={v => updateField('pitch_movement', { directions: v, key: v.length ? [...v].sort().join('_') : 'straight' })}
               />
             )}
 
