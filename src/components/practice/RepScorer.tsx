@@ -180,6 +180,8 @@ export interface ScoredRep {
   field_diagram_ball_pos?: { x: number; y: number };
   // === Hitting metrics ===
   bat_speed_mph?: number;
+  // === Pitch movement direction (hitting + pitching) ===
+  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[]; key: MovementKey };
   exit_velo_mph?: number;
   hit_distance_ft?: number;
   // === Fielding metrics ===
@@ -423,6 +425,12 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
       }),
       ...(isHitting && isMachine && machineMode === 'mix' && {
         machine_mode: 'mix' as const,
+      }),
+      ...((isHitting || isPitching) && {
+        pitch_movement: current.pitch_movement ?? {
+          directions: [],
+          key: deriveMovementKey([]),
+        },
       }),
     };
     onRepsChange([...reps, rep]);
@@ -879,6 +887,20 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                     className="h-8 text-xs"
                     min={0}
                     step="any"
+                  />
+                </div>
+              )}
+
+              {(isHitting || isPitching) && (
+                <div>
+                  <PitchMovementSelector
+                    value={current.pitch_movement?.directions ?? []}
+                    onChange={(v) =>
+                      updateField('pitch_movement', {
+                        directions: normalizeDirections(v),
+                        key: deriveMovementKey(v),
+                      })
+                    }
                   />
                 </div>
               )}
