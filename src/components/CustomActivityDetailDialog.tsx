@@ -181,6 +181,12 @@ interface CustomActivityDetailDialogProps {
   onUpdateFieldValue?: (fieldId: string, value: string) => void;
   onSkipTask?: () => void;
   onSavePerformanceData?: (data: any) => Promise<void>;
+  /** Partial completion: persist current progress, mark complete, do NOT auto-check remaining boxes */
+  onDone?: () => Promise<void> | void;
+  /** Force completion: check all boxes + mark complete */
+  onCheckAll?: () => Promise<void> | void;
+  /** Reopen a completed activity */
+  onReopen?: () => Promise<void> | void;
   categoryLabel?: string;
   hideEdit?: boolean;
 }
@@ -198,6 +204,9 @@ export function CustomActivityDetailDialog({
   onUpdateFieldValue,
   onSkipTask,
   onSavePerformanceData,
+  onDone,
+  onCheckAll,
+  onReopen,
   categoryLabel,
   hideEdit,
 }: CustomActivityDetailDialogProps) {
