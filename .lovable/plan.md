@@ -1,59 +1,43 @@
 
 
-# Add Pitch Movement Direction Selector
+# Fix Pitch Movement Selector — 5 Critical Issues
 
 ## Summary
-Create a new `PitchMovementSelector` component — 4 directional arrows (Up/Down/Left/Right), max 2 selectable, always visible (never gated behind advanced mode). Store as a clean `directions` array. Integrate into hitting practice sessions (MicroLayerInput), game at-bat logging (GameAtBatLogger), and pitch-by-pitch scoring (PitchEntry).
+Address all 5 issues: session coverage, naming consistency, direction normalization, replace-oldest UX, and derived movement profile tagging.
 
-## Data Model
+## Changes
 
-Add to `MicroLayerData` in `useMicroLayerInput.ts`:
-```typescript
-pitch_movement?: {
-  directions: ('up' | 'down' | 'left' | 'right')[];  // max 2
-};
-```
+### 1. Session coverage — `MicroLayerInput.tsx`
+Move `PitchMovementSelector` outside the `sessionType === 'hitting'` block so it renders for both hitting and pitching sessions. Place it before the session-type-specific sections.
 
-Add same field to `AtBat` interface in `GameAtBatLogger.tsx` and `PitchData` in `PitchEntry.tsx`.
+### 2. Naming consistency — `GameAtBatLogger.tsx`
+Rename `AtBat.pitchMovement` → `AtBat.pitch_movement` (snake_case) to match `MicroLayerData` and `PitchData`. Update all references in the component.
 
-## New Component: `src/components/micro-layer/PitchMovementSelector.tsx`
+### 3. Direction normalization — `PitchMovementSelector.tsx`
+Sort the directions array before calling `onChange` so `['down','right']` and `['right','down']` always store identically. Add a `normalizeDirections` helper that sorts alphabetically.
 
-- 4 arrow buttons in a cross layout (up top, left/right middle, down bottom)
-- Multi-select toggle, max 2 — when 2 are selected, remaining lock visually
-- Selected arrows: filled color + slight scale increase
-- 0 selected = "straight" (stored as empty array)
-- Order-independent: `['down','right']` treated same as `['right','down']`
-- Label: "Movement Direction (Optional)" with subtitle "Select up to 2"
-- Props: `value: ('up'|'down'|'left'|'right')[]`, `onChange: (dirs) => void`
+### 4. Replace-oldest UX — `PitchMovementSelector.tsx`
+When 2 arrows are selected and user taps a 3rd, replace the oldest (index 0) instead of blocking. Remove the disabled/locked state entirely.
 
-## Integration Points
+### 5. Derived movement profile — New utility + integration
+Create `src/lib/pitchMovementProfile.ts` with:
+- `normalizeDirections(dirs)` — sort helper
+- `deriveMovementProfile(dirs)` — maps sorted direction combos to semantic tags (`arm_side_sink`, `vertical_drop`, `cut_ride`, etc.)
 
-### 1. `MicroLayerInput.tsx` — Hitting sessions
-- Add `PitchMovementSelector` **outside** the `isAdvanced` gate — always visible when `sessionType === 'hitting'`
-- Wire to `updateField('pitch_movement', { directions: v })`
-
-### 2. `GameAtBatLogger.tsx` — Game at-bats
-- Add below `CountSelector`, always visible (not gated by `isAdvanced`)
-- Store in `AtBat.pitchMovement`
-
-### 3. `PitchEntry.tsx` — Pitch-by-pitch scoring
-- Add below pitch location grid, always visible when `advancedMode` or not
-- Store in `PitchData.pitch_movement`
-
-### 4. `useMicroLayerInput.ts` — Type update
-- Add `pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[] }` to `MicroLayerData`
+Integrate at save points:
+- `MicroLayerInput.tsx` — store `pitch_movement_profile` field on commit
+- `GameAtBatLogger.tsx` — store on add
+- `PitchEntry.tsx` — store on submit
+- `useMicroLayerInput.ts` — add `pitch_movement_profile?: string` to `MicroLayerData`
 
 ## Files
 
-| File | Action |
+| File | Changes |
 |------|--------|
-| `src/components/micro-layer/PitchMovementSelector.tsx` | Create — arrow cross UI component |
-| `src/hooks/useMicroLayerInput.ts` | Add `pitch_movement` to `MicroLayerData` |
-| `src/components/micro-layer/MicroLayerInput.tsx` | Add selector for hitting, outside advanced gate |
-| `src/components/splits/GameAtBatLogger.tsx` | Add selector, always visible |
-| `src/components/game-scoring/PitchEntry.tsx` | Add selector, add to `PitchData` |
-
-## Not Changed
-- Scoring interpretation layer (hitter vs pitcher view mapping) — deferred to a follow-up once data collection is stable
-- Movement intensity — deferred as noted in request
+| `src/lib/pitchMovementProfile.ts` | Create — normalize + derive helpers |
+| `src/components/micro-layer/PitchMovementSelector.tsx` | Normalize on output, replace-oldest UX |
+| `src/components/micro-layer/MicroLayerInput.tsx` | Move selector outside session-type gate |
+| `src/components/splits/GameAtBatLogger.tsx` | Rename to snake_case, add derived profile |
+| `src/components/game-scoring/PitchEntry.tsx` | Add derived profile on submit |
+| `src/hooks/useMicroLayerInput.ts` | Add `pitch_movement_profile` to type |
 
