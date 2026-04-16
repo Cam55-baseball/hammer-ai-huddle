@@ -1372,7 +1372,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       id: `custom-${activity.template.id}`,
       titleKey: activity.template.title, // Use raw title, not translation key
       descriptionKey: activity.template.description || '',
-      completed: activity.log?.completed || false,
+      completed: (activity.log?.completion_state === 'completed') || activity.log?.completed || false,
+      completionState: (activity.log?.completion_state as any) || (activity.log?.completed ? 'completed' : 'not_started'),
+      completionMethod: (activity.log?.completion_method as any) || 'none',
       icon: IconComponent,
       link: '', // Custom activities don't navigate
       taskType: 'custom',
@@ -1399,6 +1401,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       titleKey: ft.item.title,
       descriptionKey: ft.folderName,
       completed: ft.completed,
+      completionState: ft.completionState || (ft.completed ? 'completed' : 'not_started'),
+      completionMethod: ft.completionMethod || 'none',
       icon: IconComponent,
       link: '',
       taskType: 'custom',
