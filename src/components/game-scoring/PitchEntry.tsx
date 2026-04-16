@@ -7,7 +7,7 @@ import { PitchLocationGrid } from '@/components/micro-layer/PitchLocationGrid';
 import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { cn } from '@/lib/utils';
-import { deriveMovementProfile } from '@/lib/pitchMovementProfile';
+
 
 const PITCH_RESULTS = [
   { value: 'ball', label: 'Ball', color: 'bg-blue-500/20 text-blue-700 dark:text-blue-300' },
@@ -67,7 +67,7 @@ export function PitchEntry({ onSubmit, advancedMode, pitchNumber, sport }: Pitch
       ...(isInPlay && spray && { spray_direction: spray }),
       ...(isInPlay && contactQuality && { contact_quality: contactQuality }),
       ...(isInPlay && battedBallType && { batted_ball_type: battedBallType }),
-      ...(pitchMovement.length > 0 && { pitch_movement: { directions: pitchMovement }, pitch_movement_profile: deriveMovementProfile(pitchMovement) }),
+      ...(pitchMovement.length > 0 && { pitch_movement: { directions: pitchMovement } }),
     };
     onSubmit(pitch);
     // Reset
