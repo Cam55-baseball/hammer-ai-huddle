@@ -818,9 +818,9 @@ serve(async (req) => {
       }
     }
 
-    // E. Intensity
+    // E. Intensity (guarded: requires multiple sessions to avoid one-off lifts triggering)
     const maxWeight = Math.max(customTopWeightLbs, ...((workouts || []).map((w: any) => w.max_weight || 0)));
-    if (maxWeight >= 200) {
+    if (maxWeight >= 200 && strengthSessionDates.size >= 3) {
       insights.push({
         type: 'intensity',
         direction: 'positive',
@@ -841,7 +841,8 @@ serve(async (req) => {
       .sort((a, b) => rankScore(b) - rankScore(a))
       .slice(0, 5);
 
-    console.log(`InsightEngine: produced ${computedInsights.length} insights`, computedInsights.map(i => `${i.type}/${i.direction}/${i.impact}`));
+    console.log('Weekly volume:', weeklyVolume);
+    console.log('Computed insights:', computedInsights);
 
     // Get top 5 most performed exercises
     const topExercises = Object.entries(exerciseFrequency)
