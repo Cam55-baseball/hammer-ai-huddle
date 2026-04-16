@@ -10,7 +10,7 @@ import { useDataDensityLevel } from '@/hooks/useDataDensityLevel';
 import { useSportConfig } from '@/hooks/useSportConfig';
 import { Plus, Trash2 } from 'lucide-react';
 import { PitchMovementSelector } from '@/components/micro-layer/PitchMovementSelector';
-import { normalizeDirections, deriveMovementKey } from '@/lib/pitchMovementProfile';
+import { normalizeDirections, deriveMovementKey, type MovementKey } from '@/lib/pitchMovementProfile';
 
 
 const RESULTS = ['single', 'double', 'triple', 'home_run', 'walk', 'strikeout', 'flyout', 'groundout', 'lineout', 'hbp', 'sac_fly', 'sac_bunt', 'error', 'fc'] as const;
@@ -21,7 +21,7 @@ interface AtBat {
   contactQuality?: string;
   exitDirection?: string;
   pitchLocation?: { row: number; col: number };
-  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[]; key: string };
+  pitch_movement?: { directions: ('up' | 'down' | 'left' | 'right')[]; key: MovementKey };
   pitch_movement_profile?: string;
 }
 
