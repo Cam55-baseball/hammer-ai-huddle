@@ -73,10 +73,10 @@ const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, updateOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData, isDayComplete } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, updateOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState, saveFolderPerformanceData, setFolderItemCompletionState, markFolderItemAllAndComplete, reopenFolderItem, isDayComplete } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
-  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, setCompletionState, markAllCheckboxesAndComplete, reopenActivity, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
@@ -2056,6 +2056,29 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             handleCustomActivityToggle(selectedCustomTask);
           }
         }}
+        onDone={async () => {
+          if (!selectedCustomTask?.customActivityData) return;
+          const template = selectedCustomTask.customActivityData.template;
+          await setCompletionState(template.id, 'completed', 'done_button');
+          triggerCelebration();
+          toast.success(t('customActivity.markedComplete', 'Marked complete'));
+          refetch();
+        }}
+        onCheckAll={async () => {
+          if (!selectedCustomTask?.customActivityData) return;
+          const template = selectedCustomTask.customActivityData.template;
+          const allIds = getAllCheckableIds(template);
+          await markAllCheckboxesAndComplete(template.id, allIds);
+          triggerCelebration();
+          toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'));
+          refetch();
+        }}
+        onReopen={async () => {
+          if (!selectedCustomTask?.customActivityData) return;
+          const template = selectedCustomTask.customActivityData.template;
+          await reopenActivity(template.id);
+          refetch();
+        }}
         onEdit={() => {
           if (selectedCustomTask) {
             handleCustomActivityFullEdit(selectedCustomTask);
@@ -2116,43 +2139,25 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             
             // PERSIST: Save checkbox states to database
             await updateLogPerformanceData(log.id, newPerformanceData);
-            
-            // AUTO-COMPLETE LOGIC: Check if ALL checkable items are now checked
-            const allCheckableIds = getAllCheckableIds(template);
-            
-            if (allCheckableIds.length > 0) {
-              const allChecked = allCheckableIds.every(id => newCheckboxStates[id] === true);
-              const wasCompleted = log.completed;
-              
-              if (allChecked && !wasCompleted) {
-                // Auto-complete with celebration!
-                await toggleComplete(template.id);
-                setSelectedCustomTask(prev => prev ? {
-                  ...prev,
-                  completed: true,
-                  customActivityData: prev.customActivityData ? {
-                    ...prev.customActivityData,
-                    log: { ...prev.customActivityData.log!, completed: true }
-                  } : undefined
-                } : null);
-                triggerCelebration();
-                toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'), {
-                  description: template.title
-                });
-              } else if (!allChecked && wasCompleted) {
-                // Un-complete if a checkbox is unchecked
-                await toggleComplete(template.id);
-                setSelectedCustomTask(prev => prev ? {
-                  ...prev,
-                  completed: false,
-                  customActivityData: prev.customActivityData ? {
-                    ...prev.customActivityData,
-                    log: { ...prev.customActivityData.log!, completed: false }
-                  } : undefined
-                } : null);
-              }
+
+            // DEMOTE rule: if user previously clicked "Mark all complete" (check_all)
+            // and is now unchecking a box, demote completion back to in_progress.
+            const currentState = (log as any).completion_state as string | undefined;
+            const currentMethod = (log as any).completion_method as string | undefined;
+            if (!checked && currentState === 'completed' && currentMethod === 'check_all') {
+              await setCompletionState(template.id, 'in_progress', 'none');
+              setSelectedCustomTask(prev => prev ? {
+                ...prev,
+                completed: false,
+                completionState: 'in_progress',
+                completionMethod: 'none',
+                customActivityData: prev.customActivityData ? {
+                  ...prev.customActivityData,
+                  log: { ...prev.customActivityData.log!, completed: false, completion_state: 'in_progress', completion_method: 'none' } as any,
+                } : undefined,
+              } : null);
             }
-            
+
             // Background refresh (safe - dialog won't unmount)
             refetch();
           } catch (error) {

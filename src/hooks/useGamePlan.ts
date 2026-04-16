@@ -21,6 +21,8 @@ export interface FolderGamePlanTask {
   completionId?: string;
   isOwner: boolean;
   performanceData?: any;
+  completionState?: 'not_started' | 'in_progress' | 'completed';
+  completionMethod?: 'none' | 'done_button' | 'check_all';
 }
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
@@ -54,6 +56,8 @@ export interface GamePlanTask {
   titleKey: string;
   descriptionKey: string;
   completed: boolean;
+  completionState?: 'not_started' | 'in_progress' | 'completed';
+  completionMethod?: 'none' | 'done_button' | 'check_all';
   icon: LucideIcon;
   link: string;
   module?: 'hitting' | 'pitching' | 'throwing';
@@ -643,17 +647,23 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
         // Fetch completions for today
         const itemIds = todayItems.map(i => i.id);
-        let completionsMap: Record<string, { id: string; completed: boolean; performanceData?: any }> = {};
+        let completionsMap: Record<string, { id: string; completed: boolean; performanceData?: any; completion_state?: string; completion_method?: string }> = {};
         if (itemIds.length > 0) {
           const { data: completionsData } = await supabase
             .from('folder_item_completions')
-            .select('id, folder_item_id, completed, performance_data')
+            .select('id, folder_item_id, completed, performance_data, completion_state, completion_method')
             .eq('user_id', user.id)
             .eq('entry_date', today)
             .in('folder_item_id', itemIds);
           
           (completionsData || []).forEach((c: any) => {
-            completionsMap[c.folder_item_id] = { id: c.id, completed: c.completed, performanceData: c.performance_data };
+            completionsMap[c.folder_item_id] = {
+              id: c.id,
+              completed: c.completed,
+              performanceData: c.performance_data,
+              completion_state: c.completion_state,
+              completion_method: c.completion_method,
+            };
           });
         }
 
@@ -672,6 +682,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
             completionId: completion?.id,
             isOwner: folder.owner_id === user.id,
             performanceData: completion?.performanceData || null,
+            completionState: (completion?.completion_state as any) || 'not_started',
+            completionMethod: (completion?.completion_method as any) || 'none',
           };
         });
 
@@ -1043,6 +1055,121 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     }
   }, [user]);
 
+  // === NEW: explicit completion mutators for folder items ===
+  const setFolderItemCompletionState = useCallback(async (
+    itemId: string,
+    state: 'not_started' | 'in_progress' | 'completed',
+    method: 'none' | 'done_button' | 'check_all',
+  ) => {
+    if (!user) return;
+    const today = getTodayDate();
+
+    setFolderTasks(prev => prev.map(ft =>
+      ft.item.id === itemId
+        ? { ...ft, completed: state === 'completed', completionState: state, completionMethod: method }
+        : ft
+    ));
+
+    try {
+      const { data: existing } = await supabase
+        .from('folder_item_completions')
+        .select('id')
+        .eq('folder_item_id', itemId)
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .maybeSingle();
+
+      const payload: any = {
+        completion_state: state,
+        completion_method: method,
+        completed: state === 'completed',
+        completed_at: state === 'completed' ? new Date().toISOString() : null,
+      };
+
+      if (existing) {
+        await supabase.from('folder_item_completions').update(payload).eq('id', existing.id);
+      } else {
+        await supabase.from('folder_item_completions').insert({
+          folder_item_id: itemId,
+          user_id: user.id,
+          entry_date: today,
+          ...payload,
+        });
+      }
+    } catch (error) {
+      console.error('Error setting folder completion state:', error);
+    }
+  }, [user]);
+
+  const markFolderItemAllAndComplete = useCallback(async (
+    itemId: string,
+    allCheckableIds: string[],
+  ) => {
+    if (!user) return;
+    const today = getTodayDate();
+
+    const newStates: Record<string, boolean> = {};
+    allCheckableIds.forEach(id => { newStates[id] = true; });
+
+    // Optimistic
+    setFolderTasks(prev => prev.map(ft =>
+      ft.item.id === itemId
+        ? {
+            ...ft,
+            completed: true,
+            completionState: 'completed',
+            completionMethod: 'check_all',
+            performanceData: { ...(ft.performanceData || {}), checkboxStates: { ...((ft.performanceData?.checkboxStates) || {}), ...newStates } },
+          }
+        : ft
+    ));
+
+    try {
+      const { data: existing } = await supabase
+        .from('folder_item_completions')
+        .select('id, performance_data')
+        .eq('folder_item_id', itemId)
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .maybeSingle();
+
+      if (existing) {
+        const currentPd = (existing.performance_data as Record<string, any>) || {};
+        const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
+        await supabase
+          .from('folder_item_completions')
+          .update({
+            performance_data: { ...currentPd, checkboxStates: { ...currentStates, ...newStates } },
+            completion_state: 'completed',
+            completion_method: 'check_all',
+            completed: true,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id);
+      } else {
+        await supabase.from('folder_item_completions').insert({
+          folder_item_id: itemId,
+          user_id: user.id,
+          entry_date: today,
+          completed: true,
+          completed_at: new Date().toISOString(),
+          completion_state: 'completed',
+          completion_method: 'check_all',
+          performance_data: { checkboxStates: newStates },
+        });
+      }
+    } catch (error) {
+      console.error('Error marking folder all & complete:', error);
+    }
+  }, [user]);
+
+  const reopenFolderItem = useCallback(async (itemId: string) => {
+    const ft = folderTasks.find(f => f.item.id === itemId);
+    const states = (ft?.performanceData?.checkboxStates as Record<string, boolean>) || {};
+    const anyChecked = Object.values(states).some(v => v === true);
+    return setFolderItemCompletionState(itemId, anyChecked ? 'in_progress' : 'not_started', 'none');
+  }, [folderTasks, setFolderItemCompletionState]);
+
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
   
@@ -1360,7 +1487,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       id: `custom-${activity.template.id}`,
       titleKey: activity.template.title, // Use raw title, not translation key
       descriptionKey: activity.template.description || '',
-      completed: activity.log?.completed || false,
+      completed: (activity.log?.completion_state === 'completed') || activity.log?.completed || false,
+      completionState: (activity.log?.completion_state as any) || (activity.log?.completed ? 'completed' : 'not_started'),
+      completionMethod: (activity.log?.completion_method as any) || 'none',
       icon: IconComponent,
       link: '', // Custom activities don't navigate
       taskType: 'custom',
@@ -1387,6 +1516,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       titleKey: ft.item.title,
       descriptionKey: ft.folderName,
       completed: ft.completed,
+      completionState: ft.completionState || (ft.completed ? 'completed' : 'not_started'),
+      completionMethod: ft.completionMethod || 'none',
       icon: IconComponent,
       link: '',
       taskType: 'custom',
@@ -1453,5 +1584,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     toggleFolderItemCompletion,
     saveFolderCheckboxState,
     saveFolderPerformanceData,
+    setFolderItemCompletionState,
+    markFolderItemAllAndComplete,
+    reopenFolderItem,
   };
 }

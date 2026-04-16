@@ -181,6 +181,12 @@ interface CustomActivityDetailDialogProps {
   onUpdateFieldValue?: (fieldId: string, value: string) => void;
   onSkipTask?: () => void;
   onSavePerformanceData?: (data: any) => Promise<void>;
+  /** Partial completion: persist current progress, mark complete, do NOT auto-check remaining boxes */
+  onDone?: () => Promise<void> | void;
+  /** Force completion: check all boxes + mark complete */
+  onCheckAll?: () => Promise<void> | void;
+  /** Reopen a completed activity */
+  onReopen?: () => Promise<void> | void;
   categoryLabel?: string;
   hideEdit?: boolean;
 }
@@ -198,6 +204,9 @@ export function CustomActivityDetailDialog({
   onUpdateFieldValue,
   onSkipTask,
   onSavePerformanceData,
+  onDone,
+  onCheckAll,
+  onReopen,
   categoryLabel,
   hideEdit,
 }: CustomActivityDetailDialogProps) {
@@ -1032,41 +1041,111 @@ export function CustomActivityDetailDialog({
                 </Button>
               )}
               
-              <div className="flex gap-3">
-                {!hideEdit && (
-                  <Button
-                    variant="outline"
-                    onClick={onEdit}
-                    className="flex-1 gap-2"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    {t('customActivity.detail.editActivity')}
-                  </Button>
-                )}
-                <Button
-                  onClick={() => {
-                    onComplete();
-                    onOpenChange(false);
-                  }}
-                  className={cn(
-                    "flex-1 gap-2 font-bold",
-                    (totalCheckableCount > 0 ? checkedCount === totalCheckableCount : task.completed)
-                      ? "bg-muted text-muted-foreground hover:bg-muted" 
-                      : ""
-                  )}
-                  style={!(totalCheckableCount > 0 ? checkedCount === totalCheckableCount : task.completed) ? { backgroundColor: customColor } : undefined}
-                >
-                  <Check className="h-4 w-4" />
-                  {totalCheckableCount > 0
-                    ? (checkedCount === totalCheckableCount
-                      ? t('customActivity.detail.uncheckAll', 'Uncheck All')
-                      : t('customActivity.detail.checkAll', 'Check All & Complete'))
-                    : (task.completed 
-                      ? t('customActivity.detail.markedComplete') 
-                      : t('customActivity.detail.markComplete'))
-                  }
-                </Button>
-              </div>
+              {(() => {
+                const completionState = task.completionState
+                  || (task.completed ? 'completed' : (checkedCount > 0 ? 'in_progress' : 'not_started'));
+                const completionMethod = task.completionMethod || 'none';
+                const isCompleted = completionState === 'completed';
+                const isPartial = isCompleted
+                  && completionMethod === 'done_button'
+                  && totalCheckableCount > 0
+                  && checkedCount < totalCheckableCount;
+                const hasCheckables = totalCheckableCount > 0;
+
+                return (
+                  <>
+                    {/* Completion status pill */}
+                    {isCompleted && (
+                      <div
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold",
+                          isPartial
+                            ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30"
+                            : "bg-green-500/15 text-green-700 dark:text-green-400 border border-green-500/30"
+                        )}
+                      >
+                        <Check className="h-4 w-4" />
+                        {isPartial
+                          ? t('customActivity.detail.completedPartial', 'Completed (partial)')
+                          : t('customActivity.detail.fullyCompleted', 'Fully completed')}
+                        {hasCheckables && (
+                          <span className="ml-auto text-xs opacity-80">
+                            {checkedCount}/{totalCheckableCount}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      {!hideEdit && (
+                        <Button
+                          variant="outline"
+                          onClick={onEdit}
+                          className="flex-1 gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          {t('customActivity.detail.editActivity')}
+                        </Button>
+                      )}
+
+                      {isCompleted ? (
+                        <Button
+                          variant="outline"
+                          onClick={async () => {
+                            if (onReopen) {
+                              await onReopen();
+                            } else {
+                              onComplete();
+                            }
+                            onOpenChange(false);
+                          }}
+                          className="flex-1 gap-2 font-bold"
+                        >
+                          <X className="h-4 w-4" />
+                          {t('customActivity.detail.reopen', 'Reopen')}
+                        </Button>
+                      ) : hasCheckables && onDone && onCheckAll ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={async () => {
+                              await onCheckAll();
+                              onOpenChange(false);
+                            }}
+                            className="flex-1 gap-2 font-bold"
+                          >
+                            <Check className="h-4 w-4" />
+                            {t('customActivity.detail.markAllComplete', 'Mark all complete')}
+                          </Button>
+                          <Button
+                            onClick={async () => {
+                              await onDone();
+                              onOpenChange(false);
+                            }}
+                            className="flex-1 gap-2 font-bold"
+                            style={{ backgroundColor: customColor }}
+                          >
+                            <Check className="h-4 w-4" />
+                            {t('customActivity.detail.finishForNow', 'Finish for now')}
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            onComplete();
+                            onOpenChange(false);
+                          }}
+                          className="flex-1 gap-2 font-bold"
+                          style={{ backgroundColor: customColor }}
+                        >
+                          <Check className="h-4 w-4" />
+                          {t('customActivity.detail.markComplete')}
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
               {onSkipTask && (
                 <div className="flex gap-2 w-full">
                   <Button

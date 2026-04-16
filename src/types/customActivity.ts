@@ -140,6 +140,9 @@ export interface CustomActivityTemplate {
   deleted_permanently_at?: string | null;
 }
 
+export type CompletionState = 'not_started' | 'in_progress' | 'completed';
+export type CompletionMethod = 'none' | 'done_button' | 'check_all';
+
 export interface CustomActivityLog {
   id: string;
   user_id: string;
@@ -150,6 +153,8 @@ export interface CustomActivityLog {
   actual_duration_minutes?: number;
   notes?: string;
   performance_data: Record<string, any>;
+  completion_state?: CompletionState;
+  completion_method?: CompletionMethod;
   created_at: string;
   template?: CustomActivityTemplate;
 }

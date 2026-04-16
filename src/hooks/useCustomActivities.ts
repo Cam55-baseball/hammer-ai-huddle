@@ -8,7 +8,9 @@ import {
   Exercise,
   MealData,
   CustomField,
-  RunningInterval
+  RunningInterval,
+  CompletionState,
+  CompletionMethod
 } from '@/types/customActivity';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -610,6 +612,116 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
+  // === NEW: explicit completion state mutators (intent-based) ===
+
+  // Single-point write for completion_state + completion_method
+  const setCompletionState = async (
+    templateId: string,
+    state: CompletionState,
+    method: CompletionMethod
+  ): Promise<boolean> => {
+    if (!user) return false;
+    const today = getTodayDate();
+
+    try {
+      // Ensure log exists, then update
+      const log = await ensureLogExists(templateId);
+      if (!log) return false;
+
+      const updates: Record<string, any> = {
+        completion_state: state,
+        completion_method: method,
+      };
+      // Trigger will mirror `completed` from completion_state, but set explicitly for older readers
+      updates.completed = state === 'completed';
+      updates.completed_at = state === 'completed' ? new Date().toISOString() : null;
+
+      const { error } = await supabase
+        .from('custom_activity_logs')
+        .update(updates)
+        .eq('id', log.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('[useCustomActivities] setCompletionState error:', error);
+        return false;
+      }
+
+      // Optimistic local update
+      setTodayLogs(prev => prev.map(l =>
+        l.id === log.id
+          ? { ...l, completion_state: state, completion_method: method, completed: state === 'completed' }
+          : l
+      ));
+
+      // Background refresh
+      fetchTodayLogs();
+      return true;
+    } catch (error) {
+      console.error('[useCustomActivities] setCompletionState error:', error);
+      return false;
+    }
+  };
+
+  // Mark all checkboxes true + complete (Check all & complete)
+  const markAllCheckboxesAndComplete = async (
+    templateId: string,
+    allCheckableIds: string[]
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const log = await ensureLogExists(templateId);
+      if (!log) return false;
+
+      const currentPd = (log.performance_data as Record<string, any>) || {};
+      const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
+      const newStates: Record<string, boolean> = { ...currentStates };
+      allCheckableIds.forEach(id => { newStates[id] = true; });
+
+      const newPd = { ...currentPd, checkboxStates: newStates };
+
+      const { error } = await supabase
+        .from('custom_activity_logs')
+        .update({
+          performance_data: newPd,
+          completion_state: 'completed',
+          completion_method: 'check_all',
+          completed: true,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', log.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('[useCustomActivities] markAllCheckboxesAndComplete error:', error);
+        return false;
+      }
+
+      setTodayLogs(prev => prev.map(l =>
+        l.id === log.id
+          ? { ...l, performance_data: newPd, completion_state: 'completed', completion_method: 'check_all', completed: true }
+          : l
+      ));
+
+      fetchTodayLogs();
+      return true;
+    } catch (error) {
+      console.error('[useCustomActivities] markAllCheckboxesAndComplete error:', error);
+      return false;
+    }
+  };
+
+  // Reopen a completed activity → in_progress (or not_started if nothing checked)
+  const reopenActivity = async (templateId: string): Promise<boolean> => {
+    if (!user) return false;
+    const log = todayLogs.find(l => l.template_id === templateId);
+    const pd = (log?.performance_data as Record<string, any>) || {};
+    const states = (pd.checkboxStates as Record<string, boolean>) || {};
+    const anyChecked = Object.values(states).some(v => v === true);
+    return setCompletionState(templateId, anyChecked ? 'in_progress' : 'not_started', 'none');
+  };
+
   return {
     templates,
     todayLogs,
@@ -626,6 +738,9 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     removeFromToday,
     updateLogPerformanceData,
     ensureLogExists,
+    setCompletionState,
+    markAllCheckboxesAndComplete,
+    reopenActivity,
     refetch: fetchAll,
   };
 }
