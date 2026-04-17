@@ -647,15 +647,13 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         return false;
       }
 
-      // Optimistic local update
+      // Optimistic local update — no refetch (race-free)
       setTodayLogs(prev => prev.map(l =>
         l.id === log.id
           ? { ...l, completion_state: state, completion_method: method, completed: state === 'completed' }
           : l
       ));
 
-      // Background refresh
-      fetchTodayLogs();
       return true;
     } catch (error) {
       console.error('[useCustomActivities] setCompletionState error:', error);
@@ -698,13 +696,13 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         return false;
       }
 
+      // Optimistic local update — no refetch (race-free)
       setTodayLogs(prev => prev.map(l =>
         l.id === log.id
           ? { ...l, performance_data: newPd, completion_state: 'completed', completion_method: 'check_all', completed: true }
           : l
       ));
 
-      fetchTodayLogs();
       return true;
     } catch (error) {
       console.error('[useCustomActivities] markAllCheckboxesAndComplete error:', error);
