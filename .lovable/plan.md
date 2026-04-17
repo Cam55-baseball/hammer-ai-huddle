@@ -1,94 +1,89 @@
 
 
-## Final Hardening Pass — Completion Trigger Precision
+## Final .01% Hardening — Completion System Invariants
 
-### Changes (single new migration)
+### Single migration, no frontend changes
 
-1. **Narrow `completed_at` wipe condition** — only clear method/completed_at when truly transitioning OUT of completed (i.e. `OLD.completion_state = 'completed' AND NEW.completion_state != 'completed'`). Current code already gates on `OLD.completion_state = 'completed'` but runs in a branch where `NEW.completion_state` was just rewritten to `in_progress`/`not_started`, so behavior is correct — but make the condition **explicit** for clarity and safety against future edits.
+All 6 fixes land in one new migration. Triggers are bound via `CREATE OR REPLACE FUNCTION` (no rebinding needed).
 
-2. **Deterministic `completed` mirror** — replace `NEW.completed := FALSE` with `NEW.completed := (NEW.completion_state = 'completed')` so the boolean column is always a pure function of state, never implicit.
+### Changes
 
-3. **Reject `completed + method='none'`** — add guard in `validate_completion_intent()`: any `completed` row must carry `done_button` or `check_all`. Prevents silent state corruption.
+**1. Guarantee `completed_at` is set** — already present in current `derive_completion_state()` but reaffirm in the rewritten version.
 
-4. **DRY helper** — extract `public.has_any_checked(jsonb) RETURNS boolean` and call it from both `derive_completion_state()` and `validate_completion_intent()`.
-
-### Migration sketch
-
+**2. Immutable `completion_method` while completed** — add to `validate_completion_intent()`:
 ```sql
--- Helper
-CREATE OR REPLACE FUNCTION public.has_any_checked(cb JSONB)
-RETURNS boolean LANGUAGE sql IMMUTABLE AS $$
-  SELECT CASE
-    WHEN cb IS NULL OR jsonb_typeof(cb) != 'object' OR jsonb_object_length(cb) = 0
-      THEN FALSE
-    ELSE EXISTS (SELECT 1 FROM jsonb_each_text(cb) kv WHERE kv.value = 'true')
-  END
-$$;
-
--- Replace derive function
-CREATE OR REPLACE FUNCTION public.derive_completion_state()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  IF TG_OP = 'UPDATE'
-     AND NEW.performance_data IS NOT DISTINCT FROM OLD.performance_data
-     AND NEW.completion_state IS NOT DISTINCT FROM OLD.completion_state
-     AND NEW.completion_method IS NOT DISTINCT FROM OLD.completion_method THEN
-    RETURN NEW;
-  END IF;
-
-  IF NEW.completion_state = 'completed' THEN
-    NEW.completed := TRUE;
-    IF NEW.completed_at IS NULL THEN NEW.completed_at := NOW(); END IF;
-    RETURN NEW;
-  END IF;
-
-  NEW.completion_state := CASE
-    WHEN public.has_any_checked(NEW.performance_data->'checkboxStates')
-      THEN 'in_progress' ELSE 'not_started' END;
-
-  -- Explicit transition OUT of completed
-  IF TG_OP = 'UPDATE'
-     AND OLD.completion_state = 'completed'
-     AND NEW.completion_state != 'completed' THEN
-    NEW.completion_method := 'none';
-    NEW.completed_at := NULL;
-  END IF;
-
-  NEW.completed := (NEW.completion_state = 'completed');
-  RETURN NEW;
-END;
-$$;
-
--- Replace validate function
-CREATE OR REPLACE FUNCTION public.validate_completion_intent()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  IF NEW.completion_state = 'completed' THEN
-    IF NEW.completion_method = 'none' THEN
-      RAISE EXCEPTION 'Completed state requires a valid completion_method (done_button or check_all)';
-    END IF;
-    IF NEW.completion_method = 'done_button'
-       AND NOT public.has_any_checked(NEW.performance_data->'checkboxStates') THEN
-      RAISE EXCEPTION 'Cannot mark done_button completion with no checked tasks';
-    END IF;
-  END IF;
-  RETURN NEW;
-END;
-$$;
+IF TG_OP = 'UPDATE'
+   AND OLD.completion_state = 'completed'
+   AND NEW.completion_state = 'completed'
+   AND OLD.completion_method IS DISTINCT FROM NEW.completion_method THEN
+  RAISE EXCEPTION 'Cannot change completion_method after completion';
+END IF;
 ```
 
-Triggers stay bound (CREATE OR REPLACE FUNCTION preserves bindings); no DROP/CREATE trigger churn needed.
+**3. Reject illegal transitions** — strengthen `validate_completion_intent()`:
+```sql
+IF NEW.completion_state = 'completed' AND NOT (
+  NEW.completion_method = 'check_all'
+  OR (NEW.completion_method = 'done_button'
+      AND public.has_any_checked(NEW.performance_data->'checkboxStates'))
+) THEN
+  RAISE EXCEPTION 'Invalid completion transition';
+END IF;
+```
+This subsumes the existing `done_button + no checks` and `method='none'` guards.
+
+**4. Lock `performance_data.checkboxStates` shape** — add early in `validate_completion_intent()`:
+```sql
+IF NEW.performance_data IS NOT NULL
+   AND NEW.performance_data ? 'checkboxStates'
+   AND jsonb_typeof(NEW.performance_data->'checkboxStates') != 'object' THEN
+  RAISE EXCEPTION 'checkboxStates must be a JSON object';
+END IF;
+```
+
+**5. Strict boolean check in `has_any_checked()`** — replace string compare with cast:
+```sql
+CREATE OR REPLACE FUNCTION public.has_any_checked(cb jsonb)
+RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path = public AS $$
+  SELECT CASE
+    WHEN cb IS NULL OR jsonb_typeof(cb) != 'object' THEN FALSE
+    ELSE EXISTS (
+      SELECT 1 FROM jsonb_each(cb) kv
+      WHERE jsonb_typeof(kv.value) = 'boolean' AND (kv.value)::text::boolean IS TRUE
+    )
+  END
+$$;
+```
+Uses `jsonb_each` (not `_text`) + typeof guard so string `"true"` no longer counts. Frontend already writes real booleans into `checkboxStates`, so no UX regression.
+
+**6. Partial index for active progress** — both tables:
+```sql
+CREATE INDEX IF NOT EXISTS idx_custom_activity_logs_in_progress
+  ON public.custom_activity_logs (user_id, entry_date)
+  WHERE completion_state = 'in_progress';
+
+CREATE INDEX IF NOT EXISTS idx_folder_item_completions_in_progress
+  ON public.folder_item_completions (user_id, entry_date)
+  WHERE completion_state = 'in_progress';
+```
+(Will verify `folder_item_completions` has `entry_date`; if not, swap to its date column.)
+
+### Skipped
+
+- **Item 7 (optimistic concurrency on `updated_at`)** — frontend already uses `BroadcastChannel` multi-tab sync + optimistic UI; adding a trigger-level `updated_at` guard would reject legitimate stale-but-correct writes from mobile reconnects. Better handled at the app layer per existing memory `architecture/multi-tab-synchronization-strategy`. Leaving out unless explicitly requested.
 
 ### Files
 
 | File | Change |
 |------|--------|
-| `supabase/migrations/<new>.sql` | Add `has_any_checked()` helper; replace `derive_completion_state()` with explicit-transition guard + deterministic `completed` mirror; replace `validate_completion_intent()` to reject `completed + method='none'` and reuse helper |
+| `supabase/migrations/<new>.sql` | Rewrite `has_any_checked()` with strict boolean cast; rewrite `validate_completion_intent()` with shape guard + immutable method + unified illegal-transition check; reaffirm `derive_completion_state()` `completed_at` set; add two partial indexes |
 
-### Non-negotiables preserved
-- ✅ `completed_at` only cleared on explicit `completed → not-completed` transition
-- ✅ `completed` boolean is now a pure function of `completion_state`
-- ✅ DB rejects `completed` rows with `method='none'`
-- ✅ Single source of truth for "any checkbox checked" logic
-- ✅ No frontend changes required
+### Invariants guaranteed after this migration
+- ✅ `completed` is pure function of `completion_state`
+- ✅ `completed_at` is non-null for every completed row
+- ✅ `completion_method` cannot change once `completed`
+- ✅ No illegal jump to `completed` without valid method + (for `done_button`) checked tasks
+- ✅ `checkboxStates` shape enforced at DB
+- ✅ Only true booleans count as "checked" — no string drift
+- ✅ Fast partial-index lookups for in-progress dashboards
 
