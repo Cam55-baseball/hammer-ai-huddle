@@ -1,0 +1,1 @@
+ALTER TABLE public.hydration_logs ADD COLUMN IF NOT EXISTS custom_label text;

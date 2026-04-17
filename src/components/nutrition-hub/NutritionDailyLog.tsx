@@ -17,8 +17,12 @@ import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { GuidancePanel } from './GuidancePanel';
 import { CravingGuidance } from './CravingGuidance';
+import { HydrationLogCard } from './HydrationLogCard';
+import { useHydration } from '@/hooks/useHydration';
 import { useNutritionGuidance } from '@/hooks/useNutritionGuidance';
 import { usePerformanceMode } from '@/hooks/usePerformanceMode';
+import { TIER_LABEL, TIER_TEXT_CLASS } from '@/utils/hydrationScoring';
+import { Gauge } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -37,11 +41,13 @@ export function NutritionDailyLog({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { config } = usePerformanceMode();
+  const { todayLogs: hydrationLogs, dailyAverageScore, dailyTier, todayTotal: hydrationOzToday, deleteLog: deleteHydration } = useHydration();
   
   const [internalDate, setInternalDate] = useState(new Date());
 
   const currentDate = controlledDate ?? internalDate;
   const dateStr = format(currentDate, 'yyyy-MM-dd');
+  const isViewingToday = isToday(currentDate);
 
   const handleDateChange = (newDate: Date) => {
     if (onDateChange) {
@@ -165,12 +171,12 @@ export function NutritionDailyLog({
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
           </div>
-        ) : meals.length === 0 ? (
+        ) : meals.length === 0 && (!isViewingToday || hydrationLogs.length === 0) ? (
           <div className="text-center py-8 text-muted-foreground">
             <UtensilsCrossed className="h-10 w-10 mx-auto mb-3 opacity-50" />
             <p className="font-medium">{t('nutrition.noMeals', 'No meals logged')}</p>
             <p className="text-sm mt-1">
-              {isToday(currentDate) 
+              {isViewingToday
                 ? t('nutrition.startLogging', 'Start logging your meals to track nutrition')
                 : t('nutrition.noMealsOnDate', 'No meals were logged on this day')
               }
@@ -179,9 +185,19 @@ export function NutritionDailyLog({
         ) : (
           <>
             <div className="space-y-2">
-              {meals.map((meal) => (
-                <MealLogCard key={meal.id} meal={meal} onEdit={onEditMeal} onDelete={handleDeleteMeal} />
-              ))}
+              {(() => {
+                const items: Array<{ kind: 'meal'; at: number; data: typeof meals[number] } | { kind: 'hydration'; at: number; data: typeof hydrationLogs[number] }> = [];
+                meals.forEach(m => items.push({ kind: 'meal', at: new Date(m.loggedAt).getTime(), data: m }));
+                if (isViewingToday) {
+                  hydrationLogs.forEach(h => items.push({ kind: 'hydration', at: new Date(h.logged_at).getTime(), data: h }));
+                }
+                items.sort((a, b) => a.at - b.at);
+                return items.map(item =>
+                  item.kind === 'meal'
+                    ? <MealLogCard key={`m-${item.data.id}`} meal={item.data} onEdit={onEditMeal} onDelete={handleDeleteMeal} />
+                    : <HydrationLogCard key={`h-${item.data.id}`} log={item.data as any} onDelete={deleteHydration} compact />
+                );
+              })()}
             </div>
 
             {/* Day totals */}
@@ -232,6 +248,20 @@ export function NutritionDailyLog({
                   </p>
                 )}
               </div>
+              {/* Hydration row (today only) */}
+              {isViewingToday && hydrationLogs.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground">
+                    💧 {hydrationOzToday} oz · {hydrationLogs.length} drink{hydrationLogs.length === 1 ? '' : 's'}
+                  </span>
+                  {dailyAverageScore > 0 && (
+                    <span className={cn('flex items-center gap-1 font-semibold', TIER_TEXT_CLASS[dailyTier])}>
+                      <Gauge className="h-3 w-3" />
+                      {dailyAverageScore} · {TIER_LABEL[dailyTier]}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Nutrition Score */}

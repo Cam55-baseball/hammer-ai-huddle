@@ -23,6 +23,18 @@ export interface HydrationLog {
   sugar_g?: number | null;
   total_carbs_g?: number | null;
   hydration_profile?: HydrationProfile | null;
+  custom_label?: string | null;
+}
+
+export interface AiHydrationAnalysis {
+  display_name: string;
+  water_g_per_oz: number;
+  sodium_mg_per_oz: number;
+  potassium_mg_per_oz: number;
+  magnesium_mg_per_oz: number;
+  sugar_g_per_oz: number;
+  total_carbs_g_per_oz: number;
+  confidence?: 'high' | 'medium' | 'low';
 }
 
 export interface HydrationSettings {
@@ -158,7 +170,12 @@ export function useHydration() {
   }, [user, settings, todayTotal, dailyGoal]);
 
   // Add water
-  const addWater = useCallback(async (amount: number, liquidType: string, qualityClass: string): Promise<boolean> => {
+  const addWater = useCallback(async (
+    amount: number,
+    liquidType: string,
+    qualityClass: string,
+    aiNutrition?: AiHydrationAnalysis,
+  ): Promise<boolean> => {
     if (!user) return false;
 
     if (!liquidType || !qualityClass) {
@@ -168,39 +185,61 @@ export function useHydration() {
     }
 
     try {
-      // Look up beverage nutrition profile
       let nutritionPayload: Record<string, any> = {};
-      try {
-        const { data: bev, error: bevError } = await (supabase as any)
-          .from('hydration_beverage_database')
-          .select('*')
-          .eq('liquid_type', liquidType)
-          .maybeSingle();
+      let customLabel: string | null = null;
 
-        if (bevError) {
-          console.warn(`[hydration] beverage lookup error for "${liquidType}":`, bevError.message);
-        } else if (!bev) {
-          console.warn(`[hydration] no beverage row for liquidType="${liquidType}" — logging without profile`);
-        } else {
-          console.log(`[hydration] bev found: ${bev.display_name} (${liquidType})`);
-          const water_g       = Number(bev.water_g_per_oz)       * amount;
-          const sodium_mg     = Number(bev.sodium_mg_per_oz)     * amount;
-          const potassium_mg  = Number(bev.potassium_mg_per_oz)  * amount;
-          const magnesium_mg  = Number(bev.magnesium_mg_per_oz)  * amount;
-          const sugar_g       = Number(bev.sugar_g_per_oz)       * amount;
-          const total_carbs_g = Number(bev.total_carbs_g_per_oz) * amount;
-          const profile = computeHydrationProfile({
-            amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
-          });
-          console.log(`[hydration] computed profile: score=${profile.hydration_score}, tier=${profile.hydration_tier}`);
-          nutritionPayload = {
-            water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
-            glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
-            hydration_profile: profile,
-          };
+      if (aiNutrition) {
+        // AI-analyzed beverage (e.g. "Other" liquid). Multiply per-oz values by amount.
+        const water_g       = Number(aiNutrition.water_g_per_oz)       * amount;
+        const sodium_mg     = Number(aiNutrition.sodium_mg_per_oz)     * amount;
+        const potassium_mg  = Number(aiNutrition.potassium_mg_per_oz)  * amount;
+        const magnesium_mg  = Number(aiNutrition.magnesium_mg_per_oz)  * amount;
+        const sugar_g       = Number(aiNutrition.sugar_g_per_oz)       * amount;
+        const total_carbs_g = Number(aiNutrition.total_carbs_g_per_oz) * amount;
+        const profile = computeHydrationProfile({
+          amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
+        });
+        console.log(`[hydration] AI profile: ${aiNutrition.display_name} score=${profile.hydration_score}`);
+        nutritionPayload = {
+          water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
+          glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
+          hydration_profile: profile,
+        };
+        customLabel = aiNutrition.display_name?.slice(0, 80) || null;
+      } else {
+        // Look up preset beverage nutrition profile
+        try {
+          const { data: bev, error: bevError } = await (supabase as any)
+            .from('hydration_beverage_database')
+            .select('*')
+            .eq('liquid_type', liquidType)
+            .maybeSingle();
+
+          if (bevError) {
+            console.warn(`[hydration] beverage lookup error for "${liquidType}":`, bevError.message);
+          } else if (!bev) {
+            console.warn(`[hydration] no beverage row for liquidType="${liquidType}" — logging without profile`);
+          } else {
+            console.log(`[hydration] bev found: ${bev.display_name} (${liquidType})`);
+            const water_g       = Number(bev.water_g_per_oz)       * amount;
+            const sodium_mg     = Number(bev.sodium_mg_per_oz)     * amount;
+            const potassium_mg  = Number(bev.potassium_mg_per_oz)  * amount;
+            const magnesium_mg  = Number(bev.magnesium_mg_per_oz)  * amount;
+            const sugar_g       = Number(bev.sugar_g_per_oz)       * amount;
+            const total_carbs_g = Number(bev.total_carbs_g_per_oz) * amount;
+            const profile = computeHydrationProfile({
+              amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
+            });
+            console.log(`[hydration] computed profile: score=${profile.hydration_score}, tier=${profile.hydration_tier}`);
+            nutritionPayload = {
+              water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
+              glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
+              hydration_profile: profile,
+            };
+          }
+        } catch (e) {
+          console.warn('[hydration] beverage lookup failed, logging without profile', e);
         }
-      } catch (e) {
-        console.warn('[hydration] beverage lookup failed, logging without profile', e);
       }
 
       const { error } = await supabase
@@ -211,6 +250,7 @@ export function useHydration() {
           log_date: today,
           liquid_type: liquidType,
           quality_class: qualityClass,
+          custom_label: customLabel,
           ...nutritionPayload,
         } as any);
 

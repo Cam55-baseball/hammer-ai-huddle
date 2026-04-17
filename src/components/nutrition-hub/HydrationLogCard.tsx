@@ -18,9 +18,13 @@ interface Props {
 }
 
 export function HydrationLogCard({ log, onDelete, compact = false }: Props) {
-  const info = log.liquid_type
+  const baseInfo = log.liquid_type
     ? getLiquidTypeInfo(log.liquid_type)
     : { emoji: '💧', label: 'Water', value: 'water', defaultQuality: 'quality' as const };
+  const customLabel = (log as any).custom_label as string | null | undefined;
+  const info = customLabel && log.liquid_type === 'other'
+    ? { ...baseInfo, label: customLabel, emoji: baseInfo?.emoji || '🫗' }
+    : baseInfo;
   const profile = (log.hydration_profile as HydrationProfile | null | undefined) ?? null;
 
   // Legacy log: no nutrition profile → volume-only display.

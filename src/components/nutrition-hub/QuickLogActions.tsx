@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode, Camera } from 'lucide-react';
-import { useHydration } from '@/hooks/useHydration';
+import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode, Camera, Sparkles, Loader2, Gauge } from 'lucide-react';
+import { useHydration, type AiHydrationAnalysis } from '@/hooks/useHydration';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { RecipeBuilder } from './RecipeBuilder';
@@ -17,6 +17,8 @@ import { FoodSearchResult } from '@/hooks/useFoodSearch';
 import { MealTypeSelector, MEAL_TYPES } from './MealTypeSelector';
 import { PhotoFoodLogger } from './PhotoFoodLogger';
 import { LIQUID_TYPES, classifyLiquid } from '@/constants/hydrationClassification';
+import { computeHydrationProfile, TIER_LABEL, TIER_TEXT_CLASS } from '@/utils/hydrationScoring';
+import { supabase } from '@/integrations/supabase/client';
 
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
@@ -41,6 +43,10 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
   const [liquidPickerOpen, setLiquidPickerOpen] = useState(false);
   const [pendingWaterAmount, setPendingWaterAmount] = useState<number | null>(null);
   const [pendingLiquid, setPendingLiquid] = useState<{ type: string; quality: string } | null>(null);
+  // AI "Other" liquid flow
+  const [otherText, setOtherText] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<(AiHydrationAnalysis & { confidence: 'high' | 'medium' | 'low'; notes?: string }) | null>(null);
   
   // Store pending items waiting for meal type selection
   const pendingItemsRef = useRef<RecipeIngredient[] | null>(null);
@@ -74,21 +80,80 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
   };
 
   const handleLiquidSelect = (liquidType: string) => {
+    if (liquidType === 'other') {
+      setPendingLiquid({ type: 'other', quality: 'quality' });
+      setOtherText('');
+      setAiAnalysis(null);
+      return;
+    }
     const quality = classifyLiquid(liquidType);
     setPendingLiquid({ type: liquidType, quality });
   };
 
+  const resetLiquidPicker = () => {
+    setLiquidPickerOpen(false);
+    setPendingWaterAmount(null);
+    setPendingLiquid(null);
+    setSelectedLiquidType('water');
+    setOtherText('');
+    setAiAnalysis(null);
+  };
+
+  const handleAnalyzeOther = async () => {
+    if (!pendingWaterAmount) return;
+    const text = otherText.trim();
+    if (text.length < 2) {
+      toast.error('Describe what you\u2019re drinking (min 2 characters)');
+      return;
+    }
+    setAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-hydration-text', {
+        body: { text, amount_oz: pendingWaterAmount },
+      });
+      if (error) {
+        const status = (error as any)?.context?.status;
+        const msg = status === 429
+          ? 'Hammer is busy \u2014 try again in a moment.'
+          : status === 402
+            ? 'AI credits exhausted. Add credits to continue.'
+            : (error.message || 'Failed to analyze beverage');
+        toast.error(msg);
+        return;
+      }
+      const a = data?.analysis;
+      if (!a) {
+        toast.error('No analysis returned');
+        return;
+      }
+      setAiAnalysis(a);
+    } catch (e) {
+      console.error('analyze-hydration-text failed', e);
+      toast.error('Failed to analyze beverage');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   const handleLiquidConfirm = async () => {
     if (!pendingWaterAmount || !pendingLiquid) return;
+    if (pendingLiquid.type === 'other' && !aiAnalysis) {
+      toast.error('Analyze your drink with Hammer first');
+      return;
+    }
     setIsLogging(true);
     try {
-      await addWater(pendingWaterAmount, pendingLiquid.type, pendingLiquid.quality);
-      const info = LIQUID_TYPES.find(lt => lt.value === pendingLiquid.type);
-      toast.success(`Added ${pendingWaterAmount}oz ${info?.label || pendingLiquid.type}`);
-      setLiquidPickerOpen(false);
-      setPendingWaterAmount(null);
-      setPendingLiquid(null);
-      setSelectedLiquidType('water');
+      await addWater(
+        pendingWaterAmount,
+        pendingLiquid.type,
+        pendingLiquid.quality,
+        pendingLiquid.type === 'other' && aiAnalysis ? aiAnalysis : undefined,
+      );
+      const label = pendingLiquid.type === 'other' && aiAnalysis
+        ? aiAnalysis.display_name
+        : (LIQUID_TYPES.find(lt => lt.value === pendingLiquid.type)?.label || pendingLiquid.type);
+      toast.success(`Added ${pendingWaterAmount}oz ${label}`);
+      resetLiquidPicker();
     } finally {
       setIsLogging(false);
     }
@@ -326,6 +391,105 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
                     </Button>
                   ))}
                 </div>
+              ) : pendingLiquid.type === 'other' ? (
+                <div className="space-y-3 py-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      What are you drinking? ({pendingWaterAmount}oz)
+                    </Label>
+                    <Input
+                      placeholder="e.g. iced matcha latte with oat milk"
+                      value={otherText}
+                      onChange={(e) => setOtherText(e.target.value)}
+                      disabled={analyzing || isLogging}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !aiAnalysis) handleAnalyzeOther(); }}
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Hammer will estimate hydration value, electrolytes, and sugar.
+                    </p>
+                  </div>
+
+                  {!aiAnalysis ? (
+                    <Button
+                      className="w-full gap-2"
+                      onClick={handleAnalyzeOther}
+                      disabled={analyzing || otherText.trim().length < 2}
+                    >
+                      {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      {analyzing ? 'Analyzing...' : 'Analyze with Hammer'}
+                    </Button>
+                  ) : (() => {
+                    const profile = computeHydrationProfile({
+                      amount_oz: pendingWaterAmount!,
+                      water_g: aiAnalysis.water_g_per_oz * pendingWaterAmount!,
+                      sodium_mg: aiAnalysis.sodium_mg_per_oz * pendingWaterAmount!,
+                      potassium_mg: aiAnalysis.potassium_mg_per_oz * pendingWaterAmount!,
+                      magnesium_mg: aiAnalysis.magnesium_mg_per_oz * pendingWaterAmount!,
+                      sugar_g: aiAnalysis.sugar_g_per_oz * pendingWaterAmount!,
+                      total_carbs_g: aiAnalysis.total_carbs_g_per_oz * pendingWaterAmount!,
+                    });
+                    const tierColor = TIER_TEXT_CLASS[profile.hydration_tier];
+                    return (
+                      <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-sm">{aiAnalysis.display_name}</p>
+                          <span className={cn('text-[10px] font-semibold uppercase', 
+                            aiAnalysis.confidence === 'high' ? 'text-emerald-500' :
+                            aiAnalysis.confidence === 'medium' ? 'text-amber-500' : 'text-muted-foreground'
+                          )}>
+                            {aiAnalysis.confidence} confidence
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Hydration score</span>
+                          <span className={cn('flex items-center gap-1 font-bold', tierColor)}>
+                            <Gauge className="h-3.5 w-3.5" />
+                            {profile.hydration_score} · {TIER_LABEL[profile.hydration_tier]}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1.5 text-[10px]">
+                          <Stat label="Water" value={`${profile.water_percent}%`} />
+                          <Stat label="Sodium" value={`${Math.round(aiAnalysis.sodium_mg_per_oz * pendingWaterAmount!)}mg`} />
+                          <Stat label="Potass." value={`${Math.round(aiAnalysis.potassium_mg_per_oz * pendingWaterAmount!)}mg`} />
+                          <Stat label="Sugar" value={`${(aiAnalysis.sugar_g_per_oz * pendingWaterAmount!).toFixed(1)}g`} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Quality override */}
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">Classification</p>
+                      <p className={cn('text-xs font-semibold',
+                        pendingLiquid.quality === 'quality' ? 'text-emerald-500' : 'text-amber-500'
+                      )}>
+                        {pendingLiquid.quality === 'quality' ? '✓ Quality' : '⚠ Filler'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">Override</span>
+                      <Switch
+                        checked={pendingLiquid.quality === 'filler'}
+                        onCheckedChange={toggleQualityOverride}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={() => { setPendingLiquid(null); setAiAnalysis(null); setOtherText(''); }}>
+                      Back
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      disabled={isLogging || !aiAnalysis}
+                      onClick={handleLiquidConfirm}
+                    >
+                      {t('nutrition.add', 'Add')}
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-4 py-4">
                   {/* Confirm selected liquid with override option */}
@@ -502,5 +666,14 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
         title={t('nutrition.selectMealTypeFor', 'Add to which meal?')}
       />
     </Card>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded bg-background/60 px-1.5 py-1 text-center">
+      <p className="text-muted-foreground">{label}</p>
+      <p className="font-semibold text-foreground">{value}</p>
+    </div>
   );
 }
