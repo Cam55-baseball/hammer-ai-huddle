@@ -5,10 +5,12 @@ import { Droplets, Gauge } from 'lucide-react';
 import { useHydration } from '@/hooks/useHydration';
 import { TIER_LABEL, TIER_TEXT_CLASS } from '@/utils/hydrationScoring';
 import { cn } from '@/lib/utils';
+import { HydrationLogCard } from './HydrationLogCard';
 
 export function HydrationQualityBreakdown() {
   const { t } = useTranslation();
   const {
+    todayLogs,
     todayTotal,
     dailyAverageScore,
     dailyTier,
@@ -17,6 +19,7 @@ export function HydrationQualityBreakdown() {
     totalMagnesiumMg,
     totalSugarG,
     progress,
+    deleteLog,
   } = useHydration();
 
   if (todayTotal === 0) return null;
