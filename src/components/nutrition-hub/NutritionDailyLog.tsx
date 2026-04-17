@@ -42,12 +42,12 @@ export function NutritionDailyLog({
   const queryClient = useQueryClient();
   const { config } = usePerformanceMode();
   const { todayLogs: hydrationLogs, dailyAverageScore, dailyTier, todayTotal: hydrationOzToday, deleteLog: deleteHydration } = useHydration();
-  const isViewingToday = isToday(currentDate);
   
   const [internalDate, setInternalDate] = useState(new Date());
 
   const currentDate = controlledDate ?? internalDate;
   const dateStr = format(currentDate, 'yyyy-MM-dd');
+  const isViewingToday = isToday(currentDate);
 
   const handleDateChange = (newDate: Date) => {
     if (onDateChange) {
