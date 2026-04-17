@@ -2603,10 +2603,25 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 }}
                 onToggleCheckbox={async (fieldId, checked) => {
                   const itemId = selectedFolderTask.folderItemData!.itemId;
-                  // Persist checkbox state immediately (independent of completion intent)
                   const currentPd = performanceData || {};
                   const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
                   const newStates = { ...currentStates, [fieldId]: checked };
+
+                  // Optimistic update so the dialog re-renders immediately
+                  setSelectedFolderTask(prev => {
+                    if (!prev?.customActivityData) return prev;
+                    const prevPd = (prev.customActivityData.log?.performance_data as Record<string, any>) || {};
+                    return {
+                      ...prev,
+                      customActivityData: {
+                        ...prev.customActivityData,
+                        log: {
+                          ...(prev.customActivityData.log as any),
+                          performance_data: { ...prevPd, checkboxStates: newStates },
+                        } as any,
+                      },
+                    };
+                  });
 
                   await saveFolderCheckboxState(itemId, newStates);
 
@@ -2769,6 +2784,22 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 const currentPd = performanceData || {};
                 const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
                 const newStates = { ...currentStates, [fieldId]: checked };
+
+                // Optimistic update so the dialog re-renders immediately
+                setSelectedFolderTask(prev => {
+                  if (!prev?.customActivityData) return prev;
+                  const prevPd = (prev.customActivityData.log?.performance_data as Record<string, any>) || {};
+                  return {
+                    ...prev,
+                    customActivityData: {
+                      ...prev.customActivityData,
+                      log: {
+                        ...(prev.customActivityData.log as any),
+                        performance_data: { ...prevPd, checkboxStates: newStates },
+                      } as any,
+                    },
+                  };
+                });
 
                 await saveFolderCheckboxState(itemId, newStates);
 

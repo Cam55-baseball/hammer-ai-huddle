@@ -1106,27 +1106,30 @@ export function CustomActivityDetailDialog({
                         </Button>
                       ) : hasCheckables && onDone && onCheckAll ? (
                         <>
+                          {/* Done = exit & keep checked items saved, but DO NOT mark task as completed */}
                           <Button
                             variant="outline"
-                            onClick={async () => {
-                              await onCheckAll();
-                              onOpenChange(false);
-                            }}
+                            onClick={() => onOpenChange(false)}
                             className="flex-1 gap-2 font-bold"
                           >
-                            <Check className="h-4 w-4" />
-                            {t('customActivity.detail.markAllComplete', 'Mark all complete')}
+                            {t('customActivity.detail.done', 'Done')}
                           </Button>
+                          {/* Finish = mark task completed. Uses check_all if every item is checked, else done_button. Disabled if nothing checked. */}
                           <Button
                             onClick={async () => {
-                              await onDone();
+                              if (checkedCount === totalCheckableCount) {
+                                await onCheckAll();
+                              } else {
+                                await onDone();
+                              }
                               onOpenChange(false);
                             }}
+                            disabled={checkedCount === 0}
                             className="flex-1 gap-2 font-bold"
                             style={{ backgroundColor: customColor }}
                           >
                             <Check className="h-4 w-4" />
-                            {t('customActivity.detail.finishForNow', 'Finish for now')}
+                            {t('customActivity.detail.finish', 'Finish')}
                           </Button>
                         </>
                       ) : (

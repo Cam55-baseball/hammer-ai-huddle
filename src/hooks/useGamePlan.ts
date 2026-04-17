@@ -984,6 +984,19 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     if (!user) return;
     const today = getTodayDate();
 
+    // Optimistic local state update so the dialog re-renders immediately
+    setFolderTasks(prev => prev.map(ft =>
+      ft.item.id === itemId
+        ? {
+            ...ft,
+            performanceData: {
+              ...(ft.performanceData || {}),
+              checkboxStates: { ...((ft.performanceData?.checkboxStates) || {}), ...checkboxStates },
+            },
+          }
+        : ft
+    ));
+
     try {
       const { data: existing } = await supabase
         .from('folder_item_completions')
@@ -998,7 +1011,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         await supabase
           .from('folder_item_completions')
           .update({
-            performance_data: { ...currentPd, checkboxStates },
+            performance_data: { ...currentPd, checkboxStates: { ...((currentPd.checkboxStates as Record<string, boolean>) || {}), ...checkboxStates } },
           })
           .eq('id', existing.id);
       } else {
