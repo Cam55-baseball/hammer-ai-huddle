@@ -391,6 +391,105 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
                     </Button>
                   ))}
                 </div>
+              ) : pendingLiquid.type === 'other' ? (
+                <div className="space-y-3 py-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      What are you drinking? ({pendingWaterAmount}oz)
+                    </Label>
+                    <Input
+                      placeholder="e.g. iced matcha latte with oat milk"
+                      value={otherText}
+                      onChange={(e) => setOtherText(e.target.value)}
+                      disabled={analyzing || isLogging}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !aiAnalysis) handleAnalyzeOther(); }}
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Hammer will estimate hydration value, electrolytes, and sugar.
+                    </p>
+                  </div>
+
+                  {!aiAnalysis ? (
+                    <Button
+                      className="w-full gap-2"
+                      onClick={handleAnalyzeOther}
+                      disabled={analyzing || otherText.trim().length < 2}
+                    >
+                      {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      {analyzing ? 'Analyzing...' : 'Analyze with Hammer'}
+                    </Button>
+                  ) : (() => {
+                    const profile = computeHydrationProfile({
+                      amount_oz: pendingWaterAmount!,
+                      water_g: aiAnalysis.water_g_per_oz * pendingWaterAmount!,
+                      sodium_mg: aiAnalysis.sodium_mg_per_oz * pendingWaterAmount!,
+                      potassium_mg: aiAnalysis.potassium_mg_per_oz * pendingWaterAmount!,
+                      magnesium_mg: aiAnalysis.magnesium_mg_per_oz * pendingWaterAmount!,
+                      sugar_g: aiAnalysis.sugar_g_per_oz * pendingWaterAmount!,
+                      total_carbs_g: aiAnalysis.total_carbs_g_per_oz * pendingWaterAmount!,
+                    });
+                    const tierColor = TIER_TEXT_CLASS[profile.hydration_tier];
+                    return (
+                      <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-sm">{aiAnalysis.display_name}</p>
+                          <span className={cn('text-[10px] font-semibold uppercase', 
+                            aiAnalysis.confidence === 'high' ? 'text-emerald-500' :
+                            aiAnalysis.confidence === 'medium' ? 'text-amber-500' : 'text-muted-foreground'
+                          )}>
+                            {aiAnalysis.confidence} confidence
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Hydration score</span>
+                          <span className={cn('flex items-center gap-1 font-bold', tierColor)}>
+                            <Gauge className="h-3.5 w-3.5" />
+                            {profile.hydration_score} · {TIER_LABEL[profile.hydration_tier]}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1.5 text-[10px]">
+                          <Stat label="Water" value={`${profile.water_percent}%`} />
+                          <Stat label="Sodium" value={`${Math.round(aiAnalysis.sodium_mg_per_oz * pendingWaterAmount!)}mg`} />
+                          <Stat label="Potass." value={`${Math.round(aiAnalysis.potassium_mg_per_oz * pendingWaterAmount!)}mg`} />
+                          <Stat label="Sugar" value={`${(aiAnalysis.sugar_g_per_oz * pendingWaterAmount!).toFixed(1)}g`} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Quality override */}
+                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                    <div>
+                      <p className="text-sm font-medium">Classification</p>
+                      <p className={cn('text-xs font-semibold',
+                        pendingLiquid.quality === 'quality' ? 'text-emerald-500' : 'text-amber-500'
+                      )}>
+                        {pendingLiquid.quality === 'quality' ? '✓ Quality' : '⚠ Filler'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">Override</span>
+                      <Switch
+                        checked={pendingLiquid.quality === 'filler'}
+                        onCheckedChange={toggleQualityOverride}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="flex-1" onClick={() => { setPendingLiquid(null); setAiAnalysis(null); setOtherText(''); }}>
+                      Back
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      disabled={isLogging || !aiAnalysis}
+                      onClick={handleLiquidConfirm}
+                    >
+                      {t('nutrition.add', 'Add')}
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-4 py-4">
                   {/* Confirm selected liquid with override option */}
