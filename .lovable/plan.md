@@ -1,113 +1,70 @@
 
 
-## Plan — Performance-Grade Hydration Quality Scoring
+## Plan — Hydration Scoring Refinements + Future-Proofing
 
-### Goal
-Replace the simplistic "quality vs filler" binary with a real, explainable **Hydration Score (0–100)** derived from water %, electrolytes, and sugar — stored on each log and surfaced in the Nutrition Hub + Vault.
+### Investigation summary
+- Pipeline IS working for new logs (confirmed: `goat_milk` log at 18:43 has full `hydration_profile` with score 88, tier `optimal`).
+- All 13 beverage rows are seeded correctly in `hydration_beverage_database`.
+- Older `water` logs show `hydration_profile: null` because they were inserted **before** the migration. These are legacy and the UI correctly falls back to volume-only display.
+- New water logs *will* score (≈71, "high" tier).
 
----
-
-### 1. Database — schema changes
-
-**Table: `hydration_logs`** — add nutrition + computed hydration profile columns.
-
-| Column | Type | Purpose |
-|---|---|---|
-| `water_g` | numeric | Water content (grams) |
-| `sodium_mg` | numeric | Sodium |
-| `potassium_mg` | numeric | Potassium |
-| `magnesium_mg` | numeric | Magnesium |
-| `sugar_g` | numeric | Total sugar |
-| `total_carbs_g` | numeric | Total carbs |
-| `hydration_profile` | jsonb | `{ water_percent, electrolyte_score, sugar_penalty, hydration_score, hydration_tier, insight }` |
-
-All nullable (legacy logs unaffected). No backfill required — old logs continue to use the existing `quality_class` fallback.
-
-**Table: `hydration_beverage_database`** (new) — canonical per-oz nutrition for common drinks.
-
-| Column | Type |
-|---|---|
-| `id` uuid pk |
-| `liquid_type` text unique (matches existing `liquid_type` enum keys) |
-| `display_name` text |
-| `water_g_per_oz`, `sodium_mg_per_oz`, `potassium_mg_per_oz`, `magnesium_mg_per_oz`, `sugar_g_per_oz`, `total_carbs_g_per_oz` numeric |
-| `source` text (`'usda'`, `'branded'`, `'manual'`) |
-| `usda_fdc_id` text nullable |
-
-Seeded via insert tool with USDA FoodData Central values for the ~15 existing liquid types (water, coconut water, milk, gatorade, coffee, tea, soda, juice, beer, etc.). RLS: read-public, write-owner-only.
+So there's no broken pipeline — but the user's checklist still needs the renames, clamping, scaffolding, and diagnostic logging to make failures obvious if they ever happen.
 
 ---
 
-### 2. Scoring engine — new util
+### Changes
 
-**File**: `src/utils/hydrationScoring.ts`
+#### 1. `src/utils/hydrationScoring.ts` — formula refinement + future fields
 
-```text
-computeHydrationProfile(nutrition):
-  water_percent     = (water_g / serving_g) * 100
-  electrolyte_score = scoreElectrolytes(Na, K, Mg)   // 0–100, weighted Na 50%, K 30%, Mg 20%
-  sugar_penalty     = sugarPenalty(sugar_g, oz)       // 100 if low, scales down >6g/8oz
-  hydration_score   = round(water%*0.6 + electrolyte_score*0.3 + sugar_penalty*0.1)
-  hydration_tier    = >=85 optimal | >=70 high | >=50 moderate | low
-  insight           = generateInsight(...)            // deterministic templated string
-```
+- Rename `sugar_penalty` → `sugar_score` everywhere (type, return shape, helper).
+- Same logic (100 = low sugar, 0 = high sugar) but treated as positive contributor — formula stays mathematically identical, naming becomes consistent.
+- **Hard clamp** Na/K/Mg sub-scores to 0–100 inside `scoreElectrolytes` (already clamped, but assert via `clamp()` on the final weighted sum too).
+- Extend `HydrationProfile` with future-fields (always present, default `null`):
+  ```ts
+  glucose_g: number | null
+  fructose_g: number | null
+  osmolality_estimate: number | null
+  absorption_score: number | null
+  ```
+- Refactor `generateInsight` into a registry: `insightProviders: InsightProvider[]` where each provider returns `{ priority, text } | null`. v1 keeps the existing water/electrolyte/sugar logic as the first three providers. Future providers (performance, activity, personalized) plug in without touching the engine.
 
-Pure, deterministic, unit-tested-friendly. Used at log time (frontend) and re-usable in edge functions.
+#### 2. `src/hooks/useHydration.ts` — diagnostics + resilience
 
----
+- Add structured logging behind a `[hydration]` prefix:
+  - `bev` lookup result (or null + reason)
+  - Computed profile object
+  - Final insert payload (keys present)
+  - Insert error/result
+- Don't swallow lookup errors silently — keep the drink log working but `console.warn('[hydration] no beverage row for liquidType=…')` so we can detect missing seed data.
+- Pass `glucose_g`/`fructose_g`/`osmolality_estimate`/`absorption_score` as nulls into `computeHydrationProfile` (already-scaffolded fields) so the JSONB profile always carries the same shape.
 
-### 3. Log creation — compute & store at write time
+#### 3. Database migration — scaffold advanced columns
 
-**File**: `src/hooks/useHydration.ts`
+Add nullable columns to `hydration_logs`:
+- `glucose_g numeric`
+- `fructose_g numeric`
+- `osmolality_estimate numeric`
+- `absorption_score numeric`
 
-- `addWater(amount, liquidType, qualityClass)` → also looks up `hydration_beverage_database` row for `liquidType`, scales per-oz nutrition by `amount`, calls `computeHydrationProfile`, and writes the full nutrition + `hydration_profile` JSONB into the insert.
-- Computed once at log time per requirement — never recomputed on render.
-- Fallback: if no DB row, store `null` profile and UI shows volume-only.
+No backfill, no constraints. Stored alongside existing nutrition columns; the `hydration_profile` JSONB also carries them.
 
----
+#### 4. UI rename pass
 
-### 4. UI — per-log hydration card
+- `src/components/nutrition-hub/HydrationLogCard.tsx` — `profile.sugar_penalty` → `profile.sugar_score` (display label stays "Sugar Score"). Add a tiny `Score` cell so users see why sugar moved the needle.
+- `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` — same rename, no visual change.
+- `src/components/custom-activities/HydrationTrackerWidget.tsx` — no change (uses HydrationLogCard).
 
-**New component**: `src/components/nutrition-hub/HydrationLogCard.tsx`
+#### 5. Backwards compatibility for legacy profiles
 
-Replaces the plain row inside `HydrationTrackerWidget` popover and adds a richer breakdown in the Nutrition Hub.
+`HydrationLogCard` reads `profile.sugar_score ?? profile.sugar_penalty` so the one already-stored profile (goat_milk 88) keeps rendering after the rename.
 
-Per log displays:
-- Big score chip + tier label (color-coded: optimal=emerald, high=blue, moderate=amber, low=red)
-- 4-stat grid: Water %, Sodium mg, Potassium mg, Sugar g
-- Magnesium row + insight sentence
-- Existing delete button
+#### 6. End-to-end QA checklist (manual, post-deploy)
 
-**Updated component**: `src/components/nutrition-hub/HydrationQualityBreakdown.tsx`
-
-- Replace "Quality vs Filler" bar with **Daily Average Hydration Score** + tier
-- Add aggregate breakdown row: total liquid oz · avg score · total Na · total K · total sugar
-- Keep existing efficiency score logic but feed it from new score average
-
----
-
-### 5. Vault daily view integration
-
-**File**: `src/components/vault/...` (locate hydration daily-summary cell)
-
-Show four new aggregate stats per day:
-- Total liquid intake (oz)
-- Average hydration score (0–100, color tier)
-- Total electrolytes from fluids (Na+K+Mg)
-- Total sugar from fluids (g)
-
-Computed by aggregating the day's `hydration_logs` rows.
-
----
-
-### 6. Hook updates
-
-`useHydration` returns extended fields:
-- `dailyAverageScore`, `dailyTier`
-- `totalSodiumMg`, `totalPotassiumMg`, `totalMagnesiumMg`, `totalSugarG`
-- Per-log enriched data (already in row via JSONB)
-
-`useDailyNutritionTargets` and `MacroTargetDisplay` continue using `consumedHydration` (volume) for the goal-progress bar — unchanged. The score is **additive** insight, not a replacement for the volume goal.
+Log each of: Water (8oz), Coconut Water (8oz), Sports Drink (8oz), Soda (8oz). Verify:
+- Score chip + tier render on every new log card
+- Breakdown cells (Water %, Na, K, Mg, Sugar) populated
+- Daily Average Hydration Score increments correctly
+- Legacy water logs (pre-migration) still render volume-only with no errors
 
 ---
 
@@ -115,23 +72,14 @@ Computed by aggregating the day's `hydration_logs` rows.
 
 | File | Action |
 |---|---|
-| **Migration** | Add columns to `hydration_logs`; create `hydration_beverage_database` + RLS |
-| **Insert** | Seed `hydration_beverage_database` with ~15 USDA-backed entries |
-| `src/utils/hydrationScoring.ts` | NEW — pure scoring engine |
-| `src/hooks/useHydration.ts` | Compute + store profile on add; expose aggregates |
-| `src/components/nutrition-hub/HydrationLogCard.tsx` | NEW — per-log rich card |
-| `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` | Replace binary with score-based breakdown |
-| `src/components/custom-activities/HydrationTrackerWidget.tsx` | Use new HydrationLogCard for entries |
-| Vault daily summary component | Add 4 aggregate hydration stats |
-| `mem://features/nutrition-hub/hydration-quality-system` | Update memory to reflect score-based system |
+| `src/utils/hydrationScoring.ts` | Rename `sugar_penalty`→`sugar_score`; clamp electrolyte sum; add 4 advanced null fields; refactor insight to provider registry |
+| `src/hooks/useHydration.ts` | Add `[hydration]` diagnostic logs; pass advanced null fields; keep fallback safe |
+| `src/components/nutrition-hub/HydrationLogCard.tsx` | Read `sugar_score` (with `sugar_penalty` legacy fallback); add Sugar Score cell |
+| `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` | Same rename |
+| **Migration** | Add `glucose_g`, `fructose_g`, `osmolality_estimate`, `absorption_score` to `hydration_logs` |
 
-### Backwards compatibility
-- Legacy logs without `hydration_profile` → display volume only, no score chip
-- `quality_class` column kept (read-only fallback) — not removed
-- All existing realtime + BroadcastChannel sync logic preserved
-
-### Out of scope (per "Optional later")
-- Glucose/fructose split, osmolality, absorption rate
-- Branded API integration (manual seed for v1; structure supports later sync)
-- Editing nutrition on a logged drink
+### Out of scope
+- Real glucose/fructose/osmolality math (scaffolded only, per request)
+- Performance/activity/personalized insights (registry ready, no providers yet)
+- Backfilling profile on legacy logs
 
