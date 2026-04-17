@@ -2565,6 +2565,7 @@ export type Database = {
         Row: {
           absorption_score: number | null
           amount_oz: number
+          custom_label: string | null
           fructose_g: number | null
           glucose_g: number | null
           hydration_profile: Json | null
@@ -2585,6 +2586,7 @@ export type Database = {
         Insert: {
           absorption_score?: number | null
           amount_oz: number
+          custom_label?: string | null
           fructose_g?: number | null
           glucose_g?: number | null
           hydration_profile?: Json | null
@@ -2605,6 +2607,7 @@ export type Database = {
         Update: {
           absorption_score?: number | null
           amount_oz?: number
+          custom_label?: string | null
           fructose_g?: number | null
           glucose_g?: number | null
           hydration_profile?: Json | null
