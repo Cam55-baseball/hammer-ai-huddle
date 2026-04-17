@@ -8409,6 +8409,7 @@ export type Database = {
         Args: { p_coach_id: string; p_folder_id: string }
         Returns: boolean
       }
+      has_any_checked: { Args: { cb: Json }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
