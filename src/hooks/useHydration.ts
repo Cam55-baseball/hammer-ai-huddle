@@ -319,7 +319,7 @@ export function useHydration() {
       return [];
     }
 
-    return data || [];
+    return (data as unknown as HydrationLog[]) || [];
   }, [user]);
 
   // Initial load
