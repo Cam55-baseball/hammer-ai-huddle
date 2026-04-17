@@ -5,10 +5,12 @@ import { Droplets, Gauge } from 'lucide-react';
 import { useHydration } from '@/hooks/useHydration';
 import { TIER_LABEL, TIER_TEXT_CLASS } from '@/utils/hydrationScoring';
 import { cn } from '@/lib/utils';
+import { HydrationLogCard } from './HydrationLogCard';
 
 export function HydrationQualityBreakdown() {
   const { t } = useTranslation();
   const {
+    todayLogs,
     todayTotal,
     dailyAverageScore,
     dailyTier,
@@ -17,6 +19,7 @@ export function HydrationQualityBreakdown() {
     totalMagnesiumMg,
     totalSugarG,
     progress,
+    deleteLog,
   } = useHydration();
 
   if (todayTotal === 0) return null;
@@ -74,6 +77,24 @@ export function HydrationQualityBreakdown() {
           <span>Magnesium: {Math.round(totalMagnesiumMg)}mg</span>
           <span>Goal progress: {Math.round(progress)}%</span>
         </div>
+
+        {/* Per-drink hydration logs with scores */}
+        {todayLogs.length > 0 && (
+          <div className="space-y-2 pt-2 border-t">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t('nutrition.todayDrinks', "Today's drinks")} ({todayLogs.length})
+            </p>
+            <div className="space-y-2">
+              {todayLogs.map(log => (
+                <HydrationLogCard
+                  key={log.id}
+                  log={log as any}
+                  onDelete={deleteLog}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
