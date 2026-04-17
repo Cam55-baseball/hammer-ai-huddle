@@ -17,8 +17,12 @@ import { DeficiencyAlert } from './DeficiencyAlert';
 import { NutritionTrendsCard } from './NutritionTrendsCard';
 import { GuidancePanel } from './GuidancePanel';
 import { CravingGuidance } from './CravingGuidance';
+import { HydrationLogCard } from './HydrationLogCard';
+import { useHydration } from '@/hooks/useHydration';
 import { useNutritionGuidance } from '@/hooks/useNutritionGuidance';
 import { usePerformanceMode } from '@/hooks/usePerformanceMode';
+import { TIER_LABEL, TIER_TEXT_CLASS } from '@/utils/hydrationScoring';
+import { Gauge } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 

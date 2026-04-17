@@ -668,3 +668,12 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
     </Card>
   );
 }
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded bg-background/60 px-1.5 py-1 text-center">
+      <p className="text-muted-foreground">{label}</p>
+      <p className="font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
