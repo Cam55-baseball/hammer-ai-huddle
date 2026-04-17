@@ -5,6 +5,12 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } fro
 import { toast } from 'sonner';
 import { TAB_ID } from '@/utils/tabId';
 import { computeHydrationProfile, type HydrationProfile, type HydrationTier } from '@/utils/hydrationScoring';
+import {
+  multiplyMicros,
+  sumMicros,
+  EMPTY_MICROS,
+  type HydrationMicros,
+} from '@/utils/hydrationMicros';
 
 const HYDRATION_CHANGED_EVENT = 'hydration:changed';
 
@@ -24,6 +30,7 @@ export interface HydrationLog {
   total_carbs_g?: number | null;
   hydration_profile?: HydrationProfile | null;
   custom_label?: string | null;
+  micros?: Partial<HydrationMicros> | null;
 }
 
 export interface AiHydrationAnalysis {
@@ -35,6 +42,7 @@ export interface AiHydrationAnalysis {
   sugar_g_per_oz: number;
   total_carbs_g_per_oz: number;
   confidence?: 'high' | 'medium' | 'low';
+  micros_per_oz?: Partial<HydrationMicros> | null;
 }
 
 export interface HydrationSettings {
@@ -199,11 +207,13 @@ export function useHydration() {
         const profile = computeHydrationProfile({
           amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
         });
+        const micros = multiplyMicros(aiNutrition.micros_per_oz ?? null, amount);
         console.log(`[hydration] AI profile: ${aiNutrition.display_name} score=${profile.hydration_score}`);
         nutritionPayload = {
           water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
           glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
           hydration_profile: profile,
+          micros,
         };
         customLabel = aiNutrition.display_name?.slice(0, 80) || null;
       } else {
@@ -230,11 +240,13 @@ export function useHydration() {
             const profile = computeHydrationProfile({
               amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
             });
+            const micros = multiplyMicros(bev.micros_per_oz ?? null, amount);
             console.log(`[hydration] computed profile: score=${profile.hydration_score}, tier=${profile.hydration_tier}`);
             nutritionPayload = {
               water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
               glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
               hydration_profile: profile,
+              micros,
             };
           }
         } catch (e) {
@@ -453,6 +465,12 @@ export function useHydration() {
   const totalSugarG      = todayLogs.reduce((s, l) => s + Number((l as any).sugar_g      || 0), 0);
   const totalElectrolytesMg = totalSodiumMg + totalPotassiumMg + totalMagnesiumMg;
 
+  // Aggregate micronutrients across today's hydration logs (for display in
+  // Hydration Quality breakdown). Falls back to empty when no logs carry micros.
+  const totalHydrationMicros: HydrationMicros = sumMicros(
+    todayLogs.map(l => (l as any).micros as Partial<HydrationMicros> | null | undefined)
+  );
+
   return {
     // Data
     todayLogs,
@@ -476,6 +494,7 @@ export function useHydration() {
     totalMagnesiumMg,
     totalSugarG,
     totalElectrolytesMg,
+    totalHydrationMicros,
 
     // Actions
     addWater,
