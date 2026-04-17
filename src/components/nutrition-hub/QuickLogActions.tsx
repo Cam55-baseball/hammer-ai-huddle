@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode, Camera } from 'lucide-react';
-import { useHydration } from '@/hooks/useHydration';
+import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode, Camera, Sparkles, Loader2, Gauge } from 'lucide-react';
+import { useHydration, type AiHydrationAnalysis } from '@/hooks/useHydration';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { RecipeBuilder } from './RecipeBuilder';
@@ -17,6 +17,8 @@ import { FoodSearchResult } from '@/hooks/useFoodSearch';
 import { MealTypeSelector, MEAL_TYPES } from './MealTypeSelector';
 import { PhotoFoodLogger } from './PhotoFoodLogger';
 import { LIQUID_TYPES, classifyLiquid } from '@/constants/hydrationClassification';
+import { computeHydrationProfile, TIER_LABEL, TIER_TEXT_CLASS } from '@/utils/hydrationScoring';
+import { supabase } from '@/integrations/supabase/client';
 
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
