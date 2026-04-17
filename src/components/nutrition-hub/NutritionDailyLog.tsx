@@ -171,12 +171,12 @@ export function NutritionDailyLog({
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
           </div>
-        ) : meals.length === 0 ? (
+        ) : meals.length === 0 && (!isViewingToday || hydrationLogs.length === 0) ? (
           <div className="text-center py-8 text-muted-foreground">
             <UtensilsCrossed className="h-10 w-10 mx-auto mb-3 opacity-50" />
             <p className="font-medium">{t('nutrition.noMeals', 'No meals logged')}</p>
             <p className="text-sm mt-1">
-              {isToday(currentDate) 
+              {isViewingToday
                 ? t('nutrition.startLogging', 'Start logging your meals to track nutrition')
                 : t('nutrition.noMealsOnDate', 'No meals were logged on this day')
               }
@@ -185,9 +185,19 @@ export function NutritionDailyLog({
         ) : (
           <>
             <div className="space-y-2">
-              {meals.map((meal) => (
-                <MealLogCard key={meal.id} meal={meal} onEdit={onEditMeal} onDelete={handleDeleteMeal} />
-              ))}
+              {(() => {
+                const items: Array<{ kind: 'meal'; at: number; data: typeof meals[number] } | { kind: 'hydration'; at: number; data: typeof hydrationLogs[number] }> = [];
+                meals.forEach(m => items.push({ kind: 'meal', at: new Date(m.loggedAt).getTime(), data: m }));
+                if (isViewingToday) {
+                  hydrationLogs.forEach(h => items.push({ kind: 'hydration', at: new Date(h.logged_at).getTime(), data: h }));
+                }
+                items.sort((a, b) => a.at - b.at);
+                return items.map(item =>
+                  item.kind === 'meal'
+                    ? <MealLogCard key={`m-${item.data.id}`} meal={item.data} onEdit={onEditMeal} onDelete={handleDeleteMeal} />
+                    : <HydrationLogCard key={`h-${item.data.id}`} log={item.data as any} onDelete={deleteHydration} compact />
+                );
+              })()}
             </div>
 
             {/* Day totals */}
