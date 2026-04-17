@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { toast } from 'sonner';
+import { TAB_ID } from '@/utils/tabId';
+
+const HYDRATION_CHANGED_EVENT = 'hydration:changed';
 
 export interface HydrationLog {
   id: string;
@@ -181,6 +184,11 @@ export function useHydration() {
 
       // Refresh logs
       fetchTodayLogs();
+      try {
+        const ch = new BroadcastChannel('data-sync');
+        ch.postMessage({ type: HYDRATION_CHANGED_EVENT, userId: user.id, tabId: TAB_ID });
+        ch.close();
+      } catch {}
       return true;
     } catch (error) {
       console.error('Error logging water:', error);
@@ -203,6 +211,11 @@ export function useHydration() {
       if (error) throw error;
 
       fetchTodayLogs();
+      try {
+        const ch = new BroadcastChannel('data-sync');
+        ch.postMessage({ type: HYDRATION_CHANGED_EVENT, userId: user.id, tabId: TAB_ID });
+        ch.close();
+      } catch {}
       toast.success('Entry removed');
       return true;
     } catch (error) {
@@ -281,6 +294,40 @@ export function useHydration() {
       });
     }
   }, [user, fetchTodayLogs, fetchSettings]);
+
+  // Cross-instance + cross-tab sync
+  useEffect(() => {
+    if (!user) return;
+
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel('data-sync');
+      channel.onmessage = (event) => {
+        const data = event.data;
+        if (
+          data?.type === HYDRATION_CHANGED_EVENT &&
+          data.userId === user.id &&
+          data.tabId !== TAB_ID
+        ) {
+          fetchTodayLogs();
+        }
+      };
+    } catch {}
+
+    const realtime = supabase
+      .channel(`hydration_logs:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'hydration_logs', filter: `user_id=eq.${user.id}` },
+        () => fetchTodayLogs()
+      )
+      .subscribe();
+
+    return () => {
+      try { channel?.close(); } catch {}
+      supabase.removeChannel(realtime);
+    };
+  }, [user, fetchTodayLogs]);
 
   // Refresh stats when todayTotal changes
   useEffect(() => {
