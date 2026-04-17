@@ -1114,17 +1114,12 @@ export function CustomActivityDetailDialog({
                           >
                             {t('customActivity.detail.done', 'Done')}
                           </Button>
-                          {/* Finish = mark task completed. Uses check_all if every item is checked, else done_button. Disabled if nothing checked. */}
+                          {/* Complete Activity = always check all items + mark task completed. */}
                           <Button
                             onClick={async () => {
-                              if (checkedCount === totalCheckableCount) {
-                                await onCheckAll();
-                              } else {
-                                await onDone();
-                              }
+                              await onCheckAll();
                               onOpenChange(false);
                             }}
-                            disabled={checkedCount === 0}
                             className="flex-1 gap-2 font-bold"
                             style={{ backgroundColor: customColor }}
                           >
