@@ -68,7 +68,7 @@ export function useHydration() {
       .order('logged_at', { ascending: true });
 
     if (!error && data) {
-      setTodayLogs(data);
+      setTodayLogs(data as unknown as HydrationLog[]);
       const total = data.reduce((sum, log) => sum + Number(log.amount_oz), 0);
       setTodayTotal(total);
     }
