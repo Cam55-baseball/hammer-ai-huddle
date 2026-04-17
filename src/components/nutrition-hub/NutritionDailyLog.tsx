@@ -248,6 +248,20 @@ export function NutritionDailyLog({
                   </p>
                 )}
               </div>
+              {/* Hydration row (today only) */}
+              {isViewingToday && hydrationLogs.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground">
+                    💧 {hydrationOzToday} oz · {hydrationLogs.length} drink{hydrationLogs.length === 1 ? '' : 's'}
+                  </span>
+                  {dailyAverageScore > 0 && (
+                    <span className={cn('flex items-center gap-1 font-semibold', TIER_TEXT_CLASS[dailyTier])}>
+                      <Gauge className="h-3 w-3" />
+                      {dailyAverageScore} · {TIER_LABEL[dailyTier]}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Nutrition Score */}
