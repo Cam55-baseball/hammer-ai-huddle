@@ -171,13 +171,18 @@ export function useHydration() {
       // Look up beverage nutrition profile
       let nutritionPayload: Record<string, any> = {};
       try {
-        const { data: bev } = await (supabase as any)
+        const { data: bev, error: bevError } = await (supabase as any)
           .from('hydration_beverage_database')
           .select('*')
           .eq('liquid_type', liquidType)
           .maybeSingle();
 
-        if (bev) {
+        if (bevError) {
+          console.warn(`[hydration] beverage lookup error for "${liquidType}":`, bevError.message);
+        } else if (!bev) {
+          console.warn(`[hydration] no beverage row for liquidType="${liquidType}" — logging without profile`);
+        } else {
+          console.log(`[hydration] bev found: ${bev.display_name} (${liquidType})`);
           const water_g       = Number(bev.water_g_per_oz)       * amount;
           const sodium_mg     = Number(bev.sodium_mg_per_oz)     * amount;
           const potassium_mg  = Number(bev.potassium_mg_per_oz)  * amount;
@@ -187,13 +192,15 @@ export function useHydration() {
           const profile = computeHydrationProfile({
             amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
           });
+          console.log(`[hydration] computed profile: score=${profile.hydration_score}, tier=${profile.hydration_tier}`);
           nutritionPayload = {
             water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
+            glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
             hydration_profile: profile,
           };
         }
       } catch (e) {
-        console.warn('Beverage lookup failed, logging without profile', e);
+        console.warn('[hydration] beverage lookup failed, logging without profile', e);
       }
 
       const { error } = await supabase
