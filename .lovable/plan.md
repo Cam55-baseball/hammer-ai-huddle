@@ -1,39 +1,56 @@
 
 
-## Plan — Stricter Hydration Scoring + Resettable "Other" Search
+## Plan — Micronutrients for Liquids in Hydration Quality
 
-### Issue 1: Scoring too lenient
-Root beer (8oz, 28g sugar, 28mg Na) currently scores 59 ("Moderate"). Breakdown:
-- water% ≈ 88 → contributes 52.8 (weight 0.6)
-- electrolyte_score: Na (28/110)*100=25 *0.5=12.5; K=0; Mg=0 → ~13 → contributes 3.9 (weight 0.3)
-- sugar_score: 28g/8oz > 26g threshold → 0 → contributes 0 (weight 0.1)
-- Total ≈ 57 → "Moderate"
+### Goal
+Extend hydration logs to carry micronutrients (Vit C, B-vits, Ca, Fe, Mg, K, Zn, etc.) and surface a daily aggregate in the Hydration Quality block.
 
-Problem: water% dominates (60%), so even sugary soda with no electrolytes still passes "Moderate" floor (50). Sugar weight is only 10% and the cap of 26g/8oz means anything ≥26g penalizes equally. Real hydration science: high sugar (>10g/8oz) actively impairs absorption (osmolality > blood plasma).
+### 1. Edge function — extend `analyze-hydration-text`
+Add to the `analyze_beverage` tool schema a `micros_per_oz` object with the same 13 keys used by `parse-food-text`:
+`vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg, vitamin_b6_mg, vitamin_b12_mcg, folate_mcg, calcium_mg, iron_mg, magnesium_mg, potassium_mg, zinc_mg` (per fl oz, all required).
 
-**Fix — recalibrate `hydrationScoring.ts`:**
-1. **Reweight**: water 0.5, electrolytes 0.3, sugar 0.2 (double sugar's voice).
-2. **Sugar curve tightened**: ≤2g/8oz=100, 5g=80, 10g=50, 15g=20, ≥20g=0 (was linear to 26g). Real soda/juice should land 0–15.
-3. **Sugar veto**: if sugar ≥15g/8oz, cap final score at 45 (forces "Low" tier regardless of water%). Sugary drinks are net dehydrating relative to plain water.
-4. **Tier thresholds nudged stricter**: optimal ≥85, high ≥72, moderate ≥55, low <55. Pushes borderline cases down.
-5. **Insight**: when veto triggers, prepend "High sugar load impairs hydration absorption" so the score change is explainable.
+System prompt addition: USDA-style estimates per oz, 0 only if truly negligible. Examples: orange juice → high vit C/folate/K; milk → Ca/D/B12; coffee → tiny K/Mg; plain water → all 0.
 
-Result: root beer → water 88·0.5=44 + electrolyte 13·0.3=3.9 + sugar 0·0.2=0 ≈ 48 → veto cap 45 → **"Low"**. Plain water stays 95+. Gatorade stays in "High". Coffee/tea stay "High/Optimal".
+Sanitize/clamp to sane caps (e.g. vit C ≤ 100 mg/oz). Magnesium/potassium already returned at top-level — keep both for backwards compat with scoring; mirror inside `micros_per_oz` too.
 
-### Issue 2: "Other" search not resettable
-In `QuickLogActions.tsx`, after AI analysis returns a preview, clearing the input doesn't reset state — user is stuck on the preview/back-only flow.
+### 2. Preset beverages — micros source
+Two paths:
 
-**Fix:**
-- Watch the text input: when it becomes empty (or user edits it after a preview was shown), clear `analysis` state and return UI to the input/analyze step.
-- Also: when analysis preview is showing, edits to the input should invalidate the preview (so they can refine "matcha latte" → "matcha latte with oat milk" and re-analyze without going back).
+**a)** Extend `hydration_beverage_database` with a `micros_per_oz jsonb` column (migration). Seed common drinks (water=zeros, milk, OJ, coffee, tea, Gatorade, soda, coconut water) with USDA values. New rows fall back to zeros.
+
+**b)** For unseeded preset rows, add a one-shot enrichment: when `useHydration` reads a beverage with NULL `micros_per_oz`, call a new lightweight edge function `analyze-hydration-preset` (same schema as #1 but takes a beverage name) and persist back to the row. Owner-only path or cached at first lookup so we never re-pay.
+
+v1 implements (a) seeded; (b) deferred unless needed.
+
+### 3. Schema migration — `hydration_logs`
+Add `micros jsonb` (nullable). Stores the multiplied-out totals for that single log (per-oz × amount_oz). Keeps reads cheap — no recompute from beverage db on render.
+
+### 4. `useHydration.ts`
+- On insert (preset path): multiply preset `micros_per_oz` × `amount_oz` → store in `micros`.
+- On insert (AI/other path): multiply `aiNutrition.micros_per_oz` × `amount_oz` → store in `micros`.
+- Expose new aggregates from today's logs:
+  - `totalHydrationMicros: Record<MicroKey, number>` (summed across today's hydration logs).
+
+### 5. `HydrationQualityBreakdown.tsx`
+Add a collapsed-by-default "Micronutrients from drinks today" section under the existing aggregate row:
+- Grid of micro chips showing only non-zero values (e.g. "Vit C 62 mg · K 480 mg · Ca 310 mg").
+- "Show all 13" toggle reveals zeros.
+- Small caption: "Hammer-estimated for custom drinks; USDA values for presets."
+
+### 6. Daily Nutrition Score integration (optional, scoped tight)
+The Daily Nutrition Score (40% micros) currently only counts food micros. To avoid hidden score inflation, **do NOT auto-merge** hydration micros into the Daily Nutrition Score in v1 — display only. Add a follow-up toggle later if user wants it counted.
 
 ### Files to change
 | File | Change |
 |---|---|
-| `src/utils/hydrationScoring.ts` | New weights, stricter sugar curve, sugar veto, tier thresholds, veto insight fragment |
-| `src/components/nutrition-hub/QuickLogActions.tsx` | Reset analysis when input cleared/edited |
+| `supabase/functions/analyze-hydration-text/index.ts` | Add `micros_per_oz` to tool schema + clamping |
+| Migration | Add `micros_per_oz jsonb` to `hydration_beverage_database`; add `micros jsonb` to `hydration_logs`; seed common presets |
+| `src/hooks/useHydration.ts` | Compute & persist `micros` on insert; expose `totalHydrationMicros` |
+| `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` | Render micros section (non-zero chips, expand toggle) |
+| `src/components/nutrition-hub/QuickLogActions.tsx` | Pass through AI `micros_per_oz` to `addWater` |
 
-### Out of scope
-- Re-scoring historical logs (new scoring applies to new logs going forward; legacy `hydration_profile` JSON stays as-is)
-- Osmolality math (still scaffolded for future)
+### Out of scope (v1)
+- Folding hydration micros into the Daily Nutrition Score
+- Backfilling micros on legacy hydration logs
+- Per-drink micro detail inside `HydrationLogCard` (stays at the daily aggregate)
 
