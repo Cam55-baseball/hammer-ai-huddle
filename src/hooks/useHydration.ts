@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { toast } from 'sonner';
 import { TAB_ID } from '@/utils/tabId';
+import { computeHydrationProfile, type HydrationProfile, type HydrationTier } from '@/utils/hydrationScoring';
 
 const HYDRATION_CHANGED_EVENT = 'hydration:changed';
 
@@ -15,6 +16,13 @@ export interface HydrationLog {
   logged_at: string;
   liquid_type?: string;
   quality_class?: string;
+  water_g?: number | null;
+  sodium_mg?: number | null;
+  potassium_mg?: number | null;
+  magnesium_mg?: number | null;
+  sugar_g?: number | null;
+  total_carbs_g?: number | null;
+  hydration_profile?: HydrationProfile | null;
 }
 
 export interface HydrationSettings {
@@ -160,6 +168,34 @@ export function useHydration() {
     }
 
     try {
+      // Look up beverage nutrition profile
+      let nutritionPayload: Record<string, any> = {};
+      try {
+        const { data: bev } = await (supabase as any)
+          .from('hydration_beverage_database')
+          .select('*')
+          .eq('liquid_type', liquidType)
+          .maybeSingle();
+
+        if (bev) {
+          const water_g       = Number(bev.water_g_per_oz)       * amount;
+          const sodium_mg     = Number(bev.sodium_mg_per_oz)     * amount;
+          const potassium_mg  = Number(bev.potassium_mg_per_oz)  * amount;
+          const magnesium_mg  = Number(bev.magnesium_mg_per_oz)  * amount;
+          const sugar_g       = Number(bev.sugar_g_per_oz)       * amount;
+          const total_carbs_g = Number(bev.total_carbs_g_per_oz) * amount;
+          const profile = computeHydrationProfile({
+            amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
+          });
+          nutritionPayload = {
+            water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
+            hydration_profile: profile,
+          };
+        }
+      } catch (e) {
+        console.warn('Beverage lookup failed, logging without profile', e);
+      }
+
       const { error } = await supabase
         .from('hydration_logs')
         .insert({
@@ -168,6 +204,7 @@ export function useHydration() {
           log_date: today,
           liquid_type: liquidType,
           quality_class: qualityClass,
+          ...nutritionPayload,
         } as any);
 
       if (error) throw error;
@@ -348,6 +385,27 @@ export function useHydration() {
     .reduce((sum, l) => sum + Number(l.amount_oz), 0);
   const qualityPercent = todayTotal > 0 ? Math.round((qualityTotal / todayTotal) * 100) : 100;
 
+  // --- New: hydration-score aggregates -------------------------------------
+  const scoredLogs = todayLogs.filter(l => (l as any).hydration_profile?.hydration_score != null);
+  const dailyAverageScore = scoredLogs.length > 0
+    ? Math.round(
+        scoredLogs.reduce(
+          (sum, l) => sum + Number((l as any).hydration_profile.hydration_score),
+          0
+        ) / scoredLogs.length
+      )
+    : 0;
+  const dailyTier: HydrationTier =
+    dailyAverageScore >= 85 ? 'optimal' :
+    dailyAverageScore >= 70 ? 'high' :
+    dailyAverageScore >= 50 ? 'moderate' : 'low';
+
+  const totalSodiumMg    = todayLogs.reduce((s, l) => s + Number((l as any).sodium_mg    || 0), 0);
+  const totalPotassiumMg = todayLogs.reduce((s, l) => s + Number((l as any).potassium_mg || 0), 0);
+  const totalMagnesiumMg = todayLogs.reduce((s, l) => s + Number((l as any).magnesium_mg || 0), 0);
+  const totalSugarG      = todayLogs.reduce((s, l) => s + Number((l as any).sugar_g      || 0), 0);
+  const totalElectrolytesMg = totalSodiumMg + totalPotassiumMg + totalMagnesiumMg;
+
   return {
     // Data
     todayLogs,
@@ -362,7 +420,16 @@ export function useHydration() {
     qualityTotal,
     fillerTotal,
     qualityPercent,
-    
+
+    // Score-based aggregates
+    dailyAverageScore,
+    dailyTier,
+    totalSodiumMg,
+    totalPotassiumMg,
+    totalMagnesiumMg,
+    totalSugarG,
+    totalElectrolytesMg,
+
     // Actions
     addWater,
     deleteLog,

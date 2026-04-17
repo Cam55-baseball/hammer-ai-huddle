@@ -1,23 +1,28 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Droplets, Sparkles, AlertTriangle, Gauge } from 'lucide-react';
+import { Droplets, Gauge } from 'lucide-react';
 import { useHydration } from '@/hooks/useHydration';
+import { TIER_LABEL, TIER_TEXT_CLASS } from '@/utils/hydrationScoring';
 import { cn } from '@/lib/utils';
 
 export function HydrationQualityBreakdown() {
   const { t } = useTranslation();
-  const { todayTotal, qualityTotal, fillerTotal, qualityPercent, progress } = useHydration();
+  const {
+    todayTotal,
+    dailyAverageScore,
+    dailyTier,
+    totalSodiumMg,
+    totalPotassiumMg,
+    totalMagnesiumMg,
+    totalSugarG,
+    progress,
+  } = useHydration();
 
   if (todayTotal === 0) return null;
 
-  // Hydration Efficiency Score: quality weight 60%, goal progress 40%
-  const efficiencyScore = Math.round((qualityPercent / 100) * 60 + (Math.min(progress, 100) / 100) * 40);
-  const scoreColor = efficiencyScore >= 70
-    ? 'text-emerald-500'
-    : efficiencyScore >= 40
-      ? 'text-amber-500'
-      : 'text-destructive';
+  const tierColor = TIER_TEXT_CLASS[dailyTier];
+  const hasScored = dailyAverageScore > 0;
 
   return (
     <Card>
@@ -29,36 +34,56 @@ export function HydrationQualityBreakdown() {
           </p>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{todayTotal} oz</span>
-            <span className={cn('flex items-center gap-0.5 text-xs font-bold', scoreColor)}>
-              <Gauge className="h-3 w-3" />
-              {efficiencyScore}
-            </span>
+            {hasScored && (
+              <span className={cn('flex items-center gap-0.5 text-xs font-bold', tierColor)}>
+                <Gauge className="h-3 w-3" />
+                {dailyAverageScore}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Quality bar */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-              <Sparkles className="h-3 w-3" />
-              Quality: {qualityTotal} oz
-            </span>
-            <span className="font-semibold">{qualityPercent}%</span>
+        {/* Daily average score bar */}
+        {hasScored ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1">
+                <Gauge className={cn('h-3 w-3', tierColor)} />
+                <span>Avg Hydration Score</span>
+              </span>
+              <span className={cn('font-semibold', tierColor)}>
+                {dailyAverageScore} · {TIER_LABEL[dailyTier]}
+              </span>
+            </div>
+            <Progress value={dailyAverageScore} className="h-2" />
           </div>
-          <Progress value={qualityPercent} className="h-2" />
-        </div>
-
-        {/* Filler indicator */}
-        {fillerTotal > 0 && (
-          <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400">
-            <span className="flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              Filler: {fillerTotal} oz
-            </span>
-            <span>{100 - qualityPercent}%</span>
-          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Logged volume only — switch to a tracked beverage type to see your hydration score.
+          </p>
         )}
+
+        {/* Aggregate breakdown */}
+        <div className="grid grid-cols-4 gap-1.5 text-[10px] pt-1">
+          <Cell label="Volume"   value={`${Math.round(todayTotal)} oz`} />
+          <Cell label="Sodium"   value={`${Math.round(totalSodiumMg)}mg`} />
+          <Cell label="Potassium" value={`${Math.round(totalPotassiumMg)}mg`} />
+          <Cell label="Sugar"    value={`${totalSugarG.toFixed(1)}g`} />
+        </div>
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+          <span>Magnesium: {Math.round(totalMagnesiumMg)}mg</span>
+          <span>Goal progress: {Math.round(progress)}%</span>
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+function Cell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded bg-muted/50 px-1.5 py-1 text-center">
+      <p className="text-muted-foreground">{label}</p>
+      <p className="font-semibold text-foreground">{value}</p>
+    </div>
   );
 }
