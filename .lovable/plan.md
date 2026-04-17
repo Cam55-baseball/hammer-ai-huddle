@@ -1,100 +1,39 @@
 
 
-## Plan — AI-Analyzed "Other" Liquids + Hydration in Daily Log
+## Plan — Stricter Hydration Scoring + Resettable "Other" Search
 
-### Goal
-1. When user picks **Other** in the liquid picker, let them type a free-form description (e.g. "iced matcha latte with oat milk") → Hammer (AI) analyzes it → produces full hydration nutrition (water/Na/K/Mg/sugar) → standard `computeHydrationProfile()` runs → log saved with score + tier just like preset drinks.
-2. Surface today's hydration logs (with scores) inline in the **Daily Log** section of Nutrition Hub, alongside meals — so the day's full intake (food + drink + scores) lives in one place.
+### Issue 1: Scoring too lenient
+Root beer (8oz, 28g sugar, 28mg Na) currently scores 59 ("Moderate"). Breakdown:
+- water% ≈ 88 → contributes 52.8 (weight 0.6)
+- electrolyte_score: Na (28/110)*100=25 *0.5=12.5; K=0; Mg=0 → ~13 → contributes 3.9 (weight 0.3)
+- sugar_score: 28g/8oz > 26g threshold → 0 → contributes 0 (weight 0.1)
+- Total ≈ 57 → "Moderate"
 
----
+Problem: water% dominates (60%), so even sugary soda with no electrolytes still passes "Moderate" floor (50). Sugar weight is only 10% and the cap of 26g/8oz means anything ≥26g penalizes equally. Real hydration science: high sugar (>10g/8oz) actively impairs absorption (osmolality > blood plasma).
 
-### 1. New edge function — `analyze-hydration-text`
+**Fix — recalibrate `hydrationScoring.ts`:**
+1. **Reweight**: water 0.5, electrolytes 0.3, sugar 0.2 (double sugar's voice).
+2. **Sugar curve tightened**: ≤2g/8oz=100, 5g=80, 10g=50, 15g=20, ≥20g=0 (was linear to 26g). Real soda/juice should land 0–15.
+3. **Sugar veto**: if sugar ≥15g/8oz, cap final score at 45 (forces "Low" tier regardless of water%). Sugary drinks are net dehydrating relative to plain water.
+4. **Tier thresholds nudged stricter**: optimal ≥85, high ≥72, moderate ≥55, low <55. Pushes borderline cases down.
+5. **Insight**: when veto triggers, prepend "High sugar load impairs hydration absorption" so the score change is explainable.
 
-`supabase/functions/analyze-hydration-text/index.ts`
+Result: root beer → water 88·0.5=44 + electrolyte 13·0.3=3.9 + sugar 0·0.2=0 ≈ 48 → veto cap 45 → **"Low"**. Plain water stays 95+. Gatorade stays in "High". Coffee/tea stay "High/Optimal".
 
-- Input: `{ text: string, amount_oz: number }`
-- Auth: standard JWT bearer check (matches `parse-food-text` pattern).
-- Calls Lovable AI (`google/gemini-3-flash-preview`) via tool-calling for **structured output**:
-  ```
-  {
-    display_name: string,
-    water_g_per_oz: number,
-    sodium_mg_per_oz: number,
-    potassium_mg_per_oz: number,
-    magnesium_mg_per_oz: number,
-    sugar_g_per_oz: number,
-    total_carbs_g_per_oz: number,
-    confidence: "high" | "medium" | "low",
-    notes: string
-  }
-  ```
-- System prompt: "USDA-grade hydration analyst. Estimate per-oz values for any beverage. Water% bounded 0–1g/g. Be conservative."
-- Returns the per-oz profile + display name + confidence. Handles 429/402 gateway errors and surfaces them.
-- No DB write — pure analysis. Client owns the insert.
-- `verify_jwt = false` (Lovable default); validate auth header in code.
+### Issue 2: "Other" search not resettable
+In `QuickLogActions.tsx`, after AI analysis returns a preview, clearing the input doesn't reset state — user is stuck on the preview/back-only flow.
 
-### 2. `useHydration.ts` — extend `addWater` for AI-analyzed drinks
-
-Add an optional `aiNutrition` param:
-```ts
-addWater(
-  amount, liquidType, qualityClass,
-  aiNutrition?: { display_name, water_g_per_oz, sodium_mg_per_oz, ... }
-)
-```
-
-When `aiNutrition` is passed (i.e. `liquidType === 'other'`):
-- Skip the `hydration_beverage_database` lookup.
-- Multiply per-oz values by amount → compute profile via existing `computeHydrationProfile()` → same insert path.
-- Store the AI-provided `display_name` in a new field on the log row so the card can label it ("Iced matcha latte" instead of just "Other").
-
-### 3. Schema migration — store AI display label
-
-Add to `hydration_logs`:
-- `custom_label text` (nullable) — only set for `liquid_type='other'` AI logs.
-
-`HydrationLogCard.tsx`: when `liquid_type === 'other'` and `custom_label` exists, render it instead of the generic "Other" label.
-
-### 4. `QuickLogActions.tsx` — Other → text input flow
-
-When user selects **Other** in the liquid picker:
-- Replace the existing single-step confirm with a small inline form:
-  - Text input: "What are you drinking?" (e.g. "kombucha", "homemade smoothie with banana and almond milk")
-  - "Analyze with Hammer" button → calls `supabase.functions.invoke('analyze-hydration-text', { text, amount_oz })`
-  - Loading state with spinner
-  - On success: show preview card with display name + score + tier + breakdown (water%, Na/K/Mg, sugar) + confidence chip
-  - "Add" button → `addWater(amount, 'other', quality, aiNutrition)`
-- Error handling: surface 429 ("AI is busy, try again") and 402 ("Add credits to continue") via toast.
-
-### 5. Daily Log integration — meals + hydration unified
-
-`NutritionDailyLog.tsx` currently only shows meals (and renders `HydrationQualityBreakdown` separately further down). Change:
-- Pull today's hydration logs via `useHydration()` (already cached, realtime-synced).
-- Filter to `currentDate` (currently `useHydration` is today-only — extend to accept a date OR use `getLogsForDateRange` for non-today views).
-- Build a unified, **time-ordered** list of entries: meals + hydration logs, sorted by `logged_at`.
-- Render hydration entries using `HydrationLogCard` inline between meal cards (same chronological feed).
-- Add hydration totals to the "Day Totals" footer:
-  - Total oz · Avg hydration score · tier chip
-- Keep `HydrationQualityBreakdown` lower in the page for the deeper aggregate view (electrolytes/sugar breakdown) — no duplication of per-drink cards there once they appear inline.
-
-### 6. Backwards compatibility
-- Preset drinks: zero behavior change.
-- Legacy "other" logs without `custom_label`: fall back to "Other" label (current behavior).
-- Legacy hydration logs without `hydration_profile`: already handled by `HydrationLogCard` (volume-only).
+**Fix:**
+- Watch the text input: when it becomes empty (or user edits it after a preview was shown), clear `analysis` state and return UI to the input/analyze step.
+- Also: when analysis preview is showing, edits to the input should invalidate the preview (so they can refine "matcha latte" → "matcha latte with oat milk" and re-analyze without going back).
 
 ### Files to change
-
-| File | Action |
+| File | Change |
 |---|---|
-| `supabase/functions/analyze-hydration-text/index.ts` | **NEW** edge function |
-| Migration | Add `custom_label text` to `hydration_logs` |
-| `src/hooks/useHydration.ts` | Extend `addWater` signature + per-oz multiply branch + persist `custom_label` |
-| `src/components/nutrition-hub/QuickLogActions.tsx` | "Other" → text input → analyze → preview → confirm flow |
-| `src/components/nutrition-hub/HydrationLogCard.tsx` | Render `custom_label` when present |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Merge hydration logs into chronological day feed; add hydration to Day Totals |
+| `src/utils/hydrationScoring.ts` | New weights, stricter sugar curve, sugar veto, tier thresholds, veto insight fragment |
+| `src/components/nutrition-hub/QuickLogActions.tsx` | Reset analysis when input cleared/edited |
 
 ### Out of scope
-- Editing AI analysis after save (re-log instead)
-- Caching identical "other" descriptions to a shared DB (each log is independent for v1)
-- Historical date hydration view inside Daily Log when navigating past days — keep today-only in v1; show a "view in Hydration section" hint for past dates
+- Re-scoring historical logs (new scoring applies to new logs going forward; legacy `hydration_profile` JSON stays as-is)
+- Osmolality math (still scaffolded for future)
 
