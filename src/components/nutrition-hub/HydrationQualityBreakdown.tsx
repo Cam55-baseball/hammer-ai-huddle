@@ -77,6 +77,24 @@ export function HydrationQualityBreakdown() {
           <span>Magnesium: {Math.round(totalMagnesiumMg)}mg</span>
           <span>Goal progress: {Math.round(progress)}%</span>
         </div>
+
+        {/* Per-drink hydration logs with scores */}
+        {todayLogs.length > 0 && (
+          <div className="space-y-2 pt-2 border-t">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t('nutrition.todayDrinks', "Today's drinks")} ({todayLogs.length})
+            </p>
+            <div className="space-y-2">
+              {todayLogs.map(log => (
+                <HydrationLogCard
+                  key={log.id}
+                  log={log as any}
+                  onDelete={deleteLog}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
