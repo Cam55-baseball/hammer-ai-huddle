@@ -198,8 +198,8 @@ export const PERFORMANCE_METRICS: MetricDefinition[] = [
   // ── THROWING VELOCITY & ARM STRENGTH ───────────────────
   {
     key: 'long_toss_distance', category: 'throwing_velocity', label: 'Long Toss Distance',
-    unit: 'ft', min: 50, max: 400, step: 1, higherIsBetter: true,
-    tier: 'free', sports: ['baseball', 'softball'], modules: ['pitching', 'throwing'],
+    unit: 'ft', min: 50, max: 450, step: 1, higherIsBetter: true,
+    tier: 'free', sports: ['baseball', 'softball'], modules: ['pitching', 'throwing', 'general'],
     instructions: 'Max long toss on a line. Measure total carry distance.',
   },
   {
@@ -210,8 +210,8 @@ export const PERFORMANCE_METRICS: MetricDefinition[] = [
   },
   {
     key: 'position_throw_velo', category: 'throwing_velocity', label: 'Position Player Throw Velo',
-    unit: 'mph', min: 30, max: 100, step: 0.1, higherIsBetter: true,
-    tier: 'paid', sports: ['baseball', 'softball'], modules: ['throwing'],
+    unit: 'mph', min: 30, max: 105, step: 0.1, higherIsBetter: true,
+    tier: 'free', sports: ['baseball', 'softball'], modules: ['throwing', 'hitting', 'general'],
     instructions: 'Max effort throw from position (e.g., SS to 1B). Radar gun.',
   },
   {
