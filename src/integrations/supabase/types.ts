@@ -8335,6 +8335,7 @@ export type Database = {
       }
     }
     Functions: {
+      all_checked: { Args: { cb: Json }; Returns: boolean }
       archive_old_scout_applications: { Args: never; Returns: undefined }
       attach_session_to_link: {
         Args: { p_link_code: string; p_session_id: string; p_user_id: string }
