@@ -2513,33 +2513,102 @@ export type Database = {
         }
         Relationships: []
       }
+      hydration_beverage_database: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          liquid_type: string
+          magnesium_mg_per_oz: number
+          potassium_mg_per_oz: number
+          sodium_mg_per_oz: number
+          source: string
+          sugar_g_per_oz: number
+          total_carbs_g_per_oz: number
+          updated_at: string
+          usda_fdc_id: string | null
+          water_g_per_oz: number
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          liquid_type: string
+          magnesium_mg_per_oz?: number
+          potassium_mg_per_oz?: number
+          sodium_mg_per_oz?: number
+          source?: string
+          sugar_g_per_oz?: number
+          total_carbs_g_per_oz?: number
+          updated_at?: string
+          usda_fdc_id?: string | null
+          water_g_per_oz?: number
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          liquid_type?: string
+          magnesium_mg_per_oz?: number
+          potassium_mg_per_oz?: number
+          sodium_mg_per_oz?: number
+          source?: string
+          sugar_g_per_oz?: number
+          total_carbs_g_per_oz?: number
+          updated_at?: string
+          usda_fdc_id?: string | null
+          water_g_per_oz?: number
+        }
+        Relationships: []
+      }
       hydration_logs: {
         Row: {
           amount_oz: number
+          hydration_profile: Json | null
           id: string
           liquid_type: string | null
           log_date: string | null
           logged_at: string | null
+          magnesium_mg: number | null
+          potassium_mg: number | null
           quality_class: string | null
+          sodium_mg: number | null
+          sugar_g: number | null
+          total_carbs_g: number | null
           user_id: string
+          water_g: number | null
         }
         Insert: {
           amount_oz: number
+          hydration_profile?: Json | null
           id?: string
           liquid_type?: string | null
           log_date?: string | null
           logged_at?: string | null
+          magnesium_mg?: number | null
+          potassium_mg?: number | null
           quality_class?: string | null
+          sodium_mg?: number | null
+          sugar_g?: number | null
+          total_carbs_g?: number | null
           user_id: string
+          water_g?: number | null
         }
         Update: {
           amount_oz?: number
+          hydration_profile?: Json | null
           id?: string
           liquid_type?: string | null
           log_date?: string | null
           logged_at?: string | null
+          magnesium_mg?: number | null
+          potassium_mg?: number | null
           quality_class?: string | null
+          sodium_mg?: number | null
+          sugar_g?: number | null
+          total_carbs_g?: number | null
           user_id?: string
+          water_g?: number | null
         }
         Relationships: []
       }
