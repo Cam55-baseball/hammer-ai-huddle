@@ -2520,6 +2520,7 @@ export type Database = {
           id: string
           liquid_type: string
           magnesium_mg_per_oz: number
+          micros_per_oz: Json
           potassium_mg_per_oz: number
           sodium_mg_per_oz: number
           source: string
@@ -2535,6 +2536,7 @@ export type Database = {
           id?: string
           liquid_type: string
           magnesium_mg_per_oz?: number
+          micros_per_oz?: Json
           potassium_mg_per_oz?: number
           sodium_mg_per_oz?: number
           source?: string
@@ -2550,6 +2552,7 @@ export type Database = {
           id?: string
           liquid_type?: string
           magnesium_mg_per_oz?: number
+          micros_per_oz?: Json
           potassium_mg_per_oz?: number
           sodium_mg_per_oz?: number
           source?: string
@@ -2574,6 +2577,7 @@ export type Database = {
           log_date: string | null
           logged_at: string | null
           magnesium_mg: number | null
+          micros: Json | null
           osmolality_estimate: number | null
           potassium_mg: number | null
           quality_class: string | null
@@ -2595,6 +2599,7 @@ export type Database = {
           log_date?: string | null
           logged_at?: string | null
           magnesium_mg?: number | null
+          micros?: Json | null
           osmolality_estimate?: number | null
           potassium_mg?: number | null
           quality_class?: string | null
@@ -2616,6 +2621,7 @@ export type Database = {
           log_date?: string | null
           logged_at?: string | null
           magnesium_mg?: number | null
+          micros?: Json | null
           osmolality_estimate?: number | null
           potassium_mg?: number | null
           quality_class?: string | null

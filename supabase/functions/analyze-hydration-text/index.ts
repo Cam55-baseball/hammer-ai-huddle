@@ -73,7 +73,20 @@ Rules:
 - Milk (2%): water≈26, sodium≈5mg/oz, potassium≈18mg/oz, sugar≈1.6g/oz.
 - Smoothies/lattes: estimate from likely composition.
 - Confidence: "high" for common/standard drinks, "medium" for typical custom drinks, "low" for unusual or vague.
-- display_name: short, clean human label (e.g. "Iced Matcha Latte with Oat Milk"). Do NOT echo "other" or "drink".`,
+- display_name: short, clean human label (e.g. "Iced Matcha Latte with Oat Milk"). Do NOT echo "other" or "drink".
+
+ALSO return micros_per_oz with USDA-style estimates per fl oz for ALL of:
+vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg,
+vitamin_b6_mg, vitamin_b12_mcg, folate_mcg, calcium_mg, iron_mg,
+magnesium_mg, potassium_mg, zinc_mg.
+Use 0 only when truly negligible. Examples:
+- Plain water: all zeros (trace minerals OK).
+- Orange juice: high vitamin_c_mg (~10/oz), folate_mcg (~9/oz), potassium_mg (~24/oz).
+- Milk (2%): calcium_mg (~15/oz), vitamin_d_mcg (~0.16/oz), vitamin_b12_mcg (~0.16/oz), potassium_mg (~18/oz).
+- Coffee: tiny potassium_mg (~14/oz), magnesium_mg (~0.9/oz), rest 0.
+- Sports drink: small B-vits + sodium/potassium already at top-level.
+- Coconut water: high potassium_mg (~75/oz), magnesium_mg (~7/oz).
+Mirror the magnesium_mg and potassium_mg you already returned at top-level inside micros_per_oz too (same value).`,
           },
           {
             role: "user",
@@ -98,6 +111,31 @@ Rules:
                   total_carbs_g_per_oz: { type: "number", description: "Total carbohydrate grams per fl oz." },
                   confidence: { type: "string", enum: ["high", "medium", "low"] },
                   notes: { type: "string", description: "Brief 1-sentence rationale or assumption." },
+                  micros_per_oz: {
+                    type: "object",
+                    description: "USDA-style micronutrient estimates per fl oz.",
+                    properties: {
+                      vitamin_a_mcg:   { type: "number" },
+                      vitamin_c_mg:    { type: "number" },
+                      vitamin_d_mcg:   { type: "number" },
+                      vitamin_e_mg:    { type: "number" },
+                      vitamin_k_mcg:   { type: "number" },
+                      vitamin_b6_mg:   { type: "number" },
+                      vitamin_b12_mcg: { type: "number" },
+                      folate_mcg:      { type: "number" },
+                      calcium_mg:      { type: "number" },
+                      iron_mg:         { type: "number" },
+                      magnesium_mg:    { type: "number" },
+                      potassium_mg:    { type: "number" },
+                      zinc_mg:         { type: "number" },
+                    },
+                    required: [
+                      "vitamin_a_mcg","vitamin_c_mg","vitamin_d_mcg","vitamin_e_mg","vitamin_k_mcg",
+                      "vitamin_b6_mg","vitamin_b12_mcg","folate_mcg","calcium_mg","iron_mg",
+                      "magnesium_mg","potassium_mg","zinc_mg",
+                    ],
+                    additionalProperties: false,
+                  },
                 },
                 required: [
                   "display_name",
@@ -109,6 +147,7 @@ Rules:
                   "total_carbs_g_per_oz",
                   "confidence",
                   "notes",
+                  "micros_per_oz",
                 ],
                 additionalProperties: false,
               },
@@ -164,6 +203,22 @@ Rules:
     // Sanitize / clamp values
     const clamp = (n: number, min: number, max: number) =>
       Math.max(min, Math.min(max, Number.isFinite(n) ? n : 0));
+    const m = (parsed.micros_per_oz ?? {}) as Record<string, any>;
+    const micros_per_oz = {
+      vitamin_a_mcg:   clamp(Number(m.vitamin_a_mcg),   0, 200),
+      vitamin_c_mg:    clamp(Number(m.vitamin_c_mg),    0, 100),
+      vitamin_d_mcg:   clamp(Number(m.vitamin_d_mcg),   0, 5),
+      vitamin_e_mg:    clamp(Number(m.vitamin_e_mg),    0, 10),
+      vitamin_k_mcg:   clamp(Number(m.vitamin_k_mcg),   0, 50),
+      vitamin_b6_mg:   clamp(Number(m.vitamin_b6_mg),   0, 5),
+      vitamin_b12_mcg: clamp(Number(m.vitamin_b12_mcg), 0, 5),
+      folate_mcg:      clamp(Number(m.folate_mcg),      0, 100),
+      calcium_mg:      clamp(Number(m.calcium_mg),      0, 200),
+      iron_mg:         clamp(Number(m.iron_mg),         0, 10),
+      magnesium_mg:    clamp(Number(m.magnesium_mg),    0, 200),
+      potassium_mg:    clamp(Number(m.potassium_mg),    0, 500),
+      zinc_mg:         clamp(Number(m.zinc_mg),         0, 5),
+    };
     const result = {
       display_name: String(parsed.display_name || text).slice(0, 80),
       water_g_per_oz: clamp(Number(parsed.water_g_per_oz), 0, 29.6),
@@ -174,6 +229,7 @@ Rules:
       total_carbs_g_per_oz: clamp(Number(parsed.total_carbs_g_per_oz), 0, 20),
       confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "low",
       notes: String(parsed.notes || "").slice(0, 240),
+      micros_per_oz,
     };
 
     console.log(`[analyze-hydration-text] OK: ${result.display_name} (${result.confidence})`);
