@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { toast } from 'sonner';
+import { TAB_ID } from '@/utils/tabId';
+
+const HYDRATION_CHANGED_EVENT = 'hydration:changed';
 
 export interface HydrationLog {
   id: string;
