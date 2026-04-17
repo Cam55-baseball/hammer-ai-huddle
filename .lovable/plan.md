@@ -1,71 +1,61 @@
+## Plan — Restore Per-Item Checkboxes + Add "Done" Exit Button
+
+### Root cause investigation needed
+
+The console logs and DB state confirm triggers exist now (good), but the user reports two UX failures inside the activity execution dialog:
+
+1. Individual checkboxes don't always persist on click
+2. Only "Finish" exists — no "Done" to exit while preserving partial checks
+
+These are **frontend** issues, not trigger issues. The route `/dashboard?folderItemId=...` opens a folder activity execution dialog. I need to find that component and fix the checkbox write path + add the second button.
+
+### Investigation steps (will perform on approval)
+
+1. Find the dialog component that opens from `?folderItemId=` query param (likely in `Dashboard.tsx` or a `FolderItemExecutionDialog` / similar).
+2. Locate the checkbox toggle handler — verify it writes `checkboxStates` to `folder_item_completions.performance_data` with **real booleans** (not strings — our new strict `has_any_checked` rejects strings).
+3. Locate the bottom action bar that currently shows only "Finish".
+
+### Likely fixes
+
+**A. Checkbox persistence**
+
+- Ensure `performance_data.checkboxStates[itemId] = true` (boolean, not `"true"` string).
+- Ensure the upsert sends `completion_state` = `'in_progress'` (or omits it and lets the trigger derive it) and `completion_method` = `'none'` while partial.
+- Ensure optimistic state updates immediately on click; debounced/awaited DB write does not block UI.
+
+**B. Two-button bottom bar**
+Replace single "Finish" with:
+
+- **Done** (secondary) — closes dialog, persists current `checkboxStates` as-is, leaves `completion_state` as `in_progress` (or `not_started` if zero checked). Never marks `completed`.
+- **Finish** (primary) — marks `completion_state = 'completed'`, sets `completion_method`:
+  - `'check_all'` if every item is checked
+  - `'done_button'` if at least one is checked but not all
+  - Disabled if zero checked (DB would reject anyway)
+
+**C. Mirror logic for custom activity dialog** (non-folder path) so both surfaces behave identically — per the existing invariant memory.
+
+### Files to inspect / modify
 
 
-## NOT READY FOR DEPLOY — 2 Critical Gaps Found
+| File                                                                                   | Purpose                                            |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `src/pages/Dashboard.tsx`                                                              | Find `?folderItemId` handler                       |
+| `src/components/folders/*ExecutionDialog*` or similar                                  | Checkbox + button logic for folder items           |
+| `src/components/custom-activities/*ExecutionDialog*` or similar                        | Same fix for custom activities                     |
+| Hook: `useFolderItemCompletion` / `useCustomActivityLog` (whatever upsert hook exists) | Ensure boolean writes, correct state/method values |
 
-Audit results across all 8 invariants:
 
-| # | Invariant | Status |
-|---|-----------|--------|
-| 1 | Idempotency early-return | ✅ Present in `derive_completion_state` |
-| 2 | `completed_at` defensive set | ✅ Present in derive function |
-| 3 | `all_checked()` strictness (jsonb_each + boolean typeof + cast) | ✅ Correct |
-| 4 | Trigger execution order | ❌ **NO TRIGGERS BOUND** |
-| 5 | Partial index `(user_id, entry_date) WHERE in_progress` | ✅ Both tables |
-| 6 | Legacy data sanity | ❌ **19 rows** with `completed` + `completed_at IS NULL` |
-| 7 | Frontend contract | ✅ UI always sends valid `(state, method)` |
-| 8 | GIN index on checkboxStates | ✅ Both tables |
+### Non-negotiables preserved
 
-### Critical findings
+- ✅ Checkbox values written as real `true`/`false` booleans (matches strict `has_any_checked`)
+- ✅ "Done" never marks completed — only persists progress + closes
+- ✅ "Finish" sets correct `completion_method` based on check ratio
+- ✅ Empty state cannot reach `completed` (Finish disabled)
+- ✅ Both folder + custom activity flows behave identically
+- ✅ No trigger or DB schema changes required
 
-**A. No triggers exist.** `information_schema.triggers` returns zero rows for both `custom_activity_logs` and `folder_item_completions`. The functions `derive_completion_state` and `validate_completion_intent` are defined but **never bound to any table**. Every invariant we built is currently a no-op in production. Earlier migrations created the functions but the `CREATE TRIGGER` statements were never executed (or were dropped).
+### Out of scope
 
-**B. 19 legacy rows** in `custom_activity_logs` are `completion_state='completed'` with `completed_at IS NULL`. If we attach `validate_completion_intent` first, these rows survive (validation only fires on writes), but any future UPDATE will not fail since the validator doesn't check `completed_at`. However, these rows violate our invariant and break analytics ordering. Backfill required.
-
-(Note: 0 rows have `method='none' + completed`, and 0 rows have `completed_at` set with non-completed state — those invariants are clean.)
-
-### Fix — single migration
-
-```sql
--- 1. Backfill 19 legacy orphan rows
-UPDATE public.custom_activity_logs
-SET completed_at = COALESCE(updated_at, created_at, NOW())
-WHERE completion_state = 'completed' AND completed_at IS NULL;
-
--- 2. Bind triggers — validate FIRST, derive SECOND
--- Postgres BEFORE triggers fire in alphabetical order by name; prefix to lock order.
-CREATE TRIGGER trg_01_validate_completion_intent
-  BEFORE INSERT OR UPDATE ON public.custom_activity_logs
-  FOR EACH ROW EXECUTE FUNCTION public.validate_completion_intent();
-
-CREATE TRIGGER trg_02_derive_completion_state
-  BEFORE INSERT OR UPDATE ON public.custom_activity_logs
-  FOR EACH ROW EXECUTE FUNCTION public.derive_completion_state();
-
-CREATE TRIGGER trg_01_validate_completion_intent
-  BEFORE INSERT OR UPDATE ON public.folder_item_completions
-  FOR EACH ROW EXECUTE FUNCTION public.validate_completion_intent();
-
-CREATE TRIGGER trg_02_derive_completion_state
-  BEFORE INSERT OR UPDATE ON public.folder_item_completions
-  FOR EACH ROW EXECUTE FUNCTION public.derive_completion_state();
-```
-
-### Order rationale (item #4)
-
-Validate must run **before** derive so we reject malformed input before any mutation. Both are `BEFORE` triggers; Postgres fires same-timing triggers in **alphabetical name order**. Using `trg_01_*` and `trg_02_*` prefixes guarantees validate→derive ordering deterministically.
-
-The validator only checks user-provided fields (`completion_state`, `completion_method`, `performance_data` shape) — none of which derive mutates. So validate-then-derive is safe and cannot create a "derive then fail validation" path.
-
-### Files
-
-| File | Change |
-|------|--------|
-| `supabase/migrations/<new>.sql` | Backfill 19 orphan rows; bind 4 triggers (2 per table) with explicit ordering prefixes |
-
-### Post-migration verification queries
-- `SELECT COUNT(*) FROM information_schema.triggers WHERE event_object_table IN ('custom_activity_logs','folder_item_completions')` → expect 4
-- Re-run orphan check → expect all zeros
-- Test write: `UPDATE custom_activity_logs SET completion_state='completed', completion_method='none' WHERE id=…` → must raise
-
-After this migration: **READY FOR DEPLOY.**
-
+- DB triggers (already correct)
+- Backfill (already done)
+- Other tabs/screens
