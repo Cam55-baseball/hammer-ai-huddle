@@ -136,11 +136,19 @@ const tierInsightProvider: InsightProvider = (p) => {
   return { priority: 100, text };
 };
 
+const sugarVetoInsightProvider: InsightProvider = (_p, n) => {
+  if (sugarPer8(n.sugar_g, n.amount_oz) >= SUGAR_VETO_PER8_G) {
+    return { priority: 5, text: 'High sugar load impairs hydration absorption' };
+  }
+  return null;
+};
+
 /**
  * Registry of insight providers. Add new providers here for future
  * performance-based, activity-based, or personalized insights.
  */
 const insightProviders: InsightProvider[] = [
+  sugarVetoInsightProvider,
   waterInsightProvider,
   electrolyteInsightProvider,
   sugarInsightProvider,
@@ -170,9 +178,13 @@ export function computeHydrationProfile(n: HydrationNutritionInput): HydrationPr
   const water_percent = clamp(servingG > 0 ? (n.water_g / servingG) * 100 : 0);
   const electrolyte_score = scoreElectrolytes(n.sodium_mg, n.potassium_mg, n.magnesium_mg, n.amount_oz);
   const sugar_score_val = sugarScore(n.sugar_g, n.amount_oz);
-  const hydration_score = clamp(
-    Math.round(water_percent * 0.6 + electrolyte_score * 0.3 + sugar_score_val * 0.1)
+  let hydration_score = clamp(
+    Math.round(water_percent * 0.5 + electrolyte_score * 0.3 + sugar_score_val * 0.2)
   );
+  // High-sugar veto: net-dehydrating drinks cannot exceed Low tier
+  if (sugarPer8(n.sugar_g, n.amount_oz) >= SUGAR_VETO_PER8_G) {
+    hydration_score = Math.min(hydration_score, SUGAR_VETO_CAP);
+  }
   const hydration_tier = tierFor(hydration_score);
 
   const partial: Omit<HydrationProfile, 'insight'> = {
