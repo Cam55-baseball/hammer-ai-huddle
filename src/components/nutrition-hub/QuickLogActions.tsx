@@ -76,21 +76,80 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
   };
 
   const handleLiquidSelect = (liquidType: string) => {
+    if (liquidType === 'other') {
+      setPendingLiquid({ type: 'other', quality: 'quality' });
+      setOtherText('');
+      setAiAnalysis(null);
+      return;
+    }
     const quality = classifyLiquid(liquidType);
     setPendingLiquid({ type: liquidType, quality });
   };
 
+  const resetLiquidPicker = () => {
+    setLiquidPickerOpen(false);
+    setPendingWaterAmount(null);
+    setPendingLiquid(null);
+    setSelectedLiquidType('water');
+    setOtherText('');
+    setAiAnalysis(null);
+  };
+
+  const handleAnalyzeOther = async () => {
+    if (!pendingWaterAmount) return;
+    const text = otherText.trim();
+    if (text.length < 2) {
+      toast.error('Describe what you\u2019re drinking (min 2 characters)');
+      return;
+    }
+    setAnalyzing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-hydration-text', {
+        body: { text, amount_oz: pendingWaterAmount },
+      });
+      if (error) {
+        const status = (error as any)?.context?.status;
+        const msg = status === 429
+          ? 'Hammer is busy \u2014 try again in a moment.'
+          : status === 402
+            ? 'AI credits exhausted. Add credits to continue.'
+            : (error.message || 'Failed to analyze beverage');
+        toast.error(msg);
+        return;
+      }
+      const a = data?.analysis;
+      if (!a) {
+        toast.error('No analysis returned');
+        return;
+      }
+      setAiAnalysis(a);
+    } catch (e) {
+      console.error('analyze-hydration-text failed', e);
+      toast.error('Failed to analyze beverage');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   const handleLiquidConfirm = async () => {
     if (!pendingWaterAmount || !pendingLiquid) return;
+    if (pendingLiquid.type === 'other' && !aiAnalysis) {
+      toast.error('Analyze your drink with Hammer first');
+      return;
+    }
     setIsLogging(true);
     try {
-      await addWater(pendingWaterAmount, pendingLiquid.type, pendingLiquid.quality);
-      const info = LIQUID_TYPES.find(lt => lt.value === pendingLiquid.type);
-      toast.success(`Added ${pendingWaterAmount}oz ${info?.label || pendingLiquid.type}`);
-      setLiquidPickerOpen(false);
-      setPendingWaterAmount(null);
-      setPendingLiquid(null);
-      setSelectedLiquidType('water');
+      await addWater(
+        pendingWaterAmount,
+        pendingLiquid.type,
+        pendingLiquid.quality,
+        pendingLiquid.type === 'other' && aiAnalysis ? aiAnalysis : undefined,
+      );
+      const label = pendingLiquid.type === 'other' && aiAnalysis
+        ? aiAnalysis.display_name
+        : (LIQUID_TYPES.find(lt => lt.value === pendingLiquid.type)?.label || pendingLiquid.type);
+      toast.success(`Added ${pendingWaterAmount}oz ${label}`);
+      resetLiquidPicker();
     } finally {
       setIsLogging(false);
     }
