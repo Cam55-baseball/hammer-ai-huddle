@@ -41,6 +41,8 @@ export function NutritionDailyLog({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { config } = usePerformanceMode();
+  const { todayLogs: hydrationLogs, dailyAverageScore, dailyTier, todayTotal: hydrationOzToday, deleteLog: deleteHydration } = useHydration();
+  const isViewingToday = isToday(currentDate);
   
   const [internalDate, setInternalDate] = useState(new Date());
 
