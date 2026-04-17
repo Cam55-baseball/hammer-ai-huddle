@@ -401,7 +401,11 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
                     <Input
                       placeholder="e.g. iced matcha latte with oat milk"
                       value={otherText}
-                      onChange={(e) => setOtherText(e.target.value)}
+                      onChange={(e) => {
+                        setOtherText(e.target.value);
+                        // Invalidate stale preview when user edits/clears the input
+                        if (aiAnalysis) setAiAnalysis(null);
+                      }}
                       disabled={analyzing || isLogging}
                       onKeyDown={(e) => { if (e.key === 'Enter' && !aiAnalysis) handleAnalyzeOther(); }}
                     />
