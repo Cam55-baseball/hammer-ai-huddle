@@ -2576,6 +2576,23 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                    toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
                    handleFolderLoggerClose(false);
                 }}
+                onDone={async () => {
+                  const itemId = selectedFolderTask.folderItemData!.itemId;
+                  await setFolderItemCompletionState(itemId, 'completed', 'done_button');
+                  triggerCelebration();
+                  toast.success(t('customActivity.markedComplete', 'Marked complete'));
+                }}
+                onCheckAll={async () => {
+                  const itemId = selectedFolderTask.folderItemData!.itemId;
+                  const allIds = getAllCheckableIds(pseudoTemplate);
+                  await markFolderItemAllAndComplete(itemId, allIds);
+                  triggerCelebration();
+                  toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'));
+                }}
+                onReopen={async () => {
+                  const itemId = selectedFolderTask.folderItemData!.itemId;
+                  await reopenFolderItem(itemId);
+                }}
                onEdit={() => {
                    handleFolderLoggerClose(false);
                   setFolderItemEditOpen(true);
@@ -2586,32 +2603,24 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 }}
                 onToggleCheckbox={async (fieldId, checked) => {
                   const itemId = selectedFolderTask.folderItemData!.itemId;
-                  // Use folder checkbox state persistence
+                  // Persist checkbox state immediately (independent of completion intent)
                   const currentPd = performanceData || {};
                   const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
                   const newStates = { ...currentStates, [fieldId]: checked };
-                  
+
                   await saveFolderCheckboxState(itemId, newStates);
-                  
-                  // Check auto-complete
-                  const allIds = getAllCheckableIds(pseudoTemplate);
-                  const allChecked = allIds.every(id => id === fieldId ? checked : (newStates[id] || false));
-                  if (allChecked && !selectedFolderTask.completed) {
-                    await toggleFolderItemCompletion(itemId);
-                    setSelectedFolderTask(prev => prev ? { ...prev, completed: true } : null);
-                    triggerCelebration();
-                    toast.success('All items complete! 🎉');
-                  } else if (!allChecked && selectedFolderTask.completed) {
-                    await toggleFolderItemCompletion(itemId);
-                    setSelectedFolderTask(prev => prev ? { ...prev, completed: false } : null);
+
+                  // DEMOTE rule: if previously marked complete via check_all and user unchecks → in_progress
+                  const currentState = (selectedFolderTask as any).completionState as string | undefined;
+                  const currentMethod = (selectedFolderTask as any).completionMethod as string | undefined;
+                  if (!checked && currentState === 'completed' && currentMethod === 'check_all') {
+                    await setFolderItemCompletionState(itemId, 'in_progress', 'none');
+                    setSelectedFolderTask(prev => prev ? { ...prev, completed: false, completionState: 'in_progress', completionMethod: 'none' } as any : null);
                   }
-                  
-                  refetch();
                 }}
                 onSavePerformanceData={async (data) => {
                   const itemId = selectedFolderTask.folderItemData!.itemId;
                   await saveFolderPerformanceData(itemId, data);
-                  refetch();
                   toast.success('Performance data saved');
                 }}
                 onSkipTask={() => {
@@ -2730,6 +2739,23 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
                 handleFolderLoggerClose(false);
               }}
+              onDone={async () => {
+                const itemId = selectedFolderTask.folderItemData!.itemId;
+                await setFolderItemCompletionState(itemId, 'completed', 'done_button');
+                triggerCelebration();
+                toast.success(t('customActivity.markedComplete', 'Marked complete'));
+              }}
+              onCheckAll={async () => {
+                const itemId = selectedFolderTask.folderItemData!.itemId;
+                const allIds = getAllCheckableIds(pseudoTemplate);
+                await markFolderItemAllAndComplete(itemId, allIds);
+                triggerCelebration();
+                toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'));
+              }}
+              onReopen={async () => {
+                const itemId = selectedFolderTask.folderItemData!.itemId;
+                await reopenFolderItem(itemId);
+              }}
               onEdit={() => {
                 handleFolderLoggerClose(false);
                 setFolderItemEditOpen(true);
@@ -2743,22 +2769,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 const currentPd = performanceData || {};
                 const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
                 const newStates = { ...currentStates, [fieldId]: checked };
-                
+
                 await saveFolderCheckboxState(itemId, newStates);
-                
-                const allIds = getAllCheckableIds(pseudoTemplate);
-                const allChecked = allIds.every(id => id === fieldId ? checked : (newStates[id] || false));
-                if (allChecked && !selectedFolderTask.completed) {
-                  await toggleFolderItemCompletion(itemId);
-                  setSelectedFolderTask(prev => prev ? { ...prev, completed: true } : null);
-                  triggerCelebration();
-                  toast.success('All items complete! 🎉');
-                } else if (!allChecked && selectedFolderTask.completed) {
-                  await toggleFolderItemCompletion(itemId);
-                  setSelectedFolderTask(prev => prev ? { ...prev, completed: false } : null);
+
+                // DEMOTE rule: if previously marked complete via check_all and user unchecks → in_progress
+                const currentState = (selectedFolderTask as any).completionState as string | undefined;
+                const currentMethod = (selectedFolderTask as any).completionMethod as string | undefined;
+                if (!checked && currentState === 'completed' && currentMethod === 'check_all') {
+                  await setFolderItemCompletionState(itemId, 'in_progress', 'none');
+                  setSelectedFolderTask(prev => prev ? { ...prev, completed: false, completionState: 'in_progress', completionMethod: 'none' } as any : null);
                 }
-                
-                refetch();
               }}
               onSkipTask={() => {
                 handleSkipTask(selectedFolderTask.id);
