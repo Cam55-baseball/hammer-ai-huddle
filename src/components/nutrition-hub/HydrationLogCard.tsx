@@ -44,6 +44,8 @@ export function HydrationLogCard({ log, onDelete, compact = false }: Props) {
   }
 
   const tier = profile.hydration_tier;
+  // Backwards compat: legacy profiles may have sugar_penalty instead of sugar_score
+  const sugarScoreValue = (profile as any).sugar_score ?? (profile as any).sugar_penalty ?? 0;
 
   return (
     <div className={cn('rounded-lg border p-3 space-y-2', TIER_BG_CLASS[tier])}>
@@ -92,7 +94,7 @@ export function HydrationLogCard({ log, onDelete, compact = false }: Props) {
           </div>
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span>Magnesium: {Math.round(Number(log.magnesium_mg || 0))}mg</span>
-            <span>Carbs: {(Number(log.total_carbs_g || 0)).toFixed(1)}g</span>
+            <span>Sugar Score: {sugarScoreValue}/100</span>
           </div>
           <p className="text-[11px] leading-snug text-foreground/80">{profile.insight}</p>
         </>

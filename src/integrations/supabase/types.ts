@@ -2563,13 +2563,17 @@ export type Database = {
       }
       hydration_logs: {
         Row: {
+          absorption_score: number | null
           amount_oz: number
+          fructose_g: number | null
+          glucose_g: number | null
           hydration_profile: Json | null
           id: string
           liquid_type: string | null
           log_date: string | null
           logged_at: string | null
           magnesium_mg: number | null
+          osmolality_estimate: number | null
           potassium_mg: number | null
           quality_class: string | null
           sodium_mg: number | null
@@ -2579,13 +2583,17 @@ export type Database = {
           water_g: number | null
         }
         Insert: {
+          absorption_score?: number | null
           amount_oz: number
+          fructose_g?: number | null
+          glucose_g?: number | null
           hydration_profile?: Json | null
           id?: string
           liquid_type?: string | null
           log_date?: string | null
           logged_at?: string | null
           magnesium_mg?: number | null
+          osmolality_estimate?: number | null
           potassium_mg?: number | null
           quality_class?: string | null
           sodium_mg?: number | null
@@ -2595,13 +2603,17 @@ export type Database = {
           water_g?: number | null
         }
         Update: {
+          absorption_score?: number | null
           amount_oz?: number
+          fructose_g?: number | null
+          glucose_g?: number | null
           hydration_profile?: Json | null
           id?: string
           liquid_type?: string | null
           log_date?: string | null
           logged_at?: string | null
           magnesium_mg?: number | null
+          osmolality_estimate?: number | null
           potassium_mg?: number | null
           quality_class?: string | null
           sodium_mg?: number | null
