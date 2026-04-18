@@ -551,7 +551,14 @@ Always respond using the generate_training_block function.`
     });
 
     if (rpcErr) {
-      console.error("Atomic insert failed:", rpcErr);
+      console.error("Atomic insert failed:", {
+        code: (rpcErr as any).code,
+        message: rpcErr.message,
+        details: (rpcErr as any).details,
+        hint: (rpcErr as any).hint,
+        workout_count: workoutsPayload.length,
+        exercise_count: totalExercises,
+      });
       if (rpcErr.message?.includes('active_block_exists')) {
         return new Response(JSON.stringify({
           error: 'Active training block exists. Complete or archive it before generating a new one.',
