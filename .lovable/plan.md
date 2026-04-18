@@ -1,97 +1,34 @@
 
 
-## Plan — Surface Hammer Workout Plans + add Daily Plan mode
+## Plan — Fix 6-week block generation failure
 
-### Goal
-1. Make the workout planner discoverable (Dashboard tile + sidebar + Game Plan CTA).
-2. Let users choose between **6-Week Block** (existing) or **Daily Plan** (new) at generation time.
-3. 6-Week block scheduling auto-respects calendar conflicts + season phase, and is fully editable.
+### Root cause
+The DB function `insert_training_block_atomic` runs `SET LOCAL transaction_isolation = 'repeatable read'` AFTER validation queries (`jsonb_array_elements` loop) have already executed in the transaction. Postgres rejects this with `25001: SET TRANSACTION ISOLATION LEVEL must be called before any query`. Result: every 6-week block generation fails at the atomic insert step.
 
----
-
-### 1. Discoverability (3 entry points)
-
-**a) Dashboard tile** — new card in `src/pages/Dashboard.tsx` ("Hammer Workout Plan") linking to `/training-block`. Shows active block progress if one exists, otherwise "Generate your plan" CTA.
-
-**b) Sidebar nav** — add "Workout Plan" item under Training group in `src/components/AppSidebar.tsx` (Dumbbell icon, route `/training-block`).
-
-**c) Game Plan / Today CTA** — small inline card on the Game Plan view: "No workout today? Generate one →" linking to `/training-block?mode=daily`.
-
----
-
-### 2. Mode picker on `/training-block`
-
-Refactor `src/pages/TrainingBlock.tsx` to show a top-level toggle when no active block exists:
-
-```text
-┌────────────────────────────────────────┐
-│  [ 6-Week Block ]  [ Daily Plan ]      │
-└────────────────────────────────────────┘
+Confirmed in edge logs:
+```
+Atomic insert failed: SET TRANSACTION ISOLATION LEVEL must be called before any query
+Error in generate-training-block: Failed to create training block: ...
 ```
 
-- **6-Week Block** → existing `TrainingBlockView` + generator (unchanged behavior).
-- **Daily Plan** → new `DailyWorkoutPlanner` component.
+### Fix
+Migration to recreate `insert_training_block_atomic` with the `SET LOCAL transaction_isolation` line **removed**. The function's correctness does not depend on repeatable-read isolation — the row-level locking (`FOR UPDATE`) and the unique constraint on `(user_id, idempotency_key)` already prevent the duplicate-insert race it was trying to guard against.
 
-If an active block exists, mode picker is hidden (block view takes over) but a small "Generate one-off daily workout" button remains.
+All other logic in the function stays identical:
+- Pre-insert workout/exercise validation
+- Idempotency key conflict handling with `FOR UPDATE` lock
+- Child workout + exercise inserts
+- `pending_goal_change` flag reset
 
----
-
-### 3. New: Daily Plan mode
-
-**Component**: `src/components/training-block/DailyWorkoutPlanner.tsx`
-
-- Date picker (defaults to today, allows any future date).
-- Reuses existing `useBlockWorkoutGenerator` hook with `blockType='daily'` (single-session output, ~45-60min).
-- On generate: writes a single `block_workouts` row (no parent `training_blocks` row needed — or use a lightweight "daily" block container with `status='archived'` after the day passes).
-- Shows generated workout inline; user can save → it becomes a Game Plan task on the chosen date.
-
-**Backend tweak**: `supabase/functions/generate-block-workout/index.ts` already handles single-block generation. Add a `mode: 'daily' | 'block'` param that returns a single workout payload for daily mode (no 18-workout 6-week structure).
-
----
-
-### 4. Smart 6-Week scheduling (calendar + season aware)
-
-Update `supabase/functions/generate-training-block/index.ts`:
-
-**Inputs added to scheduling logic:**
-1. **Season phase** from `athlete_mpi_settings` (preseason/in_season/post_season) → adjusts workout density:
-   - Preseason: 5 days/week (heavy strength block)
-   - In-season: 3 days/week (maintenance, lower CNS)
-   - Post-season: 4 days/week (recovery + rebuild)
-2. **Existing calendar conflicts** — query `custom_activity_logs` and `game_plan_tasks` for the 42-day window; skip days with games or high-CNS practices.
-3. **Default schedules** from `src/constants/trainingSchedules.ts` as the base pattern, then subtract conflicts.
-
-**Helper added**: `pickOptimalSchedule(userId, startDate, seasonPhase, existingActivities)` returns 18 ideal `scheduled_date`s.
-
----
-
-### 5. Editable 6-week schedule
-
-In `src/components/training-block/TrainingBlockView.tsx`, each workout row gets:
-- A small calendar/date-picker icon → reschedule that single workout.
-- Mutation: `useTrainingBlock` → add `rescheduleWorkout({ workoutId, newDate })` that updates `block_workouts.scheduled_date` and re-runs `shift_workouts_forward` if collision.
-
-Drag-to-reorder is out of scope (follow-up); single-row reschedule is enough for V1.
-
----
-
-### 6. Files touched
-
+### Files touched
 | File | Change |
 |---|---|
-| `src/pages/Dashboard.tsx` | Add Hammer Workout Plan tile |
-| `src/components/AppSidebar.tsx` | Add nav item |
-| `src/components/game-plan/*` (existing today view) | Inline CTA card |
-| `src/pages/TrainingBlock.tsx` | Mode picker, query param `?mode=daily` |
-| `src/components/training-block/DailyWorkoutPlanner.tsx` | NEW |
-| `src/components/training-block/TrainingBlockView.tsx` | Per-workout reschedule control |
-| `src/hooks/useTrainingBlock.ts` | `rescheduleWorkout` mutation, daily-mode flow |
-| `src/hooks/useBlockWorkoutGenerator.ts` | Accept `mode: 'daily' \| 'block'` |
-| `supabase/functions/generate-block-workout/index.ts` | Daily mode branch |
-| `supabase/functions/generate-training-block/index.ts` | Season-aware + calendar-conflict scheduler |
+| New migration | `DROP FUNCTION` + `CREATE OR REPLACE` of `insert_training_block_atomic` without `SET LOCAL transaction_isolation` |
 
-### Out of scope (V1)
-- Drag-and-drop reordering of the whole 6-week grid.
-- Auto-regenerate when season phase changes mid-block (manual "adapt block" button already exists).
-- Daily-plan history view (one-off workouts just live as Game Plan tasks).
+### Verification
+After migration deploys, generating a 6-week block from `/training-block` should succeed end-to-end: AI generation → atomic DB insert → calendar events → UI shows the block.
+
+### Out of scope
+- No edge function code changes needed (the bug is purely in the DB function).
+- No client-side changes needed.
 
