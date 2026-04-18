@@ -62,6 +62,49 @@ function validateGeneratedBlock(block: GeneratedBlock, workoutsPerWeek: number):
   }
 }
 
+// ─── Season-aware default schedules (JS getDay format: 0=Sun..6=Sat) ───
+const SEASON_DEFAULT_DAYS: Record<string, number[]> = {
+  preseason: [1, 2, 3, 4, 5],   // 5 day/wk strength accumulation
+  in_season: [1, 3, 5],          // 3 day/wk maintenance, lower CNS
+  post_season: [1, 2, 4, 6],     // 4 day/wk recovery + rebuild
+};
+
+/**
+ * Pick the optimal weekly schedule:
+ *   1. Start from the user's stated availability OR a season-phase default.
+ *   2. Subtract days that already contain conflicting calendar events
+ *      (games, practices, high-CNS custom activities) for the 6-week window.
+ *   3. Guarantee at least 2 training days/week so generation never fails.
+ */
+function pickOptimalSchedule(
+  baseDays: number[],
+  seasonPhase: string,
+  conflictDates: Set<string>,
+  startDate: Date
+): number[] {
+  // Use season default when user hasn't set explicit availability
+  const candidate = baseDays.length > 0 ? baseDays : (SEASON_DEFAULT_DAYS[seasonPhase] || [1, 3, 5]);
+
+  // Score each weekday by how many of the 6 weeks it would conflict
+  const conflictsByDay = new Map<number, number>();
+  for (const day of candidate) {
+    let count = 0;
+    for (let w = 0; w < 6; w++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + w * 7);
+      const offset = (day - d.getDay() + 7) % 7;
+      d.setDate(d.getDate() + offset);
+      if (conflictDates.has(d.toISOString().split('T')[0])) count++;
+    }
+    conflictsByDay.set(day, count);
+  }
+
+  // Drop a day only if it conflicts ≥4/6 weeks AND we still have ≥2 days left
+  const sorted = [...candidate].sort((a, b) => (conflictsByDay.get(a) ?? 0) - (conflictsByDay.get(b) ?? 0));
+  const filtered = sorted.filter(d => (conflictsByDay.get(d) ?? 0) < 4);
+  return filtered.length >= 2 ? filtered.sort((a, b) => a - b) : candidate.sort((a, b) => a - b);
+}
+
 // ─── Fix #5: Spacing-first deterministic scheduling engine ───
 function scheduleBlockWorkouts(
   weeks: GeneratedBlock['weeks'],
@@ -267,26 +310,54 @@ serve(async (req) => {
       .maybeSingle();
 
     const goal = prefs?.goal || 'general strength';
-    const availability = (prefs?.availability as { days?: number[] })?.days || [1, 3, 5];
+    const userAvailability = (prefs?.availability as { days?: number[] })?.days || [];
     const equipment = prefs?.equipment || [];
     const injuries = prefs?.injuries || [];
     const experienceLevel = prefs?.experience_level || 'intermediate';
 
-    // Fetch athlete context
+    // Fetch athlete context — sport, position, season phase
     const [{ data: bodyGoal }, { data: mpiSettings }] = await Promise.all([
       supabase.from('athlete_body_goals').select('goal_type, target_weight_lbs')
         .eq('user_id', user.id).eq('is_active', true).maybeSingle(),
-      supabase.from('athlete_mpi_settings').select('primary_position, sport')
+      supabase.from('athlete_mpi_settings').select('primary_position, sport, season_status')
         .eq('user_id', user.id).maybeSingle(),
     ]);
 
     const sport = mpiSettings?.sport || 'baseball';
     const position = mpiSettings?.primary_position || 'athlete';
+    const seasonPhase = mpiSettings?.season_status || 'in_season';
     const { sport: requestSport } = await req.json().catch(() => ({ sport: undefined }));
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    // ─── Resolve schedule: season-aware + calendar-conflict-aware ───
+    const planStart = new Date();
+    const dayOfWeek0 = planStart.getDay();
+    const daysUntilMonday0 = dayOfWeek0 === 0 ? 1 : dayOfWeek0 === 1 ? 0 : 8 - dayOfWeek0;
+    planStart.setDate(planStart.getDate() + daysUntilMonday0);
+    const planEnd = new Date(planStart);
+    planEnd.setDate(planEnd.getDate() + 41);
+    const planStartStr = planStart.toISOString().split('T')[0];
+    const planEndStr = planEnd.toISOString().split('T')[0];
+
+    // Pull conflicting calendar events in the 42-day window
+    const { data: existingEvents } = await supabase
+      .from('calendar_events')
+      .select('event_date, event_type')
+      .eq('user_id', user.id)
+      .gte('event_date', planStartStr)
+      .lte('event_date', planEndStr);
+
+    const conflictDates = new Set<string>(
+      (existingEvents || [])
+        .filter(e => ['game', 'practice', 'custom_activity'].includes(e.event_type))
+        .map(e => e.event_date)
+    );
+
+    const availability = pickOptimalSchedule(userAvailability, seasonPhase, conflictDates, planStart);
     const workoutsPerWeek = Math.min(availability.length, 5);
+
+    console.log('Scheduling resolved:', { seasonPhase, userAvailability, finalAvailability: availability, conflicts: conflictDates.size });
 
     // Call Lovable AI
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
