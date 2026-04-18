@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useTrainingBlock, BlockWorkout, BlockExercise } from '@/hooks/useTrainingBlock';
 import { useTrainingPreferences } from '@/hooks/useTrainingPreferences';
@@ -7,16 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import {
   Dumbbell,
-  Calendar,
+  Calendar as CalendarIcon,
   Target,
-  TrendingUp,
   CheckCircle2,
   XCircle,
   Clock,
@@ -24,6 +25,7 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronUp,
+  CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
