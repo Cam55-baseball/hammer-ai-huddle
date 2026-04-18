@@ -516,8 +516,17 @@ Always respond using the generate_training_block function.`
       return `${y}-${mo}-${da}`;
     };
 
+    // Validate scheduled_date BEFORE sort
+    const safeWorkouts = scheduledWorkouts.map(w => {
+      if (!w.scheduled_date || isNaN(Date.parse(w.scheduled_date))) {
+        console.error("Invalid scheduled_date:", JSON.stringify(w));
+        throw new Error(`Invalid scheduled_date detected: ${JSON.stringify(w)}`);
+      }
+      return w;
+    });
+
     const usedDates = new Set<string>();
-    const normalizedWorkouts = scheduledWorkouts
+    const normalizedWorkouts = safeWorkouts
       .slice()
       .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
       .map(sw => {
