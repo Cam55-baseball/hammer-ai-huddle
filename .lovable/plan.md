@@ -1,34 +1,49 @@
 
 
-## Plan — Fix 6-week block generation failure
+## Real root cause (confirmed from edge logs + DB)
 
-### Root cause
-The DB function `insert_training_block_atomic` runs `SET LOCAL transaction_isolation = 'repeatable read'` AFTER validation queries (`jsonb_array_elements` loop) have already executed in the transaction. Postgres rejects this with `25001: SET TRANSACTION ISOLATION LEVEL must be called before any query`. Result: every 6-week block generation fails at the atomic insert step.
-
-Confirmed in edge logs:
+Edge log shows the exact failure:
 ```
-Atomic insert failed: SET TRANSACTION ISOLATION LEVEL must be called before any query
-Error in generate-training-block: Failed to create training block: ...
+code: "23514"
+message: 'new row for relation "block_exercises" violates check constraint "chk_block_exercises_reps"'
+Failing row: ... "Barbell Back Squat (Heavy Single/Double)", sets=3, reps=2 ...
 ```
 
-### Fix
-Migration to recreate `insert_training_block_atomic` with the `SET LOCAL transaction_isolation` line **removed**. The function's correctness does not depend on repeatable-read isolation — the row-level locking (`FOR UPDATE`) and the unique constraint on `(user_id, idempotency_key)` already prevent the duplicate-insert race it was trying to guard against.
+DB constraints:
+- `chk_block_exercises_reps`: `reps >= 3 AND reps <= 30`
+- `chk_block_exercises_sets`: `sets >= 1 AND sets <= 10`
 
-All other logic in the function stays identical:
-- Pre-insert workout/exercise validation
-- Idempotency key conflict handling with `FOR UPDATE` lock
-- Child workout + exercise inserts
-- `pending_goal_change` flag reset
+The AI generates legitimate strength prescriptions like **heavy singles (1 rep), doubles (2 reps), and triples (3 reps)** — these are core to a strength block — but the DB rejects anything below 3 reps. The atomic insert blows up the entire 18-workout transaction the first time it hits a `reps=1` or `reps=2` exercise. Every 6-week generation fails on the first heavy-strength exercise.
 
-### Files touched
+The previous "isolation level" fix was correct but uncovered this deeper bug.
+
+## Fix — two-layer
+
+### 1. DB migration: relax `chk_block_exercises_reps` to allow heavy singles/doubles
+- Drop `chk_block_exercises_reps`
+- Recreate as `reps >= 1 AND reps <= 30` (1-rep max work is a normal strength prescription)
+- Keep `chk_block_exercises_sets` unchanged (1–10 is fine)
+
+### 2. Edge function: defensive clamping in `generate-training-block/index.ts`
+Before calling `insert_training_block_atomic`, clamp every exercise to safe bounds so a future schema tweak or rogue AI value can never blow the transaction:
+- `sets` → clamp to `[1, 10]`
+- `reps` → clamp to `[1, 30]`
+- `rest_seconds` → clamp to `[0, 600]`
+- Drop exercises missing `name`
+
+Also add the requested defensive logging (just the useful bits — payload size, workout count, first PG error code/message/details/hint) so future failures are diagnosable without digging.
+
+## Files touched
+
 | File | Change |
 |---|---|
-| New migration | `DROP FUNCTION` + `CREATE OR REPLACE` of `insert_training_block_atomic` without `SET LOCAL transaction_isolation` |
+| New migration | Drop + recreate `chk_block_exercises_reps` with min `1` |
+| `supabase/functions/generate-training-block/index.ts` | Clamp exercise values before RPC + structured error logging |
 
-### Verification
-After migration deploys, generating a 6-week block from `/training-block` should succeed end-to-end: AI generation → atomic DB insert → calendar events → UI shows the block.
+## Verification
+After deploy: generate a 6-week block end-to-end. Heavy single/double prescriptions will insert successfully, and the block + 18 workouts + exercises + calendar events all land.
 
-### Out of scope
-- No edge function code changes needed (the bug is purely in the DB function).
-- No client-side changes needed.
+## Out of scope
+- No client changes.
+- No changes to the daily-plan path (uses a different table flow).
 
