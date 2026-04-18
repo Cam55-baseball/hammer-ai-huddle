@@ -61,32 +61,56 @@ Deno.serve(async (req) => {
           {
             role: "system",
             content:
-              `You are a USDA-grade hydration analyst. Given any beverage description, estimate per-fluid-ounce values for water, sodium, potassium, magnesium, sugar, and total carbs.
+              `You are a USDA-grade hydration analyst. Given any beverage description, estimate per-fluid-ounce values for water, sodium, potassium, magnesium, sugar, total carbs, AND a full 13-key micronutrient panel.
 
-Rules:
+GENERAL RULES:
 - water_g_per_oz must be between 0 and 29.6 (1 fl oz ≈ 29.5735 g; pure water ≈ 29.5).
-- Be conservative. For sweetened drinks reduce water content proportionally to sugar/solids.
-- Plain water: water_g_per_oz≈29.5, all electrolytes 0, sugar 0.
-- Coffee/tea (unsweetened): water≈29, minimal electrolytes, sugar 0.
-- Sports drinks (Gatorade-style): water≈28, sodium≈14mg/oz, potassium≈4mg/oz, sugar≈1.7g/oz.
-- Soda: water≈26, sodium≈2mg/oz, sugar≈3.3g/oz.
-- Milk (2%): water≈26, sodium≈5mg/oz, potassium≈18mg/oz, sugar≈1.6g/oz.
-- Smoothies/lattes: estimate from likely composition.
+- Be conservative on water — for sweetened/dense drinks reduce water proportionally to sugar/solids.
 - Confidence: "high" for common/standard drinks, "medium" for typical custom drinks, "low" for unusual or vague.
 - display_name: short, clean human label (e.g. "Iced Matcha Latte with Oat Milk"). Do NOT echo "other" or "drink".
 
-ALSO return micros_per_oz with USDA-style estimates per fl oz for ALL of:
+MACRO REFERENCE (per fl oz):
+- Plain water: water≈29.5, electrolytes 0, sugar 0.
+- Coffee/tea unsweetened: water≈29, minimal electrolytes, sugar 0.
+- Sports drinks: water≈28, sodium≈14mg, potassium≈4mg, sugar≈1.7g.
+- Soda: water≈26, sodium≈2mg, sugar≈3.3g.
+- Cow milk (2%): water≈26, sodium≈5mg, potassium≈18mg, sugar≈1.6g.
+- Goat milk: water≈25, sodium≈4mg, potassium≈62mg, sugar≈1.4g.
+- Smoothies/lattes: estimate from likely composition.
+
+MICRONUTRIENT PANEL — micros_per_oz (ALL 13 keys required, per fl oz):
 vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg,
 vitamin_b6_mg, vitamin_b12_mcg, folate_mcg, calcium_mg, iron_mg,
 magnesium_mg, potassium_mg, zinc_mg.
-Use 0 only when truly negligible. Examples:
-- Plain water: all zeros (trace minerals OK).
-- Orange juice: high vitamin_c_mg (~10/oz), folate_mcg (~9/oz), potassium_mg (~24/oz).
-- Milk (2%): calcium_mg (~15/oz), vitamin_d_mcg (~0.16/oz), vitamin_b12_mcg (~0.16/oz), potassium_mg (~18/oz).
-- Coffee: tiny potassium_mg (~14/oz), magnesium_mg (~0.9/oz), rest 0.
-- Sports drink: small B-vits + sodium/potassium already at top-level.
-- Coconut water: high potassium_mg (~75/oz), magnesium_mg (~7/oz).
-Mirror the magnesium_mg and potassium_mg you already returned at top-level inside micros_per_oz too (same value).`,
+
+CRITICAL — DO NOT RETURN ALL-ZEROS for any non-water, non-black-coffee, non-plain-tea drink. At least 3 keys MUST be > 0 for those.
+
+CATEGORY MANDATES:
+- Dairy (cow/goat/sheep): MUST populate calcium_mg, potassium_mg, magnesium_mg, vitamin_a_mcg.
+  · Cow milk: Ca~15, K~18, Mg~1.4, A~18, D~0.16, B12~0.16
+  · Goat milk: Ca~33, K~62, Mg~4, A~14, B12~0.02, D~0.07, Zn~0.1, B6~0.014
+- Plant milks (almond/oat/soy/coconut, fortified): MUST populate calcium_mg, vitamin_d_mcg, vitamin_b12_mcg.
+  · Almond: Ca~14, D~0.3, E~2, A~18
+  · Oat:    Ca~14, D~0.3, B12~0.15
+  · Soy:    Ca~14, D~0.3, B12~0.3, K~17
+- Citrus juice (orange/grapefruit/lemonade): MUST populate vitamin_c_mg, folate_mcg, potassium_mg.
+  · OJ: C~10, folate~9, K~24
+- Other juice (apple/cranberry/pomegranate/tomato/carrot/veg): populate vitamin_c_mg, potassium_mg, plus vitamin_a_mcg for tomato/carrot/veg.
+- Coconut water: K~75, Mg~7.5, Ca~7, folate~0.9.
+- Coffee black: K~14, Mg~0.9, rest ~0.
+- Tea unsweetened: K~4, folate~1.5, Mg~0.6.
+- Sports drink: K~4, B12~0.04, B6~0.005.
+- Energy drink: B6~0.5, B12~0.7.
+- Beer: K~8, Mg~2, folate~1.5.
+- Wine red: K~32, Mg~3, Fe~0.13.
+- Kombucha: B12~0.06, B6~0.012, folate~0.5.
+- Kefir: Ca~13, K~16, B12~0.1, Mg~1.4.
+- Bone broth: Ca~3, K~10, Mg~1, Fe~0.1.
+- Smoothies: scale from ingredients (fruit smoothie ≈ C~5, K~30, folate~5; green smoothie ≈ K~10mcg, A~15, C~8, K~40, Ca~8, Fe~0.3).
+
+Selenium (Se) is not tracked — skip it.
+
+Mirror the magnesium_mg and potassium_mg you returned at top-level inside micros_per_oz too (same value).`,
           },
           {
             role: "user",

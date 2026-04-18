@@ -197,3 +197,6 @@ verify_jwt = false
 
 [functions.populate-drill-instructions]
 verify_jwt = false
+
+[functions.analyze-hydration-beverage]
+verify_jwt = true
