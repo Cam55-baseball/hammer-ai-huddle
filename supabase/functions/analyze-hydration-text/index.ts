@@ -3,6 +3,11 @@
 // beverage description using Lovable AI structured tool calling.
 // Strict JSON output via tool_choice — model cannot return prose.
 
+import {
+  inferCategory, isComplete, applyFallbacks, describeMissing,
+  REQUIRED_MICROS, type Category, type MicroKey,
+} from "../_shared/hydrationCategoryRules.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -40,9 +45,10 @@ magnesium_mg, potassium_mg, zinc_mg.
 CRITICAL — DO NOT RETURN ALL-ZEROS for any non-water, non-black-coffee, non-plain-tea drink. At least 3 keys MUST be > 0 for those.
 
 CATEGORY MANDATES:
-- Dairy (cow/goat/sheep): MUST populate calcium_mg, potassium_mg, magnesium_mg, vitamin_a_mcg.
-  · Cow milk: Ca~15, K~18, Mg~1.4, A~18, D~0.16, B12~0.16
-  · Goat milk: Ca~33, K~62, Mg~4, A~14, B12~0.02, D~0.07, Zn~0.1, B6~0.014
+- Dairy (cow/goat/sheep): MUST populate calcium_mg, potassium_mg, magnesium_mg, zinc_mg, vitamin_a_mcg.
+  · Cow milk: Ca~15, K~18, Mg~1.4, Zn~0.11, A~18, D~0.16, B12~0.16
+  · Goat milk: Ca~33, K~62, Mg~4, Zn~0.1, A~14, B12~0.02, D~0.07, B6~0.014
+  · NEVER return zinc_mg=0 for any dairy milk. Zinc is mandatory (~0.1 mg/oz minimum).
 - Plant milks (almond/oat/soy/coconut, fortified): MUST populate calcium_mg, vitamin_d_mcg, vitamin_b12_mcg.
 - Citrus juice: MUST populate vitamin_c_mg, folate_mcg, potassium_mg.
 - Coconut water: K~75, Mg~7.5, Ca~7, folate~0.9.
@@ -143,10 +149,21 @@ function sanitize(parsed: Record<string, any>, fallbackName: string) {
   };
 }
 
-async function callAI(apiKey: string, text: string, ozNum: number, retry: boolean) {
-  const userMsg = retry
-    ? `Re-analyze "${text}" (${ozNum} oz). Previous attempt failed validation. Return ALL required fields with realistic non-zero values for any non-plain drink.`
-    : `Analyze this beverage and return per-oz nutrition: "${text}". Serving size: ${ozNum} oz.`;
+async function callAI(
+  apiKey: string,
+  text: string,
+  ozNum: number,
+  opts: { strict?: boolean; missing?: MicroKey[]; categoryLabel?: Category } = {},
+) {
+  const { strict = false, missing = [], categoryLabel } = opts;
+  let userMsg: string;
+  if (strict && missing.length) {
+    userMsg = `Re-analyze "${text}" (${ozNum} oz). Previous response was MISSING required micronutrients for ${categoryLabel ?? 'this drink'}: [${describeMissing(missing)}]. These MUST be non-zero per USDA. Return realistic values for ALL required keys.`;
+  } else if (strict) {
+    userMsg = `Re-analyze "${text}" (${ozNum} oz). Previous attempt failed validation. Return ALL required fields with realistic non-zero values for any non-plain drink.`;
+  } else {
+    userMsg = `Analyze this beverage and return per-oz nutrition: "${text}". Serving size: ${ozNum} oz.`;
+  }
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -202,18 +219,45 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[analyze-hydration-text] "${text}" @ ${ozNum}oz`);
+    const cat: Category = inferCategory(text);
+    console.log(`[analyze-hydration-text] "${text}" @ ${ozNum}oz cat=${cat} required=[${REQUIRED_MICROS[cat].join(',')}]`);
 
     let parsed: Record<string, any>;
     try {
-      parsed = await callAI(apiKey, text, ozNum, false);
+      parsed = await callAI(apiKey, text, ozNum);
     } catch (e) {
       console.warn("[analyze-hydration-text] First attempt failed, retrying:", e);
-      parsed = await callAI(apiKey, text, ozNum, true);
+      parsed = await callAI(apiKey, text, ozNum, { strict: true });
     }
 
-    const result = sanitize(parsed, text);
-    console.log(`[analyze-hydration-text] OK: ${result.display_name} conf=${result.confidence}`);
+    let result = sanitize(parsed, text);
+    let check = isComplete(cat, result.micros_per_oz);
+
+    if (!check.ok) {
+      console.warn(`[analyze-hydration-text] category=${cat} validation FAIL missing=[${describeMissing(check.missing)}] for "${text}" — retrying strict`);
+      try {
+        const reParsed = await callAI(apiKey, text, ozNum, { strict: true, missing: check.missing, categoryLabel: cat });
+        result = sanitize(reParsed, text);
+        check = isComplete(cat, result.micros_per_oz);
+      } catch (e) {
+        console.warn("[analyze-hydration-text] Strict retry failed:", e);
+      }
+      if (!check.ok) {
+        console.warn(`[analyze-hydration-text] category=${cat} validation FAIL after retry missing=[${describeMissing(check.missing)}] — applying fallback minimums`);
+        const filled = applyFallbacks(cat, result.micros_per_oz as any);
+        result.micros_per_oz = filled as typeof result.micros_per_oz;
+        // Mirror electrolytes back to top-level macros
+        result.calcium_mg_per_oz   = filled.calcium_mg;
+        result.magnesium_mg_per_oz = filled.magnesium_mg;
+        result.potassium_mg_per_oz = filled.potassium_mg;
+      } else {
+        console.log(`[analyze-hydration-text] category=${cat} OK after retry conf=${result.confidence}`);
+      }
+    } else {
+      console.log(`[analyze-hydration-text] category=${cat} OK conf=${result.confidence}`);
+    }
+
+    console.log(`[analyze-hydration-text] DONE: ${result.display_name} conf=${result.confidence}`);
 
     return new Response(JSON.stringify({ analysis: result }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

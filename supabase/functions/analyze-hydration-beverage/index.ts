@@ -3,6 +3,11 @@
 // AND micronutrients. Used to lazily enrich hydration_beverage_database
 // rows that have empty data so every preset eventually carries real values.
 
+import {
+  inferCategory, isComplete, applyFallbacks, describeMissing,
+  REQUIRED_MICROS, type Category, type MicroKey,
+} from "../_shared/hydrationCategoryRules.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -25,8 +30,9 @@ confidence: 0..1.
 CRITICAL — DO NOT RETURN ALL-ZEROS for any non-water, non-black-coffee, non-plain-tea beverage.
 
 REFERENCE (per fl oz):
-- Goat milk: water~25, Ca~33, K~62, Mg~4, sugar~1.4, A~14, B12~0.02, D~0.07, Zn~0.1, B6~0.014, osmolality~300
-- Cow milk: water~26, Ca~15, K~18, Mg~1.4, sugar~1.6, A~18, D~0.16, B12~0.16, osmolality~285
+- Goat milk: water~25, Ca~33, K~62, Mg~4, Zn~0.1, sugar~1.4, A~14, B12~0.02, D~0.07, B6~0.014, osmolality~300
+- Cow milk: water~26, Ca~15, K~18, Mg~1.4, Zn~0.11, sugar~1.6, A~18, D~0.16, B12~0.16, osmolality~285
+- ALL DAIRY MILKS MUST INCLUDE: calcium_mg, potassium_mg, magnesium_mg, zinc_mg (zinc ~0.1 mg/oz minimum). Never return zinc=0 for dairy.
 - Almond milk (fortified): Ca~14, D~0.3, E~2, A~18
 - Oat milk (fortified): Ca~14, D~0.3, B12~0.15
 - Soy milk (fortified): Ca~14, D~0.3, B12~0.3, K~17
@@ -88,16 +94,11 @@ function sanitize(parsed: Record<string, any>) {
   return { macros_per_oz, micros_per_oz, confidence };
 }
 
-function isAllZeroMicros(m: Record<string, number>) {
-  return MICRO_KEYS.every(k => !m[k] || m[k] === 0);
-}
-
-function isLikelyNonZero(name: string) {
-  const n = name.toLowerCase();
-  if (/^(plain |distilled )?water$/.test(n)) return false;
-  if (/^black coffee$/.test(n)) return false;
-  if (/^(plain )?tea$/.test(n)) return false;
-  return /milk|juice|smoothie|sport|energy|cola|soda|wine|beer|kombucha|kefir|broth|matcha|coconut|latte|coffee/.test(n);
+function mirrorElectrolytes(result: ReturnType<typeof sanitize>) {
+  result.macros_per_oz.calcium_mg   = result.micros_per_oz.calcium_mg;
+  result.macros_per_oz.magnesium_mg = result.micros_per_oz.magnesium_mg;
+  result.macros_per_oz.potassium_mg = result.micros_per_oz.potassium_mg;
+  return result;
 }
 
 const TOOL_SCHEMA = {
@@ -136,10 +137,21 @@ const TOOL_SCHEMA = {
   },
 };
 
-async function callAI(apiKey: string, name: string, category: string | null, strict: boolean) {
-  const userMsg = strict
-    ? `Re-analyze "${name}"${category ? ` (category: ${category})` : ""}. Previous attempt returned all-zero micros — wrong. Produce realistic USDA non-zero values.`
-    : `Beverage: "${name}"${category ? `\nCategory: ${category}` : ""}\nReturn per-oz macros and micros.`;
+async function callAI(
+  apiKey: string,
+  name: string,
+  category: string | null,
+  opts: { strict?: boolean; missing?: MicroKey[]; categoryLabel?: Category } = {},
+) {
+  const { strict = false, missing = [], categoryLabel } = opts;
+  let userMsg: string;
+  if (strict && missing.length) {
+    userMsg = `Re-analyze "${name}"${category ? ` (category: ${category})` : ""}. Previous response was MISSING required micronutrients for ${categoryLabel ?? 'this drink'}: [${describeMissing(missing)}]. These MUST be non-zero per USDA. Return realistic values for ALL required keys.`;
+  } else if (strict) {
+    userMsg = `Re-analyze "${name}"${category ? ` (category: ${category})` : ""}. Previous attempt returned all-zero micros — wrong. Produce realistic USDA non-zero values.`;
+  } else {
+    userMsg = `Beverage: "${name}"${category ? `\nCategory: ${category}` : ""}\nReturn per-oz macros and micros.`;
+  }
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -191,23 +203,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[analyze-hydration-beverage] "${name}" cat=${category}`);
+    const cat: Category = inferCategory(name, category);
+    console.log(`[analyze-hydration-beverage] "${name}" cat=${cat} (hint=${category}) required=[${REQUIRED_MICROS[cat].join(',')}]`);
 
-    let result = await callAI(apiKey, name, category, false);
+    let result = await callAI(apiKey, name, category);
+    let check = isComplete(cat, result.micros_per_oz);
 
-    // Zero-veto: if non-trivial beverage came back all zeros, retry once strict.
-    if (isAllZeroMicros(result.micros_per_oz) && isLikelyNonZero(name)) {
-      console.warn(`[analyze-hydration-beverage] All-zero on "${name}" — retrying strict`);
-      result = await callAI(apiKey, name, category, true);
-      if (isAllZeroMicros(result.micros_per_oz)) {
-        console.warn(`[analyze-hydration-beverage] Still zero — applying conservative fallback`);
-        result.micros_per_oz.calcium_mg   = 5;
-        result.micros_per_oz.potassium_mg = 10;
-        result.micros_per_oz.magnesium_mg = 1;
-        result.macros_per_oz.calcium_mg   = 5;
-        result.macros_per_oz.potassium_mg = 10;
-        result.macros_per_oz.magnesium_mg = 1;
+    if (!check.ok) {
+      console.warn(`[analyze-hydration-beverage] category=${cat} validation FAIL missing=[${describeMissing(check.missing)}] for "${name}" — retrying strict`);
+      result = await callAI(apiKey, name, category, { strict: true, missing: check.missing, categoryLabel: cat });
+      check = isComplete(cat, result.micros_per_oz);
+      if (!check.ok) {
+        console.warn(`[analyze-hydration-beverage] category=${cat} validation FAIL after retry missing=[${describeMissing(check.missing)}] — applying fallback minimums`);
+        result.micros_per_oz = applyFallbacks(cat, result.micros_per_oz) as typeof result.micros_per_oz;
+        result = mirrorElectrolytes(result);
+      } else {
+        console.log(`[analyze-hydration-beverage] category=${cat} OK after retry conf=${result.confidence}`);
       }
+    } else {
+      console.log(`[analyze-hydration-beverage] category=${cat} OK conf=${result.confidence}`);
     }
 
     return new Response(JSON.stringify(result), {
