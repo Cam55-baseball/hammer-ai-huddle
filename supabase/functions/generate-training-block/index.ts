@@ -378,6 +378,7 @@ ATHLETE CONTEXT:
 - Experience: ${experienceLevel}
 - Position: ${position}
 - Body Goal: ${bodyGoal?.goal_type || 'performance'}
+- Season Phase: ${seasonPhase.replace('_', '-')} ${seasonPhase === 'in_season' ? '(prioritize maintenance, low-CNS, recovery)' : seasonPhase === 'preseason' ? '(prioritize accumulation, strength build)' : '(prioritize rebuild + mobility)'}
 - Available days per week: ${workoutsPerWeek}
 - Equipment: ${JSON.stringify(equipment)}
 ${(injuries as string[]).length ? `- INJURIES/AVOID: ${(injuries as string[]).join(', ')}` : ''}
@@ -493,14 +494,9 @@ Always respond using the generate_training_block function.`
     // Fix #3: Strict validation before any insert
     validateGeneratedBlock(generated, workoutsPerWeek);
 
-    // Deterministic scheduling
-    const startDate = new Date();
-    const dayOfWeek = startDate.getDay();
-    const daysUntilMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
-    startDate.setDate(startDate.getDate() + daysUntilMonday);
-
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 41);
+    // Reuse pre-computed schedule window (planStart / planEnd from earlier)
+    const startDate = planStart;
+    const endDate = planEnd;
 
     const scheduledWorkouts = scheduleBlockWorkouts(generated.weeks, startDate, availability);
 
