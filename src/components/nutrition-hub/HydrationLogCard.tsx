@@ -96,7 +96,7 @@ export function HydrationLogCard({ log, onDelete, compact = false }: Props) {
             </span>
           )}
           {(log as any).nutrition_incomplete && (
-            <span className="inline-flex items-center rounded-full bg-amber-500/15 text-amber-700 px-2 py-0.5 text-[9px] font-medium">
+            <span className="inline-flex items-center rounded-full bg-warning/15 text-warning px-2 py-0.5 text-[9px] font-medium">
               Partial data
             </span>
           )}
