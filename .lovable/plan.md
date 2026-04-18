@@ -1,109 +1,83 @@
 
 
-## Plan — Reliable Structured AI Liquid Analysis → Hydration Score Pipeline
+## Plan — Category-Based Micronutrient Completeness Validation
 
 ### Goal
-Any logged drink (preset or freeform) must yield structured macros + micros + hydration profile, deterministically, with strict JSON shape, with safe fallbacks, never blocking the log.
+Stop silent zeros (e.g. goat milk reporting `zinc = 0`) by validating that AI returns realistic values for **category-required** micros, not just "any non-zero".
 
----
+### 1. Shared category rules module
+Create `supabase/functions/_shared/hydrationCategoryRules.ts` (used by both edge functions):
 
-### 1. Lock the AI output to a strict tool schema
+```ts
+type Category = 'dairy' | 'plant_milk' | 'citrus_juice' | 'coconut_water'
+              | 'sports_drink' | 'energy_drink' | 'coffee' | 'tea'
+              | 'soda' | 'kombucha' | 'kefir' | 'broth' | 'water' | 'other';
 
-Two edge functions handle drink analysis:
-- `analyze-hydration-text` — freeform user input ("16oz iced latte with oat milk")
-- `analyze-hydration-beverage` — name-only lookup for preset enrichment
+REQUIRED_MICROS: Record<Category, MicroKey[]>
+FALLBACK_MINIMUMS: Record<Category, Partial<Micros>>  // e.g. dairy zinc_mg=0.1
+ZERO_ALLOWED: Set<Category> = {'water','coffee','tea'}
 
-Both will use a **single shared tool schema** (function calling, not freeform JSON) returning per-oz values:
-
-```
-hydration_macros_per_oz: { water_g, sodium_mg, potassium_mg, magnesium_mg,
-                           calcium_mg, sugar_g, glucose_g, fructose_g,
-                           total_carbs_g, osmolality_estimate }
-micros_per_oz:           { 13-key panel — vit A/C/D/E/K, B6, B12, folate,
-                           Ca, Fe, Mg, K, Zn }
-confidence:              0..1
+inferCategory(name, hint?): Category   // regex on name + provided category
+isComplete(category, micros): { ok, missing[] }
+applyFallbacks(category, micros): Micros
 ```
 
-Why per-oz: lets us multiply by serving size client-side and reuse the same row for any oz. `analyze-hydration-text` additionally returns `amount_oz` it parsed.
+Reference values per category (per fl oz, USDA-based):
 
-`tool_choice` is forced to this function — model literally cannot return prose. If the call fails parse/validate, we retry once with a stricter user message, then fallback (see §3).
+| Category | Required micros | Fallback minimums |
+|---|---|---|
+| Dairy (cow/goat/sheep) | Ca, K, Mg, **Zn** | Ca=15, K=18, Mg=1.4, Zn=0.1 |
+| Plant milk (almond/oat/soy/coconut) | Ca, vit D, B12 | Ca=14, D=0.3, B12=0.15 |
+| Citrus juice | vit C, folate, K | C=10, folate=9, K=24 |
+| Coconut water | K, Mg | K=75, Mg=7.5 |
+| Sports drink | Na (macro), K | K=4 |
+| Energy drink | B6, B12 | B6=0.5, B12=0.7 |
+| Kombucha/Kefir | B12 | B12=0.06 |
+| Broth | Na (macro), K | K=10 |
 
-### 2. Sanitize + clamp every numeric field
-Server-side after the AI call:
-- coerce to `Number`, `NaN → 0`
-- clamp to physiologically plausible per-oz caps (e.g. sugar ≤ 12 g/oz, sodium ≤ 200 mg/oz, vit C ≤ 100 mg/oz, etc.)
-- mirror `magnesium_mg` / `potassium_mg` / `calcium_mg` between `hydration_macros_per_oz` and `micros_per_oz` so scoring + UI both see the same numbers
-- enforce zero-veto: dairy/juice/smoothie/etc. with all-zero micros triggers strict retry (already in place — keep)
+### 2. Edge function pipeline change
 
-### 3. Fallback chain (logging never blocks)
+Both `analyze-hydration-text` and `analyze-hydration-beverage` get the same flow:
 
 ```text
-[user logs drink]
-      │
-      ▼
-preset hit?  ── yes ──▶ use beverage row's macros + micros (lazy AI enrich if micros NULL)
-      │ no
-      ▼
-analyze-hydration-text  ── ok ──▶ structured data + confidence
-      │ fails / confidence<0.7
-      ▼
-fuzzy match name vs hydration_beverage_database (ILIKE + alias map)
-      │ no match
-      ▼
-store log with water_g = oz * 29.57 (assume mostly water),
-          ai_estimated=true, nutrition_incomplete=true, confidence=0
+callAI() → sanitize() → category = inferCategory(name, hint)
+                       │
+                       ▼
+              isComplete(category, micros)?
+                ├─ yes → return
+                └─ no  → log "validation failed: missing [zinc_mg] for goat milk — retrying"
+                          callAI(strict=true, missingList)
+                          re-validate
+                          ├─ yes → return
+                          └─ no  → log "fallback applied for goat milk"
+                                   applyFallbacks() → return
 ```
 
-Result: every log gets persisted with whatever data we have, flagged honestly.
+Strict retry user message includes the **specific missing keys** so the model knows what to fix:
+> "Previous response was missing required micronutrients for dairy: [zinc_mg]. Goat milk contains ~0.1 mg/oz zinc per USDA. Return realistic non-zero values for ALL required keys."
 
-### 4. Database changes (`hydration_logs`)
+Replace today's blunt `isAllZeroMicros` check with `isComplete(category, micros)`.
 
-Add columns (all nullable, default 0/false where sensible):
-- `water_g`, `sodium_mg`, `potassium_mg`, `magnesium_mg`, `calcium_mg` (numeric)
-- `sugar_g`, `glucose_g`, `fructose_g`, `total_carbs_g` (numeric)
-- `osmolality_estimate` (numeric)
-- `ai_estimated` (bool, default false)
-- `nutrition_incomplete` (bool, default false)
-- `confidence` (numeric, 0..1)
-- keep existing `micros` (jsonb, totals for the serving) and `hydration_profile` (jsonb)
+### 3. Fallback application rules
+`applyFallbacks` only fills keys that are still 0 — never overwrites AI-supplied non-zero values. Mirrors Ca/K/Mg between macros and micros after applying.
 
-Existing logs untouched (legacy nullable columns).
+### 4. Logging
+Console logs at each gate (already standard — extend):
+- `[analyze-hydration-{text|beverage}] category=dairy validation FAIL missing=[zinc_mg] — retrying strict`
+- `[analyze-hydration-{text|beverage}] category=dairy validation FAIL after retry — applying fallback minimums`
+- `[analyze-hydration-{text|beverage}] category=dairy OK conf=0.9`
 
-### 5. `useHydration.ts` — single insert pipeline
-
-Refactor the insert path so both preset and AI flows funnel through one `buildLogPayload({ source, perOzMacros, perOzMicros, oz, confidence })` helper that:
-1. multiplies per-oz × oz → top-level macro columns + `micros` jsonb
-2. calls `computeHydrationProfile()` with the resulting macros → stores `hydration_profile`
-3. sets `ai_estimated`, `nutrition_incomplete`, `confidence` flags
-4. inserts in one round trip
-
-This kills the current divergence between preset path and AI path.
-
-### 6. UI
-
-`HydrationLogCard.tsx`:
-- show hydration score badge (already exists for some paths — make universal)
-- expandable "Nutrition" row with micro chips + macro line
-- if `ai_estimated`: small "Estimated" pill
-- if `nutrition_incomplete`: amber "Partial data" pill
-
-`HydrationQualityBreakdown.tsx`:
-- micros aggregation already in place — just ensure it now reads the new top-level columns as fallback when `micros` jsonb is missing (legacy logs)
-
-### 7. Files to change
+### 5. Files to change
 
 | File | Change |
 |---|---|
-| Migration | Add 12 columns to `hydration_logs` (macros + flags + confidence) |
-| `supabase/functions/analyze-hydration-text/index.ts` | Shared strict tool schema, clamp + sanitize, confidence, retry-on-invalid |
-| `supabase/functions/analyze-hydration-beverage/index.ts` | Use same shared schema (returns macros too, not just micros) |
-| `src/hooks/useHydration.ts` | New `buildLogPayload` helper, fuzzy fallback, confidence-gated retry, persist flags |
-| `src/utils/hydrationMicros.ts` | Add macro multiply + clamp helpers (or new `hydrationMacros.ts`) |
-| `src/components/nutrition-hub/HydrationLogCard.tsx` | "Estimated" / "Partial data" badges, expandable nutrition row |
-| `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` | Read fallback from new top-level columns for legacy logs |
+| `supabase/functions/_shared/hydrationCategoryRules.ts` (new) | Category map, required keys, fallback minimums, `inferCategory`, `isComplete`, `applyFallbacks` |
+| `supabase/functions/analyze-hydration-beverage/index.ts` | Replace `isAllZeroMicros` gate with category-aware validation; use shared module; pass missing keys into strict retry |
+| `supabase/functions/analyze-hydration-text/index.ts` | Same category-aware validation pass after sanitize |
+| `supabase/functions/analyze-hydration-text/index.ts` system prompt | Add explicit zinc line for dairy (~0.1 mg/oz) so first-pass usually succeeds |
 
-### 8. Out of scope (v1)
-- Backfill of legacy logs (they keep showing whatever they have)
-- Branded-drink barcode lookup (future)
-- Per-log "re-analyze" button (future, easy add once flags exist)
+### 6. Out of scope
+- Re-validating already-cached `hydration_beverage_database` rows (lazy: next time they're queried with missing required micros, the enrichment path will re-run — covered by existing logic in `useHydration`).
+- Optional: a one-shot admin "re-enrich all preset rows" script — defer unless requested.
+- Touching client UI — server returns better data, UI unchanged.
 
