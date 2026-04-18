@@ -639,10 +639,21 @@ export function useHydration() {
   const totalSugarG      = todayLogs.reduce((s, l) => s + Number((l as any).sugar_g      || 0), 0);
   const totalElectrolytesMg = totalSodiumMg + totalPotassiumMg + totalMagnesiumMg;
 
-  // Aggregate micronutrients across today's hydration logs (for display in
-  // Hydration Quality breakdown). Falls back to empty when no logs carry micros.
+  // Aggregate micronutrients across today's hydration logs. Falls back to the
+  // top-level macro columns (calcium_mg / potassium_mg / magnesium_mg) for
+  // legacy logs that don't have a `micros` jsonb populated yet.
   const totalHydrationMicros: HydrationMicros = sumMicros(
-    todayLogs.map(l => (l as any).micros as Partial<HydrationMicros> | null | undefined)
+    todayLogs.map(l => {
+      const m = (l as any).micros as Partial<HydrationMicros> | null | undefined;
+      const hasJsonb = m && typeof m === 'object' && Object.keys(m).length > 0;
+      if (hasJsonb) return m;
+      // Fallback: synthesize a partial micros object from the top-level columns.
+      const ca = Number((l as any).calcium_mg)   || 0;
+      const k  = Number((l as any).potassium_mg) || 0;
+      const mg = Number((l as any).magnesium_mg) || 0;
+      if (ca === 0 && k === 0 && mg === 0) return null;
+      return { calcium_mg: ca, potassium_mg: k, magnesium_mg: mg };
+    })
   );
 
   return {
