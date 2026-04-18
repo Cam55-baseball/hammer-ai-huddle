@@ -3,6 +3,11 @@
 // beverage description using Lovable AI structured tool calling.
 // Strict JSON output via tool_choice — model cannot return prose.
 
+import {
+  inferCategory, isComplete, applyFallbacks, describeMissing,
+  REQUIRED_MICROS, type Category, type MicroKey,
+} from "../_shared/hydrationCategoryRules.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
