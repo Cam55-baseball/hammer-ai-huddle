@@ -219,18 +219,45 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[analyze-hydration-text] "${text}" @ ${ozNum}oz`);
+    const cat: Category = inferCategory(text);
+    console.log(`[analyze-hydration-text] "${text}" @ ${ozNum}oz cat=${cat} required=[${REQUIRED_MICROS[cat].join(',')}]`);
 
     let parsed: Record<string, any>;
     try {
-      parsed = await callAI(apiKey, text, ozNum, false);
+      parsed = await callAI(apiKey, text, ozNum);
     } catch (e) {
       console.warn("[analyze-hydration-text] First attempt failed, retrying:", e);
-      parsed = await callAI(apiKey, text, ozNum, true);
+      parsed = await callAI(apiKey, text, ozNum, { strict: true });
     }
 
-    const result = sanitize(parsed, text);
-    console.log(`[analyze-hydration-text] OK: ${result.display_name} conf=${result.confidence}`);
+    let result = sanitize(parsed, text);
+    let check = isComplete(cat, result.micros_per_oz);
+
+    if (!check.ok) {
+      console.warn(`[analyze-hydration-text] category=${cat} validation FAIL missing=[${describeMissing(check.missing)}] for "${text}" — retrying strict`);
+      try {
+        const reParsed = await callAI(apiKey, text, ozNum, { strict: true, missing: check.missing, categoryLabel: cat });
+        result = sanitize(reParsed, text);
+        check = isComplete(cat, result.micros_per_oz);
+      } catch (e) {
+        console.warn("[analyze-hydration-text] Strict retry failed:", e);
+      }
+      if (!check.ok) {
+        console.warn(`[analyze-hydration-text] category=${cat} validation FAIL after retry missing=[${describeMissing(check.missing)}] — applying fallback minimums`);
+        const filled = applyFallbacks(cat, result.micros_per_oz as any);
+        result.micros_per_oz = filled as typeof result.micros_per_oz;
+        // Mirror electrolytes back to top-level macros
+        result.calcium_mg_per_oz   = filled.calcium_mg;
+        result.magnesium_mg_per_oz = filled.magnesium_mg;
+        result.potassium_mg_per_oz = filled.potassium_mg;
+      } else {
+        console.log(`[analyze-hydration-text] category=${cat} OK after retry conf=${result.confidence}`);
+      }
+    } else {
+      console.log(`[analyze-hydration-text] category=${cat} OK conf=${result.confidence}`);
+    }
+
+    console.log(`[analyze-hydration-text] DONE: ${result.display_name} conf=${result.confidence}`);
 
     return new Response(JSON.stringify({ analysis: result }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
