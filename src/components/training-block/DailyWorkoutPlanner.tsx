@@ -19,13 +19,13 @@ import { toast } from 'sonner';
 import type { BlockType, BlockIntent } from '@/types/eliteWorkout';
 
 const FOCUS_OPTIONS: Array<{ value: string; label: string; type: BlockType; intent: BlockIntent }> = [
-  { value: 'full_body', label: 'Full Body Strength', type: 'strength_output', intent: 'max_strength' },
-  { value: 'lower_body', label: 'Lower Body Power', type: 'power_speed', intent: 'explosive_power' },
-  { value: 'upper_body', label: 'Upper Body Strength', type: 'strength_output', intent: 'hypertrophy' },
-  { value: 'rotational', label: 'Rotational Power', type: 'power_speed', intent: 'rotational_power' },
-  { value: 'sport_specific', label: 'Sport-Specific Skill', type: 'skill_transfer', intent: 'throwing_mechanics' },
-  { value: 'capacity', label: 'Conditioning / Capacity', type: 'capacity', intent: 'work_capacity' },
-  { value: 'recovery', label: 'Recovery / Mobility', type: 'recovery', intent: 'active_recovery' },
+  { value: 'full_body', label: 'Full Body Strength', type: 'strength_output', intent: 'max_output' },
+  { value: 'lower_body', label: 'Lower Body Power', type: 'power_speed', intent: 'max_output' },
+  { value: 'upper_body', label: 'Upper Body Strength', type: 'strength_output', intent: 'accumulation' },
+  { value: 'rotational', label: 'Rotational Power', type: 'power_speed', intent: 'elastic' },
+  { value: 'sport_specific', label: 'Sport-Specific Skill', type: 'skill_transfer', intent: 'submax_technical' },
+  { value: 'capacity', label: 'Conditioning / Capacity', type: 'capacity', intent: 'accumulation' },
+  { value: 'recovery', label: 'Recovery / Mobility', type: 'recovery', intent: 'cns_downregulation' },
 ];
 
 /**
