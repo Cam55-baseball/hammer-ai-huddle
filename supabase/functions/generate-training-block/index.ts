@@ -500,12 +500,35 @@ Always respond using the generate_training_block function.`
 
     const scheduledWorkouts = scheduleBlockWorkouts(generated.weeks, startDate, availability);
 
+    // ─── Enforce strictly unique sequential dates before RPC ───
+    // The DB has uq_block_workouts_date on (block_id, scheduled_date). AI-derived
+    // date assignment can collide; override with deterministic +1 day per workout
+    // in array order. Users can reschedule individual workouts via the UI.
+    // (V1 tradeoff: overrides season-aware density for guaranteed uniqueness.)
+    const normalizedWorkouts = scheduledWorkouts.map((sw, i) => {
+      const d = new Date(startDate);
+      d.setDate(startDate.getDate() + i);
+      return {
+        ...sw,
+        scheduled_date: d.toISOString().split('T')[0],
+        day_label: DAY_NAMES[d.getDay()],
+      };
+    });
+
+    const dateList = normalizedWorkouts.map(w => w.scheduled_date);
+    const duplicates = dateList.filter((d, i) => dateList.indexOf(d) !== i);
+    console.log("DATES:", dateList);
+    if (duplicates.length > 0) {
+      console.error("DUPLICATES detected pre-RPC:", duplicates);
+      throw new Error(`Duplicate scheduled_date values: ${duplicates.join(', ')}`);
+    }
+
     // Fix #4: Atomic insert via RPC — single transaction
     // Defensive clamping: prevent any rogue AI value from blowing the transaction
     const clamp = (n: number, min: number, max: number) =>
       Math.max(min, Math.min(max, Math.round(n)));
 
-    const workoutsPayload = scheduledWorkouts.map(sw => ({
+    const workoutsPayload = normalizedWorkouts.map(sw => ({
       week_number: sw.week_number,
       day_label: sw.day_label,
       scheduled_date: sw.scheduled_date,
