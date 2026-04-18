@@ -465,7 +465,7 @@ export function useHydration() {
       toast.error('Failed to log water');
       return false;
     }
-  }, [user, today, todayTotal, dailyGoal, fetchTodayLogs]);
+  }, [user, today, todayTotal, dailyGoal, fetchTodayLogs, buildLogPayload]);
 
   // Delete log entry
   const deleteLog = useCallback(async (logId: string): Promise<boolean> => {
