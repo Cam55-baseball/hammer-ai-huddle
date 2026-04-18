@@ -30,8 +30,9 @@ confidence: 0..1.
 CRITICAL — DO NOT RETURN ALL-ZEROS for any non-water, non-black-coffee, non-plain-tea beverage.
 
 REFERENCE (per fl oz):
-- Goat milk: water~25, Ca~33, K~62, Mg~4, sugar~1.4, A~14, B12~0.02, D~0.07, Zn~0.1, B6~0.014, osmolality~300
-- Cow milk: water~26, Ca~15, K~18, Mg~1.4, sugar~1.6, A~18, D~0.16, B12~0.16, osmolality~285
+- Goat milk: water~25, Ca~33, K~62, Mg~4, Zn~0.1, sugar~1.4, A~14, B12~0.02, D~0.07, B6~0.014, osmolality~300
+- Cow milk: water~26, Ca~15, K~18, Mg~1.4, Zn~0.11, sugar~1.6, A~18, D~0.16, B12~0.16, osmolality~285
+- ALL DAIRY MILKS MUST INCLUDE: calcium_mg, potassium_mg, magnesium_mg, zinc_mg (zinc ~0.1 mg/oz minimum). Never return zinc=0 for dairy.
 - Almond milk (fortified): Ca~14, D~0.3, E~2, A~18
 - Oat milk (fortified): Ca~14, D~0.3, B12~0.15
 - Soy milk (fortified): Ca~14, D~0.3, B12~0.3, K~17
