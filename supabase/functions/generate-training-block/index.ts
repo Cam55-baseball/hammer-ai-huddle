@@ -604,6 +604,12 @@ Always respond using the generate_training_block function.`
     });
 
     if (rpcErr) {
+      const snapshot = {
+        first_workouts: workoutsPayload.slice(0, 2).map(w => ({
+          ...w,
+          exercises: w.exercises.slice(0, 2),
+        })),
+      };
       console.error("Atomic insert failed:", {
         code: (rpcErr as any).code,
         message: rpcErr.message,
@@ -611,6 +617,7 @@ Always respond using the generate_training_block function.`
         hint: (rpcErr as any).hint,
         workout_count: workoutsPayload.length,
         exercise_count: totalExercises,
+        payload_snapshot: JSON.stringify(snapshot).slice(0, 2000),
       });
       if (rpcErr.message?.includes('active_block_exists')) {
         return new Response(JSON.stringify({
