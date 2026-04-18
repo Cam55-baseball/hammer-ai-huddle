@@ -11,6 +11,15 @@ import {
   EMPTY_MICROS,
   type HydrationMicros,
 } from '@/utils/hydrationMicros';
+import {
+  sanitizeMacrosPerOz,
+  multiplyMacros,
+  mirrorElectrolytes,
+  type HydrationMacrosPerOz,
+} from '@/utils/hydrationMacros';
+
+const OZ_TO_G = 29.5735;
+const CONFIDENCE_THRESHOLD = 0.7;
 
 const HYDRATION_CHANGED_EVENT = 'hydration:changed';
 
