@@ -516,8 +516,17 @@ Always respond using the generate_training_block function.`
       return `${y}-${mo}-${da}`;
     };
 
+    // Validate scheduled_date BEFORE sort
+    const safeWorkouts = scheduledWorkouts.map(w => {
+      if (!w.scheduled_date || isNaN(Date.parse(w.scheduled_date))) {
+        console.error("Invalid scheduled_date:", JSON.stringify(w));
+        throw new Error(`Invalid scheduled_date detected: ${JSON.stringify(w)}`);
+      }
+      return w;
+    });
+
     const usedDates = new Set<string>();
-    const normalizedWorkouts = scheduledWorkouts
+    const normalizedWorkouts = safeWorkouts
       .slice()
       .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
       .map(sw => {
@@ -558,17 +567,11 @@ Always respond using the generate_training_block function.`
     const clamp = (n: number, min: number, max: number) =>
       Math.max(min, Math.min(max, Math.round(n)));
 
-    const workoutsPayload = normalizedWorkouts.map(sw => ({
-      week_number: sw.week_number,
-      day_label: sw.day_label,
-      scheduled_date: sw.scheduled_date,
-      status: 'scheduled',
-      workout_type: sw.workout_type,
-      estimated_duration: sw.estimated_duration,
-      exercises: sw.exercises
+    const workoutsPayload = normalizedWorkouts.map(sw => {
+      const exercises = sw.exercises
         .filter(ex => ex && typeof ex.name === 'string' && ex.name.trim().length > 0)
         .map((ex, idx) => ({
-          ordinal: idx,
+          ordinal: idx, // recomputed AFTER filtering
           name: ex.name.trim(),
           sets: clamp(Number(ex.sets) || 3, 1, 10),
           reps: clamp(Number(ex.reps) || 8, 1, 30),
@@ -578,8 +581,42 @@ Always respond using the generate_training_block function.`
           velocity_intent: ex.velocity_intent || null,
           cns_demand: ex.cns_demand || null,
           coaching_cues: ex.coaching_cues || null,
-        })),
-    }));
+        }));
+
+      // Per-workout ordinal uniqueness guard
+      const ordinals = exercises.map(e => e.ordinal);
+      if (new Set(ordinals).size !== ordinals.length) {
+        console.error("Duplicate ordinals:", JSON.stringify({ date: sw.scheduled_date, ordinals }));
+        throw new Error(`Duplicate ordinals in workout ${sw.scheduled_date}`);
+      }
+
+      // Numeric integrity guard
+      for (const ex of exercises) {
+        if (!Number.isFinite(ex.sets) || !Number.isFinite(ex.reps)) {
+          console.error("Non-finite sets/reps:", JSON.stringify(ex));
+          throw new Error(`Invalid sets/reps detected: ${JSON.stringify(ex)}`);
+        }
+      }
+
+      return {
+        week_number: sw.week_number,
+        day_label: sw.day_label,
+        scheduled_date: sw.scheduled_date,
+        status: 'scheduled',
+        workout_type: sw.workout_type,
+        estimated_duration: sw.estimated_duration,
+        exercises,
+      };
+    });
+
+    // Final payload sanity
+    if (workoutsPayload.length === 0) {
+      throw new Error("No workouts generated");
+    }
+    if (workoutsPayload.some(w => w.exercises.length === 0)) {
+      console.error("Workout with zero exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length === 0)));
+      throw new Error("Workout with zero exercises detected");
+    }
 
     const totalExercises = workoutsPayload.reduce((s, w) => s + w.exercises.length, 0);
     console.log(`RPC payload prepared: ${workoutsPayload.length} workouts, ${totalExercises} exercises`);
