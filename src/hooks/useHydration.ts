@@ -240,7 +240,40 @@ export function useHydration() {
             const profile = computeHydrationProfile({
               amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
             });
-            const micros = multiplyMicros(bev.micros_per_oz ?? null, amount);
+
+            // --- Lazy micros enrichment -----------------------------------
+            // If preset row's micros_per_oz is null or empty {}, ask AI to
+            // estimate them and persist back to the beverage DB so future
+            // logs reuse the cached values (one AI call per unique drink, ever).
+            let microsPerOz: Partial<HydrationMicros> | null = bev.micros_per_oz ?? null;
+            const isEmpty =
+              !microsPerOz ||
+              (typeof microsPerOz === 'object' && Object.keys(microsPerOz).length === 0);
+            if (isEmpty && liquidType !== 'water') {
+              try {
+                console.log(`[hydration] enriching micros for "${bev.display_name}" via AI`);
+                const { data: enrich, error: enrichErr } = await supabase.functions.invoke(
+                  'analyze-hydration-beverage',
+                  { body: { name: bev.display_name || liquidType, category: liquidType } },
+                );
+                if (enrichErr) {
+                  console.warn('[hydration] enrich error:', enrichErr.message);
+                } else if (enrich?.micros_per_oz) {
+                  microsPerOz = enrich.micros_per_oz as Partial<HydrationMicros>;
+                  // Persist back to beverage DB (cache forever).
+                  const { error: upErr } = await (supabase as any)
+                    .from('hydration_beverage_database')
+                    .update({ micros_per_oz: microsPerOz })
+                    .eq('id', bev.id);
+                  if (upErr) console.warn('[hydration] cache persist error:', upErr.message);
+                  else console.log(`[hydration] cached micros for "${bev.display_name}"`);
+                }
+              } catch (e) {
+                console.warn('[hydration] enrichment failed', e);
+              }
+            }
+
+            const micros = multiplyMicros(microsPerOz, amount);
             console.log(`[hydration] computed profile: score=${profile.hydration_score}, tier=${profile.hydration_tier}`);
             nutritionPayload = {
               water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
