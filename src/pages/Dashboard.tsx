@@ -23,6 +23,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
+import { WorkoutPlanCTA } from "@/components/WorkoutPlanCTA";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
@@ -430,6 +431,9 @@ export default function Dashboard() {
             </h2>
           </div>
         </Card>
+
+        {/* Hammer Workout Plan tile — discoverability for /training-block */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <WorkoutPlanCTA />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
