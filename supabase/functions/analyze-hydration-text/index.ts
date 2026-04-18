@@ -149,10 +149,21 @@ function sanitize(parsed: Record<string, any>, fallbackName: string) {
   };
 }
 
-async function callAI(apiKey: string, text: string, ozNum: number, retry: boolean) {
-  const userMsg = retry
-    ? `Re-analyze "${text}" (${ozNum} oz). Previous attempt failed validation. Return ALL required fields with realistic non-zero values for any non-plain drink.`
-    : `Analyze this beverage and return per-oz nutrition: "${text}". Serving size: ${ozNum} oz.`;
+async function callAI(
+  apiKey: string,
+  text: string,
+  ozNum: number,
+  opts: { strict?: boolean; missing?: MicroKey[]; categoryLabel?: Category } = {},
+) {
+  const { strict = false, missing = [], categoryLabel } = opts;
+  let userMsg: string;
+  if (strict && missing.length) {
+    userMsg = `Re-analyze "${text}" (${ozNum} oz). Previous response was MISSING required micronutrients for ${categoryLabel ?? 'this drink'}: [${describeMissing(missing)}]. These MUST be non-zero per USDA. Return realistic values for ALL required keys.`;
+  } else if (strict) {
+    userMsg = `Re-analyze "${text}" (${ozNum} oz). Previous attempt failed validation. Return ALL required fields with realistic non-zero values for any non-plain drink.`;
+  } else {
+    userMsg = `Analyze this beverage and return per-oz nutrition: "${text}". Serving size: ${ozNum} oz.`;
+  }
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
