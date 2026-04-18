@@ -303,6 +303,7 @@ export function useHydration() {
           total_carbs_g:       Number(aiNutrition.total_carbs_g_per_oz) || 0,
           osmolality_estimate: Number(aiNutrition.osmolality_estimate)  || 0,
         };
+        customLabel = aiNutrition.display_name?.slice(0, 80) || null;
         nutritionPayload = buildLogPayload({
           perOzMacros,
           perOzMicros: aiNutrition.micros_per_oz ?? null,
@@ -310,8 +311,9 @@ export function useHydration() {
           aiEstimated: true,
           nutritionIncomplete: conf < CONFIDENCE_THRESHOLD,
           confidence: conf,
+          liquidType,
+          customLabel,
         });
-        customLabel = aiNutrition.display_name?.slice(0, 80) || null;
         console.log(`[hydration] AI path: ${customLabel} score=${nutritionPayload.hydration_profile.hydration_score} conf=${conf}`);
       } else {
         // === PATH B: Preset lookup, then lazy AI enrich, then fuzzy fallback.
@@ -403,6 +405,24 @@ export function useHydration() {
             }
           }
 
+          // Self-heal: if preset DB row's micros fail category validation,
+          // persist a healed version so future logs read clean data.
+          try {
+            const cat = inferCategory(bev.display_name || liquidType, liquidType);
+            const orig = isComplete(cat, bev.micros_per_oz || {});
+            if (!orig.ok) {
+              const healed = applyFallbacks(cat, bev.micros_per_oz || {});
+              await (supabase as any)
+                .from('hydration_beverage_database')
+                .update({ micros_per_oz: healed })
+                .eq('id', bev.id);
+              microsPerOz = healed;
+              console.log(`[hydration] self-healed preset "${bev.display_name}" missing=[${orig.missing.join(',')}]`);
+            }
+          } catch (e) {
+            console.warn('[hydration] self-heal failed', e);
+          }
+
           nutritionPayload = buildLogPayload({
             perOzMacros,
             perOzMicros: microsPerOz,
@@ -410,6 +430,8 @@ export function useHydration() {
             aiEstimated: microsEmpty, // true if we needed AI to fill micros
             nutritionIncomplete: false,
             confidence,
+            liquidType,
+            customLabel: bev.display_name || null,
           });
           console.log(`[hydration] preset path: ${bev.display_name} score=${nutritionPayload.hydration_profile.hydration_score}`);
         } else if (liquidType === 'water') {
@@ -421,6 +443,7 @@ export function useHydration() {
             aiEstimated: false,
             nutritionIncomplete: false,
             confidence: 1,
+            liquidType,
           });
         } else {
           // === PATH C: Last-resort fallback — store with mostly-water assumption.
@@ -432,6 +455,7 @@ export function useHydration() {
             aiEstimated: true,
             nutritionIncomplete: true,
             confidence: 0,
+            liquidType,
           });
         }
       }
