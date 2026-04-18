@@ -35,11 +35,18 @@ export interface HydrationLog {
   sodium_mg?: number | null;
   potassium_mg?: number | null;
   magnesium_mg?: number | null;
+  calcium_mg?: number | null;
   sugar_g?: number | null;
+  glucose_g?: number | null;
+  fructose_g?: number | null;
   total_carbs_g?: number | null;
+  osmolality_estimate?: number | null;
   hydration_profile?: HydrationProfile | null;
   custom_label?: string | null;
   micros?: Partial<HydrationMicros> | null;
+  ai_estimated?: boolean | null;
+  nutrition_incomplete?: boolean | null;
+  confidence?: number | null;
 }
 
 export interface AiHydrationAnalysis {
@@ -48,9 +55,13 @@ export interface AiHydrationAnalysis {
   sodium_mg_per_oz: number;
   potassium_mg_per_oz: number;
   magnesium_mg_per_oz: number;
+  calcium_mg_per_oz?: number;
   sugar_g_per_oz: number;
+  glucose_g_per_oz?: number;
+  fructose_g_per_oz?: number;
   total_carbs_g_per_oz: number;
-  confidence?: 'high' | 'medium' | 'low';
+  osmolality_estimate?: number;
+  confidence?: number | 'high' | 'medium' | 'low';
   micros_per_oz?: Partial<HydrationMicros> | null;
 }
 
