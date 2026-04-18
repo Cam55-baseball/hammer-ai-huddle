@@ -203,6 +203,51 @@ export function useTrainingBlock() {
     },
   });
 
+  // Reschedule a single workout to a new date
+  const rescheduleWorkout = useMutation({
+    mutationFn: async ({ workoutId, newDate }: { workoutId: string; newDate: string }) => {
+      // Check for collision on the same block + date
+      if (!activeBlock) throw new Error('No active block');
+      const { data: collision } = await supabase
+        .from('block_workouts')
+        .select('id')
+        .eq('block_id', activeBlock.id)
+        .eq('scheduled_date', newDate)
+        .neq('id', workoutId)
+        .maybeSingle();
+
+      // If collision, push subsequent scheduled workouts forward 1 day
+      if (collision) {
+        const prevDay = new Date(newDate);
+        prevDay.setDate(prevDay.getDate() - 1);
+        await supabase.rpc('shift_workouts_forward', {
+          p_block_id: activeBlock.id,
+          p_after_date: prevDay.toISOString().split('T')[0],
+          p_days: 1,
+        });
+      }
+
+      const { error } = await supabase
+        .from('block_workouts')
+        .update({ scheduled_date: newDate })
+        .eq('id', workoutId);
+      if (error) throw error;
+
+      // Mirror to calendar_events if one exists for this workout
+      await supabase
+        .from('calendar_events')
+        .update({ event_date: newDate })
+        .eq('related_id', activeBlock.id)
+        .eq('event_type', 'training_block');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training-block'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      toast.success(t('trainingBlock.rescheduled', 'Workout rescheduled'));
+    },
+    onError: () => toast.error(t('trainingBlock.rescheduleError', 'Failed to reschedule workout')),
+  });
+
   // Stats
   const stats = workouts ? {
     total: workouts.length,
@@ -224,5 +269,6 @@ export function useTrainingBlock() {
     completeWorkout,
     adaptBlock,
     archiveBlock,
+    rescheduleWorkout,
   };
 }
