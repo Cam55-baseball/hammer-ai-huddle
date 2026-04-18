@@ -11,6 +11,15 @@ import {
   EMPTY_MICROS,
   type HydrationMicros,
 } from '@/utils/hydrationMicros';
+import {
+  sanitizeMacrosPerOz,
+  multiplyMacros,
+  mirrorElectrolytes,
+  type HydrationMacrosPerOz,
+} from '@/utils/hydrationMacros';
+
+const OZ_TO_G = 29.5735;
+const CONFIDENCE_THRESHOLD = 0.7;
 
 const HYDRATION_CHANGED_EVENT = 'hydration:changed';
 
@@ -26,11 +35,18 @@ export interface HydrationLog {
   sodium_mg?: number | null;
   potassium_mg?: number | null;
   magnesium_mg?: number | null;
+  calcium_mg?: number | null;
   sugar_g?: number | null;
+  glucose_g?: number | null;
+  fructose_g?: number | null;
   total_carbs_g?: number | null;
+  osmolality_estimate?: number | null;
   hydration_profile?: HydrationProfile | null;
   custom_label?: string | null;
   micros?: Partial<HydrationMicros> | null;
+  ai_estimated?: boolean | null;
+  nutrition_incomplete?: boolean | null;
+  confidence?: number | null;
 }
 
 export interface AiHydrationAnalysis {
@@ -39,9 +55,13 @@ export interface AiHydrationAnalysis {
   sodium_mg_per_oz: number;
   potassium_mg_per_oz: number;
   magnesium_mg_per_oz: number;
+  calcium_mg_per_oz?: number;
   sugar_g_per_oz: number;
+  glucose_g_per_oz?: number;
+  fructose_g_per_oz?: number;
   total_carbs_g_per_oz: number;
-  confidence?: 'high' | 'medium' | 'low';
+  osmolality_estimate?: number;
+  confidence?: number | 'high' | 'medium' | 'low';
   micros_per_oz?: Partial<HydrationMicros> | null;
 }
 
@@ -177,7 +197,52 @@ export function useHydration() {
     });
   }, [user, settings, todayTotal, dailyGoal]);
 
-  // Add water
+  // --- Unified log payload builder ----------------------------------------
+  // Single funnel for both preset and AI flows. Multiplies per-oz × oz, mirrors
+  // electrolytes between macros + micros, computes the hydration profile, and
+  // sets the AI/incomplete/confidence flags.
+  const buildLogPayload = useCallback((args: {
+    perOzMacros: HydrationMacrosPerOz;
+    perOzMicros: Partial<HydrationMicros> | null | undefined;
+    oz: number;
+    aiEstimated: boolean;
+    nutritionIncomplete: boolean;
+    confidence: number;
+  }) => {
+    const { oz, aiEstimated, nutritionIncomplete, confidence } = args;
+    const cleanMacros = sanitizeMacrosPerOz(args.perOzMacros);
+    const mirrored = mirrorElectrolytes(cleanMacros, args.perOzMicros);
+    const totalsMacros = multiplyMacros(mirrored.macros, oz);
+    const totalsMicros = multiplyMicros(mirrored.micros, oz);
+    const profile = computeHydrationProfile({
+      amount_oz: oz,
+      water_g: totalsMacros.water_g,
+      sodium_mg: totalsMacros.sodium_mg,
+      potassium_mg: totalsMacros.potassium_mg,
+      magnesium_mg: totalsMacros.magnesium_mg,
+      sugar_g: totalsMacros.sugar_g,
+      total_carbs_g: totalsMacros.total_carbs_g,
+    });
+    return {
+      water_g: totalsMacros.water_g,
+      sodium_mg: totalsMacros.sodium_mg,
+      potassium_mg: totalsMacros.potassium_mg,
+      magnesium_mg: totalsMacros.magnesium_mg,
+      calcium_mg: totalsMacros.calcium_mg,
+      sugar_g: totalsMacros.sugar_g,
+      glucose_g: totalsMacros.glucose_g,
+      fructose_g: totalsMacros.fructose_g,
+      total_carbs_g: totalsMacros.total_carbs_g,
+      osmolality_estimate: totalsMacros.osmolality_estimate,
+      hydration_profile: profile,
+      micros: totalsMicros,
+      ai_estimated: aiEstimated,
+      nutrition_incomplete: nutritionIncomplete,
+      confidence,
+    };
+  }, []);
+
+  // Add water — never blocks the log. Funnels through buildLogPayload.
   const addWater = useCallback(async (
     amount: number,
     liquidType: string,
@@ -196,94 +261,156 @@ export function useHydration() {
       let nutritionPayload: Record<string, any> = {};
       let customLabel: string | null = null;
 
+      // === PATH A: Caller already gave us AI-analyzed per-oz nutrition. =====
       if (aiNutrition) {
-        // AI-analyzed beverage (e.g. "Other" liquid). Multiply per-oz values by amount.
-        const water_g       = Number(aiNutrition.water_g_per_oz)       * amount;
-        const sodium_mg     = Number(aiNutrition.sodium_mg_per_oz)     * amount;
-        const potassium_mg  = Number(aiNutrition.potassium_mg_per_oz)  * amount;
-        const magnesium_mg  = Number(aiNutrition.magnesium_mg_per_oz)  * amount;
-        const sugar_g       = Number(aiNutrition.sugar_g_per_oz)       * amount;
-        const total_carbs_g = Number(aiNutrition.total_carbs_g_per_oz) * amount;
-        const profile = computeHydrationProfile({
-          amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
-        });
-        const micros = multiplyMicros(aiNutrition.micros_per_oz ?? null, amount);
-        console.log(`[hydration] AI profile: ${aiNutrition.display_name} score=${profile.hydration_score}`);
-        nutritionPayload = {
-          water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
-          glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
-          hydration_profile: profile,
-          micros,
+        const conf =
+          typeof aiNutrition.confidence === 'number'
+            ? aiNutrition.confidence
+            : aiNutrition.confidence === 'high' ? 0.9
+              : aiNutrition.confidence === 'medium' ? 0.7
+              : aiNutrition.confidence === 'low' ? 0.4 : 0.5;
+        const perOzMacros: HydrationMacrosPerOz = {
+          water_g:             Number(aiNutrition.water_g_per_oz)       || 0,
+          sodium_mg:           Number(aiNutrition.sodium_mg_per_oz)     || 0,
+          potassium_mg:        Number(aiNutrition.potassium_mg_per_oz)  || 0,
+          magnesium_mg:        Number(aiNutrition.magnesium_mg_per_oz)  || 0,
+          calcium_mg:          Number(aiNutrition.calcium_mg_per_oz)    || 0,
+          sugar_g:             Number(aiNutrition.sugar_g_per_oz)       || 0,
+          glucose_g:           Number(aiNutrition.glucose_g_per_oz)     || 0,
+          fructose_g:          Number(aiNutrition.fructose_g_per_oz)    || 0,
+          total_carbs_g:       Number(aiNutrition.total_carbs_g_per_oz) || 0,
+          osmolality_estimate: Number(aiNutrition.osmolality_estimate)  || 0,
         };
+        nutritionPayload = buildLogPayload({
+          perOzMacros,
+          perOzMicros: aiNutrition.micros_per_oz ?? null,
+          oz: amount,
+          aiEstimated: true,
+          nutritionIncomplete: conf < CONFIDENCE_THRESHOLD,
+          confidence: conf,
+        });
         customLabel = aiNutrition.display_name?.slice(0, 80) || null;
+        console.log(`[hydration] AI path: ${customLabel} score=${nutritionPayload.hydration_profile.hydration_score} conf=${conf}`);
       } else {
-        // Look up preset beverage nutrition profile
+        // === PATH B: Preset lookup, then lazy AI enrich, then fuzzy fallback.
+        let bev: any = null;
         try {
-          const { data: bev, error: bevError } = await (supabase as any)
+          const { data, error } = await (supabase as any)
             .from('hydration_beverage_database')
             .select('*')
             .eq('liquid_type', liquidType)
             .maybeSingle();
+          if (error) console.warn('[hydration] preset lookup error:', error.message);
+          bev = data;
+        } catch (e) {
+          console.warn('[hydration] preset lookup failed', e);
+        }
 
-          if (bevError) {
-            console.warn(`[hydration] beverage lookup error for "${liquidType}":`, bevError.message);
-          } else if (!bev) {
-            console.warn(`[hydration] no beverage row for liquidType="${liquidType}" — logging without profile`);
-          } else {
-            console.log(`[hydration] bev found: ${bev.display_name} (${liquidType})`);
-            const water_g       = Number(bev.water_g_per_oz)       * amount;
-            const sodium_mg     = Number(bev.sodium_mg_per_oz)     * amount;
-            const potassium_mg  = Number(bev.potassium_mg_per_oz)  * amount;
-            const magnesium_mg  = Number(bev.magnesium_mg_per_oz)  * amount;
-            const sugar_g       = Number(bev.sugar_g_per_oz)       * amount;
-            const total_carbs_g = Number(bev.total_carbs_g_per_oz) * amount;
-            const profile = computeHydrationProfile({
-              amount_oz: amount, water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
-            });
+        // Fuzzy fallback: try ILIKE on display_name when exact liquid_type misses.
+        if (!bev && liquidType !== 'water' && liquidType !== 'other') {
+          try {
+            const { data } = await (supabase as any)
+              .from('hydration_beverage_database')
+              .select('*')
+              .ilike('display_name', `%${liquidType}%`)
+              .limit(1);
+            if (data && data.length > 0) {
+              bev = data[0];
+              console.log(`[hydration] fuzzy match: "${liquidType}" → "${bev.display_name}"`);
+            }
+          } catch (e) {
+            console.warn('[hydration] fuzzy match failed', e);
+          }
+        }
 
-            // --- Lazy micros enrichment -----------------------------------
-            // If preset row's micros_per_oz is null or empty {}, ask AI to
-            // estimate them and persist back to the beverage DB so future
-            // logs reuse the cached values (one AI call per unique drink, ever).
-            let microsPerOz: Partial<HydrationMicros> | null = bev.micros_per_oz ?? null;
-            const isEmpty =
-              !microsPerOz ||
-              (typeof microsPerOz === 'object' && Object.keys(microsPerOz).length === 0);
-            if (isEmpty && liquidType !== 'water') {
-              try {
-                console.log(`[hydration] enriching micros for "${bev.display_name}" via AI`);
-                const { data: enrich, error: enrichErr } = await supabase.functions.invoke(
-                  'analyze-hydration-beverage',
-                  { body: { name: bev.display_name || liquidType, category: liquidType } },
-                );
-                if (enrichErr) {
-                  console.warn('[hydration] enrich error:', enrichErr.message);
-                } else if (enrich?.micros_per_oz) {
-                  microsPerOz = enrich.micros_per_oz as Partial<HydrationMicros>;
-                  // Persist back to beverage DB (cache forever).
-                  const { error: upErr } = await (supabase as any)
+        if (bev) {
+          let perOzMacros: HydrationMacrosPerOz = {
+            water_g:             Number(bev.water_g_per_oz)       || 0,
+            sodium_mg:           Number(bev.sodium_mg_per_oz)     || 0,
+            potassium_mg:        Number(bev.potassium_mg_per_oz)  || 0,
+            magnesium_mg:        Number(bev.magnesium_mg_per_oz)  || 0,
+            calcium_mg:          Number(bev.calcium_mg_per_oz)    || 0,
+            sugar_g:             Number(bev.sugar_g_per_oz)       || 0,
+            glucose_g:           Number(bev.glucose_g_per_oz)     || 0,
+            fructose_g:          Number(bev.fructose_g_per_oz)    || 0,
+            total_carbs_g:       Number(bev.total_carbs_g_per_oz) || 0,
+            osmolality_estimate: Number(bev.osmolality_estimate)  || 0,
+          };
+          let microsPerOz: Partial<HydrationMicros> | null = bev.micros_per_oz ?? null;
+          let confidence = 0.95; // preset = high confidence
+
+          // Lazy enrich: if micros are empty, ask AI and persist back.
+          const microsEmpty =
+            !microsPerOz ||
+            (typeof microsPerOz === 'object' && Object.keys(microsPerOz).length === 0);
+          if (microsEmpty && liquidType !== 'water') {
+            try {
+              console.log(`[hydration] enriching "${bev.display_name}" via AI`);
+              const { data: enrich, error: enrichErr } = await supabase.functions.invoke(
+                'analyze-hydration-beverage',
+                { body: { name: bev.display_name || liquidType, category: liquidType } },
+              );
+              if (enrichErr) {
+                console.warn('[hydration] enrich error:', enrichErr.message);
+              } else if (enrich?.micros_per_oz) {
+                microsPerOz = enrich.micros_per_oz as Partial<HydrationMicros>;
+                // Merge any new macros from enrichment if preset macros were 0/missing.
+                if (enrich.macros_per_oz) {
+                  perOzMacros = sanitizeMacrosPerOz({
+                    ...enrich.macros_per_oz,
+                    // Preserve preset values that are non-zero.
+                    ...(Object.fromEntries(
+                      Object.entries(perOzMacros).filter(([_, v]) => Number(v) > 0)
+                    )),
+                  });
+                }
+                // Persist micros back to beverage DB (cache forever).
+                try {
+                  await (supabase as any)
                     .from('hydration_beverage_database')
                     .update({ micros_per_oz: microsPerOz })
                     .eq('id', bev.id);
-                  if (upErr) console.warn('[hydration] cache persist error:', upErr.message);
-                  else console.log(`[hydration] cached micros for "${bev.display_name}"`);
+                  console.log(`[hydration] cached micros for "${bev.display_name}"`);
+                } catch (e) {
+                  console.warn('[hydration] cache persist failed', e);
                 }
-              } catch (e) {
-                console.warn('[hydration] enrichment failed', e);
+                if (typeof enrich.confidence === 'number') confidence = enrich.confidence;
               }
+            } catch (e) {
+              console.warn('[hydration] enrichment failed', e);
             }
-
-            const micros = multiplyMicros(microsPerOz, amount);
-            console.log(`[hydration] computed profile: score=${profile.hydration_score}, tier=${profile.hydration_tier}`);
-            nutritionPayload = {
-              water_g, sodium_mg, potassium_mg, magnesium_mg, sugar_g, total_carbs_g,
-              glucose_g: null, fructose_g: null, osmolality_estimate: null, absorption_score: null,
-              hydration_profile: profile,
-              micros,
-            };
           }
-        } catch (e) {
-          console.warn('[hydration] beverage lookup failed, logging without profile', e);
+
+          nutritionPayload = buildLogPayload({
+            perOzMacros,
+            perOzMicros: microsPerOz,
+            oz: amount,
+            aiEstimated: microsEmpty, // true if we needed AI to fill micros
+            nutritionIncomplete: false,
+            confidence,
+          });
+          console.log(`[hydration] preset path: ${bev.display_name} score=${nutritionPayload.hydration_profile.hydration_score}`);
+        } else if (liquidType === 'water') {
+          // Plain water → assume mostly water, no electrolytes.
+          nutritionPayload = buildLogPayload({
+            perOzMacros: { ...sanitizeMacrosPerOz({ water_g: OZ_TO_G }) },
+            perOzMicros: null,
+            oz: amount,
+            aiEstimated: false,
+            nutritionIncomplete: false,
+            confidence: 1,
+          });
+        } else {
+          // === PATH C: Last-resort fallback — store with mostly-water assumption.
+          console.warn(`[hydration] no preset/match for "${liquidType}" — storing partial data`);
+          nutritionPayload = buildLogPayload({
+            perOzMacros: { ...sanitizeMacrosPerOz({ water_g: OZ_TO_G * 0.95 }) },
+            perOzMicros: null,
+            oz: amount,
+            aiEstimated: true,
+            nutritionIncomplete: true,
+            confidence: 0,
+          });
         }
       }
 
@@ -302,6 +429,20 @@ export function useHydration() {
       if (error) throw error;
 
       const newTotal = todayTotal + amount;
+      setTodayTotal(newTotal);
+
+      if (newTotal >= dailyGoal && todayTotal < dailyGoal) {
+        toast.success('🎉 Daily hydration goal reached!', { duration: 5000 });
+      } else {
+        toast.success(`+${amount} oz logged!`);
+      }
+
+      fetchTodayLogs();
+      try {
+        const ch = new BroadcastChannel('data-sync');
+        ch.postMessage({ type: HYDRATION_CHANGED_EVENT, userId: user.id, tabId: TAB_ID });
+        ch.close();
+      } catch {}
       setTodayTotal(newTotal);
       
       // Check if goal reached
@@ -324,7 +465,7 @@ export function useHydration() {
       toast.error('Failed to log water');
       return false;
     }
-  }, [user, today, todayTotal, dailyGoal, fetchTodayLogs]);
+  }, [user, today, todayTotal, dailyGoal, fetchTodayLogs, buildLogPayload]);
 
   // Delete log entry
   const deleteLog = useCallback(async (logId: string): Promise<boolean> => {
@@ -498,10 +639,21 @@ export function useHydration() {
   const totalSugarG      = todayLogs.reduce((s, l) => s + Number((l as any).sugar_g      || 0), 0);
   const totalElectrolytesMg = totalSodiumMg + totalPotassiumMg + totalMagnesiumMg;
 
-  // Aggregate micronutrients across today's hydration logs (for display in
-  // Hydration Quality breakdown). Falls back to empty when no logs carry micros.
+  // Aggregate micronutrients across today's hydration logs. Falls back to the
+  // top-level macro columns (calcium_mg / potassium_mg / magnesium_mg) for
+  // legacy logs that don't have a `micros` jsonb populated yet.
   const totalHydrationMicros: HydrationMicros = sumMicros(
-    todayLogs.map(l => (l as any).micros as Partial<HydrationMicros> | null | undefined)
+    todayLogs.map(l => {
+      const m = (l as any).micros as Partial<HydrationMicros> | null | undefined;
+      const hasJsonb = m && typeof m === 'object' && Object.keys(m).length > 0;
+      if (hasJsonb) return m;
+      // Fallback: synthesize a partial micros object from the top-level columns.
+      const ca = Number((l as any).calcium_mg)   || 0;
+      const k  = Number((l as any).potassium_mg) || 0;
+      const mg = Number((l as any).magnesium_mg) || 0;
+      if (ca === 0 && k === 0 && mg === 0) return null;
+      return { calcium_mg: ca, potassium_mg: k, magnesium_mg: mg };
+    })
   );
 
   return {

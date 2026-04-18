@@ -2567,7 +2567,10 @@ export type Database = {
       hydration_logs: {
         Row: {
           absorption_score: number | null
+          ai_estimated: boolean | null
           amount_oz: number
+          calcium_mg: number | null
+          confidence: number | null
           custom_label: string | null
           fructose_g: number | null
           glucose_g: number | null
@@ -2578,6 +2581,7 @@ export type Database = {
           logged_at: string | null
           magnesium_mg: number | null
           micros: Json | null
+          nutrition_incomplete: boolean | null
           osmolality_estimate: number | null
           potassium_mg: number | null
           quality_class: string | null
@@ -2589,7 +2593,10 @@ export type Database = {
         }
         Insert: {
           absorption_score?: number | null
+          ai_estimated?: boolean | null
           amount_oz: number
+          calcium_mg?: number | null
+          confidence?: number | null
           custom_label?: string | null
           fructose_g?: number | null
           glucose_g?: number | null
@@ -2600,6 +2607,7 @@ export type Database = {
           logged_at?: string | null
           magnesium_mg?: number | null
           micros?: Json | null
+          nutrition_incomplete?: boolean | null
           osmolality_estimate?: number | null
           potassium_mg?: number | null
           quality_class?: string | null
@@ -2611,7 +2619,10 @@ export type Database = {
         }
         Update: {
           absorption_score?: number | null
+          ai_estimated?: boolean | null
           amount_oz?: number
+          calcium_mg?: number | null
+          confidence?: number | null
           custom_label?: string | null
           fructose_g?: number | null
           glucose_g?: number | null
@@ -2622,6 +2633,7 @@ export type Database = {
           logged_at?: string | null
           magnesium_mg?: number | null
           micros?: Json | null
+          nutrition_incomplete?: boolean | null
           osmolality_estimate?: number | null
           potassium_mg?: number | null
           quality_class?: string | null
