@@ -91,7 +91,7 @@ export function HydrationLogCard({ log, onDelete, compact = false }: Props) {
       {((log as any).ai_estimated || (log as any).nutrition_incomplete) && (
         <div className="flex items-center gap-1.5 flex-wrap">
           {(log as any).ai_estimated && (
-            <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[9px] font-medium">
+            <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground border border-border/50 px-2 py-0.5 text-[9px] font-medium">
               Estimated
             </span>
           )}
