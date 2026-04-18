@@ -17,6 +17,11 @@ import {
   mirrorElectrolytes,
   type HydrationMacrosPerOz,
 } from '@/utils/hydrationMacros';
+import {
+  inferCategory,
+  isComplete,
+  applyFallbacks,
+} from '@/utils/hydrationCategoryRules';
 
 const OZ_TO_G = 29.5735;
 const CONFIDENCE_THRESHOLD = 0.7;
@@ -208,10 +213,27 @@ export function useHydration() {
     aiEstimated: boolean;
     nutritionIncomplete: boolean;
     confidence: number;
+    liquidType?: string;
+    customLabel?: string | null;
   }) => {
-    const { oz, aiEstimated, nutritionIncomplete, confidence } = args;
+    const { oz, aiEstimated, confidence, liquidType, customLabel } = args;
+    let { nutritionIncomplete } = args;
     const cleanMacros = sanitizeMacrosPerOz(args.perOzMacros);
-    const mirrored = mirrorElectrolytes(cleanMacros, args.perOzMicros);
+
+    // === FINAL ENFORCEMENT: category-based micronutrient completeness ===
+    // No log can persist with missing required micros for its category.
+    const category = inferCategory(customLabel || liquidType, liquidType);
+    let workingMicros: Partial<HydrationMicros> = args.perOzMicros || {};
+    const check = isComplete(category, workingMicros);
+    if (!check.ok) {
+      console.warn(
+        `[hydration] fallback applied → category=${category} missing=[${check.missing.join(',')}]`,
+      );
+      workingMicros = applyFallbacks(category, workingMicros);
+      nutritionIncomplete = true;
+    }
+
+    const mirrored = mirrorElectrolytes(cleanMacros, workingMicros);
     const totalsMacros = multiplyMacros(mirrored.macros, oz);
     const totalsMicros = multiplyMicros(mirrored.micros, oz);
     const profile = computeHydrationProfile({
