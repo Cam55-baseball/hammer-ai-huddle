@@ -1,64 +1,45 @@
 
 
-## Plan — Final Client-Side Micronutrient Enforcement Layer
+## Answer — What "Estimated" means on your goat milk log
 
-### Goal
-No hydration log can ever be persisted with missing required micros for its category. Goat milk → zinc always > 0.
+**It's an honest data-source flag, not an error.**
 
-### 1. Create client mirror of category rules
-New file `src/utils/hydrationCategoryRules.ts` — a TS port of `supabase/functions/_shared/hydrationCategoryRules.ts` (same `Category` map, `REQUIRED_MICROS`, `FALLBACK_MINIMUMS`, `inferCategory`, `isComplete`, `applyFallbacks`). Edge module stays the source of truth for server; this is its client twin so the browser can enforce too.
+Looking at `HydrationLogCard.tsx`, the red/primary "Estimated" pill renders when the log row has `ai_estimated = true`:
 
-(Can't import edge `_shared` files into the React app — different Deno/Node module resolution, different `HydrationMicroKey` source. Mirror is the clean fix.)
-
-### 2. Enforce inside `buildLogPayload` (the universal funnel)
-Add a `liquidType` + `customLabel` arg. Before sanitize/mirror/multiply:
-
-```ts
-const category = inferCategory(customLabel || liquidType, liquidType);
-const check = isComplete(category, perOzMicros || {});
-let finalMicros = perOzMicros || {};
-let incomplete = nutritionIncomplete;
-if (!check.ok) {
-  console.warn(`[hydration] fallback applied → category=${category} missing=[${check.missing.join(',')}]`);
-  finalMicros = applyFallbacks(category, finalMicros as HydrationMicros);
-  incomplete = true;          // flag honestly
-}
-// then existing mirror/multiply pipeline using finalMicros
+```tsx
+{(log as any).ai_estimated && (
+  <span className="...bg-primary/10 text-primary...">Estimated</span>
+)}
+{(log as any).nutrition_incomplete && (
+  <span className="...bg-warning/15 text-warning...">Partial data</span>
+)}
 ```
 
-This single insertion catches **all three paths** (AI, preset, last-resort) since they all funnel through here.
+### Why your goat milk got tagged
 
-### 3. Self-heal preset DB rows
-In `useHydration.ts` preset path, **after** `buildLogPayload` runs, compare returned `micros` (totals) against the original `bev.micros_per_oz`. If we had to apply fallbacks (detect by re-running `isComplete` on `bev.micros_per_oz`), persist the corrected per-oz back:
+Goat milk hits one of two paths in `useHydration.ts`:
 
-```ts
-const cat = inferCategory(bev.display_name, liquidType);
-const orig = isComplete(cat, bev.micros_per_oz || {});
-if (!orig.ok) {
-  const healed = applyFallbacks(cat, bev.micros_per_oz || {} as HydrationMicros);
-  await supabase.from('hydration_beverage_database')
-    .update({ micros_per_oz: healed }).eq('id', bev.id);
-  console.log(`[hydration] self-healed preset "${bev.display_name}" missing=[${orig.missing.join(',')}]`);
-}
-```
+1. **Preset path** — if it's in `hydration_beverage_database` with complete USDA micros, no flag.
+2. **AI/fallback path** — if Hammer had to estimate values (freeform name, missing preset, or a category-fallback was applied to fill required micros like zinc), the row is saved with `ai_estimated = true`.
 
-DB gradually heals as users log drinks.
+Given the recent self-healing work we added: if your goat milk preset row was missing required dairy micros (Ca/K/Mg/**Zn**), the client applied USDA-grounded fallback minimums and flagged the row as estimated. That's the system being transparent — "these numbers are accurate enough to score you, but they came from category defaults, not a per-brand lab analysis."
 
-### 4. Keep edge-function enforcement (already in place)
-No changes there — defense in depth: AI returns good data ideally → client validates again → fallbacks guarantee compliance.
+### What it does NOT mean
+- Not "wrong data" — values are USDA-grounded
+- Not "low confidence" — that would be the amber **"Partial data"** pill (`nutrition_incomplete`)
+- Not blocking your hydration score — score still computes normally
 
-### 5. Pass `liquidType` / `customLabel` through call sites
-`buildLogPayload({ ..., liquidType, customLabel })` — only one caller (`addWater`), trivial wiring.
+### Two flags, two meanings
 
-### Files to change
+| Pill | Color | Trigger | Meaning |
+|---|---|---|---|
+| Estimated | primary (red-ish) | `ai_estimated = true` | Values came from Hammer/category fallbacks, not a verified preset |
+| Partial data | amber | `nutrition_incomplete = true` | Some required fields couldn't be resolved even after fallback |
 
-| File | Change |
-|---|---|
-| `src/utils/hydrationCategoryRules.ts` (new) | Client port of category map, `inferCategory`, `isComplete`, `applyFallbacks` |
-| `src/hooks/useHydration.ts` | Enforce inside `buildLogPayload`; self-heal preset DB row when original fails validation |
+### If you'd like, I can:
+1. **Tone down the color** — switch "Estimated" from primary/red to a neutral muted pill so it reads as info, not warning.
+2. **Add a tooltip** explaining the source (e.g. "USDA-based estimate for dairy category") on hover.
+3. **Suppress the flag** when the only reason it fired was a category fallback on a *preset* row (since that's now self-healed in DB) — only show it for true freeform AI logs.
 
-### Out of scope
-- One-shot backfill of existing bad `hydration_beverage_database` rows (lazy heal covers it)
-- Recomputing already-logged `hydration_logs` rows (user can re-log goat milk to see zinc)
-- UI changes — server returns better data, existing badges already cover incomplete state
+No code changes needed unless you want one of the above.
 
