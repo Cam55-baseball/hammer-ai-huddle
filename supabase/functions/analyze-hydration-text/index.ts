@@ -45,9 +45,10 @@ magnesium_mg, potassium_mg, zinc_mg.
 CRITICAL — DO NOT RETURN ALL-ZEROS for any non-water, non-black-coffee, non-plain-tea drink. At least 3 keys MUST be > 0 for those.
 
 CATEGORY MANDATES:
-- Dairy (cow/goat/sheep): MUST populate calcium_mg, potassium_mg, magnesium_mg, vitamin_a_mcg.
-  · Cow milk: Ca~15, K~18, Mg~1.4, A~18, D~0.16, B12~0.16
-  · Goat milk: Ca~33, K~62, Mg~4, A~14, B12~0.02, D~0.07, Zn~0.1, B6~0.014
+- Dairy (cow/goat/sheep): MUST populate calcium_mg, potassium_mg, magnesium_mg, zinc_mg, vitamin_a_mcg.
+  · Cow milk: Ca~15, K~18, Mg~1.4, Zn~0.11, A~18, D~0.16, B12~0.16
+  · Goat milk: Ca~33, K~62, Mg~4, Zn~0.1, A~14, B12~0.02, D~0.07, B6~0.014
+  · NEVER return zinc_mg=0 for any dairy milk. Zinc is mandatory (~0.1 mg/oz minimum).
 - Plant milks (almond/oat/soy/coconut, fortified): MUST populate calcium_mg, vitamin_d_mcg, vitamin_b12_mcg.
 - Citrus juice: MUST populate vitamin_c_mg, folate_mcg, potassium_mg.
 - Coconut water: K~75, Mg~7.5, Ca~7, folate~0.9.
