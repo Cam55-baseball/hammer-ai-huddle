@@ -55,11 +55,13 @@ export function TrainingBlockView() {
     generateBlock,
     completeWorkout,
     adaptBlock,
+    rescheduleWorkout,
   } = useTrainingBlock();
   const { preferences } = useTrainingPreferences();
 
   const [expandedWeek, setExpandedWeek] = useState<number | null>(1);
   const [completeDialog, setCompleteDialog] = useState<string | null>(null);
+  const [reschedulePopover, setReschedulePopover] = useState<string | null>(null);
   const [rpe, setRpe] = useState(6);
   const [completionNotes, setCompletionNotes] = useState('');
 
@@ -175,7 +177,7 @@ export function TrainingBlockView() {
         <CardContent>
           <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
             <span className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
+              <CalendarIcon className="h-3.5 w-3.5" />
               {activeBlock.start_date} → {activeBlock.end_date}
             </span>
             <span className="capitalize">{activeBlock.sport}</span>
@@ -253,6 +255,39 @@ export function TrainingBlockView() {
                         <div className="flex items-center gap-2">
                           {workout.estimated_duration && (
                             <span className="text-xs text-muted-foreground">{workout.estimated_duration} min</span>
+                          )}
+                          {workout.status === 'scheduled' && (
+                            <Popover
+                              open={reschedulePopover === workout.id}
+                              onOpenChange={open => setReschedulePopover(open ? workout.id : null)}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  title="Reschedule workout"
+                                >
+                                  <CalendarClock className="h-3.5 w-3.5" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="end">
+                                <Calendar
+                                  mode="single"
+                                  selected={workout.scheduled_date ? new Date(workout.scheduled_date) : undefined}
+                                  onSelect={d => {
+                                    if (!d) return;
+                                    rescheduleWorkout.mutate(
+                                      { workoutId: workout.id, newDate: format(d, 'yyyy-MM-dd') },
+                                      { onSuccess: () => setReschedulePopover(null) }
+                                    );
+                                  }}
+                                  disabled={d => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                                  initialFocus
+                                  className={cn('p-3 pointer-events-auto')}
+                                />
+                              </PopoverContent>
+                            </Popover>
                           )}
                           {workout.status === 'scheduled' && (
                             <Dialog
