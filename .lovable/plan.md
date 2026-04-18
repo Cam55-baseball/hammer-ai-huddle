@@ -1,56 +1,54 @@
 
 
-## Plan — Micronutrients for Liquids in Hydration Quality
+## Plan — Fix Missing Micronutrients on Logged Drinks (e.g. Goat Milk)
 
-### Goal
-Extend hydration logs to carry micronutrients (Vit C, B-vits, Ca, Fe, Mg, K, Zn, etc.) and surface a daily aggregate in the Hydration Quality block.
+### Problem
+User logged goat milk and the Hydration Quality block shows "No micronutrients logged from drinks today." Goat milk is rich in Ca, P, K, Mg, Zn, Se, B2, B12, A — none surfaced.
 
-### 1. Edge function — extend `analyze-hydration-text`
-Add to the `analyze_beverage` tool schema a `micros_per_oz` object with the same 13 keys used by `parse-food-text`:
-`vitamin_a_mcg, vitamin_c_mg, vitamin_d_mcg, vitamin_e_mg, vitamin_k_mcg, vitamin_b6_mg, vitamin_b12_mcg, folate_mcg, calcium_mg, iron_mg, magnesium_mg, potassium_mg, zinc_mg` (per fl oz, all required).
+### Root cause hypothesis
+Two paths feed `hydration_logs.micros`:
+1. **Preset path** — uses `hydration_beverage_database.micros_per_oz`. Only ~8 drinks were seeded; goat milk almost certainly has NULL → log.micros = all zeros.
+2. **AI ("Other") path** — `analyze-hydration-text` returns `micros_per_oz` and `useHydration` multiplies it. This path likely worked for goat milk only if user typed it in "Other"; if they tapped a "Milk" preset variant, no micros.
 
-System prompt addition: USDA-style estimates per oz, 0 only if truly negligible. Examples: orange juice → high vit C/folate/K; milk → Ca/D/B12; coffee → tiny K/Mg; plain water → all 0.
+Need to confirm via DB which path was used and whether `micros` on the row is null/zeros.
 
-Sanitize/clamp to sane caps (e.g. vit C ≤ 100 mg/oz). Magnesium/potassium already returned at top-level — keep both for backwards compat with scoring; mirror inside `micros_per_oz` too.
+### Fix — Lazy AI enrichment for ANY beverage missing micros (the (b) path deferred in v1)
 
-### 2. Preset beverages — micros source
-Two paths:
+When inserting a hydration log:
+1. If preset beverage row has `micros_per_oz` populated → use it (current behavior).
+2. If preset beverage row has NULL/empty `micros_per_oz` → call new edge function `analyze-hydration-beverage` with the beverage name, get `micros_per_oz`, **persist back to `hydration_beverage_database`** (cached forever), then multiply × oz for the log.
+3. AI/Other path stays as-is (already returns micros).
 
-**a)** Extend `hydration_beverage_database` with a `micros_per_oz jsonb` column (migration). Seed common drinks (water=zeros, milk, OJ, coffee, tea, Gatorade, soda, coconut water) with USDA values. New rows fall back to zeros.
+This guarantees every drink gets micros on first log, and subsequent logs reuse the cached values (one AI call per unique beverage, ever).
 
-**b)** For unseeded preset rows, add a one-shot enrichment: when `useHydration` reads a beverage with NULL `micros_per_oz`, call a new lightweight edge function `analyze-hydration-preset` (same schema as #1 but takes a beverage name) and persist back to the row. Owner-only path or cached at first lookup so we never re-pay.
+### Strengthen the AI prompt
+Update both `analyze-hydration-text` and the new `analyze-hydration-beverage` system prompts:
+- Explicit USDA reference cues with examples covering edge cases:
+  - **Goat milk**: high Ca (~33mg/oz), Mg (~4mg/oz), K (~62mg/oz), Zn (~0.1mg/oz), Se (not in our 13 keys — skip), B2, B12, A, D-fortified.
+  - **Cow milk, OJ, coconut water, kombucha, kefir, almond/oat/soy milk, bone broth, sports drinks, energy drinks, beer, wine, smoothies.**
+- Mandate: every dairy/plant-milk MUST populate Ca, K, Mg; every citrus juice MUST populate Vit C, folate, K; every fortified milk MUST populate Vit D + B12.
+- Forbid all-zeros for non-water, non-black-coffee, non-plain-tea drinks.
+- Add validator in edge function: if input is dairy/juice/milk-alternative and ALL micros = 0, retry once with stricter prompt; if still zero, log warning and return best-guess minimums.
 
-v1 implements (a) seeded; (b) deferred unless needed.
-
-### 3. Schema migration — `hydration_logs`
-Add `micros jsonb` (nullable). Stores the multiplied-out totals for that single log (per-oz × amount_oz). Keeps reads cheap — no recompute from beverage db on render.
-
-### 4. `useHydration.ts`
-- On insert (preset path): multiply preset `micros_per_oz` × `amount_oz` → store in `micros`.
-- On insert (AI/other path): multiply `aiNutrition.micros_per_oz` × `amount_oz` → store in `micros`.
-- Expose new aggregates from today's logs:
-  - `totalHydrationMicros: Record<MicroKey, number>` (summed across today's hydration logs).
-
-### 5. `HydrationQualityBreakdown.tsx`
-Add a collapsed-by-default "Micronutrients from drinks today" section under the existing aggregate row:
-- Grid of micro chips showing only non-zero values (e.g. "Vit C 62 mg · K 480 mg · Ca 310 mg").
-- "Show all 13" toggle reveals zeros.
-- Small caption: "Hammer-estimated for custom drinks; USDA values for presets."
-
-### 6. Daily Nutrition Score integration (optional, scoped tight)
-The Daily Nutrition Score (40% micros) currently only counts food micros. To avoid hidden score inflation, **do NOT auto-merge** hydration micros into the Daily Nutrition Score in v1 — display only. Add a follow-up toggle later if user wants it counted.
+### Backfill switch (optional, scoped)
+Add a one-time admin-callable refresh: re-run AI on every `hydration_beverage_database` row where `micros_per_oz` IS NULL OR is all zeros. Out of scope unless user asks — lazy path will heal organically.
 
 ### Files to change
 | File | Change |
 |---|---|
-| `supabase/functions/analyze-hydration-text/index.ts` | Add `micros_per_oz` to tool schema + clamping |
-| Migration | Add `micros_per_oz jsonb` to `hydration_beverage_database`; add `micros jsonb` to `hydration_logs`; seed common presets |
-| `src/hooks/useHydration.ts` | Compute & persist `micros` on insert; expose `totalHydrationMicros` |
-| `src/components/nutrition-hub/HydrationQualityBreakdown.tsx` | Render micros section (non-zero chips, expand toggle) |
-| `src/components/nutrition-hub/QuickLogActions.tsx` | Pass through AI `micros_per_oz` to `addWater` |
+| `supabase/functions/analyze-hydration-text/index.ts` | Stronger system prompt with category-specific micro mandates + zero-veto retry |
+| `supabase/functions/analyze-hydration-beverage/index.ts` (new) | Name-only beverage → `micros_per_oz` for preset enrichment |
+| `src/hooks/useHydration.ts` | When preset has no micros, call enrichment fn, persist to beverage DB, then store on log |
+| `supabase/config.toml` | Register new edge function |
 
-### Out of scope (v1)
-- Folding hydration micros into the Daily Nutrition Score
-- Backfilling micros on legacy hydration logs
-- Per-drink micro detail inside `HydrationLogCard` (stays at the daily aggregate)
+### Diagnostic before coding
+Once switched to default mode I'll first query the DB:
+- The user's most recent `hydration_logs` row (confirm `micros` is null/zeros and which `beverage_id`).
+- That `hydration_beverage_database` row's `micros_per_oz`.
+
+This confirms which path failed and whether enrichment alone fixes it without re-prompt tuning.
+
+### Out of scope
+- Adding selenium (Se) to the 13-key schema — would cascade through food micros, scoring, UI. Note in caption that "Se not currently tracked."
+- Backfilling user's already-logged goat milk row (they can re-log to see micros, or we add a one-time recompute pass if requested).
 
