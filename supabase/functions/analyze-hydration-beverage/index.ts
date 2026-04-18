@@ -3,6 +3,11 @@
 // AND micronutrients. Used to lazily enrich hydration_beverage_database
 // rows that have empty data so every preset eventually carries real values.
 
+import {
+  inferCategory, isComplete, applyFallbacks, describeMissing,
+  REQUIRED_MICROS, type Category, type MicroKey,
+} from "../_shared/hydrationCategoryRules.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
