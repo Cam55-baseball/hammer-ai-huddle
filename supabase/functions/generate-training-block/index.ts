@@ -593,7 +593,7 @@ Always respond using the generate_training_block function.`
     }
 
     // Create calendar events (non-critical — outside transaction)
-    const calendarEvents = scheduledWorkouts.map(sw => ({
+    const calendarEvents = normalizedWorkouts.map(sw => ({
       user_id: user.id,
       event_date: sw.scheduled_date,
       event_type: 'training_block',
@@ -611,7 +611,7 @@ Always respond using the generate_training_block function.`
 
     return new Response(JSON.stringify({
       blockId,
-      totalWorkouts: scheduledWorkouts.length,
+      totalWorkouts: normalizedWorkouts.length,
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
     }), {
