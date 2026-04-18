@@ -500,27 +500,57 @@ Always respond using the generate_training_block function.`
 
     const scheduledWorkouts = scheduleBlockWorkouts(generated.weeks, startDate, availability);
 
-    // ─── Enforce strictly unique sequential dates before RPC ───
-    // The DB has uq_block_workouts_date on (block_id, scheduled_date). AI-derived
-    // date assignment can collide; override with deterministic +1 day per workout
-    // in array order. Users can reschedule individual workouts via the UI.
-    // (V1 tradeoff: overrides season-aware density for guaranteed uniqueness.)
-    const normalizedWorkouts = scheduledWorkouts.map((sw, i) => {
-      const d = new Date(startDate);
-      d.setDate(startDate.getDate() + i);
-      return {
-        ...sw,
-        scheduled_date: d.toISOString().split('T')[0],
-        day_label: DAY_NAMES[d.getDay()],
-      };
-    });
+    // ─── Forward-shift uniqueness pass (preserves availability cadence) ───
+    // Keep the spacing-aware dates from scheduleBlockWorkouts. If two workouts
+    // land on the same date (collision), nudge later ones forward by +1 day
+    // until unique. Satisfies uq_block_workouts_date(block_id, scheduled_date)
+    // without flattening to daily training.
+    const parseLocalDate = (s: string): Date => {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, (m || 1) - 1, d || 1);
+    };
+    const toISO = (d: Date): string => {
+      const y = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      return `${y}-${mo}-${da}`;
+    };
 
+    const usedDates = new Set<string>();
+    const normalizedWorkouts = scheduledWorkouts
+      .slice()
+      .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+      .map(sw => {
+        const d = parseLocalDate(sw.scheduled_date);
+        while (usedDates.has(toISO(d))) {
+          d.setDate(d.getDate() + 1);
+        }
+        const finalDate = toISO(d);
+        usedDates.add(finalDate);
+        return {
+          ...sw,
+          scheduled_date: finalDate,
+          day_label: DAY_NAMES[d.getDay()],
+        };
+      });
+
+    // ─── Pre-RPC hard validation ───
     const dateList = normalizedWorkouts.map(w => w.scheduled_date);
     const duplicates = dateList.filter((d, i) => dateList.indexOf(d) !== i);
     console.log("DATES:", dateList);
     if (duplicates.length > 0) {
-      console.error("DUPLICATES detected pre-RPC:", duplicates);
+      console.error("DUPLICATES detected pre-RPC:", duplicates, "full payload:", JSON.stringify(normalizedWorkouts));
       throw new Error(`Duplicate scheduled_date values: ${duplicates.join(', ')}`);
+    }
+    for (const w of normalizedWorkouts) {
+      if (!w.exercises || w.exercises.length < 1) {
+        console.error("Validation fail — workout missing exercises:", JSON.stringify(w));
+        throw new Error(`Workout on ${w.scheduled_date} (${w.workout_type}) has no exercises`);
+      }
+      if (!Number.isInteger(w.week_number) || w.week_number < 1 || w.week_number > 6) {
+        console.error("Validation fail — invalid week_number:", JSON.stringify(w));
+        throw new Error(`Invalid week_number ${w.week_number} on ${w.scheduled_date}`);
+      }
     }
 
     // Fix #4: Atomic insert via RPC — single transaction
