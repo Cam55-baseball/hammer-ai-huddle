@@ -501,6 +501,10 @@ Always respond using the generate_training_block function.`
     const scheduledWorkouts = scheduleBlockWorkouts(generated.weeks, startDate, availability);
 
     // Fix #4: Atomic insert via RPC — single transaction
+    // Defensive clamping: prevent any rogue AI value from blowing the transaction
+    const clamp = (n: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, Math.round(n)));
+
     const workoutsPayload = scheduledWorkouts.map(sw => ({
       week_number: sw.week_number,
       day_label: sw.day_label,
@@ -508,19 +512,24 @@ Always respond using the generate_training_block function.`
       status: 'scheduled',
       workout_type: sw.workout_type,
       estimated_duration: sw.estimated_duration,
-      exercises: sw.exercises.map((ex, idx) => ({
-        ordinal: idx,
-        name: ex.name,
-        sets: ex.sets,
-        reps: ex.reps,
-        weight: ex.weight || null,
-        tempo: ex.tempo || null,
-        rest_seconds: ex.rest_seconds || null,
-        velocity_intent: ex.velocity_intent || null,
-        cns_demand: ex.cns_demand || null,
-        coaching_cues: ex.coaching_cues || null,
-      })),
+      exercises: sw.exercises
+        .filter(ex => ex && typeof ex.name === 'string' && ex.name.trim().length > 0)
+        .map((ex, idx) => ({
+          ordinal: idx,
+          name: ex.name.trim(),
+          sets: clamp(Number(ex.sets) || 3, 1, 10),
+          reps: clamp(Number(ex.reps) || 8, 1, 30),
+          weight: ex.weight ?? null,
+          tempo: ex.tempo || null,
+          rest_seconds: ex.rest_seconds != null ? clamp(Number(ex.rest_seconds), 0, 600) : null,
+          velocity_intent: ex.velocity_intent || null,
+          cns_demand: ex.cns_demand || null,
+          coaching_cues: ex.coaching_cues || null,
+        })),
     }));
+
+    const totalExercises = workoutsPayload.reduce((s, w) => s + w.exercises.length, 0);
+    console.log(`RPC payload prepared: ${workoutsPayload.length} workouts, ${totalExercises} exercises`);
 
     // Generate idempotency key to prevent duplicate generation from retries
     const idempotencyKey = crypto.randomUUID();
@@ -542,7 +551,14 @@ Always respond using the generate_training_block function.`
     });
 
     if (rpcErr) {
-      console.error("Atomic insert failed:", rpcErr);
+      console.error("Atomic insert failed:", {
+        code: (rpcErr as any).code,
+        message: rpcErr.message,
+        details: (rpcErr as any).details,
+        hint: (rpcErr as any).hint,
+        workout_count: workoutsPayload.length,
+        exercise_count: totalExercises,
+      });
       if (rpcErr.message?.includes('active_block_exists')) {
         return new Response(JSON.stringify({
           error: 'Active training block exists. Complete or archive it before generating a new one.',
