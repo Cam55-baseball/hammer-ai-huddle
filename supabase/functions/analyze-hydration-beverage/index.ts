@@ -202,23 +202,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[analyze-hydration-beverage] "${name}" cat=${category}`);
+    const cat: Category = inferCategory(name, category);
+    console.log(`[analyze-hydration-beverage] "${name}" cat=${cat} (hint=${category}) required=[${REQUIRED_MICROS[cat].join(',')}]`);
 
-    let result = await callAI(apiKey, name, category, false);
+    let result = await callAI(apiKey, name, category);
+    let check = isComplete(cat, result.micros_per_oz);
 
-    // Zero-veto: if non-trivial beverage came back all zeros, retry once strict.
-    if (isAllZeroMicros(result.micros_per_oz) && isLikelyNonZero(name)) {
-      console.warn(`[analyze-hydration-beverage] All-zero on "${name}" — retrying strict`);
-      result = await callAI(apiKey, name, category, true);
-      if (isAllZeroMicros(result.micros_per_oz)) {
-        console.warn(`[analyze-hydration-beverage] Still zero — applying conservative fallback`);
-        result.micros_per_oz.calcium_mg   = 5;
-        result.micros_per_oz.potassium_mg = 10;
-        result.micros_per_oz.magnesium_mg = 1;
-        result.macros_per_oz.calcium_mg   = 5;
-        result.macros_per_oz.potassium_mg = 10;
-        result.macros_per_oz.magnesium_mg = 1;
+    if (!check.ok) {
+      console.warn(`[analyze-hydration-beverage] category=${cat} validation FAIL missing=[${describeMissing(check.missing)}] for "${name}" — retrying strict`);
+      result = await callAI(apiKey, name, category, { strict: true, missing: check.missing, categoryLabel: cat });
+      check = isComplete(cat, result.micros_per_oz);
+      if (!check.ok) {
+        console.warn(`[analyze-hydration-beverage] category=${cat} validation FAIL after retry missing=[${describeMissing(check.missing)}] — applying fallback minimums`);
+        result.micros_per_oz = applyFallbacks(cat, result.micros_per_oz) as typeof result.micros_per_oz;
+        result = mirrorElectrolytes(result);
+      } else {
+        console.log(`[analyze-hydration-beverage] category=${cat} OK after retry conf=${result.confidence}`);
       }
+    } else {
+      console.log(`[analyze-hydration-beverage] category=${cat} OK conf=${result.confidence}`);
     }
 
     return new Response(JSON.stringify(result), {
