@@ -1,62 +1,26 @@
 
 
-## Plan — Proper availability-aware scheduling with guaranteed uniqueness
+## Plan — Harden pre-RPC validation in `generate-training-block`
 
-### Root cause
-Current code flattens dates to `startDate + i` (daily), which breaks training-frequency logic. The original AI/availability scheduling can produce duplicate dates that violate `uq_block_workouts_date`. We need to preserve the intended cadence AND guarantee uniqueness.
+Single file: `supabase/functions/generate-training-block/index.ts`
 
-### Fix — single file: `supabase/functions/generate-training-block/index.ts`
+### Changes (in order, all pre-RPC)
 
-**1. Remove sequential `startDate + i` override.** Restore availability-based dates from `pickOptimalSchedule` / AI output.
+1. **Validate `scheduled_date` before sort** — map `scheduledWorkouts` into `safeWorkouts`, throw on missing/unparseable dates. Feed `safeWorkouts` into the existing sort + forward-shift uniqueness pass.
 
-**2. Add forward-shift uniqueness pass:**
-```ts
-const usedDates = new Set<string>();
-const normalizedWorkouts = scheduledWorkouts
-  .slice()
-  .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
-  .map(sw => {
-    let d = parseLocalDate(sw.scheduled_date);
-    while (usedDates.has(toISO(d))) {
-      d.setDate(d.getDate() + 1);
-    }
-    const finalDate = toISO(d);
-    usedDates.add(finalDate);
-    return {
-      ...sw,
-      scheduled_date: finalDate,
-      day_label: DAY_NAMES[d.getDay()],
-    };
-  });
-```
-Preserves intended spacing; only nudges forward on collision.
+2. **Recompute exercise ordinals after filtering** — in the `workoutsPayload` mapping, filter out exercises missing a non-empty `name`, then re-index `ordinal` from the post-filter array (don't trust AI-supplied indexes).
 
-**3. Pre-RPC hard validation** (throw before RPC if any fail):
-- Duplicate `scheduled_date` check (defense in depth)
-- Every workout has `exercises.length >= 1`
-- Every workout has `week_number` between 1 and 6
-- Log full payload on failure
+3. **Per-workout ordinal uniqueness guard** — after building each workout's `exercises` array, throw if `new Set(ordinals).size !== ordinals.length`.
 
-**4. Full RPC error logging** — wrap `supabase.rpc('insert_training_block_atomic', ...)` in try/catch and log:
-- `error.code`, `error.message`, `error.details`, `error.hint`
-- Payload size: `workouts.length`, total exercise count
-- Snapshot: first 2 workouts + first 2 exercises of each (stringified, truncated)
+4. **Numeric integrity guard** — loop each exercise, throw if `sets` or `reps` is not finite.
 
-**5. Update `calendar_events` insert** to use `normalizedWorkouts` (already done, just verify after revert).
+5. **Final payload sanity** — before RPC: throw if `workoutsPayload.length === 0` or any workout has zero exercises.
 
-### Files touched
-| File | Change |
-|---|---|
-| `supabase/functions/generate-training-block/index.ts` | Replace daily-flatten block with forward-shift uniqueness + validation + structured error logging |
+### Notes
+- All clamps (`sets` 1–10, `reps` 1–30, `rest_seconds` 0–600) already exist — reuse them.
+- Existing duplicate-date guard, week_number validation, and structured RPC error logging stay as-is.
+- No DB, scheduling-logic, or client changes.
 
 ### Verification
-After deploy, generate a 6-week block. Logs should show:
-- Original cadence preserved (e.g., 3-4 workouts/week, not 7)
-- Zero duplicate dates
-- If RPC ever fails, exact PG code/message/hint visible
-
-### Out of scope
-- DB schema changes
-- Client changes
-- Daily-plan path
+Generate a 6-week block. If it still fails, the next surfaced error will be the raw Postgres `code/message/details/hint` from the existing RPC catch block — report that back.
 
