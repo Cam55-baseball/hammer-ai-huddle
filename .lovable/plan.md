@@ -1,30 +1,62 @@
 
 
-## Plan — Enforce unique sequential dates before RPC
+## Plan — Proper availability-aware scheduling with guaranteed uniqueness
 
-### Root cause hypothesis
-The AI-generated `scheduled_date` values for the 18 workouts in a 6-week block are not guaranteed unique/ordered. The `uq_block_workouts_date` constraint on `(block_id, scheduled_date)` aborts the atomic insert.
+### Root cause
+Current code flattens dates to `startDate + i` (daily), which breaks training-frequency logic. The original AI/availability scheduling can produce duplicate dates that violate `uq_block_workouts_date`. We need to preserve the intended cadence AND guarantee uniqueness.
 
-### Fix (single file)
-`supabase/functions/generate-training-block/index.ts`
+### Fix — single file: `supabase/functions/generate-training-block/index.ts`
 
-1. After AI generation produces `scheduledWorkouts`, build `normalizedWorkouts` with deterministic sequential dates derived from `startDate + dayOffset` — one day apart per workout in array order. This guarantees uniqueness regardless of what the AI returned.
-2. Replace every downstream reference (RPC payload + `calendar_events` insert) to use `normalizedWorkouts` instead of `scheduledWorkouts`.
-3. Pre-RPC guard: log the date array, detect duplicates, throw before RPC if any exist.
+**1. Remove sequential `startDate + i` override.** Restore availability-based dates from `pickOptimalSchedule` / AI output.
 
-### Note on density
-Sequential `+1 day` overrides the season-aware density logic (`pickOptimalSchedule`) for the actual date assignment. That's acceptable for V1 — fixing the failing path is the priority. Users can reschedule individual workouts via the existing per-row date picker. We'll add a follow-up note in the file comment.
+**2. Add forward-shift uniqueness pass:**
+```ts
+const usedDates = new Set<string>();
+const normalizedWorkouts = scheduledWorkouts
+  .slice()
+  .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
+  .map(sw => {
+    let d = parseLocalDate(sw.scheduled_date);
+    while (usedDates.has(toISO(d))) {
+      d.setDate(d.getDate() + 1);
+    }
+    const finalDate = toISO(d);
+    usedDates.add(finalDate);
+    return {
+      ...sw,
+      scheduled_date: finalDate,
+      day_label: DAY_NAMES[d.getDay()],
+    };
+  });
+```
+Preserves intended spacing; only nudges forward on collision.
+
+**3. Pre-RPC hard validation** (throw before RPC if any fail):
+- Duplicate `scheduled_date` check (defense in depth)
+- Every workout has `exercises.length >= 1`
+- Every workout has `week_number` between 1 and 6
+- Log full payload on failure
+
+**4. Full RPC error logging** — wrap `supabase.rpc('insert_training_block_atomic', ...)` in try/catch and log:
+- `error.code`, `error.message`, `error.details`, `error.hint`
+- Payload size: `workouts.length`, total exercise count
+- Snapshot: first 2 workouts + first 2 exercises of each (stringified, truncated)
+
+**5. Update `calendar_events` insert** to use `normalizedWorkouts` (already done, just verify after revert).
 
 ### Files touched
 | File | Change |
 |---|---|
-| `supabase/functions/generate-training-block/index.ts` | Insert normalization block + duplicate guard, swap variable usage downstream |
+| `supabase/functions/generate-training-block/index.ts` | Replace daily-flatten block with forward-shift uniqueness + validation + structured error logging |
 
 ### Verification
-Generate a 6-week block end-to-end. Logs should show 18 strictly increasing unique dates and the atomic insert should succeed.
+After deploy, generate a 6-week block. Logs should show:
+- Original cadence preserved (e.g., 3-4 workouts/week, not 7)
+- Zero duplicate dates
+- If RPC ever fails, exact PG code/message/hint visible
 
 ### Out of scope
-- No DB migration.
-- No client changes.
-- Smarter conflict-aware scheduling (defer to follow-up; current per-row reschedule already covers manual adjustment).
+- DB schema changes
+- Client changes
+- Daily-plan path
 
