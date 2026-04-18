@@ -1,83 +1,64 @@
 
 
-## Plan — Category-Based Micronutrient Completeness Validation
+## Plan — Final Client-Side Micronutrient Enforcement Layer
 
 ### Goal
-Stop silent zeros (e.g. goat milk reporting `zinc = 0`) by validating that AI returns realistic values for **category-required** micros, not just "any non-zero".
+No hydration log can ever be persisted with missing required micros for its category. Goat milk → zinc always > 0.
 
-### 1. Shared category rules module
-Create `supabase/functions/_shared/hydrationCategoryRules.ts` (used by both edge functions):
+### 1. Create client mirror of category rules
+New file `src/utils/hydrationCategoryRules.ts` — a TS port of `supabase/functions/_shared/hydrationCategoryRules.ts` (same `Category` map, `REQUIRED_MICROS`, `FALLBACK_MINIMUMS`, `inferCategory`, `isComplete`, `applyFallbacks`). Edge module stays the source of truth for server; this is its client twin so the browser can enforce too.
+
+(Can't import edge `_shared` files into the React app — different Deno/Node module resolution, different `HydrationMicroKey` source. Mirror is the clean fix.)
+
+### 2. Enforce inside `buildLogPayload` (the universal funnel)
+Add a `liquidType` + `customLabel` arg. Before sanitize/mirror/multiply:
 
 ```ts
-type Category = 'dairy' | 'plant_milk' | 'citrus_juice' | 'coconut_water'
-              | 'sports_drink' | 'energy_drink' | 'coffee' | 'tea'
-              | 'soda' | 'kombucha' | 'kefir' | 'broth' | 'water' | 'other';
-
-REQUIRED_MICROS: Record<Category, MicroKey[]>
-FALLBACK_MINIMUMS: Record<Category, Partial<Micros>>  // e.g. dairy zinc_mg=0.1
-ZERO_ALLOWED: Set<Category> = {'water','coffee','tea'}
-
-inferCategory(name, hint?): Category   // regex on name + provided category
-isComplete(category, micros): { ok, missing[] }
-applyFallbacks(category, micros): Micros
+const category = inferCategory(customLabel || liquidType, liquidType);
+const check = isComplete(category, perOzMicros || {});
+let finalMicros = perOzMicros || {};
+let incomplete = nutritionIncomplete;
+if (!check.ok) {
+  console.warn(`[hydration] fallback applied → category=${category} missing=[${check.missing.join(',')}]`);
+  finalMicros = applyFallbacks(category, finalMicros as HydrationMicros);
+  incomplete = true;          // flag honestly
+}
+// then existing mirror/multiply pipeline using finalMicros
 ```
 
-Reference values per category (per fl oz, USDA-based):
+This single insertion catches **all three paths** (AI, preset, last-resort) since they all funnel through here.
 
-| Category | Required micros | Fallback minimums |
-|---|---|---|
-| Dairy (cow/goat/sheep) | Ca, K, Mg, **Zn** | Ca=15, K=18, Mg=1.4, Zn=0.1 |
-| Plant milk (almond/oat/soy/coconut) | Ca, vit D, B12 | Ca=14, D=0.3, B12=0.15 |
-| Citrus juice | vit C, folate, K | C=10, folate=9, K=24 |
-| Coconut water | K, Mg | K=75, Mg=7.5 |
-| Sports drink | Na (macro), K | K=4 |
-| Energy drink | B6, B12 | B6=0.5, B12=0.7 |
-| Kombucha/Kefir | B12 | B12=0.06 |
-| Broth | Na (macro), K | K=10 |
+### 3. Self-heal preset DB rows
+In `useHydration.ts` preset path, **after** `buildLogPayload` runs, compare returned `micros` (totals) against the original `bev.micros_per_oz`. If we had to apply fallbacks (detect by re-running `isComplete` on `bev.micros_per_oz`), persist the corrected per-oz back:
 
-### 2. Edge function pipeline change
-
-Both `analyze-hydration-text` and `analyze-hydration-beverage` get the same flow:
-
-```text
-callAI() → sanitize() → category = inferCategory(name, hint)
-                       │
-                       ▼
-              isComplete(category, micros)?
-                ├─ yes → return
-                └─ no  → log "validation failed: missing [zinc_mg] for goat milk — retrying"
-                          callAI(strict=true, missingList)
-                          re-validate
-                          ├─ yes → return
-                          └─ no  → log "fallback applied for goat milk"
-                                   applyFallbacks() → return
+```ts
+const cat = inferCategory(bev.display_name, liquidType);
+const orig = isComplete(cat, bev.micros_per_oz || {});
+if (!orig.ok) {
+  const healed = applyFallbacks(cat, bev.micros_per_oz || {} as HydrationMicros);
+  await supabase.from('hydration_beverage_database')
+    .update({ micros_per_oz: healed }).eq('id', bev.id);
+  console.log(`[hydration] self-healed preset "${bev.display_name}" missing=[${orig.missing.join(',')}]`);
+}
 ```
 
-Strict retry user message includes the **specific missing keys** so the model knows what to fix:
-> "Previous response was missing required micronutrients for dairy: [zinc_mg]. Goat milk contains ~0.1 mg/oz zinc per USDA. Return realistic non-zero values for ALL required keys."
+DB gradually heals as users log drinks.
 
-Replace today's blunt `isAllZeroMicros` check with `isComplete(category, micros)`.
+### 4. Keep edge-function enforcement (already in place)
+No changes there — defense in depth: AI returns good data ideally → client validates again → fallbacks guarantee compliance.
 
-### 3. Fallback application rules
-`applyFallbacks` only fills keys that are still 0 — never overwrites AI-supplied non-zero values. Mirrors Ca/K/Mg between macros and micros after applying.
+### 5. Pass `liquidType` / `customLabel` through call sites
+`buildLogPayload({ ..., liquidType, customLabel })` — only one caller (`addWater`), trivial wiring.
 
-### 4. Logging
-Console logs at each gate (already standard — extend):
-- `[analyze-hydration-{text|beverage}] category=dairy validation FAIL missing=[zinc_mg] — retrying strict`
-- `[analyze-hydration-{text|beverage}] category=dairy validation FAIL after retry — applying fallback minimums`
-- `[analyze-hydration-{text|beverage}] category=dairy OK conf=0.9`
-
-### 5. Files to change
+### Files to change
 
 | File | Change |
 |---|---|
-| `supabase/functions/_shared/hydrationCategoryRules.ts` (new) | Category map, required keys, fallback minimums, `inferCategory`, `isComplete`, `applyFallbacks` |
-| `supabase/functions/analyze-hydration-beverage/index.ts` | Replace `isAllZeroMicros` gate with category-aware validation; use shared module; pass missing keys into strict retry |
-| `supabase/functions/analyze-hydration-text/index.ts` | Same category-aware validation pass after sanitize |
-| `supabase/functions/analyze-hydration-text/index.ts` system prompt | Add explicit zinc line for dairy (~0.1 mg/oz) so first-pass usually succeeds |
+| `src/utils/hydrationCategoryRules.ts` (new) | Client port of category map, `inferCategory`, `isComplete`, `applyFallbacks` |
+| `src/hooks/useHydration.ts` | Enforce inside `buildLogPayload`; self-heal preset DB row when original fails validation |
 
-### 6. Out of scope
-- Re-validating already-cached `hydration_beverage_database` rows (lazy: next time they're queried with missing required micros, the enrichment path will re-run — covered by existing logic in `useHydration`).
-- Optional: a one-shot admin "re-enrich all preset rows" script — defer unless requested.
-- Touching client UI — server returns better data, UI unchanged.
+### Out of scope
+- One-shot backfill of existing bad `hydration_beverage_database` rows (lazy heal covers it)
+- Recomputing already-logged `hydration_logs` rows (user can re-log goat milk to see zinc)
+- UI changes — server returns better data, existing badges already cover incomplete state
 
