@@ -93,16 +93,11 @@ function sanitize(parsed: Record<string, any>) {
   return { macros_per_oz, micros_per_oz, confidence };
 }
 
-function isAllZeroMicros(m: Record<string, number>) {
-  return MICRO_KEYS.every(k => !m[k] || m[k] === 0);
-}
-
-function isLikelyNonZero(name: string) {
-  const n = name.toLowerCase();
-  if (/^(plain |distilled )?water$/.test(n)) return false;
-  if (/^black coffee$/.test(n)) return false;
-  if (/^(plain )?tea$/.test(n)) return false;
-  return /milk|juice|smoothie|sport|energy|cola|soda|wine|beer|kombucha|kefir|broth|matcha|coconut|latte|coffee/.test(n);
+function mirrorElectrolytes(result: ReturnType<typeof sanitize>) {
+  result.macros_per_oz.calcium_mg   = result.micros_per_oz.calcium_mg;
+  result.macros_per_oz.magnesium_mg = result.micros_per_oz.magnesium_mg;
+  result.macros_per_oz.potassium_mg = result.micros_per_oz.potassium_mg;
+  return result;
 }
 
 const TOOL_SCHEMA = {
@@ -141,10 +136,21 @@ const TOOL_SCHEMA = {
   },
 };
 
-async function callAI(apiKey: string, name: string, category: string | null, strict: boolean) {
-  const userMsg = strict
-    ? `Re-analyze "${name}"${category ? ` (category: ${category})` : ""}. Previous attempt returned all-zero micros — wrong. Produce realistic USDA non-zero values.`
-    : `Beverage: "${name}"${category ? `\nCategory: ${category}` : ""}\nReturn per-oz macros and micros.`;
+async function callAI(
+  apiKey: string,
+  name: string,
+  category: string | null,
+  opts: { strict?: boolean; missing?: MicroKey[]; categoryLabel?: Category } = {},
+) {
+  const { strict = false, missing = [], categoryLabel } = opts;
+  let userMsg: string;
+  if (strict && missing.length) {
+    userMsg = `Re-analyze "${name}"${category ? ` (category: ${category})` : ""}. Previous response was MISSING required micronutrients for ${categoryLabel ?? 'this drink'}: [${describeMissing(missing)}]. These MUST be non-zero per USDA. Return realistic values for ALL required keys.`;
+  } else if (strict) {
+    userMsg = `Re-analyze "${name}"${category ? ` (category: ${category})` : ""}. Previous attempt returned all-zero micros — wrong. Produce realistic USDA non-zero values.`;
+  } else {
+    userMsg = `Beverage: "${name}"${category ? `\nCategory: ${category}` : ""}\nReturn per-oz macros and micros.`;
+  }
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
