@@ -455,26 +455,25 @@ export function NutritionHubContent() {
         showHydration
       />
 
-      {/* Log Meal (with Quick Pick Foods dropdown) */}
+      {/* Log Meal (with nested Quick Pick Foods, Favorites, Quick Actions, Supplements) */}
       <LogMealCard
         onLogMeal={(mealType) => handleLogMeal(mealType)}
         onSelectFood={handleGalleryFoodSelect}
+        favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
+        quickActionsSlot={
+          <QuickLogActions
+            onLogMeal={handleLogMeal}
+            onSwitchTab={(tab) => {
+              setActiveTab(tab);
+              setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+            }}
+          />
+        }
+        supplementsSlot={<VitaminSupplementTracker />}
       />
 
       {/* Physio Nutrition Suggestions */}
       <PhysioNutritionSuggestions />
-
-      {/* Food Favorites Quick Access */}
-      <FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />
-
-      {/* Quick Actions */}
-      <QuickLogActions onLogMeal={handleLogMeal} onSwitchTab={(tab) => {
-        setActiveTab(tab);
-        setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-      }} />
-
-      {/* Vitamins & Supplements Tracker */}
-      <VitaminSupplementTracker />
 
       {/* Main Content Tabs */}
       <Tabs ref={tabsRef} value={activeTab} onValueChange={setActiveTab} className="w-full">
