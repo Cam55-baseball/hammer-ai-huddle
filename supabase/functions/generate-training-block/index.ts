@@ -505,7 +505,10 @@ Always respond using the generate_training_block function.`
     // land on the same date (collision), nudge later ones forward by +1 day
     // until unique. Satisfies uq_block_workouts_date(block_id, scheduled_date)
     // without flattening to daily training.
-    const parseLocalDate = (s: string): Date => new Date(s + "T00:00:00");
+    const parseLocalDate = (s: string): Date => {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
     const toISO = (d: Date): string => {
       const y = d.getFullYear();
       const mo = String(d.getMonth() + 1).padStart(2, '0');
@@ -532,6 +535,9 @@ Always respond using the generate_training_block function.`
           d.setDate(d.getDate() + 1);
         }
         const finalDate = toISO(d);
+        if (parseLocalDate(finalDate) > endDate) {
+          throw new Error(`Workout shifted beyond block end_date: ${finalDate} > ${toISO(endDate)}`);
+        }
         usedDates.add(finalDate);
         return {
           ...sw,
@@ -612,14 +618,20 @@ Always respond using the generate_training_block function.`
     if (workoutsPayload.length === 0) {
       throw new Error("No workouts generated");
     }
-    if (workoutsPayload.some(w => w.exercises.length < 2)) {
-      console.error("Workout with fewer than 2 exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length < 2)));
-      throw new Error("Workout has fewer than 2 valid exercises");
+    if (workoutsPayload.some(w => w.exercises.length < 1)) {
+      console.error("Workout with zero exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length < 1)));
+      throw new Error("Workout has zero valid exercises");
     }
 
-    // Week distribution guard
+    // Strict week 1–6 continuity guard
     const weeks = new Set(workoutsPayload.map(w => w.week_number));
-    if (weeks.size > 6 || Math.min(...weeks) !== 1) {
+    for (let i = 1; i <= 6; i++) {
+      if (!weeks.has(i)) {
+        console.error("Missing week in payload:", i, "present:", Array.from(weeks));
+        throw new Error(`Missing week ${i} in payload`);
+      }
+    }
+    if (weeks.size !== 6) {
       console.error("Invalid week_number distribution:", Array.from(weeks));
       throw new Error("Invalid week_number distribution");
     }
