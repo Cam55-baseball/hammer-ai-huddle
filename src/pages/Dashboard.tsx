@@ -69,8 +69,7 @@ function PracticeIntelligenceCard() {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => navigate('/practice')}>Practice Hub</Button>
+        <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate('/progress')}>Progress</Button>
         </div>
       </div>
@@ -513,21 +512,6 @@ export default function Dashboard() {
         {/* Practice Intelligence Summary */}
         <PracticeIntelligenceCard />
 
-        {/* Game Hub Card */}
-        <Card className="p-4 sm:p-6 border-primary/20 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/game-scoring')}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10">
-              <Gamepad2 className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-lg">Game Hub</h3>
-              <p className="text-sm text-muted-foreground">Score games, track plays, and review game summaries</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate('/game-scoring'); }}>
-              Open
-            </Button>
-          </div>
-        </Card>
 
         <DualStreakDisplay />
 
