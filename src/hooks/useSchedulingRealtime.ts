@@ -136,6 +136,37 @@ export function useSchedulingRealtime() {
         table: 'hie_snapshots',
         filter: `user_id=eq.${user.id}`,
       }, invalidateHIESnapshot)
+      // --- Pure derived calendar projection: source-of-truth tables ---
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'custom_activity_logs',
+        filter: `user_id=eq.${user.id}`,
+      }, invalidateProjection)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'custom_activity_templates',
+        filter: `user_id=eq.${user.id}`,
+      }, invalidateProjection)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'training_blocks',
+        filter: `user_id=eq.${user.id}`,
+      }, invalidateProjection)
+      // block_workouts has no user_id column — invalidation is broad.
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'block_workouts',
+      }, invalidateProjection)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'game_plan_days',
+        filter: `user_id=eq.${user.id}`,
+      }, invalidateProjection)
       .subscribe();
 
     return () => {
