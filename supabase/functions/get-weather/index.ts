@@ -551,6 +551,68 @@ serve(async (req) => {
     } else if (!latitude) {
       // Clean up location string - Open-Meteo works better with just city names
       let cleanLocation = location.trim();
+
+      // NEW: Venue/POI lookup via OpenStreetMap Nominatim
+      // Recognizes baseball fields, parks, stadiums, complexes across the entire US
+      const venueKeywords = /\b(field|park|stadium|ballpark|complex|diamond|coliseum|arena|sports)\b/i;
+      const isMultiWordProper = cleanLocation.split(/\s+/).length >= 2 &&
+        /^[A-Z]/.test(cleanLocation) &&
+        !/^\d/.test(cleanLocation);
+      const tryNominatimFirst = venueKeywords.test(cleanLocation) || isMultiWordProper;
+
+      const tryNominatim = async (): Promise<boolean> => {
+        try {
+          const nomUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanLocation)}&countrycodes=us&format=json&limit=5&addressdetails=1&extratags=1`;
+          console.log(`Nominatim POI lookup: ${nomUrl}`);
+          const nomResponse = await fetch(nomUrl, {
+            headers: { 'User-Agent': 'HammersWeather/1.0 (contact@hammers.app)' },
+            signal: AbortSignal.timeout(5000),
+          });
+          if (!nomResponse.ok) {
+            console.warn(`Nominatim returned status ${nomResponse.status}`);
+            return false;
+          }
+          const nomResults = await nomResponse.json();
+          if (!Array.isArray(nomResults) || nomResults.length === 0) {
+            console.log(`Nominatim returned no results for: ${cleanLocation}`);
+            return false;
+          }
+
+          // Prefer stadium/pitch/park/sports_centre or baseball/softball-tagged results
+          const preferredTypes = new Set(['stadium', 'pitch', 'park', 'sports_centre']);
+          const best = nomResults.find((r: any) =>
+            (r.class === 'leisure' && preferredTypes.has(r.type)) ||
+            (r.extratags && /baseball|softball/i.test(r.extratags.sport || ''))
+          ) || nomResults[0];
+
+          latitude = parseFloat(best.lat);
+          longitude = parseFloat(best.lon);
+          if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+            console.warn(`Nominatim returned invalid coords for: ${cleanLocation}`);
+            latitude = null;
+            longitude = null;
+            return false;
+          }
+          const parts = String(best.display_name || cleanLocation).split(',').map((s: string) => s.trim()).filter(Boolean);
+          resolvedLocationName = parts.slice(0, 3).join(', ');
+          console.log(`Nominatim resolved "${cleanLocation}" → ${resolvedLocationName} (${latitude}, ${longitude})`);
+          return true;
+        } catch (nomErr) {
+          console.warn(`Nominatim lookup failed:`, nomErr);
+          return false;
+        }
+      };
+
+      if (tryNominatimFirst) {
+        const ok = await tryNominatim();
+        if (ok) {
+          // Skip Open-Meteo city geocoding — POI resolved
+        }
+      }
+
+      if (latitude != null) {
+        // Already resolved via Nominatim, skip Open-Meteo city geocoding block below
+      } else {
       
       const commaStatePattern = /,\s*([A-Za-z]{2}|[A-Za-z]+)$/i;
       const spaceStatePattern = /\s+(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s+Hampshire|New\s+Jersey|New\s+Mexico|New\s+York|North\s+Carolina|North\s+Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s+Island|South\s+Carolina|South\s+Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s+Virginia|Wisconsin|Wyoming)$/i;
@@ -594,15 +656,25 @@ serve(async (req) => {
       }
 
       if (!geoData || !geoData.results || !geoData.results.length) {
-        console.error(`Location not found for any search terms: ${searchTerms.join(', ')}`);
-        throw new Error(`Location "${cleanLocation}" not found. Try a city name (e.g., "Tampa") or ZIP code (e.g., "33601").`);
+        // Fallback: try Nominatim if we haven't already
+        if (!tryNominatimFirst) {
+          const ok = await tryNominatim();
+          if (!ok) {
+            console.error(`Location not found via Open-Meteo or Nominatim: ${searchTerms.join(', ')}`);
+            throw new Error(`Location "${cleanLocation}" not found. Try a field name (e.g., "Yankee Stadium"), city, or ZIP code.`);
+          }
+        } else {
+          console.error(`Location not found for any search terms: ${searchTerms.join(', ')}`);
+          throw new Error(`Location "${cleanLocation}" not found. Try a field name (e.g., "Yankee Stadium"), city, or ZIP code.`);
+        }
+      } else {
+        const firstResult = geoData.results[0];
+        latitude = firstResult.latitude;
+        longitude = firstResult.longitude;
+        resolvedLocationName = `${firstResult.name}${firstResult.admin1 ? `, ${firstResult.admin1}` : ''}${firstResult.country ? `, ${firstResult.country}` : ""}`;
+        console.log(`Resolved location: ${resolvedLocationName}`);
       }
-
-      const firstResult = geoData.results[0];
-      latitude = firstResult.latitude;
-      longitude = firstResult.longitude;
-      resolvedLocationName = `${firstResult.name}${firstResult.admin1 ? `, ${firstResult.admin1}` : ''}${firstResult.country ? `, ${firstResult.country}` : ""}`;
-      console.log(`Resolved location: ${resolvedLocationName}`);
+      } // end else (Open-Meteo branch)
     }
 
     if (latitude == null || longitude == null || Number.isNaN(latitude) || Number.isNaN(longitude)) {
