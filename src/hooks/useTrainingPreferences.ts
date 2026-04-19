@@ -34,10 +34,16 @@ export function useTrainingPreferences() {
   const upsertPreferences = useMutation({
     mutationFn: async (prefs: Partial<Omit<TrainingPreferences, 'user_id' | 'updated_at'>>) => {
       console.log('SAVE PREFS PAYLOAD:', JSON.stringify(prefs));
+      console.log('USER AT SUBMIT:', user?.id);
+      if (!user?.id) {
+        console.error('No user — abort');
+        throw new Error('Not authenticated');
+      }
       if (!prefs || Object.keys(prefs).length === 0) {
         console.error('Empty preferences payload — Save Preferences aborted');
         throw new Error('Empty preferences payload');
       }
+      console.log('SAVE PREFS → calling supabase upsert...');
       const { error } = await supabase
         .from('training_preferences')
         .upsert({
@@ -45,6 +51,7 @@ export function useTrainingPreferences() {
           ...prefs,
           updated_at: new Date().toISOString(),
         });
+      console.log('SAVE PREFS → upsert returned. error:', error);
       if (error) {
         console.error('SAVE PREFS ERROR:', error);
         throw new Error(error.message);
