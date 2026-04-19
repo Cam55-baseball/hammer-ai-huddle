@@ -99,8 +99,6 @@ export default function Dashboard() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
-  const { activeBlock } = useTrainingBlock();
-  const hasActiveTrainingBlock = !!activeBlock;
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
     const saved = localStorage.getItem('selectedSport');
