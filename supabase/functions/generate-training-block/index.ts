@@ -600,7 +600,7 @@ Always respond using the generate_training_block function.`
 
       return {
         week_number: sw.week_number,
-        day_label: sw.day_label,
+        day_label: DAY_NAMES[parseLocalDate(sw.scheduled_date).getDay()],
         scheduled_date: sw.scheduled_date,
         status: 'scheduled',
         workout_type: sw.workout_type,
