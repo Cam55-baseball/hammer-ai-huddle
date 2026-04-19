@@ -5,6 +5,8 @@ import { LessonDetail } from "@/components/baserunning-iq/LessonDetail";
 import { DailyDecision } from "@/components/baserunning-iq/DailyDecision";
 import { LevelBadge } from "@/components/baserunning-iq/LevelBadge";
 import { OnboardingHero } from "@/components/baserunning-iq/OnboardingHero";
+import { ScheduleBaserunningIQDialog } from "@/components/baserunning-iq/ScheduleBaserunningIQDialog";
+import { PlayerScheduledSessions } from "@/components/practice/PlayerScheduledSessions";
 import { useBaserunningProgress } from "@/hooks/useBaserunningProgress";
 import { useBaserunningDaily } from "@/hooks/useBaserunningDaily";
 import { PressureBanner } from "@/components/baserunning-iq/PressureBanner";
@@ -41,7 +43,7 @@ export default function BaserunningIQ() {
 
         {!isFirstTime && !activeLessonId && (
           <>
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-3">
               <div className="flex items-center justify-center gap-2">
                 <Brain className="h-8 w-8 text-primary" />
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Baserunning IQ</h1>
@@ -49,9 +51,14 @@ export default function BaserunningIQ() {
               <p className="text-muted-foreground text-base">
                 Learn elite baserunning decisions and test your game IQ
               </p>
+              <div className="flex justify-center">
+                <ScheduleBaserunningIQDialog />
+              </div>
             </div>
 
             <LevelBadge level={level} />
+
+            <PlayerScheduledSessions />
 
             <PressureBanner streak={streak} completedToday={completedToday} streakLost={streakLost} isPerfectDay={isPerfectDay} />
             <DailyDecision sport={selectedSport} />
