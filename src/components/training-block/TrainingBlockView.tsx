@@ -129,8 +129,20 @@ export function TrainingBlockView() {
     );
   }
 
+  const hasPendingChange =
+    activeBlock.pending_goal_change === true ||
+    activeBlock.status === 'ready_for_regeneration';
+
   return (
     <div className="space-y-6">
+      {import.meta.env.DEV && (
+        <div className="rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 p-3 text-[11px] font-mono space-y-1">
+          <div><span className="text-amber-600 font-semibold">DEBUG</span> blockId: {activeBlock.id}</div>
+          <div>created_at: {activeBlock.created_at}</div>
+          <div>status: {activeBlock.status} · pending_goal_change: {String(activeBlock.pending_goal_change)}</div>
+          <div className="truncate">prefs: {JSON.stringify(preferences)}</div>
+        </div>
+      )}
       {/* Block Header */}
       <Card>
         <CardHeader className="pb-3">
