@@ -1539,21 +1539,28 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     folderTasks.map(ft => ft.item.title.trim().toLowerCase())
   );
 
-  // Add custom activities as tasks, skipping duplicates that exist in folders
+  // Add custom activities as tasks, skipping duplicates that exist in folders.
+  // Each (template, log) pair becomes its own task — supports multiple Quick Adds per day.
   customActivities.forEach(activity => {
     if (folderItemTitles.has(activity.template.title.trim().toLowerCase())) return;
     const iconKey = activity.template.icon || 'activity';
     const IconComponent = customActivityIconMap[iconKey] || Activity;
-    
+
+    const instanceIdx = (activity.log as any)?.instance_index ?? 0;
+    const titleSuffix = instanceIdx > 0 ? ` #${instanceIdx + 1}` : '';
+    const taskId = activity.log?.id
+      ? `custom-${activity.template.id}-${activity.log.id}`
+      : `custom-${activity.template.id}`;
+
     tasks.push({
-      id: `custom-${activity.template.id}`,
-      titleKey: activity.template.title, // Use raw title, not translation key
+      id: taskId,
+      titleKey: activity.template.title + titleSuffix,
       descriptionKey: activity.template.description || '',
       completed: (activity.log?.completion_state === 'completed') || activity.log?.completed || false,
       completionState: (activity.log?.completion_state as any) || (activity.log?.completed ? 'completed' : 'not_started'),
       completionMethod: (activity.log?.completion_method as any) || 'none',
       icon: IconComponent,
-      link: '', // Custom activities don't navigate
+      link: '',
       taskType: 'custom',
       section: 'custom',
       specialStyle: 'custom',
