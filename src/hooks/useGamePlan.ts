@@ -840,11 +840,11 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       .catch((err) => console.error("[useGamePlan] Date repair error:", err));
   }, [user?.id, fetchTaskStatus]);
 
-  // Optimistic injection: immediately add a new activity to state before DB confirms
+  // Optimistic injection: immediately add a new activity to state before DB confirms.
+  // Allow multiple instances per template (Quick Add) — only dedupe if the same log id is already present.
   const addOptimisticActivity = useCallback((activity: CustomActivityWithLog) => {
     setCustomActivities(prev => {
-      // Avoid duplicates if refreshCustomActivities already ran
-      if (prev.some(a => a.template.id === activity.template.id)) return prev;
+      if (activity.log?.id && prev.some(a => a.log?.id === activity.log!.id)) return prev;
       return [...prev, activity];
     });
   }, []);
