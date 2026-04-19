@@ -1916,6 +1916,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                       {t('customActivity.quickAdd')}
                     </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setQuickNoteOpen(true)}
+                    className="gap-2 border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                  >
+                    <NotebookPen className="h-4 w-4" />
+                    Quick Note
+                  </Button>
                 </div>
                 
                 {customTasks.length > 0 && renderTaskSection(
