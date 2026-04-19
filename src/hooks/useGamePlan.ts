@@ -532,40 +532,43 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
       const logs = (logsData || []) as unknown as CustomActivityLog[];
 
-      // Build custom activities list
+      // Build custom activities list — emit ONE entry PER LOG so multiple Quick Adds render as multiple cards.
       const customActivitiesForToday: CustomActivityWithLog[] = [];
 
       templates.forEach(template => {
         // Check display settings first
         if (template.display_on_game_plan === false) return;
-        
+
         // Check calendar_skipped_items first (SINGLE SOURCE OF TRUTH for Repeat Weekly)
         const itemId = `template-${template.id}`;
         const skipDays = skipItemsMap.get(itemId) || [];
         const isSkippedToday = skipDays.includes(todayDayOfWeek);
-        
-        // Check if there's a log for today
-        const todayLog = logs.find(l => l.template_id === template.id);
-        
+
+        // ALL logs for this template today (sorted by instance_index ascending)
+        const todayLogsForTemplate = logs
+          .filter(l => l.template_id === template.id)
+          .sort((a, b) => ((a as any).instance_index ?? 0) - ((b as any).instance_index ?? 0));
+        const hasAnyLog = todayLogsForTemplate.length > 0;
+
         // If explicitly skipped for today via calendar settings, only show if already logged
-        if (isSkippedToday && !todayLog) {
+        if (isSkippedToday && !hasAnyLog) {
           return; // Skip this activity entirely
         }
 
         // Check specific_dates scheduling — if set, only show on those dates
         const specificDates = (template.specific_dates as string[] | null) || [];
         if (specificDates.length > 0) {
-          if (!specificDates.includes(today) && !todayLog) return;
+          if (!specificDates.includes(today) && !hasAnyLog) return;
         }
-        
+
         // Determine schedule signals — "no schedule" means none of these are set
         const hasWeekly = !!template.recurring_active && ((template.recurring_days as number[] | null)?.length ?? 0) > 0;
         const hasDisplayDays = ((template.display_days as number[] | null)?.length ?? 0) > 0;
         const hasSpecificDates = specificDates.length > 0;
 
         if (!hasWeekly && !hasDisplayDays && !hasSpecificDates) {
-          // No schedule at all — only show if user has an explicit log for today
-          if (!todayLog) return;
+          // No schedule at all — only show if user has at least one explicit log for today
+          if (!hasAnyLog) return;
         }
 
         const scheduledDays = hasWeekly
@@ -575,14 +578,25 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           : [];
 
         const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
-        
-        // Include if: (scheduled AND not skipped) OR has a log for today
-        if ((isScheduledToday && !isSkippedToday) || todayLog) {
+        const showScheduled = isScheduledToday && !isSkippedToday;
+
+        if (hasAnyLog) {
+          // Emit ONE entry per existing log (each Quick Add / scheduled occurrence = its own card)
+          todayLogsForTemplate.forEach(log => {
+            customActivitiesForToday.push({
+              template,
+              log,
+              isRecurring: template.recurring_active || false,
+              isScheduledForToday: showScheduled || true,
+            });
+          });
+        } else if (showScheduled) {
+          // Scheduled today but not yet logged — emit a single placeholder entry
           customActivitiesForToday.push({
             template,
-            log: todayLog,
+            log: undefined,
             isRecurring: template.recurring_active || false,
-            isScheduledForToday: (isScheduledToday && !isSkippedToday) || !!todayLog,
+            isScheduledForToday: true,
           });
         }
       });
