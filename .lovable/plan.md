@@ -1,39 +1,66 @@
 
 
-## Plan — Make Adapt always replace, never conflict
+## Plan — Strict CREATE vs ADAPT separation in RPC
 
 ### Root cause
-Adapt regen path archives old block client-side, but:
-- Race: archive may not commit before `generate-training-block` checks for active block → `active_block_exists` from RPC.
-- Idempotency key may be reused if the edge function derives it deterministically from user/sport.
-- Errors from `supabase.functions.invoke` get swallowed into generic toast — no diagnostic.
+Last migration added archive logic that fires even when `p_replace_existing` is unset/NULL, breaking initial generation. Need defensive defaults, mode logging, and a retry-on-conflict path that only triggers in ADAPT mode.
 
-Fix is split across **client** (already archives, needs error clarity) and **edge function** (must accept and honor `archive_block_id`, generate fresh idempotency key per call, surface clean error).
+### Changes
 
-### Files to change
+**1. Migration — overwrite `insert_training_block_atomic` (with `p_idempotency_key` + new `p_replace_existing`)**
 
-**1. `src/hooks/useTrainingBlock.ts`** — `adaptBlock` regen branch:
-- Pass `archive_block_id: oldId` and `force_new: true` in invoke body so the edge function archives server-side (atomic with RPC).
-- Keep client-side archive as belt-and-suspenders, but log it: `console.log("ARCHIVED OLD BLOCK:", oldId)`.
-- Catch invoke errors, log full payload: `console.error("ADAPT RPC ERROR FULL:", error)`.
-- If error message contains `active_block_exists` → toast `"Existing active block prevented adaptation"` (no generic fallback).
-- On success, `setQueryData(['training-block','active', user.id], newBlock)` (already in place — confirm replacement, not merge).
+Add `p_replace_existing boolean DEFAULT false` as final param. At top of function body:
 
-**2. `supabase/functions/generate-training-block/index.ts`** — accept new params:
-- Read `archive_block_id` and `force_new` from request body.
-- If `archive_block_id` present: `await serviceClient.from('training_blocks').update({ status: 'archived' }).eq('id', archive_block_id).eq('user_id', user.id)` BEFORE any active-block check or RPC call. Log `ARCHIVED OLD BLOCK (server): <id>`.
-- Always generate fresh idempotency key: `crypto.randomUUID()` per invocation when `force_new` is true (do not derive from user+sport).
-- On RPC error, log `console.error("ADAPT RPC ERROR FULL:", rpcErr)` and if message includes `active_block_exists`, return 409 with `{ error: "active_block_exists", message: "Existing active block prevented adaptation" }` so client can surface the exact text.
+```sql
+-- Defensive: never let NULL slip through
+IF p_replace_existing IS NULL THEN
+  p_replace_existing := FALSE;
+END IF;
+
+RAISE NOTICE 'insert_training_block_atomic MODE: %',
+  CASE WHEN p_replace_existing THEN 'ADAPT' ELSE 'CREATE' END;
+
+-- Only archive in ADAPT mode
+IF p_replace_existing THEN
+  UPDATE training_blocks
+  SET status = 'archived', updated_at = now()
+  WHERE user_id = p_user_id AND status = 'active';
+END IF;
+```
+
+In the non-idempotency `INSERT ... EXCEPTION WHEN unique_violation` block, add safety retry:
+
+```sql
+EXCEPTION WHEN unique_violation THEN
+  IF p_replace_existing THEN
+    UPDATE training_blocks SET status = 'archived', updated_at = now()
+    WHERE user_id = p_user_id AND status = 'active';
+    INSERT INTO training_blocks (...same cols...) VALUES (...) RETURNING id INTO v_block_id;
+  ELSE
+    RAISE EXCEPTION 'active_block_exists';
+  END IF;
+```
+
+Keep all other logic (idempotency dedup, workouts/exercises insert, pending_goal_block_id reset) unchanged.
+
+**2. `supabase/functions/generate-training-block/index.ts`**
+- Pass `p_replace_existing: force_new === true` into `insert_training_block_atomic` RPC call.
+- Remove standalone server-side archive block (RPC now handles it atomically).
+- Skip pre-RPC active-block guard when `force_new` is true.
+
+**3. `src/hooks/useTrainingBlock.ts`** — verify client contract
+- `generateBlock` (initial): does NOT send `force_new` (or sends `false`). Confirm and leave as-is.
+- `adaptBlock` regen branch: sends `force_new: true`. Confirm and leave as-is.
+- Remove leftover `archive_block_id` param if still being sent.
 
 ### Out of scope
-- No DB/RPC signature changes (`insert_training_block_atomic` already supports `p_idempotency_key`).
-- No changes to `adapt-training-block` (volume-tuning path stays as-is).
-- No UI changes beyond toast text routing.
+- No changes to `adapt-training-block` (volume tuning).
+- No UI changes.
+- No DB signature breakage — new param has DEFAULT, existing callers unaffected.
 
 ### Verification
-1. Generate initial block → succeeds.
-2. Change goal → click Adapt → console shows `ARCHIVED OLD BLOCK` (client + server), new blockId in state, workouts replaced.
-3. Click Adapt again immediately (second attempt) → succeeds, no `active_block_exists` error.
-4. If RPC ever returns `active_block_exists`, toast reads `"Existing active block prevented adaptation"` (not generic).
-5. Confirm in DB: only one `active` block per user after each adapt; previous blocks marked `archived`.
+1. Fresh user, no active block → initial generate succeeds; logs show `MODE: CREATE`.
+2. Active block exists, change goal, click Adapt → succeeds; logs show `MODE: ADAPT`; previous block archived; new block active.
+3. Rapid double-Adapt → both resolve cleanly via retry path; one active block in DB.
+4. Initial generate while active block exists (no `force_new`) → fails cleanly with `active_block_exists` (expected guard).
 
