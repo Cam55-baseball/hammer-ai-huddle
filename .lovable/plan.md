@@ -1,52 +1,79 @@
 
 
-## Plan — Recognize Baseball Fields & Parks in Weather Search
+## Plan — "No Schedule" must hide activity from Game Plan
 
 ### Problem
-The Weather search calls Open-Meteo's geocoding API (`geocoding-api.open-meteo.com`), which only indexes cities, towns, and administrative places. It cannot resolve venue names like "Yankee Stadium", "Steinbrenner Field", "TD Ballpark", local high school fields, or little league complexes.
+When a user picks **No Schedule** in the Custom Activity Builder, the activity still appears every day on the Game Plan.
 
-### Approach
-Add a **POI-aware geocoding layer** in front of the existing city/ZIP/coords resolution in `supabase/functions/get-weather/index.ts`. Use **OpenStreetMap Nominatim** (free, no key) which indexes named ballparks, stadiums, sports complexes, and athletic fields across the entire US (sourced from OSM tags `leisure=pitch sport=baseball/softball`, `leisure=stadium`, `name=*`).
+Root cause (two layers):
 
-### Resolution order (new)
-1. ZIP code (existing) — unchanged.
-2. Coordinates (existing) — unchanged.
-3. **NEW: Venue/POI lookup via Nominatim** — runs first for any free-text query. Biased to US (`countrycodes=us`), prefers results tagged as stadium/pitch/park, falls back gracefully.
-4. Open-Meteo city geocoding (existing) — fallback if Nominatim returns nothing.
+1. **Builder save payload** (`CustomActivityBuilderDialog.tsx`, line ~351): selecting `scheduleMode='none'` writes `recurring_days: []`, `recurring_active: false`, and `specific_dates: undefined` — but never sets `display_on_game_plan: false`. The DB row keeps whatever value it had (default `true`).
 
-### Edge function changes (`supabase/functions/get-weather/index.ts`)
-- Insert a new block after the coord check and before line 551's city-cleaning logic.
-- Skip Nominatim if input matches obvious city-only pattern after a quick heuristic? No — always try Nominatim first for free text; it handles cities too, but we still prefer Open-Meteo for plain city names to keep behavior identical. Strategy:
-  - If query contains keywords suggesting a venue (`field|park|stadium|ballpark|complex|diamond|coliseum|arena|sports`) **OR** is multi-word with capitalized proper-noun pattern → try Nominatim first.
-  - Otherwise → Open-Meteo first, Nominatim as fallback.
-- Nominatim call:
-  ```
-  https://nominatim.openstreetmap.org/search?q=<query>&countrycodes=us&format=json&limit=5&addressdetails=1&extratags=1
-  ```
-  Required header: `User-Agent: HammersWeather/1.0 (contact@hammers.app)` (Nominatim usage policy).
-- Pick the best result: prefer entries where `class=leisure` and `type ∈ {stadium, pitch, park, sports_centre}`, or `extratags.sport=baseball|softball`. Otherwise take the top result.
-- Extract `lat`, `lon`, build `resolvedLocationName` as `display_name` trimmed to first 3 comma parts (e.g., "Yankee Stadium, East 161st Street, Bronx").
-- Log every step for debugging.
-- Update the error message at line 598 to: `Try a field name (e.g., "Yankee Stadium"), city, or ZIP code.`
+2. **Game Plan fetch fallback** (`useGamePlan.ts`, line ~564):
+   ```ts
+   const scheduledDays = template.recurring_active 
+     ? (template.recurring_days as number[]) || []
+     : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
+   ```
+   When `recurring_active=false` and `display_days=null`, it defaults to **all 7 days** — so the activity shows every day even though the user intentionally chose "No Schedule."
 
-### Rate-limit & resilience
-- Nominatim allows ~1 req/sec per app — fine for our usage. Add a 5s timeout and graceful fallback to Open-Meteo on any failure (no thrown error from Nominatim alone).
-- Cache: existing weather caching by resolved coords already handles repeats.
+`buildCalendarEvents.ts` (calendar widget) is already correct because it requires `display_on_game_plan=true` AND a non-empty `recurring_days`/`display_days`.
 
-### UI changes (`src/components/WeatherWidget.tsx`)
-- Update the search input placeholder to: `"Search field, park, stadium, city, or ZIP…"` so users know the new capability exists.
-- No other UI changes needed — the existing search flow passes the raw string to the edge function.
+### Fix
+
+**1. `src/components/custom-activities/CustomActivityBuilderDialog.tsx` (line ~351)**
+Derive and pass `display_on_game_plan` based on schedule mode:
+```ts
+recurring_days: scheduleMode === 'weekly' ? recurringDays : [],
+recurring_active: scheduleMode === 'weekly' && recurringActive,
+specific_dates: scheduleMode === 'specific_date' ? specificDates.map(...) : undefined,
+display_on_game_plan: scheduleMode !== 'none',   // ← NEW
+```
+This guarantees "No Schedule" stores an explicit `false` on the template so both Game Plan and Calendar paths exclude it.
+
+**2. `src/hooks/useGamePlan.ts` (line ~564)**
+Tighten the fallback so an unscheduled template never silently defaults to every day. Treat "no recurring + no display_days + no specific_dates + not on game plan flag" as **not scheduled**:
+```ts
+// If no scheduling signal exists at all, treat as "no schedule" → exclude
+const hasWeekly = template.recurring_active && (template.recurring_days?.length ?? 0) > 0;
+const hasDisplayDays = (template.display_days?.length ?? 0) > 0;
+const hasSpecificDates = specificDates.length > 0;
+
+if (!hasWeekly && !hasDisplayDays && !hasSpecificDates) {
+  // No schedule at all — only show if user has an explicit log for today
+  if (!todayLog) return;
+}
+
+const scheduledDays = hasWeekly
+  ? (template.recurring_days as number[])
+  : hasDisplayDays
+  ? (template.display_days as number[])
+  : []; // no longer defaults to all 7 days
+```
+
+**3. Backfill existing templates (data migration)**
+For currently-broken rows where the user previously saved "No Schedule" but `display_on_game_plan` is still `true`, run a one-time UPDATE so they immediately disappear from the Game Plan:
+```sql
+UPDATE custom_activity_templates
+SET display_on_game_plan = false
+WHERE display_on_game_plan = true
+  AND (recurring_active = false OR recurring_active IS NULL)
+  AND (recurring_days IS NULL OR jsonb_array_length(to_jsonb(recurring_days)) = 0)
+  AND (display_days IS NULL OR jsonb_array_length(to_jsonb(display_days)) = 0)
+  AND (specific_dates IS NULL OR jsonb_array_length(to_jsonb(specific_dates)) = 0)
+  AND deleted_at IS NULL;
+```
+Run via insert tool (data update, not schema change).
 
 ### Out of scope
-- No autocomplete dropdown (would require a separate suggestions endpoint and rate-limit handling). Free-text resolution only.
-- No new database tables or caching layer beyond what exists.
-- No API key requirement (Nominatim is free).
+- No changes to My Activities module — unscheduled templates already live there (TemplatesGrid lists every non-deleted template regardless of schedule).
+- No changes to Calendar projection — already handles this correctly.
+- No changes to Folders, Received, Recurring weekly skips, or reminders.
 
 ### Verification
-- Search "Yankee Stadium" → resolves to Bronx, NY weather.
-- Search "Steinbrenner Field" → resolves to Tampa, FL weather.
-- Search "Tampa" → still resolves correctly (city fallback intact).
-- Search "33601" → ZIP path unchanged.
-- Search a small local field by name (e.g., "Al Lopez Park Tampa") → Nominatim resolves it.
-- Invalid input → clear updated error message.
+1. Create activity → select **No Schedule** → save → activity does NOT appear on today's Game Plan; it DOES appear in My Activities → Templates.
+2. Edit that activity → switch to **Weekly** + pick Mon/Wed → save → it appears on Game Plan on Mon/Wed only.
+3. Switch back to **No Schedule** → save → it disappears from Game Plan again.
+4. Activities scheduled on **Specific Dates** still appear on those dates only.
+5. Pre-existing unscheduled templates (post-backfill) no longer crowd the Game Plan.
 
