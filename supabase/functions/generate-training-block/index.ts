@@ -505,10 +505,7 @@ Always respond using the generate_training_block function.`
     // land on the same date (collision), nudge later ones forward by +1 day
     // until unique. Satisfies uq_block_workouts_date(block_id, scheduled_date)
     // without flattening to daily training.
-    const parseLocalDate = (s: string): Date => {
-      const [y, m, d] = s.split('-').map(Number);
-      return new Date(y, (m || 1) - 1, d || 1);
-    };
+    const parseLocalDate = (s: string): Date => new Date(s + "T00:00:00");
     const toISO = (d: Date): string => {
       const y = d.getFullYear();
       const mo = String(d.getMonth() + 1).padStart(2, '0');
@@ -542,6 +539,8 @@ Always respond using the generate_training_block function.`
           day_label: DAY_NAMES[d.getDay()],
         };
       });
+    // Re-sort after forward-shift to restore chronological order
+    normalizedWorkouts.sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
 
     // ─── Pre-RPC hard validation ───
     const dateList = normalizedWorkouts.map(w => w.scheduled_date);
@@ -613,9 +612,16 @@ Always respond using the generate_training_block function.`
     if (workoutsPayload.length === 0) {
       throw new Error("No workouts generated");
     }
-    if (workoutsPayload.some(w => w.exercises.length === 0)) {
-      console.error("Workout with zero exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length === 0)));
-      throw new Error("Workout with zero exercises detected");
+    if (workoutsPayload.some(w => w.exercises.length < 2)) {
+      console.error("Workout with fewer than 2 exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length < 2)));
+      throw new Error("Workout has fewer than 2 valid exercises");
+    }
+
+    // Week distribution guard
+    const weeks = new Set(workoutsPayload.map(w => w.week_number));
+    if (weeks.size > 6 || Math.min(...weeks) !== 1) {
+      console.error("Invalid week_number distribution:", Array.from(weeks));
+      throw new Error("Invalid week_number distribution");
     }
 
     const totalExercises = workoutsPayload.reduce((s, w) => s + w.exercises.length, 0);
