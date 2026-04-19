@@ -351,6 +351,7 @@ export function CustomActivityBuilderDialog({
         recurring_days: scheduleMode === 'weekly' ? recurringDays : [],
         recurring_active: scheduleMode === 'weekly' && recurringActive,
         specific_dates: scheduleMode === 'specific_date' ? specificDates.map(d => format(d, 'yyyy-MM-dd')) : undefined,
+        display_on_game_plan: scheduleMode !== 'none',
         sport: selectedSport,
         embedded_running_sessions: runningSessions,
         display_nickname: displayNickname.trim() || undefined,

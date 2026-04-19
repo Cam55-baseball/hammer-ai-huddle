@@ -558,11 +558,22 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           if (!specificDates.includes(today) && !todayLog) return;
         }
         
-        // Fallback to template settings if no skip record exists
-        const scheduledDays = template.recurring_active 
-          ? (template.recurring_days as number[]) || []
-          : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
-        
+        // Determine schedule signals — "no schedule" means none of these are set
+        const hasWeekly = !!template.recurring_active && ((template.recurring_days as number[] | null)?.length ?? 0) > 0;
+        const hasDisplayDays = ((template.display_days as number[] | null)?.length ?? 0) > 0;
+        const hasSpecificDates = specificDates.length > 0;
+
+        if (!hasWeekly && !hasDisplayDays && !hasSpecificDates) {
+          // No schedule at all — only show if user has an explicit log for today
+          if (!todayLog) return;
+        }
+
+        const scheduledDays = hasWeekly
+          ? (template.recurring_days as number[])
+          : hasDisplayDays
+          ? (template.display_days as number[])
+          : [];
+
         const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
         
         // Include if: (scheduled AND not skipped) OR has a log for today
