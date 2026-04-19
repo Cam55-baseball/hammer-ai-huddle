@@ -153,6 +153,18 @@ export function TrainingPreferencesEditor() {
         >
           {upsertPreferences.isPending ? 'Saving...' : 'Save Preferences'}
         </Button>
+
+        {activeBlock && (
+          <Button
+            variant="outline"
+            onClick={() => adaptBlock.mutate({ regenerate: true })}
+            disabled={adaptBlock.isPending}
+            className="w-full gap-2"
+          >
+            <RefreshCw className={cn('h-4 w-4', adaptBlock.isPending && 'animate-spin')} />
+            {adaptBlock.isPending ? 'Regenerating...' : 'Apply changes to current block'}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
