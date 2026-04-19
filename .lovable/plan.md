@@ -1,52 +1,65 @@
 
 
-## Important — premise mismatch
+## Premise mismatch — UI is already sending real data
 
-Save Preferences does **not** go through an edge function. It's a direct client-side Supabase upsert in `useTrainingPreferences.ts` (`upsertPreferences` mutation). There is no `req.json()` anywhere in this flow to deduplicate, and no edge function body to log.
+Console proof from this session:
+```
+SAVE PREFS PAYLOAD: {"goal":"power","availability":{"days":[1,2,3,5]},
+"equipment":["dumbbells","kettlebells","bands"],"injuries":[],
+"experience_level":"intermediate"}
+```
 
-The "double-parse `req.json()`" pattern from the suggested fix doesn't apply here. I want to confirm what's actually broken before changing code.
+All requested guarantees are **already in place** in `TrainingPreferencesEditor.tsx` + `useTrainingPreferences.ts`:
 
-## Questions before I proceed
+| Requested change | Current state |
+|---|---|
+| `mutate(formValues)` not `mutate()` | ✅ `upsertPreferences.mutate({ goal, availability, equipment, injuries, experience_level })` (line 53–59) |
+| Log form values at submit | ✅ `console.log("SAVE PREFS PAYLOAD:", ...)` already fires inside mutationFn — proven by console |
+| Controlled inputs | ✅ All 5 fields use `useState` + `onChange`/toggle handlers |
+| Hard guard before mutate | ✅ `if (!prefs \|\| Object.keys(prefs).length === 0) throw` already exists in mutationFn |
 
-1. What exactly is broken? Options:
-   - Click "Save Preferences" → no toast, no DB change
-   - Toast says "Preferences saved" but DB row unchanged
-   - Toast shows but values revert on reload
-   - Console error fires
-2. Is this related to the Adapt flow we just stabilized (e.g., goal change via `updateGoal` not propagating), or the standalone `upsertPreferences` button in `TrainingPreferencesEditor`?
+So the requested fix would change nothing.
 
-## If the goal is just hardening the existing client-side path
+## What's actually wrong
 
-Tight, surgical changes to `src/hooks/useTrainingPreferences.ts` only:
+After `SAVE PREFS PAYLOAD:` log, there is **no follow-up** in console:
+- No `SAVE PREFS ERROR:` line
+- No `"Preferences saved"` success toast
+- No `"Save failed: ..."` error toast
 
-1. **`upsertPreferences.mutationFn`** — log payload, surface real errors:
-   ```ts
-   console.log("SAVE PREFS PAYLOAD:", JSON.stringify(prefs));
-   if (!prefs || Object.keys(prefs).length === 0) {
-     console.error("Empty preferences payload — Save Preferences aborted");
-     throw new Error("Empty preferences payload");
-   }
-   const { error } = await supabase.from('training_preferences').upsert({ user_id: user!.id, ...prefs, updated_at: new Date().toISOString() });
-   if (error) {
-     console.error("SAVE PREFS ERROR:", error);
-     throw new Error(error.message);
-   }
-   ```
+That means `supabase.from('training_preferences').upsert(...)` is **hanging** (never resolves) or the promise is being dropped silently. The form is innocent — the issue is downstream.
 
-2. **`onError` handler** (currently missing) — toast the actual error so failures stop being silent:
-   ```ts
-   onError: (e: Error) => toast.error(`Save failed: ${e.message}`)
-   ```
+Likely culprits worth investigating (the user said "don't modify backend yet" — so this is a diagnostic plan, no code changes):
 
-3. Same treatment in `updateGoal.mutationFn` for the preference upsert + `training_blocks` update calls (both currently swallow non-throw error states or lack `onError`).
+1. **Auth session not attached** — `user!.id` might be stale at click time. Add a pre-check log: `console.log("USER AT SUBMIT:", user?.id, "SESSION:", !!session)` right before the upsert.
+2. **Network request blocked / pending** — confirm by checking the Network tab for the POST to `/rest/v1/training_preferences`. If it's pending forever or 401, that's a session/RLS issue.
+3. **Realtime/sync interception** — `useUnifiedDataSync` or BroadcastChannel could intercept; less likely.
+
+## Proposed diagnostic-only changes (no backend touched)
+
+In `src/hooks/useTrainingPreferences.ts`, inside `upsertPreferences.mutationFn`, add three logs around the supabase call to find where it stalls:
+
+```ts
+console.log("SAVE PREFS PAYLOAD:", JSON.stringify(prefs));
+console.log("USER AT SUBMIT:", user?.id);  // NEW
+if (!user?.id) {
+  console.error("No user — abort");
+  throw new Error("Not authenticated");
+}
+console.log("SAVE PREFS → calling supabase upsert...");  // NEW
+const { error } = await supabase.from('training_preferences').upsert({...});
+console.log("SAVE PREFS → upsert returned. error:", error);  // NEW
+```
+
+This will reveal whether:
+- `user.id` is undefined at click → auth race
+- supabase call never returns → network/RLS hang
+- supabase returns an error that isn't reaching the toast (impossible given current code, but proves it)
 
 ### Out of scope
-- No edge function changes (none exist for this flow).
-- No changes to `generate-training-block` or the Adapt path.
-- No UI changes in `TrainingPreferencesEditor`.
+- No form/UI changes (form is verified working).
+- No backend / RPC / migration changes.
 
 ### Verification
-- Click Save → console shows `SAVE PREFS PAYLOAD: {...}`, toast confirms; row visible in DB.
-- Force a failure (e.g., revoke RLS temporarily in test) → toast shows real Postgres error string, console shows `SAVE PREFS ERROR:`.
-- Change Goal via `updateGoal` → both upsert + block-flag steps log errors instead of failing silently.
+- Click Save → console must now show all four log lines in sequence. Whichever line is missing identifies the failure point.
 
