@@ -1,42 +1,28 @@
 
 
-## Plan — Consolidate Favorites, Quick Actions, and Supplements as Dropdowns inside Log Meal Card
+## Fix Nutrition Hub tab strip horizontal scroll
 
-### Goal
-Reduce the Nutrition Hub's vertical clutter by collapsing three sibling sections into dropdowns nested inside the existing `LogMealCard`, joining the existing "Quick Pick Foods" collapsible.
+### Problem
+The tab strip above the Daily Log (`Today / Weekly / Planning / Shopping / Recipes`) in `NutritionHubContent.tsx` (line 480) uses:
+```
+<TabsList className="w-full flex overflow-x-auto">
+  <TabsTrigger className="flex-1 min-w-fit ..." />
+```
+`flex-1` forces each trigger to shrink and share the row width, which **defeats `overflow-x-auto`** — there's nothing to scroll because the children compress to fit. On a 390px viewport this crams the labels and the scroll bar never engages.
 
-### Changes
+### Fix
+In `src/components/nutrition-hub/NutritionHubContent.tsx` (lines 480–486):
+- Remove `flex-1` from each `TabsTrigger` so they keep their natural width and overflow horizontally.
+- Keep `whitespace-nowrap` and `min-w-fit` to prevent label wrapping.
+- Add `h-auto` / proper padding to the `TabsList` (shadcn's default `TabsList` has fixed height + `inline-flex` styling that conflicts with horizontal scroll). Override with `w-full justify-start overflow-x-auto no-scrollbar` and add `flex-shrink-0` per trigger.
+- Add a small custom utility (inline `style` or Tailwind arbitrary) so the scrollbar is hidden visually but scroll still works on touch (optional polish).
 
-**1. `src/components/nutrition-hub/LogMealCard.tsx` — extend with 3 new collapsibles**
-Add three new `Collapsible` sections below "Quick Pick Foods", each defaulting to closed and styled identically (full-width outline button trigger with chevron):
-1. **Favorites** — renders `<FavoriteFoodsWidget onQuickAdd={...} />` content (pass through prop).
-2. **Quick Actions** — renders `<QuickLogActions ... />` (hydration / barcode / photo) (pass all needed props through).
-3. **Vitamins & Supplements** — renders `<VitaminSupplementTracker ... />` (pass needed props through).
-
-Update the component's prop interface to accept the additional handlers and data the nested widgets need (e.g., `onQuickAddFavorite`, `quickActionsProps`, `supplementsProps`) — or, simpler, accept ready-built React nodes as props (`favoritesSlot`, `quickActionsSlot`, `supplementsSlot`) so the parent stays the data owner and `LogMealCard` only handles layout/state for the collapsibles.
-
-Preferred approach: **slot props** (`favoritesSlot?: ReactNode`, `quickActionsSlot?: ReactNode`, `supplementsSlot?: ReactNode`) — keeps `LogMealCard` decoupled from each widget's API.
-
-Each new collapsible reuses the same trigger pattern as Quick Pick Foods:
-- Outline button, full width, `justify-between`, ChevronDown that rotates 180° when open.
-- Distinct icon per section: `Star` (Favorites, amber), `Zap` (Quick Actions, blue), `Pill` (Supplements, purple).
-- Hide a section entirely if its slot prop is not provided (so Favorites still auto-hides when there are no favorites — `FavoriteFoodsWidget` already returns `null` in that case, so we'll wrap the trigger in a check or let the parent omit the slot).
-
-**2. `src/components/nutrition-hub/NutritionHubContent.tsx` — remove standalone renders, pass as slots**
-- Remove the standalone `<FavoriteFoodsWidget />`, `<QuickLogActions />`, and `<VitaminSupplementTracker />` siblings from the section stack.
-- Pass them into `<LogMealCard />` as `favoritesSlot`, `quickActionsSlot`, `supplementsSlot` props.
-- New section order:
-  1. Daily Targets
-  2. **Log Meal** (with nested: meal types → Quick Pick Foods → Favorites → Quick Actions → Supplements)
-  3. Physio suggestions
-  4. Tabs (Today / Weekly / Planning / Shopping / Recipes)
-  5. Weight Tracking
-
-### Out of scope
-- No changes to the underlying `FavoriteFoodsWidget`, `QuickLogActions`, or `VitaminSupplementTracker` component internals or behavior.
-- No data/schema changes.
-- Hydration tracker header widget untouched.
+Final classes:
+- `TabsList`: `w-full justify-start overflow-x-auto flex gap-1 h-auto p-1`
+- Each `TabsTrigger`: `flex-shrink-0 min-w-fit px-3 text-xs sm:text-sm whitespace-nowrap` (drop `flex-1`)
 
 ### Verification
-- `/nutrition-hub` on 390px mobile: only the Log Meal card is visible between Daily Targets and Physio. Tapping each dropdown reveals its widget. All existing flows (favorite quick-add, hydration, barcode/photo, supplement logging, recipes from tab) still work.
+- On 390px mobile, the 5 tabs sit at natural width and the row scrolls horizontally with a swipe.
+- Active tab indicator still works; tapping each tab still switches content.
+- On ≥sm viewports, all tabs fit without needing to scroll.
 
