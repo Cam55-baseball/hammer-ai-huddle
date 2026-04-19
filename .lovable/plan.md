@@ -1,35 +1,43 @@
 
+## Fix Plan — Make Calendar Day Close Button Clearly Visible and Tappable on Mobile
 
-## Mobile UI Fixes — Activities Tabs & Calendar Day Sheet Close Button
+### What I found
+- The calendar day view is `src/components/calendar/CalendarDaySheet.tsx`, and it uses the shared `Sheet` component from `src/components/ui/sheet.tsx`.
+- The shared `Sheet` close button already has the larger mobile hit area (`p-2`, `h-6 w-6`), so the remaining problem is not just size.
+- It is still styled with low visual prominence (`opacity-70`, subtle/default foreground), which matches your report that it still looks like a small light gray “X”.
 
-Two scoped, mobile-only changes. No logic touched.
+### Plan
+1. **Make the close control visually obvious on mobile**
+   - Update the shared sheet close button in `src/components/ui/sheet.tsx` to use:
+     - stronger foreground color
+     - visible background on mobile
+     - rounded touch target
+     - border/shadow so it stands out against the calendar header
+   - Keep desktop styling close to current behavior.
 
-### 1. My Activities tab icons too small on mobile
-**File:** `src/pages/MyCustomActivities.tsx` (lines 126–144)
+2. **If needed, promote the calendar day sheet close button specifically**
+   - If the shared change would affect too many other sheets, I’ll give `CalendarDaySheet.tsx` its own more prominent close button in the header area and hide/de-emphasize the default one for that sheet only.
+   - This keeps the calendar fix precise while avoiding unintended changes elsewhere.
 
-On mobile the tab labels are hidden (`hidden sm:inline`), leaving only a tiny `h-4 w-4` icon — users can't tell tabs apart.
+3. **Preserve behavior**
+   - No calendar logic changes.
+   - No changes to filters, event rendering, or sheet open/close behavior.
+   - Only visibility and tap-target styling.
 
-**Change:**
-- Bump icon size on mobile: `h-4 w-4` → `h-6 w-6 sm:h-4 sm:w-4`
-- Increase tap target: `TabsList` height `h-12` → `h-14 sm:h-12`
-- Increase trigger horizontal padding on mobile: `px-3 sm:px-4` → `px-4 sm:px-4`
-- Keep desktop (≥sm) appearance identical.
-
-Result: large, clearly-distinguishable icons on phones; desktop unchanged.
-
-### 2. Calendar day-view close button too small on mobile
-**File:** `src/components/ui/sheet.tsx` (line 60–63)
-
-The shadcn `Sheet` close button is `h-4 w-4` with no padding — ~16px hit area, well below the 44px iOS/Android touch target minimum. This is the "X" the user can't tap when viewing a specific calendar day.
-
-**Change (mobile-first, desktop-safe):**
-- Wrap close button with a real touch target: add `p-2 sm:p-1` and bump icon to `h-6 w-6 sm:h-4 sm:w-4`.
-- Move slightly inward on mobile so it's not flush against the edge: `right-4 top-4` → `right-3 top-3 sm:right-4 sm:top-4`.
-- Keep `opacity-70 hover:opacity-100` styling intact.
-
-This is a global Sheet change but it only enlarges the close hit-area — every Sheet in the app benefits, and desktop sizing stays the same at the `sm:` breakpoint. No other Sheet behavior changes.
+### Likely implementation
+- `src/components/ui/sheet.tsx`
+  - replace low-contrast close styling with a mobile-first control that is clearly visible
+  - likely use stronger classes such as foreground text, solid/translucent background, border, and shadow
+- possibly `src/components/calendar/CalendarDaySheet.tsx`
+  - add a dedicated close button near the title if the shared primitive still isn’t prominent enough
 
 ### Verification
-- On mobile viewport (375px): Activities tabs show clearly readable icons; Sheet close button is comfortably tappable.
-- On desktop (≥768px): No visible difference.
+- On mobile viewport, the close button should:
+  - be immediately visible without hunting for it
+  - look intentional, not faded/light gray
+  - be easy to tap with one thumb
+- Desktop should remain functionally unchanged.
 
+### Notes
+- Based on the current code, this is a styling/prominence issue more than a raw icon-size issue.
+- I will treat the calendar day sheet as the priority target so the fix is unmistakable there.
