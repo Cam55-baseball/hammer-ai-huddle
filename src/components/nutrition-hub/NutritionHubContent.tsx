@@ -83,7 +83,11 @@ export function NutritionHubContent() {
   const [selectedMealType, setSelectedMealType] = useState('');
   const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
-  
+
+  // Recipe → meal type selector flow (lifted from QuickLogActions)
+  const [recipeMealTypeOpen, setRecipeMealTypeOpen] = useState(false);
+  const pendingRecipeRef = useRef<RecipeIngredient[] | null>(null);
+
   // Settings dialog state
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -451,14 +455,17 @@ export function NutritionHubContent() {
         showHydration
       />
 
+      {/* Log Meal (with Quick Pick Foods dropdown) */}
+      <LogMealCard
+        onLogMeal={(mealType) => handleLogMeal(mealType)}
+        onSelectFood={handleGalleryFoodSelect}
+      />
+
       {/* Physio Nutrition Suggestions */}
       <PhysioNutritionSuggestions />
 
       {/* Food Favorites Quick Access */}
       <FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />
-
-      {/* Visual Food Gallery - Kid-friendly quick pick */}
-      <CommonFoodsGallery onSelectFood={handleGalleryFoodSelect} />
 
       {/* Quick Actions */}
       <QuickLogActions onLogMeal={handleLogMeal} onSwitchTab={(tab) => {
@@ -469,9 +476,6 @@ export function NutritionHubContent() {
       {/* Vitamins & Supplements Tracker */}
       <VitaminSupplementTracker />
 
-      {/* Weight Tracking Section */}
-      <WeightTrackingSection />
-
       {/* Main Content Tabs */}
       <Tabs ref={tabsRef} value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full flex overflow-x-auto">
@@ -479,7 +483,7 @@ export function NutritionHubContent() {
           <TabsTrigger value="weekly" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
           <TabsTrigger value="planning" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('mealPlanning.title', 'Planning')}</TabsTrigger>
           <TabsTrigger value="shopping" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('shoppingList.title', 'Shopping')}</TabsTrigger>
-          
+          <TabsTrigger value="recipes" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.recipes', 'Recipes')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">
@@ -518,8 +522,33 @@ export function NutritionHubContent() {
         <TabsContent value="shopping" className="mt-4">
           <ShoppingListTab />
         </TabsContent>
-        
+
+        <TabsContent value="recipes" className="mt-4">
+          <RecipeBuilder
+            onRecipeSelect={(ingredients) => {
+              pendingRecipeRef.current = ingredients;
+              setRecipeMealTypeOpen(true);
+            }}
+          />
+        </TabsContent>
+
       </Tabs>
+
+      {/* Weight Tracking Section (moved to bottom) */}
+      <WeightTrackingSection />
+
+      {/* Recipe → meal type selector */}
+      <MealTypeSelector
+        open={recipeMealTypeOpen}
+        onOpenChange={setRecipeMealTypeOpen}
+        onSelect={(mealType) => {
+          if (pendingRecipeRef.current) {
+            handleLogMeal(mealType, pendingRecipeRef.current);
+            pendingRecipeRef.current = null;
+          }
+        }}
+        title={t('nutrition.selectMealTypeFor', 'Add to which meal?')}
+      />
 
       {/* Meal Logging Dialog */}
       <MealLoggingDialog
