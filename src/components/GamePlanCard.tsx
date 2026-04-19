@@ -705,7 +705,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Custom activity handlers
   const handleCustomActivityToggle = async (task: GamePlanTask) => {
     if (task.customActivityData) {
-      const success = await toggleComplete(task.customActivityData.template.id);
+      const success = await toggleComplete(task.customActivityData.template.id, task.customActivityData.log?.id);
       if (success) {
         // In timeline mode, re-sort to move completed to bottom
         if (sortMode === 'timeline') {
