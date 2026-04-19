@@ -525,18 +525,24 @@ Always respond using the generate_training_block function.`
       return w;
     });
 
+    const endDateObj: Date = typeof endDate === 'string' ? parseLocalDate(endDate as string) : endDate;
     const usedDates = new Set<string>();
     const normalizedWorkouts = safeWorkouts
       .slice()
       .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
       .map(sw => {
         const d = parseLocalDate(sw.scheduled_date);
+        let guard = 0;
         while (usedDates.has(toISO(d))) {
           d.setDate(d.getDate() + 1);
+          guard++;
+          if (guard > 365) {
+            throw new Error("Date collision resolution exceeded safe bounds");
+          }
         }
         const finalDate = toISO(d);
-        if (parseLocalDate(finalDate) > endDate) {
-          throw new Error(`Workout shifted beyond block end_date: ${finalDate} > ${toISO(endDate)}`);
+        if (parseLocalDate(finalDate) > endDateObj) {
+          throw new Error(`Workout shifted beyond block end_date: ${finalDate} > ${toISO(endDateObj)}`);
         }
         usedDates.add(finalDate);
         return {
