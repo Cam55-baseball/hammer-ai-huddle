@@ -1,65 +1,31 @@
 
 
-## Premise mismatch — UI is already sending real data
+## Plan — Fix "Failed to generate training block" (date overflow)
 
-Console proof from this session:
-```
-SAVE PREFS PAYLOAD: {"goal":"power","availability":{"days":[1,2,3,5]},
-"equipment":["dumbbells","kettlebells","bands"],"injuries":[],
-"experience_level":"intermediate"}
-```
+### Root cause
+In `generate-training-block/index.ts` (~line 530), when forward-shifting to resolve date collisions, if the shifted date exceeds the block's `end_date`, the function throws `Workout shifted beyond block end_date`. Logs confirm: `2026-06-01 > 2026-05-31`. With 5 training days/week × 6 weeks, the last workouts have zero forward headroom — any single collision spills past the end and aborts the whole generation.
 
-All requested guarantees are **already in place** in `TrainingPreferencesEditor.tsx` + `useTrainingPreferences.ts`:
+### Fix (single file)
+**`supabase/functions/generate-training-block/index.ts`** — change the overflow handler from throw → backward-shift fallback.
 
-| Requested change | Current state |
-|---|---|
-| `mutate(formValues)` not `mutate()` | ✅ `upsertPreferences.mutate({ goal, availability, equipment, injuries, experience_level })` (line 53–59) |
-| Log form values at submit | ✅ `console.log("SAVE PREFS PAYLOAD:", ...)` already fires inside mutationFn — proven by console |
-| Controlled inputs | ✅ All 5 fields use `useState` + `onChange`/toggle handlers |
-| Hard guard before mutate | ✅ `if (!prefs \|\| Object.keys(prefs).length === 0) throw` already exists in mutationFn |
+Inside the collision-resolution block:
+1. Forward-shift as today, but if `finalDate > endDateObj`, instead of throwing:
+   - Reset `d` to the original `parseLocalDate(sw.scheduled_date)`.
+   - Walk **backward** (`d.setDate(d.getDate() - 1)`) until an unused date `>= startDateObj` is found.
+   - If still no slot (extreme edge: every date in the block window is taken), then log `console.error` and **drop** the workout (skip with `return null`), then `.filter(Boolean)` after the map.
+2. Keep the 365-iteration safety guard.
+3. Keep all post-shift logic (re-sort, soft validations, RPC payload build) unchanged.
 
-So the requested fix would change nothing.
-
-## What's actually wrong
-
-After `SAVE PREFS PAYLOAD:` log, there is **no follow-up** in console:
-- No `SAVE PREFS ERROR:` line
-- No `"Preferences saved"` success toast
-- No `"Save failed: ..."` error toast
-
-That means `supabase.from('training_preferences').upsert(...)` is **hanging** (never resolves) or the promise is being dropped silently. The form is innocent — the issue is downstream.
-
-Likely culprits worth investigating (the user said "don't modify backend yet" — so this is a diagnostic plan, no code changes):
-
-1. **Auth session not attached** — `user!.id` might be stale at click time. Add a pre-check log: `console.log("USER AT SUBMIT:", user?.id, "SESSION:", !!session)` right before the upsert.
-2. **Network request blocked / pending** — confirm by checking the Network tab for the POST to `/rest/v1/training_preferences`. If it's pending forever or 401, that's a session/RLS issue.
-3. **Realtime/sync interception** — `useUnifiedDataSync` or BroadcastChannel could intercept; less likely.
-
-## Proposed diagnostic-only changes (no backend touched)
-
-In `src/hooks/useTrainingPreferences.ts`, inside `upsertPreferences.mutationFn`, add three logs around the supabase call to find where it stalls:
-
-```ts
-console.log("SAVE PREFS PAYLOAD:", JSON.stringify(prefs));
-console.log("USER AT SUBMIT:", user?.id);  // NEW
-if (!user?.id) {
-  console.error("No user — abort");
-  throw new Error("Not authenticated");
-}
-console.log("SAVE PREFS → calling supabase upsert...");  // NEW
-const { error } = await supabase.from('training_preferences').upsert({...});
-console.log("SAVE PREFS → upsert returned. error:", error);  // NEW
-```
-
-This will reveal whether:
-- `user.id` is undefined at click → auth race
-- supabase call never returns → network/RLS hang
-- supabase returns an error that isn't reaching the toast (impossible given current code, but proves it)
-
-### Out of scope
-- No form/UI changes (form is verified working).
-- No backend / RPC / migration changes.
+This guarantees:
+- No throw on date overflow.
+- Cadence is preserved within the block window.
+- Worst case, one or two trailing workouts may be dropped rather than failing the entire 6-week generation. Logged for visibility.
 
 ### Verification
-- Click Save → console must now show all four log lines in sequence. Whichever line is missing identifies the failure point.
+1. Click Generate with 5 days/week, 6-week block → succeeds; logs show `MODE: CREATE`, no overflow error, block visible in Game Plan.
+2. Generate with 3 days/week → no collisions, no backward-shift triggered.
+3. Adapt path → unaffected (same code path, but RPC archive logic already stable).
+
+### Out of scope
+- No DB migration. No client changes. No edge function CORS/auth changes.
 
