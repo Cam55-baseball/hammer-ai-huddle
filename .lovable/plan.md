@@ -1,26 +1,30 @@
 
 
-## Plan — Harden pre-RPC validation in `generate-training-block`
+## Plan — Bind `workoutsPayload` to `normalizedWorkouts` + recompute `day_label`
 
 Single file: `supabase/functions/generate-training-block/index.ts`
 
-### Changes (in order, all pre-RPC)
+### Context check first
+Before editing, I'll read the current state of the file to locate:
+- Where `normalizedWorkouts` is built (end of forward-shift uniqueness pass)
+- Where `workoutsPayload` is currently constructed (the `.map(sw => ({...}))` that becomes the RPC arg)
+- Where `day_label` is assigned
 
-1. **Validate `scheduled_date` before sort** — map `scheduledWorkouts` into `safeWorkouts`, throw on missing/unparseable dates. Feed `safeWorkouts` into the existing sort + forward-shift uniqueness pass.
+### Changes
 
-2. **Recompute exercise ordinals after filtering** — in the `workoutsPayload` mapping, filter out exercises missing a non-empty `name`, then re-index `ordinal` from the post-filter array (don't trust AI-supplied indexes).
+1. **Bind payload to the validated source** — immediately after `normalizedWorkouts` is built, ensure the RPC payload is derived from it (not from the raw `scheduledWorkouts`). Concretely: the existing `workoutsPayload = normalizedWorkouts.map(...)` mapping must reference `normalizedWorkouts` as its input array. If any stray reference to `scheduledWorkouts` remains in the payload-building map, replace it.
 
-3. **Per-workout ordinal uniqueness guard** — after building each workout's `exercises` array, throw if `new Set(ordinals).size !== ordinals.length`.
+2. **Recompute `day_label` inside the payload map** from `scheduled_date` to prevent drift after the forward-shift may have moved a workout to a new weekday:
+   ```ts
+   day_label: DAY_NAMES[new Date(sw.scheduled_date).getDay()],
+   ```
+   (Use the same `parseLocalDate` helper already in the file if it exists, to avoid UTC off-by-one — will confirm when reading.)
 
-4. **Numeric integrity guard** — loop each exercise, throw if `sets` or `reps` is not finite.
-
-5. **Final payload sanity** — before RPC: throw if `workoutsPayload.length === 0` or any workout has zero exercises.
-
-### Notes
-- All clamps (`sets` 1–10, `reps` 1–30, `rest_seconds` 0–600) already exist — reuse them.
-- Existing duplicate-date guard, week_number validation, and structured RPC error logging stay as-is.
-- No DB, scheduling-logic, or client changes.
+### No other changes
+- Validation guards stay as-is.
+- RPC error logging stays as-is.
+- Forward-shift uniqueness logic stays as-is.
 
 ### Verification
-Generate a 6-week block. If it still fails, the next surfaced error will be the raw Postgres `code/message/details/hint` from the existing RPC catch block — report that back.
+Generate a 6-week block. If it still fails, the existing structured RPC catch block will surface the raw Postgres `code/message/details/hint` — report that back.
 
