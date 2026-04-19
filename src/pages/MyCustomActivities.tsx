@@ -123,14 +123,14 @@ export default function MyCustomActivities() {
         <Tabs defaultValue="templates" className="w-full">
           {/* Scrollable tabs on mobile */}
           <ScrollArea className="w-full">
-            <TabsList className="inline-flex h-12 w-full sm:w-auto bg-muted/50 p-1 gap-1">
+            <TabsList className="inline-flex h-14 sm:h-12 w-full sm:w-auto bg-muted/50 p-1 gap-1">
               {tabs.map(({ value, icon: Icon, label, badge }) => (
                 <TabsTrigger 
                   key={value}
                   value={value} 
-                  className="flex items-center gap-2 px-3 sm:px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-md whitespace-nowrap transition-all"
+                  className="flex items-center gap-2 px-4 sm:px-4 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-md whitespace-nowrap transition-all"
                 >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <Icon className="h-6 w-6 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className="hidden sm:inline font-medium">{label}</span>
                   {badge !== undefined && badge > 0 && (
                     <Badge 
