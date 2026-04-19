@@ -263,7 +263,11 @@ export function useTrainingBlock() {
     },
     onError: (error: Error) => {
       console.error('ADAPT FAILED:', error);
-      toast.error(t('trainingBlock.adaptFailed', 'Failed to adapt plan'));
+      if (error.message?.includes('active_block_exists')) {
+        toast.error('Existing active block prevented adaptation');
+      } else {
+        toast.error(t('trainingBlock.adaptFailed', 'Failed to adapt plan'));
+      }
     },
   });
 
