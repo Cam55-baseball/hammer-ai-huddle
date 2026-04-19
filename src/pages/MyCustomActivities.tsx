@@ -13,6 +13,9 @@ import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutT
 import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedActivitiesList';
 import { RecentlyDeletedList } from '@/components/custom-activities/RecentlyDeletedList';
 import { PresetLibrary } from '@/components/elite-workout/presets/PresetLibrary';
+import { WorkoutPlanCTA } from '@/components/WorkoutPlanCTA';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import { LoadDashboard } from '@/components/elite-workout/intelligence/LoadDashboard';
 import { FolderTabContent } from '@/components/folders/FolderTabContent';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
@@ -27,6 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function MyCustomActivities() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [selectedSport] = useState<'baseball' | 'softball'>(() => {
     return (localStorage.getItem('selectedSport') as 'baseball' | 'softball') || 'baseball';
   });
@@ -85,6 +89,7 @@ export default function MyCustomActivities() {
 
   const tabs = [
     { value: 'templates', icon: LayoutGrid, label: t('myCustomActivities.tabs.templates', 'Templates') },
+    { value: 'workout-plan', icon: Dumbbell, label: t('myCustomActivities.tabs.workoutPlan', 'Workout Plan') },
     { value: 'folders', icon: FolderOpen, label: t('myCustomActivities.tabs.folders', 'Folders'), badge: folderPendingCount },
     { value: 'elite-presets', icon: Dumbbell, label: t('myCustomActivities.tabs.elitePresets', 'Elite Presets') },
     { value: 'load-dashboard', icon: Activity, label: t('myCustomActivities.tabs.loadDashboard', 'Load Dashboard') },
@@ -158,6 +163,37 @@ export default function MyCustomActivities() {
                 onToggleFavorite={toggleFavorite}
                 onRefetch={refetch}
               />
+            </TabsContent>
+
+            <TabsContent value="workout-plan" className="mt-0 animate-fade-in space-y-4">
+              <WorkoutPlanCTA />
+              <div className="rounded-lg border border-border bg-card p-4 sm:p-5 space-y-3">
+                <div>
+                  <h3 className="font-bold text-base">Build a new plan</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Generate a personalized 6-week training block or a single-session daily workout tailored to your goals.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    size="sm"
+                    className="gap-1.5 flex-1"
+                    onClick={() => navigate('/training-block?mode=block')}
+                  >
+                    <Dumbbell className="h-3.5 w-3.5" />
+                    6-Week Block
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 flex-1"
+                    onClick={() => navigate('/training-block?mode=daily')}
+                  >
+                    <Dumbbell className="h-3.5 w-3.5" />
+                    Daily Plan
+                  </Button>
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="folders" className="mt-0 animate-fade-in">

@@ -23,8 +23,6 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
-import { WorkoutPlanCTA } from "@/components/WorkoutPlanCTA";
-import { useTrainingBlock } from "@/hooks/useTrainingBlock";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
@@ -101,8 +99,6 @@ export default function Dashboard() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
-  const { activeBlock } = useTrainingBlock();
-  const hasActiveTrainingBlock = !!activeBlock;
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
     const saved = localStorage.getItem('selectedSport');
@@ -434,22 +430,12 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Hammer Workout Plan tile — above Game Plan when a block is active */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && hasActiveTrainingBlock && (
-          <WorkoutPlanCTA />
-        )}
-
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <GamePlanCard selectedSport={selectedSport} />
-        )}
-
-        {/* Hammer Workout Plan tile — below Game Plan when no block exists yet */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && !hasActiveTrainingBlock && (
-          <WorkoutPlanCTA />
         )}
 
         {/* Sport Switch Confirmation Dialog */}
