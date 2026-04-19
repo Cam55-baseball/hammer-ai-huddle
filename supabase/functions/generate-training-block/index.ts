@@ -276,22 +276,7 @@ serve(async (req) => {
       }
     }
 
-    // Fix #8: Check for existing active block — user must archive first
-    const { data: existingBlock } = await supabase
-      .from('training_blocks')
-      .select('id, status, pending_goal_change')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'nearing_completion'])
-      .maybeSingle();
-
-    if (existingBlock) {
-      return new Response(JSON.stringify({
-        error: 'Active training block exists. Complete or archive it before generating a new one.',
-        existing_block_id: existingBlock.id,
-      }), {
-        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Existing-active-block check moved AFTER body parse + server-side archive (below)
 
     // Fix #9: Check pending goal change on ready_for_regeneration blocks
     const { data: pendingBlock } = await supabase
