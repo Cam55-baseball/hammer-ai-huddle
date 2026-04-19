@@ -515,11 +515,13 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
-  // Remove activity from today
-  const removeFromToday = async (templateId: string): Promise<boolean> => {
+  // Remove activity from today (specific instance if logId provided)
+  const removeFromToday = async (templateId: string, logId?: string): Promise<boolean> => {
     if (!user) return false;
 
-    const log = todayLogs.find(l => l.template_id === templateId);
+    const log = logId
+      ? todayLogs.find(l => l.id === logId)
+      : todayLogs.find(l => l.template_id === templateId);
     if (!log) return false;
 
     try {
