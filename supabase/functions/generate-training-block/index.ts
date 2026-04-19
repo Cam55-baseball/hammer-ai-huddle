@@ -707,48 +707,33 @@ Always respond using the generate_training_block function.`
       if (calErr) console.error("Calendar event insert failed (non-critical):", calErr);
     }
 
-    // Defensive post-RPC fetch using service client (bypasses RLS for diagnostic)
-    try {
-      const { data: block, error: fetchErr } = await serviceClient
-        .from('training_blocks')
-        .select('*')
-        .eq('id', blockId)
-        .maybeSingle();
+    // Fetch fully nested training block (workouts + exercises) via service client
+    const { data: block, error: fetchErr } = await serviceClient
+      .from('training_blocks')
+      .select(`
+        id, goal, sport, start_date, end_date, status,
+        block_workouts (
+          id, week_number, day_label, scheduled_date, status, workout_type, estimated_duration,
+          block_exercises (
+            id, ordinal, name, sets, reps, weight, tempo, rest_seconds,
+            velocity_intent, cns_demand, coaching_cues
+          )
+        )
+      `)
+      .eq('id', blockId)
+      .maybeSingle();
 
-      if (fetchErr) {
-        console.error("BLOCK FETCH FAILED:", {
-          message: fetchErr.message,
-          details: fetchErr.details,
-          hint: fetchErr.hint,
-          blockId,
-        });
-      }
-
-      if (!block) {
-        console.error("BLOCK NULL AFTER CREATION", { blockId });
-        return new Response(JSON.stringify({
-          blockId,
-          warning: "Block created but fetch failed",
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      console.log("BLOCK RETURN SUCCESS", { blockId });
-    } catch (fetchCatchErr) {
-      console.error("BLOCK FETCH THREW:", {
-        error: fetchCatchErr instanceof Error ? fetchCatchErr.message : String(fetchCatchErr),
-        blockId,
-      });
+    if (fetchErr) {
+      console.error("BLOCK FETCH FAILED:", fetchErr);
+      throw new Error("Failed to fetch training block after creation");
+    }
+    if (!block) {
+      console.error("BLOCK NULL AFTER CREATION", { blockId });
+      throw new Error("Training block created but not found");
     }
 
-    return new Response(JSON.stringify({
-      blockId,
-      totalWorkouts: normalizedWorkouts.length,
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-    }), {
+    console.log("BLOCK RETURN SUCCESS", { blockId });
+    return new Response(JSON.stringify({ block }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
