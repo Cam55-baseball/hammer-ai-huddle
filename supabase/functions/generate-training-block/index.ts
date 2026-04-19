@@ -707,6 +707,42 @@ Always respond using the generate_training_block function.`
       if (calErr) console.error("Calendar event insert failed (non-critical):", calErr);
     }
 
+    // Defensive post-RPC fetch using service client (bypasses RLS for diagnostic)
+    try {
+      const { data: block, error: fetchErr } = await serviceClient
+        .from('training_blocks')
+        .select('*')
+        .eq('id', blockId)
+        .maybeSingle();
+
+      if (fetchErr) {
+        console.error("BLOCK FETCH FAILED:", {
+          message: fetchErr.message,
+          details: fetchErr.details,
+          hint: fetchErr.hint,
+          blockId,
+        });
+      }
+
+      if (!block) {
+        console.error("BLOCK NULL AFTER CREATION", { blockId });
+        return new Response(JSON.stringify({
+          blockId,
+          warning: "Block created but fetch failed",
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log("BLOCK RETURN SUCCESS", { blockId });
+    } catch (fetchCatchErr) {
+      console.error("BLOCK FETCH THREW:", {
+        error: fetchCatchErr instanceof Error ? fetchCatchErr.message : String(fetchCatchErr),
+        blockId,
+      });
+    }
+
     return new Response(JSON.stringify({
       blockId,
       totalWorkouts: normalizedWorkouts.length,
