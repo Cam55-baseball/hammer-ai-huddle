@@ -539,6 +539,8 @@ Always respond using the generate_training_block function.`
           day_label: DAY_NAMES[d.getDay()],
         };
       });
+    // Re-sort after forward-shift to restore chronological order
+    normalizedWorkouts.sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
 
     // ─── Pre-RPC hard validation ───
     const dateList = normalizedWorkouts.map(w => w.scheduled_date);
