@@ -332,6 +332,25 @@ serve(async (req) => {
       }
     }
 
+    // Existing-active-block guard (after possible archive). Skip when force_new + archive succeeded.
+    if (!force_new) {
+      const { data: existingBlock } = await supabase
+        .from('training_blocks')
+        .select('id, status, pending_goal_change')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'nearing_completion'])
+        .maybeSingle();
+
+      if (existingBlock) {
+        return new Response(JSON.stringify({
+          error: 'Active training block exists. Complete or archive it before generating a new one.',
+          existing_block_id: existingBlock.id,
+        }), {
+          status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // ─── Resolve schedule: season-aware + calendar-conflict-aware ───
