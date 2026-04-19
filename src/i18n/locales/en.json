@@ -1931,7 +1931,7 @@
     "excellent": "Excellent",
     "fair": "Fair",
     "notRecommended": "Not Recommended",
-    "searchLocation": "Search any location...",
+    "searchLocation": "Search field, park, stadium, city, or ZIP...",
     "retry": "Retry",
     "enterLocationPrompt": "Enter a location above to see weather conditions and training recommendations",
     "locationDetected": "Location detected",
