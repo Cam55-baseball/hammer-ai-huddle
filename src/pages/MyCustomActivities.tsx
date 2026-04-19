@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { TemplatesGrid } from '@/components/custom-activities/TemplatesGrid';
 import { ActivityHistoryList } from '@/components/custom-activities/ActivityHistoryList';
-import { ActivityAnalytics } from '@/components/custom-activities/ActivityAnalytics';
 import { HydrationReminderSettings } from '@/components/custom-activities/HydrationReminderSettings';
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { RunningPresetLibrary } from '@/components/custom-activities/RunningPresetLibrary';
@@ -16,14 +15,13 @@ import { PresetLibrary } from '@/components/elite-workout/presets/PresetLibrary'
 import { WorkoutPlanCTA } from '@/components/WorkoutPlanCTA';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { LoadDashboard } from '@/components/elite-workout/intelligence/LoadDashboard';
 import { FolderTabContent } from '@/components/folders/FolderTabContent';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { useDeletedActivities } from '@/hooks/useDeletedActivities';
 import { useReceivedFolders } from '@/hooks/useReceivedFolders';
 import { WorkoutBlock } from '@/types/eliteWorkout';
-import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2, Dumbbell, Activity, FolderOpen } from 'lucide-react';
+import { LayoutGrid, History, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2, Dumbbell, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
@@ -92,12 +90,10 @@ export default function MyCustomActivities() {
     { value: 'workout-plan', icon: Dumbbell, label: t('myCustomActivities.tabs.workoutPlan', 'Workout Plan') },
     { value: 'folders', icon: FolderOpen, label: t('myCustomActivities.tabs.folders', 'Folders'), badge: folderPendingCount },
     { value: 'elite-presets', icon: Dumbbell, label: t('myCustomActivities.tabs.elitePresets', 'Elite Presets') },
-    { value: 'load-dashboard', icon: Activity, label: t('myCustomActivities.tabs.loadDashboard', 'Load Dashboard') },
     { value: 'received', icon: Inbox, label: t('myCustomActivities.tabs.received', 'Received'), badge: pendingCount },
     { value: 'deleted', icon: Trash2, label: t('myCustomActivities.tabs.deleted', 'Recently Deleted'), badge: deletedCount },
     { value: 'library', icon: BookOpen, label: t('myCustomActivities.tabs.library', 'Library') },
     { value: 'history', icon: History, label: t('myCustomActivities.tabs.history', 'History') },
-    { value: 'analytics', icon: BarChart3, label: t('myCustomActivities.tabs.analytics', 'Analytics') },
     { value: 'hydration', icon: Droplets, label: t('myCustomActivities.tabs.hydration', 'Hydration') },
     { value: 'presets', icon: Footprints, label: t('myCustomActivities.tabs.presets', 'Presets') },
   ];
@@ -211,10 +207,6 @@ export default function MyCustomActivities() {
               />
             </TabsContent>
 
-            <TabsContent value="load-dashboard" className="mt-0 animate-fade-in">
-              <LoadDashboard />
-            </TabsContent>
-
             <TabsContent value="deleted" className="mt-0 animate-fade-in">
               <RecentlyDeletedList 
                 selectedSport={selectedSport}
@@ -231,10 +223,6 @@ export default function MyCustomActivities() {
 
             <TabsContent value="history" className="mt-0 animate-fade-in">
               <ActivityHistoryList selectedSport={selectedSport} />
-            </TabsContent>
-
-            <TabsContent value="analytics" className="mt-0 animate-fade-in">
-              <ActivityAnalytics selectedSport={selectedSport} />
             </TabsContent>
 
             <TabsContent value="hydration" className="mt-0 animate-fade-in">
