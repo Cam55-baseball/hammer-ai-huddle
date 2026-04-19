@@ -17,6 +17,7 @@ export function useSchedulingRealtime() {
 
     const invalidateScheduling = () => {
       queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar-projection'] });
       queryClient.invalidateQueries({ queryKey: ['gameplan'] });
       queryClient.invalidateQueries({ queryKey: ['game-plan-skipped'] });
       queryClient.invalidateQueries({ queryKey: ['athlete-events'] });
@@ -24,6 +25,11 @@ export function useSchedulingRealtime() {
       queryClient.invalidateQueries({ queryKey: ['task-schedules'] });
       queryClient.invalidateQueries({ queryKey: ['calendar-skips'] });
       queryClient.invalidateQueries({ queryKey: ['game-plan-days'] });
+    };
+
+    // Pure derived calendar projection — refetched on any source-of-truth change
+    const invalidateProjection = () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-projection'] });
     };
 
     // Scoped invalidation for performance sessions
