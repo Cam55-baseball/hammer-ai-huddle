@@ -1,24 +1,30 @@
 
 
-## Remove Game Hub Card and Practice Hub Button from Dashboard
-
-No plan was created yet — here it is now. Both elements are in `src/pages/Dashboard.tsx`.
+## Move Hammer Workout Plan from Dashboard to My Activities
 
 ### Changes
 
-**1. Remove the "Practice Hub" button** (`PracticeIntelligenceCard`, lines 72–75)
-- Delete the `<Button>` for Practice Hub.
-- Keep the "Progress" button. Adjust the wrapper so Progress remains right-aligned.
+**1. `src/pages/Dashboard.tsx`** — remove both `<WorkoutPlanCTA />` placements
+- Delete lines 437–440 (above Game Plan, when block active)
+- Delete lines 450–453 (below Game Plan, when no block)
+- Remove now-unused imports: `WorkoutPlanCTA`, `useTrainingBlock`, and the `activeBlock`/`hasActiveTrainingBlock` lines (102–105 area). Keep everything else intact.
 
-**2. Remove the Game Hub card** (lines 516–530)
-- Delete the entire Game Hub `<Card>` block, including its surrounding comment.
+**2. `src/pages/MyCustomActivities.tsx`** — add a new "Workout Plan" tab that always appears
+- Import `WorkoutPlanCTA` and a new icon (`Dumbbell` is already imported).
+- Add a new tab entry, e.g. `{ value: 'workout-plan', icon: Dumbbell, label: 'Workout Plan' }`, placed near the top of the tabs array (right after `templates`).
+- Add a matching `<TabsContent value="workout-plan">` that renders `<WorkoutPlanCTA />` plus a brief intro panel and two prominent buttons that route to `/training-block?mode=block` and `/training-block?mode=daily` (so users can act even when no block exists).
+- The tile itself already handles both states (active block vs. CTA), so it works pre- and post-creation.
+
+**3. Game Plan behavior** — no code change needed
+- `useTrainingBlock` already writes `block_workouts` with `event_type='training_block'` into the calendar. They will continue to surface on the user's Game Plan on their scheduled day. We will verify this in QA, not modify it.
 
 ### Out of scope
-- Sidebar navigation entries — left untouched (Game Hub and Practice Hub remain accessible via the side menu).
-- All other dashboard cards, routes, and logic.
+- Sidebar entry (`/training-block`) stays.
+- `TrainingBlock.tsx` page stays.
+- No changes to Game Plan rendering or scheduling logic.
 
 ### Verification
-- `/dashboard` no longer shows the Game Hub card below Practice Intelligence.
-- Practice Intelligence card still shows MPI summary and the "Progress" button, but no "Practice Hub" button.
-- Side menu still navigates to `/practice` and `/game-scoring`.
+- Dashboard no longer shows the Hammer Workout Plan tile in either state.
+- My Activities → "Workout Plan" tab is always visible and shows either active-block progress or the Generate CTA.
+- After creating a 6-week or daily plan, the scheduled workout appears on the Game Plan for its date.
 
