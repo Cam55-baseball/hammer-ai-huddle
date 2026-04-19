@@ -312,27 +312,12 @@ serve(async (req) => {
     const position = mpiSettings?.primary_position || 'athlete';
     const seasonPhase = mpiSettings?.season_status || 'in_season';
     const reqBody = await req.json().catch(() => ({}));
-    const { sport: requestSport, archive_block_id, force_new } = reqBody as {
+    const { sport: requestSport, force_new } = reqBody as {
       sport?: string;
-      archive_block_id?: string;
       force_new?: boolean;
     };
 
-    // Server-side archive BEFORE any active-block check / RPC
-    if (archive_block_id) {
-      const { error: archErr } = await serviceClient
-        .from('training_blocks')
-        .update({ status: 'archived' })
-        .eq('id', archive_block_id)
-        .eq('user_id', user.id);
-      if (archErr) {
-        console.error('SERVER ARCHIVE FAILED:', archErr);
-      } else {
-        console.log('ARCHIVED OLD BLOCK (server):', archive_block_id);
-      }
-    }
-
-    // Existing-active-block guard (after possible archive). Skip when force_new + archive succeeded.
+    // Existing-active-block guard. Skip when force_new — RPC handles archive atomically.
     if (!force_new) {
       const { data: existingBlock } = await supabase
         .from('training_blocks')
@@ -685,6 +670,7 @@ Always respond using the generate_training_block function.`
       p_workouts: workoutsPayload,
       p_pending_goal_block_id: pendingBlock?.id || null,
       p_idempotency_key: idempotencyKey,
+      p_replace_existing: force_new === true,
     });
 
     if (rpcErr) {

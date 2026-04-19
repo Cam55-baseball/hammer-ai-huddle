@@ -8548,6 +8548,21 @@ export type Database = {
             }
             Returns: string
           }
+        | {
+            Args: {
+              p_end_date: string
+              p_generation_metadata: Json
+              p_goal: string
+              p_idempotency_key?: string
+              p_pending_goal_block_id?: string
+              p_replace_existing?: boolean
+              p_sport: string
+              p_start_date: string
+              p_user_id: string
+              p_workouts: Json
+            }
+            Returns: string
+          }
       is_linked_coach: {
         Args: { p_coach_id: string; p_player_id: string }
         Returns: boolean

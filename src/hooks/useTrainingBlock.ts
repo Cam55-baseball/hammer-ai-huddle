@@ -192,17 +192,9 @@ export function useTrainingBlock() {
       const oldCreatedAt = activeBlock.created_at;
 
       if (shouldRegenerate) {
-        // Belt-and-suspenders client-side archive (server also archives atomically)
-        await supabase
-          .from('training_blocks')
-          .update({ status: 'archived' })
-          .eq('id', oldId);
-        console.log('ARCHIVED OLD BLOCK:', oldId);
-
         const payload = {
           sport: activeBlock.sport,
           blockId: oldId,
-          archive_block_id: oldId,
           force_new: true,
           preferences: prefs,
           startDate: activeBlock.start_date,
