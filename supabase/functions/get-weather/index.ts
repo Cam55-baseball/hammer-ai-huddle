@@ -656,15 +656,25 @@ serve(async (req) => {
       }
 
       if (!geoData || !geoData.results || !geoData.results.length) {
-        console.error(`Location not found for any search terms: ${searchTerms.join(', ')}`);
-        throw new Error(`Location "${cleanLocation}" not found. Try a city name (e.g., "Tampa") or ZIP code (e.g., "33601").`);
+        // Fallback: try Nominatim if we haven't already
+        if (!tryNominatimFirst) {
+          const ok = await tryNominatim();
+          if (!ok) {
+            console.error(`Location not found via Open-Meteo or Nominatim: ${searchTerms.join(', ')}`);
+            throw new Error(`Location "${cleanLocation}" not found. Try a field name (e.g., "Yankee Stadium"), city, or ZIP code.`);
+          }
+        } else {
+          console.error(`Location not found for any search terms: ${searchTerms.join(', ')}`);
+          throw new Error(`Location "${cleanLocation}" not found. Try a field name (e.g., "Yankee Stadium"), city, or ZIP code.`);
+        }
+      } else {
+        const firstResult = geoData.results[0];
+        latitude = firstResult.latitude;
+        longitude = firstResult.longitude;
+        resolvedLocationName = `${firstResult.name}${firstResult.admin1 ? `, ${firstResult.admin1}` : ''}${firstResult.country ? `, ${firstResult.country}` : ""}`;
+        console.log(`Resolved location: ${resolvedLocationName}`);
       }
-
-      const firstResult = geoData.results[0];
-      latitude = firstResult.latitude;
-      longitude = firstResult.longitude;
-      resolvedLocationName = `${firstResult.name}${firstResult.admin1 ? `, ${firstResult.admin1}` : ''}${firstResult.country ? `, ${firstResult.country}` : ""}`;
-      console.log(`Resolved location: ${resolvedLocationName}`);
+      } // end else (Open-Meteo branch)
     }
 
     if (latitude == null || longitude == null || Number.isNaN(latitude) || Number.isNaN(longitude)) {
