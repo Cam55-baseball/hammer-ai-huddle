@@ -419,11 +419,14 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   };
 
   // Mark activity as complete/incomplete
-  const toggleComplete = async (templateId: string): Promise<boolean> => {
+  // If logId is provided, target that specific log instance; otherwise target the first log for templateId.
+  const toggleComplete = async (templateId: string, logId?: string): Promise<boolean> => {
     if (!user) return false;
 
     const today = getTodayDate();
-    const existingLog = todayLogs.find(l => l.template_id === templateId);
+    const existingLog = logId
+      ? todayLogs.find(l => l.id === logId)
+      : todayLogs.find(l => l.template_id === templateId);
     const template = templates.find(t => t.id === templateId);
 
     try {
