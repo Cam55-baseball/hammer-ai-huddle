@@ -612,9 +612,16 @@ Always respond using the generate_training_block function.`
     if (workoutsPayload.length === 0) {
       throw new Error("No workouts generated");
     }
-    if (workoutsPayload.some(w => w.exercises.length === 0)) {
-      console.error("Workout with zero exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length === 0)));
-      throw new Error("Workout with zero exercises detected");
+    if (workoutsPayload.some(w => w.exercises.length < 2)) {
+      console.error("Workout with fewer than 2 exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length < 2)));
+      throw new Error("Workout has fewer than 2 valid exercises");
+    }
+
+    // Week distribution guard
+    const weeks = new Set(workoutsPayload.map(w => w.week_number));
+    if (weeks.size > 6 || Math.min(...weeks) !== 1) {
+      console.error("Invalid week_number distribution:", Array.from(weeks));
+      throw new Error("Invalid week_number distribution");
     }
 
     const totalExercises = workoutsPayload.reduce((s, w) => s + w.exercises.length, 0);
