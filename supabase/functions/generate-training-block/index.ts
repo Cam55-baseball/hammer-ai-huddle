@@ -512,32 +512,50 @@ Always respond using the generate_training_block function.`
     });
 
     const endDateObj: Date = typeof endDate === 'string' ? parseLocalDate(endDate as string) : endDate;
+    const startDateObj: Date = startDate;
     const usedDates = new Set<string>();
     const normalizedWorkouts = safeWorkouts
       .slice()
       .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))
       .map(sw => {
-        const d = parseLocalDate(sw.scheduled_date);
+        const original = parseLocalDate(sw.scheduled_date);
+        const d = new Date(original);
         let guard = 0;
-        while (usedDates.has(toISO(d))) {
+        while (usedDates.has(toISO(d)) && d <= endDateObj) {
           d.setDate(d.getDate() + 1);
           guard++;
           if (guard > 365) {
-            throw new Error("Date collision resolution exceeded safe bounds");
+            console.error("Forward-shift guard exceeded for", sw.scheduled_date);
+            break;
           }
         }
-        const finalDate = toISO(d);
-        if (parseLocalDate(finalDate) > endDateObj) {
-          throw new Error(`Workout shifted beyond block end_date: ${finalDate} > ${toISO(endDateObj)}`);
+        let finalDate = toISO(d);
+        // If forward-shift overflowed end_date, walk backward from original
+        if (parseLocalDate(finalDate) > endDateObj || usedDates.has(finalDate)) {
+          const b = new Date(original);
+          let bguard = 0;
+          while ((usedDates.has(toISO(b)) || b > endDateObj) && b >= startDateObj) {
+            b.setDate(b.getDate() - 1);
+            bguard++;
+            if (bguard > 365) break;
+          }
+          if (b >= startDateObj && b <= endDateObj && !usedDates.has(toISO(b))) {
+            finalDate = toISO(b);
+          } else {
+            console.error(`Dropping workout — no slot available in block window: ${sw.scheduled_date}`);
+            return null;
+          }
         }
         usedDates.add(finalDate);
+        const finalD = parseLocalDate(finalDate);
         return {
           ...sw,
           scheduled_date: finalDate,
-          day_label: DAY_NAMES[d.getDay()],
+          day_label: DAY_NAMES[finalD.getDay()],
         };
-      });
-    // Re-sort after forward-shift to restore chronological order
+      })
+      .filter((w): w is NonNullable<typeof w> => w !== null);
+    // Re-sort after shift to restore chronological order
     normalizedWorkouts.sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
 
     // ─── Pre-RPC soft validation: log only, never throw on shape ───
