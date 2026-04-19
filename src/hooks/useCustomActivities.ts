@@ -341,11 +341,30 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     return updateTemplate(id, { is_favorited: !template.is_favorited });
   };
 
-  // Add activity to today (create log entry) — with optimistic update + retry
+  // Add activity to today (create NEW log entry every time — supports unlimited Quick Adds)
   const addToToday = async (templateId: string): Promise<boolean> => {
     if (!user) return false;
 
     const today = getTodayDate();
+
+    // Determine the next instance_index for this (user, template, today)
+    let nextInstanceIndex = 0;
+    try {
+      const { data: existingForToday, error: fetchErr } = await supabase
+        .from('custom_activity_logs')
+        .select('instance_index')
+        .eq('user_id', user.id)
+        .eq('template_id', templateId)
+        .eq('entry_date', today)
+        .order('instance_index', { ascending: false })
+        .limit(1);
+      if (fetchErr) throw fetchErr;
+      if (existingForToday && existingForToday.length > 0) {
+        nextInstanceIndex = ((existingForToday[0] as any).instance_index ?? 0) + 1;
+      }
+    } catch (e) {
+      console.warn('[useCustomActivities] addToToday: instance_index lookup failed, defaulting to 0', e);
+    }
 
     // Optimistic update: immediately add to todayLogs
     const optimisticLog: CustomActivityLog = {
@@ -355,32 +374,38 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       entry_date: today,
       completed: false,
       performance_data: {},
+      instance_index: nextInstanceIndex,
       created_at: new Date().toISOString(),
     };
     setTodayLogs(prev => [...prev, optimisticLog]);
     toast.success(t('customActivity.addedToday'));
 
-    const attemptUpsert = async (retryCount: number): Promise<boolean> => {
+    const attemptInsert = async (retryCount: number, indexToUse: number): Promise<boolean> => {
       try {
         const { error } = await supabase
           .from('custom_activity_logs')
-          .upsert({
+          .insert({
             user_id: user.id,
             template_id: templateId,
             entry_date: today,
             completed: false,
-          }, {
-            onConflict: 'user_id,template_id,entry_date'
-          });
+            instance_index: indexToUse,
+          } as any);
 
-        if (error) throw error;
+        if (error) {
+          // Unique-violation → bump index and retry
+          if ((error as any).code === '23505' && retryCount > 0) {
+            return attemptInsert(retryCount - 1, indexToUse + 1);
+          }
+          throw error;
+        }
         await fetchTodayLogs();
         return true;
       } catch (error) {
         if (retryCount > 0) {
           console.warn('[useCustomActivities] addToToday retry...', error);
           await new Promise(r => setTimeout(r, 800));
-          return attemptUpsert(retryCount - 1);
+          return attemptInsert(retryCount - 1, indexToUse);
         }
         console.error('Error adding to today:', error);
         // Roll back optimistic update
@@ -390,7 +415,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       }
     };
 
-    return attemptUpsert(1);
+    return attemptInsert(3, nextInstanceIndex);
   };
 
   // Mark activity as complete/incomplete
