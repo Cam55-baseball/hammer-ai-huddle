@@ -432,8 +432,10 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Hammer Workout Plan tile — discoverability for /training-block */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <WorkoutPlanCTA />}
+        {/* Hammer Workout Plan tile — above Game Plan when a block is active */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && hasActiveTrainingBlock && (
+          <WorkoutPlanCTA />
+        )}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
@@ -441,6 +443,11 @@ export default function Dashboard() {
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <GamePlanCard selectedSport={selectedSport} />
+        )}
+
+        {/* Hammer Workout Plan tile — below Game Plan when no block exists yet */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && !hasActiveTrainingBlock && (
+          <WorkoutPlanCTA />
         )}
 
         {/* Sport Switch Confirmation Dialog */}
