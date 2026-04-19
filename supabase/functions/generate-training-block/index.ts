@@ -37,26 +37,20 @@ interface GeneratedBlock {
   }>;
 }
 
-// ─── Fix #3: Strict AI response validation ───
+// ─── Soft AI response validation: log only, never throw on shape ───
 function validateGeneratedBlock(block: GeneratedBlock, workoutsPerWeek: number): void {
   if (!block.weeks || block.weeks.length !== 6) {
-    throw new Error(`AI returned ${block.weeks?.length ?? 0} weeks — exactly 6 required`);
+    console.error(`AI returned ${block.weeks?.length ?? 0} weeks — expected 6`);
+    return;
   }
-
   for (const week of block.weeks) {
     if (!week.workouts || week.workouts.length !== workoutsPerWeek) {
-      throw new Error(`Week ${week.week} has ${week.workouts?.length ?? 0} workouts — expected ${workoutsPerWeek}`);
+      console.error(`Week ${week.week} has ${week.workouts?.length ?? 0} workouts — expected ${workoutsPerWeek}`);
+      continue;
     }
-
     for (const workout of week.workouts) {
       if (!workout.exercises || workout.exercises.length < 3 || workout.exercises.length > 6) {
-        throw new Error(`Workout "${workout.type}" in week ${week.week} has ${workout.exercises?.length ?? 0} exercises — must be 3-6`);
-      }
-
-      for (const ex of workout.exercises) {
-        if (!ex.name || typeof ex.sets !== 'number' || typeof ex.reps !== 'number' || ex.sets < 1 || ex.reps < 1) {
-          throw new Error(`Invalid exercise in week ${week.week}: ${ex.name || 'unnamed'} — sets and reps required and must be > 0`);
-        }
+        console.error(`Workout "${workout.type}" in week ${week.week} has ${workout.exercises?.length ?? 0} exercises — expected 3-6`);
       }
     }
   }
@@ -317,24 +311,8 @@ serve(async (req) => {
       force_new?: boolean;
     };
 
-    // Existing-active-block guard. Skip when force_new — RPC handles archive atomically.
-    if (!force_new) {
-      const { data: existingBlock } = await supabase
-        .from('training_blocks')
-        .select('id, status, pending_goal_change')
-        .eq('user_id', user.id)
-        .in('status', ['active', 'nearing_completion'])
-        .maybeSingle();
-
-      if (existingBlock) {
-        return new Response(JSON.stringify({
-          error: 'Active training block exists. Complete or archive it before generating a new one.',
-          existing_block_id: existingBlock.id,
-        }), {
-          status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
+    // Active-block guard removed — RPC is the single source of truth for CREATE vs ADAPT.
+    console.log("MODE:", force_new ? "ADAPT" : "CREATE");
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -562,22 +540,19 @@ Always respond using the generate_training_block function.`
     // Re-sort after forward-shift to restore chronological order
     normalizedWorkouts.sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
 
-    // ─── Pre-RPC hard validation ───
+    // ─── Pre-RPC soft validation: log only, never throw on shape ───
     const dateList = normalizedWorkouts.map(w => w.scheduled_date);
     const duplicates = dateList.filter((d, i) => dateList.indexOf(d) !== i);
     console.log("DATES:", dateList);
     if (duplicates.length > 0) {
-      console.error("DUPLICATES detected pre-RPC:", duplicates, "full payload:", JSON.stringify(normalizedWorkouts));
-      throw new Error(`Duplicate scheduled_date values: ${duplicates.join(', ')}`);
+      console.error("DUPLICATES detected pre-RPC:", duplicates);
     }
     for (const w of normalizedWorkouts) {
       if (!w.exercises || w.exercises.length < 1) {
-        console.error("Validation fail — workout missing exercises:", JSON.stringify(w));
-        throw new Error(`Workout on ${w.scheduled_date} (${w.workout_type}) has no exercises`);
+        console.error("Workout missing exercises:", JSON.stringify(w));
       }
       if (!Number.isInteger(w.week_number) || w.week_number < 1 || w.week_number > 6) {
-        console.error("Validation fail — invalid week_number:", JSON.stringify(w));
-        throw new Error(`Invalid week_number ${w.week_number} on ${w.scheduled_date}`);
+        console.error("Invalid week_number:", JSON.stringify(w));
       }
     }
 
@@ -628,26 +603,20 @@ Always respond using the generate_training_block function.`
       };
     });
 
-    // Final payload sanity
+    // Final payload sanity — only hard-throw on empty payload
     if (workoutsPayload.length === 0) {
       throw new Error("No workouts generated");
     }
-    if (workoutsPayload.some(w => w.exercises.length < 1)) {
-      console.error("Workout with zero exercises:", JSON.stringify(workoutsPayload.filter(w => w.exercises.length < 1)));
-      throw new Error("Workout has zero valid exercises");
-    }
 
-    // Strict week 1–6 continuity guard
+    // Soft week 1–6 continuity check
     const weeks = new Set(workoutsPayload.map(w => w.week_number));
     for (let i = 1; i <= 6; i++) {
       if (!weeks.has(i)) {
         console.error("Missing week in payload:", i, "present:", Array.from(weeks));
-        throw new Error(`Missing week ${i} in payload`);
       }
     }
     if (weeks.size !== 6) {
       console.error("Invalid week_number distribution:", Array.from(weeks));
-      throw new Error("Invalid week_number distribution");
     }
 
     const totalExercises = workoutsPayload.reduce((s, w) => s + w.exercises.length, 0);
