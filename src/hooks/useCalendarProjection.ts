@@ -146,7 +146,7 @@ export function useCalendarProjection({
 
   const events: DerivedCalendarEvent[] = useMemo(() => {
     if (isLoading) return [];
-    return buildCalendarEvents({
+    const built = buildCalendarEvents({
       gamePlanDays: gamePlanDaysQ.data ?? [],
       logs: logsQ.data ?? [],
       templates: templatesQ.data ?? [],
@@ -155,6 +155,14 @@ export function useCalendarProjection({
       rangeStart: startDate,
       rangeEnd: endDate,
     });
+    // Dev-only instrumentation — verify projection completeness vs legacy.
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        `[calendar-projection] logs=${(logsQ.data ?? []).length} templates=${(templatesQ.data ?? []).length} blockWorkouts=${(blockWorkoutsQ.data ?? []).length} gamePlanDays=${(gamePlanDaysQ.data ?? []).length} → events=${built.length} range=${startDate}..${endDate}`,
+      );
+    }
+    return built;
   }, [
     isLoading,
     gamePlanDaysQ.data,

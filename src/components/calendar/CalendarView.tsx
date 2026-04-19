@@ -22,6 +22,8 @@ import {
   addDays,
 } from 'date-fns';
 import { useCalendar, CalendarEvent } from '@/hooks/useCalendar';
+import { useCalendarProjection } from '@/hooks/useCalendarProjection';
+import { mergeDerivedAndLegacyEvents } from '@/lib/calendar/adaptDerivedEvent';
 import { CalendarDaySheet } from './CalendarDaySheet';
 import { AddCalendarEventDialog } from './AddCalendarEventDialog';
 import { PendingCoachActivitiesSection } from './PendingCoachActivitiesSection';
@@ -75,8 +77,28 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
   const [filters, setFilters] = useState<CalendarFilters>(getInitialFilters);
   
-  const { events, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
-  
+  const { events: legacyEvents, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
+
+  // Calculate visible range early so the projection hook can consume it
+  const monthStartForRange = startOfMonth(currentMonth);
+  const fetchStart = startOfWeek(startOfMonth(subMonths(currentMonth, 1)), { weekStartsOn: 0 });
+  const fetchEnd = endOfWeek(endOfMonth(addMonths(currentMonth, 1)), { weekStartsOn: 0 });
+
+  // Derived projection (read-only, source-of-truth driven, realtime-aware via React Query)
+  const { events: derivedEvents } = useCalendarProjection({
+    startDate: format(fetchStart, 'yyyy-MM-dd'),
+    endDate: format(fetchEnd, 'yyyy-MM-dd'),
+    sport: selectedSport,
+  });
+
+  // Merge: derived layer owns custom_activity (logs + template projections);
+  // legacy keeps everything else (athlete_events, meals, manual, game_plan tasks,
+  // sub_module programs, scheduled_practice). Dev counts logged in projection hook.
+  const events = useMemo(
+    () => mergeDerivedAndLegacyEvents(legacyEvents, derivedEvents),
+    [legacyEvents, derivedEvents],
+  );
+
   // Persist filters to localStorage
   useEffect(() => {
     try {
@@ -104,18 +126,15 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   }, [filters]);
 
   // Calculate visible range (include days from adjacent months shown in calendar grid)
-  const monthStart = startOfMonth(currentMonth);
+  const monthStart = monthStartForRange;
   const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
-  // Fetch events when month changes
+  // Fetch legacy events when month changes (derived layer fetches itself via React Query)
   useEffect(() => {
-    // Fetch a bit beyond visible range for smoother navigation
-    const fetchStart = startOfWeek(startOfMonth(subMonths(currentMonth, 1)), { weekStartsOn: 0 });
-    const fetchEnd = endOfWeek(endOfMonth(addMonths(currentMonth, 1)), { weekStartsOn: 0 });
     fetchEventsForRange(fetchStart, fetchEnd);
-  }, [currentMonth, fetchEventsForRange]);
+  }, [currentMonth, fetchEventsForRange, fetchStart, fetchEnd]);
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
