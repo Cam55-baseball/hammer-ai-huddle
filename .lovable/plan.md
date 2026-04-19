@@ -1,43 +1,24 @@
 
-## Fix Plan — Make Calendar Day Close Button Clearly Visible and Tappable on Mobile
 
-### What I found
-- The calendar day view is `src/components/calendar/CalendarDaySheet.tsx`, and it uses the shared `Sheet` component from `src/components/ui/sheet.tsx`.
-- The shared `Sheet` close button already has the larger mobile hit area (`p-2`, `h-6 w-6`), so the remaining problem is not just size.
-- It is still styled with low visual prominence (`opacity-70`, subtle/default foreground), which matches your report that it still looks like a small light gray “X”.
+## Remove Game Hub Card and Practice Hub Button from Dashboard
 
-### Plan
-1. **Make the close control visually obvious on mobile**
-   - Update the shared sheet close button in `src/components/ui/sheet.tsx` to use:
-     - stronger foreground color
-     - visible background on mobile
-     - rounded touch target
-     - border/shadow so it stands out against the calendar header
-   - Keep desktop styling close to current behavior.
+No plan was created yet — here it is now. Both elements are in `src/pages/Dashboard.tsx`.
 
-2. **If needed, promote the calendar day sheet close button specifically**
-   - If the shared change would affect too many other sheets, I’ll give `CalendarDaySheet.tsx` its own more prominent close button in the header area and hide/de-emphasize the default one for that sheet only.
-   - This keeps the calendar fix precise while avoiding unintended changes elsewhere.
+### Changes
 
-3. **Preserve behavior**
-   - No calendar logic changes.
-   - No changes to filters, event rendering, or sheet open/close behavior.
-   - Only visibility and tap-target styling.
+**1. Remove the "Practice Hub" button** (`PracticeIntelligenceCard`, lines 72–75)
+- Delete the `<Button>` for Practice Hub.
+- Keep the "Progress" button. Adjust the wrapper so Progress remains right-aligned.
 
-### Likely implementation
-- `src/components/ui/sheet.tsx`
-  - replace low-contrast close styling with a mobile-first control that is clearly visible
-  - likely use stronger classes such as foreground text, solid/translucent background, border, and shadow
-- possibly `src/components/calendar/CalendarDaySheet.tsx`
-  - add a dedicated close button near the title if the shared primitive still isn’t prominent enough
+**2. Remove the Game Hub card** (lines 516–530)
+- Delete the entire Game Hub `<Card>` block, including its surrounding comment.
+
+### Out of scope
+- Sidebar navigation entries — left untouched (Game Hub and Practice Hub remain accessible via the side menu).
+- All other dashboard cards, routes, and logic.
 
 ### Verification
-- On mobile viewport, the close button should:
-  - be immediately visible without hunting for it
-  - look intentional, not faded/light gray
-  - be easy to tap with one thumb
-- Desktop should remain functionally unchanged.
+- `/dashboard` no longer shows the Game Hub card below Practice Intelligence.
+- Practice Intelligence card still shows MPI summary and the "Progress" button, but no "Practice Hub" button.
+- Side menu still navigates to `/practice` and `/game-scoring`.
 
-### Notes
-- Based on the current code, this is a styling/prominence issue more than a raw icon-size issue.
-- I will treat the calendar day sheet as the priority target so the fix is unmistakable there.
