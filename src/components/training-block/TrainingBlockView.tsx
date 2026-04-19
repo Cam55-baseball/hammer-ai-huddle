@@ -165,7 +165,7 @@ export function TrainingBlockView() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => adaptBlock.mutate()}
+                onClick={() => adaptBlock.mutate({ regenerate: hasPendingChange })}
                 disabled={adaptBlock.isPending}
                 className="gap-1"
               >
