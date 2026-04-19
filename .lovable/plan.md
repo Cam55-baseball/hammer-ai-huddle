@@ -1,28 +1,30 @@
 
 
-## Fix Nutrition Hub tab strip horizontal scroll
+## Plan — Add Quick Note to all Game Plan views
 
 ### Problem
-The tab strip above the Daily Log (`Today / Weekly / Planning / Shopping / Recipes`) in `NutritionHubContent.tsx` (line 480) uses:
-```
-<TabsList className="w-full flex overflow-x-auto">
-  <TabsTrigger className="flex-1 min-w-fit ..." />
-```
-`flex-1` forces each trigger to shrink and share the row width, which **defeats `overflow-x-auto`** — there's nothing to scroll because the children compress to fit. On a 390px viewport this crams the labels and the scroll bar never engages.
+1. The Quick Note button only exists in the **timeline** branch of `GamePlanCard.tsx` (line 1774–1812). The manual/auto branch (lines ~1880–1920) has its own quick-action row that omits it.
+2. "Only one note per day" — the `vault_free_notes` table has **no unique constraint** (verified) and `saveFreeNote` already does a plain `INSERT`, so unlimited notes are already supported at the data layer. The user's perception is likely tied to the dialog being only on timeline view.
 
 ### Fix
-In `src/components/nutrition-hub/NutritionHubContent.tsx` (lines 480–486):
-- Remove `flex-1` from each `TabsTrigger` so they keep their natural width and overflow horizontally.
-- Keep `whitespace-nowrap` and `min-w-fit` to prevent label wrapping.
-- Add `h-auto` / proper padding to the `TabsList` (shadcn's default `TabsList` has fixed height + `inline-flex` styling that conflicts with horizontal scroll). Override with `w-full justify-start overflow-x-auto no-scrollbar` and add `flex-shrink-0` per trigger.
-- Add a small custom utility (inline `style` or Tailwind arbitrary) so the scrollbar is hidden visually but scroll still works on touch (optional polish).
 
-Final classes:
-- `TabsList`: `w-full justify-start overflow-x-auto flex gap-1 h-auto p-1`
-- Each `TabsTrigger`: `flex-shrink-0 min-w-fit px-3 text-xs sm:text-sm whitespace-nowrap` (drop `flex-1`)
+**`src/components/GamePlanCard.tsx`** — add the Quick Note button to the manual/auto quick-action row (around line 1916, right after the `quickAdd` favorites button), mirroring the timeline version exactly:
+
+```tsx
+<Button
+  size="sm"
+  variant="outline"
+  onClick={() => setQuickNoteOpen(true)}
+  className="gap-2 border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+>
+  <NotebookPen className="h-4 w-4" />
+  Quick Note
+</Button>
+```
+
+The dialog mount (`<QuickNoteDialog ... />` at line 2869) and state (`quickNoteOpen`, line 112) already exist and are shared, so no other wiring is needed.
 
 ### Verification
-- On 390px mobile, the 5 tabs sit at natural width and the row scrolls horizontally with a swipe.
-- Active tab indicator still works; tapping each tab still switches content.
-- On ≥sm viewports, all tabs fit without needing to scroll.
+- Quick Note button visible in all three Game Plan view modes (timeline, manual, auto) on `/dashboard`.
+- Tapping Quick Note → typing → Save → toast appears → dialog closes → tapping Quick Note again immediately allows another note (unlimited per day).
 
