@@ -23,7 +23,7 @@ import { ShoppingListTab } from './ShoppingListTab';
 import { RecipeImportDialog } from './RecipeImportDialog';
 import { AIMealSuggestions } from './AIMealSuggestions';
 import { FavoriteFoodsWidget } from './FavoriteFoodsWidget';
-import { CommonFoodsGallery } from './CommonFoodsGallery';
+
 import { LogMealCard } from './LogMealCard';
 import { RecipeBuilder } from './RecipeBuilder';
 import { MealTypeSelector } from './MealTypeSelector';
