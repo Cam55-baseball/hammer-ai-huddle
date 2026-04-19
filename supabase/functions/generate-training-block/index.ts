@@ -535,6 +535,9 @@ Always respond using the generate_training_block function.`
           d.setDate(d.getDate() + 1);
         }
         const finalDate = toISO(d);
+        if (parseLocalDate(finalDate) > endDate) {
+          throw new Error(`Workout shifted beyond block end_date: ${finalDate} > ${toISO(endDate)}`);
+        }
         usedDates.add(finalDate);
         return {
           ...sw,
