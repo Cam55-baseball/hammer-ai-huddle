@@ -672,14 +672,14 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const setCompletionState = async (
     templateId: string,
     state: CompletionState,
-    method: CompletionMethod
+    method: CompletionMethod,
+    logId?: string
   ): Promise<boolean> => {
     if (!user) return false;
-    const today = getTodayDate();
 
     try {
-      // Ensure log exists, then update
-      const log = await ensureLogExists(templateId);
+      // Ensure log exists (target specific instance if logId provided), then update
+      const log = await ensureLogExists(templateId, logId);
       if (!log) return false;
 
       const updates: Record<string, any> = {
@@ -718,12 +718,13 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   // Mark all checkboxes true + complete (Check all & complete)
   const markAllCheckboxesAndComplete = async (
     templateId: string,
-    allCheckableIds: string[]
+    allCheckableIds: string[],
+    logId?: string
   ): Promise<boolean> => {
     if (!user) return false;
 
     try {
-      const log = await ensureLogExists(templateId);
+      const log = await ensureLogExists(templateId, logId);
       if (!log) return false;
 
       const currentPd = (log.performance_data as Record<string, any>) || {};
@@ -765,13 +766,15 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   };
 
   // Reopen a completed activity → in_progress (or not_started if nothing checked)
-  const reopenActivity = async (templateId: string): Promise<boolean> => {
+  const reopenActivity = async (templateId: string, logId?: string): Promise<boolean> => {
     if (!user) return false;
-    const log = todayLogs.find(l => l.template_id === templateId);
+    const log = logId
+      ? todayLogs.find(l => l.id === logId)
+      : todayLogs.find(l => l.template_id === templateId);
     const pd = (log?.performance_data as Record<string, any>) || {};
     const states = (pd.checkboxStates as Record<string, boolean>) || {};
     const anyChecked = Object.values(states).some(v => v === true);
-    return setCompletionState(templateId, anyChecked ? 'in_progress' : 'not_started', 'none');
+    return setCompletionState(templateId, anyChecked ? 'in_progress' : 'not_started', 'none', logId);
   };
 
   return {
