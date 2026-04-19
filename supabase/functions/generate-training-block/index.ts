@@ -688,6 +688,7 @@ Always respond using the generate_training_block function.`
     });
 
     if (rpcErr) {
+      console.error("ADAPT RPC ERROR FULL:", rpcErr);
       const snapshot = {
         first_workouts: workoutsPayload.slice(0, 2).map(w => ({
           ...w,
@@ -705,7 +706,8 @@ Always respond using the generate_training_block function.`
       });
       if (rpcErr.message?.includes('active_block_exists')) {
         return new Response(JSON.stringify({
-          error: 'Active training block exists. Complete or archive it before generating a new one.',
+          error: 'active_block_exists',
+          message: 'Existing active block prevented adaptation',
         }), {
           status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
