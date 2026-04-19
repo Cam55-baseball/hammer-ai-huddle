@@ -670,6 +670,7 @@ Always respond using the generate_training_block function.`
       p_workouts: workoutsPayload,
       p_pending_goal_block_id: pendingBlock?.id || null,
       p_idempotency_key: idempotencyKey,
+      p_replace_existing: force_new === true,
     });
 
     if (rpcErr) {
