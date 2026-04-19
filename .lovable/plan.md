@@ -1,59 +1,43 @@
 
 
-## Plan — Production-readiness fixes for `generate-training-block`
+## Plan — Final 2 safety fixes for `generate-training-block`
 
-### Files
-- `supabase/functions/generate-training-block/index.ts` (edge fn)
-- `supabase/migrations/<new>.sql` (RPC dedupe — item 4)
+Single file: `supabase/functions/generate-training-block/index.ts`
 
-### Context to confirm before editing
-Read current state of:
-- `parseLocalDate` definition + all call sites
-- Forward-shift loop (need access to `endDate` / block end date in scope)
-- Pre-RPC validation block (min-exercises + week-distribution guards)
-- RPC source (`create_training_block_atomic` or equivalent) to find duplicate `FOR UPDATE`
+### Context check first
+Read current state to confirm:
+- How `endDate` is currently typed/built in scope of the forward-shift loop
+- Exact shape of the forward-shift `while` loop (variable names: `d`, `usedDates`, `toISO`, `finalDate`)
 
 ### Changes
 
-1. **Edge-safe `parseLocalDate`** — replace string-concat form with split-based local Date construction:
+1. **Normalize `endDate` to `Date` before comparison** — just before the forward-shift loop, coerce:
    ```ts
-   const parseLocalDate = (s: string): Date => {
-     const [y, m, d] = s.split('-').map(Number);
-     return new Date(y, m - 1, d);
-   };
+   const endDateObj = typeof endDate === 'string' ? parseLocalDate(endDate) : endDate;
    ```
-
-2. **Relax min-exercise guard** — change `< 2` to `< 1`:
+   Update the overflow guard to compare against `endDateObj`:
    ```ts
-   if (workoutsPayload.some(w => w.exercises.length < 1)) {
-     throw new Error("Workout has zero valid exercises");
-   }
-   ```
-
-3. **Forward-shift overflow guard** — inside the forward-shift uniqueness loop (and/or after `normalizedWorkouts` is built), compare against block `endDate`:
-   ```ts
-   if (parseLocalDate(finalDate) > endDate) {
+   if (parseLocalDate(finalDate) > endDateObj) {
      throw new Error("Workout shifted beyond block end_date");
    }
    ```
-   Apply per-iteration so we fail fast with the offending date.
 
-4. **Dedupe `FOR UPDATE` in RPC** — open the RPC SQL and remove the redundant `SELECT ... FOR UPDATE`. Keep exactly one lock acquisition on `training_blocks` for the user. Ship via new migration (functions are `CREATE OR REPLACE`).
-
-5. **Strict week 1–6 continuity** — strengthen existing week-distribution guard:
+2. **Infinite-loop guard in forward-shift** — wrap the existing `usedDates.has(...)` while loop with a counter that throws after 365 iterations:
    ```ts
-   const weeks = new Set(workoutsPayload.map(w => w.week_number));
-   for (let i = 1; i <= 6; i++) {
-     if (!weeks.has(i)) throw new Error(`Missing week ${i} in payload`);
+   let guard = 0;
+   while (usedDates.has(toISO(d))) {
+     d.setDate(d.getDate() + 1);
+     guard++;
+     if (guard > 365) {
+       throw new Error("Date collision resolution exceeded safe bounds");
+     }
    }
-   if (weeks.size !== 6) throw new Error("Invalid week_number distribution");
    ```
 
-### Out of scope
-- No client changes.
-- No scheduler logic changes beyond the overflow guard.
-- No new validation surfaces beyond the four listed.
+### No other changes
+- Validation guards, week continuity, payload binding, RPC error logging, RPC dedupe — all stay as-is.
+- No DB or client changes.
 
 ### Verification
-Generate a 6-week block end-to-end. Expected: payload passes all guards, RPC succeeds with single lock, all weeks 1–6 present, no date exceeds `end_date`. If RPC fails, the existing structured catch block surfaces the raw Postgres `code/message/details/hint`.
+Generate a 6-week block end-to-end. Expected: clean RPC success. If it fails, the existing structured catch surfaces raw Postgres `code/message/details/hint`.
 
