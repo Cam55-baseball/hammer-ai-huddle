@@ -1,30 +1,47 @@
 
 
-## Plan — Bind `workoutsPayload` to `normalizedWorkouts` + recompute `day_label`
+## Plan — Final E2E hardening for `generate-training-block`
 
 Single file: `supabase/functions/generate-training-block/index.ts`
 
 ### Context check first
-Before editing, I'll read the current state of the file to locate:
-- Where `normalizedWorkouts` is built (end of forward-shift uniqueness pass)
-- Where `workoutsPayload` is currently constructed (the `.map(sw => ({...}))` that becomes the RPC arg)
-- Where `day_label` is assigned
+Read current state to confirm:
+- Location of forward-shift `normalizedWorkouts` build
+- Existing `parseLocalDate` helper signature (already referenced in prior pass)
+- Pre-RPC validation block location
 
-### Changes
+### Changes (additive safeguards only)
 
-1. **Bind payload to the validated source** — immediately after `normalizedWorkouts` is built, ensure the RPC payload is derived from it (not from the raw `scheduledWorkouts`). Concretely: the existing `workoutsPayload = normalizedWorkouts.map(...)` mapping must reference `normalizedWorkouts` as its input array. If any stray reference to `scheduledWorkouts` remains in the payload-building map, replace it.
+1. **Re-sort after forward-shift** — append `.sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))` to `normalizedWorkouts` after the forward-shift map completes, so chronological order is restored if any collisions pushed dates forward past later entries.
 
-2. **Recompute `day_label` inside the payload map** from `scheduled_date` to prevent drift after the forward-shift may have moved a workout to a new weekday:
+2. **Min 2 exercises per workout** — add to pre-RPC validation block:
    ```ts
-   day_label: DAY_NAMES[new Date(sw.scheduled_date).getDay()],
+   if (workoutsPayload.some(w => w.exercises.length < 2)) {
+     throw new Error("Workout has fewer than 2 valid exercises");
+   }
    ```
-   (Use the same `parseLocalDate` helper already in the file if it exists, to avoid UTC off-by-one — will confirm when reading.)
+   (Replaces/strengthens existing `length === 0` check.)
+
+3. **Week number distribution guard** — add before RPC:
+   ```ts
+   const weeks = new Set(workoutsPayload.map(w => w.week_number));
+   if (weeks.size > 6 || Math.min(...weeks) !== 1) {
+     throw new Error("Invalid week_number distribution");
+   }
+   ```
+
+4. **Timezone-safe date parsing** — ensure `parseLocalDate` is defined as:
+   ```ts
+   const parseLocalDate = (s: string) => new Date(s + "T00:00:00");
+   ```
+   Replace any remaining `new Date(sw.scheduled_date)` calls with `parseLocalDate(sw.scheduled_date)` to prevent UTC off-by-one drift.
 
 ### No other changes
-- Validation guards stay as-is.
-- RPC error logging stays as-is.
-- Forward-shift uniqueness logic stays as-is.
+- Forward-shift uniqueness logic stays.
+- Ordinal/numeric/payload guards stay.
+- RPC error logging stays.
+- No DB or client changes.
 
 ### Verification
-Generate a 6-week block. If it still fails, the existing structured RPC catch block will surface the raw Postgres `code/message/details/hint` — report that back.
+Generate a 6-week block. Reply "ready" once deployed and validation passes; if RPC fails, return the structured Postgres error.
 
