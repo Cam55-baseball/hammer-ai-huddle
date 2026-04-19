@@ -1,66 +1,63 @@
 
 
-## Plan — Strict CREATE vs ADAPT separation in RPC
+## Plan — Stabilize CREATE vs ADAPT (single source of truth = RPC)
 
 ### Root cause
-Last migration added archive logic that fires even when `p_replace_existing` is unset/NULL, breaking initial generation. Need defensive defaults, mode logging, and a retry-on-conflict path that only triggers in ADAPT mode.
+RPC and edge function both guard active-block state, with overlapping retry/archive paths. This double control causes nondeterministic failures. Collapse all decision logic into the RPC; edge function becomes a thin caller.
 
 ### Changes
 
-**1. Migration — overwrite `insert_training_block_atomic` (with `p_idempotency_key` + new `p_replace_existing`)**
+**1. Migration — overwrite `insert_training_block_atomic` (10-arg signature with `p_replace_existing`)**
 
-Add `p_replace_existing boolean DEFAULT false` as final param. At top of function body:
-
-```sql
--- Defensive: never let NULL slip through
-IF p_replace_existing IS NULL THEN
-  p_replace_existing := FALSE;
-END IF;
-
-RAISE NOTICE 'insert_training_block_atomic MODE: %',
-  CASE WHEN p_replace_existing THEN 'ADAPT' ELSE 'CREATE' END;
-
--- Only archive in ADAPT mode
-IF p_replace_existing THEN
-  UPDATE training_blocks
-  SET status = 'archived', updated_at = now()
-  WHERE user_id = p_user_id AND status = 'active';
-END IF;
-```
-
-In the non-idempotency `INSERT ... EXCEPTION WHEN unique_violation` block, add safety retry:
+Replace current archive block at top of function:
 
 ```sql
-EXCEPTION WHEN unique_violation THEN
+-- Strict CREATE vs ADAPT decision
+IF EXISTS (SELECT 1 FROM training_blocks WHERE user_id = p_user_id AND status = 'active') THEN
   IF p_replace_existing THEN
-    UPDATE training_blocks SET status = 'archived', updated_at = now()
-    WHERE user_id = p_user_id AND status = 'active';
-    INSERT INTO training_blocks (...same cols...) VALUES (...) RETURNING id INTO v_block_id;
+    UPDATE training_blocks
+    SET status = 'archived', updated_at = now()
+    WHERE id = (
+      SELECT id FROM training_blocks
+      WHERE user_id = p_user_id AND status = 'active'
+      ORDER BY updated_at DESC
+      LIMIT 1
+    );
   ELSE
     RAISE EXCEPTION 'active_block_exists';
   END IF;
+END IF;
 ```
 
-Keep all other logic (idempotency dedup, workouts/exercises insert, pending_goal_block_id reset) unchanged.
+Also remove the safety-retry branch inside `EXCEPTION WHEN unique_violation` (no hidden retries). Keep:
+- Defensive `IF p_replace_existing IS NULL THEN p_replace_existing := FALSE`.
+- `RAISE NOTICE 'MODE: %'` log.
+- Idempotency-key dedup branch unchanged.
+- Workouts/exercises insert unchanged.
+- `pending_goal_block_id` reset unchanged.
 
 **2. `supabase/functions/generate-training-block/index.ts`**
-- Pass `p_replace_existing: force_new === true` into `insert_training_block_atomic` RPC call.
-- Remove standalone server-side archive block (RPC now handles it atomically).
-- Skip pre-RPC active-block guard when `force_new` is true.
+- Delete the `if (!force_new) { ...active-block check... }` block entirely. RPC owns this.
+- Always generate a fresh key right before the RPC call: `const idempotencyKey = crypto.randomUUID();` (no reuse, no derivation).
+- Before RPC: `console.log("MODE:", force_new ? "ADAPT" : "CREATE");`
+- Continue passing `p_replace_existing: force_new === true`, `p_idempotency_key: idempotencyKey`.
+- **Soften validation**: scan the function for hard throws on workout shape (e.g., "fewer than X exercises", "missing week", "invalid distribution") and convert each to `console.error(...)` only. Keep hard throws ONLY for: invalid date parsing and empty payload (`!workouts || workouts.length === 0`).
+- Keep existing 409 `active_block_exists` mapping when RPC raises it.
 
-**3. `src/hooks/useTrainingBlock.ts`** — verify client contract
-- `generateBlock` (initial): does NOT send `force_new` (or sends `false`). Confirm and leave as-is.
-- `adaptBlock` regen branch: sends `force_new: true`. Confirm and leave as-is.
-- Remove leftover `archive_block_id` param if still being sent.
+**3. `src/hooks/useTrainingBlock.ts`** — no logic changes
+- Confirm `generateBlock` does not send `force_new` (CREATE path).
+- Confirm `adaptBlock` regen branch sends `force_new: true` (ADAPT path).
+- No client-side archive, no `archive_block_id`. (Already removed previously — verify only.)
 
 ### Out of scope
-- No changes to `adapt-training-block` (volume tuning).
 - No UI changes.
-- No DB signature breakage — new param has DEFAULT, existing callers unaffected.
+- No changes to `adapt-training-block` (volume tuning).
+- No new guards anywhere.
 
 ### Verification
-1. Fresh user, no active block → initial generate succeeds; logs show `MODE: CREATE`.
-2. Active block exists, change goal, click Adapt → succeeds; logs show `MODE: ADAPT`; previous block archived; new block active.
-3. Rapid double-Adapt → both resolve cleanly via retry path; one active block in DB.
-4. Initial generate while active block exists (no `force_new`) → fails cleanly with `active_block_exists` (expected guard).
+1. Fresh user → initial generate succeeds; logs show `MODE: CREATE`.
+2. Active block exists, click Adapt → succeeds; `MODE: ADAPT`; exactly one prior active block archived (most recent by `updated_at`); new block active.
+3. Initial generate while active block exists (no `force_new`) → fails cleanly with `active_block_exists`.
+4. Rapid double-Adapt → both succeed deterministically; one active block remains.
+5. Workout payload missing optional shape (e.g., low exercise count in one workout) → succeeds with `console.error` warnings, no throw.
 
