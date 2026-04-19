@@ -24,6 +24,7 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { WorkoutPlanCTA } from "@/components/WorkoutPlanCTA";
+import { useTrainingBlock } from "@/hooks/useTrainingBlock";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
