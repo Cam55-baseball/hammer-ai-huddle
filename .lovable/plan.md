@@ -1,43 +1,57 @@
 
 
-## Plan — Final 2 safety fixes for `generate-training-block`
+## Plan — Defensive post-RPC fetch in `generate-training-block`
 
 Single file: `supabase/functions/generate-training-block/index.ts`
 
 ### Context check first
-Read current state to confirm:
-- How `endDate` is currently typed/built in scope of the forward-shift loop
-- Exact shape of the forward-shift `while` loop (variable names: `d`, `usedDates`, `toISO`, `finalDate`)
+Read the post-RPC section to confirm:
+- Variable name holding the returned block id (`blockId` vs `v_block_id`)
+- Whether `serviceClient` is already instantiated in scope (it should be — RPC uses it)
+- Current `.single()` vs `.maybeSingle()` usage on the return fetch
 
-### Changes
+### Changes (isolation/diagnostic only)
 
-1. **Normalize `endDate` to `Date` before comparison** — just before the forward-shift loop, coerce:
+1. **Switch fetch to `serviceClient` + `.maybeSingle()`** — replace the user-client `.single()` fetch with service-client `.maybeSingle()` to bypass RLS as the diagnostic.
+
+2. **Wrap fetch in try/catch with full error logging**:
    ```ts
-   const endDateObj = typeof endDate === 'string' ? parseLocalDate(endDate) : endDate;
-   ```
-   Update the overflow guard to compare against `endDateObj`:
-   ```ts
-   if (parseLocalDate(finalDate) > endDateObj) {
-     throw new Error("Workout shifted beyond block end_date");
+   const { data: block, error: fetchErr } = await serviceClient
+     .from('training_blocks')
+     .select('*')
+     .eq('id', blockId)
+     .maybeSingle();
+
+   if (fetchErr) {
+     console.error("BLOCK FETCH FAILED:", {
+       message: fetchErr.message,
+       details: fetchErr.details,
+       hint: fetchErr.hint,
+       blockId
+     });
    }
    ```
 
-2. **Infinite-loop guard in forward-shift** — wrap the existing `usedDates.has(...)` while loop with a counter that throws after 365 iterations:
+3. **Null-block soft return** — instead of throwing, return 200 with `blockId` + warning so client surfaces a debuggable response:
    ```ts
-   let guard = 0;
-   while (usedDates.has(toISO(d))) {
-     d.setDate(d.getDate() + 1);
-     guard++;
-     if (guard > 365) {
-       throw new Error("Date collision resolution exceeded safe bounds");
-     }
+   if (!block) {
+     console.error("BLOCK NULL AFTER CREATION", { blockId });
+     return new Response(JSON.stringify({
+       blockId,
+       warning: "Block created but fetch failed"
+     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
    }
+   ```
+
+4. **Explicit success log** before normal return:
+   ```ts
+   console.log("BLOCK RETURN SUCCESS", { blockId });
    ```
 
 ### No other changes
-- Validation guards, week continuity, payload binding, RPC error logging, RPC dedupe — all stay as-is.
+- Validation guards, forward-shift logic, RPC payload, week continuity, infinite-loop guard — all stay as-is.
 - No DB or client changes.
 
 ### Verification
-Generate a 6-week block end-to-end. Expected: clean RPC success. If it fails, the existing structured catch surfaces raw Postgres `code/message/details/hint`.
+Generate a 6-week block. Inspect edge function logs for `BLOCK FETCH FAILED` / `BLOCK NULL AFTER CREATION` / `BLOCK RETURN SUCCESS`. If service-client fetch succeeds where user-client failed → confirmed RLS root cause; next pass fixes the SELECT policy on `training_blocks`.
 
