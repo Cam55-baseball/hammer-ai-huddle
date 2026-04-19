@@ -904,28 +904,52 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       const skipDays = skipItemsMap.get(itemId) || [];
       const isSkippedToday = skipDays.includes(todayDayOfWeek);
 
-      const todayLog = logs.find(l => l.template_id === template.id);
+      const todayLogsForTemplate = logs
+        .filter(l => l.template_id === template.id)
+        .sort((a, b) => ((a as any).instance_index ?? 0) - ((b as any).instance_index ?? 0));
+      const hasAnyLog = todayLogsForTemplate.length > 0;
 
-      if (isSkippedToday && !todayLog) return;
+      if (isSkippedToday && !hasAnyLog) return;
 
       // Check specific_dates scheduling
       const specificDates = (template.specific_dates as string[] | null) || [];
       if (specificDates.length > 0) {
-        if (!specificDates.includes(today) && !todayLog) return;
+        if (!specificDates.includes(today) && !hasAnyLog) return;
       }
 
-      const scheduledDays = template.recurring_active
-        ? (template.recurring_days as number[]) || []
-        : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
+      // Determine schedule signals — "no schedule" means none of these are set
+      const hasWeekly = !!template.recurring_active && ((template.recurring_days as number[] | null)?.length ?? 0) > 0;
+      const hasDisplayDays = ((template.display_days as number[] | null)?.length ?? 0) > 0;
+      const hasSpecificDates = specificDates.length > 0;
+
+      if (!hasWeekly && !hasDisplayDays && !hasSpecificDates) {
+        if (!hasAnyLog) return;
+      }
+
+      const scheduledDays = hasWeekly
+        ? (template.recurring_days as number[])
+        : hasDisplayDays
+        ? (template.display_days as number[])
+        : [];
 
       const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
+      const showScheduled = isScheduledToday && !isSkippedToday;
 
-      if ((isScheduledToday && !isSkippedToday) || todayLog) {
+      if (hasAnyLog) {
+        todayLogsForTemplate.forEach(log => {
+          refreshed.push({
+            template,
+            log,
+            isRecurring: template.recurring_active || false,
+            isScheduledForToday: true,
+          });
+        });
+      } else if (showScheduled) {
         refreshed.push({
           template,
-          log: todayLog,
+          log: undefined,
           isRecurring: template.recurring_active || false,
-          isScheduledForToday: (isScheduledToday && !isSkippedToday) || !!todayLog,
+          isScheduledForToday: true,
         });
       }
     });
