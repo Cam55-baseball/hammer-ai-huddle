@@ -276,22 +276,7 @@ serve(async (req) => {
       }
     }
 
-    // Fix #8: Check for existing active block — user must archive first
-    const { data: existingBlock } = await supabase
-      .from('training_blocks')
-      .select('id, status, pending_goal_change')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'nearing_completion'])
-      .maybeSingle();
-
-    if (existingBlock) {
-      return new Response(JSON.stringify({
-        error: 'Active training block exists. Complete or archive it before generating a new one.',
-        existing_block_id: existingBlock.id,
-      }), {
-        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Existing-active-block check moved AFTER body parse + server-side archive (below)
 
     // Fix #9: Check pending goal change on ready_for_regeneration blocks
     const { data: pendingBlock } = await supabase
@@ -326,7 +311,45 @@ serve(async (req) => {
     const sport = mpiSettings?.sport || 'baseball';
     const position = mpiSettings?.primary_position || 'athlete';
     const seasonPhase = mpiSettings?.season_status || 'in_season';
-    const { sport: requestSport } = await req.json().catch(() => ({ sport: undefined }));
+    const reqBody = await req.json().catch(() => ({}));
+    const { sport: requestSport, archive_block_id, force_new } = reqBody as {
+      sport?: string;
+      archive_block_id?: string;
+      force_new?: boolean;
+    };
+
+    // Server-side archive BEFORE any active-block check / RPC
+    if (archive_block_id) {
+      const { error: archErr } = await serviceClient
+        .from('training_blocks')
+        .update({ status: 'archived' })
+        .eq('id', archive_block_id)
+        .eq('user_id', user.id);
+      if (archErr) {
+        console.error('SERVER ARCHIVE FAILED:', archErr);
+      } else {
+        console.log('ARCHIVED OLD BLOCK (server):', archive_block_id);
+      }
+    }
+
+    // Existing-active-block guard (after possible archive). Skip when force_new + archive succeeded.
+    if (!force_new) {
+      const { data: existingBlock } = await supabase
+        .from('training_blocks')
+        .select('id, status, pending_goal_change')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'nearing_completion'])
+        .maybeSingle();
+
+      if (existingBlock) {
+        return new Response(JSON.stringify({
+          error: 'Active training block exists. Complete or archive it before generating a new one.',
+          existing_block_id: existingBlock.id,
+        }), {
+          status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -665,6 +688,7 @@ Always respond using the generate_training_block function.`
     });
 
     if (rpcErr) {
+      console.error("ADAPT RPC ERROR FULL:", rpcErr);
       const snapshot = {
         first_workouts: workoutsPayload.slice(0, 2).map(w => ({
           ...w,
@@ -682,7 +706,8 @@ Always respond using the generate_training_block function.`
       });
       if (rpcErr.message?.includes('active_block_exists')) {
         return new Response(JSON.stringify({
-          error: 'Active training block exists. Complete or archive it before generating a new one.',
+          error: 'active_block_exists',
+          message: 'Existing active block prevented adaptation',
         }), {
           status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
