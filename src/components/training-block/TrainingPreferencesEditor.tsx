@@ -21,6 +21,7 @@ const EQUIPMENT_OPTIONS = [
 export function TrainingPreferencesEditor() {
   const { t } = useTranslation();
   const { preferences, isLoading, upsertPreferences, updateGoal } = useTrainingPreferences();
+  const { activeBlock, adaptBlock } = useTrainingBlock();
 
   const [goal, setGoal] = useState(preferences?.goal || '');
   const [selectedDays, setSelectedDays] = useState<number[]>(
