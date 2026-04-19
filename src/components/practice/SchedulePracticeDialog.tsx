@@ -21,6 +21,7 @@ const MODULES = [
   { value: 'baserunning', label: 'Baserunning' },
   { value: 'bunting', label: 'Bunting' },
   { value: 'base_stealing', label: 'Base Stealing', baseballOnly: true },
+  { value: 'baserunning_iq', label: 'Baserunning IQ' },
 ];
 
 const SESSION_TYPES = [
