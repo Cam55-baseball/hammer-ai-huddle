@@ -181,15 +181,15 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className={cn(
-            'flex items-center justify-center w-14 h-14 rounded-full border-4',
+            'flex items-center justify-center w-14 h-14 rounded-full border-4 shrink-0',
             score.total >= 70 ? 'border-emerald-500/30' : score.total >= 40 ? 'border-amber-500/30' : 'border-destructive/30'
           )}>
             <span className={cn('text-xl font-bold', colorClass)}>{score.total}</span>
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <p className="text-sm font-semibold flex items-center gap-1.5">
                 <Trophy className="h-4 w-4 text-primary" />
                 {t('nutrition.nutritionScore', 'Nutrition Score')}
@@ -200,23 +200,24 @@ export function NutritionScoreCard({ date }: NutritionScoreCardProps) {
                   PRO
                 </span>
               )}
-              <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', confidenceBadge.cls)}>
+              <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap', confidenceBadge.cls)}>
                 {confidenceBadge.text}
               </span>
               {score.microCoverage && (
                 <span className={cn(
-                  'text-[10px] font-medium px-1.5 py-0.5 rounded-full',
+                  'text-[10px] font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap',
                   score.microCoverage.withMicros === score.microCoverage.total
                     ? 'text-emerald-600 bg-emerald-500/10'
                     : score.microCoverage.withMicros === 0
                       ? 'text-destructive bg-destructive/10'
                       : 'text-amber-600 bg-amber-500/10'
                 )}>
-                  {score.microCoverage.withMicros}/{score.microCoverage.total} verified
+                  {score.microCoverage.withMicros}/{score.microCoverage.total}
+                  <span className="hidden sm:inline"> verified</span>
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-5 gap-1 mt-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2">
               {breakdownItems.map(([label, val, max]) => (
                 <div key={label} className="text-center">
                   <p className="text-[10px] text-muted-foreground">{label}</p>

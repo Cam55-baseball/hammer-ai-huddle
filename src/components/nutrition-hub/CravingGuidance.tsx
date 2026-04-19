@@ -54,41 +54,41 @@ export function CravingGuidance({ date, microCoverage, limitingFactorKeys = [] }
         }
       }
 
-      if (limitingFactorKeys.length === 0) return [];
-
       const cravingNutrients = CRAVING_NUTRIENT_MAP[selectedCraving] || [];
+      if (cravingNutrients.length === 0) return [];
+
+      // Prefer keys that are both deficient AND limiters; fall back to all deficient; finally fall back to first nutrient.
       const deficientKeys = cravingNutrients.filter(key => {
         const rda = RDA[key];
         if (!rda) return false;
-        const isDeficient = ((totals[key] || 0) / rda) < 0.40;
-        return isDeficient && limitingFactorKeys.includes(key);
+        return ((totals[key] || 0) / rda) < 0.40;
       });
 
-      if (deficientKeys.length === 0) return [];
+      const intersected = deficientKeys.filter(k => limitingFactorKeys.includes(k));
+      const targetKey =
+        intersected[0] ||
+        deficientKeys[0] ||
+        cravingNutrients[0];
 
-      const topDeficient = deficientKeys[0];
       const { data: foods } = await supabase
         .from('nutrition_food_database')
         .select('name')
         .contains('food_category', [selectedCraving])
-        .gt(topDeficient, 0)
-        .order(topDeficient, { ascending: false })
+        .gt(targetKey, 0)
+        .order(targetKey, { ascending: false })
         .limit(2);
 
-      const label = topDeficient.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      const label = targetKey.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
         .replace(/ Mcg$/, '').replace(/ Mg$/, '');
 
       return (foods || []).map((f: any) => ({
         name: f.name,
         nutrient: label,
-        impact: NUTRIENT_IMPACT[topDeficient] || '',
+        impact: NUTRIENT_IMPACT[targetKey] || '',
       }));
     },
-    enabled: !!user && !!selectedCraving && microCoverage > 0,
+    enabled: !!user && !!selectedCraving,
   });
-
-  // Hard stop: don't render at all when no micro data
-  if (microCoverage === 0) return null;
 
   return (
     <Card>

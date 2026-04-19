@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { TemplatesGrid } from '@/components/custom-activities/TemplatesGrid';
 import { ActivityHistoryList } from '@/components/custom-activities/ActivityHistoryList';
-import { HydrationReminderSettings } from '@/components/custom-activities/HydrationReminderSettings';
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { RunningPresetLibrary } from '@/components/custom-activities/RunningPresetLibrary';
 import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutTemplatesLibrary';
@@ -94,7 +93,6 @@ export default function MyCustomActivities() {
     { value: 'deleted', icon: Trash2, label: t('myCustomActivities.tabs.deleted', 'Recently Deleted'), badge: deletedCount },
     { value: 'library', icon: BookOpen, label: t('myCustomActivities.tabs.library', 'Library') },
     { value: 'history', icon: History, label: t('myCustomActivities.tabs.history', 'History') },
-    { value: 'hydration', icon: Droplets, label: t('myCustomActivities.tabs.hydration', 'Hydration') },
     { value: 'presets', icon: Footprints, label: t('myCustomActivities.tabs.presets', 'Presets') },
   ];
 
@@ -223,10 +221,6 @@ export default function MyCustomActivities() {
 
             <TabsContent value="history" className="mt-0 animate-fade-in">
               <ActivityHistoryList selectedSport={selectedSport} />
-            </TabsContent>
-
-            <TabsContent value="hydration" className="mt-0 animate-fade-in">
-              <HydrationReminderSettings />
             </TabsContent>
 
             <TabsContent value="presets" className="mt-0 animate-fade-in">
