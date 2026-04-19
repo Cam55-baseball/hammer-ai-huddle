@@ -1251,6 +1251,7 @@ export type Database = {
           created_at: string | null
           entry_date: string
           id: string
+          instance_index: number
           notes: string | null
           performance_data: Json | null
           reminder_minutes: number | null
@@ -1268,6 +1269,7 @@ export type Database = {
           created_at?: string | null
           entry_date?: string
           id?: string
+          instance_index?: number
           notes?: string | null
           performance_data?: Json | null
           reminder_minutes?: number | null
@@ -1285,6 +1287,7 @@ export type Database = {
           created_at?: string | null
           entry_date?: string
           id?: string
+          instance_index?: number
           notes?: string | null
           performance_data?: Json | null
           reminder_minutes?: number | null
