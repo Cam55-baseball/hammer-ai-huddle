@@ -6,11 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode, Camera, Sparkles, Loader2, Gauge } from 'lucide-react';
+import { Droplets, Plus, Zap, ScanBarcode, Camera, Sparkles, Loader2, Gauge, Utensils } from 'lucide-react';
 import { useHydration, type AiHydrationAnalysis } from '@/hooks/useHydration';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { RecipeBuilder } from './RecipeBuilder';
 import { RecipeIngredient } from '@/hooks/useRecipes';
 import { BarcodeScanner } from './BarcodeScanner';
 import { FoodSearchResult } from '@/hooks/useFoodSearch';
@@ -551,62 +550,6 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
           </Dialog>
         </div>
 
-        {/* Log meal section */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium flex items-center gap-2">
-            <Utensils className="h-4 w-4 text-green-500" />
-            {t('nutrition.logMeal', 'Log Meal')}
-          </Label>
-          <div className="grid grid-cols-3 gap-2">
-            {MEAL_TYPES.slice(0, 3).map((type) => (
-              <Button
-                key={type.value}
-                variant="outline"
-                size="sm"
-                className="flex-col h-auto py-2 gap-0.5 hover:bg-green-500/10 hover:border-green-500/50"
-                onClick={() => onLogMeal?.(type.value)}
-              >
-                <span>{type.icon}</span>
-                <span className="text-xs">{t(`nutrition.mealTypes.${type.value}`, type.label)}</span>
-              </Button>
-            ))}
-          </div>
-          <Dialog open={mealDialogOpen} onOpenChange={setMealDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="w-full text-xs">
-                {t('nutrition.moreMealTypes', 'More meal types...')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t('nutrition.selectMealType', 'Select Meal Type')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {MEAL_TYPES.map((type) => (
-                    <Button
-                      key={type.value}
-                      variant={selectedMealType === type.value ? 'default' : 'outline'}
-                      className="justify-start gap-2"
-                      onClick={() => setSelectedMealType(type.value)}
-                    >
-                      <span>{type.icon}</span>
-                      {t(`nutrition.mealTypes.${type.value}`, type.label)}
-                    </Button>
-                  ))}
-                </div>
-                <Button
-                  className="w-full"
-                  disabled={!selectedMealType}
-                  onClick={handleLogMeal}
-                >
-                  {t('nutrition.continue', 'Continue')}
-                </Button>
-              </div>
-            </DialogContent>
-        </Dialog>
-        </div>
-
         {/* Barcode Scanner */}
         <div className="space-y-2">
           <Label className="text-sm font-medium flex items-center gap-2">
@@ -642,24 +585,6 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
           }} />
         </div>
 
-        {/* Recipe Builder */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-orange-500" />
-            {t('nutrition.recipes', 'Recipes')}
-          </Label>
-          <RecipeBuilder onRecipeSelect={handleRecipeSelect} />
-        </div>
-
-        {/* Supplement reminder */}
-        <Button
-          variant="outline"
-          className="w-full gap-2 hover:bg-purple-500/10 hover:border-purple-500/50"
-          onClick={() => onSwitchTab?.('supplements')}
-        >
-          <Pill className="h-4 w-4 text-purple-500" />
-          {t('nutrition.trackSupplements', 'Track Supplements')}
-        </Button>
       </CardContent>
 
       {/* Meal Type Selector for barcode/recipe items */}
