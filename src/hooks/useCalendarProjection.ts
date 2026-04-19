@@ -82,7 +82,17 @@ export function useCalendarProjection({
       if (sport) q = q.or(`sport.eq.${sport},sport.is.null`);
       const { data, error } = await q;
       if (error) throw error;
-      return data ?? [];
+      // Normalize Json `recurring_days`/`display_days` → number[] at the boundary
+      // so the pure builder stays strictly typed.
+      return (data ?? []).map((t: any) => ({
+        ...t,
+        recurring_days: Array.isArray(t.recurring_days)
+          ? (t.recurring_days as number[])
+          : null,
+        display_days: Array.isArray(t.display_days)
+          ? (t.display_days as number[])
+          : null,
+      }));
     },
     enabled,
   });
