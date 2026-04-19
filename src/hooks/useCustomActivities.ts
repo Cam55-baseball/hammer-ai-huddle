@@ -568,21 +568,45 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   };
 
   // Ensure a log exists for a template and return it directly (avoids stale closure)
-  const ensureLogExists = async (templateId: string): Promise<CustomActivityLog | null> => {
+  // If logId is provided AND that log exists, return it directly without inserting.
+  const ensureLogExists = async (templateId: string, logId?: string): Promise<CustomActivityLog | null> => {
     if (!user) return null;
-    
+
+    if (logId) {
+      const existing = todayLogs.find(l => l.id === logId);
+      if (existing) return existing;
+    }
+
     const today = getTodayDate();
-    
+
     try {
-      // Upsert the log and return it directly
+      // Look for an existing log (instance 0 preferred) for this template/today
+      const { data: existingRows, error: selErr } = await supabase
+        .from('custom_activity_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('template_id', templateId)
+        .eq('entry_date', today)
+        .order('instance_index', { ascending: true })
+        .limit(1);
+
+      if (selErr) throw selErr;
+      if (existingRows && existingRows.length > 0) {
+        // Refresh state in background
+        fetchTodayLogs();
+        return existingRows[0] as CustomActivityLog;
+      }
+
+      // None exists — insert at instance_index 0
       const { data, error } = await supabase
         .from('custom_activity_logs')
-        .upsert({
+        .insert({
           user_id: user.id,
           template_id: templateId,
           entry_date: today,
           completed: false,
-        }, { onConflict: 'user_id,template_id,entry_date' })
+          instance_index: 0,
+        } as any)
         .select()
         .single();
 
