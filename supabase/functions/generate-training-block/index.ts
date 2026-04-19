@@ -326,7 +326,26 @@ serve(async (req) => {
     const sport = mpiSettings?.sport || 'baseball';
     const position = mpiSettings?.primary_position || 'athlete';
     const seasonPhase = mpiSettings?.season_status || 'in_season';
-    const { sport: requestSport } = await req.json().catch(() => ({ sport: undefined }));
+    const reqBody = await req.json().catch(() => ({}));
+    const { sport: requestSport, archive_block_id, force_new } = reqBody as {
+      sport?: string;
+      archive_block_id?: string;
+      force_new?: boolean;
+    };
+
+    // Server-side archive BEFORE any active-block check / RPC
+    if (archive_block_id) {
+      const { error: archErr } = await serviceClient
+        .from('training_blocks')
+        .update({ status: 'archived' })
+        .eq('id', archive_block_id)
+        .eq('user_id', user.id);
+      if (archErr) {
+        console.error('SERVER ARCHIVE FAILED:', archErr);
+      } else {
+        console.log('ARCHIVED OLD BLOCK (server):', archive_block_id);
+      }
+    }
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
