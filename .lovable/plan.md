@@ -1,110 +1,114 @@
 
 
-## Plan — Refactor Calendar into Pure Derived Projection Layer
+# Calendar Module Audit — Findings
 
-### Premise check (must verify during exploration)
+This is a diagnostic only. No fixes implemented.
 
-Before committing, I need to inspect:
-- `src/components/calendar/CalendarView.tsx` and children — current data sources
-- `src/hooks/useCalendar*` — what's fetched, what's written
-- `calendar_events`, `calendar_skipped_items`, `calendar_day_orders`, `game_plan_skipped_tasks` tables — which are "calendar-owned" vs "source of truth"
-- `useTrainingBlock`, `useGamePlan`, `useCustomActivities` — existing source-of-truth hooks
-- Anywhere calendar performs writes (`schedulingService.setCalendarSkip`, `removeCalendarSkip`, calendar_events inserts in `generate-training-block`)
-
-The premise is **mostly correct** but with one important nuance: `calendar_events` is currently written by the training block generator (confirmed earlier). User wants this removed — calendar derives from `block_workouts` directly instead.
-
-### Architecture
+## 1. System Diagram (current state)
 
 ```text
-SOURCE OF TRUTH                 PROJECTION                 UI
-─────────────────               ──────────────             ───────────
-game_plan_days        ─┐
-custom_activity_logs  ─┤   buildCalendarEvents()    →  CalendarView
-activities/templates  ─┤   (pure, deterministic)       (read-only)
-training_blocks       ─┤
-  └─ block_workouts   ─┘
-        │
-        ├─ realtime subs on all 4 tables
-        └─ on change → refetch → rebuild → rerender
+                      ┌──────────────────────────────────────────────┐
+                      │ calendar_events (table — STORED, mutable)    │◄──┐
+                      └──────────────────────────────────────────────┘   │
+                                       ▲   ▲   ▲   ▲                    │
+   WRITES from many places ────────────┘   │   │   │                    │
+   - useCalendar.addEvent/update/delete    │   │   │                    │
+   - useSchedulingService                  │   │   │                    │
+   - generate-training-block edge fn       │   │   │                    │
+   - useTrainingBlock (reschedule mirror)  │   │   │                    │
+   - RestDayScheduler                      │   │   │                    │
+   - DailyWorkoutPlanner                   │   │   │                    │
+   - useRescheduleEngine                   │   │   │                    │
+                                                                        │
+SOURCES OF TRUTH (also read directly)                                   │
+   game_plan_days, custom_activity_logs,                                │
+   custom_activity_templates, athlete_events,                           │
+   game_plan_task_schedule, sub_module_progress,                        │
+   vault_meal_plans, calendar_day_orders,                               │
+   scheduled_practice_sessions,                                         │
+   game_plan_skipped_tasks, calendar_skipped_items                      │
+                            │                                           │
+                            ▼                                           │
+   useCalendar.fetchEventsForRange (~700-line aggregator) ──────────────┘
+                            │
+                            ▼     setEvents(...)  (local React state)
+                  CalendarView → CalendarDaySheet
+                            │
+   Realtime: useSchedulingRealtime invalidates broad query keys
+   BUT useCalendar uses local useState, not React Query → invalidation MISSES it.
+   Refresh path = useEffect on `lockedDays` only.
+
+NEW (just-built, not wired):
+   buildCalendarEvents() + useCalendarProjection() + ['calendar-projection'] key
+   → exists but CalendarView still imports the old useCalendar hook.
 ```
 
-### Implementation
+## 2. Verdict
 
-**1. New pure builder** — `src/lib/calendar/buildCalendarEvents.ts`
-```ts
-export type CalendarEvent = {
-  id: string;                    // deterministic: `${source}:${sourceId}:${date}`
-  date: string;                  // YYYY-MM-DD
-  title: string;
-  source: 'game_plan' | 'custom_activity' | 'training_block';
-  sourceId: string;
-  completed: boolean;
-  partial?: boolean;             // partial day completion
-  meta: Record<string, unknown>;
-};
+**B) Partially derived, partially stored — fragile.**
 
-export function buildCalendarEvents(input: {
-  gamePlanDays: GamePlanDay[];
-  logs: CustomActivityLog[];     // filtered: not deleted
-  activities: Activity[];        // filtered: not deleted
-  blocks: TrainingBlockWithWorkouts[]; // active + nearing_completion only
-}): CalendarEvent[]
-```
-Rules:
-- Skip logs whose parent activity is deleted/missing
-- Skip blocks with `status='archived'`
-- Sort: date asc, then source order, then sourceId
-- Deduplicate by `id` (idempotent)
-- `completed` derived from log `completed` flag or `block_workouts.status='completed'`
-- `partial` = `game_plan_days.is_completed=false` but ≥1 log completed that date
+The calendar reads from 11 tables AND maintains its own writable `calendar_events` table that is mirrored from at least 5 different code paths. The "derived projection" layer built last round exists but is **not wired into the UI**.
 
-**2. New aggregator hook** — `src/hooks/useCalendarProjection.ts`
-- React Query queries (parallel): `game_plan_days`, `custom_activity_logs` + parent activities, `training_blocks` + `block_workouts`
-- `useMemo` → `buildCalendarEvents(...)`
-- Returns `{ events, isLoading, byDate(date) }`
+## 3. Issues (prioritized)
 
-**3. Realtime** — extend `useSchedulingRealtime.ts`
-- Already subscribes to `game_plan_*`, add/confirm: `custom_activity_logs`, `training_blocks`, `block_workouts`, `activities`/`custom_activity_templates`
-- On change → invalidate `['calendar-projection']` query keys
+### P0 — Causes desync immediately
 
-**4. Refactor CalendarView**
-- Replace current data sources with `useCalendarProjection()`
-- Remove `useCalendarSkips` writes from calendar UI (skips are a Game Plan concern, not calendar)
-- Calendar becomes purely render-only: no Add/Edit/Delete buttons that write to calendar tables
+| # | Issue | Location | Why it desyncs |
+|---|---|---|---|
+| 1 | **CalendarView still uses legacy `useCalendar`**, not the new `useCalendarProjection` | `src/components/calendar/CalendarView.tsx:24,78` | The new derived layer is dead code from the user's perspective. |
+| 2 | **`useCalendar` stores events in `useState`, not React Query** | `useCalendar.ts:877` (`setEvents`) | `useSchedulingRealtime` invalidates query keys (`['calendar']`, etc.) — but `useCalendar` doesn't subscribe to any query key, so realtime invalidation does nothing. Only manual `refetch()` updates it. |
+| 3 | **Six independent writers to `calendar_events`** | `useCalendar` (893,915,937), `useSchedulingService` (61,87,112), `RestDayScheduler` (42,77), `DailyWorkoutPlanner` (63), `useTrainingBlock` (313, mirror), `generate-training-block` (704) | Any writer that fails or runs out of order leaves `calendar_events` out of sync with source-of-truth tables (`block_workouts`, `custom_activity_logs`). The "mirror" in `useTrainingBlock` is a classic dual-write race. |
+| 4 | **Training block workouts duplicated**: `block_workouts` + mirrored `calendar_events` rows | `generate-training-block/index.ts:692-706` | If a workout is rescheduled in `block_workouts` but the mirror update in `useTrainingBlock:313` fails or is skipped, calendar shows the old date. |
 
-**5. Remove direct calendar writes**
-- `generate-training-block/index.ts` (lines 692-706): **delete** the `calendar_events` insert block. Calendar will derive from `block_workouts` directly.
-- `useTrainingBlock.ts` reschedule: **delete** the `calendar_events` sync update (no longer needed).
-- `schedulingService.setCalendarSkip` / `removeCalendarSkip`: keep for Game Plan use, but Calendar UI no longer calls them.
+### P1 — Causes drift over time
 
-**6. Deprecation (non-destructive)**
-- Leave `calendar_events` table intact (no migration this round) but stop writing to it. Mark hook `useCalendarEvents` (if exists) as deprecated with comment. Removal in follow-up after verification.
+| # | Issue | Location | Why |
+|---|---|---|---|
+| 5 | **Recurring template projection only suppresses duplicates if a log exists**; deleted templates with old logs still render via the log row | `useCalendar.ts:367-410` (templates) and `:244-250` (logs) | Logs are joined via `custom_activity_templates(*)` — if template is soft-deleted, log title still renders from the joined row (which is filtered `is('deleted_at', null)` only on the templates query, **not** on the logs join). |
+| 6 | **Completion status comes from `custom_activity_logs.completed`** but recurring template projections have no log → always rendered as "not completed" even if `game_plan_days.is_completed=true` | `useCalendar.ts:398-410` | Day-level completion isn't propagated to projected template events. |
+| 7 | **Partial day completion is never represented** | n/a | No code path computes `partial`. The new builder added this; the legacy hook does not. |
+| 8 | **Realtime subscription on `block_workouts` lacks user filter** (table has no `user_id`) | `useSchedulingRealtime.ts:177` | Every user receives every other user's workout events. Cheap noise now, but invalidates all clients on every block update. |
 
-### Edge cases handled
+### P2 — Architectural smells
 
-| Case | Behavior |
-|---|---|
-| Activity deleted after scheduled | Builder filters logs whose activity is missing → event disappears next rebuild |
-| Activity edited after completion | Title/meta reflects current activity row; `completed=true` preserved from log |
-| Training block swapped mid-cycle | Old block status→`archived` (excluded); new block's `block_workouts` appear immediately via realtime |
-| Partial day completion | `partial=true` flag rendered distinctly from full `completed` |
-| Idempotency | Deterministic IDs + sort + dedupe → identical input ⇒ identical output |
+| # | Issue | Location |
+|---|---|---|
+| 9 | `useCalendar` is 977 lines and aggregates 11 sources inline — no single deterministic builder until last round's `buildCalendarEvents`. | `useCalendar.ts` |
+| 10 | `calculate-regulation` and `useNightCheckInStats` read from `calendar_events` for "what's scheduled tomorrow" — they will silently go stale if we stop writing to that table. | `calculate-regulation/index.ts:106`, `useNightCheckInStats.ts:91` |
+| 11 | `useRescheduleEngine` reads/writes `calendar_events` exclusively; if the table becomes derived, the reschedule UX breaks. | `useRescheduleEngine.ts:48,94,121,134` |
 
-### Files touched
-- **New**: `src/lib/calendar/buildCalendarEvents.ts`, `src/lib/calendar/buildCalendarEvents.test.ts` (unit tests for idempotency + edge cases), `src/hooks/useCalendarProjection.ts`
-- **Modified**: `src/hooks/useSchedulingRealtime.ts`, `src/components/calendar/CalendarView.tsx` (+ children that read events), `supabase/functions/generate-training-block/index.ts` (remove calendar_events insert), `src/hooks/useTrainingBlock.ts` (remove calendar_events sync)
-- **Unchanged**: source-of-truth tables, Game Plan, training block generation logic itself
+## 4. Edge-case behavior (current)
 
-### Out of scope
-- Dropping `calendar_events` table (follow-up after soak)
-- Game Plan UI changes
-- Skip/recurring-skip semantics (still owned by Game Plan)
+| Scenario | Current behavior | Why |
+|---|---|---|
+| Complete a custom activity | Calendar updates only after manual `refetch()` or page nav. Realtime invalidation hits the wrong store. | Issue #2 |
+| Delete a custom activity template | Future projections disappear (templates query filters `deleted_at`). **Past logs still render** with stale title. | Issue #5 |
+| Edit a template title | Recurring projections update on next fetch. Past logs still show old title (joined data is current though, so partially OK). | Mostly OK |
+| Reschedule a training-block workout | `block_workouts.scheduled_date` updates; mirror update on `calendar_events` **may or may not run** (best-effort, no transaction). | Issue #3, #4 |
+| Archive an active block | `block_workouts` rows remain; `calendar_events` mirror rows remain. Nothing deletes them. Calendar shows ghost workouts. | Issue #3 |
+| Partial day (1 of 3 logs done) | Day shows mixed event states; no `partial` flag. | Issue #7 |
 
-### Verification
-1. Generate 6-week block → calendar shows all workouts (derived from `block_workouts`, no `calendar_events` row needed).
-2. Mark a workout complete in Practice Hub → calendar event flips to completed within ~1s (realtime).
-3. Delete a custom activity → its scheduled instances disappear from calendar on next render.
-4. Archive active block → all its workouts vanish from calendar instantly.
-5. Log 1 of 3 activities for a day → that day shows `partial`, not `completed`.
-6. Hard reload calendar repeatedly → identical event list each time (idempotency).
+## 5. Failure points / race conditions
+
+1. **Dual-write race**: `useTrainingBlock` updates `block_workouts` then `calendar_events`. Two awaits, no transaction. Network failure between them ⇒ permanent drift.
+2. **Realtime → `useState` gap**: `useSchedulingRealtime` invalidates React Query keys; `useCalendar` doesn't use them. Realtime silently no-ops for the calendar UI.
+3. **Edge function vs client writes**: `generate-training-block` inserts `calendar_events` server-side; client may have already cached an older view. No conflict resolution.
+4. **`block_workouts` realtime has no user filter** ⇒ broadcast storms across users.
+5. **Soft-deleted template + lingering log** ⇒ orphan events persist.
+
+## 6. Where the new derived layer stands
+
+`src/lib/calendar/buildCalendarEvents.ts` and `src/hooks/useCalendarProjection.ts` were created last round. They are **correct and idempotent** (10 tests pass per prior summary), but **nothing imports them**. They are dead code until `CalendarView` is swapped over and the legacy writers are decommissioned.
+
+## 7. Output summary
+
+- **Architecture verdict**: B (partially derived, fragile).
+- **Root cause of inaccuracy**: split-brain between `calendar_events` (stored, multi-writer) and source-of-truth tables, plus realtime invalidating query keys the calendar hook doesn't use.
+- **Highest-leverage fix order** (for a future plan):
+  1. Swap `CalendarView` to `useCalendarProjection` (kills issues #1, #2, #6, #7 in one move).
+  2. Stop writing to `calendar_events` from `generate-training-block` and `useTrainingBlock` mirror (kills #3, #4).
+  3. Migrate `useRescheduleEngine`, `RestDayScheduler`, `DailyWorkoutPlanner` to source-of-truth tables (kills remaining #3).
+  4. Update `calculate-regulation` and `useNightCheckInStats` to read from source-of-truth tables (kills #10).
+  5. Add `user_id` JOIN-side filter for `block_workouts` realtime (kills #8).
+  6. Drop `calendar_events`, `calendar_skipped_items` (calendar-side), `calendar_day_orders` after soak.
 
