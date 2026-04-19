@@ -169,21 +169,92 @@ export function useTrainingBlock() {
     },
   });
 
-  // Adapt block
+  // Adapt block — branches between regeneration (preference change) and volume tuning
   const adaptBlock = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (opts?: { regenerate?: boolean }) => {
       if (!activeBlock) throw new Error('No active block');
+
+      // Fetch current preferences for logging + decisioning
+      const { data: prefs } = await supabase
+        .from('training_preferences')
+        .select('*')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+
+      console.log('ADAPT CLICKED', { blockId: activeBlock.id, preferences: prefs });
+
+      const shouldRegenerate =
+        opts?.regenerate === true ||
+        activeBlock.pending_goal_change === true ||
+        activeBlock.status === 'ready_for_regeneration';
+
+      const oldId = activeBlock.id;
+      const oldCreatedAt = activeBlock.created_at;
+
+      if (shouldRegenerate) {
+        // Archive existing block first so generator's "active block exists" guard passes
+        await supabase
+          .from('training_blocks')
+          .update({ status: 'archived' })
+          .eq('id', oldId);
+
+        const payload = {
+          sport: activeBlock.sport,
+          blockId: oldId,
+          preferences: prefs,
+          startDate: activeBlock.start_date,
+          availability: (prefs as { availability?: unknown } | null)?.availability,
+        };
+        console.log('ADAPT REQUEST:', payload);
+
+        const { data, error } = await supabase.functions.invoke('generate-training-block', {
+          body: payload,
+        });
+        console.log('ADAPT RESPONSE:', data);
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        const newBlock = data?.block ?? data;
+        if (newBlock?.id && user) {
+          // Replace state explicitly — no append
+          queryClient.setQueryData(['training-block', 'active', user.id], newBlock);
+        }
+
+        // Change-verification guard
+        if (newBlock?.id && newBlock.id === oldId) {
+          console.warn('Adapt produced no change');
+        }
+        if (newBlock?.created_at && newBlock.created_at === oldCreatedAt) {
+          console.warn('Adapt produced no change');
+        }
+
+        return { mode: 'regenerate', block: newBlock, oldId };
+      }
+
+      // Volume-tuning path (RPE / missed sessions)
+      const payload = { block_id: oldId };
+      console.log('ADAPT REQUEST:', payload);
       const { data, error } = await supabase.functions.invoke('adapt-training-block', {
-        body: { block_id: activeBlock.id },
+        body: payload,
       });
+      console.log('ADAPT RESPONSE:', data);
       if (error) throw error;
-      return data;
+      return { mode: 'tune', ...data };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['training-block'] });
-      if (data?.adaptations?.length > 0) {
+      queryClient.invalidateQueries({ queryKey: ['calendar'] });
+      if (data?.mode === 'regenerate') {
+        toast.success(t('trainingBlock.regenerated', 'Training plan regenerated with your updated preferences'));
+      } else if (data?.adaptations?.length > 0) {
         toast.info(t('trainingBlock.adapted', 'Training plan adjusted based on your progress'));
+      } else {
+        toast.message(t('trainingBlock.noAdaptation', 'No changes needed right now'));
       }
+    },
+    onError: (error: Error) => {
+      console.error('ADAPT FAILED:', error);
+      toast.error(t('trainingBlock.adaptFailed', 'Failed to adapt plan'));
     },
   });
 
