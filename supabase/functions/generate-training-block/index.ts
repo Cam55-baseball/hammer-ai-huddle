@@ -505,10 +505,7 @@ Always respond using the generate_training_block function.`
     // land on the same date (collision), nudge later ones forward by +1 day
     // until unique. Satisfies uq_block_workouts_date(block_id, scheduled_date)
     // without flattening to daily training.
-    const parseLocalDate = (s: string): Date => {
-      const [y, m, d] = s.split('-').map(Number);
-      return new Date(y, (m || 1) - 1, d || 1);
-    };
+    const parseLocalDate = (s: string): Date => new Date(s + "T00:00:00");
     const toISO = (d: Date): string => {
       const y = d.getFullYear();
       const mo = String(d.getMonth() + 1).padStart(2, '0');
