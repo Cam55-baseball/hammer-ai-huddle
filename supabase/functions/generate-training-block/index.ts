@@ -733,6 +733,8 @@ Always respond using the generate_training_block function.`
     }
 
     console.log("BLOCK RETURN SUCCESS", { blockId });
+    console.log("FINAL BLOCK RESPONSE:", JSON.stringify(block, null, 2));
+    console.log("BLOCK KEYS:", Object.keys(block || {}));
     return new Response(JSON.stringify({ block }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
