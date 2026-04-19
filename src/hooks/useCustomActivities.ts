@@ -341,11 +341,30 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     return updateTemplate(id, { is_favorited: !template.is_favorited });
   };
 
-  // Add activity to today (create log entry) — with optimistic update + retry
+  // Add activity to today (create NEW log entry every time — supports unlimited Quick Adds)
   const addToToday = async (templateId: string): Promise<boolean> => {
     if (!user) return false;
 
     const today = getTodayDate();
+
+    // Determine the next instance_index for this (user, template, today)
+    let nextInstanceIndex = 0;
+    try {
+      const { data: existingForToday, error: fetchErr } = await supabase
+        .from('custom_activity_logs')
+        .select('instance_index')
+        .eq('user_id', user.id)
+        .eq('template_id', templateId)
+        .eq('entry_date', today)
+        .order('instance_index', { ascending: false })
+        .limit(1);
+      if (fetchErr) throw fetchErr;
+      if (existingForToday && existingForToday.length > 0) {
+        nextInstanceIndex = ((existingForToday[0] as any).instance_index ?? 0) + 1;
+      }
+    } catch (e) {
+      console.warn('[useCustomActivities] addToToday: instance_index lookup failed, defaulting to 0', e);
+    }
 
     // Optimistic update: immediately add to todayLogs
     const optimisticLog: CustomActivityLog = {
@@ -355,32 +374,38 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       entry_date: today,
       completed: false,
       performance_data: {},
+      instance_index: nextInstanceIndex,
       created_at: new Date().toISOString(),
     };
     setTodayLogs(prev => [...prev, optimisticLog]);
     toast.success(t('customActivity.addedToday'));
 
-    const attemptUpsert = async (retryCount: number): Promise<boolean> => {
+    const attemptInsert = async (retryCount: number, indexToUse: number): Promise<boolean> => {
       try {
         const { error } = await supabase
           .from('custom_activity_logs')
-          .upsert({
+          .insert({
             user_id: user.id,
             template_id: templateId,
             entry_date: today,
             completed: false,
-          }, {
-            onConflict: 'user_id,template_id,entry_date'
-          });
+            instance_index: indexToUse,
+          } as any);
 
-        if (error) throw error;
+        if (error) {
+          // Unique-violation → bump index and retry
+          if ((error as any).code === '23505' && retryCount > 0) {
+            return attemptInsert(retryCount - 1, indexToUse + 1);
+          }
+          throw error;
+        }
         await fetchTodayLogs();
         return true;
       } catch (error) {
         if (retryCount > 0) {
           console.warn('[useCustomActivities] addToToday retry...', error);
           await new Promise(r => setTimeout(r, 800));
-          return attemptUpsert(retryCount - 1);
+          return attemptInsert(retryCount - 1, indexToUse);
         }
         console.error('Error adding to today:', error);
         // Roll back optimistic update
@@ -390,15 +415,18 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       }
     };
 
-    return attemptUpsert(1);
+    return attemptInsert(3, nextInstanceIndex);
   };
 
   // Mark activity as complete/incomplete
-  const toggleComplete = async (templateId: string): Promise<boolean> => {
+  // If logId is provided, target that specific log instance; otherwise target the first log for templateId.
+  const toggleComplete = async (templateId: string, logId?: string): Promise<boolean> => {
     if (!user) return false;
 
     const today = getTodayDate();
-    const existingLog = todayLogs.find(l => l.template_id === templateId);
+    const existingLog = logId
+      ? todayLogs.find(l => l.id === logId)
+      : todayLogs.find(l => l.template_id === templateId);
     const template = templates.find(t => t.id === templateId);
 
     try {
@@ -487,11 +515,13 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
-  // Remove activity from today
-  const removeFromToday = async (templateId: string): Promise<boolean> => {
+  // Remove activity from today (specific instance if logId provided)
+  const removeFromToday = async (templateId: string, logId?: string): Promise<boolean> => {
     if (!user) return false;
 
-    const log = todayLogs.find(l => l.template_id === templateId);
+    const log = logId
+      ? todayLogs.find(l => l.id === logId)
+      : todayLogs.find(l => l.template_id === templateId);
     if (!log) return false;
 
     try {
@@ -538,21 +568,45 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   };
 
   // Ensure a log exists for a template and return it directly (avoids stale closure)
-  const ensureLogExists = async (templateId: string): Promise<CustomActivityLog | null> => {
+  // If logId is provided AND that log exists, return it directly without inserting.
+  const ensureLogExists = async (templateId: string, logId?: string): Promise<CustomActivityLog | null> => {
     if (!user) return null;
-    
+
+    if (logId) {
+      const existing = todayLogs.find(l => l.id === logId);
+      if (existing) return existing;
+    }
+
     const today = getTodayDate();
-    
+
     try {
-      // Upsert the log and return it directly
+      // Look for an existing log (instance 0 preferred) for this template/today
+      const { data: existingRows, error: selErr } = await supabase
+        .from('custom_activity_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('template_id', templateId)
+        .eq('entry_date', today)
+        .order('instance_index', { ascending: true })
+        .limit(1);
+
+      if (selErr) throw selErr;
+      if (existingRows && existingRows.length > 0) {
+        // Refresh state in background
+        fetchTodayLogs();
+        return existingRows[0] as CustomActivityLog;
+      }
+
+      // None exists — insert at instance_index 0
       const { data, error } = await supabase
         .from('custom_activity_logs')
-        .upsert({
+        .insert({
           user_id: user.id,
           template_id: templateId,
           entry_date: today,
           completed: false,
-        }, { onConflict: 'user_id,template_id,entry_date' })
+          instance_index: 0,
+        } as any)
         .select()
         .single();
 
@@ -618,14 +672,14 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const setCompletionState = async (
     templateId: string,
     state: CompletionState,
-    method: CompletionMethod
+    method: CompletionMethod,
+    logId?: string
   ): Promise<boolean> => {
     if (!user) return false;
-    const today = getTodayDate();
 
     try {
-      // Ensure log exists, then update
-      const log = await ensureLogExists(templateId);
+      // Ensure log exists (target specific instance if logId provided), then update
+      const log = await ensureLogExists(templateId, logId);
       if (!log) return false;
 
       const updates: Record<string, any> = {
@@ -664,12 +718,13 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   // Mark all checkboxes true + complete (Check all & complete)
   const markAllCheckboxesAndComplete = async (
     templateId: string,
-    allCheckableIds: string[]
+    allCheckableIds: string[],
+    logId?: string
   ): Promise<boolean> => {
     if (!user) return false;
 
     try {
-      const log = await ensureLogExists(templateId);
+      const log = await ensureLogExists(templateId, logId);
       if (!log) return false;
 
       const currentPd = (log.performance_data as Record<string, any>) || {};
@@ -711,13 +766,15 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   };
 
   // Reopen a completed activity → in_progress (or not_started if nothing checked)
-  const reopenActivity = async (templateId: string): Promise<boolean> => {
+  const reopenActivity = async (templateId: string, logId?: string): Promise<boolean> => {
     if (!user) return false;
-    const log = todayLogs.find(l => l.template_id === templateId);
+    const log = logId
+      ? todayLogs.find(l => l.id === logId)
+      : todayLogs.find(l => l.template_id === templateId);
     const pd = (log?.performance_data as Record<string, any>) || {};
     const states = (pd.checkboxStates as Record<string, boolean>) || {};
     const anyChecked = Object.values(states).some(v => v === true);
-    return setCompletionState(templateId, anyChecked ? 'in_progress' : 'not_started', 'none');
+    return setCompletionState(templateId, anyChecked ? 'in_progress' : 'not_started', 'none', logId);
   };
 
   return {

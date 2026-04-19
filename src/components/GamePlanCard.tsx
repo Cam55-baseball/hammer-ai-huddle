@@ -705,7 +705,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Custom activity handlers
   const handleCustomActivityToggle = async (task: GamePlanTask) => {
     if (task.customActivityData) {
-      const success = await toggleComplete(task.customActivityData.template.id);
+      const success = await toggleComplete(task.customActivityData.template.id, task.customActivityData.log?.id);
       if (success) {
         // In timeline mode, re-sort to move completed to bottom
         if (sortMode === 'timeline') {
@@ -2068,7 +2068,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onDone={async () => {
           if (!selectedCustomTask?.customActivityData) return;
           const template = selectedCustomTask.customActivityData.template;
-          await setCompletionState(template.id, 'completed', 'done_button');
+          const logId = selectedCustomTask.customActivityData.log?.id;
+          await setCompletionState(template.id, 'completed', 'done_button', logId);
           triggerCelebration();
           toast.success(t('customActivity.markedComplete', 'Marked complete'));
           refetch();
@@ -2076,8 +2077,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onCheckAll={async () => {
           if (!selectedCustomTask?.customActivityData) return;
           const template = selectedCustomTask.customActivityData.template;
+          const logId = selectedCustomTask.customActivityData.log?.id;
           const allIds = getAllCheckableIds(template);
-          await markAllCheckboxesAndComplete(template.id, allIds);
+          await markAllCheckboxesAndComplete(template.id, allIds, logId);
           triggerCelebration();
           toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'));
           refetch();
@@ -2085,7 +2087,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onReopen={async () => {
           if (!selectedCustomTask?.customActivityData) return;
           const template = selectedCustomTask.customActivityData.template;
-          await reopenActivity(template.id);
+          const logId = selectedCustomTask.customActivityData.log?.id;
+          await reopenActivity(template.id, logId);
           refetch();
         }}
         onEdit={() => {

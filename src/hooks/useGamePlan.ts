@@ -532,40 +532,43 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
       const logs = (logsData || []) as unknown as CustomActivityLog[];
 
-      // Build custom activities list
+      // Build custom activities list — emit ONE entry PER LOG so multiple Quick Adds render as multiple cards.
       const customActivitiesForToday: CustomActivityWithLog[] = [];
 
       templates.forEach(template => {
         // Check display settings first
         if (template.display_on_game_plan === false) return;
-        
+
         // Check calendar_skipped_items first (SINGLE SOURCE OF TRUTH for Repeat Weekly)
         const itemId = `template-${template.id}`;
         const skipDays = skipItemsMap.get(itemId) || [];
         const isSkippedToday = skipDays.includes(todayDayOfWeek);
-        
-        // Check if there's a log for today
-        const todayLog = logs.find(l => l.template_id === template.id);
-        
+
+        // ALL logs for this template today (sorted by instance_index ascending)
+        const todayLogsForTemplate = logs
+          .filter(l => l.template_id === template.id)
+          .sort((a, b) => ((a as any).instance_index ?? 0) - ((b as any).instance_index ?? 0));
+        const hasAnyLog = todayLogsForTemplate.length > 0;
+
         // If explicitly skipped for today via calendar settings, only show if already logged
-        if (isSkippedToday && !todayLog) {
+        if (isSkippedToday && !hasAnyLog) {
           return; // Skip this activity entirely
         }
 
         // Check specific_dates scheduling — if set, only show on those dates
         const specificDates = (template.specific_dates as string[] | null) || [];
         if (specificDates.length > 0) {
-          if (!specificDates.includes(today) && !todayLog) return;
+          if (!specificDates.includes(today) && !hasAnyLog) return;
         }
-        
+
         // Determine schedule signals — "no schedule" means none of these are set
         const hasWeekly = !!template.recurring_active && ((template.recurring_days as number[] | null)?.length ?? 0) > 0;
         const hasDisplayDays = ((template.display_days as number[] | null)?.length ?? 0) > 0;
         const hasSpecificDates = specificDates.length > 0;
 
         if (!hasWeekly && !hasDisplayDays && !hasSpecificDates) {
-          // No schedule at all — only show if user has an explicit log for today
-          if (!todayLog) return;
+          // No schedule at all — only show if user has at least one explicit log for today
+          if (!hasAnyLog) return;
         }
 
         const scheduledDays = hasWeekly
@@ -575,14 +578,25 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           : [];
 
         const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
-        
-        // Include if: (scheduled AND not skipped) OR has a log for today
-        if ((isScheduledToday && !isSkippedToday) || todayLog) {
+        const showScheduled = isScheduledToday && !isSkippedToday;
+
+        if (hasAnyLog) {
+          // Emit ONE entry per existing log (each Quick Add / scheduled occurrence = its own card)
+          todayLogsForTemplate.forEach(log => {
+            customActivitiesForToday.push({
+              template,
+              log,
+              isRecurring: template.recurring_active || false,
+              isScheduledForToday: showScheduled || true,
+            });
+          });
+        } else if (showScheduled) {
+          // Scheduled today but not yet logged — emit a single placeholder entry
           customActivitiesForToday.push({
             template,
-            log: todayLog,
+            log: undefined,
             isRecurring: template.recurring_active || false,
-            isScheduledForToday: (isScheduledToday && !isSkippedToday) || !!todayLog,
+            isScheduledForToday: true,
           });
         }
       });
@@ -826,11 +840,11 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       .catch((err) => console.error("[useGamePlan] Date repair error:", err));
   }, [user?.id, fetchTaskStatus]);
 
-  // Optimistic injection: immediately add a new activity to state before DB confirms
+  // Optimistic injection: immediately add a new activity to state before DB confirms.
+  // Allow multiple instances per template (Quick Add) — only dedupe if the same log id is already present.
   const addOptimisticActivity = useCallback((activity: CustomActivityWithLog) => {
     setCustomActivities(prev => {
-      // Avoid duplicates if refreshCustomActivities already ran
-      if (prev.some(a => a.template.id === activity.template.id)) return prev;
+      if (activity.log?.id && prev.some(a => a.log?.id === activity.log!.id)) return prev;
       return [...prev, activity];
     });
   }, []);
@@ -890,28 +904,52 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       const skipDays = skipItemsMap.get(itemId) || [];
       const isSkippedToday = skipDays.includes(todayDayOfWeek);
 
-      const todayLog = logs.find(l => l.template_id === template.id);
+      const todayLogsForTemplate = logs
+        .filter(l => l.template_id === template.id)
+        .sort((a, b) => ((a as any).instance_index ?? 0) - ((b as any).instance_index ?? 0));
+      const hasAnyLog = todayLogsForTemplate.length > 0;
 
-      if (isSkippedToday && !todayLog) return;
+      if (isSkippedToday && !hasAnyLog) return;
 
       // Check specific_dates scheduling
       const specificDates = (template.specific_dates as string[] | null) || [];
       if (specificDates.length > 0) {
-        if (!specificDates.includes(today) && !todayLog) return;
+        if (!specificDates.includes(today) && !hasAnyLog) return;
       }
 
-      const scheduledDays = template.recurring_active
-        ? (template.recurring_days as number[]) || []
-        : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
+      // Determine schedule signals — "no schedule" means none of these are set
+      const hasWeekly = !!template.recurring_active && ((template.recurring_days as number[] | null)?.length ?? 0) > 0;
+      const hasDisplayDays = ((template.display_days as number[] | null)?.length ?? 0) > 0;
+      const hasSpecificDates = specificDates.length > 0;
+
+      if (!hasWeekly && !hasDisplayDays && !hasSpecificDates) {
+        if (!hasAnyLog) return;
+      }
+
+      const scheduledDays = hasWeekly
+        ? (template.recurring_days as number[])
+        : hasDisplayDays
+        ? (template.display_days as number[])
+        : [];
 
       const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
+      const showScheduled = isScheduledToday && !isSkippedToday;
 
-      if ((isScheduledToday && !isSkippedToday) || todayLog) {
+      if (hasAnyLog) {
+        todayLogsForTemplate.forEach(log => {
+          refreshed.push({
+            template,
+            log,
+            isRecurring: template.recurring_active || false,
+            isScheduledForToday: true,
+          });
+        });
+      } else if (showScheduled) {
         refreshed.push({
           template,
-          log: todayLog,
+          log: undefined,
           isRecurring: template.recurring_active || false,
-          isScheduledForToday: (isScheduledToday && !isSkippedToday) || !!todayLog,
+          isScheduledForToday: true,
         });
       }
     });
@@ -1501,21 +1539,28 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     folderTasks.map(ft => ft.item.title.trim().toLowerCase())
   );
 
-  // Add custom activities as tasks, skipping duplicates that exist in folders
+  // Add custom activities as tasks, skipping duplicates that exist in folders.
+  // Each (template, log) pair becomes its own task — supports multiple Quick Adds per day.
   customActivities.forEach(activity => {
     if (folderItemTitles.has(activity.template.title.trim().toLowerCase())) return;
     const iconKey = activity.template.icon || 'activity';
     const IconComponent = customActivityIconMap[iconKey] || Activity;
-    
+
+    const instanceIdx = (activity.log as any)?.instance_index ?? 0;
+    const titleSuffix = instanceIdx > 0 ? ` #${instanceIdx + 1}` : '';
+    const taskId = activity.log?.id
+      ? `custom-${activity.template.id}-${activity.log.id}`
+      : `custom-${activity.template.id}`;
+
     tasks.push({
-      id: `custom-${activity.template.id}`,
-      titleKey: activity.template.title, // Use raw title, not translation key
+      id: taskId,
+      titleKey: activity.template.title + titleSuffix,
       descriptionKey: activity.template.description || '',
       completed: (activity.log?.completion_state === 'completed') || activity.log?.completed || false,
       completionState: (activity.log?.completion_state as any) || (activity.log?.completed ? 'completed' : 'not_started'),
       completionMethod: (activity.log?.completion_method as any) || 'none',
       icon: IconComponent,
-      link: '', // Custom activities don't navigate
+      link: '',
       taskType: 'custom',
       section: 'custom',
       specialStyle: 'custom',

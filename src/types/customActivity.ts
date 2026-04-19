@@ -155,6 +155,7 @@ export interface CustomActivityLog {
   performance_data: Record<string, any>;
   completion_state?: CompletionState;
   completion_method?: CompletionMethod;
+  instance_index?: number;
   created_at: string;
   template?: CustomActivityTemplate;
 }
