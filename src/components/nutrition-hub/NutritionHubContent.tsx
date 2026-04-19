@@ -477,12 +477,12 @@ export function NutritionHubContent() {
 
       {/* Main Content Tabs */}
       <Tabs ref={tabsRef} value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full flex overflow-x-auto">
-          <TabsTrigger value="today" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.today', 'Today')}</TabsTrigger>
-          <TabsTrigger value="weekly" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
-          <TabsTrigger value="planning" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('mealPlanning.title', 'Planning')}</TabsTrigger>
-          <TabsTrigger value="shopping" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('shoppingList.title', 'Shopping')}</TabsTrigger>
-          <TabsTrigger value="recipes" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.recipes', 'Recipes')}</TabsTrigger>
+        <TabsList className="w-full justify-start overflow-x-auto flex gap-1 h-auto p-1">
+          <TabsTrigger value="today" className="flex-shrink-0 min-w-fit px-3 text-xs sm:text-sm whitespace-nowrap">{t('nutrition.today', 'Today')}</TabsTrigger>
+          <TabsTrigger value="weekly" className="flex-shrink-0 min-w-fit px-3 text-xs sm:text-sm whitespace-nowrap">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
+          <TabsTrigger value="planning" className="flex-shrink-0 min-w-fit px-3 text-xs sm:text-sm whitespace-nowrap">{t('mealPlanning.title', 'Planning')}</TabsTrigger>
+          <TabsTrigger value="shopping" className="flex-shrink-0 min-w-fit px-3 text-xs sm:text-sm whitespace-nowrap">{t('shoppingList.title', 'Shopping')}</TabsTrigger>
+          <TabsTrigger value="recipes" className="flex-shrink-0 min-w-fit px-3 text-xs sm:text-sm whitespace-nowrap">{t('nutrition.recipes', 'Recipes')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">
