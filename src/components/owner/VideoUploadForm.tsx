@@ -50,6 +50,9 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
 
   const handleSubmit = async () => {
     if (!title.trim()) return;
+    if (!structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()) {
+      return;
+    }
 
     const videoType = mode === 'upload' ? 'upload' : detectVideoType(externalUrl);
 
@@ -63,17 +66,16 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
       videoFile: videoFile || undefined,
       externalUrl: mode === 'link' ? externalUrl : undefined,
       videoType,
+      videoFormat: structured.videoFormat,
+      skillDomains: structured.skillDomains,
+      aiDescription: structured.aiDescription,
+      tagAssignments: structured.tagAssignments,
     });
 
     if (result) {
-      setTitle('');
-      setDescription('');
-      setNotes('');
-      setExternalUrl('');
-      setVideoFile(null);
-      setSelectedSport([]);
-      setCategory('');
-      setSelectedTags([]);
+      setTitle(''); setDescription(''); setNotes(''); setExternalUrl('');
+      setVideoFile(null); setSelectedSport([]); setCategory(''); setSelectedTags([]);
+      setStructured(emptyStructuredTagState);
       onSuccess();
     }
   };
