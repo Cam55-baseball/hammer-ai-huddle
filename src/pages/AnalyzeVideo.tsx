@@ -27,6 +27,8 @@ import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers
 import { extractKeyFrames, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { useVault } from "@/hooks/useVault";
 import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
+import { VideoSuggestionsPanel } from "@/components/video-suggestions/VideoSuggestionsPanel";
+import { moduleToSkillDomain } from "@/lib/analysisToTaxonomy";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();

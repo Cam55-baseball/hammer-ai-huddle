@@ -12,6 +12,8 @@ import { CoachingReportDisplay } from '@/components/practice/CoachingReportDispl
 import { useAuth } from '@/hooks/useAuth';
 import { CheckCircle, Loader2, Flame, Trophy, Target, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { VideoSuggestionsPanel } from '@/components/video-suggestions/VideoSuggestionsPanel';
+import { moduleToSkillDomain, mapOutcomeToResult } from '@/lib/analysisToTaxonomy';
 
 interface PostSessionSummaryV2Props {
   sessionId: string;
