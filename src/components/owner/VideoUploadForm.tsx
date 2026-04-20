@@ -197,7 +197,13 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
         )}
       </div>
 
-      <Button onClick={handleSubmit} disabled={uploading || !title.trim()} className="w-full">
+      <StructuredTagEditor value={structured} onChange={setStructured} />
+
+      <Button
+        onClick={handleSubmit}
+        disabled={uploading || !title.trim() || !structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()}
+        className="w-full"
+      >
         {uploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</> : 'Add Video'}
       </Button>
     </Card>
