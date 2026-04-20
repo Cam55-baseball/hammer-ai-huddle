@@ -15,6 +15,11 @@ interface UploadVideoPayload {
   externalUrl?: string;
   videoType: 'upload' | 'youtube' | 'vimeo' | 'external';
   thumbnailUrl?: string;
+  // Hammer 6-Layer structured tagging (V1)
+  videoFormat?: string;
+  skillDomains?: string[];
+  aiDescription?: string;
+  tagAssignments?: Record<string, number>; // taxonomy tag id -> weight
 }
 
 export function useVideoLibraryAdmin() {
