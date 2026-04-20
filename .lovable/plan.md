@@ -1,89 +1,81 @@
 
 
-## Plan — 6-Week Test Elite Performance Alignment
+## Plan — Exhaustive Running Aggregation Engine
 
-Upgrades the registry-driven 6-Week Test to remove low-transfer metrics, sport-normalize speed, and tie elasticity directly to performance.
+### Problem
+`RunningProgressSummary` only reads completed `custom_activity_logs` whose template has `activity_type='running'`, ignoring 90% of the places users actually log running. Worse, it adds the raw `template.distance_value` without unit conversion, so a user logging **"100 yards"** silently becomes **"100 miles"** — and short distances in feet/yards round to ~0 contribution. Result: short-distance runners "never get credit."
 
-### 1. Registry changes (`src/data/performanceTestRegistry.ts`)
+### New aggregation engine — `src/lib/runningAggregator.ts` (new file)
 
-**Remove categories** from `METRIC_CATEGORIES`, `CATEGORY_LABELS`, and delete all metrics in:
-- `health` (resting_heart_rate, body_weight, body_fat_pct)
-- `recovery` (soreness_score, sleep_hours_avg, recovery_score)
+A single `aggregateAllRunning(userId, sport, range)` function that gathers running from **every** source the app stores it in, normalizes to miles, and returns a unified `RunningStats`. Sources scanned:
 
-**Rename category**:
-- `mobility` label `"Mobility & Fascial Elasticity"` → `"Fascial Elasticity"`. Keep the `mobility` key (immutable contract) but treat the category as elasticity-focused.
+| # | Source | What it captures |
+|---|--------|------------------|
+| 1 | `custom_activity_logs` + `custom_activity_templates` (`activity_type='running'`) — **main `distance_value` with unit conversion** (currently broken) | Standard runs |
+| 2 | Same templates' `embedded_running_sessions[]` (already partially handled, fix unit edge cases) | Multi-leg runs |
+| 3 | Same templates' `intervals[]` jsonb (currently ignored) | Interval workouts |
+| 4 | `custom_activity_templates` (`activity_type='workout' OR 'practice' OR 'warmup'`) with non-empty `embedded_running_sessions` | Runs embedded inside lift/practice cards |
+| 5 | `custom_activity_templates.exercises[]` where `type='cardio'` OR name matches `/run|sprint|jog|dash|hill|interval|tempo|mile|fartlek/i` — convert `sets × reps` as yards when name ends in "(30m)", "(yd)", etc., else use `duration` to estimate via 6 mph default | Cardio inside any custom activity |
+| 6 | `running_sessions` table (`completed=true`) with its own `distance_value` + `distance_unit` + `intervals[]` jsonb | Dedicated running log |
+| 7 | `speed_sessions.distances` jsonb `{"10y":[1.41,1.58], "30y":[3.63], "60y":[6.3]}` — sum reps × yards per key | Speed Lab / Explosive Conditioning sprints |
+| 8 | `block_exercises` (joined via `block_workouts` → `training_blocks.user_id`) where name matches sprint/run regex AND parent `block_workouts.status='completed'`. Parse distance from name (`(30m)`, `(40yd)`, `Hill Sprints`) × sets × reps; fall back to default 30 yd if unknown sprint distance | Strength program sprints |
 
-**Remove metric**:
-- `sit_and_reach` (delete from registry + benchmarks).
+### Unit normalization (single source of truth)
 
-**Keep elasticity-relevant mobility metrics** (they directly enable rotational / arm performance and are referenced in the intelligence engine's causal links):
-- `shoulder_rom_internal`, `shoulder_rom_external`, `hip_internal_rotation`, `ankle_dorsiflexion` remain — they predict throwing/rotational output.
+Helper `toMiles(value, unit)` handles: `miles`, `kilometers`, `meters`, `yards`, `feet`. All accumulators store **miles** internally; UI converts back for display.
 
-**Add new metric** (bilateral, fascial elasticity):
+```text
+yards → /1760 | meters → /1609.34 | feet → /5280 | km → /1.609 | miles → 1:1
 ```
-key: 'sl_3x_bound', category: 'mobility', label: 'Single Leg 3x Bound',
-unit: 'ft', min: 10, max: 80, step: 0.5, higherIsBetter: true,
-tier: 'free', sports: ['baseball','softball'],
-modules: ['hitting','pitching','throwing','general'],
-bilateral: true, bilateralType: 'leg',
-instructions: 'Three consecutive single-leg bounds for distance. Measure total distance from start line to final landing. Test each leg.'
+
+Apply unit conversion to **every** source — fixes the `template.distance_value` bug.
+
+### Confidence-aware totals
+
+Return shape:
+```ts
+{
+  totalDistanceMiles: number,
+  totalDistanceYards: number,    // also expose for short-distance users
+  totalDuration: number,
+  totalSessions: number,
+  avgPace: string,
+  bySource: {                    // transparency: where credit came from
+    customActivities, embedded, intervals, runningSessions,
+    speedSessions, blockSprints, cardioExercises
+  },
+  shortDistanceTotal: number     // sum of <1 mile efforts so users see them
+}
 ```
-The existing `renderBilateralInputs` already handles `_left` / `_right` suffixed inputs — Right and Left distance fields render automatically. **Asymmetry %** and **Combined Elastic Output Score** are computed downstream (see §3).
 
-**Sport-specific speed split**:
-- Update `ten_yard_dash` → `sports: ['baseball']` only (keep key for historical baseball data).
-- Add `seven_yard_dash` (softball-only acceleration test).
-- `sixty_yard_dash` → `sports: ['baseball']` only (already present, adjust sport array).
-- Add `forty_yard_dash` (softball-only top-end test).
+### UI updates — `RunningProgressSummary.tsx`
 
-### 2. Benchmarks (`src/data/gradeBenchmarks.ts`)
+1. Replace inline fetch with `useQuery(['running-aggregate', userId, sport, range], aggregateAllRunning)`.
+2. **Smart unit display**: if `totalDistanceMiles < 1` AND `totalDistanceYards > 0`, show **yards** instead of miles so short runs are visible (no more rounding to 0).
+3. Add a **"Sources counted"** collapsible row listing each contributing source with its session count + distance, so users immediately see they're being credited (e.g., `Speed Lab: 14 sprints • 420 yd`).
+4. Drop sport filter to a soft filter — include sessions where sport is null or doesn't match (with a small "all sports" count badge) so runs logged before sport selection still count.
+5. Pace calculation: only compute when `totalDistanceMiles ≥ 0.5` AND `totalDuration > 0`; otherwise display `—:—` instead of bogus `0:00`.
 
-- Delete `sit_and_reach` block.
-- Restrict `ten_yard_dash` & `sixty_yard_dash` to baseball entries (softball blocks removed).
-- Add age-banded benchmarks (14u / 18u / college / pro) for: `seven_yard_dash`, `forty_yard_dash`, `sl_3x_bound` — derived from PG/PBR softball event data, NSCA bound norms, anchored at grade 45 = average.
+### Caching & sync
 
-### 3. Speed normalization & elasticity coupling (`src/lib/gradeEngine.ts` + new `src/lib/speedScoring.ts`)
-
-New helper `computeSpeedSubscores(results, sport, age)`:
-- **Acceleration Score** = grade of `ten_yard_dash` (baseball) or `seven_yard_dash` (softball).
-- **Max Speed Score** = grade of `sixty_yard_dash` (baseball) or `forty_yard_dash` (softball).
-- **Overall Speed Grade** = weighted avg (Accel 0.45, MaxSpeed 0.55), then apply elasticity modifier:
-  - Compute combined elastic output = avg of `sl_3x_bound_left` + `sl_3x_bound_right` graded value.
-  - Asymmetry % = `|L − R| / max(L,R) × 100`.
-  - Modifier: `+1 grade per 10 elasticity points above 50`, capped at +5; `−1 per 5% asymmetry above 10%`, capped at −5.
-- Returns `{ accel, maxSpeed, overall, elasticBoost, asymmetryPenalty, asymmetryPct, combinedElasticOutput }`.
-
-### 4. Tool-grade integration (`src/data/positionToolProfiles.ts`)
-- Replace `RUN_METRICS = ['sixty_yard_dash','ten_yard_dash','thirty_yard_dash',…]` with sport-aware list including `seven_yard_dash` and `forty_yard_dash`.
-- Add `sl_3x_bound` to `POWER_METRICS` and to `RUN_METRICS` (elasticity → speed transfer).
-
-### 5. Intelligence engine (`src/lib/testIntelligenceEngine.ts`)
-- Add causal link for `sl_3x_bound`: blocks `['sixty_yard_dash','forty_yard_dash','ten_yard_dash','seven_yard_dash']` — message: *"Single-leg elastic output is limiting your sprint ceiling and asymmetry increases injury risk."*
-- Surface `asymmetryPct ≥ 15%` as a dedicated limiting factor row (red flag).
-
-### 6. UI (`src/components/vault/VaultPerformanceTestCard.tsx`)
-- After bilateral inputs for `sl_3x_bound`, render computed **Asymmetry %** and **Combined Elastic Output Score** (read-only badges, live from current input state).
-- Render new **Speed Summary panel** in the latest-test view showing Acceleration / Max Speed / Overall Speed grades plus elasticity modifier badge.
-- No locale string changes required beyond category label rename.
-
-### 7. Weight redistribution
-- Removed `health` & `recovery` had no tool-profile weight (they were advisory-only). No `POSITION_TOOL_PROFILES` weight changes needed — invariant (sum=1.0) preserved.
-- Added `sl_3x_bound` participates via `POWER_METRICS` and `RUN_METRICS` averaging — no weight rebalance required.
-
-### 8. Data integrity / longitudinal compatibility
-- Historical results containing deleted keys (`sit_and_reach`, `resting_heart_rate`, etc.) remain in `performance_tests.results` JSON — engine simply skips unknown keys (`METRIC_BY_KEY[key]` returns undefined → no grade). No DB migration needed; **schema_version** stays compatible.
-- Old softball `ten_yard_dash` historical entries continue to render in trends (registry lookup still resolves the key as baseball-only metric, but trend code uses `METRIC_BY_KEY` not sport filter).
+- `staleTime: 60_000`, `refetchOnWindowFocus: true`.
+- Subscribe to `BroadcastChannel('data-sync')` so logging a run anywhere in the app instantly invalidates `['running-aggregate']`.
 
 ### Out of scope
-- No core grading-formula changes (interpolation untouched).
-- No changes to MPI / HIE engines.
-- No removal of `mobility` category key (immutable per engine contract).
+- No schema changes (all sources already exist).
+- No changes to how runs are *logged* — only how they're aggregated/displayed.
+- No changes to MPI / CNS load engines (they already credit these sources separately).
+
+### Files
+- **New**: `src/lib/runningAggregator.ts`
+- **Edit**: `src/components/custom-activities/RunningProgressSummary.tsx`
+- **Edit**: `src/i18n/locales/*/customActivity.json` (add `runningProgress.sourcesLabel`, short-distance copy)
 
 ### Verification
-1. Baseball athlete: 6-Week Test shows `10-Yard Dash` + `60-Yard Dash`, no 7yd/40yd.
-2. Softball athlete: shows `7-Yard Dash` + `40-Yard Dash`, no 10yd/60yd.
-3. Both sports show `Single Leg 3x Bound` with Right/Left inputs; saving displays Asymmetry % and Combined Elastic Output.
-4. Health & Recovery and Sit & Reach sections gone from UI.
-5. Speed Summary panel shows Acceleration / Max Speed / Overall Speed grades; elastic boost increases Overall Speed when bounds are above 50; high asymmetry applies a penalty.
-6. Historical tests with deleted metrics still load without errors; trends ignore them.
+1. User with only Speed Lab sessions (no custom run cards): now sees sprint yardage credited.
+2. User who logged "200 yards" via custom activity card: sees **200 yd** (not 200 miles, not 0).
+3. User with embedded run inside a strength workout card: sees it counted under "Embedded".
+4. User with `running_sessions` entries (Production Lab Speed Lab): sees them listed as "Running Sessions".
+5. Existing user with mile-based runs: totals match prior numbers (no regression).
+6. "Sources counted" panel shows non-zero entries matching DB rows.
 
