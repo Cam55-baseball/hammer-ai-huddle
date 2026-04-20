@@ -154,7 +154,32 @@ export function PostSessionSummaryV2({ sessionId, module, sessionType, onDone }:
         />
       )}
 
-      {/* F. Streak */}
+      {/* Hammer Video Suggestions — Session Mode */}
+      {hasScores && (() => {
+        const skillDomain = moduleToSkillDomain(module) || 'hitting';
+        const movements = Object.entries(composites)
+          .filter(([, v]) => (v as number) < 60)
+          .map(([k]) => k.toLowerCase().replace(/[^a-z]+/g, '_'));
+        const results: string[] = [];
+        drillBlocks.forEach((b: any) => {
+          (b.outcomes || b.reps || []).forEach((r: any) => {
+            const tag = r.outcome || r.outcome_tag || r.result;
+            if (tag) {
+              const m = mapOutcomeToResult(String(tag));
+              if (m) results.push(m);
+            }
+          });
+        });
+        if (movements.length === 0 && results.length === 0) return null;
+        return (
+          <VideoSuggestionsPanel
+            skillDomain={skillDomain}
+            mode="session"
+            movementPatterns={movements}
+            resultTags={Array.from(new Set(results))}
+          />
+        );
+      })()}
       {mpiSettings?.streak_current != null && mpiSettings.streak_current > 0 && (
         <Card>
           <CardContent className="pt-4 flex items-center gap-3">
