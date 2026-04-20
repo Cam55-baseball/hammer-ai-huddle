@@ -1,52 +1,89 @@
 
 
-## Plan — Fix nutrition & mind fuel badge unlocks
+## Plan — 6-Week Test Elite Performance Alignment
 
-### Root causes
+Upgrades the registry-driven 6-Week Test to remove low-transfer metrics, sport-normalize speed, and tie elasticity directly to performance.
 
-**Nutrition (`get-daily-tip`)** — badges are computed but never reach the user:
-1. **First-visit branch** (no streak record yet) hardcodes `badges_earned: ['starter']` even though `starter` requires 3 days. Awards a wrong badge instantly and never re-evaluates real milestones.
-2. **No `newBadges` delta returned** — response only sends the cumulative `badgesEarned` list. The client cannot detect *which* badge was just unlocked.
-3. **`DailyTipHero.tsx` has zero badge-toast wiring** — no import, no celebration, no haptics. Even when a badge IS added to the DB list, the user sees nothing.
-4. **Same-day repeat visits** still update `badges_earned` correctly via the `else` branch loop, but with no client toast, the user never knows.
+### 1. Registry changes (`src/data/performanceTestRegistry.ts`)
 
-**Mind Fuel (`get-daily-lesson`)** — server logic works AND client wires `newBadges` to `showBadgeUnlockToast`. One small gap:
-1. The `mind_starter` (1-day) badge is awarded only when `currentStreak >= 1`, which only becomes true inside the `!alreadyVisitedToday` block. On a brand-new user's very first visit this works. ✔️
-2. **Confirmed working** — no fix needed beyond defensive cleanup.
+**Remove categories** from `METRIC_CATEGORIES`, `CATEGORY_LABELS`, and delete all metrics in:
+- `health` (resting_heart_rate, body_weight, body_fat_pct)
+- `recovery` (soreness_score, sleep_hours_avg, recovery_score)
 
-### Changes
+**Rename category**:
+- `mobility` label `"Mobility & Fascial Elasticity"` → `"Fascial Elasticity"`. Keep the `mobility` key (immutable contract) but treat the category as elasticity-focused.
 
-**1. `supabase/functions/get-daily-tip/index.ts`** — track and return new-badge deltas.
+**Remove metric**:
+- `sit_and_reach` (delete from registry + benchmarks).
 
-- **First-visit branch** (lines 83-98): create the streak with `badges_earned: []` (not `['starter']`). Compute `newBadges = []` for this path (streak=1, none of the milestones ≥ 3 days qualify).
-- **Same-day / consecutive / broken branches**: keep existing badge-loop logic, but explicitly compute and return a `newBadges` array (the badges added in *this* invocation).
-- **Response payload** (both `limitReached` path and normal path): add top-level `newBadges: string[]` field.
-- Add `console.log` for awarded badges (mirrors `get-daily-lesson` for parity / debuggability).
+**Keep elasticity-relevant mobility metrics** (they directly enable rotational / arm performance and are referenced in the intelligence engine's causal links):
+- `shoulder_rom_internal`, `shoulder_rom_external`, `hip_internal_rotation`, `ankle_dorsiflexion` remain — they predict throwing/rotational output.
 
-**2. `src/components/DailyTipHero.tsx`** — show the celebration toast.
+**Add new metric** (bilateral, fascial elasticity):
+```
+key: 'sl_3x_bound', category: 'mobility', label: 'Single Leg 3x Bound',
+unit: 'ft', min: 10, max: 80, step: 0.5, higherIsBetter: true,
+tier: 'free', sports: ['baseball','softball'],
+modules: ['hitting','pitching','throwing','general'],
+bilateral: true, bilateralType: 'leg',
+instructions: 'Three consecutive single-leg bounds for distance. Measure total distance from start line to final landing. Test each leg.'
+```
+The existing `renderBilateralInputs` already handles `_left` / `_right` suffixed inputs — Right and Left distance fields render automatically. **Asymmetry %** and **Combined Elastic Output Score** are computed downstream (see §3).
 
-- Import `showBadgeUnlockToast` (we'll create a small nutrition variant — or reuse existing pattern).
-- After `supabase.functions.invoke('get-daily-tip', …)` returns, if `data.newBadges?.length`, fire one toast per badge with staggered 1.5s delay (mirrors `MindFuelWeeklyChallenge.tsx` pattern).
+**Sport-specific speed split**:
+- Update `ten_yard_dash` → `sports: ['baseball']` only (keep key for historical baseball data).
+- Add `seven_yard_dash` (softball-only acceleration test).
+- `sixty_yard_dash` → `sports: ['baseball']` only (already present, adjust sport array).
+- Add `forty_yard_dash` (softball-only top-end test).
 
-**3. New file: `src/components/NutritionBadgeUnlockToast.tsx`** — dedicated nutrition badge toast.
-- Mirrors `MindFuelBadgeUnlockToast.tsx` structure.
-- `BADGE_INFO` map for the 6 nutrition milestones (`starter`, `week_warrior`, `iron_will`, `iron_horse`, `elite`, `legendary`) with their emojis from `NutritionBadges.tsx`.
-- Exports `showBadgeUnlockToast({ badgeKey })` — triggers confetti + haptic + sonner toast with green/emerald gradient (matches nutrition theme).
+### 2. Benchmarks (`src/data/gradeBenchmarks.ts`)
 
-**4. Backfill existing wrongly-awarded `'starter'` badges** — via SQL update (insert tool):
-- For users in `nutrition_streaks` where `'starter' = ANY(badges_earned)` AND `current_streak < 3`, remove `'starter'` from the array so they earn it legitimately.
+- Delete `sit_and_reach` block.
+- Restrict `ten_yard_dash` & `sixty_yard_dash` to baseball entries (softball blocks removed).
+- Add age-banded benchmarks (14u / 18u / college / pro) for: `seven_yard_dash`, `forty_yard_dash`, `sl_3x_bound` — derived from PG/PBR softball event data, NSCA bound norms, anchored at grade 45 = average.
+
+### 3. Speed normalization & elasticity coupling (`src/lib/gradeEngine.ts` + new `src/lib/speedScoring.ts`)
+
+New helper `computeSpeedSubscores(results, sport, age)`:
+- **Acceleration Score** = grade of `ten_yard_dash` (baseball) or `seven_yard_dash` (softball).
+- **Max Speed Score** = grade of `sixty_yard_dash` (baseball) or `forty_yard_dash` (softball).
+- **Overall Speed Grade** = weighted avg (Accel 0.45, MaxSpeed 0.55), then apply elasticity modifier:
+  - Compute combined elastic output = avg of `sl_3x_bound_left` + `sl_3x_bound_right` graded value.
+  - Asymmetry % = `|L − R| / max(L,R) × 100`.
+  - Modifier: `+1 grade per 10 elasticity points above 50`, capped at +5; `−1 per 5% asymmetry above 10%`, capped at −5.
+- Returns `{ accel, maxSpeed, overall, elasticBoost, asymmetryPenalty, asymmetryPct, combinedElasticOutput }`.
+
+### 4. Tool-grade integration (`src/data/positionToolProfiles.ts`)
+- Replace `RUN_METRICS = ['sixty_yard_dash','ten_yard_dash','thirty_yard_dash',…]` with sport-aware list including `seven_yard_dash` and `forty_yard_dash`.
+- Add `sl_3x_bound` to `POWER_METRICS` and to `RUN_METRICS` (elasticity → speed transfer).
+
+### 5. Intelligence engine (`src/lib/testIntelligenceEngine.ts`)
+- Add causal link for `sl_3x_bound`: blocks `['sixty_yard_dash','forty_yard_dash','ten_yard_dash','seven_yard_dash']` — message: *"Single-leg elastic output is limiting your sprint ceiling and asymmetry increases injury risk."*
+- Surface `asymmetryPct ≥ 15%` as a dedicated limiting factor row (red flag).
+
+### 6. UI (`src/components/vault/VaultPerformanceTestCard.tsx`)
+- After bilateral inputs for `sl_3x_bound`, render computed **Asymmetry %** and **Combined Elastic Output Score** (read-only badges, live from current input state).
+- Render new **Speed Summary panel** in the latest-test view showing Acceleration / Max Speed / Overall Speed grades plus elasticity modifier badge.
+- No locale string changes required beyond category label rename.
+
+### 7. Weight redistribution
+- Removed `health` & `recovery` had no tool-profile weight (they were advisory-only). No `POSITION_TOOL_PROFILES` weight changes needed — invariant (sum=1.0) preserved.
+- Added `sl_3x_bound` participates via `POWER_METRICS` and `RUN_METRICS` averaging — no weight rebalance required.
+
+### 8. Data integrity / longitudinal compatibility
+- Historical results containing deleted keys (`sit_and_reach`, `resting_heart_rate`, etc.) remain in `performance_tests.results` JSON — engine simply skips unknown keys (`METRIC_BY_KEY[key]` returns undefined → no grade). No DB migration needed; **schema_version** stays compatible.
+- Old softball `ten_yard_dash` historical entries continue to render in trends (registry lookup still resolves the key as baseball-only metric, but trend code uses `METRIC_BY_KEY` not sport filter).
 
 ### Out of scope
-- No changes to mind_fuel server logic (already correct).
-- No DB schema changes.
-- No changes to weekly challenge / bounce-back-bay badge systems (already working).
-- No badge UI redesign — only the unlock event flow.
+- No core grading-formula changes (interpolation untouched).
+- No changes to MPI / HIE engines.
+- No removal of `mobility` category key (immutable per engine contract).
 
 ### Verification
-1. **New user** visits Nutrition → sees a tip → no badge toast (streak = 1, first milestone is 3 days). DB row created with `badges_earned: []`.
-2. Same user returns 3 consecutive days → on day 3 sees 🌱 **"Getting Started"** confetti + toast. `nutrition_streaks.badges_earned` includes `starter` and response payload contains `newBadges: ['starter']`.
-3. Day 7 → 🌱 stays earned, ⚡ **"Week Warrior"** unlocks with toast.
-4. Refresh page same day after unlock → no duplicate toast (newBadges is empty on second invocation).
-5. **Mind Fuel** day 1 → 🧠 **"Mind Starter"** toast still fires (regression check).
-6. Existing user who falsely had `'starter'` with streak < 3 → after backfill, no badge shown until they hit 3 consecutive days.
+1. Baseball athlete: 6-Week Test shows `10-Yard Dash` + `60-Yard Dash`, no 7yd/40yd.
+2. Softball athlete: shows `7-Yard Dash` + `40-Yard Dash`, no 10yd/60yd.
+3. Both sports show `Single Leg 3x Bound` with Right/Left inputs; saving displays Asymmetry % and Combined Elastic Output.
+4. Health & Recovery and Sit & Reach sections gone from UI.
+5. Speed Summary panel shows Acceleration / Max Speed / Overall Speed grades; elastic boost increases Overall Speed when bounds are above 50; high asymmetry applies a penalty.
+6. Historical tests with deleted metrics still load without errors; trends ignore them.
 
