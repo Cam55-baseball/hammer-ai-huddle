@@ -355,6 +355,194 @@ export default function Dashboard() {
     );
   }
 
+  const moduleCardsSection = (
+    <>
+      {/* Sport Selector with Refresh Button */}
+      <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4">
+        <Tabs value={selectedSport} onValueChange={handleSportChange} className="flex-1">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="baseball">{t('dashboard.baseball')}</TabsTrigger>
+            <TabsTrigger value="softball">{t('dashboard.softball')}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefreshAccess}
+          disabled={isRefreshing}
+          className="gap-2 w-full xs:w-auto"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">{t('dashboard.refreshAccess')}</span>
+          <span className="sm:hidden">{t('dashboard.refresh')}</span>
+        </Button>
+      </div>
+
+      {/* Module Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">
+        {/* Complete Pitcher — $200/mo */}
+        <Card
+          className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
+            !isTierUnlocked('pitcher')
+              ? "border-2 border-dashed border-primary/30 hover:border-primary/50"
+              : "border-primary/50 border-2"
+          }`}
+          onClick={() => handleModuleSelect("pitcher")}
+        >
+          <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
+            <div className="p-2 sm:p-4 rounded-full bg-primary/10">
+              <CircleDot className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              Complete Pitcher
+              {!isTierUnlocked('pitcher') && <Lock className="h-5 w-5" />}
+            </h3>
+
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Pitching Analysis, Heat Factory, Ask the Coach
+            </p>
+            <Button
+              className="w-full"
+              variant={isTierUnlocked('pitcher') ? "default" : "outline"}
+            >
+              {isTierUnlocked('pitcher') ? (
+                <><CircleDot className="h-4 w-4 sm:mr-2" /> Start Training</>
+              ) : (
+                <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
+              )}
+            </Button>
+          </div>
+        </Card>
+
+        {/* 5Tool Player — $300/mo */}
+        <Card
+          className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
+            !isTierUnlocked('5tool')
+              ? "border-2 border-dashed border-primary/30 hover:border-primary/50"
+              : "border-primary/50 border-2"
+          }`}
+          onClick={() => handleModuleSelect("5tool")}
+        >
+          <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
+            <div className="p-2 sm:p-4 rounded-full bg-primary/10">
+              <Zap className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
+            </div>
+            <Badge className="bg-primary text-primary-foreground text-xs">Most Popular</Badge>
+            <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              5Tool Player
+              {!isTierUnlocked('5tool') && <Lock className="h-5 w-5" />}
+            </h3>
+
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Hitting + Throwing Analysis, Iron Bambino, Speed Lab, Tex Vision
+            </p>
+            <Button
+              className="w-full"
+              variant={isTierUnlocked('5tool') ? "default" : "outline"}
+            >
+              {isTierUnlocked('5tool') ? (
+                <><Zap className="h-4 w-4 sm:mr-2" /> Start Training</>
+              ) : (
+                <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
+              )}
+            </Button>
+          </div>
+        </Card>
+
+        {/* The Golden 2Way — $400/mo */}
+        <Card
+          className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
+            !isTierUnlocked('golden2way')
+              ? "border-2 border-dashed border-primary/30 hover:border-primary/50"
+              : "border-primary border-2"
+          }`}
+          onClick={() => handleModuleSelect("golden2way")}
+        >
+          <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
+            <div className="p-2 sm:p-4 rounded-full bg-primary/10">
+              <Target className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
+            </div>
+            <Badge className="bg-primary text-primary-foreground text-xs">Best Value</Badge>
+            <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              The Golden 2Way
+              {!isTierUnlocked('golden2way') && <Lock className="h-5 w-5" />}
+            </h3>
+
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Everything + The Unicorn workout system
+            </p>
+            <Button
+              className="w-full"
+              variant={isTierUnlocked('golden2way') ? "default" : "outline"}
+            >
+              {isTierUnlocked('golden2way') ? (
+                <><Target className="h-4 w-4 sm:mr-2" /> Start Training</>
+              ) : (
+                <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
+              )}
+            </Button>
+          </div>
+        </Card>
+
+        {/* Merch Card - Premium Visual Design */}
+        <Card
+          className="p-2 sm:p-6 hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]
+                     bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10
+                     border-2 border-amber-500/30 hover:border-amber-500/50
+                     relative overflow-hidden group"
+          onClick={() => window.open('https://hammers-modality-shop.fourthwall.com', '_blank')}
+        >
+          {/* Animated background shimmer */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
+                          translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+          <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4 relative z-10">
+            {/* Icon with pulse animation */}
+            <div className="p-2 sm:p-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20
+                            animate-pulse-gentle">
+              <ShoppingBag className="h-7 w-7 sm:h-12 sm:w-12 text-amber-600" />
+            </div>
+
+            {/* Title with sparkle badge */}
+            <div className="relative">
+              <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600
+                             bg-clip-text text-transparent flex items-center gap-2">
+                {t('dashboard.modules.merch')}
+                <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
+              </h3>
+              <Badge className="absolute -top-2 -right-8 bg-gradient-to-r from-red-500 to-orange-500
+                                text-white text-[10px] px-1.5 py-0.5 animate-bounce-subtle">
+                {t('dashboard.modules.merchNew')}
+              </Badge>
+            </div>
+
+            {/* Description */}
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {t('dashboard.modules.merchDescription')}
+            </p>
+
+            {/* Promotional tagline */}
+            <div className="text-xs text-amber-600 font-medium">
+              {t('dashboard.modules.merchTagline')}
+            </div>
+
+            {/* CTA Button */}
+            <Button
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600
+                         hover:to-orange-600 text-white font-semibold shadow-lg
+                         hover:shadow-amber-500/30 transition-all"
+            >
+              <ShoppingBag className="h-4 w-4 sm:mr-2" />
+              <span className="hidden xs:inline">{t('dashboard.modules.shopNow')}</span>
+              <span className="xs:hidden">{t('dashboard.modules.shop')}</span>
+              <ExternalLink className="h-3 w-3 ml-2" />
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </>
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full">
