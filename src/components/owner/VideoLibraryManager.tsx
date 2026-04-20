@@ -114,6 +114,14 @@ export function VideoLibraryManager() {
           <TagManager tags={tags} onRefresh={() => refetch()} />
         </TabsContent>
 
+        <TabsContent value="taxonomy" className="mt-4">
+          <TaxonomyManager />
+        </TabsContent>
+
+        <TabsContent value="rules" className="mt-4">
+          <RuleEngineManager />
+        </TabsContent>
+
         <TabsContent value="analytics" className="mt-4">
           <VideoAnalytics />
         </TabsContent>
