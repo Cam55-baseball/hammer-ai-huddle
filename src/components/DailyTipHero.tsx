@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useVault } from '@/hooks/useVault';
 import { toast } from 'sonner';
+import { showBadgeUnlockToast } from '@/components/NutritionBadgeUnlockToast';
 
 interface StreakData {
   currentStreak: number;
@@ -115,6 +116,14 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
           streak: data?.streak || null,
           totalTips: data?.totalTips || 0,
           viewedTips: data?.viewedTips || 0,
+        });
+      }
+
+      // Fire badge-unlock toasts (staggered) for any newly earned badges
+      const newBadges: string[] = data?.newBadges || [];
+      if (newBadges.length > 0) {
+        newBadges.forEach((badgeKey, idx) => {
+          setTimeout(() => showBadgeUnlockToast({ badgeKey }), idx * 1500);
         });
       }
     } catch (err) {

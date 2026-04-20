@@ -73,6 +73,9 @@ serve(async (req) => {
     // ========== STREAK TRACKING ==========
     const today = new Date().toISOString().split('T')[0];
     
+    // Track newly awarded badges in this invocation
+    let newBadgesThisRun: string[] = [];
+    
     // Get or create streak record
     let { data: streakData } = await serviceClient
       .from('nutrition_streaks')
@@ -81,7 +84,7 @@ serve(async (req) => {
       .single();
 
     if (!streakData) {
-      // Create new streak record
+      // Create new streak record — start with NO badges (starter requires 3 days)
       const { data: newStreak } = await serviceClient
         .from('nutrition_streaks')
         .insert({
@@ -91,11 +94,12 @@ serve(async (req) => {
           last_visit_date: today,
           total_visits: 1,
           tips_collected: 1,
-          badges_earned: ['starter'],
+          badges_earned: [],
         })
         .select()
         .single();
       streakData = newStreak;
+      console.log(`[get-daily-tip] First visit for user ${user.id}, streak=1, no badges`);
     } else {
       const lastVisit = streakData.last_visit_date;
       const lastVisitDate = new Date(lastVisit);
@@ -122,14 +126,19 @@ serve(async (req) => {
         newTipsCollected += 1;
       }
 
-      // Check for new badges
+      // Check for new badges (always evaluate, even on same-day repeat visits)
       const currentBadges = streakData.badges_earned || [];
-      const newBadges = [...currentBadges];
+      const updatedBadges = [...currentBadges];
       
       for (const milestone of BADGE_MILESTONES) {
         if (newStreak >= milestone.days && !currentBadges.includes(milestone.id)) {
-          newBadges.push(milestone.id);
+          updatedBadges.push(milestone.id);
+          newBadgesThisRun.push(milestone.id);
         }
+      }
+
+      if (newBadgesThisRun.length > 0) {
+        console.log(`[get-daily-tip] User ${user.id} earned new badges: ${newBadgesThisRun.join(', ')} (streak=${newStreak})`);
       }
 
       // Update streak record
@@ -141,7 +150,7 @@ serve(async (req) => {
           last_visit_date: today,
           total_visits: streakData.total_visits + 1,
           tips_collected: newTipsCollected,
-          badges_earned: newBadges,
+          badges_earned: updatedBadges,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id)
@@ -186,6 +195,7 @@ serve(async (req) => {
         totalTips: totalCount || 0,
         viewedTips: viewedCount || 0,
         viewedPercentage: totalCount ? Math.round(((viewedCount || 0) / totalCount) * 100) : 0,
+        newBadges: newBadgesThisRun,
         streak: streakData ? {
           currentStreak: streakData.current_streak,
           longestStreak: streakData.longest_streak,
@@ -365,6 +375,7 @@ Generate ONLY the tip text — no labels, no headers, no quotation marks.`;
       viewedTips: viewedCount || 0,
       dailyTipsRemaining: dailyTipsRemaining - 1,
       limitReached: false,
+      newBadges: newBadgesThisRun,
       streak: streakData ? {
         currentStreak: streakData.current_streak,
         longestStreak: streakData.longest_streak,
