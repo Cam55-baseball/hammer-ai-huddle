@@ -69,6 +69,7 @@ export default function Dashboard() {
   // Tier-based display: only the purchased tier card shows "Start Training"
   const activeTier = getActiveTier(subscribedModules, selectedSport);
   const isTierUnlocked = (tier: string) => isOwner || isAdmin || activeTier === tier;
+  const hasAnyTier = isOwner || isAdmin || activeTier !== null;
 
   const heroImages = [dashboardHero1, dashboardHero2, dashboardHero3, dashboardHero4];
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
