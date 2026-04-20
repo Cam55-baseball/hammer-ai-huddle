@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
+import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
 
 interface VideoUploadFormProps {
@@ -34,6 +35,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
   const [category, setCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagSearch, setTagSearch] = useState('');
+  const [structured, setStructured] = useState<StructuredTagState>(emptyStructuredTagState);
 
   const filteredTags = tags.filter(t =>
     t.name.toLowerCase().includes(tagSearch.toLowerCase()) &&
@@ -48,6 +50,9 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
 
   const handleSubmit = async () => {
     if (!title.trim()) return;
+    if (!structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()) {
+      return;
+    }
 
     const videoType = mode === 'upload' ? 'upload' : detectVideoType(externalUrl);
 
@@ -61,17 +66,16 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
       videoFile: videoFile || undefined,
       externalUrl: mode === 'link' ? externalUrl : undefined,
       videoType,
+      videoFormat: structured.videoFormat,
+      skillDomains: structured.skillDomains,
+      aiDescription: structured.aiDescription,
+      tagAssignments: structured.tagAssignments,
     });
 
     if (result) {
-      setTitle('');
-      setDescription('');
-      setNotes('');
-      setExternalUrl('');
-      setVideoFile(null);
-      setSelectedSport([]);
-      setCategory('');
-      setSelectedTags([]);
+      setTitle(''); setDescription(''); setNotes(''); setExternalUrl('');
+      setVideoFile(null); setSelectedSport([]); setCategory(''); setSelectedTags([]);
+      setStructured(emptyStructuredTagState);
       onSuccess();
     }
   };
@@ -193,7 +197,13 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
         )}
       </div>
 
-      <Button onClick={handleSubmit} disabled={uploading || !title.trim()} className="w-full">
+      <StructuredTagEditor value={structured} onChange={setStructured} />
+
+      <Button
+        onClick={handleSubmit}
+        disabled={uploading || !title.trim() || !structured.videoFormat || structured.skillDomains.length === 0 || !structured.aiDescription.trim()}
+        className="w-full"
+      >
         {uploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading...</> : 'Add Video'}
       </Button>
     </Card>

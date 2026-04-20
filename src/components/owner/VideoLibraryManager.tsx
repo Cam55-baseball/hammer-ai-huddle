@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Pencil, BarChart3, Tags } from "lucide-react";
+import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,8 @@ import { VideoUploadForm } from "./VideoUploadForm";
 import { VideoEditForm } from "./VideoEditForm";
 import { TagManager } from "./TagManager";
 import { VideoAnalytics } from "./VideoAnalytics";
+import { TaxonomyManager } from "./TaxonomyManager";
+import { RuleEngineManager } from "./RuleEngineManager";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
 import {
   Dialog,
@@ -43,17 +45,13 @@ export function VideoLibraryManager() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="videos">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="videos">Videos ({videos.length})</TabsTrigger>
-          <TabsTrigger value="upload">
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add Video
-          </TabsTrigger>
-          <TabsTrigger value="tags">
-            <Tags className="h-3.5 w-3.5 mr-1" /> Tags
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics
-          </TabsTrigger>
+          <TabsTrigger value="upload"><Plus className="h-3.5 w-3.5 mr-1" /> Add</TabsTrigger>
+          <TabsTrigger value="tags"><Tags className="h-3.5 w-3.5 mr-1" /> Tags</TabsTrigger>
+          <TabsTrigger value="taxonomy"><Network className="h-3.5 w-3.5 mr-1" /> Taxonomy</TabsTrigger>
+          <TabsTrigger value="rules"><GitBranch className="h-3.5 w-3.5 mr-1" /> Rules</TabsTrigger>
+          <TabsTrigger value="analytics"><BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="videos" className="space-y-3 mt-4">
@@ -114,6 +112,14 @@ export function VideoLibraryManager() {
 
         <TabsContent value="tags" className="mt-4">
           <TagManager tags={tags} onRefresh={() => refetch()} />
+        </TabsContent>
+
+        <TabsContent value="taxonomy" className="mt-4">
+          <TaxonomyManager />
+        </TabsContent>
+
+        <TabsContent value="rules" className="mt-4">
+          <RuleEngineManager />
         </TabsContent>
 
         <TabsContent value="analytics" className="mt-4">
