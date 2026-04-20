@@ -2917,6 +2917,7 @@ export type Database = {
       }
       library_videos: {
         Row: {
+          ai_description: string | null
           category: string | null
           created_at: string
           description: string | null
@@ -2924,16 +2925,21 @@ export type Database = {
           likes_count: number
           notes: string | null
           owner_id: string
+          skill_domains:
+            | Database["public"]["Enums"]["skill_domain_enum"][]
+            | null
           sport: string[]
           tags: string[]
           thumbnail_url: string | null
           title: string
           updated_at: string
+          video_format: Database["public"]["Enums"]["video_type_enum"] | null
           video_type: string
           video_url: string | null
           views_count: number
         }
         Insert: {
+          ai_description?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -2941,16 +2947,21 @@ export type Database = {
           likes_count?: number
           notes?: string | null
           owner_id: string
+          skill_domains?:
+            | Database["public"]["Enums"]["skill_domain_enum"][]
+            | null
           sport?: string[]
           tags?: string[]
           thumbnail_url?: string | null
           title: string
           updated_at?: string
+          video_format?: Database["public"]["Enums"]["video_type_enum"] | null
           video_type?: string
           video_url?: string | null
           views_count?: number
         }
         Update: {
+          ai_description?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -2958,11 +2969,15 @@ export type Database = {
           likes_count?: number
           notes?: string | null
           owner_id?: string
+          skill_domains?:
+            | Database["public"]["Enums"]["skill_domain_enum"][]
+            | null
           sport?: string[]
           tags?: string[]
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          video_format?: Database["public"]["Enums"]["video_type_enum"] | null
           video_type?: string
           video_url?: string | null
           views_count?: number
@@ -7994,6 +8009,44 @@ export type Database = {
           },
         ]
       }
+      video_performance_metrics: {
+        Row: {
+          last_recomputed_at: string | null
+          post_view_improvement_n: number
+          post_view_improvement_sum: number
+          suggestion_count: number
+          total_watch_seconds: number
+          video_id: string
+          watch_count: number
+        }
+        Insert: {
+          last_recomputed_at?: string | null
+          post_view_improvement_n?: number
+          post_view_improvement_sum?: number
+          suggestion_count?: number
+          total_watch_seconds?: number
+          video_id: string
+          watch_count?: number
+        }
+        Update: {
+          last_recomputed_at?: string | null
+          post_view_improvement_n?: number
+          post_view_improvement_sum?: number
+          suggestion_count?: number
+          total_watch_seconds?: number
+          video_id?: string
+          watch_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_performance_metrics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_pose_analysis: {
         Row: {
           id: string
@@ -8022,6 +8075,176 @@ export type Database = {
             columns: ["video_id"]
             isOneToOne: true
             referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_tag_assignments: {
+        Row: {
+          created_at: string
+          tag_id: string
+          video_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          tag_id: string
+          video_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          tag_id?: string
+          video_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "video_tag_taxonomy"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_tag_assignments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_tag_rules: {
+        Row: {
+          active: boolean
+          context_key: string | null
+          correction_key: string
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_key: string
+          notes: string | null
+          result_key: string | null
+          skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          strength: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          context_key?: string | null
+          correction_key: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_key: string
+          notes?: string | null
+          result_key?: string | null
+          skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          strength?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          context_key?: string | null
+          correction_key?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_key?: string
+          notes?: string | null
+          result_key?: string | null
+          skill_domain?: Database["public"]["Enums"]["skill_domain_enum"]
+          strength?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      video_tag_taxonomy: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          key: string
+          label: string
+          layer: Database["public"]["Enums"]["video_tag_layer_enum"]
+          skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          label: string
+          layer: Database["public"]["Enums"]["video_tag_layer_enum"]
+          skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          label?: string
+          layer?: Database["public"]["Enums"]["video_tag_layer_enum"]
+          skill_domain?: Database["public"]["Enums"]["skill_domain_enum"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      video_user_outcomes: {
+        Row: {
+          created_at: string
+          id: string
+          mode: string | null
+          post_score_delta: number | null
+          skill_domain: Database["public"]["Enums"]["skill_domain_enum"] | null
+          suggested_at: string
+          suggestion_reason: Json | null
+          user_id: string
+          video_id: string
+          watch_seconds: number | null
+          watched_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mode?: string | null
+          post_score_delta?: number | null
+          skill_domain?: Database["public"]["Enums"]["skill_domain_enum"] | null
+          suggested_at?: string
+          suggestion_reason?: Json | null
+          user_id: string
+          video_id: string
+          watch_seconds?: number | null
+          watched_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mode?: string | null
+          post_score_delta?: number | null
+          skill_domain?: Database["public"]["Enums"]["skill_domain_enum"] | null
+          suggested_at?: string
+          suggestion_reason?: Json | null
+          user_id?: string
+          video_id?: string
+          watch_seconds?: number | null
+          watched_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_user_outcomes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
             referencedColumns: ["id"]
           },
         ]
@@ -8637,10 +8860,29 @@ export type Database = {
         | "situation"
       mistake_type: "hesitation" | "misread" | "panic" | "over_aggressive"
       module_type: "hitting" | "pitching" | "throwing"
+      skill_domain_enum:
+        | "hitting"
+        | "fielding"
+        | "throwing"
+        | "base_running"
+        | "pitching"
       sport_type: "baseball" | "softball"
       throwing_hand: "R" | "L" | "B"
       training_data_type: "professional_example" | "common_mistake"
       video_status: "uploading" | "processing" | "completed" | "failed"
+      video_tag_layer_enum:
+        | "movement_pattern"
+        | "result"
+        | "context"
+        | "correction"
+      video_type_enum:
+        | "drill"
+        | "game_at_bat"
+        | "practice_rep"
+        | "breakdown"
+        | "slow_motion"
+        | "pov"
+        | "comparison"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -8783,10 +9025,32 @@ export const Constants = {
       ],
       mistake_type: ["hesitation", "misread", "panic", "over_aggressive"],
       module_type: ["hitting", "pitching", "throwing"],
+      skill_domain_enum: [
+        "hitting",
+        "fielding",
+        "throwing",
+        "base_running",
+        "pitching",
+      ],
       sport_type: ["baseball", "softball"],
       throwing_hand: ["R", "L", "B"],
       training_data_type: ["professional_example", "common_mistake"],
       video_status: ["uploading", "processing", "completed", "failed"],
+      video_tag_layer_enum: [
+        "movement_pattern",
+        "result",
+        "context",
+        "correction",
+      ],
+      video_type_enum: [
+        "drill",
+        "game_at_bat",
+        "practice_rep",
+        "breakdown",
+        "slow_motion",
+        "pov",
+        "comparison",
+      ],
     },
   },
 } as const
