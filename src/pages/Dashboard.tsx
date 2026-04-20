@@ -544,8 +544,7 @@ export default function Dashboard() {
             </Button>
           </div>
         </Card>
-      </div>
-    </>
+    </div>
   );
 
   return (
