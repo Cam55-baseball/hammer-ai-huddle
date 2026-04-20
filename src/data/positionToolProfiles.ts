@@ -17,8 +17,8 @@ export type ToolProfile = Record<ToolName, ToolMapping>;
 
 // ── METRIC → TOOL ASSIGNMENTS ────────────────────────────
 const HIT_METRICS = ['tee_exit_velocity', 'bat_speed', 'avg_exit_velo_bp'];
-const POWER_METRICS = ['tee_exit_velocity', 'max_tee_distance', 'mb_rotational_throw', 'vertical_jump', 'sl_broad_jump', 'mb_situp_throw', 'seated_chest_pass', 'mb_overhead_throw', 'standing_broad_jump'];
-const RUN_METRICS = ['sixty_yard_dash', 'ten_yard_dash', 'thirty_yard_dash', 'pro_agility', 'lateral_shuffle', 'first_step_5yd'];
+const POWER_METRICS = ['tee_exit_velocity', 'max_tee_distance', 'mb_rotational_throw', 'vertical_jump', 'sl_broad_jump', 'mb_situp_throw', 'seated_chest_pass', 'mb_overhead_throw', 'standing_broad_jump', 'sl_3x_bound'];
+const RUN_METRICS = ['sixty_yard_dash', 'ten_yard_dash', 'seven_yard_dash', 'forty_yard_dash', 'thirty_yard_dash', 'pro_agility', 'lateral_shuffle', 'first_step_5yd', 'sl_3x_bound'];
 const FIELD_METRICS = ['fielding_exchange_time', 'pop_time', 'lateral_shuffle', 'sixty_yard_shuttle', 'sl_balance_eyes_closed', 'pro_agility'];
 const ARM_METRICS = ['position_throw_velo', 'long_toss_distance', 'pulldown_velocity', 'pitching_velocity'];
 
