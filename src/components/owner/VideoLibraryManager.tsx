@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Pencil, BarChart3, Tags } from "lucide-react";
+import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,8 @@ import { VideoUploadForm } from "./VideoUploadForm";
 import { VideoEditForm } from "./VideoEditForm";
 import { TagManager } from "./TagManager";
 import { VideoAnalytics } from "./VideoAnalytics";
+import { TaxonomyManager } from "./TaxonomyManager";
+import { RuleEngineManager } from "./RuleEngineManager";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
 import {
   Dialog,
