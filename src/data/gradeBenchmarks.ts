@@ -1239,4 +1239,5 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
     },
   },
   // Health & Recovery categories removed — accounted for elsewhere in system.
+};
 
