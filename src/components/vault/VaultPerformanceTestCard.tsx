@@ -26,6 +26,7 @@ import { computeToolGrades, TOOL_LABELS, type ToolName } from '@/data/positionTo
 import { generateReport, type TestIntelligenceReport } from '@/lib/testIntelligenceEngine';
 import { getNextTestFocus, type NextTestFocus } from '@/lib/adaptiveTestPriority';
 import { computeTrends, getTrendSummary, type MetricTrend } from '@/lib/longitudinalEngine';
+import { computeSpeedSubscores, type SpeedSubscores } from '@/lib/speedScoring';
 
 interface PerformanceTest {
   id: string;
@@ -227,6 +228,33 @@ export function VaultPerformanceTestCard({
       ? [t('vault.performance.leftHand', 'Left Hand'), t('vault.performance.rightHand', 'Right Hand')]
       : [t('vault.performance.leftSide', 'Left Side'), t('vault.performance.rightSide', 'Right Side')];
 
+    // Live asymmetry / elastic output for sl_3x_bound
+    let elasticBadges: JSX.Element | null = null;
+    if (metric.key === 'sl_3x_bound') {
+      const leftVal = parseFloat(testResults[leftKey] || '');
+      const rightVal = parseFloat(testResults[rightKey] || '');
+      if (leftVal > 0 && rightVal > 0) {
+        const asymPct = (Math.abs(leftVal - rightVal) / Math.max(leftVal, rightVal)) * 100;
+        const leftGrade = rawToGrade('sl_3x_bound', leftVal, sport, age);
+        const rightGrade = rawToGrade('sl_3x_bound', rightVal, sport, age);
+        const elasticOutput = leftGrade !== null && rightGrade !== null
+          ? Math.round((leftGrade + rightGrade) / 2)
+          : null;
+        elasticBadges = (
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <Badge variant="outline" className={`text-[10px] ${asymPct >= 15 ? 'text-red-500 border-red-500/40' : asymPct >= 10 ? 'text-amber-500 border-amber-500/40' : 'text-green-600 border-green-500/40'}`}>
+              Asymmetry: {asymPct.toFixed(1)}%
+            </Badge>
+            {elasticOutput !== null && (
+              <Badge variant="outline" className={`text-[10px] ${gradeToColor(elasticOutput)}`}>
+                Elastic Output: {elasticOutput} ({gradeToLabel(elasticOutput)})
+              </Badge>
+            )}
+          </div>
+        );
+      }
+    }
+
     return (
       <div key={metric.key} className="p-2 rounded-lg bg-background/50 border border-border/50">
         <div className="flex items-center gap-2 mb-1">
@@ -255,6 +283,7 @@ export function VaultPerformanceTestCard({
             />
           </div>
         </div>
+        {elasticBadges}
       </div>
     );
   };
@@ -352,6 +381,63 @@ export function VaultPerformanceTestCard({
                         })}
                       </div>
                     </div>
+
+                    {/* Speed Summary — sport-normalized acceleration / max speed / overall */}
+                    {(() => {
+                      const speed: SpeedSubscores = computeSpeedSubscores(latestTest!.results, sport, age);
+                      if (speed.accel === null && speed.maxSpeed === null && speed.overall === null) return null;
+                      const accelLabel = sport === 'baseball' ? '10yd' : '7yd';
+                      const maxLabel = sport === 'baseball' ? '60yd' : '40yd';
+                      return (
+                        <div className="p-3 rounded-lg bg-muted/30 border border-border">
+                          <Label className="text-xs font-medium mb-2 block">Speed Summary</Label>
+                          <div className="grid grid-cols-3 gap-1">
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground">Acceleration ({accelLabel})</p>
+                              <p className={`text-lg font-bold ${speed.accel !== null ? gradeToColor(speed.accel) : 'text-muted-foreground'}`}>
+                                {speed.accel !== null ? speed.accel : '—'}
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground">Max Speed ({maxLabel})</p>
+                              <p className={`text-lg font-bold ${speed.maxSpeed !== null ? gradeToColor(speed.maxSpeed) : 'text-muted-foreground'}`}>
+                                {speed.maxSpeed !== null ? speed.maxSpeed : '—'}
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-muted-foreground">Overall Speed</p>
+                              <p className={`text-lg font-bold ${speed.overall !== null ? gradeToColor(speed.overall) : 'text-muted-foreground'}`}>
+                                {speed.overall !== null ? speed.overall : '—'}
+                              </p>
+                            </div>
+                          </div>
+                          {(speed.elasticBoost !== 0 || speed.asymmetryPenalty !== 0 || speed.combinedElasticOutput !== null) && (
+                            <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+                              {speed.combinedElasticOutput !== null && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  Elastic Output: {speed.combinedElasticOutput}
+                                </Badge>
+                              )}
+                              {speed.elasticBoost > 0 && (
+                                <Badge variant="outline" className="text-[10px] text-green-600 border-green-500/40">
+                                  Elastic Boost: +{speed.elasticBoost}
+                                </Badge>
+                              )}
+                              {speed.asymmetryPenalty < 0 && (
+                                <Badge variant="outline" className="text-[10px] text-red-500 border-red-500/40">
+                                  Asymmetry Penalty: {speed.asymmetryPenalty}
+                                </Badge>
+                              )}
+                              {speed.asymmetryPct !== null && (
+                                <Badge variant="outline" className={`text-[10px] ${speed.asymmetryPct >= 15 ? 'text-red-500 border-red-500/40' : speed.asymmetryPct >= 10 ? 'text-amber-500 border-amber-500/40' : 'text-muted-foreground'}`}>
+                                  Asym: {speed.asymmetryPct.toFixed(1)}%
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Strengths */}
                     {latestReport.topStrengths.length > 0 && (

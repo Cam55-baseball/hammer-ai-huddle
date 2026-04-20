@@ -66,6 +66,10 @@ const CAUSAL_LINKS: Record<string, { blocks: string[]; message: string }> = {
     blocks: ['sl_broad_jump', 'pro_agility'],
     message: 'Ankle mobility is limiting your lower body mechanics',
   },
+  sl_3x_bound: {
+    blocks: ['sixty_yard_dash', 'forty_yard_dash', 'ten_yard_dash', 'seven_yard_dash'],
+    message: 'Single-leg elastic output is limiting your sprint ceiling and asymmetry increases injury risk',
+  },
 };
 
 /**

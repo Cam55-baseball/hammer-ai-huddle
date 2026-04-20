@@ -33,8 +33,6 @@ export const METRIC_CATEGORIES = [
   'body_control',
   'energy_system',
   'mobility',
-  'health',
-  'recovery',
 ] as const;
 
 export type MetricCategory = typeof METRIC_CATEGORIES[number];
@@ -49,9 +47,7 @@ export const CATEGORY_LABELS: Record<MetricCategory, string> = {
   fielding: 'Fielding Mechanics & Range',
   body_control: 'Body Control',
   energy_system: 'Energy System Capacity',
-  mobility: 'Mobility & Fascial Elasticity',
-  health: 'Health & Durability',
-  recovery: 'Recovery Capacity',
+  mobility: 'Fascial Elasticity',
 };
 
 export const PERFORMANCE_METRICS: MetricDefinition[] = [
@@ -59,8 +55,14 @@ export const PERFORMANCE_METRICS: MetricDefinition[] = [
   {
     key: 'ten_yard_dash', category: 'speed', label: '10-Yard Dash',
     unit: 's', min: 1.0, max: 3.0, step: 0.01, higherIsBetter: false,
-    tier: 'free', sports: ['baseball', 'softball'], modules: ['hitting', 'pitching', 'throwing', 'general'],
+    tier: 'free', sports: ['baseball'], modules: ['hitting', 'pitching', 'throwing', 'general'],
     instructions: 'From a standing start, sprint 10 yards. Time with stopwatch or laser.',
+  },
+  {
+    key: 'seven_yard_dash', category: 'speed', label: '7-Yard Dash',
+    unit: 's', min: 0.8, max: 2.5, step: 0.01, higherIsBetter: false,
+    tier: 'free', sports: ['softball'], modules: ['hitting', 'pitching', 'throwing', 'general'],
+    instructions: 'From a standing start, sprint 7 yards (home-to-first-step distance for softball acceleration). Time with stopwatch or laser.',
   },
   {
     key: 'thirty_yard_dash', category: 'speed', label: '30-Yard Dash',
@@ -69,9 +71,15 @@ export const PERFORMANCE_METRICS: MetricDefinition[] = [
     instructions: 'From a standing start, sprint 30 yards. Use electronic timing if available.',
   },
   {
+    key: 'forty_yard_dash', category: 'speed', label: '40-Yard Dash',
+    unit: 's', min: 4.0, max: 8.0, step: 0.01, higherIsBetter: false,
+    tier: 'paid', sports: ['softball'], modules: ['hitting', 'throwing', 'general'],
+    instructions: 'From a standing start, sprint 40 yards. Standard softball top-end speed test.',
+  },
+  {
     key: 'sixty_yard_dash', category: 'speed', label: '60-Yard Dash',
     unit: 's', min: 5.5, max: 10.0, step: 0.01, higherIsBetter: false,
-    tier: 'paid', sports: ['baseball', 'softball'], modules: ['hitting', 'throwing', 'general'],
+    tier: 'paid', sports: ['baseball'], modules: ['hitting', 'throwing', 'general'],
     instructions: 'From a standing start, sprint 60 yards. Standard MLB combine distance.',
   },
   {
@@ -270,12 +278,13 @@ export const PERFORMANCE_METRICS: MetricDefinition[] = [
     instructions: 'Sprint 30 yards × 6 reps, 30s rest between. Record average time.',
   },
 
-  // ── MOBILITY ───────────────────────────────────────────
+  // ── FASCIAL ELASTICITY ─────────────────────────────────
   {
-    key: 'sit_and_reach', category: 'mobility', label: 'Sit & Reach',
-    unit: 'in', min: -5, max: 25, step: 0.5, higherIsBetter: true,
-    tier: 'free', sports: ['baseball', 'softball'], modules: ['general'],
-    instructions: 'Seated, legs extended. Reach forward past toes. Measure from toe line.',
+    key: 'sl_3x_bound', category: 'mobility', label: 'Single Leg 3x Bound',
+    unit: 'ft', min: 10, max: 80, step: 0.5, higherIsBetter: true,
+    tier: 'free', sports: ['baseball', 'softball'], modules: ['hitting', 'pitching', 'throwing', 'general'],
+    instructions: 'Three consecutive single-leg bounds for distance. Measure total distance from start line to final landing. Test each leg.',
+    bilateral: true, bilateralType: 'leg',
   },
   {
     key: 'shoulder_rom_internal', category: 'mobility', label: 'Shoulder ROM Internal',
@@ -304,46 +313,6 @@ export const PERFORMANCE_METRICS: MetricDefinition[] = [
     tier: 'elite', sports: ['baseball', 'softball'], modules: ['general'],
     instructions: 'Half-kneeling, toe 5" from wall. Knee-to-wall test. Measure max distance.',
     bilateral: true, bilateralType: 'leg',
-  },
-
-  // ── HEALTH ─────────────────────────────────────────────
-  {
-    key: 'resting_heart_rate', category: 'health', label: 'Resting Heart Rate',
-    unit: 'bpm', min: 35, max: 100, step: 1, higherIsBetter: false,
-    tier: 'free', sports: ['baseball', 'softball'], modules: ['general'],
-    instructions: 'Take pulse first thing in morning, before getting out of bed. 60-second count.',
-  },
-  {
-    key: 'body_weight', category: 'health', label: 'Body Weight',
-    unit: 'lbs', min: 50, max: 350, step: 0.1, higherIsBetter: false, // neutral
-    tier: 'free', sports: ['baseball', 'softball'], modules: ['general'],
-    instructions: 'Weigh first thing in morning after using restroom, before eating.',
-  },
-  {
-    key: 'body_fat_pct', category: 'health', label: 'Body Fat %',
-    unit: '%', min: 3, max: 45, step: 0.1, higherIsBetter: false,
-    tier: 'paid', sports: ['baseball', 'softball'], modules: ['general'],
-    instructions: 'Use calipers, DEXA, or bioimpedance. Same method each test for consistency.',
-  },
-
-  // ── RECOVERY ───────────────────────────────────────────
-  {
-    key: 'soreness_score', category: 'recovery', label: 'Self-Reported Soreness (1-10)',
-    unit: 'score', min: 1, max: 10, step: 1, higherIsBetter: false,
-    tier: 'free', sports: ['baseball', 'softball'], modules: ['general'],
-    instructions: '1 = no soreness, 10 = extreme. Rate overall body soreness.',
-  },
-  {
-    key: 'sleep_hours_avg', category: 'recovery', label: 'Avg Sleep (hrs/night)',
-    unit: 'hrs', min: 2, max: 14, step: 0.5, higherIsBetter: true,
-    tier: 'free', sports: ['baseball', 'softball'], modules: ['general'],
-    instructions: 'Average hours of sleep per night over the past week.',
-  },
-  {
-    key: 'recovery_score', category: 'recovery', label: 'Recovery Score (1-10)',
-    unit: 'score', min: 1, max: 10, step: 1, higherIsBetter: true,
-    tier: 'paid', sports: ['baseball', 'softball'], modules: ['general'],
-    instructions: '1 = not recovered at all, 10 = fully recovered and energized.',
   },
 ];
 
