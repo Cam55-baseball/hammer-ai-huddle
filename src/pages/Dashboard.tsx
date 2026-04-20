@@ -483,15 +483,20 @@ export default function Dashboard() {
             </Button>
           </div>
         </Card>
+      </div>
+    </>
+  );
 
-        {/* Merch Card - Premium Visual Design */}
-        <Card
-          className="p-2 sm:p-6 hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]
-                     bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10
-                     border-2 border-amber-500/30 hover:border-amber-500/50
-                     relative overflow-hidden group"
-          onClick={() => window.open('https://hammers-modality-shop.fourthwall.com', '_blank')}
-        >
+  const merchSection = (
+    <div className="grid grid-cols-1 gap-4 sm:gap-6">
+      {/* Merch Card - Premium Visual Design */}
+      <Card
+        className="p-2 sm:p-6 hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]
+                   bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10
+                   border-2 border-amber-500/30 hover:border-amber-500/50
+                   relative overflow-hidden group"
+        onClick={() => window.open('https://hammers-modality-shop.fourthwall.com', '_blank')}
+      >
           {/* Animated background shimmer */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
                           translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
