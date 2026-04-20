@@ -35,6 +35,7 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
   const [category, setCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagSearch, setTagSearch] = useState('');
+  const [structured, setStructured] = useState<StructuredTagState>(emptyStructuredTagState);
 
   const filteredTags = tags.filter(t =>
     t.name.toLowerCase().includes(tagSearch.toLowerCase()) &&
