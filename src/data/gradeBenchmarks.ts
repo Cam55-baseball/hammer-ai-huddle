@@ -34,7 +34,7 @@ export type BenchmarkTable = Record<string, {
 export const GRADE_BENCHMARKS: BenchmarkTable = {
   // ── SPEED ──────────────────────────────────────────────
   ten_yard_dash: {
-    // Source: PG/PBR event timing data, MLB Combine
+    // Source: PG/PBR event timing data, MLB Combine — baseball only
     baseball: {
       '14u': [
         { raw: 2.2, grade: 20 }, { raw: 2.0, grade: 30 }, { raw: 1.85, grade: 45 },
@@ -53,22 +53,28 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 1.48, grade: 55 }, { raw: 1.40, grade: 65 }, { raw: 1.30, grade: 80 },
       ],
     },
+    softball: {},
+  },
+
+  seven_yard_dash: {
+    // Source: PG/PBR softball event timing — softball acceleration test
+    baseball: {},
     softball: {
       '14u': [
-        { raw: 2.3, grade: 20 }, { raw: 2.1, grade: 30 }, { raw: 1.95, grade: 45 },
-        { raw: 1.85, grade: 55 }, { raw: 1.75, grade: 65 }, { raw: 1.65, grade: 80 },
+        { raw: 1.85, grade: 20 }, { raw: 1.70, grade: 30 }, { raw: 1.55, grade: 45 },
+        { raw: 1.45, grade: 55 }, { raw: 1.38, grade: 65 }, { raw: 1.28, grade: 80 },
       ],
       '18u': [
-        { raw: 2.1, grade: 20 }, { raw: 1.95, grade: 30 }, { raw: 1.8, grade: 45 },
-        { raw: 1.7, grade: 55 }, { raw: 1.6, grade: 65 }, { raw: 1.50, grade: 80 },
+        { raw: 1.70, grade: 20 }, { raw: 1.55, grade: 30 }, { raw: 1.42, grade: 45 },
+        { raw: 1.34, grade: 55 }, { raw: 1.28, grade: 65 }, { raw: 1.18, grade: 80 },
       ],
       college: [
-        { raw: 2.0, grade: 20 }, { raw: 1.85, grade: 30 }, { raw: 1.7, grade: 45 },
-        { raw: 1.6, grade: 55 }, { raw: 1.52, grade: 65 }, { raw: 1.43, grade: 80 },
+        { raw: 1.60, grade: 20 }, { raw: 1.48, grade: 30 }, { raw: 1.36, grade: 45 },
+        { raw: 1.28, grade: 55 }, { raw: 1.22, grade: 65 }, { raw: 1.13, grade: 80 },
       ],
       pro: [
-        { raw: 1.95, grade: 20 }, { raw: 1.8, grade: 30 }, { raw: 1.65, grade: 45 },
-        { raw: 1.55, grade: 55 }, { raw: 1.48, grade: 65 }, { raw: 1.40, grade: 80 },
+        { raw: 1.55, grade: 20 }, { raw: 1.43, grade: 30 }, { raw: 1.32, grade: 45 },
+        { raw: 1.24, grade: 55 }, { raw: 1.18, grade: 65 }, { raw: 1.10, grade: 80 },
       ],
     },
   },
@@ -114,7 +120,7 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
   },
 
   sixty_yard_dash: {
-    // Source: MLB Combine avg 2019-2023
+    // Source: MLB Combine avg 2019-2023 — baseball only
     baseball: {
       '14u': [
         { raw: 9.0, grade: 20 }, { raw: 8.3, grade: 30 }, { raw: 7.6, grade: 45 },
@@ -133,22 +139,28 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
         { raw: 6.4, grade: 55 }, { raw: 6.3, grade: 65 }, { raw: 6.0, grade: 80 },
       ],
     },
+    softball: {},
+  },
+
+  forty_yard_dash: {
+    // Source: PG/PBR softball event timing — softball top-end speed test
+    baseball: {},
     softball: {
       '14u': [
-        { raw: 9.5, grade: 20 }, { raw: 8.8, grade: 30 }, { raw: 8.1, grade: 45 },
-        { raw: 7.7, grade: 55 }, { raw: 7.3, grade: 65 }, { raw: 6.8, grade: 80 },
+        { raw: 6.8, grade: 20 }, { raw: 6.3, grade: 30 }, { raw: 5.85, grade: 45 },
+        { raw: 5.55, grade: 55 }, { raw: 5.30, grade: 65 }, { raw: 4.95, grade: 80 },
       ],
       '18u': [
-        { raw: 8.8, grade: 20 }, { raw: 8.2, grade: 30 }, { raw: 7.6, grade: 45 },
-        { raw: 7.2, grade: 55 }, { raw: 6.9, grade: 65 }, { raw: 6.5, grade: 80 },
+        { raw: 6.3, grade: 20 }, { raw: 5.85, grade: 30 }, { raw: 5.45, grade: 45 },
+        { raw: 5.18, grade: 55 }, { raw: 4.95, grade: 65 }, { raw: 4.65, grade: 80 },
       ],
       college: [
-        { raw: 8.3, grade: 20 }, { raw: 7.8, grade: 30 }, { raw: 7.3, grade: 45 },
-        { raw: 7.0, grade: 55 }, { raw: 6.7, grade: 65 }, { raw: 6.3, grade: 80 },
+        { raw: 5.95, grade: 20 }, { raw: 5.55, grade: 30 }, { raw: 5.20, grade: 45 },
+        { raw: 4.95, grade: 55 }, { raw: 4.78, grade: 65 }, { raw: 4.50, grade: 80 },
       ],
       pro: [
-        { raw: 8.0, grade: 20 }, { raw: 7.5, grade: 30 }, { raw: 7.1, grade: 45 },
-        { raw: 6.8, grade: 55 }, { raw: 6.5, grade: 65 }, { raw: 6.1, grade: 80 },
+        { raw: 5.75, grade: 20 }, { raw: 5.40, grade: 30 }, { raw: 5.05, grade: 45 },
+        { raw: 4.85, grade: 55 }, { raw: 4.65, grade: 65 }, { raw: 4.40, grade: 80 },
       ],
     },
   },
@@ -1089,35 +1101,44 @@ export const GRADE_BENCHMARKS: BenchmarkTable = {
     },
   },
 
-  // ── MOBILITY ───────────────────────────────────────────
-  sit_and_reach: {
-    // Source: NSCA normative tables
+  // ── FASCIAL ELASTICITY ─────────────────────────────────
+  sl_3x_bound: {
+    // Source: NSCA bound norms + sport-specific elastic output research.
+    // Total distance for three consecutive single-leg bounds (per leg).
     baseball: {
       '14u': [
-        { raw: -2, grade: 20 }, { raw: 2, grade: 30 }, { raw: 6, grade: 45 },
-        { raw: 9, grade: 55 }, { raw: 12, grade: 65 }, { raw: 17, grade: 80 },
+        { raw: 14, grade: 20 }, { raw: 18, grade: 30 }, { raw: 23, grade: 45 },
+        { raw: 27, grade: 55 }, { raw: 31, grade: 65 }, { raw: 37, grade: 80 },
       ],
       '18u': [
-        { raw: -1, grade: 20 }, { raw: 3, grade: 30 }, { raw: 7, grade: 45 },
-        { raw: 10, grade: 55 }, { raw: 13, grade: 65 }, { raw: 18, grade: 80 },
+        { raw: 18, grade: 20 }, { raw: 23, grade: 30 }, { raw: 28, grade: 45 },
+        { raw: 32, grade: 55 }, { raw: 36, grade: 65 }, { raw: 42, grade: 80 },
+      ],
+      college: [
+        { raw: 21, grade: 20 }, { raw: 26, grade: 30 }, { raw: 31, grade: 45 },
+        { raw: 35, grade: 55 }, { raw: 39, grade: 65 }, { raw: 45, grade: 80 },
       ],
       pro: [
-        { raw: 0, grade: 20 }, { raw: 4, grade: 30 }, { raw: 8, grade: 45 },
-        { raw: 11, grade: 55 }, { raw: 14, grade: 65 }, { raw: 19, grade: 80 },
+        { raw: 23, grade: 20 }, { raw: 28, grade: 30 }, { raw: 33, grade: 45 },
+        { raw: 37, grade: 55 }, { raw: 41, grade: 65 }, { raw: 47, grade: 80 },
       ],
     },
     softball: {
       '14u': [
-        { raw: 0, grade: 20 }, { raw: 4, grade: 30 }, { raw: 8, grade: 45 },
-        { raw: 11, grade: 55 }, { raw: 14, grade: 65 }, { raw: 19, grade: 80 },
+        { raw: 12, grade: 20 }, { raw: 16, grade: 30 }, { raw: 20, grade: 45 },
+        { raw: 24, grade: 55 }, { raw: 28, grade: 65 }, { raw: 33, grade: 80 },
       ],
       '18u': [
-        { raw: 1, grade: 20 }, { raw: 5, grade: 30 }, { raw: 9, grade: 45 },
-        { raw: 12, grade: 55 }, { raw: 15, grade: 65 }, { raw: 20, grade: 80 },
+        { raw: 16, grade: 20 }, { raw: 20, grade: 30 }, { raw: 25, grade: 45 },
+        { raw: 29, grade: 55 }, { raw: 33, grade: 65 }, { raw: 38, grade: 80 },
+      ],
+      college: [
+        { raw: 19, grade: 20 }, { raw: 23, grade: 30 }, { raw: 28, grade: 45 },
+        { raw: 32, grade: 55 }, { raw: 36, grade: 65 }, { raw: 41, grade: 80 },
       ],
       pro: [
-        { raw: 2, grade: 20 }, { raw: 6, grade: 30 }, { raw: 10, grade: 45 },
-        { raw: 13, grade: 55 }, { raw: 16, grade: 65 }, { raw: 21, grade: 80 },
+        { raw: 21, grade: 20 }, { raw: 25, grade: 30 }, { raw: 30, grade: 45 },
+        { raw: 34, grade: 55 }, { raw: 38, grade: 65 }, { raw: 43, grade: 80 },
       ],
     },
   },
