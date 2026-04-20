@@ -1,187 +1,96 @@
 
 
-## Plan — Hammer Video Tagging + Suggestion Engine V1
+## Plan — Hammer Video Tagging V2: Mount Points + AI Learning Layer
 
-Upgrade the existing `library_videos` flat-tag system into a 6-layer structured tagging engine with a rule-based recommendation engine, real-time suggestion modes, and a learning feedback loop — without breaking the current Video Library UI.
+Phase 1 built the engine, hooks, panel, owner UI, and DB. Phase 2 makes it **live across the app** and adds the **AI learning layer** described in spec §10.
 
-### 1. Database — schema changes (migration)
+### Part A — Mount the suggestion panel (so Phase 1 is visible)
 
-**Enums** (Postgres types):
-- `video_type_enum` — drill, game_at_bat, practice_rep, breakdown, slow_motion, pov, comparison
-- `skill_domain_enum` — hitting, fielding, throwing, base_running, pitching
-- `video_tag_layer_enum` — movement_pattern, result, context, correction (the 4 structured taxonomy layers; `video_type` and `skill_domain` are columns, not tags)
+Currently `VideoSuggestionsPanel` is built but never rendered. Add it to:
 
-**Extend `library_videos`** (additive, nullable for back-compat):
-- `video_format video_type_enum` (Layer 1)
-- `skill_domains skill_domain_enum[]` (Layer 2)
-- `ai_description text` (free-text intent description)
+1. **`src/pages/AnalyzeVideo.tsx`** — after `analysis` block (~line 815). Map `analysis.summary[]` + drill issue keys → movement patterns via `mapHIEAreaToMovement`. Mode = `immediate`. Skill domain derived from analysis route (`hitting`/`pitching`/`throwing`).
 
-**New table `video_tag_taxonomy`** — the controlled vocabulary for layers 3–6:
+2. **`src/components/practice/PostSessionSummaryV2.tsx`** — after `FallbackInsights` (line 209). Aggregate movement keys from `composites` (low scores → corresponding movement_pattern), result tags from `drillBlocks[].outcomes`. Mode = `session`. Skill domain from `module` via `moduleToSkillDomain`.
+
+3. **`src/components/hie/WeaknessClusterCard.tsx`** — append `<VideoSuggestionsPanel mode="long_term" movementPatterns={clusters.map(c => mapHIEAreaToMovement(c.area))}>` below the cluster list. Skill domain inferred from cluster area (default `hitting`).
+
+4. **`src/pages/VideoLibrary.tsx`** — optional "Suggested for you" rail above the Browse tab when user has any HIE snapshot.
+
+### Part B — AI Description Learning Layer (spec §10)
+
+**B1. New edge function `analyze-video-description`** (`supabase/functions/analyze-video-description/index.ts`)
+- Trigger: called by owner from the new "Auto-Tag" button on `VideoUploadForm` / `StructuredTagEditor`, OR batch-run from the Taxonomy tab "Analyze all untagged".
+- Reads `library_videos.ai_description` + title.
+- Calls Lovable AI Gateway (`google/gemini-2.5-flash`) with a structured tool-call schema returning `{ movement_patterns[], result_tags[], context_tags[], correction_tags[], suggested_rules[] }` constrained to existing taxonomy keys (passed in the prompt).
+- Writes proposals to a new staging table `video_tag_suggestions` (NOT to `video_tag_assignments` directly — owner approves first).
+
+**B2. New table `video_tag_suggestions`** (migration):
 ```text
-id uuid pk | layer video_tag_layer_enum | key text | label text | skill_domain skill_domain_enum
-| description text | created_by uuid | active bool default true
-unique(layer, key, skill_domain)
+id uuid pk | video_id uuid fk | layer video_tag_layer_enum | suggested_key text
+| confidence numeric (0–1) | source text ('ai_description'|'pattern_discovery')
+| status text ('pending'|'approved'|'rejected') default 'pending'
+| reasoning text | created_at | reviewed_by uuid | reviewed_at
 ```
-Seeded with the spec's enums (hands_forward_early, roll_over_contact, two_strike, keep_hands_back, etc.) for hitting + fielding + pitching + throwing + base_running.
+RLS: owner-only read/write; system insert via service role.
 
-**New table `video_tag_assignments`** — many-to-many video↔structured-tag:
+**B3. New table `video_rule_suggestions`** for proposed new `video_tag_rules`:
 ```text
-video_id uuid fk → library_videos | tag_id uuid fk → video_tag_taxonomy
-| weight smallint default 1 (owner can boost a tag 1–5)
-pk(video_id, tag_id)
+id uuid pk | skill_domain | movement_key | result_key | context_key | correction_key
+| confidence | reasoning text | source_video_ids uuid[]
+| status ('pending'|'approved'|'rejected') | created_at | reviewed_by | reviewed_at
 ```
 
-**New table `video_tag_rules`** — the relationship engine (movement+result+context → correction):
-```text
-id uuid pk | skill_domain | movement_key | result_key (nullable) | context_key (nullable)
-| correction_key | strength smallint default 5 | active bool | notes text | created_by uuid
-```
-Seeded with spec rules (e.g. `hands_forward_early + roll_over_contact → keep_hands_back, barrel_stays_behind_hands`; `slow_first_step → reaction_drills, first_step_quickness`).
+**B4. Pattern Discovery edge function** `discover-tag-patterns` (cron-scheduled nightly):
+- Scans `video_user_outcomes` for clusters where users with movement_pattern X who watched videos tagged Y showed `post_score_delta > 5`.
+- Proposes new rules `(movement X) → (correction Y)` into `video_rule_suggestions` with confidence based on sample size and effect size.
+- Skips suggestions matching existing active rules.
 
-**New table `video_performance_metrics`** — feedback loop counters:
-```text
-video_id uuid pk → library_videos
-suggestion_count int | watch_count int | total_watch_seconds bigint
-post_view_improvement_sum numeric | post_view_improvement_n int
-last_recomputed_at timestamptz
-```
-Computed `improvement_score` = `post_view_improvement_sum / max(1, post_view_improvement_n)`.
+**B5. Owner Review UI** — new tab in `VideoLibraryManager.tsx`:
+- **"AI Suggestions"** tab listing pending tag + rule suggestions grouped by video/skill domain.
+- Per row: confidence badge, reasoning text, **Approve / Reject** buttons.
+- Approve tag → inserts row in `video_tag_assignments` (weight=2 to mark AI-derived) and marks suggestion `approved`.
+- Approve rule → inserts row in `video_tag_rules` with `notes='discovered_v1'`.
+- Bulk approve filtered by confidence ≥ 0.8.
 
-**New table `video_user_outcomes`** — per-user learning signal:
-```text
-id uuid pk | user_id | video_id | suggested_at | watched_at | watch_seconds
-| suggestion_reason jsonb (rule + tags matched) | post_score_delta numeric (filled by background job)
-| mode text ('immediate'|'session'|'long_term')
-```
+**B6. Wire into upload flow**:
+- `VideoUploadForm.tsx` — after save, if `ai_description` is set and structured tags are sparse (<2 movement tags), fire `analyze-video-description` automatically and toast "AI suggested 5 tags — review in Suggestions tab".
 
-**RLS**: taxonomy + rules read-public/write-owner; assignments owner-write/all-read; performance_metrics public-read/system-write; user_outcomes user-scoped read/write + owner read.
+### Part C — Effectiveness reinforcement loop
 
-Existing `library_videos.tags text[]` and `library_tags` table stay untouched (legacy filter chips keep working).
+Extend `recompute-video-metrics` edge function (already exists from Phase 1) to also:
+- For any `video_tag_rules` with `notes='discovered_v1'`, recompute its empirical effectiveness from `video_user_outcomes`. If `improvement_score < 0` over ≥20 samples, auto-deactivate the rule (`active=false`) and log to `audit_log`.
+- Boost rule `strength` (cap 10) for rules whose downstream videos consistently show `post_score_delta > 8`.
 
-### 2. Recommendation engine — `src/lib/videoRecommendationEngine.ts` (new)
+### Files
 
-Pure function, fully unit-testable:
+**New**
+- `supabase/migrations/<ts>_video_tagging_v2_ai_learning.sql` (2 tables + RLS)
+- `supabase/functions/analyze-video-description/index.ts`
+- `supabase/functions/discover-tag-patterns/index.ts`
+- `src/components/owner/AISuggestionsReview.tsx`
+- `src/hooks/useVideoTagSuggestions.ts`
 
-```ts
-recommendVideos({
-  skillDomain, sport, mode: 'immediate'|'session'|'long_term',
-  movementPatterns: string[],   // from analysis/HIE/drill issues
-  resultTags: string[],         // from latest reps / outcomeTags
-  contextTags: string[],        // from session context
-  candidateVideos: VideoWithTags[],
-  rules: VideoTagRule[],
-  userOutcomes: Map<videoId, {watchCount, avgPostDelta}>,
-  globalMetrics: Map<videoId, {improvementScore}>
-}) → Array<{ video, score, reasons: string[] }>
-```
+**Edited**
+- `src/pages/AnalyzeVideo.tsx` (mount panel)
+- `src/components/practice/PostSessionSummaryV2.tsx` (mount panel)
+- `src/components/hie/WeaknessClusterCard.tsx` (mount panel)
+- `src/pages/VideoLibrary.tsx` (optional rail)
+- `src/components/owner/VideoUploadForm.tsx` (auto-trigger AI analysis)
+- `src/components/owner/VideoLibraryManager.tsx` (AI Suggestions tab)
+- `supabase/functions/recompute-video-metrics/index.ts` (rule reinforcement)
+- Cron schedule SQL for `discover-tag-patterns` (weekly)
 
-**Ranking weights (priority order from spec)**:
-1. Exact movement_pattern tag match → +50 per match (× tag weight)
-2. Result tag match → +25
-3. Context tag match → +15
-4. Rule-derived correction tag match (movement+result→correction) → +40
-5. User-specific success: `userOutcomes[v].avgPostDelta × 8`, capped ±20
-6. Global `improvementScore × 5`, capped ±10
-7. Recency bonus: `created_at` within 30 days → +3
-8. Penalty: already watched ≥3 times by user with no positive delta → −15
-
-**Mode caps**:
-- `immediate`: max 2 results, requires score ≥ 60
-- `session`: max 4, requires score ≥ 40
-- `long_term`: max 4, biased toward `correction` + `drill` formats
-
-Each result carries human-readable `reasons[]` strings ("Matches your movement pattern: hands drifting forward early", "Targets roll-over contact you logged 3× today") for the mandatory "WHY" UI.
-
-### 3. Suggestion delivery — `useVideoSuggestions` hook + UI
-
-**New hook** `src/hooks/useVideoSuggestions.ts` — wraps the engine with React Query, handles the 3 modes:
-- `useImmediateSuggestions(rep)` — fires after a rep is logged
-- `useSessionSuggestions(sessionId)` — runs after 10–20 reps aggregated
-- `useLongTermSuggestions()` — pulls from HIE weakness clusters + 6-week test report
-
-**New component** `src/components/video-suggestions/VideoSuggestionsPanel.tsx`:
-- Renders ≤4 cards (≤2 in immediate mode), each shows thumbnail, title, "Why" reason list
-- "Watch" CTA tracks `video_user_outcomes` row (suggestion_count++ on display, watch_count++ on play)
-- Reuses existing `VideoPlayer` modal from `src/components/video-library/`
-
-**Mount points** (additive — no removal of existing flows):
-- Hitting/Pitching analysis result page → immediate mode (after analysis returns)
-- Practice Hub session summary → session mode
-- HIE Weakness Cluster card → "Watch related videos" button → long_term mode
-- Vault performance test report → long_term mode
-
-### 4. Owner tagging UI — extend `src/components/owner/VideoUploadForm.tsx` + `VideoLibraryManager.tsx`
-
-**Two-mode tagging panel** (per spec §7):
-
-**Mode A — Structured (required)**
-- Required: `video_format` dropdown (Layer 1), `skill_domains` multi-select (Layer 2)
-- 4 grouped multi-selects pulling from `video_tag_taxonomy` filtered by layer + skill domain:
-  - Movement Patterns (Layer 3)
-  - Result Tags (Layer 4)
-  - Context Tags (Layer 5)
-  - Correction/Intent Tags (Layer 6)
-- Per-tag weight slider 1–5 (default 1)
-
-**Mode B — AI Description (required)**
-- Free-text `ai_description` textarea with placeholder example from spec
-- Stored on `library_videos.ai_description`
-
-**New tab in `VideoLibraryManager`**:
-- **"Taxonomy"** — owner-only CRUD on `video_tag_taxonomy` (add/edit/deactivate keys per layer per skill_domain)
-- **"Rules"** — owner-only CRUD on `video_tag_rules` (movement+result+context → correction)
-
-### 5. Feedback loop — recompute metrics
-
-**New edge function** `supabase/functions/recompute-video-metrics/index.ts`:
-- Runs on cron (nightly, follows `architecture/edge-functions/implementation-standards`)
-- For each video: aggregates `video_user_outcomes` → updates `video_performance_metrics` (suggestion_count, watch_count, improvement_score)
-- `post_score_delta` is filled by a separate trigger: when a `performance_sessions` row is inserted within 7 days of a `video_user_outcomes.watched_at` for that user/skill_domain, compute the delta vs the user's prior session score and write it back.
-
-**Realtime sync**: `BroadcastChannel('data-sync')` invalidates `['video-suggestions']` query on rep log + session save (per multi-tab strategy).
-
-### 6. Analysis integration (data input → engine)
-
-Map existing analysis outputs to taxonomy keys via `src/lib/analysisToTaxonomy.ts`:
-- `useHIESnapshot().weakness_clusters[].area` → `movement_pattern` keys
-- `outcomeTags.ts` IDs (barrel, roll_over, etc.) → `result` keys (rename pass — `roll_over_contact` matches existing `barrel`/`hard_hit`/`pop_up` naming)
-- Session intent gate (handedness/pitch type) + game state → `context` keys
-- HIE `prescriptive_actions[].weakness_area` → seeds new `video_tag_rules` rows
-
-No changes to analysis formulas (per spec §11).
-
-### 7. Files
-
-**New**:
-- `supabase/migrations/<ts>_video_tagging_v1.sql` (enums, tables, RLS, seed taxonomy + rules)
-- `src/lib/videoRecommendationEngine.ts` + tests
-- `src/lib/analysisToTaxonomy.ts`
-- `src/hooks/useVideoSuggestions.ts`
-- `src/hooks/useVideoTaxonomy.ts`
-- `src/components/video-suggestions/VideoSuggestionsPanel.tsx`
-- `src/components/owner/StructuredTagEditor.tsx`
-- `src/components/owner/TaxonomyManager.tsx`
-- `src/components/owner/RuleEngineManager.tsx`
-- `supabase/functions/recompute-video-metrics/index.ts` (+ cron config)
-
-**Edited**:
-- `src/components/owner/VideoUploadForm.tsx` (add structured panel + ai_description)
-- `src/components/owner/VideoLibraryManager.tsx` (Taxonomy + Rules tabs)
-- `src/hooks/useVideoLibraryAdmin.ts` (write to `video_tag_assignments` + `ai_description`)
-- `src/pages/VideoLibrary.tsx` (optional "Suggested for you" rail above Browse)
-- Mount `VideoSuggestionsPanel` in Hitting/Pitching analysis result page, Practice Hub summary, HIE WeaknessCluster card
-
-### Out of scope (Phase 2 per spec §10)
-- AI parsing of `ai_description` to auto-derive new tag relationships
-- Automatic discovery of new `video_tag_rules`
-- No removal of legacy `library_videos.tags` array
+### Out of scope (Phase 3+)
+- LLM rewriting `ai_description` itself
+- User-facing voting on suggestion quality
+- Cross-skill-domain transfer learning
 
 ### Verification
-1. Owner uploads a video → required to pick `video_format`, ≥1 `skill_domain`, ≥1 movement pattern, fill `ai_description`. Saves to `video_tag_assignments` + `library_videos`.
-2. Owner adds rule `hands_forward_early + roll_over_contact → keep_hands_back` in Rules tab → row in `video_tag_rules`.
-3. User logs a rep with outcome `roll_over_contact` while analysis flags `hands_forward_early` → Immediate panel shows ≤2 videos with reasons "Matches: hands drifting forward early" + "Fixes: keep hands back".
-4. After 15 reps in a session → Session panel shows ≤4 videos addressing dominant movement issues.
-5. HIE Weakness Cluster "Watch related videos" → Long-term panel shows ≤4 foundational drill videos.
-6. Watching a video → row in `video_user_outcomes`; nightly job updates `video_performance_metrics.improvement_score`; future suggestions for that user re-rank with personal success boost.
-7. Existing Video Library Browse/Saved tabs continue to work unchanged with legacy `tags` filtering.
+1. Open `/analyze/hitting`, run analysis → suggestion panel appears under results with ≤2 immediate-mode videos and visible "Why" reasons.
+2. Finish a Practice Hub session → session-mode panel appears in summary with ≤4 videos.
+3. HIE Weakness Cluster card now shows a long-term panel with foundational drill videos.
+4. Owner uploads video with only `ai_description` filled → toast appears, "AI Suggestions" tab shows proposed tags with confidence + reasoning.
+5. Owner clicks Approve → tag assignment created; the video starts appearing in matching suggestions immediately.
+6. After cron run, `discover-tag-patterns` populates `video_rule_suggestions` from outcome data; owner reviews and approves → new rule active in next recommendation cycle.
+7. Existing Phase 1 flows (manual structured tagging, taxonomy/rules CRUD, suggestion engine ranking) unchanged.
 
