@@ -624,6 +624,9 @@ export default function Dashboard() {
 
         {/* Module cards below Game Plan when user has at least one tier */}
         {hasAnyTier && moduleCardsSection}
+
+        {/* Merch always pinned below the Game Plan */}
+        {merchSection}
       </div>
     </DashboardLayout>
   );
