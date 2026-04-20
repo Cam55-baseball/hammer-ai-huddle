@@ -66,11 +66,25 @@ export function useVideoLibraryAdmin() {
           tags: payload.tags,
           sport: payload.sport,
           category: payload.category || null,
+          // Hammer V1 structured fields
+          video_format: payload.videoFormat || null,
+          skill_domains: payload.skillDomains || [],
+          ai_description: payload.aiDescription || null,
         } as any)
         .select()
         .single();
 
       if (error) throw error;
+
+      // Insert structured tag assignments
+      if (data && payload.tagAssignments && Object.keys(payload.tagAssignments).length > 0) {
+        const rows = Object.entries(payload.tagAssignments).map(([tag_id, weight]) => ({
+          video_id: data.id, tag_id, weight,
+        }));
+        const { error: aErr } = await (supabase as any).from('video_tag_assignments').insert(rows);
+        if (aErr) console.error('Tag assignment insert error:', aErr);
+      }
+
       toast({ title: 'Video added', description: 'Video has been added to the library.' });
       return data;
     } catch (err: any) {
