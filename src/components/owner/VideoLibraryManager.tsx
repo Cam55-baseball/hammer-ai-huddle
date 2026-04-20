@@ -45,17 +45,13 @@ export function VideoLibraryManager() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="videos">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="videos">Videos ({videos.length})</TabsTrigger>
-          <TabsTrigger value="upload">
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add Video
-          </TabsTrigger>
-          <TabsTrigger value="tags">
-            <Tags className="h-3.5 w-3.5 mr-1" /> Tags
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics
-          </TabsTrigger>
+          <TabsTrigger value="upload"><Plus className="h-3.5 w-3.5 mr-1" /> Add</TabsTrigger>
+          <TabsTrigger value="tags"><Tags className="h-3.5 w-3.5 mr-1" /> Tags</TabsTrigger>
+          <TabsTrigger value="taxonomy"><Network className="h-3.5 w-3.5 mr-1" /> Taxonomy</TabsTrigger>
+          <TabsTrigger value="rules"><GitBranch className="h-3.5 w-3.5 mr-1" /> Rules</TabsTrigger>
+          <TabsTrigger value="analytics"><BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="videos" className="space-y-3 mt-4">
