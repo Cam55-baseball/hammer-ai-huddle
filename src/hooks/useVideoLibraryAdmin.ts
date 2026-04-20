@@ -85,6 +85,19 @@ export function useVideoLibraryAdmin() {
         if (aErr) console.error('Tag assignment insert error:', aErr);
       }
 
+      // Auto-trigger AI analysis if ai_description set and structured tags sparse
+      const sparseTags = !payload.tagAssignments || Object.keys(payload.tagAssignments).length < 2;
+      if (data && payload.aiDescription && sparseTags) {
+        supabase.functions.invoke('analyze-video-description', { body: { videoId: data.id } })
+          .then((res: any) => {
+            const inserted = res?.data?.inserted ?? 0;
+            if (inserted > 0) {
+              toast({ title: 'AI suggestions ready', description: `${inserted} tags proposed — review in AI Suggestions tab.` });
+            }
+          })
+          .catch(err => console.error('AI auto-tag failed:', err));
+      }
+
       toast({ title: 'Video added', description: 'Video has been added to the library.' });
       return data;
     } catch (err: any) {

@@ -8079,6 +8079,60 @@ export type Database = {
           },
         ]
       }
+      video_rule_suggestions: {
+        Row: {
+          avg_improvement: number | null
+          confidence: number
+          context_key: string | null
+          correction_key: string
+          created_at: string
+          id: string
+          movement_key: string
+          reasoning: string | null
+          result_key: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sample_size: number | null
+          skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          source_video_ids: string[] | null
+          status: string
+        }
+        Insert: {
+          avg_improvement?: number | null
+          confidence?: number
+          context_key?: string | null
+          correction_key: string
+          created_at?: string
+          id?: string
+          movement_key: string
+          reasoning?: string | null
+          result_key?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sample_size?: number | null
+          skill_domain: Database["public"]["Enums"]["skill_domain_enum"]
+          source_video_ids?: string[] | null
+          status?: string
+        }
+        Update: {
+          avg_improvement?: number | null
+          confidence?: number
+          context_key?: string | null
+          correction_key?: string
+          created_at?: string
+          id?: string
+          movement_key?: string
+          reasoning?: string | null
+          result_key?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sample_size?: number | null
+          skill_domain?: Database["public"]["Enums"]["skill_domain_enum"]
+          source_video_ids?: string[] | null
+          status?: string
+        }
+        Relationships: []
+      }
       video_tag_assignments: {
         Row: {
           created_at: string
@@ -8159,6 +8213,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      video_tag_suggestions: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          layer: Database["public"]["Enums"]["video_tag_layer_enum"]
+          reasoning: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string
+          status: string
+          suggested_key: string
+          video_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          layer: Database["public"]["Enums"]["video_tag_layer_enum"]
+          reasoning?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+          suggested_key: string
+          video_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          layer?: Database["public"]["Enums"]["video_tag_layer_enum"]
+          reasoning?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+          suggested_key?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_tag_suggestions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       video_tag_taxonomy: {
         Row: {

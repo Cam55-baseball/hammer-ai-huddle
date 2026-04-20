@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch } from "lucide-react";
+import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch, Sparkles } from "lucide-react";
+import { AISuggestionsReview } from "./AISuggestionsReview";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,7 @@ export function VideoLibraryManager() {
           <TabsTrigger value="tags"><Tags className="h-3.5 w-3.5 mr-1" /> Tags</TabsTrigger>
           <TabsTrigger value="taxonomy"><Network className="h-3.5 w-3.5 mr-1" /> Taxonomy</TabsTrigger>
           <TabsTrigger value="rules"><GitBranch className="h-3.5 w-3.5 mr-1" /> Rules</TabsTrigger>
+          <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" /> AI Suggestions</TabsTrigger>
           <TabsTrigger value="analytics"><BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics</TabsTrigger>
         </TabsList>
 
@@ -120,6 +122,10 @@ export function VideoLibraryManager() {
 
         <TabsContent value="rules" className="mt-4">
           <RuleEngineManager />
+        </TabsContent>
+
+        <TabsContent value="ai" className="mt-4">
+          <AISuggestionsReview />
         </TabsContent>
 
         <TabsContent value="analytics" className="mt-4">
