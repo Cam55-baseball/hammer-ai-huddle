@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildGlobalContext } from "./contextEngine.ts";
+import { getInterpretationProfile } from "./interpretationProfiles.ts";
+import { computeCorrelations } from "./correlationEngine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -844,6 +847,25 @@ serve(async (req) => {
     console.log('Weekly volume:', weeklyVolume);
     console.log('Computed insights:', computedInsights);
 
+    // ========== GLOBAL CONTEXT (V2) ==========
+    let globalContext: any = null;
+    let interpretationProfile: any = null;
+    let correlationInsights: any[] = [];
+    try {
+      globalContext = await buildGlobalContext(supabase, user.id, startDate, endDate, profile);
+      interpretationProfile = getInterpretationProfile(
+        globalContext.season.phase,
+        {},
+      );
+      correlationInsights = computeCorrelations(globalContext, {
+        chronicAreas: chronicPainAreas,
+        avgScale: avgPainScale,
+      });
+      console.log('Global context built. Phase:', globalContext.season.phase, 'Correlations:', correlationInsights.length);
+    } catch (ctxErr) {
+      console.error('Context engine error (non-fatal):', ctxErr);
+    }
+
     // Get top 5 most performed exercises
     const topExercises = Object.entries(exerciseFrequency)
       .sort(([,a], [,b]) => b - a)
@@ -1651,6 +1673,36 @@ COMPUTED INSIGHTS (SOURCE OF TRUTH — DO NOT INFER, ONLY EXPLAIN):
 ═══════════════════════════════════════════════════════════════
 ${JSON.stringify(computedInsights, null, 2)}
 
+═══════════════════════════════════════════════════════════════
+GLOBAL CONTEXT V2 (SOURCE OF TRUTH — ALWAYS RESPECT):
+═══════════════════════════════════════════════════════════════
+${globalContext ? JSON.stringify({
+  player: globalContext.player,
+  season: globalContext.season,
+  mpi: globalContext.performance.mpi,
+  sessions: globalContext.performance.sessions,
+  transferGap: globalContext.performance.transferGap,
+  sixWeekTest: globalContext.performance.sixWeekTest,
+  workload: globalContext.workload,
+  hieClusters: globalContext.systemIntel.hieSnapshot?.weakness_clusters?.slice(0, 3) || [],
+  previousRecapHeadline: globalContext.previousRecap?.headline || null,
+  inputWeights: globalContext.inputWeights,
+  disabledSections: globalContext.disabledSections,
+}, null, 2) : 'unavailable'}
+
+INTERPRETATION PROFILE (season-aware):
+${interpretationProfile ? JSON.stringify(interpretationProfile, null, 2) : 'default'}
+
+CORRELATION INSIGHTS (deterministic — explain, do not contradict):
+${JSON.stringify(correlationInsights, null, 2)}
+
+V2 INSTRUCTIONS:
+- ALWAYS lead with the season-appropriate framing from interpretationProfile.toneGuidance.
+- Respect inputWeights: any source set to 0 must NOT be referenced in the narrative.
+- Skip any output section listed in disabledSections.
+- When previousRecapHeadline is present, explicitly compare to prior block.
+- When transferGap is present and |gap|≥10, address it in transfer_analysis.
+
 INSTRUCTIONS FOR INSIGHTS:
 - Convert these insights to natural, athlete-facing language in your narrative
 - Do NOT calculate, infer, or contradict these insights
@@ -1679,12 +1731,19 @@ REQUIRED SECTIONS (return as JSON):
 9. elite_insight (1 paragraph): A deeper analysis connecting multiple data points to reveal a pattern or insight the athlete may not have noticed. ${isRecoveryPhase ? 'Connect their mental data with recovery readiness. Show how their discipline and mindset during this down period will translate to a stronger return.' : 'This demonstrates elite-level coaching.'}
 
 10. body_connection_analysis (REQUIRED if pain data exists): Object containing kid-friendly fascia insights:
-    - kid_summary: Simple 1-2 sentence explanation of body connections found (use spider web / train track analogies)
-    - affected_body_line: The dominant "Body Track" name (e.g., "Back Track")
-    - connected_areas_to_stretch: Array of 3-5 connected areas the athlete should check/stretch
-    - pro_insight: What elite athletes do differently when this pattern appears
-    - self_care_tip: One simple thing the athlete can try
-    - disclaimer: "This is just for learning! Always talk to a coach, parent, or doctor about pain that doesn't go away."
+    - kid_summary, affected_body_line, connected_areas_to_stretch (3-5), pro_insight, self_care_tip, disclaimer
+
+11. context_header (V2): { season_phase, player_summary (1 sentence), workload_summary (1 sentence) }
+
+12. trend_insights (V2): { improved: [..], declined: [..], block_comparison: "MPI X→Y, +Z" or null }
+
+13. transfer_analysis (V2): { practice_to_game_delta: number|null, narrative: "..." } — only meaningful if game sessions exist.
+
+14. physical_impact (V2): { body_changes: "...", performance_correlation: "..." }
+
+15. system_correlations (V2): { movement_x_results, physical_x_performance, workload_x_outcome, key_insight }
+
+16. elite_suggestions (V2): array of { priority: 'high'|'medium'|'low', action, rationale, season_appropriate: boolean }
 
 Return ONLY valid JSON with this exact structure:
 {
@@ -1742,6 +1801,13 @@ Return ONLY valid JSON with this exact structure:
               strategic_recommendations: parsed.strategic_recommendations || [],
               elite_insight: parsed.elite_insight || '',
               body_connection_analysis: parsed.body_connection_analysis || null,
+              // V2 sections
+              context_header: parsed.context_header || null,
+              trend_insights: parsed.trend_insights || null,
+              transfer_analysis: parsed.transfer_analysis || null,
+              physical_impact: parsed.physical_impact || null,
+              system_correlations: parsed.system_correlations || null,
+              elite_suggestions: parsed.elite_suggestions || [],
               // Map to legacy fields for backward compatibility
               summary: parsed.executive_summary || '',
               highlights: parsed.training_analysis?.slice(0, 3) || [],
