@@ -1831,9 +1831,36 @@ Return ONLY valid JSON with this exact structure:
       aiContent.focus_areas = aiContent.critical_focus_areas;
     }
 
+    // Build slim global context snapshot for UI rendering
+    const globalContextSnapshot = globalContext ? {
+      season_phase: globalContext.season?.phase ?? null,
+      player: globalContext.player ?? null,
+      mpi: globalContext.performance?.mpi
+        ? {
+            current: globalContext.performance.mpi.current ?? null,
+            prevBlock: globalContext.performance.mpi.prevBlock ?? null,
+            delta: globalContext.performance.mpi.delta ?? null,
+            trendDirection: globalContext.performance.mpi.trendDirection ?? null,
+          }
+        : null,
+      transferGap: globalContext.performance?.transferGap ?? null,
+      workload: globalContext.workload
+        ? {
+            sessionsPerWeek: globalContext.workload.sessionsPerWeek ?? null,
+            totalCnsLoad: globalContext.workload.totalCnsLoad ?? null,
+            spikeDetected: globalContext.workload.spikeDetected ?? null,
+          }
+        : null,
+      previousRecapHeadline: globalContext.previousRecap?.headline ?? null,
+    } : null;
+
     // Build full recap data with all stats
     const recapData = {
       ...aiContent,
+      recap_version: 'v2',
+      global_context_snapshot: globalContextSnapshot,
+      correlation_insights: correlationInsights,
+      interpretation_profile: interpretationProfile,
       computed_insights: computedInsights,
       workout_stats: {
         total_workouts: totalWorkouts,
