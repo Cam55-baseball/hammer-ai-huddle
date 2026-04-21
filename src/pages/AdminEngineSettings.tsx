@@ -11,6 +11,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Settings, Save, Loader2, Shield } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RecapEngineSettings } from '@/components/admin/RecapEngineSettings';
 
 interface EngineSetting {
   id: string;
@@ -133,50 +135,63 @@ export default function AdminEngineSettings() {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Configuration</CardTitle>
-            <CardDescription>
-              Changes are logged and take effect on the next nightly processing cycle.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {settings.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                No engine settings found. Seed defaults to get started.
-              </p>
-            ) : (
-              settings.map(setting => (
-                <div key={setting.id} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor={setting.setting_key} className="text-sm font-medium">
-                      {setting.setting_key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </Label>
-                    {editedValues[setting.setting_key] !== undefined && (
-                      <Badge variant="outline" className="text-xs">Modified</Badge>
-                    )}
-                  </div>
-                  {setting.description && (
-                    <p className="text-xs text-muted-foreground">{setting.description}</p>
-                  )}
-                  <Input
-                    id={setting.setting_key}
-                    value={getDisplayValue(setting)}
-                    onChange={(e) => handleValueChange(setting.setting_key, e.target.value)}
-                    className="font-mono text-sm"
-                  />
-                </div>
-              ))
-            )}
+        <Tabs defaultValue="hie" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="hie">HIE Engine</TabsTrigger>
+            <TabsTrigger value="recap">Recap Engine</TabsTrigger>
+          </TabsList>
 
-            {Object.keys(editedValues).length > 0 && (
-              <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Save {Object.keys(editedValues).length} Change{Object.keys(editedValues).length !== 1 ? 's' : ''}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+          <TabsContent value="hie" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Configuration</CardTitle>
+                <CardDescription>
+                  Changes are logged and take effect on the next nightly processing cycle.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {settings.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No engine settings found. Seed defaults to get started.
+                  </p>
+                ) : (
+                  settings.map(setting => (
+                    <div key={setting.id} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={setting.setting_key} className="text-sm font-medium">
+                          {setting.setting_key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </Label>
+                        {editedValues[setting.setting_key] !== undefined && (
+                          <Badge variant="outline" className="text-xs">Modified</Badge>
+                        )}
+                      </div>
+                      {setting.description && (
+                        <p className="text-xs text-muted-foreground">{setting.description}</p>
+                      )}
+                      <Input
+                        id={setting.setting_key}
+                        value={getDisplayValue(setting)}
+                        onChange={(e) => handleValueChange(setting.setting_key, e.target.value)}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                  ))
+                )}
+
+                {Object.keys(editedValues).length > 0 && (
+                  <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Save {Object.keys(editedValues).length} Change{Object.keys(editedValues).length !== 1 ? 's' : ''}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recap" className="mt-4">
+            <RecapEngineSettings />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
