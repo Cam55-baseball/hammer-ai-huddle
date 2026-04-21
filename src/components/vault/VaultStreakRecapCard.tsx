@@ -574,6 +574,30 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                   <p className="text-sm text-foreground leading-relaxed">{getExecutiveSummary(selectedRecap)}</p>
                 </div>
               )}
+              {/* Context Header (V2) */}
+              {selectedRecap.recap_data.context_header && (
+                selectedRecap.recap_data.context_header.season_phase ||
+                selectedRecap.recap_data.context_header.player_summary ||
+                selectedRecap.recap_data.context_header.workload_summary
+              ) && (
+                <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+                  {selectedRecap.recap_data.context_header.season_phase && (
+                    <Badge variant="outline" className="text-xs uppercase">
+                      {selectedRecap.recap_data.context_header.season_phase.replace(/_/g, ' ')}
+                    </Badge>
+                  )}
+                  {selectedRecap.recap_data.context_header.player_summary && (
+                    <p className="text-xs text-muted-foreground">
+                      {selectedRecap.recap_data.context_header.player_summary}
+                    </p>
+                  )}
+                  {selectedRecap.recap_data.context_header.workload_summary && (
+                    <p className="text-xs text-muted-foreground">
+                      {selectedRecap.recap_data.context_header.workload_summary}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Training Analysis */}
               {getTrainingAnalysis(selectedRecap) && getTrainingAnalysis(selectedRecap)!.length > 0 && (
