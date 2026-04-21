@@ -847,6 +847,25 @@ serve(async (req) => {
     console.log('Weekly volume:', weeklyVolume);
     console.log('Computed insights:', computedInsights);
 
+    // ========== GLOBAL CONTEXT (V2) ==========
+    let globalContext: any = null;
+    let interpretationProfile: any = null;
+    let correlationInsights: any[] = [];
+    try {
+      globalContext = await buildGlobalContext(supabase, user.id, startDate, endDate, profile);
+      interpretationProfile = getInterpretationProfile(
+        globalContext.season.phase,
+        {},
+      );
+      correlationInsights = computeCorrelations(globalContext, {
+        chronicAreas: chronicPainAreas,
+        avgScale: avgPainScale,
+      });
+      console.log('Global context built. Phase:', globalContext.season.phase, 'Correlations:', correlationInsights.length);
+    } catch (ctxErr) {
+      console.error('Context engine error (non-fatal):', ctxErr);
+    }
+
     // Get top 5 most performed exercises
     const topExercises = Object.entries(exerciseFrequency)
       .sort(([,a], [,b]) => b - a)
