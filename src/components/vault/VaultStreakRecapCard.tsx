@@ -96,6 +96,16 @@ interface VaultRecap {
       regressions: { field: string; change: number }[];
     };
     performance_tests?: any[];
+    // V2 fields (backward compatible)
+    recap_version?: string;
+    context_header?: { season_phase?: string; player_summary?: string; workload_summary?: string };
+    trend_insights?: { improved?: string[]; declined?: string[]; block_comparison?: string };
+    transfer_analysis?: { practice_to_game_delta?: number | string; narrative?: string };
+    physical_impact?: { body_changes?: string; performance_correlation?: string };
+    system_correlations?: { movement_x_results?: string; physical_x_performance?: string; workload_x_outcome?: string; key_insight?: string };
+    elite_suggestions?: { priority?: string; action?: string; rationale?: string; season_appropriate?: boolean }[];
+    global_context_snapshot?: any;
+    correlation_insights?: any[];
   };
   generated_at: string;
   saved_to_library?: boolean;
