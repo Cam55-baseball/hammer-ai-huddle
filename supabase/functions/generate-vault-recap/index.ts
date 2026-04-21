@@ -1673,6 +1673,36 @@ COMPUTED INSIGHTS (SOURCE OF TRUTH — DO NOT INFER, ONLY EXPLAIN):
 ═══════════════════════════════════════════════════════════════
 ${JSON.stringify(computedInsights, null, 2)}
 
+═══════════════════════════════════════════════════════════════
+GLOBAL CONTEXT V2 (SOURCE OF TRUTH — ALWAYS RESPECT):
+═══════════════════════════════════════════════════════════════
+${globalContext ? JSON.stringify({
+  player: globalContext.player,
+  season: globalContext.season,
+  mpi: globalContext.performance.mpi,
+  sessions: globalContext.performance.sessions,
+  transferGap: globalContext.performance.transferGap,
+  sixWeekTest: globalContext.performance.sixWeekTest,
+  workload: globalContext.workload,
+  hieClusters: globalContext.systemIntel.hieSnapshot?.weakness_clusters?.slice(0, 3) || [],
+  previousRecapHeadline: globalContext.previousRecap?.headline || null,
+  inputWeights: globalContext.inputWeights,
+  disabledSections: globalContext.disabledSections,
+}, null, 2) : 'unavailable'}
+
+INTERPRETATION PROFILE (season-aware):
+${interpretationProfile ? JSON.stringify(interpretationProfile, null, 2) : 'default'}
+
+CORRELATION INSIGHTS (deterministic — explain, do not contradict):
+${JSON.stringify(correlationInsights, null, 2)}
+
+V2 INSTRUCTIONS:
+- ALWAYS lead with the season-appropriate framing from interpretationProfile.toneGuidance.
+- Respect inputWeights: any source set to 0 must NOT be referenced in the narrative.
+- Skip any output section listed in disabledSections.
+- When previousRecapHeadline is present, explicitly compare to prior block.
+- When transferGap is present and |gap|≥10, address it in transfer_analysis.
+
 INSTRUCTIONS FOR INSIGHTS:
 - Convert these insights to natural, athlete-facing language in your narrative
 - Do NOT calculate, infer, or contradict these insights
