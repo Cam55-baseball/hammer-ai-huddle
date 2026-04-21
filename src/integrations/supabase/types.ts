@@ -4696,6 +4696,36 @@ export type Database = {
         }
         Relationships: []
       }
+      recap_engine_settings: {
+        Row: {
+          disabled_sections: string[]
+          id: string
+          input_weights: Json
+          scope: string
+          season_overrides: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          disabled_sections?: string[]
+          id?: string
+          input_weights?: Json
+          scope?: string
+          season_overrides?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          disabled_sections?: string[]
+          id?: string
+          input_weights?: Json
+          scope?: string
+          season_overrides?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       roadmap_milestones: {
         Row: {
           badge_icon: string | null
