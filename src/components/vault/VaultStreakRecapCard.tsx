@@ -698,6 +698,136 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                 </div>
               )}
 
+              {/* ============= V2 SECTIONS (backward compatible) ============= */}
+
+              {/* Trend Insights */}
+              {selectedRecap.recap_data.trend_insights && (
+                (selectedRecap.recap_data.trend_insights.improved?.length ||
+                  selectedRecap.recap_data.trend_insights.declined?.length ||
+                  selectedRecap.recap_data.trend_insights.block_comparison) && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-emerald-500" />
+                      Trend Insights
+                    </h4>
+                    {selectedRecap.recap_data.trend_insights.block_comparison && (
+                      <div className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-sm italic">
+                        {selectedRecap.recap_data.trend_insights.block_comparison}
+                      </div>
+                    )}
+                    {selectedRecap.recap_data.trend_insights.improved?.map((item, i) => (
+                      <div key={`imp-${i}`} className="flex items-start gap-2 p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                        <TrendingUp className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                        <span className="text-sm">{item}</span>
+                      </div>
+                    ))}
+                    {selectedRecap.recap_data.trend_insights.declined?.map((item, i) => (
+                      <div key={`dec-${i}`} className="flex items-start gap-2 p-2 rounded-lg bg-rose-500/5 border border-rose-500/10">
+                        <AlertCircle className="h-4 w-4 text-rose-500 mt-0.5 shrink-0" />
+                        <span className="text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+
+              {/* Transfer Analysis */}
+              {selectedRecap.recap_data.transfer_analysis?.narrative && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-cyan-500" />
+                    Practice → Game Transfer
+                  </h4>
+                  <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
+                    {selectedRecap.recap_data.transfer_analysis.practice_to_game_delta !== undefined && (
+                      <div className="text-xs font-mono text-muted-foreground mb-1">
+                        Δ {selectedRecap.recap_data.transfer_analysis.practice_to_game_delta} pts
+                      </div>
+                    )}
+                    <p className="text-sm">{selectedRecap.recap_data.transfer_analysis.narrative}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Physical Impact */}
+              {selectedRecap.recap_data.physical_impact && (
+                (selectedRecap.recap_data.physical_impact.body_changes ||
+                  selectedRecap.recap_data.physical_impact.performance_correlation) && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-indigo-500" />
+                      Physical Impact
+                    </h4>
+                    {selectedRecap.recap_data.physical_impact.body_changes && (
+                      <div className="p-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-sm">
+                        <strong className="text-xs text-muted-foreground block mb-1">Body Changes</strong>
+                        {selectedRecap.recap_data.physical_impact.body_changes}
+                      </div>
+                    )}
+                    {selectedRecap.recap_data.physical_impact.performance_correlation && (
+                      <div className="p-2 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-sm">
+                        <strong className="text-xs text-muted-foreground block mb-1">Performance Correlation</strong>
+                        {selectedRecap.recap_data.physical_impact.performance_correlation}
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
+
+              {/* System Correlations */}
+              {selectedRecap.recap_data.system_correlations && (
+                (selectedRecap.recap_data.system_correlations.key_insight ||
+                  selectedRecap.recap_data.system_correlations.movement_x_results ||
+                  selectedRecap.recap_data.system_correlations.physical_x_performance ||
+                  selectedRecap.recap_data.system_correlations.workload_x_outcome) && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-fuchsia-500" />
+                      System Correlations
+                    </h4>
+                    {selectedRecap.recap_data.system_correlations.key_insight && (
+                      <div className="p-3 rounded-lg bg-gradient-to-br from-fuchsia-500/10 to-violet-500/5 border border-fuchsia-500/20 text-sm font-medium">
+                        {selectedRecap.recap_data.system_correlations.key_insight}
+                      </div>
+                    )}
+                    {[
+                      ['Movement × Results', selectedRecap.recap_data.system_correlations.movement_x_results],
+                      ['Physical × Performance', selectedRecap.recap_data.system_correlations.physical_x_performance],
+                      ['Workload × Outcome', selectedRecap.recap_data.system_correlations.workload_x_outcome],
+                    ].filter(([, v]) => !!v).map(([label, v], i) => (
+                      <div key={i} className="p-2 rounded-lg bg-fuchsia-500/5 border border-fuchsia-500/10 text-sm">
+                        <strong className="text-xs text-muted-foreground block mb-1">{label}</strong>
+                        {v}
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+
+              {/* Elite Suggestions */}
+              {selectedRecap.recap_data.elite_suggestions && selectedRecap.recap_data.elite_suggestions.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Award className="h-4 w-4 text-amber-500" />
+                    Elite Suggestions
+                  </h4>
+                  {selectedRecap.recap_data.elite_suggestions.map((s, i) => (
+                    <div key={i} className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {s.priority && (
+                          <Badge variant="outline" className="text-xs uppercase">{s.priority}</Badge>
+                        )}
+                        {s.season_appropriate && (
+                          <Badge variant="outline" className="text-xs">Season-Appropriate</Badge>
+                        )}
+                      </div>
+                      {s.action && <p className="text-sm font-medium">{s.action}</p>}
+                      {s.rationale && <p className="text-xs text-muted-foreground italic">{s.rationale}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t mt-4">
                 <Button
