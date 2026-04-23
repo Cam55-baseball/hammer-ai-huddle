@@ -12,6 +12,7 @@ import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, Lo
 import { VideoLibraryManager } from "@/components/owner/VideoLibraryManager";
 import { PromoEngineTab } from "@/components/promo-engine/PromoEngineTab";
 import { DrillCmsManager } from "@/components/owner/DrillCmsManager";
+import { OwnerEngineSettingsPanel } from "@/components/owner/OwnerEngineSettingsPanel";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
@@ -51,6 +52,7 @@ const sectionLabels: Record<OwnerSection, string> = {
   'video-library': 'Video Library Manager',
   'promo-engine': 'Promo Engine',
   'drill-cms': 'Drill CMS',
+  'engine-settings': 'Engine Settings',
   'subscriptions': 'Subscriptions',
   'settings': 'Settings',
   'player-search': 'Player Search',
@@ -459,6 +461,7 @@ const OwnerDashboard = () => {
               {activeSection === 'settings' && 'Configure app-wide settings'}
               {activeSection === 'player-search' && 'Search and view player profiles'}
               {activeSection === 'promo-engine' && 'Build and manage cinematic promotional videos'}
+              {activeSection === 'engine-settings' && 'Tune HIE and Recap engine weights, thresholds, and behavior'}
             </p>
           </div>
 
@@ -926,6 +929,11 @@ const OwnerDashboard = () => {
           {/* Drill CMS Section */}
           {activeSection === 'drill-cms' && (
             <DrillCmsManager />
+          )}
+
+          {/* Engine Settings Section */}
+          {activeSection === 'engine-settings' && (
+            <OwnerEngineSettingsPanel />
           )}
 
           {/* Player Search Section */}
