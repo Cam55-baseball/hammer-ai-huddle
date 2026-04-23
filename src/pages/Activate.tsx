@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -22,7 +22,6 @@ const Activate = () => {
   const { toast } = useToast();
 
   const sport = (localStorage.getItem("selectedSport") as "baseball" | "softball") || "baseball";
-  const firstName = profile?.first_name || "";
 
   // Guard: redirect users who shouldn't see this screen
   useEffect(() => {
@@ -40,7 +39,7 @@ const Activate = () => {
     }
   }, [authLoading, profileLoading, subLoading, ownerLoading, adminLoading, user, isOwner, isAdmin, initialized, modules, navigate]);
 
-  const recordChoice = async (choice: "paid" | "free" | "deferred") => {
+  const recordChoice = async (choice: "paid" | "free") => {
     try {
       await updateProfile({ activation_choice: choice });
     } catch {
@@ -55,24 +54,17 @@ const Activate = () => {
     navigate("/checkout", { state: { tier: tierKey, sport } });
   };
 
-  const handleStartFree = async () => {
+  const handleContinueFree = async () => {
     await recordChoice("free");
-    // Free subscription was already created by the create_free_subscription trigger.
-    // Just confirm and route.
     if (user) {
       await supabase
         .from("subscriptions")
         .upsert({ user_id: user.id, plan: "free", status: "active" }, { onConflict: "user_id" });
     }
     toast({
-      title: "You're in — 7-day free trial active",
-      description: "Explore the dashboard. Upgrade anytime.",
+      title: "Free access enabled",
+      description: "Upgrade anytime from your dashboard.",
     });
-    navigate("/dashboard", { replace: true });
-  };
-
-  const handleDecideLater = async () => {
-    await recordChoice("deferred");
     navigate("/dashboard", { replace: true });
   };
 
@@ -90,13 +82,13 @@ const Activate = () => {
         <header className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            Final step
+            Activate your access
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            You're set{firstName ? `, ${firstName}` : ""}.
+            Choose Your Access
           </h1>
           <p className="text-muted-foreground mt-2 text-base">
-            Pick how you want to train. You can change anytime.
+            Unlock full access instantly or continue with free tools. Upgrade anytime.
           </p>
         </header>
 
@@ -118,7 +110,7 @@ const Activate = () => {
                       <h3 className="text-lg font-bold">{tier.displayName}</h3>
                       {isFeatured && (
                         <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary text-primary-foreground">
-                          Popular
+                          Most Popular
                         </span>
                       )}
                     </div>
@@ -142,29 +134,24 @@ const Activate = () => {
                   </div>
                 </div>
                 <Button className="w-full mt-4" size="sm">
-                  Choose {tier.displayName}
+                  Unlock Full Access
                 </Button>
               </Card>
             );
           })}
         </div>
 
-        <div className="mt-6 p-5 rounded-lg border border-dashed border-border bg-card/50 text-center">
-          <p className="text-sm font-medium mb-2">Not ready to commit?</p>
-          <Button variant="secondary" onClick={handleStartFree} className="w-full sm:w-auto">
-            Start free for 7 days
-          </Button>
-          <p className="text-xs text-muted-foreground mt-3">
-            Limited features. Upgrade anytime from your dashboard.
-          </p>
+        <div className="mt-5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          <span>All discounts and promotions are securely applied at checkout.</span>
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-8 pt-6 border-t border-border/60 text-center">
           <button
-            onClick={handleDecideLater}
-            className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+            onClick={handleContinueFree}
+            className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
           >
-            I'll decide later
+            Continue with Free Access →
           </button>
         </div>
       </div>
