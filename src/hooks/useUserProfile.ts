@@ -61,7 +61,7 @@ export const useUserProfile = () => {
       if (!user?.id) throw new Error("Not authenticated");
       const { data, error } = await supabase
         .from("profiles")
-        .update(patch)
+        .update(patch as any)
         .eq("id", user.id)
         .select()
         .single();
