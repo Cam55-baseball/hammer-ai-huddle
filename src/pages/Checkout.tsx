@@ -155,6 +155,16 @@ const Checkout = () => {
     }
   };
 
+  if (showSuccessState) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-6" />
+        <h2 className="text-xl font-semibold text-foreground">Access unlocked.</h2>
+        <p className="text-sm text-muted-foreground mt-1">Loading your dashboard…</p>
+      </div>
+    );
+  }
+
   if (authLoading || subLoading || ownerLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
