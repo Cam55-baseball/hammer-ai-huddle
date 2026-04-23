@@ -813,8 +813,11 @@ const ProfileSetup = () => {
             size="lg"
             disabled={isSubmitting}
           >
-            {isSubmitting ? t('profileSetup.creatingProfile') : t('profileSetup.completeProfileAndGo')}
+            {isSubmitting ? t('profileSetup.creatingProfile') : "Complete Profile & Continue"}
           </Button>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            {isPlayer ? "Next: Choose your access" : "Next: Your dashboard"}
+          </p>
         </div>
       </div>
     </div>
