@@ -83,15 +83,19 @@ serve(async (req) => {
       case 'customer.subscription.deleted':
         await handleSubscriptionEvent(event, supabaseClient, stripe);
         break;
-      
+
+      case 'checkout.session.completed':
+        await handleCheckoutCompleted(event, supabaseClient, stripe);
+        break;
+
       case 'invoice.payment_succeeded':
         await handlePaymentSuccess(event, supabaseClient, stripe);
         break;
-      
+
       case 'invoice.payment_failed':
         await handlePaymentFailed(event, supabaseClient, stripe);
         break;
-      
+
       default:
         logStep("Unhandled event type", { type: event.type });
     }
@@ -311,11 +315,43 @@ async function handleSubscriptionEvent(
     .from('subscriptions')
     .upsert(upsertData, { onConflict: 'user_id' });
 
-  logStep("Database updated", { 
+  logStep("Database updated", {
     userId: user.id,
     activeModules,
     hasPendingCancellations
   });
+
+  // Realtime broadcast — frontend flips to "paid" within ~300ms, no reload lag.
+  try {
+    const channel = supabaseClient.channel(`subscription:${user.id}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'updated',
+      payload: { active_modules: activeModules, tier: activeTier },
+    });
+    await supabaseClient.removeChannel(channel);
+    logStep("Realtime broadcast sent", { userId: user.id });
+  } catch (broadcastErr) {
+    logStep("Realtime broadcast failed (non-fatal)", { error: String(broadcastErr) });
+  }
+}
+
+async function handleCheckoutCompleted(
+  event: Stripe.Event,
+  supabaseClient: any,
+  stripe: Stripe
+) {
+  const session = event.data.object as Stripe.Checkout.Session;
+  logStep("Checkout completed", { sessionId: session.id, customer: session.customer });
+
+  if (!session.subscription) return;
+
+  const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+  await handleSubscriptionEvent(
+    { ...event, data: { object: subscription } } as Stripe.Event,
+    supabaseClient,
+    stripe
+  );
 }
 
 async function handlePaymentSuccess(
