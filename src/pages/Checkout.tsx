@@ -28,6 +28,7 @@ const Checkout = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [showManualLink, setShowManualLink] = useState(false);
+  const [showSuccessState, setShowSuccessState] = useState(false);
   const popupRef = useRef<Window | null>(null);
   const successHandledRef = useRef(false);
 
@@ -50,28 +51,33 @@ const Checkout = () => {
     if (status === 'success') {
       if (successHandledRef.current) return;
       successHandledRef.current = true;
-      
+
       toast({
-        title: "Payment Successful!",
-        description: "Your training tier is now active. Redirecting to dashboard...",
+        title: "Access unlocked",
+        description: "Your training tier is now active.",
       });
-      
+
       localStorage.setItem('pendingModuleActivation', JSON.stringify({
         module: selectedTier,
         sport: selectedSport,
         timestamp: Date.now()
       }));
-      
+
       refetch();
-      navigate("/dashboard", { replace: true });
+      setShowSuccessState(true);
+      // Hold briefly so the realtime broadcast can land and the user sees confirmation
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 800);
       return;
     } else if (status === 'cancel' || status === 'cancelled') {
       localStorage.removeItem('pendingModuleActivation');
       toast({
-        title: "Payment Cancelled",
-        description: "Your payment was cancelled. You can try again anytime.",
-        variant: "destructive",
+        title: "Checkout cancelled",
+        description: "No charge was made. Choose a tier to continue.",
       });
+      navigate("/activate", { replace: true });
+      return;
     }
   }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, selectedTier, selectedSport]);
 
