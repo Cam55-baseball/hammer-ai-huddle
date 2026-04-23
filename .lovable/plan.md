@@ -1,138 +1,179 @@
+## Plan — Elite Signup → Activation → Monetization Pipeline
 
-## Plan — Put Recap Engine Inside the Owner Dashboard
+**Goal:** Lift signup→paid conversion without breaking anything. Add a structured decision moment, make every profile field actually do work in the product, and route paid users straight into Stripe with zero internal friction. THIS Will NOT APPLY TO Coach and scout profile creation routing (Coach and scout signup route does not change). This is just for for player profile creation
 
-### What is wrong now
-The Recap Engine already exists, but it lives inside the separate page `/admin/engine-settings`.  
-That page has the **Recap Engine** tab, but the **Owner Dashboard has no navigation item that leads to it**.
-
-So the real problem is not that the feature is missing.  
-The problem is that the owner dashboard does not expose it.
+This is a **layer on top** of the current flow — Auth, ProfileSetup, SelectModules, Checkout, stripe-webhook, and the `create_free_subscription` trigger all stay. We are inserting one new screen, hardening webhook-driven activation, and turning the profile into a true single source of truth.
 
 ---
 
-## What to build
+### New end-to-end flow
 
-### 1. Add an Owner Dashboard navigation item for engine controls
-Update the owner dashboard sidebar so it includes a new section item:
+```text
+Auth (existing)
+   ↓
+SelectRole → SelectSport (existing)
+   ↓
+ProfileSetup (enhanced — every field gets a downstream consumer)
+   ↓
+[NEW] /activate  ← Subscription Decision Board
+   ├─ "Start Free" → free tier already exists → /dashboard
+   └─ "Choose a Tier" → SelectModules → Checkout → Stripe Hosted
+                                          ↓
+                              stripe-webhook updates subscriptions
+                                          ↓
+                          /checkout?status=success → /dashboard
+                                          ↓
+                  Dashboard reads live entitlements (no reload lag)
+```
 
-- **Engine Settings**
-
-This will sit with the other owner tools like:
-- Video Library
-- Promo Engine
-- Drill CMS
-- Settings
-
-This makes the feature discoverable where you actually expect it: inside the owner dashboard.
-
-**Files**
-- `src/components/owner/OwnerSidebar.tsx`
-- `src/pages/OwnerDashboard.tsx`
-
-**Changes**
-- Add a new `OwnerSection` value like `engine-settings`
-- Add a sidebar button labeled **Engine Settings**
-- Add a matching label/description in `sectionLabels`
-- Render the engine settings content when that section is active
+No existing route is removed. `/select-modules` and `/checkout` continue to work for upgrades from inside the app.
 
 ---
 
-### 2. Reuse the existing Recap/HIE settings UI instead of rebuilding it
-Right now the engine settings UI already exists in `AdminEngineSettings.tsx`.
+### 1. Profile becomes the single source of truth
 
-To avoid having two separate versions of the same control panel, extract the shared engine settings content into a reusable owner-facing component, then use it in both places:
+**Problem today:** ProfileSetup collects 25+ fields (DOB, height/weight, position, throws/bats, grad year, GPA, SAT, commitment status, league, etc.). Most are written once and never read again as defaults.
 
-- inside the Owner Dashboard
-- inside `/admin/engine-settings`
+**Fix — wire each field to a consumer:**
 
-**Files**
-- `src/pages/AdminEngineSettings.tsx`
-- new shared component, for example:
-  - `src/components/owner/OwnerEngineSettingsPanel.tsx`
 
-**Changes**
-- Move the current tabbed engine settings UI into the shared component
-- Keep the existing two tabs:
-  - **HIE Engine**
-  - **Recap Engine**
-- Make `AdminEngineSettings.tsx` render that shared component
-- Make `OwnerDashboard.tsx` render that same shared component under the new owner section
+| Profile field                                                                     | Downstream consumer (prefill / filter / recommendation)                                     |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `date_of_birth`                                                                   | Already authoritative (memory rule). Confirm every age gate reads it.                       |
+| `position`                                                                        | Default position in Game Hub lineup builder, Practice Hub session intent, drill recommender |
+| `throwing_hand` / `batting_side`                                                  | Pre-select Session Intent Gate handedness, video analysis side                              |
+| `height` / `weight`                                                               | Strength workout load defaults, Speed Lab norms, Nutrition macro baseline                   |
+| `state` / `team_affiliation`                                                      | Default opponent search scope, Rankings filter                                              |
+| `high_school_grad_year` / `gpa` / `sat_score` / `act_score` / `commitment_status` | Scout-facing profile card, Rankings eligibility                                             |
+| `experience_level`                                                                | HIE difficulty floor, drill progression starting tier (1–7 ladder)                          |
+| `preferred_language`                                                              | i18n bootstrap (already exists — verify)                                                    |
 
-This keeps one source of truth.
 
----
+**Implementation:**
 
-### 3. Make it clear on mobile and desktop
-Because you are often using the owner flow from a smaller viewport, the new navigation must work cleanly in both layouts.
-
-**Desktop**
-- Engine Settings appears in the left owner sidebar
-
-**Mobile**
-- Engine Settings appears in the owner dashboard slide-out menu
-- Tapping it closes the drawer and opens the engine settings section immediately
-
-No hidden route-hunting required.
+- New `useUserProfile()` hook — single React Query source for the `profiles` row, cached app-wide, invalidated on any profile mutation.
+- New `<QuickEditProfile />` slide-over component, mounted globally, openable from `UserMenu` and any "Edit profile" affordance. Inline edits propagate via the shared query key.
+- Touch every component listed in the table above to read defaults from `useUserProfile()` instead of empty state.
+- No schema change required — the columns already exist.
 
 ---
 
-### 4. Keep the existing route for backward compatibility
-Do not remove `/admin/engine-settings`.
+### 2. New screen: `/activate` — Subscription Decision Board
 
-Keep it working, but treat it as a secondary/direct route.  
-The primary place for owner use should now be the **Owner Dashboard**.
+Inserted **between** ProfileSetup completion and the Dashboard. Today ProfileSetup navigates straight to `/dashboard`, which is the single biggest leak in the funnel.
 
-This preserves:
-- existing bookmarks
-- existing internal references
-- current owner gating behavior
+**Screen design (mobile-first, 440px viewport):**
 
----
+- Header: "You're set, {firstName}. Pick how you want to train."
+- Three tier cards (Complete Pitcher / 5Tool Player / Golden 2Way) using existing `TIER_CONFIG`, sport pre-selected from profile.
+- Below the tiers: a single clearly-labeled **"Start free for 7 days"** secondary action (the `create_free_subscription` trigger already grants this — we just stop hiding it).
+- Tertiary link: "I'll decide later" → `/dashboard` (free tier still active, no dead-end).
 
-## Expected owner experience after this ships
+**Routing:**
 
-### Desktop
-1. Open **Owner Dashboard**
-2. In the left owner navigation, click **Engine Settings**
-3. See:
-   - **HIE Engine**
-   - **Recap Engine**
-4. Click **Recap Engine** to manage recap logic
-
-### Mobile
-1. Open **Owner Dashboard**
-2. Open the owner menu
-3. Tap **Engine Settings**
-4. The section opens directly
-5. Tap **Recap Engine**
+- New route `/activate` rendered by a new `Activate.tsx` page.
+- `ProfileSetup.handleCompleteSetup` final `navigate("/dashboard", ...)` becomes `navigate("/activate", ...)` **only for new players** (skip for scout/coach/admin and skip if user already has a paid module).
+- Tier card click → reuses existing `navigate("/checkout", { state: { tier, sport } })`. No new checkout code path.
 
 ---
 
-## Files to edit
+### 3. Stripe path — direct, with coupons, no internal payment page
+
+Already in place (`create-checkout` → Stripe hosted Checkout with `allow_promotion_codes: true`). One enhancement:
+
+- `create-checkout` accepts an optional `coupon` param. When passed, it's forwarded as `discounts: [{ coupon }]` so pre-applied promos (campaigns, partner deals) skip the manual code step.
+- Success URL stays `/checkout?status=success`. Existing handler already toasts + refetches subscription + routes to dashboard.
+
+**Webhook hardening (existing `stripe-webhook`):**
+
+- Already idempotent (`processed_webhook_events`), already maps tier products → `subscriptions.subscribed_modules`. Verified working.
+- Add: on `checkout.session.completed`, call `supabase.realtime` broadcast on channel `subscription:{user_id}` so the frontend flips to "paid" the instant the redirect lands — no polling, no reload lag.
+
+**Frontend reactivity:**
+
+- `useSubscription` subscribes to that broadcast channel and to `postgres_changes` on `subscriptions` for the user. Dashboard locked/unlocked state updates within ~300ms of webhook write.
+
+**Failure handling:**
+
+- Cancel → `?status=cancel` already returns to `/checkout` with a toast → user can re-pick tier.
+- `invoice.payment_failed` → already handled in webhook; add a lightweight banner on Dashboard that reads `subscriptions.status = 'past_due'` and links to `/customer-portal`.
+
+---
+
+### 4. State, performance, editability
+
+- **State:** `AuthContext` (existing) + `useSubscription` (existing) + new `useUserProfile`. All three keyed off `user.id`, all three use React Query so there is one cache per concept and zero desync.
+- **Performance:** Activate screen is code-split. SelectModules and Checkout already exist — no extra bundle.
+- **Editability:** `<QuickEditProfile />` opens from anywhere; on save it `upsert`s `profiles` and invalidates the shared query — every consumer re-renders with new defaults instantly.
+
+---
+
+### 5. Database / schema
+
+No structural changes required. Optional additions for analytics only:
+
+- `profiles.activation_choice` (`text`, nullable) — values: `paid`, `free`, `deferred`. Written by `/activate`. Lets us measure conversion at the decision point. Migration is additive and safe.
+- Index on `subscriptions(user_id, status)` if not already present (verify before migration).
+
+---
+
+### 6. Edge cases
+
+
+| Case                                        | Behavior                                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| User refreshes mid-`/activate`              | Page is idempotent; reads profile + subscription, re-renders same state.                                           |
+| User already paid (returning)               | `/activate` detects `modules.length > 0` and auto-redirects to `/dashboard`.                                       |
+| Scout / Coach / Admin                       | Skip `/activate` entirely — they don't pay. Existing behavior preserved.                                           |
+| Owner                                       | Existing owner bypass in `create-checkout` and `check-subscription` untouched.                                     |
+| Webhook arrives before redirect             | Realtime broadcast + DB write means dashboard is correct regardless of order.                                      |
+| Webhook delayed                             | `useSubscription` polls on focus + 60s interval (existing) as backstop.                                            |
+| Profile incomplete then user navigates away | DOB + name + role still required to leave ProfileSetup. `/activate` requires a profile row — guard redirects back. |
+| Existing users (rollout safety)             | They never hit `/activate` (they're past ProfileSetup). Nothing changes for them. New signups only.                |
+
+
+---
+
+### 7. Files
+
+**New**
+
+- `src/pages/Activate.tsx` — Subscription Decision Board
+- `src/hooks/useUserProfile.ts` — single source of truth hook
+- `src/components/profile/QuickEditProfile.tsx` — global slide-over editor
 
 **Edited**
-- `src/components/owner/OwnerSidebar.tsx` — add Engine Settings nav item
-- `src/pages/OwnerDashboard.tsx` — add new owner section and render engine settings there
-- `src/pages/AdminEngineSettings.tsx` — switch to shared panel
-- `src/components/owner/OwnerEngineSettingsPanel.tsx` — shared tabbed HIE/Recap settings UI
+
+- `src/App.tsx` — register `/activate` route, mount `<QuickEditProfile />` globally
+- `src/pages/ProfileSetup.tsx` — final navigate target switches to `/activate` for new players
+- `src/components/UserMenu.tsx` — "Edit profile" opens QuickEditProfile
+- `src/hooks/useSubscription.ts` — subscribe to `subscription:{userId}` realtime channel
+- `supabase/functions/create-checkout/index.ts` — accept optional `coupon` param → `discounts`
+- `supabase/functions/stripe-webhook/index.ts` — broadcast subscription update on `checkout.session.completed`
+- (Defaults wiring) Practice Hub session intent, Game Hub lineup, Strength workout, Speed Lab, Nutrition macros, Drill recommender — read defaults from `useUserProfile`
+
+**Migration (optional, additive)**
+
+- Add `profiles.activation_choice text` for funnel analytics
 
 ---
 
-## Verification
+### 8. Verification
 
-1. Owner dashboard sidebar shows **Engine Settings**
-2. Mobile owner drawer also shows **Engine Settings**
-3. Clicking it opens the owner dashboard section without leaving the owner area
-4. That section contains both tabs:
-   - **HIE Engine**
-   - **Recap Engine**
-5. The **Recap Engine** tab loads the existing sliders, toggles, and JSON editor
-6. Saving from the owner dashboard still writes to the same backend tables as before
-7. `/admin/engine-settings` still works and shows the same shared UI
-8. Non-owners never see the new owner dashboard nav item
+1. New signup as Player → ProfileSetup → lands on `/activate` (not `/dashboard`).
+2. Tap a tier → Stripe Checkout opens directly, coupon field works, `allow_promotion_codes` accepts a code.
+3. Pay successfully → returned to `/checkout?status=success` → toast → `/dashboard` shows tier unlocked within ~1s, no manual refresh.
+4. Cancel checkout → returned to `/checkout?status=cancel` → toast → can re-select tier.
+5. Pick "Start free for 7 days" → `subscriptions.plan = 'free'` (already created by trigger) → `/dashboard` loads immediately.
+6. Edit profile from UserMenu → change `position` → open Practice Hub → new session pre-selects the new position with no reload.
+7. Existing paid user signs in → `/activate` is skipped (auto-redirect to `/dashboard`).
+8. Scout/Coach/Admin signups → never see `/activate`.
+9. Webhook test event for `customer.subscription.updated` → dashboard entitlements update without user action.
+10. `invoice.payment_failed` → past-due banner appears on dashboard with link to customer portal.
 
 ---
 
-## Result
-After this change, the Recap Engine will no longer feel hidden or “somewhere else.”  
-It will live where an owner would naturally look for it: **inside the Owner Dashboard**.
+### 9. Rollout
+
+- Ship behind a feature flag check on `profiles.created_at > <release_timestamp>` so only **new** signups are routed through `/activate`. Existing users are completely unaffected.
+- After 7 days of clean metrics, remove the gate so any user without a paid module sees `/activate` on next dashboard visit (gentle, not forced).
