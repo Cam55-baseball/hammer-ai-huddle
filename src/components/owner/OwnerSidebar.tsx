@@ -31,6 +31,7 @@ export type OwnerSection =
   | 'video-library'
   | 'promo-engine'
   | 'drill-cms'
+  | 'engine-settings'
   | 'subscriptions' 
   | 'settings' 
   | 'player-search';
@@ -71,6 +72,7 @@ export const OwnerSidebar = ({
     { id: 'video-library', label: 'Video Library', icon: Library },
     { id: 'promo-engine', label: 'Promo Engine', icon: Film },
     { id: 'drill-cms', label: 'Drill CMS', icon: Dumbbell },
+    { id: 'engine-settings', label: 'Engine Settings', icon: Settings },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'player-search', label: 'Player Search', icon: Search },
