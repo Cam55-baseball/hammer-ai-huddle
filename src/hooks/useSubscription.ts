@@ -283,10 +283,30 @@ export const useSubscription = () => {
       }
     });
 
+    // Realtime: react instantly to webhook-driven subscription updates
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (!u || !mounted) return;
+      realtimeChannel = supabase
+        .channel(`subscription:${u.id}`)
+        .on('broadcast', { event: 'updated' }, () => {
+          if (mounted) checkSubscription(true);
+        })
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'subscriptions', filter: `user_id=eq.${u.id}` },
+          () => {
+            if (mounted) checkSubscription(true);
+          }
+        )
+        .subscribe();
+    });
+
     return () => {
       mounted = false;
       if (interval) clearInterval(interval);
       authSub.unsubscribe();
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
     };
   }, [checkSubscription, fastPolling]);
 

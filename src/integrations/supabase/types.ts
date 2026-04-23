@@ -4370,6 +4370,7 @@ export type Database = {
       profiles: {
         Row: {
           act_score: number | null
+          activation_choice: string | null
           activity_level: string | null
           avatar_url: string | null
           batting_side: Database["public"]["Enums"]["batting_side"] | null
@@ -4430,6 +4431,7 @@ export type Database = {
         }
         Insert: {
           act_score?: number | null
+          activation_choice?: string | null
           activity_level?: string | null
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
@@ -4490,6 +4492,7 @@ export type Database = {
         }
         Update: {
           act_score?: number | null
+          activation_choice?: string | null
           activity_level?: string | null
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null

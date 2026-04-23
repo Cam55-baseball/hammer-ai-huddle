@@ -289,7 +289,10 @@ const ProfileSetup = () => {
         });
       }
 
-      navigate("/dashboard", { replace: true });
+      // New monetization funnel: route new players through the activation decision board.
+      // Scouts/Coaches/Admins skip it entirely (they don't pay).
+      const goToActivate = isPlayer && dbRole !== 'admin';
+      navigate(goToActivate ? "/activate" : "/dashboard", { replace: true });
     } catch (error: any) {
       toast({
         title: t('profileSetup.setupFailed'),

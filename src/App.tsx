@@ -10,6 +10,7 @@ import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton"
 import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
+import { QuickEditProfileProvider } from "./components/profile/QuickEditProfile";
 // Preloaded lazy imports — triggers fetch at boot, not on navigation
 const dashboardImport = () => import("./pages/Dashboard");
 const scoutDashboardImport = () => import("./pages/ScoutDashboard");
@@ -64,6 +65,7 @@ const SelectModules = lazyWithRetry(() => import("./pages/SelectModules"));
 const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
 const Checkout = lazyWithRetry(() => import("./pages/Checkout"));
 const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup"));
+const Activate = lazyWithRetry(() => import("./pages/Activate"));
 
 const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
 const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
@@ -142,6 +144,7 @@ const App = () => {
           <Sonner />
           <PWAUpdatePrompt />
           <BrowserRouter>
+            <QuickEditProfileProvider>
             <Suspense fallback={<PageLoadingSkeleton />}>
               <Routes>
               <Route path="/" element={<Index />} />
@@ -156,6 +159,7 @@ const App = () => {
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile-setup" element={<ProfileSetup />} />
+              <Route path="/activate" element={<Activate />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
@@ -208,6 +212,7 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            </QuickEditProfileProvider>
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>

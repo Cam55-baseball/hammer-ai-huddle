@@ -1,4 +1,4 @@
-import { User, Settings, HelpCircle, LogOut } from "lucide-react";
+import { User, Settings, HelpCircle, LogOut, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useQuickEditProfile } from "@/components/profile/QuickEditProfile";
 
 interface UserMenuProps {
   userName?: string;
@@ -19,6 +20,7 @@ interface UserMenuProps {
 
 export function UserMenu({ userName, userEmail }: UserMenuProps) {
   const navigate = useNavigate();
+  const { open: openQuickEdit } = useQuickEditProfile();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -55,6 +57,10 @@ export function UserMenu({ userName, userEmail }: UserMenuProps) {
         <DropdownMenuItem onClick={() => navigate("/profile")}>
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={openQuickEdit}>
+          <Pencil className="mr-2 h-4 w-4" />
+          <span>Quick edit</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate("/checkout")}>
           <Settings className="mr-2 h-4 w-4" />
