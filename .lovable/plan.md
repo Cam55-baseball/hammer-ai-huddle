@@ -1,99 +1,102 @@
 
 
-## Plan — Activation Page Conversion Refinement
+## Plan — Conversion Copy & Hierarchy Pass on Profile + `/activate`
 
-A precision UI + copy pass on `/activate`. No Stripe, webhook, or schema changes. The existing free subscription (created by the `create_free_subscription` trigger on signup) stays — we simply stop calling it a "trial."
-
----
-
-### 1. Rewrite `/activate` (`src/pages/Activate.tsx`)
-
-**New structure (top → bottom):**
-
-- **Headline:** "Choose Your Access"
-- **Subtext:** "Unlock full access instantly or continue with free tools. Upgrade anytime."
-- **Three tier cards** (Complete Pitcher / 5Tool Player / Golden 2Way) — primary visual weight
-  - CTA on each: **"Unlock Full Access"**
-  - Click → existing `navigate("/checkout", { state: { tier, sport } })` → Stripe hosted checkout
-- **Promo reassurance line** (small, centered, under tier cards):
-  *"All discounts and promotions are securely applied at checkout."*
-- **Free option** (visually secondary — plain text row, no card chrome, muted):
-  - Single CTA: **"Continue with Free Access"**
-  - Click → record `activation_choice='free'`, ensure free subscription row exists, redirect to `/dashboard`
-- **Removed:** "Start free for 7 days" headline/CTA, "7-day free trial" toast copy, "I'll decide later" link, "Not ready to commit?" block, any "trial" wording.
-
-**Language sweep:** remove "Try / Maybe / Explore / decide later / commit." Use "Unlock / Get Access / Continue."
+A precision UI/copy upgrade. No routing, Stripe, webhook, or schema changes. Existing free-subscription trigger, `TIER_CONFIG`, and checkout flow stay exactly as they are.
 
 ---
 
-### 2. Post-checkout reassurance state
+### 1. Profile Setup CTA — fix the misleading button
 
-In `src/pages/Checkout.tsx` (success branch — currently toasts and routes immediately):
+**File:** `src/pages/ProfileSetup.tsx`
 
-- Render a brief full-screen confirmation: **"Access unlocked. Loading your dashboard…"** with a spinner.
-- Hold ~800ms (long enough for `useSubscription` realtime broadcast to land), then `navigate("/dashboard", { replace: true })`.
-- Existing toast + refetch logic preserved underneath.
-
----
-
-### 3. Free flow without "trial" semantics
-
-- `handleStartFree` → renamed `handleContinueFree`. Removes the `"You're in — 7-day free trial active"` toast. Replace with neutral: *"Free access enabled. Upgrade anytime."*
-- No DB change. The `subscriptions` row created by the existing trigger is already `plan='free'`; we just stop labeling it a trial in the UI.
+- Change the final submit button label from **"Complete Profile and Go to Dashboard"** → **"Complete Profile & Continue"**.
+- Add a small muted line directly under the button: **"Next: Choose your access"** (only shown for player role — coaches/scouts/admins skip `/activate`, so for them keep no subtext or use neutral "Next: Your dashboard").
+- No logic change. Routing already sends players to `/activate` (shipped previously).
 
 ---
 
-### 4. Edge cases (verify, no new code)
+### 2. Rebuild `/activate` as a sales engine
 
-| Case | Behavior |
-|---|---|
-| Cancel Stripe checkout | Existing `?status=cancel` handler returns to `/checkout` with toast → user clicks tier again → back to Stripe. **Change:** update cancel handler to `navigate("/activate")` so the user lands back on the decision screen, not the checkout shell. |
-| Payment fails | Stripe hosted page handles retry inline (existing). |
-| Already subscribed | Existing guard in `Activate.tsx` auto-redirects to `/dashboard`. Unchanged. |
-| Owner / Admin / Coach / Scout | Existing role guards skip `/activate`. Unchanged. |
+**File:** `src/pages/Activate.tsx` (full rewrite of card markup; surrounding guards/handlers untouched)
+
+#### Header
+- Headline: **"Choose Your Access"**
+- Subheadline: **"Get full access instantly or continue with free tools. Upgrade anytime."**
+
+#### Tier card structure (per paid tier — Complete Pitcher, 5Tool Player, Golden 2Way)
+
+Each card uses a new outcome-based content model layered on top of the existing `TIER_CONFIG` keys. Feature bullets in `TIER_CONFIG` stay (used elsewhere); `/activate` ignores them and uses a new local copy map:
+
+| Tier | Positioning tag | Core value statement | 3 outcome bullets |
+|---|---|---|---|
+| Complete Pitcher | "For Serious Arms" | "Own the Mound. Command Every Pitch." | • Develop elite arm strength and pitch command • Follow a proven system trusted by college-level pitchers • Turn bullpens into game-day dominance |
+| 5Tool Player | "Most Popular" | "Train Like a Pro. Compete With Confidence." | • Build elite-level instincts and decision making • Follow a proven system used by high-level players • Turn practice into game-speed performance |
+| Golden 2Way | "Full System Access" | "Everything You Need to Separate Yourself." | • Master both sides of the game with one system • Train with the same framework as elite two-way players • Compound every rep into long-term separation |
+
+Card layout (top → bottom):
+1. Plan name (clean)
+2. Positioning tag (small uppercase pill)
+3. Core value statement (large, bold)
+4. Three outcome bullets with check icons
+5. Price — large, confident: `$X / month`
+6. Primary CTA: **"Unlock Full Access"**
+7. Micro-line under CTA: *"Secure checkout. Promotions applied at checkout."*
+
+#### Free option (visually minimized, still intentional)
+
+Rendered as a fourth, deliberately smaller, lower-contrast card beneath the paid tiers (not a plain text link — the brief asks for a clean free card):
+
+- Title: **"Free Access"**
+- Value line: **"Start with the fundamentals"**
+- Bullets:
+  - Access select training content
+  - Get familiar with the system
+  - Upgrade anytime for full access
+- CTA: **"Continue Free"**
+
+#### Visual hierarchy
+- Paid tiers: full card chrome, normal scale.
+- 5Tool Player card: highlighted with `ring-2 ring-primary` + slight scale (`md:scale-[1.03]`) + the "Most Popular" tag styled as a primary-colored pill.
+- Free card: muted background (`bg-muted/40`), no ring, smaller padding, lower-contrast text — present but visually secondary.
+- Mobile (440px): cards stack vertically, "Most Popular" still scales subtly so it remains visually dominant.
+
+#### Removed copy (final sweep)
+- Any remaining "Try / trial / 7 days / decide later / maybe / explore" language. Confirmed by grep across `Activate.tsx` and `Checkout.tsx`.
 
 ---
 
-### 5. Profile-as-SSOT enforcement (audit, light wiring)
+### 3. Behavior — unchanged
 
-The `useUserProfile` hook and `<QuickEditProfile />` shipped previously. This pass confirms active use:
-
-- Audit Practice Hub Session Intent, Game Hub lineup builder, Speed Lab, Strength workout defaults, Drill recommender — confirm each reads `position`, `throwing_hand`, `batting_side`, `height`, `weight`, `experience_level` from `useUserProfile()` and pre-selects.
-- Where any consumer still uses empty/local state, wire it to the hook.
-- No new fields. No schema change. Goal: zero dead profile data.
-
----
-
-### 6. What is explicitly NOT touched
-
-- `supabase/functions/create-checkout/index.ts` (already supports `coupon` + `allow_promotion_codes`)
-- `supabase/functions/stripe-webhook/index.ts`
-- `subscriptions` table, `create_free_subscription` trigger
-- `useSubscription` realtime broadcast wiring
-- Stripe price IDs in `TIER_CONFIG`
+- Tier CTA → existing `navigate("/checkout", { state: { tier, sport } })` → Stripe hosted checkout
+- Free CTA → existing `handleContinueFree` (records `activation_choice='free'`, ensures free `subscriptions` row, neutral toast, redirect to `/dashboard`)
+- Cancel from Stripe → already returns to `/activate` (shipped last pass)
+- Returning paid user, owner/admin/coach/scout role guards — unchanged
 
 ---
 
-### Files
+### 4. Files
 
-**Edited**
-- `src/pages/Activate.tsx` — full copy + layout rewrite, remove trial/decide-later, add promo reassurance line
-- `src/pages/Checkout.tsx` — add "Access unlocked. Loading your dashboard…" confirmation state on success; route cancel back to `/activate`
-- (Audit pass) any consumer not yet reading `useUserProfile()` defaults — wire it in
+**Edited only**
+- `src/pages/ProfileSetup.tsx` — button label + subtext
+- `src/pages/Activate.tsx` — full card markup rewrite, new outcome-copy map, free card, hierarchy
 
-**Not edited**
-- All edge functions, webhook, Stripe config, DB schema, subscription hook plumbing
+**Not touched**
+- `src/constants/tiers.ts` (feature `includes` arrays still consumed by `/checkout` summary and other surfaces)
+- `src/pages/Checkout.tsx`
+- All edge functions, webhooks, DB schema, Stripe price IDs
+- `useSubscription`, `useUserProfile`, `QuickEditProfile`
 
 ---
 
-### Verification
+### 5. Verification
 
-1. `/activate` shows "Choose Your Access" headline, three tier cards with **"Unlock Full Access"** CTAs, the promo reassurance line, and a single muted **"Continue with Free Access"** row beneath. No "trial," no "decide later," no "7 days" anywhere.
-2. Clicking a tier opens Stripe checkout directly — coupon field and `allow_promotion_codes` still functional.
-3. Successful payment → "Access unlocked. Loading your dashboard…" appears for ~800ms → dashboard loads with tier unlocked (realtime path unchanged).
-4. Cancel from Stripe → returns to `/activate`, not `/checkout`.
-5. "Continue with Free Access" → dashboard loads instantly with free entitlements; no trial-language toast.
-6. Returning paid user → auto-redirected away from `/activate` (unchanged).
-7. Coach / Scout / Admin / Owner → never see `/activate` (unchanged).
-8. Profile audit: changing `position` in QuickEditProfile pre-selects the new value in Practice Hub Session Intent on next open with no reload.
+1. Profile Setup final button reads **"Complete Profile & Continue"** with **"Next: Choose your access"** beneath (player role only).
+2. `/activate` shows the new headline + subheadline.
+3. Three paid tier cards render with positioning tag, bold value statement, exactly 3 outcome bullets, price, **"Unlock Full Access"** CTA, and the secure-checkout micro-line.
+4. **5Tool Player** card is visually dominant (ring + slight scale) and shows the **"Most Popular"** pill.
+5. Free Access card appears beneath, visually minimized, with **"Continue Free"** CTA.
+6. No occurrence of "trial", "7 days", "decide later", "try", "maybe", or "explore" anywhere on either screen.
+7. Tier CTA still routes to Stripe; Free CTA still routes to `/dashboard`; cancel still returns to `/activate`.
+8. Mobile 440px viewport: cards stack, hierarchy preserved, all CTAs full-width and tappable.
 
