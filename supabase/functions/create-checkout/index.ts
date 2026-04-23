@@ -86,9 +86,9 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { tier, sport, modules } = body;
+    const { tier, sport, modules, coupon } = body;
     
-    logStep("Received request", { tier, sport, modules });
+    logStep("Received request", { tier, sport, modules, hasCoupon: !!coupon });
 
     // Validate sport
     if (!sport || !['baseball', 'softball'].includes(sport)) {
@@ -139,17 +139,25 @@ serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
-    
-    const session = await stripe.checkout.sessions.create({
+
+    const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: lineItems,
       mode: "subscription",
-      allow_promotion_codes: true,
       success_url: `${origin}/checkout?status=success`,
       cancel_url: `${origin}/checkout?status=cancel`,
-      metadata: checkoutMetadata
-    });
+      metadata: checkoutMetadata,
+    };
+
+    // Apply coupon directly if provided (skips manual code entry); otherwise allow user to enter one.
+    if (coupon) {
+      sessionParams.discounts = [{ coupon }];
+    } else {
+      sessionParams.allow_promotion_codes = true;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
