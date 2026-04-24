@@ -13,10 +13,10 @@ export interface SyntheticLog {
   entry_date: string; // YYYY-MM-DD
   created_at: string; // ISO timestamp
   actual_duration_minutes: number;
-  performance_data: { rpe: number };
+  performance_data: { rpe: number; checkboxStates: Record<string, boolean> };
   notes: string;
   completion_state: 'completed';
-  completion_method: 'check_all';
+  completion_method: 'done_button';
   completed: true;
   completed_at: string;
 }
@@ -55,10 +55,10 @@ function mkLog(
     entry_date: isoDate(ts),
     created_at: iso,
     actual_duration_minutes: durationMin,
-    performance_data: { rpe },
+    performance_data: { rpe, checkboxStates: { task_1: true } },
     notes: `adversarial:${scenario}`,
     completion_state: 'completed',
-    completion_method: 'check_all',
+    completion_method: 'done_button',
     completed: true,
     completed_at: iso,
   };
