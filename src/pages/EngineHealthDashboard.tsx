@@ -338,6 +338,8 @@ export default function EngineHealthDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <FunctionReliabilityPanel />
       </div>
     </DashboardLayout>
   );
