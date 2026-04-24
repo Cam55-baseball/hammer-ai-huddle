@@ -200,3 +200,6 @@ verify_jwt = false
 
 [functions.analyze-hydration-beverage]
 verify_jwt = true
+
+[functions.engine-heartbeat]
+verify_jwt = false
