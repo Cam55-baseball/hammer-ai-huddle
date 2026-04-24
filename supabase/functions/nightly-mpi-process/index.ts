@@ -1002,7 +1002,7 @@ serve(async (req) => {
     }
 
     console.log('[nightly-mpi] Complete.');
-    return new Response(JSON.stringify({ success: true, resumed_from: resumeFrom, athletes_processed: totalProcessed, timestamp: new Date().toISOString() }), {
+    return new Response(JSON.stringify({ success: true, athletes_processed: totalProcessed, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
