@@ -9,7 +9,8 @@ import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useEngineHealth } from '@/hooks/useEngineHealth';
 import { useHeartbeatHealth } from '@/hooks/useHeartbeatHealth';
-import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart } from 'lucide-react';
+import { useSentinelHealth } from '@/hooks/useSentinelHealth';
+import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart, Eye } from 'lucide-react';
 
 const formatRel = (iso: string | null) => {
   if (!iso) return 'Never';
