@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
@@ -114,6 +114,7 @@ const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
+const EngineHealthDashboard = lazyWithRetry(() => import("./pages/EngineHealthDashboard"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
 const TrainingBlock = lazyWithRetry(() => import("./pages/TrainingBlock"));
 
@@ -206,6 +207,8 @@ const App = () => {
               <Route path="/baserunning-iq" element={<BaserunningIQ />} />
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
+              <Route path="/admin/engine-health" element={<EngineHealthDashboard />} />
+              <Route path="/coach-compliance" element={<Navigate to="/coach-dashboard" replace />} />
               <Route path="/drill-library" element={<DrillLibraryPlayer />} />
               <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />

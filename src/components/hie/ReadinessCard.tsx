@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useHIESnapshot } from '@/hooks/useHIESnapshot';
 import { Battery, BatteryLow, BatteryMedium, BatteryFull } from 'lucide-react';
+import { ReadinessChip } from '@/components/hammer/ReadinessChip';
 
 export function ReadinessCard() {
   const { snapshot } = useHIESnapshot();
@@ -30,7 +31,10 @@ export function ReadinessCard() {
             {snapshot.readiness_recommendation}
           </p>
         )}
+        {/* Unified Readiness — additive, shows source breakdown */}
+        <ReadinessChip variant="expanded" />
       </CardContent>
     </Card>
   );
 }
+

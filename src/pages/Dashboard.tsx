@@ -23,6 +23,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
+import { TodayCommandBar } from "@/components/today/TodayCommandBar";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
@@ -574,6 +575,9 @@ export default function Dashboard() {
             </h2>
           </div>
         </Card>
+
+        {/* Today Command Bar — Hammer State + Readiness + Quick Log (additive, mounted above Game Plan) */}
+        <TodayCommandBar />
 
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
