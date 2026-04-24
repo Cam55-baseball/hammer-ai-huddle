@@ -23,6 +23,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
+import { TodayCommandBar } from "@/components/today/TodayCommandBar";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
