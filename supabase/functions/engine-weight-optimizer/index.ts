@@ -140,10 +140,42 @@ serve(async (req) => {
       (currentWeights ?? []).map((r: any) => [r.axis, Number(r.weight)])
     );
 
-    // Apply: clamp final to 0.5..1.5
+    // Apply: clamp final to 0.5..1.5 + DRIFT GUARD (Phase 6)
     const axesModified: string[] = [];
+    const axesBlocked: string[] = [];
+    const DRIFT_CAP_24H = 0.15;
+    const driftSince = new Date(Date.now() - 86400000).toISOString();
+
     for (const axis of Object.keys(perAxis) as Axis[]) {
       if (perAxis[axis] === 0) continue;
+
+      // Drift guard: sum of |delta| from engine_weight_history in last 24h
+      const { data: hist } = await supabase
+        .from("engine_weight_history")
+        .select("delta")
+        .eq("axis", axis)
+        .gte("created_at", driftSince);
+      const cumulative = (hist ?? []).reduce(
+        (s: number, r: any) => s + Math.abs(Number(r.delta)),
+        0,
+      );
+
+      if (cumulative + Math.abs(perAxis[axis]) > DRIFT_CAP_24H) {
+        await supabase.from("audit_log").insert({
+          user_id: "00000000-0000-0000-0000-000000000000",
+          action: "weight_drift_blocked",
+          table_name: "engine_dynamic_weights",
+          metadata: {
+            axis,
+            attempted_delta: perAxis[axis],
+            cumulative_24h: cumulative,
+            cap: DRIFT_CAP_24H,
+          },
+        });
+        axesBlocked.push(axis);
+        continue;
+      }
+
       const cur = current[axis] ?? 1.0;
       const next = clamp(cur + perAxis[axis], MIN_WEIGHT, MAX_WEIGHT);
       if (next !== cur) {
@@ -152,6 +184,15 @@ serve(async (req) => {
           metadata: { previous_weight: cur, applied_delta: perAxis[axis] },
         }, { onConflict: "axis" });
         axesModified.push(axis);
+
+        // History INSERT for drift tracking
+        await supabase.from("engine_weight_history").insert({
+          axis,
+          weight: next,
+          delta: perAxis[axis],
+          source: "optimizer",
+          metadata: { previous_weight: cur, cumulative_24h_before: cumulative },
+        });
       }
     }
 
