@@ -224,3 +224,9 @@ verify_jwt = false
 
 [functions.evaluate-advice-effectiveness]
 verify_jwt = false
+
+[functions.predict-hammer-state]
+verify_jwt = false
+
+[functions.generate-interventions]
+verify_jwt = false
