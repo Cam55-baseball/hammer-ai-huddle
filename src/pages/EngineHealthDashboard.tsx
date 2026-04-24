@@ -36,6 +36,7 @@ export default function EngineHealthDashboard() {
   const navigate = useNavigate();
   const health = useEngineHealth();
   const heartbeat = useHeartbeatHealth();
+  const sentinel = useSentinelHealth();
 
   useEffect(() => {
     if (!ownerLoading && !adminLoading && !isOwner && !isAdmin) navigate('/dashboard');
