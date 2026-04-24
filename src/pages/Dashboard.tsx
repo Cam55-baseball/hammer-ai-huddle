@@ -575,8 +575,8 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Module cards above Game Plan when user has no tier */}
-        {!hasAnyTier && moduleCardsSection}
+        {/* Module cards above Game Plan when user has no tier (players only) */}
+        {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
@@ -622,8 +622,8 @@ export default function Dashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Module cards below Game Plan when user has at least one tier */}
-        {hasAnyTier && moduleCardsSection}
+        {/* Module cards below Game Plan when user has a tier, or is coach/scout */}
+        {(hasAnyTier || isCoach || isScout) && moduleCardsSection}
 
         {/* Merch always pinned below the Game Plan */}
         {merchSection}
