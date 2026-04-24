@@ -93,6 +93,7 @@ export function AppSidebar() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach } = useScoutAccess();
+  const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
   const { modules } = useSubscription();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
   const { isSoftball } = useSportTheme();
