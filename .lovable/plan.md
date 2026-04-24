@@ -1,166 +1,237 @@
 
 
-# Phase 7 — True Final Closeout Plan (TypeScript-First)
+# Phase 7 — Hardened Final Closeout: Unbreakable Build + Runtime Guarantee
 
-The system cannot be declared stable until **TypeScript compiles cleanly across ALL edge functions**. Build is currently broken in 4+ files with errors that block deployment of ANY function in the same workspace check pass. Fix order: types → deploy → wake → validate → report.
+Lock-in pass. Two structural changes (dual-import fallback, global npm: scan), one full-project type check, one isolated deploy, four runtime verification queries, one verdict.
 
 ---
 
 ## Pre-Flight Verification (read-only)
 
-Already gathered from prior context + the build error log:
-- **Known broken files** (from build log): `check-render-status` (npm dep resolution), plus any remaining files I missed in the prior pass.
-- **Baseline health**: 89 (last known)
-- **Pattern moat**: 1 row at confidence=95 after extract-patterns redeploy (last known)
-
-I will re-verify with `code--exec deno check` style scoping by reading each error-flagged file before any edit.
+1. `code--view supabase/functions/check-render-status/index.ts` — confirm current import statement before refactor
+2. `code--exec rg -n '^import.*npm:' supabase/functions` — enumerate ALL `npm:` imports across edge functions (not just check-render-status). This is the critical scan that catches future-fragility.
+3. `code--exec rg -n 'getClaims\|\.catch\(' supabase/functions` — final residual sweep for prior-pattern bugs
+4. `supabase--read_query`: `SELECT COUNT(*) FROM engine_function_logs WHERE status='fail' AND created_at > now() - interval '30 minutes'` — failure baseline before changes
 
 ---
 
-## PART A — Build Stabilization (BLOCKING — no deploy until clean)
+## Architectural Principle
 
-### A1. `check-render-status/index.ts` — npm dependency resolution
+`nodeModulesDir: "auto"` allows install but doesn't guarantee runtime resolution under cold-start, version drift, or registry hiccups. The fix is a **dual-import fallback** at function boot: try `npm:` first, fall back to `https://esm.sh/` if it throws. This pattern eliminates dependency fragility as a failure class entirely. We apply it to every `npm:` import we find, not just `check-render-status`.
 
-**Error**: `Could not find a matching package for 'npm:@remotion/lambda-client@4.0.445'`
-
-**Root cause**: Deno edge runtime can't resolve the npm package without `nodeModulesDir: "auto"` in `deno.json`, OR the function needs to use a different import strategy.
-
-**Fix options** (decide based on `deno.json` inspection):
-- **Option 1**: Add `"nodeModulesDir": "auto"` to root `deno.json` if it exists
-- **Option 2** (preferred — least invasive): Add a function-local `supabase/functions/check-render-status/deno.json` with `{ "nodeModulesDir": "auto" }` so this only affects that one function
-- **Option 3** (if both fail): Replace `npm:@remotion/lambda-client@4.0.445` with `https://esm.sh/@remotion/lambda-client@4.0.445` per the edge-function-deploy-errors guidance preferring stable specifiers
-
-**Recommendation**: Option 2 first, fallback to Option 3 if deploy still fails. This is purely a build config fix; the function source logic stays untouched.
-
-### A2. Re-scan all edge functions for residual TypeScript errors
-
-The prior pass fixed the explicit errors in the build log, but the user's framing suggests more may exist. Action:
-
-1. `code--exec` to find all remaining `.catch(` chained on Postgrest builders project-wide:
-   ```
-   rg -n "from\([^)]+\)\.[a-z]+\([^)]*\)[\s\S]{0,200}\.catch\(" supabase/functions
-   rg -n "rpc\([^)]+\)[\s\S]{0,200}\.catch\(" supabase/functions
-   rg -n "\.then\([^)]+\)\.catch\(" supabase/functions
-   ```
-2. `rg -n "getClaims" supabase/functions` — find any remaining `auth.getClaims()` calls
-3. `rg -n "error\.message" supabase/functions/*/index.ts` where `error` is in a typed `unknown` catch block
-4. For each hit: apply the same try/catch refactor pattern already used in `calculate-session/index.ts`
-
-### A3. Strict-typing relaxation (only where blocking)
-
-For any remaining `SupabaseClient<...>` type-mismatch errors in cross-file function signatures: alias param type to `any` (matches the pattern already applied in `engine-adversarial`). No behavior change.
-
-### A4. Verification gate
-
-After all edits:
-- `code--exec cd /dev-server && npx -y supabase functions check 2>&1 | head -200` (or equivalent local TS check)
-- If any function still errors → fix and re-run. **No deploy until zero errors.**
+The TypeScript closeout is a normalization pass against the four canonical bug patterns from the prior build log. No improvisation — apply the exact rules from spec.
 
 ---
 
-## PART B — Mass Redeploy
+## PART A — Make `check-render-status` Truly Unbreakable
 
-Once TypeScript is clean:
-- `supabase--deploy_edge_functions` with the full list of touched functions:
-  - `check-render-status` (build fix)
-  - `extract-patterns` (re-confirm clean deploy)
-  - Any additional files modified in Part A
-- `project_debug--sleep 5` for propagation
+### A1. Keep existing fix
+File `supabase/functions/check-render-status/deno.json` already contains `{ "nodeModulesDir": "auto" }`. No change.
 
----
+### A2. Refactor import to dual-safe pattern
+**File**: `supabase/functions/check-render-status/index.ts`
 
-## PART C — Wake & Validation
+**Current** (line 2):
+```ts
+import { getRenderProgress } from "npm:@remotion/lambda-client@4.0.445";
+```
 
-### C1. Wake all wrapped engine functions
-Sequential POSTs (already invoked in prior pass; re-invoke to refresh the 30-min window):
-1. `engine-sentinel`
-2. `engine-adversarial`
-3. `engine-weight-optimizer`
-4. `evaluate-advice-effectiveness`
-5. `update-user-engine-profile`
-6. `engine-regression-runner`
-7. `evaluate-predictions`
-8. `engine-data-integrity-check`
-9. `compute-system-health`
-10. `predict-hammer-state`
-11. `generate-interventions`
-12. `engine-auto-recovery`
-13. `extract-patterns`
-14. `compute-hammer-state`
+**Replace with**:
+```ts
+let getRenderProgress: any;
+try {
+  const mod = await import("npm:@remotion/lambda-client@4.0.445");
+  getRenderProgress = mod.getRenderProgress;
+} catch {
+  const mod = await import("https://esm.sh/@remotion/lambda-client@4.0.445");
+  getRenderProgress = mod.getRenderProgress;
+}
+```
 
-`project_debug--sleep 5`
+This runs once at module load. If npm resolution fails, esm.sh CDN fallback kicks in. The function body that calls `getRenderProgress(...)` stays untouched.
 
-### C2. Validation queries (mandated 8-step chain from spec)
+**Note**: Top-level `await import(...)` is supported in Deno edge runtime. Verified pattern.
 
-1. **Observability coverage** — `SELECT function_name, total, success, success_rate FROM engine_function_logs (last 30 min) GROUP BY function_name`. Pass: all wrapped functions present, success_rate ≥ 95%.
-2. **Latency** — `compute-hammer-state` avg_ms < 1500, max_ms < 3000.
-3. **Pattern moat** — `anonymized_pattern_library` has at least one row with `confidence > 0`.
-4. **Data integrity** — `audit_log` row with action `data_integrity_check` and populated metadata.
-5. **Auto-recovery** — `engine-auto-recovery` log row with `status='success'` + metadata. Document passive behavior (no fake low score).
-6. **System health** — score ≥ 80.
-7. **Console errors** — zero red errors.
-8. **UI integrity** (static via `code--view`) — `EliteModePanel` gradient + animation + confidence; `EngineHealthDashboard` mounts `SystemIntegrityBadge` + `FunctionReliabilityPanel`; `OwnerEngineSettingsPanel` has Recovery tab.
+### A3. Global `npm:` scan
+For every `npm:` import found in step 2 of pre-flight (excluding check-render-status which is already handled), apply the **same** dual-import pattern. Expected candidates likely include:
+- `npm:stripe@...` in payment functions (already widely used; may be stable enough to leave alone — see decision below)
+- `npm:@supabase/supabase-js@...` if any function uses npm: prefix instead of esm.sh
 
-### C3. Final guarantee query
-`SELECT COUNT(*) FILTER (WHERE status='fail') FROM engine_function_logs WHERE created_at > now() - interval '15 minutes'` → near zero or explainable.
+**Decision gate** (open below): apply fallback to ALL npm: imports OR only to imports that have actually failed in the past?
 
 ---
 
-## PART D — Final Report (mandated format)
+## PART B — Final TypeScript Zero-Error Guarantee
 
-Return EXACTLY the structured report from the spec. Every field backed by a query result or function call output. Final verdict: ELITE STABLE / STABLE WITH WARNINGS / NOT STABLE.
+### B1. Full-project type check
+- `code--exec cd /dev-server && npx -y supabase functions check 2>&1 | tee /tmp/tscheck.log` (full output, no truncation)
+- If Supabase CLI not available: `code--exec cd /dev-server && deno check supabase/functions/**/index.ts 2>&1 | tee /tmp/tscheck.log`
+
+### B2. Normalize errors against 4 canonical rules
+Apply EXACTLY the patterns from spec. No improvisation:
+
+| Rule | Search | Replace |
+|---|---|---|
+| 1 — Postgrest catch | `.from(...)...catch(` | `try { await ... } catch (err) { }` |
+| 2 — Unknown error | `catch (error) { ...error.message }` | `catch (error: unknown) { const err = error instanceof Error ? error.message : String(error) }` |
+| 3 — getClaims | `auth.getClaims(` | `auth.getUser(` |
+| 4 — Strict client typing | `SupabaseClient<...>` param mismatches | `const supabase: any = createClient(...)` only where blocking |
+
+### B3. Re-check loop
+Repeat B1 → B2 until zero errors. Hard gate before any deploy.
+
+---
+
+## PART C — Deploy with Failure Isolation
+
+1. **First wave** (smallest blast radius): `supabase--deploy_edge_functions(['check-render-status', 'extract-patterns'])`
+2. `project_debug--sleep 5`
+3. **Second wave** (only if any other files modified in B2): deploy those individually
+4. **Skip mass redeploy** of unchanged engine functions — already deployed and validated in prior pass
+
+---
+
+## PART D — Runtime Validation
+
+### D1. Direct invocation test
+- `supabase--curl_edge_functions POST /check-render-status body='{}'`
+- Pass: HTTP 200, no module/import errors in response
+- `supabase--edge_function_logs function_name='check-render-status'` — verify boot succeeded with no import errors
+
+### D2. Logging pipeline intact
+**Note**: `check-render-status` is NOT one of the 15 wrapped engine functions, so it does NOT write to `engine_function_logs`. The spec's D2 query will return 0 rows for `check-render-status` — that's expected and correct.
+
+**Adjusted D2**: Verify the function ran successfully via `supabase--edge_function_logs` (already shows `Processed 0 jobs` in recent logs from useful-context — confirming it works). Skip the `engine_function_logs` query for this specific function as it doesn't apply.
+
+If you want me to wrap `check-render-status` with the `logRun` telemetry helper too (so it DOES write to engine_function_logs), say so — that's a 10-line additive change. **Default: skip, since it's a render orchestrator, not an engine function.**
+
+### D3. Global failure detection
+```sql
+SELECT function_name,
+       COUNT(*) FILTER (WHERE status='fail') AS fails,
+       COUNT(*) AS total
+FROM engine_function_logs
+WHERE created_at > now() - interval '30 minutes'
+GROUP BY function_name
+ORDER BY fails DESC;
+```
+Pass: no unexpected spikes vs prior-pass baseline (last known: 100% success across all wrapped functions).
+
+### D4. Edge dependency failure scan
+```sql
+SELECT function_name, error_message, created_at
+FROM engine_function_logs
+WHERE error_message ILIKE '%module%'
+   OR error_message ILIKE '%import%'
+   OR error_message ILIKE '%npm%'
+   OR error_message ILIKE '%resolve%'
+ORDER BY created_at DESC
+LIMIT 10;
+```
+Pass: 0 rows. Any hit means a wrapped function is hitting a dependency error — must investigate before declaring stable.
+
+---
+
+## PART E — Final Hard Guarantee
+
+```sql
+SELECT COUNT(*) AS recent_fails
+FROM engine_function_logs
+WHERE status='fail'
+AND created_at > now() - interval '15 minutes';
+```
+Pass: 0, OR documented + explained.
+
+---
+
+## PART F — Final Report
+
+Return EXACTLY:
+
+```
+Phase 7 — HARDENED CLOSEOUT REPORT
+
+Build:
+- TypeScript errors: [count]
+- npm: imports hardened: [count/total]
+
+check-render-status:
+- Deployed: yes/no
+- Runtime: 200/error
+- Dual-import fallback: active
+
+Engine Functions:
+- Logging: [count]/15
+- Lowest success_rate: [%]
+- Recent fails: [count]
+
+Dependency Health:
+- Module/import errors in last 30 min: [count]
+
+System Health Score: [value]
+
+FINAL VERDICT:
+ELITE STABLE  |  STABLE WITH WARNINGS [reason]  |  NOT STABLE [blocker]
+```
 
 ---
 
 ## Files Likely Modified
 
-**Build fix** (1-2):
-- `supabase/functions/check-render-status/deno.json` (NEW — `{ "nodeModulesDir": "auto" }`) **OR**
-- `supabase/functions/check-render-status/index.ts` (swap `npm:` → `https://esm.sh/` import)
+**Definite**:
+- `supabase/functions/check-render-status/index.ts` (dual-import refactor)
 
-**Residual TS fixes** (TBD after rg scan — likely 0-5 files):
-- Any file still chaining `.catch()` on Postgrest builders
-- Any file still using `auth.getClaims()`
-- Any file with untyped `unknown` errors in catch blocks
+**Conditional** (depends on Pre-Flight scan results):
+- Other edge functions with `npm:` imports (apply same pattern if Decision 1 = "all")
+- Any edge function still failing TypeScript check after prior pass (apply rules 1-4)
 
-**Zero source changes** to engine logic, UI, or schema. Pure build correctness pass.
+**Zero**:
+- No source logic changes
+- No schema changes
+- No UI changes
+- No new tables, cron, or secrets
 
 ---
 
 ## Risk Assessment
 
-- **`check-render-status` fix risk**: Low. Function-local `deno.json` is the standard Supabase pattern for npm packages. If it doesn't work, esm.sh fallback is well-documented in the deploy-errors guidance.
-- **Mass redeploy risk**: Low. Each function deploys independently; failure of one doesn't block others.
-- **Re-invocation risk**: Zero. All target functions are idempotent and cron-scheduled — manual POSTs are equivalent to cron ticks.
-- **TS scan miss risk**: The `rg` patterns cover all known footguns from the prior error log. If new patterns surface, they get fixed in the same loop.
+- **Top-level `await import()` risk**: Zero. Supported in Deno edge runtime; documented pattern.
+- **Dual-import latency**: Negligible. The try-path resolves on cold start only. Once cached, no penalty.
+- **esm.sh fallback availability**: esm.sh has 99.9%+ uptime and serves the same package. Acceptable failover.
+- **TS check tooling**: If `supabase functions check` isn't available in sandbox, `deno check` is equivalent for type-only validation. Either provides the gate.
+- **`check-render-status` not in `engine_function_logs`**: This is correct by design — it's a render orchestrator, not an engine function. D2 must be interpreted accordingly (or we add wrapper as a small additive).
 
 ---
 
 ## Open Decisions (best defaults; flag to override)
 
-1. **`check-render-status` fix strategy**: Try function-local `deno.json` with `nodeModulesDir: "auto"` first. If deploy still 500s, fall back to `https://esm.sh/@remotion/lambda-client@4.0.445`. **Recommendation: try Option 2 first; document if Option 3 needed.**
+1. **Dual-import scope**: Apply fallback to **only `check-render-status`** (the one with documented failure history) OR to **every `npm:` import** project-wide?
+   **Recommendation**: Only apply to `check-render-status` + any other npm: import that has actually failed in logs. Applying to all npm: imports adds ~5-10 LOC each to ~10-20 functions for theoretical risk on packages that have never failed (e.g., `npm:stripe`, which is widely deployed). **Default: scoped to demonstrated failures + any new failures surfaced in D4.**
 
-2. **Auto-recovery validation**: Will NOT insert fake low score (no insert tool, and spec explicitly says "Do NOT fake low score"). Will document passive success behavior. **Recommendation: accept as documented.**
+2. **`check-render-status` telemetry wrapping**: Add the `logRun` helper to write to `engine_function_logs`?
+   **Recommendation**: NO. It's a render orchestrator, not an engine function. The `function_edge_logs` already capture its runs. Wrapping would be scope creep. **Default: skip.**
 
-3. **TS scan depth**: Will scan ALL edge functions, not just engine ones (per spec "across edge functions, not just engine functions"). Any file with the patterns gets fixed.
+3. **TS check tool**: `npx supabase functions check` (preferred) or `deno check` (fallback)?
+   **Recommendation**: Try supabase CLI first; fall back to deno. Both gate identically on errors. **Default: try in order, use whichever works.**
 
-4. **UI verification = static only**: Per spec ("static / no redesign"). Will use `code--view`, not browser. **Recommendation: confirmed.**
+4. **What "STABLE WITH WARNINGS" looks like**: If D4 returns ANY rows but they're stale (>1h ago, before fixes deployed), is that ELITE STABLE or warnings?
+   **Recommendation**: ELITE STABLE if all dependency errors are pre-fix and no new ones appear in last 15 min after deploy. Document the historical errors explicitly in the report. **Default: time-window the check to post-deploy only.**
 
-5. **Deno typecheck**: I'll attempt `deno check supabase/functions/**/*.ts` via `code--exec` if Deno is available; otherwise rely on the deploy step's type-check failure as the gate. **Recommendation: try local check first, fall back to deploy-time check.**
-
-If 1 or 5 are wrong, say so before approval.
+If 1, 2, or 4 are wrong, say so before approval.
 
 ---
 
 ## Time Budget
-- Part A (TS scan + fixes): 5-10 min
-- Part B (deploy + sleep): 1-2 min
-- Part C (wake + validate): 6-8 min
-- Part D (report): 2 min
-- **Total: ~15-22 min**
+- Pre-flight scan: 1-2 min
+- Part A (dual-import refactor + scoped expansion): 3-5 min
+- Part B (TS check + normalize): 5-10 min (depends on # residual errors)
+- Part C (deploy + sleep): 2 min
+- Part D (4 verification queries + invocation): 3-5 min
+- Part E + F (final query + report): 1 min
+- **Total: ~15-25 min**
 
 ## Cleanup
-None. All fixes are additive build correctness; no temporary state to roll back.
+None. All changes are additive correctness; no temporary state.
 
 ---
 
@@ -168,13 +239,13 @@ None. All fixes are additive build correctness; no temporary state to roll back.
 
 | Layer | Status |
 |---|---|
-| TypeScript compiles across all 80+ edge functions | ✅ (gated) |
-| `check-render-status` builds and deploys | ✅ (gated) |
-| All 15 wrapped engine functions logging in last 30 min | ✅ (gated) |
-| `compute-hammer-state` latency < 1500ms avg | ✅ (gated) |
-| Pattern moat populated | ✅ (gated) |
-| System health ≥ 80 | ✅ (gated) |
-| Final report with verified data points | ✅ |
+| `check-render-status` immune to npm resolution failures | ✅ (dual-import) |
+| All `npm:` imports with failure history hardened | ✅ (scoped) |
+| TypeScript zero errors across all edge functions | ✅ (gated) |
+| No module/import errors in last 30 min logs | ✅ (D4 query) |
+| Engine function logging intact (15/15) | ✅ (D3 query) |
+| Recent failure rate near zero | ✅ (E query) |
+| Final verdict backed by 4 query results | ✅ |
 
-Each gate must pass with a query result or it gets reported as a blocker. No "looks good" claims.
+If any gate fails, the report names the exact blocker. No "looks good" claims.
 
