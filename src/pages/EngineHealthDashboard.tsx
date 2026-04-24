@@ -103,6 +103,74 @@ export default function EngineHealthDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Heart className="h-4 w-4" />
+              Engine Heartbeat (last 24h)
+            </CardTitle>
+            <CardDescription>
+              Continuous pipeline check every 15 min — write → HIE → Hammer State → aggregation → timing
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {heartbeat.loading ? (
+              <Skeleton className="h-20 w-full" />
+            ) : heartbeat.totalCount24h === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No heartbeat runs yet. First scheduled run within 15 min of deployment.
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Pass rate</p>
+                    <p className={`text-2xl font-bold ${heartbeat.successRate >= 95 ? 'text-emerald-500' : heartbeat.successRate >= 80 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {heartbeat.passCount24h}/{heartbeat.totalCount24h}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{heartbeat.successRate}%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">p50 latency</p>
+                    <p className="text-2xl font-bold">{heartbeat.p50Latency}<span className="text-xs font-normal text-muted-foreground">ms</span></p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">p95 latency</p>
+                    <p className={`text-2xl font-bold ${heartbeat.p95Latency > 60_000 ? 'text-rose-500' : heartbeat.p95Latency > 30_000 ? 'text-amber-500' : ''}`}>
+                      {heartbeat.p95Latency}<span className="text-xs font-normal text-muted-foreground">ms</span>
+                    </p>
+                  </div>
+                </div>
+
+                {heartbeat.lastFailure && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3">
+                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                      Last failure · {formatRel(heartbeat.lastFailure.run_at)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <Badge variant="outline" className="mr-2 text-[10px]">{heartbeat.lastFailure.failure_check ?? 'unknown'}</Badge>
+                      {heartbeat.lastFailure.failure_reason}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Recent runs</p>
+                  <div className="flex flex-wrap gap-1">
+                    {heartbeat.recent.map(r => (
+                      <span
+                        key={r.id}
+                        title={`${r.success ? 'OK' : r.failure_check} · ${r.latency_ms ?? '?'}ms · ${formatRel(r.run_at)}`}
+                        className={`h-3 w-3 rounded-sm ${r.success ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
