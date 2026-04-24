@@ -576,6 +576,9 @@ export default function Dashboard() {
           </div>
         </Card>
 
+        {/* Today Command Bar — Hammer State + Readiness + Quick Log (additive, mounted above Game Plan) */}
+        <TodayCommandBar />
+
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
