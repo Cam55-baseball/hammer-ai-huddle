@@ -1,5 +1,17 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { renderMediaOnLambda, getCompositionsOnLambda } from "npm:@remotion/lambda-client@4.0.445";
+
+// Dual-safe import: try npm: first, fall back to esm.sh CDN if npm resolution fails.
+let renderMediaOnLambda: any;
+let getCompositionsOnLambda: any;
+try {
+  const mod = await import("npm:@remotion/lambda-client@4.0.445");
+  renderMediaOnLambda = mod.renderMediaOnLambda;
+  getCompositionsOnLambda = mod.getCompositionsOnLambda;
+} catch (_e) {
+  const mod = await import("https://esm.sh/@remotion/lambda-client@4.0.445");
+  renderMediaOnLambda = mod.renderMediaOnLambda;
+  getCompositionsOnLambda = mod.getCompositionsOnLambda;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

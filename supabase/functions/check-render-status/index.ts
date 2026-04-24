@@ -1,5 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
-import { getRenderProgress } from "npm:@remotion/lambda-client@4.0.445";
+
+// Dual-safe import: try npm: first, fall back to esm.sh CDN if npm resolution fails.
+let getRenderProgress: any;
+try {
+  const mod = await import("npm:@remotion/lambda-client@4.0.445");
+  getRenderProgress = mod.getRenderProgress;
+} catch (_e) {
+  const mod = await import("https://esm.sh/@remotion/lambda-client@4.0.445");
+  getRenderProgress = mod.getRenderProgress;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
