@@ -114,6 +114,7 @@ const PickoffTrainer = lazyWithRetry(() => import("./pages/PickoffTrainer"));
 const BaserunningIQ = lazyWithRetry(() => import("./pages/BaserunningIQ"));
 const RoyalTiming = lazyWithRetry(() => import("./pages/RoyalTiming"));
 const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSettings"));
+const EngineHealthDashboard = lazyWithRetry(() => import("./pages/EngineHealthDashboard"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
 const TrainingBlock = lazyWithRetry(() => import("./pages/TrainingBlock"));
 
