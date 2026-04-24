@@ -141,8 +141,15 @@ serve(async (req) => {
     const W_DECISION = typeof es.mpi_weight_decision === 'number' ? es.mpi_weight_decision : 0.20;
     const W_COMPETITIVE = typeof es.mpi_weight_competitive === 'number' ? es.mpi_weight_competitive : 0.20;
     const INTEGRITY_THRESHOLD = typeof es.integrity_threshold === 'number' ? es.integrity_threshold : 80;
-    const DATA_GATE_MIN = typeof es.data_gate_min_sessions === 'number' ? es.data_gate_min_sessions : 60;
-    console.log(`[nightly-mpi] Engine settings loaded: BQI=${W_BQI}, FQI=${W_FQI}, PEI=${W_PEI}, DEC=${W_DECISION}, COMP=${W_COMPETITIVE}, integrity=${INTEGRITY_THRESHOLD}, gate=${DATA_GATE_MIN}`);
+    // ── PHASE A1: Gate split — provisional vs ranking ──
+    // ranking_min_sessions: required for leaderboard inclusion (strict, unchanged behavior).
+    // provisional_min_sessions: required to produce a dashboard-only snapshot (low bar).
+    // Falls back to legacy data_gate_min_sessions if new keys absent.
+    const LEGACY_GATE = typeof es.data_gate_min_sessions === 'number' ? es.data_gate_min_sessions : 60;
+    const RANKING_MIN = typeof es.ranking_min_sessions === 'number' ? es.ranking_min_sessions : LEGACY_GATE;
+    const PROVISIONAL_MIN = typeof es.provisional_min_sessions === 'number' ? es.provisional_min_sessions : 1;
+    const DATA_GATE_MIN = RANKING_MIN; // alias: ranking_eligible still uses the strict bar
+    console.log(`[nightly-mpi] Engine settings loaded: BQI=${W_BQI}, FQI=${W_FQI}, PEI=${W_PEI}, DEC=${W_DECISION}, COMP=${W_COMPETITIVE}, integrity=${INTEGRITY_THRESHOLD}, ranking_gate=${RANKING_MIN}, provisional_gate=${PROVISIONAL_MIN}`);
 
     // ── RETRY PREVIOUSLY FAILED ATHLETES FIRST ──
     const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
