@@ -151,11 +151,13 @@ export default function Rankings() {
   };
 
   useEffect(() => {
+    if (accessLoading || !canViewRankings) return;
     fetchRankings();
-  }, [selectedSport, selectedSegment, user?.id]);
+  }, [selectedSport, selectedSegment, user?.id, accessLoading, canViewRankings]);
 
   // Realtime subscription on mpi_scores
   useEffect(() => {
+    if (accessLoading || !canViewRankings) return;
     const channel = supabase
       .channel("rankings-mpi-changes")
       .on(
@@ -168,10 +170,44 @@ export default function Rankings() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedSport, selectedSegment, user?.id]);
+  }, [selectedSport, selectedSegment, user?.id, accessLoading, canViewRankings]);
 
   const TrendIcon = userRank?.trend_direction === "rising" ? TrendingUp : userRank?.trend_direction === "dropping" ? TrendingDown : Minus;
   const trendColor = userRank?.trend_direction === "rising" ? "text-green-500" : userRank?.trend_direction === "dropping" ? "text-red-500" : "text-muted-foreground";
+
+  if (accessLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!canViewRankings) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Card className="max-w-md w-full">
+            <CardContent className="py-10 flex flex-col items-center text-center gap-4">
+              <div className="rounded-full bg-muted p-4">
+                <EyeOff className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">
+                {t("rankings.unavailableTitle", "Rankings are temporarily unavailable")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t("rankings.unavailableDescription", "Rankings have been temporarily hidden by the team. Please check back later.")}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
