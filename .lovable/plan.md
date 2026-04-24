@@ -1,66 +1,76 @@
 
 
-# Hammers Modality — End-to-End Kill Test Execution Plan
+# Kill Test V2 — Repeatability, Concurrency & Truth Validation
 
-## What I'll do (under 2 minutes wall time)
+## Objective
+Prove the Hammers Modality engine is **real, stable, non-flaky** under: rapid-fire input, multi-user concurrency, double-run stability, hard-refresh UI integrity, and full WhyButton trace fidelity.
 
-**Test user**: `95de827d-7418-460b-8b79-267bf79bdca4` (most-active account, 438 prior logs — guarantees enough signal for HIE/Hammer aggregations).
-**T0**: captured at insert time (`now()` returned with the row).
+## Test Subjects
+- **User A** — `95de827d-7418-460b-8b79-267bf79bdca4` (438+ logs, used in V1 PASS)
+- **User B & C** — selected from top-active accounts in `athlete_mpi_settings` with prior session data (queried at execution time; will report exact IDs in final output)
+- **T0** — captured at first insert via `now()` returned in row
 
-### Step 1 — Insert (proxy for Quick Log)
-Insert a `custom_activity_logs` row matching the QuickLogSheet payload:
-- `activity_name='Test Kill Session'`, `duration_minutes=5`, `intensity_rpe=5`, `notes='kill test'`, `entry_date=current_date`, `completed=true`.
-- Return full row JSON + `created_at - T0` delta.
+## Execution Sequence
 
-### Step 2 — Dirty Trigger
-- Read `hie_dirty_users WHERE user_id=...`.
-- Confirm `dirtied_at > T0`. Return row JSON + delta.
+### Step 1 — Rapid-Fire Same-User Inserts
+Insert 3 sequential `custom_activity_logs` rows for User A (`Kill Test A1`, `A2`, `A3`; `duration=5`, `RPE=5`, `notes='kill test v2'`) within a 5-second window via 3 separate `INSERT ... RETURNING *` statements. Verify: 3 distinct rows, monotonically increasing `created_at`.
 
-### Step 3 — HIE Refresh (forced, no cron wait)
-- Invoke `hie-refresh-worker` directly via `supabase--curl_edge_functions`.
-- Read latest `hie_snapshots` row for user. Confirm `created_at > T0` and `development_confidence` populated. Return JSON + delta.
+### Step 2 — Dirty Queue Dedup Check
+`SELECT * FROM hie_dirty_users WHERE user_id = A`. Confirm exactly **one row** with `dirtied_at` matching the latest of the 3 inserts (proves `ON CONFLICT (user_id) DO UPDATE` dedup logic works).
 
-### Step 4 — Hammer State Compute (forced)
-- Invoke `compute-hammer-state` with `{ user_id }`.
-- Read latest `hammer_state_snapshots` row. Confirm `computed_at > T0` and all 4 core fields (`arousal_score`, `recovery_score`, `motor_state`, `overall_state`) present.
-- **If function fails or returns nothing → inspect edge function logs, fix the bug, redeploy, retry.** (Currently 0 rows in `hammer_state_snapshots` system-wide — high risk this needs a fix.)
+### Step 3 — Parallel Multi-User Inserts + Single Worker Run
+Insert 1 log each for A, B, C in a single transaction batch. Wait 2s. Invoke `hie-refresh-worker` **once** via `supabase--curl_edge_functions`. Verify: 3 fresh rows in `hie_snapshots` (one per user) with `created_at > T0`.
 
-### Step 5 — UI Realtime Verification
-- Open the preview via browser tools, log in if needed (will pause and ask user to log in if auth required — won't fill credentials without approval).
-- Navigate to `/index` (Dashboard). Screenshot before/after.
-- Wait up to 60s for `HammerStateBadge` + `ReadinessChip` to update via the realtime subscription wired in `useHammerState`.
-- Measure UI latency from T0.
+### Step 4 — Hammer State Per-User Differentiation
+Invoke `compute-hammer-state` with `{ user_id }` for each of A, B, C. Read latest `hammer_state_snapshots` per user. Verify: distinct `arousal_score` and `recovery_score` values (proves per-user computation, not cached/shared).
 
-### Step 6 — Why Button Trace
-- Click `WhyButton` on the Hammer State badge expansion.
-- Capture the explanation sheet payload (inputs, thresholds, logic, neuro tags, confidence).
-- Verify the "Test Kill Session" entry appears in the inputs and timestamps align with T0.
+### Step 5 — Double-Run Stability
+Re-invoke `hie-refresh-worker` and `compute-hammer-state` for all 3 users immediately. Verify: row counts increment by expected amount (1 per user per function), no duplicate timestamps, no row explosion (>2x expected).
 
-## Final Output
+### Step 6 — UI Hard-Refresh Persistence
+Open browser preview at `/index` as User A (current logged-in user per session replay). Capture `HammerStateBadge` + `ReadinessChip` values via screenshot. Insert one more log. Hard-refresh page. Re-screenshot. Compare: UI values must match DB snapshot exactly (proves no fake optimistic state).
 
-Single structured JSON report:
+### Step 7 — WhyButton Truth Audit
+Click `WhyButton` on Hammer State badge expansion AND on an HIE cluster card. Inspect `WhyExplanationSheet` payload. Verify: shows multiple `Kill Test` entries (A1, A2, A3 + parallel log) with correct timestamps, neuro tags from `module_neuro_map`, thresholds from `engine_settings`.
+
+### Step 8 — Timing Envelope
+Measure 4 deltas from each insert:
+- Insert → `hie_dirty_users.dirtied_at` (target <5s)
+- Insert → new `hie_snapshots.created_at` (target <30s)
+- Insert → new `hammer_state_snapshots.computed_at` (target <30s)
+- Insert → UI reflects new state (target <60s, measured via screenshot timestamps)
+
+## Failure Handling (Additive Only)
+For any failed step:
+1. Pull edge function logs via `supabase--edge_function_logs`
+2. Identify root cause (RLS, missing field, dedup bug, cache leak, etc.)
+3. Patch edge function or write **additive** migration (no schema removal)
+4. Redeploy via `supabase--deploy_edge_functions`
+5. Rerun failing step + all downstream steps
+6. Document both failure evidence and fix in final report
+
+## Final Output (single structured JSON)
 ```
 {
-  test_user_id, T0,
-  step1_log_insert: {row, delta_ms},
-  step2_dirty_trigger: {row, delta_ms},
-  step3_hie_snapshot: {snapshot, delta_ms},
-  step4_hammer_state: {snapshot, delta_ms},
-  step5_ui_latency_seconds,
-  step6_why_trace: {payload},
+  users: { A, B, C },
+  T0,
+  step1_rapid_fire: [3 rows + deltas],
+  step2_dirty_dedup: { row_count, dirtied_at, latest_insert_at },
+  step3_parallel_snapshots: [3 hie_snapshots],
+  step4_hammer_per_user: [3 hammer_snapshots with arousal/recovery],
+  step5_double_run: { hie_rows_added, hammer_rows_added, duplicates: 0 },
+  step6_ui_consistency: { before_screenshot, after_screenshot, db_match: true|false },
+  step7_why_audit: { hammer_inputs[], hie_inputs[], neuro_tags[], thresholds[] },
+  timing: { dirty_ms, hie_ms, hammer_ms, ui_seconds },
   verdict: "PASS" | "FAIL",
-  failures: [...]
+  failure_points: [],
+  fixes_applied: []
 }
 ```
 
-## Failure handling (additive, no deletions)
-If any step fails, I will:
-1. Pull edge function logs for the failing function.
-2. Identify root cause (missing column, bad query, RLS block, type mismatch).
-3. Patch the edge function or migration **additively** (no schema removal).
-4. Redeploy and rerun the failing step + all downstream steps.
-5. Continue until full PASS or document a hard architectural blocker.
-
 ## Cleanup
-The kill-test row stays in `custom_activity_logs` (it's real activity data — useful as a permanent integration smoke test). Marked clearly via `notes='kill test'` so the user can prune later if desired.
+All `kill test v2` rows remain in DB as permanent integration smoke-test markers (filterable via `notes='kill test v2'`).
+
+## Time Budget
+~3-4 minutes wall time. Browser steps (6) gated on user being logged in as User A in the preview — if not, will pause and request login before proceeding (will not auto-fill credentials).
 
