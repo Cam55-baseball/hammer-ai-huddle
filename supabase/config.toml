@@ -230,3 +230,18 @@ verify_jwt = false
 
 [functions.generate-interventions]
 verify_jwt = false
+
+[functions.engine-regression-runner]
+verify_jwt = false
+
+[functions.evaluate-predictions]
+verify_jwt = false
+
+[functions.compute-system-health]
+verify_jwt = false
+
+[functions.engine-reset-safe-mode]
+verify_jwt = true
+
+[functions.engine-chaos-test]
+verify_jwt = true
