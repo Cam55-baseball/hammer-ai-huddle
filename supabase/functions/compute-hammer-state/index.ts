@@ -21,8 +21,6 @@ interface HammerInputs {
 function clamp(v: number, lo = 0, hi = 100) { return Math.max(lo, Math.min(hi, v)); }
 
 async function computeForUser(supabase: any, userId: string) {
-  // KILL TEST V3.1 — INTENTIONAL FAILURE (will be reverted)
-  throw new Error('KILL_TEST_V3_1_FORCED_FAILURE: intentional break to verify recovery for user ' + userId);
   const since = new Date(Date.now() - DAY_MS).toISOString();
   const since3d = new Date(Date.now() - 3 * DAY_MS).toISOString();
   const inputs: HammerInputs = { arousal: {}, recovery: {}, motor: {}, cognitive: {}, dopamine: {} };
