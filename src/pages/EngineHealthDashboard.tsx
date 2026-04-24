@@ -12,6 +12,7 @@ import { useHeartbeatHealth } from '@/hooks/useHeartbeatHealth';
 import { useSentinelHealth } from '@/hooks/useSentinelHealth';
 import { useAdversarialHealth } from '@/hooks/useAdversarialHealth';
 import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart, Eye, Swords } from 'lucide-react';
+import { SystemIntegrityBadge } from '@/components/owner/SystemIntegrityBadge';
 
 const formatRel = (iso: string | null) => {
   if (!iso) return 'Never';
@@ -62,15 +63,18 @@ export default function EngineHealthDashboard() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-5xl space-y-6">
-        <div>
-          <h1 className="flex items-center gap-2 text-3xl font-bold">
-            <Activity className="h-8 w-8" />
-            Engine Health
-          </h1>
-          <p className="mt-1 flex items-center gap-2 text-muted-foreground">
-            <Shield className="h-4 w-4" />
-            Owner/Admin only — monitors HIE, MPI, and Hammer State pipelines.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="flex items-center gap-2 text-3xl font-bold">
+              <Activity className="h-8 w-8" />
+              Engine Health
+            </h1>
+            <p className="mt-1 flex items-center gap-2 text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              Owner/Admin only — monitors HIE, MPI, and Hammer State pipelines.
+            </p>
+          </div>
+          <SystemIntegrityBadge />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
