@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
       }
 
       if (!hs) {
-        if (!result.failure_check) fail("hammer_stale", "No new hammer_state_snapshot since T0");
+        if (!result.failure_check) fail("hammer_stale", "No new hammer_state_snapshot within 20s of T0");
       } else {
         result.hammer_snapshot_age_ms = Date.now() - new Date(hs.computed_at).getTime();
 
