@@ -7,6 +7,7 @@ import { ReadinessChip } from '@/components/hammer/ReadinessChip';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { QuickLogSheet } from '@/components/practice/QuickLogSheet';
+import { EliteModePanel } from '@/components/hammer/EliteModePanel';
 
 export function TodayCommandBar() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export function TodayCommandBar() {
 
   return (
     <>
+      <EliteModePanel />
       <Card className="border-primary/20 bg-gradient-to-br from-card to-muted/20">
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
