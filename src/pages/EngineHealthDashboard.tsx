@@ -10,7 +10,8 @@ import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useEngineHealth } from '@/hooks/useEngineHealth';
 import { useHeartbeatHealth } from '@/hooks/useHeartbeatHealth';
 import { useSentinelHealth } from '@/hooks/useSentinelHealth';
-import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart, Eye } from 'lucide-react';
+import { useAdversarialHealth } from '@/hooks/useAdversarialHealth';
+import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart, Eye, Swords } from 'lucide-react';
 
 const formatRel = (iso: string | null) => {
   if (!iso) return 'Never';
@@ -37,6 +38,7 @@ export default function EngineHealthDashboard() {
   const health = useEngineHealth();
   const heartbeat = useHeartbeatHealth();
   const sentinel = useSentinelHealth();
+  const adversarial = useAdversarialHealth();
 
   useEffect(() => {
     if (!ownerLoading && !adminLoading && !isOwner && !isAdmin) navigate('/dashboard');
