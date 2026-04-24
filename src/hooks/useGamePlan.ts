@@ -1534,27 +1534,20 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  // Collect folder item titles for deduplication (folder version takes priority)
-  const folderItemTitles = new Set(
-    folderTasks.map(ft => ft.item.title.trim().toLowerCase())
-  );
-
-  // Add custom activities as tasks, skipping duplicates that exist in folders.
-  // Each (template, log) pair becomes its own task — supports multiple Quick Adds per day.
+  // Render every (template, log) pair the user added — no title-based dedup.
+  // Title collisions between folder items and standalone custom activities are
+  // legitimate distinct entries; silent UI hiding is a "ghost write" and forbidden.
   customActivities.forEach(activity => {
-    if (folderItemTitles.has(activity.template.title.trim().toLowerCase())) return;
     const iconKey = activity.template.icon || 'activity';
     const IconComponent = customActivityIconMap[iconKey] || Activity;
 
-    const instanceIdx = (activity.log as any)?.instance_index ?? 0;
-    const titleSuffix = instanceIdx > 0 ? ` #${instanceIdx + 1}` : '';
     const taskId = activity.log?.id
       ? `custom-${activity.template.id}-${activity.log.id}`
       : `custom-${activity.template.id}`;
 
     tasks.push({
       id: taskId,
-      titleKey: activity.template.title + titleSuffix,
+      titleKey: activity.template.title, // canonical title — no version suffix
       descriptionKey: activity.template.description || '',
       completed: (activity.log?.completion_state === 'completed') || activity.log?.completed || false,
       completionState: (activity.log?.completion_state as any) || (activity.log?.completed ? 'completed' : 'not_started'),

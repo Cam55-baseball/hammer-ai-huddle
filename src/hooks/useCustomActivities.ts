@@ -341,81 +341,50 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     return updateTemplate(id, { is_favorited: !template.is_favorited });
   };
 
-  // Add activity to today (create NEW log entry every time — supports unlimited Quick Adds)
+  // Add activity to today — idempotent at instance_index = 0.
+  // Upsert on UNIQUE (user_id, template_id, entry_date, instance_index) guarantees:
+  //   - First call → INSERT
+  //   - Repeat call / rapid double-tap → resolves to same canonical row, no duplicates
+  //   - Delete + re-add → returns to clean instance 0
   const addToToday = async (templateId: string): Promise<boolean> => {
     if (!user) return false;
-
     const today = getTodayDate();
 
-    // Determine the next instance_index for this (user, template, today)
-    let nextInstanceIndex = 0;
-    try {
-      const { data: existingForToday, error: fetchErr } = await supabase
-        .from('custom_activity_logs')
-        .select('instance_index')
-        .eq('user_id', user.id)
-        .eq('template_id', templateId)
-        .eq('entry_date', today)
-        .order('instance_index', { ascending: false })
-        .limit(1);
-      if (fetchErr) throw fetchErr;
-      if (existingForToday && existingForToday.length > 0) {
-        nextInstanceIndex = ((existingForToday[0] as any).instance_index ?? 0) + 1;
-      }
-    } catch (e) {
-      console.warn('[useCustomActivities] addToToday: instance_index lookup failed, defaulting to 0', e);
+    const { data, error } = await supabase
+      .from('custom_activity_logs')
+      .upsert(
+        {
+          user_id: user.id,
+          template_id: templateId,
+          entry_date: today,
+          instance_index: 0,
+          completed: false,
+        } as any,
+        {
+          onConflict: 'user_id,template_id,entry_date,instance_index',
+          ignoreDuplicates: false,
+        }
+      )
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[useCustomActivities] addToToday upsert failed:', error);
+      toast.error(t('customActivity.addError'));
+      return false;
     }
 
-    // Optimistic update: immediately add to todayLogs
-    const optimisticLog: CustomActivityLog = {
-      id: `optimistic-${Date.now()}`,
-      user_id: user.id,
-      template_id: templateId,
-      entry_date: today,
-      completed: false,
-      performance_data: {},
-      instance_index: nextInstanceIndex,
-      created_at: new Date().toISOString(),
-    };
-    setTodayLogs(prev => [...prev, optimisticLog]);
+    // Merge canonical row into local state, replacing any prior entry for this (template, today).
+    setTodayLogs(prev => {
+      const filtered = prev.filter(
+        l => !(l.template_id === templateId && l.entry_date === today)
+      );
+      return [...filtered, data as CustomActivityLog];
+    });
+
     toast.success(t('customActivity.addedToday'));
-
-    const attemptInsert = async (retryCount: number, indexToUse: number): Promise<boolean> => {
-      try {
-        const { error } = await supabase
-          .from('custom_activity_logs')
-          .insert({
-            user_id: user.id,
-            template_id: templateId,
-            entry_date: today,
-            completed: false,
-            instance_index: indexToUse,
-          } as any);
-
-        if (error) {
-          // Unique-violation → bump index and retry
-          if ((error as any).code === '23505' && retryCount > 0) {
-            return attemptInsert(retryCount - 1, indexToUse + 1);
-          }
-          throw error;
-        }
-        await fetchTodayLogs();
-        return true;
-      } catch (error) {
-        if (retryCount > 0) {
-          console.warn('[useCustomActivities] addToToday retry...', error);
-          await new Promise(r => setTimeout(r, 800));
-          return attemptInsert(retryCount - 1, indexToUse);
-        }
-        console.error('Error adding to today:', error);
-        // Roll back optimistic update
-        setTodayLogs(prev => prev.filter(l => l.id !== optimisticLog.id));
-        toast.error(t('customActivity.addError'));
-        return false;
-      }
-    };
-
-    return attemptInsert(3, nextInstanceIndex);
+    fetchTodayLogs(); // background reconcile
+    return true;
   };
 
   // Mark activity as complete/incomplete
@@ -515,7 +484,8 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
-  // Remove activity from today (specific instance if logId provided)
+  // Remove activity from today (specific instance if logId provided).
+  // Optimistic local purge → instant UI feedback, rollback on failure.
   const removeFromToday = async (templateId: string, logId?: string): Promise<boolean> => {
     if (!user) return false;
 
@@ -524,20 +494,25 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       : todayLogs.find(l => l.template_id === templateId);
     if (!log) return false;
 
-    try {
-      const { error } = await supabase
-        .from('custom_activity_logs')
-        .delete()
-        .eq('id', log.id);
+    // Optimistic removal
+    setTodayLogs(prev => prev.filter(l => l.id !== log.id));
 
-      if (error) throw error;
+    const { error } = await supabase
+      .from('custom_activity_logs')
+      .delete()
+      .eq('id', log.id)
+      .eq('user_id', user.id);
 
-      await fetchTodayLogs();
-      return true;
-    } catch (error) {
+    if (error) {
       console.error('Error removing from today:', error);
+      // Roll back
+      setTodayLogs(prev => [...prev, log]);
+      toast.error(t('customActivity.deleteError'));
       return false;
     }
+
+    fetchTodayLogs(); // background reconcile
+    return true;
   };
 
   // Update log performance data (for daily checkbox states, etc.)
