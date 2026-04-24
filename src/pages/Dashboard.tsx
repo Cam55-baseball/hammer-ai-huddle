@@ -622,8 +622,8 @@ export default function Dashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Module cards below Game Plan when user has at least one tier */}
-        {hasAnyTier && moduleCardsSection}
+        {/* Module cards below Game Plan when user has a tier, or is coach/scout */}
+        {(hasAnyTier || isCoach || isScout) && moduleCardsSection}
 
         {/* Merch always pinned below the Game Plan */}
         {merchSection}
