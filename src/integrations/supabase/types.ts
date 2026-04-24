@@ -322,6 +322,7 @@ export type Database = {
       }
       anonymized_pattern_library: {
         Row: {
+          confidence: number | null
           created_at: string
           feature_vector: Json
           frequency: number
@@ -329,8 +330,10 @@ export type Database = {
           last_seen_at: string
           outcome_state: string
           pattern_type: string
+          performance_outcome_score: number | null
         }
         Insert: {
+          confidence?: number | null
           created_at?: string
           feature_vector: Json
           frequency?: number
@@ -338,8 +341,10 @@ export type Database = {
           last_seen_at?: string
           outcome_state: string
           pattern_type: string
+          performance_outcome_score?: number | null
         }
         Update: {
+          confidence?: number | null
           created_at?: string
           feature_vector?: Json
           frequency?: number
@@ -347,6 +352,7 @@ export type Database = {
           last_seen_at?: string
           outcome_state?: string
           pattern_type?: string
+          performance_outcome_score?: number | null
         }
         Relationships: []
       }
@@ -1970,6 +1976,36 @@ export type Database = {
           metadata?: Json
           updated_at?: string
           weight?: number
+        }
+        Relationships: []
+      }
+      engine_function_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          function_name: string
+          id: string
+          metadata: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+          metadata?: Json | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
         }
         Relationships: []
       }
@@ -9667,6 +9703,45 @@ export type Database = {
       }
     }
     Views: {
+      pattern_library_ranked: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          feature_vector: Json | null
+          frequency: number | null
+          id: string | null
+          last_seen_at: string | null
+          outcome_state: string | null
+          pattern_type: string | null
+          performance_outcome_score: number | null
+          rank_score: number | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          feature_vector?: Json | null
+          frequency?: number | null
+          id?: string | null
+          last_seen_at?: string | null
+          outcome_state?: string | null
+          pattern_type?: string | null
+          performance_outcome_score?: number | null
+          rank_score?: never
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          feature_vector?: Json | null
+          frequency?: number | null
+          id?: string | null
+          last_seen_at?: string | null
+          outcome_state?: string | null
+          pattern_type?: string | null
+          performance_outcome_score?: number | null
+          rank_score?: never
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           avatar_url: string | null
@@ -9752,6 +9827,7 @@ export type Database = {
       cleanup_old_adversarial_logs: { Args: never; Returns: undefined }
       cleanup_old_advisory_logs: { Args: never; Returns: undefined }
       cleanup_old_explanations: { Args: never; Returns: undefined }
+      cleanup_old_function_logs: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
       cleanup_old_interventions: { Args: never; Returns: undefined }
       cleanup_old_patterns: { Args: never; Returns: undefined }
