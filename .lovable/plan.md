@@ -1,273 +1,170 @@
 
 
-# Phase 7 — Continuation: Wrapper Rollout, Moat Logic & Validation
+# Phase 7 — Full Closeout Execution Plan
 
-The 5 net-new artifacts (tables, hooks, badges, auto-recovery function, integrity function, contract file) are deployed. This continuation completes the remaining 3 deferred items from the approved Phase 7 plan, with no scope expansion.
-
----
-
-## Pre-Flight Verification (read-only)
-
-1. `code--view supabase/functions/extract-patterns/index.ts` — confirm current bucketing logic before extending with outcome scoring (already in context partially; confirm full shape)
-2. `supabase--read_query`: `SELECT function_name, COUNT(*) FROM engine_function_logs GROUP BY function_name` — see which functions are already self-logging (engine-auto-recovery already does)
-3. `supabase--read_query`: `SELECT score FROM engine_system_health ORDER BY created_at DESC LIMIT 1` — record baseline for post-rollout comparison
-4. `code--view supabase/functions/compute-hammer-state/index.ts` — confirm current shape, find safest `EdgeRuntime.waitUntil` insertion point
+Pure execution. No new features. No source rewrites (extract-patterns source is already correct — only redeploy needed).
 
 ---
 
 ## Architectural Principle
 
-Every wrapped function gets the **same minimal additive shell**:
-- Inline `logRun()` helper at top of file (~10 lines, copy-paste)
-- 30s timeout via `Promise.race`
-- Try/catch around the existing `serve()` body
-- One INSERT to `engine_function_logs` per execution
-- For `compute-hammer-state` only: use `EdgeRuntime.waitUntil(logRun(...))` to keep zero added latency on the user-facing path
-
-**Existing logic inside each function is untouched.** The wrapper is structurally outside the business code. If logging insert fails, the function still returns its real response.
+The 15-function wrapper rollout is structurally complete. Closeout = (1) one redeploy to clear stale failures, (2) manual invocations to wake silent cron functions and prove their wrappers work, (3) full validation chain with exact queries, (4) final report in mandated format.
 
 ---
 
-## PART A — Observability Wrapper Rollout (14 functions)
+## PART A — Fix & Redeploy `extract-patterns`
 
-### Wrap each function with this template:
+**Verified**: Source uses only `try { await supabase... }` blocks. No `.catch()` on Postgrest builders. The earlier failures were from a previous deploy that has since been fixed in source but not redeployed.
 
-```ts
-async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
-  try {
-    await supabase.from('engine_function_logs').insert({
-      function_name: '<FN_NAME>',
-      status,
-      duration_ms: Date.now() - startMs,
-      error_message: error ?? null,
-      metadata: metadata ?? {},
-    });
-  } catch { /* silent */ }
-}
+**Action**: Single redeploy via `supabase--deploy_edge_functions(['extract-patterns'])`.
 
-serve(async (req) => {
-  const startMs = Date.now();
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+**Smoke test**: `supabase--curl_edge_functions POST /extract-patterns body='{}'` → expect 200 with `{ status: 'ok', patterns_upserted: N, source_snapshots: M }`.
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+If it returns non-200, view error from response body, fix, redeploy. Loop until clean.
 
-  const work = (async (): Promise<Response> => {
-    try {
-      // ===== existing function body unchanged =====
-      const result = /* existing logic */;
-      await logRun(supabase, 'success', startMs, undefined, { /* useful metadata */ });
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    } catch (err) {
-      await logRun(supabase, 'fail', startMs, String(err));
-      return new Response(JSON.stringify({ error: String(err), fallback: true }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-  })();
+---
 
-  const timeout = new Promise<Response>((resolve) => setTimeout(async () => {
-    await logRun(supabase, 'timeout', startMs);
-    resolve(new Response(JSON.stringify({ error: 'timeout', fallback: true }), {
-      status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    }));
-  }, 30000));
+## PART B — Wake Silent Cron Functions (10 functions)
 
-  return Promise.race([work, timeout]);
-});
+Each function needs at least one invocation to prove its wrapper writes to `engine_function_logs`. These are all cron-scheduled, so manual POSTs are safe (idempotent runs):
+
+1. `engine-sentinel` — POST `/engine-sentinel` body `{}`
+2. `engine-adversarial` — POST `/engine-adversarial` body `{}`
+3. `engine-weight-optimizer` — POST `/engine-weight-optimizer` body `{}`
+4. `evaluate-advice-effectiveness` — POST `/evaluate-advice-effectiveness` body `{}`
+5. `update-user-engine-profile` — POST `/update-user-engine-profile` body `{}`
+6. `engine-regression-runner` — POST `/engine-regression-runner` body `{}`
+7. `evaluate-predictions` — POST `/evaluate-predictions` body `{}`
+8. `engine-data-integrity-check` — POST `/engine-data-integrity-check` body `{}`
+
+Run all 8 in sequence (need to wait for each to flush). Then `project_debug--sleep 5` and query.
+
+**Note**: `engine-reset-safe-mode` and `engine-chaos-test` require `verify_jwt = true` and admin auth. They were already validated in Phase 6 closeout. Verify via prior log query rather than re-invoking (chaos test takes 30s + perturbs weights — not appropriate to re-run during validation).
+
+---
+
+## PART C — Validation Chain (executed in strict order)
+
+### Step 1 — Observability sweep (Part 2 from spec)
+```sql
+SELECT function_name,
+       COUNT(*) AS total,
+       COUNT(*) FILTER (WHERE status='success') AS success,
+       COUNT(*) FILTER (WHERE status='fail') AS fail,
+       COUNT(*) FILTER (WHERE status='timeout') AS timeout,
+       ROUND(COUNT(*) FILTER (WHERE status='success') * 100.0 / COUNT(*), 1) AS success_rate
+FROM engine_function_logs
+WHERE created_at > now() - interval '30 minutes'
+GROUP BY function_name
+ORDER BY success_rate ASC, function_name;
 ```
+Pass criteria: every wrapped function appears, success_rate ≥ 95%.
 
-### Special case: `compute-hammer-state`
-Replace `await logRun(...)` with `EdgeRuntime.waitUntil(logRun(...))` so the response payload returns to the browser BEFORE the logging insert runs. Zero added latency. Same pattern is already used for the snapshot_versions insert from Phase 6.
+If any function still missing → re-invoke that specific function and re-query.
 
-### Functions to wrap (14 total — the remaining ones not yet wrapped):
-1. `compute-hammer-state` (uses `EdgeRuntime.waitUntil` — zero latency)
-2. `engine-heartbeat`
-3. `engine-sentinel`
-4. `engine-adversarial`
-5. `engine-weight-optimizer`
-6. `evaluate-advice-effectiveness`
-7. `extract-patterns` (also gets Part B logic update in same edit)
-8. `update-user-engine-profile`
-9. `predict-hammer-state`
-10. `generate-interventions`
-11. `engine-regression-runner`
-12. `evaluate-predictions`
-13. `compute-system-health`
-14. `engine-reset-safe-mode` + `engine-chaos-test` (admin functions — keep verify_jwt; wrapper goes inside the auth-passing block)
+### Step 2 — Latency check (Part 3 from spec)
+```sql
+SELECT ROUND(AVG(duration_ms)) AS avg_ms, MAX(duration_ms) AS max_ms, COUNT(*) AS n
+FROM engine_function_logs
+WHERE function_name = 'compute-hammer-state'
+AND created_at > now() - interval '15 minutes';
+```
+Pass: `avg_ms < 1500`, `max_ms < 3000`.
 
-`engine-auto-recovery` and `engine-data-integrity-check` are NEW from Phase 7 and already log via the same `logRun()` pattern (verified in source).
+### Step 3 — Pattern moat (Part 4)
+After extract-patterns redeploy + invocation:
+```sql
+SELECT performance_outcome_score, confidence, frequency, pattern_type, last_seen_at
+FROM anonymized_pattern_library
+ORDER BY last_seen_at DESC
+LIMIT 10;
+```
+Pass: at least 1 row with `confidence > 0`. If `performance_outcome_score` all 0, document as "data-limited — heuristic transitions yielded zero net delta on current snapshot set."
 
-### Deployment strategy:
-- Single batch deploy via `supabase--deploy_edge_functions` with all 14 names. If one fails, others succeed independently.
-- Edit one function, deploy, smoke-test with `supabase--curl_edge_functions`, then move to the next batch.
-- Group order: cron-only (low risk) → user-facing `compute-hammer-state` last (highest scrutiny).
+### Step 4 — Auto-recovery (Part 5)
+```sql
+INSERT INTO engine_system_health (score, breakdown, sample_size)
+VALUES (50, '{"heartbeat":50,"sentinel":50,"adversarial":50,"regression":50,"prediction":50,"advisory":50}'::jsonb, '{}'::jsonb);
+```
+Wait — this is a **mutation**. I cannot perform inserts via `supabase--read_query`. Two options:
+- **Option A (preferred)**: Use the existing low score (if any below 70) to trigger naturally — but current readings show 84. So a fake row is required.
+- **Option B**: Skip the destructive trigger; verify auto-recovery's PASSIVE checks instead: (a) function-instability detection (no current instability so it should log "all clear"), (b) stuck-state detection.
 
----
+I'll use a **third option**: invoke `/engine-auto-recovery` directly. Its current behavior at health=84 is to NOT trigger downstream functions (correctly — system is healthy). The function's success log + `metadata` showing the score it observed is sufficient proof it ran. Then verify the audit_log queries for the historical `auto_recovery_triggered` action will return 0 rows (which is correct — system has been healthy throughout Phase 7).
 
-## PART B — Pattern Moat Logic Update
+To prove the trigger pathway works, I'll insert one synthetic low-score row using the **insert capability** I have via Supabase tools (a single INSERT to a non-user table is permitted under "Add data" mode), then re-invoke `/engine-auto-recovery`, then verify the audit_log entry. If insert mode is unavailable, I'll document the auto-recovery as "code-verified, trigger pathway not exercised because system is healthy (score=84)."
 
-### Modify `supabase/functions/extract-patterns/index.ts`
-The migration already added `performance_outcome_score` and `confidence` columns (default 0). This phase populates them.
+Actually — checking my tool list: I only have `supabase--read_query` (SELECT only). No insert tool exposed. So **Option B**: Verify auto-recovery ran successfully with current healthy state, document the trigger pathway as code-verified but not exercised (acceptable — the function's logic was validated in earlier Phase 7 builds).
 
-After bucketing patterns, for each bucket:
+### Step 5 — Data integrity (Part 6)
+After invoking `/engine-data-integrity-check`:
+```sql
+SELECT action, metadata, created_at FROM audit_log
+WHERE action = 'data_integrity_check'
+ORDER BY created_at DESC LIMIT 1;
+```
+Pass: row exists with summary metadata + duration.
 
-1. **Outcome scoring** (heuristic, deterministic):
-   - Look at the next snapshot in time order for users who matched the pattern's anonymized signature
-   - State delta scoring: `recover→ready=+10`, `caution→ready=+10`, `ready→prime=+10`, `prime→caution=-10`, `ready→caution=-10`, `caution→recover=-10`, same state=0, opposite extreme=-15
-   - Aggregate per bucket as average → `performance_outcome_score`
+### Step 6 — Final system health (Part 9)
+After all invocations:
+```
+POST /compute-system-health
+```
+Then:
+```sql
+SELECT score, breakdown, created_at FROM engine_system_health ORDER BY created_at DESC LIMIT 1;
+```
+Pass: score ≥ 80.
 
-2. **Confidence**:
-   - Formula: `min(95, sqrt(frequency) * 10)`
-   - frequency = count of snapshots matching this pattern in the extraction window
+### Step 7 — Console errors (Part 8)
+`code--read_console_logs search='error'` → expect zero red errors.
 
-3. **UPDATE the existing INSERT** in `extract-patterns` to include both columns. Existing rows with default 0/0 get overwritten on next run.
+### Step 8 — UI verification (Part 7)
+Static verification via `code--view`:
+- `EliteModePanel.tsx` lines 1-260 → confirm gradient border, fade-in animation, confidence indicator code present
+- `EngineHealthDashboard.tsx` → confirm `<FunctionReliabilityPanel />` and `<SystemIntegrityBadge />` mounted
+- `OwnerEngineSettingsPanel.tsx` → confirm Recovery tab with Safe Mode + Chaos Test dialogs
 
-The `pattern_library_ranked` VIEW (already created in Phase 7 migration) will then start showing ranked patterns once `extract-patterns` runs.
-
-### Combine with Part A wrapper
-Since `extract-patterns` is also in the wrapper rollout list, the moat logic update + observability wrapper happen in a single file edit + single deploy.
-
----
-
-## PART C — Validation (10-step chain)
-
-Run sequentially after all deploys complete:
-
-1. **Logging present**:
-   - `supabase--curl_edge_functions` POST `/compute-hammer-state` body `{}`
-   - `project_debug--sleep 3`
-   - `supabase--read_query`: `SELECT function_name, status, duration_ms FROM engine_function_logs WHERE function_name='compute-hammer-state' ORDER BY created_at DESC LIMIT 1`
-   - Assert: row exists, `status='success'`, `duration_ms < 3000`
-
-2. **Wrapper safety on bad input**:
-   - `supabase--curl_edge_functions` POST `/predict-hammer-state` with malformed body
-   - Confirm row in `engine_function_logs` with `status='fail'` (or success if function tolerates it), function returns clean JSON not crash
-
-3. **Hook & dashboard render**:
-   - `supabase--read_query`: `SELECT COUNT(DISTINCT function_name) FROM engine_function_logs WHERE created_at > now() - interval '1 hour'`
-   - Expect ≥ 5 (after invocations above)
-   - Visit `/engine-health` (already done previously, just confirm live data)
-
-4. **Auto-recovery integration**:
-   - `supabase--curl_edge_functions` POST `/engine-auto-recovery`
-   - `supabase--read_query`: `SELECT * FROM engine_function_logs WHERE function_name='engine-auto-recovery' ORDER BY created_at DESC LIMIT 1`
-   - Should be success, with `metadata` containing summary
-
-5. **Data integrity dry run**:
-   - `supabase--curl_edge_functions` POST `/engine-data-integrity-check`
-   - `supabase--read_query`: `SELECT * FROM audit_log WHERE action='data_integrity_check' ORDER BY created_at DESC LIMIT 1`
-   - Confirm summary metadata
-
-6. **Pattern moat backfill**:
-   - `supabase--curl_edge_functions` POST `/extract-patterns`
-   - `supabase--read_query`: `SELECT pattern_signature, performance_outcome_score, confidence, frequency FROM anonymized_pattern_library WHERE confidence > 0 ORDER BY last_seen_at DESC LIMIT 5`
-   - Confirm at least one row has non-zero values (will be 0 if no historical state-transition data — document if so)
-
-7. **Stability sweep**:
-   - `supabase--read_query`:
-     ```sql
-     SELECT function_name,
-            COUNT(*) AS total,
-            COUNT(*) FILTER (WHERE status='success') * 100.0 / COUNT(*) AS success_rate,
-            ROUND(AVG(duration_ms)) AS avg_ms
-     FROM engine_function_logs
-     WHERE created_at > now() - interval '15 minutes'
-     GROUP BY function_name
-     ORDER BY success_rate ASC;
-     ```
-   - Assert: every function ≥ 95% success
-
-8. **Latency check on user-facing path**:
-   - `supabase--read_query`: `SELECT AVG(duration_ms), MAX(duration_ms) FROM engine_function_logs WHERE function_name='compute-hammer-state' AND created_at > now() - interval '15 minutes'`
-   - Assert: avg < 1500ms (should be unchanged from baseline thanks to `EdgeRuntime.waitUntil`)
-
-9. **System health refresh**:
-   - `supabase--curl_edge_functions` POST `/compute-system-health`
-   - `supabase--read_query`: `SELECT score FROM engine_system_health ORDER BY created_at DESC LIMIT 1`
-   - Assert: score ≥ 80 (or document any drop with explanation)
-
-10. **No console errors in app**:
-    - `code--read_console_logs search='error'`
-    - Fix any reds. Empty result = pass.
+(Not invoking browser tool since not requested for non-bug verification; static + data verification is sufficient for closeout per the spec wording "Function Reliability section visible / Data populated".)
 
 ---
 
-## Files Modified (Part A + B)
+## Files Modified
 
-**Modified edge functions** (14 — wrapper + moat for extract-patterns):
-- `supabase/functions/compute-hammer-state/index.ts`
-- `supabase/functions/engine-heartbeat/index.ts`
-- `supabase/functions/engine-sentinel/index.ts`
-- `supabase/functions/engine-adversarial/index.ts`
-- `supabase/functions/engine-weight-optimizer/index.ts`
-- `supabase/functions/evaluate-advice-effectiveness/index.ts`
-- `supabase/functions/extract-patterns/index.ts` (wrapper + moat logic)
-- `supabase/functions/update-user-engine-profile/index.ts`
-- `supabase/functions/predict-hammer-state/index.ts`
-- `supabase/functions/generate-interventions/index.ts`
-- `supabase/functions/engine-regression-runner/index.ts`
-- `supabase/functions/evaluate-predictions/index.ts`
-- `supabase/functions/compute-system-health/index.ts`
-- `supabase/functions/engine-reset-safe-mode/index.ts`
-- `supabase/functions/engine-chaos-test/index.ts`
-
-(15 files; admin functions count as one batch)
-
-**No** new files. **No** new tables. **No** new cron schedules. **No** UI changes.
+**Zero source changes.** Just one redeploy of `extract-patterns` (source already correct).
 
 ---
 
 ## Risk Assessment
 
-- **Wrapper deployment risk**: Each function is independently deployable. A bad wrapper on one function doesn't affect others. Smoke-testing per function catches issues immediately.
-- **Latency on `compute-hammer-state`**: Zero — `EdgeRuntime.waitUntil` runs the insert post-response. Other functions are cron-only; +30ms for one INSERT is acceptable.
-- **Wrapper bug surfaces existing bugs**: If a function was silently throwing before, it now logs `status='fail'`. This is intended observability, not a new failure. The `audit_log` will surface any newly-visible function instability.
-- **`extract-patterns` outcome scoring**: Heuristic; cannot break consumers because no UI reads `performance_outcome_score` yet. Worst case = stays at 0 if no transition data exists.
-- **Storage**: `engine_function_logs` retention 30d, ~50k rows/day max. Indexed. No concerns.
+- **Redeploy risk**: Zero — same source that previously deployed cleanly except for the prior `.catch()` bug, which is already removed.
+- **Mass invocation risk**: Low — all 8 functions are cron-only and idempotent. Manual invocations are equivalent to a cron tick.
+- **Insert-blocked auto-recovery test**: Tool surface allows only SELECTs. The trigger pathway has been code-verified; absence of low health = no real trigger. Documented honestly in the report.
+- **No latency change**: `compute-hammer-state` already uses `EdgeRuntime.waitUntil` for telemetry.
 
 ---
 
 ## Open Decisions (best defaults; flag to override)
 
-1. **Wrapper template is inline per file** (not a shared module). Deno edge functions can't easily share local code without import_map gymnastics. Inline keeps each function self-contained and independently deployable. Trade-off: minor duplication.
+1. **Auto-recovery trigger pathway**: I cannot INSERT a fake low score (no insert tool exposed). Will report code-verified + currently passive behavior, with explicit explanation. If you want me to actually trigger downstream functions, I'd need to either (a) have insert access enabled or (b) add a temporary admin endpoint. **Recommendation: accept code-verified + explain in report.** This is honest and matches "no assumptions" since I'm not claiming the trigger fired — I'm explaining exactly why it didn't and what was verified instead.
 
-2. **`logRun()` failures are silent** (try/catch swallowed). Logging must never break production functions. If `engine_function_logs` table is unavailable, the function still returns its real response. The dashboard will show no data for that window — acceptable degradation.
+2. **Skip re-running chaos test**: Already validated in Phase 6 closeout. Re-running would mutate weights for 30s. Will pull historical log row instead. **Recommendation: confirmed via historical log.**
 
-3. **`extract-patterns` outcome scoring is deterministic, not ML**. Spec explicitly says future training data — current build sets up the data shape. v2 model trains on it later.
+3. **UI verification = static + data only**: Per spec wording (visible/populated/working), data presence + code presence is the ground truth. Browser screenshot would add no signal. **Recommendation: skip browser tool.**
 
-4. **Validation step 6 (moat backfill) may show 0/0** if historical pattern data has no clear next-snapshot transitions in the extraction window. This is documented as expected, not a failure.
+4. **`engine-data-integrity-check` writes audit_log on success**, but if 0 issues found it still writes a summary. Will accept summary presence as pass.
 
-5. **Validation will pause 3-5 seconds after each function invocation** before querying logs (writes need to flush). Uses `project_debug--sleep`.
-
-6. **`engine-reset-safe-mode` and `engine-chaos-test` get the wrapper** but the auth check happens FIRST (before timeout race) so unauthorized calls never reach the work block.
-
-If any of those six are wrong, say so before approval.
+If 1, 2, or 3 are wrong, say so before approval.
 
 ---
 
 ## Time Budget
-- Build (Parts A + B): ~15-20 minutes (15 file edits, 1 batch deploy)
-- Validation (Part C): ~5-7 minutes (10-step chain with sleeps)
+- Build (Part A redeploy): 1 min
+- Invocations (Part B, 8 functions sequential with sleeps): 4-6 min
+- Validation queries (Part C): 3-5 min
+- Report generation: 2 min
+- **Total: ~12-15 min**
 
-## Cleanup
-None required — `engine_function_logs` already has a 30-day cleanup function and cron schedule from earlier in Phase 7.
-
----
-
-## Final State After Phase 7 Completion
-
-| Layer | Status |
-|---|---|
-| 14 engine functions self-log | ✅ |
-| Pattern moat captures outcome data | ✅ |
-| Function Reliability dashboard live | ✅ (already built) |
-| Auto-recovery responds to health drops | ✅ (already built) |
-| Data integrity check runs daily | ✅ (already built) |
-| Elite UI polish | ✅ (already built) |
-| Engine Contract V2 | ✅ (already built) |
-| `compute-hammer-state` zero added latency | ✅ via `EdgeRuntime.waitUntil` |
-
-**System verdict after validation**: ELITE STABLE (target).
+## Final Output Format
+Will return EXACTLY the format specified in PART 10 of the request — no narration, just the structured report with verified data points or explicit failure reasons.
 
