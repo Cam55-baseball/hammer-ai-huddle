@@ -1807,6 +1807,45 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_heartbeat_logs: {
+        Row: {
+          completions_in_aggregation: number | null
+          failure_check: string | null
+          failure_reason: string | null
+          hammer_snapshot_age_ms: number | null
+          hie_snapshot_age_ms: number | null
+          id: string
+          latency_ms: number | null
+          metadata: Json
+          run_at: string
+          success: boolean
+        }
+        Insert: {
+          completions_in_aggregation?: number | null
+          failure_check?: string | null
+          failure_reason?: string | null
+          hammer_snapshot_age_ms?: number | null
+          hie_snapshot_age_ms?: number | null
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json
+          run_at?: string
+          success: boolean
+        }
+        Update: {
+          completions_in_aggregation?: number | null
+          failure_check?: string | null
+          failure_reason?: string | null
+          hammer_snapshot_age_ms?: number | null
+          hie_snapshot_age_ms?: number | null
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json
+          run_at?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       engine_settings: {
         Row: {
           description: string | null
@@ -9129,6 +9168,7 @@ export type Database = {
         }
       }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
+      cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       create_ab_link: {
         Args: { p_link_code: string; p_sport: string; p_user_id: string }
