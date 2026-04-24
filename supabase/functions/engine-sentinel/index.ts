@@ -56,10 +56,11 @@ Deno.serve(async (req: Request) => {
 
   try {
     // 1. Select sentinel pool
-    const { data: poolData, error: poolErr } = await supabase.rpc('exec_sql' as never, {} as never).then(
-      () => ({ data: null, error: { message: 'rpc unavailable' } as { message: string } }),
-      () => ({ data: null, error: { message: 'rpc unavailable' } as { message: string } })
-    ).catch(() => ({ data: null, error: { message: 'rpc unavailable' } }));
+    let _poolData: unknown = null;
+    try {
+      const r = await supabase.rpc('exec_sql' as never, {} as never);
+      _poolData = r;
+    } catch { /* rpc unavailable; continue with REST */ }
 
     // Pool selection via direct query (no exec_sql available; use REST)
     const poolUserIds = await selectPool(supabase);
@@ -137,7 +138,7 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-async function selectPool(supabase: ReturnType<typeof createClient>): Promise<string[]> {
+async function selectPool(supabase: any): Promise<string[]> {
   // Pull last 7 days of non-heartbeat logs and rank client-side.
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
   const fourteenDaysAgo = new Date(Date.now() - 14 * 86400_000).toISOString();
@@ -204,7 +205,7 @@ function stddev(arr: number[]): number {
 }
 
 async function evaluateUser(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   userId: string,
   runId: string
 ): Promise<SentinelRow> {
@@ -221,8 +222,8 @@ async function evaluateUser(
     .gte('created_at', threeDaysAgo)
     .order('created_at', { ascending: false });
 
-  const cleanLogs = (logs ?? []).filter(
-    (l: { notes?: string | null }) => !l.notes?.toLowerCase().includes('heartbeat')
+  const cleanLogs = ((logs ?? []) as Array<Record<string, unknown>>).filter(
+    (l) => !String(l.notes ?? '').toLowerCase().includes('heartbeat')
   );
 
   let completions_6h = 0;
@@ -247,7 +248,7 @@ async function evaluateUser(
     days3d.add(l.entry_date ?? l.created_at.slice(0, 10));
   }
 
-  const lastLogTs = cleanLogs[0]?.created_at;
+  const lastLogTs = cleanLogs[0]?.created_at as string | undefined;
   const hours_since_last_activity = lastLogTs
     ? (now - new Date(lastLogTs).getTime()) / 3600_000
     : null;

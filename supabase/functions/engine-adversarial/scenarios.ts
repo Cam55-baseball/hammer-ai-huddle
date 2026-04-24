@@ -16,9 +16,10 @@ export interface SyntheticLog {
   performance_data: { rpe: number; checkboxStates: Record<string, boolean> };
   notes: string;
   completion_state: 'completed';
-  completion_method: 'done_button';
+  completion_method: 'check_all' | 'done_button';
   completed: true;
   completed_at: string;
+  [key: string]: unknown;
 }
 
 export const FORBIDDEN: Record<ScenarioName, string[]> = {

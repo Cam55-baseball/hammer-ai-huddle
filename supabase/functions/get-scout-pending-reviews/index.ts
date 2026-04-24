@@ -28,11 +28,9 @@ Deno.serve(async (req) => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-
-    const user = claimsData?.claims ? { id: claimsData.claims.sub as string } : null;
-    const userError = claimsError;
+    const { data: userData, error: userErr } = await anonClient.auth.getUser();
+    const user = userData?.user ? { id: userData.user.id } : null;
+    const userError = userErr;
 
     // Use service role for data queries
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
