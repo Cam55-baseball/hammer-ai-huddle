@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Owner is heartbeat target — already deep-trace anchor across all prior Kill Tests.
 const HEARTBEAT_USER_ID = "95de827d-7418-460b-8b79-267bf79bdca4";
-const PIPELINE_TIMEOUT_MS = 60_000;
+const PIPELINE_TIMEOUT_MS = 90_000;
 
 interface HeartbeatResult {
   success: boolean;
