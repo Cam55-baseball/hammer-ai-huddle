@@ -1,232 +1,501 @@
 
 
-# Phase 6 — Final Completion Plan (Execution-Only)
+# Phase 7 — Experience Perfection + System Hardening + Infinite Scale Moat
 
-Strictly additive finishing pass. The 5 edge functions, the migration, and the 2 engine patches are already deployed. This plan covers the remaining 5%: config, cron, UI, owner controls, and validation.
-
----
-
-## Pre-Flight Verification (read-only, will run during execution)
-
-Before touching anything, confirm current state with read tools:
-1. `code--view supabase/config.toml` — check which of the 5 functions are already registered
-2. `supabase--read_query` on `cron.job` — check which schedules already exist
-3. `code--view src/pages/EngineHealthDashboard.tsx` — confirm current structure
-4. `code--view src/components/owner/OwnerEngineSettingsPanel.tsx` — confirm current structure
-5. `supabase--read_query` on `engine_system_health`, `engine_snapshot_versions`, `engine_regression_results` — confirm tables exist and are empty/seeded
-
-If any item already exists, skip its creation step. No duplicates.
+Strictly additive. Eight parts. Sequenced so each leaves the system in a working state. No core engine logic touched.
 
 ---
 
-## SECTION 1 — Config Finalization
+## Pre-Flight Verification (read-only, during execution)
 
-**File**: `supabase/config.toml`
+1. `code--view src/components/hammer/EliteModePanel.tsx` (already in context — confirmed structure)
+2. `code--view src/pages/EngineHealthDashboard.tsx` to find the right insertion point for new section
+3. `supabase--read_query`: `SELECT proname FROM pg_proc WHERE proname='cleanup_old_function_logs'` to avoid duplicate function
+4. `code--list_dir supabase/functions` to enumerate every function that needs the logging wrapper
+5. `code--view supabase/functions/extract-patterns/index.ts` (in context) to understand current pattern shape before extending
 
-Append these 5 entries (only if missing — pre-flight will confirm):
-```toml
-[functions.engine-regression-runner]
-verify_jwt = false
+---
 
-[functions.evaluate-predictions]
-verify_jwt = false
+## Architectural Principle
 
-[functions.compute-system-health]
-verify_jwt = false
+Two new tables (`engine_function_logs`, plus 2 columns on `anonymized_pattern_library`). One new TypeScript contract file. One new edge function (`engine-auto-recovery`), one new SQL-only daily check (`engine-data-integrity-check`), one new hook, one new dashboard section. **Every existing edge function gets a thin observability wrapper** — try/catch + duration logging + 30s timeout. Wrapper is non-blocking: if logging insert fails, function still returns its real response.
 
-[functions.engine-reset-safe-mode]
-verify_jwt = true
+The Elite UI upgrade is purely visual polish (typography, spacing, micro-animation) on `EliteModePanel` plus a global "errorless states" sweep — **no behavior change**.
 
-[functions.engine-chaos-test]
-verify_jwt = true
+---
+
+## PART 1 — Elite UI/UX Perfection
+
+### Modify `src/components/hammer/EliteModePanel.tsx`
+Additive enhancements only:
+
+1. **Gradient top border**: Replace solid `border-t-2 border-t-primary` with gradient via inline style:
+   ```tsx
+   style={{
+     borderImage: `linear-gradient(90deg, ${stateColor}, transparent) 1`,
+     borderTop: '2px solid'
+   }}
+   ```
+   Color map: prime=`hsl(var(--primary))`, ready=emerald, caution=amber, recover=rose.
+
+2. **Micro-animation**: Replace `animate-in fade-in duration-200` with custom keyframes for opacity 0→1 + translateY 4px→0 over 200ms (use `motion-safe:animate-[elite-fade-in_200ms_ease-out]` and add `@keyframes elite-fade-in` to `index.css`).
+
+3. **Typography hierarchy**:
+   - `elite_message`: `font-semibold tracking-tight text-[15px] leading-snug`
+   - `micro_directive`: `text-xs text-foreground/70` (current is `text-muted-foreground`, this is higher contrast)
+   - constraint chip: add `gap-1.5` (was `gap-1`), align icon vertically at center
+
+4. **Confidence indicator** (new, top-right, only when `confidence >= 70`):
+   ```tsx
+   {layer.confidence >= 70 && (
+     <span className="text-[10px] text-muted-foreground/80 tabular-nums">
+       Confidence: {layer.confidence}%
+     </span>
+   )}
+   ```
+   Sits inline with `windowBadge` if both present (gap-1.5).
+
+5. **Trajectory stagger**: Wrap trajectory line in 150ms delayed fade-in (`style={{ animationDelay: '150ms' }}` on the same fade-in keyframe).
+
+### Add CSS keyframes to `src/index.css`
+```css
+@keyframes elite-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 ```
-Verification: re-view file, confirm exactly 5 new blocks, no typos, no duplicates.
+
+### Performance:
+- `useEliteLayer` and `usePrediction` already memoize state; verify no re-render leak by wrapping the panel body in `React.memo` if not already.
+- All realtime channels in both hooks already clean up on unmount (verified in source).
+
+### Errorless states sweep (audit, not rewrite):
+- Confirm `EliteModePanel` returns null gracefully when `layer === null` (already does)
+- Confirm `useSystemHealth` returns `{ score: null }` gracefully when no rows (verified earlier)
+- No changes required to other panels for this phase — keeping scope tight.
 
 ---
 
-## SECTION 2 — Cron Schedule Completion
+## PART 2 — Engine Observability 2.0
 
-Use the **Supabase insert tool** (NOT migration — schedules are project-specific and contain anon keys). 8 schedules total:
-
+### Migration (1 new table + 1 cleanup function)
 ```sql
--- Logic runners
-SELECT cron.schedule('engine-regression-runner-12h', '11 */12 * * *', $$
+CREATE TABLE public.engine_function_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  function_name text NOT NULL,
+  status text NOT NULL CHECK (status IN ('success','fail','timeout')),
+  duration_ms integer,
+  error_message text,
+  metadata jsonb DEFAULT '{}',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_function_logs_name_created ON engine_function_logs(function_name, created_at DESC);
+CREATE INDEX idx_function_logs_status_created ON engine_function_logs(status, created_at DESC);
+ALTER TABLE engine_function_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admin/owner read function logs" ON engine_function_logs
+  FOR SELECT USING (has_role(auth.uid(), 'admin') OR has_role(auth.uid(), 'owner'));
+CREATE POLICY "Service role writes function logs" ON engine_function_logs
+  FOR INSERT WITH CHECK (true);
+
+CREATE OR REPLACE FUNCTION cleanup_old_function_logs() RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path=public AS $$
+  DELETE FROM engine_function_logs WHERE created_at < now() - interval '30 days';
+$$;
+```
+Retention: 30 days. ~50k rows/day for 30 active functions × 4 runs/hr. Trivial.
+
+### Logging wrapper — applied to all 18 edge functions
+Create a tiny inline helper (no shared module, since we can't share across functions without copy-paste):
+```ts
+async function logRun(supabase: any, fn: string, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: fn,
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent — logging must never break the function */ }
+}
+```
+
+Wrap each function's `serve()` body:
+```ts
+serve(async (req) => {
+  const startMs = Date.now();
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  
+  const timeout = new Promise<Response>((resolve) => 
+    setTimeout(() => resolve(new Response(JSON.stringify({ error: 'timeout' }), { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })), 30000)
+  );
+  const work = (async () => {
+    const supabase = createClient(...);
+    try {
+      // ...existing logic...
+      await logRun(supabase, '<fn-name>', 'success', startMs, undefined, { /* useful metadata */ });
+      return new Response(...);
+    } catch (err) {
+      await logRun(supabase, '<fn-name>', 'fail', startMs, String(err));
+      return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+  })();
+  return Promise.race([work, timeout.then(async (r) => {
+    const supabase = createClient(...);
+    await logRun(supabase, '<fn-name>', 'timeout', startMs);
+    return r;
+  })]);
+});
+```
+
+**Functions to wrap** (18 total — only existing engine + governance functions, NOT Stripe/auth/render functions):
+1. `compute-hammer-state`
+2. `engine-heartbeat`
+3. `engine-sentinel`
+4. `engine-adversarial`
+5. `engine-weight-optimizer`
+6. `evaluate-advice-effectiveness`
+7. `extract-patterns`
+8. `update-user-engine-profile`
+9. `predict-hammer-state`
+10. `generate-interventions`
+11. `engine-regression-runner`
+12. `evaluate-predictions`
+13. `compute-system-health`
+14. `engine-reset-safe-mode`
+15. `engine-chaos-test`
+16. (NEW) `engine-auto-recovery`
+17. (NEW) `engine-data-integrity-check`
+18. `compute-hammer-state` cron variants (none — same function)
+
+**Critical**: For `compute-hammer-state`, the `await logRun(...)` at the end runs AFTER the response payload is built. To guarantee zero added latency on the user-facing path, use fire-and-forget `EdgeRuntime.waitUntil(logRun(...))` instead of `await`. Same pattern for snapshot_versions insert added in Phase 6.
+
+### New hook: `src/hooks/useFunctionHealth.ts`
+- Fetches per-function aggregates from last 24h
+- Returns array: `[{ function_name, total_runs, success_rate, avg_duration_ms, last_error_at, last_error_message }]`
+- One read on mount + realtime subscription on `engine_function_logs` INSERTs
+
+### Modify `src/pages/EngineHealthDashboard.tsx`
+Add new section "Function Reliability" (collapsible card):
+- Table: function name | success % | avg duration | last error timestamp
+- Row highlight: red if `success_rate < 95`, amber if `< 99`, default otherwise
+- Empty state: "No function activity yet" if zero rows
+- Sortable by success rate (worst first)
+
+---
+
+## PART 3 — Auto-Recovery Layer
+
+### New edge function: `engine-auto-recovery`
+Schedule: every 10 min at `:09`.
+Auth: `verify_jwt = false`.
+
+Logic:
+1. Read latest `engine_system_health.score`
+2. **If score < 70**: fire-and-forget invoke `engine-weight-optimizer`, then wait 5s, then `compute-system-health`, then `evaluate-predictions`. Log `audit_log` with `action='auto_recovery_triggered'` + score that triggered it.
+3. **Function instability check**: Query `engine_function_logs` last 1h, group by `function_name`. For any function with `(fails / total) > 0.20` AND `total >= 5` → log `audit_log` with `action='function_instability_detected'` + the offending function name + failure rate.
+4. **Stuck-state check**: Query `MAX(created_at)` on `hammer_state_snapshots`. If `> 30 min ago` AND there's at least one user with activity in last 24h (`SELECT DISTINCT user_id FROM custom_activity_logs WHERE created_at > now() - interval '24h' LIMIT 10`), invoke `compute-hammer-state` for those users (POST per user). Log `action='stuck_state_recovery'` + user count.
+5. **Never** modify engine tables directly. All recovery is via existing function invocations.
+
+### Cron schedule (insert tool):
+```sql
+SELECT cron.schedule('engine-auto-recovery-10min', '9 */10 * * * *', $$
   SELECT net.http_post(
-    url:='https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/engine-regression-runner',
-    headers:='{"Content-Type":"application/json","apikey":"<ANON_KEY>"}'::jsonb,
-    body:=jsonb_build_object('triggered_at', now())
+    url := 'https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/engine-auto-recovery',
+    headers := '{"Content-Type":"application/json","apikey":"<ANON>"}'::jsonb,
+    body := jsonb_build_object('triggered_at', now())
   );
 $$);
+```
+*(Schedule typo correction: cron uses 5-field, so `9-59/10 * * * *` = at :09, :19, :29, :39, :49, :59. Acceptable; spec says "every 10 min at :09".)*
 
-SELECT cron.schedule('evaluate-predictions-4h', '37 */4 * * *', $$ ... $$);
-SELECT cron.schedule('compute-system-health-15min', '52 * * * *', $$ ... $$);
+Actually — to be precise, true "every 10 min starting at :09" requires `9,19,29,39,49,59 * * * *`. Will use that exact form.
 
--- Cleanup jobs (call SQL functions directly, no HTTP)
-SELECT cron.schedule('cleanup-snapshot-versions',   '31 5 * * *', $$ SELECT public.cleanup_old_snapshot_versions(); $$);
-SELECT cron.schedule('cleanup-regression-results',  '38 5 * * *', $$ SELECT public.cleanup_old_regression_results(); $$);
-SELECT cron.schedule('cleanup-weight-history',      '45 5 * * *', $$ SELECT public.cleanup_old_weight_history(); $$);
-SELECT cron.schedule('cleanup-prediction-outcomes', '55 5 * * *', $$ SELECT public.cleanup_old_prediction_outcomes(); $$);
-SELECT cron.schedule('cleanup-system-health',       '02 6 * * *', $$ SELECT public.cleanup_old_system_health(); $$);
+---
+
+## PART 4 — Real-Time System Stability Guard
+
+This is implemented inline as part of PART 2's wrapper — every wrapped function gets:
+- Try/catch around all logic
+- 30s timeout via `Promise.race`
+- Safe fallback response (`{ error, fallback: true }` with status 500 or 504)
+- Logged to `engine_function_logs` with appropriate status
+
+No separate work needed. Bundled with Part 2.
+
+---
+
+## PART 5 — Data Integrity Enforcement
+
+### New edge function: `engine-data-integrity-check`
+Schedule: daily at 06:15.
+Auth: `verify_jwt = false`.
+
+Logic (all SAFE actions only — repairs, no aggressive deletes on user data):
+1. **Orphan check 1**: `predictions` without snapshots
+   ```sql
+   SELECT id FROM engine_state_predictions
+   WHERE base_snapshot_id IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM hammer_state_snapshots WHERE id = base_snapshot_id)
+   ```
+   Action: NULL out `base_snapshot_id` (don't delete prediction — the prediction itself is still valid data, just orphaned reference).
+
+2. **Orphan check 2**: `interventions` without predictions
+   ```sql
+   SELECT id FROM engine_interventions
+   WHERE prediction_id IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM engine_state_predictions WHERE id = prediction_id)
+   ```
+   FK already cascades on delete — should never happen. If found, log only.
+
+3. **Invalid state**: `SELECT id FROM hammer_state_snapshots WHERE overall_state IS NULL OR overall_state NOT IN ('prime','ready','caution','recover')`. Log count to audit_log. Do NOT delete (could be in-flight write).
+
+4. **Missing joins**: `SELECT id FROM hammer_state_explanations_v2 WHERE NOT EXISTS (SELECT 1 FROM hammer_state_snapshots WHERE user_id = explanations.user_id)`. Log.
+
+5. Single audit_log entry per run with full summary: `{ orphan_predictions_repaired, orphan_interventions_found, null_states_count, orphan_explanations_count, run_duration_ms }`.
+
+### Cron schedule (insert tool):
+```sql
+SELECT cron.schedule('engine-data-integrity-check-daily', '15 6 * * *', $$ ... $$);
 ```
 
-Pre-flight will check `cron.job WHERE jobname IN (...)`. If a name already exists, `SELECT cron.unschedule('name'); SELECT cron.schedule(...);` to ensure the schedule matches spec exactly.
+---
 
-Verification: post-insert query to `cron.job` confirms all 8 jobs present with correct schedules and no collisions with existing slots (`:00,:07,:11,:15,:17,:23,:30,:31,:37,:43,:45,:52,:55`).
+## PART 6 — Scalability Moat
+
+### Migration: extend `anonymized_pattern_library`
+```sql
+ALTER TABLE public.anonymized_pattern_library
+  ADD COLUMN IF NOT EXISTS performance_outcome_score numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS confidence numeric DEFAULT 0;
+```
+
+### Modify `extract-patterns/index.ts`
+After bucketing, for each bucket compute:
+- `performance_outcome_score`: For each pattern, look at the next snapshot in time order for matching anonymized feature signature. Score = `+10` if next state is "better" (recover→caution=+5, caution→ready=+10, ready→prime=+10, same=0), `-10` if worse. Aggregate per bucket as average.
+- `confidence`: `min(95, sqrt(frequency) * 10)` — more occurrences = higher confidence in the outcome score.
+
+Update INSERT/UPDATE in `extract-patterns` to include both new columns. Existing rows get default 0/0 until next run rewrites them.
+
+### Internal ranking
+Add a new admin-only view (no UI yet, just the data model):
+```sql
+CREATE OR REPLACE VIEW public.pattern_library_ranked AS
+SELECT *, (performance_outcome_score * confidence / 100.0) AS rank_score
+FROM anonymized_pattern_library
+WHERE confidence >= 30
+ORDER BY rank_score DESC;
+```
+Future v2 model trains on this. Not exposed to users.
 
 ---
 
-## SECTION 3 — System Health UI
+## PART 7 — Future-Proof Engine Interface
 
-### New file: `src/hooks/useSystemHealth.ts`
-- Fetches latest `engine_system_health` row via Supabase client
-- Subscribes to realtime INSERTs on the table for the dashboard channel
-- Also fetches last 20 rows for sparkline data (per component breakdown)
-- Returns: `{ score, breakdown, history, loading, error }`
-- Graceful degrade: if no rows → `{ score: null, breakdown: null, history: [], loading: false }`
+### New file: `src/lib/engine/EngineInputContractV2.ts`
+```ts
+/**
+ * Engine Input Contract V2 — the canonical input shape for any future engine.
+ * All future features that compute or read engine state MUST normalize their
+ * inputs to this shape. Direct DB column coupling in feature code is forbidden.
+ */
+export interface EngineInputV2 {
+  load_24h: number;        // 0..100, normalized cumulative load over last 24h
+  recovery_score: number;  // 0..100, current recovery score
+  freshness_6h: number;    // 0..100, dopamine/freshness index from last 6h activity
+  volatility: number;      // 0..1, normalized state-transition rate over last 3d
+}
 
-### Modify: `src/pages/EngineHealthDashboard.tsx`
-- Add top-of-page integrity badge: `<SystemIntegrityBadge />` above existing dashboard content
-- Badge displays `System Integrity: {score}/100` with color logic:
-  - `≥ 90` → green (`bg-green-500/15 text-green-700 border-green-500/30`)
-  - `75–89` → amber (`bg-amber-500/15 text-amber-700 border-amber-500/30`)
-  - `< 75` → red (`bg-destructive/15 text-destructive border-destructive/30`)
-  - `null` → muted gray, label "No data yet"
-- Click → opens `<SystemIntegrityModal />` (Dialog) showing:
-  - 6 component scores (heartbeat, sentinel, adversarial, regression, prediction, advisory) as percentages
-  - Inline sparkline (using lightweight inline SVG, last 20 points) per component
-  - Sample size for each
-  - Empty-state per component if its source returned null
+export interface EngineOutputV2 {
+  overall_state: 'prime' | 'ready' | 'caution' | 'recover';
+  confidence: number;      // 0..100
+  computed_at: string;     // ISO timestamp
+}
 
-### New helper component: `src/components/owner/SystemIntegrityBadge.tsx`
-Self-contained badge + modal trigger. Uses the hook.
+/** Adapter: convert a hammer_state_snapshots row into EngineInputV2 */
+export function snapshotToEngineInput(snap: {
+  cognitive_load?: number | null;
+  recovery_score?: number | null;
+  dopamine_load?: number | null;
+}): EngineInputV2 {
+  return {
+    load_24h: Number(snap.cognitive_load ?? 0),
+    recovery_score: Number(snap.recovery_score ?? 50),
+    freshness_6h: 100 - Number(snap.dopamine_load ?? 0),
+    volatility: 0, // computed externally — caller fills in
+  };
+}
 
----
+export const ENGINE_CONTRACT_VERSION = 'v2.0.0';
+```
 
-## SECTION 4 — Owner Controls
+This is a **declarative contract** — no runtime impact. Documents the intent. Future engine v2 code reads/writes through these types only.
 
-### Modify: `src/components/owner/OwnerEngineSettingsPanel.tsx`
-Add a new "Recovery & Stress Testing" section below existing tabs (or as a third tab). Two destructive buttons gated by existing `isOwner` check:
-
-**Safe Mode button**:
-- Red destructive variant
-- Label: "Engine Safe Mode (Instant Reset)"
-- Click → opens AlertDialog with:
-  - Warning text
-  - Optional checkbox: "Also reset user engine profiles"
-- Confirm → `supabase.functions.invoke('engine-reset-safe-mode', { body: { reset_profiles: bool }})`
-- Success toast + refresh local settings state (no page reload)
-- Error toast on failure
-
-**Chaos Test button**:
-- Amber/outline variant
-- Label: "Run Chaos Test"
-- Click → opens AlertDialog explaining 30s perturbation
-- Confirm → `supabase.functions.invoke('engine-chaos-test')`
-- Show loading state for ~35s
-- Display result Dialog with:
-  - `baseline_weights` (JSON pretty-print)
-  - `chaos_weights` (JSON pretty-print)
-  - `sentinel_drifts` count
-  - `adversarial_fails` count
-  - `restored: true` confirmation
-- Error toast on failure
-
-Both buttons render only when `isOwner === true` (already enforced by parent route).
+Add a memory entry: `mem://architecture/engine/input-contract-v2`.
 
 ---
 
-## SECTION 5 — Final System Validation
+## PART 8 — Final UX Polish Pass
 
-Execute via tools, in order:
+This is a focused, surgical sweep — NOT a rewrite. Specific actions:
 
-1. **Snapshot Versioning**:
-   - `supabase--curl_edge_functions` POST `/compute-hammer-state` for owner user
-   - `supabase--read_query`: `SELECT * FROM engine_snapshot_versions ORDER BY created_at DESC LIMIT 1`
-   - Assert: `inputs != '{}'`, `weights IS NOT NULL`, `output->>'overall_state' IS NOT NULL`
+1. **`EliteModePanel`**: confirmed in Part 1 (gradient border, animation, typography, confidence indicator)
+2. **`SystemIntegrityBadge`**: confirm modal opens cleanly on mobile (440px viewport — already current viewport)
+3. **`OwnerEngineSettingsPanel` Recovery tab**: confirm dialogs scroll on small viewports
+4. **`EngineHealthDashboard`**: ensure new "Function Reliability" section uses same `Card` + spacing as siblings
+5. **Console errors sweep**: run `code--read_console_logs` after deploy; fix any reds
+6. **Layout shift**: confirm Elite panel doesn't reflow when prediction loads (skeleton placeholder for trajectory line during initial 150ms)
 
-2. **Regression Engine**:
-   - `supabase--curl_edge_functions` POST `/engine-regression-runner`
-   - `supabase--read_query`: `SELECT count(*), count(*) FILTER (WHERE pass=true) FROM engine_regression_results WHERE run_at > now() - interval '5 min'`
-   - Assert: count > 0, pass_rate ≥ 0.90 (or document if baseline is lower because no historical seed data)
-
-3. **Drift Guard**:
-   - Insert 4 fake `engine_weight_history` rows for `recovery` axis with deltas summing to 0.16 in last 24h
-   - `supabase--curl_edge_functions` POST `/engine-weight-optimizer`
-   - `supabase--read_query`: `SELECT * FROM audit_log WHERE action='weight_drift_blocked' ORDER BY created_at DESC LIMIT 5`
-   - Assert: row exists, `engine_dynamic_weights.recovery` unchanged
-   - Cleanup: `DELETE FROM engine_weight_history WHERE metadata->>'test'='drift_guard'`
-
-4. **Prediction Outcome**:
-   - Find or insert one `engine_state_predictions` row backdated 25h
-   - `supabase--curl_edge_functions` POST `/evaluate-predictions`
-   - `supabase--read_query`: `SELECT * FROM prediction_outcomes ORDER BY created_at DESC LIMIT 1`
-   - Assert: `accuracy_score IN (0,40,70,100)`
-
-5. **System Health**:
-   - `supabase--curl_edge_functions` POST `/compute-system-health`
-   - `supabase--read_query`: `SELECT score, breakdown FROM engine_system_health ORDER BY created_at DESC LIMIT 1`
-   - Assert: score 0–100, breakdown has 6 keys
-   - UI: confirm badge renders (visual via session replay if needed)
-
-6. **Safe Mode** (admin only):
-   - Snapshot current `engine_dynamic_weights` to local var
-   - `supabase--curl_edge_functions` POST `/engine-reset-safe-mode` with auth header (owner JWT)
-   - `supabase--read_query`: `SELECT count(*) FROM engine_dynamic_weights` → expect 0
-   - `supabase--read_query`: `SELECT * FROM audit_log WHERE action='safe_mode_enabled' ORDER BY created_at DESC LIMIT 1` → expect row
-   - Trigger compute-hammer-state, confirm output uses `?? 1` defaults (engine alive)
-
-7. **Chaos Test** (admin only):
-   - `supabase--curl_edge_functions` POST `/engine-chaos-test` with auth header
-   - Wait via `project_debug--sleep` 35s
-   - `supabase--read_query`: `SELECT * FROM audit_log WHERE action='chaos_test_completed' ORDER BY created_at DESC LIMIT 1`
-   - Confirm response JSON has `restored: true`, weights match pre-test snapshot
+No ambitious redesigns. No new components. Polish only.
 
 ---
 
-## SECTION 6 — Hard Guarantees Verification
-
-After validation:
-1. `supabase--read_query`: `SELECT relname, relrowsecurity FROM pg_class WHERE relname IN ('engine_snapshot_versions','engine_regression_results','engine_weight_history','prediction_outcomes','engine_system_health')` — all `rowsecurity=true`
-2. `supabase--read_query`: `SELECT indexname FROM pg_indexes WHERE tablename IN (...)` — confirm indexes per spec
-3. `supabase--read_query`: `SELECT proname FROM pg_proc WHERE proname LIKE 'cleanup_old_%'` — confirm 5 new cleanup functions
-4. Re-run compute-hammer-state with empty `engine_dynamic_weights` (already empty post-safe-mode test) — confirm output identical to pre-Phase-4 baseline math
-5. Confirm no advertised latency > +20ms (timing logs from edge function)
+## CRON SCHEDULE (Final, all phases)
+```
+:00,:15,:30,:45    Heartbeat (15min)            — Phase 3
+:07                Sentinel (hourly)             — Phase 3
+:09,:19,:29,:39,:49,:59  Auto-Recovery (10min)   — Phase 7 (NEW)
+:11  every 12h     Regression Runner             — Phase 6
+:17  every 2h      Predict Hammer State          — Phase 5
+:23  every 6h      Adversarial                   — Phase 3
+:31  every 4h      Advisory Eval                 — Phase 4
+:37  every 4h      Evaluate Predictions          — Phase 6
+:43  every 6h      Weight Optimizer              — Phase 4
+:52  every 15min   Compute System Health         — Phase 6
+04:53 daily        Pattern extraction            — Phase 4
+05:13 Sunday       User profile update           — Phase 4
+06:15 daily        Data Integrity Check (NEW)    — Phase 7
+05:31, 05:38, 05:45, 05:55, 06:02, 06:25 daily   Cleanup jobs (existing + 1 new for function_logs)
+```
+No collisions. The :09/:19/:29/:39/:49/:59 auto-recovery slots don't overlap any existing cron.
 
 ---
 
 ## Files Created / Modified
 
-**New** (3):
-- `src/hooks/useSystemHealth.ts`
-- `src/components/owner/SystemIntegrityBadge.tsx`
-- (Optional) `src/components/owner/SystemIntegrityModal.tsx` — could be inline in badge
+**New migration** (1):
+- `engine_function_logs` table + RLS + indexes
+- `cleanup_old_function_logs()` SQL function
+- ALTER `anonymized_pattern_library` ADD `performance_outcome_score`, `confidence`
+- `pattern_library_ranked` VIEW
 
-**Modified** (3):
-- `supabase/config.toml` — append 5 function entries
-- `src/pages/EngineHealthDashboard.tsx` — append top-level badge
-- `src/components/owner/OwnerEngineSettingsPanel.tsx` — append Safe Mode + Chaos Test buttons
+**New edge functions** (2):
+- `supabase/functions/engine-auto-recovery/index.ts`
+- `supabase/functions/engine-data-integrity-check/index.ts`
 
-**Cron** (insert tool, 8 schedules)
+**New files** (3):
+- `src/hooks/useFunctionHealth.ts`
+- `src/components/owner/FunctionReliabilityPanel.tsx` (collapsible card for the dashboard)
+- `src/lib/engine/EngineInputContractV2.ts`
+
+**Modified edge functions** (16 — observability wrapper):
+- `compute-hammer-state` (uses `EdgeRuntime.waitUntil` to keep zero latency)
+- `engine-heartbeat`, `engine-sentinel`, `engine-adversarial`, `engine-weight-optimizer`
+- `evaluate-advice-effectiveness`, `extract-patterns`, `update-user-engine-profile`
+- `predict-hammer-state`, `generate-interventions`
+- `engine-regression-runner`, `evaluate-predictions`, `compute-system-health`
+- `engine-reset-safe-mode`, `engine-chaos-test`
+- `extract-patterns` (also gets the moat upgrade in Part 6)
+
+**Modified UI** (3):
+- `src/components/hammer/EliteModePanel.tsx` — gradient border, animation, typography, confidence indicator, trajectory stagger
+- `src/index.css` — add `@keyframes elite-fade-in`
+- `src/pages/EngineHealthDashboard.tsx` — add Function Reliability section (uses new component)
+
+**Config** (1):
+- `supabase/config.toml` — add 2 entries: `engine-auto-recovery` (verify_jwt=false), `engine-data-integrity-check` (verify_jwt=false)
+
+**Cron** (insert tool):
+- `engine-auto-recovery-10min`
+- `engine-data-integrity-check-daily`
+- `cleanup-function-logs-daily` (06:25)
+
+**Memory** (1):
+- `mem://architecture/engine/input-contract-v2`
+
+---
+
+## Validation
+
+1. **Logging**: invoke `compute-hammer-state` → confirm new row in `engine_function_logs` with `status='success'`, `duration_ms < 2000`
+2. **Wrapper safety**: invoke a function with bad input → confirm `status='fail'` row written, function still returns 500 cleanly
+3. **Hook**: visit `/engine-health` → confirm "Function Reliability" section renders 16+ functions
+4. **UI polish**: visit `/index` → confirm Elite panel has gradient border, fade-in animation, confidence indicator (if ≥70)
+5. **Auto-recovery**: temporarily INSERT a fake `engine_system_health` row with score 50 → invoke `engine-auto-recovery` → confirm `audit_log` entry `auto_recovery_triggered` + downstream function logs in `engine_function_logs`
+6. **Data integrity**: invoke `engine-data-integrity-check` → confirm `audit_log` entry with summary
+7. **Pattern moat**: invoke `extract-patterns` → confirm new rows have non-default `performance_outcome_score` and `confidence`
+8. **Stability**: query `SELECT function_name, COUNT(*) FILTER (WHERE status='success') * 100.0 / COUNT(*) AS success_rate FROM engine_function_logs GROUP BY function_name`. All wrapped functions should be ≥95% success.
+9. **Latency**: time `compute-hammer-state` p50 from logs — must be unchanged from pre-Phase-7 baseline (the `EdgeRuntime.waitUntil` ensures logging is post-response)
+10. **System Health Score**: invoke `compute-system-health` → confirm score still ≥80
 
 ---
 
 ## Risk Assessment
-- Config: zero risk (declarative entries, no runtime impact for already-deployed functions)
-- Cron: low risk — new schedules at unused offsets (`:11`, `:37`, `:52`, plus daily 5:31/5:38/5:45/5:55/6:02). Pre-flight confirms no name collisions.
-- UI: zero risk — graceful degrade when tables empty
-- Owner controls: gated by existing isOwner check + AlertDialog confirmations
-- Validation: drift guard test inserts fake history rows tagged `metadata.test='drift_guard'` for clean removal
+- **Engine break risk**: zero — wrapper is try/catch + post-response logging. Existing logic untouched.
+- **Latency risk**: zero on user-facing `compute-hammer-state` (waitUntil); ≤30ms on cron-triggered functions (single insert, fire-and-forget where possible)
+- **Auto-recovery loop risk**: gated by score < 70 trigger. Cannot recursively trigger itself. All actions are idempotent (force a function run that's already scheduled).
+- **Data integrity action risk**: only "safe" repair = NULL'ing orphaned FKs. No deletes. No updates to user content.
+- **Pattern outcome scoring**: backfilled to 0/0 for existing rows; non-zero only after next `extract-patterns` run. Can't break consumers because no consumers read the new columns yet.
+- **Wrapper deployment risk**: 16 functions get the same wrapper template. Mass deploy = 16 deploys. If one fails, others succeed independently. The wrapper itself is ~30 lines and self-contained.
+- **Storage**: function_logs at 30d × ~50k/day = 1.5M rows. Indexed on `(function_name, created_at desc)`. Trivial.
 
-## Time Budget
-- Build: ~12-15 minutes (1 config edit, 8 cron inserts, 1 hook, 2 UI edits)
-- Validation: ~10 minutes (7-step test chain + sleep 35s for chaos)
+---
 
 ## Open Decisions (best defaults; flag to override)
-1. **Sparkline implementation** = inline SVG in badge modal, no chart library dependency. Keeps bundle small.
-2. **Safe Mode button placement** = third tab "Recovery" in `OwnerEngineSettingsPanel` (alongside HIE + Recap). Cleaner than appending to existing tab.
-3. **Chaos test wait** = `project_debug--sleep(35)` after invoke (function takes 30s + buffer). Could poll `audit_log` instead but sleep is simpler.
-4. **Pre-flight skip behavior** = if a config entry already exists, skip the append (no duplicate); if a cron job name exists with same schedule, skip; if same name different schedule, unschedule + reschedule.
-5. **Drift guard validation** = simulate via `engine_weight_history` inserts (not `engine_weight_adjustments`), since the optimizer's drift guard reads `engine_weight_history` for cumulative deltas.
 
-If any of these are wrong, say so before approval.
+1. **Wrapper as inline template, not shared module** — Deno edge functions can't easily share local modules across folders without import_map. Inline copy keeps each function self-contained and deployable independently. Trade-off: small duplication. Worth it for resilience.
+
+2. **`compute-hammer-state` uses `EdgeRuntime.waitUntil`** for the logging insert + snapshot_versions insert — guarantees zero added latency on the only user-facing edge function. Other functions use plain `await` since they're cron-only.
+
+3. **Function Reliability shown to admin/owner only** — uses existing `isOwner` gate on `/engine-health`. Not exposed to athletes.
+
+4. **`engine-auto-recovery` does NOT touch `engine-sentinel` or `engine-adversarial`** in its trigger list — those are diagnostic, not corrective. It only kicks the optimizer + health + predictions.
+
+5. **Stuck-state recovery limited to 10 users** per run to prevent thundering-herd if everyone's snapshots are stale. Spec says "active users"; bounded to 10/run.
+
+6. **Pattern outcome scoring is heuristic** (next-state delta) not ML. Spec explicitly says "Future training data for v2 model" — current build sets up the data shape; v2 will train on it.
+
+7. **Engine Input Contract V2 is documentation/typing only** — no migration of existing code to use it. Future features will adopt; existing engine continues with its current snapshot-based flow.
+
+8. **Elite UI animation respects `prefers-reduced-motion`** via `motion-safe:` Tailwind prefix. Accessibility default.
+
+If any of those eight are wrong, say so before approval.
+
+---
+
+## Time Budget
+- Build: ~30-40 minutes (1 migration, 2 new edge functions, 16 wrapper edits, 3 new files, 3 UI edits, 1 config edit, 3 cron schedules, 1 memory file)
+- Validation: ~10 minutes (10-step test chain + 30-min stability watch)
+
+## Cleanup
+function_logs auto-rotates at 30d. Pattern extension columns persist indefinitely (intentional — moat data). Zero manual maintenance.
+
+---
+
+## Final State After Phase 7
+
+| Layer | Question Answered | Phase |
+|---|---|---|
+| Heartbeat | Is it alive? | 3 |
+| Sentinel | Is it right? | 3 |
+| Adversarial | Can it be tricked? | 3 |
+| Optimizer | Can it learn? | 4 |
+| Predictor | Can it see ahead? | 5 |
+| Interventions | Can it act early? | 5 |
+| Snapshot Versioning | Can we replay any moment? | 6 |
+| Regression Runner | Did learning improve or degrade? | 6 |
+| Drift Guard | Can learning go runaway? | 6 |
+| Prediction Outcomes | Were forecasts correct? | 6 |
+| System Health | One number, full truth | 6 |
+| Safe Mode | Can we instantly recover? | 6 |
+| Chaos Test | Is it stable under attack? | 6 |
+| **Function Logs** | **Did anything fail silently?** | **7** |
+| **Auto-Recovery** | **Can it heal without humans?** | **7** |
+| **Data Integrity** | **Is the data shape clean?** | **7** |
+| **Pattern Moat** | **Does it get smarter with scale?** | **7** |
+| **Engine Contract V2** | **Can future features plug in safely?** | **7** |
+| **Elite UI** | **Does it feel generational?** | **7** |
+
+Every layer reads from the previous, writes only to its own table. Engine remains the only mutator of `hammer_state_snapshots`. Auto-recovery only triggers existing systems; it cannot mutate the engine directly. UI degrades gracefully at every component. **Nothing can fail silently. Nothing can spiral. Everything is reproducible. Experience is elite.**
 
