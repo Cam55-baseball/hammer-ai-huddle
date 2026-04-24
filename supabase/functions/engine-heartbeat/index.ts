@@ -100,31 +100,41 @@ Deno.serve(async (req) => {
       });
       if (hsErr) result.metadata = { ...result.metadata, hammer_invoke_warning: hsErr.message };
 
-      // --- CHECK 2: HIE snapshot updated ---
-      const { data: hie } = await supabase
-        .from("hie_snapshots")
-        .select("computed_at")
-        .eq("user_id", HEARTBEAT_USER_ID)
-        .gte("computed_at", T0_iso)
-        .order("computed_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // --- CHECK 2: HIE snapshot updated (poll up to 20s) ---
+      let hie: { computed_at: string } | null = null;
+      for (let i = 0; i < 10; i++) {
+        const { data } = await supabase
+          .from("hie_snapshots")
+          .select("computed_at")
+          .eq("user_id", HEARTBEAT_USER_ID)
+          .gte("computed_at", T0_iso)
+          .order("computed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) { hie = data; break; }
+        await new Promise((r) => setTimeout(r, 2_000));
+      }
 
       if (!hie) {
-        fail("hie_stale", "No new HIE snapshot since heartbeat T0");
+        fail("hie_stale", "No new HIE snapshot within 20s of heartbeat T0");
       } else {
         result.hie_snapshot_age_ms = Date.now() - new Date(hie.computed_at).getTime();
       }
 
-      // --- CHECK 3: Hammer state snapshot updated ---
-      const { data: hs } = await supabase
-        .from("hammer_state_snapshots")
-        .select("computed_at, dopamine_inputs")
-        .eq("user_id", HEARTBEAT_USER_ID)
-        .gte("computed_at", T0_iso)
-        .order("computed_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // --- CHECK 3: Hammer state snapshot updated (poll up to 20s) ---
+      let hs: { computed_at: string; dopamine_inputs: unknown } | null = null;
+      for (let i = 0; i < 10; i++) {
+        const { data } = await supabase
+          .from("hammer_state_snapshots")
+          .select("computed_at, dopamine_inputs")
+          .eq("user_id", HEARTBEAT_USER_ID)
+          .gte("computed_at", T0_iso)
+          .order("computed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) { hs = data; break; }
+        await new Promise((r) => setTimeout(r, 2_000));
+      }
 
       if (!hs) {
         if (!result.failure_check) fail("hammer_stale", "No new hammer_state_snapshot since T0");
