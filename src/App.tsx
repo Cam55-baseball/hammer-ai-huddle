@@ -208,7 +208,7 @@ const App = () => {
               <Route path="/royal-timing" element={<RoyalTiming />} />
               <Route path="/admin/engine-settings" element={<AdminEngineSettings />} />
               <Route path="/admin/engine-health" element={<EngineHealthDashboard />} />
-              <Route path="/complete-player" element={<Navigate to="/complete-player" replace />} />
+              <Route path="/coach-compliance" element={<Navigate to="/coach-dashboard" replace />} />
               <Route path="/drill-library" element={<DrillLibraryPlayer />} />
               <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />
