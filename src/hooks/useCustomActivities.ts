@@ -97,6 +97,30 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     fetchAll();
   }, [fetchAll]);
 
+  // Realtime sync: refresh todayLogs on any custom_activity_logs mutation for this user.
+  // Closes cross-tab/external-write desync (GamePlanCard uses local state, not react-query).
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`custom-activity-logs-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'custom_activity_logs',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchTodayLogs();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchTodayLogs]);
+
   // Get activities scheduled for today (recurring + one-off with logs)
   const getTodayActivities = useCallback((): CustomActivityWithLog[] => {
     const today = new Date();
