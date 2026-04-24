@@ -253,6 +253,93 @@ export type Database = {
           },
         ]
       }
+      advisory_feedback_logs: {
+        Row: {
+          advice_directive: string | null
+          advice_state: string
+          created_at: string
+          effectiveness_score: number | null
+          evaluated_at: string | null
+          evaluation_window_hours: number
+          explanation_id: string | null
+          id: string
+          snapshot_id: string | null
+          user_action_inferred: string | null
+          user_id: string
+        }
+        Insert: {
+          advice_directive?: string | null
+          advice_state: string
+          created_at?: string
+          effectiveness_score?: number | null
+          evaluated_at?: string | null
+          evaluation_window_hours?: number
+          explanation_id?: string | null
+          id?: string
+          snapshot_id?: string | null
+          user_action_inferred?: string | null
+          user_id: string
+        }
+        Update: {
+          advice_directive?: string | null
+          advice_state?: string
+          created_at?: string
+          effectiveness_score?: number | null
+          evaluated_at?: string | null
+          evaluation_window_hours?: number
+          explanation_id?: string | null
+          id?: string
+          snapshot_id?: string | null
+          user_action_inferred?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advisory_feedback_logs_explanation_id_fkey"
+            columns: ["explanation_id"]
+            isOneToOne: false
+            referencedRelation: "hammer_state_explanations_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisory_feedback_logs_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "hammer_state_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anonymized_pattern_library: {
+        Row: {
+          created_at: string
+          feature_vector: Json
+          frequency: number
+          id: string
+          last_seen_at: string
+          outcome_state: string
+          pattern_type: string
+        }
+        Insert: {
+          created_at?: string
+          feature_vector: Json
+          frequency?: number
+          id?: string
+          last_seen_at?: string
+          outcome_state: string
+          pattern_type: string
+        }
+        Update: {
+          created_at?: string
+          feature_vector?: Json
+          frequency?: number
+          id?: string
+          last_seen_at?: string
+          outcome_state?: string
+          pattern_type?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           id: string
@@ -1852,6 +1939,30 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_dynamic_weights: {
+        Row: {
+          axis: string
+          last_run_id: string | null
+          metadata: Json
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          axis: string
+          last_run_id?: string | null
+          metadata?: Json
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          axis?: string
+          last_run_id?: string | null
+          metadata?: Json
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       engine_heartbeat_logs: {
         Row: {
           completions_in_aggregation: number | null
@@ -1960,6 +2071,42 @@ export type Database = {
           setting_value?: Json
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      engine_weight_adjustments: {
+        Row: {
+          affected_axis: string
+          applied: boolean
+          created_at: string
+          drift_score: number | null
+          id: string
+          metadata: Json
+          scenario: string | null
+          source: string
+          suggested_delta: number
+        }
+        Insert: {
+          affected_axis: string
+          applied?: boolean
+          created_at?: string
+          drift_score?: number | null
+          id?: string
+          metadata?: Json
+          scenario?: string | null
+          source: string
+          suggested_delta: number
+        }
+        Update: {
+          affected_axis?: string
+          applied?: boolean
+          created_at?: string
+          drift_score?: number | null
+          id?: string
+          metadata?: Json
+          scenario?: string | null
+          source?: string
+          suggested_delta?: number
         }
         Relationships: []
       }
@@ -2546,6 +2693,50 @@ export type Database = {
             columns: ["source_session_id"]
             isOneToOne: false
             referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hammer_state_explanations_v2: {
+        Row: {
+          confidence: number
+          constraint_text: string
+          created_at: string
+          elite_message: string
+          id: string
+          micro_directive: string
+          snapshot_id: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          constraint_text: string
+          created_at?: string
+          elite_message: string
+          id?: string
+          micro_directive: string
+          snapshot_id: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          constraint_text?: string
+          created_at?: string
+          elite_message?: string
+          id?: string
+          micro_directive?: string
+          snapshot_id?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hammer_state_explanations_v2_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "hammer_state_snapshots"
             referencedColumns: ["id"]
           },
         ]
@@ -7122,6 +7313,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_engine_profile: {
+        Row: {
+          recovery_speed: number
+          sample_size: number
+          sensitivity_to_load: number
+          updated_at: string
+          user_id: string
+          volatility_index: number
+        }
+        Insert: {
+          recovery_speed?: number
+          sample_size?: number
+          sensitivity_to_load?: number
+          updated_at?: string
+          user_id: string
+          volatility_index?: number
+        }
+        Update: {
+          recovery_speed?: number
+          sample_size?: number
+          sensitivity_to_load?: number
+          updated_at?: string
+          user_id?: string
+          volatility_index?: number
+        }
+        Relationships: []
+      }
       user_food_history: {
         Row: {
           created_at: string | null
@@ -9256,9 +9474,13 @@ export type Database = {
       }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_adversarial_logs: { Args: never; Returns: undefined }
+      cleanup_old_advisory_logs: { Args: never; Returns: undefined }
+      cleanup_old_explanations: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
+      cleanup_old_patterns: { Args: never; Returns: undefined }
       cleanup_old_sentinel_logs: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
+      cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
       create_ab_link: {
         Args: { p_link_code: string; p_sport: string; p_user_id: string }
         Returns: {
