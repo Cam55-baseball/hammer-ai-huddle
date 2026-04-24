@@ -9,7 +9,21 @@ const corsHeaders = {
 
 function clamp(v: number, lo = 0, hi = 1) { return Math.max(lo, Math.min(hi, v)); }
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'compute-system-health',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(
@@ -119,11 +133,13 @@ serve(async (req) => {
       });
     }
 
+    await logRun(supabase, 'success', startMs, undefined, { score });
     return new Response(JSON.stringify({ status: "ok", score, breakdown }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("[compute-system-health]", err);
+    await logRun(supabase, 'fail', startMs, String(err));
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

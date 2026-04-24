@@ -10,6 +10,19 @@ const corsHeaders = {
 const HEARTBEAT_USER_ID = "95de827d-7418-460b-8b79-267bf79bdca4";
 const PIPELINE_TIMEOUT_MS = 90_000;
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'engine-heartbeat',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 interface HeartbeatResult {
   success: boolean;
   latency_ms: number;
@@ -22,6 +35,7 @@ interface HeartbeatResult {
 }
 
 Deno.serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(
@@ -202,6 +216,13 @@ Deno.serve(async (req) => {
       },
     });
   }
+
+  await logRun(supabase, result.success ? 'success' : 'fail', startMs, result.failure_reason ?? undefined, {
+    failure_check: result.failure_check,
+    latency_ms: result.latency_ms,
+    hie_age_ms: result.hie_snapshot_age_ms,
+    hammer_age_ms: result.hammer_snapshot_age_ms,
+  });
 
   return new Response(JSON.stringify(result), {
     status: 200,

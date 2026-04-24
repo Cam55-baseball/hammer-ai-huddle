@@ -22,6 +22,19 @@ const STATE_DISTANCE: Record<string, number> = {
 
 function clamp(v: number, lo = 0, hi = 100) { return Math.max(lo, Math.min(hi, v)); }
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'engine-regression-runner',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 // Recompute final state from stored inputs + CURRENT weights — mirrors compute-hammer-state math
 function recomputeState(inputs: any, weights: Record<string, number>): State {
   const arousalScore = clamp(Number(inputs?.arousal_inputs?.energy_self_report ?? 0) * 20 || inputs?.recovery_score_used || 50);
@@ -42,6 +55,7 @@ function recomputeState(inputs: any, weights: Record<string, number>): State {
 }
 
 serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(
@@ -147,11 +161,13 @@ serve(async (req) => {
       });
     }
 
+    await logRun(supabase, 'success', startMs, undefined, { total, fails, fail_rate: +failRate.toFixed(3) });
     return new Response(JSON.stringify({
       status: "ok", total, fails, fail_rate: +failRate.toFixed(3),
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("[engine-regression-runner]", err);
+    await logRun(supabase, 'fail', startMs, String(err));
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -12,6 +12,19 @@ type State = "prime" | "ready" | "caution" | "recover";
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'predict-hammer-state',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 function computeLoadSlope24h(logs: any[]): number {
   // bucket into 4 × 6h windows; linear regression slope on (count + duration) per bucket
   const now = Date.now();
@@ -42,6 +55,7 @@ function modalState(snaps: any[]): State {
 }
 
 serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -172,11 +186,13 @@ serve(async (req) => {
       }
     }
 
+    await logRun(supabase, 'success', startMs, undefined, { processed });
     return new Response(JSON.stringify({ status: "ok", processed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("[predict-hammer-state]", err);
+    await logRun(supabase, 'fail', startMs, String(err));
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

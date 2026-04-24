@@ -10,6 +10,19 @@ const corsHeaders = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// Phase 7 — Observability wrapper (silent, never breaks function)
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'compute-hammer-state',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 interface HammerInputs {
   arousal: Record<string, any>;
   recovery: Record<string, any>;
@@ -282,6 +295,7 @@ async function computeForUser(supabase: any, userId: string) {
 }
 
 serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(
@@ -295,6 +309,11 @@ serve(async (req) => {
 
     if (targetUser) {
       const result = await computeForUser(supabase, targetUser);
+      // Fire-and-forget logging — zero added latency on user-facing path
+      try {
+        // @ts-ignore EdgeRuntime is available in Supabase edge functions
+        EdgeRuntime.waitUntil(logRun(supabase, 'success', startMs, undefined, { mode: 'single', user_id: targetUser }));
+      } catch { logRun(supabase, 'success', startMs, undefined, { mode: 'single' }).catch(() => {}); }
       return new Response(JSON.stringify({ status: "ok", result }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -317,11 +336,19 @@ serve(async (req) => {
         console.error(`[hammer-state] ${u.user_id}:`, err);
       }
     }
+    try {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(logRun(supabase, 'success', startMs, undefined, { mode: 'batch', processed, failed }));
+    } catch { logRun(supabase, 'success', startMs, undefined, { mode: 'batch', processed, failed }).catch(() => {}); }
     return new Response(JSON.stringify({ status: "batch", processed, failed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("[hammer-state] fatal:", err);
+    try {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(logRun(supabase, 'fail', startMs, String(err)));
+    } catch { logRun(supabase, 'fail', startMs, String(err)).catch(() => {}); }
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -18,6 +18,19 @@ const corsHeaders = {
 const ANCHOR_USER_ID = '95de827d-7418-460b-8b79-267bf79bdca4';
 const POOL_SIZE = 10;
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'engine-sentinel',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 interface SentinelRow {
   user_id: string;
   expected_state: SentinelState;
@@ -97,6 +110,12 @@ Deno.serve(async (req: Request) => {
 
     const worstDrift = rows.reduce((m, r) => Math.max(m, r.drift_score), 0);
 
+    await logRun(supabase, 'success', t0, undefined, {
+      users_evaluated: rows.length,
+      drifts_flagged: drifts.length,
+      worst_drift: worstDrift,
+    });
+
     return new Response(
       JSON.stringify({
         ok: true,
@@ -110,6 +129,7 @@ Deno.serve(async (req: Request) => {
     );
   } catch (e) {
     console.error('[sentinel] fatal', e);
+    await logRun(supabase, 'fail', t0, String(e));
     return new Response(
       JSON.stringify({ ok: false, error: String(e), run_ms: Date.now() - t0 }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
