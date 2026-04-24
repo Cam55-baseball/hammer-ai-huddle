@@ -488,10 +488,14 @@ serve(async (req) => {
     // ── Deterministic HIE execution with atomic lock ──
     let hie_completed = false;
 
-    const lockAcquired = await supabase
-      .rpc('try_acquire_hie_lock', { p_user_id: user.id, p_stale_seconds: 120 })
-      .then((r: any) => r.data === true)
-      .catch(() => false);
+    let lockAcquired = false;
+    try {
+      const r: any = await supabase
+        .rpc('try_acquire_hie_lock', { p_user_id: user.id, p_stale_seconds: 120 });
+      lockAcquired = r?.data === true;
+    } catch {
+      lockAcquired = false;
+    }
 
     if (!lockAcquired) {
       // Another execution owns the lock — request rerun
@@ -538,14 +542,16 @@ serve(async (req) => {
 
           if (!runSucceeded && !shouldRun) {
             // All retries failed and no rerun pending — log governance flag
-            await supabase.from('governance_flags').insert({
-              user_id: user.id,
-              flag_type: 'hie_analysis_failed',
-              severity: 'warning',
-              status: 'pending',
-              source_session_id: session_id,
-              details: { attempts: 3, timestamp: new Date().toISOString() },
-            }).catch(() => {});
+            try {
+              await supabase.from('governance_flags').insert({
+                user_id: user.id,
+                flag_type: 'hie_analysis_failed',
+                severity: 'warning',
+                status: 'pending',
+                source_session_id: session_id,
+                details: { attempts: 3, timestamp: new Date().toISOString() },
+              });
+            } catch { /* non-fatal */ }
           }
         }
       } finally {
@@ -561,7 +567,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const msg = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: msg }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

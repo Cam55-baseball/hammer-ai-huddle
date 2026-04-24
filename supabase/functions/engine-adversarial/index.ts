@@ -26,7 +26,8 @@ async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs
   } catch { /* silent */ }
 }
 
-type SB = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SB = any;
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
