@@ -173,12 +173,78 @@ export default function EngineHealthDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
-    </DashboardLayout>
-  );
-}
 
-function CoverageCard({ title, desc, value, loading, icon }: { title: string; desc: string; value: number; loading: boolean; icon: React.ReactNode }) {
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Eye className="h-4 w-4" />
+              Engine Truth Drift (last 24h)
+            </CardTitle>
+            <CardDescription>
+              Independent sanity model vs engine output — flags silent logic drift
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {sentinel.loading ? (
+              <Skeleton className="h-20 w-full" />
+            ) : sentinel.total24h === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No sentinel runs yet. First scheduled run within 60 min of deployment.
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Drift rate</p>
+                    <p className={`text-2xl font-bold ${sentinel.driftRate <= 15 ? 'text-emerald-500' : sentinel.driftRate <= 30 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {sentinel.driftRate}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">{sentinel.total24h} evals</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Users flagged</p>
+                    <p className="text-2xl font-bold">{sentinel.usersFlagged}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Worst drift</p>
+                    <p className={`text-2xl font-bold ${(sentinel.worstDriftCase?.drift_score ?? 0) <= 15 ? 'text-emerald-500' : (sentinel.worstDriftCase?.drift_score ?? 0) <= 30 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {sentinel.worstDriftCase?.drift_score ?? 0}
+                    </p>
+                  </div>
+                </div>
+
+                {sentinel.worstDriftCase && sentinel.worstDriftCase.drift_flag && (
+                  <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 space-y-1">
+                    <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                      Worst case · {formatRel(sentinel.worstDriftCase.run_at)}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <Badge variant="outline">expected: {sentinel.worstDriftCase.expected_state}</Badge>
+                      <span className="text-muted-foreground">→</span>
+                      <Badge variant="outline">actual: {sentinel.worstDriftCase.actual_state ?? 'none'}</Badge>
+                      {sentinel.worstDriftCase.failure_reason && (
+                        <Badge variant="outline" className="text-[10px]">{sentinel.worstDriftCase.failure_reason}</Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Recent evaluations</p>
+                  <div className="flex flex-wrap gap-1">
+                    {sentinel.recent.map((r) => (
+                      <span
+                        key={r.id}
+                        title={`${r.expected_state} vs ${r.actual_state ?? 'none'} · drift ${r.drift_score} · ${formatRel(r.run_at)}`}
+                        className={`h-3 w-3 rounded-sm ${r.drift_score <= 15 ? 'bg-emerald-500' : r.drift_score <= 30 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
   return (
     <Card>
       <CardHeader className="pb-3">
