@@ -62,9 +62,9 @@ serve(async (req) => {
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data: snaps } = await supabase
       .from("hammer_state_snapshots")
-      .select("user_id,cognitive_load,recovery_score,dopamine_load,overall_state,created_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: true })
+      .select("user_id,cognitive_load,recovery_score,dopamine_load,overall_state,computed_at")
+      .gte("computed_at", since)
+      .order("computed_at", { ascending: true })
       .limit(5000);
 
     type Bucket = { pattern_type: string; feature_vector: any; outcome_state: string; count: number; transitions: number[] };
