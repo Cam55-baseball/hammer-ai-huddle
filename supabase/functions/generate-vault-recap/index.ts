@@ -949,6 +949,7 @@ serve(async (req) => {
       timeValues?: string[];
       // Checkbox fields
       checkboxRate?: number;
+      habitLabels?: string[];
     }
     
     const customFieldAnalysis: Record<string, FieldAnalysis> = {};
