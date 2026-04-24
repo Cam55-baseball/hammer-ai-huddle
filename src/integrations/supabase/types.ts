@@ -1846,6 +1846,48 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_sentinel_logs: {
+        Row: {
+          actual_state: string | null
+          drift_flag: boolean
+          drift_score: number
+          engine_snapshot: Json
+          expected_state: string
+          failure_reason: string | null
+          id: string
+          inputs_snapshot: Json
+          metadata: Json
+          run_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_state?: string | null
+          drift_flag?: boolean
+          drift_score?: number
+          engine_snapshot?: Json
+          expected_state: string
+          failure_reason?: string | null
+          id?: string
+          inputs_snapshot?: Json
+          metadata?: Json
+          run_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_state?: string | null
+          drift_flag?: boolean
+          drift_score?: number
+          engine_snapshot?: Json
+          expected_state?: string
+          failure_reason?: string | null
+          id?: string
+          inputs_snapshot?: Json
+          metadata?: Json
+          run_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       engine_settings: {
         Row: {
           description: string | null
@@ -9169,6 +9211,7 @@ export type Database = {
       }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
+      cleanup_old_sentinel_logs: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       create_ab_link: {
         Args: { p_link_code: string; p_sport: string; p_user_id: string }

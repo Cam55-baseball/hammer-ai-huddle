@@ -203,3 +203,6 @@ verify_jwt = true
 
 [functions.engine-heartbeat]
 verify_jwt = false
+
+[functions.engine-sentinel]
+verify_jwt = false
