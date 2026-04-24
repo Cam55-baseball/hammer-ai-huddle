@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useRankingsVisibility } from "@/hooks/useRankingsVisibility";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -92,6 +93,7 @@ export function AppSidebar() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout, isCoach } = useScoutAccess();
+  const { visible: rankingsVisible, loading: rankingsVisibilityLoading } = useRankingsVisibility();
   const { modules } = useSubscription();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
   const { isSoftball } = useSportTheme();
@@ -169,7 +171,7 @@ export function AppSidebar() {
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
-    { title: t('navigation.rankings'), url: "/rankings", icon: Trophy },
+    ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
     { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },
     { title: t('navigation.nutritionTips', 'Nutrition Tips'), url: "/nutrition", icon: Apple },
     { title: t('navigation.mindFuel'), url: "/mind-fuel", icon: Brain },
