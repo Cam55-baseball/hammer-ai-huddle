@@ -55,10 +55,13 @@ function mkLog(
     entry_date: isoDate(ts),
     created_at: iso,
     actual_duration_minutes: durationMin,
-    performance_data: { rpe, checkboxStates: { task_1: true } },
+    performance_data: {
+      rpe,
+      checkboxStates: { task_1: true, task_2: true, task_3: true },
+    },
     notes: `adversarial:${scenario}`,
     completion_state: 'completed',
-    completion_method: 'done_button',
+    completion_method: 'check_all',
     completed: true,
     completed_at: iso,
   };

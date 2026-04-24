@@ -129,11 +129,31 @@ async function runScenario(
     .eq('user_id', userId)
     .lt('computed_at', oneHourAgo);
 
-  // B. INJECT
+  // B. INJECT (preflight probe first to catch contract violations loudly)
   const logs = generateScenario(scenario, userId);
   if (logs.length > 0) {
-    const { error: insErr } = await supabase.from('custom_activity_logs').insert(logs);
-    if (insErr) throw new Error(`inject_failed:${insErr.message}`);
+    const [probe, ...rest] = logs;
+    const { error: probeErr } = await supabase.from('custom_activity_logs').insert(probe);
+    if (probeErr) {
+      await supabase.from('engine_adversarial_logs').insert({
+        run_at: new Date().toISOString(),
+        scenario,
+        user_id: userId,
+        expected_state: EXPECTED[scenario],
+        forbidden_states: FORBIDDEN[scenario],
+        actual_state: null,
+        pass: false,
+        failure_reason: 'invalid_insert_contract',
+        inputs: { log_count: logs.length, probe_sample: probe },
+        engine_output: {},
+        metadata: { run_id: runId, db_error: probeErr.message, db_details: probeErr.details ?? null, db_hint: probeErr.hint ?? null },
+      });
+      return { pass: false, failure_reason: 'invalid_insert_contract', actual_state: null };
+    }
+    if (rest.length > 0) {
+      const { error: insErr } = await supabase.from('custom_activity_logs').insert(rest);
+      if (insErr) throw new Error(`inject_failed_after_probe:${insErr.message}`);
+    }
   }
 
   // Sleep-signal injection for fake_recovery / low_load_high_readiness via profiles upsert if columns exist.
