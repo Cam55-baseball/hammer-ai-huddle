@@ -245,6 +245,12 @@ export default function EngineHealthDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+function CoverageCard({ title, desc, value, loading, icon }: { title: string; desc: string; value: number; loading: boolean; icon: React.ReactNode }) {
   return (
     <Card>
       <CardHeader className="pb-3">
