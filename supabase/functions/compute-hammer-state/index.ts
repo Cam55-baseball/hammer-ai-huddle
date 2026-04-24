@@ -238,6 +238,46 @@ async function computeForUser(supabase: any, userId: string) {
     }).catch(() => { /* never block engine */ });
   }
 
+  // ── ADDITIVE HOOK 4 (Phase 6): Reproducibility — snapshot_versions row ──
+  if (inserted?.id) {
+    const outputRow = {
+      arousal_score: +arousalScore.toFixed(1),
+      recovery_score: +recoveryScore.toFixed(1),
+      motor_state: motorState,
+      cognitive_load: +cognitiveLoad.toFixed(1),
+      dopamine_load: +dopamineLoad.toFixed(1),
+      overall_state: overall,
+      confidence: +confidence.toFixed(2),
+      blended,
+    };
+    let profileSnap: any = null;
+    try {
+      const { data: prof } = await supabase
+        .from("user_engine_profile").select("*").eq("user_id", userId).maybeSingle();
+      profileSnap = prof;
+    } catch (_) {}
+    supabase.from("engine_snapshot_versions").insert({
+      snapshot_id: inserted.id,
+      user_id: userId,
+      engine_version: "v1.0.0",
+      weights: w,
+      profile: profileSnap,
+      inputs: {
+        load_24h: cognitiveLoad,
+        recovery_score_used: recoveryScore,
+        freshness_6h: recentCompletions,
+        arousal_inputs: inputs.arousal,
+        recovery_inputs: inputs.recovery,
+        motor_inputs: inputs.motor,
+        cognitive_inputs: inputs.cognitive,
+        dopamine_inputs: inputs.dopamine,
+      },
+      output: outputRow,
+    }).then(({ error: vErr }: any) => {
+      if (vErr) console.warn("[snapshot_versions] insert failed:", vErr.message);
+    });
+  }
+
   return { user_id: userId, overall, confidence };
 }
 
