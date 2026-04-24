@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useEngineHealth } from '@/hooks/useEngineHealth';
-import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield } from 'lucide-react';
+import { useHeartbeatHealth } from '@/hooks/useHeartbeatHealth';
+import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart } from 'lucide-react';
 
 const formatRel = (iso: string | null) => {
   if (!iso) return 'Never';
