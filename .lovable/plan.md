@@ -1,340 +1,285 @@
 
 
-# Phase 7 — Final Lock-In: Heartbeat Truthfulness + ELITE STABLE Verification
+# Quick Add — Root-Cause Fix Plan (Scheduling Integrity)
 
-Single-purpose pass. Fix the heartbeat probe so it measures real failure (not race conditions), redeploy, re-validate, return the strict verdict report.
+## What's actually broken (verified in code)
 
----
+After reading `useCustomActivities.ts`, `useGamePlan.ts:1542-1569`, `GamePlanCard.tsx:741-747 / 2266-2282`, and the live `custom_activity_logs` schema (PK `id`, UNIQUE on `(user_id, template_id, entry_date, instance_index)`), the three reported failures map to **two real defects** + **one rendering inconsistency**. Production data confirms it: out of 600 rows, only 2 have `instance_index > 0` — the auto-increment branch is rarely hit but when it is, the bugs surface exactly as described.
 
-## Pre-Flight Verification (read-only)
+### Defect 1 — `addToToday` always increments `instance_index`, never reuses freed slots → "Pray, Pray #2, Pray #3"
 
-1. `code--view supabase/functions/engine-heartbeat/index.ts` — re-read the current 220-line file to confirm exact line numbers for the stale check (visible in conversation: lines 124-145 do the 20s polling + `hammer_stale` failure path).
-2. `supabase--read_query`: baseline of last 10 heartbeat runs to quantify the false-negative rate
-   ```sql
-   SELECT success, failure_check, failure_reason, latency_ms, hammer_snapshot_age_ms, run_at
-   FROM engine_heartbeat_logs
-   ORDER BY run_at DESC LIMIT 10;
-   ```
-3. `supabase--read_query`: confirm pattern moat baseline
-   ```sql
-   SELECT COUNT(*) FROM anonymized_pattern_library WHERE confidence > 0;
-   ```
-4. `supabase--read_query`: confirm last system health score
-   ```sql
-   SELECT score FROM engine_system_health ORDER BY created_at DESC LIMIT 1;
-   ```
-
----
-
-## Architectural Principle
-
-A monitoring probe must distinguish **real failure** from **timing race**. The current heartbeat polls for a fresh `hammer_state_snapshots` row matching `computed_at >= T0` for up to 20s after invoking `compute-hammer-state`. If `compute-hammer-state` runs longer than 20s (it can — it's the heaviest engine function with telemetry wrapping), the heartbeat reports `hammer_stale` even though the snapshot lands 5 seconds later. That's a **probe bug**, not a system bug.
-
-The fix: extend the window to 120s AND add a recovery-attempt fallback (re-invoke compute-hammer-state, re-check). This converts the heartbeat from "is the snapshot fresh right now?" (timing-fragile) to "can the system produce a fresh snapshot when asked?" (truth).
-
----
-
-## PART A — Fix Engine Heartbeat (Truthful Probe)
-
-**File**: `supabase/functions/engine-heartbeat/index.ts`
-
-### A1. Extend stale threshold + add fallback recovery path
-
-Current logic (lines 124-145, simplified):
+`useCustomActivities.ts` lines 350-367:
 ```ts
-// Poll up to 20s for a snapshot with computed_at >= T0
-for (let i = 0; i < 10; i++) {
-  const { data } = await supabase.from("hammer_state_snapshots")...
-  if (data) { hs = data; break; }
-  await new Promise((r) => setTimeout(r, 2_000));
-}
-if (!hs) {
-  fail("hammer_stale", "No new hammer_state_snapshot within 20s of T0");
+nextInstanceIndex = ((existingForToday[0] as any).instance_index ?? 0) + 1;
+```
+It picks `MAX(instance_index) + 1`. After delete-then-readd:
+- Add Pray → `instance_index = 0` ✅
+- Delete Pray → row gone, but the lookup still queries fresh, so… wait, this branch only runs **if a row exists**. The `if (existingForToday && existingForToday.length > 0)` guard means after a hard delete, the next add correctly returns to `0`.
+
+So how does the user see "Pray #2, #3"? Two paths:
+
+**Path A (the active bug):** The unique-violation retry at line 397-398:
+```ts
+if ((error as any).code === '23505' && retryCount > 0) {
+  return attemptInsert(retryCount - 1, indexToUse + 1);
 }
 ```
+On rapid double-tap, both clicks compute `nextInstanceIndex = 0` from the same stale read → first insert wins at index 0 → second hits the unique constraint → **retry bumps to index 1** → renders as "Pray #2". A third tap → "Pray #3". This is the "multiple adds in sequence" failure the user described.
 
-**Replace with** (matches user's mandated pattern, adapted to the existing variable names):
+**Path B (the visible artifact):** Even if the index logic were perfect, `useGamePlan.ts:1550` *unconditionally* mutates the visible title:
 ```ts
-// CHECK 3 — Hammer state snapshot (truthful probe with recovery path)
-const STALE_THRESHOLD_MS = 120_000;
+const titleSuffix = instanceIdx > 0 ? ` #${instanceIdx + 1}` : '';
+titleKey: activity.template.title + titleSuffix
+```
+This is "incremental naming logic tied to previous deletes" — exactly what the spec says to remove.
 
-// First wait: poll up to 60s for a snapshot >= T0
-let hs: { computed_at: string; dopamine_inputs: unknown } | null = null;
-for (let i = 0; i < 30; i++) {
-  const { data } = await supabase
-    .from("hammer_state_snapshots")
-    .select("computed_at, dopamine_inputs")
-    .eq("user_id", HEARTBEAT_USER_ID)
-    .gte("computed_at", T0_iso)
-    .order("computed_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (data) { hs = data; break; }
-  await new Promise((r) => setTimeout(r, 2_000));
-}
+### Defect 2 — "Quick Add fails unless activity already exists / sometimes silently fails"
 
-// Recovery path: if no snapshot yet, re-invoke compute-hammer-state and check the freshest snapshot age
-if (!hs) {
-  try {
-    await supabase.functions.invoke("compute-hammer-state", {
-      body: { user_id: HEARTBEAT_USER_ID },
-    });
-    await new Promise((r) => setTimeout(r, 3_000));
+The optimistic update at line 380 (`setTodayLogs(prev => [...prev, optimisticLog])`) inserts a row with id `optimistic-${Date.now()}`, but the de-dup logic in `useGamePlan.ts:1542-1545` filters by **template title** against folder items:
+```ts
+if (folderItemTitles.has(activity.template.title.trim().toLowerCase())) return;
+```
+If the activity is also inside an active folder for today (common — favorites are often pinned to folders), the Quick-Added log gets **silently dropped from render** because the folder version "wins". To the user: "I tapped add, nothing appeared, I tapped again, now there are 2." → also feeds Defect 1.
 
-    const { data: latest } = await supabase
-      .from("hammer_state_snapshots")
-      .select("computed_at, dopamine_inputs")
-      .eq("user_id", HEARTBEAT_USER_ID)
-      .order("computed_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+Additionally, `addToToday` calls `await fetchTodayLogs()` (line 402) but `getTodayActivities` uses **state** that React batches — between the `setTodayLogs(optimistic)` and the `fetchTodayLogs()` post-insert refresh, if the user taps a second time, they read `todayLogs` from a stale snapshot.
 
-    if (latest) {
-      const ageMs = Date.now() - new Date(latest.computed_at).getTime();
-      if (ageMs <= STALE_THRESHOLD_MS) {
-        hs = latest;  // recovered — system is healthy
-        result.metadata = { ...result.metadata, hammer_recovered: true, recovery_age_ms: ageMs };
+### Defect 3 — "Activities scheduled but not appearing on the calendar"
+
+The Calendar reads from `useCalendarProjection` (a `react-query` projection). Realtime invalidation **is** wired (`useSchedulingRealtime.ts` listens to `custom_activity_logs` and invalidates `['calendar-projection']`) — so the wire is correct. But the **GamePlanCard** path uses local `useState` (`todayLogs`) — not react-query — so it depends entirely on `fetchTodayLogs()` running. The Quick Add path runs it; the realtime listener doesn't. **Result:** if a write happens in another tab (or the optimistic row gets a real id from realtime), the GamePlanCard is the one that desyncs, not the calendar.
+
+---
+
+## Fix architecture (root-level, not patches)
+
+### Single-instance-per-day model (canonical)
+
+The spec says: *"Same activity + same day = single instance unless explicitly duplicated."* The current schema supports multi-instance via `instance_index`, but no UI exposes "add another instance of the same activity" as an explicit action. The `instance_index > 0` data is essentially noise from bugs.
+
+**Decision:** Treat every Quick Add as **idempotent at instance_index = 0**. Re-adding a removed activity restores instance 0 cleanly. Multi-instance is removed from the Quick Add path (no UI uses it deliberately today). If multi-instance is needed later, it gets its own explicit "Duplicate" action with a versioned label like "Pray (2)" derived deliberately, not from a unique-constraint retry.
+
+This is the simplest deterministic model and matches every example the user gave.
+
+---
+
+## Changes
+
+### 1. `src/hooks/useCustomActivities.ts` — Rewrite `addToToday` as a true upsert
+
+Replace lines 344-419 with a single idempotent upsert:
+
+```ts
+const addToToday = async (templateId: string): Promise<boolean> => {
+  if (!user) return false;
+  const today = getTodayDate();
+
+  // Idempotent: one log per (user, template, date) at instance_index 0.
+  // Upsert on the existing UNIQUE constraint guarantees:
+  //   - First call → INSERT
+  //   - Repeat call → no-op (returns same row)
+  //   - Rapid double-tap → both resolve to same row, no duplicates, no retries
+  const { data, error } = await supabase
+    .from('custom_activity_logs')
+    .upsert(
+      {
+        user_id: user.id,
+        template_id: templateId,
+        entry_date: today,
+        instance_index: 0,
+        completed: false,
+      } as any,
+      {
+        onConflict: 'user_id,template_id,entry_date,instance_index',
+        ignoreDuplicates: false, // returns the existing row on conflict
       }
-    }
-  } catch (err) {
-    result.metadata = { ...result.metadata, hammer_recovery_error: err instanceof Error ? err.message : String(err) };
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[useCustomActivities] addToToday upsert failed:', error);
+    toast.error(t('customActivity.addError'));
+    return false;
   }
-}
 
-if (!hs) {
-  if (!result.failure_check) fail("hammer_stale", `No hammer_state_snapshot within ${STALE_THRESHOLD_MS}ms even after recovery attempt`);
-} else {
-  result.hammer_snapshot_age_ms = Date.now() - new Date(hs.computed_at).getTime();
-  // ... existing CHECK 4 aggregation logic continues unchanged
-}
+  // Optimistic + canonical merge: replace any optimistic placeholder for this
+  // (template_id, today) with the real row, or insert if not present.
+  setTodayLogs(prev => {
+    const filtered = prev.filter(
+      l => !(l.template_id === templateId && l.entry_date === today)
+    );
+    return [...filtered, data as CustomActivityLog];
+  });
+
+  toast.success(t('customActivity.addedToday'));
+
+  // Background reconciliation (no race — UI already shows the canonical row)
+  fetchTodayLogs();
+  return true;
+};
 ```
 
-### A2. Apply same widened threshold to HIE check (same race condition class)
+**Why this fixes everything:**
+- **No precondition logic** — upsert always succeeds.
+- **No "day-bound" check** — the row is created if missing, returned if present.
+- **Rapid sequential taps** → all converge on the same row (idempotent). No `23505` retries, no `instance_index` drift.
+- **No optimistic/canonical mismatch** — we wait for the real row (the upsert is fast: single round-trip), then merge it into local state. The optimistic placeholder pattern is removed (it was the source of "ghost writes").
+- **Delete + re-add** → re-add returns to instance 0 cleanly. No `#2`.
 
-Current HIE check polls 20s. Widen to 60s to match the heartbeat's new tolerance. Same pattern, no recovery needed for HIE since it's a non-blocking informational check.
+### 2. `src/hooks/useCustomActivities.ts` — Harden `removeFromToday`
 
-Change `for (let i = 0; i < 10; i++)` → `for (let i = 0; i < 30; i++)` for the HIE poll loop (lines 109-122).
+Currently OK at lines 519-541, but add explicit local-state purge before the network call (so the UI updates instantly even if realtime is slow):
 
-### A3. Bump pipeline timeout
+```ts
+const removeFromToday = async (templateId: string, logId?: string): Promise<boolean> => {
+  if (!user) return false;
+  const log = logId
+    ? todayLogs.find(l => l.id === logId)
+    : todayLogs.find(l => l.template_id === templateId);
+  if (!log) return false;
 
-`PIPELINE_TIMEOUT_MS = 90_000` is too tight given the new 60s+60s poll budgets. Bump to `180_000` (3 min). Heartbeat runs every 15 min via cron, so 3 min worst-case is well within budget.
+  // Optimistic removal
+  setTodayLogs(prev => prev.filter(l => l.id !== log.id));
 
-### A4. No other source changes
-- Keep `logRun` telemetry wrapper intact.
-- Keep `engine_heartbeat_logs` insert + `audit_log` failure surfacing intact.
-- Keep all 5 checks structure intact; only the timing/recovery semantics change.
+  const { error } = await supabase
+    .from('custom_activity_logs')
+    .delete()
+    .eq('id', log.id)
+    .eq('user_id', user.id);
 
----
+  if (error) {
+    console.error('Error removing from today:', error);
+    // Roll back
+    setTodayLogs(prev => [...prev, log]);
+    toast.error(t('customActivity.deleteError'));
+    return false;
+  }
 
-## PART B — TypeScript Build Confirmation
-
-### B1. Targeted check first
-- `code--exec cd /dev-server && deno check supabase/functions/engine-heartbeat/index.ts 2>&1` — fast verification of the file we touched
-
-### B2. Full sweep
-- `code--exec cd /dev-server && deno check supabase/functions/**/index.ts 2>&1 | tail -100` — full project type check
-
-### B3. Normalize errors (only if any surface)
-Apply the 4 canonical rules from spec — same patterns already proven across prior passes. Loop until 0 errors. **No deploy until clean.**
-
----
-
-## PART C — Isolated Deploy
-
-1. `supabase--deploy_edge_functions(['engine-heartbeat'])`
-2. `project_debug--sleep 5`
-3. `supabase--curl_edge_functions POST /engine-heartbeat body='{}'`
-4. Verify response: `success=true`, no `hammer_stale` failure.
-
-If still failing → inspect `result.metadata` for the recovery-path branch outcome. Adjust threshold or fix root cause (likely a real `compute-hammer-state` regression, not a probe issue).
-
----
-
-## PART D — System Wake (refresh data window)
-
-Sequential POSTs to all 15 wrapped engine functions:
-1. `engine-sentinel`
-2. `engine-adversarial`
-3. `engine-weight-optimizer`
-4. `evaluate-advice-effectiveness`
-5. `update-user-engine-profile`
-6. `engine-regression-runner`
-7. `evaluate-predictions`
-8. `engine-data-integrity-check`
-9. `compute-system-health`
-10. `predict-hammer-state`
-11. `generate-interventions`
-12. `engine-auto-recovery`
-13. `extract-patterns`
-14. `compute-hammer-state` (with `body: { user_id: HEARTBEAT_USER_ID }`)
-15. `engine-heartbeat`
-
-Then `project_debug--sleep 5`.
-
----
-
-## PART E — Hard Validation (5 mandatory queries)
-
-### E1. Global success rate
-```sql
-SELECT function_name,
-       ROUND(COUNT(*) FILTER (WHERE status='success') * 100.0 / COUNT(*), 1) AS success_rate,
-       COUNT(*) AS total
-FROM engine_function_logs
-WHERE created_at > now() - interval '30 minutes'
-GROUP BY function_name
-ORDER BY success_rate ASC;
-```
-Pass: ALL ≥ 95%, **including engine-heartbeat**.
-
-### E2. Failure count (strict)
-```sql
-SELECT COUNT(*) AS recent_fails
-FROM engine_function_logs
-WHERE status='fail'
-AND created_at > now() - interval '15 minutes';
-```
-Pass: 0.
-
-### E3. Dependency failure scan
-```sql
-SELECT function_name, error_message, created_at
-FROM engine_function_logs
-WHERE error_message ILIKE '%module%'
-   OR error_message ILIKE '%import%'
-   OR error_message ILIKE '%npm%'
-   OR error_message ILIKE '%resolve%'
-ORDER BY created_at DESC LIMIT 10;
-```
-Pass: 0 rows.
-
-### E4. Pattern moat
-```sql
-SELECT COUNT(*) FROM anonymized_pattern_library WHERE confidence > 0;
-```
-Pass: > 0.
-
-### E5. System health
-```sql
-SELECT score FROM engine_system_health ORDER BY created_at DESC LIMIT 1;
-```
-Pass: ≥ 80 (target ≥ prior 89).
-
-### E6. Heartbeat-specific verification
-```sql
-SELECT success, failure_check, failure_reason, latency_ms, metadata
-FROM engine_heartbeat_logs
-ORDER BY run_at DESC LIMIT 5;
-```
-Pass: most recent run = `success=true`. If `metadata.hammer_recovered = true`, that proves the recovery path activated and worked — also a pass.
-
----
-
-## PART F — Final Report (strict format)
-
-Return EXACTLY the format from the spec:
-
-```
-PHASE 7 — FINAL CLOSEOUT REPORT
-
-Build:
-- TypeScript errors: [count]
-
-Heartbeat:
-- Status: PASS / FAIL
-- False stale eliminated: yes / no
-- Recovery path active: yes / no
-
-Engine:
-- Functions reporting: [count]
-- Lowest success rate: [%]
-- Recent fails (15 min): [count]
-
-Dependency Health:
-- Import/module errors: [count]
-
-Pattern System:
-- Patterns with confidence > 0: [count]
-
-System Health Score: [value]
-
-FINAL VERDICT:
-ELITE STABLE  |  STABLE WITH WARNINGS [exact reason]
+  fetchTodayLogs(); // background reconcile
+  return true;
+};
 ```
 
-ELITE STABLE only if ALL 6 conditions pass (0 TS errors, 0 recent fails, 0 dep errors, heartbeat ≥95%, health ≥80, pattern moat active).
+### 3. `src/hooks/useGamePlan.ts:1549-1557` — Remove the `#N` title-suffix logic
+
+Replace:
+```ts
+const instanceIdx = (activity.log as any)?.instance_index ?? 0;
+const titleSuffix = instanceIdx > 0 ? ` #${instanceIdx + 1}` : '';
+const taskId = activity.log?.id
+  ? `custom-${activity.template.id}-${activity.log.id}`
+  : `custom-${activity.template.id}`;
+
+tasks.push({
+  id: taskId,
+  titleKey: activity.template.title + titleSuffix,
+  ...
+```
+
+with:
+```ts
+const taskId = activity.log?.id
+  ? `custom-${activity.template.id}-${activity.log.id}`
+  : `custom-${activity.template.id}`;
+
+tasks.push({
+  id: taskId,
+  titleKey: activity.template.title, // canonical: no version suffix
+  ...
+```
+
+The taskId still uses `log.id` so React keys stay unique even if multi-instance ever returns; no naming artifacts surface.
+
+### 4. `src/hooks/useGamePlan.ts:547-550 / 909` — Drop the multi-instance fanout in single-instance world
+
+Lines 547-550 and 909 fan out **all** logs per template (sorted by `instance_index`). With the upsert model there's at most one. Keep the code but the fanout becomes a no-op for properly-shaped data. **Optional cleanup** — not blocking, no behavior change. Skip unless you want it removed.
+
+### 5. `src/hooks/useGamePlan.ts:1542-1545` — Fix the silent-drop title collision
+
+Today: any custom activity whose title matches a folder-item title is silently filtered out (`folderItemTitles.has(...)`). This is the "ghost write" the user reported — Quick Add succeeded in DB but never rendered because a folder item had the same title.
+
+**Fix:** key folder dedup by **template/folder item ID**, not title. Folder items already carry a stable id in `ft.item.id`, and custom activities carry `template.id`. There's no field linking them, so title is the closest signal — but it's wrong (same-named items are legitimately different things). Two options:
+
+- **Option A (recommended):** remove the dedup entirely. If a user has both a folder containing "Pray" and a standalone Pray template, they show both. This is honest. The user explicitly added both.
+- **Option B (conservative):** keep title dedup but make folder items lose to standalone customs (invert the priority). Worse — still silent drops in the other direction.
+
+**Going with Option A.** This eliminates the silent-drop class entirely. If the user later wants linked folder/template dedup, it needs a real foreign key, not a string match.
+
+```ts
+// REMOVED: const folderItemTitles = new Set(...)
+
+customActivities.forEach(activity => {
+  // No title-based dedup — render every (template, log) pair the user added.
+  const iconKey = activity.template.icon || 'activity';
+  ...
+```
+
+### 6. Realtime: ensure GamePlanCard refreshes on cross-tab/realtime writes
+
+`useSchedulingRealtime` invalidates react-query keys, but `useCustomActivities` uses local `useState`. Add a realtime listener inside `useCustomActivities` that calls `fetchTodayLogs()` on any `custom_activity_logs` change for this user:
+
+```ts
+useEffect(() => {
+  if (!user) return;
+  const channel = supabase
+    .channel(`custom-activity-logs-${user.id}`)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'custom_activity_logs',
+      filter: `user_id=eq.${user.id}`,
+    }, () => {
+      fetchTodayLogs();
+    })
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}, [user?.id, fetchTodayLogs]);
+```
+
+This closes the rendering desync for cross-tab writes (the BroadcastChannel pattern in `mem://architecture/multi-tab-synchronization-strategy` is for templates, not logs — logs need realtime).
+
+### 7. No schema changes
+
+The existing `UNIQUE (user_id, template_id, entry_date, instance_index)` is exactly what the upsert needs. `instance_index` stays in the schema (forward-compat), but the Quick Add path locks it to 0. Existing rows with `instance_index > 0` (only 2 in production) keep working — they just won't get `#N` suffixes anymore (the title becomes the clean template title for everyone).
 
 ---
 
-## Files Modified
+## Files modified
 
-**Definite (1 file)**:
-- `supabase/functions/engine-heartbeat/index.ts` — widen HIE poll to 60s, widen hammer poll to 60s + add 65s recovery path, bump `PIPELINE_TIMEOUT_MS` to 180_000.
+1. `src/hooks/useCustomActivities.ts` — rewrite `addToToday` (~75 lines → ~30 lines), harden `removeFromToday`, add realtime listener for logs.
+2. `src/hooks/useGamePlan.ts` — remove `titleSuffix` logic (1 line gone), remove `folderItemTitles` dedup (3 lines gone).
 
-**Conditional**:
-- Any file surfacing TS errors in B2 (apply 4 canonical rules; expected: zero, given prior pass cleared the project).
-
-**Zero**:
-- No schema changes
-- No new functions, cron, or secrets
-- No UI changes
-- No other engine logic changes
+That's it. Two files. No schema migration. No new tables.
 
 ---
 
-## Risk Assessment
+## What this guarantees against the user's validation checklist
 
-- **Wider polls = longer runtime**: Heartbeat will run 60-180s instead of 30-60s. Acceptable: cron interval is 15 min, edge function timeout is 150s+. Bumped `PIPELINE_TIMEOUT_MS` accordingly.
-- **Recovery path could mask real issues**: If `compute-hammer-state` is genuinely broken, the recovery path will also fail, so the heartbeat still reports `hammer_stale`. Truth preserved.
-- **Recovery metadata adds noise**: New keys `hammer_recovered`, `recovery_age_ms`, `hammer_recovery_error` in `engine_heartbeat_logs.metadata`. These are JSONB fields; no schema change needed.
-- **Telemetry wrapper compatibility**: `logRun` runs at end and reads `result.success`. The recovery path sets `hs` so the function passes; `success` becomes true. No telemetry change needed.
-- **Re-invocation idempotency**: All 15 functions are cron-safe and idempotent. Mass invocation in Part D is equivalent to a cron tick.
-
----
-
-## Open Decisions (best defaults; flag to override)
-
-1. **Recovery wait time**: After re-invoking `compute-hammer-state`, wait 3s before re-checking. Spec doesn't mandate a specific value. **Recommendation: 3s — long enough for the function to write its row, short enough to keep total runtime under timeout. Total worst-case heartbeat runtime: 60s wait + invoke + 3s wait + check ≈ 70s.** If you want a longer wait (e.g., 5s for safety margin), say so.
-
-2. **HIE check threshold**: Spec only mandates fixing the hammer check. Should I also widen the HIE poll from 20s → 60s? **Recommendation: YES — same race-condition class, same false-negative risk. One-line change. Otherwise the heartbeat could pass the hammer check but fail HIE for the same flawed reason.** If you prefer to keep HIE strict, say so.
-
-3. **`PIPELINE_TIMEOUT_MS`**: Bump 90s → 180s to accommodate widened windows. **Recommendation: 180s.** Alternative: 150s (Supabase edge default function timeout). Going to 180s assumes the function timeout is configured higher; 150s is the safe ceiling. Will use **150s** to stay within default edge limits unless you say otherwise.
-
-4. **Heartbeat user**: Hardcoded `HEARTBEAT_USER_ID = "95de827d-..."`. The recovery path invokes `compute-hammer-state` for this same user. No change needed — already aligned.
-
-5. **Validation E2 strict-zero**: If a non-heartbeat function has 1 fail in 15 min (e.g., a sentinel timeout), is that ELITE STABLE? **Recommendation: NO — spec says "0 recent fails" is non-negotiable. Will report as STABLE WITH WARNINGS naming the exact function and reason.** If you want tolerance for explainable single failures, say so before approval.
-
-If 1, 2, 3, or 5 are wrong, say so before approval.
-
----
-
-## Time Budget
-- Pre-flight: 1 min
-- Part A (heartbeat refactor): 3-4 min
-- Part B (TS check): 2-3 min
-- Part C (deploy + smoke test): 2 min
-- Part D (15 invocations + sleep): 4-6 min
-- Part E (5 validation queries): 2 min
-- Part F (report): 1 min
-- **Total: ~15-20 min**
-
-## Cleanup
-None. All changes are additive correctness; no temporary state.
-
----
-
-## Final State After This Pass
-
-| Layer | Status |
+| Validation | Mechanism |
 |---|---|
-| `engine-heartbeat` measures real failure (not race condition) | ✅ (gated) |
-| Recovery path active — re-invokes compute-hammer-state on stale | ✅ (gated) |
-| TypeScript zero errors | ✅ (gated) |
-| 0 recent failures (15 min window) | ✅ (gated) |
-| 0 dependency/import errors | ✅ (gated) |
-| Pattern moat active (confidence > 0) | ✅ (gated) |
-| System health ≥ 80 | ✅ (gated) |
-| **FINAL VERDICT: ELITE STABLE** | ✅ if all gates pass |
+| Add unscheduled activity via Quick Add → appears instantly | Upsert returns canonical row → merged into local state synchronously → no optimistic/real swap race |
+| Add 3+ activities rapidly → all persist and render | Each upsert is for a different `template_id` → all hit different unique-constraint slots → all succeed independently. Same template tapped 3× → 3 idempotent no-ops on the same row, no errors, no `#2/#3` |
+| Delete + re-add same activity → only one instance exists | Delete removes row at `instance_index = 0`. Re-add upserts at `instance_index = 0` → fresh single instance, no naming artifact |
+| Cross-check DB vs UI → perfect parity | Local state is updated from the upsert's returned row (canonical), then realtime listener reconciles any external writes. No more title-based dedup that hides rows |
 
-If ANY gate fails, the report names the exact blocker. No "looks good" claims. No partial completion accepted as elite.
+---
+
+## Risks & non-issues
+
+- **Multi-instance feature loss:** Today no UI explicitly creates `instance_index > 0` (production data confirms: 2/600 rows, both likely from the bug being fixed). If multi-instance is ever needed, it should be a deliberate "Duplicate this activity" button that bumps `instance_index` and labels it "Pray (copy)" or `(2x)` — not a side effect of unique-constraint retries.
+- **Cross-component impact:** `useGamePlan.ts` lines 547/909 still iterate logs as arrays (forward-compat for multi-instance). No change needed.
+- **Calendar projection (`useCalendarProjection`):** already correct — reads from react-query with realtime invalidation. The fixes above only make GamePlanCard match the calendar's reliability.
+- **Folder dedup removal:** Anyone relying on "folder Pray hides standalone Pray" will now see both. Acceptable per spec ("delete = hard state removal or properly archived, not lingering in active query scope" — silent UI hiding is the opposite of that).
+
+---
+
+## Open question (one)
+
+**Should I also clean up the 2 stray production rows with `instance_index > 0`?** They're harmless after the suffix removal (they'll just render with the clean template title), but if you want a tidy DB I can write a one-time migration to merge them into instance 0 (deleting the higher-index row, keeping the older instance 0 if both exist). Default: **leave them alone** — they're invisible to users now and migrating live data carries its own risk. Flag if you want them cleaned.
+
+---
+
+## Time budget
+- Code changes: 10 min
+- Manual verification (Quick Add idempotency, delete/re-add, multi-template rapid add, cross-tab refresh): 5 min
+- **Total: ~15 min**
 
