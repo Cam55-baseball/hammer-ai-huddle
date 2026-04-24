@@ -34,6 +34,7 @@ export default function EngineHealthDashboard() {
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const navigate = useNavigate();
   const health = useEngineHealth();
+  const heartbeat = useHeartbeatHealth();
 
   useEffect(() => {
     if (!ownerLoading && !adminLoading && !isOwner && !isAdmin) navigate('/dashboard');
