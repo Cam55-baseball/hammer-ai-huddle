@@ -1,0 +1,248 @@
+// Compute Hammer State — aggregates last-24h inputs across all neuro systems
+// and writes a snapshot to hammer_state_snapshots.
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+interface HammerInputs {
+  arousal: Record<string, any>;
+  recovery: Record<string, any>;
+  motor: Record<string, any>;
+  cognitive: Record<string, any>;
+  dopamine: Record<string, any>;
+}
+
+function clamp(v: number, lo = 0, hi = 100) { return Math.max(lo, Math.min(hi, v)); }
+
+async function computeForUser(supabase: any, userId: string) {
+  const since = new Date(Date.now() - DAY_MS).toISOString();
+  const since3d = new Date(Date.now() - 3 * DAY_MS).toISOString();
+  const inputs: HammerInputs = { arousal: {}, recovery: {}, motor: {}, cognitive: {}, dopamine: {} };
+
+  // Pull all signals in parallel
+  const [
+    focusQ, texQ, mindQ, perfQ, customQ, physioQ, nutritionQ, moodQ, wearQ,
+  ] = await Promise.all([
+    supabase.from("vault_focus_quizzes").select("*").eq("user_id", userId)
+      .gte("created_at", since3d).order("created_at", { ascending: false }).limit(7),
+    supabase.from("tex_vision_sessions").select("*").eq("user_id", userId)
+      .gte("created_at", since).order("created_at", { ascending: false }),
+    supabase.from("mindfulness_sessions").select("*").eq("user_id", userId)
+      .gte("created_at", since).order("created_at", { ascending: false }).limit(5),
+    supabase.from("performance_sessions").select("id,module,created_at,perceived_intensity")
+      .eq("user_id", userId).is("deleted_at", null)
+      .gte("created_at", since3d).order("created_at", { ascending: false }),
+    supabase.from("custom_activity_logs").select("id,template_id,entry_date,created_at,actual_duration_minutes")
+      .eq("user_id", userId).gte("created_at", since3d).order("created_at", { ascending: false }),
+    supabase.from("physio_daily_reports").select("*").eq("user_id", userId)
+      .order("created_at", { ascending: false }).limit(1),
+    supabase.from("vault_nutrition_logs").select("id,created_at,minutes_since_last_meal")
+      .eq("user_id", userId).gte("created_at", since).order("created_at", { ascending: false }),
+    supabase.from("session_start_moods").select("*").eq("user_id", userId)
+      .gte("captured_at", since).order("captured_at", { ascending: false }),
+    supabase.from("wearable_metrics").select("*").eq("user_id", userId)
+      .gte("captured_at", since).order("captured_at", { ascending: false }).limit(1),
+  ]);
+
+  // ── AROUSAL: reaction time, mental readiness, tex_vision accuracy ──
+  let arousalScore = 50, arousalConf = 0;
+  const latestFocus = focusQ.data?.[0];
+  if (latestFocus?.reaction_time_ms) {
+    // 200ms = elite (100), 500ms = poor (0)
+    const rtScore = clamp(100 - ((latestFocus.reaction_time_ms - 200) / 3));
+    arousalScore = rtScore;
+    arousalConf += 0.4;
+    inputs.arousal.reaction_time_ms = latestFocus.reaction_time_ms;
+  }
+  if (latestFocus?.mental_readiness != null) {
+    const mr = clamp(latestFocus.mental_readiness * 10);
+    arousalScore = arousalConf > 0 ? (arousalScore + mr) / 2 : mr;
+    arousalConf += 0.3;
+    inputs.arousal.mental_readiness = latestFocus.mental_readiness;
+  }
+  if (texQ.data?.length) {
+    const accs = texQ.data.map((t: any) => t.accuracy ?? t.score ?? 0).filter((n: number) => n > 0);
+    if (accs.length) {
+      const avg = accs.reduce((a: number, b: number) => a + b, 0) / accs.length;
+      arousalScore = arousalConf > 0 ? (arousalScore + avg) / 2 : avg;
+      arousalConf += 0.3;
+      inputs.arousal.tex_vision_avg_accuracy = Math.round(avg);
+      inputs.arousal.tex_vision_session_count = texQ.data.length;
+    }
+  }
+  if (moodQ.data?.length) {
+    const eAvg = moodQ.data.reduce((s: number, m: any) => s + (m.energy ?? 3), 0) / moodQ.data.length;
+    inputs.arousal.energy_self_report = +eAvg.toFixed(2);
+    arousalScore = (arousalScore * 0.7) + (eAvg * 20 * 0.3);
+  }
+
+  // ── RECOVERY: sleep, pain, perceived recovery, regulation ──
+  let recoveryScore = 50, recoveryConf = 0;
+  if (latestFocus?.hours_slept != null) {
+    const sleepScore = clamp(((latestFocus.hours_slept - 4) / 4) * 100);
+    recoveryScore = sleepScore;
+    recoveryConf += 0.3;
+    inputs.recovery.hours_slept = latestFocus.hours_slept;
+  }
+  if (latestFocus?.sleep_quality != null) {
+    const sq = clamp(latestFocus.sleep_quality * 20);
+    recoveryScore = recoveryConf > 0 ? (recoveryScore + sq) / 2 : sq;
+    recoveryConf += 0.2;
+    inputs.recovery.sleep_quality = latestFocus.sleep_quality;
+  }
+  if (latestFocus?.pain_scale != null) {
+    const pain = clamp(100 - latestFocus.pain_scale * 10);
+    recoveryScore = (recoveryScore + pain) / 2;
+    recoveryConf += 0.2;
+    inputs.recovery.pain_scale = latestFocus.pain_scale;
+  }
+  if (latestFocus?.perceived_recovery != null) {
+    const pr = clamp(latestFocus.perceived_recovery * 10);
+    recoveryScore = (recoveryScore + pr) / 2;
+    recoveryConf += 0.2;
+    inputs.recovery.perceived_recovery = latestFocus.perceived_recovery;
+  }
+  if (physioQ.data?.[0]?.regulation_score != null) {
+    const rs = clamp(physioQ.data[0].regulation_score);
+    recoveryScore = (recoveryScore + rs) / 2;
+    recoveryConf += 0.3;
+    inputs.recovery.regulation_score = rs;
+  }
+
+  // ── MOTOR LEARNING STATE: based on session spacing ──
+  const allSessions = [
+    ...(perfQ.data ?? []).map((s: any) => ({ at: s.created_at, src: "perf" })),
+    ...(customQ.data ?? []).map((c: any) => ({ at: c.created_at, src: "custom" })),
+  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
+  let motorState: "acquisition" | "consolidation" | "retention" | "idle" = "idle";
+  if (allSessions.length > 0) {
+    const lastAt = new Date(allSessions[0].at).getTime();
+    const ageH = (Date.now() - lastAt) / (60 * 60 * 1000);
+    if (ageH < 24) motorState = "acquisition";
+    else if (ageH < 72) motorState = "consolidation";
+    else motorState = "retention";
+    inputs.motor.last_session_hours_ago = +ageH.toFixed(1);
+    inputs.motor.session_count_3d = allSessions.length;
+  }
+
+  // ── COGNITIVE LOAD ──
+  let cognitiveLoad = 0;
+  if (texQ.data?.length) {
+    cognitiveLoad += Math.min(40, texQ.data.length * 8);
+    inputs.cognitive.tex_vision_count_24h = texQ.data.length;
+  }
+  if (mindQ.data?.length) {
+    cognitiveLoad += Math.min(20, mindQ.data.length * 5);
+    inputs.cognitive.mindfulness_count_24h = mindQ.data.length;
+  }
+  if (perfQ.data?.length) {
+    const intensitySum = perfQ.data.reduce((s: number, p: any) => s + (p.perceived_intensity ?? 5), 0);
+    cognitiveLoad += Math.min(40, intensitySum);
+    inputs.cognitive.perf_session_count_3d = perfQ.data.length;
+  }
+  cognitiveLoad = clamp(cognitiveLoad);
+
+  // ── DOPAMINE THROTTLE: completion frequency in last 6h ──
+  const since6h = Date.now() - 6 * 60 * 60 * 1000;
+  const recentCompletions = (customQ.data ?? []).filter((c: any) =>
+    new Date(c.created_at).getTime() > since6h
+  ).length;
+  const dopamineLoad = clamp(recentCompletions * 20);
+  inputs.dopamine.completions_last_6h = recentCompletions;
+  inputs.dopamine.cooldown_recommended = dopamineLoad > 80;
+
+  // Wearable boost
+  if (wearQ.data?.[0]?.hrv_ms) {
+    inputs.recovery.hrv_ms = wearQ.data[0].hrv_ms;
+    recoveryConf += 0.2;
+  }
+
+  // Nutrition fuel timing
+  if (nutritionQ.data?.[0]?.minutes_since_last_meal != null) {
+    inputs.recovery.minutes_since_last_meal = nutritionQ.data[0].minutes_since_last_meal;
+  }
+
+  // ── OVERALL STATE ──
+  const blended = (arousalScore * 0.3) + (recoveryScore * 0.4) + ((100 - cognitiveLoad) * 0.2) + ((100 - dopamineLoad) * 0.1);
+  let overall: "prime" | "ready" | "caution" | "recover" = "ready";
+  if (blended >= 80 && recoveryScore >= 70) overall = "prime";
+  else if (blended >= 60) overall = "ready";
+  else if (blended >= 40) overall = "caution";
+  else overall = "recover";
+
+  const confidence = Math.min(1, (arousalConf + recoveryConf) / 2);
+
+  // Insert snapshot
+  const { error } = await supabase.from("hammer_state_snapshots").insert({
+    user_id: userId,
+    arousal_score: +arousalScore.toFixed(1),
+    arousal_inputs: inputs.arousal,
+    recovery_score: +recoveryScore.toFixed(1),
+    recovery_inputs: inputs.recovery,
+    motor_state: motorState,
+    motor_inputs: inputs.motor,
+    cognitive_load: +cognitiveLoad.toFixed(1),
+    cognitive_inputs: inputs.cognitive,
+    dopamine_load: +dopamineLoad.toFixed(1),
+    dopamine_inputs: inputs.dopamine,
+    overall_state: overall,
+    confidence: +confidence.toFixed(2),
+  });
+  if (error) throw error;
+
+  return { user_id: userId, overall, confidence };
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  try {
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const targetUser: string | null = body?.user_id ?? null;
+
+    if (targetUser) {
+      const result = await computeForUser(supabase, targetUser);
+      return new Response(JSON.stringify({ status: "ok", result }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Batch mode: all users with activity in last 24h
+    const since = new Date(Date.now() - DAY_MS).toISOString();
+    const { data: activeUsers } = await supabase
+      .from("athlete_mpi_settings")
+      .select("user_id")
+      .limit(500);
+
+    let processed = 0, failed = 0;
+    for (const u of activeUsers ?? []) {
+      try {
+        await computeForUser(supabase, u.user_id);
+        processed++;
+      } catch (err) {
+        failed++;
+        console.error(`[hammer-state] ${u.user_id}:`, err);
+      }
+    }
+    return new Response(JSON.stringify({ status: "batch", processed, failed }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("[hammer-state] fatal:", err);
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
