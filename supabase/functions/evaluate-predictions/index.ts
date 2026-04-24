@@ -21,7 +21,21 @@ function scoreAccuracy(predicted: string, actual: string): number {
   return 0; // opposite extremes
 }
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'evaluate-predictions',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(
@@ -98,11 +112,14 @@ serve(async (req) => {
       }
     }
 
+    const sampledAvg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+    await logRun(supabase, 'success', startMs, undefined, { evaluated, sampled_avg: sampledAvg });
     return new Response(JSON.stringify({
-      status: "ok", evaluated, sampled_avg: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null,
+      status: "ok", evaluated, sampled_avg: sampledAvg,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("[evaluate-predictions]", err);
+    await logRun(supabase, 'fail', startMs, String(err));
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
