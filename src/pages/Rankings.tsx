@@ -34,6 +34,12 @@ export default function Rankings() {
   const [selectedSegment, setSelectedSegment] = useState<string>("all");
   const [userRank, setUserRank] = useState<MPIRankingData | null>(null);
   const { user } = useAuth();
+  const { visible: rankingsVisible, loading: visibilityLoading } = useRankingsVisibility();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
+
+  const accessLoading = visibilityLoading || ownerLoading || adminLoading;
+  const canViewRankings = rankingsVisible || isOwner || isAdmin;
 
   const fetchRankings = async () => {
     try {
