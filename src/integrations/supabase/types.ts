@@ -2056,6 +2056,45 @@ export type Database = {
           },
         ]
       }
+      engine_regression_results: {
+        Row: {
+          baseline_snapshot_id: string | null
+          baseline_state: string
+          drift_score: number
+          id: string
+          metadata: Json
+          new_state: string
+          pass: boolean
+          run_at: string
+          test_case: string
+          user_id: string | null
+        }
+        Insert: {
+          baseline_snapshot_id?: string | null
+          baseline_state: string
+          drift_score: number
+          id?: string
+          metadata?: Json
+          new_state: string
+          pass: boolean
+          run_at?: string
+          test_case: string
+          user_id?: string | null
+        }
+        Update: {
+          baseline_snapshot_id?: string | null
+          baseline_state?: string
+          drift_score?: number
+          id?: string
+          metadata?: Json
+          new_state?: string
+          pass?: boolean
+          run_at?: string
+          test_case?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       engine_sentinel_logs: {
         Row: {
           actual_state: string | null
@@ -2128,6 +2167,50 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_snapshot_versions: {
+        Row: {
+          created_at: string
+          engine_version: string
+          id: string
+          inputs: Json
+          output: Json
+          profile: Json | null
+          snapshot_id: string
+          user_id: string
+          weights: Json
+        }
+        Insert: {
+          created_at?: string
+          engine_version?: string
+          id?: string
+          inputs?: Json
+          output?: Json
+          profile?: Json | null
+          snapshot_id: string
+          user_id: string
+          weights?: Json
+        }
+        Update: {
+          created_at?: string
+          engine_version?: string
+          id?: string
+          inputs?: Json
+          output?: Json
+          profile?: Json | null
+          snapshot_id?: string
+          user_id?: string
+          weights?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engine_snapshot_versions_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "hammer_state_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       engine_state_predictions: {
         Row: {
           base_snapshot_id: string | null
@@ -2181,6 +2264,27 @@ export type Database = {
           },
         ]
       }
+      engine_system_health: {
+        Row: {
+          breakdown: Json
+          created_at: string
+          id: string
+          score: number
+        }
+        Insert: {
+          breakdown?: Json
+          created_at?: string
+          id?: string
+          score: number
+        }
+        Update: {
+          breakdown?: Json
+          created_at?: string
+          id?: string
+          score?: number
+        }
+        Relationships: []
+      }
       engine_weight_adjustments: {
         Row: {
           affected_axis: string
@@ -2214,6 +2318,36 @@ export type Database = {
           scenario?: string | null
           source?: string
           suggested_delta?: number
+        }
+        Relationships: []
+      }
+      engine_weight_history: {
+        Row: {
+          axis: string
+          created_at: string
+          delta: number
+          id: string
+          metadata: Json
+          source: string
+          weight: number
+        }
+        Insert: {
+          axis: string
+          created_at?: string
+          delta: number
+          id?: string
+          metadata?: Json
+          source: string
+          weight: number
+        }
+        Update: {
+          axis?: string
+          created_at?: string
+          delta?: number
+          id?: string
+          metadata?: Json
+          source?: string
+          weight?: number
         }
         Relationships: []
       }
@@ -4968,6 +5102,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      prediction_outcomes: {
+        Row: {
+          accuracy_score: number
+          actual_snapshot_id: string | null
+          actual_state_24h: string
+          created_at: string
+          id: string
+          prediction_id: string
+        }
+        Insert: {
+          accuracy_score: number
+          actual_snapshot_id?: string | null
+          actual_state_24h: string
+          created_at?: string
+          id?: string
+          prediction_id: string
+        }
+        Update: {
+          accuracy_score?: number
+          actual_snapshot_id?: string | null
+          actual_state_24h?: string
+          created_at?: string
+          id?: string
+          prediction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prediction_outcomes_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "engine_state_predictions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       processed_webhook_events: {
         Row: {
@@ -9586,10 +9755,15 @@ export type Database = {
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
       cleanup_old_interventions: { Args: never; Returns: undefined }
       cleanup_old_patterns: { Args: never; Returns: undefined }
+      cleanup_old_prediction_outcomes: { Args: never; Returns: undefined }
       cleanup_old_predictions: { Args: never; Returns: undefined }
+      cleanup_old_regression_results: { Args: never; Returns: undefined }
       cleanup_old_sentinel_logs: { Args: never; Returns: undefined }
+      cleanup_old_snapshot_versions: { Args: never; Returns: undefined }
+      cleanup_old_system_health: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
+      cleanup_old_weight_history: { Args: never; Returns: undefined }
       create_ab_link: {
         Args: { p_link_code: string; p_sport: string; p_user_id: string }
         Returns: {
