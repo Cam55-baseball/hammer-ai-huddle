@@ -648,6 +648,23 @@ serve(async (req) => {
           tier_multiplier: s.tierMult,
           age_curve_multiplier: s.ageCurveMult,
           position_weight: s.posWeight,
+          // Phase A1: provisional flag + scoring inputs for "Why am I seeing this?"
+          is_provisional: false,
+          scoring_inputs: {
+            source: 'mature',
+            sessions_count: s.sessionsCount,
+            ranking_min_sessions: RANKING_MIN,
+            weights: { bqi: W_BQI, fqi: W_FQI, pei: W_PEI, decision: W_DECISION, competitive: W_COMPETITIVE },
+            integrity_score: s.integrityScore,
+            verified_boost: s.verifiedBoost,
+            contract_modifier: s.contractMod,
+            tier_multiplier: s.tierMult,
+            age_curve_multiplier: s.ageCurveMult,
+            position_weight: s.posWeight,
+            consecutive_heavy_days: s.consecutiveHeavy,
+            game_practice_ratio: s.gamePracticeRatio,
+            computed_at: new Date().toISOString(),
+          },
         }, { onConflict: 'user_id,sport,calculation_date' });
       }
 
