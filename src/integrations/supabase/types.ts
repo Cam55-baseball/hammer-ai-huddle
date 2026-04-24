@@ -1458,6 +1458,41 @@ export type Database = {
           },
         ]
       }
+      drill_definitions_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          definition: Json
+          drill_id: string
+          id: string
+          version_number: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          definition: Json
+          drill_id: string
+          id?: string
+          version_number: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          definition?: Json
+          drill_id?: string
+          id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drill_definitions_versions_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drill_positions: {
         Row: {
           drill_id: string
@@ -1655,6 +1690,7 @@ export type Database = {
           ai_context: string | null
           created_at: string | null
           created_by: string | null
+          current_version_id: string | null
           default_constraints: Json | null
           description: string | null
           difficulty_levels: string[] | null
@@ -1678,6 +1714,7 @@ export type Database = {
           ai_context?: string | null
           created_at?: string | null
           created_by?: string | null
+          current_version_id?: string | null
           default_constraints?: Json | null
           description?: string | null
           difficulty_levels?: string[] | null
@@ -1701,6 +1738,7 @@ export type Database = {
           ai_context?: string | null
           created_at?: string | null
           created_by?: string | null
+          current_version_id?: string | null
           default_constraints?: Json | null
           description?: string | null
           difficulty_levels?: string[] | null
@@ -1720,7 +1758,15 @@ export type Database = {
           version?: number
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drills_current_version_id_fkey"
+            columns: ["current_version_id"]
+            isOneToOne: false
+            referencedRelation: "drill_definitions_versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       emotion_tracking: {
         Row: {
@@ -1765,6 +1811,7 @@ export type Database = {
         Row: {
           description: string | null
           id: string
+          is_override: boolean
           setting_key: string
           setting_value: Json
           updated_at: string
@@ -1773,6 +1820,7 @@ export type Database = {
         Insert: {
           description?: string | null
           id?: string
+          is_override?: boolean
           setting_key: string
           setting_value?: Json
           updated_at?: string
@@ -1781,10 +1829,47 @@ export type Database = {
         Update: {
           description?: string | null
           id?: string
+          is_override?: boolean
           setting_key?: string
           setting_value?: Json
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      environment_snapshots: {
+        Row: {
+          captured_at: string
+          conditions: string | null
+          humidity: number | null
+          id: string
+          session_id: string | null
+          source: string | null
+          temp_f: number | null
+          user_id: string
+          weather: Json | null
+        }
+        Insert: {
+          captured_at?: string
+          conditions?: string | null
+          humidity?: number | null
+          id?: string
+          session_id?: string | null
+          source?: string | null
+          temp_f?: number | null
+          user_id: string
+          weather?: Json | null
+        }
+        Update: {
+          captured_at?: string
+          conditions?: string | null
+          humidity?: number | null
+          id?: string
+          session_id?: string | null
+          source?: string | null
+          temp_f?: number | null
+          user_id?: string
+          weather?: Json | null
         }
         Relationships: []
       }
@@ -2339,6 +2424,63 @@ export type Database = {
           },
         ]
       }
+      hammer_state_snapshots: {
+        Row: {
+          arousal_inputs: Json | null
+          arousal_score: number | null
+          cognitive_inputs: Json | null
+          cognitive_load: number | null
+          computed_at: string
+          confidence: number | null
+          dopamine_inputs: Json | null
+          dopamine_load: number | null
+          id: string
+          motor_inputs: Json | null
+          motor_state: string | null
+          overall_state: string | null
+          recovery_inputs: Json | null
+          recovery_score: number | null
+          schema_version: number
+          user_id: string
+        }
+        Insert: {
+          arousal_inputs?: Json | null
+          arousal_score?: number | null
+          cognitive_inputs?: Json | null
+          cognitive_load?: number | null
+          computed_at?: string
+          confidence?: number | null
+          dopamine_inputs?: Json | null
+          dopamine_load?: number | null
+          id?: string
+          motor_inputs?: Json | null
+          motor_state?: string | null
+          overall_state?: string | null
+          recovery_inputs?: Json | null
+          recovery_score?: number | null
+          schema_version?: number
+          user_id: string
+        }
+        Update: {
+          arousal_inputs?: Json | null
+          arousal_score?: number | null
+          cognitive_inputs?: Json | null
+          cognitive_load?: number | null
+          computed_at?: string
+          confidence?: number | null
+          dopamine_inputs?: Json | null
+          dopamine_load?: number | null
+          id?: string
+          motor_inputs?: Json | null
+          motor_state?: string | null
+          overall_state?: string | null
+          recovery_inputs?: Json | null
+          recovery_score?: number | null
+          schema_version?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       heat_map_snapshots: {
         Row: {
           blind_zones: Json | null
@@ -2381,6 +2523,27 @@ export type Database = {
         }
         Relationships: []
       }
+      hie_dirty_users: {
+        Row: {
+          attempt_count: number
+          dirtied_at: string
+          processing_started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          dirtied_at?: string
+          processing_started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_count?: number
+          dirtied_at?: string
+          processing_started_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       hie_execution_locks: {
         Row: {
           locked_at: string
@@ -2418,6 +2581,7 @@ export type Database = {
           readiness_recommendation: string | null
           readiness_score: number | null
           risk_alerts: Json | null
+          schema_version: number
           smart_week_plan: Json | null
           sport: string
           transfer_score: number | null
@@ -2443,6 +2607,7 @@ export type Database = {
           readiness_recommendation?: string | null
           readiness_score?: number | null
           risk_alerts?: Json | null
+          schema_version?: number
           smart_week_plan?: Json | null
           sport?: string
           transfer_score?: number | null
@@ -2468,6 +2633,7 @@ export type Database = {
           readiness_recommendation?: string | null
           readiness_score?: number | null
           risk_alerts?: Json | null
+          schema_version?: number
           smart_week_plan?: Json | null
           sport?: string
           transfer_score?: number | null
@@ -3441,6 +3607,7 @@ export type Database = {
           position_weight: number | null
           pro_probability: number | null
           pro_probability_capped: boolean | null
+          schema_version: number
           scoring_inputs: Json | null
           segment_pool: string | null
           sport: string
@@ -3476,6 +3643,7 @@ export type Database = {
           position_weight?: number | null
           pro_probability?: number | null
           pro_probability_capped?: boolean | null
+          schema_version?: number
           scoring_inputs?: Json | null
           segment_pool?: string | null
           sport: string
@@ -3511,6 +3679,7 @@ export type Database = {
           position_weight?: number | null
           pro_probability?: number | null
           pro_probability_capped?: boolean | null
+          schema_version?: number
           scoring_inputs?: Json | null
           segment_pool?: string | null
           sport?: string
@@ -4036,6 +4205,7 @@ export type Database = {
           opponent_name: string | null
           organization_id: string | null
           player_grade: number | null
+          schema_version: number
           season_context: string | null
           session_date: string
           session_type: string
@@ -4078,6 +4248,7 @@ export type Database = {
           opponent_name?: string | null
           organization_id?: string | null
           player_grade?: number | null
+          schema_version?: number
           season_context?: string | null
           session_date?: string
           session_type: string
@@ -4120,6 +4291,7 @@ export type Database = {
           opponent_name?: string | null
           organization_id?: string | null
           player_grade?: number | null
+          schema_version?: number
           season_context?: string | null
           session_date?: string
           session_type?: string
@@ -4138,6 +4310,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      performance_sessions_ledger: {
+        Row: {
+          captured_at: string
+          id: string
+          reason: string
+          session_id: string
+          snapshot: Json
+          user_id: string | null
+        }
+        Insert: {
+          captured_at?: string
+          id?: string
+          reason: string
+          session_id: string
+          snapshot: Json
+          user_id?: string | null
+        }
+        Update: {
+          captured_at?: string
+          id?: string
+          reason?: string
+          session_id?: string
+          snapshot?: Json
+          user_id?: string | null
+        }
+        Relationships: []
       }
       physio_adult_tracking: {
         Row: {
@@ -5398,6 +5597,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      session_start_moods: {
+        Row: {
+          captured_at: string
+          energy: number | null
+          id: string
+          module: string | null
+          mood: number | null
+          schema_version: number
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          energy?: number | null
+          id?: string
+          module?: string | null
+          mood?: number | null
+          schema_version?: number
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          energy?: number | null
+          id?: string
+          module?: string | null
+          mood?: number | null
+          schema_version?: number
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       session_videos: {
         Row: {
@@ -7093,6 +7325,8 @@ export type Database = {
           reflection_learned: string | null
           reflection_motivation: string | null
           resting_hr: number | null
+          schema_version: number
+          sleep_consistency_score: number | null
           sleep_quality: number | null
           sleep_time: string | null
           stress_level: number | null
@@ -7137,6 +7371,8 @@ export type Database = {
           reflection_learned?: string | null
           reflection_motivation?: string | null
           resting_hr?: number | null
+          schema_version?: number
+          sleep_consistency_score?: number | null
           sleep_quality?: number | null
           sleep_time?: string | null
           stress_level?: number | null
@@ -7181,6 +7417,8 @@ export type Database = {
           reflection_learned?: string | null
           reflection_motivation?: string | null
           resting_hr?: number | null
+          schema_version?: number
+          sleep_consistency_score?: number | null
           sleep_quality?: number | null
           sleep_time?: string | null
           stress_level?: number | null
@@ -7343,6 +7581,7 @@ export type Database = {
           meal_title: string | null
           meal_type: string | null
           micros: Json | null
+          minutes_since_last_meal: number | null
           protein_g: number | null
           supplements: Json | null
           updated_at: string | null
@@ -7365,6 +7604,7 @@ export type Database = {
           meal_title?: string | null
           meal_type?: string | null
           micros?: Json | null
+          minutes_since_last_meal?: number | null
           protein_g?: number | null
           supplements?: Json | null
           updated_at?: string | null
@@ -7387,6 +7627,7 @@ export type Database = {
           meal_title?: string | null
           meal_type?: string | null
           micros?: Json | null
+          minutes_since_last_meal?: number | null
           protein_g?: number | null
           supplements?: Json | null
           updated_at?: string | null
@@ -8532,6 +8773,42 @@ export type Database = {
           score?: number
           user_id?: string
           weakness_metric?: string
+        }
+        Relationships: []
+      }
+      wearable_metrics: {
+        Row: {
+          captured_at: string
+          hrv_ms: number | null
+          id: string
+          raw: Json | null
+          rhr_bpm: number | null
+          schema_version: number
+          sleep_min: number | null
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          hrv_ms?: number | null
+          id?: string
+          raw?: Json | null
+          rhr_bpm?: number | null
+          schema_version?: number
+          sleep_min?: number | null
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          hrv_ms?: number | null
+          id?: string
+          raw?: Json | null
+          rhr_bpm?: number | null
+          schema_version?: number
+          sleep_min?: number | null
+          source?: string | null
+          user_id?: string
         }
         Relationships: []
       }
