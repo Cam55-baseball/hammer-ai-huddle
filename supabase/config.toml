@@ -209,3 +209,18 @@ verify_jwt = false
 
 [functions.engine-adversarial]
 verify_jwt = false
+
+[functions.engine-weight-optimizer]
+verify_jwt = false
+
+[functions.generate-elite-layer]
+verify_jwt = false
+
+[functions.extract-patterns]
+verify_jwt = false
+
+[functions.update-user-engine-profile]
+verify_jwt = false
+
+[functions.evaluate-advice-effectiveness]
+verify_jwt = false
