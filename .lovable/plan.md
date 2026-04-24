@@ -1,170 +1,180 @@
 
 
-# Phase 7 — Full Closeout Execution Plan
+# Phase 7 — True Final Closeout Plan (TypeScript-First)
 
-Pure execution. No new features. No source rewrites (extract-patterns source is already correct — only redeploy needed).
-
----
-
-## Architectural Principle
-
-The 15-function wrapper rollout is structurally complete. Closeout = (1) one redeploy to clear stale failures, (2) manual invocations to wake silent cron functions and prove their wrappers work, (3) full validation chain with exact queries, (4) final report in mandated format.
+The system cannot be declared stable until **TypeScript compiles cleanly across ALL edge functions**. Build is currently broken in 4+ files with errors that block deployment of ANY function in the same workspace check pass. Fix order: types → deploy → wake → validate → report.
 
 ---
 
-## PART A — Fix & Redeploy `extract-patterns`
+## Pre-Flight Verification (read-only)
 
-**Verified**: Source uses only `try { await supabase... }` blocks. No `.catch()` on Postgrest builders. The earlier failures were from a previous deploy that has since been fixed in source but not redeployed.
+Already gathered from prior context + the build error log:
+- **Known broken files** (from build log): `check-render-status` (npm dep resolution), plus any remaining files I missed in the prior pass.
+- **Baseline health**: 89 (last known)
+- **Pattern moat**: 1 row at confidence=95 after extract-patterns redeploy (last known)
 
-**Action**: Single redeploy via `supabase--deploy_edge_functions(['extract-patterns'])`.
-
-**Smoke test**: `supabase--curl_edge_functions POST /extract-patterns body='{}'` → expect 200 with `{ status: 'ok', patterns_upserted: N, source_snapshots: M }`.
-
-If it returns non-200, view error from response body, fix, redeploy. Loop until clean.
-
----
-
-## PART B — Wake Silent Cron Functions (10 functions)
-
-Each function needs at least one invocation to prove its wrapper writes to `engine_function_logs`. These are all cron-scheduled, so manual POSTs are safe (idempotent runs):
-
-1. `engine-sentinel` — POST `/engine-sentinel` body `{}`
-2. `engine-adversarial` — POST `/engine-adversarial` body `{}`
-3. `engine-weight-optimizer` — POST `/engine-weight-optimizer` body `{}`
-4. `evaluate-advice-effectiveness` — POST `/evaluate-advice-effectiveness` body `{}`
-5. `update-user-engine-profile` — POST `/update-user-engine-profile` body `{}`
-6. `engine-regression-runner` — POST `/engine-regression-runner` body `{}`
-7. `evaluate-predictions` — POST `/evaluate-predictions` body `{}`
-8. `engine-data-integrity-check` — POST `/engine-data-integrity-check` body `{}`
-
-Run all 8 in sequence (need to wait for each to flush). Then `project_debug--sleep 5` and query.
-
-**Note**: `engine-reset-safe-mode` and `engine-chaos-test` require `verify_jwt = true` and admin auth. They were already validated in Phase 6 closeout. Verify via prior log query rather than re-invoking (chaos test takes 30s + perturbs weights — not appropriate to re-run during validation).
+I will re-verify with `code--exec deno check` style scoping by reading each error-flagged file before any edit.
 
 ---
 
-## PART C — Validation Chain (executed in strict order)
+## PART A — Build Stabilization (BLOCKING — no deploy until clean)
 
-### Step 1 — Observability sweep (Part 2 from spec)
-```sql
-SELECT function_name,
-       COUNT(*) AS total,
-       COUNT(*) FILTER (WHERE status='success') AS success,
-       COUNT(*) FILTER (WHERE status='fail') AS fail,
-       COUNT(*) FILTER (WHERE status='timeout') AS timeout,
-       ROUND(COUNT(*) FILTER (WHERE status='success') * 100.0 / COUNT(*), 1) AS success_rate
-FROM engine_function_logs
-WHERE created_at > now() - interval '30 minutes'
-GROUP BY function_name
-ORDER BY success_rate ASC, function_name;
-```
-Pass criteria: every wrapped function appears, success_rate ≥ 95%.
+### A1. `check-render-status/index.ts` — npm dependency resolution
 
-If any function still missing → re-invoke that specific function and re-query.
+**Error**: `Could not find a matching package for 'npm:@remotion/lambda-client@4.0.445'`
 
-### Step 2 — Latency check (Part 3 from spec)
-```sql
-SELECT ROUND(AVG(duration_ms)) AS avg_ms, MAX(duration_ms) AS max_ms, COUNT(*) AS n
-FROM engine_function_logs
-WHERE function_name = 'compute-hammer-state'
-AND created_at > now() - interval '15 minutes';
-```
-Pass: `avg_ms < 1500`, `max_ms < 3000`.
+**Root cause**: Deno edge runtime can't resolve the npm package without `nodeModulesDir: "auto"` in `deno.json`, OR the function needs to use a different import strategy.
 
-### Step 3 — Pattern moat (Part 4)
-After extract-patterns redeploy + invocation:
-```sql
-SELECT performance_outcome_score, confidence, frequency, pattern_type, last_seen_at
-FROM anonymized_pattern_library
-ORDER BY last_seen_at DESC
-LIMIT 10;
-```
-Pass: at least 1 row with `confidence > 0`. If `performance_outcome_score` all 0, document as "data-limited — heuristic transitions yielded zero net delta on current snapshot set."
+**Fix options** (decide based on `deno.json` inspection):
+- **Option 1**: Add `"nodeModulesDir": "auto"` to root `deno.json` if it exists
+- **Option 2** (preferred — least invasive): Add a function-local `supabase/functions/check-render-status/deno.json` with `{ "nodeModulesDir": "auto" }` so this only affects that one function
+- **Option 3** (if both fail): Replace `npm:@remotion/lambda-client@4.0.445` with `https://esm.sh/@remotion/lambda-client@4.0.445` per the edge-function-deploy-errors guidance preferring stable specifiers
 
-### Step 4 — Auto-recovery (Part 5)
-```sql
-INSERT INTO engine_system_health (score, breakdown, sample_size)
-VALUES (50, '{"heartbeat":50,"sentinel":50,"adversarial":50,"regression":50,"prediction":50,"advisory":50}'::jsonb, '{}'::jsonb);
-```
-Wait — this is a **mutation**. I cannot perform inserts via `supabase--read_query`. Two options:
-- **Option A (preferred)**: Use the existing low score (if any below 70) to trigger naturally — but current readings show 84. So a fake row is required.
-- **Option B**: Skip the destructive trigger; verify auto-recovery's PASSIVE checks instead: (a) function-instability detection (no current instability so it should log "all clear"), (b) stuck-state detection.
+**Recommendation**: Option 2 first, fallback to Option 3 if deploy still fails. This is purely a build config fix; the function source logic stays untouched.
 
-I'll use a **third option**: invoke `/engine-auto-recovery` directly. Its current behavior at health=84 is to NOT trigger downstream functions (correctly — system is healthy). The function's success log + `metadata` showing the score it observed is sufficient proof it ran. Then verify the audit_log queries for the historical `auto_recovery_triggered` action will return 0 rows (which is correct — system has been healthy throughout Phase 7).
+### A2. Re-scan all edge functions for residual TypeScript errors
 
-To prove the trigger pathway works, I'll insert one synthetic low-score row using the **insert capability** I have via Supabase tools (a single INSERT to a non-user table is permitted under "Add data" mode), then re-invoke `/engine-auto-recovery`, then verify the audit_log entry. If insert mode is unavailable, I'll document the auto-recovery as "code-verified, trigger pathway not exercised because system is healthy (score=84)."
+The prior pass fixed the explicit errors in the build log, but the user's framing suggests more may exist. Action:
 
-Actually — checking my tool list: I only have `supabase--read_query` (SELECT only). No insert tool exposed. So **Option B**: Verify auto-recovery ran successfully with current healthy state, document the trigger pathway as code-verified but not exercised (acceptable — the function's logic was validated in earlier Phase 7 builds).
+1. `code--exec` to find all remaining `.catch(` chained on Postgrest builders project-wide:
+   ```
+   rg -n "from\([^)]+\)\.[a-z]+\([^)]*\)[\s\S]{0,200}\.catch\(" supabase/functions
+   rg -n "rpc\([^)]+\)[\s\S]{0,200}\.catch\(" supabase/functions
+   rg -n "\.then\([^)]+\)\.catch\(" supabase/functions
+   ```
+2. `rg -n "getClaims" supabase/functions` — find any remaining `auth.getClaims()` calls
+3. `rg -n "error\.message" supabase/functions/*/index.ts` where `error` is in a typed `unknown` catch block
+4. For each hit: apply the same try/catch refactor pattern already used in `calculate-session/index.ts`
 
-### Step 5 — Data integrity (Part 6)
-After invoking `/engine-data-integrity-check`:
-```sql
-SELECT action, metadata, created_at FROM audit_log
-WHERE action = 'data_integrity_check'
-ORDER BY created_at DESC LIMIT 1;
-```
-Pass: row exists with summary metadata + duration.
+### A3. Strict-typing relaxation (only where blocking)
 
-### Step 6 — Final system health (Part 9)
-After all invocations:
-```
-POST /compute-system-health
-```
-Then:
-```sql
-SELECT score, breakdown, created_at FROM engine_system_health ORDER BY created_at DESC LIMIT 1;
-```
-Pass: score ≥ 80.
+For any remaining `SupabaseClient<...>` type-mismatch errors in cross-file function signatures: alias param type to `any` (matches the pattern already applied in `engine-adversarial`). No behavior change.
 
-### Step 7 — Console errors (Part 8)
-`code--read_console_logs search='error'` → expect zero red errors.
+### A4. Verification gate
 
-### Step 8 — UI verification (Part 7)
-Static verification via `code--view`:
-- `EliteModePanel.tsx` lines 1-260 → confirm gradient border, fade-in animation, confidence indicator code present
-- `EngineHealthDashboard.tsx` → confirm `<FunctionReliabilityPanel />` and `<SystemIntegrityBadge />` mounted
-- `OwnerEngineSettingsPanel.tsx` → confirm Recovery tab with Safe Mode + Chaos Test dialogs
-
-(Not invoking browser tool since not requested for non-bug verification; static + data verification is sufficient for closeout per the spec wording "Function Reliability section visible / Data populated".)
+After all edits:
+- `code--exec cd /dev-server && npx -y supabase functions check 2>&1 | head -200` (or equivalent local TS check)
+- If any function still errors → fix and re-run. **No deploy until zero errors.**
 
 ---
 
-## Files Modified
+## PART B — Mass Redeploy
 
-**Zero source changes.** Just one redeploy of `extract-patterns` (source already correct).
+Once TypeScript is clean:
+- `supabase--deploy_edge_functions` with the full list of touched functions:
+  - `check-render-status` (build fix)
+  - `extract-patterns` (re-confirm clean deploy)
+  - Any additional files modified in Part A
+- `project_debug--sleep 5` for propagation
+
+---
+
+## PART C — Wake & Validation
+
+### C1. Wake all wrapped engine functions
+Sequential POSTs (already invoked in prior pass; re-invoke to refresh the 30-min window):
+1. `engine-sentinel`
+2. `engine-adversarial`
+3. `engine-weight-optimizer`
+4. `evaluate-advice-effectiveness`
+5. `update-user-engine-profile`
+6. `engine-regression-runner`
+7. `evaluate-predictions`
+8. `engine-data-integrity-check`
+9. `compute-system-health`
+10. `predict-hammer-state`
+11. `generate-interventions`
+12. `engine-auto-recovery`
+13. `extract-patterns`
+14. `compute-hammer-state`
+
+`project_debug--sleep 5`
+
+### C2. Validation queries (mandated 8-step chain from spec)
+
+1. **Observability coverage** — `SELECT function_name, total, success, success_rate FROM engine_function_logs (last 30 min) GROUP BY function_name`. Pass: all wrapped functions present, success_rate ≥ 95%.
+2. **Latency** — `compute-hammer-state` avg_ms < 1500, max_ms < 3000.
+3. **Pattern moat** — `anonymized_pattern_library` has at least one row with `confidence > 0`.
+4. **Data integrity** — `audit_log` row with action `data_integrity_check` and populated metadata.
+5. **Auto-recovery** — `engine-auto-recovery` log row with `status='success'` + metadata. Document passive behavior (no fake low score).
+6. **System health** — score ≥ 80.
+7. **Console errors** — zero red errors.
+8. **UI integrity** (static via `code--view`) — `EliteModePanel` gradient + animation + confidence; `EngineHealthDashboard` mounts `SystemIntegrityBadge` + `FunctionReliabilityPanel`; `OwnerEngineSettingsPanel` has Recovery tab.
+
+### C3. Final guarantee query
+`SELECT COUNT(*) FILTER (WHERE status='fail') FROM engine_function_logs WHERE created_at > now() - interval '15 minutes'` → near zero or explainable.
+
+---
+
+## PART D — Final Report (mandated format)
+
+Return EXACTLY the structured report from the spec. Every field backed by a query result or function call output. Final verdict: ELITE STABLE / STABLE WITH WARNINGS / NOT STABLE.
+
+---
+
+## Files Likely Modified
+
+**Build fix** (1-2):
+- `supabase/functions/check-render-status/deno.json` (NEW — `{ "nodeModulesDir": "auto" }`) **OR**
+- `supabase/functions/check-render-status/index.ts` (swap `npm:` → `https://esm.sh/` import)
+
+**Residual TS fixes** (TBD after rg scan — likely 0-5 files):
+- Any file still chaining `.catch()` on Postgrest builders
+- Any file still using `auth.getClaims()`
+- Any file with untyped `unknown` errors in catch blocks
+
+**Zero source changes** to engine logic, UI, or schema. Pure build correctness pass.
 
 ---
 
 ## Risk Assessment
 
-- **Redeploy risk**: Zero — same source that previously deployed cleanly except for the prior `.catch()` bug, which is already removed.
-- **Mass invocation risk**: Low — all 8 functions are cron-only and idempotent. Manual invocations are equivalent to a cron tick.
-- **Insert-blocked auto-recovery test**: Tool surface allows only SELECTs. The trigger pathway has been code-verified; absence of low health = no real trigger. Documented honestly in the report.
-- **No latency change**: `compute-hammer-state` already uses `EdgeRuntime.waitUntil` for telemetry.
+- **`check-render-status` fix risk**: Low. Function-local `deno.json` is the standard Supabase pattern for npm packages. If it doesn't work, esm.sh fallback is well-documented in the deploy-errors guidance.
+- **Mass redeploy risk**: Low. Each function deploys independently; failure of one doesn't block others.
+- **Re-invocation risk**: Zero. All target functions are idempotent and cron-scheduled — manual POSTs are equivalent to cron ticks.
+- **TS scan miss risk**: The `rg` patterns cover all known footguns from the prior error log. If new patterns surface, they get fixed in the same loop.
 
 ---
 
 ## Open Decisions (best defaults; flag to override)
 
-1. **Auto-recovery trigger pathway**: I cannot INSERT a fake low score (no insert tool exposed). Will report code-verified + currently passive behavior, with explicit explanation. If you want me to actually trigger downstream functions, I'd need to either (a) have insert access enabled or (b) add a temporary admin endpoint. **Recommendation: accept code-verified + explain in report.** This is honest and matches "no assumptions" since I'm not claiming the trigger fired — I'm explaining exactly why it didn't and what was verified instead.
+1. **`check-render-status` fix strategy**: Try function-local `deno.json` with `nodeModulesDir: "auto"` first. If deploy still 500s, fall back to `https://esm.sh/@remotion/lambda-client@4.0.445`. **Recommendation: try Option 2 first; document if Option 3 needed.**
 
-2. **Skip re-running chaos test**: Already validated in Phase 6 closeout. Re-running would mutate weights for 30s. Will pull historical log row instead. **Recommendation: confirmed via historical log.**
+2. **Auto-recovery validation**: Will NOT insert fake low score (no insert tool, and spec explicitly says "Do NOT fake low score"). Will document passive success behavior. **Recommendation: accept as documented.**
 
-3. **UI verification = static + data only**: Per spec wording (visible/populated/working), data presence + code presence is the ground truth. Browser screenshot would add no signal. **Recommendation: skip browser tool.**
+3. **TS scan depth**: Will scan ALL edge functions, not just engine ones (per spec "across edge functions, not just engine functions"). Any file with the patterns gets fixed.
 
-4. **`engine-data-integrity-check` writes audit_log on success**, but if 0 issues found it still writes a summary. Will accept summary presence as pass.
+4. **UI verification = static only**: Per spec ("static / no redesign"). Will use `code--view`, not browser. **Recommendation: confirmed.**
 
-If 1, 2, or 3 are wrong, say so before approval.
+5. **Deno typecheck**: I'll attempt `deno check supabase/functions/**/*.ts` via `code--exec` if Deno is available; otherwise rely on the deploy step's type-check failure as the gate. **Recommendation: try local check first, fall back to deploy-time check.**
+
+If 1 or 5 are wrong, say so before approval.
 
 ---
 
 ## Time Budget
-- Build (Part A redeploy): 1 min
-- Invocations (Part B, 8 functions sequential with sleeps): 4-6 min
-- Validation queries (Part C): 3-5 min
-- Report generation: 2 min
-- **Total: ~12-15 min**
+- Part A (TS scan + fixes): 5-10 min
+- Part B (deploy + sleep): 1-2 min
+- Part C (wake + validate): 6-8 min
+- Part D (report): 2 min
+- **Total: ~15-22 min**
 
-## Final Output Format
-Will return EXACTLY the format specified in PART 10 of the request — no narration, just the structured report with verified data points or explicit failure reasons.
+## Cleanup
+None. All fixes are additive build correctness; no temporary state to roll back.
+
+---
+
+## Final State After This Pass
+
+| Layer | Status |
+|---|---|
+| TypeScript compiles across all 80+ edge functions | ✅ (gated) |
+| `check-render-status` builds and deploys | ✅ (gated) |
+| All 15 wrapped engine functions logging in last 30 min | ✅ (gated) |
+| `compute-hammer-state` latency < 1500ms avg | ✅ (gated) |
+| Pattern moat populated | ✅ (gated) |
+| System health ≥ 80 | ✅ (gated) |
+| Final report with verified data points | ✅ |
+
+Each gate must pass with a query result or it gets reported as a blocker. No "looks good" claims.
 
