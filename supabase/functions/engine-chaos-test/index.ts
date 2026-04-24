@@ -9,7 +9,21 @@ const corsHeaders = {
 
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'engine-chaos-test',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const authHeader = req.headers.get("Authorization");
@@ -111,12 +125,14 @@ serve(async (req) => {
       metadata: { baseline_weights: baselineMap, chaos_weights: chaosMap, sentinel_drifts, adversarial_fails, restored: true },
     });
 
+    await logRun(admin, 'success', startMs, undefined, { sentinel_drifts, adversarial_fails });
     return new Response(JSON.stringify({
       status: "ok", baseline_weights: baselineMap, chaos_weights: chaosMap,
       sentinel_drifts, adversarial_fails, restored: true,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("[engine-chaos-test]", err);
+    await logRun(admin, 'fail', startMs, String(err));
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

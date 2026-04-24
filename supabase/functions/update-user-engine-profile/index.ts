@@ -16,7 +16,21 @@ function stddev(xs: number[]): number {
   return Math.sqrt(v);
 }
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'update-user-engine-profile',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 serve(async (req) => {
+  const startMs = Date.now();
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(
@@ -83,11 +97,13 @@ serve(async (req) => {
       processed++;
     }
 
+    await logRun(supabase, 'success', startMs, undefined, { profiles_updated: processed });
     return new Response(JSON.stringify({ status: "ok", profiles_updated: processed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("[update-user-engine-profile]", err);
+    await logRun(supabase, 'fail', startMs, String(err));
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

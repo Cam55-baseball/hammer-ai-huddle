@@ -13,6 +13,19 @@ const SANDBOX_COUNT = 3;
 const POLL_MAX_MS = 30_000;
 const POLL_INTERVAL_MS = 2_000;
 
+// Phase 7 — Observability wrapper
+async function logRun(supabase: any, status: 'success'|'fail'|'timeout', startMs: number, error?: string, metadata?: any) {
+  try {
+    await supabase.from('engine_function_logs').insert({
+      function_name: 'engine-adversarial',
+      status,
+      duration_ms: Date.now() - startMs,
+      error_message: error ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch { /* silent */ }
+}
+
 type SB = ReturnType<typeof createClient>;
 
 Deno.serve(async (req: Request) => {
@@ -56,6 +69,11 @@ Deno.serve(async (req: Request) => {
     }
 
     const passed = results.filter((r) => r.pass).length;
+    await logRun(supabase, 'success', t0, undefined, {
+      scenarios_run: results.length,
+      passed,
+      failed: results.length - passed,
+    });
     return new Response(
       JSON.stringify({
         ok: true,
@@ -70,6 +88,7 @@ Deno.serve(async (req: Request) => {
     );
   } catch (e) {
     console.error('[adversarial] fatal', e);
+    await logRun(supabase, 'fail', t0, String(e));
     return new Response(
       JSON.stringify({ ok: false, error: String(e), run_ms: Date.now() - t0 }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
