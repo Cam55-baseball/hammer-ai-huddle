@@ -1,125 +1,215 @@
 
 
-# Engine Heartbeat — Permanent Truth Check (Continuous Verification Layer)
+# Engine Sentinel — Truth-vs-Reality Verification Layer
 
 ## Objective
-Convert the Hammers Modality engine from "tested and working" to "continuously verified" — detect any silent failure in triggers, workers, aggregation, or pipeline timing within 15 minutes of it happening.
+Add a second-order observer that audits **whether engine outputs match reality**, not just whether the pipeline ran. Heartbeat = "alive". Sentinel = "right".
 
 ---
 
 ## Architecture
 
-A pg_cron job (every 15 min) hits a new edge function `engine-heartbeat`, which:
-1. Inserts a heartbeat log for a dedicated system user
-2. Triggers `hie-refresh-worker` + `compute-hammer-state`
-3. Runs 5 validation checks
-4. Writes a structured result row to `engine_heartbeat_logs`
-5. On failure → writes to `audit_log` with `action='heartbeat_failed'` (so existing `useEngineHealth` failure counter picks it up + admin dashboard can surface it)
+A pg_cron job (every 60 min) hits a new edge function `engine-sentinel`, which:
+1. Selects 5–10 high-signal users (deterministic pool, refreshed weekly)
+2. For each user: pulls raw inputs → independently computes **expected state** via a simplified truth model → compares to actual `hammer_state_snapshots.overall_state`
+3. Calculates `drift_score` (0–100) and flags if > threshold
+4. Writes one row per user per run to `engine_sentinel_logs`
+5. On drift: writes to `audit_log` with `action='engine_drift_detected'`
 
-No external alerting service required — failures surface in the existing **Engine Health** admin panel (which already polls `failures24h` every 30s). Optional: extend later to send email via existing `RESEND_API_KEY` if user wants push alerts.
+**Strict additive boundary**: Sentinel reads only. Never invokes `compute-hammer-state`. Never mutates engine state. Never blocks production. Pure observer.
 
 ---
 
-## Components to Build
+## Components
 
 ### 1. Database Migration
-- **New table**: `engine_heartbeat_logs`
-  ```
-  id uuid pk default gen_random_uuid()
-  run_at timestamptz not null default now()
-  success boolean not null
-  latency_ms integer
-  failure_reason text
-  failure_check text  -- which CHECK # failed (write/hie/hammer/consistency/timing)
-  hie_snapshot_age_ms integer
-  hammer_snapshot_age_ms integer
-  completions_in_aggregation integer
-  metadata jsonb default '{}'::jsonb
-  ```
-- **Indexes**: `(run_at desc)`, `(success, run_at desc)` for dashboard queries
-- **RLS**: read = owner/admin only; insert = service role only (no public writes)
-- **Retention**: keep 30 days of rows (cleanup function `cleanup_old_heartbeat_logs()` invoked by same cron at midnight UTC — additive, no destructive behavior elsewhere)
-
-### 2. Heartbeat System User
-- Identify-or-create a dedicated `auth.users` row with deterministic email `heartbeat@hammers-system.local` (cannot be created via auth.admin without service role — use existing `95de827d…` (owner) as the heartbeat user since they're already the deep-trace anchor and have prior activity. Tag heartbeat rows uniquely via `notes='heartbeat'` so they don't pollute real metrics).
-- **Decision**: Use **owner user** as heartbeat target. Heartbeat logs are tagged `notes='heartbeat'` and have `actual_duration_minutes=1`, which makes them filterable + invisible in normal dashboards (already excluded by existing `notes NOT LIKE 'kill%'` patterns we've established). Owner already has consent, full access, and is monitored anyway.
-
-### 3. Edge Function: `engine-heartbeat`
-**Location**: `supabase/functions/engine-heartbeat/index.ts`
-**Auth**: `verify_jwt = false` (cron-invoked with service role)
-**Logic**:
+**Table**: `engine_sentinel_logs`
 ```
-T0 = now()
-1. INSERT custom_activity_logs { user_id: HEARTBEAT_USER, notes: 'heartbeat', actual_duration_minutes: 1, perceived_intensity: 1 } RETURNING created_at
-2. CHECK 1: INSERT succeeded, created_at within 2min → else FAIL('write_failed')
-3. await invoke('hie-refresh-worker') — wait for completion
-4. await invoke('compute-hammer-state', { user_id: HEARTBEAT_USER })
-5. CHECK 2: SELECT latest hie_snapshots WHERE user_id=HEARTBEAT AND computed_at > T0 → else FAIL('hie_stale')
-6. CHECK 3: SELECT latest hammer_state_snapshots WHERE user_id=HEARTBEAT AND computed_at > T0 → else FAIL('hammer_stale')
-7. CHECK 4: parse dopamine_inputs.completions_last_6h from latest snapshot → must be ≥ raw count of heartbeat logs in last 6h → else FAIL('aggregation_drift')
-8. CHECK 5: total elapsed (now - T0) < 60_000 ms → else FAIL('pipeline_slow')
-9. INSERT engine_heartbeat_logs { success: true|false, latency_ms, failure_reason, failure_check, ... }
-10. On failure: also INSERT audit_log { action: 'heartbeat_failed', metadata: {...} } so existing engine-health dashboard picks it up
+id              uuid pk default gen_random_uuid()
+run_at          timestamptz not null default now()
+user_id         uuid not null
+expected_state  text not null    -- from sentinel truth model
+actual_state    text             -- from latest hammer_state_snapshots (nullable if missing)
+drift_score     integer not null -- 0..100
+drift_flag      boolean not null default false
+failure_reason  text             -- 'no_snapshot' | 'stale_snapshot' | 'state_mismatch' | null
+inputs_snapshot jsonb default '{}'::jsonb   -- raw inputs the truth model saw
+engine_snapshot jsonb default '{}'::jsonb   -- the engine's reasoning (arousal/recovery/dopamine/motor/cognitive scores)
+metadata        jsonb default '{}'::jsonb   -- run_id, sentinel_version, distance_matrix used
+```
+**Indexes**: `(run_at desc)`, `(drift_flag, run_at desc)`, `(user_id, run_at desc)`
+**RLS**: read = owner/admin only; insert = service role only
+**Retention**: 60 days via `cleanup_old_sentinel_logs()` invoked by daily cron (additive, isolated to this table)
+
+### 2. Sentinel User Pool — Deterministic, Not Random
+**Selection logic** (cached at run start, no manual list):
+```sql
+WITH activity_score AS (
+  SELECT user_id,
+    count(*) FILTER (WHERE created_at > now() - interval '7 days') as logs_7d,
+    count(DISTINCT date_trunc('day', created_at)) FILTER (WHERE created_at > now() - interval '14 days') as active_days_14d,
+    avg(perceived_intensity) FILTER (WHERE created_at > now() - interval '7 days') as avg_rpe_7d,
+    stddev(perceived_intensity) FILTER (WHERE created_at > now() - interval '7 days') as rpe_variance_7d
+  FROM custom_activity_logs
+  WHERE notes IS NULL OR notes NOT IN ('heartbeat')
+  GROUP BY user_id
+  HAVING count(*) FILTER (WHERE created_at > now() - interval '7 days') >= 5
+)
+SELECT user_id FROM activity_score
+ORDER BY (logs_7d * 0.4 + active_days_14d * 2 + COALESCE(rpe_variance_7d, 0) * 5) DESC
+LIMIT 10;
+```
+- Always force-include User A (`95de827d…`) as anchor regardless of rank
+- Excludes heartbeat-tagged logs (no synthetic noise)
+- Variance bonus = mixed behavior patterns, not just high-volume users
+
+### 3. Edge Function: `engine-sentinel`
+**Location**: `supabase/functions/engine-sentinel/index.ts`
+**Auth**: `verify_jwt = false` (cron + service role only)
+
+**Per-user flow**:
+```
+A. PULL RAW INPUTS (read-only, parallel queries):
+   - completions_6h: count(custom_activity_logs WHERE user_id AND created_at > now() - 6h)
+   - completions_24h: same, 24h window
+   - sessions_3d: distinct date count, 3d window
+   - avg_rpe_24h, max_rpe_24h
+   - avg_duration_24h
+   - sleep_quality_24h (if profiles.last_sleep_quality or recent vault entry exists; else null)
+   - hours_since_last_activity
+
+B. INDEPENDENT TRUTH MODEL (NOT compute-hammer-state):
+   Sentinel-specific deterministic classifier — separate file: `truth-model.ts`
+   
+   load_score = clamp(0..100, completions_24h*8 + sessions_3d*10 + avg_rpe_24h*4)
+   recovery_score = clamp(0..100, hours_since_last_activity*2 + (sleep_quality_24h ?? 50))
+   freshness_score = clamp(0..100, 100 - max(0, completions_6h*15))
+   
+   expected_state =
+     if load_score >= 70 AND recovery_score < 40        → 'recover'   (overdrive risk)
+     elif load_score >= 50 AND freshness_score >= 60    → 'prime'     (worked + still fresh)
+     elif load_score < 30 AND recovery_score >= 70      → 'prime'     (rested, ready)
+     elif load_score >= 30 AND load_score < 70          → 'ready'     (steady state)
+     elif load_score < 30 AND recovery_score >= 40      → 'ready'     (low load, fine)
+     else                                                → 'caution'  (mixed/ambiguous)
+
+C. PULL ACTUAL ENGINE STATE:
+   SELECT * FROM hammer_state_snapshots WHERE user_id ORDER BY computed_at DESC LIMIT 1
+   - If null → failure_reason='no_snapshot', drift_score=100, drift_flag=true
+   - If older than 24h → failure_reason='stale_snapshot', drift_score=80, drift_flag=true
+
+D. DRIFT CALCULATION:
+   STATE_DISTANCE matrix:
+     prime↔ready=15, prime↔caution=40, prime↔recover=80
+     ready↔caution=25, ready↔recover=60
+     caution↔recover=35
+     same↔same=0
+   drift_score = STATE_DISTANCE[expected][actual]
+   drift_flag = drift_score >= 30
+
+E. PERSIST:
+   INSERT engine_sentinel_logs { full row }
+   IF drift_flag: INSERT audit_log { action: 'engine_drift_detected', user_id, metadata: { expected, actual, drift_score, inputs } }
+
+F. RETURN run summary: { users_evaluated, drifts_flagged, worst_drift, run_ms }
 ```
 
-### 4. pg_cron Job
-- Runs every 15 min: `*/15 * * * *`
-- Calls `engine-heartbeat` via `net.http_post` with anon key
-- Job name: `engine-heartbeat-15min`
+**Failure isolation**: Each user wrapped in try/catch — one user's read failure never breaks the run. Failed users get a row with `failure_reason='compute_error'`.
 
-### 5. Admin UI Surface (Engine Health Dashboard Extension)
-**Reuse existing `useEngineHealth` hook**, add a new `useHeartbeatHealth` hook:
-- Query: latest 10 heartbeat runs, success rate over last 24h, last failure reason, p50/p95 latency
-- Surface in existing Engine Health admin panel as a new card: "Heartbeat (last 24h: X/96 pass, p95 latency Yms)"
-- Failed runs link to `engine_heartbeat_logs` row with full context
+### 4. pg_cron Schedule
+```sql
+select cron.schedule(
+  'engine-sentinel-60min',
+  '7 * * * *',  -- :07 every hour, offset from heartbeat (:00,:15,:30,:45) to spread load
+  $$ select net.http_post(...engine-sentinel...) $$
+);
+select cron.schedule(
+  'engine-sentinel-cleanup-daily',
+  '17 4 * * *',  -- 4:17 UTC daily
+  $$ select public.cleanup_old_sentinel_logs(); $$
+);
+```
 
-### 6. Future Hook (Not in this build)
-Optional later: edge function `notify-heartbeat-failure` triggered by `engine_heartbeat_logs` INSERT with `success=false` → emails owner via Resend. Not building now per scope ("alerting" listed but no provider chosen — defer to user when they want push).
+### 5. Hook: `useSentinelHealth.ts`
+Mirrors `useHeartbeatHealth` shape:
+- `driftRate24h` (% of evaluations flagged)
+- `usersFlagged24h` (distinct count)
+- `worstDriftCase` (single row, joined with user email if available)
+- `recentRuns` (last 20 sentinel rows for sparkline)
+- `loading`
+
+Polls every 60s.
+
+### 6. Admin UI — Engine Health Dashboard Extension
+Add a new card after the Heartbeat card in `EngineHealthDashboard.tsx`:
+- Title: "Engine Truth Drift (last 24h)"
+- Metrics row: drift rate %, users flagged, worst drift score
+- Worst-case row: shows expected vs actual state badges + click-to-expand inputs/engine snapshots
+- Recent runs strip: 20 squares colored by drift_score (green ≤15, amber ≤30, red >30)
 
 ---
 
 ## Files Created/Modified
 
-**Created** (4 files):
-1. Migration: `engine_heartbeat_logs` table + RLS + indexes + cleanup function
-2. `supabase/functions/engine-heartbeat/index.ts`
-3. `src/hooks/useHeartbeatHealth.ts`
-4. `supabase/config.toml` — add `[functions.engine-heartbeat] verify_jwt = false`
+**Created** (4):
+1. Migration: `engine_sentinel_logs` table + RLS + indexes + `cleanup_old_sentinel_logs()` function
+2. `supabase/functions/engine-sentinel/index.ts`
+3. `supabase/functions/engine-sentinel/truth-model.ts` (isolated truth classifier — pure function, easy to test/audit)
+4. `src/hooks/useSentinelHealth.ts`
 
-**Modified** (1 file):
-5. Engine Health admin component (path TBD via search at execution time — likely `src/components/admin/EngineHealthPanel.tsx` or similar) — append heartbeat card
+**Modified** (2):
+5. `src/pages/EngineHealthDashboard.tsx` — append Truth Drift card
+6. `supabase/config.toml` — add `[functions.engine-sentinel] verify_jwt = false`
 
-**Migrations** (separately, via Supabase migration tool):
-- Create table + RLS
-- pg_cron schedule INSERT (uses `cron.schedule` + `net.http_post` per the supabase-managed pattern)
+**Cron schedule** (separate via insert tool, not migration — contains anon key per platform rules):
+- `engine-sentinel-60min`
+- `engine-sentinel-cleanup-daily`
 
 ---
 
 ## Validation After Build
-1. Manually invoke `engine-heartbeat` once via `supabase--curl_edge_functions` → confirm row written, all 5 checks pass
-2. Check `engine_heartbeat_logs` for the inserted row
-3. Verify cron job exists: `SELECT jobname, schedule FROM cron.job WHERE jobname = 'engine-heartbeat-15min'`
-4. Wait 15+ min and confirm second auto-run row appears
-5. Inject failure: temporarily break `compute-hammer-state` → wait one cron cycle → confirm `engine_heartbeat_logs` row with `success=false, failure_check='hammer_stale'` AND `audit_log` row with `action='heartbeat_failed'`
-6. Revert break → confirm next cycle returns to success
+
+1. **Manual invoke** → confirm rows written for ~10 users, drift distribution visible
+2. **Inject controlled drift** (read-only test, no engine mutation):
+   - Insert 15 high-RPE logs in last 6h for User A (already established pattern, tagged `notes='kill sentinel-test'`)
+   - Wait for next sentinel run (or invoke manually)
+   - Confirm User A row shows expected≈'recover', drift_score>30, drift_flag=true, audit_log entry written
+3. **Verify cleanup**: `SELECT count(*) FROM engine_sentinel_logs` doesn't grow unboundedly (60d retention)
+4. **Verify isolation**: confirm `compute-hammer-state` was NOT invoked during sentinel run (check edge function logs)
+5. **UI check**: Truth Drift card renders on `/engine-health` with real data
 
 ---
 
 ## Pre-Existing Constraints Honored
-- **No reserved schema modifications** (auth/storage/realtime untouched)
-- **No CHECK constraints** for time-based validation — using triggers if needed (none required here, all logic in edge function)
-- **Service-role only writes** to heartbeat table → safe RLS
-- **Heartbeat logs tagged** so they're excluded from MPI/HIE real metrics by adding `AND notes != 'heartbeat'` to upstream aggregations where they could skew real scores. **Risk audit needed**: `compute-hammer-state` queries `custom_activity_logs` — heartbeat logs WILL inflate `completions_last_6h` for the owner. Acceptable because: (a) it's the owner account, (b) it's the test signal we WANT to validate aggregation, (c) only 1-min duration / 1-RPE so motor/cognitive impact is negligible. Documented as known behavior.
+- ✅ No reserved schema modifications (auth/storage/realtime untouched)
+- ✅ No CHECK constraints for time-based logic — all logic in edge function
+- ✅ Service-role only writes; owner/admin only reads via RLS
+- ✅ Sentinel-tagged test logs (`kill sentinel-test`) excluded from real metrics aggregation patterns we've established
+- ✅ Strictly additive — zero changes to `compute-hammer-state`, `hie-refresh-worker`, or any existing engine logic
+- ✅ Heartbeat-tagged logs excluded from sentinel pool selection (no double-counting synthetic data)
 
 ---
 
+## Risk Assessment
+- **Performance**: 10 users × ~5 read queries × hourly = ~1200 lightweight queries/day. Negligible.
+- **Storage**: ~10 rows/hour × 60d = ~14k rows max steady state. Tiny.
+- **False positives**: Truth model is intentionally simple → expected to flag ~5–15% as "drift" initially. This is signal, not bug — gives owner visibility into where the real engine and the sanity model disagree, which is exactly the diagnostic value.
+- **False negatives**: A drift the simple model also produces wrong won't be caught. Acceptable — sentinel is one of multiple verification layers, not the only one.
+
+---
+
+## Open Decisions (using best defaults; flag if you'd prefer different)
+1. **Drift threshold = 30** (adjacent states pass, non-adjacent flag). Could be 25 for stricter, 40 for looser.
+2. **Pool size = 10** users + User A. Could be 5 (lighter) or 20 (more signal, more noise).
+3. **Schedule = hourly at :07**. Could be every 30min or every 2hr.
+4. **No alerting hook** in this build (matches Heartbeat decision — drift surfaces in admin UI + audit_log; Resend integration deferred until you choose channel).
+
+If any of those four defaults are wrong for you, say so before approval and I'll adjust.
+
 ## Time Budget
-- Build: ~6-8 minutes (1 migration, 1 edge function, 1 hook, 1 admin card edit, 1 cron schedule)
-- Validation: ~3 minutes manual + 15 min wait for first auto-cron
+- Build: ~7-9 minutes (1 migration, 2 edge function files, 1 hook, 1 UI card, 1 config edit, 1 cron schedule)
+- Validation: ~3 minutes manual + drift injection test
 
 ## Cleanup
-None needed — heartbeat logs auto-rotate after 30d via cleanup function.
-
-## Open Decision (no clarification needed; using best default)
-**Heartbeat user** = owner (`95de827d…`). Could also create a dedicated synthetic user via service role, but that requires creating an `auth.users` row which needs explicit user approval. Using owner is simpler, lower-risk, and the owner is already the deep-trace anchor across all prior tests. If you'd prefer a dedicated synthetic user instead, say the word before approval and I'll switch the plan.
+None required — auto-rotates after 60d.
 
