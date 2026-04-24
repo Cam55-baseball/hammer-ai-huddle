@@ -63,7 +63,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const mergeMonotonic = useCallback(
     (current: CustomActivityLog[], incoming: CustomActivityLog[]): CustomActivityLog[] => {
       const ts = (l: CustomActivityLog) =>
-        new Date((l.updated_at as string | undefined) ?? l.created_at ?? 0).getTime();
+        new Date(((l as unknown as { updated_at?: string }).updated_at) ?? l.created_at ?? 0).getTime();
       const byId = new Map<string, CustomActivityLog>();
       for (const row of current) byId.set(row.id, row);
       for (const row of incoming) {
