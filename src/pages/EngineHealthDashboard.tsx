@@ -13,6 +13,7 @@ import { useSentinelHealth } from '@/hooks/useSentinelHealth';
 import { useAdversarialHealth } from '@/hooks/useAdversarialHealth';
 import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart, Eye, Swords } from 'lucide-react';
 import { SystemIntegrityBadge } from '@/components/owner/SystemIntegrityBadge';
+import { FunctionReliabilityPanel } from '@/components/owner/FunctionReliabilityPanel';
 
 const formatRel = (iso: string | null) => {
   if (!iso) return 'Never';
@@ -337,6 +338,8 @@ export default function EngineHealthDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <FunctionReliabilityPanel />
       </div>
     </DashboardLayout>
   );
