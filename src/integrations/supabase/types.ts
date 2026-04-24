@@ -263,6 +263,7 @@ export type Database = {
           evaluation_window_hours: number
           explanation_id: string | null
           id: string
+          intervention_id: string | null
           snapshot_id: string | null
           user_action_inferred: string | null
           user_id: string
@@ -276,6 +277,7 @@ export type Database = {
           evaluation_window_hours?: number
           explanation_id?: string | null
           id?: string
+          intervention_id?: string | null
           snapshot_id?: string | null
           user_action_inferred?: string | null
           user_id: string
@@ -289,6 +291,7 @@ export type Database = {
           evaluation_window_hours?: number
           explanation_id?: string | null
           id?: string
+          intervention_id?: string | null
           snapshot_id?: string | null
           user_action_inferred?: string | null
           user_id?: string
@@ -299,6 +302,13 @@ export type Database = {
             columns: ["explanation_id"]
             isOneToOne: false
             referencedRelation: "hammer_state_explanations_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advisory_feedback_logs_intervention_id_fkey"
+            columns: ["intervention_id"]
+            isOneToOne: false
+            referencedRelation: "engine_interventions"
             referencedColumns: ["id"]
           },
           {
@@ -2002,6 +2012,50 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_interventions: {
+        Row: {
+          created_at: string
+          directive: string
+          executed: boolean
+          id: string
+          intervention_type: string
+          prediction_id: string | null
+          priority: number
+          trigger_reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          directive: string
+          executed?: boolean
+          id?: string
+          intervention_type: string
+          prediction_id?: string | null
+          priority?: number
+          trigger_reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          directive?: string
+          executed?: boolean
+          id?: string
+          intervention_type?: string
+          prediction_id?: string | null
+          priority?: number
+          trigger_reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engine_interventions_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "engine_state_predictions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       engine_sentinel_logs: {
         Row: {
           actual_state: string | null
@@ -2073,6 +2127,59 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      engine_state_predictions: {
+        Row: {
+          base_snapshot_id: string | null
+          confidence_24h: number
+          confidence_48h: number
+          confidence_72h: number
+          created_at: string
+          id: string
+          input_vector: Json
+          predicted_state_24h: string
+          predicted_state_48h: string
+          predicted_state_72h: string
+          risk_flags: string[]
+          user_id: string
+        }
+        Insert: {
+          base_snapshot_id?: string | null
+          confidence_24h: number
+          confidence_48h: number
+          confidence_72h: number
+          created_at?: string
+          id?: string
+          input_vector?: Json
+          predicted_state_24h: string
+          predicted_state_48h: string
+          predicted_state_72h: string
+          risk_flags?: string[]
+          user_id: string
+        }
+        Update: {
+          base_snapshot_id?: string | null
+          confidence_24h?: number
+          confidence_48h?: number
+          confidence_72h?: number
+          created_at?: string
+          id?: string
+          input_vector?: Json
+          predicted_state_24h?: string
+          predicted_state_48h?: string
+          predicted_state_72h?: string
+          risk_flags?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engine_state_predictions_base_snapshot_id_fkey"
+            columns: ["base_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "hammer_state_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       engine_weight_adjustments: {
         Row: {
@@ -9477,7 +9584,9 @@ export type Database = {
       cleanup_old_advisory_logs: { Args: never; Returns: undefined }
       cleanup_old_explanations: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
+      cleanup_old_interventions: { Args: never; Returns: undefined }
       cleanup_old_patterns: { Args: never; Returns: undefined }
+      cleanup_old_predictions: { Args: never; Returns: undefined }
       cleanup_old_sentinel_logs: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
