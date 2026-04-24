@@ -1807,6 +1807,51 @@ export type Database = {
         }
         Relationships: []
       }
+      engine_adversarial_logs: {
+        Row: {
+          actual_state: string | null
+          engine_output: Json
+          expected_state: string
+          failure_reason: string | null
+          forbidden_states: string[]
+          id: string
+          inputs: Json
+          metadata: Json
+          pass: boolean
+          run_at: string
+          scenario: string
+          user_id: string
+        }
+        Insert: {
+          actual_state?: string | null
+          engine_output?: Json
+          expected_state: string
+          failure_reason?: string | null
+          forbidden_states?: string[]
+          id?: string
+          inputs?: Json
+          metadata?: Json
+          pass: boolean
+          run_at?: string
+          scenario: string
+          user_id: string
+        }
+        Update: {
+          actual_state?: string | null
+          engine_output?: Json
+          expected_state?: string
+          failure_reason?: string | null
+          forbidden_states?: string[]
+          id?: string
+          inputs?: Json
+          metadata?: Json
+          pass?: boolean
+          run_at?: string
+          scenario?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       engine_heartbeat_logs: {
         Row: {
           completions_in_aggregation: number | null
@@ -9210,6 +9255,7 @@ export type Database = {
         }
       }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
+      cleanup_old_adversarial_logs: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
       cleanup_old_sentinel_logs: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
