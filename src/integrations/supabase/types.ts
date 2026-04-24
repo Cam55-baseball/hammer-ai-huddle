@@ -5235,6 +5235,7 @@ export type Database = {
           is_free_agent: boolean | null
           is_professional: boolean | null
           is_switch_hitter: boolean | null
+          is_system_account: boolean
           last_name: string | null
           mlb_affiliate: string | null
           ncaa_id: string | null
@@ -5296,6 +5297,7 @@ export type Database = {
           is_free_agent?: boolean | null
           is_professional?: boolean | null
           is_switch_hitter?: boolean | null
+          is_system_account?: boolean
           last_name?: string | null
           mlb_affiliate?: string | null
           ncaa_id?: string | null
@@ -5357,6 +5359,7 @@ export type Database = {
           is_free_agent?: boolean | null
           is_professional?: boolean | null
           is_switch_hitter?: boolean | null
+          is_system_account?: boolean
           last_name?: string | null
           mlb_affiliate?: string | null
           ncaa_id?: string | null
@@ -9840,6 +9843,7 @@ export type Database = {
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       cleanup_old_weight_adjustments: { Args: never; Returns: undefined }
       cleanup_old_weight_history: { Args: never; Returns: undefined }
+      cleanup_synthetic_activity_logs: { Args: never; Returns: undefined }
       create_ab_link: {
         Args: { p_link_code: string; p_sport: string; p_user_id: string }
         Returns: {
@@ -9931,6 +9935,7 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_system_user: { Args: { _uid: string }; Returns: boolean }
       manual_archive_scout_applications: {
         Args: never
         Returns: {

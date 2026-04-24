@@ -58,11 +58,32 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   }, [user, selectedSport]);
 
+  // Phase 8 — Monotonic merge: never replace a newer local row with a stale server payload.
+  // Compares by updated_at (falls back to created_at). DELETE events apply unconditionally upstream.
+  const mergeMonotonic = useCallback(
+    (current: CustomActivityLog[], incoming: CustomActivityLog[]): CustomActivityLog[] => {
+      const ts = (l: CustomActivityLog) =>
+        new Date(((l as unknown as { updated_at?: string }).updated_at) ?? l.created_at ?? 0).getTime();
+      const byId = new Map<string, CustomActivityLog>();
+      for (const row of current) byId.set(row.id, row);
+      for (const row of incoming) {
+        const existing = byId.get(row.id);
+        if (!existing || ts(row) >= ts(existing)) {
+          byId.set(row.id, row);
+        }
+      }
+      // Drop locally-cached rows that no longer exist server-side (server is source of truth for membership).
+      const incomingIds = new Set(incoming.map((r) => r.id));
+      return Array.from(byId.values()).filter((r) => incomingIds.has(r.id));
+    },
+    []
+  );
+
   const fetchTodayLogs = useCallback(async () => {
     if (!user) return;
-    
+
     const today = getTodayDate();
-    
+
     try {
       const { data, error } = await supabase
         .from('custom_activity_logs')
@@ -71,11 +92,12 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         .eq('entry_date', today);
 
       if (error) throw error;
-      setTodayLogs((data || []) as CustomActivityLog[]);
+      const incoming = (data || []) as CustomActivityLog[];
+      setTodayLogs((prev) => mergeMonotonic(prev, incoming));
     } catch (error) {
       console.error('Error fetching today logs:', error);
     }
-  }, [user]);
+  }, [user, mergeMonotonic]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);

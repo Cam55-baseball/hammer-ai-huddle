@@ -6,8 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Owner is heartbeat target — already deep-trace anchor across all prior Kill Tests.
-const HEARTBEAT_USER_ID = "95de827d-7418-460b-8b79-267bf79bdca4";
+// Phase 8 — heartbeat now writes to dedicated system user (NEVER a real user).
+// Real-user activity logs are protected by structural triggers; this user is exempted via profiles.is_system_account.
+const HEARTBEAT_USER_ID = "00000000-0000-0000-0000-000000000001";
 const PIPELINE_TIMEOUT_MS = 150_000;
 const STALE_THRESHOLD_MS = 120_000;
 
