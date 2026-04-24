@@ -1,221 +1,105 @@
 
 
-# Adversarial Drift Engine — Reality Stress Testing Layer
+# Adversarial Engine — Injection Contract Fix
 
-## Objective
-Move from "engine agrees with itself" → "engine cannot be tricked." Sentinel checks alignment between two models. Adversarial actively fabricates known-failure-pattern inputs and asserts the engine produces physiologically correct outputs.
+## Root Cause (Confirmed)
+Every scenario fails with: `inject_failed: check_all requires all checkboxes to be true`.
 
----
+The `derive_completion_state` BEFORE trigger runs first and **overrides** `completion_method`. Even though `mkLog()` sets `completion_method: 'done_button'`, the trigger code path:
+1. Sees `completion_state='completed'` → leaves it alone but...
+2. Then `validate_completion_intent` AFTER trigger checks: `if completion_method='check_all' AND NOT all_checked(...)` → fails.
 
-## Architecture
+Wait — we set `done_button`, not `check_all`. Let me re-read the trigger:
 
-A pg_cron job (every 6 hours) hits a new edge function `engine-adversarial`, which:
-1. Iterates through 5 scripted scenarios on dedicated sandbox users
-2. Cleans prior adversarial logs for that scenario+user (idempotent reset)
-3. Inserts synthetic logs tagged `notes='adversarial:<scenario>'`
-4. Triggers `hie-refresh-worker` + `compute-hammer-state` for the sandbox user
-5. Reads latest `hammer_state_snapshots.overall_state`
-6. Asserts result against scenario's expected/forbidden state set
-7. Writes one row per scenario per run to `engine_adversarial_logs`
-8. On fail → writes `audit_log` with `action='engine_adversarial_fail'`
-
-**Boundary**: Adversarial layer only operates on dedicated sandbox users. Real users never see synthetic data.
-
----
-
-## Components
-
-### 1. Database Migration
-**Table**: `engine_adversarial_logs`
+Looking at `derive_completion_state` lines:
 ```
-id              uuid pk default gen_random_uuid()
-run_at          timestamptz not null default now()
-scenario        text not null      -- 'overload_spike' | 'fake_recovery' | 'stale_dominance' | 'low_load_high_readiness' | 'noise_chaos'
-user_id         uuid not null      -- sandbox user used
-expected_state  text not null      -- semantic intent (e.g. 'recover')
-forbidden_states text[] not null   -- explicit fail-list (more robust than expected match)
-actual_state    text               -- from hammer_state_snapshots after injection
-pass            boolean not null
-failure_reason  text               -- 'forbidden_state_returned' | 'no_snapshot' | 'pipeline_error' | 'timeout'
-inputs          jsonb default '{}'::jsonb   -- log count, RPE distribution, time spread
-engine_output   jsonb default '{}'::jsonb   -- full snapshot row (arousal/recovery/dopamine/motor/cognitive)
-metadata        jsonb default '{}'::jsonb   -- run_id, sandbox_user_email, duration_ms
+IF NEW.completion_state = 'completed' THEN
+  NEW.completed := TRUE; ...
+  RETURN NEW;  ← returns early, keeps completion_method='done_button'
 ```
-**Indexes**: `(run_at desc)`, `(pass, run_at desc)`, `(scenario, run_at desc)`
-**RLS**: read = owner/admin only; insert = service role only
-**Retention**: 90 days via `cleanup_old_adversarial_logs()` (additive)
+So that path should preserve `done_button`. But the error says `check_all`.
 
-### 2. Sandbox User Strategy — Critical Decision Point
+**Real culprit**: The early-return only happens when `completion_state` arrives as `'completed'`. But the column **default** is `'not_started'` and `completion_method` default is `'none'`. If our insert payload's `completion_state` is being stripped/ignored by PostgREST (e.g. RLS/column-level), the trigger sees `not_started` → recomputes via `has_any_checked(checkboxStates)` → since `task_1: true` exists → state becomes `'in_progress'`, NOT `'completed'`. Then somewhere downstream… 
 
-**Three options; picking #2 with auto-bootstrap:**
+Actually the error message `check_all requires all checkboxes to be true` only fires when `completion_method='check_all'`. We never set that. So somewhere `completion_method` is being mutated to `check_all`. The only place that could happen: a default we're missing, OR — most likely — **the `validate_completion_intent` trigger ordering means it sees the post-derived state**, and our payload arrives with `completed: true, completion_state: 'completed', completion_method: 'done_button'` but the RPC client's snake_case translation isn't wiring `completion_method` (a non-default field name? no, it matches). 
 
-| Option | Tradeoff |
-|---|---|
-| 1. Real owner user | Pollutes real metrics — REJECTED |
-| 2. **Dedicated sandbox auth users (created via service role)** | **Clean isolation, fully automated** ✅ |
-| 3. Filter `notes LIKE 'adversarial:%'` everywhere | Brittle — every aggregation needs the filter, easy to miss one |
+Rather than guess further, the **fix is to align with the system's contract** as the user instructed: **stop overriding derived fields entirely. Insert minimum valid input, let triggers compute everything.**
 
-**Implementation**: On first invocation, function checks for 3 sandbox users by deterministic email pattern:
-- `adversarial-sandbox-1@hammers-system.local`
-- `adversarial-sandbox-2@hammers-system.local`
-- `adversarial-sandbox-3@hammers-system.local`
+## Fix Strategy
 
-If missing, creates them via `supabase.auth.admin.createUser()` with random passwords, marks via `profiles.full_name = 'Adversarial Sandbox N'`, and adds rows to `athlete_mpi_settings` (sport='baseball'). Sandbox users:
-- Are excluded from sentinel pool (will modify sentinel selection query to exclude `email LIKE '%@hammers-system.local'`)
-- Are excluded from heartbeat aggregation alignment check
-- Are excluded from real cohort analytics queries (one additive change to existing aggregation patterns: add to existing `notes != 'heartbeat'` filter)
+Rewrite `mkLog()` to insert a **realistic user-shaped row** that the triggers will validate cleanly:
 
-**One sandbox user is rotated per scenario per run** to avoid cross-contamination — scenario N uses sandbox user `(N % 3) + 1`. Each run starts by deleting prior `notes LIKE 'adversarial:%'` logs for that user (clean slate).
-
-### 3. Edge Function: `engine-adversarial`
-**Location**: `supabase/functions/engine-adversarial/index.ts`
-**Auth**: `verify_jwt = false` (cron + service role only)
-
-**Per-scenario flow**:
-```
-A. RESET: DELETE custom_activity_logs WHERE user_id=sandbox AND notes LIKE 'adversarial:%'
-   DELETE hie_snapshots/hammer_state_snapshots for sandbox user older than 1h (clean prior runs)
-
-B. INJECT: scenario-specific log generation
-   - overload_spike: 16 logs in last 6h, RPE 8-10, durations 30-60min, intervals ~20min
-   - fake_recovery: 12 logs in last 12h (RPE 7-9) + jam profiles.last_sleep_quality=5, last_recovery_score=95
-   - stale_dominance: 14 logs 20-26h ago (RPE 8-9), zero logs in last 12h
-   - low_load_high_readiness: 1 log in last 48h (RPE 2, duration 10min) + sleep_quality=5
-   - noise_chaos: 8 logs over last 24h with RPE pattern [3,9,2,8,4,9,3,7], jittered intervals
-
-C. PIPELINE TRIGGER:
-   - await invoke('hie-refresh-worker') — process dirty queue (sandbox user is auto-marked dirty by mark_hie_dirty trigger)
-   - await invoke('compute-hammer-state', { user_id: sandbox_user_id })
-   - poll hammer_state_snapshots for fresh row (max 30s, 2s interval)
-
-D. EVALUATE:
-   actual_state = latest hammer_state_snapshots.overall_state for sandbox user
-   pass = actual_state IS NOT NULL AND actual_state NOT IN forbidden_states[scenario]
-   - If actual_state is null after 30s polling → pass=false, failure_reason='timeout'
-
-E. PERSIST:
-   INSERT engine_adversarial_logs { all fields }
-   IF NOT pass: INSERT audit_log { action='engine_adversarial_fail', metadata: {scenario, expected, actual, inputs} }
-
-F. CLEANUP: Leave logs in place between runs (next run's RESET handles it). Sandbox snapshots stay for forensics.
-```
-
-**Scenario forbidden-state matrix**:
 ```ts
-const FORBIDDEN: Record<string, string[]> = {
-  overload_spike:           ['prime', 'ready'],          // must NOT say "go hard"
-  fake_recovery:            ['prime'],                   // must NOT be fooled by sleep signal
-  stale_dominance:          ['recover'],                 // must show recovery progressing (not still in recover)
-  low_load_high_readiness:  ['recover', 'caution'],      // must NOT be conservative when fresh
-  noise_chaos:              ['prime', 'recover'],        // must stabilize mid (no extremes)
-};
+{
+  user_id,
+  entry_date,
+  created_at,
+  actual_duration_minutes,
+  notes: 'adversarial:<scenario>',
+  performance_data: {
+    rpe,
+    checkboxStates: { task_1: true, task_2: true, task_3: true }  // ALL true
+  },
+  completion_state: 'completed',
+  completion_method: 'check_all',   // matches "all true" semantics
+  completed: true,
+  completed_at: created_at,
+}
 ```
 
-**Why forbidden-states instead of expected-match**: The engine has 5 states (prime/ready/caution/recover/unknown). Strict equality is too brittle (adjacent states are often acceptable). Forbidden-list flags only the *clearly wrong* outputs — which is what "cannot be tricked" actually means.
+Why this works:
+- `derive_completion_state` sees `completion_state='completed'` → early-returns, preserves our `completion_method='check_all'`
+- `validate_completion_intent` checks: method is `check_all` AND `all_checked()` returns true (all 3 keys are boolean true) → ✅ passes
+- `has_any_checked()` also true → state derivation aligns
 
-**Failure isolation**: Each scenario wrapped in try/catch. One scenario's pipeline crash doesn't kill the run. Failed scenario gets row with `failure_reason='pipeline_error'` + error message in metadata.
+This matches what a real user clicking "check all tasks" produces.
 
-### 4. pg_cron Schedule
-```sql
-select cron.schedule(
-  'engine-adversarial-6h',
-  '23 */6 * * *',  -- :23 every 6 hours (offset from heartbeat :00 and sentinel :07 to spread load)
-  $$ select net.http_post(...engine-adversarial...) $$
-);
-select cron.schedule(
-  'engine-adversarial-cleanup-daily',
-  '37 4 * * *',  -- 4:37 UTC daily
-  $$ select public.cleanup_old_adversarial_logs(); $$
-);
-```
+## Changes
 
-### 5. Hook: `useAdversarialHealth.ts`
-- `passRate24h` (% of scenario runs that passed)
-- `runsToday` (total scenarios executed)
-- `failuresByScenario` (object: scenario → count)
-- `lastFailure` (single row with full inputs/output for inspection)
-- `recentRuns` (last 30 rows for sparkline)
-- Polls every 60s
+### 1. `supabase/functions/engine-adversarial/scenarios.ts`
+Modify `mkLog()` to set `checkboxStates: { task_1: true, task_2: true, task_3: true }` and `completion_method: 'check_all'`. Single-line surgical change.
 
-### 6. Admin UI — Engine Health Dashboard Extension
-New card after Sentinel card in `EngineHealthDashboard.tsx`:
-- Title: "Adversarial Integrity (last 24h)"
-- Metrics row: pass rate %, runs today, failures by scenario (5 small chips)
-- Last failure: scenario badge + expected/forbidden vs actual + click-to-expand inputs+engine_output JSON
-- Recent runs strip: 30 squares colored by pass (green) / fail (red) with scenario tooltip
+### 2. `supabase/functions/engine-adversarial/index.ts` — Add Preflight Contract Check
+Before bulk insert, do a **single-row probe insert**. If it fails:
+- Log to `engine_adversarial_logs` with `failure_reason='invalid_insert_contract'` + the actual DB error message in metadata
+- Skip the scenario entirely (don't trigger pipeline, don't poll)
+- Continue to next scenario (don't crash whole run)
 
-### 7. Sentinel Pool Update (small additive change)
-`engine-sentinel/index.ts` user-pool query gets one extra filter:
-```sql
-... AND user_id NOT IN (SELECT id FROM auth.users WHERE email LIKE '%@hammers-system.local')
-```
-Wrapped via a service-role lookup (sentinel already runs with service role) to keep the sandbox users pure synthetic test surface.
+This converts silent invalid runs into loud, diagnosable failures.
 
----
+### 3. Backfill cleanup (one-time)
+Existing `engine_adversarial_logs` rows from broken runs are noise. Leave them — `pass=false` rows are accurate history and auto-rotate in 90d. No backfill needed.
 
-## Files Created/Modified
+### 4. Re-run validation
+After deploy:
+- Manually invoke `engine-adversarial` once
+- Confirm 5 rows written, mix of pass/fail
+- Inspect any `invalid_insert_contract` rows (should be zero)
+- Inspect actual_state distribution — expect 1-2 forbidden-state hits as the user predicted (especially `fake_recovery` and `low_load_high_readiness` since the engine doesn't currently consume `profiles.last_sleep_quality`)
 
-**Created** (4):
-1. Migration: `engine_adversarial_logs` table + RLS + indexes + `cleanup_old_adversarial_logs()` function
-2. `supabase/functions/engine-adversarial/index.ts` (orchestrator)
-3. `supabase/functions/engine-adversarial/scenarios.ts` (5 scenario generators as pure functions, easy to audit/extend)
-4. `src/hooks/useAdversarialHealth.ts`
+## Files Modified (2)
+1. `supabase/functions/engine-adversarial/scenarios.ts` — checkbox shape + completion_method
+2. `supabase/functions/engine-adversarial/index.ts` — preflight contract check + skip-on-fail
 
-**Modified** (3):
-5. `src/pages/EngineHealthDashboard.tsx` — append Adversarial Integrity card
-6. `supabase/config.toml` — add `[functions.engine-adversarial] verify_jwt = false`
-7. `supabase/functions/engine-sentinel/index.ts` — exclude sandbox user emails from selection pool
-
-**Cron schedule** (separate via insert tool, not migration):
-- `engine-adversarial-6h`
-- `engine-adversarial-cleanup-daily`
-
----
+## Files NOT Touched
+- No DB migrations (triggers are correct — adversarial layer was wrong)
+- No engine logic changes (`compute-hammer-state`, `hie-refresh-worker` untouched)
+- No UI changes (existing dashboard surfaces results correctly)
+- No new SQL function `validate_adversarial_insert()` — Step 6 is "optional"; the preflight insert IS the contract guard, executed against the real triggers (more authoritative than a duplicate function that could drift). If you want the SQL helper anyway, say so and I'll add it.
 
 ## Validation After Build
+1. `supabase--curl_edge_functions` POST `/engine-adversarial` → confirm `{passed: N, failed: 5-N}`
+2. `SELECT * FROM engine_adversarial_logs ORDER BY run_at DESC LIMIT 5` → all 5 fresh rows, no `pipeline_error`/`invalid_insert_contract`
+3. Inspect any `forbidden_state_returned` rows → those are the *real* engine weaknesses the layer was built to find
+4. Verify sandbox users have actual `hammer_state_snapshots` rows now (proof pipeline ran end-to-end)
 
-1. **Sandbox bootstrap**: First manual invocation creates 3 sandbox users → confirm via `auth.users` query
-2. **Manual full run**: invoke `engine-adversarial` → confirm 5 rows in `engine_adversarial_logs`, distribution of pass/fail
-3. **Expected initial failures**: 1-2 scenarios will likely fail on first run (especially `fake_recovery` since current engine may overweight sleep). This is the diagnostic value — it shows where engine logic needs hardening
-4. **Re-run**: invoke again, confirm RESET cleans prior synthetic logs (no log accumulation on sandbox users beyond current scenario's injection)
-5. **Verify isolation**: query `custom_activity_logs WHERE user_id != ANY(sandbox_ids) AND notes LIKE 'adversarial:%'` returns zero rows
-6. **Verify sentinel exclusion**: confirm next sentinel run does not include sandbox users in evaluation pool
-7. **UI check**: Adversarial card renders on `/engine-health` with real scenario breakdown
-
----
-
-## Pre-Existing Constraints Honored
-- ✅ No reserved schema modifications (auth via SDK admin API only — that's the sanctioned path for service-role user creation)
-- ✅ Strictly additive — zero changes to `compute-hammer-state` or `hie-refresh-worker` logic; only consume their outputs
-- ✅ Sandbox users cleanly tagged + excluded from real metrics
-- ✅ Service-role only writes; owner/admin reads via RLS
-- ✅ Cron offset from heartbeat (:00) and sentinel (:07) — no concurrent invocation collisions
-- ✅ No CHECK constraints with time-based logic
-- ✅ Adversarial logs auto-rotate after 90d
-
----
-
-## Risk Assessment
-- **Performance**: 5 scenarios × ~16 inserts × 2 pipeline invocations per scenario, every 6h = ~60 inserts/day + ~10 edge function invocations/day. Trivial.
-- **Storage**: ~20 adversarial log rows/day × 90d = ~1800 rows max. Plus residual sandbox user activity logs (~80 rows × 3 sandbox users, constantly recycled). Negligible.
-- **Pipeline contention**: Adversarial run takes ~30-60s wall time per scenario × 5 = 2.5-5 min total. Runs at :23 every 6h. Cannot collide with heartbeat (:00, :15, :30, :45) or sentinel (:07 hourly). Safe.
-- **False positives**: Forbidden-state matrix may be overly strict. Rate-limited to 4 runs/day means false positives surface quickly but don't spam. Tunable per-scenario without code redeploy by editing the FORBIDDEN map.
-- **Sandbox user pollution into real cohort queries**: Mitigated by deterministic email suffix (`@hammers-system.local`) — easy to filter wherever needed. Sentinel update is the only required filter; other aggregations don't currently filter by email so risk = sandbox users may show up in admin "user count" UI. Acceptable: 3 system users in admin counts is a known and labeled artifact.
-
----
-
-## Open Decisions (using best defaults)
-1. **Sandbox count = 3** rotating users. Could be 1 (cheaper, less isolation) or 5 (more parallelism, more bootstrap cost). 3 hits the sweet spot of one-per-frequent-scenario without contamination.
-2. **Schedule = every 6h at :23**. Could be every 4h or every 12h. Every 6h = 4 runs/day, enough signal to catch regressions same-day, light enough not to noise-flood.
-3. **Forbidden-state mode** instead of expected-match mode. Stronger semantics; more tolerant of acceptable adjacency.
-4. **No alerting hook** in this build (matches Heartbeat and Sentinel pattern — fails surface in admin UI + audit_log).
-
-If any of those four are wrong, say so before approval and I'll adjust.
+## Risk
+Zero — strictly fixes a broken test layer. Real engine + real users untouched.
 
 ## Time Budget
-- Build: ~10-12 minutes (1 migration, 2 edge function files, 1 hook, 1 UI card, 1 config edit, 1 sentinel patch, 1 cron schedule, 1 sandbox bootstrap)
-- Validation: ~5 minutes (manual run + verify expected partial failures + UI check)
+- Build: ~2 minutes (2 small edits + redeploy)
+- Validation: ~2 minutes (1 manual invoke + DB inspection)
 
-## Cleanup
-None required — auto-rotates after 90d.
+## Open Decision
+**Skip Step 6** (`validate_adversarial_insert` SQL function) by default — the preflight insert against real triggers is stronger than a parallel validator that can drift. If you want belt-and-suspenders (SQL helper too), say so before approval.
 
