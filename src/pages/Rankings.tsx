@@ -7,8 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Trophy, TrendingUp, TrendingDown, Minus, EyeOff } from "lucide-react";
 import { getGradeLabel } from "@/lib/gradeLabel";
+import { useRankingsVisibility } from "@/hooks/useRankingsVisibility";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface MPIRankingData {
   user_id: string;
