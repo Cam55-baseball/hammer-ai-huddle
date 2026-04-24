@@ -141,8 +141,15 @@ serve(async (req) => {
     const W_DECISION = typeof es.mpi_weight_decision === 'number' ? es.mpi_weight_decision : 0.20;
     const W_COMPETITIVE = typeof es.mpi_weight_competitive === 'number' ? es.mpi_weight_competitive : 0.20;
     const INTEGRITY_THRESHOLD = typeof es.integrity_threshold === 'number' ? es.integrity_threshold : 80;
-    const DATA_GATE_MIN = typeof es.data_gate_min_sessions === 'number' ? es.data_gate_min_sessions : 60;
-    console.log(`[nightly-mpi] Engine settings loaded: BQI=${W_BQI}, FQI=${W_FQI}, PEI=${W_PEI}, DEC=${W_DECISION}, COMP=${W_COMPETITIVE}, integrity=${INTEGRITY_THRESHOLD}, gate=${DATA_GATE_MIN}`);
+    // ── PHASE A1: Gate split — provisional vs ranking ──
+    // ranking_min_sessions: required for leaderboard inclusion (strict, unchanged behavior).
+    // provisional_min_sessions: required to produce a dashboard-only snapshot (low bar).
+    // Falls back to legacy data_gate_min_sessions if new keys absent.
+    const LEGACY_GATE = typeof es.data_gate_min_sessions === 'number' ? es.data_gate_min_sessions : 60;
+    const RANKING_MIN = typeof es.ranking_min_sessions === 'number' ? es.ranking_min_sessions : LEGACY_GATE;
+    const PROVISIONAL_MIN = typeof es.provisional_min_sessions === 'number' ? es.provisional_min_sessions : 1;
+    const DATA_GATE_MIN = RANKING_MIN; // alias: ranking_eligible still uses the strict bar
+    console.log(`[nightly-mpi] Engine settings loaded: BQI=${W_BQI}, FQI=${W_FQI}, PEI=${W_PEI}, DEC=${W_DECISION}, COMP=${W_COMPETITIVE}, integrity=${INTEGRITY_THRESHOLD}, ranking_gate=${RANKING_MIN}, provisional_gate=${PROVISIONAL_MIN}`);
 
     // ── RETRY PREVIOUSLY FAILED ATHLETES FIRST ──
     const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
@@ -287,7 +294,60 @@ serve(async (req) => {
           .select('composite_indexes, session_type, effective_grade, player_grade, coach_grade, fatigue_state_at_session')
           .eq('user_id', uid).eq('sport', sport).is('deleted_at', null)
           .gte('session_date', new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]);
-        if (!sessions || sessions.length === 0) continue;
+
+        // ── PHASE A1: Provisional snapshot path ──
+        // If athlete has no performance_sessions, check alternative inputs and produce a
+        // provisional MPI row (dashboard-only, excluded from leaderboard) instead of skipping.
+        if (!sessions || sessions.length === 0) {
+          const sinceIso = new Date(Date.now() - 90 * 86400000).toISOString();
+          const sinceDate = sinceIso.split('T')[0];
+          const [calRes, txRes, vqRes] = await Promise.all([
+            supabase.from('custom_activity_logs').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('entry_date', sinceDate),
+            supabase.from('tex_vision_sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('session_date', sinceDate),
+            supabase.from('vault_focus_quizzes').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('created_at', sinceIso),
+          ]);
+          const altInputs = {
+            custom_activity_logs: calRes.count ?? 0,
+            tex_vision_sessions: txRes.count ?? 0,
+            vault_focus_quizzes: vqRes.count ?? 0,
+          };
+          const totalAlt = altInputs.custom_activity_logs + altInputs.tex_vision_sessions + altInputs.vault_focus_quizzes;
+          if (totalAlt < PROVISIONAL_MIN) continue;
+
+          // Neutral baseline composites — surfaces a snapshot without inventing performance data.
+          const provisionalScore = 50;
+          await supabase.from('mpi_scores').upsert({
+            user_id: uid, sport, calculation_date: today,
+            adjusted_global_score: provisionalScore,
+            global_rank: null, global_percentile: null, total_athletes_in_pool: null,
+            pro_probability: null, pro_probability_capped: false,
+            trend_direction: 'stable', trend_delta_30d: 0,
+            segment_pool: `${sport}_${tierToSegment(athlete.league_tier || '')}`,
+            integrity_score: 100,
+            composite_bqi: 50, composite_fqi: 50, composite_pei: 50,
+            composite_decision: 50, composite_competitive: 50,
+            development_prompts: [{
+              area: 'data_collection',
+              message: 'Log a few performance sessions to unlock your full ranking and personalized insights.',
+              priority: 'high',
+            }],
+            verified_stat_boost: 0, contract_status_modifier: 0,
+            tier_multiplier: tierMultipliers[athlete.league_tier] || 1.0,
+            age_curve_multiplier: 1.0, position_weight: 1.0,
+            is_provisional: true,
+            scoring_inputs: {
+              source: 'provisional',
+              reason: 'No performance_sessions in last 90 days; provisional snapshot from alternative inputs.',
+              alternative_inputs: altInputs,
+              ranking_min_sessions: RANKING_MIN,
+              provisional_min_sessions: PROVISIONAL_MIN,
+              computed_at: new Date().toISOString(),
+            },
+          }, { onConflict: 'user_id,sport,calculation_date' });
+          processedUserIds.push(uid);
+          continue;
+        }
+
 
         // ── Block 9: Game-weighted composite averages (1.5x for game sessions) ──
         let totalWeight = 0;
@@ -588,6 +648,23 @@ serve(async (req) => {
           tier_multiplier: s.tierMult,
           age_curve_multiplier: s.ageCurveMult,
           position_weight: s.posWeight,
+          // Phase A1: provisional flag + scoring inputs for "Why am I seeing this?"
+          is_provisional: false,
+          scoring_inputs: {
+            source: 'mature',
+            sessions_count: s.sessionsCount,
+            ranking_min_sessions: RANKING_MIN,
+            weights: { bqi: W_BQI, fqi: W_FQI, pei: W_PEI, decision: W_DECISION, competitive: W_COMPETITIVE },
+            integrity_score: s.integrityScore,
+            verified_boost: s.verifiedBoost,
+            contract_modifier: s.contractMod,
+            tier_multiplier: s.tierMult,
+            age_curve_multiplier: s.ageCurveMult,
+            position_weight: s.posWeight,
+            consecutive_heavy_days: s.consecutiveHeavy,
+            game_practice_ratio: s.gamePracticeRatio,
+            computed_at: new Date().toISOString(),
+          },
         }, { onConflict: 'user_id,sport,calculation_date' });
       }
 
@@ -904,7 +981,6 @@ serve(async (req) => {
       metadata: {
         timestamp: new Date().toISOString(),
         athletes_processed: totalProcessed,
-        resumed_from: resumeFrom,
         duration_ms: Date.now() - nightlyStartTime,
       },
     });
@@ -926,7 +1002,7 @@ serve(async (req) => {
     }
 
     console.log('[nightly-mpi] Complete.');
-    return new Response(JSON.stringify({ success: true, resumed_from: resumeFrom, athletes_processed: totalProcessed, timestamp: new Date().toISOString() }), {
+    return new Response(JSON.stringify({ success: true, athletes_processed: totalProcessed, timestamp: new Date().toISOString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

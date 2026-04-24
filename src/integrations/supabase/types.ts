@@ -3437,9 +3437,11 @@ export type Database = {
           hof_tracking_active: boolean | null
           id: string
           integrity_score: number | null
+          is_provisional: boolean
           position_weight: number | null
           pro_probability: number | null
           pro_probability_capped: boolean | null
+          scoring_inputs: Json | null
           segment_pool: string | null
           sport: string
           tier_multiplier: number | null
@@ -3470,9 +3472,11 @@ export type Database = {
           hof_tracking_active?: boolean | null
           id?: string
           integrity_score?: number | null
+          is_provisional?: boolean
           position_weight?: number | null
           pro_probability?: number | null
           pro_probability_capped?: boolean | null
+          scoring_inputs?: Json | null
           segment_pool?: string | null
           sport: string
           tier_multiplier?: number | null
@@ -3503,9 +3507,11 @@ export type Database = {
           hof_tracking_active?: boolean | null
           id?: string
           integrity_score?: number | null
+          is_provisional?: boolean
           position_weight?: number | null
           pro_probability?: number | null
           pro_probability_capped?: boolean | null
+          scoring_inputs?: Json | null
           segment_pool?: string | null
           sport?: string
           tier_multiplier?: number | null
