@@ -294,7 +294,60 @@ serve(async (req) => {
           .select('composite_indexes, session_type, effective_grade, player_grade, coach_grade, fatigue_state_at_session')
           .eq('user_id', uid).eq('sport', sport).is('deleted_at', null)
           .gte('session_date', new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]);
-        if (!sessions || sessions.length === 0) continue;
+
+        // ── PHASE A1: Provisional snapshot path ──
+        // If athlete has no performance_sessions, check alternative inputs and produce a
+        // provisional MPI row (dashboard-only, excluded from leaderboard) instead of skipping.
+        if (!sessions || sessions.length === 0) {
+          const sinceIso = new Date(Date.now() - 90 * 86400000).toISOString();
+          const sinceDate = sinceIso.split('T')[0];
+          const [calRes, txRes, vqRes] = await Promise.all([
+            supabase.from('custom_activity_logs').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('entry_date', sinceDate),
+            supabase.from('tex_vision_sessions').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('session_date', sinceDate),
+            supabase.from('vault_focus_quizzes').select('id', { count: 'exact', head: true }).eq('user_id', uid).gte('created_at', sinceIso),
+          ]);
+          const altInputs = {
+            custom_activity_logs: calRes.count ?? 0,
+            tex_vision_sessions: txRes.count ?? 0,
+            vault_focus_quizzes: vqRes.count ?? 0,
+          };
+          const totalAlt = altInputs.custom_activity_logs + altInputs.tex_vision_sessions + altInputs.vault_focus_quizzes;
+          if (totalAlt < PROVISIONAL_MIN) continue;
+
+          // Neutral baseline composites — surfaces a snapshot without inventing performance data.
+          const provisionalScore = 50;
+          await supabase.from('mpi_scores').upsert({
+            user_id: uid, sport, calculation_date: today,
+            adjusted_global_score: provisionalScore,
+            global_rank: null, global_percentile: null, total_athletes_in_pool: null,
+            pro_probability: null, pro_probability_capped: false,
+            trend_direction: 'stable', trend_delta_30d: 0,
+            segment_pool: `${sport}_${tierToSegment(athlete.league_tier || '')}`,
+            integrity_score: 100,
+            composite_bqi: 50, composite_fqi: 50, composite_pei: 50,
+            composite_decision: 50, composite_competitive: 50,
+            development_prompts: [{
+              area: 'data_collection',
+              message: 'Log a few performance sessions to unlock your full ranking and personalized insights.',
+              priority: 'high',
+            }],
+            verified_stat_boost: 0, contract_status_modifier: 0,
+            tier_multiplier: tierMultipliers[athlete.league_tier] || 1.0,
+            age_curve_multiplier: 1.0, position_weight: 1.0,
+            is_provisional: true,
+            scoring_inputs: {
+              source: 'provisional',
+              reason: 'No performance_sessions in last 90 days; provisional snapshot from alternative inputs.',
+              alternative_inputs: altInputs,
+              ranking_min_sessions: RANKING_MIN,
+              provisional_min_sessions: PROVISIONAL_MIN,
+              computed_at: new Date().toISOString(),
+            },
+          }, { onConflict: 'user_id,sport,calculation_date' });
+          processedUserIds.push(uid);
+          continue;
+        }
+
 
         // ── Block 9: Game-weighted composite averages (1.5x for game sessions) ──
         let totalWeight = 0;
