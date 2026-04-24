@@ -144,7 +144,7 @@ serve(async (req) => {
     }
 
     // Prune stale
-    await supabase.rpc("cleanup_old_patterns").catch(() => {});
+    try { await supabase.rpc("cleanup_old_patterns"); } catch { /* silent */ }
 
     await logRun(supabase, 'success', startMs, undefined, { patterns_upserted: upserted, source_snapshots: snaps?.length ?? 0 });
     return new Response(JSON.stringify({ status: "ok", patterns_upserted: upserted, source_snapshots: snaps?.length ?? 0 }), {
