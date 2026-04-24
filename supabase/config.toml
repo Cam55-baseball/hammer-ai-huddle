@@ -245,3 +245,9 @@ verify_jwt = true
 
 [functions.engine-chaos-test]
 verify_jwt = true
+
+[functions.engine-auto-recovery]
+verify_jwt = false
+
+[functions.engine-data-integrity-check]
+verify_jwt = false
