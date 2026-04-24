@@ -10,7 +10,8 @@ import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useEngineHealth } from '@/hooks/useEngineHealth';
 import { useHeartbeatHealth } from '@/hooks/useHeartbeatHealth';
 import { useSentinelHealth } from '@/hooks/useSentinelHealth';
-import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart, Eye } from 'lucide-react';
+import { useAdversarialHealth } from '@/hooks/useAdversarialHealth';
+import { Activity, Brain, Clock, AlertTriangle, Layers, Loader2, Shield, Heart, Eye, Swords } from 'lucide-react';
 
 const formatRel = (iso: string | null) => {
   if (!iso) return 'Never';
@@ -37,6 +38,7 @@ export default function EngineHealthDashboard() {
   const health = useEngineHealth();
   const heartbeat = useHeartbeatHealth();
   const sentinel = useSentinelHealth();
+  const adversarial = useAdversarialHealth();
 
   useEffect(() => {
     if (!ownerLoading && !adminLoading && !isOwner && !isAdmin) navigate('/dashboard');
@@ -237,6 +239,92 @@ export default function EngineHealthDashboard() {
                         key={r.id}
                         title={`${r.expected_state} vs ${r.actual_state ?? 'none'} · drift ${r.drift_score} · ${formatRel(r.run_at)}`}
                         className={`h-3 w-3 rounded-sm ${r.drift_score <= 15 ? 'bg-emerald-500' : r.drift_score <= 30 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Swords className="h-4 w-4" />
+              Adversarial Integrity (last 24h)
+            </CardTitle>
+            <CardDescription>
+              Structured stress tests — fabricates known failure patterns and asserts engine doesn't fall for them
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {adversarial.loading ? (
+              <Skeleton className="h-20 w-full" />
+            ) : adversarial.runsToday === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No adversarial runs yet. First scheduled run within 6h of deployment.
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Pass rate</p>
+                    <p className={`text-2xl font-bold ${adversarial.passRate24h >= 90 ? 'text-emerald-500' : adversarial.passRate24h >= 70 ? 'text-amber-500' : 'text-rose-500'}`}>
+                      {adversarial.passRate24h}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">{adversarial.runsToday} scenarios</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Failures</p>
+                    <p className="text-2xl font-bold">
+                      {Object.values(adversarial.failuresByScenario).reduce((s, n) => s + n, 0)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Worst scenario</p>
+                    <p className="text-sm font-semibold truncate">
+                      {Object.entries(adversarial.failuresByScenario).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {Object.keys(adversarial.failuresByScenario).length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {Object.entries(adversarial.failuresByScenario).map(([s, n]) => (
+                      <Badge key={s} variant="outline" className="text-[10px]">
+                        {s}: {n}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {adversarial.lastFailure && (
+                  <div className="rounded-md border border-rose-500/40 bg-rose-500/10 p-3 space-y-1">
+                    <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                      Last failure · {formatRel(adversarial.lastFailure.run_at)}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <Badge variant="outline">{adversarial.lastFailure.scenario}</Badge>
+                      <span className="text-muted-foreground">forbidden:</span>
+                      <Badge variant="outline">{adversarial.lastFailure.forbidden_states.join(', ')}</Badge>
+                      <span className="text-muted-foreground">→</span>
+                      <Badge variant="outline">actual: {adversarial.lastFailure.actual_state ?? 'none'}</Badge>
+                      {adversarial.lastFailure.failure_reason && (
+                        <Badge variant="outline" className="text-[10px]">{adversarial.lastFailure.failure_reason}</Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Recent runs</p>
+                  <div className="flex flex-wrap gap-1">
+                    {adversarial.recent.map((r) => (
+                      <span
+                        key={r.id}
+                        title={`${r.scenario} · ${r.pass ? 'PASS' : 'FAIL'} · ${r.actual_state ?? 'none'} · ${formatRel(r.run_at)}`}
+                        className={`h-3 w-3 rounded-sm ${r.pass ? 'bg-emerald-500' : 'bg-rose-500'}`}
                       />
                     ))}
                   </div>

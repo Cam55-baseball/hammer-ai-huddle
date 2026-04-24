@@ -133,9 +133,24 @@ async function selectPool(supabase: ReturnType<typeof createClient>): Promise<st
     return [ANCHOR_USER_ID];
   }
 
+  // Build sandbox-user exclusion set (adversarial sandbox accounts)
+  const sandboxIds = new Set<string>();
+  try {
+    const { data: list } = await (supabase.auth.admin as unknown as {
+      listUsers: (opts: { page: number; perPage: number }) => Promise<{ data: { users: Array<{ id: string; email?: string }> } }>;
+    }).listUsers({ page: 1, perPage: 200 });
+    for (const u of list?.users ?? []) {
+      if (u.email && u.email.toLowerCase().endsWith('@hammers-system.local')) sandboxIds.add(u.id);
+    }
+  } catch (e) {
+    console.warn('[sentinel] sandbox exclusion lookup failed', String(e));
+  }
+
   const byUser = new Map<string, { logs7d: number; days14d: Set<string>; rpes7d: number[] }>();
   for (const row of data as Array<{ user_id: string; created_at: string; entry_date?: string; notes?: string | null; perceived_intensity?: unknown }>) {
     if (row.notes && row.notes.toLowerCase().includes('heartbeat')) continue;
+    if (row.notes && row.notes.toLowerCase().startsWith('adversarial:')) continue;
+    if (sandboxIds.has(row.user_id)) continue;
     const u = row.user_id;
     if (!byUser.has(u)) byUser.set(u, { logs7d: 0, days14d: new Set(), rpes7d: [] });
     const agg = byUser.get(u)!;

@@ -206,3 +206,6 @@ verify_jwt = false
 
 [functions.engine-sentinel]
 verify_jwt = false
+
+[functions.engine-adversarial]
+verify_jwt = false
