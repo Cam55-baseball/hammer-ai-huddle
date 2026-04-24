@@ -169,8 +169,36 @@ async function computeForUser(supabase: any, userId: string) {
     inputs.recovery.minutes_since_last_meal = nutritionQ.data[0].minutes_since_last_meal;
   }
 
-  // ── OVERALL STATE ──
-  const blended = (arousalScore * 0.3) + (recoveryScore * 0.4) + ((100 - cognitiveLoad) * 0.2) + ((100 - dopamineLoad) * 0.1);
+  // ── ADDITIVE HOOK 1: Dynamic weights from self-healing optimizer ──
+  // Safe fallback: missing table/empty → all multipliers = 1 → identical to static behavior
+  let w: Record<string, number> = {};
+  try {
+    const { data: weights } = await supabase
+      .from("engine_dynamic_weights").select("axis,weight");
+    w = Object.fromEntries((weights ?? []).map((r: any) => [r.axis, Number(r.weight)]));
+  } catch (_) { /* zero-risk fallback */ }
+
+  // ── ADDITIVE HOOK 2: User personalization profile (bounded ±10%) ──
+  try {
+    const { data: prof } = await supabase
+      .from("user_engine_profile").select("*").eq("user_id", userId).maybeSingle();
+    if (prof && prof.sample_size >= 10) {
+      const sensMod = clamp((Number(prof.sensitivity_to_load) - 1) * 0.1, -0.1, 0.1);
+      const recMod  = clamp((Number(prof.recovery_speed) - 1) * 0.1, -0.1, 0.1);
+      // Higher sensitivity → recovery feels lower (athlete needs more rest)
+      recoveryScore = clamp(recoveryScore * (1 - sensMod));
+      // Higher recovery_speed → recovery feels higher
+      recoveryScore = clamp(recoveryScore * (1 + recMod));
+    }
+  } catch (_) { /* zero-risk fallback */ }
+
+  // ── OVERALL STATE (with optional dynamic weights) ──
+  const blended = (
+    arousalScore        * 0.3 * (w.arousal   ?? 1) +
+    recoveryScore       * 0.4 * (w.recovery  ?? 1) +
+    (100 - cognitiveLoad) * 0.2 * (w.cognitive ?? 1) +
+    (100 - dopamineLoad)  * 0.1 * (w.dopamine  ?? 1)
+  );
   let overall: "prime" | "ready" | "caution" | "recover" = "ready";
   if (blended >= 80 && recoveryScore >= 70) overall = "prime";
   else if (blended >= 60) overall = "ready";
@@ -180,7 +208,7 @@ async function computeForUser(supabase: any, userId: string) {
   const confidence = Math.min(1, (arousalConf + recoveryConf) / 2);
 
   // Insert snapshot
-  const { error } = await supabase.from("hammer_state_snapshots").insert({
+  const { data: inserted, error } = await supabase.from("hammer_state_snapshots").insert({
     user_id: userId,
     arousal_score: +arousalScore.toFixed(1),
     arousal_inputs: inputs.arousal,
@@ -194,8 +222,21 @@ async function computeForUser(supabase: any, userId: string) {
     dopamine_inputs: inputs.dopamine,
     overall_state: overall,
     confidence: +confidence.toFixed(2),
-  });
+  }).select("id").maybeSingle();
   if (error) throw error;
+
+  // ── ADDITIVE HOOK 3: Fire-and-forget elite layer generation (non-blocking) ──
+  if (inserted?.id) {
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/generate-elite-layer`;
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({ snapshot_id: inserted.id, user_id: userId, state: overall, confidence }),
+    }).catch(() => { /* never block engine */ });
+  }
 
   return { user_id: userId, overall, confidence };
 }
