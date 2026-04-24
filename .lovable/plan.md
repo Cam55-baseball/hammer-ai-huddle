@@ -1,298 +1,261 @@
 
 
-# Phase 4 — Self-Healing + Elite Layer + Moat Architecture
+# Phase 5 — Predictive Engine + Behavioral Control Layer
 
-This is a large, four-part build. To respect the "additive only / no breaking changes" rule, I'm sequencing it as **5 deployable subphases** that each leave the system in a working state. You can approve all-at-once or step-by-step.
-
----
-
-## Architectural Principle (applies to every part)
-
-`compute-hammer-state` gets exactly **one** new behavior: at the very end of `computeForUser`, before INSERT, it consults two optional read-only sources (`engine_dynamic_weights`, `user_engine_profile`) and applies a bounded modifier to the blended scores. **If either table is empty or the read fails → fall through to current static logic, identical output.** Zero-risk additive hook.
-
-All other new systems (optimizer, elite layer, pattern extraction, advisory) are **separate edge functions on separate cron schedules** that only read engine outputs and write to their own tables. The engine never depends on them being present.
+Strictly additive. The predictive layer reads from existing snapshots and writes only to new tables. Engine, optimizer, sentinel, adversarial, and elite layer remain untouched.
 
 ---
 
-## PART 1 — Self-Healing Weight Adjustment Layer
+## Architectural Principle
+
+`predict-hammer-state` runs on a schedule, builds a forward trajectory from the last 72h of snapshots + activity logs, and writes one row per user per run. `generate-interventions` reads predictions and emits directives only when confidence ≥ 60 AND no duplicate in last 12h. UI surfaces a single muted trajectory line in `EliteModePanel`. All loops feed `evaluate-advice-effectiveness`, which gets one extra column to track intervention compliance.
+
+---
+
+## PART 1 — Predictive State Engine
 
 ### Schema (1 migration)
-```
-engine_weight_adjustments
+```sql
+engine_state_predictions
   id uuid pk default gen_random_uuid()
-  created_at timestamptz default now()
-  source text not null         -- 'sentinel' | 'adversarial'
-  scenario text                -- nullable (sentinel has none)
-  drift_score int              -- 0..100
-  affected_axis text not null  -- 'arousal' | 'recovery' | 'motor' | 'cognitive' | 'dopamine'
-  suggested_delta numeric not null  -- bounded ±0.05 per run
-  applied boolean default false
-  metadata jsonb default '{}'
-
-engine_dynamic_weights
-  axis text primary key        -- one row per axis (5 axes total)
-  weight numeric not null      -- multiplier, clamped 0.5..1.5
-  updated_at timestamptz default now()
-  last_run_id uuid             -- correlates to optimizer run
-  metadata jsonb default '{}'
-```
-RLS: read = owner/admin; write = service role only. Indexes on `(created_at desc)` and `(applied, created_at desc)`.
-
-### Edge function: `engine-weight-optimizer` (new)
-Schedule: every 6h at `:43` (after adversarial runs at `:23`).
-
-Logic (additive only, never edits engine code):
-1. Read last 24h of `engine_sentinel_logs WHERE drift_flag=true` and `engine_adversarial_logs WHERE pass=false`
-2. Aggregate by `(scenario, expected→actual transition)` → identify systematic bias
-3. Map failures to axis adjustments using a static rule table:
-   ```
-   overload_spike (engine said prime/ready)        → dopamine -= 0.02
-   fake_recovery (engine said prime)               → recovery -= 0.02
-   stale_dominance (engine still recover)          → recovery += 0.02
-   low_load_high_readiness (engine said caution)   → arousal += 0.02
-   noise_chaos (engine said extreme)               → cognitive += 0.01
-   sentinel drift on recovery axis                 → recovery ±0.01 toward truth model
-   ```
-4. **Bounds**: max ±0.05 per axis per run, weight clamped to `0.5..1.5` cumulatively
-5. Insert one row per adjustment to `engine_weight_adjustments` with `applied=true`
-6. UPSERT to `engine_dynamic_weights`
-7. Log summary to `audit_log`
-
-### compute-hammer-state surgical hook (the only engine edit)
-Add ~12 lines just before the INSERT:
-```ts
-const { data: weights } = await supabase
-  .from('engine_dynamic_weights')
-  .select('axis,weight');
-const w = Object.fromEntries((weights ?? []).map(r => [r.axis, Number(r.weight)]));
-const blended = (
-  arousalScore * 0.3 * (w.arousal ?? 1) +
-  recoveryScore * 0.4 * (w.recovery ?? 1) +
-  (100 - cognitiveLoad) * 0.2 * (w.cognitive ?? 1) +
-  (100 - dopamineLoad) * 0.1 * (w.dopamine ?? 1)
-);
-```
-If `engine_dynamic_weights` is empty → all `?? 1` defaults → byte-identical to current behavior. **Zero breaking change.**
-
----
-
-## PART 2 — Elite Athlete Experience Layer
-
-### Schema
-```
-hammer_state_explanations_v2
-  id uuid pk
   user_id uuid not null
-  snapshot_id uuid references hammer_state_snapshots(id) on delete cascade
-  state text not null
-  elite_message text not null
-  micro_directive text not null
-  constraint_text text not null   -- "constraint" is reserved-ish; rename column
-  confidence int                  -- 0..100, mirrors snapshot confidence × 100
+  base_snapshot_id uuid references hammer_state_snapshots(id) on delete cascade
+  predicted_state_24h text not null    -- 'prime'|'ready'|'caution'|'recover'
+  predicted_state_48h text not null
+  predicted_state_72h text not null
+  confidence_24h int not null          -- 0..100
+  confidence_48h int not null
+  confidence_72h int not null
+  risk_flags text[] default '{}'       -- ['overload_risk','underload','instability']
+  input_vector jsonb default '{}'      -- snapshot of features used
   created_at timestamptz default now()
 ```
-RLS: user reads own rows; service role writes.
+Indexes: `(user_id, created_at desc)`, `(created_at desc)`.
+RLS: user reads own; service role writes; admin reads all.
+Retention: 60 days via `cleanup_old_predictions()`.
 
-### Edge function: `generate-elite-layer` (new)
-Triggered immediately at the end of `compute-hammer-state` via fire-and-forget `fetch()` — non-blocking, so engine latency stays untouched. If the call fails, snapshot is still written; explanation just won't exist for that snapshot.
+### Edge function: `predict-hammer-state` (new)
+Schedule: every 2h at `:17` (offset from heartbeat :00, sentinel :07, adversarial :23, advisory :31, optimizer :43).
+Auth: `verify_jwt = false`.
 
-Maps state → message using the exact copy block in your spec (prime/ready/caution/recover). Confidence pulled from snapshot. One row per snapshot.
-
-### Hook: `useEliteLayer.ts`
-Reads latest explanation joined to latest snapshot. Subscribes to `hammer_state_explanations_v2` realtime channel for the user.
-
-### UI: `EliteModePanel` component
-- Renders **above** `HammerStateBadge` on `/index` (Today route) — minimal: state-tinted thin top border, 1-line elite_message in semibold, 1-line micro_directive in muted, 1-line constraint as a small chip with `AlertCircle` icon.
-- Renders nothing if no explanation yet (graceful degrade).
-- No gamification, no animation beyond a subtle 200ms fade-in.
+Logic per user (only users with ≥3 snapshots in last 7d):
+1. Pull last 10 `hammer_state_snapshots` (ordered desc)
+2. Pull last 72h `custom_activity_logs` (filter out `notes LIKE 'heartbeat%'` and `notes LIKE 'adversarial:%'`)
+3. Pull `user_engine_profile` if exists
+4. Compute trajectory features:
+   - `loadSlope24h` = linear regression slope of (count + duration_minutes) per 6h bucket over last 24h
+   - `recoveryDelta` = latest.recovery_score − snapshots[3].recovery_score
+   - `arousalDelta` = same for arousal
+   - `volatility` = number of state transitions in last 3d / 30 (normalized 0..1)
+   - `freshness6h` = whether last activity was >6h ago
+5. Simulate forward (deterministic rule-based, not ML — auditable):
+   ```
+   24h:
+     if loadSlope24h > +threshold AND recoveryDelta < -10  → 'recover'
+     elif loadSlope24h > +threshold                         → 'caution'
+     elif current=prime AND volatility<0.3                  → 'prime'
+     elif current=recover AND loadSlope24h < threshold      → 'ready'
+     else current
+   48h: apply decay (volatility reduces forward confidence; trend dampened by 0.6)
+   72h: further dampen by 0.4; default to user's modal state if confidence too low
+   ```
+6. Confidence formula:
+   ```
+   conf24h = clamp(60 + (sample_size × 4) − (volatility × 50), 30, 95)
+   conf48h = conf24h × 0.75
+   conf72h = conf24h × 0.5
+   ```
+   If `user_engine_profile.sample_size >= 10`, +10 confidence boost.
+7. Risk flags:
+   - `overload_risk` if loadSlope24h > +threshold AND recoveryDelta < -10
+   - `underload` if loadSlope24h ≤ 0 AND no logs in 48h AND current=ready/prime
+   - `instability` if volatility > 0.5
+8. INSERT one row, link to base snapshot.
 
 ---
 
-## PART 3 — Competitive Moat (Pattern Library + Personalization)
+## PART 2 — Preemptive Intervention Engine
 
-### Schema
-```
-anonymized_pattern_library
-  id uuid pk
-  pattern_type text not null    -- 'overload' | 'recovery' | 'inconsistency' | 'ramp' | 'plateau'
-  feature_vector jsonb not null -- {load_24h, load_3d, recovery_24h, freshness_6h, rpe_avg}
-  outcome_state text not null   -- the snapshot state that followed
-  frequency int default 1
-  last_seen_at timestamptz default now()
-  created_at timestamptz default now()
-  -- NO user_id stored; truly anonymous
-
-user_engine_profile
-  user_id uuid pk
-  sensitivity_to_load numeric default 1.0   -- 0.5..1.5
-  recovery_speed numeric default 1.0        -- 0.5..1.5
-  volatility_index numeric default 0.0      -- 0..1
-  sample_size int default 0
-  updated_at timestamptz default now()
-```
-RLS: pattern library readable only by service role + admin (anonymous, no PII risk but still locked); user_engine_profile read by owning user only.
-
-### Edge function: `extract-patterns` (new)
-Schedule: daily at `04:53 UTC`.
-- Scans last 7d of `hammer_state_snapshots`
-- Bucketizes feature vectors into discrete bins (load: low/med/high; recovery: low/med/high; freshness: low/med/high)
-- Counts state outcomes per bucket
-- UPSERTs into `anonymized_pattern_library` with `frequency = frequency + count`
-- Old patterns (>180d unseen) get pruned in the same run
-
-### Edge function: `update-user-engine-profile` (new)
-Schedule: weekly Sunday `05:13 UTC`.
-- For each user with ≥10 snapshots in past 30d:
-  - `sensitivity_to_load` = correlation of (load_24h, drop in overall blended score)
-  - `recovery_speed` = avg hours from `recover` state → `ready` state
-  - `volatility_index` = stddev of state transitions / 30d
-- UPSERT to `user_engine_profile`
-- Bounded to safe ranges, sample_size tracked for confidence
-
-### compute-hammer-state second hook (still additive)
-After the dynamic_weights hook:
-```ts
-const { data: prof } = await supabase
-  .from('user_engine_profile').select('*').eq('user_id', userId).maybeSingle();
-if (prof && prof.sample_size >= 10) {
-  // bounded ±10% modifier
-  const sensMod = clamp((prof.sensitivity_to_load - 1) * 0.1, -0.1, 0.1);
-  recoveryScore = clamp(recoveryScore * (1 + sensMod * -1));
-  // similar for other axes — bounded
-}
-```
-Same zero-risk fallback: missing row → no-op.
-
-Pattern influence: skipped in v1 — too easy to amplify bad signal. Patterns are **observed only** in v1, used in admin dashboard. Pattern influence on engine deferred to v2 once we see real cluster quality. (Flag if you want it in v1 anyway.)
-
----
-
-## PART 4 — Adaptive Advisory Loop
-
-### Schema
-```
-advisory_feedback_logs
-  id uuid pk
+### Schema (same migration)
+```sql
+engine_interventions
+  id uuid pk default gen_random_uuid()
   user_id uuid not null
-  snapshot_id uuid references hammer_state_snapshots(id) on delete cascade
-  explanation_id uuid references hammer_state_explanations_v2(id)
-  advice_state text not null            -- the state that was advised
-  advice_directive text                 -- copy of micro_directive
-  user_action_inferred text             -- 'complied' | 'partial' | 'ignored' | 'opposed'
-  effectiveness_score int               -- -100..+100
-  evaluation_window_hours int default 24
+  prediction_id uuid references engine_state_predictions(id) on delete cascade
+  trigger_reason text not null           -- 'predicted_recover_24h' etc.
+  intervention_type text not null        -- 'reduce_load'|'increase_intensity'|'recover'|'stabilize'
+  directive text not null                -- short user-facing line
+  priority int not null default 3        -- 1 (low) .. 5 (urgent)
+  executed boolean default false
   created_at timestamptz default now()
-  evaluated_at timestamptz
 ```
+Indexes: `(user_id, created_at desc)`, `(executed, created_at desc)`.
+RLS: same pattern.
+Retention: 90 days via `cleanup_old_interventions()`.
 
-### Edge function: `evaluate-advice-effectiveness` (new)
-Schedule: every 4h at `:31`.
-- Pulls explanations from 24-30h ago that haven't been evaluated
-- For each: looks at user's `custom_activity_logs` in the 24h after the advice
-  - If state was `recover` and user logged ≤1 low-RPE activity → complied (+score)
-  - If state was `prime` and user logged ≥2 high-RPE activities → complied (+score)
-  - Inverse cases → opposed (negative score)
-- Writes effectiveness_score, feeds aggregate signal back to optimizer:
-  - Persistent low effectiveness on a state → flag axis adjustment in `engine_weight_adjustments` (same table reused)
-  - Persistent high effectiveness → reinforce via small weight increment
+### Edge function: `generate-interventions` (new)
+Triggered immediately at end of `predict-hammer-state` via fire-and-forget `fetch()` (non-blocking; if it fails, prediction still written).
+Auth: `verify_jwt = false`.
+
+Per-user logic:
+1. Read latest prediction + latest snapshot
+2. Skip if any prediction confidence < 60 across 24h horizon
+3. Dedupe: skip if any intervention exists for user in last 12h with same `intervention_type`
+4. Map (current_state, predicted_24h) → intervention:
+   ```
+   current=prime/ready, predicted=recover  → reduce_load,  priority 5
+   current=ready,        predicted=caution  → reduce_load,  priority 3
+   current=caution,      predicted=recover  → recover,      priority 4
+   current=recover,      predicted=ready    → stabilize,    priority 2
+   current=ready,        predicted=prime    → increase_intensity, priority 4 (rare window)
+   instability flag (any state)             → stabilize,    priority 2
+   ```
+5. Directive copy (terse, elite, no fluff):
+   - reduce_load: "Cut volume 30% next session — trajectory shows fatigue building."
+   - recover: "Skip intensity. Restore inputs only — full recovery in 24-48h."
+   - stabilize: "Hold steady. Same load, same timing — let signal settle."
+   - increase_intensity: "Window opening. Stack one quality high-intensity rep block."
+6. INSERT row.
 
 ---
 
-## PART 5 — System Guarantees (preserved + extended)
+## PART 3 — Elite UI Upgrade (subtle)
 
-The five layers now run on staggered cron offsets to prevent contention:
+### Hook: `usePrediction.ts` (new)
+- Reads latest `engine_state_predictions` for user
+- Reads latest unexecuted `engine_interventions` for user
+- Realtime subscription on both tables
+- Returns: `{ prediction, intervention, hasMeaningfulSignal }` where `hasMeaningfulSignal = prediction.confidence_24h >= 60 AND prediction.predicted_state_24h !== currentState`
+
+### Modify: `src/components/hammer/EliteModePanel.tsx`
+Add ONE muted line below `micro_directive`, only when `hasMeaningfulSignal`:
 ```
-:00,:15,:30,:45  Heartbeat (15min)        — liveness
-:07              Sentinel (hourly)        — truth alignment
-:23  every 6h    Adversarial (6h)         — resistance
-:31  every 4h    Advisory eval (4h)       — closed-loop feedback
-:43  every 6h    Weight Optimizer (6h)    — learning [runs AFTER adversarial]
-04:53 daily      Pattern extraction       — moat building
-05:13 Sunday     User profile update      — personalization
+Trajectory: trending toward {predicted_state_24h} in next 24h
 ```
-No collisions. Each layer reads from previous layer's output, writes to its own table. **Engine remains the only mutator of `hammer_state_snapshots`.**
+Optional badge to right of state border (only when confidence ≥ 70):
+- `Window Opening` (predicted=prime, current≠prime) — green tint
+- `Window Closing` (predicted=recover, current≠recover) — amber tint
+No icon. No animation. Same `text-xs text-muted-foreground` styling already in panel.
+
+If active intervention exists with priority ≥ 4, replace `constraint_text` chip with intervention.directive (priority 4-5 overrides default constraint).
+
+No notifications. No toasts. No badges anywhere except the panel.
+
+---
+
+## PART 4 — Behavioral Feedback Loop
+
+### Schema change (in same migration)
+```sql
+ALTER TABLE advisory_feedback_logs
+  ADD COLUMN intervention_id uuid REFERENCES engine_interventions(id) ON DELETE SET NULL;
+```
+Index: `(intervention_id) WHERE intervention_id IS NOT NULL`.
+
+### Modify: `supabase/functions/evaluate-advice-effectiveness/index.ts`
+After existing explanation evaluation, add second pass:
+1. Pull interventions 24-30h old WHERE `executed=false` AND no row in `advisory_feedback_logs` references them
+2. For each, look at user's logs in 24h window AFTER intervention created_at
+3. Determine compliance:
+   ```
+   reduce_load:        complied if avg duration/session DROPPED ≥20% vs prior 24h
+   recover:            complied if total log count DROPPED ≥50% vs prior 24h
+   stabilize:          complied if RPE stddev DROPPED vs prior 24h
+   increase_intensity: complied if max RPE INCREASED vs prior 24h
+   ```
+4. Compare prediction outcome:
+   - If complied AND actual snapshot 24h later matches/improves on predicted state → score +80, mark intervention `executed=true`
+   - If complied AND actual worsened despite advice → score +20 (we predicted right, advice was off)
+   - If ignored AND actual worsened → score -50 (proves intervention value), bump optimizer signal: insert `engine_weight_adjustments` row with `metadata.source='intervention_validation'`
+   - If ignored AND state stayed stable → score -10 (false alarm), reduce future intervention priority
+5. INSERT `advisory_feedback_logs` row with `intervention_id` set + score
+
+This closes the loop: the optimizer now learns from intervention success/failure too.
+
+---
+
+## PART 5 — System Positioning (cron summary)
+
+Final staggered schedule (all offsets, no collisions):
+```
+:00,:15,:30,:45    Heartbeat (15min)
+:07                Sentinel (hourly)
+:17  every 2h      Predict Hammer State (NEW)
+:23  every 6h      Adversarial
+:31  every 4h      Advisory eval
+:43  every 6h      Weight Optimizer
+04:53 daily        Pattern extraction
+05:13 Sunday       User profile update
+04:37, 05:21, 05:42, 05:51 daily   Cleanup jobs (existing + 2 new)
+```
 
 ---
 
 ## Files Created / Modified
 
-**New migrations** (4 tables + RLS + indexes + retention functions):
-1. `engine_weight_adjustments` + `engine_dynamic_weights`
-2. `hammer_state_explanations_v2`
-3. `anonymized_pattern_library` + `user_engine_profile`
-4. `advisory_feedback_logs`
+**New migration** (1):
+- `engine_state_predictions` + `engine_interventions` tables, RLS, indexes, 2 cleanup functions, ALTER `advisory_feedback_logs ADD COLUMN intervention_id`
 
-**New edge functions** (5):
-1. `supabase/functions/engine-weight-optimizer/index.ts`
-2. `supabase/functions/generate-elite-layer/index.ts`
-3. `supabase/functions/extract-patterns/index.ts`
-4. `supabase/functions/update-user-engine-profile/index.ts`
-5. `supabase/functions/evaluate-advice-effectiveness/index.ts`
+**New edge functions** (2):
+- `supabase/functions/predict-hammer-state/index.ts`
+- `supabase/functions/generate-interventions/index.ts`
 
-**New hooks + UI**:
-6. `src/hooks/useEliteLayer.ts`
-7. `src/components/hammer/EliteModePanel.tsx`
-8. `src/hooks/useEngineLearningHealth.ts` (admin metrics for optimizer)
-9. `src/pages/EngineHealthDashboard.tsx` — append "Self-Healing Optimizer" card showing adjustments today, axes modified, weight history sparkline
+**New hook**:
+- `src/hooks/usePrediction.ts`
 
-**Modified**:
-10. `src/components/today/TodayCommandBar.tsx` — render `<EliteModePanel />` above `<HammerStateBadge />`
-11. `supabase/functions/compute-hammer-state/index.ts` — **two surgical additive hooks** (dynamic weights + user profile modifier) + fire-and-forget call to `generate-elite-layer`
-12. `supabase/config.toml` — add 5 `verify_jwt = false` entries
+**Modified** (3):
+- `src/components/hammer/EliteModePanel.tsx` — append trajectory line + optional window badge + intervention override
+- `supabase/functions/evaluate-advice-effectiveness/index.ts` — add intervention compliance pass
+- `supabase/config.toml` — add 2 `verify_jwt = false` entries
 
 **Cron schedules** (insert tool, not migration):
-- `engine-weight-optimizer-6h`
-- `extract-patterns-daily`
-- `update-user-engine-profile-weekly`
-- `evaluate-advice-effectiveness-4h`
-- 4 cleanup-daily jobs (60–180d retention per table)
+- `predict-hammer-state-2h`
+- `cleanup-predictions-daily`
+- `cleanup-interventions-daily`
 
 ---
 
 ## Validation
 
-1. **Bypass proof**: temporarily empty `engine_dynamic_weights` → run `compute-hammer-state` → assert byte-identical snapshot to pre-deploy baseline (regression test on User A)
-2. **Self-healing proof**: invoke `engine-adversarial` → confirm fail rows → invoke `engine-weight-optimizer` → confirm `engine_weight_adjustments` row created + `engine_dynamic_weights.dopamine` decremented → re-invoke adversarial → confirm same scenario now passes (or drift_score reduced)
-3. **Elite layer proof**: trigger `compute-hammer-state` → within 5s confirm `hammer_state_explanations_v2` row → confirm `<EliteModePanel />` renders above badge with correct copy
-4. **No latency added**: time `compute-hammer-state` p50 before vs after — must be within +20ms (the elite-layer call is fire-and-forget)
-5. **Pattern extraction**: invoke once → confirm ≥5 pattern rows for User A's 7d history
-6. **Advisory loop**: backdate an explanation 25h → invoke evaluator → confirm `advisory_feedback_logs` row with non-null effectiveness_score
-7. **Admin UI**: all 4 layers (Heartbeat/Sentinel/Adversarial/Optimizer) render on `/engine-health` with live data
+1. **Force high-load sequence**: backfill 12 high-RPE logs into `custom_activity_logs` for owner over last 18h
+2. Invoke `compute-hammer-state` → confirm fresh snapshot
+3. Invoke `predict-hammer-state` → confirm `engine_state_predictions` row with `predicted_state_24h IN ('caution','recover')`, `confidence_24h ≥ 60`, `risk_flags` contains `overload_risk`
+4. Confirm `generate-interventions` auto-fired → `engine_interventions` row with `intervention_type='reduce_load'` or `'recover'`, priority ≥ 4
+5. Visit `/index` → confirm `EliteModePanel` shows:
+   - Trajectory line: "Trajectory: trending toward recover in next 24h"
+   - "Window Closing" badge
+   - Constraint chip replaced by intervention directive
+6. Wait 24h (or backdate intervention 25h via insert tool for test) → invoke `evaluate-advice-effectiveness`
+7. Confirm `advisory_feedback_logs` row with `intervention_id` set + non-null `effectiveness_score`
+8. Confirm if compliance was poor + decline happened → `engine_weight_adjustments` row with `metadata.source='intervention_validation'`
+9. **No latency added**: time `compute-hammer-state` p50 — must be unchanged (predictions run on cron, not in user path)
+10. **No notifications fired**: confirm zero push/toast/email triggered (UI-only surface)
 
 ---
 
 ## Risk Assessment
-- **Engine break risk**: zero — both new hooks have `?? 1` fallbacks; optional table reads
-- **Latency risk**: optimizer/extract/profile run on cron, never in user request path. Elite-layer call is non-blocking
-- **Storage**: ~2k advisory rows/day + ~50 weight adjustments/week + a few hundred pattern rows. Tiny.
-- **Compounding error risk**: weight clamps (`0.5..1.5`) + per-run delta cap (`±0.05`) prevent runaway. If optimizer goes haywire, `DELETE FROM engine_dynamic_weights;` instantly restores baseline.
-- **Privacy**: `anonymized_pattern_library` stores zero user_ids. Can be safely shared across cohort.
+- **Engine break risk**: zero — only reads from snapshots, writes to own tables
+- **UI noise risk**: gated by `hasMeaningfulSignal` (confidence ≥ 60 AND state mismatch). If no signal, panel renders identically to today
+- **Intervention spam risk**: 12h dedupe per type + confidence floor. Max ~2-4 interventions/user/day worst case
+- **Storage**: ~12 predictions/user/day × 60d retention; ~2 interventions/user/day × 90d. Tiny.
+- **Prediction accuracy**: rule-based + deterministic, auditable. Future v2 could swap in regression model — interface stable.
+- **Compounding error**: predictions never feed back into `compute-hammer-state`. Engine remains source of truth. If predictions go haywire, `DELETE FROM engine_state_predictions; DELETE FROM engine_interventions;` instantly clears.
 
 ---
 
 ## Open Decisions (best defaults; flag to override)
-1. **Pattern influence on engine = OFF in v1** (observe-only). Flip on after 2 weeks of cluster data review. Say "include pattern influence" if you want it active immediately.
-2. **Effectiveness signal feeds optimizer = ON** (closes the loop). Could be observe-only.
-3. **Elite Mode Panel placement** = above `HammerStateBadge` in `TodayCommandBar`. Could also be a dedicated full-width card on dashboard. Default chosen for "minimal, no clutter" per spec.
-4. **Constraint column named `constraint_text`** (Postgres reserved word workaround). Spec said `constraint`; this is the safe rename.
-5. **Static rule table in optimizer** vs. **ML-derived deltas**. v1 uses static rules (auditable, deterministic). v2 could derive deltas from drift magnitude. Default = static.
+1. **Prediction model = rule-based** (auditable, deterministic). v2 could use linear regression on last 30d trajectory. Default = rules.
+2. **Intervention surface = panel only** (no toasts, no email, no push). Spec said "no spam"; this honors it strictly.
+3. **Window badge threshold = confidence ≥ 70** (stricter than trajectory line's 60). Prevents low-confidence state flips from showing badges.
+4. **Intervention directive overrides constraint chip only at priority ≥ 4**. Lower priority interventions appear nowhere — they exist only for the feedback loop. (Could surface all interventions; default is "only urgent ones reach UI".)
+5. **Forecast horizon = 24/48/72h**. 72h confidence will often be low (<60) and won't surface; kept for analytics + future visualization.
 
----
+If any of those four are wrong, say so before approval and I'll adjust.
 
 ## Time Budget
-- Build: ~25-35 minutes (4 migrations, 5 edge functions, 2 hooks, 1 UI component, 2 file modifications, 5 cron schedules)
-- Validation: ~10 minutes (full chain test + latency benchmark + UI verification)
+- Build: ~12-15 minutes (1 migration, 2 edge functions, 1 hook, 1 UI edit, 1 function patch, 1 config edit, 3 cron schedules)
+- Validation: ~5 minutes (force-load sequence + invoke chain + UI check)
 
 ## Cleanup
-All 4 new tables auto-rotate (60–180d windows). Zero manual maintenance.
-
----
-
-## Sequencing Option
-If you want to derisk, approve in 3 stages:
-- **Stage A**: Part 1 (optimizer) + Part 5 (cron) — proves self-healing on existing infra
-- **Stage B**: Part 2 (elite layer) — user-visible upgrade
-- **Stage C**: Parts 3 + 4 (moat + advisory) — long-term compounding
-
-Or approve all four parts together for a single ~35-min build. Default = **all-at-once** unless you say otherwise.
+Both new tables auto-rotate (60–90d). Zero manual maintenance.
 
