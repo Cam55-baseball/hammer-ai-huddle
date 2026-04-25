@@ -364,15 +364,43 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   if (restDays7 > maxRestPerWeek)
     pushEvent("rest_overuse", restDays7 - maxRestPerWeek, { rest_days_7d: restDays7, cap: maxRestPerWeek });
 
+  // Push / Skip events for today (deduped within day)
+  const eventsTodaySince = todayUTC + "T00:00:00Z";
+  const dedupeToday = async (type: string) => {
+    const { data } = await supabase.from("behavioral_events")
+      .select("id").eq("user_id", userId).eq("event_type", type)
+      .gte("created_at", eventsTodaySince).limit(1);
+    return !!(data && data.length);
+  };
+
+  if (dayTypeToday === "skip") {
+    if (!(await dedupeToday("skip_day_used")))
+      pushEvent("skip_day_used", null, { date: todayUTC });
+  } else if (dayTypeToday === "push") {
+    const requiredIds = ddaRelief ? nnIds.slice(0, -1) : nnIds;
+    const doneToday = completedTemplatesByDay.get(todayUTC) ?? new Set<string>();
+    const allNnDone = requiredIds.length === 0
+      ? completedByDay.has(todayUTC)
+      : requiredIds.every(id => doneToday.has(id));
+    if (allNnDone) {
+      if (!(await dedupeToday("push_complete")))
+        pushEvent("push_complete", null, { date: todayUTC });
+    } else {
+      // Only emit push_fail late in day so users get full chance
+      const utcHourPush = new Date().getUTCHours();
+      if (utcHourPush >= 18 && !(await dedupeToday("push_fail"))) {
+        pushEvent("push_fail", null, { date: todayUTC },
+          { smallest_nn_template_id: smallestNnId });
+      }
+    }
+  }
+
   // Streak risk: streak >=3, today not yet completed/rest/injury, late in day (UTC > 18:00)
   const todayKlass = days[days.length - 1]?.klass;
   const utcHour = new Date().getUTCHours();
-  if (perfStreak >= 3 && todayKlass === "missed" && utcHour >= 18 && nnIds.length > 0) {
-    // dedupe within today
-    const { data: existing } = await supabase.from("behavioral_events")
-      .select("id").eq("user_id", userId).eq("event_type", "streak_risk")
-      .gte("created_at", todayUTC + "T00:00:00Z").limit(1);
-    if (!existing || existing.length === 0) pushEvent("streak_risk", perfStreak, { streak: perfStreak });
+  if (perfStreak >= 3 && (todayKlass === "missed" || todayKlass === "skip") && utcHour >= 18 && nnIds.length > 0) {
+    if (!(await dedupeToday("streak_risk")))
+      pushEvent("streak_risk", perfStreak, { streak: perfStreak });
   }
 
   // Coaching insights (low priority, dedupe by date)
