@@ -598,6 +598,7 @@ export default function Dashboard() {
             <DayControlCard />
             <NonNegotiableProgressStrip />
             <DayStateBanner />
+            <StandardActivationBanner />
             <GamePlanCard selectedSport={selectedSport} />
           </>
         )}
