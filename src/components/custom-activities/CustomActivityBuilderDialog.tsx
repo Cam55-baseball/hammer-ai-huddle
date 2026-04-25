@@ -33,6 +33,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { validateNNFields } from '@/lib/nnContract';
 
 type LockableField = 
   | 'title' 
@@ -286,10 +287,18 @@ export function CustomActivityBuilderDialog({
       toast.error(t('customActivity.titleRequired', 'Please enter a title'));
       return;
     }
-    // Phase 12 — NN context contract enforcement
+    // Phase 12.1 — Strict NN context contract enforcement
     if (isNonNegotiable) {
-      if (!nnPurpose.trim() || !nnAction.trim() || !nnSuccessCriteria.trim()) {
-        toast.error('Non-Negotiables require Purpose, Action, and Success Criteria');
+      const v = validateNNFields({
+        title: title.trim(),
+        purpose: nnPurpose,
+        action: nnAction,
+        successCriteria: nnSuccessCriteria,
+      });
+      if (!v.ok) {
+        const firstError =
+          v.errors.title || v.errors.purpose || v.errors.action || v.errors.successCriteria;
+        toast.error(firstError || 'Non-Negotiable fields are incomplete');
         return;
       }
     }
