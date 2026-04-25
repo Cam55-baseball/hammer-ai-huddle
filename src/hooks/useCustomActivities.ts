@@ -208,6 +208,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         pace_value: data.pace_value,
         intervals: data.intervals as unknown as Record<string, unknown>[],
         is_favorited: data.is_favorited,
+        is_non_negotiable: (data as any).is_non_negotiable ?? false,
         recurring_days: data.recurring_days as unknown as number[],
         recurring_active: data.recurring_active,
         sport: data.sport,
