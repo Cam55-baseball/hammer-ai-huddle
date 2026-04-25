@@ -44,7 +44,8 @@ export function useNNSuggestions() {
           id, template_id, score, completion_rate,
           total_completions_14d, consistency_streak, status,
           template:custom_activity_templates!inner (
-            id, title, icon, color, display_nickname, is_non_negotiable
+            id, title, description, icon, color, display_nickname, is_non_negotiable,
+            purpose, action, success_criteria, source
           )
         `)
         .eq('user_id', user.id)
