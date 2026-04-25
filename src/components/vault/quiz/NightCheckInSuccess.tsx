@@ -1,23 +1,29 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { 
-  Sparkles, 
-  Flame, 
-  Moon, 
-  Sun, 
-  Brain, 
-  Dumbbell, 
-  Salad, 
+import {
+  Sparkles,
+  Flame,
+  Moon,
+  Sun,
+  Brain,
+  Dumbbell,
+  Salad,
   CheckCircle2,
   Scale,
   Clock,
-  Calendar
+  Calendar,
+  AlertTriangle,
+  SkipForward,
+  TrendingUp,
+  Minus,
+  TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { triggerConfetti, stopConfetti } from '@/lib/confetti';
 import { cn } from '@/lib/utils';
+import { useDailyOutcome, type DailyOutcomeStatus, type StreakImpact } from '@/hooks/useDailyOutcome';
 
 interface TodayStats {
   checkinsCompleted: number;
