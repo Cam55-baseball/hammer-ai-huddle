@@ -7947,6 +7947,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_nn_suggestions: {
+        Row: {
+          completion_rate: number
+          consistency_streak: number
+          created_at: string
+          id: string
+          score: number
+          status: string
+          template_id: string
+          total_completions_14d: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completion_rate: number
+          consistency_streak?: number
+          created_at?: string
+          id?: string
+          score: number
+          status?: string
+          template_id: string
+          total_completions_14d?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completion_rate?: number
+          consistency_streak?: number
+          created_at?: string
+          id?: string
+          score?: number
+          status?: string
+          template_id?: string
+          total_completions_14d?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_nn_suggestions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           average_efficiency_score: number | null

@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DualStreakDisplay } from '@/components/dashboard/DualStreakDisplay';
 import { ActivityAnalytics } from '@/components/custom-activities/ActivityAnalytics';
 import { LoadDashboard } from '@/components/elite-workout/intelligence/LoadDashboard';
+import { NNSuggestionPanel } from '@/components/identity/NNSuggestionPanel';
 import { useMPIScores } from '@/hooks/useMPIScores';
 import { useAIPrompts } from '@/hooks/useAIPrompts';
 import { getGradeLabel } from '@/lib/gradeLabel';
@@ -86,6 +87,7 @@ Confidence: ${snapshot.development_confidence}%
         </div>
 
         {/* Always-visible top sections */}
+        <NNSuggestionPanel />
         <PracticeIntelligenceCard />
         <DualStreakDisplay />
         <ActivityAnalytics selectedSport={selectedSport} />

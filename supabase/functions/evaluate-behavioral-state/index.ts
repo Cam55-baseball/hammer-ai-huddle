@@ -423,6 +423,144 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
 
   if (events.length) await supabase.from("behavioral_events").insert(events);
 
+  // ────────────────────────────────────────────────────────────────────
+  // Phase 10.2 — NN Suggestion Engine (additive, isolated)
+  // Failures must NOT impact snapshot/event writes above.
+  // ────────────────────────────────────────────────────────────────────
+  try {
+    const since14 = dayStr(new Date(Date.now() - 13 * 86400000)); // inclusive 14-day window
+    const SUGGEST_THRESHOLD = 0.75;
+
+    // 1. Candidate templates (non-NN, not deleted)
+    const { data: candidateTpls } = await supabase
+      .from("custom_activity_templates")
+      .select("id, recurring_days, recurring_active, display_days, display_on_game_plan")
+      .eq("user_id", userId)
+      .eq("is_non_negotiable", false)
+      .is("deleted_at", null);
+
+    // 2. Last-14d completion logs (reuse base-table; window narrower than actLogs 30d)
+    const { data: logs14 } = await supabase
+      .from("custom_activity_logs")
+      .select("entry_date, completion_state, template_id")
+      .eq("user_id", userId)
+      .gte("entry_date", since14);
+
+    // Build template_id → Set<entry_date> for completed days
+    const completedByTpl = new Map<string, Set<string>>();
+    for (const l of logs14 ?? []) {
+      if (l.completion_state !== "completed") continue;
+      if (!completedByTpl.has(l.template_id)) completedByTpl.set(l.template_id, new Set());
+      completedByTpl.get(l.template_id)!.add(l.entry_date);
+    }
+
+    // Build the trailing 14-date list for streak walk
+    const dates14: string[] = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
+      dates14.push(dayStr(d));
+    }
+
+    const upserts: any[] = [];
+    const qualifyingTplIds = new Set<string>();
+
+    for (const tpl of candidateTpls ?? []) {
+      const completedSet = completedByTpl.get(tpl.id) ?? new Set<string>();
+      const totalCompletions = completedSet.size;
+
+      // Days the template was scheduled in last 14d
+      let scheduledDays = 0;
+      const displayDays: number[] = (tpl as any).display_days ?? [];
+      const recurringDaysT: number[] = (tpl as any).recurring_days ?? [];
+      const useDisplay = (tpl as any).display_on_game_plan && displayDays.length > 0;
+      const useRecurring = !useDisplay && (tpl as any).recurring_active && recurringDaysT.length > 0;
+
+      if (useDisplay) {
+        for (const ds of dates14) if (displayDays.includes(weekday(ds))) scheduledDays++;
+      } else if (useRecurring) {
+        for (const ds of dates14) if (recurringDaysT.includes(weekday(ds))) scheduledDays++;
+      } else {
+        // Fallback: assume scheduled on every day a log exists for it (avoids 0 denominator);
+        // if no logs, scheduledDays stays 0 and gate below filters out.
+        scheduledDays = totalCompletions;
+      }
+
+      const completionRate = scheduledDays > 0
+        ? Math.min(1, totalCompletions / scheduledDays)
+        : 0;
+
+      // Eligibility gate (per spec)
+      if (completionRate < 0.80 || totalCompletions < 6) continue;
+
+      // Current consecutive completed-day streak walking back from today
+      let streak = 0;
+      for (let i = dates14.length - 1; i >= 0; i--) {
+        if (completedSet.has(dates14[i])) streak++; else break;
+      }
+
+      // Score (normalized streak component to keep score ∈ [0,1])
+      const rawScore =
+        completionRate * 0.6
+        + (Math.min(streak, 5) / 5) * 0.1
+        + (totalCompletions / 14) * 0.3;
+      const score = Math.max(0, Math.min(1, rawScore));
+
+      if (score < SUGGEST_THRESHOLD) continue;
+
+      qualifyingTplIds.add(tpl.id);
+
+      upserts.push({
+        user_id: userId,
+        template_id: tpl.id,
+        score: Number(score.toFixed(3)),
+        completion_rate: Number(completionRate.toFixed(3)),
+        total_completions_14d: totalCompletions,
+        consistency_streak: streak,
+      });
+    }
+
+    // Existing suggestions for this user (to honor accepted/dismissed-7d/active states)
+    const { data: existingSugs } = await supabase
+      .from("user_nn_suggestions")
+      .select("id, template_id, status, updated_at")
+      .eq("user_id", userId);
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000);
+    const existingByTpl = new Map<string, any>();
+    for (const e of existingSugs ?? []) existingByTpl.set(e.template_id, e);
+
+    // Filter upserts: skip accepted, skip dismissed within 7d
+    const writeRows: any[] = [];
+    for (const row of upserts) {
+      const ex = existingByTpl.get(row.template_id);
+      if (ex?.status === "accepted") continue;
+      if (ex?.status === "dismissed" && new Date(ex.updated_at) > sevenDaysAgo) continue;
+      writeRows.push({ ...row, status: "active", updated_at: new Date().toISOString() });
+    }
+
+    if (writeRows.length > 0) {
+      await supabase
+        .from("user_nn_suggestions")
+        .upsert(writeRows, { onConflict: "user_id,template_id" });
+    }
+
+    // Silent cleanup: any active suggestion that no longer qualifies → dismiss
+    const staleIds: string[] = [];
+    for (const ex of existingSugs ?? []) {
+      if (ex.status === "active" && !qualifyingTplIds.has(ex.template_id)) {
+        staleIds.push(ex.id);
+      }
+    }
+    if (staleIds.length > 0) {
+      await supabase
+        .from("user_nn_suggestions")
+        .update({ status: "dismissed", updated_at: new Date().toISOString() })
+        .in("id", staleIds);
+    }
+  } catch (e) {
+    console.warn("[evaluate-behavioral-state] NN suggestion block failed (non-fatal)", e);
+  }
+
   return { userId, score, tier, perfStreak, discStreak, nnMiss7, damp,
     restDays7, restDays30, recoveryModeToday, prevTier, ddaRelief };
 }
