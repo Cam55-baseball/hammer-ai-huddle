@@ -80,14 +80,18 @@ export function NonNegotiableProgressStrip() {
       )}
     >
       <div className="flex items-center gap-2">
-        {allDone ? <ShieldCheck className="h-4 w-4" /> : <Flame className="h-4 w-4" />}
+        {allDone ? (
+          <ShieldCheck className="h-4 w-4" />
+        ) : (
+          <Flame className={cn('h-4 w-4', noneDone && 'animate-pulse text-red-400')} />
+        )}
         <span>
           {counts.done} / {counts.total} Non-Negotiables completed
         </span>
       </div>
-      {!allDone && (
-        <span className="text-[10px] text-rose-300/90">Standard required</span>
-      )}
+      <span className={cn('text-[10px]', allDone ? 'text-emerald-300/90' : 'text-rose-300/90')}>
+        {allDone ? 'Standard met' : 'Standard not met'}
+      </span>
     </div>
   );
 }

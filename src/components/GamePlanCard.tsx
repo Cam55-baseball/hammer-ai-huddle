@@ -15,7 +15,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight, NotebookPen } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight, NotebookPen, Flame } from 'lucide-react';
+import { NonNegotiableBadge } from '@/components/identity/NonNegotiableBadge';
+import { useDayState } from '@/hooks/useDayState';
 import { Badge } from '@/components/ui/badge';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
@@ -978,12 +980,41 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Skipped tasks: manually skipped (today only) OR weekly skipped via calendar
   const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id) || isWeeklySkipped(t));
 
+  // Day-state context — drives NN visibility + push glow
+  const { dayType: __dayType } = useDayState();
+  const hideNN = __dayType === 'rest';
+  const skipDimming = __dayType === 'skip';
+  const pushGlow = __dayType === 'push';
+
+  // Toggle NON-NEGOTIABLE on a custom activity template (1-click)
+  const toggleNonNegotiable = async (templateId: string, current: boolean) => {
+    const next = !current;
+    try {
+      const ok = await updateTemplate(templateId, { is_non_negotiable: next } as any);
+      if (!ok) return;
+      // Recompute identity + hammer state immediately
+      if (user?.id) {
+        supabase.functions.invoke('evaluate-behavioral-state', { body: { user_id: user.id } }).catch(() => {});
+        supabase.functions.invoke('compute-hammer-state',     { body: { user_id: user.id } }).catch(() => {});
+      }
+      refetch();
+      refetchActivities();
+      toast.success(next
+        ? 'Set as Non-Negotiable — now required daily.'
+        : 'Removed from Non-Negotiables.');
+    } catch (e) {
+      console.error('[toggleNonNegotiable]', e);
+      toast.error('Could not update standard');
+    }
+  };
+
   const renderTask = (task: GamePlanTask, index?: number) => {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
     const isTexVision = task.specialStyle === 'tex-vision';
     const isCustom = task.specialStyle === 'custom';
+    const isNN = !!task.customActivityData?.template?.is_non_negotiable && !hideNN;
     const showTimelineNumber = sortMode === 'timeline' && typeof index === 'number';
     const taskTime = taskTimes[task.id];
     const hasReminder = taskReminders[task.id];
@@ -1013,6 +1044,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           "group relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
           task.completed && "bg-green-500/20 border-green-500/50",
+          isNN && !task.completed && "border-l-4 border-l-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]",
+          skipDimming && isCustom && "opacity-60 grayscale pointer-events-none",
           showTimeBadge && "pt-8"
         )}
         style={!task.completed ? {
@@ -1073,6 +1106,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               )}>
                 {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
               </h3>
+              {isNN && <NonNegotiableBadge />}
               {isCustom && !task.completed && (
                 <span 
                   className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
@@ -1139,6 +1173,27 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </button>
         
+        {/* Inline NN toggle — set/unset Non-Negotiable in 1 click (custom activities only) */}
+        {isCustom && task.customActivityData?.template?.id && !hideNN && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const tpl = task.customActivityData!.template;
+              toggleNonNegotiable(tpl.id, !!tpl.is_non_negotiable);
+            }}
+            title={isNN ? 'Remove from Non-Negotiables' : 'Mark as Non-Negotiable'}
+            className={cn(
+              "flex-shrink-0 h-8 w-8 rounded-md flex items-center justify-center transition-all",
+              isNN
+                ? "text-red-400 hover:bg-red-500/15"
+                : "text-white/30 hover:text-red-300 hover:bg-white/5"
+            )}
+          >
+            <Flame className={cn("h-4 w-4", isNN && "fill-red-400")} />
+          </button>
+        )}
+
         {/* Edit button - opens schedule drawer for system tasks, activity editor for custom */}
         <Button
           variant="ghost"
@@ -1927,14 +1982,58 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   </Button>
                 </div>
                 
-                {customTasks.length > 0 && renderTaskSection(
-                  customTasks,
-                  orderedCustom,
-                  handleReorderCustom,
-                  '',
-                  'text-emerald-400',
-                  'bg-emerald-500/30'
-                )}
+                {customTasks.length > 0 && (() => {
+                  const isNNRow = (t: GamePlanTask) => !!t.customActivityData?.template?.is_non_negotiable;
+                  const nnTasks  = customTasks.filter(isNNRow);
+                  const optTasks = customTasks.filter(t => !isNNRow(t));
+                  const nnOrdered  = orderedCustom.filter(isNNRow);
+                  const optOrdered = orderedCustom.filter(t => !isNNRow(t));
+                  return (
+                    <div className="space-y-4">
+                      {/* NON-NEGOTIABLES — required, always rendered first; hidden on rest day */}
+                      {!hideNN && nnTasks.length > 0 && (
+                        <div className={cn(
+                          "space-y-1 rounded-xl",
+                          pushGlow && "ring-2 ring-amber-500/40 p-2"
+                        )}>
+                          <div className="px-1">
+                            <p className="text-[10px] uppercase tracking-widest text-red-300/80 font-bold">
+                              Required — standard is built here
+                            </p>
+                          </div>
+                          {renderTaskSection(
+                            nnTasks,
+                            nnOrdered,
+                            (newOrder) => handleReorderCustom([...newOrder, ...optOrdered]),
+                            'NON-NEGOTIABLES',
+                            'text-red-400',
+                            'bg-red-500/40',
+                          )}
+                        </div>
+                      )}
+
+                      {/* OPTIONAL WORK */}
+                      {optTasks.length > 0 && renderTaskSection(
+                        optTasks,
+                        optOrdered,
+                        (newOrder) => handleReorderCustom([...nnOrdered, ...newOrder]),
+                        hideNN ? '' : 'OPTIONAL WORK',
+                        'text-emerald-400',
+                        'bg-emerald-500/30',
+                      )}
+
+                      {/* When hiding NN (rest day), still render NN tasks under OPTIONAL silently */}
+                      {hideNN && nnTasks.length > 0 && renderTaskSection(
+                        nnTasks,
+                        nnOrdered,
+                        (newOrder) => handleReorderCustom([...newOrder, ...optOrdered]),
+                        '',
+                        'text-emerald-400',
+                        'bg-emerald-500/30',
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
