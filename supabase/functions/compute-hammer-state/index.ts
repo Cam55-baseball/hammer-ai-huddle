@@ -205,18 +205,69 @@ async function computeForUser(supabase: any, userId: string) {
     }
   } catch (_) { /* zero-risk fallback */ }
 
-  // ── OVERALL STATE (with optional dynamic weights) ──
-  const blended = (
+  // ── HAMMER STATE v3 — behavior-weighted, time-decayed ──
+  let consistencyScore = 50;
+  let dampingMultiplier = 1.0;
+  let performanceStreak = 0;
+  let nnMissCount7d = 0;
+  try {
+    const { data: snap } = await supabase
+      .from("user_consistency_snapshots")
+      .select("consistency_score,damping_multiplier,performance_streak,nn_miss_count_7d")
+      .eq("user_id", userId)
+      .order("snapshot_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (snap) {
+      consistencyScore = Number(snap.consistency_score ?? 50);
+      dampingMultiplier = Number(snap.damping_multiplier ?? 1.0);
+      performanceStreak = Number(snap.performance_streak ?? 0);
+      nnMissCount7d = Number(snap.nn_miss_count_7d ?? 0);
+    }
+  } catch (_) { /* zero-risk fallback */ }
+
+  const since30d = new Date(Date.now() - 30 * DAY_MS).toISOString();
+  let bucket48h = 0, bucket3to7 = 0, bucket8to30 = 0;
+  try {
+    const { data: logs30 } = await supabase
+      .from("custom_activity_logs")
+      .select("created_at,actual_duration_minutes,completion_state")
+      .eq("user_id", userId)
+      .gte("created_at", since30d);
+    const now = Date.now();
+    for (const l of logs30 ?? []) {
+      if ((l as any).completion_state !== "completed") continue;
+      const ageH = (now - new Date((l as any).created_at).getTime()) / (60 * 60 * 1000);
+      const intensity = 1 + Number((l as any).actual_duration_minutes ?? 0) / 60;
+      if (ageH <= 48) bucket48h += intensity;
+      else if (ageH <= 168) bucket3to7 += intensity;
+      else bucket8to30 += intensity;
+    }
+  } catch (_) { /* fallback: zeros */ }
+  const norm = (x: number) => clamp(100 * (1 - Math.exp(-x / 5)));
+  const activityScore =
+    norm(bucket48h) * 0.50 +
+    norm(bucket3to7) * 0.30 +
+    norm(bucket8to30) * 0.20;
+
+  const neuroBlend =
     arousalScore        * 0.3 * (w.arousal   ?? 1) +
     recoveryScore       * 0.4 * (w.recovery  ?? 1) +
     (100 - cognitiveLoad) * 0.2 * (w.cognitive ?? 1) +
-    (100 - dopamineLoad)  * 0.1 * (w.dopamine  ?? 1)
-  );
+    (100 - dopamineLoad)  * 0.1 * (w.dopamine  ?? 1);
+
+  const base = (activityScore * 0.55) + (consistencyScore * 0.25) + (neuroBlend * 0.20);
+  const nnPenalty = Math.min(nnMissCount7d * 8, 30);
+  const streakBoost = Math.min(performanceStreak * 1.5, 15);
+  const finalScore = clamp(base * dampingMultiplier - nnPenalty + streakBoost);
+
   let overall: "prime" | "ready" | "caution" | "recover" = "ready";
-  if (blended >= 80 && recoveryScore >= 70) overall = "prime";
-  else if (blended >= 60) overall = "ready";
-  else if (blended >= 40) overall = "caution";
+  if (finalScore >= 80 && recoveryScore >= 60) overall = "prime";
+  else if (finalScore >= 60) overall = "ready";
+  else if (finalScore >= 40) overall = "caution";
   else overall = "recover";
+
+  const blended = finalScore;
 
   const confidence = Math.min(1, (arousalConf + recoveryConf) / 2);
 
