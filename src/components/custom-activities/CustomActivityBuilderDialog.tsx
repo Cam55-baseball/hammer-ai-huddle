@@ -373,6 +373,9 @@ export function CustomActivityBuilderDialog({
         action: isNonNegotiable ? nnAction.trim() : null,
         success_criteria: isNonNegotiable ? nnSuccessCriteria.trim() : null,
         source: isNonNegotiable ? ((template as any)?.source || 'Custom') : null,
+        // Phase 12.2 — completion contract
+        completion_type: isNonNegotiable ? (nnCompletionType || null) : null,
+        completion_binding: isNonNegotiable ? nnBinding : null,
         recurring_days: scheduleMode === 'weekly' ? recurringDays : [],
         recurring_active: scheduleMode === 'weekly' && recurringActive,
         specific_dates: scheduleMode === 'specific_date' ? specificDates.map(d => format(d, 'yyyy-MM-dd')) : undefined,
