@@ -114,6 +114,10 @@ export function CustomActivityBuilderDialog({
   const [distanceUnit, setDistanceUnit] = useState<string>(template?.distance_unit || 'miles');
   const [isFavorited, setIsFavorited] = useState(template?.is_favorited || false);
   const [isNonNegotiable, setIsNonNegotiable] = useState(template?.is_non_negotiable || false);
+  // Phase 12 — NN context contract fields. Required when NN is on.
+  const [nnPurpose, setNnPurpose] = useState((template as any)?.purpose || '');
+  const [nnAction, setNnAction] = useState((template as any)?.action || template?.description || '');
+  const [nnSuccessCriteria, setNnSuccessCriteria] = useState((template as any)?.success_criteria || '');
   const [recurringDays, setRecurringDays] = useState<number[]>(template?.recurring_days || []);
   const [recurringActive, setRecurringActive] = useState(template?.recurring_active || false);
   const [saving, setSaving] = useState(false);
@@ -165,6 +169,9 @@ export function CustomActivityBuilderDialog({
       setDistanceUnit(template.distance_unit || 'miles');
       setIsFavorited(template.is_favorited);
       setIsNonNegotiable((template as any).is_non_negotiable ?? false);
+      setNnPurpose((template as any).purpose ?? '');
+      setNnAction((template as any).action ?? template.description ?? '');
+      setNnSuccessCriteria((template as any).success_criteria ?? '');
       setRecurringDays(template.recurring_days || []);
       setRecurringActive(template.recurring_active);
       // Initialize schedule mode from template
@@ -279,6 +286,13 @@ export function CustomActivityBuilderDialog({
       toast.error(t('customActivity.titleRequired', 'Please enter a title'));
       return;
     }
+    // Phase 12 — NN context contract enforcement
+    if (isNonNegotiable) {
+      if (!nnPurpose.trim() || !nnAction.trim() || !nnSuccessCriteria.trim()) {
+        toast.error('Non-Negotiables require Purpose, Action, and Success Criteria');
+        return;
+      }
+    }
     
     setSaving(true);
     
@@ -319,6 +333,11 @@ export function CustomActivityBuilderDialog({
         intervals: [] as RunningInterval[],
         is_favorited: isFavorited,
         is_non_negotiable: isNonNegotiable,
+        // Phase 12 — NN context contract
+        purpose: isNonNegotiable ? nnPurpose.trim() : null,
+        action: isNonNegotiable ? nnAction.trim() : null,
+        success_criteria: isNonNegotiable ? nnSuccessCriteria.trim() : null,
+        source: isNonNegotiable ? ((template as any)?.source || 'Custom') : null,
         recurring_days: scheduleMode === 'weekly' ? recurringDays : [],
         recurring_active: scheduleMode === 'weekly' && recurringActive,
         specific_dates: scheduleMode === 'specific_date' ? specificDates.map(d => format(d, 'yyyy-MM-dd')) : undefined,
@@ -489,6 +508,54 @@ export function CustomActivityBuilderDialog({
                     />
                   </div>
                 </div>
+                {/* Phase 12 — NN context contract: required fields when NN is on */}
+                {isNonNegotiable && (
+                  <div className="p-3 sm:p-4 rounded-lg border bg-red-500/5 border-red-500/20 space-y-3">
+                    <p className="text-[11px] font-black uppercase tracking-wider text-red-400">
+                      Required: explain this Non-Negotiable
+                    </p>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="nn-purpose" className="text-xs font-bold">
+                        Purpose <span className="text-red-400">*</span>
+                      </Label>
+                      <Input
+                        id="nn-purpose"
+                        value={nnPurpose}
+                        onChange={(e) => setNnPurpose(e.target.value.slice(0, 120))}
+                        placeholder="Why this exists. e.g. Reset focus before performance."
+                        maxLength={120}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="nn-action" className="text-xs font-bold">
+                        Action <span className="text-red-400">*</span>
+                      </Label>
+                      <Textarea
+                        id="nn-action"
+                        value={nnAction}
+                        onChange={(e) => setNnAction(e.target.value.slice(0, 240))}
+                        placeholder="Exactly what to do. e.g. Take 2 minutes to breathe slowly and refocus."
+                        maxLength={240}
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="nn-success" className="text-xs font-bold">
+                        Success Criteria <span className="text-red-400">*</span>
+                      </Label>
+                      <Input
+                        id="nn-success"
+                        value={nnSuccessCriteria}
+                        onChange={(e) => setNnSuccessCriteria(e.target.value.slice(0, 120))}
+                        placeholder="How you'll know it's done. e.g. Completed an uninterrupted 2-minute reset."
+                        maxLength={120}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
                 {!isEditing && (
                   <div className="p-3 sm:p-4 rounded-lg border bg-primary/5 border-primary/20 overflow-hidden">
                     <div className="flex items-center justify-between gap-3">

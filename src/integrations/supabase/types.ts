@@ -1464,6 +1464,7 @@ export type Database = {
       }
       custom_activity_templates: {
         Row: {
+          action: string | null
           activity_type: string
           color: string
           created_at: string | null
@@ -1489,18 +1490,22 @@ export type Database = {
           is_non_negotiable: boolean
           meals: Json | null
           pace_value: string | null
+          purpose: string | null
           recurring_active: boolean | null
           recurring_days: Json | null
           reminder_enabled: boolean | null
           reminder_minutes: number | null
           reminder_time: string | null
+          source: string | null
           specific_dates: string[] | null
           sport: string
+          success_criteria: string | null
           title: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          action?: string | null
           activity_type: string
           color?: string
           created_at?: string | null
@@ -1526,18 +1531,22 @@ export type Database = {
           is_non_negotiable?: boolean
           meals?: Json | null
           pace_value?: string | null
+          purpose?: string | null
           recurring_active?: boolean | null
           recurring_days?: Json | null
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
           reminder_time?: string | null
+          source?: string | null
           specific_dates?: string[] | null
           sport?: string
+          success_criteria?: string | null
           title: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          action?: string | null
           activity_type?: string
           color?: string
           created_at?: string | null
@@ -1563,13 +1572,16 @@ export type Database = {
           is_non_negotiable?: boolean
           meals?: Json | null
           pace_value?: string | null
+          purpose?: string | null
           recurring_active?: boolean | null
           recurring_days?: Json | null
           reminder_enabled?: boolean | null
           reminder_minutes?: number | null
           reminder_time?: string | null
+          source?: string | null
           specific_dates?: string[] | null
           sport?: string
+          success_criteria?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string

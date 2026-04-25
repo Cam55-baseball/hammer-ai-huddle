@@ -65,6 +65,7 @@ import { CustomActivityTemplate } from '@/types/customActivity';
 import { CustomField } from '@/types/customActivity';
 import { triggerCelebration } from '@/lib/confetti';
 import { trackOnce } from '@/lib/launchEvents';
+import { buildNNContext } from '@/lib/nnContract';
 import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
 
 interface GamePlanCardProps {
@@ -1087,6 +1088,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const isTexVision = task.specialStyle === 'tex-vision';
     const isCustom = task.specialStyle === 'custom';
     const isNN = !!task.customActivityData?.template?.is_non_negotiable && !hideNN;
+    // Phase 12 — NN context contract render guard.
+    // If a task is marked Non-Negotiable but cannot produce a fully-explained
+    // context (title + action at minimum, no shorthand titles), drop the card.
+    // Non-NN tasks are unaffected.
+    const nnCtx = isNN ? buildNNContext(task.customActivityData?.template) : null;
+    if (isNN && !nnCtx) {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn('[HM-NN-INVALID]', task.customActivityData?.template?.id);
+      }
+      return null;
+    }
     const showTimelineNumber = sortMode === 'timeline' && typeof index === 'number';
     const taskTime = taskTimes[task.id];
     const hasReminder = taskReminders[task.id];
@@ -1234,14 +1247,40 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </div>
               );
             })()}
-            <div className="flex items-center gap-2">
-              <p className={cn(
-                "text-xs sm:text-sm line-clamp-1",
-                task.completed ? "text-white/40" : "text-white/70"
-              )}>
-                {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
-              </p>
-            </div>
+            {isNN && nnCtx ? (
+              // Phase 12 — Structured NN body. Every NN ships with purpose,
+              // action, and success criteria so the card is self-explanatory.
+              <div className="mt-1 space-y-1">
+                <p className={cn(
+                  "text-[11px] sm:text-xs leading-snug",
+                  task.completed ? "text-white/35" : "text-white/60"
+                )}>
+                  {nnCtx.purpose}
+                </p>
+                <p className={cn(
+                  "text-xs sm:text-sm leading-snug",
+                  task.completed ? "text-white/40" : "text-white/85"
+                )}>
+                  {nnCtx.action}
+                </p>
+                <p className={cn(
+                  "text-[10px] sm:text-[11px] leading-snug",
+                  task.completed ? "text-white/30" : "text-white/50"
+                )}>
+                  <span className="font-bold uppercase tracking-wider">Done when:</span>{' '}
+                  {nnCtx.successCriteria}
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className={cn(
+                  "text-xs sm:text-sm line-clamp-1",
+                  task.completed ? "text-white/40" : "text-white/70"
+                )}>
+                  {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
+                </p>
+              </div>
+            )}
           </div>
         </button>
         

@@ -117,6 +117,11 @@ export interface CustomActivityTemplate {
   intervals: RunningInterval[];
   is_favorited: boolean;
   is_non_negotiable?: boolean;
+  // Phase 12 — NN context contract (optional on legacy rows; required for NN render)
+  purpose?: string | null;
+  action?: string | null;
+  success_criteria?: string | null;
+  source?: string | null;
   recurring_days: number[]; // 0-6 (Sunday-Saturday)
   recurring_active: boolean;
   sport: 'baseball' | 'softball';
