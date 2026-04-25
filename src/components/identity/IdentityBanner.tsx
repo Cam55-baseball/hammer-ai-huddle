@@ -1,4 +1,5 @@
 import { useIdentityState } from '@/hooks/useIdentityState';
+import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
 import { cn } from '@/lib/utils';
 import { Flame, ShieldCheck } from 'lucide-react';
 import { BehavioralPressureToast } from './BehavioralPressureToast';
@@ -9,6 +10,7 @@ interface Props {
 
 export function IdentityBanner({ className }: Props) {
   const { snapshot, tier, label, tone, ring, bg, loading } = useIdentityState();
+  useEngineRecomputeTrigger();
 
   if (loading) {
     return (
