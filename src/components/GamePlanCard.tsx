@@ -2049,10 +2049,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     <div className="space-y-4">
                       {/* NON-NEGOTIABLES — required, always rendered first; hidden on rest day */}
                       {!hideNN && nnTasks.length > 0 && (
-                        <div className={cn(
-                          "space-y-1 rounded-xl",
-                          pushGlow && "ring-2 ring-amber-500/40 p-2"
-                        )}>
+                        <div
+                          id="nn-section"
+                          className={cn(
+                            "space-y-1 rounded-xl scroll-mt-4",
+                            pushGlow && "ring-2 ring-amber-500/40 p-2"
+                          )}
+                        >
                           <div className="px-1">
                             <p className="text-[10px] uppercase tracking-widest text-red-300/80 font-bold">
                               Required — standard is built here
