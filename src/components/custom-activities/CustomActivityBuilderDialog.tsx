@@ -309,17 +309,21 @@ export function CustomActivityBuilderDialog({
       toast.error(t('customActivity.titleRequired', 'Please enter a title'));
       return;
     }
-    // Phase 12.1 — Strict NN context contract enforcement
+    // Phase 12.1/12.2 — Strict NN context + completion contract enforcement
     if (isNonNegotiable) {
       const v = validateNNFields({
         title: title.trim(),
         purpose: nnPurpose,
         action: nnAction,
         successCriteria: nnSuccessCriteria,
+        completionType: nnCompletionType || undefined,
+        completionBinding: nnBinding,
+        templateId: template?.id ?? '__self__',
       });
       if (!v.ok) {
         const firstError =
-          v.errors.title || v.errors.purpose || v.errors.action || v.errors.successCriteria;
+          v.errors.title || v.errors.purpose || v.errors.action ||
+          v.errors.successCriteria || v.errors.completion;
         toast.error(firstError || 'Non-Negotiable fields are incomplete');
         return;
       }
