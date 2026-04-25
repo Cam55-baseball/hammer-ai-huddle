@@ -24,7 +24,9 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityBanner } from "@/components/identity/IdentityBanner";
-import { RestDayControl } from "@/components/game-plan/RestDayControl";
+import { DayControlCard } from "@/components/game-plan/DayControlCard";
+import { NonNegotiableProgressStrip } from "@/components/game-plan/NonNegotiableProgressStrip";
+import { DayStateBanner } from "@/components/game-plan/DayStateBanner";
 import { TodayCommandBar } from "@/components/today/TodayCommandBar";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
@@ -593,7 +595,9 @@ export default function Dashboard() {
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <>
-            <RestDayControl />
+            <DayControlCard />
+            <NonNegotiableProgressStrip />
+            <DayStateBanner />
             <GamePlanCard selectedSport={selectedSport} />
           </>
         )}

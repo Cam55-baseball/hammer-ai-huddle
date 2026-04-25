@@ -84,8 +84,7 @@ export function useRestDay() {
         () => qc.invalidateQueries({ queryKey: ['rest-day-overrides', user.id] })
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel(ch)); };
-    function channel(c: any) { return c; }
+    return () => { supabase.removeChannel(ch); };
   }, [user?.id, qc]);
 
   const recurringDays = rule.data?.recurring_days ?? [];

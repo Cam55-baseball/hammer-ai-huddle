@@ -7749,6 +7749,7 @@ export type Database = {
           consistency_score: number
           created_at: string
           damping_multiplier: number
+          day_type_today: string | null
           discipline_streak: number
           id: string
           identity_tier: string
@@ -7758,9 +7759,11 @@ export type Database = {
           missed_days: number
           nn_miss_count_7d: number
           performance_streak: number
+          push_days_7d: number
           recovery_mode_today: boolean
           rest_days_30d: number
           rest_days_7d: number
+          skip_days_7d: number
           snapshot_date: string
           tier_entered_at: string | null
           user_id: string
@@ -7769,6 +7772,7 @@ export type Database = {
           consistency_score: number
           created_at?: string
           damping_multiplier?: number
+          day_type_today?: string | null
           discipline_streak?: number
           id?: string
           identity_tier?: string
@@ -7778,9 +7782,11 @@ export type Database = {
           missed_days?: number
           nn_miss_count_7d?: number
           performance_streak?: number
+          push_days_7d?: number
           recovery_mode_today?: boolean
           rest_days_30d?: number
           rest_days_7d?: number
+          skip_days_7d?: number
           snapshot_date: string
           tier_entered_at?: string | null
           user_id: string
@@ -7789,6 +7795,7 @@ export type Database = {
           consistency_score?: number
           created_at?: string
           damping_multiplier?: number
+          day_type_today?: string | null
           discipline_streak?: number
           id?: string
           identity_tier?: string
@@ -7798,11 +7805,37 @@ export type Database = {
           missed_days?: number
           nn_miss_count_7d?: number
           performance_streak?: number
+          push_days_7d?: number
           recovery_mode_today?: boolean
           rest_days_30d?: number
           rest_days_7d?: number
+          skip_days_7d?: number
           snapshot_date?: string
           tier_entered_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_day_state_overrides: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          type?: string
           user_id?: string
         }
         Relationships: []

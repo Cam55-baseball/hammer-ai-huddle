@@ -80,6 +80,24 @@ function eventCopy(type: string, ctx: any): { command_text: string; action_type:
         action_type: "acknowledge",
         action_payload: {},
       };
+    case "push_fail":
+      return {
+        command_text: "You called a push and didn't meet it.",
+        action_type: "complete_nn",
+        action_payload: ctx.smallest_nn_template_id ? { template_id: ctx.smallest_nn_template_id } : {},
+      };
+    case "push_complete":
+      return {
+        command_text: "Push executed. That's locked in.",
+        action_type: "acknowledge",
+        action_payload: {},
+      };
+    case "skip_day_used":
+      return {
+        command_text: "You skipped the day. No standard applied.",
+        action_type: "acknowledge",
+        action_payload: {},
+      };
     default:
       return { command_text: "Update available.", action_type: "acknowledge", action_payload: {} };
   }
@@ -118,27 +136,40 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   const injuryByDay = new Set<string>();
   for (const d of dailyLogs ?? []) if (d.injury_mode) injuryByDay.add(d.entry_date);
 
-  // 3. Rest day classification
-  const [{ data: restRules }, { data: restOverrides }] = await Promise.all([
+  // 3. Day state — unified overrides + recurring rest rule
+  const [{ data: restRules }, { data: restOverrides }, { data: dayStateRows }] = await Promise.all([
     supabase.from("user_rest_day_rules")
       .select("recurring_days, max_rest_days_per_week").eq("user_id", userId).maybeSingle(),
     supabase.from("user_rest_day_overrides")
       .select("date").eq("user_id", userId).gte("date", since30),
+    supabase.from("user_day_state_overrides")
+      .select("date, type").eq("user_id", userId).gte("date", since30),
   ]);
   const recurringDays: number[] = restRules?.recurring_days ?? [];
   const maxRestPerWeek: number = restRules?.max_rest_days_per_week ?? 2;
-  const overrideDays = new Set<string>((restOverrides ?? []).map((r: any) => r.date));
+
+  // Unified intent map: explicit override wins over legacy rest table
+  const intentByDay = new Map<string, "rest" | "skip" | "push">();
+  for (const r of restOverrides ?? []) intentByDay.set(r.date, "rest");
+  for (const r of dayStateRows ?? []) intentByDay.set(r.date, r.type as any);
 
   // Walk 30 days oldest→newest, applying weekly cap to rest classification
   const today = new Date(todayUTC + "T00:00:00Z");
-  const days: { ds: string; klass: "injury" | "rest" | "logged" | "missed" }[] = [];
+  const days: { ds: string; klass: "injury" | "rest" | "skip" | "push" | "logged" | "missed" }[] = [];
   const restUsedByWeek = new Map<string, number>();
 
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
     const ds = dayStr(d);
     if (injuryByDay.has(ds)) { days.push({ ds, klass: "injury" }); continue; }
-    const isRestCandidate = overrideDays.has(ds) || recurringDays.includes(weekday(ds));
+
+    const intent = intentByDay.get(ds);
+
+    // SKIP: hard miss, breaks streaks, NN auto-missed
+    if (intent === "skip") { days.push({ ds, klass: "skip" }); continue; }
+
+    // REST: explicit or recurring
+    const isRestCandidate = intent === "rest" || recurringDays.includes(weekday(ds));
     if (isRestCandidate) {
       const wk = weekKey(ds);
       const used = restUsedByWeek.get(wk) ?? 0;
@@ -152,21 +183,43 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
       else days.push({ ds, klass: "missed" });
       continue;
     }
+
+    // PUSH: behaves like standard for scoring; flagged for events
+    if (intent === "push") {
+      days.push({ ds, klass: "push" });
+      continue;
+    }
+
     if (completedByDay.has(ds)) days.push({ ds, klass: "logged" });
     else days.push({ ds, klass: "missed" });
   }
 
   // 4. Aggregate
   let logged = 0, missed = 0, injuryHold = 0, restDays30 = 0, restDays7 = 0;
+  let skipDays7 = 0, pushDays7 = 0;
   const todayStr = todayUTC;
   let recoveryModeToday = false;
+  let dayTypeToday: "injury" | "rest" | "skip" | "push" | "standard" = "standard";
   for (const x of days) {
-    if (x.klass === "injury") injuryHold++;
+    const ageDays = Math.round((today.getTime() - new Date(x.ds + "T00:00:00Z").getTime()) / 86400000);
+    const isToday = x.ds === todayStr;
+    if (x.klass === "injury") { injuryHold++; if (isToday) dayTypeToday = "injury"; }
     else if (x.klass === "rest") {
       restDays30++;
-      const ageDays = Math.round((today.getTime() - new Date(x.ds + "T00:00:00Z").getTime()) / 86400000);
       if (ageDays < 7) restDays7++;
-      if (x.ds === todayStr) recoveryModeToday = true;
+      if (isToday) { recoveryModeToday = true; dayTypeToday = "rest"; }
+    }
+    else if (x.klass === "skip") {
+      // Hard miss — counts in missed_days, breaks streak, NN auto-missed
+      missed++;
+      if (ageDays < 7) skipDays7++;
+      if (isToday) dayTypeToday = "skip";
+    }
+    else if (x.klass === "push") {
+      // Push behaves like standard for scoring base; logged/missed depends on completion
+      if (completedByDay.has(x.ds)) logged++; else missed++;
+      if (ageDays < 7) pushDays7++;
+      if (isToday) dayTypeToday = "push";
     }
     else if (x.klass === "logged") logged++;
     else missed++;
@@ -194,13 +247,14 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   const prevTier = (prevSnap?.identity_tier ?? null) as IdentityTier | null;
   const ddaRelief = prevTier === "slipping" && nnIds.length >= 2; // waive lowest-priority NN
 
-  // 6. Streaks (rest = neutral, injury = neutral)
+  // 6. Streaks (rest = neutral, injury = neutral; skip = hard break; push = standard rules)
   let perfStreak = 0, discStreak = 0;
   for (let i = 0; i < 365; i++) {
     const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
     const ds = dayStr(d);
     const klass = days.find(x => x.ds === ds)?.klass;
     if (klass === "injury" || klass === "rest") continue;
+    if (klass === "skip") break; // hard streak break
 
     let dayMetPerf: boolean;
     if (nnIds.length > 0) {
@@ -217,6 +271,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     const ds = dayStr(d);
     const klass = days.find(x => x.ds === ds)?.klass;
     if (klass === "injury" || klass === "rest") continue;
+    if (klass === "skip") break; // hard discipline break too
     if (anyLogByDay.has(ds)) discStreak++; else break;
   }
 
@@ -224,7 +279,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   const denom = Math.max(1, 30 - injuryHold - restDays30);
   const score = Math.round((logged / denom) * 100);
 
-  // 8. NN miss 7d (rest days excluded)
+  // 8. NN miss 7d (rest excluded; skip auto-misses every NN)
   let nnMiss7 = 0;
   if (nnIds.length > 0) {
     for (let i = 0; i < 7; i++) {
@@ -232,8 +287,9 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
       const ds = dayStr(d);
       const klass = days.find(x => x.ds === ds)?.klass;
       if (klass === "injury" || klass === "rest") continue;
-      const done = completedTemplatesByDay.get(ds) ?? new Set<string>();
       const requiredIds = ddaRelief ? nnIds.slice(0, -1) : nnIds;
+      if (klass === "skip") { nnMiss7 += requiredIds.length; continue; }
+      const done = completedTemplatesByDay.get(ds) ?? new Set<string>();
       for (const id of requiredIds) if (!done.has(id)) nnMiss7++;
     }
   }
@@ -268,10 +324,13 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     rest_days_7d: restDays7,
     recovery_mode_today: recoveryModeToday,
     tier_entered_at: tierEnteredAt,
+    day_type_today: dayTypeToday,
+    push_days_7d: pushDays7,
+    skip_days_7d: skipDays7,
     inputs: {
       denom, nn_template_count: nnIds.length, dda_relief: ddaRelief,
       max_rest_per_week: maxRestPerWeek, recurring_days: recurringDays,
-      source: "custom_activity_logs_v3_rest",
+      source: "custom_activity_logs_v4_unified_day_state",
     },
   }, { onConflict: "user_id,snapshot_date" });
 
@@ -305,15 +364,43 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   if (restDays7 > maxRestPerWeek)
     pushEvent("rest_overuse", restDays7 - maxRestPerWeek, { rest_days_7d: restDays7, cap: maxRestPerWeek });
 
+  // Push / Skip events for today (deduped within day)
+  const eventsTodaySince = todayUTC + "T00:00:00Z";
+  const dedupeToday = async (type: string) => {
+    const { data } = await supabase.from("behavioral_events")
+      .select("id").eq("user_id", userId).eq("event_type", type)
+      .gte("created_at", eventsTodaySince).limit(1);
+    return !!(data && data.length);
+  };
+
+  if (dayTypeToday === "skip") {
+    if (!(await dedupeToday("skip_day_used")))
+      pushEvent("skip_day_used", null, { date: todayUTC });
+  } else if (dayTypeToday === "push") {
+    const requiredIds = ddaRelief ? nnIds.slice(0, -1) : nnIds;
+    const doneToday = completedTemplatesByDay.get(todayUTC) ?? new Set<string>();
+    const allNnDone = requiredIds.length === 0
+      ? completedByDay.has(todayUTC)
+      : requiredIds.every(id => doneToday.has(id));
+    if (allNnDone) {
+      if (!(await dedupeToday("push_complete")))
+        pushEvent("push_complete", null, { date: todayUTC });
+    } else {
+      // Only emit push_fail late in day so users get full chance
+      const utcHourPush = new Date().getUTCHours();
+      if (utcHourPush >= 18 && !(await dedupeToday("push_fail"))) {
+        pushEvent("push_fail", null, { date: todayUTC },
+          { smallest_nn_template_id: smallestNnId });
+      }
+    }
+  }
+
   // Streak risk: streak >=3, today not yet completed/rest/injury, late in day (UTC > 18:00)
   const todayKlass = days[days.length - 1]?.klass;
   const utcHour = new Date().getUTCHours();
-  if (perfStreak >= 3 && todayKlass === "missed" && utcHour >= 18 && nnIds.length > 0) {
-    // dedupe within today
-    const { data: existing } = await supabase.from("behavioral_events")
-      .select("id").eq("user_id", userId).eq("event_type", "streak_risk")
-      .gte("created_at", todayUTC + "T00:00:00Z").limit(1);
-    if (!existing || existing.length === 0) pushEvent("streak_risk", perfStreak, { streak: perfStreak });
+  if (perfStreak >= 3 && (todayKlass === "missed" || todayKlass === "skip") && utcHour >= 18 && nnIds.length > 0) {
+    if (!(await dedupeToday("streak_risk")))
+      pushEvent("streak_risk", perfStreak, { streak: perfStreak });
   }
 
   // Coaching insights (low priority, dedupe by date)
@@ -359,13 +446,16 @@ serve(async (req) => {
       userIds = [targetUser];
     } else {
       const since30 = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
-      const { data: activeRows } = await supabase
-        .from("custom_activity_logs")
-        .select("user_id")
-        .gte("entry_date", since30)
-        .neq("user_id", SYSTEM_USER);
-      userIds = Array.from(new Set((activeRows ?? []).map((r: any) => r.user_id)))
-        .filter((u) => u !== SYSTEM_USER);
+      const [{ data: activeRows }, { data: dayRows }] = await Promise.all([
+        supabase.from("custom_activity_logs")
+          .select("user_id").gte("entry_date", since30).neq("user_id", SYSTEM_USER),
+        supabase.from("user_day_state_overrides")
+          .select("user_id").gte("date", since30),
+      ]);
+      const ids = new Set<string>();
+      for (const r of activeRows ?? []) if (r.user_id !== SYSTEM_USER) ids.add(r.user_id);
+      for (const r of dayRows ?? []) if (r.user_id !== SYSTEM_USER) ids.add(r.user_id);
+      userIds = Array.from(ids);
     }
 
     const results: any[] = [];
