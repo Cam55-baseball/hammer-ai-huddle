@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { Share2 } from 'lucide-react';
 import { getTodayDate } from '@/utils/dateUtils';
 import { safeGet, safeSet, safeRemove } from '@/lib/safeStorage';
+import { trackLaunchEvent } from '@/lib/launchEvents';
 import { useDailyOutcome, type DailyOutcomeStatus, type StreakImpact } from '@/hooks/useDailyOutcome';
 
 interface TodayStats {
