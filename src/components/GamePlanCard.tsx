@@ -1088,6 +1088,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const isTexVision = task.specialStyle === 'tex-vision';
     const isCustom = task.specialStyle === 'custom';
     const isNN = !!task.customActivityData?.template?.is_non_negotiable && !hideNN;
+    // Phase 12 — NN context contract render guard.
+    // If a task is marked Non-Negotiable but cannot produce a fully-explained
+    // context (title + action at minimum, no shorthand titles), drop the card.
+    // Non-NN tasks are unaffected.
+    const nnCtx = isNN ? buildNNContext(task.customActivityData?.template) : null;
+    if (isNN && !nnCtx) {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn('[HM-NN-INVALID]', task.customActivityData?.template?.id);
+      }
+      return null;
+    }
     const showTimelineNumber = sortMode === 'timeline' && typeof index === 'number';
     const taskTime = taskTimes[task.id];
     const hasReminder = taskReminders[task.id];
