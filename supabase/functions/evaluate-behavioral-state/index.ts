@@ -196,15 +196,30 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
 
   // 4. Aggregate
   let logged = 0, missed = 0, injuryHold = 0, restDays30 = 0, restDays7 = 0;
+  let skipDays7 = 0, pushDays7 = 0;
   const todayStr = todayUTC;
   let recoveryModeToday = false;
+  let dayTypeToday: "injury" | "rest" | "skip" | "push" | "standard" = "standard";
   for (const x of days) {
-    if (x.klass === "injury") injuryHold++;
+    const ageDays = Math.round((today.getTime() - new Date(x.ds + "T00:00:00Z").getTime()) / 86400000);
+    const isToday = x.ds === todayStr;
+    if (x.klass === "injury") { injuryHold++; if (isToday) dayTypeToday = "injury"; }
     else if (x.klass === "rest") {
       restDays30++;
-      const ageDays = Math.round((today.getTime() - new Date(x.ds + "T00:00:00Z").getTime()) / 86400000);
       if (ageDays < 7) restDays7++;
-      if (x.ds === todayStr) recoveryModeToday = true;
+      if (isToday) { recoveryModeToday = true; dayTypeToday = "rest"; }
+    }
+    else if (x.klass === "skip") {
+      // Hard miss — counts in missed_days, breaks streak, NN auto-missed
+      missed++;
+      if (ageDays < 7) skipDays7++;
+      if (isToday) dayTypeToday = "skip";
+    }
+    else if (x.klass === "push") {
+      // Push behaves like standard for scoring base; logged/missed depends on completion
+      if (completedByDay.has(x.ds)) logged++; else missed++;
+      if (ageDays < 7) pushDays7++;
+      if (isToday) dayTypeToday = "push";
     }
     else if (x.klass === "logged") logged++;
     else missed++;
@@ -232,13 +247,14 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   const prevTier = (prevSnap?.identity_tier ?? null) as IdentityTier | null;
   const ddaRelief = prevTier === "slipping" && nnIds.length >= 2; // waive lowest-priority NN
 
-  // 6. Streaks (rest = neutral, injury = neutral)
+  // 6. Streaks (rest = neutral, injury = neutral; skip = hard break; push = standard rules)
   let perfStreak = 0, discStreak = 0;
   for (let i = 0; i < 365; i++) {
     const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
     const ds = dayStr(d);
     const klass = days.find(x => x.ds === ds)?.klass;
     if (klass === "injury" || klass === "rest") continue;
+    if (klass === "skip") break; // hard streak break
 
     let dayMetPerf: boolean;
     if (nnIds.length > 0) {
@@ -255,6 +271,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     const ds = dayStr(d);
     const klass = days.find(x => x.ds === ds)?.klass;
     if (klass === "injury" || klass === "rest") continue;
+    if (klass === "skip") break; // hard discipline break too
     if (anyLogByDay.has(ds)) discStreak++; else break;
   }
 
@@ -262,7 +279,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   const denom = Math.max(1, 30 - injuryHold - restDays30);
   const score = Math.round((logged / denom) * 100);
 
-  // 8. NN miss 7d (rest days excluded)
+  // 8. NN miss 7d (rest excluded; skip auto-misses every NN)
   let nnMiss7 = 0;
   if (nnIds.length > 0) {
     for (let i = 0; i < 7; i++) {
@@ -270,8 +287,9 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
       const ds = dayStr(d);
       const klass = days.find(x => x.ds === ds)?.klass;
       if (klass === "injury" || klass === "rest") continue;
-      const done = completedTemplatesByDay.get(ds) ?? new Set<string>();
       const requiredIds = ddaRelief ? nnIds.slice(0, -1) : nnIds;
+      if (klass === "skip") { nnMiss7 += requiredIds.length; continue; }
+      const done = completedTemplatesByDay.get(ds) ?? new Set<string>();
       for (const id of requiredIds) if (!done.has(id)) nnMiss7++;
     }
   }
@@ -306,10 +324,13 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     rest_days_7d: restDays7,
     recovery_mode_today: recoveryModeToday,
     tier_entered_at: tierEnteredAt,
+    day_type_today: dayTypeToday,
+    push_days_7d: pushDays7,
+    skip_days_7d: skipDays7,
     inputs: {
       denom, nn_template_count: nnIds.length, dda_relief: ddaRelief,
       max_rest_per_week: maxRestPerWeek, recurring_days: recurringDays,
-      source: "custom_activity_logs_v3_rest",
+      source: "custom_activity_logs_v4_unified_day_state",
     },
   }, { onConflict: "user_id,snapshot_date" });
 
