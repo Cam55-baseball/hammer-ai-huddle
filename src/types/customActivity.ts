@@ -98,6 +98,23 @@ export interface EmbeddedRunningSession {
   pace_goal?: string;
 }
 
+// Phase 12.2 — NN completion contract.
+// Every Non-Negotiable must bind to either an in-app event or an enforceable
+// manual rule. The renderer + builder validate this through nnContract.ts.
+export type NNCompletionBinding =
+  | {
+      kind: 'in_app';
+      event: 'NN_COMPLETED' | 'STANDARD_MET' | 'NIGHT_CHECKIN_COMPLETED';
+      match?: { templateId?: string };
+    }
+  | {
+      kind: 'manual';
+      rule:
+        | { type: 'timer'; min_seconds: number }
+        | { type: 'count'; min_count: number; label: string }
+        | { type: 'binary'; confirm_label: string };
+    };
+
 export interface CustomActivityTemplate {
   id: string;
   user_id: string;
