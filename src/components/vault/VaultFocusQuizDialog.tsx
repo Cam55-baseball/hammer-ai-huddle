@@ -41,6 +41,12 @@ interface VaultFocusQuizDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   quizType: 'pre_lift' | 'night' | 'morning';
+  /**
+   * Phase 10.5 — Authority Lock: when truthy, the night check-in
+   * has already been submitted today. Dialog must skip the form
+   * entirely and render the success/verdict screen.
+   */
+  existingNightQuiz?: { id: string } | null;
   onSubmit: (data: {
     mental_readiness: number;
     emotional_state: number;
@@ -248,6 +254,7 @@ export function VaultFocusQuizDialog({
   open,
   onOpenChange,
   quizType,
+  existingNightQuiz,
   onSubmit,
 }: VaultFocusQuizDialogProps) {
   const { t } = useTranslation();
@@ -255,7 +262,21 @@ export function VaultFocusQuizDialog({
   const { updateIllness } = usePhysioProfile();
   const [loading, setLoading] = useState(false);
   const [showNightSuccess, setShowNightSuccess] = useState(false);
-  
+
+  // Phase 10.5 — Authority Lock: if user already completed today's night
+  // check-in, skip the form and land on the verdict screen immediately.
+  const bypassRef = useRef(false);
+  useEffect(() => {
+    if (open && quizType === 'night' && existingNightQuiz && !bypassRef.current) {
+      bypassRef.current = true;
+      setShowNightSuccess(true);
+      if (import.meta.env.DEV) {
+        console.log('[HM-NIGHT] bypass: existing entry detected', existingNightQuiz.id);
+      }
+    }
+    if (!open) bypassRef.current = false;
+  }, [open, quizType, existingNightQuiz]);
+
   // Fetch night check-in stats for success screen
   const nightStats = useNightCheckInStats();
   const { daysUntilRecap } = useRecapCountdown();
