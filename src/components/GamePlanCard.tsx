@@ -740,9 +740,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     if (!ca || task.completed) return;
     try {
       // Make sure a log row exists, then write the gate audit.
-      const logId = ca.log?.id ?? (await ensureLogExists(ca.template.id));
+      const ensured = ca.log ?? (await ensureLogExists(ca.template.id));
+      const logId = ensured?.id;
       if (logId) {
-        const prevPd = ((ca.log as any)?.performance_data as Record<string, any>) || {};
+        const prevPd = ((ensured as any)?.performance_data as Record<string, any>) || {};
         await updateLogPerformanceData(logId, { ...prevPd, nn_gate: gate });
       }
       const success = await toggleComplete(ca.template.id, logId ?? undefined);
