@@ -478,7 +478,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
       // Phase 10.8 — silent NN completion event (storage-safe dedupe)
       if (isCompletingNow && (template as any)?.is_non_negotiable) {
-        trackOnce('NN_COMPLETED', `nn:${today}:${templateId}`, { templateId });
+        trackOnce('NN_COMPLETED', `nn:${today}:${templateId}`, { date: today, templateId });
       }
 
       // When completing (not uncompleting), add exercises to load tracking

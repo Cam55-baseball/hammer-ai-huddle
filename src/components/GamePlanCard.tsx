@@ -1051,7 +1051,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       pulsedRef.current = true;
       setPulseStandard(true);
       toast.success('Standard met.');
-      trackOnce('STANDARD_MET', `standard_met:${getTodayDate()}`, { nnTotal: total });
+      const __today = getTodayDate();
+      trackOnce('STANDARD_MET', `standard_met:${__today}`, { date: __today });
       const t = setTimeout(() => setPulseStandard(false), 1000);
       return () => clearTimeout(t);
     }

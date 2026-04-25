@@ -586,10 +586,12 @@ function FeedbackPrompt() {
       arr.push({ date: today, helpful, note: noteText ?? null });
       safeSet(FEEDBACK_LOG_KEY, JSON.stringify(arr.slice(-50)));
     } catch { /* noop */ }
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('[HM-EVENT] FEEDBACK', { helpful, note: noteText ?? null });
-    }
+    // Phase 11 — emit FEEDBACK through the unified tracker (DEV log + PROD analytics).
+    trackLaunchEvent('FEEDBACK', {
+      date: today,
+      helpful,
+      ...(noteText ? { note: noteText.slice(0, 120) } : {}),
+    });
   };
 
   if (!visible) return null;
