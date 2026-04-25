@@ -585,7 +585,8 @@ export function VaultFocusQuizDialog({
         // Refetch stats to get updated data
         nightStats.refetch();
         setShowNightSuccess(true);
-        trackOnce('NIGHT_CHECKIN_COMPLETED', `night_checkin:${getTodayDate()}`);
+        const __today = getTodayDate();
+        trackOnce('NIGHT_CHECKIN_COMPLETED', `night_checkin:${__today}`, { date: __today });
         return;
       }
       

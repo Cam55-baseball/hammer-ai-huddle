@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { Share2 } from 'lucide-react';
 import { getTodayDate } from '@/utils/dateUtils';
 import { safeGet, safeSet, safeRemove } from '@/lib/safeStorage';
+import { trackLaunchEvent } from '@/lib/launchEvents';
 import { useDailyOutcome, type DailyOutcomeStatus, type StreakImpact } from '@/hooks/useDailyOutcome';
 
 interface TodayStats {
@@ -586,10 +587,12 @@ function FeedbackPrompt() {
       arr.push({ date: today, helpful, note: noteText ?? null });
       safeSet(FEEDBACK_LOG_KEY, JSON.stringify(arr.slice(-50)));
     } catch { /* noop */ }
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('[HM-EVENT] FEEDBACK', { helpful, note: noteText ?? null });
-    }
+    // Phase 11 — emit FEEDBACK through the unified tracker (DEV log + PROD analytics).
+    trackLaunchEvent('FEEDBACK', {
+      date: today,
+      helpful,
+      ...(noteText ? { note: noteText.slice(0, 120) } : {}),
+    });
   };
 
   if (!visible) return null;

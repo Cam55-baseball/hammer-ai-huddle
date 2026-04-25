@@ -3604,6 +3604,30 @@ export type Database = {
         }
         Relationships: []
       }
+      launch_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          payload: Json
+          ts: string
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          payload?: Json
+          ts?: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          payload?: Json
+          ts?: string
+        }
+        Relationships: []
+      }
       league_classifications: {
         Row: {
           ai_classified: boolean | null

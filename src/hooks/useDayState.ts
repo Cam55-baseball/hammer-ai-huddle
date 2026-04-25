@@ -119,7 +119,7 @@ export function useDayState() {
         .catch?.(() => {});
     }
     qc.invalidateQueries({ queryKey: ['rest-day-overrides', user.id] });
-    if (next === 'skip') trackOnce('DAY_SKIPPED', `day_skipped:${todayStr}`);
+    if (next === 'skip') trackOnce('DAY_SKIPPED', `day_skipped:${todayStr}`, { date: todayStr });
     recompute();
   };
 
