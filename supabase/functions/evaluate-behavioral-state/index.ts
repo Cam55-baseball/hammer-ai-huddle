@@ -446,13 +446,16 @@ serve(async (req) => {
       userIds = [targetUser];
     } else {
       const since30 = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
-      const { data: activeRows } = await supabase
-        .from("custom_activity_logs")
-        .select("user_id")
-        .gte("entry_date", since30)
-        .neq("user_id", SYSTEM_USER);
-      userIds = Array.from(new Set((activeRows ?? []).map((r: any) => r.user_id)))
-        .filter((u) => u !== SYSTEM_USER);
+      const [{ data: activeRows }, { data: dayRows }] = await Promise.all([
+        supabase.from("custom_activity_logs")
+          .select("user_id").gte("entry_date", since30).neq("user_id", SYSTEM_USER),
+        supabase.from("user_day_state_overrides")
+          .select("user_id").gte("date", since30),
+      ]);
+      const ids = new Set<string>();
+      for (const r of activeRows ?? []) if (r.user_id !== SYSTEM_USER) ids.add(r.user_id);
+      for (const r of dayRows ?? []) if (r.user_id !== SYSTEM_USER) ids.add(r.user_id);
+      userIds = Array.from(ids);
     }
 
     const results: any[] = [];
