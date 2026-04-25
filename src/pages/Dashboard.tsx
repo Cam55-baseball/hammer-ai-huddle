@@ -24,6 +24,7 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityBanner } from "@/components/identity/IdentityBanner";
+import { RestDayControl } from "@/components/game-plan/RestDayControl";
 import { TodayCommandBar } from "@/components/today/TodayCommandBar";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
@@ -591,7 +592,10 @@ export default function Dashboard() {
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <GamePlanCard selectedSport={selectedSport} />
+          <>
+            <RestDayControl />
+            <GamePlanCard selectedSport={selectedSport} />
+          </>
         )}
 
         {/* Sport Switch Confirmation Dialog */}
