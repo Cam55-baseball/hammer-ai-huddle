@@ -28,7 +28,7 @@ import { ViewModeToggle } from '@/components/elite-workout/views/ViewModeToggle'
 import { CNSLoadIndicator } from '@/components/elite-workout/intelligence/CNSLoadIndicator';
 import { WorkoutBlock, ViewMode } from '@/types/eliteWorkout';
 import { calculateWorkoutCNS } from '@/utils/loadCalculation';
-import { CustomActivityTemplate, ActivityType, IntensityLevel, Exercise, MealData, CustomField, RunningInterval, EmbeddedRunningSession } from '@/types/customActivity';
+import { CustomActivityTemplate, ActivityType, IntensityLevel, Exercise, MealData, CustomField, RunningInterval, EmbeddedRunningSession, NNCompletionBinding } from '@/types/customActivity';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -119,15 +119,25 @@ export function CustomActivityBuilderDialog({
   const [nnPurpose, setNnPurpose] = useState((template as any)?.purpose || '');
   const [nnAction, setNnAction] = useState((template as any)?.action || template?.description || '');
   const [nnSuccessCriteria, setNnSuccessCriteria] = useState((template as any)?.success_criteria || '');
-  // Phase 12.1 — live validation against the strict NN contract
+  // Phase 12.2 — completion contract state
+  const [nnCompletionType, setNnCompletionType] = useState<'in_app' | 'manual' | ''>(
+    ((template as any)?.completion_type as 'in_app' | 'manual' | undefined) ?? ''
+  );
+  const [nnBinding, setNnBinding] = useState<NNCompletionBinding | null>(
+    ((template as any)?.completion_binding as NNCompletionBinding | undefined) ?? null
+  );
+  // Phase 12.1/12.2 — live validation against the strict NN contract
   const nnValidation = useMemo(
     () => validateNNFields({
       title,
       purpose: nnPurpose,
       action: nnAction,
       successCriteria: nnSuccessCriteria,
+      completionType: nnCompletionType || undefined,
+      completionBinding: nnBinding,
+      templateId: template?.id ?? '__self__',
     }),
-    [title, nnPurpose, nnAction, nnSuccessCriteria]
+    [title, nnPurpose, nnAction, nnSuccessCriteria, nnCompletionType, nnBinding, template?.id]
   );
   const [recurringDays, setRecurringDays] = useState<number[]>(template?.recurring_days || []);
   const [recurringActive, setRecurringActive] = useState(template?.recurring_active || false);
@@ -183,6 +193,8 @@ export function CustomActivityBuilderDialog({
       setNnPurpose((template as any).purpose ?? '');
       setNnAction((template as any).action ?? template.description ?? '');
       setNnSuccessCriteria((template as any).success_criteria ?? '');
+      setNnCompletionType(((template as any).completion_type as 'in_app' | 'manual' | undefined) ?? '');
+      setNnBinding(((template as any).completion_binding as NNCompletionBinding | undefined) ?? null);
       setRecurringDays(template.recurring_days || []);
       setRecurringActive(template.recurring_active);
       // Initialize schedule mode from template
