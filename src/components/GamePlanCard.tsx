@@ -728,6 +728,43 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
 
+  // Phase 12.2 — gated NN completion. The gate has already been satisfied
+  // by the user (timer expired, count reached, or binary confirmed). We
+  // record the proof in performance_data and then trigger the standard
+  // completion path so all downstream engine triggers fire unchanged.
+  const handleNNGateSatisfied = async (
+    task: GamePlanTask,
+    gate: { type: string; satisfied_at: string; [k: string]: any },
+  ) => {
+    const ca = task.customActivityData;
+    if (!ca || task.completed) return;
+    try {
+      // Make sure a log row exists, then write the gate audit.
+      const logId = ca.log?.id ?? (await ensureLogExists(ca.template.id));
+      if (logId) {
+        const prevPd = ((ca.log as any)?.performance_data as Record<string, any>) || {};
+        await updateLogPerformanceData(logId, { ...prevPd, nn_gate: gate });
+      }
+      const success = await toggleComplete(ca.template.id, logId ?? undefined);
+      if (success) {
+        if (sortMode === 'timeline') {
+          const updatedTasks = timelineTasks.map(t =>
+            t.id === task.id ? { ...t, completed: true } : t
+          );
+          const sorted = sortTimelineByCompletion(updatedTasks);
+          setTimelineTasks(sorted);
+          localStorage.setItem('gameplan-timeline-order', JSON.stringify(sorted.map(t => t.id)));
+        }
+        refetch();
+        toast.success(t('customActivity.markedComplete'));
+      }
+    } catch (e) {
+      console.error('[NNGate] complete failed', e);
+      toast.error('Could not complete this Non-Negotiable.');
+    }
+  };
+
+
   // Custom activity schedule edit handler - now opens schedule drawer like system tasks
   const handleCustomActivityScheduleEdit = (task: GamePlanTask) => {
     if (task.customActivityData) {
