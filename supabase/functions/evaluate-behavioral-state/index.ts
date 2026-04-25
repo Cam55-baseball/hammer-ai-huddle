@@ -2,6 +2,15 @@
 // Source: custom_activity_logs (completion_state='completed' = logged day)
 // Override: athlete_daily_log.injury_mode = injury_hold day
 // Rest:     user_rest_day_overrides + user_rest_day_rules.recurring_days
+//
+// ⚠ INVARIANTS — Phase 10.5 Integrity Lock — DO NOT VIOLATE
+// This function is strictly behavioral scoring + NN suggestion generation.
+// It must NOT:
+//   - derive or write daily outcome (standard met / not met)
+//   - mutate NN completion state on custom_activity_templates
+//   - produce day-summary text or any per-day verdict
+// Daily outcome is derived client-side via useDailyOutcome only (single
+// source of truth). Adding outcome logic here will desync the system.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 

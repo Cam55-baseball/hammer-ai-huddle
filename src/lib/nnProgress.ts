@@ -1,3 +1,8 @@
+// ⚠ The ONLY allowed NN-completion counter for "today" derivations
+// (Phase 10.5 Integrity Lock). Game Plan, Daily Outcome, and Nightly
+// Check-In all route through this. Do NOT add parallel queries that
+// count today's NN completions elsewhere — they will drift.
+
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -34,6 +39,7 @@ export async function fetchNNProgressToday(userId: string): Promise<{
   const anyActivityLogged = allLogs.length > 0;
 
   if (nnIds.length === 0) {
+    if (import.meta.env.DEV) console.log('[HM-NN]', { done: 0, total: 0, anyActivityLogged });
     return { done: 0, total: 0, anyActivityLogged };
   }
 
@@ -44,5 +50,7 @@ export async function fetchNNProgressToday(userId: string): Promise<{
       .map((l: any) => l.template_id)
   );
 
-  return { done: done.size, total: nnIds.length, anyActivityLogged };
+  const result = { done: done.size, total: nnIds.length, anyActivityLogged };
+  if (import.meta.env.DEV) console.log('[HM-NN]', result);
+  return result;
 }
