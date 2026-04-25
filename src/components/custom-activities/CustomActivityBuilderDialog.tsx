@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -33,6 +33,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { validateNNFields } from '@/lib/nnContract';
 
 type LockableField = 
   | 'title' 
@@ -118,6 +119,16 @@ export function CustomActivityBuilderDialog({
   const [nnPurpose, setNnPurpose] = useState((template as any)?.purpose || '');
   const [nnAction, setNnAction] = useState((template as any)?.action || template?.description || '');
   const [nnSuccessCriteria, setNnSuccessCriteria] = useState((template as any)?.success_criteria || '');
+  // Phase 12.1 — live validation against the strict NN contract
+  const nnValidation = useMemo(
+    () => validateNNFields({
+      title,
+      purpose: nnPurpose,
+      action: nnAction,
+      successCriteria: nnSuccessCriteria,
+    }),
+    [title, nnPurpose, nnAction, nnSuccessCriteria]
+  );
   const [recurringDays, setRecurringDays] = useState<number[]>(template?.recurring_days || []);
   const [recurringActive, setRecurringActive] = useState(template?.recurring_active || false);
   const [saving, setSaving] = useState(false);
@@ -286,10 +297,18 @@ export function CustomActivityBuilderDialog({
       toast.error(t('customActivity.titleRequired', 'Please enter a title'));
       return;
     }
-    // Phase 12 — NN context contract enforcement
+    // Phase 12.1 — Strict NN context contract enforcement
     if (isNonNegotiable) {
-      if (!nnPurpose.trim() || !nnAction.trim() || !nnSuccessCriteria.trim()) {
-        toast.error('Non-Negotiables require Purpose, Action, and Success Criteria');
+      const v = validateNNFields({
+        title: title.trim(),
+        purpose: nnPurpose,
+        action: nnAction,
+        successCriteria: nnSuccessCriteria,
+      });
+      if (!v.ok) {
+        const firstError =
+          v.errors.title || v.errors.purpose || v.errors.action || v.errors.successCriteria;
+        toast.error(firstError || 'Non-Negotiable fields are incomplete');
         return;
       }
     }
@@ -508,52 +527,84 @@ export function CustomActivityBuilderDialog({
                     />
                   </div>
                 </div>
-                {/* Phase 12 — NN context contract: required fields when NN is on */}
+                {/* Phase 12.1 — NN context contract: required, quality-gated fields */}
                 {isNonNegotiable && (
                   <div className="p-3 sm:p-4 rounded-lg border bg-red-500/5 border-red-500/20 space-y-3">
-                    <p className="text-[11px] font-black uppercase tracking-wider text-red-400">
-                      Required: explain this Non-Negotiable
-                    </p>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-red-400">
+                        Required: explain this Non-Negotiable
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Be specific. Vague entries like "stay focused" or "reset" will be rejected.
+                      </p>
+                    </div>
+
                     <div className="space-y-1.5">
                       <Label htmlFor="nn-purpose" className="text-xs font-bold">
                         Purpose <span className="text-red-400">*</span>
                       </Label>
+                      <p className="text-[10px] text-muted-foreground">
+                        Why this matters. Strong example: "Lower stress and sharpen focus before competition reps."
+                      </p>
                       <Input
                         id="nn-purpose"
                         value={nnPurpose}
                         onChange={(e) => setNnPurpose(e.target.value.slice(0, 120))}
-                        placeholder="Why this exists. e.g. Reset focus before performance."
+                        placeholder="Lower stress and sharpen focus before competition reps."
                         maxLength={120}
-                        className="text-sm"
+                        className={cn("text-sm", nnPurpose && nnValidation.errors.purpose && "border-red-500/60 focus-visible:ring-red-500/40")}
                       />
+                      {nnPurpose && nnValidation.errors.purpose && (
+                        <p className="text-[10px] text-red-400 font-medium">{nnValidation.errors.purpose}</p>
+                      )}
                     </div>
+
                     <div className="space-y-1.5">
                       <Label htmlFor="nn-action" className="text-xs font-bold">
                         Action <span className="text-red-400">*</span>
                       </Label>
+                      <p className="text-[10px] text-muted-foreground">
+                        Exact steps. Strong example: "Box-breathe 4-4-4-4 for 8 cycles, then visualize your first three reps."
+                      </p>
                       <Textarea
                         id="nn-action"
                         value={nnAction}
                         onChange={(e) => setNnAction(e.target.value.slice(0, 240))}
-                        placeholder="Exactly what to do. e.g. Take 2 minutes to breathe slowly and refocus."
+                        placeholder="Box-breathe 4-4-4-4 for 8 cycles, then visualize your first three reps."
                         maxLength={240}
                         rows={2}
-                        className="text-sm"
+                        className={cn("text-sm", nnAction && nnValidation.errors.action && "border-red-500/60 focus-visible:ring-red-500/40")}
                       />
+                      {nnAction && nnValidation.errors.action && (
+                        <p className="text-[10px] text-red-400 font-medium">{nnValidation.errors.action}</p>
+                      )}
                     </div>
+
                     <div className="space-y-1.5">
                       <Label htmlFor="nn-success" className="text-xs font-bold">
                         Success Criteria <span className="text-red-400">*</span>
                       </Label>
+                      <p className="text-[10px] text-muted-foreground">
+                        How you'll know it's done. Strong example: "Finished all 8 breathing cycles uninterrupted."
+                      </p>
                       <Input
                         id="nn-success"
                         value={nnSuccessCriteria}
                         onChange={(e) => setNnSuccessCriteria(e.target.value.slice(0, 120))}
-                        placeholder="How you'll know it's done. e.g. Completed an uninterrupted 2-minute reset."
+                        placeholder="Finished all 8 breathing cycles uninterrupted."
                         maxLength={120}
-                        className="text-sm"
+                        className={cn("text-sm", nnSuccessCriteria && nnValidation.errors.successCriteria && "border-red-500/60 focus-visible:ring-red-500/40")}
                       />
+                      {nnSuccessCriteria && nnValidation.errors.successCriteria && (
+                        <p className="text-[10px] text-red-400 font-medium">{nnValidation.errors.successCriteria}</p>
+                      )}
                     </div>
+
+                    {title.trim() && nnValidation.errors.title && (
+                      <p className="text-[10px] text-red-400 font-medium">
+                        Title: {nnValidation.errors.title}
+                      </p>
+                    )}
                   </div>
                 )}
                 {!isEditing && (
@@ -1014,7 +1065,7 @@ export function CustomActivityBuilderDialog({
           ) : <div />}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-            <Button onClick={handleSave} disabled={!activityType || !title.trim() || saving} className="gap-2">
+            <Button onClick={handleSave} disabled={!activityType || !title.trim() || saving || (isNonNegotiable && !nnValidation.ok)} className="gap-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? t('common.saving', 'Saving...') : t('common.save')}
             </Button>

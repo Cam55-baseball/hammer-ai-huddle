@@ -1,163 +1,93 @@
+# Phase 12.1 — Strict NN Contract (Remove the Safety Net)
 
-# Phase 12 — Context Integrity + Zero-Confusion Enforcement
-
-## Root cause (confirmed)
-
-The card "PHASE 9 NN: Daily mental reset" comes from a **single test row** in `custom_activity_templates`:
-
-- title: `Daily Mental Reset`
-- description: `Phase 9 NN validation template`
-- is_non_negotiable: `true`
-
-NN cards in `GamePlanCard.tsx` render `template.title` + `template.description` directly (via `useGamePlan.ts` → `titleKey`/`descriptionKey`). There is no structured contract — any template with vague or shorthand text leaks straight to the UI.
-
-This phase introduces a hard structural contract for every NN, a render guard that drops invalid cards in production (warns in dev), a builder UI that enforces the contract for new templates, and a one-time DB normalization for the lone test row.
-
-**Scope guardrails:** No scoring changes. No evaluator changes. No new components. No design overhaul.
+Goal: zero ambiguous NN cards. If a Non-Negotiable doesn't carry real, specific, actionable context, it does not exist in the UI. No filler defaults anywhere in the pipeline.
 
 ---
 
-## Part 1 — Schema: structured NN context fields
+## 1. `src/lib/nnContract.ts` — Tighten validator, kill defaults
 
-Add three nullable text columns to `custom_activity_templates` (migration):
+**Remove all default fill-ins.** Currently `safePurpose` and `safeSuccess` inject `"Locked-in daily standard."` and `"Logged complete on the day."` — these get deleted.
 
-- `purpose` text — 1 sentence: why this exists
-- `action` text — 1–2 sentences: exactly what to do
-- `success_criteria` text — how the user knows it's complete
-- `source` text — `"Custom"` (default), `"Phase 9"`, `"Program"`, etc.
+New rules enforced inside `buildNNContext`:
+- `title` — required, **≥ 6 chars**, not in generic blocklist
+- `purpose` — required, **≥ 10 chars**, not vague
+- `action` — required (with `description` fallback only if it itself meets length), **≥ 10 chars**, not vague
+- `successCriteria` — required, **≥ 8 chars**, not vague
+- `source` — defaults to `'Custom'` (this is a tag, not user-facing context, so a default is acceptable)
 
-All nullable so legacy non-NN templates are unaffected. The contract is **enforced at render time for NN cards only**, not at the column level.
+Add forbidden title patterns (existing) plus a **generic-title blocklist** (case-insensitive exact / substring match on the trimmed title):
+`['activity', 'task', 'standard', 'non-negotiable', 'nn', 'daily', 'reset', 'focus', 'mental reset', 'be disciplined', 'stay focused']`
 
-Update `src/types/customActivity.ts` `CustomActivityTemplate` with the matching optional fields. Update the Supabase select in `useCustomActivities.ts` (line ~303 field list) and `useNNSuggestions.ts` to include them.
+Add a **vague-content blocklist** applied to `purpose`, `action`, `successCriteria` — if the *entire* trimmed value (lowercased) matches one of these, reject:
+`['stay focused', 'be disciplined', 'mental reset', 'do it', 'be consistent', 'stay locked in', 'lock in', 'focus', 'discipline', 'reset', 'be ready', 'show up']`
 
-## Part 2 — One-time normalization of the offending row
+Any failure → return `null`. No partial fill, no defaults, no salvage.
 
-In the same migration, fix the lone existing NN test template:
+Export a small helper `validateNNFields(fields)` that returns `{ ok: boolean, errors: Record<'title'|'purpose'|'action'|'successCriteria', string | null> }` so the builder can show inline errors without duplicating rules.
 
-```sql
-UPDATE custom_activity_templates
-SET title = 'Daily Mental Reset',
-    description = 'Reset focus and clear mental fatigue before performance.',
-    purpose = 'Reset focus and clear mental fatigue before performance.',
-    action = 'Take 2 minutes to breathe slowly, clear your thoughts, and refocus on your next objective.',
-    success_criteria = 'Completed a full uninterrupted 2-minute reset.',
-    source = 'Phase 9'
-WHERE id = 'e6120c59-965d-4301-82b0-a96c2503b05e';
-```
+---
 
-No bulk backfill of other NNs — they're user-authored and already have human titles/descriptions; the render guard handles them gracefully (Part 4 fallback).
+## 2. `CustomActivityBuilderDialog.tsx` — Builder enforces quality
 
-## Part 3 — Contract validator (`src/lib/nnContract.ts`, new)
+- Import `validateNNFields` from `@/lib/nnContract`.
+- Compute `nnValidation` whenever `isNonNegotiable` is on, using current field values.
+- Update each NN field block (Purpose, Action, Success Criteria) to:
+  - Show a small **helper line** under the label describing what a strong answer looks like (examples already match — formalize as helper text, not just placeholder).
+  - Show an inline **error message** in red when the field is touched and fails the rule (e.g. "Purpose must be at least 10 characters and specific — avoid 'stay focused'").
+- Update the Save button at line 1017:
+  ```
+  disabled={!activityType || !title.trim() || saving || (isNonNegotiable && !nnValidation.ok)}
+  ```
+- Update the existing `handleSave` guard (line 291) to use `validateNNFields` and show the first specific error via toast instead of the generic "Add purpose, action, and success criteria" message.
 
-Single source of truth:
+No silent acceptance. No save until every NN field passes the same rules the renderer enforces.
 
-```ts
-export interface NNContext {
-  title: string;
-  purpose: string;
-  action: string;
-  successCriteria: string;
-  source: string;
-}
+---
 
-export function buildNNContext(tpl): NNContext | null {
-  // 1. Map structured fields first
-  // 2. Fallback: description → action, title → title
-  // 3. Defaults: source = 'Custom'
-  // 4. Reject shorthand: titles starting /^PHASE\s*\d+/i or matching /NN:\s*/i
-  // 5. Reject if title/action missing or < 4 chars after trim
-  // Returns null if invalid
-}
-```
+## 3. `src/hooks/useNNSuggestions.ts` — Real auto-population or block
 
-Forbidden patterns rejected outright: `^PHASE\s*\d+`, `NN:\s`, raw `phase 9 nn` substrings in title.
+Remove the filler defaults in the `accept` flow:
+- Drop `'Locked-in daily standard.'` and `'Logged complete on the day.'`.
+- Build a candidate context from the suggestion's template:
+  - `purpose` ← `tpl.purpose` if present, else **null** (do not invent).
+  - `action`  ← `tpl.action` if present, else `tpl.description` (only if ≥ 10 chars and not vague).
+  - `success_criteria` ← `tpl.success_criteria` if present, else **null**.
+- Run the candidate through `buildNNContext`. If it returns `null`:
+  - Block the accept with a clear toast: **"This activity needs more detail before it can be a Non-Negotiable. Open it in the builder to add Purpose, Action, and Success Criteria."**
+  - Do not flip `is_non_negotiable`.
+  - Do not mark the suggestion accepted (leave it active so the user can act on it via the builder).
+- If validation passes, write the validated values back to the template (no defaults).
 
-## Part 4 — Render guard in `GamePlanCard.tsx`
+---
 
-In `renderTask`, before rendering when `isNN === true`:
+## 4. `GamePlanCard.tsx` — Render guard already correct, verify
 
-```ts
-const nnCtx = buildNNContext(task.customActivityData?.template);
-if (isNN && !nnCtx) {
-  if (import.meta.env.DEV) {
-    console.warn('[HM-NN-INVALID]', task.customActivityData?.template?.id);
-  }
-  return null;
-}
-```
+The render guard already drops invalid NNs and logs `[HM-NN-INVALID]` in DEV. No change needed beyond confirming it still calls `buildNNContext` and renders `null` on failure. Once `buildNNContext` is strict (step 1), legacy weak rows will simply stop rendering — which is the desired behavior.
 
-Non-NN tasks render unchanged (zero impact on the rest of the Game Plan).
+---
 
-## Part 5 — Display upgrade (no new components)
+## 5. Database — leave existing rows alone
 
-For NN cards only, replace the single `description` line (around line 1238–1243) with a structured stack inside the existing content `<div>`:
+No migration. Legacy rows that don't meet the new contract will silently stop rendering as NNs (the underlying activity still exists; only the NN treatment is gated). Users can repair them via the builder.
 
-- **Title** — already bold (existing `h3`)
-- **Purpose** — new muted line, `text-xs text-white/60`, under the title row
-- **Action** — primary body line (replaces current description line, `text-sm text-white/80`)
-- **Success Criteria** — small footer, `text-[11px] text-white/50 mt-1`, prefixed with a subtle "Done when:" label
+The previously normalized "Daily Mental Reset" row already has full structured content (Purpose, Action, Success Criteria from the Phase 12 migration) and will continue to render — confirming the strict path works for valid data.
 
-Layout uses existing flex/spacing — no new components, no new files. Non-NN tasks keep current single-description rendering.
+---
 
-## Part 6 — Builder enforcement (`CustomActivityBuilderDialog.tsx`)
+## 6. Verification (post-implementation)
 
-Add three new fields to the form **only when `isNonNegotiable` is true**:
-
-- Purpose (single-line input, required, max 120 chars)
-- Action (textarea, required, max 240 chars)
-- Success Criteria (single-line input, required, max 120 chars)
-
-Save button disabled with inline helper text if any are blank when NN is on. Source defaults to `"Custom"` (hidden field; only Phase 9 system rows use other values).
-
-When user toggles `isNonNegotiable` ON for the first time, the fields appear inline (no new dialog). Toggling OFF preserves the values silently.
-
-## Part 7 — Suggestion accept path (`useNNSuggestions.ts`)
-
-When a user accepts a suggestion that flips `is_non_negotiable = true`, the template likely has no `purpose`/`action`/`success_criteria` yet. Two options handled in the hook:
-
-- If `description` exists → auto-populate `action = description`, `purpose = "Lock in this daily standard."`, `success_criteria = "Logged complete on the day."`
-- If `description` is missing → block accept with toast: `"Add a purpose and action before locking this in"` and open the builder for that template.
-
-This keeps the contract intact without forcing a separate flow.
-
-## Part 8 — Dev sweep
-
-Code search confirmed:
-- No code constants generate `"PHASE 9 NN"` or `"Daily mental reset"` strings.
-- The only sources are the one DB row (fixed in Part 2) and user-authored templates (gated in Parts 4, 6, 7).
-
-No additional code changes needed for the sweep — the render guard is the permanent backstop.
-
-## Part 9 — Acceptance verification
-
-After the migration runs:
-
-1. Hard-refresh the app — the `Daily Mental Reset` card now shows full structured context.
-2. In dev, manually insert a template with title `"PHASE 9 NN: foo"` and `is_non_negotiable=true` → it must NOT render and must log `[HM-NN-INVALID]`.
-3. Open the builder, toggle Non-Negotiable on → three new required fields appear. Save is blocked until filled.
-4. Accept an NN suggestion for a template with only `description` → auto-population kicks in and the card renders with full context.
-5. Production build: `[HM-NN-INVALID]` string is absent from `dist/` (gated by `import.meta.env.DEV`).
+1. Query `custom_activity_templates` for any NN row missing one of the four required fields or with vague content → confirm none of them appear on Game Plan.
+2. Open builder, toggle NN on, type "focus" in Purpose → Save stays disabled, inline error shows.
+3. Fill all three fields with strong content → Save enables, card renders with full structured display.
+4. Trigger a suggestion accept on a template that only has a short/vague description → toast appears, NN is NOT activated.
+5. Trigger a suggestion accept on a template with rich `description` (≥ 10 chars, specific) → NN activates with that description as `action`, no filler text in DB or UI.
+6. Grep the entire `src/` tree for the strings `'Locked-in daily standard'` and `'Logged complete on the day'` → zero matches.
 
 ---
 
 ## Files touched
+- `src/lib/nnContract.ts` — strict validator, new helper, no defaults
+- `src/components/custom-activities/CustomActivityBuilderDialog.tsx` — quality validation, inline errors, disabled save
+- `src/hooks/useNNSuggestions.ts` — remove filler defaults, block weak accepts
 
-**New**
-- `src/lib/nnContract.ts` — validator + `NNContext` type
-- `supabase/migrations/<ts>_phase12_nn_context_contract.sql` — add 4 columns + normalize the test row
-
-**Edited**
-- `src/types/customActivity.ts` — add optional `purpose`, `action`, `success_criteria`, `source`
-- `src/hooks/useCustomActivities.ts` — extend select column list
-- `src/hooks/useNNSuggestions.ts` — auto-populate or block on accept
-- `src/components/GamePlanCard.tsx` — render guard + structured NN body block
-- `src/components/custom-activities/CustomActivityBuilderDialog.tsx` — conditional NN context fields + save validation
-
-**Untouched**
-- All scoring, evaluators, behavioral engine, useDailyOutcome, useGamePlan ordering logic, analytics pipeline, RLS
-
-## Risks & mitigations
-
-- **Existing user NNs without structured fields** — mitigated by the `description → action` fallback in `buildNNContext`. Only templates with no description AND no action get blocked.
-- **Suggestion acceptance friction** — auto-population on accept keeps the one-tap flow alive for templates with a description.
-- **Migration safety** — additive columns only, all nullable, no constraints. Safe rollback: drop the columns.
+No DB migration. No new components. No scoring changes. No new events.
