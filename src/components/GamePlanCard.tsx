@@ -64,6 +64,7 @@ import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
 import { CustomField } from '@/types/customActivity';
 import { triggerCelebration } from '@/lib/confetti';
+import { trackLaunchEvent } from '@/lib/launchEvents';
 import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
 
 interface GamePlanCardProps {
