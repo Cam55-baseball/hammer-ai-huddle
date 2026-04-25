@@ -1,110 +1,114 @@
-# Phase 10.6 — Verification Matrix + Production Readiness Pass
+## Phase 10.7 — Launch Activation + Feedback Capture Layer
 
-**Final pre-publish gate.** No new features, no architecture changes, no UI redesign. This phase proves the existing system is correct and locks production readiness.
-
----
-
-## Audit findings (already in place ✅)
-
-From a read-only sweep of the current code:
-
-- **Single source of truth** — `useDailyOutcome.ts` carries the SINGLE SOURCE OF TRUTH header comment and a 300 ms commit debounce (race-condition guard).
-- **Only NN counter** — `src/lib/nnProgress.ts` carries the ONLY-NN-COUNTER lock. The two other places that reference `is_non_negotiable` (`useNNSuggestions.ts`, `useQuickActionExecutor.ts`) **filter/identify** NN templates for suggestions and quick actions — they do not produce the daily verdict count, so they don't violate the lock.
-- **Evaluator invariant** — `supabase/functions/evaluate-behavioral-state/index.ts` lines 6–13 explicitly forbid outcome derivation/writes.
-- **Smart scroll guard** — `userScrolledRef` in `GamePlanCard.tsx` (line 1003) cancels auto-scroll if the user scrolls first.
-- **Pulse single-fire** — `pulsedRef` (line 1037) latches per `__dayType`, preventing re-pulse on re-render or navigation.
-- **Night check-in authority** — `VaultFocusQuizDialog.tsx` lines 274 & 470 bypass submission when an entry already exists for today.
-- **Dev logs gated** — `[HM-OUTCOME]` and `[HM-NN]` are wrapped in `import.meta.env.DEV`. **Two `[HM-NIGHT]` logs in `VaultFocusQuizDialog.tsx` (lines 274, 470, 476) are NOT gated** — they will fire in production. Needs a one-line fix.
+Pure UX/instrumentation pass. **No DB tables, no evaluator changes, no scoring changes, no new derived state.** Everything reads from `useDailyOutcome` and stores user-facing flags in `localStorage`.
 
 ---
 
-## Part 1 — Tiny Code Cleanup (1 file)
+### Part 1 — First-Visit-of-Day Activation Banner
 
-**`src/components/vault/VaultFocusQuizDialog.tsx`** — wrap the three `[HM-NIGHT]` `console.log` calls (lines 274, 470, 476) in `if (import.meta.env.DEV)` so they are stripped from production builds.
+**File:** `src/pages/Dashboard.tsx` (entry surface — `GamePlanCard` lives here at line 601)
 
-No other code changes. Everything else already passes audit.
+- Add a small inline banner directly above `<GamePlanCard />`, gated by:
+  - localStorage key `hm:activation:lastShown` !== today (`getTodayDate()` from `src/utils/dateUtils.ts`)
+  - `useDailyOutcome().status === 'STANDARD NOT MET'` AND `nnTotal > 0` (no banner if already met, rest, skip, or no NNs)
+- Copy: **"You have a standard today. Finish it before the day ends."**
+- CTA button: **"View Non-Negotiables"** → smooth-scrolls to `#nn-section` (already exists in `GamePlanCard`)
+- Dismiss "X" sets the localStorage stamp; CTA also stamps. Banner never re-renders same day.
+- Component: `src/components/identity/StandardActivationBanner.tsx` (new, ~50 lines, inline card style — no modal so it never blocks active flow).
 
 ---
 
-## Part 2 — Live Verification Matrix (manual interactive QA)
+### Part 2 — Night Check-In Reflection Prompt
 
-Use the live preview to walk through every scenario. I'll drive this with browser automation if you want, or you can run through the matrix yourself. For each row I'll capture screenshots + console traces.
+**File:** `src/components/vault/quiz/NightCheckInSuccess.tsx`
 
-| # | Scenario | Setup | Expected |
-|---|----------|-------|----------|
-| 1 | **STANDARD MET** | Complete all NNs | GamePlan header → emerald `STANDARD MET` <1s; pulse + toast fire exactly once; ProgressDashboard banner matches; NightCheckInSuccess shows same verdict |
-| 2 | **STANDARD NOT MET** | Leave ≥1 NN incomplete | Header stays red `STANDARD NOT MET`; remaining count accurate; auto-scroll fires once on mount only |
-| 3 | **RECOVERY DAY** | DayControl → Rest | Status `RECOVERY DAY` everywhere; no remaining-actions text; pulse cannot fire |
-| 4 | **SKIP REGISTERED** | DayControl → Skip | Status `SKIP REGISTERED` everywhere; streakImpact = `broken`; NN count irrelevant |
-| 5 | **ZERO NN — activity logged** | Remove all NNs, log 1 activity | `STANDARD MET` via `anyActivityLogged` fallback; no remaining-actions text |
-| 6 | **ZERO NN — nothing logged** | Remove all NNs, log nothing | `STANDARD NOT MET` |
-| 7 | **Realtime consistency** | Complete final NN | No flicker NOT MET → MET → NOT MET (300 ms debounce); all surfaces sync |
+- Inside `<DailyOutcomeSection />` (after the detail rows, before closing `<CardContent>`), add one optional `<input>`:
+  - status `STANDARD NOT MET` → label **"What blocked you today?"**
+  - status `STANDARD MET`     → label **"What did you do right today?"**
+  - status `RECOVERY DAY` / `SKIP REGISTERED` → no prompt
+- `maxLength={120}`, optional, no submit button — auto-saves on blur to `localStorage` key `hm:reflection:{YYYY-MM-DD}`.
+- Pre-fills if a value already exists for today (so reopen shows their answer).
+- No DB write, no friction — pure local capture so we have a behavioral signal harness ready.
 
-## Part 3 — Night Check-In Authority
+---
 
-1. Open night check-in → submit → close.
-2. Reopen → form is skipped, success screen renders immediately, no second submission, no duplicate animations.
+### Part 3 — Post-Success Feedback Prompt
 
-## Part 4 — Scroll Behavior
+**File:** `src/components/vault/quiz/NightCheckInSuccess.tsx`
 
-- Load Game Plan with incomplete NNs from cold mount → auto-scroll to `#nn-section` fires once.
-- Reload + manually scroll before mount settles → auto-scroll suppressed (verified by `userScrolledRef`).
+- New child `<FeedbackPrompt />` rendered above the close button.
+- Mounts hidden, fades in after **2000 ms** (timer cleared on unmount).
+- Throttle: only renders if `localStorage['hm:feedback:lastAsked']` is null OR ≥ 3 days ago.
+- Question: **"Did today's plan help you perform better?"** with **Yes** / **No** buttons.
+- On **No** → reveal one `<input maxLength={140}>` "What was missing?" with a Submit button.
+- On submit (Yes, or No+text), write to `localStorage['hm:feedback:log']` (append-only JSON array of `{date, helpful, note}`) and stamp `hm:feedback:lastAsked = today`. DEV-only console log via the new tracker (Part 4).
+- No new endpoint or table — store local now, ready to ship to a future endpoint without UI rework.
 
-## Part 5 — Pulse Integrity
+---
 
-- Complete final NN → pulse + toast fire exactly once.
-- Navigate away and back → no re-trigger.
-- Re-render via state change → no re-trigger (`pulsedRef` latch + `__dayType` reset).
+### Part 4 — Silent Event Tracker
 
-## Part 6 — Performance Sanity
+**New file:** `src/lib/launchEvents.ts`
 
-- React DevTools profiler: confirm `useDailyOutcome` consumers don't re-render more than once per state change.
-- Confirm only ONE `daily-outcome-${user.id}` channel is created (cleanup on unmount).
-- Confirm only ONE `day-state-${user.id}` channel.
-
-## Part 7 — Dev Log Sweep (post-cleanup)
-
-After Part 1 fix: `rg "HM-OUTCOME|HM-NN|HM-NIGHT"` should show every `console.log` wrapped in `import.meta.env.DEV`.
-
-## Part 8 — Invariant Comment Confirmation
-
-Already verified ✅:
-- `useDailyOutcome.ts` → SINGLE SOURCE OF TRUTH (lines 1–17)
-- `nnProgress.ts` → ONLY NN COUNTER (lines 1–4)
-- `evaluate-behavioral-state/index.ts` → NO OUTCOME WRITES (lines 6–13)
-
-## Part 9 — Production Build Test
-
-```
-npm run build
-npm run preview
+```ts
+export type LaunchEvent =
+  | 'NN_COMPLETED' | 'STANDARD_MET' | 'NIGHT_CHECKIN_COMPLETED' | 'DAY_SKIPPED';
+export function trackLaunchEvent(event: LaunchEvent, payload?: Record<string, unknown>) {
+  if (import.meta.env.DEV) console.log(`[HM-EVENT] ${event}`, payload ?? {});
+  // Future: forward to analytics endpoint here without touching call sites.
+}
 ```
 
-Verify:
-- Build completes with no errors.
-- Preview runs without runtime/hydration errors.
-- Realtime channels reconnect after a manual page reload.
-- All four outcome states still behave deterministically in the production bundle.
+Wire-in points (single call each, no logic changes):
+- `NN_COMPLETED` → `src/hooks/useCustomActivities.ts` log mutation success path (only when target reached for that template that day — guard via `localStorage['hm:nn:fired:{date}:{templateId}']` to prevent duplicates).
+- `STANDARD_MET` → `src/components/GamePlanCard.tsx` inside the existing pulse-trigger effect (already latched once-per-day via `pulsedRef`).
+- `NIGHT_CHECKIN_COMPLETED` → `src/components/vault/VaultFocusQuizDialog.tsx` immediately after the night-quiz successful submission (pre-existing path).
+- `DAY_SKIPPED` → wherever `dayType` is set to `'skip'` (search `useDayState`/DayControl mutation; fire on the mutation success).
 
 ---
 
-## Acceptance Criteria
+### Part 5 — "Share your standard" Hook
 
-- ✅ All four outcome states behave deterministically across all surfaces
-- ✅ No flicker, no duplicate submissions, no duplicate pulses
-- ✅ Scroll respects user input
-- ✅ Night check-in is single-submit enforced
-- ✅ All state derives from `useDailyOutcome` only
-- ✅ All `[HM-*]` logs stripped from production
-- ✅ App runs clean in production build
+**File:** `src/components/vault/quiz/NightCheckInSuccess.tsx`
 
-If all checks pass → **Phase 10 is COMPLETE** and the system is production-ready.
+- Inside `<DailyOutcomeSection />`, only when `outcome.status === 'STANDARD MET'`:
+  - Subtle ghost button **"Share your standard"** under the detail rows.
+  - On click: `navigator.clipboard.writeText("I completed my full standard today.")` + sonner toast `"Copied to clipboard"`.
+  - Graceful fallback if clipboard API unavailable (toast "Copy not supported").
+  - Fires `trackLaunchEvent('STANDARD_MET', { shared: true })` once per click.
 
 ---
 
-## Files touched
+### Part 6 — Guardrails (verified, no code)
 
-**Edit (1 file, ~3 line wraps):**
-- `src/components/vault/VaultFocusQuizDialog.tsx` — gate the three `[HM-NIGHT]` console logs behind `import.meta.env.DEV`.
+- ❌ No new tables, columns, or migrations
+- ❌ No changes to `useDailyOutcome`, `nnProgress.ts`, or the evaluator edge function
+- ❌ No new scoring or derived state
+- ✅ Everything reads from existing single sources of truth
+- ✅ All persistence is `localStorage` + future-ready event util
 
-**No other code changes.** The rest of Phase 10.6 is verification work performed against the live preview + production build.
+---
+
+### Files Touched
+
+| File | Change |
+|------|--------|
+| `src/components/identity/StandardActivationBanner.tsx` | **NEW** — once-per-day banner |
+| `src/pages/Dashboard.tsx` | Mount banner above `GamePlanCard` |
+| `src/components/vault/quiz/NightCheckInSuccess.tsx` | Reflection input, FeedbackPrompt, Share button |
+| `src/lib/launchEvents.ts` | **NEW** — `trackLaunchEvent` util |
+| `src/hooks/useCustomActivities.ts` | Fire `NN_COMPLETED` on log success |
+| `src/components/GamePlanCard.tsx` | Fire `STANDARD_MET` inside existing pulse latch |
+| `src/components/vault/VaultFocusQuizDialog.tsx` | Fire `NIGHT_CHECKIN_COMPLETED` on submit |
+| `src/hooks/useDayState.ts` (or DayControl mutation site) | Fire `DAY_SKIPPED` on skip |
+
+---
+
+### Acceptance Validation
+
+1. First Dashboard visit of a new day with incomplete NNs → banner appears, CTA scrolls to `#nn-section`, dismiss persists for the day.
+2. Night check-in shows status-aware reflection input; value persists across re-opens.
+3. After 2s on the success screen, feedback prompt fades in; dismissed/answered state respected for 3 days.
+4. STANDARD MET success screen shows "Share your standard" → clipboard contains the canonical sentence.
+5. DEV console emits `[HM-EVENT] …` on the four key behaviors; production build contains zero `[HM-EVENT]` references.
+6. No DB schema changes; `useDailyOutcome` and `nnProgress` headers untouched.
