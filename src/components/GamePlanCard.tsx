@@ -1397,22 +1397,45 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </Button>
         )}
         
-        {/* Status indicator - clickable for custom activities with prominent styling */}
+        {/* Status indicator - clickable for custom activities with prominent styling.
+            Phase 12.2: for manual NNs, this button is gated — completion must
+            go through the inline timer/count/binary gate inside the card body. */}
+        {(() => {
+          const isManualNN = !!(isNN && nnCtx?.completion?.kind === 'manual' && !task.completed);
+          return (
         <button
-          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { setSelectedFolderTask(task); setFolderLoggerOpen(true); setUrlParam('folderItemId', task.folderItemData.itemId); } else if (isCustom) handleCustomActivityToggle(task); }}
-          disabled={!isCustom}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (task.folderItemData) {
+              setSelectedFolderTask(task);
+              setFolderLoggerOpen(true);
+              setUrlParam('folderItemId', task.folderItemData.itemId);
+            } else if (isCustom) {
+              if (isManualNN) {
+                toast.info('Use the timer or counter on this card to complete.');
+                return;
+              }
+              handleCustomActivityToggle(task);
+            }
+          }}
+          disabled={!isCustom || isManualNN}
           className={cn(
             "flex-shrink-0 rounded-full flex items-center justify-center transition-all",
             task.completed && "bg-green-500 text-white",
-            isCustom && !task.completed && "hover:scale-110 cursor-pointer",
+            isCustom && !task.completed && !isManualNN && "hover:scale-110 cursor-pointer",
+            isManualNN && "opacity-40 cursor-not-allowed",
             // Larger touch target for custom activities
             isCustom ? "h-10 w-10 sm:h-11 sm:w-11" : "h-7 w-7 sm:h-8 sm:w-8"
           )}
-          style={!task.completed ? { 
+          style={!task.completed ? {
             border: `3px ${isCustom ? 'solid' : 'dashed'} ${activeColors.border}`,
             backgroundColor: isCustom ? hexToRgba(customColor, 0.2) : undefined,
           } : undefined}
-          title={isCustom ? (task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.detail.markComplete')) : undefined}
+          title={
+            isManualNN
+              ? 'Complete the gate inside this card to finish'
+              : (isCustom ? (task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.detail.markComplete')) : undefined)
+          }
         >
           {task.completed ? (
             <Check className={cn(
