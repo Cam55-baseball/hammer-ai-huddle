@@ -1309,6 +1309,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   <span className="font-bold uppercase tracking-wider">Done when:</span>{' '}
                   {nnCtx.successCriteria}
                 </p>
+                {/* Phase 12.2 — gated manual completion. Renders timer / count /
+                    binary controls inline. In-app NNs keep the standard tap-to-
+                    complete behavior on the right-side check button. */}
+                {nnCtx.completion?.kind === 'manual' && !task.completed && (
+                  <NNManualCompletionGate
+                    templateId={task.customActivityData!.template.id}
+                    binding={nnCtx.completion}
+                    successCriteria={nnCtx.successCriteria}
+                    onSatisfied={(gate) => handleNNGateSatisfied(task, gate)}
+                  />
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-2">
