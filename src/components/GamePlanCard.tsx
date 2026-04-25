@@ -3039,3 +3039,55 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Phase 10.4 — Live Standard Awareness Header
+// Sourced entirely from useDailyOutcome via props. No new logic.
+// ─────────────────────────────────────────────────────────────────────
+
+const STANDARD_HEADER_META: Record<DailyOutcomeStatus, {
+  Icon: typeof CheckCircle2;
+  borderClass: string;
+  bgClass: string;
+  textClass: string;
+}> = {
+  'STANDARD MET':     { Icon: CheckCircle2,   borderClass: 'border-emerald-500', bgClass: 'bg-emerald-500/10', textClass: 'text-emerald-300' },
+  'STANDARD NOT MET': { Icon: AlertTriangle,  borderClass: 'border-rose-500',    bgClass: 'bg-rose-500/10',    textClass: 'text-rose-300' },
+  'RECOVERY DAY':     { Icon: Moon,           borderClass: 'border-sky-500',     bgClass: 'bg-sky-500/10',     textClass: 'text-sky-300' },
+  'SKIP REGISTERED':  { Icon: SkipForward,    borderClass: 'border-zinc-500',    bgClass: 'bg-zinc-500/10',    textClass: 'text-zinc-300' },
+};
+
+function StandardAwarenessHeader({
+  status,
+  remaining,
+  showRemaining,
+  loading,
+}: {
+  status: DailyOutcomeStatus;
+  remaining: number;
+  showRemaining: boolean;
+  loading: boolean;
+}) {
+  if (loading) return null;
+  const meta = STANDARD_HEADER_META[status];
+  const Icon = meta.Icon;
+  return (
+    <div
+      className={cn(
+        'rounded-md border-l-4 px-3 py-2',
+        meta.borderClass,
+        meta.bgClass,
+      )}
+    >
+      <div className={cn('flex items-center gap-2 text-sm font-bold uppercase tracking-wide', meta.textClass)}>
+        <Icon className="h-4 w-4 shrink-0" />
+        <span>{status}</span>
+      </div>
+      {showRemaining && remaining > 0 && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {remaining} required action{remaining === 1 ? '' : 's'} remaining
+        </p>
+      )}
+    </div>
+  );
+}
+
