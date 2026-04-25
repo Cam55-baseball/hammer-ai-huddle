@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -119,6 +119,16 @@ export function CustomActivityBuilderDialog({
   const [nnPurpose, setNnPurpose] = useState((template as any)?.purpose || '');
   const [nnAction, setNnAction] = useState((template as any)?.action || template?.description || '');
   const [nnSuccessCriteria, setNnSuccessCriteria] = useState((template as any)?.success_criteria || '');
+  // Phase 12.1 — live validation against the strict NN contract
+  const nnValidation = useMemo(
+    () => validateNNFields({
+      title,
+      purpose: nnPurpose,
+      action: nnAction,
+      successCriteria: nnSuccessCriteria,
+    }),
+    [title, nnPurpose, nnAction, nnSuccessCriteria]
+  );
   const [recurringDays, setRecurringDays] = useState<number[]>(template?.recurring_days || []);
   const [recurringActive, setRecurringActive] = useState(template?.recurring_active || false);
   const [saving, setSaving] = useState(false);
@@ -1023,7 +1033,7 @@ export function CustomActivityBuilderDialog({
           ) : <div />}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
-            <Button onClick={handleSave} disabled={!activityType || !title.trim() || saving} className="gap-2">
+            <Button onClick={handleSave} disabled={!activityType || !title.trim() || saving || (isNonNegotiable && !nnValidation.ok)} className="gap-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {saving ? t('common.saving', 'Saving...') : t('common.save')}
             </Button>
