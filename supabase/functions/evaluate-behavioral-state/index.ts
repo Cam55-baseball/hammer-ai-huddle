@@ -1,7 +1,6 @@
-// Phase 9 — Behavioral State Evaluator
-// Runs nightly at 23:59 local-day cutoff (UTC sweep covers all TZs by running hourly).
-// For each user: computes consistency snapshot, NN miss detection, identity tier,
-// and emits behavioral_events for downstream pattern detection + Hammer State.
+// Phase 9 — Behavioral State Evaluator (v2: custom_activity_logs as source of truth)
+// Source: custom_activity_logs (completion_state='completed' = logged day)
+// Override: athlete_daily_log.injury_mode = injury_hold day
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -14,7 +13,7 @@ const SYSTEM_USER = "00000000-0000-0000-0000-000000000001";
 
 type IdentityTier = "building" | "consistent" | "locked_in" | "elite" | "slipping";
 
-function deriveIdentityTier(score: number, performanceStreak: number, prevTier: IdentityTier | null): IdentityTier {
+function deriveIdentityTier(score: number, performanceStreak: number, _prev: IdentityTier | null): IdentityTier {
   if (score < 50) return "slipping";
   if (score >= 90 && performanceStreak >= 21) return "elite";
   if (score >= 80 && performanceStreak >= 10) return "locked_in";
@@ -22,86 +21,108 @@ function deriveIdentityTier(score: number, performanceStreak: number, prevTier: 
   return "building";
 }
 
-async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
-  const since30 = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+function dayStr(d: Date): string { return d.toISOString().split("T")[0]; }
 
-  // 1. Pull last 30 days of athlete_daily_log
-  const { data: logs } = await supabase
-    .from("athlete_daily_log")
-    .select("entry_date, day_status, injury_mode")
+async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
+  const since30 = dayStr(new Date(Date.now() - 30 * 86400000));
+
+  // 1. Activity completions from custom_activity_logs (source of truth)
+  const { data: actLogs } = await supabase
+    .from("custom_activity_logs")
+    .select("entry_date, completion_state, template_id")
     .eq("user_id", userId)
     .gte("entry_date", since30);
 
-  const statusMap = new Map<string, { status: string; injury: boolean }>();
-  for (const l of logs ?? []) statusMap.set(l.entry_date, { status: l.day_status, injury: !!l.injury_mode });
+  // completedByDay: dates that had ≥1 completed activity
+  // anyLogByDay: dates that had ANY activity row (for discipline streak)
+  const completedByDay = new Set<string>();
+  const anyLogByDay = new Set<string>();
+  const completedTemplatesByDay = new Map<string, Set<string>>();
+  for (const l of actLogs ?? []) {
+    anyLogByDay.add(l.entry_date);
+    if (l.completion_state === "completed") {
+      completedByDay.add(l.entry_date);
+      if (!completedTemplatesByDay.has(l.entry_date)) completedTemplatesByDay.set(l.entry_date, new Set());
+      completedTemplatesByDay.get(l.entry_date)!.add(l.template_id);
+    }
+  }
 
-  // 2. Build 30-day window
-  let logged = 0, missed = 0, injuryHold = 0, perfStreak = 0, discStreak = 0;
+  // 2. Injury overrides from athlete_daily_log
+  const { data: dailyLogs } = await supabase
+    .from("athlete_daily_log")
+    .select("entry_date, injury_mode")
+    .eq("user_id", userId)
+    .gte("entry_date", since30);
+
+  const injuryByDay = new Set<string>();
+  for (const d of dailyLogs ?? []) if (d.injury_mode) injuryByDay.add(d.entry_date);
+
+  // 3. 30-day window
   const today = new Date(todayUTC + "T00:00:00Z");
+  let logged = 0, missed = 0, injuryHold = 0;
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
-    const ds = d.toISOString().split("T")[0];
-    const e = statusMap.get(ds);
-    if (e?.injury) { injuryHold++; continue; }
-    if (e && e.status !== "missed") logged++; else missed++;
+    const ds = dayStr(d);
+    if (injuryByDay.has(ds)) { injuryHold++; continue; }
+    if (completedByDay.has(ds)) logged++;
+    else missed++;
   }
 
-  // Streaks (back from today)
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
-    const ds = d.toISOString().split("T")[0];
-    const e = statusMap.get(ds);
-    if (e && e.status !== "missed") perfStreak++; else break;
-  }
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
-    const ds = d.toISOString().split("T")[0];
-    if (statusMap.has(ds)) discStreak++; else break;
-  }
-
-  const denom = Math.max(1, 30 - injuryHold);
-  const score = Math.round((logged / denom) * 100);
-
-  // 3. Non-Negotiable miss detection — scan last 7 days
+  // 4. NN templates
   const { data: nnTemplates } = await supabase
     .from("custom_activity_templates")
     .select("id")
     .eq("user_id", userId)
     .eq("is_non_negotiable", true)
     .is("deleted_at", null);
+  const nnIds: string[] = (nnTemplates ?? []).map((t: any) => t.id);
 
-  const nnIds = (nnTemplates ?? []).map((t: any) => t.id);
+  // 5. Streaks back from today
+  // performance_streak: consecutive days with NN met (or any completion if no NN templates), break on miss
+  // discipline_streak: consecutive days with ANY activity row, break on empty day
+  let perfStreak = 0, discStreak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
+    const ds = dayStr(d);
+    if (injuryByDay.has(ds)) continue; // injury days don't break streaks
+    let dayMetPerf: boolean;
+    if (nnIds.length > 0) {
+      const done = completedTemplatesByDay.get(ds) ?? new Set<string>();
+      dayMetPerf = nnIds.every(id => done.has(id));
+    } else {
+      dayMetPerf = completedByDay.has(ds);
+    }
+    if (dayMetPerf) perfStreak++; else break;
+  }
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
+    const ds = dayStr(d);
+    if (injuryByDay.has(ds)) continue;
+    if (anyLogByDay.has(ds)) discStreak++; else break;
+  }
+
+  const denom = Math.max(1, 30 - injuryHold);
+  const score = Math.round((logged / denom) * 100);
+
+  // 6. NN miss count (last 7d)
   let nnMiss7 = 0;
   if (nnIds.length > 0) {
-    const since7 = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
-    const { data: nnLogs } = await supabase
-      .from("custom_activity_logs")
-      .select("template_id, entry_date, completion_state")
-      .eq("user_id", userId)
-      .in("template_id", nnIds)
-      .gte("entry_date", since7);
-    const completedByDay = new Map<string, Set<string>>();
-    for (const l of nnLogs ?? []) {
-      if (l.completion_state === "completed") {
-        if (!completedByDay.has(l.entry_date)) completedByDay.set(l.entry_date, new Set());
-        completedByDay.get(l.entry_date)!.add(l.template_id);
-      }
-    }
     for (let i = 0; i < 7; i++) {
       const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
-      const ds = d.toISOString().split("T")[0];
-      const done = completedByDay.get(ds) ?? new Set();
+      const ds = dayStr(d);
+      if (injuryByDay.has(ds)) continue;
+      const done = completedTemplatesByDay.get(ds) ?? new Set<string>();
       for (const id of nnIds) if (!done.has(id)) nnMiss7++;
     }
   }
 
-  // 4. Damping
+  // 7. Damping
   let damp = 1.0;
   if (missed >= 4) damp = 0.85;
   else if (missed >= 2) damp = 0.95;
   if (score >= 80) damp = 1.0;
 
-  // 5. Previous tier (for transition events)
+  // 8. Previous tier
   const { data: prevSnap } = await supabase
     .from("user_consistency_snapshots")
     .select("identity_tier, consistency_score")
@@ -113,7 +134,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   const prevTier = (prevSnap?.identity_tier ?? null) as IdentityTier | null;
   const tier = deriveIdentityTier(score, perfStreak, prevTier);
 
-  // 6. Upsert snapshot
+  // 9. Upsert snapshot
   await supabase.from("user_consistency_snapshots").upsert({
     user_id: userId,
     snapshot_date: todayUTC,
@@ -126,10 +147,10 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     nn_miss_count_7d: nnMiss7,
     identity_tier: tier,
     damping_multiplier: damp,
-    inputs: { denom, nn_template_count: nnIds.length },
+    inputs: { denom, nn_template_count: nnIds.length, source: "custom_activity_logs_v2" },
   }, { onConflict: "user_id,snapshot_date" });
 
-  // 7. Emit behavioral events
+  // 10. Behavioral events
   const events: any[] = [];
   if (prevTier && prevTier !== tier) {
     events.push({ user_id: userId, event_type: "identity_tier_change", magnitude: null,
@@ -162,16 +183,23 @@ serve(async (req) => {
 
   try {
     const todayUTC = new Date().toISOString().split("T")[0];
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    const targetUser: string | null = body?.user_id ?? null;
 
-    // Eligible users: anyone with athlete_daily_log activity in last 30d, excluding system user
-    const since30 = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
-    const { data: activeRows } = await supabase
-      .from("athlete_daily_log")
-      .select("user_id")
-      .gte("entry_date", since30);
-
-    const userIds = Array.from(new Set((activeRows ?? []).map((r: any) => r.user_id)))
-      .filter((u) => u !== SYSTEM_USER);
+    let userIds: string[];
+    if (targetUser && targetUser !== SYSTEM_USER) {
+      userIds = [targetUser];
+    } else {
+      // Eligible: anyone with custom_activity_logs in last 30d, excluding system user
+      const since30 = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+      const { data: activeRows } = await supabase
+        .from("custom_activity_logs")
+        .select("user_id")
+        .gte("entry_date", since30)
+        .neq("user_id", SYSTEM_USER);
+      userIds = Array.from(new Set((activeRows ?? []).map((r: any) => r.user_id)))
+        .filter((u) => u !== SYSTEM_USER);
+    }
 
     const results: any[] = [];
     for (const uid of userIds) {
@@ -183,10 +211,10 @@ serve(async (req) => {
       function_name: "evaluate-behavioral-state",
       status: "success",
       duration_ms: Date.now() - startMs,
-      metadata: { processed: results.length, today: todayUTC },
+      metadata: { processed: results.length, today: todayUTC, source: "custom_activity_logs_v2" },
     }).then(() => {}, () => {});
 
-    return new Response(JSON.stringify({ status: "ok", processed: results.length, today: todayUTC }),
+    return new Response(JSON.stringify({ status: "ok", processed: results.length, today: todayUTC, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("[evaluate-behavioral-state]", err);
