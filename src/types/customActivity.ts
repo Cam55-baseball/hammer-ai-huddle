@@ -116,6 +116,7 @@ export interface CustomActivityTemplate {
   pace_value?: string; // H:MM:SS.T format for time goals
   intervals: RunningInterval[];
   is_favorited: boolean;
+  is_non_negotiable?: boolean;
   recurring_days: number[]; // 0-6 (Sunday-Saturday)
   recurring_active: boolean;
   sport: 'baseball' | 'softball';
