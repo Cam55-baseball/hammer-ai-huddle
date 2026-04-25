@@ -1453,6 +1453,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             />
           )}
         </button>
+          );
+        })()}
 
         {/* Urgency indicator for incomplete tasks */}
         {isIncomplete && (
