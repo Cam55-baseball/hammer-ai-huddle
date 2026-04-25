@@ -7,7 +7,10 @@ export type BehavioralEventType =
   | 'nn_miss'
   | 'consistency_drop'
   | 'identity_tier_change'
-  | 'consistency_recover';
+  | 'consistency_recover'
+  | 'rest_overuse'
+  | 'streak_risk'
+  | 'coaching_insight';
 
 export interface BehavioralEvent {
   id: string;
@@ -17,13 +20,19 @@ export interface BehavioralEvent {
   template_id: string | null;
   magnitude: number | null;
   metadata: Record<string, any>;
+  command_text?: string | null;
+  action_type?: string | null;
+  action_payload?: Record<string, any> | null;
   created_at: string;
   acknowledged_at: string | null;
 }
 
 const PRIORITY: Record<BehavioralEventType, number> = {
-  nn_miss: 4,
+  nn_miss: 5,
+  streak_risk: 4,
+  rest_overuse: 3,
   consistency_drop: 3,
+  coaching_insight: 2,
   identity_tier_change: 2,
   consistency_recover: 1,
 };

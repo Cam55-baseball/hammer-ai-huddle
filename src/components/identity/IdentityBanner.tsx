@@ -3,6 +3,8 @@ import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
 import { cn } from '@/lib/utils';
 import { Flame, ShieldCheck } from 'lucide-react';
 import { BehavioralPressureToast } from './BehavioralPressureToast';
+import { RestDayButton } from './RestDayButton';
+import { DailyStandardCheck } from './DailyStandardCheck';
 
 interface Props {
   className?: string;
@@ -54,6 +56,9 @@ export function IdentityBanner({ className }: Props) {
                 </span>
               )}
             </div>
+            <div className="mt-3">
+              <RestDayButton />
+            </div>
           </div>
           <div className="flex flex-col items-end">
             <div className={cn('text-3xl font-black tabular-nums sm:text-4xl', tone)}>{score}</div>
@@ -65,6 +70,7 @@ export function IdentityBanner({ className }: Props) {
       </div>
 
       <BehavioralPressureToast />
+      <DailyStandardCheck />
     </div>
   );
 }
