@@ -988,6 +988,9 @@ export type Database = {
       behavioral_events: {
         Row: {
           acknowledged_at: string | null
+          action_payload: Json
+          action_type: string | null
+          command_text: string | null
           created_at: string
           event_date: string
           event_type: string
@@ -999,6 +1002,9 @@ export type Database = {
         }
         Insert: {
           acknowledged_at?: string | null
+          action_payload?: Json
+          action_type?: string | null
+          command_text?: string | null
           created_at?: string
           event_date?: string
           event_type: string
@@ -1010,6 +1016,9 @@ export type Database = {
         }
         Update: {
           acknowledged_at?: string | null
+          action_payload?: Json
+          action_type?: string | null
+          command_text?: string | null
           created_at?: string
           event_date?: string
           event_type?: string
@@ -1563,6 +1572,30 @@ export type Database = {
           sport?: string
           title?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_standard_checks: {
+        Row: {
+          check_date: string
+          confirmed_at: string
+          id: string
+          tier_at_confirm: string | null
+          user_id: string
+        }
+        Insert: {
+          check_date: string
+          confirmed_at?: string
+          id?: string
+          tier_at_confirm?: string | null
+          user_id: string
+        }
+        Update: {
+          check_date?: string
+          confirmed_at?: string
+          id?: string
+          tier_at_confirm?: string | null
           user_id?: string
         }
         Relationships: []
@@ -7725,7 +7758,11 @@ export type Database = {
           missed_days: number
           nn_miss_count_7d: number
           performance_streak: number
+          recovery_mode_today: boolean
+          rest_days_30d: number
+          rest_days_7d: number
           snapshot_date: string
+          tier_entered_at: string | null
           user_id: string
         }
         Insert: {
@@ -7741,7 +7778,11 @@ export type Database = {
           missed_days?: number
           nn_miss_count_7d?: number
           performance_streak?: number
+          recovery_mode_today?: boolean
+          rest_days_30d?: number
+          rest_days_7d?: number
           snapshot_date: string
+          tier_entered_at?: string | null
           user_id: string
         }
         Update: {
@@ -7757,7 +7798,11 @@ export type Database = {
           missed_days?: number
           nn_miss_count_7d?: number
           performance_streak?: number
+          recovery_mode_today?: boolean
+          rest_days_30d?: number
+          rest_days_7d?: number
           snapshot_date?: string
+          tier_entered_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -7925,6 +7970,54 @@ export type Database = {
           next_report_date?: string
           reports_generated?: number | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_rest_day_overrides: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_rest_day_rules: {
+        Row: {
+          created_at: string
+          max_rest_days_per_week: number
+          recurring_days: number[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          max_rest_days_per_week?: number
+          recurring_days?: number[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          max_rest_days_per_week?: number
+          recurring_days?: number[]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

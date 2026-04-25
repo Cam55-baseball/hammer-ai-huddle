@@ -210,10 +210,13 @@ async function computeForUser(supabase: any, userId: string) {
   let dampingMultiplier = 1.0;
   let performanceStreak = 0;
   let nnMissCount7d = 0;
+  let restDays7d = 0;
+  let recoveryModeToday = false;
+  let maxRestPerWeek = 2;
   try {
     const { data: snap } = await supabase
       .from("user_consistency_snapshots")
-      .select("consistency_score,damping_multiplier,performance_streak,nn_miss_count_7d")
+      .select("consistency_score,damping_multiplier,performance_streak,nn_miss_count_7d,rest_days_7d,recovery_mode_today,inputs")
       .eq("user_id", userId)
       .order("snapshot_date", { ascending: false })
       .limit(1)
@@ -223,6 +226,9 @@ async function computeForUser(supabase: any, userId: string) {
       dampingMultiplier = Number(snap.damping_multiplier ?? 1.0);
       performanceStreak = Number(snap.performance_streak ?? 0);
       nnMissCount7d = Number(snap.nn_miss_count_7d ?? 0);
+      restDays7d = Number((snap as any).rest_days_7d ?? 0);
+      recoveryModeToday = Boolean((snap as any).recovery_mode_today ?? false);
+      maxRestPerWeek = Number(((snap as any).inputs?.max_rest_per_week) ?? 2);
     }
   } catch (_) { /* zero-risk fallback */ }
 
@@ -259,13 +265,21 @@ async function computeForUser(supabase: any, userId: string) {
   const base = (activityScore * 0.55) + (consistencyScore * 0.25) + (neuroBlend * 0.20);
   const nnPenalty = Math.min(nnMissCount7d * 8, 30);
   const streakBoost = Math.min(performanceStreak * 1.5, 15);
-  const finalScore = clamp(base * dampingMultiplier - nnPenalty + streakBoost);
+  const restFactor = restDays7d <= maxRestPerWeek
+    ? 5
+    : -Math.min((restDays7d - maxRestPerWeek) * 5, 15);
+  let finalScore = clamp(base * dampingMultiplier - nnPenalty + streakBoost + restFactor);
 
   let overall: "prime" | "ready" | "caution" | "recover" = "ready";
   if (finalScore >= 80 && recoveryScore >= 60) overall = "prime";
   else if (finalScore >= 60) overall = "ready";
   else if (finalScore >= 40) overall = "caution";
   else overall = "recover";
+
+  // Recovery mode floor: planned rest day never drops below "ready"
+  if (recoveryModeToday && (overall === "recover" || overall === "caution")) {
+    overall = "ready";
+  }
 
   const blended = finalScore;
 
@@ -341,6 +355,9 @@ async function computeForUser(supabase: any, userId: string) {
         neuro_blend: neuroBlend,
         nn_penalty: nnPenalty,
         streak_boost: streakBoost,
+        rest_factor: restFactor,
+        rest_days_7d: restDays7d,
+        recovery_mode_today: recoveryModeToday,
         final_score: finalScore,
         arousal_inputs: inputs.arousal,
         recovery_inputs: inputs.recovery,
