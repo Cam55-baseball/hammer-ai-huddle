@@ -318,6 +318,7 @@ export function CustomActivityBuilderDialog({
         pace_value: paceValue || paceGoal || undefined,
         intervals: [] as RunningInterval[],
         is_favorited: isFavorited,
+        is_non_negotiable: isNonNegotiable,
         recurring_days: scheduleMode === 'weekly' ? recurringDays : [],
         recurring_active: scheduleMode === 'weekly' && recurringActive,
         specific_dates: scheduleMode === 'specific_date' ? specificDates.map(d => format(d, 'yyyy-MM-dd')) : undefined,
