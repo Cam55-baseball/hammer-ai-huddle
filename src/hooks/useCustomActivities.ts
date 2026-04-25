@@ -215,6 +215,9 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         action: (data as any).action ?? null,
         success_criteria: (data as any).success_criteria ?? null,
         source: (data as any).source ?? null,
+        // Phase 12.2 — completion contract
+        completion_type: (data as any).completion_type ?? null,
+        completion_binding: (data as any).completion_binding ?? null,
         recurring_days: data.recurring_days as unknown as number[],
         recurring_active: data.recurring_active,
         sport: data.sport,
@@ -256,6 +259,21 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
       const createdTemplate = result as unknown as CustomActivityTemplate;
       console.log('[useCustomActivities] Template created successfully:', createdTemplate.id);
+
+      // Phase 12.2 — Resolve __self__ sentinel in completion_binding to the new id.
+      try {
+        const cb: any = (createdTemplate as any).completion_binding;
+        if (cb?.kind === 'in_app' && cb?.match?.templateId === '__self__') {
+          const resolved = { ...cb, match: { templateId: createdTemplate.id } };
+          await supabase
+            .from('custom_activity_templates')
+            .update({ completion_binding: resolved as any })
+            .eq('id', createdTemplate.id);
+          (createdTemplate as any).completion_binding = resolved;
+        }
+      } catch (e) {
+        console.warn('[useCustomActivities] Could not resolve __self__ binding', e);
+      }
 
       // If scheduleForToday is true, add to today's game plan BEFORE returning
       if (scheduleForToday) {
@@ -308,6 +326,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         'is_non_negotiable',
         // Phase 12 — NN context contract
         'purpose', 'action', 'success_criteria', 'source',
+        'completion_type', 'completion_binding',
         'recurring_days', 'recurring_active', 'activity_type',
         'embedded_running_sessions', 'display_nickname', 'custom_logo_url',
         'reminder_enabled', 'reminder_time', 'display_on_game_plan',

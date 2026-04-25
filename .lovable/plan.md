@@ -1,93 +1,159 @@
-# Phase 12.1 — Strict NN Contract (Remove the Safety Net)
+# Phase 12.2 — NN Attachment + Verifiable Completion
 
-Goal: zero ambiguous NN cards. If a Non-Negotiable doesn't carry real, specific, actionable context, it does not exist in the UI. No filler defaults anywhere in the pipeline.
-
----
-
-## 1. `src/lib/nnContract.ts` — Tighten validator, kill defaults
-
-**Remove all default fill-ins.** Currently `safePurpose` and `safeSuccess` inject `"Locked-in daily standard."` and `"Logged complete on the day."` — these get deleted.
-
-New rules enforced inside `buildNNContext`:
-- `title` — required, **≥ 6 chars**, not in generic blocklist
-- `purpose` — required, **≥ 10 chars**, not vague
-- `action` — required (with `description` fallback only if it itself meets length), **≥ 10 chars**, not vague
-- `successCriteria` — required, **≥ 8 chars**, not vague
-- `source` — defaults to `'Custom'` (this is a tag, not user-facing context, so a default is acceptable)
-
-Add forbidden title patterns (existing) plus a **generic-title blocklist** (case-insensitive exact / substring match on the trimmed title):
-`['activity', 'task', 'standard', 'non-negotiable', 'nn', 'daily', 'reset', 'focus', 'mental reset', 'be disciplined', 'stay focused']`
-
-Add a **vague-content blocklist** applied to `purpose`, `action`, `successCriteria` — if the *entire* trimmed value (lowercased) matches one of these, reject:
-`['stay focused', 'be disciplined', 'mental reset', 'do it', 'be consistent', 'stay locked in', 'lock in', 'focus', 'discipline', 'reset', 'be ready', 'show up']`
-
-Any failure → return `null`. No partial fill, no defaults, no salvage.
-
-Export a small helper `validateNNFields(fields)` that returns `{ ok: boolean, errors: Record<'title'|'purpose'|'action'|'successCriteria', string | null> }` so the builder can show inline errors without duplicating rules.
+Goal: every Non-Negotiable must be attached to a measurable completion signal. No floating "tap done" cards. If a NN can't bind to an in-app event or define an enforceable manual rule, it does not render and cannot be saved.
 
 ---
 
-## 2. `CustomActivityBuilderDialog.tsx` — Builder enforces quality
+## 1. DB migration — add completion contract columns
 
-- Import `validateNNFields` from `@/lib/nnContract`.
-- Compute `nnValidation` whenever `isNonNegotiable` is on, using current field values.
-- Update each NN field block (Purpose, Action, Success Criteria) to:
-  - Show a small **helper line** under the label describing what a strong answer looks like (examples already match — formalize as helper text, not just placeholder).
-  - Show an inline **error message** in red when the field is touched and fails the rule (e.g. "Purpose must be at least 10 characters and specific — avoid 'stay focused'").
-- Update the Save button at line 1017:
-  ```
-  disabled={!activityType || !title.trim() || saving || (isNonNegotiable && !nnValidation.ok)}
-  ```
-- Update the existing `handleSave` guard (line 291) to use `validateNNFields` and show the first specific error via toast instead of the generic "Add purpose, action, and success criteria" message.
+Table: `public.custom_activity_templates`
 
-No silent acceptance. No save until every NN field passes the same rules the renderer enforces.
+```sql
+ALTER TABLE public.custom_activity_templates
+  ADD COLUMN IF NOT EXISTS completion_type text,
+  ADD COLUMN IF NOT EXISTS completion_binding jsonb;
+```
 
----
+No CHECK constraint (per project rule — use validation triggers if needed; here we validate in app code, since legacy non-NN rows are allowed to be NULL).
 
-## 3. `src/hooks/useNNSuggestions.ts` — Real auto-population or block
+Backfill the only existing NN row (`Daily Mental Reset`, id `e6120c59-965d-4301-82b0-a96c2503b05e`):
 
-Remove the filler defaults in the `accept` flow:
-- Drop `'Locked-in daily standard.'` and `'Logged complete on the day.'`.
-- Build a candidate context from the suggestion's template:
-  - `purpose` ← `tpl.purpose` if present, else **null** (do not invent).
-  - `action`  ← `tpl.action` if present, else `tpl.description` (only if ≥ 10 chars and not vague).
-  - `success_criteria` ← `tpl.success_criteria` if present, else **null**.
-- Run the candidate through `buildNNContext`. If it returns `null`:
-  - Block the accept with a clear toast: **"This activity needs more detail before it can be a Non-Negotiable. Open it in the builder to add Purpose, Action, and Success Criteria."**
-  - Do not flip `is_non_negotiable`.
-  - Do not mark the suggestion accepted (leave it active so the user can act on it via the builder).
-- If validation passes, write the validated values back to the template (no defaults).
+```sql
+UPDATE public.custom_activity_templates
+SET completion_type = 'manual',
+    completion_binding = '{"type":"timer","min_seconds":120}'::jsonb
+WHERE id = 'e6120c59-965d-4301-82b0-a96c2503b05e';
+```
 
 ---
 
-## 4. `GamePlanCard.tsx` — Render guard already correct, verify
+## 2. `src/types/customActivity.ts`
 
-The render guard already drops invalid NNs and logs `[HM-NN-INVALID]` in DEV. No change needed beyond confirming it still calls `buildNNContext` and renders `null` on failure. Once `buildNNContext` is strict (step 1), legacy weak rows will simply stop rendering — which is the desired behavior.
+Extend `CustomActivityTemplate`:
+
+```ts
+completion_type?: 'in_app' | 'manual' | null;
+completion_binding?: NNCompletionBinding | null;
+```
+
+New shared type:
+
+```ts
+export type NNCompletionBinding =
+  | { kind: 'in_app'; event: 'NN_COMPLETED' | 'STANDARD_MET' | 'NIGHT_CHECKIN_COMPLETED'; match?: { templateId?: string } }
+  | { kind: 'manual'; rule:
+      | { type: 'timer'; min_seconds: number }
+      | { type: 'count'; min_count: number; label: string }
+      | { type: 'binary'; confirm_label: string } };
+```
+
+Note: `binary` is only allowed when `success_criteria` ≥ 12 chars and contains a measurable verb — enforced in `nnContract.ts` (see §3).
 
 ---
 
-## 5. Database — leave existing rows alone
+## 3. `src/lib/nnContract.ts` — extend the contract
 
-No migration. Legacy rows that don't meet the new contract will silently stop rendering as NNs (the underlying activity still exists; only the NN treatment is gated). Users can repair them via the builder.
+Add `completion` to `NNContext`:
 
-The previously normalized "Daily Mental Reset" row already has full structured content (Purpose, Action, Success Criteria from the Phase 12 migration) and will continue to render — confirming the strict path works for valid data.
+```ts
+completion: NNCompletionBinding;
+```
+
+Extend `validateNNFields` signature to accept optional `completionType` + `completionBinding` and produce a `completion` error key.
+
+New validation rules inside `buildNNContext` (in addition to current strict checks):
+
+- `completion_type` must be `'in_app'` or `'manual'`. Any other value → reject.
+- If `'in_app'`:
+  - `completion_binding.kind === 'in_app'`
+  - `event` must be one of the allowed enum values
+  - if `event === 'NN_COMPLETED'`, `match.templateId` must equal the template's own id (self-binding) — prevents pointing at unrelated templates
+- If `'manual'`:
+  - `completion_binding.kind === 'manual'`
+  - `rule.type === 'timer'` → `min_seconds` integer in `[30, 3600]`
+  - `rule.type === 'count'` → `min_count` integer in `[1, 500]`, `label` ≥ 3 chars and not in vague blocklist
+  - `rule.type === 'binary'` → only valid when `successCriteria.length ≥ 12` and matches `/\b(complete[d]?|finish|log|record|mark|did|performed)\b/i` (proves the success criteria itself is the gate). Otherwise reject — this closes the "blind tap done" loophole.
+
+Any failure → `buildNNContext` returns `null`. No defaults.
+
+Export `validateNNCompletion(type, binding, successCriteria)` helper for the builder so it can show inline errors per-rule without duplicating logic.
 
 ---
 
-## 6. Verification (post-implementation)
+## 4. Builder — `CustomActivityBuilderDialog.tsx`
 
-1. Query `custom_activity_templates` for any NN row missing one of the four required fields or with vague content → confirm none of them appear on Game Plan.
-2. Open builder, toggle NN on, type "focus" in Purpose → Save stays disabled, inline error shows.
-3. Fill all three fields with strong content → Save enables, card renders with full structured display.
-4. Trigger a suggestion accept on a template that only has a short/vague description → toast appears, NN is NOT activated.
-5. Trigger a suggestion accept on a template with rich `description` (≥ 10 chars, specific) → NN activates with that description as `action`, no filler text in DB or UI.
-6. Grep the entire `src/` tree for the strings `'Locked-in daily standard'` and `'Logged complete on the day'` → zero matches.
+State additions:
+```ts
+const [nnCompletionType, setNnCompletionType] = useState<'in_app'|'manual'|''>(...);
+const [nnBinding, setNnBinding] = useState<NNCompletionBinding|null>(...);
+```
+Hydrate from template on edit; default empty on new.
+
+UI (rendered only when `isNonNegotiable` is on, directly under the existing Purpose/Action/Success block):
+
+1. **Completion Type segmented control** — "Track inside app" | "Manual confirmation". Required.
+2. **If `in_app`**: dropdown of allowed events. For `NN_COMPLETED` we pre-fill `match.templateId` with the current template id (or `__self__` sentinel if creating; resolved on save). Helper text: "This NN auto-completes when you complete it from Game Plan."
+3. **If `manual`**: sub-selector "Timer / Count / Binary".
+   - Timer → number input `min_seconds` (default 120, min 30, max 3600). Helper: "User must run a full timer before Complete enables."
+   - Count → number input `min_count` + label (e.g. "reps", "breaths"). Helper: "User must enter at least N before Complete enables."
+   - Binary → text input `confirm_label` (default "I completed this honestly"). Disabled with tooltip if `successCriteria` doesn't pass the strict measurable-verb check from §3.
+
+Wire `nnValidation` to call the extended `validateNNFields` (now including completion). Save button stays disabled until both context AND completion contract pass.
+
+Persist to DB on save:
+```ts
+completion_type: isNonNegotiable ? nnCompletionType : null,
+completion_binding: isNonNegotiable ? nnBinding : null,
+```
+Resolve `__self__` → actual template id after insert (do a follow-up update in the same save flow when creating new in_app NNs that self-bind).
+
+---
+
+## 5. `useNNSuggestions.ts` — block accept without contract
+
+In `accept`, after the existing strict context check, also require a completion contract on the source template. Since suggestions today don't carry one, this means **all suggestion accepts now route the user to the builder** with a toast: "This standard needs a completion rule. Open it in the builder to set how it gets verified." (Same UX pattern as the existing context-missing toast.)
+
+No silent default contract injection.
+
+---
+
+## 6. `GamePlanCard.tsx` — render + completion behavior
+
+Render guard already calls `buildNNContext`. Once §3 lands, NNs without a valid contract auto-disappear — no extra guard needed.
+
+Completion behavior changes (NN-only path):
+
+- **`in_app` NNs**: keep current tap-to-complete behavior. The `NN_COMPLETED` event already fires from the existing completion handler (Phase 11), satisfying its own self-binding. No UI change beyond the existing structured display.
+- **`manual` NNs**: replace the simple checkbox/done tap with a small inline gated control inside the NN card body:
+  - **Timer**: "Start 2:00 reset" button → countdown UI → Complete button enables only when timer reaches 0. Persist start timestamp in component state; if user navigates away mid-timer, restart required (no fake completion). Optional: persist start to `localStorage` keyed by `${templateId}:${date}` so a refresh resumes.
+  - **Count**: number stepper + "Log N" button. Complete enables when entered count ≥ `min_count`.
+  - **Binary**: confirm dialog showing `confirm_label` + `successCriteria`, requires explicit "Confirm" tap (two-step), then completes.
+
+On successful gated action, call the existing `markCustomActivityComplete` flow so all downstream analytics / engine triggers / Hammer recompute fire unchanged. Record the gate satisfaction in `performance_data` (e.g. `{ nn_gate: { type: 'timer', seconds: 120, satisfied_at: ts } }`) for auditability — no schema change needed (already jsonb).
+
+Do NOT alter the non-NN completion path.
+
+---
+
+## 7. Verification
+
+1. New NN, leave completion type empty → Save disabled, inline error.
+2. New NN, choose `manual / binary` while success criteria is "stay focused" → Save disabled (binary requires measurable verb).
+3. New NN, choose `manual / timer` 120s → Save enabled. On Game Plan, card shows "Start 2:00 reset", Complete disabled until timer ends.
+4. New NN, choose `in_app / NN_COMPLETED` self-binding → completes on tap as before; analytics event fires once.
+5. Existing "Daily Mental Reset" → after migration, renders with timer gate; tapping done without timer is impossible.
+6. Suggestion accept on a template with no contract → blocked with toast routing to builder.
+7. Legacy NN row missing `completion_type` → silently dropped from Game Plan (logs `[HM-NN-INVALID]` in dev).
 
 ---
 
 ## Files touched
-- `src/lib/nnContract.ts` — strict validator, new helper, no defaults
-- `src/components/custom-activities/CustomActivityBuilderDialog.tsx` — quality validation, inline errors, disabled save
-- `src/hooks/useNNSuggestions.ts` — remove filler defaults, block weak accepts
 
-No DB migration. No new components. No scoring changes. No new events.
+- DB migration (add columns) + data update for the one existing NN row
+- `src/types/customActivity.ts` — type extensions
+- `src/lib/nnContract.ts` — extended validation, new `validateNNCompletion` helper, no defaults
+- `src/components/custom-activities/CustomActivityBuilderDialog.tsx` — completion UI + save persistence
+- `src/hooks/useNNSuggestions.ts` — block accept without contract
+- `src/components/GamePlanCard.tsx` — gated manual completion controls inside NN card body
+
+No new tables. No new components. No scoring changes. No new analytics events.
