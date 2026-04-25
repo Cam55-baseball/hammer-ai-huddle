@@ -987,6 +987,49 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const skipDimming = __dayType === 'skip';
   const pushGlow = __dayType === 'push';
 
+  // ── Phase 10.4 — Live Standard Awareness ────────────────────────────
+  // Pure derivation from the single source of truth.
+  const dailyOutcome = useDailyOutcome();
+  const nnRemaining = Math.max(0, dailyOutcome.nnTotal - dailyOutcome.nnCompleted);
+  const standardIncomplete =
+    dailyOutcome.nnTotal > 0 &&
+    dailyOutcome.nnCompleted < dailyOutcome.nnTotal &&
+    !hideNN &&
+    __dayType !== 'skip';
+
+  // One-shot smart scroll to NN section on mount when standard is incomplete
+  const scrollFiredRef = useRef(false);
+  useEffect(() => {
+    if (scrollFiredRef.current) return;
+    if (loading || dailyOutcome.loading) return;
+    if (!standardIncomplete) return;
+    scrollFiredRef.current = true;
+    requestAnimationFrame(() => {
+      const el = document.getElementById('nn-section');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, dailyOutcome.loading, standardIncomplete]);
+
+  // Completion reinforcement pulse — fires once on the < → === transition
+  const [pulseStandard, setPulseStandard] = useState(false);
+  const prevNnCompletedRef = useRef<number | null>(null);
+  useEffect(() => {
+    const prev = prevNnCompletedRef.current;
+    const cur = dailyOutcome.nnCompleted;
+    const total = dailyOutcome.nnTotal;
+    prevNnCompletedRef.current = cur;
+    if (prev === null) return; // skip first observation
+    if (total <= 0) return;
+    if (__dayType === 'rest' || __dayType === 'skip') return;
+    if (prev < total && cur === total) {
+      setPulseStandard(true);
+      toast.success('Standard met.');
+      const t = setTimeout(() => setPulseStandard(false), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [dailyOutcome.nnCompleted, dailyOutcome.nnTotal, __dayType]);
+
   // Toggle NON-NEGOTIABLE on a custom activity template (1-click)
   const toggleNonNegotiable = async (templateId: string, current: boolean) => {
     const next = !current;
