@@ -465,7 +465,30 @@ export function CustomActivityBuilderDialog({
                   </div>
                 </div>
 
-                {/* Schedule for Today Toggle - Only show for new activities */}
+                {/* Non-Negotiable toggle — set this activity as required daily */}
+                <div className="p-3 sm:p-4 rounded-lg border bg-red-500/5 border-red-500/30 overflow-hidden">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="non-negotiable" className="flex items-center gap-3 cursor-pointer min-w-0">
+                      <Flame className={cn(
+                        "h-5 w-5 shrink-0",
+                        isNonNegotiable ? "text-red-400 fill-red-400" : "text-red-400/60"
+                      )} />
+                      <div className="min-w-0">
+                        <span className="font-black uppercase tracking-wider text-xs">
+                          Make this a Non-Negotiable
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-0.5 break-words">
+                          This will be required daily and tracked in your standard.
+                        </p>
+                      </div>
+                    </Label>
+                    <Switch
+                      id="non-negotiable"
+                      checked={isNonNegotiable}
+                      onCheckedChange={setIsNonNegotiable}
+                    />
+                  </div>
+                </div>
                 {!isEditing && (
                   <div className="p-3 sm:p-4 rounded-lg border bg-primary/5 border-primary/20 overflow-hidden">
                     <div className="flex items-center justify-between gap-3">
