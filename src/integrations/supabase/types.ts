@@ -985,6 +985,47 @@ export type Database = {
           },
         ]
       }
+      behavioral_events: {
+        Row: {
+          created_at: string
+          event_date: string
+          event_type: string
+          id: string
+          magnitude: number | null
+          metadata: Json
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date?: string
+          event_type: string
+          id?: string
+          magnitude?: number | null
+          metadata?: Json
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          id?: string
+          magnitude?: number | null
+          metadata?: Json
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "behavioral_events_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       block_exercises: {
         Row: {
           cns_demand: string | null
@@ -1433,6 +1474,7 @@ export type Database = {
           intensity: string | null
           intervals: Json | null
           is_favorited: boolean | null
+          is_non_negotiable: boolean
           meals: Json | null
           pace_value: string | null
           recurring_active: boolean | null
@@ -1469,6 +1511,7 @@ export type Database = {
           intensity?: string | null
           intervals?: Json | null
           is_favorited?: boolean | null
+          is_non_negotiable?: boolean
           meals?: Json | null
           pace_value?: string | null
           recurring_active?: boolean | null
@@ -1505,6 +1548,7 @@ export type Database = {
           intensity?: string | null
           intervals?: Json | null
           is_favorited?: boolean | null
+          is_non_negotiable?: boolean
           meals?: Json | null
           pace_value?: string | null
           recurring_active?: boolean | null
@@ -7625,6 +7669,93 @@ export type Database = {
           vitamin_e_mg?: number | null
           vitamin_k_mcg?: number | null
           zinc_mg?: number | null
+        }
+        Relationships: []
+      }
+      user_behavior_patterns: {
+        Row: {
+          confidence: number
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          metadata: Json
+          occurrences: number
+          pattern_key: string
+          pattern_type: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          occurrences?: number
+          pattern_key: string
+          pattern_type: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          occurrences?: number
+          pattern_key?: string
+          pattern_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_consistency_snapshots: {
+        Row: {
+          consistency_score: number
+          created_at: string
+          damping_multiplier: number
+          discipline_streak: number
+          id: string
+          identity_tier: string
+          injury_hold_days: number
+          inputs: Json
+          logged_days: number
+          missed_days: number
+          nn_miss_count_7d: number
+          performance_streak: number
+          snapshot_date: string
+          user_id: string
+        }
+        Insert: {
+          consistency_score: number
+          created_at?: string
+          damping_multiplier?: number
+          discipline_streak?: number
+          id?: string
+          identity_tier?: string
+          injury_hold_days?: number
+          inputs?: Json
+          logged_days?: number
+          missed_days?: number
+          nn_miss_count_7d?: number
+          performance_streak?: number
+          snapshot_date: string
+          user_id: string
+        }
+        Update: {
+          consistency_score?: number
+          created_at?: string
+          damping_multiplier?: number
+          discipline_streak?: number
+          id?: string
+          identity_tier?: string
+          injury_hold_days?: number
+          inputs?: Json
+          logged_days?: number
+          missed_days?: number
+          nn_miss_count_7d?: number
+          performance_streak?: number
+          snapshot_date?: string
+          user_id?: string
         }
         Relationships: []
       }
