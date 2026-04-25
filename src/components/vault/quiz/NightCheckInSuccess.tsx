@@ -139,6 +139,11 @@ export function NightCheckInSuccess({
       initial="hidden"
       animate="visible"
     >
+      {/* Daily Outcome — authoritative verdict */}
+      <motion.div variants={itemVariants}>
+        <DailyOutcomeSection />
+      </motion.div>
+
       {/* Hero Section */}
       <motion.div 
         variants={itemVariants}
