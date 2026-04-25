@@ -86,6 +86,17 @@ export function useNNSuggestions() {
 
   const accept = async (suggestion: NNSuggestion) => {
     if (!user?.id) return;
+    // Phase 12 — NN context contract on accept.
+    // The suggestion's underlying template likely has only title + description.
+    // Auto-populate the structured fields so the resulting NN card renders
+    // with full context. If description is missing, block the accept and
+    // ask the user to author the activity properly via the builder.
+    const tpl = suggestion.template as any;
+    const fallbackAction = (tpl?.description ?? '').trim();
+    if (!fallbackAction) {
+      toast.error('Add a description before locking this in as a Non-Negotiable');
+      return;
+    }
     // Optimistic remove
     qc.setQueryData<NNSuggestion[] | undefined>(
       ['nn-suggestions', user.id],
@@ -95,7 +106,14 @@ export function useNNSuggestions() {
       const [tplRes, sugRes] = await Promise.all([
         (supabase as any)
           .from('custom_activity_templates')
-          .update({ is_non_negotiable: true })
+          .update({
+            is_non_negotiable: true,
+            // Auto-populated NN context — user can refine via the builder later
+            purpose: tpl?.purpose || 'Locked-in daily standard.',
+            action: tpl?.action || fallbackAction,
+            success_criteria: tpl?.success_criteria || 'Logged complete on the day.',
+            source: tpl?.source || 'Custom',
+          })
           .eq('id', suggestion.template_id)
           .eq('user_id', user.id),
         (supabase as any)
