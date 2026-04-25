@@ -87,17 +87,33 @@ export function useNNSuggestions() {
 
   const accept = async (suggestion: NNSuggestion) => {
     if (!user?.id) return;
-    // Phase 12 — NN context contract on accept.
-    // The suggestion's underlying template likely has only title + description.
-    // Auto-populate the structured fields so the resulting NN card renders
-    // with full context. If description is missing, block the accept and
-    // ask the user to author the activity properly via the builder.
+    // Phase 12.1 — Strict NN context contract on accept.
+    // No filler defaults. We build a candidate from the template's actual
+    // fields and validate it through the same renderer-grade contract.
+    // If the candidate doesn't pass, we block the accept and route the user
+    // to the builder. The suggestion stays active so they can act on it.
     const tpl = suggestion.template as any;
-    const fallbackAction = (tpl?.description ?? '').trim();
-    if (!fallbackAction) {
-      toast.error('Add a description before locking this in as a Non-Negotiable');
+    const candidatePurpose = (tpl?.purpose ?? '').trim();
+    const candidateAction = ((tpl?.action ?? tpl?.description ?? '') as string).trim();
+    const candidateSuccess = (tpl?.success_criteria ?? '').trim();
+    const candidateTitle = (tpl?.title ?? '').trim();
+
+    const ctx = buildNNContext({
+      title: candidateTitle,
+      purpose: candidatePurpose,
+      action: candidateAction,
+      success_criteria: candidateSuccess,
+      description: tpl?.description ?? '',
+      source: tpl?.source ?? 'Custom',
+    });
+
+    if (!ctx) {
+      toast.error(
+        'This activity needs more detail before it can be a Non-Negotiable. Open it in the builder to add Purpose, Action, and Success Criteria.'
+      );
       return;
     }
+
     // Optimistic remove
     qc.setQueryData<NNSuggestion[] | undefined>(
       ['nn-suggestions', user.id],
@@ -109,11 +125,11 @@ export function useNNSuggestions() {
           .from('custom_activity_templates')
           .update({
             is_non_negotiable: true,
-            // Auto-populated NN context — user can refine via the builder later
-            purpose: tpl?.purpose || 'Locked-in daily standard.',
-            action: tpl?.action || fallbackAction,
-            success_criteria: tpl?.success_criteria || 'Logged complete on the day.',
-            source: tpl?.source || 'Custom',
+            // Validated values only — no defaults, no filler
+            purpose: ctx.purpose,
+            action: ctx.action,
+            success_criteria: ctx.successCriteria,
+            source: ctx.source,
           })
           .eq('id', suggestion.template_id)
           .eq('user_id', user.id),
