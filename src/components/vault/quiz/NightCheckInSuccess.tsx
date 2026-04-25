@@ -414,6 +414,40 @@ function DailyOutcomeSection() {
   const StatusIcon = meta.Icon;
   const StreakIcon = streak.Icon;
 
+  // Phase 10.7 — optional reflection (status-aware), local-only
+  const reflectionKey = `hm:reflection:${getTodayDate()}`;
+  const [reflection, setReflection] = useState<string>('');
+  useEffect(() => {
+    try { setReflection(localStorage.getItem(reflectionKey) ?? ''); } catch { /* noop */ }
+  }, [reflectionKey]);
+
+  const showReflection =
+    outcome.status === 'STANDARD MET' || outcome.status === 'STANDARD NOT MET';
+  const reflectionLabel = outcome.status === 'STANDARD MET'
+    ? 'What did you do right today?'
+    : 'What blocked you today?';
+
+  const persistReflection = () => {
+    try {
+      if (reflection.trim()) localStorage.setItem(reflectionKey, reflection.trim().slice(0, 120));
+      else localStorage.removeItem(reflectionKey);
+    } catch { /* noop */ }
+  };
+
+  const handleShare = async () => {
+    const text = 'I completed my full standard today.';
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast.success('Copied to clipboard');
+      } else {
+        toast.error('Copy not supported');
+      }
+    } catch {
+      toast.error('Copy not supported');
+    }
+  };
+
   return (
     <Card className={cn('border-2', meta.borderClass, meta.bgClass)}>
       <CardContent className="p-4 space-y-3">
@@ -452,6 +486,132 @@ function DailyOutcomeSection() {
             </span>
           </div>
         </div>
+
+        {/* Phase 10.7 — Optional reflection */}
+        {showReflection && (
+          <div className="border-t border-border/40 pt-3 space-y-1.5">
+            <label className="text-xs text-muted-foreground block">{reflectionLabel}</label>
+            <Input
+              value={reflection}
+              maxLength={120}
+              onChange={(e) => setReflection(e.target.value)}
+              onBlur={persistReflection}
+              placeholder="Optional — one short line"
+              className="h-9 text-sm"
+            />
+          </div>
+        )}
+
+        {/* Phase 10.7 — Share standard */}
+        {outcome.status === 'STANDARD MET' && (
+          <div className="pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShare}
+              className="w-full text-emerald-300 hover:text-emerald-200 hover:bg-emerald-500/10"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share your standard
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Phase 10.7 — Lightweight feedback prompt
+// ─────────────────────────────────────────────────────────────────────
+
+const FEEDBACK_LAST_KEY = 'hm:feedback:lastAsked';
+const FEEDBACK_LOG_KEY = 'hm:feedback:log';
+const FEEDBACK_THROTTLE_DAYS = 3;
+
+function FeedbackPrompt() {
+  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState<'ask' | 'why' | 'done'>('ask');
+  const [note, setNote] = useState('');
+
+  useEffect(() => {
+    // Throttle
+    try {
+      const last = localStorage.getItem(FEEDBACK_LAST_KEY);
+      if (last) {
+        const days = (Date.now() - new Date(last).getTime()) / (1000 * 60 * 60 * 24);
+        if (days < FEEDBACK_THROTTLE_DAYS) return;
+      }
+    } catch { /* noop */ }
+    const t = setTimeout(() => setVisible(true), 2000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const stamp = (helpful: boolean, noteText?: string) => {
+    try {
+      const today = getTodayDate();
+      localStorage.setItem(FEEDBACK_LAST_KEY, today);
+      const raw = localStorage.getItem(FEEDBACK_LOG_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      arr.push({ date: today, helpful, note: noteText ?? null });
+      localStorage.setItem(FEEDBACK_LOG_KEY, JSON.stringify(arr.slice(-50)));
+    } catch { /* noop */ }
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log('[HM-EVENT] FEEDBACK', { helpful, note: noteText ?? null });
+    }
+  };
+
+  if (!visible) return null;
+
+  return (
+    <Card className="border border-border/60 bg-background/40">
+      <CardContent className="p-4 space-y-3">
+        {phase === 'ask' && (
+          <>
+            <p className="text-sm font-medium">Did today's plan help you perform better?</p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => { stamp(true); setPhase('done'); }}
+              >
+                Yes
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setPhase('why')}
+              >
+                No
+              </Button>
+            </div>
+          </>
+        )}
+        {phase === 'why' && (
+          <>
+            <label className="text-sm font-medium block">What was missing?</label>
+            <Input
+              value={note}
+              maxLength={140}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Optional — one short line"
+              className="h-9 text-sm"
+            />
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={() => { stamp(false, note.trim() || undefined); setPhase('done'); }}
+            >
+              Submit
+            </Button>
+          </>
+        )}
+        {phase === 'done' && (
+          <p className="text-xs text-muted-foreground text-center">Thanks — noted.</p>
+        )}
       </CardContent>
     </Card>
   );
