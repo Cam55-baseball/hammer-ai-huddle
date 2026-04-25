@@ -66,6 +66,7 @@ import { CustomField } from '@/types/customActivity';
 import { triggerCelebration } from '@/lib/confetti';
 import { trackOnce } from '@/lib/launchEvents';
 import { buildNNContext } from '@/lib/nnContract';
+import { NNManualCompletionGate } from '@/components/custom-activities/NNManualCompletionGate';
 import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
 
 interface GamePlanCardProps {
@@ -727,6 +728,44 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
 
+  // Phase 12.2 — gated NN completion. The gate has already been satisfied
+  // by the user (timer expired, count reached, or binary confirmed). We
+  // record the proof in performance_data and then trigger the standard
+  // completion path so all downstream engine triggers fire unchanged.
+  const handleNNGateSatisfied = async (
+    task: GamePlanTask,
+    gate: { type: string; satisfied_at: string; [k: string]: any },
+  ) => {
+    const ca = task.customActivityData;
+    if (!ca || task.completed) return;
+    try {
+      // Make sure a log row exists, then write the gate audit.
+      const ensured = ca.log ?? (await ensureLogExists(ca.template.id));
+      const logId = ensured?.id;
+      if (logId) {
+        const prevPd = ((ensured as any)?.performance_data as Record<string, any>) || {};
+        await updateLogPerformanceData(logId, { ...prevPd, nn_gate: gate });
+      }
+      const success = await toggleComplete(ca.template.id, logId ?? undefined);
+      if (success) {
+        if (sortMode === 'timeline') {
+          const updatedTasks = timelineTasks.map(t =>
+            t.id === task.id ? { ...t, completed: true } : t
+          );
+          const sorted = sortTimelineByCompletion(updatedTasks);
+          setTimelineTasks(sorted);
+          localStorage.setItem('gameplan-timeline-order', JSON.stringify(sorted.map(t => t.id)));
+        }
+        refetch();
+        toast.success(t('customActivity.markedComplete'));
+      }
+    } catch (e) {
+      console.error('[NNGate] complete failed', e);
+      toast.error('Could not complete this Non-Negotiable.');
+    }
+  };
+
+
   // Custom activity schedule edit handler - now opens schedule drawer like system tasks
   const handleCustomActivityScheduleEdit = (task: GamePlanTask) => {
     if (task.customActivityData) {
@@ -1270,6 +1309,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   <span className="font-bold uppercase tracking-wider">Done when:</span>{' '}
                   {nnCtx.successCriteria}
                 </p>
+                {/* Phase 12.2 — gated manual completion. Renders timer / count /
+                    binary controls inline. In-app NNs keep the standard tap-to-
+                    complete behavior on the right-side check button. */}
+                {nnCtx.completion?.kind === 'manual' && !task.completed && (
+                  <NNManualCompletionGate
+                    templateId={task.customActivityData!.template.id}
+                    binding={nnCtx.completion}
+                    successCriteria={nnCtx.successCriteria}
+                    onSatisfied={(gate) => handleNNGateSatisfied(task, gate)}
+                  />
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -1347,22 +1397,45 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </Button>
         )}
         
-        {/* Status indicator - clickable for custom activities with prominent styling */}
+        {/* Status indicator - clickable for custom activities with prominent styling.
+            Phase 12.2: for manual NNs, this button is gated — completion must
+            go through the inline timer/count/binary gate inside the card body. */}
+        {(() => {
+          const isManualNN = !!(isNN && nnCtx?.completion?.kind === 'manual' && !task.completed);
+          return (
         <button
-          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { setSelectedFolderTask(task); setFolderLoggerOpen(true); setUrlParam('folderItemId', task.folderItemData.itemId); } else if (isCustom) handleCustomActivityToggle(task); }}
-          disabled={!isCustom}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (task.folderItemData) {
+              setSelectedFolderTask(task);
+              setFolderLoggerOpen(true);
+              setUrlParam('folderItemId', task.folderItemData.itemId);
+            } else if (isCustom) {
+              if (isManualNN) {
+                toast.info('Use the timer or counter on this card to complete.');
+                return;
+              }
+              handleCustomActivityToggle(task);
+            }
+          }}
+          disabled={!isCustom || isManualNN}
           className={cn(
             "flex-shrink-0 rounded-full flex items-center justify-center transition-all",
             task.completed && "bg-green-500 text-white",
-            isCustom && !task.completed && "hover:scale-110 cursor-pointer",
+            isCustom && !task.completed && !isManualNN && "hover:scale-110 cursor-pointer",
+            isManualNN && "opacity-40 cursor-not-allowed",
             // Larger touch target for custom activities
             isCustom ? "h-10 w-10 sm:h-11 sm:w-11" : "h-7 w-7 sm:h-8 sm:w-8"
           )}
-          style={!task.completed ? { 
+          style={!task.completed ? {
             border: `3px ${isCustom ? 'solid' : 'dashed'} ${activeColors.border}`,
             backgroundColor: isCustom ? hexToRgba(customColor, 0.2) : undefined,
           } : undefined}
-          title={isCustom ? (task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.detail.markComplete')) : undefined}
+          title={
+            isManualNN
+              ? 'Complete the gate inside this card to finish'
+              : (isCustom ? (task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.detail.markComplete')) : undefined)
+          }
         >
           {task.completed ? (
             <Check className={cn(
@@ -1380,6 +1453,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             />
           )}
         </button>
+          );
+        })()}
 
         {/* Urgency indicator for incomplete tasks */}
         {isIncomplete && (
