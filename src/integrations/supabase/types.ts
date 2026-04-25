@@ -987,6 +987,7 @@ export type Database = {
       }
       behavioral_events: {
         Row: {
+          acknowledged_at: string | null
           created_at: string
           event_date: string
           event_type: string
@@ -997,6 +998,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          acknowledged_at?: string | null
           created_at?: string
           event_date?: string
           event_type: string
@@ -1007,6 +1009,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          acknowledged_at?: string | null
           created_at?: string
           event_date?: string
           event_type?: string
