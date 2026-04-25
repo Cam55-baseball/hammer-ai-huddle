@@ -1412,12 +1412,25 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Users can access via navigation sidebar
 
   return (
-    <Card className="relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl">
+    <Card
+      className={cn(
+        "relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl transition-shadow duration-700",
+        pulseStandard && "ring-2 ring-emerald-500/60 shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)]"
+      )}
+    >
       {/* Athletic diagonal stripe accent */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 transform rotate-45 translate-x-20 -translate-y-20" />
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 transform -rotate-45 -translate-x-16 translate-y-16" />
-      
+
       <CardContent className="relative p-4 sm:p-6 space-y-4">
+        {/* Phase 10.4 — Live Standard Header (single source of truth) */}
+        <StandardAwarenessHeader
+          status={dailyOutcome.status}
+          remaining={nnRemaining}
+          showRemaining={standardIncomplete}
+          loading={dailyOutcome.loading}
+        />
+
         {/* Bold Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
