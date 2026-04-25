@@ -333,6 +333,11 @@ export function NightCheckInSuccess({
         </motion.div>
       )}
 
+      {/* Phase 10.7 — Lightweight feedback prompt (post-success) */}
+      <motion.div variants={itemVariants}>
+        <FeedbackPrompt />
+      </motion.div>
+
       {/* Close Button */}
       <motion.div variants={itemVariants} className="pt-2">
         <Button 
