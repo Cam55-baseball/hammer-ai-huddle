@@ -122,6 +122,9 @@ export interface CustomActivityTemplate {
   action?: string | null;
   success_criteria?: string | null;
   source?: string | null;
+  // Phase 12.2 — NN completion contract (required for NN render)
+  completion_type?: 'in_app' | 'manual' | null;
+  completion_binding?: NNCompletionBinding | null;
   recurring_days: number[]; // 0-6 (Sunday-Saturday)
   recurring_active: boolean;
   sport: 'baseball' | 'softball';
