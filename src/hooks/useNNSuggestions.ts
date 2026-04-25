@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { buildNNContext } from '@/lib/nnContract';
+import { buildNNContext, validateNNFields } from '@/lib/nnContract';
 
 export interface NNSuggestion {
   id: string;
@@ -99,21 +99,57 @@ export function useNNSuggestions() {
     const candidateSuccess = (tpl?.success_criteria ?? '').trim();
     const candidateTitle = (tpl?.title ?? '').trim();
 
+    // Phase 12.2 — strict validation including completion contract.
+    // Suggestions inherit the source template's completion fields. If either
+    // context OR completion is missing, we route the user to the builder
+    // instead of silently injecting a default rule.
+    const candidateCompletionType = tpl?.completion_type;
+    const candidateCompletionBinding = tpl?.completion_binding;
+
+    const validation = validateNNFields({
+      title: candidateTitle,
+      purpose: candidatePurpose,
+      action: candidateAction,
+      successCriteria: candidateSuccess,
+      completionType: candidateCompletionType,
+      completionBinding: candidateCompletionBinding,
+      templateId: suggestion.template_id,
+    });
+
+    if (!validation.ok) {
+      const contextMissing =
+        !!validation.errors.title ||
+        !!validation.errors.purpose ||
+        !!validation.errors.action ||
+        !!validation.errors.successCriteria;
+      const completionMissing = !!validation.errors.completion;
+
+      if (contextMissing && completionMissing) {
+        toast.error(
+          'This activity needs context AND a completion rule before it can be a Non-Negotiable. Open it in the builder.'
+        );
+      } else if (completionMissing) {
+        toast.error(
+          'This standard needs a completion rule. Open it in the builder to set how it gets verified.'
+        );
+      } else {
+        toast.error(
+          'This activity needs more detail before it can be a Non-Negotiable. Open it in the builder to add Purpose, Action, and Success Criteria.'
+        );
+      }
+      return;
+    }
+
+    // Build the validated context for persistence.
     const ctx = buildNNContext({
+      ...tpl,
       title: candidateTitle,
       purpose: candidatePurpose,
       action: candidateAction,
       success_criteria: candidateSuccess,
       description: tpl?.description ?? '',
       source: tpl?.source ?? 'Custom',
-    });
-
-    if (!ctx) {
-      toast.error(
-        'This activity needs more detail before it can be a Non-Negotiable. Open it in the builder to add Purpose, Action, and Success Criteria.'
-      );
-      return;
-    }
+    })!;
 
     // Optimistic remove
     qc.setQueryData<NNSuggestion[] | undefined>(
