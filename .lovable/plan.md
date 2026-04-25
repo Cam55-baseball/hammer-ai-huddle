@@ -1,175 +1,141 @@
-# Phase 10 Refinement — Unified Day Control + NN Clarity
 
-This is a **refinement layer** on top of existing Phase 9/10 systems. No rebuilds. We unify Rest/Skip/Push into one daily classification source, replace fragmented controls with a single `DayControlCard`, and make Non-Negotiables visually unmistakable.
+# Phase 10.1 — Non-Negotiable Clarity + Direct Control Layer
 
----
-
-## Current State (verified)
-
-- **Rest Day**: `user_rest_day_overrides` (per-date) + `user_rest_day_rules` (recurring) — fully wired into evaluator + Hammer v3.
-- **Skip Day**: `calendar_skipped_items.skip_days[]` is **recurring weekday skips** for individual items — NOT a daily classification. There is no "skip today as a day-type" concept yet.
-- **Push Day**: `GamePlanPushDayDialog` only **reschedules** (shifts dates forward). Not a day classification, no engine signal.
-- **NN**: `custom_activity_templates.is_non_negotiable` exists and is read by evaluator + `save-streak`, but Game Plan UI does not visually label, group, or progress-track them.
+Additive-only UX + control pass on top of the unified Day Control system. Zero changes to evaluator contracts, hammer scoring, or logs. `is_non_negotiable` already exists on `custom_activity_templates` and is consumed by `evaluate-behavioral-state`, `useQuickActionExecutor`, and `NonNegotiableProgressStrip` — but is invisible and unmanaged in the UI today. This pass surfaces and controls it.
 
 ---
 
-## Part 1 — Unified Day Classification Source
+## Part 1 — `NonNegotiableBadge` (new)
 
-**New table** `user_day_state_overrides` becomes the single source for daily intent:
+Create `src/components/identity/NonNegotiableBadge.tsx`:
 
-```
-id uuid pk
-user_id uuid (indexed)
-date date
-type text check in ('rest','skip','push')
-created_at timestamptz
-UNIQUE(user_id, date)
-```
+- Pill: `bg-red-500/15 text-red-400 border border-red-500/40 rounded`
+- Font: `text-[10px] font-black tracking-wider uppercase`
+- Content: `<Flame className="h-3 w-3" /> NON-NEGOTIABLE`
+- Wrapped in shadcn `Tooltip`: *"Required for your daily standard. Missing this breaks your discipline."*
+- Tiny `compact` prop for ultra-tight rows (icon-only).
 
-**Migration tasks:**
-1. Create `user_day_state_overrides`.
-2. Backfill existing `user_rest_day_overrides` rows → `(type='rest')`.
-3. Keep `user_rest_day_overrides` table for now (read-compat) but **route all new writes** through the unified table. Add a thin compat view or update `useRestDay` to read from unified table.
-4. Recurring rest config (`user_rest_day_rules`) stays as-is — recurring days still resolve to `type='rest'` at classification time.
+## Part 2 — `GamePlanCard` row upgrade
 
-Mutual exclusion is enforced by the UNIQUE constraint: only one `type` per (user_id, date).
+In `src/components/GamePlanCard.tsx → renderTask` (~line 981):
 
----
+- Derive `const isNN = !!task.customActivityData?.template?.is_non_negotiable;`
+- When `isNN && !task.completed`, append to outer row `className`:
+  - `border-l-4 border-red-500`
+  - `shadow-[0_0_0_1px_rgba(239,68,68,0.2)]`
+- Inject `<NonNegotiableBadge />` in the title-badges row (line ~1067) for custom activity rows where `isNN`.
 
-## Part 2 — Evaluator Day Classification (`evaluate-behavioral-state`)
+## Part 3 — Hard NN/Optional split inside the custom section
 
-Add unified day classifier. **Precedence:**
+At the call site (line ~1930) where `customTasks` is rendered via `renderTaskSection`, split first:
 
-```
-injury_mode > skip > rest > push > standard
+```ts
+const nnCustomTasks   = customTasks.filter(t => t.customActivityData?.template?.is_non_negotiable);
+const optCustomTasks  = customTasks.filter(t => !t.customActivityData?.template?.is_non_negotiable);
 ```
 
-Per-day handling:
-- **rest**: neutral — excluded from `logged_days`, `missed_days`, NN; doesn't break or extend streaks; counts toward weekly cap (excess rest demoted to `missed`, unchanged from current logic).
-- **skip**: **hard miss** — counts as `missed_days`, breaks both `performance_streak` and `discipline_streak`, NN auto-missed → `nn_miss_count` increments, no `restFactor` benefit.
-- **push**: classified as `standard` for scoring base, but:
-  - if all NN completed → emit `push_complete` event (low-priority boost, +2 to streakBoost cap).
-  - if any NN missed → emit `push_fail` event (high priority, command_text + action).
-- **standard**: existing logic.
+Render two consecutive `renderTaskSection` calls:
 
-**Snapshot fields added** to `user_consistency_snapshots`:
-- `day_type_today text` — `'injury'|'rest'|'skip'|'push'|'standard'`
-- `push_days_7d int`
-- `skip_days_7d int`
+1. **NON-NEGOTIABLES (REQUIRED)** — red accent (`text-red-400`, `bg-red-500/40`), subtitle "Required — standard is built here" rendered above the section line.
+2. **OPTIONAL WORK** — existing emerald accent.
 
----
+Manual-reorder ordered arrays (`orderedCustom`) get the same filter applied so drag groups don't re-mix sections. NN section is rendered FIRST regardless of `sortMode`. `timeline` mode is left untouched (timeline is time-ordered and global; NN border + badge still apply per-row).
 
-## Part 3 — Hammer Engine (`compute-hammer-state`)
+Hide NN section entirely when `useDayState().dayType === 'rest'` (delegated to existing day-state hook already imported at the page level — pass a prop `hideNonNegotiables: boolean` from `Dashboard` → `GamePlanCard`).
 
-- `restFactor` unchanged (rest within cap → +5; excess → penalty).
-- Skip days flow through normal `nnPenalty` + missed-streak path (no special factor).
-- Push: if `push_complete` event in last 24h, add `+2` to `streakBoost` (capped at existing 15).
+## Part 4 — Inline NN toggle on each row
 
-No formula rewrite — additive only.
+In `renderTask`, for `task.taskType === 'custom'` only:
 
----
+- Add a small `Flame` icon-button (24px, far right of row, before any existing trailing controls):
+  - ON: `text-red-400 fill-red-400`
+  - OFF: `text-white/30` (outline only)
+- `onClick` (stop propagation) calls a new function `toggleNN(template_id, next)`:
+  ```ts
+  await supabase
+    .from('custom_activity_templates')
+    .update({ is_non_negotiable: next })
+    .eq('id', template_id)
+    .eq('user_id', user.id);
+  ```
+- After mutation:
+  - Optimistic local toggle via `useCustomActivities.updateTemplate(id, { is_non_negotiable: next })` (after Part 5 wiring).
+  - Invalidate game-plan query and the NN progress strip query.
+  - Fire-and-forget recompute:
+    ```ts
+    supabase.functions.invoke('evaluate-behavioral-state', { body: { user_id: user.id } });
+    supabase.functions.invoke('compute-hammer-state',     { body: { user_id: user.id } });
+    ```
+- Toast (sonner):
+  - ON: *"Set as Non-Negotiable — now required daily."*
+  - OFF: *"Removed from Non-Negotiables."*
 
-## Part 4 — Behavioral Events Extension
+## Part 5 — Persist `is_non_negotiable` through the builder
 
-Add to `behavioral_events.event_type` enum (or text values):
-- `push_fail` — `command_text: "You called a push and didn't meet it."`, `action_type: 'complete_nn'`
-- `push_complete` — `command_text: "Push executed. That's locked in."`, `action_type: 'acknowledge'`
-- `skip_day_used` — `command_text: "You skipped the day. No standard applied."`, `action_type: 'acknowledge'`
+`src/hooks/useCustomActivities.ts`:
 
-**Updated priority** (used by `useBehavioralEvents.PRIORITY`):
-```
-nn_miss(6) > push_fail(5) > rest_overuse(4) > streak_risk(4)
-> consistency_drop(3) > coaching_insight(2)
-> identity_tier_change(2) > push_complete(1) > consistency_recover(1)
-```
+- Add `'is_non_negotiable'` to the `fieldsToCopy` array (line ~300) so `updateTemplate` actually writes it.
+- Ensure `createTemplate` insert payload includes it (default `false`).
 
----
+`src/components/custom-activities/CustomActivityBuilderDialog.tsx`:
 
-## Part 5 — Unified `DayControlCard.tsx`
+- Add state: `const [isNonNegotiable, setIsNonNegotiable] = useState(template?.is_non_negotiable ?? false);`
+- Reset in the same places `isFavorited` resets (lines 165, 234, 267).
+- Persist in the save payload (line ~350): `is_non_negotiable: isNonNegotiable`.
+- New row directly under the favorite toggle (line ~488), mirroring the `Switch + Label` pattern:
+  - Label: `<Flame className="h-4 w-4 text-red-400" /> Make this a Non-Negotiable`
+  - Helper text: *"This will be required daily and tracked in your standard."*
 
-**New component** at `src/components/game-plan/DayControlCard.tsx` — replaces both:
-- `RestDayControl` mount in `Dashboard.tsx` (line 596)
-- `RestDayButton` in `IdentityBanner` (keep button as compact entry point but route through unified hook)
+## Part 6 — `NonNegotiableProgressStrip` enhancement
 
-**Structure:**
-1. **Status header** — single line, color + tone:
-   - Standard → default theme, "STANDARD DAY"
-   - Rest → cool blue, "REST DAY — RECOVERY MODE"
-   - Skip → neutral gray, "SKIP DAY — NO LOGGED OUTPUT"
-   - Push → amber/red, "PUSH DAY — EXTRA LOAD"
-2. **Action button row** — three mutually exclusive toggle buttons: `[Rest] [Skip] [Push]`. Tapping the active one clears it (back to Standard). Tapping a different one swaps (DELETE + INSERT in one call via upsert on UNIQUE).
-3. **Quick explanation text** — dynamic, exact copy from spec.
-4. **Recurring rest sub-section** (collapsed by default) — preserves existing recurring-day picker + weekly cap from `RestDayControl`.
+`src/components/game-plan/NonNegotiableProgressStrip.tsx`:
 
-**New hook** `useDayState.ts`:
-- Reads + writes `user_day_state_overrides` for today.
-- Resolves effective state: explicit override > recurring rest rule > standard.
-- `setDayType(type | null)` → upsert/delete + invoke `evaluate-behavioral-state` + `compute-hammer-state` (fire-and-forget, 8s throttle reused).
-- Replaces `useRestDay` consumers — `useRestDay` becomes a thin wrapper for backward compatibility during transition.
+- When `noneDone` (already computed), append text: `"Standard not met"` (replace existing `"Standard required"` chip).
+- When `allDone`, append: `"Standard met"`.
+- Keep the existing red glow on `noneDone`; add a soft red `animate-pulse` to the icon only (not the whole strip — avoid a flashing bar).
 
----
+## Part 7 — Day-state interaction polish
 
-## Part 6 — NN Visual Clarity in Game Plan (`GamePlanCard.tsx`)
+Driven by existing `useDayState()`:
 
-1. **NN badge** on every NN activity row:
-   - Bold red label "NON-NEGOTIABLE" + `Flame` icon (lucide-react).
-   - Distinct border-l-2 border-red-500 on the row.
-2. **Section grouping** — split rendered activities into:
-   - `NON-NEGOTIABLES (REQUIRED)` section first
-   - `OPTIONAL WORK` section below
-3. **Progress strip** at top of Game Plan: `"X / Y Non-Negotiables completed"`. If `X === 0` and Y > 0 and not rest day → subtle warning glow on NN section header.
-4. **Failure language** — replace "You haven't completed this" → "Standard not met" (search occurrences in GamePlanCard).
+- **rest**: strip already returns `null`; pass `hideNonNegotiables` prop to `GamePlanCard` so the NN section header + badges + flame toggles are also hidden (rows still render under "OPTIONAL WORK").
+- **skip**: NN section renders but with `opacity-60 grayscale pointer-events-none` wrapper around the section (banner already explains).
+- **push**: NN section gets `ring-2 ring-amber-500/40 rounded-xl p-2` wrapper to reinforce importance.
 
----
+## Part 8 — Language standardization
 
-## Part 7 — Game Plan UI Reactivity to Day State
+Global replace across `src/components/GamePlanCard.tsx`, `NonNegotiableProgressStrip.tsx`, and `BehavioralPressureToast.tsx`:
 
-`GamePlanCard` reads `useDayState`:
-- **Rest**: activities at `opacity-60`, banner "RECOVERY MODE — Resume tomorrow", NN badges hidden.
-- **Skip**: activities `grayscale opacity-50 pointer-events-none`, banner "DAY SKIPPED — No progress recorded".
-- **Push**: NN section gets `ring-2 ring-amber-500/40` glow, banner "PUSH DAY — Higher output expected".
-- **Standard**: default rendering.
+- "You haven't completed this" → "Standard not met"
+- "Incomplete" → "Required"
+- nn_miss event copy already authored by evaluator — leave server-side strings untouched; only edit hard-coded UI strings.
 
-Skip/Push do NOT modify the existing per-item recurring `calendar_skipped_items` system — that remains independent (it's about hiding individual recurring items from the calendar, not classifying a day).
+`rg -n "haven't completed|Incomplete" src/components` will scope the sweep.
 
----
+## Part 9 — Zero breaking changes
 
-## Part 8 — Existing Push Dialog
+- No evaluator, hammer, or log schema changes.
+- No new tables or migrations.
+- Single new column writes on existing `is_non_negotiable` (already in schema and `types.ts`).
+- All other systems (skip/push/rest, streak, NN waiver, DDA) remain bit-identical.
 
-`GamePlanPushDayDialog` (rescheduling) is preserved as **secondary action** — accessible via "Reschedule…" link in the DayControlCard for users who want to actually shift dates rather than just declare a push intent. The new `[Push]` button on the card only sets day-type classification.
+## Files
 
----
+**New**
+- `src/components/identity/NonNegotiableBadge.tsx`
 
-## Part 9 — Realtime + Throttle
+**Edit**
+- `src/components/GamePlanCard.tsx` (renderTask row decoration + flame toggle + NN/Optional split at custom-section call site)
+- `src/components/custom-activities/CustomActivityBuilderDialog.tsx` (NN switch row + state + persist)
+- `src/hooks/useCustomActivities.ts` (add `is_non_negotiable` to `fieldsToCopy`; include in create payload)
+- `src/components/game-plan/NonNegotiableProgressStrip.tsx` (Standard met / not met copy + softer pulse)
+- `src/pages/Dashboard.tsx` (pass `hideNonNegotiables` from `useDayState().isRest` into `GamePlanCard`)
 
-Reuse existing 8s throttle pattern. On any `setDayType` call:
-- Optimistic UI update (<50ms).
-- DB upsert.
-- `supabase.functions.invoke('evaluate-behavioral-state', ...)` + `compute-hammer-state` (fire-and-forget).
-- Realtime channel on `user_day_state_overrides` invalidates queries cross-tab.
+## Acceptance
 
----
-
-## Files to create
-- `supabase/migrations/<ts>_unified_day_state.sql` — new table + backfill from rest overrides + add snapshot columns + extend event types.
-- `src/hooks/useDayState.ts`
-- `src/components/game-plan/DayControlCard.tsx`
-- `src/components/game-plan/NonNegotiableBadge.tsx`
-- `src/components/game-plan/NNProgressStrip.tsx`
-
-## Files to edit
-- `supabase/functions/evaluate-behavioral-state/index.ts` — unified classifier, push events, skip handling, snapshot fields.
-- `supabase/functions/compute-hammer-state/index.ts` — push_complete streak bonus.
-- `src/hooks/useRestDay.ts` — read from unified table; keep API for backcompat.
-- `src/hooks/useBehavioralEvents.ts` — updated PRIORITY map + new event types.
-- `src/components/identity/RestDayButton.tsx` — route through `useDayState`.
-- `src/pages/Dashboard.tsx` — swap `RestDayControl` → `DayControlCard`.
-- `src/components/GamePlanCard.tsx` — NN badges, section split, progress strip, day-state visual states, language fixes.
-- `src/integrations/supabase/types.ts` — auto-regenerated.
-
-## Invariants preserved
-- `custom_activity_logs` remains source of truth for activity completion.
-- System user `00000000-...-0001` excluded from all pipelines.
-- Phase 9 NN/streak/Hammer v3 contracts intact — additive only.
-- Skip and Rest remain user-explicit (no auto-conversion).
-- Rest within cap never penalizes; Skip always counts as miss.
+- NN rows visually dominate (red bar + glow + badge) and always render above optional rows.
+- One-click flame toggle on any custom row sets/unsets NN, with toast + recompute + progress-strip update inside 2s.
+- Builder save persists `is_non_negotiable` and re-edit reflects it.
+- Rest day hides all NN UI; Skip day grays it; Push day amber-rings it.
+- Strip reads "Standard met" / "Standard not met"; no "Incomplete" copy remains.
+- No regressions to evaluator, hammer, or skip/push/rest behavior.

@@ -298,6 +298,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         'title', 'description', 'icon', 'color', 'exercises', 'meals',
         'custom_fields', 'duration_minutes', 'intensity', 'distance_value',
         'distance_unit', 'pace_value', 'intervals', 'is_favorited',
+        'is_non_negotiable',
         'recurring_days', 'recurring_active', 'activity_type',
         'embedded_running_sessions', 'display_nickname', 'custom_logo_url',
         'reminder_enabled', 'reminder_time', 'display_on_game_plan',
