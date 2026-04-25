@@ -2115,6 +2115,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         open={quizDialogOpen}
         onOpenChange={setQuizDialogOpen}
         quizType={activeQuizType}
+        existingNightQuiz={todaysQuizzes.find(q => q.quiz_type === 'night') ?? null}
         onSubmit={handleQuizSubmit}
       />
       
