@@ -980,12 +980,41 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Skipped tasks: manually skipped (today only) OR weekly skipped via calendar
   const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id) || isWeeklySkipped(t));
 
+  // Day-state context — drives NN visibility + push glow
+  const { dayType: __dayType } = useDayState();
+  const hideNN = __dayType === 'rest';
+  const skipDimming = __dayType === 'skip';
+  const pushGlow = __dayType === 'push';
+
+  // Toggle NON-NEGOTIABLE on a custom activity template (1-click)
+  const toggleNonNegotiable = async (templateId: string, current: boolean) => {
+    const next = !current;
+    try {
+      const ok = await updateTemplate(templateId, { is_non_negotiable: next } as any);
+      if (!ok) return;
+      // Recompute identity + hammer state immediately
+      if (user?.id) {
+        supabase.functions.invoke('evaluate-behavioral-state', { body: { user_id: user.id } }).catch(() => {});
+        supabase.functions.invoke('compute-hammer-state',     { body: { user_id: user.id } }).catch(() => {});
+      }
+      refetch();
+      refetchActivities();
+      toast.success(next
+        ? 'Set as Non-Negotiable — now required daily.'
+        : 'Removed from Non-Negotiables.');
+    } catch (e) {
+      console.error('[toggleNonNegotiable]', e);
+      toast.error('Could not update standard');
+    }
+  };
+
   const renderTask = (task: GamePlanTask, index?: number) => {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
     const isTexVision = task.specialStyle === 'tex-vision';
     const isCustom = task.specialStyle === 'custom';
+    const isNN = !!task.customActivityData?.template?.is_non_negotiable && !hideNN;
     const showTimelineNumber = sortMode === 'timeline' && typeof index === 'number';
     const taskTime = taskTimes[task.id];
     const hasReminder = taskReminders[task.id];
