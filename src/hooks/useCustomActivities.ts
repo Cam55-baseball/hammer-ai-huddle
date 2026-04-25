@@ -210,6 +210,11 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         intervals: data.intervals as unknown as Record<string, unknown>[],
         is_favorited: data.is_favorited,
         is_non_negotiable: (data as any).is_non_negotiable ?? false,
+        // Phase 12 — NN context contract
+        purpose: (data as any).purpose ?? null,
+        action: (data as any).action ?? null,
+        success_criteria: (data as any).success_criteria ?? null,
+        source: (data as any).source ?? null,
         recurring_days: data.recurring_days as unknown as number[],
         recurring_active: data.recurring_active,
         sport: data.sport,
@@ -301,6 +306,8 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         'custom_fields', 'duration_minutes', 'intensity', 'distance_value',
         'distance_unit', 'pace_value', 'intervals', 'is_favorited',
         'is_non_negotiable',
+        // Phase 12 — NN context contract
+        'purpose', 'action', 'success_criteria', 'source',
         'recurring_days', 'recurring_active', 'activity_type',
         'embedded_running_sessions', 'display_nickname', 'custom_logo_url',
         'reminder_enabled', 'reminder_time', 'display_on_game_plan',
