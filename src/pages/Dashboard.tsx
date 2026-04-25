@@ -23,6 +23,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
+import { IdentityBanner } from "@/components/identity/IdentityBanner";
 import { TodayCommandBar } from "@/components/today/TodayCommandBar";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
@@ -581,6 +582,9 @@ export default function Dashboard() {
 
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
+
+        {/* Identity Banner — primary status; dominates above all metrics */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityBanner />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
