@@ -1,99 +1,164 @@
-## Phase 10.4 — Live Standard Awareness Layer (Final Pre-Launch Pass)
+# Phase 10.5 — System Integrity Lock + Anti-Duplication Pass
 
-Pure awareness/integration pass on top of `useDailyOutcome` (already the single source of truth from Phase 10.3). No new systems, no DB or evaluator changes.
+Pure correctness pass. No features, no scoring changes, no DB changes, no evaluator changes. The audit shows the architecture is already largely clean — this phase closes the remaining gaps.
 
 ---
 
-### Part 1 — Game Plan Standard Header (`src/components/GamePlanCard.tsx`)
+## Audit Findings (what's already correct)
 
-Insert a new top-level header **inside `<CardContent>` (line 1376), as the first child above the existing "Bold Header" block (line 1377)**. Sourced from `useDailyOutcome()`.
+| Concern | Status |
+|---|---|
+| Duplicate outcome logic | ✅ None. `useDailyOutcome` is the sole deriver. `VaultDayRecapCard` is a history viewer for *past* days, not a verdict producer. |
+| Evaluator writing outcome state | ✅ Clean. `evaluate-behavioral-state` writes only behavioral scores + suggestions; no `standard_met` anywhere. |
+| NN counting drift | ✅ `fetchNNProgressToday` is already used by both `useDailyOutcome` and `NonNegotiableProgressStrip`. Other `is_non_negotiable` refs are for editing/scheduling, not outcome counting. |
+| DB dedupe for night quiz | ✅ Exists via `onConflict: 'user_id,entry_date,quiz_type'`. |
+| Language consistency | ✅ Standardized in 10.4. |
 
-- Map status → tone + icon:
-  - `STANDARD MET` → emerald, `CheckCircle2`
-  - `STANDARD NOT MET` → red, `AlertTriangle`
-  - `RECOVERY DAY` → sky, `Moon`
-  - `SKIP REGISTERED` → muted/zinc, `SkipForward`
-- Style: `text-sm font-bold uppercase tracking-wide`, `border-l-4` accent matching the NN styling system (mirrors `DailyOutcomeInlineBanner` tones), background tint `bg-{color}/10`, padding `px-3 py-2`, rounded.
-- Hidden while `loading === true` (avoids flash).
-- Reactivity is automatic — `useDailyOutcome` already subscribes to `custom_activity_logs` + `custom_activity_templates`.
+## Remaining Gaps (what this phase fixes)
 
-### Part 2 — Remaining Required Indicator
+1. **Client-side duplicate submission** — Even with DB onConflict, the night quiz dialog runs full submit logic each open and re-fires success animations. Should detect existing entry and jump straight to success view.
+2. **Race-condition flicker** — `useDailyOutcome` reads NN counts, dayType, and snapshot from independent sources. When the final NN flips, brief mismatched frames are possible.
+3. **Scroll override after manual scroll** — `GamePlanCard` smart-scroll currently always fires; should bail if the user already scrolled before mount stabilizes.
+4. **Defensive comment block** in evaluator + suggestion engine to prevent future drift.
+5. **Dev-only tracing** for outcome / NN / nightly events.
 
-Directly under the header, conditional render:
+---
+
+## Part 1 — Nightly Check-In Authority Lock
+
+**File:** `src/components/vault/VaultFocusQuizDialog.tsx`
+
+- Add `existingNightQuiz?: VaultFocusQuiz | null` prop (passed by callers).
+- In a `useEffect` watching `open && quizType === 'night' && existingNightQuiz`:
+  - Skip form rendering, set `showNightSuccess = true` immediately.
+  - Do **not** call `onSubmit`. The success screen renders from existing data + live `nightStats`.
+- In `handleSubmit` (night branch), pre-check `existingNightQuiz` and short-circuit to `setShowNightSuccess(true)` without write.
+
+**Callers:**
+- `src/pages/Vault.tsx` (line 865): pass `existingNightQuiz={todaysQuizzes.find(q => q.quiz_type === 'night') ?? null}`.
+- `src/components/GamePlanCard.tsx` (line 2114): same — `useVault()` already exposes `todaysQuizzes`; thread it in.
+
+**Result:** Cannot submit twice. Reopening today's night check-in lands directly on the verdict screen.
+
+---
+
+## Part 2 — Duplicate Outcome Prevention (audit-only enforcement)
+
+No code changes needed; instead lock the invariant:
+
+- Add a top-of-file comment block in `src/hooks/useDailyOutcome.ts`:
+  ```ts
+  // ⚠ SINGLE SOURCE OF TRUTH for daily outcome.
+  // Do NOT create parallel "daily summary" / "outcome card" / "day recap" derivers.
+  // All UI surfaces that show today's verdict MUST consume this hook.
+  ```
+- Add a matching comment in `src/lib/nnProgress.ts` declaring it the only NN counter for "today" derivations.
+
+(`VaultDayRecapCard` reviewed and confirmed scope = past-day history, not today's verdict — left untouched.)
+
+---
+
+## Part 3 — Evaluator Consistency Guard
+
+**File:** `supabase/functions/evaluate-behavioral-state/index.ts`
+
+Add a defensive header comment (no logic change):
+```ts
+// ⚠ INVARIANTS — DO NOT VIOLATE
+// This function is strictly behavioral scoring + NN suggestion generation.
+// It must NOT:
+//   - derive or write daily outcome (standard met / not met)
+//   - mutate NN completion state
+//   - produce day-summary text
+// Outcome is derived client-side via useDailyOutcome only.
 ```
-nnTotal > 0 && nnCompleted < nnTotal
-  → <p className="text-xs text-muted-foreground mt-1">
-      {nnTotal - nnCompleted} required actions remaining
-    </p>
+
+---
+
+## Part 4 — NN Progress Integrity Lock
+
+Already enforced. Add a single guarding comment in `src/lib/nnProgress.ts`:
+```ts
+// ⚠ The ONLY allowed NN-completion counter for "today" derivations.
+// Game Plan, Daily Outcome, and Nightly Check-In all route through this.
 ```
-When standard is met (or `nnTotal === 0`, or rest/skip), render nothing.
 
-### Part 3 — Smart Scroll Anchor
-
-- Add `id="nn-section"` to the existing NON-NEGOTIABLES wrapper at line 1995 (`<div className={cn("space-y-1 rounded-xl", ...)}>`).
-- Add a one-shot `useEffect` in `GamePlanCard` keyed off the **first non-loading render**:
-  - Guard with a `useRef(false)` so it fires once per mount.
-  - Condition: `!loading && !outcome.loading && nnTotal > 0 && nnCompleted < nnTotal && !hideNN`
-  - Action: `document.getElementById('nn-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })`
-  - Wrapped in `requestAnimationFrame` to let layout settle.
-- Never re-fires after mount → cannot interfere with manual scroll.
-
-### Part 4 — Completion Reinforcement Pulse
-
-- Track `prevNnCompleted` via `useRef`.
-- In an effect on `[nnCompleted, nnTotal]`:
-  - If `prevNnCompleted < nnTotal` AND `nnCompleted === nnTotal` AND `nnTotal > 0` AND `dayType !== 'rest' && dayType !== 'skip'`:
-    - Set local state `pulseStandard = true` for 1000ms (then clear).
-    - Fire `toast.success('Standard met.')` once (deduped via the same transition guard).
-- Apply the pulse to the outer `<Card>` (line 1371) via conditional class:
-  - `pulseStandard && 'ring-2 ring-emerald-500/60 transition-shadow duration-700'`
-- No confetti, no looping animations.
-
-### Part 5 — Language Lock (Global Consistency)
-
-Audit and normalize the four surfaces to the **exact strings**: `Standard met`, `Standard not met`, `Recovery day`, `Skip registered`.
-
-- `GamePlanCard` header (new): "STANDARD MET" / "STANDARD NOT MET" / "RECOVERY DAY" / "SKIP REGISTERED" (uppercase per styling).
-- `src/components/identity/DailyOutcomeInlineBanner.tsx` — already conformant (uses same status strings). No change.
-- `src/components/vault/quiz/NightCheckInSuccess.tsx` — verify Daily Outcome section uses exact phrasing; adjust any drift.
-- `src/components/game-plan/NonNegotiableProgressStrip.tsx` — already uses "Standard met"/"Standard not met". No change.
-
-### Part 6 — Suggestion Panel Awareness Sync (`src/components/identity/NNSuggestionPanel.tsx`)
-
-- Import `useDailyOutcome`.
-- Replace the static subline (line 28) with a status-aware line:
-  - `STANDARD NOT MET` → "Locking these in reduces missed days."
-  - `STANDARD MET` → "These are already part of your standard."
-  - Otherwise (rest/skip/loading) → keep existing default: "Based on your recent behavior, these are already part of your identity."
-- No other changes to this component.
+(Other files that touch `is_non_negotiable` — builder, calendar, scheduling — are scope-correct and not counters; no refactor needed.)
 
 ---
 
-### Files
+## Part 5 — Race Condition Protection in `useDailyOutcome`
 
-**Edit:**
-- `src/components/GamePlanCard.tsx` — Parts 1–4 (header, remaining indicator, scroll anchor + `id`, pulse on completion).
-- `src/components/identity/NNSuggestionPanel.tsx` — Part 6 awareness subline.
-- `src/components/vault/quiz/NightCheckInSuccess.tsx` — verify/normalize Part 5 phrasing only if drift found.
+**File:** `src/hooks/useDailyOutcome.ts`
 
-**No new files. No DB changes. No evaluator changes.**
+- Compute the raw outcome as today, then run it through a **300 ms trailing debounce** before returning. Implementation: `useEffect` writes raw values to a `pendingRef`; `setTimeout(300)` flushes into a `committedState` `useState`. Cancel pending timeout on each new change.
+- Until `nn.isLoading === false` AND `snapshot` defined AND `dayType` defined, return the previous committed value (or `loading: true` on first frame).
+- Keeps `streakImpact` derivation intact (still reacts to `prevStreak`).
 
----
-
-### Invariants
-
-- All state derives from `useDailyOutcome` — no parallel logic.
-- No new components beyond edits to existing ones.
-- Scroll fires at most once per mount.
-- Pulse fires only on the `< nnTotal → === nnTotal` transition; never on initial mount when already complete.
-- No scoring, evaluator, NN enforcement, or DB changes.
+**Result:** No flicker when the final NN flips and the snapshot/recompute trails by a few hundred ms. Status transitions are atomic per stable frame.
 
 ---
 
-### Acceptance
+## Part 6 — Edge Cases (verify + harden)
 
-- Opening Game Plan shows the live standard header at the top, color-coded.
-- If NNs are incomplete, page auto-scrolls to NN section once and shows "{N} required actions remaining".
-- Completing the final NN updates header to STANDARD MET within <1s, fires a one-time emerald ring pulse + single toast.
-- All four surfaces (Game Plan header, ProgressDashboard banner, NightCheckInSuccess, NN strip) use identical status phrasing.
-- Suggestion panel subline reflects current day status.
+**File:** `src/components/GamePlanCard.tsx`
+
+- The "remaining required actions" line already gates on `n.nnTotal > 0 && n.nnCompleted < n.nnTotal` — confirmed correct, will not render when `nnTotal === 0`. ✅
+- `useDailyOutcome` already returns `STANDARD NOT MET` for `nnTotal === 0 && !anyActivityLogged`. ✅
+- `useDailyOutcome` already returns `RECOVERY DAY / standardMet=true` regardless of NN count on rest days. ✅
+
+No changes — just confirmed in audit. Add a unit-style comment in `useDailyOutcome.ts` documenting the three edge cases adjacent to the decision block.
+
+---
+
+## Part 7 — UX Friction Polish
+
+**File:** `src/components/GamePlanCard.tsx`
+
+- **Scroll guard:** track a `userScrolledRef = useRef(false)` set on the first `wheel` / `touchstart` / `scroll` event after mount. Skip the smart-scroll-to-NN effect if `userScrolledRef.current`.
+- **Single pulse / single toast:** the existing pulse effect already keys off the `< → ===` transition; verify the dependency array does not include values that would re-fire. If it does, gate with a `pulsedRef.current` boolean reset on dayType change.
+- **Suggestion panel filter:** `useNNSuggestions` already filters `!s.template.is_non_negotiable` client-side. ✅ Confirmed.
+
+---
+
+## Part 8 — Dev-Only Tracing
+
+Add `if (import.meta.env.DEV) console.log(...)` in three places:
+
+1. `src/hooks/useDailyOutcome.ts` — log `[HM-OUTCOME]` whenever committed status changes.
+2. `src/lib/nnProgress.ts` — log `[HM-NN]` with `{done, total}` per fetch.
+3. `src/components/vault/VaultFocusQuizDialog.tsx` — log `[HM-NIGHT]` on submit attempt + on duplicate-bypass.
+
+Stripped automatically from production via Vite's `import.meta.env.DEV` tree-shake.
+
+---
+
+## Files Touched
+
+| File | Change |
+|---|---|
+| `src/components/vault/VaultFocusQuizDialog.tsx` | Add `existingNightQuiz` prop, duplicate-bypass logic, dev log |
+| `src/pages/Vault.tsx` | Pass `existingNightQuiz` to dialog |
+| `src/components/GamePlanCard.tsx` | Pass `existingNightQuiz`, add `userScrolledRef` guard, single-pulse gate |
+| `src/hooks/useDailyOutcome.ts` | 300 ms debounce commit, invariant header comment, edge-case docs, dev log |
+| `src/lib/nnProgress.ts` | Invariant header comment, dev log |
+| `supabase/functions/evaluate-behavioral-state/index.ts` | Invariant header comment only — no logic change |
+
+## Acceptance Criteria
+
+- ✅ Night check-in cannot submit twice for the same day; reopening lands on verdict screen
+- ✅ No duplicate outcome derivers exist (audited & locked via comments)
+- ✅ All NN counts route through `fetchNNProgressToday` (already true; locked)
+- ✅ No status flicker during NN completion / snapshot recompute (300 ms debounce)
+- ✅ Edge cases (0 NN, rest day, new user) verified correct
+- ✅ Smart scroll respects manual user scroll
+- ✅ Single pulse + single toast on standard completion
+- ✅ Evaluator carries explicit invariant comment
+
+## Out of Scope
+
+- No DB migrations
+- No evaluator logic changes
+- No new components
+- No scoring changes
+- No new tables
