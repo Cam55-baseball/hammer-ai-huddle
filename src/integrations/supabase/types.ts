@@ -1467,6 +1467,8 @@ export type Database = {
           action: string | null
           activity_type: string
           color: string
+          completion_binding: Json | null
+          completion_type: string | null
           created_at: string | null
           custom_fields: Json | null
           custom_logo_url: string | null
@@ -1508,6 +1510,8 @@ export type Database = {
           action?: string | null
           activity_type: string
           color?: string
+          completion_binding?: Json | null
+          completion_type?: string | null
           created_at?: string | null
           custom_fields?: Json | null
           custom_logo_url?: string | null
@@ -1549,6 +1553,8 @@ export type Database = {
           action?: string | null
           activity_type?: string
           color?: string
+          completion_binding?: Json | null
+          completion_type?: string | null
           created_at?: string | null
           custom_fields?: Json | null
           custom_logo_url?: string | null
