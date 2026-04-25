@@ -464,8 +464,19 @@ export function VaultFocusQuizDialog({
   };
 
   const handleSubmit = async () => {
+    // Phase 10.5 — duplicate-submit guard for night check-in
+    if (quizType === 'night' && existingNightQuiz) {
+      if (import.meta.env.DEV) {
+        console.log('[HM-NIGHT] submit blocked: existing entry', existingNightQuiz.id);
+      }
+      setShowNightSuccess(true);
+      return;
+    }
+    if (import.meta.env.DEV && quizType === 'night') {
+      console.log('[HM-NIGHT] submit attempt');
+    }
     setLoading(true);
-    
+
     const data: any = {
       mental_readiness: mentalReadiness,
       emotional_state: emotionalState,
