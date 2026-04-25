@@ -1106,6 +1106,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               )}>
                 {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
               </h3>
+              {isNN && <NonNegotiableBadge />}
               {isCustom && !task.completed && (
                 <span 
                   className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
