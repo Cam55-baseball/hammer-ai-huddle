@@ -210,10 +210,13 @@ async function computeForUser(supabase: any, userId: string) {
   let dampingMultiplier = 1.0;
   let performanceStreak = 0;
   let nnMissCount7d = 0;
+  let restDays7d = 0;
+  let recoveryModeToday = false;
+  let maxRestPerWeek = 2;
   try {
     const { data: snap } = await supabase
       .from("user_consistency_snapshots")
-      .select("consistency_score,damping_multiplier,performance_streak,nn_miss_count_7d")
+      .select("consistency_score,damping_multiplier,performance_streak,nn_miss_count_7d,rest_days_7d,recovery_mode_today,inputs")
       .eq("user_id", userId)
       .order("snapshot_date", { ascending: false })
       .limit(1)
@@ -223,6 +226,9 @@ async function computeForUser(supabase: any, userId: string) {
       dampingMultiplier = Number(snap.damping_multiplier ?? 1.0);
       performanceStreak = Number(snap.performance_streak ?? 0);
       nnMissCount7d = Number(snap.nn_miss_count_7d ?? 0);
+      restDays7d = Number((snap as any).rest_days_7d ?? 0);
+      recoveryModeToday = Boolean((snap as any).recovery_mode_today ?? false);
+      maxRestPerWeek = Number(((snap as any).inputs?.max_rest_per_week) ?? 2);
     }
   } catch (_) { /* zero-risk fallback */ }
 
