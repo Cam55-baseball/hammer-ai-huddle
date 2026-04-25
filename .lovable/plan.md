@@ -1,67 +1,38 @@
-# Phase 8 — System Boundary Lock-In (Approved Execution)
+# Lock Phase 9 invariants to project memory
 
-Execute Steps 1–8 in order. All final constraints from user message incorporated.
+## Goal
+Persist the Phase 9 hardening contract so all future work treats it as immutable. No code, schema, or DB changes — memory only.
 
-## Step 1 — Create dedicated system user
-- Insert into `auth.users` with fixed UUID `00000000-0000-0000-0000-000000000001`, email `system@hammer.internal`, no password.
-- Add `is_system_account boolean DEFAULT false` to `profiles`.
-- Seed system user `profiles` row (`full_name='System'`, `sport='baseball'`, `date_of_birth='2000-01-01'`, `is_system_account=true`).
+## Memory writes
 
-## Step 2 — Migrate engine writers to system user
-- `engine-heartbeat/index.ts`: `HEARTBEAT_USER_ID = '00000000-0000-0000-0000-000000000001'`.
-- `engine-adversarial`: read first; migrate sandbox user IDs to system user.
-- `engine-sentinel`: read first; migrate if it writes activity logs.
-- `hie-refresh-worker`: exclude system user from enumeration.
-- Deploy all modified functions.
+**1. New feature memory: `mem://features/behavioral-engine/phase-9-architecture`**
 
-## Step 3 — Pre-purge audit + hard delete + Truth Reset
-- `INSERT INTO audit_log` with pre-purge count (heartbeat / kill v3 / adversarial rows on real users).
-- `DELETE FROM custom_activity_logs WHERE user_id != system_uuid AND template_id IS NULL AND (notes='heartbeat' OR notes LIKE 'kill v3 %' OR notes LIKE 'adversarial:%' OR notes LIKE 'sentinel:%')`.
-- Post-purge audit count.
-- **Truth reset**: invoke `compute-hammer-state` for owner (`95de827d-7418-460b-8b79-267bf79bdca4`) to refresh completions_last_6h / MPI / Hammer State.
-- Clean up the 2 stray `instance_index > 0` rows.
+Captures the canonical contract:
 
-## Step 4 — Structural triggers (ENHANCED per user request)
-Trigger 1 — `enforce_structural_invariants_for_real_users`:
-```
-IF NEW.user_id != system_uuid THEN
-  IF NEW.template_id IS NULL THEN RAISE; END IF;
-  IF NEW.instance_index != 0 THEN RAISE; END IF;
-END IF;
-```
+- **Source of truth**: `custom_activity_logs` is the ONLY behavioral source. `athlete_daily_log` is used solely for `injury_mode` override. Snapshot input tag: `"source": "custom_activity_logs_v2"`.
+- **NN system**: If NN templates exist, ALL must complete per day; else fallback to "any completion". 7-day rolling window in `nn_miss_count_7d`. Emits `nn_miss` event with magnitude.
+- **Streaks (independent)**:
+  - `performance_streak` = consecutive days all NN met (or any-completion fallback).
+  - `discipline_streak` = consecutive days any activity logged.
+  - Injury days do NOT break streaks. Missed days reset immediately.
+- **Hammer State v3 formula** (deterministic):
+  `final_score = clamp((activityScore*0.55 + consistencyScore*0.25 + neuroBlend*0.20) * damping_multiplier - min(nn_miss_count_7d*8, 30) + min(performance_streak*1.5, 15))`
+  Thresholds: prime ≥80, ready 60–79, caution 40–59, recover <40.
+- **Version source of truth**: `engine_snapshot_versions.engine_version` (currently `v3.0.0`). `snapshot.schema_version` is **deprecated** for validation.
+- **Behavioral events**: `nn_miss`, `consistency_drop`, `consistency_recover`, `identity_tier_change`. No duplicates within same minute. UI shows ONE active message at a time. Priority: `nn_miss > consistency_drop > tier_change > recover`.
+- **Realtime trigger**: On any completed activity → `compute-hammer-state` + `evaluate-behavioral-state` invoked fire-and-forget, 8s throttle. Cron is fallback only.
+- **System user exclusion**: `00000000-0000-0000-0000-000000000001` MUST never appear in `hammer_state_snapshots`, `user_consistency_snapshots`, or `behavioral_events`. Hard-excluded in both edge functions.
+- **Performance budget**: All engine edge functions must remain <2000ms. Current: evaluate ~895ms, compute ~660ms.
 
-Trigger 2 — `block_synthetic_writes_on_real_users`:
-- Block notes IN ('heartbeat') OR LIKE 'adversarial:%' / 'kill v3 %' / 'sentinel:%' for non-system users.
+**2. Update `mem://index.md`** — add 4 Core invariants (always-applied one-liners):
 
-## Step 5 — Cleanup lifecycle
-- `cleanup_synthetic_activity_logs()` deletes system-user rows >24h old.
-- pg_cron hourly schedule.
+- Behavioral engine source of truth = `custom_activity_logs` ONLY; `athlete_daily_log` is injury-override only.
+- Hammer engine version = `engine_snapshot_versions.engine_version` ONLY; `snapshot.schema_version` is deprecated.
+- System user `00000000-0000-0000-0000-000000000001` must be excluded from all behavioral pipelines.
+- Activity completion must trigger realtime engine recompute (8s throttle, fire-and-forget); cron is fallback.
 
-## Step 6 — Heartbeat self-validation update
-- Verify heartbeat still works end-to-end against system user (profile is seeded, so `compute-hammer-state` won't crash).
+Plus add to Memories list:
+- `[Phase 9 Behavioral Engine](mem://features/behavioral-engine/phase-9-architecture)` — Source of truth, NN, streaks, Hammer v3, events, realtime.
 
-## Step 7 — Realtime monotonic merge (`useCustomActivities.ts`)
-- Add `mergeMonotonic(current, incoming)` using `updated_at` comparison.
-- Apply to `fetchTodayLogs` post-merge and realtime payload handlers.
-- DELETE events apply unconditionally.
-
-## Step 8 — Verification
-- Test insert: `(real_user_id, template_id=NULL, ...)` → MUST FAIL.
-- Test insert: `(real_user_id, template_id=valid, instance_index=1)` → MUST FAIL.
-- Test insert: `(real_user_id, template_id=valid, notes='heartbeat')` → MUST FAIL.
-- Confirm 0 contaminated rows on real users.
-- Confirm heartbeat success on system user via `engine_heartbeat_logs`.
-- Confirm cleanup cron scheduled.
-
-## Definition of Done (report)
-- Pre-purge count (logged)
-- Post-purge count = 0 (verified)
-- All 2 triggers firing (3 negative-case tests pass)
-- Heartbeat success on system user (latest `engine_heartbeat_logs` row, success=true)
-- Owner Hammer State recomputed post-purge
-
-## Files modified
-- 4 edge functions: engine-heartbeat, engine-adversarial, engine-sentinel, hie-refresh-worker
-- 1 hook: src/hooks/useCustomActivities.ts (monotonic merge)
-- 1 schema migration (system user, profile column, 2 triggers, cleanup function)
-- 1 data migration (purge + truth reset + cron schedule)
+## Out of scope
+No code, schema, function, or DB changes. Phase 9 is locked; this only encodes the contract so future edits can't silently violate it.
