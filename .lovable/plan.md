@@ -1,141 +1,165 @@
 
-# Phase 10.1 — Non-Negotiable Clarity + Direct Control Layer
+# Phase 10.2 — Intelligent Non-Negotiable Suggestion Engine
 
-Additive-only UX + control pass on top of the unified Day Control system. Zero changes to evaluator contracts, hammer scoring, or logs. `is_non_negotiable` already exists on `custom_activity_templates` and is consumed by `evaluate-behavioral-state`, `useQuickActionExecutor`, and `NonNegotiableProgressStrip` — but is invisible and unmanaged in the UI today. This pass surfaces and controls it.
+Pure decision-support layer. Surfaces high-confidence NN candidates based on the user's own 14-day behavior and converts them with one tap. **Zero changes** to evaluator outputs, hammer scoring, streak math, NN execution, or logs schema.
 
 ---
 
-## Part 1 — `NonNegotiableBadge` (new)
+## Part 1 — Storage (new table only)
 
-Create `src/components/identity/NonNegotiableBadge.tsx`:
+Migration: `user_nn_suggestions`
 
-- Pill: `bg-red-500/15 text-red-400 border border-red-500/40 rounded`
-- Font: `text-[10px] font-black tracking-wider uppercase`
-- Content: `<Flame className="h-3 w-3" /> NON-NEGOTIABLE`
-- Wrapped in shadcn `Tooltip`: *"Required for your daily standard. Missing this breaks your discipline."*
-- Tiny `compact` prop for ultra-tight rows (icon-only).
+```sql
+CREATE TABLE public.user_nn_suggestions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  template_id uuid NOT NULL REFERENCES public.custom_activity_templates(id) ON DELETE CASCADE,
+  score numeric(4,3) NOT NULL,
+  completion_rate numeric(4,3) NOT NULL,
+  total_completions_14d int NOT NULL,
+  consistency_streak int NOT NULL,
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','accepted','dismissed')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id, template_id)
+);
 
-## Part 2 — `GamePlanCard` row upgrade
+ALTER TABLE public.user_nn_suggestions ENABLE ROW LEVEL SECURITY;
 
-In `src/components/GamePlanCard.tsx → renderTask` (~line 981):
+CREATE POLICY "users read own suggestions" ON public.user_nn_suggestions
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "users update own suggestions" ON public.user_nn_suggestions
+  FOR UPDATE USING (auth.uid() = user_id);
+-- Inserts/upserts are server-side only (service role). No INSERT policy.
 
-- Derive `const isNN = !!task.customActivityData?.template?.is_non_negotiable;`
-- When `isNN && !task.completed`, append to outer row `className`:
-  - `border-l-4 border-red-500`
-  - `shadow-[0_0_0_1px_rgba(239,68,68,0.2)]`
-- Inject `<NonNegotiableBadge />` in the title-badges row (line ~1067) for custom activity rows where `isNN`.
+CREATE INDEX idx_nn_sugg_user_status ON public.user_nn_suggestions(user_id, status);
 
-## Part 3 — Hard NN/Optional split inside the custom section
-
-At the call site (line ~1930) where `customTasks` is rendered via `renderTaskSection`, split first:
-
-```ts
-const nnCustomTasks   = customTasks.filter(t => t.customActivityData?.template?.is_non_negotiable);
-const optCustomTasks  = customTasks.filter(t => !t.customActivityData?.template?.is_non_negotiable);
+ALTER PUBLICATION supabase_realtime ADD TABLE public.user_nn_suggestions;
 ```
 
-Render two consecutive `renderTaskSection` calls:
+---
 
-1. **NON-NEGOTIABLES (REQUIRED)** — red accent (`text-red-400`, `bg-red-500/40`), subtitle "Required — standard is built here" rendered above the section line.
-2. **OPTIONAL WORK** — existing emerald accent.
+## Part 2 — Suggestion computation in `evaluate-behavioral-state`
 
-Manual-reorder ordered arrays (`orderedCustom`) get the same filter applied so drag groups don't re-mix sections. NN section is rendered FIRST regardless of `sortMode`. `timeline` mode is left untouched (timeline is time-ordered and global; NN border + badge still apply per-row).
+Additive block at the end of `evaluateUser` (after current snapshot/event writes, before return). Wrapped in try/catch — failure here must NOT affect existing evaluator output.
 
-Hide NN section entirely when `useDayState().dayType === 'rest'` (delegated to existing day-state hook already imported at the page level — pass a prop `hideNonNegotiables: boolean` from `Dashboard` → `GamePlanCard`).
+Logic:
 
-## Part 4 — Inline NN toggle on each row
+1. Pull all of user's templates: `is_non_negotiable=false`, `deleted_at IS NULL`. Include `display_days`, `recurring_days`, `recurring_active`, `display_on_game_plan`.
+2. Pull last-14-day logs (already partially loaded — extend the existing `actLogs` window to 14 days minimum, reuse rows).
+3. For each template compute:
+   - `days_scheduled_14d` = count of last 14 days where the template was scheduled (via `display_days` if `display_on_game_plan`, else `recurring_days` if `recurring_active`, else fallback = total log-day count for that template).
+   - `total_completions_14d` = distinct dates where a log for that template_id had `completion_state='completed'`.
+   - `completion_rate = total_completions_14d / max(days_scheduled_14d, 1)` (clamped 0–1).
+   - `consistency_streak` = current consecutive completed days walking back from today.
+4. Eligibility gate: `completion_rate >= 0.80 AND total_completions_14d >= 6`.
+5. Score:
+   ```
+   score = clamp01(
+     completion_rate * 0.6
+     + min(consistency_streak, 5) / 5 * 0.1   // normalized streak component
+     + (total_completions_14d / 14) * 0.3
+   )
+   ```
+   (Spec literal `min(streak,5) * 0.1` would over-weight to 0.5 alone; we normalize to keep the 60/10/30 weighting and `score ∈ [0,1]`. High-priority threshold 0.90 still meaningful.)
+6. Surface threshold: `score >= 0.75`. High priority: `score >= 0.90`.
+7. Upsert into `user_nn_suggestions` ON CONFLICT (user_id, template_id):
+   - If existing row is `dismissed` AND `updated_at > now() - interval '7 days'` → SKIP (suppression window).
+   - If existing row is `accepted` → SKIP.
+   - Else update score/metrics/`status='active'`/`updated_at=now()`. Idempotent within a day (evaluator-throttled by existing 8s recompute).
+8. Mark suggestions stale: any `active` suggestion whose template no longer qualifies OR whose template flipped to `is_non_negotiable=true` → set `status='dismissed'` (silent cleanup, no UI churn).
 
-In `renderTask`, for `task.taskType === 'custom'` only:
+No changes to snapshot fields, events, or hammer pipeline.
 
-- Add a small `Flame` icon-button (24px, far right of row, before any existing trailing controls):
-  - ON: `text-red-400 fill-red-400`
-  - OFF: `text-white/30` (outline only)
-- `onClick` (stop propagation) calls a new function `toggleNN(template_id, next)`:
-  ```ts
-  await supabase
-    .from('custom_activity_templates')
-    .update({ is_non_negotiable: next })
-    .eq('id', template_id)
-    .eq('user_id', user.id);
-  ```
-- After mutation:
-  - Optimistic local toggle via `useCustomActivities.updateTemplate(id, { is_non_negotiable: next })` (after Part 5 wiring).
-  - Invalidate game-plan query and the NN progress strip query.
-  - Fire-and-forget recompute:
-    ```ts
-    supabase.functions.invoke('evaluate-behavioral-state', { body: { user_id: user.id } });
-    supabase.functions.invoke('compute-hammer-state',     { body: { user_id: user.id } });
-    ```
-- Toast (sonner):
-  - ON: *"Set as Non-Negotiable — now required daily."*
-  - OFF: *"Removed from Non-Negotiables."*
+---
 
-## Part 5 — Persist `is_non_negotiable` through the builder
+## Part 3 — Hook: `src/hooks/useNNSuggestions.ts`
 
-`src/hooks/useCustomActivities.ts`:
+```ts
+export function useNNSuggestions() {
+  // SELECT * FROM user_nn_suggestions
+  //   WHERE user_id = auth.uid() AND status = 'active'
+  //   JOIN template (id, title, icon, color, display_nickname)
+  //   ORDER BY score DESC LIMIT 3
+  // Realtime subscribe → invalidate
+  // Mutations: accept(template_id), dismiss(suggestion_id)
+}
+```
 
-- Add `'is_non_negotiable'` to the `fieldsToCopy` array (line ~300) so `updateTemplate` actually writes it.
-- Ensure `createTemplate` insert payload includes it (default `false`).
+`accept`:
+1. Optimistic: remove from local list.
+2. `supabase.from('custom_activity_templates').update({ is_non_negotiable: true }).eq('id', template_id).eq('user_id', user.id)`
+3. `supabase.from('user_nn_suggestions').update({ status: 'accepted', updated_at: new Date() }).eq('id', suggestion_id)`
+4. Fire-and-forget: `evaluate-behavioral-state` + `compute-hammer-state` (reuse existing recompute helper from `useQuickActionExecutor`).
+5. Invalidate game-plan + NN-progress queries.
+6. Toast: *"Standard locked. This is now required daily."*
 
-`src/components/custom-activities/CustomActivityBuilderDialog.tsx`:
+`dismiss`:
+1. Optimistic remove.
+2. Update `status='dismissed'`, `updated_at=now()`.
+3. No recompute needed.
 
-- Add state: `const [isNonNegotiable, setIsNonNegotiable] = useState(template?.is_non_negotiable ?? false);`
-- Reset in the same places `isFavorited` resets (lines 165, 234, 267).
-- Persist in the save payload (line ~350): `is_non_negotiable: isNonNegotiable`.
-- New row directly under the favorite toggle (line ~488), mirroring the `Switch + Label` pattern:
-  - Label: `<Flame className="h-4 w-4 text-red-400" /> Make this a Non-Negotiable`
-  - Helper text: *"This will be required daily and tracked in your standard."*
+---
 
-## Part 6 — `NonNegotiableProgressStrip` enhancement
+## Part 4 — UI: `src/components/identity/NNSuggestionPanel.tsx`
 
-`src/components/game-plan/NonNegotiableProgressStrip.tsx`:
+Mounted on **Progress Dashboard only** (above `PracticeIntelligenceCard`).
 
-- When `noneDone` (already computed), append text: `"Standard not met"` (replace existing `"Standard required"` chip).
-- When `allDone`, append: `"Standard met"`.
-- Keep the existing red glow on `noneDone`; add a soft red `animate-pulse` to the icon only (not the whole strip — avoid a flashing bar).
+Renders nothing if `suggestions.length === 0`.
 
-## Part 7 — Day-state interaction polish
+Card shell:
+- Header: **"Suggested Standards"**
+- Subtext: *"Based on your recent behavior, these are already part of your identity."*
+- Up to 3 suggestion rows.
 
-Driven by existing `useDayState()`:
+Per row:
+- Activity icon + title (use `display_nickname || title`).
+- Stat line: `"{total_completions_14d} of last 14 days"` · `"{consistency_streak}-day streak"` (streak chip hidden if 0).
+- Confidence pill:
+  - `score >= 0.90` → red `LOCK THIS IN` (red glow ring `ring-1 ring-red-500/40`, `scale-[1.02]`, flame icon).
+  - else → neutral `READY TO LOCK`.
+- Buttons: **[ Make Non-Negotiable ]** (primary, red on high-priority) · **[ Not Now ]** (ghost).
 
-- **rest**: strip already returns `null`; pass `hideNonNegotiables` prop to `GamePlanCard` so the NN section header + badges + flame toggles are also hidden (rows still render under "OPTIONAL WORK").
-- **skip**: NN section renders but with `opacity-60 grayscale pointer-events-none` wrapper around the section (banner already explains).
-- **push**: NN section gets `ring-2 ring-amber-500/40 rounded-xl p-2` wrapper to reinforce importance.
+Hard cap at 3 rendered rows even if more active.
 
-## Part 8 — Language standardization
+---
 
-Global replace across `src/components/GamePlanCard.tsx`, `NonNegotiableProgressStrip.tsx`, and `BehavioralPressureToast.tsx`:
+## Part 5 — Mounting
 
-- "You haven't completed this" → "Standard not met"
-- "Incomplete" → "Required"
-- nn_miss event copy already authored by evaluator — leave server-side strings untouched; only edit hard-coded UI strings.
+`src/pages/ProgressDashboard.tsx`: import and render `<NNSuggestionPanel />` directly above `<PracticeIntelligenceCard />` inside the always-visible top stack. No other dashboards touched.
 
-`rg -n "haven't completed|Incomplete" src/components` will scope the sweep.
+---
 
-## Part 9 — Zero breaking changes
+## Part 6 — Invariants (must hold)
 
-- No evaluator, hammer, or log schema changes.
-- No new tables or migrations.
-- Single new column writes on existing `is_non_negotiable` (already in schema and `types.ts`).
-- All other systems (skip/push/rest, streak, NN waiver, DDA) remain bit-identical.
+- Evaluator output snapshot fields unchanged. Suggestion writes are isolated.
+- No automatic NN flip — only the user's tap mutates `custom_activity_templates.is_non_negotiable`.
+- System user `00000000-0000-0000-0000-000000000001` skipped (already short-circuits at top of `evaluateUser`).
+- Suppression: dismissed suggestions don't resurface for 7 days.
+- Already-NN templates never appear (eligibility filter + stale cleanup).
+- Realtime keeps panel reactive; UI mutations are <1s optimistic.
+
+---
 
 ## Files
 
 **New**
-- `src/components/identity/NonNegotiableBadge.tsx`
+- `supabase/migrations/<ts>_user_nn_suggestions.sql`
+- `src/hooks/useNNSuggestions.ts`
+- `src/components/identity/NNSuggestionPanel.tsx`
 
 **Edit**
-- `src/components/GamePlanCard.tsx` (renderTask row decoration + flame toggle + NN/Optional split at custom-section call site)
-- `src/components/custom-activities/CustomActivityBuilderDialog.tsx` (NN switch row + state + persist)
-- `src/hooks/useCustomActivities.ts` (add `is_non_negotiable` to `fieldsToCopy`; include in create payload)
-- `src/components/game-plan/NonNegotiableProgressStrip.tsx` (Standard met / not met copy + softer pulse)
-- `src/pages/Dashboard.tsx` (pass `hideNonNegotiables` from `useDayState().isRest` into `GamePlanCard`)
+- `supabase/functions/evaluate-behavioral-state/index.ts` (additive suggestion block at end of `evaluateUser`, wrapped in try/catch)
+- `src/pages/ProgressDashboard.tsx` (mount panel)
+- `src/integrations/supabase/types.ts` (auto-regenerated from migration)
+
+---
 
 ## Acceptance
 
-- NN rows visually dominate (red bar + glow + badge) and always render above optional rows.
-- One-click flame toggle on any custom row sets/unsets NN, with toast + recompute + progress-strip update inside 2s.
-- Builder save persists `is_non_negotiable` and re-edit reflects it.
-- Rest day hides all NN UI; Skip day grays it; Push day amber-rings it.
-- Strip reads "Standard met" / "Standard not met"; no "Incomplete" copy remains.
-- No regressions to evaluator, hammer, or skip/push/rest behavior.
+- A template with ≥80% completion over 14 days and ≥6 completions appears within one evaluator cycle.
+- Tapping **Make Non-Negotiable** flips the template, recomputes engine, and the row disappears <1s.
+- Tapping **Not Now** hides the row and suppresses re-surfacing for 7 days.
+- Max 3 cards visible; high-priority cards have red ring + flame.
+- Already-NN templates and dismissed-within-7d templates never surface.
+- Evaluator continues to produce identical snapshots if the suggestion block throws.
