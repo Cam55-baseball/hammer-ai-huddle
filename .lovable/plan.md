@@ -1,237 +1,175 @@
+# Phase 10 Refinement — Unified Day Control + NN Clarity
 
-# Phase 10 — Rest Day System + Identity Amplification
-
-**Additive only.** All Phase 9 invariants remain enforced: `custom_activity_logs` = source of truth, system user excluded, Hammer v3 engine version, realtime triggers, single behavioral toast.
-
-**Locked decisions:**
-- Rest Day UI: **both** banner button + Game Plan card
-- Skip behavior: **never auto-convert** — Skip and Rest are separate intents
-- DDA: **conservative** — slipping users get 1 NN waived/day
+This is a **refinement layer** on top of existing Phase 9/10 systems. No rebuilds. We unify Rest/Skip/Push into one daily classification source, replace fragmented controls with a single `DayControlCard`, and make Non-Negotiables visually unmistakable.
 
 ---
 
-## PART 1 — Rest Day System
+## Current State (verified)
 
-### 1.1 Database (migration)
-
-**`user_rest_day_rules`** — one row per user
-- `user_id uuid PK references auth.users`
-- `recurring_days int[] default '{}'` (0=Sun … 6=Sat)
-- `max_rest_days_per_week int default 2 check (between 0 and 7)`
-- `created_at`, `updated_at` timestamps + `update_updated_at_column` trigger
-- RLS: owner select/insert/update
-
-**`user_rest_day_overrides`** — explicit per-date marks
-- `id uuid PK`
-- `user_id uuid not null`
-- `date date not null`
-- `type text not null check in ('manual_rest','auto_recurring')`
-- `created_at`
-- `unique (user_id, date)`
-- RLS: owner all
-- CHECK: `user_id <> '00000000-0000-0000-0000-000000000001'` (system user guard)
-
-### 1.2 `evaluate-behavioral-state` patch
-
-Insert rest-day classification **before** the 30-day scoring loop:
-
-```
-restRulesByUser  = fetch user_rest_day_rules for current user(s)
-overridesByDay   = Set(date) from user_rest_day_overrides last 30d
-```
-
-For each day in 30-day window, classification precedence:
-1. `injury_mode` → `injury_hold`
-2. `overridesByDay.has(d)` OR `recurring_days.includes(weekday(d))` → `rest_day` (subject to weekly cap)
-3. `completedByDay.has(d)` → `logged`
-4. else → `missed`
-
-**Weekly cap enforcement:** walk days oldest→newest within each ISO week; once `rest_used_this_week > max_rest_days_per_week`, demote further rest days to `missed` (or `logged` if also completed).
-
-**Streak rules:**
-- `performance_streak` & `discipline_streak`: rest day = neutral (skip iteration without break, do not increment)
-- Injury same as today
-
-**NN enforcement:** rest days excluded from NN evaluation and `nn_miss_count_7d`.
-
-**Snapshot additions** (`user_consistency_snapshots`):
-- `rest_days_30d int`
-- `rest_days_7d int`
-- `recovery_mode_today boolean`
-- `inputs.source = "custom_activity_logs_v3_rest"`
-
-Denominator for score: `max(1, 30 - injury_hold - rest_days_30d)`.
-
-### 1.3 Hammer v3 — `restFactor`
-
-Add to `compute-hammer-state`:
-
-```
-restFactor = rest_days_7d <= max_rest_days_per_week
-  ? +5
-  : -min((rest_days_7d - max) * 5, 15)
-```
-
-Final formula:
-```
-final = clamp(
-  (activityScore*0.55 + consistencyScore*0.25 + neuroBlend*0.20)
-  * damping_multiplier
-  - min(nn_miss_count_7d * 8, 30)
-  + min(performance_streak * 1.5, 15)
-  + restFactor
-, 0, 100)
-```
-
-### 1.4 Behavioral event: `rest_overuse`
-- Emitted when `rest_days_7d > max_rest_days_per_week`
-- Magnitude = excess count
-- Priority order updated: `nn_miss > rest_overuse > consistency_drop > identity_tier_change > consistency_recover`
-- Command tone: "Rest limit exceeded — standard slipping."
-- Action: `tighten_week` (no-op acknowledge)
-
-### 1.5 UI components
-
-**`RestDayButton.tsx`** (compact, in `IdentityBanner`)
-- One-tap "Rest Day" toggle for today
-- Optimistic upsert into `user_rest_day_overrides` (type=`manual_rest`)
-- Triggers fire-and-forget recompute (8s throttle, reuses Phase 9 trigger hook)
-
-**`RestDayControl.tsx`** (Game Plan header card)
-- Weekly recurring picker (reuse `RecurringDayPicker` styling)
-- Max rest/week selector (1–3, default 2)
-- "Today is a rest day" switch
-- Writes to `user_rest_day_rules` + `user_rest_day_overrides`
-
-**Game Plan rest-day visual state**
-- When today is rest: banner "RECOVERY MODE — Recovery supports performance. Resume tomorrow."
-- Activity tasks rendered muted (opacity-60), no NN pressure styling, no failure copy
-- Existing skip/log buttons remain functional (separate intent)
-
-**`useRestDayState.ts`** hook
-- Fetches rules + overrides for last 14d
-- `isTodayRestDay`, `restUsedThisWeek`, `restRemaining`, `setTodayAsRest()`, `clearTodayRest()`
-- Realtime subscription on both tables
-- Invalidates `behavioral-events`, `identity-state`, `hammer-state` on change
-
-### 1.6 Skip / Push integration
-- Skip stays independent — no auto-convert prompt
-- If user skips on a rest day → no penalty (already classified as rest)
-- Push logic: push from rest day allowed without penalty (no streak break since rest is neutral)
+- **Rest Day**: `user_rest_day_overrides` (per-date) + `user_rest_day_rules` (recurring) — fully wired into evaluator + Hammer v3.
+- **Skip Day**: `calendar_skipped_items.skip_days[]` is **recurring weekday skips** for individual items — NOT a daily classification. There is no "skip today as a day-type" concept yet.
+- **Push Day**: `GamePlanPushDayDialog` only **reschedules** (shifts dates forward). Not a day classification, no engine signal.
+- **NN**: `custom_activity_templates.is_non_negotiable` exists and is read by evaluator + `save-streak`, but Game Plan UI does not visually label, group, or progress-track them.
 
 ---
 
-## PART 2 — Identity Amplification Layer
+## Part 1 — Unified Day Classification Source
 
-### 2.1 Behavioral events: `command_text` + `action_type`
+**New table** `user_day_state_overrides` becomes the single source for daily intent:
 
-Migration: add to `behavioral_events`:
-- `command_text text` (direct-tone copy)
-- `action_type text` (`complete_nn` | `save_streak` | `log_session` | `two_min_reset` | `tighten_week` | `acknowledge`)
-- `action_payload jsonb` (e.g. `{template_id}`)
-
-Backfill in `evaluate-behavioral-state` event emission:
-- `nn_miss` → "Standard broken. Fix it now." → `complete_nn` with smallest NN template_id
-- `consistency_drop` → "You are slipping. Act immediately." → `log_session`
-- `identity_tier_change` (down) → "You dropped to {TIER}. Reclaim it." → `complete_nn`
-- `identity_tier_change` (up) → "{TIER} unlocked." → `acknowledge`
-- `consistency_recover` → "Back on standard. Hold it." → `acknowledge`
-- `rest_overuse` → "Rest limit exceeded — standard slipping." → `tighten_week`
-- `streak_risk` (new, see 2.3) → "You are about to break your streak." → `save_streak`
-
-### 2.2 `BehavioralPressureToast` upgrade
-- Replace dismiss-only UX with **action button** rendered from `action_type`
-- Button click → invokes `QuickActionExecutor` → on success acknowledges event
-- Maintain "one toast at a time" priority queue from Phase 9
-
-### 2.3 Streak protection
-
-New edge function: **`detect-streak-risk`**
-- Runs as part of post-completion realtime trigger AND nightly
-- For each user with `performance_streak >= 3`:
-  - If today not yet logged AND local time > 18:00 (use user TZ if available, else UTC) AND no rest day declared → emit `streak_risk` event (deduped per day)
-
-New edge function: **`save-streak`**
-- POST `{user_id}` (RLS: must match auth)
-- Finds smallest NN template (lowest estimated duration) for user
-- Inserts `custom_activity_logs` row: today, `completion_state='completed'`, `completion_method='quick_save'`
-- Triggers recompute
-
-### 2.4 `QuickActionExecutor.ts` (client)
 ```
-executeAction(event): Promise<{ scoreDelta, newTier, message }>
+id uuid pk
+user_id uuid (indexed)
+date date
+type text check in ('rest','skip','push')
+created_at timestamptz
+UNIQUE(user_id, date)
 ```
-- `complete_nn` → insert custom_activity_logs (template_id from payload), wait for snapshot refresh, compute delta
-- `save_streak` → invoke `save-streak` edge fn
-- `log_session` → navigate to log dialog with prefilled "quick session"
-- `two_min_reset` → insert pre-seeded "2-Min Reset" template log
-- `tighten_week` / `acknowledge` → just acknowledge
-- All paths invalidate identity + hammer queries; target <500ms perceived latency
 
-### 2.5 Identity feedback
+**Migration tasks:**
+1. Create `user_day_state_overrides`.
+2. Backfill existing `user_rest_day_overrides` rows → `(type='rest')`.
+3. Keep `user_rest_day_overrides` table for now (read-compat) but **route all new writes** through the unified table. Add a thin compat view or update `useRestDay` to read from unified table.
+4. Recurring rest config (`user_rest_day_rules`) stays as-is — recurring days still resolve to `type='rest'` at classification time.
 
-After any QuickAction success:
-- Toast: `"That's {tier} behavior. {±delta} consistency."`
-- Reuse existing sonner toaster, 3s duration
-- If `performance_streak` incremented → append `"Streak: {n}d"`
-
-### 2.6 DDA — conservative
-
-In `evaluate-behavioral-state`, for users with previous tier `slipping`:
-- If `nnIds.length >= 2`, waive **lowest-priority NN** (smallest `estimated_duration_min`) for that day's `performance_streak` calculation only
-- Snapshot: `inputs.dda_relief = true`
-- Does NOT affect `nn_miss_count_7d` accounting (still tracked truthfully)
-
-### 2.7 `PerformanceTimeline.tsx`
-- New component on Identity page
-- Reads last 14d of `behavioral_events` + `user_consistency_snapshots`
-- Renders cause→effect rows: `"Missed NN → Score -12 → Dropped to BUILDING"`
-- Read-only; pure projection of existing data
-
-### 2.8 Identity gamification (status-based, no points)
-- Add `days_in_tier` derived field in `useIdentityState` (count consecutive snapshots with same tier)
-- `IdentityBanner`: framer-motion entry animation when tier changes (scale + glow)
-- "Tier loss" friction: 800ms delay + red ring pulse on downgrade before settling
-- "Days in tier" chip displayed under tier label
-
-### 2.9 `DailyStandardCheck.tsx`
-- Once-per-day prompt (modal, dismissable) on home: *"I am operating at {TIER} standard today."*
-- Confirm → writes to `daily_standard_checks` table (new: `user_id, date, confirmed_at, tier_at_confirm`); unique `(user_id, date)`
-- Skip 3+ days → emit behavioral event `standard_check_missed` (low priority)
-
-### 2.10 Coaching layer (rule-based, in evaluator)
-- If `discipline_streak >= 5` AND `performance_streak == 0` → emit `coaching_insight` event: "You're active, not executing. Lock the standard."
-- If `nn_miss_count_7d >= 5` AND `nnIds.length >= 4` → "Reduce NN count to stabilize."
-- Both low priority, dismiss-only
-
-### 2.11 Tone lock
-- Pass on all toast/event copy: identity-based, direct, non-optional
-- Replace any remaining "You logged a session" → "Standard met."
-- Memory rule already exists (`style/coaching-language-standard`); reassert in PR
+Mutual exclusion is enforced by the UNIQUE constraint: only one `type` per (user_id, date).
 
 ---
 
-## Execution order
+## Part 2 — Evaluator Day Classification (`evaluate-behavioral-state`)
 
-1. **DB migration** — 4 new tables (`user_rest_day_rules`, `user_rest_day_overrides`, `daily_standard_checks`) + columns on `behavioral_events` + columns on `user_consistency_snapshots`
-2. **Patch `evaluate-behavioral-state`** — rest-day classification, weekly cap, DDA, command_text/action_type emission, coaching insights
-3. **Patch `compute-hammer-state`** — restFactor in formula
-4. **Deploy `detect-streak-risk` + `save-streak`** edge functions
-5. **Hooks**: `useRestDayState`, extend `useIdentityState` with `days_in_tier`
-6. **Components**: `RestDayButton`, `RestDayControl`, `QuickActionExecutor`, upgraded `BehavioralPressureToast`, `PerformanceTimeline`, `DailyStandardCheck`
-7. **Wire**: `IdentityBanner` (RestDayButton + animations), `GamePlan` (RestDayControl card + recovery mode visual state)
-8. **Smoke test**: set rest day → verify score unchanged, streak preserved, restFactor=+5; exceed cap → `rest_overuse` event fires; skip-day on rest day → no penalty
-9. **Memory update** — append Phase 10 invariants to `mem://features/behavioral-engine/phase-9-architecture` (rename mentally to engine canonical), add Core line about rest-day neutrality
-10. **Final audit** — re-run owner snapshot, confirm DB ↔ UI parity, p95 < 2s
+Add unified day classifier. **Precedence:**
+
+```
+injury_mode > skip > rest > push > standard
+```
+
+Per-day handling:
+- **rest**: neutral — excluded from `logged_days`, `missed_days`, NN; doesn't break or extend streaks; counts toward weekly cap (excess rest demoted to `missed`, unchanged from current logic).
+- **skip**: **hard miss** — counts as `missed_days`, breaks both `performance_streak` and `discipline_streak`, NN auto-missed → `nn_miss_count` increments, no `restFactor` benefit.
+- **push**: classified as `standard` for scoring base, but:
+  - if all NN completed → emit `push_complete` event (low-priority boost, +2 to streakBoost cap).
+  - if any NN missed → emit `push_fail` event (high priority, command_text + action).
+- **standard**: existing logic.
+
+**Snapshot fields added** to `user_consistency_snapshots`:
+- `day_type_today text` — `'injury'|'rest'|'skip'|'push'|'standard'`
+- `push_days_7d int`
+- `skip_days_7d int`
 
 ---
 
-## Non-negotiables (Phase 10 invariants)
-1. Rest days within weekly cap NEVER count as missed and NEVER break streaks
-2. Rest days do NOT increment streaks either (neutral)
-3. Excess rest days (> cap) demote to `missed` AND emit `rest_overuse`
-4. Skip and Rest are independent intents — no auto-conversion
-5. Every behavioral event ships with `command_text` + actionable `action_type`
-6. QuickAction perceived latency < 500ms; full system response < 2s
-7. DDA relief is conservative: max 1 NN waived/day, slipping tier only
-8. All Phase 9 invariants remain enforced (system user excluded, custom_activity_logs source of truth, engine_version v3)
+## Part 3 — Hammer Engine (`compute-hammer-state`)
+
+- `restFactor` unchanged (rest within cap → +5; excess → penalty).
+- Skip days flow through normal `nnPenalty` + missed-streak path (no special factor).
+- Push: if `push_complete` event in last 24h, add `+2` to `streakBoost` (capped at existing 15).
+
+No formula rewrite — additive only.
+
+---
+
+## Part 4 — Behavioral Events Extension
+
+Add to `behavioral_events.event_type` enum (or text values):
+- `push_fail` — `command_text: "You called a push and didn't meet it."`, `action_type: 'complete_nn'`
+- `push_complete` — `command_text: "Push executed. That's locked in."`, `action_type: 'acknowledge'`
+- `skip_day_used` — `command_text: "You skipped the day. No standard applied."`, `action_type: 'acknowledge'`
+
+**Updated priority** (used by `useBehavioralEvents.PRIORITY`):
+```
+nn_miss(6) > push_fail(5) > rest_overuse(4) > streak_risk(4)
+> consistency_drop(3) > coaching_insight(2)
+> identity_tier_change(2) > push_complete(1) > consistency_recover(1)
+```
+
+---
+
+## Part 5 — Unified `DayControlCard.tsx`
+
+**New component** at `src/components/game-plan/DayControlCard.tsx` — replaces both:
+- `RestDayControl` mount in `Dashboard.tsx` (line 596)
+- `RestDayButton` in `IdentityBanner` (keep button as compact entry point but route through unified hook)
+
+**Structure:**
+1. **Status header** — single line, color + tone:
+   - Standard → default theme, "STANDARD DAY"
+   - Rest → cool blue, "REST DAY — RECOVERY MODE"
+   - Skip → neutral gray, "SKIP DAY — NO LOGGED OUTPUT"
+   - Push → amber/red, "PUSH DAY — EXTRA LOAD"
+2. **Action button row** — three mutually exclusive toggle buttons: `[Rest] [Skip] [Push]`. Tapping the active one clears it (back to Standard). Tapping a different one swaps (DELETE + INSERT in one call via upsert on UNIQUE).
+3. **Quick explanation text** — dynamic, exact copy from spec.
+4. **Recurring rest sub-section** (collapsed by default) — preserves existing recurring-day picker + weekly cap from `RestDayControl`.
+
+**New hook** `useDayState.ts`:
+- Reads + writes `user_day_state_overrides` for today.
+- Resolves effective state: explicit override > recurring rest rule > standard.
+- `setDayType(type | null)` → upsert/delete + invoke `evaluate-behavioral-state` + `compute-hammer-state` (fire-and-forget, 8s throttle reused).
+- Replaces `useRestDay` consumers — `useRestDay` becomes a thin wrapper for backward compatibility during transition.
+
+---
+
+## Part 6 — NN Visual Clarity in Game Plan (`GamePlanCard.tsx`)
+
+1. **NN badge** on every NN activity row:
+   - Bold red label "NON-NEGOTIABLE" + `Flame` icon (lucide-react).
+   - Distinct border-l-2 border-red-500 on the row.
+2. **Section grouping** — split rendered activities into:
+   - `NON-NEGOTIABLES (REQUIRED)` section first
+   - `OPTIONAL WORK` section below
+3. **Progress strip** at top of Game Plan: `"X / Y Non-Negotiables completed"`. If `X === 0` and Y > 0 and not rest day → subtle warning glow on NN section header.
+4. **Failure language** — replace "You haven't completed this" → "Standard not met" (search occurrences in GamePlanCard).
+
+---
+
+## Part 7 — Game Plan UI Reactivity to Day State
+
+`GamePlanCard` reads `useDayState`:
+- **Rest**: activities at `opacity-60`, banner "RECOVERY MODE — Resume tomorrow", NN badges hidden.
+- **Skip**: activities `grayscale opacity-50 pointer-events-none`, banner "DAY SKIPPED — No progress recorded".
+- **Push**: NN section gets `ring-2 ring-amber-500/40` glow, banner "PUSH DAY — Higher output expected".
+- **Standard**: default rendering.
+
+Skip/Push do NOT modify the existing per-item recurring `calendar_skipped_items` system — that remains independent (it's about hiding individual recurring items from the calendar, not classifying a day).
+
+---
+
+## Part 8 — Existing Push Dialog
+
+`GamePlanPushDayDialog` (rescheduling) is preserved as **secondary action** — accessible via "Reschedule…" link in the DayControlCard for users who want to actually shift dates rather than just declare a push intent. The new `[Push]` button on the card only sets day-type classification.
+
+---
+
+## Part 9 — Realtime + Throttle
+
+Reuse existing 8s throttle pattern. On any `setDayType` call:
+- Optimistic UI update (<50ms).
+- DB upsert.
+- `supabase.functions.invoke('evaluate-behavioral-state', ...)` + `compute-hammer-state` (fire-and-forget).
+- Realtime channel on `user_day_state_overrides` invalidates queries cross-tab.
+
+---
+
+## Files to create
+- `supabase/migrations/<ts>_unified_day_state.sql` — new table + backfill from rest overrides + add snapshot columns + extend event types.
+- `src/hooks/useDayState.ts`
+- `src/components/game-plan/DayControlCard.tsx`
+- `src/components/game-plan/NonNegotiableBadge.tsx`
+- `src/components/game-plan/NNProgressStrip.tsx`
+
+## Files to edit
+- `supabase/functions/evaluate-behavioral-state/index.ts` — unified classifier, push events, skip handling, snapshot fields.
+- `supabase/functions/compute-hammer-state/index.ts` — push_complete streak bonus.
+- `src/hooks/useRestDay.ts` — read from unified table; keep API for backcompat.
+- `src/hooks/useBehavioralEvents.ts` — updated PRIORITY map + new event types.
+- `src/components/identity/RestDayButton.tsx` — route through `useDayState`.
+- `src/pages/Dashboard.tsx` — swap `RestDayControl` → `DayControlCard`.
+- `src/components/GamePlanCard.tsx` — NN badges, section split, progress strip, day-state visual states, language fixes.
+- `src/integrations/supabase/types.ts` — auto-regenerated.
+
+## Invariants preserved
+- `custom_activity_logs` remains source of truth for activity completion.
+- System user `00000000-...-0001` excluded from all pipelines.
+- Phase 9 NN/streak/Hammer v3 contracts intact — additive only.
+- Skip and Rest remain user-explicit (no auto-conversion).
+- Rest within cap never penalizes; Skip always counts as miss.
