@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useRestDay } from '@/hooks/useRestDay';
-import { trackLaunchEvent } from '@/lib/launchEvents';
+import { trackOnce } from '@/lib/launchEvents';
 import { format } from 'date-fns';
 
 export type DayType = 'rest' | 'skip' | 'push' | 'standard';
@@ -119,7 +119,7 @@ export function useDayState() {
         .catch?.(() => {});
     }
     qc.invalidateQueries({ queryKey: ['rest-day-overrides', user.id] });
-    if (next === 'skip') trackLaunchEvent('DAY_SKIPPED');
+    if (next === 'skip') trackOnce('DAY_SKIPPED', `day_skipped:${todayStr}`);
     recompute();
   };
 

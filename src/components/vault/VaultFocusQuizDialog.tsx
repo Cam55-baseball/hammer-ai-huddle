@@ -19,7 +19,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle, Clock, BedDouble, Scale, Activity, Lock, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { trackLaunchEvent } from '@/lib/launchEvents';
+import { trackOnce } from '@/lib/launchEvents';
+import { getTodayDate } from '@/utils/dateUtils';
 import { calculateSleepDuration, getSleepAnalysis, formatSleepDuration } from '@/utils/sleepUtils';
 
 // Import new quiz sub-components
@@ -584,7 +585,7 @@ export function VaultFocusQuizDialog({
         // Refetch stats to get updated data
         nightStats.refetch();
         setShowNightSuccess(true);
-        trackLaunchEvent('NIGHT_CHECKIN_COMPLETED');
+        trackOnce('NIGHT_CHECKIN_COMPLETED', `night_checkin:${getTodayDate()}`);
         return;
       }
       
