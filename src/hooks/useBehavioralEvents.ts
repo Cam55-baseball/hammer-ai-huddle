@@ -10,7 +10,10 @@ export type BehavioralEventType =
   | 'consistency_recover'
   | 'rest_overuse'
   | 'streak_risk'
-  | 'coaching_insight';
+  | 'coaching_insight'
+  | 'push_fail'
+  | 'push_complete'
+  | 'skip_day_used';
 
 export interface BehavioralEvent {
   id: string;
@@ -28,12 +31,15 @@ export interface BehavioralEvent {
 }
 
 const PRIORITY: Record<BehavioralEventType, number> = {
-  nn_miss: 5,
+  nn_miss: 6,
+  push_fail: 5,
+  rest_overuse: 4,
   streak_risk: 4,
-  rest_overuse: 3,
   consistency_drop: 3,
+  skip_day_used: 2,
   coaching_insight: 2,
   identity_tier_change: 2,
+  push_complete: 1,
   consistency_recover: 1,
 };
 
