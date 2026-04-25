@@ -342,3 +342,108 @@ export function NightCheckInSuccess({
     </motion.div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Daily Outcome Section — sourced entirely from useDailyOutcome.
+// Single source of truth for the day's verdict.
+// ─────────────────────────────────────────────────────────────────────
+
+const STATUS_META: Record<DailyOutcomeStatus, {
+  Icon: typeof CheckCircle2;
+  borderClass: string;
+  bgClass: string;
+  textClass: string;
+  iconClass: string;
+}> = {
+  'STANDARD MET': {
+    Icon: CheckCircle2,
+    borderClass: 'border-emerald-500/50',
+    bgClass: 'bg-gradient-to-br from-emerald-500/15 to-teal-500/10',
+    textClass: 'text-emerald-300',
+    iconClass: 'text-emerald-400',
+  },
+  'STANDARD NOT MET': {
+    Icon: AlertTriangle,
+    borderClass: 'border-rose-500/50',
+    bgClass: 'bg-gradient-to-br from-rose-500/15 to-red-500/10',
+    textClass: 'text-rose-300',
+    iconClass: 'text-rose-400',
+  },
+  'RECOVERY DAY': {
+    Icon: Moon,
+    borderClass: 'border-sky-500/50',
+    bgClass: 'bg-gradient-to-br from-sky-500/15 to-blue-500/10',
+    textClass: 'text-sky-300',
+    iconClass: 'text-sky-400',
+  },
+  'SKIP REGISTERED': {
+    Icon: SkipForward,
+    borderClass: 'border-zinc-500/40',
+    bgClass: 'bg-gradient-to-br from-zinc-500/15 to-slate-500/10',
+    textClass: 'text-zinc-300',
+    iconClass: 'text-zinc-400',
+  },
+};
+
+const DAY_TYPE_LABEL: Record<'standard' | 'rest' | 'skip' | 'push', string> = {
+  standard: 'Standard',
+  rest: 'Rest',
+  skip: 'Skip',
+  push: 'Push',
+};
+
+const STREAK_META: Record<StreakImpact, { label: string; Icon: typeof TrendingUp; color: string }> = {
+  up:     { label: 'Extended', Icon: TrendingUp,   color: 'text-emerald-400' },
+  held:   { label: 'Held',     Icon: Minus,        color: 'text-muted-foreground' },
+  broken: { label: 'Broken',   Icon: TrendingDown, color: 'text-rose-400' },
+};
+
+function DailyOutcomeSection() {
+  const outcome = useDailyOutcome();
+  const meta = STATUS_META[outcome.status];
+  const streak = STREAK_META[outcome.streakImpact];
+  const StatusIcon = meta.Icon;
+  const StreakIcon = streak.Icon;
+
+  return (
+    <Card className={cn('border-2', meta.borderClass, meta.bgClass)}>
+      <CardContent className="p-4 space-y-3">
+        {/* Status header */}
+        <div className="flex items-center gap-3">
+          <div className={cn('rounded-lg p-2 bg-background/30', meta.iconClass)}>
+            <StatusIcon className="h-6 w-6" />
+          </div>
+          <div className="min-w-0">
+            <div className={cn('text-lg sm:text-xl font-black uppercase tracking-wider', meta.textClass)}>
+              {outcome.status}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">{outcome.summary}</p>
+          </div>
+        </div>
+
+        {/* Detail rows */}
+        <div className="grid gap-1.5 text-xs sm:text-sm border-t border-border/40 pt-3">
+          {outcome.nnTotal > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Non-Negotiables</span>
+              <span className={cn('font-bold', outcome.nnCompleted === outcome.nnTotal ? 'text-emerald-400' : 'text-rose-400')}>
+                {outcome.nnCompleted} / {outcome.nnTotal}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Day Type</span>
+            <span className="font-bold">{DAY_TYPE_LABEL[outcome.dayType]}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Streak Impact</span>
+            <span className={cn('font-bold inline-flex items-center gap-1', streak.color)}>
+              <StreakIcon className="h-3.5 w-3.5" />
+              {streak.label}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
