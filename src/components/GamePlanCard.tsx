@@ -1982,14 +1982,58 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   </Button>
                 </div>
                 
-                {customTasks.length > 0 && renderTaskSection(
-                  customTasks,
-                  orderedCustom,
-                  handleReorderCustom,
-                  '',
-                  'text-emerald-400',
-                  'bg-emerald-500/30'
-                )}
+                {customTasks.length > 0 && (() => {
+                  const isNNRow = (t: GamePlanTask) => !!t.customActivityData?.template?.is_non_negotiable;
+                  const nnTasks  = customTasks.filter(isNNRow);
+                  const optTasks = customTasks.filter(t => !isNNRow(t));
+                  const nnOrdered  = orderedCustom.filter(isNNRow);
+                  const optOrdered = orderedCustom.filter(t => !isNNRow(t));
+                  return (
+                    <div className="space-y-4">
+                      {/* NON-NEGOTIABLES — required, always rendered first; hidden on rest day */}
+                      {!hideNN && nnTasks.length > 0 && (
+                        <div className={cn(
+                          "space-y-1 rounded-xl",
+                          pushGlow && "ring-2 ring-amber-500/40 p-2"
+                        )}>
+                          <div className="px-1">
+                            <p className="text-[10px] uppercase tracking-widest text-red-300/80 font-bold">
+                              Required — standard is built here
+                            </p>
+                          </div>
+                          {renderTaskSection(
+                            nnTasks,
+                            nnOrdered,
+                            (newOrder) => handleReorderCustom([...newOrder, ...optOrdered]),
+                            'NON-NEGOTIABLES',
+                            'text-red-400',
+                            'bg-red-500/40',
+                          )}
+                        </div>
+                      )}
+
+                      {/* OPTIONAL WORK */}
+                      {optTasks.length > 0 && renderTaskSection(
+                        optTasks,
+                        optOrdered,
+                        (newOrder) => handleReorderCustom([...nnOrdered, ...newOrder]),
+                        hideNN ? '' : 'OPTIONAL WORK',
+                        'text-emerald-400',
+                        'bg-emerald-500/30',
+                      )}
+
+                      {/* When hiding NN (rest day), still render NN tasks under OPTIONAL silently */}
+                      {hideNN && nnTasks.length > 0 && renderTaskSection(
+                        nnTasks,
+                        nnOrdered,
+                        (newOrder) => handleReorderCustom([...newOrder, ...optOrdered]),
+                        '',
+                        'text-emerald-400',
+                        'bg-emerald-500/30',
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
