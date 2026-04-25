@@ -1,12 +1,14 @@
-// Phase 10.7 — Standard Activation Banner
-// Fires once per local day on the entry surface (Dashboard).
-// Pure presentation: reads useDailyOutcome, never writes DB.
+// Phase 10.7/10.8 — Standard Activation Banner
+// - Fires once per local day on the entry surface (Dashboard).
+// - 10.8 hardening: safeStorage fallback, mid-session auto-hide on completion,
+//   day-rollover re-evaluation when the app stays open past midnight.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, X, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDailyOutcome } from '@/hooks/useDailyOutcome';
 import { getTodayDate } from '@/utils/dateUtils';
+import { safeGet, safeSet } from '@/lib/safeStorage';
 import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'hm:activation:lastShown';
@@ -19,30 +21,52 @@ function scrollToNN() {
 export function StandardActivationBanner({ className }: { className?: string }) {
   const outcome = useDailyOutcome();
   const [show, setShow] = useState(false);
+  const evaluatedDateRef = useRef<string | null>(null);
+  const dismissedDateRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (outcome.loading) return;
-    if (outcome.status !== 'STANDARD NOT MET') return;
-    if (outcome.nnTotal <= 0) return;
-    try {
-      const today = getTodayDate();
-      if (localStorage.getItem(STORAGE_KEY) === today) return;
-      setShow(true);
-    } catch {
-      setShow(true);
+
+    const today = getTodayDate();
+
+    // Day rollover: if we've crossed into a new day, reset in-memory dismissal
+    // so the new day's banner can appear without a refresh.
+    if (evaluatedDateRef.current && evaluatedDateRef.current !== today) {
+      dismissedDateRef.current = null;
+      setShow(false);
     }
-  }, [outcome.loading, outcome.status, outcome.nnTotal]);
+    evaluatedDateRef.current = today;
+
+    // Mid-session auto-hide: once the standard is met / rest / skip / no NNs,
+    // hide instantly even if the banner was previously visible.
+    if (outcome.status !== 'STANDARD NOT MET' || outcome.nnTotal <= 0) {
+      if (show) setShow(false);
+      return;
+    }
+
+    // Already dismissed (in-memory) for today → stay hidden.
+    if (dismissedDateRef.current === today) return;
+
+    // Persistent stamp check (safeStorage falls back to memory).
+    if (safeGet(STORAGE_KEY) === today) {
+      dismissedDateRef.current = today;
+      return;
+    }
+
+    if (!show) setShow(true);
+  }, [outcome.loading, outcome.status, outcome.nnTotal, show]);
 
   if (!show) return null;
 
   const stamp = () => {
-    try { localStorage.setItem(STORAGE_KEY, getTodayDate()); } catch { /* noop */ }
+    const today = getTodayDate();
+    safeSet(STORAGE_KEY, today);
+    dismissedDateRef.current = today;
     setShow(false);
   };
 
   const handleCTA = () => {
     stamp();
-    // Defer to next frame so the banner unmount doesn't fight the scroll.
     requestAnimationFrame(scrollToNN);
   };
 
