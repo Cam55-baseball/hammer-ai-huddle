@@ -475,6 +475,17 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         if (error) throw error;
       }
 
+      // Phase 10.7 — silent NN completion event (deduped per template per day)
+      if (isCompletingNow && (template as any)?.is_non_negotiable) {
+        try {
+          const key = `hm:nn:fired:${today}:${templateId}`;
+          if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
+            localStorage.setItem(key, '1');
+            trackLaunchEvent('NN_COMPLETED', { templateId });
+          }
+        } catch { /* noop */ }
+      }
+
       // When completing (not uncompleting), add exercises to load tracking
       if (isCompletingNow && template?.exercises && template.exercises.length > 0) {
         const activityTypes = ['workout', 'practice', 'short_practice', 'warmup'];
