@@ -997,23 +997,46 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     !hideNN &&
     __dayType !== 'skip';
 
-  // One-shot smart scroll to NN section on mount when standard is incomplete
+  // One-shot smart scroll to NN section on mount when standard is incomplete.
+  // Phase 10.5: respect manual user scroll — bail if user already scrolled.
   const scrollFiredRef = useRef(false);
+  const userScrolledRef = useRef(false);
+  useEffect(() => {
+    const onUserScroll = () => { userScrolledRef.current = true; };
+    window.addEventListener('wheel', onUserScroll, { passive: true, once: true });
+    window.addEventListener('touchstart', onUserScroll, { passive: true, once: true });
+    window.addEventListener('keydown', onUserScroll, { once: true });
+    return () => {
+      window.removeEventListener('wheel', onUserScroll);
+      window.removeEventListener('touchstart', onUserScroll);
+      window.removeEventListener('keydown', onUserScroll);
+    };
+  }, []);
   useEffect(() => {
     if (scrollFiredRef.current) return;
     if (loading || dailyOutcome.loading) return;
     if (!standardIncomplete) return;
+    if (userScrolledRef.current) {
+      scrollFiredRef.current = true; // mark satisfied; don't override user
+      return;
+    }
     scrollFiredRef.current = true;
     requestAnimationFrame(() => {
+      // Re-check at fire time — user may have scrolled in the same frame
+      if (userScrolledRef.current) return;
       const el = document.getElementById('nn-section');
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, dailyOutcome.loading, standardIncomplete]);
 
-  // Completion reinforcement pulse — fires once on the < → === transition
+  // Completion reinforcement pulse — fires once on the < → === transition.
+  // Phase 10.5: hard single-fire gate via pulsedRef in addition to transition guard.
   const [pulseStandard, setPulseStandard] = useState(false);
   const prevNnCompletedRef = useRef<number | null>(null);
+  const pulsedRef = useRef(false);
+  // Reset pulse latch when day changes
+  useEffect(() => { pulsedRef.current = false; }, [__dayType]);
   useEffect(() => {
     const prev = prevNnCompletedRef.current;
     const cur = dailyOutcome.nnCompleted;
@@ -1022,7 +1045,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     if (prev === null) return; // skip first observation
     if (total <= 0) return;
     if (__dayType === 'rest' || __dayType === 'skip') return;
+    if (pulsedRef.current) return;
     if (prev < total && cur === total) {
+      pulsedRef.current = true;
       setPulseStandard(true);
       toast.success('Standard met.');
       const t = setTimeout(() => setPulseStandard(false), 1000);
