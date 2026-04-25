@@ -83,7 +83,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
-  const { saveFocusQuiz } = useVault();
+  const { saveFocusQuiz, todaysQuizzes } = useVault();
   const { getBadgesForTask } = usePhysioGamePlanBadges();
   const scheduling = useSchedulingService();
   
