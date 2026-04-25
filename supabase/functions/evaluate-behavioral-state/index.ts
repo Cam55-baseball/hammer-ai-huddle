@@ -80,6 +80,24 @@ function eventCopy(type: string, ctx: any): { command_text: string; action_type:
         action_type: "acknowledge",
         action_payload: {},
       };
+    case "push_fail":
+      return {
+        command_text: "You called a push and didn't meet it.",
+        action_type: "complete_nn",
+        action_payload: ctx.smallest_nn_template_id ? { template_id: ctx.smallest_nn_template_id } : {},
+      };
+    case "push_complete":
+      return {
+        command_text: "Push executed. That's locked in.",
+        action_type: "acknowledge",
+        action_payload: {},
+      };
+    case "skip_day_used":
+      return {
+        command_text: "You skipped the day. No standard applied.",
+        action_type: "acknowledge",
+        action_payload: {},
+      };
     default:
       return { command_text: "Update available.", action_type: "acknowledge", action_payload: {} };
   }
@@ -118,27 +136,40 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   const injuryByDay = new Set<string>();
   for (const d of dailyLogs ?? []) if (d.injury_mode) injuryByDay.add(d.entry_date);
 
-  // 3. Rest day classification
-  const [{ data: restRules }, { data: restOverrides }] = await Promise.all([
+  // 3. Day state — unified overrides + recurring rest rule
+  const [{ data: restRules }, { data: restOverrides }, { data: dayStateRows }] = await Promise.all([
     supabase.from("user_rest_day_rules")
       .select("recurring_days, max_rest_days_per_week").eq("user_id", userId).maybeSingle(),
     supabase.from("user_rest_day_overrides")
       .select("date").eq("user_id", userId).gte("date", since30),
+    supabase.from("user_day_state_overrides")
+      .select("date, type").eq("user_id", userId).gte("date", since30),
   ]);
   const recurringDays: number[] = restRules?.recurring_days ?? [];
   const maxRestPerWeek: number = restRules?.max_rest_days_per_week ?? 2;
-  const overrideDays = new Set<string>((restOverrides ?? []).map((r: any) => r.date));
+
+  // Unified intent map: explicit override wins over legacy rest table
+  const intentByDay = new Map<string, "rest" | "skip" | "push">();
+  for (const r of restOverrides ?? []) intentByDay.set(r.date, "rest");
+  for (const r of dayStateRows ?? []) intentByDay.set(r.date, r.type as any);
 
   // Walk 30 days oldest→newest, applying weekly cap to rest classification
   const today = new Date(todayUTC + "T00:00:00Z");
-  const days: { ds: string; klass: "injury" | "rest" | "logged" | "missed" }[] = [];
+  const days: { ds: string; klass: "injury" | "rest" | "skip" | "push" | "logged" | "missed" }[] = [];
   const restUsedByWeek = new Map<string, number>();
 
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
     const ds = dayStr(d);
     if (injuryByDay.has(ds)) { days.push({ ds, klass: "injury" }); continue; }
-    const isRestCandidate = overrideDays.has(ds) || recurringDays.includes(weekday(ds));
+
+    const intent = intentByDay.get(ds);
+
+    // SKIP: hard miss, breaks streaks, NN auto-missed
+    if (intent === "skip") { days.push({ ds, klass: "skip" }); continue; }
+
+    // REST: explicit or recurring
+    const isRestCandidate = intent === "rest" || recurringDays.includes(weekday(ds));
     if (isRestCandidate) {
       const wk = weekKey(ds);
       const used = restUsedByWeek.get(wk) ?? 0;
@@ -152,6 +183,13 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
       else days.push({ ds, klass: "missed" });
       continue;
     }
+
+    // PUSH: behaves like standard for scoring; flagged for events
+    if (intent === "push") {
+      days.push({ ds, klass: "push" });
+      continue;
+    }
+
     if (completedByDay.has(ds)) days.push({ ds, klass: "logged" });
     else days.push({ ds, klass: "missed" });
   }
