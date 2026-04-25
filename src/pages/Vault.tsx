@@ -866,6 +866,7 @@ export default function Vault() {
         open={quizDialogOpen}
         onOpenChange={setQuizDialogOpen}
         quizType={selectedQuizType}
+        existingNightQuiz={todaysQuizzes.find(q => q.quiz_type === 'night') ?? null}
         onSubmit={handleQuizSubmit}
       />
 
