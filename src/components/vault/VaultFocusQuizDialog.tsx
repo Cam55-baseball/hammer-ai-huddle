@@ -583,6 +583,7 @@ export function VaultFocusQuizDialog({
         // Refetch stats to get updated data
         nightStats.refetch();
         setShowNightSuccess(true);
+        trackLaunchEvent('NIGHT_CHECKIN_COMPLETED');
         return;
       }
       
