@@ -66,6 +66,7 @@ import { CustomField } from '@/types/customActivity';
 import { triggerCelebration } from '@/lib/confetti';
 import { trackOnce } from '@/lib/launchEvents';
 import { buildNNContext } from '@/lib/nnContract';
+import { NNManualCompletionGate } from '@/components/custom-activities/NNManualCompletionGate';
 import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
 
 interface GamePlanCardProps {
