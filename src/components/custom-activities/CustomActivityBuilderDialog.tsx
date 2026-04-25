@@ -114,6 +114,10 @@ export function CustomActivityBuilderDialog({
   const [distanceUnit, setDistanceUnit] = useState<string>(template?.distance_unit || 'miles');
   const [isFavorited, setIsFavorited] = useState(template?.is_favorited || false);
   const [isNonNegotiable, setIsNonNegotiable] = useState(template?.is_non_negotiable || false);
+  // Phase 12 — NN context contract fields. Required when NN is on.
+  const [nnPurpose, setNnPurpose] = useState((template as any)?.purpose || '');
+  const [nnAction, setNnAction] = useState((template as any)?.action || template?.description || '');
+  const [nnSuccessCriteria, setNnSuccessCriteria] = useState((template as any)?.success_criteria || '');
   const [recurringDays, setRecurringDays] = useState<number[]>(template?.recurring_days || []);
   const [recurringActive, setRecurringActive] = useState(template?.recurring_active || false);
   const [saving, setSaving] = useState(false);
@@ -165,6 +169,9 @@ export function CustomActivityBuilderDialog({
       setDistanceUnit(template.distance_unit || 'miles');
       setIsFavorited(template.is_favorited);
       setIsNonNegotiable((template as any).is_non_negotiable ?? false);
+      setNnPurpose((template as any).purpose ?? '');
+      setNnAction((template as any).action ?? template.description ?? '');
+      setNnSuccessCriteria((template as any).success_criteria ?? '');
       setRecurringDays(template.recurring_days || []);
       setRecurringActive(template.recurring_active);
       // Initialize schedule mode from template
@@ -279,6 +286,13 @@ export function CustomActivityBuilderDialog({
       toast.error(t('customActivity.titleRequired', 'Please enter a title'));
       return;
     }
+    // Phase 12 — NN context contract enforcement
+    if (isNonNegotiable) {
+      if (!nnPurpose.trim() || !nnAction.trim() || !nnSuccessCriteria.trim()) {
+        toast.error('Non-Negotiables require Purpose, Action, and Success Criteria');
+        return;
+      }
+    }
     
     setSaving(true);
     
@@ -319,6 +333,11 @@ export function CustomActivityBuilderDialog({
         intervals: [] as RunningInterval[],
         is_favorited: isFavorited,
         is_non_negotiable: isNonNegotiable,
+        // Phase 12 — NN context contract
+        purpose: isNonNegotiable ? nnPurpose.trim() : null,
+        action: isNonNegotiable ? nnAction.trim() : null,
+        success_criteria: isNonNegotiable ? nnSuccessCriteria.trim() : null,
+        source: isNonNegotiable ? ((template as any)?.source || 'Custom') : null,
         recurring_days: scheduleMode === 'weekly' ? recurringDays : [],
         recurring_active: scheduleMode === 'weekly' && recurringActive,
         specific_dates: scheduleMode === 'specific_date' ? specificDates.map(d => format(d, 'yyyy-MM-dd')) : undefined,
