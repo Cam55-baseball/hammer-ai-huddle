@@ -23,6 +23,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
+import { StandardActivationBanner } from "@/components/identity/StandardActivationBanner";
 import { IdentityBanner } from "@/components/identity/IdentityBanner";
 import { DayControlCard } from "@/components/game-plan/DayControlCard";
 import { NonNegotiableProgressStrip } from "@/components/game-plan/NonNegotiableProgressStrip";
@@ -598,6 +599,7 @@ export default function Dashboard() {
             <DayControlCard />
             <NonNegotiableProgressStrip />
             <DayStateBanner />
+            <StandardActivationBanner />
             <GamePlanCard selectedSport={selectedSport} />
           </>
         )}
