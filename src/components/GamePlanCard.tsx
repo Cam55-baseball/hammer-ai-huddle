@@ -1050,6 +1050,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       pulsedRef.current = true;
       setPulseStandard(true);
       toast.success('Standard met.');
+      trackLaunchEvent('STANDARD_MET', { nnTotal: total });
       const t = setTimeout(() => setPulseStandard(false), 1000);
       return () => clearTimeout(t);
     }
