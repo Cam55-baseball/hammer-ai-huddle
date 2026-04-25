@@ -15,9 +15,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight, NotebookPen, Flame } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight, NotebookPen, Flame, AlertTriangle, CheckCircle2, Moon } from 'lucide-react';
 import { NonNegotiableBadge } from '@/components/identity/NonNegotiableBadge';
 import { useDayState } from '@/hooks/useDayState';
+import { useDailyOutcome, type DailyOutcomeStatus } from '@/hooks/useDailyOutcome';
 import { Badge } from '@/components/ui/badge';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
@@ -986,6 +987,49 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const skipDimming = __dayType === 'skip';
   const pushGlow = __dayType === 'push';
 
+  // ── Phase 10.4 — Live Standard Awareness ────────────────────────────
+  // Pure derivation from the single source of truth.
+  const dailyOutcome = useDailyOutcome();
+  const nnRemaining = Math.max(0, dailyOutcome.nnTotal - dailyOutcome.nnCompleted);
+  const standardIncomplete =
+    dailyOutcome.nnTotal > 0 &&
+    dailyOutcome.nnCompleted < dailyOutcome.nnTotal &&
+    !hideNN &&
+    __dayType !== 'skip';
+
+  // One-shot smart scroll to NN section on mount when standard is incomplete
+  const scrollFiredRef = useRef(false);
+  useEffect(() => {
+    if (scrollFiredRef.current) return;
+    if (loading || dailyOutcome.loading) return;
+    if (!standardIncomplete) return;
+    scrollFiredRef.current = true;
+    requestAnimationFrame(() => {
+      const el = document.getElementById('nn-section');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, dailyOutcome.loading, standardIncomplete]);
+
+  // Completion reinforcement pulse — fires once on the < → === transition
+  const [pulseStandard, setPulseStandard] = useState(false);
+  const prevNnCompletedRef = useRef<number | null>(null);
+  useEffect(() => {
+    const prev = prevNnCompletedRef.current;
+    const cur = dailyOutcome.nnCompleted;
+    const total = dailyOutcome.nnTotal;
+    prevNnCompletedRef.current = cur;
+    if (prev === null) return; // skip first observation
+    if (total <= 0) return;
+    if (__dayType === 'rest' || __dayType === 'skip') return;
+    if (prev < total && cur === total) {
+      setPulseStandard(true);
+      toast.success('Standard met.');
+      const t = setTimeout(() => setPulseStandard(false), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [dailyOutcome.nnCompleted, dailyOutcome.nnTotal, __dayType]);
+
   // Toggle NON-NEGOTIABLE on a custom activity template (1-click)
   const toggleNonNegotiable = async (templateId: string, current: boolean) => {
     const next = !current;
@@ -1368,12 +1412,25 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Users can access via navigation sidebar
 
   return (
-    <Card className="relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl">
+    <Card
+      className={cn(
+        "relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl transition-shadow duration-700",
+        pulseStandard && "ring-2 ring-emerald-500/60 shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)]"
+      )}
+    >
       {/* Athletic diagonal stripe accent */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 transform rotate-45 translate-x-20 -translate-y-20" />
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 transform -rotate-45 -translate-x-16 translate-y-16" />
-      
+
       <CardContent className="relative p-4 sm:p-6 space-y-4">
+        {/* Phase 10.4 — Live Standard Header (single source of truth) */}
+        <StandardAwarenessHeader
+          status={dailyOutcome.status}
+          remaining={nnRemaining}
+          showRemaining={standardIncomplete}
+          loading={dailyOutcome.loading}
+        />
+
         {/* Bold Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -1992,10 +2049,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     <div className="space-y-4">
                       {/* NON-NEGOTIABLES — required, always rendered first; hidden on rest day */}
                       {!hideNN && nnTasks.length > 0 && (
-                        <div className={cn(
-                          "space-y-1 rounded-xl",
-                          pushGlow && "ring-2 ring-amber-500/40 p-2"
-                        )}>
+                        <div
+                          id="nn-section"
+                          className={cn(
+                            "space-y-1 rounded-xl scroll-mt-4",
+                            pushGlow && "ring-2 ring-amber-500/40 p-2"
+                          )}
+                        >
                           <div className="px-1">
                             <p className="text-[10px] uppercase tracking-widest text-red-300/80 font-bold">
                               Required — standard is built here
@@ -2979,6 +3039,58 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       {/* Quick Note Dialog */}
       <QuickNoteDialog open={quickNoteOpen} onOpenChange={setQuickNoteOpen} />
     </Card>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Phase 10.4 — Live Standard Awareness Header
+// Sourced entirely from useDailyOutcome via props. No new logic.
+// ─────────────────────────────────────────────────────────────────────
+
+const STANDARD_HEADER_META: Record<DailyOutcomeStatus, {
+  Icon: typeof CheckCircle2;
+  borderClass: string;
+  bgClass: string;
+  textClass: string;
+}> = {
+  'STANDARD MET':     { Icon: CheckCircle2,   borderClass: 'border-emerald-500', bgClass: 'bg-emerald-500/10', textClass: 'text-emerald-300' },
+  'STANDARD NOT MET': { Icon: AlertTriangle,  borderClass: 'border-rose-500',    bgClass: 'bg-rose-500/10',    textClass: 'text-rose-300' },
+  'RECOVERY DAY':     { Icon: Moon,           borderClass: 'border-sky-500',     bgClass: 'bg-sky-500/10',     textClass: 'text-sky-300' },
+  'SKIP REGISTERED':  { Icon: SkipForward,    borderClass: 'border-zinc-500',    bgClass: 'bg-zinc-500/10',    textClass: 'text-zinc-300' },
+};
+
+function StandardAwarenessHeader({
+  status,
+  remaining,
+  showRemaining,
+  loading,
+}: {
+  status: DailyOutcomeStatus;
+  remaining: number;
+  showRemaining: boolean;
+  loading: boolean;
+}) {
+  if (loading) return null;
+  const meta = STANDARD_HEADER_META[status];
+  const Icon = meta.Icon;
+  return (
+    <div
+      className={cn(
+        'rounded-md border-l-4 px-3 py-2',
+        meta.borderClass,
+        meta.bgClass,
+      )}
+    >
+      <div className={cn('flex items-center gap-2 text-sm font-bold uppercase tracking-wide', meta.textClass)}>
+        <Icon className="h-4 w-4 shrink-0" />
+        <span>{status}</span>
+      </div>
+      {showRemaining && remaining > 0 && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {remaining} required action{remaining === 1 ? '' : 's'} remaining
+        </p>
+      )}
+    </div>
   );
 }
 

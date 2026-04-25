@@ -1,4 +1,5 @@
 import { useNNSuggestions, type NNSuggestion } from '@/hooks/useNNSuggestions';
+import { useDailyOutcome } from '@/hooks/useDailyOutcome';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Flame, Sparkles, X } from 'lucide-react';
@@ -10,8 +11,17 @@ import { cn } from '@/lib/utils';
  */
 export function NNSuggestionPanel() {
   const { suggestions, loading, accept, dismiss } = useNNSuggestions();
+  const { status } = useDailyOutcome();
 
   if (loading || suggestions.length === 0) return null;
+
+  // Status-aware subline — keeps the panel in lockstep with today's standard
+  const subline =
+    status === 'STANDARD NOT MET'
+      ? 'Locking these in reduces missed days.'
+      : status === 'STANDARD MET'
+        ? 'These are already part of your standard.'
+        : 'Based on your recent behavior, these are already part of your identity.';
 
   return (
     <Card className="border-2 border-red-500/20 bg-gradient-to-br from-red-500/5 to-amber-500/5">
@@ -25,7 +35,7 @@ export function NNSuggestionPanel() {
               Suggested Standards
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Based on your recent behavior, these are already part of your identity.
+              {subline}
             </p>
           </div>
         </div>
