@@ -19,6 +19,7 @@ import { DualStreakDisplay } from '@/components/dashboard/DualStreakDisplay';
 import { ActivityAnalytics } from '@/components/custom-activities/ActivityAnalytics';
 import { LoadDashboard } from '@/components/elite-workout/intelligence/LoadDashboard';
 import { NNSuggestionPanel } from '@/components/identity/NNSuggestionPanel';
+import { DailyOutcomeInlineBanner } from '@/components/identity/DailyOutcomeInlineBanner';
 import { useMPIScores } from '@/hooks/useMPIScores';
 import { useAIPrompts } from '@/hooks/useAIPrompts';
 import { getGradeLabel } from '@/lib/gradeLabel';
@@ -81,6 +82,9 @@ Confidence: ${snapshot.development_confidence}%
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Authoritative passive verdict — sourced from useDailyOutcome */}
+        <DailyOutcomeInlineBanner />
+
         <div>
           <h1 className="text-3xl font-bold text-foreground">Progress Dashboard</h1>
           <p className="text-muted-foreground">Diagnose → Prescribe → Guide → Verify</p>

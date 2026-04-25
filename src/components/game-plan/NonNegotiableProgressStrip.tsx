@@ -4,11 +4,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDayState } from '@/hooks/useDayState';
 import { Flame, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { fetchNNProgressToday } from '@/lib/nnProgress';
 
 /**
  * Top-of-Game-Plan strip showing today's NN completion progress.
  * Hidden on rest days (NN waived). Glowing when 0/N completed on a non-rest day.
+ *
+ * Sources NN counts from the shared helper so it stays in lockstep with
+ * the Daily Outcome verdict.
  */
 export function NonNegotiableProgressStrip() {
   const { user } = useAuth();
@@ -18,46 +21,24 @@ export function NonNegotiableProgressStrip() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
 
-    const fetchCounts = async () => {
-      const { data: nn } = await (supabase as any)
-        .from('custom_activity_templates')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('is_non_negotiable', true)
-        .is('deleted_at', null);
-      const ids: string[] = (nn ?? []).map((t: any) => t.id);
-      if (ids.length === 0) {
-        if (!cancelled) setCounts({ done: 0, total: 0 });
-        return;
-      }
-      const { data: logs } = await (supabase as any)
-        .from('custom_activity_logs')
-        .select('template_id, completion_state')
-        .eq('user_id', user.id)
-        .eq('entry_date', todayStr)
-        .in('template_id', ids);
-      const done = new Set<string>(
-        (logs ?? [])
-          .filter((l: any) => l.completion_state === 'completed')
-          .map((l: any) => l.template_id)
-      );
-      if (!cancelled) setCounts({ done: done.size, total: ids.length });
+    const refresh = async () => {
+      const res = await fetchNNProgressToday(user.id);
+      if (!cancelled) setCounts({ done: res.done, total: res.total });
     };
 
-    fetchCounts();
+    refresh();
     const ch = supabase
       .channel(`nn-progress-${user.id}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'custom_activity_logs', filter: `user_id=eq.${user.id}` },
-        () => fetchCounts()
+        () => refresh()
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'custom_activity_templates', filter: `user_id=eq.${user.id}` },
-        () => fetchCounts()
+        () => refresh()
       )
       .subscribe();
     return () => { cancelled = true; supabase.removeChannel(ch); };
