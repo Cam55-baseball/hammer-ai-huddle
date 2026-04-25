@@ -1,22 +1,66 @@
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
+import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { Button } from '@/components/ui/button';
-import { X, AlertTriangle, TrendingDown, TrendingUp, ArrowUpRight } from 'lucide-react';
+import {
+  X, AlertTriangle, TrendingDown, TrendingUp, ArrowUpRight,
+  Moon, Flame, Lightbulb, Zap,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon: any } {
+  // Engine-provided command text takes precedence (Phase 10 identity-pressure copy)
+  if (ev.command_text) {
+    const tones: Record<string, string> = {
+      nn_miss: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+      streak_risk: 'border-amber-500/50 bg-amber-500/10 text-amber-200',
+      rest_overuse: 'border-orange-500/40 bg-orange-500/10 text-orange-200',
+      consistency_drop: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+      consistency_recover: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+      coaching_insight: 'border-sky-500/40 bg-sky-500/10 text-sky-200',
+      identity_tier_change: 'border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200',
+    };
+    const icons: Record<string, any> = {
+      nn_miss: AlertTriangle,
+      streak_risk: Flame,
+      rest_overuse: Moon,
+      consistency_drop: TrendingDown,
+      consistency_recover: TrendingUp,
+      coaching_insight: Lightbulb,
+      identity_tier_change: ArrowUpRight,
+    };
+    return {
+      text: ev.command_text,
+      tone: tones[ev.event_type] ?? 'border-border bg-card',
+      Icon: icons[ev.event_type] ?? AlertTriangle,
+    };
+  }
+
   switch (ev.event_type) {
     case 'nn_miss': {
       const n = ev.magnitude ?? 1;
       return {
-        text: n > 1 ? `Standard broken — ${n} non-negotiables missed.` : 'Standard broken — non-negotiable missed.',
+        text: n > 1 ? `Standard broken — ${n} non-negotiables missed. Fix it now.` : 'Standard broken. Fix it now.',
         tone: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
         Icon: AlertTriangle,
       };
     }
+    case 'streak_risk':
+      return {
+        text: 'You are about to break your streak. Act.',
+        tone: 'border-amber-500/50 bg-amber-500/10 text-amber-200',
+        Icon: Flame,
+      };
+    case 'rest_overuse':
+      return {
+        text: 'Rest limit exceeded — standard slipping.',
+        tone: 'border-orange-500/40 bg-orange-500/10 text-orange-200',
+        Icon: Moon,
+      };
     case 'consistency_drop': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
-        text: `Consistency dropped ${d}%.`,
+        text: `Consistency dropped ${d}%. Reset the standard.`,
         tone: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
         Icon: TrendingDown,
       };
@@ -27,17 +71,23 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       const ranks = ['slipping', 'building', 'consistent', 'locked_in', 'elite'];
       const up = ranks.indexOf(String(ev.metadata?.to)) > ranks.indexOf(from);
       return {
-        text: up ? `You moved to ${to}.` : `Slipped to ${to}.`,
+        text: up ? `You moved to ${to}.` : `Slipped to ${to}. Reclaim it.`,
         tone: up
           ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
           : 'border-rose-500/40 bg-rose-500/10 text-rose-200',
         Icon: up ? ArrowUpRight : TrendingDown,
       };
     }
+    case 'coaching_insight':
+      return {
+        text: String(ev.metadata?.insight ?? 'Coaching available.'),
+        tone: 'border-sky-500/40 bg-sky-500/10 text-sky-200',
+        Icon: Lightbulb,
+      };
     case 'consistency_recover': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
-        text: `Back on track. +${d}%.`,
+        text: `Back on track. +${d}%. LOCKED IN.`,
         tone: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
         Icon: TrendingUp,
       };
@@ -47,22 +97,53 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
   }
 }
 
+const ACTION_LABELS: Record<string, string> = {
+  complete_nn: 'Complete NN',
+  save_streak: 'Save streak',
+  log_session: 'Log now',
+  rest_today: 'Rest today',
+  reset_2min: '2-min reset',
+};
+
 export function BehavioralPressureToast() {
   const { active, acknowledge } = useBehavioralEvents();
+  const { execute, running } = useQuickActionExecutor();
   if (!active) return null;
 
   const { text, tone, Icon } = formatMessage(active);
+  const actionType = (active.action_type ?? null) as QuickActionType | null;
+  const actionLabel = actionType ? ACTION_LABELS[actionType] ?? 'Act now' : null;
+
+  const handleAction = async () => {
+    if (!actionType) return;
+    const res = await execute(actionType, active.action_payload ?? {});
+    if (res.ok) {
+      toast.success(res.message);
+      await acknowledge(active.id);
+    }
+  };
 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-semibold',
+        'flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-semibold',
         tone
       )}
       role="status"
     >
       <Icon className="h-4 w-4 flex-shrink-0" />
       <span className="flex-1 min-w-0">{text}</span>
+      {actionType && (
+        <Button
+          size="sm"
+          onClick={handleAction}
+          disabled={running}
+          className="h-7 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold"
+        >
+          <Zap className="h-3 w-3" />
+          {actionLabel}
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"
