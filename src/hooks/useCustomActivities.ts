@@ -13,6 +13,7 @@ import {
   CompletionMethod
 } from '@/types/customActivity';
 import { toast } from 'sonner';
+import { trackLaunchEvent } from '@/lib/launchEvents';
 import { useTranslation } from 'react-i18next';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
