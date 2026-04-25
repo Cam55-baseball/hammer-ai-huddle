@@ -265,13 +265,21 @@ async function computeForUser(supabase: any, userId: string) {
   const base = (activityScore * 0.55) + (consistencyScore * 0.25) + (neuroBlend * 0.20);
   const nnPenalty = Math.min(nnMissCount7d * 8, 30);
   const streakBoost = Math.min(performanceStreak * 1.5, 15);
-  const finalScore = clamp(base * dampingMultiplier - nnPenalty + streakBoost);
+  const restFactor = restDays7d <= maxRestPerWeek
+    ? 5
+    : -Math.min((restDays7d - maxRestPerWeek) * 5, 15);
+  let finalScore = clamp(base * dampingMultiplier - nnPenalty + streakBoost + restFactor);
 
   let overall: "prime" | "ready" | "caution" | "recover" = "ready";
   if (finalScore >= 80 && recoveryScore >= 60) overall = "prime";
   else if (finalScore >= 60) overall = "ready";
   else if (finalScore >= 40) overall = "caution";
   else overall = "recover";
+
+  // Recovery mode floor: planned rest day never drops below "ready"
+  if (recoveryModeToday && (overall === "recover" || overall === "caution")) {
+    overall = "ready";
+  }
 
   const blended = finalScore;
 
