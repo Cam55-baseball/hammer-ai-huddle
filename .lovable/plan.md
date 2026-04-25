@@ -1,124 +1,99 @@
-## Phase 10.3 — Nightly Check-In Upgrade (Authoritative Daily Outcome Layer)
+## Phase 10.4 — Live Standard Awareness Layer (Final Pre-Launch Pass)
 
-We already have a fully-built nightly check-in flow (`VaultFocusQuizDialog` with `quizType='night'`) and a success screen (`NightCheckInSuccess.tsx`) powered by `useNightCheckInStats`. We will **upgrade it in-place** to be the single source of truth for daily outcome — no new card on the dashboard, no parallel summary system.
+Pure awareness/integration pass on top of `useDailyOutcome` (already the single source of truth from Phase 10.3). No new systems, no DB or evaluator changes.
 
 ---
 
-### Part 1 — New derived hook: `src/hooks/useDailyOutcome.ts`
+### Part 1 — Game Plan Standard Header (`src/components/GamePlanCard.tsx`)
 
-Pure read/derive layer. No DB writes, no new tables.
+Insert a new top-level header **inside `<CardContent>` (line 1376), as the first child above the existing "Bold Header" block (line 1377)**. Sourced from `useDailyOutcome()`.
 
-**Returns:**
-```ts
-{
-  status: 'STANDARD MET' | 'STANDARD NOT MET' | 'RECOVERY DAY' | 'SKIP REGISTERED',
-  standardMet: boolean,
-  nnCompleted: number,
-  nnTotal: number,
-  dayType: 'standard' | 'rest' | 'skip' | 'push',
-  streakImpact: 'up' | 'held' | 'broken',
-  summary: string,
-  loading: boolean,
-}
+- Map status → tone + icon:
+  - `STANDARD MET` → emerald, `CheckCircle2`
+  - `STANDARD NOT MET` → red, `AlertTriangle`
+  - `RECOVERY DAY` → sky, `Moon`
+  - `SKIP REGISTERED` → muted/zinc, `SkipForward`
+- Style: `text-sm font-bold uppercase tracking-wide`, `border-l-4` accent matching the NN styling system (mirrors `DailyOutcomeInlineBanner` tones), background tint `bg-{color}/10`, padding `px-3 py-2`, rounded.
+- Hidden while `loading === true` (avoids flash).
+- Reactivity is automatic — `useDailyOutcome` already subscribes to `custom_activity_logs` + `custom_activity_templates`.
+
+### Part 2 — Remaining Required Indicator
+
+Directly under the header, conditional render:
 ```
-
-**Sources (in priority):**
-1. `useDayState()` → `dayType`
-2. NN counts via existing logic from `NonNegotiableProgressStrip` — extract the NN counting query into a small shared helper (`src/lib/nnProgress.ts`) so both the strip and the hook consume the same numbers (no duplication, no drift).
-3. `useIdentityState()` → today's snapshot:
-   - `streakImpact = 'up'` if `performance_streak` increased vs. previous snapshot (compare `snapshot_date`)
-   - `'held'` if same
-   - `'broken'` if `performance_streak === 0` and prior > 0, OR `nn_miss_count_7d` jumped today
-4. Any-activity-logged fallback: `custom_activity_logs` count for today (only used when `nnTotal === 0`).
-
-**Outcome logic (deterministic, exactly per spec):**
-- `dayType === 'rest'` → `RECOVERY DAY`, `standardMet = true`
-- `dayType === 'skip'` → `SKIP REGISTERED`, `standardMet = false`
-- `nnTotal > 0` → `STANDARD MET` if `nnCompleted === nnTotal`, else `STANDARD NOT MET`
-- Else (no NNs defined) → fallback to `anyActivityLogged ? MET : NOT MET`
-
-**Summary line (1:1, no randomness):**
-- MET → "You protected your standard."
-- NOT MET → "You missed required work."
-- RECOVERY → "Recovery applied correctly."
-- SKIP → "You skipped the day. No standard applied."
-
-Realtime: subscribe to `custom_activity_logs`, `custom_activity_templates`, `user_day_state_overrides`, `user_consistency_snapshots` (filtered by `user_id`) and invalidate the query — keeps outcome reactive in <1s.
-
----
-
-### Part 2 — Upgrade `NightCheckInSuccess.tsx` (in-place)
-
-Insert a new **"Daily Outcome"** section as the **first block above the Hero**, sourced entirely from `useDailyOutcome`:
-
-- **Status header** (large, bold) — color-coded:
-  - MET → emerald, `CheckCircle2` icon
-  - NOT MET → red, `AlertTriangle` icon
-  - RECOVERY → blue/sky, `Moon` icon
-  - SKIP → muted gray, `SkipForward` icon
-- **Row: Non-Negotiables** → `nnCompleted / nnTotal` (hidden if `nnTotal === 0`)
-- **Row: Day Type** → `Push / Rest / Skip / Standard` (mapped label)
-- **Row: Streak Impact** → `Extended` (up) / `Held` (held) / `Broken` (broken) with arrow icon
-- **System Summary** → the deterministic 1-line string
-
-Keep the existing Today's Highlights / Tomorrow Preview / Morning Bonus / Sleep Countdown sections untouched — they are complementary context, not the verdict.
-
-No new file. No second card.
-
----
-
-### Part 3 — Optional inline banner on Progress Dashboard
-
-In `src/pages/ProgressDashboard.tsx`, add a **single thin inline banner** (NOT a card) at the very top, reading from `useDailyOutcome`:
-
+nnTotal > 0 && nnCompleted < nnTotal
+  → <p className="text-xs text-muted-foreground mt-1">
+      {nnTotal - nnCompleted} required actions remaining
+    </p>
 ```
-Today: STANDARD MET     (emerald bg-emerald-500/10 border-l-4 border-emerald-500)
-Today: STANDARD NOT MET (red, border-l-4 border-red-500)
-Today: RECOVERY DAY     (sky)
-Today: SKIP REGISTERED  (muted)
-```
+When standard is met (or `nnTotal === 0`, or rest/skip), render nothing.
 
-One line, no actions, no extra metrics — purely passive visibility. This satisfies "Part 7 — Passive Visibility" without duplicating the verdict.
+### Part 3 — Smart Scroll Anchor
 
----
+- Add `id="nn-section"` to the existing NON-NEGOTIABLES wrapper at line 1995 (`<div className={cn("space-y-1 rounded-xl", ...)}>`).
+- Add a one-shot `useEffect` in `GamePlanCard` keyed off the **first non-loading render**:
+  - Guard with a `useRef(false)` so it fires once per mount.
+  - Condition: `!loading && !outcome.loading && nnTotal > 0 && nnCompleted < nnTotal && !hideNN`
+  - Action: `document.getElementById('nn-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })`
+  - Wrapped in `requestAnimationFrame` to let layout settle.
+- Never re-fires after mount → cannot interfere with manual scroll.
 
-### Part 4 — Language standardization sweep
+### Part 4 — Completion Reinforcement Pulse
 
-In the upgraded `NightCheckInSuccess` outcome section and the Progress Dashboard banner only, use exactly:
-- "Standard met" / "Standard not met" / "Recovery day" / "Skip registered"
+- Track `prevNnCompleted` via `useRef`.
+- In an effect on `[nnCompleted, nnTotal]`:
+  - If `prevNnCompleted < nnTotal` AND `nnCompleted === nnTotal` AND `nnTotal > 0` AND `dayType !== 'rest' && dayType !== 'skip'`:
+    - Set local state `pulseStandard = true` for 1000ms (then clear).
+    - Fire `toast.success('Standard met.')` once (deduped via the same transition guard).
+- Apply the pulse to the outer `<Card>` (line 1371) via conditional class:
+  - `pulseStandard && 'ring-2 ring-emerald-500/60 transition-shadow duration-700'`
+- No confetti, no looping animations.
 
-We will **not** rewrite unrelated copy elsewhere in this pass (out of scope; the phrasing across the app is being standardized in earlier phases already).
+### Part 5 — Language Lock (Global Consistency)
 
----
+Audit and normalize the four surfaces to the **exact strings**: `Standard met`, `Standard not met`, `Recovery day`, `Skip registered`.
 
-### Part 5 — Invariants (enforced)
+- `GamePlanCard` header (new): "STANDARD MET" / "STANDARD NOT MET" / "RECOVERY DAY" / "SKIP REGISTERED" (uppercase per styling).
+- `src/components/identity/DailyOutcomeInlineBanner.tsx` — already conformant (uses same status strings). No change.
+- `src/components/vault/quiz/NightCheckInSuccess.tsx` — verify Daily Outcome section uses exact phrasing; adjust any drift.
+- `src/components/game-plan/NonNegotiableProgressStrip.tsx` — already uses "Standard met"/"Standard not met". No change.
 
-- ❌ No new tables, no migrations
-- ❌ No edge function changes (`evaluate-behavioral-state` / `compute-hammer-state` untouched)
-- ❌ No new "Daily Summary" / "Outcome Card" components elsewhere
-- ❌ No changes to NN enforcement, Hammer scoring, streak math
-- ✅ Pure read + presentation upgrade
-- ✅ Single source of truth: `useDailyOutcome` → consumed by Nightly Check-In + thin dashboard banner only
+### Part 6 — Suggestion Panel Awareness Sync (`src/components/identity/NNSuggestionPanel.tsx`)
+
+- Import `useDailyOutcome`.
+- Replace the static subline (line 28) with a status-aware line:
+  - `STANDARD NOT MET` → "Locking these in reduces missed days."
+  - `STANDARD MET` → "These are already part of your standard."
+  - Otherwise (rest/skip/loading) → keep existing default: "Based on your recent behavior, these are already part of your identity."
+- No other changes to this component.
 
 ---
 
 ### Files
 
-**New:**
-- `src/hooks/useDailyOutcome.ts`
-- `src/lib/nnProgress.ts` (extracted shared NN-count helper used by both `NonNegotiableProgressStrip` and `useDailyOutcome` to prevent drift)
+**Edit:**
+- `src/components/GamePlanCard.tsx` — Parts 1–4 (header, remaining indicator, scroll anchor + `id`, pulse on completion).
+- `src/components/identity/NNSuggestionPanel.tsx` — Part 6 awareness subline.
+- `src/components/vault/quiz/NightCheckInSuccess.tsx` — verify/normalize Part 5 phrasing only if drift found.
 
-**Edited:**
-- `src/components/vault/quiz/NightCheckInSuccess.tsx` — prepend Daily Outcome section
-- `src/components/game-plan/NonNegotiableProgressStrip.tsx` — refactored to use shared helper (no behavior change)
-- `src/pages/ProgressDashboard.tsx` — add thin inline banner at top
+**No new files. No DB changes. No evaluator changes.**
+
+---
+
+### Invariants
+
+- All state derives from `useDailyOutcome` — no parallel logic.
+- No new components beyond edits to existing ones.
+- Scroll fires at most once per mount.
+- Pulse fires only on the `< nnTotal → === nnTotal` transition; never on initial mount when already complete.
+- No scoring, evaluator, NN enforcement, or DB changes.
 
 ---
 
 ### Acceptance
 
-- Nightly check-in success screen now opens with a clear verdict (status + NN + day type + streak impact + 1-line summary)
-- Outcome matches NN completion + day state deterministically
-- Progress Dashboard shows the same verdict as a single inline banner — no second card, no duplication
-- Updates within 1s as NNs are completed or day type changes (realtime subscriptions)
-- Zero changes to evaluator, Hammer, or scoring logic
+- Opening Game Plan shows the live standard header at the top, color-coded.
+- If NNs are incomplete, page auto-scrolls to NN section once and shows "{N} required actions remaining".
+- Completing the final NN updates header to STANDARD MET within <1s, fires a one-time emerald ring pulse + single toast.
+- All four surfaces (Game Plan header, ProgressDashboard banner, NightCheckInSuccess, NN strip) use identical status phrasing.
+- Suggestion panel subline reflects current day status.
