@@ -21,8 +21,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { triggerConfetti, stopConfetti } from '@/lib/confetti';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { Share2 } from 'lucide-react';
+import { getTodayDate } from '@/utils/dateUtils';
 import { useDailyOutcome, type DailyOutcomeStatus, type StreakImpact } from '@/hooks/useDailyOutcome';
 
 interface TodayStats {
