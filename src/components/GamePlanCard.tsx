@@ -1173,6 +1173,27 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </button>
         
+        {/* Inline NN toggle — set/unset Non-Negotiable in 1 click (custom activities only) */}
+        {isCustom && task.customActivityData?.template?.id && !hideNN && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const tpl = task.customActivityData!.template;
+              toggleNonNegotiable(tpl.id, !!tpl.is_non_negotiable);
+            }}
+            title={isNN ? 'Remove from Non-Negotiables' : 'Mark as Non-Negotiable'}
+            className={cn(
+              "flex-shrink-0 h-8 w-8 rounded-md flex items-center justify-center transition-all",
+              isNN
+                ? "text-red-400 hover:bg-red-500/15"
+                : "text-white/30 hover:text-red-300 hover:bg-white/5"
+            )}
+          >
+            <Flame className={cn("h-4 w-4", isNN && "fill-red-400")} />
+          </button>
+        )}
+
         {/* Edit button - opens schedule drawer for system tasks, activity editor for custom */}
         <Button
           variant="ghost"
