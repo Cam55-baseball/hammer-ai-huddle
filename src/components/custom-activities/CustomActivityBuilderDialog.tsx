@@ -624,6 +624,190 @@ export function CustomActivityBuilderDialog({
                         Title: {nnValidation.errors.title}
                       </p>
                     )}
+
+                    {/* Phase 12.2 — Completion contract */}
+                    <Separator className="bg-red-500/20" />
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-wider text-red-400">
+                        Required: how is this verified?
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Pick a measurable signal. No "tap done" without proof.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNnCompletionType('in_app');
+                          setNnBinding({ kind: 'in_app', event: 'NN_COMPLETED', match: { templateId: template?.id ?? '__self__' } });
+                        }}
+                        className={cn(
+                          "p-2 rounded-md border-2 text-xs font-bold transition-all",
+                          nnCompletionType === 'in_app'
+                            ? "border-red-500 bg-red-500/15 text-red-300"
+                            : "border-border bg-background text-muted-foreground hover:border-red-500/50"
+                        )}
+                      >
+                        Track inside app
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNnCompletionType('manual');
+                          setNnBinding({ kind: 'manual', rule: { type: 'timer', min_seconds: 120 } });
+                        }}
+                        className={cn(
+                          "p-2 rounded-md border-2 text-xs font-bold transition-all",
+                          nnCompletionType === 'manual'
+                            ? "border-red-500 bg-red-500/15 text-red-300"
+                            : "border-border bg-background text-muted-foreground hover:border-red-500/50"
+                        )}
+                      >
+                        Manual confirmation
+                      </button>
+                    </div>
+
+                    {nnCompletionType === 'in_app' && nnBinding?.kind === 'in_app' && (
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold">Tracked event</Label>
+                        <Select
+                          value={nnBinding.event}
+                          onValueChange={(v) => setNnBinding({
+                            kind: 'in_app',
+                            event: v as 'NN_COMPLETED' | 'STANDARD_MET' | 'NIGHT_CHECKIN_COMPLETED',
+                            match: v === 'NN_COMPLETED' ? { templateId: template?.id ?? '__self__' } : undefined,
+                          })}
+                        >
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="NN_COMPLETED">Completing this activity</SelectItem>
+                            <SelectItem value="STANDARD_MET">Hitting today's full standard</SelectItem>
+                            <SelectItem value="NIGHT_CHECKIN_COMPLETED">Submitting tonight's check-in</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground">
+                          Auto-completes the moment this event fires. No manual tap.
+                        </p>
+                      </div>
+                    )}
+
+                    {nnCompletionType === 'manual' && nnBinding?.kind === 'manual' && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-3 gap-2">
+                          {(['timer', 'count', 'binary'] as const).map((rt) => (
+                            <button
+                              key={rt}
+                              type="button"
+                              onClick={() => {
+                                if (rt === 'timer') setNnBinding({ kind: 'manual', rule: { type: 'timer', min_seconds: 120 } });
+                                else if (rt === 'count') setNnBinding({ kind: 'manual', rule: { type: 'count', min_count: 10, label: 'reps' } });
+                                else setNnBinding({ kind: 'manual', rule: { type: 'binary', confirm_label: 'I completed this honestly' } });
+                              }}
+                              className={cn(
+                                "p-2 rounded-md border text-[11px] font-bold uppercase transition-all",
+                                nnBinding.rule.type === rt
+                                  ? "border-red-500 bg-red-500/10 text-red-300"
+                                  : "border-border text-muted-foreground hover:border-red-500/40"
+                              )}
+                            >
+                              {rt}
+                            </button>
+                          ))}
+                        </div>
+
+                        {nnBinding.rule.type === 'timer' && (
+                          <div className="space-y-1.5">
+                            <Label htmlFor="nn-timer" className="text-xs font-bold">
+                              Minimum seconds
+                            </Label>
+                            <Input
+                              id="nn-timer"
+                              type="number"
+                              min={30}
+                              max={3600}
+                              value={nnBinding.rule.min_seconds}
+                              onChange={(e) => setNnBinding({
+                                kind: 'manual',
+                                rule: { type: 'timer', min_seconds: parseInt(e.target.value || '0', 10) },
+                              })}
+                              className="text-sm"
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                              User must run the full timer before "Complete" enables.
+                            </p>
+                          </div>
+                        )}
+
+                        {nnBinding.rule.type === 'count' && (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1.5">
+                              <Label htmlFor="nn-count" className="text-xs font-bold">Minimum count</Label>
+                              <Input
+                                id="nn-count"
+                                type="number"
+                                min={1}
+                                max={500}
+                                value={nnBinding.rule.min_count}
+                                onChange={(e) => setNnBinding({
+                                  kind: 'manual',
+                                  rule: {
+                                    type: 'count',
+                                    min_count: parseInt(e.target.value || '0', 10),
+                                    label: (nnBinding.rule as any).label || 'reps',
+                                  },
+                                })}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="nn-count-label" className="text-xs font-bold">Unit label</Label>
+                              <Input
+                                id="nn-count-label"
+                                value={(nnBinding.rule as any).label || ''}
+                                onChange={(e) => setNnBinding({
+                                  kind: 'manual',
+                                  rule: {
+                                    type: 'count',
+                                    min_count: (nnBinding.rule as any).min_count || 1,
+                                    label: e.target.value.slice(0, 30),
+                                  },
+                                })}
+                                placeholder="reps, breaths, sets"
+                                maxLength={30}
+                                className="text-sm"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {nnBinding.rule.type === 'binary' && (
+                          <div className="space-y-1.5">
+                            <Label htmlFor="nn-binary" className="text-xs font-bold">Confirmation label</Label>
+                            <Input
+                              id="nn-binary"
+                              value={nnBinding.rule.confirm_label}
+                              onChange={(e) => setNnBinding({
+                                kind: 'manual',
+                                rule: { type: 'binary', confirm_label: e.target.value.slice(0, 80) },
+                              })}
+                              maxLength={80}
+                              className="text-sm"
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                              Allowed only when Success Criteria contains a measurable verb (e.g. "Completed 3 sets").
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {nnValidation.errors.completion && (
+                      <p className="text-[10px] text-red-400 font-medium">
+                        Completion: {nnValidation.errors.completion}
+                      </p>
+                    )}
                   </div>
                 )}
                 {!isEditing && (
