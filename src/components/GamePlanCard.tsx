@@ -15,9 +15,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight, NotebookPen, Flame } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight, NotebookPen, Flame, AlertTriangle, CheckCircle2, Moon } from 'lucide-react';
 import { NonNegotiableBadge } from '@/components/identity/NonNegotiableBadge';
 import { useDayState } from '@/hooks/useDayState';
+import { useDailyOutcome, type DailyOutcomeStatus } from '@/hooks/useDailyOutcome';
 import { Badge } from '@/components/ui/badge';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
