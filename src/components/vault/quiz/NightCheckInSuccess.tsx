@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Share2 } from 'lucide-react';
 import { getTodayDate } from '@/utils/dateUtils';
+import { safeGet, safeSet, safeRemove } from '@/lib/safeStorage';
 import { useDailyOutcome, type DailyOutcomeStatus, type StreakImpact } from '@/hooks/useDailyOutcome';
 
 interface TodayStats {
@@ -414,11 +415,15 @@ function DailyOutcomeSection() {
   const StatusIcon = meta.Icon;
   const StreakIcon = streak.Icon;
 
-  // Phase 10.7 — optional reflection (status-aware), local-only
+  // Phase 10.7/10.8 — optional reflection (status-aware), local-only.
+  // 10.8: safeStorage + no-op-on-unchanged + trim/limit before save.
   const reflectionKey = `hm:reflection:${getTodayDate()}`;
   const [reflection, setReflection] = useState<string>('');
+  const lastPersistedRef = useRef<string>('');
   useEffect(() => {
-    try { setReflection(localStorage.getItem(reflectionKey) ?? ''); } catch { /* noop */ }
+    const initial = safeGet(reflectionKey) ?? '';
+    setReflection(initial);
+    lastPersistedRef.current = initial;
   }, [reflectionKey]);
 
   const showReflection =
@@ -428,22 +433,32 @@ function DailyOutcomeSection() {
     : 'What blocked you today?';
 
   const persistReflection = () => {
-    try {
-      if (reflection.trim()) localStorage.setItem(reflectionKey, reflection.trim().slice(0, 120));
-      else localStorage.removeItem(reflectionKey);
-    } catch { /* noop */ }
+    const next = reflection.trim().slice(0, 120);
+    if (next === lastPersistedRef.current) return; // no redundant writes
+    if (next === '') {
+      safeRemove(reflectionKey);
+    } else {
+      safeSet(reflectionKey, next);
+    }
+    lastPersistedRef.current = next;
   };
 
   const handleShare = async () => {
     const text = 'I completed my full standard today.';
+    const supported =
+      typeof navigator !== 'undefined' && !!navigator.clipboard?.writeText;
+    if (!supported) {
+      toast.error('Copy not supported');
+      return;
+    }
     try {
-      if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        toast.success('Copied to clipboard');
-      } else {
-        toast.error('Copy not supported');
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard');
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log('[HM-CLIPBOARD] failed', err);
       }
-    } catch {
       toast.error('Copy not supported');
     }
   };
@@ -533,28 +548,43 @@ function FeedbackPrompt() {
   const [visible, setVisible] = useState(false);
   const [phase, setPhase] = useState<'ask' | 'why' | 'done'>('ask');
   const [note, setNote] = useState('');
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submittedRef = useRef(false);
 
   useEffect(() => {
-    // Throttle
-    try {
-      const last = localStorage.getItem(FEEDBACK_LAST_KEY);
-      if (last) {
-        const days = (Date.now() - new Date(last).getTime()) / (1000 * 60 * 60 * 24);
-        if (days < FEEDBACK_THROTTLE_DAYS) return;
+    // 10.8: clear any prior timer (defensive against fast remounts).
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    // Throttle: never even schedule the timer if the gate fails.
+    const last = safeGet(FEEDBACK_LAST_KEY);
+    if (last) {
+      const days = (Date.now() - new Date(last).getTime()) / (1000 * 60 * 60 * 24);
+      if (Number.isFinite(days) && days < FEEDBACK_THROTTLE_DAYS) return;
+    }
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      setVisible(true);
+    }, 2000);
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
-    } catch { /* noop */ }
-    const t = setTimeout(() => setVisible(true), 2000);
-    return () => clearTimeout(t);
+    };
   }, []);
 
   const stamp = (helpful: boolean, noteText?: string) => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+    const today = getTodayDate();
+    safeSet(FEEDBACK_LAST_KEY, today);
     try {
-      const today = getTodayDate();
-      localStorage.setItem(FEEDBACK_LAST_KEY, today);
-      const raw = localStorage.getItem(FEEDBACK_LOG_KEY);
+      const raw = safeGet(FEEDBACK_LOG_KEY);
       const arr = raw ? JSON.parse(raw) : [];
       arr.push({ date: today, helpful, note: noteText ?? null });
-      localStorage.setItem(FEEDBACK_LOG_KEY, JSON.stringify(arr.slice(-50)));
+      safeSet(FEEDBACK_LOG_KEY, JSON.stringify(arr.slice(-50)));
     } catch { /* noop */ }
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
