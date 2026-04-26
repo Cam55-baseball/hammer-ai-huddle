@@ -159,6 +159,18 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
     setRegen(false);
   };
 
+  // Phase 6 — autoOpenSuggestions: run once on mount when description is rich enough.
+  // Suggestions land in the suggestions table — owner still must click to adopt.
+  const autoSuggestRanRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpenSuggestions || autoSuggestRanRef.current) return;
+    if (aiDescription.trim().length >= 20) {
+      autoSuggestRanRef.current = true;
+      void handleAutoSuggest();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenSuggestions, aiDescription]);
+
   const handleSave = async () => {
     if (!isReady) {
       toast({ title: 'Not ready', description: missing.map(m => m.message).join(' · '), variant: 'destructive' });
