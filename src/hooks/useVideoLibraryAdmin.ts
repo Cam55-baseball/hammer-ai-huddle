@@ -346,6 +346,13 @@ export function useVideoLibraryAdmin() {
   /**
    * Re-trigger the AI tag suggestion function for an existing video.
    * Returns the count of newly inserted suggestions, or null on failure.
+   *
+   * OWNER AUTHORITY GUARD:
+   *   This function MUST write only to `video_tag_suggestions` (the AI proposal
+   *   table). It MUST NOT call `syncTagAssignments`, MUST NOT mutate
+   *   `video_tag_assignments`, and MUST NOT modify any owner-set field on
+   *   `library_videos`. Suggestions are advisory; the owner adopts them via
+   *   explicit click in `AIComparePanel` or `AISuggestionsReview`.
    */
   const regenerateAISuggestions = useCallback(async (videoId: string) => {
     try {

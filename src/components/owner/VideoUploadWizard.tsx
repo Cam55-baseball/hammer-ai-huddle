@@ -12,11 +12,15 @@ import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
 import { computeMissingFields } from "@/lib/videoReadiness";
+import { getSmartDefaults } from "@/lib/ownerLearning";
+import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
   tags: LibraryTag[];
   onSuccess: () => void;
+  /** When true, smart defaults pre-fill domain & format and Step 4 review is skipped. */
+  fastMode?: boolean;
 }
 
 const SPORTS = ['baseball', 'softball', 'both'] as const;
@@ -39,23 +43,32 @@ function detectVideoType(url: string): 'youtube' | 'vimeo' | 'external' {
   return 'external';
 }
 
-export function VideoUploadWizard({ tags, onSuccess }: Props) {
+export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) {
   const { uploadVideo, uploading } = useVideoLibraryAdmin();
   const [step, setStep] = useState(1);
+  const defaults = useMemo(() => (fastMode ? getSmartDefaults() : null), [fastMode]);
 
   // Step 1
   const [mode, setMode] = useState<'link' | 'upload'>('link');
   const [externalUrl, setExternalUrl] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
-  // Step 2
+  // Step 2 — pre-filled by smart defaults in Fast Mode (only suggests; owner can change)
   const [title, setTitle] = useState('');
   const [sport, setSport] = useState<string>('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
 
-  // Step 3 (engine fields, reusing StructuredTagEditor)
-  const [structured, setStructured] = useState<StructuredTagState>(emptyStructuredTagState);
+  // Step 3 (engine fields, reusing StructuredTagEditor) — Fast Mode pre-suggests format only
+  const [structured, setStructured] = useState<StructuredTagState>(() => {
+    if (!fastMode || !defaults) return emptyStructuredTagState;
+    return {
+      ...emptyStructuredTagState,
+      videoFormat: defaults.topFormat ?? '',
+      // Skill domain is sport-aware in Step 2; we don't pre-fill skillDomains here
+      // because they are also driven by what the owner picks at Step 2.
+    };
+  });
 
   // Autofocus refs
   const urlRef = useRef<HTMLInputElement>(null);
@@ -74,6 +87,8 @@ export function VideoUploadWizard({ tags, onSuccess }: Props) {
   });
   const step3Valid = step3Missing.length === 0;
 
+  // Fast Mode treats Step 3 as the final step (auto-publish on advance).
+  const totalSteps = fastMode ? 3 : 4;
   const validBy: Record<number, boolean> = { 1: step1Valid, 2: step2Valid, 3: step3Valid, 4: true };
   const canNext = validBy[step] === true;
 
@@ -85,13 +100,17 @@ export function VideoUploadWizard({ tags, onSuccess }: Props) {
     });
   }, [step]);
 
-  // Keyboard nav: Enter → Next, Escape ignored (parent dialog handles close)
+  // Keyboard nav: Cmd/Ctrl+Enter → advance / publish
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        if (step < 4 && canNext) setStep(step + 1);
-        else if (step === 4) handlePublish();
+        if (step < totalSteps && canNext) {
+          setStep(step + 1);
+        } else if (step === totalSteps && canNext) {
+          // Final step: publish (Step 4 in beginner, Step 3 in Fast Mode)
+          void handlePublish();
+        }
       }
     };
     window.addEventListener('keydown', onKey);
@@ -134,7 +153,8 @@ export function VideoUploadWizard({ tags, onSuccess }: Props) {
     }
   };
 
-  const progress = (step / 4) * 100;
+  const progress = (step / totalSteps) * 100;
+  const visibleSteps = fastMode ? STEPS.slice(0, 3) : STEPS;
 
   return (
     <Card className="p-5 space-y-5">
@@ -142,13 +162,14 @@ export function VideoUploadWizard({ tags, onSuccess }: Props) {
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              Step {step} of 4
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <span>Step {step} of {totalSteps}</span>
+              {fastMode && <span className="text-primary">⚡ Fast Mode</span>}
             </p>
             <h3 className="font-semibold text-base">{STEPS[step - 1].title}</h3>
           </div>
           <div className="flex gap-1">
-            {STEPS.map(s => (
+            {visibleSteps.map(s => (
               <div
                 key={s.n}
                 className={`h-1.5 w-6 rounded-full transition-colors ${
@@ -336,7 +357,7 @@ export function VideoUploadWizard({ tags, onSuccess }: Props) {
           <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
         </Button>
 
-        {step < 4 ? (
+        {step < totalSteps ? (
           <Button
             size="sm"
             onClick={() => setStep(s => s + 1)}
@@ -349,7 +370,7 @@ export function VideoUploadWizard({ tags, onSuccess }: Props) {
             {uploading ? (
               <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Publishing…</>
             ) : (
-              <><Check className="h-3.5 w-3.5 mr-1" /> Publish to Library</>
+              <><Check className="h-3.5 w-3.5 mr-1" /> {fastMode ? 'Publish' : 'Publish to Library'}</>
             )}
           </Button>
         )}

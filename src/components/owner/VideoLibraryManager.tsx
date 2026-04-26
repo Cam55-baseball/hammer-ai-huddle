@@ -109,6 +109,7 @@ export function VideoLibraryManager() {
     setEditTarget(null);
     refetch();
     qc.invalidateQueries({ queryKey: ['library-videos-readiness'] });
+    qc.invalidateQueries({ queryKey: ['video-confidence-map'] });
   };
 
   const handleEditClose = () => {
@@ -172,6 +173,7 @@ export function VideoLibraryManager() {
           ) : (
             visibleVideos.map(video => {
               const r = readinessMap.get(video.id);
+              const conf = confidenceMap?.get(video.id);
               return (
                 <Card key={video.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -179,6 +181,7 @@ export function VideoLibraryManager() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-semibold text-sm truncate">{video.title}</h4>
                         <ReadinessBadge r={r} />
+                        {conf && <ConfidenceBadge score={conf.score} tier={conf.tier} compact />}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -222,10 +225,15 @@ export function VideoLibraryManager() {
         </TabsContent>
 
         <TabsContent value="upload" className="mt-4">
-          <VideoUploadWizard tags={tags} onSuccess={() => {
-            refetch();
-            qc.invalidateQueries({ queryKey: ['library-videos-readiness'] });
-          }} />
+          <VideoUploadWizard
+            tags={tags}
+            fastMode={fastMode}
+            onSuccess={() => {
+              refetch();
+              qc.invalidateQueries({ queryKey: ['library-videos-readiness'] });
+              qc.invalidateQueries({ queryKey: ['video-confidence-map'] });
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="tags" className="mt-4">
@@ -249,19 +257,27 @@ export function VideoLibraryManager() {
         </TabsContent>
       </Tabs>
 
-      {/* Edit Dialog */}
+      {/* Edit Dialog — Fast Mode swaps in compact editor (identical save path) */}
       <Dialog open={!!editTarget} onOpenChange={(open) => { if (!open) handleEditClose(); }}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className={fastMode ? "max-w-2xl max-h-[85vh] overflow-y-auto" : "max-w-lg max-h-[85vh] overflow-y-auto"}>
           <DialogHeader>
-            <DialogTitle>Edit Video</DialogTitle>
+            <DialogTitle>{fastMode ? "Edit · Fast Mode" : "Edit Video"}</DialogTitle>
           </DialogHeader>
           {editTarget && (
-            <VideoEditForm
-              video={editTarget}
-              tags={tags}
-              onSuccess={handleEditSuccess}
-              onCancel={handleEditClose}
-            />
+            fastMode ? (
+              <VideoFastEditor
+                video={editTarget}
+                onSuccess={handleEditSuccess}
+                onCancel={handleEditClose}
+              />
+            ) : (
+              <VideoEditForm
+                video={editTarget}
+                tags={tags}
+                onSuccess={handleEditSuccess}
+                onCancel={handleEditClose}
+              />
+            )
           )}
         </DialogContent>
       </Dialog>
