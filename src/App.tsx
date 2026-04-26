@@ -117,6 +117,9 @@ const AdminEngineSettings = lazyWithRetry(() => import("./pages/AdminEngineSetti
 const EngineHealthDashboard = lazyWithRetry(() => import("./pages/EngineHealthDashboard"));
 const DrillLibraryPlayer = lazyWithRetry(() => import("./pages/DrillLibraryPlayer"));
 const TrainingBlock = lazyWithRetry(() => import("./pages/TrainingBlock"));
+const ProgramBuilder = lazyWithRetry(() => import("./pages/owner/ProgramBuilder"));
+const BundleBuilder = lazyWithRetry(() => import("./pages/owner/BundleBuilder"));
+const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationFlow"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -167,6 +170,9 @@ const App = () => {
               <Route path="/video-library" element={<VideoLibrary />} />
               <Route path="/video-library/:id" element={<VideoLibraryPlayer />} />
               <Route path="/owner" element={<OwnerDashboard />} />
+              <Route path="/owner/open_program_builder" element={<ProgramBuilder />} />
+              <Route path="/owner/open_bundle_builder" element={<BundleBuilder />} />
+              <Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />
               <Route path="/coach-dashboard" element={<CoachDashboard />} />
