@@ -29,6 +29,10 @@ interface Props {
   video: LibraryVideo;
   onSuccess: () => void;
   onCancel: () => void;
+  /** Phase 6 — focus a specific missing field on mount. */
+  initialFocus?: 'video_format' | 'skill_domains' | 'ai_description' | 'tag_assignments' | string;
+  /** Phase 6 — auto-run Hammer suggestions on mount (still NOT applied). */
+  autoOpenSuggestions?: boolean;
 }
 
 /**
@@ -38,7 +42,7 @@ interface Props {
  * - Cmd/Ctrl+Enter saves, Esc cancels
  * - Smart defaults pre-applied (format, primary domain) when video is empty
  */
-export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
+export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, autoOpenSuggestions }: Props) {
   const { updateStructuredFields, syncTagAssignments, regenerateAISuggestions, uploading } = useVideoLibraryAdmin();
 
   const defaults = useMemo(() => getSmartDefaults(), []);
@@ -53,12 +57,16 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
   const [assignments, setAssignments] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [regen, setRegen] = useState(false);
+  const initialConfRef = useRef<number | null>(null);
 
   const primaryDomain = skillDomains[0];
   const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
   const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
 
   const descRef = useRef<HTMLTextAreaElement>(null);
+  const formatRef = useRef<HTMLDivElement>(null);
+  const domainsRef = useRef<HTMLDivElement>(null);
+  const tagsRef = useRef<HTMLDivElement>(null);
 
   // Load existing assignments
   useEffect(() => {
@@ -75,10 +83,16 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
     })();
   }, [video.id]);
 
-  // Auto-focus description (the highest-leverage field)
+  // Phase 6 — focus the requested field, falling back to description.
   useEffect(() => {
-    requestAnimationFrame(() => descRef.current?.focus());
-  }, []);
+    requestAnimationFrame(() => {
+      const target = initialFocus;
+      if (target === 'video_format') formatRef.current?.scrollIntoView({ block: 'center' });
+      else if (target === 'skill_domains') domainsRef.current?.scrollIntoView({ block: 'center' });
+      else if (target === 'tag_assignments') tagsRef.current?.scrollIntoView({ block: 'center' });
+      else descRef.current?.focus();
+    });
+  }, [initialFocus]);
 
   const layersCovered = useMemo<TagLayer[]>(() => {
     const layers: TagLayer[] = [];
@@ -96,6 +110,9 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
     assignmentCount: Object.keys(assignments).length,
   });
 
+  // Capture the very first non-zero confidence for the save-preview delta.
+  if (initialConfRef.current === null && conf.score > 0) initialConfRef.current = conf.score;
+
   const missing = computeMissingFields({
     videoFormat,
     skillDomains,
@@ -104,6 +121,25 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
   });
   const isReady = missing.length === 0;
   const canAutoSuggest = aiDescription.trim().length >= 20;
+
+  // Phase 6 — per-field "what you'd gain" deltas (matches videoConfidence weights).
+  const deltaFor = (key: string): number | null => {
+    if (key === 'video_format' && !videoFormat) return 15;
+    if (key === 'skill_domains' && skillDomains.length === 0) return 15;
+    if (key === 'ai_description') {
+      const len = aiDescription.trim().length;
+      if (len < 20) return 10;
+      if (len < 60) return 10; // bump to 20
+      if (len < 140) return 5;  // bump to 25
+    }
+    if (key === 'tag_assignments') {
+      const n = Object.keys(assignments).length;
+      if (n === 0) return 12;
+      if (n === 1) return 7;
+      if (n < 6) return 8; // diversity boost potential
+    }
+    return null;
+  };
 
   const toggleDomain = (d: SkillDomain) =>
     setSkillDomains(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
@@ -122,6 +158,18 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
     await regenerateAISuggestions(video.id);
     setRegen(false);
   };
+
+  // Phase 6 — autoOpenSuggestions: run once on mount when description is rich enough.
+  // Suggestions land in the suggestions table — owner still must click to adopt.
+  const autoSuggestRanRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpenSuggestions || autoSuggestRanRef.current) return;
+    if (aiDescription.trim().length >= 20) {
+      autoSuggestRanRef.current = true;
+      void handleAutoSuggest();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenSuggestions, aiDescription]);
 
   const handleSave = async () => {
     if (!isReady) {
@@ -177,8 +225,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
 
       {/* 2-column engine fields */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-[10px]">Format</Label>
+        <div className="space-y-1" ref={formatRef}>
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px]">Format</Label>
+            {deltaFor('video_format') && (
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('video_format')}</span>
+            )}
+          </div>
           <Select value={videoFormat} onValueChange={setVideoFormat} disabled={isProcessing}>
             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pick format" /></SelectTrigger>
             <SelectContent>
@@ -192,8 +245,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
           </Select>
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-[10px]">Skill Domains</Label>
+        <div className="space-y-1" ref={domainsRef}>
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px]">Skill Domains</Label>
+            {deltaFor('skill_domains') && (
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('skill_domains')}</span>
+            )}
+          </div>
           <div className="flex flex-wrap gap-1">
             {SKILL_DOMAINS.map(d => (
               <Badge
@@ -212,14 +270,19 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
       {/* Description */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px]">Description</Label>
+          <Label className="text-[10px] flex items-center gap-1.5">
+            Description
+            {deltaFor('ai_description') && (
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('ai_description')}</span>
+            )}
+          </Label>
           <Button
             size="sm" variant="ghost" className="h-6 text-[10px] px-1.5"
             disabled={!canAutoSuggest || regen || isProcessing}
             onClick={handleAutoSuggest}
           >
             {regen ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
-            Auto-Suggest
+            Run Hammer Suggestions
           </Button>
         </div>
         <OwnerAuthorityNote compact className="block" />
@@ -235,8 +298,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
       </div>
 
       {/* Tags */}
-      <div className="space-y-1">
-        <Label className="text-[10px]">Tags ({Object.keys(assignments).length})</Label>
+      <div className="space-y-1" ref={tagsRef}>
+        <div className="flex items-center justify-between">
+          <Label className="text-[10px]">Tags ({Object.keys(assignments).length})</Label>
+          {deltaFor('tag_assignments') && (
+            <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('tag_assignments')}</span>
+          )}
+        </div>
         {!primaryDomain ? (
           <p className="text-[10px] text-muted-foreground italic">Pick a domain to load tags.</p>
         ) : (
@@ -267,7 +335,12 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
       {/* Actions */}
       <div className="flex items-center justify-between pt-1 border-t">
         <p className="text-[10px] text-muted-foreground">
-          {isReady ? '⌘↵ to save' : missing.map(m => m.message).join(' · ')}
+          {isReady ? `⌘↵ to save` : missing.map(m => m.message).join(' · ')}
+          {initialConfRef.current !== null && conf.score !== initialConfRef.current && (
+            <span className="ml-2 font-semibold text-foreground">
+              · Confidence {initialConfRef.current} → {conf.score}
+            </span>
+          )}
         </p>
         <div className="flex gap-1.5">
           <Button variant="ghost" size="sm" onClick={onCancel} disabled={isProcessing}>

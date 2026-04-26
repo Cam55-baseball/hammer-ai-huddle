@@ -17,6 +17,9 @@ import { BackfillQueueDialog } from "./BackfillQueueDialog";
 import { OwnerTaggingPerformancePanel } from "./OwnerTaggingPerformancePanel";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { VideoFastEditor } from "./VideoFastEditor";
+import { QuickFixActions, type QuickFixIntent } from "./QuickFixActions";
+import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
+import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
 import { useVideoReadiness, readinessByVideoId, MISSING_LABEL, type VideoReadiness } from "@/hooks/useVideoReadiness";
 import { useVideoConfidenceMap } from "@/hooks/useVideoConfidenceMap";
@@ -75,6 +78,8 @@ export function VideoLibraryManager() {
   const qc = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<LibraryVideo | null>(null);
+  const [editFocus, setEditFocus] = useState<string | undefined>(undefined);
+  const [editAutoSuggest, setEditAutoSuggest] = useState(false);
   const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
   const [backfillOpen, setBackfillOpen] = useState(false);
   const [confirmCloseEdit, setConfirmCloseEdit] = useState(false);
@@ -120,13 +125,30 @@ export function VideoLibraryManager() {
       return;
     }
     setEditTarget(null);
+    setEditFocus(undefined);
+    setEditAutoSuggest(false);
   };
+
+  // Quick-fix entry. Always opens the editor — owner still must save (Owner Authority).
+  const openQuickFix = (video: LibraryVideo, intent: QuickFixIntent, focus?: string) => {
+    setEditFocus(intent === 'complete_missing' ? focus : intent === 'auto_suggest' ? 'ai_description' : undefined);
+    setEditAutoSuggest(intent === 'auto_suggest');
+    // Smart Defaults already auto-applies in VideoFastEditor when fields are empty,
+    // so we just open the editor — no extra wiring required.
+    setEditTarget(video);
+  };
+
+  // Filter to throttled-only used by coaching nudge "Fix now" CTA.
+  const filterThrottled = () => setShowOnlyIncomplete(true);
 
   return (
     <div className="space-y-4">
       {/* Top bar */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="text-lg font-semibold">Video Library</h2>
+        <div>
+          <h2 className="text-lg font-semibold">Video Library</h2>
+          <p className="text-xs text-muted-foreground">{SYSTEM_TONE.libraryHeader}</p>
+        </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <Zap className={`h-3.5 w-3.5 ${fastMode ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -136,6 +158,8 @@ export function VideoLibraryManager() {
           <VideoLibraryHelpSheet />
         </div>
       </div>
+
+      <OwnerCoachingNudge onFixThrottled={filterThrottled} />
 
       <OwnerTaggingPerformancePanel />
 
@@ -174,6 +198,8 @@ export function VideoLibraryManager() {
             visibleVideos.map(video => {
               const r = readinessMap.get(video.id);
               const conf = confidenceMap?.get(video.id);
+              const tier = (video as any).distribution_tier as string | undefined;
+              const isThrottled = tier === 'throttled';
               return (
                 <Card key={video.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -184,6 +210,11 @@ export function VideoLibraryManager() {
                         {conf && <ConfidenceBadge score={conf.score} tier={conf.tier} compact />}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
+                      {isThrottled && (
+                        <p className="mt-1.5 text-[11px] text-destructive font-medium">
+                          {SYSTEM_TONE.throttledOwnerCard}
+                        </p>
+                      )}
                       <div className="flex flex-wrap gap-1 mt-2">
                         {video.sport.map(s => (
                           <Badge key={s} variant="default" className="text-[10px] capitalize">{s}</Badge>
@@ -196,6 +227,10 @@ export function VideoLibraryManager() {
                         <span>❤️ {video.likes_count}</span>
                         <span>Type: {video.video_type}</span>
                       </div>
+                      <QuickFixActions
+                        readiness={r}
+                        onAction={(intent, focus) => openQuickFix(video, intent, focus)}
+                      />
                     </div>
                     <div className="flex shrink-0 gap-1">
                       <Button
@@ -269,6 +304,8 @@ export function VideoLibraryManager() {
                 video={editTarget}
                 onSuccess={handleEditSuccess}
                 onCancel={handleEditClose}
+                initialFocus={editFocus}
+                autoOpenSuggestions={editAutoSuggest}
               />
             ) : (
               <VideoEditForm
