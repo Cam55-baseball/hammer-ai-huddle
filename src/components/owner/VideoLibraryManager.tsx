@@ -28,6 +28,7 @@ import type { ConversionAction } from "@/lib/videoConversionActions";
 import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
 import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useVideoReadiness, readinessByVideoId, MISSING_LABEL, type VideoReadiness } from "@/hooks/useVideoReadiness";
 import { useVideoConfidenceMap } from "@/hooks/useVideoConfidenceMap";
 import { useOwnerPrefs } from "@/hooks/useOwnerPrefs";
@@ -253,7 +254,7 @@ export function VideoLibraryManager() {
                           {SYSTEM_TONE.throttledOwnerCard}
                         </p>
                       )}
-                      {cta && !isThrottled && action && (
+                      {isOwner && cta && !isThrottled && action && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
                           <span className="text-muted-foreground italic">
                             <span className="font-medium not-italic">Hammer Suggestion — Owner Decides:</span>{' '}
