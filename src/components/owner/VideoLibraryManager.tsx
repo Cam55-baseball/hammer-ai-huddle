@@ -18,6 +18,7 @@ import { OwnerTaggingPerformancePanel } from "./OwnerTaggingPerformancePanel";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { VideoFastEditor } from "./VideoFastEditor";
 import { QuickFixActions, type QuickFixIntent } from "./QuickFixActions";
+import { normalizeTier } from "@/lib/videoTier";
 import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
 import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
