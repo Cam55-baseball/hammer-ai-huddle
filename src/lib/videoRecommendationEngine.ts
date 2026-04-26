@@ -75,6 +75,8 @@ export interface RecommendResult {
   video: VideoWithTags;
   score: number;
   reasons: string[];
+  /** Phase 7: derived monetization overlay — never feeds back into ranking. */
+  conversionScore?: number;
 }
 
 const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
