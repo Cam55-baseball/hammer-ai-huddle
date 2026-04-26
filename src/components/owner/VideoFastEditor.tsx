@@ -225,8 +225,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
 
       {/* 2-column engine fields */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-[10px]">Format</Label>
+        <div className="space-y-1" ref={formatRef}>
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px]">Format</Label>
+            {deltaFor('video_format') && (
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('video_format')}</span>
+            )}
+          </div>
           <Select value={videoFormat} onValueChange={setVideoFormat} disabled={isProcessing}>
             <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pick format" /></SelectTrigger>
             <SelectContent>
@@ -240,8 +245,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
           </Select>
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-[10px]">Skill Domains</Label>
+        <div className="space-y-1" ref={domainsRef}>
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px]">Skill Domains</Label>
+            {deltaFor('skill_domains') && (
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('skill_domains')}</span>
+            )}
+          </div>
           <div className="flex flex-wrap gap-1">
             {SKILL_DOMAINS.map(d => (
               <Badge
