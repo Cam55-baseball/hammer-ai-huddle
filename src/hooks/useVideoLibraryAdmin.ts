@@ -300,6 +300,18 @@ export function useVideoLibraryAdmin() {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return false;
     }
+
+    // Owner learning: rolling localStorage record (no DB calls)
+    try {
+      const { recordOwnerChoice } = await import('@/lib/ownerLearning');
+      recordOwnerChoice({
+        format: fields.videoFormat || undefined,
+        domains: fields.skillDomains ?? [],
+        layers: [], // layer info comes from syncTagAssignments via taxonomy join elsewhere
+      });
+    } catch {
+      /* learning is non-critical */
+    }
     return true;
   }, []);
 
