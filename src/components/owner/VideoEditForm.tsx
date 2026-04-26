@@ -14,6 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LibraryVideo, LibraryTag } from "@/hooks/useVideoLibrary";
 import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
 import { computeMissingFields } from "@/lib/videoReadiness";
+import { computeVideoConfidence } from "@/lib/videoConfidence";
+import { ConfidenceBadge } from "./ConfidenceBadge";
+import { AIComparePanel } from "./AIComparePanel";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -110,6 +113,14 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     setAssignments(prev => ({ ...prev, [tagId]: w }));
   };
 
+  const layersCovered = useMemo<TagLayer[]>(() => {
+    const layers: TagLayer[] = [];
+    for (const t of taxonomy) {
+      if (assignments[t.id] != null) layers.push(t.layer);
+    }
+    return layers;
+  }, [assignments, taxonomy]);
+
   const missing = computeMissingFields({
     videoFormat,
     skillDomains,
@@ -118,6 +129,13 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
   });
   const isReady = missing.length === 0;
   const canAutoSuggest = aiDescription.trim().length >= 20;
+  const conf = computeVideoConfidence({
+    videoFormat,
+    skillDomains,
+    aiDescription,
+    layersCovered,
+    assignmentCount: Object.keys(assignments).length,
+  });
 
   const handleRegenAI = async () => {
     if (!aiDescription.trim()) {
@@ -325,9 +343,12 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
             </h4>
             <p className="text-[11px] text-muted-foreground">Required for recommendations</p>
           </div>
-          <Badge variant={isReady ? "default" : "outline"} className="text-[10px]">
-            {isReady ? "Ready" : `${4 - missing.length}/4 done`}
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            <ConfidenceBadge score={conf.score} tier={conf.tier} compact />
+            <Badge variant={isReady ? "default" : "outline"} className="text-[10px]">
+              {isReady ? "Ready" : `${4 - missing.length}/4 done`}
+            </Badge>
+          </div>
         </div>
 
         {/* Video Format */}
