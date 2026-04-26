@@ -129,6 +129,9 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const scored: RecommendResult[] = [];
 
   for (const v of candidateVideos) {
+    // Phase 6 hard gate: blocked videos never reach athletes.
+    if (v.distribution_tier === 'blocked') continue;
+
     // Domain gate: skip videos not in this skill domain (if domains set)
     if (v.skill_domains && v.skill_domains.length && !v.skill_domains.includes(skillDomain)) continue;
 
@@ -180,6 +183,15 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     if (mode === 'long_term' && (v.video_format === 'drill' || v.video_format === 'breakdown')) {
       score += 8;
     }
+
+    // Phase 6: distribution tier multiplier — applied to the final tag-match score
+    // so relevance dominates but confidence breaks ties decisively.
+    const tier = v.distribution_tier ?? 'normal';
+    const multiplier = TIER_MULTIPLIER[tier] ?? 1.0;
+    score = score * multiplier;
+    if (tier === 'featured') reasons.push('Featured video — elite structure');
+    else if (tier === 'boosted') reasons.push('Boosted — high-confidence');
+    else if (tier === 'throttled') reasons.push('Reduced reach — incomplete structure');
 
     if (score > 0) {
       scored.push({ video: v, score, reasons: dedupe(reasons).slice(0, 4) });
