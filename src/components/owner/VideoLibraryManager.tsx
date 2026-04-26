@@ -83,6 +83,7 @@ function ReadinessBadge({ r }: { r?: VideoReadiness }) {
 }
 
 export function VideoLibraryManager() {
+  const { isOwner } = useOwnerAccess();
   const qc = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<LibraryVideo | null>(null);
