@@ -28,9 +28,16 @@ export function useVideoLibraryAdmin() {
 
   const uploadVideo = useCallback(async (payload: UploadVideoPayload) => {
     if (!user) return null;
+
+    // Project rule: no blank video_url ever
+    if (payload.videoType !== 'upload' && (!payload.externalUrl || !payload.externalUrl.trim())) {
+      toast({ title: 'Video URL required', description: 'Paste a valid video link.', variant: 'destructive' });
+      return null;
+    }
+
     setUploading(true);
     try {
-      let videoUrl = payload.externalUrl || '';
+      let videoUrl = payload.externalUrl?.trim() || '';
 
       if (payload.videoType === 'upload' && payload.videoFile) {
         const validation = validateVideoFile(payload.videoFile);
@@ -82,7 +89,14 @@ export function useVideoLibraryAdmin() {
           video_id: data.id, tag_id, weight,
         }));
         const { error: aErr } = await (supabase as any).from('video_tag_assignments').insert(rows);
-        if (aErr) console.error('Tag assignment insert error:', aErr);
+        if (aErr) {
+          console.error('Tag assignment insert error:', aErr);
+          toast({
+            title: 'Tags not saved',
+            description: 'Video was added but the tag assignments failed. Open Edit to fix.',
+            variant: 'destructive',
+          });
+        }
       }
 
       // Auto-trigger AI analysis if ai_description set and structured tags sparse
