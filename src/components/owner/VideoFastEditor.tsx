@@ -270,14 +270,19 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
       {/* Description */}
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px]">Description</Label>
+          <Label className="text-[10px] flex items-center gap-1.5">
+            Description
+            {deltaFor('ai_description') && (
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('ai_description')}</span>
+            )}
+          </Label>
           <Button
             size="sm" variant="ghost" className="h-6 text-[10px] px-1.5"
             disabled={!canAutoSuggest || regen || isProcessing}
             onClick={handleAutoSuggest}
           >
             {regen ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Wand2 className="h-3 w-3 mr-1" />}
-            Auto-Suggest
+            Run Hammer Suggestions
           </Button>
         </div>
         <OwnerAuthorityNote compact className="block" />
@@ -293,8 +298,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
       </div>
 
       {/* Tags */}
-      <div className="space-y-1">
-        <Label className="text-[10px]">Tags ({Object.keys(assignments).length})</Label>
+      <div className="space-y-1" ref={tagsRef}>
+        <div className="flex items-center justify-between">
+          <Label className="text-[10px]">Tags ({Object.keys(assignments).length})</Label>
+          {deltaFor('tag_assignments') && (
+            <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('tag_assignments')}</span>
+          )}
+        </div>
         {!primaryDomain ? (
           <p className="text-[10px] text-muted-foreground italic">Pick a domain to load tags.</p>
         ) : (
@@ -325,7 +335,12 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
       {/* Actions */}
       <div className="flex items-center justify-between pt-1 border-t">
         <p className="text-[10px] text-muted-foreground">
-          {isReady ? '⌘↵ to save' : missing.map(m => m.message).join(' · ')}
+          {isReady ? `⌘↵ to save` : missing.map(m => m.message).join(' · ')}
+          {initialConfRef.current !== null && conf.score !== initialConfRef.current && (
+            <span className="ml-2 font-semibold text-foreground">
+              · Confidence {initialConfRef.current} → {conf.score}
+            </span>
+          )}
         </p>
         <div className="flex gap-1.5">
           <Button variant="ghost" size="sm" onClick={onCancel} disabled={isProcessing}>
