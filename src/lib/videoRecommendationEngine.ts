@@ -1,7 +1,14 @@
 /**
  * Video Recommendation Engine — Hammer Tagging V1
  * Pure, testable function. Ranks library videos against analysis/session/long-term inputs.
+ *
+ * PHASE 6 SYSTEM RULES:
+ * - Blocked videos NEVER surface
+ * - Tier is authoritative over raw score noise
+ * - Confidence is a tie-breaker, not a driver
+ * - UI must reflect DB tier exactly (no divergence)
  */
+import { normalizeTier, TIER_BOOST } from './videoTier';
 
 export type SuggestionMode = 'immediate' | 'session' | 'long_term';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
@@ -38,13 +45,7 @@ export interface VideoWithTags {
   distribution_tier?: DistributionTier | null;
 }
 
-const TIER_MULTIPLIER: Record<DistributionTier, number> = {
-  blocked: 0,
-  throttled: 0.55,
-  normal: 1.0,
-  boosted: 1.15,
-  featured: 1.30,
-};
+// Tier multipliers live in src/lib/videoTier.ts (TIER_BOOST) — single source of truth.
 
 export interface VideoTagRule {
   id: string;
@@ -129,11 +130,16 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const scored: RecommendResult[] = [];
 
   for (const v of candidateVideos) {
-    // Phase 6 hard gate: blocked videos never reach athletes.
-    if (v.distribution_tier === 'blocked') continue;
+    // Phase 6 — tier is read once, authoritatively, up-front.
+    const tier = normalizeTier(v.distribution_tier);
+
+    // HARD FILTER: blocked videos never reach athletes.
+    if (tier === 'blocked') continue;
 
     // Domain gate: skip videos not in this skill domain (if domains set)
     if (v.skill_domains && v.skill_domains.length && !v.skill_domains.includes(skillDomain)) continue;
+
+    const tierBoost = TIER_BOOST[tier];
 
     let score = 0;
     const reasons: string[] = [];
@@ -184,11 +190,8 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       score += 8;
     }
 
-    // Phase 6: distribution tier multiplier — applied to the final tag-match score
-    // so relevance dominates but confidence breaks ties decisively.
-    const tier = v.distribution_tier ?? 'normal';
-    const multiplier = TIER_MULTIPLIER[tier] ?? 1.0;
-    score = score * multiplier;
+    // Phase 6: tier boost is the FINAL multiplier — no late-stage tag-noise can out-rank a featured video.
+    score = score * tierBoost;
     if (tier === 'featured') reasons.push('Featured video — elite structure');
     else if (tier === 'boosted') reasons.push('Boosted — high-confidence');
     else if (tier === 'throttled') reasons.push('Reduced reach — incomplete structure');

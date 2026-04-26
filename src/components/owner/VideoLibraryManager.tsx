@@ -18,6 +18,7 @@ import { OwnerTaggingPerformancePanel } from "./OwnerTaggingPerformancePanel";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { VideoFastEditor } from "./VideoFastEditor";
 import { QuickFixActions, type QuickFixIntent } from "./QuickFixActions";
+import { normalizeTier } from "@/lib/videoTier";
 import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
 import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
@@ -198,7 +199,9 @@ export function VideoLibraryManager() {
             visibleVideos.map(video => {
               const r = readinessMap.get(video.id);
               const conf = confidenceMap?.get(video.id);
-              const tier = (video as any).distribution_tier as string | undefined;
+              const tier = normalizeTier((video as any).distribution_tier);
+              // Phase 6 safety: blocked videos must never render, even if a server-side filter slips.
+              if (tier === 'blocked') return null;
               const isThrottled = tier === 'throttled';
               return (
                 <Card key={video.id} className="p-4">

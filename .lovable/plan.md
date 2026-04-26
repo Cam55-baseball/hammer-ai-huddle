@@ -1,166 +1,157 @@
-## Phase 6 — Enforcement, Feedback Loops, Monetization Pressure
+# Phase 6 — Final Hardening Patch
 
-### Audit Result (verified, not assumed)
-
-| Area | Current state | Gap |
-|---|---|---|
-| Publish gate | `isReady` only disables Save button in editors | No DB-side or distribution-side consequence |
-| Recommendation engine (`recommendVideos`) | Pure tag-match scoring; no readiness/confidence factor | Ignores tier — Empty videos can rank as high as Elite |
-| Suggestions hook (`useVideoSuggestions`) | Loads all 500 videos, scores, returns top N | No throttle/suppression for Incomplete |
-| Public library (`useVideoLibrary`) | `created_at` / `likes_count` order; no readiness sort | Incomplete videos surface equally |
-| Confidence | Visual badge only | No effect on ranking, no inline fix CTAs |
-| Quick fix | None — owner must open full edit form | High friction for ⚠️ batch cleanup |
-| Monetization | No layer exists | Greenfield |
-| Behavior tracking | `ownerLearning.ts` records last 50 saves but never surfaces patterns | Silent — no nudges |
-| Fast Mode | Static editor | No "delta preview", no auto-focus on missing |
-
-**Owner Authority remains intact** — every change below is gated on explicit clicks. No auto-application.
+Lock down the enforcement layer so **distribution tier is authoritative**, ranking is deterministic, and UI/DB/engine cannot drift apart.
 
 ---
 
-### 1. Hard Enforcement Layer
+## 1. Single source of truth — `src/lib/videoTier.ts` (NEW)
 
-**Publish gate (DB-side, single source of truth)**
-- Add a generated column `library_videos.distribution_tier` via migration: `'blocked' | 'throttled' | 'normal' | 'boosted' | 'featured'`. Computed by trigger from `(video_format, skill_domains, ai_description, assignment_count, confidence_score)`.
-- Trigger fires on `library_videos` and `video_tag_assignments` upsert/delete. Recomputes:
-  - `blocked` → 4/4 missing fields (Empty)
-  - `throttled` → ≥1 missing OR confidence <70 (Incomplete / Needs Work)
-  - `normal` → ready + 70–89
-  - `boosted` → ready + 90–94
-  - `featured` → ready + ≥95
-- Add `library_videos.confidence_score smallint` cached column updated by same trigger so we don't recompute in JS for every list query.
+Create a tiny normalizer module so every consumer reads tier through the same gate:
 
-**RLS / API enforcement**
-- Update `library_videos` RLS or add a `BEFORE INSERT/UPDATE` check: if a non-owner tries to read a `blocked` video → filtered out via a new view `public_library_videos` that excludes `tier='blocked'`.
-- `useVideoLibrary` (athlete-facing) switches its source to `public_library_videos`.
-- Owner manager keeps reading `library_videos` directly so they still see Empty drafts.
+```ts
+export type DistributionTier = 'blocked' | 'throttled' | 'normal' | 'boosted' | 'featured';
 
-**Owner-side warning banner**
-- On owner manager card: when `tier='throttled'`, render a small red strip:
-  > "Underperforming — reduced visibility. Fix to restore reach."
+export function normalizeTier(t: unknown): DistributionTier {
+  if (t === 'blocked' || t === 'throttled' || t === 'boosted' || t === 'featured') return t;
+  return 'normal';
+}
 
-### 2. Confidence → System Leverage (recommendation engine)
-
-Update `src/lib/videoRecommendationEngine.ts`:
-- Add `confidence_score?: number` and `distribution_tier?: string` to `VideoWithTags`.
-- New scoring multipliers applied **after** the tag-match score:
-  - `featured` ×1.30, `boosted` ×1.15, `normal` ×1.0, `throttled` ×0.55, `blocked` → excluded entirely
-- Tier multiplier acts on the final score, not the raw match — keeps relevance dominant but lets confidence break ties decisively.
-- Engine rejects `blocked` videos at the domain gate (early continue).
-- `useVideoSuggestions` extends its meta select to `confidence_score, distribution_tier`.
-
-### 3. "Fix in One Click" Quick Actions
-
-New small component `src/components/owner/QuickFixActions.tsx` rendered on each card when `r.is_ready === false`. Three buttons (only those that apply):
-- **"Apply Smart Defaults"** → calls `getSmartDefaults()` from `ownerLearning.ts`, opens Fast Editor with format/domain pre-filled (still requires owner Save click — Owner Authority).
-- **"Auto-Suggest + Review"** → opens Fast Editor with `?focus=tags`, auto-runs `regenerateAISuggestions`, opens `AIComparePanel` automatically. Owner adopts via existing click-to-add flow.
-- **"Complete Missing Fields"** → opens Fast Editor and auto-focuses the first missing field (`format` → `domain` → `description` → `tags`). Pass `initialFocus` prop.
-
-Wire these by adding an `initialFocus` and `autoOpenSuggestions` prop to `VideoFastEditor`.
-
-### 4. AI → Revenue Bridge (Monetization Readiness)
-
-**New table `library_video_monetization`** (migration):
+export const TIER_BOOST: Record<DistributionTier, number> = {
+  blocked: 0,
+  throttled: 0.55,
+  normal: 1.0,
+  boosted: 1.15,
+  featured: 1.30,
+};
 ```
-video_id uuid PK references library_videos(id) on delete cascade
-cta_type text                 -- 'program' | 'bundle' | 'consultation' | null
-cta_url text
-linked_program_id uuid        -- nullable, references future programs table
-series_slug text              -- groups bundled videos
-conversion_score smallint     -- 0-100 cached
-updated_at timestamptz default now()
-```
-RLS: owner-only insert/update; public select.
 
-**Conversion score (`src/lib/videoMonetization.ts`)** — pure function:
-- Title specificity (length 30–80 chars, contains noun + verb): 25
-- Description CTA-readiness (mentions outcome/benefit verb): 25
-- Tag count in `result` layer ≥1: 20
-- Has CTA configured: 30 (this is the gate — without CTA, max is 70)
-
-**UI** — new section in `VideoEditForm` "Monetization" (collapsed by default):
-- Conversion score badge
-- CTA type select + URL field
-- "Link to program" picker (placeholder for now if no programs table — disabled w/ tooltip)
-- Series slug input + "Bundle into series" suggestion when ≥3 videos share top-2 tags
-
-Owner Authority preserved: every CTA is a manual field. The system only **suggests** ("Add CTA — +30 score").
-
-### 5. Owner Behavior Tracking (Silent Coaching)
-
-Extend `ownerLearning.ts` to track per-save:
-- `skipped_auto_suggest: boolean` (auto-suggest button never clicked before save)
-- `description_length: number`
-- `final_confidence: number`
-- `accepted_ai_tags: number` / `rejected_ai_tags: number`
-
-New component `OwnerCoachingNudge.tsx` rendered above the videos tab (replaces nothing — additive, dismissible per-session). Surfaces ONE pattern at a time, rotating:
-- "Your last 10 videos averaged 68 confidence — 22 points below your top 5"
-- "You skipped Auto-Suggest on 8 of your last 10 saves. Try it once."
-- "5 of your videos are throttled. [Fix Now →]" (deep-links to BackfillQueueDialog filtered to throttled)
-- "Adding 1 more `correction` tag would lift 7 videos to Boosted"
-
-Pure derivation from existing localStorage history + `useVideoConfidenceMap`. No new table.
-
-### 6. Fast Mode Evolution (Performance Cockpit)
-
-Update `VideoFastEditor.tsx`:
-- **Auto-open missing fields**: on mount, if `initialFocus` prop set, scroll/focus that field.
-- **Inline confidence delta preview**: next to each empty field show `+15` or `+25` chip — uses the same `videoConfidence.ts` weights.
-- **"Run Hammer Suggestions"** button (replaces silent auto-run): owner clicks, suggestions appear in `AIComparePanel` already wired. Clarify with helper text: "Suggestions only — you decide."
-- **Save preview**: footer shows `Confidence: 68 → 84 after save` computed live from current draft.
-
-### 7. System-Wide Message Shift (copy)
-
-Add a constant `src/lib/systemTone.ts` with three reused strings:
-- Header subtitle in `VideoLibraryManager`: replace "Manage videos" with "Your library determines what wins and what gets buried."
-- Throttled warning: "Reduced reach — incomplete structure"
-- Blocked warning: "Cannot publish — engine rejects empty videos"
-
-### 8. Non-Negotiables Verification
-
-- ✅ Owner Authority untouched — every quick-fix opens an editor; nothing auto-saves.
-- ✅ AI suggestions still require explicit click in `AIComparePanel`.
-- ✅ Distribution tier is computed from owner-set fields only — system never edits them.
-- ✅ Monetization fields are 100% owner-input.
-- ✅ Smart Defaults still only pre-fill empty fields.
+Replace every direct `video.distribution_tier` read with `normalizeTier(video.distribution_tier)` in:
+- `src/lib/videoRecommendationEngine.ts` (2 sites)
+- `src/components/owner/VideoLibraryManager.tsx` (line 201)
+- `src/hooks/useVideoSuggestions.ts` (line 89 mapping)
 
 ---
 
-### Files
+## 2. Deterministic ranking in `videoRecommendationEngine.ts`
 
-**New:**
-- `src/components/owner/QuickFixActions.tsx`
-- `src/components/owner/OwnerCoachingNudge.tsx`
-- `src/components/owner/VideoMonetizationSection.tsx`
+Add invariant header comment:
+
+```ts
+/**
+ * PHASE 6 SYSTEM RULES:
+ * - Blocked videos NEVER surface
+ * - Tier is authoritative over raw score noise
+ * - Confidence is a tie-breaker, not a driver
+ * - UI must reflect DB tier exactly (no divergence)
+ */
+```
+
+Refactor the per-video loop so the **tier gate + boost is computed first**, then applied as a final multiplier (so weak tag-noise can never out-rank a featured video):
+
+```ts
+const tier = normalizeTier(v.distribution_tier);
+if (tier === 'blocked') continue;            // hard filter
+const tierBoost = TIER_BOOST[tier];
+// ...existing scoring...
+score = score * tierBoost;
+```
+
+Remove the inline `TIER_MULTIPLIER` constant in favor of the shared `TIER_BOOST`.
+
+---
+
+## 3. Lock `public_library_videos` view (migration)
+
+New migration: drop & recreate the view to enforce both invariants.
+
+```sql
+DROP VIEW IF EXISTS public.public_library_videos;
+CREATE VIEW public.public_library_videos
+WITH (security_invoker = on) AS
+SELECT *
+FROM public.library_videos
+WHERE distribution_tier <> 'blocked'
+  AND confidence_score IS NOT NULL;
+```
+
+Missing-confidence rows now hard-fail to invisible (safety net for any legacy/null records that bypass the trigger).
+
+---
+
+## 4. Athlete feed deterministic ordering — `src/hooks/useVideoLibrary.ts`
+
+Replace the current confidence/created-at chain with a strict three-key ordering:
+
+```ts
+query = query
+  .neq('distribution_tier', 'blocked')
+  .order('distribution_tier', { ascending: false })  // featured > normal > throttled (alpha desc happens to match priority once 'blocked' is excluded — verify)
+  .order('confidence_score', { ascending: false, nullsFirst: false })
+  .order('created_at', { ascending: false });
+```
+
+> Note: alphabetical desc on tier strings does **not** produce the desired priority (`throttled` > `normal` > `featured` > `boosted` alphabetically). I will instead order by a computed `tier_rank` expression — since Supabase JS can't do that inline, I'll add a generated column `tier_rank smallint` to `library_videos` (via the same migration) populated by the existing `recompute_library_video_tier` function:
+> - `featured=4, boosted=3, normal=2, throttled=1, blocked=0`
+> Then order by `tier_rank desc, confidence_score desc, created_at desc`. This gives true deterministic ordering with no alpha-sort surprises.
+
+---
+
+## 5. UI guards in `VideoLibraryManager.tsx`
+
+Replace line 201's loose cast with the normalizer, and short-circuit blocked rows defensively:
+
+```tsx
+const tier = normalizeTier(video.distribution_tier);
+if (tier === 'blocked') return null; // safety: should already be filtered server-side
+const isThrottled = tier === 'throttled';
+```
+
+Keep the existing throttled banner (already wired to `SYSTEM_TONE.throttledOwnerCard`).
+
+---
+
+## 6. Monetization safety — `src/lib/videoMonetization.ts` (NEW)
+
+The file doesn't exist yet. Create it as the foundation for the next phase, with the gate baked in from day one:
+
+```ts
+import { normalizeTier } from './videoTier';
+import type { VideoWithTags } from './videoRecommendationEngine';
+
+export function isMonetizable(video: VideoWithTags): boolean {
+  return (
+    normalizeTier(video.distribution_tier) !== 'blocked' &&
+    (video.confidence_score ?? 0) >= 70
+  );
+}
+```
+
+This locks the contract: **only solid-or-better videos can ever be wired into CTAs/bundles**.
+
+---
+
+## Files touched
+
+**Created (2):**
+- `src/lib/videoTier.ts`
 - `src/lib/videoMonetization.ts`
-- `src/lib/systemTone.ts`
 
-**Edited:**
-- `src/lib/videoRecommendationEngine.ts` — tier multiplier + blocked exclusion
-- `src/hooks/useVideoSuggestions.ts` — fetch `distribution_tier`, `confidence_score`
-- `src/hooks/useVideoLibrary.ts` — switch to `public_library_videos` view
-- `src/components/owner/VideoLibraryManager.tsx` — wire QuickFixActions, throttled banner, coaching nudge, tone copy
-- `src/components/owner/VideoFastEditor.tsx` — `initialFocus`, delta chips, save-preview footer, optional auto-open suggestions
-- `src/components/owner/VideoEditForm.tsx` — Monetization section
-- `src/lib/ownerLearning.ts` — extended save metadata
+**Edited (4):**
+- `src/lib/videoRecommendationEngine.ts` — invariant header, normalizer, early tier gate, shared `TIER_BOOST`
+- `src/hooks/useVideoLibrary.ts` — deterministic ordering via `tier_rank`
+- `src/hooks/useVideoSuggestions.ts` — normalize tier on hydration
+- `src/components/owner/VideoLibraryManager.tsx` — normalized tier read + blocked short-circuit
 
-**DB Migration:**
-- Add `confidence_score`, `distribution_tier` columns to `library_videos`
-- Trigger function `recompute_video_tier()` on insert/update of `library_videos` and `video_tag_assignments`
-- View `public_library_videos` (excludes `tier='blocked'`)
-- Table `library_video_monetization` + RLS
+**Migration (1):**
+- Adds `tier_rank smallint` column to `library_videos`, updates `recompute_library_video_tier` to populate it, backfills existing rows, recreates `public_library_videos` view with the dual `blocked + null-confidence` filter.
 
-### Out of Scope
-- No changes to taxonomy, rules, or analytics dashboards.
-- No payments / Stripe wiring (Monetization layer is metadata only — actual checkout is Phase 7).
-- No removal of any current behavior.
+## Owner Authority
 
-### Validation Checklist
-- [ ] Empty video cannot be published (DB rejects) and is excluded from `public_library_videos`.
-- [ ] Throttled video appears in suggestions but with ×0.55 score multiplier.
-- [ ] Quick-fix buttons open Fast Editor with correct field focused.
-- [ ] Confidence delta chips render and update live.
-- [ ] Coaching nudge surfaces real pattern from local history.
-- [ ] Monetization score reaches 70 max without CTA, 100 with everything filled.
-- [ ] No code path auto-applies AI suggestions or overwrites owner fields.
+Untouched. No auto-application, no silent overrides. This patch is purely about enforcing existing rules consistently.
+
+## Outcome
+
+- Ranking becomes deterministic (tier-first, confidence tiebreak, recency final)
+- Blocked content cannot leak through any path (engine gate + view filter + UI short-circuit)
+- UI, DB, and engine all read tier through one normalizer — drift is structurally impossible
+- Monetization layer ships with a safety gate so the next phase can build on stable ground
