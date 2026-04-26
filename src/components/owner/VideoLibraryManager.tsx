@@ -304,6 +304,8 @@ export function VideoLibraryManager() {
                 video={editTarget}
                 onSuccess={handleEditSuccess}
                 onCancel={handleEditClose}
+                initialFocus={editFocus}
+                autoOpenSuggestions={editAutoSuggest}
               />
             ) : (
               <VideoEditForm
