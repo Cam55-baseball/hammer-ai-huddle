@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Loader2, Wrench } from 'lucide-react';
+import { saveBuild } from '@/lib/ownerBuildStorage';
+import { toast } from '@/hooks/use-toast';
 
 export default function ProgramBuilder() {
   const { isOwner, loading } = useOwnerAccess();
@@ -38,7 +40,16 @@ export default function ProgramBuilder() {
   if (!isOwner) return null;
 
   const handleSave = () => {
+    saveBuild({
+      id: crypto.randomUUID(),
+      type: 'program',
+      name,
+      meta: { description, videoId },
+      createdAt: Date.now(),
+    });
     console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId });
+    toast({ title: 'Program saved', description: name });
+    navigate('/owner/builds');
   };
 
   return (

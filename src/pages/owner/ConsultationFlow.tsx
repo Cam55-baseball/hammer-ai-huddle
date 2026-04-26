@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Calendar } from 'lucide-react';
+import { saveBuild } from '@/lib/ownerBuildStorage';
+import { toast } from '@/hooks/use-toast';
 
 export default function ConsultationFlow() {
   const { isOwner, loading } = useOwnerAccess();
@@ -37,7 +39,16 @@ export default function ConsultationFlow() {
   if (!isOwner) return null;
 
   const handleCreate = () => {
+    saveBuild({
+      id: crypto.randomUUID(),
+      type: 'consultation',
+      name: title,
+      meta: { price, videoId },
+      createdAt: Date.now(),
+    });
     console.log('[PHASE_10_CONSULTATION_CREATE]', { title, price, videoId });
+    toast({ title: 'Consultation offer created', description: title });
+    navigate('/owner/builds');
   };
 
   return (
