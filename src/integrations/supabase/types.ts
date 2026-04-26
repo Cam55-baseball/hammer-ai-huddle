@@ -3773,6 +3773,13 @@ export type Database = {
             referencedRelation: "library_videos_readiness"
             referencedColumns: ["video_id"]
           },
+          {
+            foreignKeyName: "library_video_analytics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       library_video_likes: {
@@ -3809,14 +3816,75 @@ export type Database = {
             referencedRelation: "library_videos_readiness"
             referencedColumns: ["video_id"]
           },
+          {
+            foreignKeyName: "library_video_likes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_video_monetization: {
+        Row: {
+          conversion_score: number
+          cta_type: string | null
+          cta_url: string | null
+          linked_program_id: string | null
+          series_slug: string | null
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          conversion_score?: number
+          cta_type?: string | null
+          cta_url?: string | null
+          linked_program_id?: string | null
+          series_slug?: string | null
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          conversion_score?: number
+          cta_type?: string | null
+          cta_url?: string | null
+          linked_program_id?: string | null
+          series_slug?: string | null
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_video_monetization_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_video_monetization_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
+          {
+            foreignKeyName: "library_video_monetization_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       library_videos: {
         Row: {
           ai_description: string | null
           category: string | null
+          confidence_score: number
           created_at: string
           description: string | null
+          distribution_tier: string
           id: string
           likes_count: number
           notes: string | null
@@ -3837,8 +3905,10 @@ export type Database = {
         Insert: {
           ai_description?: string | null
           category?: string | null
+          confidence_score?: number
           created_at?: string
           description?: string | null
+          distribution_tier?: string
           id?: string
           likes_count?: number
           notes?: string | null
@@ -3859,8 +3929,10 @@ export type Database = {
         Update: {
           ai_description?: string | null
           category?: string | null
+          confidence_score?: number
           created_at?: string
           description?: string | null
+          distribution_tier?: string
           id?: string
           likes_count?: number
           notes?: string | null
@@ -9354,6 +9426,13 @@ export type Database = {
             referencedRelation: "library_videos_readiness"
             referencedColumns: ["video_id"]
           },
+          {
+            foreignKeyName: "video_performance_metrics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       video_pose_analysis: {
@@ -9483,6 +9562,13 @@ export type Database = {
             referencedRelation: "library_videos_readiness"
             referencedColumns: ["video_id"]
           },
+          {
+            foreignKeyName: "video_tag_assignments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       video_tag_rules: {
@@ -9585,6 +9671,13 @@ export type Database = {
             referencedRelation: "library_videos_readiness"
             referencedColumns: ["video_id"]
           },
+          {
+            foreignKeyName: "video_tag_suggestions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       video_tag_taxonomy: {
@@ -9681,6 +9774,13 @@ export type Database = {
             referencedRelation: "library_videos_readiness"
             referencedColumns: ["video_id"]
           },
+          {
+            foreignKeyName: "video_user_outcomes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       video_versions: {
@@ -9731,6 +9831,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "library_videos_readiness"
             referencedColumns: ["video_id"]
+          },
+          {
+            foreignKeyName: "video_versions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -10180,6 +10287,81 @@ export type Database = {
         }
         Relationships: []
       }
+      public_library_videos: {
+        Row: {
+          ai_description: string | null
+          category: string | null
+          confidence_score: number | null
+          created_at: string | null
+          description: string | null
+          distribution_tier: string | null
+          id: string | null
+          likes_count: number | null
+          notes: string | null
+          owner_id: string | null
+          skill_domains:
+            | Database["public"]["Enums"]["skill_domain_enum"][]
+            | null
+          sport: string[] | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string | null
+          video_format: Database["public"]["Enums"]["video_type_enum"] | null
+          video_type: string | null
+          video_url: string | null
+          views_count: number | null
+        }
+        Insert: {
+          ai_description?: string | null
+          category?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          description?: string | null
+          distribution_tier?: string | null
+          id?: string | null
+          likes_count?: number | null
+          notes?: string | null
+          owner_id?: string | null
+          skill_domains?:
+            | Database["public"]["Enums"]["skill_domain_enum"][]
+            | null
+          sport?: string[] | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_format?: Database["public"]["Enums"]["video_type_enum"] | null
+          video_type?: string | null
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          ai_description?: string | null
+          category?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          description?: string | null
+          distribution_tier?: string | null
+          id?: string | null
+          likes_count?: number | null
+          notes?: string | null
+          owner_id?: string | null
+          skill_domains?:
+            | Database["public"]["Enums"]["skill_domain_enum"][]
+            | null
+          sport?: string[] | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          video_format?: Database["public"]["Enums"]["video_type_enum"] | null
+          video_type?: string | null
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       retention_status: {
         Row: {
           newest_record: string | null
@@ -10360,6 +10542,10 @@ export type Database = {
           cutoff_date: string
           deleted_count: number
         }[]
+      }
+      recompute_library_video_tier: {
+        Args: { p_video_id: string }
+        Returns: undefined
       }
       replace_video_version: {
         Args: {
