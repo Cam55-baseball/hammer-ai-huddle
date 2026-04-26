@@ -1,103 +1,125 @@
-# Phase 9 — Final Cleanup Patch (SPA Hook Boundary)
+## Phase 10 — Builder Pages + SPA Routing + Owner Gating
 
-The Phase 9 modal is structurally complete. The only remaining technical debt is the `window.location.href` navigation in `VideoConversionModal.tsx`, which causes a hard page reload, loses React state context, and would create friction when wiring real SPA routes + Stripe checkout in Phase 10.
-
-This patch swaps that single line for a clean, log-only Phase 10 hook boundary. **No new files, no DB changes, no ranking/monetization impact.**
+Activate the execution layer with three owner-only builder pages, real SPA navigation from the conversion modal, and an explicit owner gate around the Execute CTA. **No DB writes, no ranking impact, no monetization changes.**
 
 ---
 
-## 1. EDIT — `src/components/owner/VideoConversionModal.tsx`
+### 1. NEW PAGES (3 files) — owner-only scaffolds
 
-Replace **only** the `handleProceed` function body. Everything else in the file (imports, props, `ACTION_LABEL`, JSX, `Dialog` wiring, Cancel/Continue buttons) stays exactly as-is.
+All three pages follow the same pattern:
+- Wrapped in `DashboardLayout`
+- Use `useOwnerAccess()` — redirect non-owners to `/dashboard` (mirrors `AdminEngineSettings.tsx`)
+- Read `videoId` from query string via `useSearchParams`
+- Show a header with the originating video ID
+- Use existing design system (`Button`, `Input`, `Textarea`, `Card`)
+- Save buttons `console.log` only — **no DB writes**
 
-**Current (lines ~38–46):**
+**`src/pages/owner/ProgramBuilder.tsx`** (route: `/owner/open_program_builder`)
+- Title: "Program Builder"
+- Subtext: "Building from Video ID: {videoId}"
+- Inputs: Program Name (`Input`), Description (`Textarea`)
+- Section card: "Selected Video" showing `videoId`
+- Button: "Save Program" → `console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId })`
+
+**`src/pages/owner/BundleBuilder.tsx`** (route: `/owner/open_bundle_builder`)
+- Title: "Bundle Builder"
+- Subtext: "Building from Video ID: {videoId}"
+- Input: Bundle Name
+- Section card: "Videos in Bundle" showing `videoId` as the seed entry
+- Button: "Save Bundle" → `console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoId })`
+
+**`src/pages/owner/ConsultationFlow.tsx`** (route: `/owner/open_consultation_flow`)
+- Title: "Consultation Setup"
+- Subtext: "Based on Video ID: {videoId}"
+- Inputs: Offer Title, Price (text input)
+- Button: "Create Offer" → `console.log('[PHASE_10_CONSULTATION_CREATE]', { title, price, videoId })`
+
+---
+
+### 2. ROUTING — `src/App.tsx`
+
+Add three lazy imports + three routes (paths match the `ConversionAction` enum values exactly so `/owner/${action}` resolves cleanly):
+
 ```tsx
-const handleProceed = () => {
-  console.log('[PHASE_9_ROUTE]', {
-    action,
-    videoId,
-    timestamp: Date.now(),
-  });
-  // Phase 9 placeholder — Phase 10 will replace with router.push + real builder pages.
-  window.location.href = `/owner/${action}?videoId=${encodeURIComponent(videoId)}`;
-};
+const ProgramBuilder = lazyWithRetry(() => import("./pages/owner/ProgramBuilder"));
+const BundleBuilder = lazyWithRetry(() => import("./pages/owner/BundleBuilder"));
+const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationFlow"));
 ```
 
-**Replace with:**
+Routes (placed near the existing `/owner` route):
+```tsx
+<Route path="/owner/open_program_builder" element={<ProgramBuilder />} />
+<Route path="/owner/open_bundle_builder" element={<BundleBuilder />} />
+<Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
+```
+
+---
+
+### 3. SPA NAVIGATION — `src/components/owner/VideoConversionModal.tsx`
+
+Replace the Phase 10 hook log with real `react-router-dom` navigation (the project already uses `BrowserRouter`).
+
+- Add `import { useNavigate } from 'react-router-dom';`
+- Inside component: `const navigate = useNavigate();`
+- Update `handleProceed`:
 ```tsx
 const handleProceed = () => {
-  console.log('[PHASE_9_ROUTE]', {
-    action,
-    videoId,
-    timestamp: Date.now(),
-  });
-  // Phase 10 hook point — replace with router.push + real builder pages
-  console.log('[PHASE_10_HOOK]', `/owner/${action}?videoId=${videoId}`);
+  console.log('[PHASE_9_ROUTE]', { action, videoId, timestamp: Date.now() });
+  navigate(`/owner/${action}?videoId=${encodeURIComponent(videoId)}`);
   onClose();
 };
 ```
 
-Two small, deliberate refinements vs. the user's snippet:
-- **Add `onClose()`** at the end so the modal dismisses after the owner confirms (otherwise Continue logs but leaves the modal open, which reads as a broken click). This preserves the "owner-gated, single explicit action" contract.
-- Keep the existing `[PHASE_9_ROUTE]` structured log untouched — Phase 8 analytics breadcrumbs (`trackCtaClick` in `VideoLibraryManager`) and Phase 9 route logs remain intact for debugging.
+Rules preserved: no `window.location.href`, modal still closes on confirm, `[PHASE_9_ROUTE]` log retained.
 
 ---
 
-## 2. Guardrails (verified, no changes)
+### 4. OWNER GATING — `src/components/owner/VideoLibraryManager.tsx`
 
-- `videoRecommendationEngine.ts` — untouched. Phase 6 ranking stays deterministic.
-- `videoMonetization.ts` — untouched. Phase 7 overlay stays derived.
-- `videoConversionActions.ts` / `videoConversionAnalytics.ts` / `videoCtaSuggestions.ts` — untouched.
-- `VideoLibraryManager.tsx` — untouched. CTA → modal state bridge already correct.
-- DB / migrations — none.
-- `library_video_monetization` — still NOT written to. Reserved for Phase 10.
+Currently the CTA block (lines ~256–275) renders for anyone viewing the manager. Although the manager is mounted inside `OwnerDashboard` (which is owner-gated at the page level), add an explicit defense-in-depth gate so the Execute control can never leak if this component is ever embedded elsewhere.
 
----
+- Import `useOwnerAccess`: `import { useOwnerAccess } from '@/hooks/useOwnerAccess';`
+- At top of component: `const { isOwner } = useOwnerAccess();`
+- Update the conditional render around the CTA block from `{cta && !isThrottled && action && (...)}` to `{isOwner && cta && !isThrottled && action && (...)}`
 
-## 3. Why this matters (concretely)
-
-`window.location.href`:
-- triggers a full document reload
-- destroys React state, query cache, auth context in memory
-- breaks SPA-style transitions and future Stripe session continuity
-- would force a rewire when Phase 10 lands
-
-Log-only hook boundary:
-- preserves all in-memory state
-- gives Phase 10 a clean, single-line swap point (`router.push(...)` or modal-stack push)
-- keeps the modal click feeling instant and non-disruptive
-- matches the project's centralized routing/SPA standards
+The builder pages themselves also enforce owner-only access via `useOwnerAccess`, so even direct URL access by a non-owner redirects to `/dashboard`.
 
 ---
 
-## 4. Owner Authority — invariants preserved
+### 5. Guardrails (verified, untouched)
 
-- ✅ Suggestion advisory (Phase 7)
-- ✅ Execute = first explicit click (Phase 8)
-- ✅ Continue = second explicit click, now closes modal cleanly (Phase 9)
-- ✅ No auto-navigation, no checkout, no DB mutation
-- ✅ No ranking feedback loop
-
----
-
-## 5. Files
-
-**Edited (1):** `src/components/owner/VideoConversionModal.tsx` — `handleProceed` body only
-**Created:** none
-**Migration:** none
+- `videoRecommendationEngine.ts` — Phase 6 ranking unchanged
+- `videoMonetization.ts` — Phase 7 overlay unchanged
+- `videoCtaSuggestions.ts` / `videoConversionActions.ts` / `videoConversionAnalytics.ts` — unchanged
+- No DB migrations, no edge functions, no schema changes
+- `library_video_monetization` still NOT written — reserved for a later commerce phase
 
 ---
 
-## 6. Outcome
+### 6. Files
 
-After this patch:
+**Created (3):**
+- `src/pages/owner/ProgramBuilder.tsx`
+- `src/pages/owner/BundleBuilder.tsx`
+- `src/pages/owner/ConsultationFlow.tsx`
+
+**Edited (3):**
+- `src/App.tsx` — three lazy imports + three routes
+- `src/components/owner/VideoConversionModal.tsx` — `useNavigate` swap in `handleProceed`
+- `src/components/owner/VideoLibraryManager.tsx` — `isOwner` guard on CTA block
+
+**Migrations:** none
+
+---
+
+### 7. Outcome
 
 | Phase | State |
 |-------|-------|
 | 6 — Ranking | ✔ deterministic, locked |
 | 7 — Monetization | ✔ derived overlay only |
 | 8 — CTA intent | ✔ click-only emitter |
-| 9 — Conversion modal | ✔ owner-gated, SPA-safe hook boundary |
-| 10 — Real routing + checkout | 🟢 single-line swap point ready |
+| 9 — Conversion modal | ✔ owner-gated, SPA-safe |
+| 10 — Builder pages + routing | ✔ owner-only scaffolds, real SPA nav |
 
-System reaches **🟢 production-ready architecture** with one intentional, clearly-labeled Phase 10 placeholder.
+Execute → Continue now navigates (in-app, no reload) into a real owner-only builder surface seeded with the originating `videoId`. The pages are functional placeholders ready for a future commerce/persistence phase.

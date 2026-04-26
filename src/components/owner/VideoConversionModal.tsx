@@ -5,6 +5,7 @@
  * - Only explicit owner-triggered navigation
  * - Phase 10 hook point: replace window.location.href with real router + builder pages
  */
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ const ACTION_LABEL: Record<Exclude<ConversionAction, null>, string> = {
 };
 
 export function VideoConversionModal({ open, onClose, action, videoId }: Props) {
+  const navigate = useNavigate();
   if (!action) return null;
 
   const label = ACTION_LABEL[action];
@@ -40,8 +42,8 @@ export function VideoConversionModal({ open, onClose, action, videoId }: Props) 
       videoId,
       timestamp: Date.now(),
     });
-    // Phase 10 hook point — replace with router.push + real builder pages
-    console.log('[PHASE_10_HOOK]', `/owner/${action}?videoId=${videoId}`);
+    // Phase 10 — real SPA navigation into owner builder pages
+    navigate(`/owner/${action}?videoId=${encodeURIComponent(videoId)}`);
     onClose();
   };
 
