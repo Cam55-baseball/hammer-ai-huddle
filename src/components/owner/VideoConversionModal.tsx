@@ -40,8 +40,9 @@ export function VideoConversionModal({ open, onClose, action, videoId }: Props) 
       videoId,
       timestamp: Date.now(),
     });
-    // Phase 9 placeholder — Phase 10 will replace with router.push + real builder pages.
-    window.location.href = `/owner/${action}?videoId=${encodeURIComponent(videoId)}`;
+    // Phase 10 hook point — replace with router.push + real builder pages
+    console.log('[PHASE_10_HOOK]', `/owner/${action}?videoId=${videoId}`);
+    onClose();
   };
 
   return (
