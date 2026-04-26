@@ -78,6 +78,8 @@ export function VideoLibraryManager() {
   const qc = useQueryClient();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<LibraryVideo | null>(null);
+  const [editFocus, setEditFocus] = useState<string | undefined>(undefined);
+  const [editAutoSuggest, setEditAutoSuggest] = useState(false);
   const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
   const [backfillOpen, setBackfillOpen] = useState(false);
   const [confirmCloseEdit, setConfirmCloseEdit] = useState(false);
