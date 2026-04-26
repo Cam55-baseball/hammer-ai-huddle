@@ -110,6 +110,9 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
     assignmentCount: Object.keys(assignments).length,
   });
 
+  // Capture the very first non-zero confidence for the save-preview delta.
+  if (initialConfRef.current === null && conf.score > 0) initialConfRef.current = conf.score;
+
   const missing = computeMissingFields({
     videoFormat,
     skillDomains,
@@ -118,6 +121,25 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
   });
   const isReady = missing.length === 0;
   const canAutoSuggest = aiDescription.trim().length >= 20;
+
+  // Phase 6 — per-field "what you'd gain" deltas (matches videoConfidence weights).
+  const deltaFor = (key: string): number | null => {
+    if (key === 'video_format' && !videoFormat) return 15;
+    if (key === 'skill_domains' && skillDomains.length === 0) return 15;
+    if (key === 'ai_description') {
+      const len = aiDescription.trim().length;
+      if (len < 20) return 10;
+      if (len < 60) return 10; // bump to 20
+      if (len < 140) return 5;  // bump to 25
+    }
+    if (key === 'tag_assignments') {
+      const n = Object.keys(assignments).length;
+      if (n === 0) return 12;
+      if (n === 1) return 7;
+      if (n < 6) return 8; // diversity boost potential
+    }
+    return null;
+  };
 
   const toggleDomain = (d: SkillDomain) =>
     setSkillDomains(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
