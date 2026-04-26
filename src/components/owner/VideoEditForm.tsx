@@ -32,8 +32,16 @@ interface VideoEditFormProps {
 }
 
 export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFormProps) {
-  const { updateVideo, replaceVideoFile, uploading } = useVideoLibraryAdmin();
+  const {
+    updateVideo,
+    replaceVideoFile,
+    updateStructuredFields,
+    syncTagAssignments,
+    regenerateAISuggestions,
+    uploading,
+  } = useVideoLibraryAdmin();
 
+  // Existing fields
   const [title, setTitle] = useState(video.title);
   const [description, setDescription] = useState(video.description || "");
   const [selectedTags, setSelectedTags] = useState<string[]>(video.tags);
@@ -41,6 +49,34 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
   const [category, setCategory] = useState(video.category || "");
   const [newFile, setNewFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Engine-critical fields (the fix)
+  const [videoFormat, setVideoFormat] = useState<string>(video.video_format || "");
+  const [skillDomains, setSkillDomains] = useState<SkillDomain[]>(
+    (video.skill_domains as SkillDomain[]) || []
+  );
+  const [aiDescription, setAiDescription] = useState<string>(video.ai_description || "");
+  const [assignments, setAssignments] = useState<Record<string, number>>({});
+  const [regenLoading, setRegenLoading] = useState(false);
+
+  const primaryDomain = skillDomains[0];
+  const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
+  const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
+
+  // Load existing assignments for this video on mount
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from('video_tag_assignments')
+        .select('tag_id, weight')
+        .eq('video_id', video.id);
+      if (!error && data) {
+        const map: Record<string, number> = {};
+        for (const r of data) map[r.tag_id] = r.weight;
+        setAssignments(map);
+      }
+    })();
+  }, [video.id]);
 
   const sportOptions = ["baseball", "softball"];
 
@@ -56,6 +92,35 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     );
   };
 
+  const toggleDomain = (d: SkillDomain) => {
+    setSkillDomains(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
+  };
+
+  const toggleAssignment = (tagId: string) => {
+    setAssignments(prev => {
+      const next = { ...prev };
+      if (next[tagId] != null) delete next[tagId];
+      else next[tagId] = 3;
+      return next;
+    });
+  };
+
+  const setAssignmentWeight = (tagId: string, w: number) => {
+    setAssignments(prev => ({ ...prev, [tagId]: w }));
+  };
+
+  const handleRegenAI = async () => {
+    if (!aiDescription.trim()) {
+      toast({ title: "Add a description first", variant: "destructive" });
+      return;
+    }
+    setRegenLoading(true);
+    // Save the description before re-running so the function sees the latest text
+    await updateStructuredFields(video.id, { aiDescription });
+    await regenerateAISuggestions(video.id);
+    setRegenLoading(false);
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
       toast({ title: "Title required", variant: "destructive" });
@@ -68,16 +133,11 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
 
     setSaving(true);
     try {
-      // Step 1: Replace video file if a new one was selected
       if (newFile) {
         const result = await replaceVideoFile(video.id, newFile);
-        if (!result) {
-          setSaving(false);
-          return; // Error already toasted inside the hook
-        }
+        if (!result) { setSaving(false); return; }
       }
 
-      // Step 2: Update metadata
       const ok = await updateVideo(video.id, {
         title: title.trim(),
         description: description.trim() || undefined,
@@ -85,8 +145,20 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
         sport: selectedSports,
         category: category.trim() || undefined,
       });
+      if (!ok) return;
 
-      if (ok) onSuccess();
+      const okStruct = await updateStructuredFields(video.id, {
+        videoFormat: videoFormat || null,
+        skillDomains,
+        aiDescription,
+      });
+      if (!okStruct) return;
+
+      const okAssign = await syncTagAssignments(video.id, assignments);
+      if (!okAssign) return;
+
+      toast({ title: "Saved", description: "Video updated." });
+      onSuccess();
     } finally {
       setSaving(false);
     }
