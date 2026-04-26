@@ -198,8 +198,15 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
     else if (tier === 'boosted') reasons.push('Boosted — high-confidence');
     else if (tier === 'throttled') reasons.push('Reduced reach — incomplete structure');
 
+    // Phase 7: derived only — never feeds back into ranking.
+    const monetizationBoost =
+      tier === 'featured' ? 1.25 :
+      tier === 'boosted'  ? 1.15 :
+      tier === 'normal'   ? 1.05 : 0;
+    const conversionScore = score * monetizationBoost;
+
     if (score > 0) {
-      scored.push({ video: v, score, reasons: dedupe(reasons).slice(0, 4) });
+      scored.push({ video: v, score, conversionScore, reasons: dedupe(reasons).slice(0, 4) });
     }
   }
 
