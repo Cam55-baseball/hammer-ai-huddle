@@ -14,8 +14,16 @@ import { RuleEngineManager } from "./RuleEngineManager";
 import { LibraryHealthStrip } from "./LibraryHealthStrip";
 import { VideoLibraryHelpSheet } from "./VideoLibraryHelpSheet";
 import { BackfillQueueDialog } from "./BackfillQueueDialog";
+import { OwnerTaggingPerformancePanel } from "./OwnerTaggingPerformancePanel";
+import { ConfidenceBadge } from "./ConfidenceBadge";
+import { VideoFastEditor } from "./VideoFastEditor";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
 import { useVideoReadiness, readinessByVideoId, MISSING_LABEL, type VideoReadiness } from "@/hooks/useVideoReadiness";
+import { useVideoConfidenceMap } from "@/hooks/useVideoConfidenceMap";
+import { useOwnerPrefs } from "@/hooks/useOwnerPrefs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Zap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -73,6 +81,8 @@ export function VideoLibraryManager() {
 
   const { videos, tags, refetch } = useVideoLibrary({ limit: 100 });
   const { data: readinessRows } = useVideoReadiness();
+  const { data: confidenceMap } = useVideoConfidenceMap();
+  const { fastMode, setFastMode } = useOwnerPrefs();
   const { deleteVideo } = useVideoLibraryAdmin();
 
   const readinessMap = useMemo(() => readinessByVideoId(readinessRows), [readinessRows]);
@@ -114,10 +124,19 @@ export function VideoLibraryManager() {
   return (
     <div className="space-y-4">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-lg font-semibold">Video Library</h2>
-        <VideoLibraryHelpSheet />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Zap className={`h-3.5 w-3.5 ${fastMode ? 'text-primary' : 'text-muted-foreground'}`} />
+            <Label htmlFor="fast-mode" className="text-xs cursor-pointer">Fast Mode</Label>
+            <Switch id="fast-mode" checked={fastMode} onCheckedChange={setFastMode} />
+          </div>
+          <VideoLibraryHelpSheet />
+        </div>
       </div>
+
+      <OwnerTaggingPerformancePanel />
 
       <LibraryHealthStrip
         onBackfill={() => setBackfillOpen(true)}

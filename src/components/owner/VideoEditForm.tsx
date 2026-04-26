@@ -483,6 +483,14 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
             </div>
           )}
         </div>
+
+        {/* AI vs Owner Compare (collapsed by default) */}
+        <AIComparePanel
+          videoId={video.id}
+          taxonomy={taxonomy}
+          ownerTagIds={Object.keys(assignments)}
+          onAdoptTag={toggleAssignment}
+        />
       </div>
 
       {/* Missing-fields list */}
