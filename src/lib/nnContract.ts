@@ -257,7 +257,7 @@ export function buildNNContext(tpl: any): NNContext | null {
   const completionType = tpl.completion_type;
   const completionBinding = tpl.completion_binding;
 
-  const { ok } = validateNNFields({
+  const result = validateNNFields({
     title,
     purpose,
     action,
@@ -266,7 +266,27 @@ export function buildNNContext(tpl: any): NNContext | null {
     completionBinding,
     templateId: typeof tpl.id === 'string' ? tpl.id : null,
   });
-  if (!ok) return null;
+  if (!result.ok) {
+    // Phase 12.2 safeguard — observe silent drops without changing behavior.
+    const missing_fields = Object.entries(result.errors)
+      .filter(([, v]) => !!v)
+      .map(([k]) => k);
+
+    trackNNInvalidDropped({
+      templateId: typeof tpl.id === 'string' ? tpl.id : null,
+      completion_type: completionType ?? null,
+      missing_fields,
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[HM-NN-INVALID]', {
+        id: tpl.id,
+        errors: result.errors,
+      });
+    }
+
+    return null;
+  }
 
   return {
     title,
