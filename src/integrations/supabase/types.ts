@@ -3766,6 +3766,13 @@ export type Database = {
             referencedRelation: "library_videos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "library_video_analytics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
         ]
       }
       library_video_likes: {
@@ -3794,6 +3801,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "library_videos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_video_likes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
           },
         ]
       }
@@ -9333,6 +9347,13 @@ export type Database = {
             referencedRelation: "library_videos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "video_performance_metrics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: true
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
         ]
       }
       video_pose_analysis: {
@@ -9455,6 +9476,13 @@ export type Database = {
             referencedRelation: "library_videos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "video_tag_assignments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
         ]
       }
       video_tag_rules: {
@@ -9550,6 +9578,13 @@ export type Database = {
             referencedRelation: "library_videos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "video_tag_suggestions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
         ]
       }
       video_tag_taxonomy: {
@@ -9639,6 +9674,13 @@ export type Database = {
             referencedRelation: "library_videos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "video_user_outcomes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
         ]
       }
       video_versions: {
@@ -9682,6 +9724,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "library_videos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_versions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
           },
         ]
       }
@@ -10055,6 +10104,19 @@ export type Database = {
       }
     }
     Views: {
+      library_videos_readiness: {
+        Row: {
+          assignment_count: number | null
+          has_description: boolean | null
+          has_domain: boolean | null
+          has_format: boolean | null
+          is_ready: boolean | null
+          missing_fields: string[] | null
+          owner_id: string | null
+          video_id: string | null
+        }
+        Relationships: []
+      }
       pattern_library_ranked: {
         Row: {
           confidence: number | null
