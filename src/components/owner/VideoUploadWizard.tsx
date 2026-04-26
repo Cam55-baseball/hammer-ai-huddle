@@ -12,11 +12,15 @@ import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
 import { computeMissingFields } from "@/lib/videoReadiness";
+import { getSmartDefaults } from "@/lib/ownerLearning";
+import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
   tags: LibraryTag[];
   onSuccess: () => void;
+  /** When true, smart defaults pre-fill domain & format and Step 4 review is skipped. */
+  fastMode?: boolean;
 }
 
 const SPORTS = ['baseball', 'softball', 'both'] as const;
@@ -39,23 +43,32 @@ function detectVideoType(url: string): 'youtube' | 'vimeo' | 'external' {
   return 'external';
 }
 
-export function VideoUploadWizard({ tags, onSuccess }: Props) {
+export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) {
   const { uploadVideo, uploading } = useVideoLibraryAdmin();
   const [step, setStep] = useState(1);
+  const defaults = useMemo(() => (fastMode ? getSmartDefaults() : null), [fastMode]);
 
   // Step 1
   const [mode, setMode] = useState<'link' | 'upload'>('link');
   const [externalUrl, setExternalUrl] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
-  // Step 2
+  // Step 2 — pre-filled by smart defaults in Fast Mode (only suggests; owner can change)
   const [title, setTitle] = useState('');
   const [sport, setSport] = useState<string>('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
 
-  // Step 3 (engine fields, reusing StructuredTagEditor)
-  const [structured, setStructured] = useState<StructuredTagState>(emptyStructuredTagState);
+  // Step 3 (engine fields, reusing StructuredTagEditor) — Fast Mode pre-suggests format only
+  const [structured, setStructured] = useState<StructuredTagState>(() => {
+    if (!fastMode || !defaults) return emptyStructuredTagState;
+    return {
+      ...emptyStructuredTagState,
+      videoFormat: defaults.topFormat ?? '',
+      // Skill domain is sport-aware in Step 2; we don't pre-fill skillDomains here
+      // because they are also driven by what the owner picks at Step 2.
+    };
+  });
 
   // Autofocus refs
   const urlRef = useRef<HTMLInputElement>(null);
