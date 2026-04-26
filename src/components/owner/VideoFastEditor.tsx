@@ -16,6 +16,7 @@ import { computeMissingFields } from "@/lib/videoReadiness";
 import { computeVideoConfidence } from "@/lib/videoConfidence";
 import { getSmartDefaults } from "@/lib/ownerLearning";
 import { ConfidenceBadge } from "./ConfidenceBadge";
+import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -145,11 +146,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
   };
 
   // Keyboard: Cmd/Ctrl+Enter = save, Esc = cancel
+  // Re-attaches each render so it always has the latest closures (handleSave / onCancel
+  // capture current state). Cleanup runs every render — no leak.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        handleSave();
+        void handleSave();
       } else if (e.key === 'Escape') {
         onCancel();
       }
@@ -219,6 +222,7 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
             Auto-Suggest
           </Button>
         </div>
+        <OwnerAuthorityNote compact className="block" />
         <Textarea
           ref={descRef}
           value={aiDescription}

@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import type { TaxonomyTag } from "@/lib/videoRecommendationEngine";
 import { TagWhyPopover, type TagWhyMeta } from "./TagWhyPopover";
+import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
 
 interface SuggestionRow {
   id: string;
@@ -102,10 +103,13 @@ export function AIComparePanel({ videoId, taxonomy, ownerTagIds, onAdoptTag }: P
   return (
     <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
       <div className="flex items-center justify-between gap-2">
-        <Label className="text-xs flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          Compare with Hammer
-        </Label>
+        <div className="space-y-0.5">
+          <Label className="text-xs flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            Compare with Hammer
+          </Label>
+          <OwnerAuthorityNote />
+        </div>
         <Switch checked={open} onCheckedChange={setOpen} />
       </div>
 
