@@ -1,130 +1,153 @@
-# Phase 7 — Monetization & Conversion Layer Activation
+# Phase 8 — CTA → Conversion Execution Layer
 
-Build a **derived monetization overlay** on top of the locked Phase 6 tier system. Ranking integrity is non-negotiable: monetization is a runtime read, never a write, never a ranking input.
+Bridge the Phase 7 advisory CTA into an **explicit, owner-triggered intent emitter**. Zero ranking impact, zero DB writes, zero auto-execution. Click is the only thing that fires anything — and even then, all it does is emit an intent + analytics breadcrumb. Real routing/checkout is deferred to Phase 9+.
+
+System ladder after this phase:
+- **Phase 6** Tier system → structural worth (immutable)
+- **Phase 7** Monetization overlay → revenue eligibility (derived)
+- **Phase 8** Conversion actions → owner intent emission (manual click only)
 
 ---
 
-## 1. `src/lib/videoMonetization.ts` — tier-aware gate (EDIT)
+## 1. NEW — `src/lib/videoConversionActions.ts`
 
-Replace the current `isMonetizable` with a tier-driven version + invariant header:
+Pure mapper: `CtaKind → ConversionAction`. No side effects.
 
 ```ts
 /**
- * PHASE 7 RULES:
- * - Monetization NEVER affects ranking
- * - Ranking remains Phase 6 deterministic system
- * - Monetization is derived, not authoritative
- * - No DB writes from suggestion logic
+ * PHASE 8 RULES:
+ * - No ranking logic here
+ * - No DB writes
+ * - Only user-triggered intent mapping
+ * - All actions are explicit (never automatic)
  */
-import { normalizeTier } from './videoTier';
-import type { VideoWithTags } from './videoRecommendationEngine';
+import type { CtaKind } from './videoCtaSuggestions';
 
-export function isMonetizable(video: VideoWithTags): boolean {
-  const tier = normalizeTier(video.distribution_tier);
-  if (tier === 'featured' || tier === 'boosted') return true;
-  if (tier === 'normal') return (video.confidence_score ?? 0) >= 75;
-  return false; // throttled + blocked
-}
+export type ConversionAction =
+  | 'open_program_builder'
+  | 'open_bundle_builder'
+  | 'open_consultation_flow'
+  | null;
 
-export type RevenueLabel = 'revenue_ready' | 'upgradeable' | null;
-
-export function revenueLabel(video: VideoWithTags): RevenueLabel {
-  const tier = normalizeTier(video.distribution_tier);
-  if (tier === 'featured' || tier === 'boosted') return 'revenue_ready';
-  if (tier === 'normal' && (video.confidence_score ?? 0) >= 75) return 'upgradeable';
+export function mapCtaToAction(cta: CtaKind): ConversionAction {
+  if (cta === 'program') return 'open_program_builder';
+  if (cta === 'bundle') return 'open_bundle_builder';
+  if (cta === 'consultation') return 'open_consultation_flow';
   return null;
 }
 ```
 
-The current threshold is `>= 70`; spec says `>= 75` for normal-tier monetization. Aligning to spec.
-
 ---
 
-## 2. `src/lib/videoCtaSuggestions.ts` — CTA suggestion engine (NEW)
+## 2. NEW — `src/lib/videoConversionAnalytics.ts`
 
-Pure, suggestion-only. Never writes, never auto-assigns.
+Lightweight, fail-silent breadcrumb emitter. No network calls, no DB. Just structured `console.log` for now — Phase 9 can replace the body with a real telemetry sink without touching callers.
 
 ```ts
 /**
- * PHASE 7 — CTA suggestion (advisory only).
- * UI surfaces these as hints. Owner Authority: never auto-applied.
+ * PHASE 8 — analytics only.
+ * No ranking influence. No DB mutation. Never throws.
  */
-import { normalizeTier } from './videoTier';
-import type { VideoWithTags } from './videoRecommendationEngine';
-
-export type CtaKind = 'program' | 'bundle' | 'consultation' | null;
-
-export function suggestCta(video: VideoWithTags): CtaKind {
-  const tier = normalizeTier(video.distribution_tier);
-  if (tier === 'featured') return 'program';
-  if (tier === 'boosted') return 'bundle';
-  if ((video.confidence_score ?? 0) >= 80) return 'consultation';
-  return null;
+export function trackCtaClick(videoId: string, action: string) {
+  try {
+    console.log('[CTA_CLICK]', {
+      videoId,
+      action,
+      timestamp: Date.now(),
+    });
+  } catch {
+    // silent fail (never break UI)
+  }
 }
-
-export const CTA_LABEL: Record<Exclude<CtaKind, null>, string> = {
-  program: 'Link to a program',
-  bundle: 'Bundle into a series',
-  consultation: 'Offer a consultation',
-};
 ```
 
 ---
 
-## 3. `src/lib/videoRecommendationEngine.ts` — derived conversion score (EDIT)
+## 3. EDIT — `src/lib/videoCtaSuggestions.ts`
 
-Add **after** the existing `score = score * tierBoost` line, inside the per-video loop. Result is attached to the returned record but does NOT change sort order, filters, or thresholds.
+Append a Phase 8 guardrail comment to the existing header (no logic change):
 
+```
+ * PHASE 8 NOTE:
+ * Suggestions are pre-execution hints only.
+ * Never assume business context or override owner intent.
+```
+
+---
+
+## 4. EDIT — `src/components/owner/VideoLibraryManager.tsx`
+
+**A. Imports** (add):
 ```ts
-const monetizationBoost =
-  tier === 'featured' ? 1.25 :
-  tier === 'boosted'  ? 1.15 :
-  tier === 'normal'   ? 1.05 : 0;
-const conversionScore = score * monetizationBoost; // derived overlay only
+import { mapCtaToAction } from '@/lib/videoConversionActions';
+import { trackCtaClick } from '@/lib/videoConversionAnalytics';
 ```
 
-Extend `RecommendResult` with optional `conversionScore?: number`. Sort/cap logic stays exactly the same — `b.score - a.score`. Add inline comment: `// Phase 7: derived only — never feeds back into ranking.`
+**B. Inside the per-video render block** (around line 215, right after `const cta = suggestCta(monetizationVideo);`):
+```ts
+const action = mapCtaToAction(cta);
+```
+
+**C. Replace the CTA hint block** (lines 247–252) with an execution-ready, click-only intent surface. Keep "Hammer Suggestion — Owner Decides" wording, append an `Execute` link button beside it. Guard on `cta && !isThrottled && action`.
+
+```tsx
+{cta && !isThrottled && action && (
+  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+    <span className="text-muted-foreground italic">
+      <span className="font-medium not-italic">Hammer Suggestion — Owner Decides:</span>{' '}
+      {CTA_LABEL[cta]}
+    </span>
+    <button
+      type="button"
+      onClick={() => {
+        trackCtaClick(video.id, action);
+        // Phase 8: explicit intent emission only.
+        // Phase 9+ hook point: route to builder / open modal / start checkout.
+        console.log('[CONVERSION_ACTION]', action, video.id);
+      }}
+      className="underline text-primary hover:text-primary/80 font-medium"
+    >
+      Execute
+    </button>
+  </div>
+)}
+```
+
+Notes:
+- Uses `text-primary` (design token) instead of raw `text-blue-500` to stay on-brand.
+- `<button type="button">` so it never submits a parent form.
+- No router/modal wiring yet — that's Phase 9. The console logs are the explicit hook points.
 
 ---
 
-## 4. `src/components/owner/VideoLibraryManager.tsx` — Revenue badge (EDIT)
+## 5. Guardrails (verified, no changes)
 
-In the card render block (around line 213, next to `ConfidenceBadge`), add a Revenue Potential badge driven by `revenueLabel(video)`:
-
-- `revenue_ready` → green-tinted Badge: **"Revenue Ready"**
-- `upgradeable` → amber-tinted Badge: **"Upgradeable"**
-- `null` → render nothing (throttled is silently hidden — no negative shaming)
-
-Below the existing throttled banner, when `suggestCta(video)` returns a value, render a compact one-line hint:
-> *Hammer Suggestion — Owner Decides:* Link to a program
-
-Reusing the existing `OwnerAuthorityNote` tone. No buttons, no auto-wire — pure advisory text in this phase.
-
-Imports added: `isMonetizable`, `revenueLabel` from `@/lib/videoMonetization`; `suggestCta`, `CTA_LABEL` from `@/lib/videoCtaSuggestions`.
+- `videoRecommendationEngine.ts` — untouched. Ranking remains Phase 6 deterministic.
+- `videoMonetization.ts` — untouched. Overlay stays derived.
+- `useVideoLibrary.ts` / `useVideoSuggestions.ts` — untouched.
+- DB / migrations — none. Phase 8 is **pure runtime intent emission**.
+- `library_video_monetization` table — still NOT written to. Reserved for Phase 9 explicit wiring.
 
 ---
 
-## 5. Guardrails (verified, no changes needed)
+## 6. Owner Authority — invariants preserved
 
-- `useVideoLibrary.ts` ordering — untouched (Phase 6 deterministic chain stays).
-- `useVideoSuggestions.ts` — untouched.
-- DB / migrations — none. Phase 7 is **pure runtime derivation**.
-- `library_video_monetization` table (created in Phase 6) is NOT written to by any of this — it remains reserved for the future explicit owner-action wiring (CTA → program → checkout).
+- ✅ No auto-execution
+- ✅ No auto-checkout / auto-enrollment
+- ✅ No DB writes from CTA system
+- ✅ No ranking feedback loops
+- ✅ Click is the only trigger; suggestion remains advisory until then
 
 ---
 
 ## Files
 
-**Created (1):** `src/lib/videoCtaSuggestions.ts`
-**Edited (3):** `src/lib/videoMonetization.ts`, `src/lib/videoRecommendationEngine.ts`, `src/components/owner/VideoLibraryManager.tsx`
+**Created (2):** `src/lib/videoConversionActions.ts`, `src/lib/videoConversionAnalytics.ts`
+**Edited (2):** `src/lib/videoCtaSuggestions.ts` (comment-only), `src/components/owner/VideoLibraryManager.tsx`
 **Migration:** none.
-
-## Owner Authority
-
-Untouched. Every CTA hint is advisory, marked as Hammer Suggestion. No auto-application, no DB mutation, no silent assignment.
 
 ## Outcome
 
-- Phase 6 ranking integrity preserved (verified — only additive derivation)
-- Revenue signals emerge from quality tier, not engagement gaming
-- Monetization layer becomes a clean overlay ready for Phase 8 (CTA → checkout wiring) without backtracking
+- Phase 6 ranking integrity: preserved
+- Phase 7 monetization overlay: preserved
+- CTA pipeline now has a clean, owner-gated execution seam ready for Phase 9 (real routing → builders → Stripe/checkout) without any architectural rework.

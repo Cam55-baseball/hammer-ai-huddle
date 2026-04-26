@@ -6,6 +6,10 @@
  * - Suggestions never write to the DB
  * - Suggestions never auto-assign a CTA to a video
  * - Owner is the only actor who can wire a CTA
+ *
+ * PHASE 8 NOTE:
+ * Suggestions are pre-execution hints only.
+ * Never assume business context or override owner intent.
  */
 import { normalizeTier } from './videoTier';
 import type { VideoWithTags } from './videoRecommendationEngine';
