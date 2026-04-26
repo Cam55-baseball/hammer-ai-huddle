@@ -1,125 +1,106 @@
-## Phase 10 — Builder Pages + SPA Routing + Owner Gating
+## Phase 10.5 — Local Persistence + Owner Build Library
 
-Activate the execution layer with three owner-only builder pages, real SPA navigation from the conversion modal, and an explicit owner gate around the Execute CTA. **No DB writes, no ranking impact, no monetization changes.**
-
----
-
-### 1. NEW PAGES (3 files) — owner-only scaffolds
-
-All three pages follow the same pattern:
-- Wrapped in `DashboardLayout`
-- Use `useOwnerAccess()` — redirect non-owners to `/dashboard` (mirrors `AdminEngineSettings.tsx`)
-- Read `videoId` from query string via `useSearchParams`
-- Show a header with the originating video ID
-- Use existing design system (`Button`, `Input`, `Textarea`, `Card`)
-- Save buttons `console.log` only — **no DB writes**
-
-**`src/pages/owner/ProgramBuilder.tsx`** (route: `/owner/open_program_builder`)
-- Title: "Program Builder"
-- Subtext: "Building from Video ID: {videoId}"
-- Inputs: Program Name (`Input`), Description (`Textarea`)
-- Section card: "Selected Video" showing `videoId`
-- Button: "Save Program" → `console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId })`
-
-**`src/pages/owner/BundleBuilder.tsx`** (route: `/owner/open_bundle_builder`)
-- Title: "Bundle Builder"
-- Subtext: "Building from Video ID: {videoId}"
-- Input: Bundle Name
-- Section card: "Videos in Bundle" showing `videoId` as the seed entry
-- Button: "Save Bundle" → `console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoId })`
-
-**`src/pages/owner/ConsultationFlow.tsx`** (route: `/owner/open_consultation_flow`)
-- Title: "Consultation Setup"
-- Subtext: "Based on Video ID: {videoId}"
-- Inputs: Offer Title, Price (text input)
-- Button: "Create Offer" → `console.log('[PHASE_10_CONSULTATION_CREATE]', { title, price, videoId })`
+Add a lightweight localStorage layer so owner-created programs/bundles/consultations persist and are viewable in a new owner-only "Build Library" page. **No DB, no schema, no ranking/monetization changes.**
 
 ---
 
-### 2. ROUTING — `src/App.tsx`
+### 1. NEW — `src/lib/ownerBuildStorage.ts`
 
-Add three lazy imports + three routes (paths match the `ConversionAction` enum values exactly so `/owner/${action}` resolves cleanly):
+Tiny utility around `localStorage` (key: `owner_builds`).
 
-```tsx
-const ProgramBuilder = lazyWithRetry(() => import("./pages/owner/ProgramBuilder"));
-const BundleBuilder = lazyWithRetry(() => import("./pages/owner/BundleBuilder"));
-const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationFlow"));
-```
-
-Routes (placed near the existing `/owner` route):
-```tsx
-<Route path="/owner/open_program_builder" element={<ProgramBuilder />} />
-<Route path="/owner/open_bundle_builder" element={<BundleBuilder />} />
-<Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
-```
-
----
-
-### 3. SPA NAVIGATION — `src/components/owner/VideoConversionModal.tsx`
-
-Replace the Phase 10 hook log with real `react-router-dom` navigation (the project already uses `BrowserRouter`).
-
-- Add `import { useNavigate } from 'react-router-dom';`
-- Inside component: `const navigate = useNavigate();`
-- Update `handleProceed`:
-```tsx
-const handleProceed = () => {
-  console.log('[PHASE_9_ROUTE]', { action, videoId, timestamp: Date.now() });
-  navigate(`/owner/${action}?videoId=${encodeURIComponent(videoId)}`);
-  onClose();
+```ts
+export type BuildItem = {
+  id: string;
+  type: 'program' | 'bundle' | 'consultation';
+  name: string;
+  meta: Record<string, any>;
+  createdAt: number;
 };
+
+const KEY = 'owner_builds';
+
+export function saveBuild(item: BuildItem): void { /* try/catch unshift+set */ }
+export function getBuilds(): BuildItem[] { /* try/catch parse, default [] */ }
 ```
 
-Rules preserved: no `window.location.href`, modal still closes on confirm, `[PHASE_9_ROUTE]` log retained.
+All access wrapped in `try/catch` for SSR/quota safety.
 
 ---
 
-### 4. OWNER GATING — `src/components/owner/VideoLibraryManager.tsx`
+### 2. EDIT — Three builder pages (replace console-log save handlers)
 
-Currently the CTA block (lines ~256–275) renders for anyone viewing the manager. Although the manager is mounted inside `OwnerDashboard` (which is owner-gated at the page level), add an explicit defense-in-depth gate so the Execute control can never leak if this component is ever embedded elsewhere.
+**`src/pages/owner/ProgramBuilder.tsx`** — `handleSave`:
+```ts
+saveBuild({
+  id: crypto.randomUUID(),
+  type: 'program',
+  name,
+  meta: { description, videoId },
+  createdAt: Date.now(),
+});
+console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId });
+// toast success + navigate to /owner/builds
+```
 
-- Import `useOwnerAccess`: `import { useOwnerAccess } from '@/hooks/useOwnerAccess';`
-- At top of component: `const { isOwner } = useOwnerAccess();`
-- Update the conditional render around the CTA block from `{cta && !isThrottled && action && (...)}` to `{isOwner && cta && !isThrottled && action && (...)}`
+**`src/pages/owner/BundleBuilder.tsx`** — `handleSave`:
+```ts
+saveBuild({ id: crypto.randomUUID(), type: 'bundle', name, meta: { videoId }, createdAt: Date.now() });
+```
 
-The builder pages themselves also enforce owner-only access via `useOwnerAccess`, so even direct URL access by a non-owner redirects to `/dashboard`.
+**`src/pages/owner/ConsultationFlow.tsx`** — `handleCreate`:
+```ts
+saveBuild({ id: crypto.randomUUID(), type: 'consultation', name: title, meta: { price, videoId }, createdAt: Date.now() });
+```
+
+Each page: keep existing `console.log`, add a `toast` confirming save, then `navigate('/owner/builds')`.
 
 ---
 
-### 5. Guardrails (verified, untouched)
+### 3. NEW — `src/pages/owner/BuildLibrary.tsx`
 
-- `videoRecommendationEngine.ts` — Phase 6 ranking unchanged
-- `videoMonetization.ts` — Phase 7 overlay unchanged
-- `videoCtaSuggestions.ts` / `videoConversionActions.ts` / `videoConversionAnalytics.ts` — unchanged
-- No DB migrations, no edge functions, no schema changes
-- `library_video_monetization` still NOT written — reserved for a later commerce phase
+Owner-gated page (mirrors existing builder pages):
+- `useOwnerAccess()` redirect guard + `Loader2` while loading
+- `DashboardLayout` wrapper
+- Header: "Your Builds" with `Library` icon
+- Reads `getBuilds()` once on mount into `useState`
+- Renders list of `Card`s — each shows name, type badge, formatted `createdAt`, and a small meta line (e.g. videoId)
+- Empty state: "No builds yet — create one from your videos."
+
+---
+
+### 4. ROUTE — `src/App.tsx`
+
+Add lazy import + route alongside the other `/owner/*` routes (line ~173):
+```tsx
+const BuildLibrary = lazyWithRetry(() => import("./pages/owner/BuildLibrary"));
+<Route path="/owner/builds" element={<BuildLibrary />} />
+```
+
+---
+
+### 5. OwnerDashboard link
+
+In `src/pages/OwnerDashboard.tsx`, add a small "View Your Builds" button/link → `/owner/builds` near the top of the dashboard. (Owner-only page already, so no extra gating needed.)
 
 ---
 
 ### 6. Files
 
-**Created (3):**
+**Created (2):**
+- `src/lib/ownerBuildStorage.ts`
+- `src/pages/owner/BuildLibrary.tsx`
+
+**Edited (5):**
 - `src/pages/owner/ProgramBuilder.tsx`
 - `src/pages/owner/BundleBuilder.tsx`
 - `src/pages/owner/ConsultationFlow.tsx`
+- `src/App.tsx` — lazy import + route
+- `src/pages/OwnerDashboard.tsx` — link to `/owner/builds`
 
-**Edited (3):**
-- `src/App.tsx` — three lazy imports + three routes
-- `src/components/owner/VideoConversionModal.tsx` — `useNavigate` swap in `handleProceed`
-- `src/components/owner/VideoLibraryManager.tsx` — `isOwner` guard on CTA block
-
-**Migrations:** none
+**Migrations:** none. **Backend:** none.
 
 ---
 
 ### 7. Outcome
 
-| Phase | State |
-|-------|-------|
-| 6 — Ranking | ✔ deterministic, locked |
-| 7 — Monetization | ✔ derived overlay only |
-| 8 — CTA intent | ✔ click-only emitter |
-| 9 — Conversion modal | ✔ owner-gated, SPA-safe |
-| 10 — Builder pages + routing | ✔ owner-only scaffolds, real SPA nav |
-
-Execute → Continue now navigates (in-app, no reload) into a real owner-only builder surface seeded with the originating `videoId`. The pages are functional placeholders ready for a future commerce/persistence phase.
+Execute → Continue → Builder → Save → redirected to Build Library showing the new entry. Persists across reloads via `localStorage`. Ready for Phase 11 (DB + Stripe) drop-in: swap `saveBuild`/`getBuilds` for Supabase calls without UI rework.

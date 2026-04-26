@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Package } from 'lucide-react';
+import { saveBuild } from '@/lib/ownerBuildStorage';
+import { toast } from '@/hooks/use-toast';
 
 export default function BundleBuilder() {
   const { isOwner, loading } = useOwnerAccess();
@@ -36,7 +38,16 @@ export default function BundleBuilder() {
   if (!isOwner) return null;
 
   const handleSave = () => {
+    saveBuild({
+      id: crypto.randomUUID(),
+      type: 'bundle',
+      name,
+      meta: { videoId },
+      createdAt: Date.now(),
+    });
     console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoId });
+    toast({ title: 'Bundle saved', description: name });
+    navigate('/owner/builds');
   };
 
   return (
