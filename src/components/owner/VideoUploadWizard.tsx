@@ -87,6 +87,8 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
   });
   const step3Valid = step3Missing.length === 0;
 
+  // Fast Mode treats Step 3 as the final step (auto-publish on advance).
+  const totalSteps = fastMode ? 3 : 4;
   const validBy: Record<number, boolean> = { 1: step1Valid, 2: step2Valid, 3: step3Valid, 4: true };
   const canNext = validBy[step] === true;
 
@@ -98,13 +100,17 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
     });
   }, [step]);
 
-  // Keyboard nav: Enter → Next, Escape ignored (parent dialog handles close)
+  // Keyboard nav: Cmd/Ctrl+Enter → advance / publish
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        if (step < 4 && canNext) setStep(step + 1);
-        else if (step === 4) handlePublish();
+        if (step < totalSteps && canNext) {
+          setStep(step + 1);
+        } else if (step === totalSteps && canNext) {
+          // Final step: publish (Step 4 in beginner, Step 3 in Fast Mode)
+          void handlePublish();
+        }
       }
     };
     window.addEventListener('keydown', onKey);
