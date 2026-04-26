@@ -42,7 +42,7 @@ interface Props {
  * - Cmd/Ctrl+Enter saves, Esc cancels
  * - Smart defaults pre-applied (format, primary domain) when video is empty
  */
-export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
+export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, autoOpenSuggestions }: Props) {
   const { updateStructuredFields, syncTagAssignments, regenerateAISuggestions, uploading } = useVideoLibraryAdmin();
 
   const defaults = useMemo(() => getSmartDefaults(), []);
@@ -57,12 +57,16 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
   const [assignments, setAssignments] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [regen, setRegen] = useState(false);
+  const initialConfRef = useRef<number | null>(null);
 
   const primaryDomain = skillDomains[0];
   const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
   const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
 
   const descRef = useRef<HTMLTextAreaElement>(null);
+  const formatRef = useRef<HTMLDivElement>(null);
+  const domainsRef = useRef<HTMLDivElement>(null);
+  const tagsRef = useRef<HTMLDivElement>(null);
 
   // Load existing assignments
   useEffect(() => {
@@ -79,10 +83,16 @@ export function VideoFastEditor({ video, onSuccess, onCancel }: Props) {
     })();
   }, [video.id]);
 
-  // Auto-focus description (the highest-leverage field)
+  // Phase 6 — focus the requested field, falling back to description.
   useEffect(() => {
-    requestAnimationFrame(() => descRef.current?.focus());
-  }, []);
+    requestAnimationFrame(() => {
+      const target = initialFocus;
+      if (target === 'video_format') formatRef.current?.scrollIntoView({ block: 'center' });
+      else if (target === 'skill_domains') domainsRef.current?.scrollIntoView({ block: 'center' });
+      else if (target === 'tag_assignments') tagsRef.current?.scrollIntoView({ block: 'center' });
+      else descRef.current?.focus();
+    });
+  }, [initialFocus]);
 
   const layersCovered = useMemo<TagLayer[]>(() => {
     const layers: TagLayer[] = [];
