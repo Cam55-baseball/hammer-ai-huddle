@@ -16,6 +16,10 @@ export interface LibraryVideo {
   views_count: number;
   created_at: string;
   is_liked?: boolean;
+  // Engine-critical structured fields
+  video_format?: string | null;
+  skill_domains?: string[] | null;
+  ai_description?: string | null;
 }
 
 export interface LibraryTag {
