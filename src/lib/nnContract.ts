@@ -4,6 +4,7 @@
 // it does not render.
 
 import type { NNCompletionBinding } from '@/types/customActivity';
+import { trackNNInvalidDropped } from './nnTelemetry';
 
 export interface NNContext {
   title: string;
