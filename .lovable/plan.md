@@ -1,131 +1,94 @@
-## Goal
-Layer a **feedback + learning system** on top of the existing video library. Additive only — no removal, no schema changes. Every signal is derivable from data we already have (`library_videos_readiness`, `video_tag_assignments`, `video_tag_taxonomy`, `video_tag_suggestions`, localStorage).
+## Phase 5 Final Wiring — Owner Authority + Remaining Integration
+
+### Audit Summary
+
+The Owner Authority rule is **already respected** in current code:
+- `AIComparePanel` adoption requires explicit click on the `+` Plus button (line 163, `onAdoptTag`).
+- `Auto-Suggest Tags` is button-gated (no auto-fire on description change).
+- `regenerateAISuggestions` writes to `video_tag_suggestions`, never to `video_tag_assignments`.
+- `syncTagAssignments` only persists what the owner has in local `assignments` state.
+- Smart Defaults in `VideoFastEditor` apply **only when fields are empty** (line 45–50: `video.video_format || defaults.topFormat`) — never overrides existing owner data.
+
+What's missing is **labeling, integration, and reinforcement** — not behavior changes.
 
 ---
 
-## 1. Confidence Score (`src/lib/videoConfidence.ts` — new)
+### 1. ConfidenceBadge on Library Cards (`VideoLibraryManager.tsx`)
+- Render `<ConfidenceBadge score tier compact />` next to `<ReadinessBadge />` on each card.
+- Pull from existing `confidenceMap` (already destructured but unused on cards).
+- Skip badge if no entry yet (avoid layout flicker).
 
-Pure function `computeVideoConfidence({ video_format, skill_domains, ai_description, assignments })` → `{ score: 0–100, tier: 'elite'|'solid'|'needs_work', breakdown }`.
+### 2. Fast Mode Editor Swap — Edit Dialog
+In `VideoLibraryManager.tsx` Edit Dialog body:
+```
+{fastMode
+  ? <VideoFastEditor video={editTarget} onSuccess={...} onCancel={...} />
+  : <VideoEditForm video={editTarget} tags={tags} ... />}
+```
+Both paths already use `useVideoLibraryAdmin` (`updateStructuredFields`, `syncTagAssignments`) — identical mutation path, no divergence.
 
-Weights (sum 100):
-- **Format present** → 15
-- **Skill domain present** → 15
-- **Description quality** → 25 — length-based curve: <20=0, 20–60=10, 60–140=20, 140+=25; bonus only if it contains a verb cue (regex on action verbs from `coaching-language-standard`).
-- **Tag count** → 20 — 0=0, 1=5, 2=12, 3–6=20, 7+=15 (over-tagging penalty).
-- **Tag layer diversity** → 25 — +6 per layer covered (movement / result / context / correction), +1 floor.
+### 3. Add Tab Behavior (Fast Mode for new uploads)
+Current `VideoFastEditor` requires an existing `LibraryVideo` (it loads `assignments` by `video_id` and saves via `updateStructuredFields(video.id, ...)`). It is **not** a new-video creator.
 
-Tier cutoffs: ≥90 elite (emerald), 70–89 solid (sky), <70 needs_work (amber).
+**Decision needed — minimal-risk approach:**
+- Keep `VideoUploadWizard` as the upload entry-point in both modes (uploading bytes / external URL is wizard step 1).
+- When `fastMode` is on, after Step 1 completes (file uploaded / URL set + minimal metadata), short-circuit to a Fast-Mode-style compact pane (Steps 2+3 collapsed into one screen) → publish.
+- Concretely: add a `fastMode` prop to `VideoUploadWizard`. When true, render Steps 2+3 as a single combined view with the same fields, `⌘+Enter` to publish. Step 4 review is skipped (smart defaults pre-fill format/domain).
+- This preserves beginner wizard intact (default `fastMode=false`) and gives elite owners a 1-screen flow without forking a second creation pipeline.
 
-New hook `useVideoConfidenceMap()` — joins `useVideoReadiness` + a single batched query for `video_tag_assignments` (with taxonomy layer) → returns `Map<video_id, ConfidenceResult>`. Cached 60s via react-query.
+### 4. Owner Authority Reinforcement (Labeling)
+Add subtle persistent label `"Hammer Suggestion — Owner Decides"`:
+- `AIComparePanel.tsx` header (next to "Compare with Hammer" switch).
+- Bottom of the AI suggestions panel in `VideoEditForm` Engine Fields section (under Auto-Suggest Tags button).
+- `VideoFastEditor.tsx` next to Auto-Suggest button.
+- Constant exported from a small new file `src/lib/ownerAuthority.ts` so the phrase stays consistent.
 
-**UI**:
-- New `<ConfidenceBadge score tier />` rendered next to `<ReadinessBadge />` in `VideoLibraryManager` cards.
-- Same badge inside `VideoEditForm` Engine Fields header (live, recomputes as user edits — local computation off form state).
+Add an explicit code-level guard (defensive, even though no path violates it today):
+- In `useVideoLibraryAdmin.regenerateAISuggestions`: add a comment + assertion that this function MUST NOT call `syncTagAssignments` or write to `video_tag_assignments`. (Documentation guard — no behavior change.)
 
----
+### 5. Help Sheet Updates (`VideoLibraryHelpSheet.tsx`)
+Append two new sections + a Reset button:
+- **⚡ Fast Mode** — "For owners who know the system. Skips guidance, opens compact one-screen editor. Same save logic, same enforcement."
+- **🧠 Smart Defaults** — "Hammer watches your last 50 saves and pre-suggests your most-used Format and Skill Domain on new videos. It only fills empty fields. You can always change or clear them."
+- **Reset Learning** button → calls `resetLearning()` from `ownerLearning.ts`, shows toast confirmation.
+- **Owner Authority** — short callout: "Hammer suggests. You decide. The system never auto-applies tags or overrides your picks."
 
-## 2. AI vs Owner Comparison (`src/components/owner/AIComparePanel.tsx` — new)
+### 6. Type Safety + Stability Pass
+- Verify `confidenceMap.get(video.id)` is null-checked before passing to `ConfidenceBadge` (it returns `ConfidenceResult | undefined`).
+- `VideoFastEditor` keyboard listener: current effect has no dep array → re-attaches every render. Fix: add deps `[handleSave, onCancel]` or wrap `handleSave` in `useCallback` with stable refs. Low priority (no leak — cleanup runs each render) but worth fixing.
+- Confirm `useVideoConfidenceMap` query cache is invalidated after `updateStructuredFields` / `syncTagAssignments` so the badge live-updates after save. Add `qc.invalidateQueries({ queryKey: ['video-confidence-map'] })` to the success paths in `useVideoLibraryAdmin` (or in `handleEditSuccess`).
+- No `tsc --noEmit` run in plan mode — will run after approval.
 
-Inside `VideoEditForm`, below the Tag Assignments grid:
-
-- Toggle: **"Compare with Hammer"** (default off — keeps form clean).
-- When on, fetches `video_tag_suggestions` for `video_id` (any status) + maps `suggested_key + layer` → taxonomy `id`.
-- Computes three sets vs current `assignments` state:
-  - **Matching** — owner picked + AI suggested → green chips with ✓
-  - **AI suggested, owner missed** → amber chips with **"Add"** one-click button (calls existing `toggleAssignment`)
-  - **Owner picked, AI didn't suggest** → neutral chips labeled "Owner pick" (no action — informational)
-- Confidence % from suggestion shown on AI chips.
-- Empty state: "No Hammer suggestions yet. Click Auto-Suggest Tags above."
-
-No new mutations — reuses local `assignments` state.
-
----
-
-## 3. "Why this tag?" System
-
-Reuse the existing `WhyButton` pattern but lighter — create `<TagWhyPopover tag suggestion? />` (Popover, not Sheet) for inline use:
-
-Content:
-- **What it means** → `taxonomy.description` (already in DB).
-- **Why it applies** → `suggestion.reasoning` (already stored on `video_tag_suggestions`) when available, else "No Hammer rationale recorded — owner pick."
-- **Connected cue** → display `taxonomy.layer + key`.
-
-Mounted on:
-- Each AI chip in `AIComparePanel`.
-- Optional: small `?` next to selected tags in the assignments grid (only when reasoning exists, to avoid clutter).
-
----
-
-## 4. Owner Performance Feedback (`src/components/owner/OwnerTaggingPerformancePanel.tsx` — new)
-
-Card mounted **above** the Videos tab (collapsed by default, "Show your tagging stats" toggle).
-
-Derived purely client-side from `useVideoConfidenceMap()` + `useVideoReadiness()`:
-- **Avg confidence** (big number + tier color).
-- **Most common missing layer** — counts which of `movement/result/context/correction` is least represented across ready videos.
-- **Consistency** — % of videos with all 4 layers represented (diversity rate).
-- **Trend (lite)** — compare last 5 videos by `created_at` vs prior 5 → ▲/▼ chip on avg confidence. No new tables, just `videos.sort(created_at).slice(...)`.
+### 7. Validation Checklist (verified against current code)
+| Rule | Status |
+|------|--------|
+| Confidence updates live while editing | ✅ already (computed from local state in `VideoEditForm` & `VideoFastEditor`) |
+| AI Compare never auto-applies | ✅ already (explicit `onClick={() => onAdoptTag(tag.id)}`) |
+| Removing tag — AI doesn't re-add | ✅ already (suggestions live in separate table; assignments are owner-controlled state) |
+| Fast Mode = same save path | ✅ already (both call `updateStructuredFields` + `syncTagAssignments`) |
+| Smart Defaults only suggest | ✅ already (only applied when field is empty) |
+| Confidence badge on cards | ⏳ this PR |
+| Fast Mode swap in Edit dialog | ⏳ this PR |
+| Help sheet additions | ⏳ this PR |
+| "Hammer Suggestion — Owner Decides" labels | ⏳ this PR |
 
 ---
 
-## 5. Fast Mode (Elite Mode)
+### Files Touched
+**Created:**
+- `src/lib/ownerAuthority.ts` — exports `OWNER_AUTHORITY_LABEL` constant + `<OwnerAuthorityNote />` tiny component.
 
-`src/hooks/useOwnerPrefs.ts` — new, localStorage-backed (`hammer.owner.fastMode`, `hammer.owner.smartDefaults`).
+**Edited:**
+- `src/components/owner/VideoLibraryManager.tsx` — render ConfidenceBadge on cards; swap to FastEditor when `fastMode`; pass `fastMode` to wizard.
+- `src/components/owner/VideoUploadWizard.tsx` — accept optional `fastMode` prop; collapse steps 2+3 into one screen when on; skip step 4.
+- `src/components/owner/VideoLibraryHelpSheet.tsx` — Fast Mode / Smart Defaults / Reset Learning / Owner Authority sections.
+- `src/components/owner/AIComparePanel.tsx` — add Owner Authority label.
+- `src/components/owner/VideoEditForm.tsx` — add Owner Authority label near Auto-Suggest.
+- `src/components/owner/VideoFastEditor.tsx` — add Owner Authority label; fix keyboard effect deps.
+- `src/hooks/useVideoLibraryAdmin.ts` — invalidate `['video-confidence-map']` on structured-field / assignment saves; add documentation guard comment to `regenerateAISuggestions`.
 
-UI:
-- Switch in `VideoLibraryManager` top bar: **⚡ Fast Mode** (next to Help).
-- When ON:
-  - Add tab swaps `<VideoUploadWizard />` → new `<VideoFastEditor />` (compact single-pane: dropzone + 4 inline engine inputs + Save). All required fields visible at once, keyboard navigation (`Tab`/`Cmd+Enter`).
-  - Edit dialog opens in a denser layout: hide non-engine sections behind "More options" disclosure. Engine Fields panel becomes the primary content.
-- Beginner wizard remains the default and is never removed.
-
-Persistence: choice survives reloads via localStorage; no DB write.
-
----
-
-## 6. Smart Defaults (`src/lib/ownerLearning.ts` — new)
-
-Learned from existing data, not new tables:
-- On every successful save in `useVideoLibraryAdmin.updateStructuredFields`, call `recordOwnerChoice({ format, domains, layers })`.
-- Store rolling counts (last 50 saves) in localStorage: `hammer.owner.learning.v1`.
-- Expose `getSmartDefaults()` → `{ topFormat, topDomains, topLayerWeights }`.
-
-Applied in:
-- `VideoUploadWizard` Step 3 → format selector pre-selects `topFormat` (with subtle "Suggested" hint and easy override).
-- `VideoFastEditor` (Fast Mode) → same.
-- New video defaults skill_domains to `topDomains[0]` only when none chosen and Fast Mode is on (never in beginner wizard, to preserve teaching).
-
-A "Reset learning" button in the Help sheet for owner control.
-
----
-
-## Files
-
-**New (9):**
-- `src/lib/videoConfidence.ts`
-- `src/lib/ownerLearning.ts`
-- `src/hooks/useVideoConfidenceMap.ts`
-- `src/hooks/useOwnerPrefs.ts`
-- `src/components/owner/ConfidenceBadge.tsx`
-- `src/components/owner/AIComparePanel.tsx`
-- `src/components/owner/TagWhyPopover.tsx`
-- `src/components/owner/OwnerTaggingPerformancePanel.tsx`
-- `src/components/owner/VideoFastEditor.tsx`
-
-**Edited (4):**
-- `src/components/owner/VideoLibraryManager.tsx` — Fast Mode switch, Performance panel mount, ConfidenceBadge per card.
-- `src/components/owner/VideoEditForm.tsx` — Live ConfidenceBadge, AIComparePanel toggle, TagWhyPopover hooks.
-- `src/components/owner/VideoLibraryHelpSheet.tsx` — add "Reset learning" + Fast Mode explainer.
-- `src/hooks/useVideoLibraryAdmin.ts` — call `recordOwnerChoice` after structured save.
-
-**No DB migrations. No new edge functions.**
-
----
-
-## Acceptance
-- Every video shows a 0–100 confidence score with elite/solid/needs-work color.
-- Edit form has working "Compare with Hammer" with one-click adopt.
-- Every AI suggestion has a reachable "Why?" with taxonomy meaning + reasoning + cue.
-- Owner panel shows avg score, weakest layer, consistency, and 5-video trend.
-- Fast Mode toggle persists, swaps wizard for compact editor, never blocks beginner flow.
-- After ~3 saves, format dropdown pre-selects the owner's most-used format.
+### Out of Scope
+- No changes to recommendation engine.
+- No DB migrations.
+- No removal of beginner wizard.
+- No new edge functions.
