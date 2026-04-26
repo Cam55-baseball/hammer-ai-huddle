@@ -29,6 +29,10 @@ interface Props {
   video: LibraryVideo;
   onSuccess: () => void;
   onCancel: () => void;
+  /** Phase 6 — focus a specific missing field on mount. */
+  initialFocus?: 'video_format' | 'skill_domains' | 'ai_description' | 'tag_assignments' | string;
+  /** Phase 6 — auto-run Hammer suggestions on mount (still NOT applied). */
+  autoOpenSuggestions?: boolean;
 }
 
 /**
