@@ -20,6 +20,8 @@ export interface VideoTagAssignment {
   weight: number;
 }
 
+export type DistributionTier = 'blocked' | 'throttled' | 'normal' | 'boosted' | 'featured';
+
 export interface VideoWithTags {
   id: string;
   title: string;
@@ -31,7 +33,18 @@ export interface VideoWithTags {
   ai_description?: string | null;
   created_at?: string | null;
   assignments: VideoTagAssignment[]; // assigned taxonomy tags
+  /** Phase 6 — engine leverage. Cached on library_videos. */
+  confidence_score?: number | null;
+  distribution_tier?: DistributionTier | null;
 }
+
+const TIER_MULTIPLIER: Record<DistributionTier, number> = {
+  blocked: 0,
+  throttled: 0.55,
+  normal: 1.0,
+  boosted: 1.15,
+  featured: 1.30,
+};
 
 export interface VideoTagRule {
   id: string;
