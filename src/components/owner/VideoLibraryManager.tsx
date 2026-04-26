@@ -125,7 +125,21 @@ export function VideoLibraryManager() {
       return;
     }
     setEditTarget(null);
+    setEditFocus(undefined);
+    setEditAutoSuggest(false);
   };
+
+  // Quick-fix entry. Always opens the editor — owner still must save (Owner Authority).
+  const openQuickFix = (video: LibraryVideo, intent: QuickFixIntent, focus?: string) => {
+    setEditFocus(intent === 'complete_missing' ? focus : intent === 'auto_suggest' ? 'ai_description' : undefined);
+    setEditAutoSuggest(intent === 'auto_suggest');
+    // Smart Defaults already auto-applies in VideoFastEditor when fields are empty,
+    // so we just open the editor — no extra wiring required.
+    setEditTarget(video);
+  };
+
+  // Filter to throttled-only used by coaching nudge "Fix now" CTA.
+  const filterThrottled = () => setShowOnlyIncomplete(true);
 
   return (
     <div className="space-y-4">
