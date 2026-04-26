@@ -918,7 +918,15 @@ const OwnerDashboard = () => {
 
           {/* Video Library Manager Section */}
           {activeSection === 'video-library' && (
-            <VideoLibraryManager />
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => navigate('/owner/builds')}>
+                  <Library className="h-4 w-4 mr-2" />
+                  View Your Builds
+                </Button>
+              </div>
+              <VideoLibraryManager />
+            </div>
           )}
 
           {/* Promo Engine Section */}
