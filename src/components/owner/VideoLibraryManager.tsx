@@ -21,6 +21,8 @@ import { QuickFixActions, type QuickFixIntent } from "./QuickFixActions";
 import { normalizeTier } from "@/lib/videoTier";
 import { revenueLabel } from "@/lib/videoMonetization";
 import { suggestCta, CTA_LABEL } from "@/lib/videoCtaSuggestions";
+import { mapCtaToAction } from "@/lib/videoConversionActions";
+import { trackCtaClick } from "@/lib/videoConversionAnalytics";
 import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
 import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
@@ -213,6 +215,7 @@ export function VideoLibraryManager() {
               } as any;
               const revLabel = revenueLabel(monetizationVideo);
               const cta = suggestCta(monetizationVideo);
+              const action = mapCtaToAction(cta);
               return (
                 <Card key={video.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -244,11 +247,25 @@ export function VideoLibraryManager() {
                           {SYSTEM_TONE.throttledOwnerCard}
                         </p>
                       )}
-                      {cta && !isThrottled && (
-                        <p className="mt-1.5 text-[11px] text-muted-foreground italic">
-                          <span className="font-medium not-italic">Hammer Suggestion — Owner Decides:</span>{' '}
-                          {CTA_LABEL[cta]}
-                        </p>
+                      {cta && !isThrottled && action && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+                          <span className="text-muted-foreground italic">
+                            <span className="font-medium not-italic">Hammer Suggestion — Owner Decides:</span>{' '}
+                            {CTA_LABEL[cta]}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              trackCtaClick(video.id, action);
+                              // Phase 8: explicit intent emission only.
+                              // Phase 9+ hook point: route to builder / open modal / start checkout.
+                              console.log('[CONVERSION_ACTION]', action, video.id);
+                            }}
+                            className="underline text-primary hover:text-primary/80 font-medium"
+                          >
+                            Execute
+                          </button>
+                        </div>
                       )}
                       <div className="flex flex-wrap gap-1 mt-2">
                         {video.sport.map(s => (
