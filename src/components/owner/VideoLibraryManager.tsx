@@ -23,6 +23,8 @@ import { revenueLabel } from "@/lib/videoMonetization";
 import { suggestCta, CTA_LABEL } from "@/lib/videoCtaSuggestions";
 import { mapCtaToAction } from "@/lib/videoConversionActions";
 import { trackCtaClick } from "@/lib/videoConversionAnalytics";
+import { VideoConversionModal } from "./VideoConversionModal";
+import type { ConversionAction } from "@/lib/videoConversionActions";
 import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
 import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";

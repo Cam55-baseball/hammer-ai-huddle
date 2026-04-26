@@ -1,153 +1,164 @@
-# Phase 8 — CTA → Conversion Execution Layer
+# Phase 9 — Conversion Execution Layer (Modal → Routing Bridge)
 
-Bridge the Phase 7 advisory CTA into an **explicit, owner-triggered intent emitter**. Zero ranking impact, zero DB writes, zero auto-execution. Click is the only thing that fires anything — and even then, all it does is emit an intent + analytics breadcrumb. Real routing/checkout is deferred to Phase 9+.
+Turn the Phase 8 "Execute" intent emission into a confirmed, owner-gated action via a modal that bridges to placeholder owner routes. Still **zero DB writes**, **zero ranking impact**, **zero auto-execution** — every step requires an explicit owner click.
 
 System ladder after this phase:
 - **Phase 6** Tier system → structural worth (immutable)
 - **Phase 7** Monetization overlay → revenue eligibility (derived)
-- **Phase 8** Conversion actions → owner intent emission (manual click only)
+- **Phase 8** CTA → ConversionAction intent emitter (click-only)
+- **Phase 9** Conversion modal → confirmed routing bridge (click-only, placeholder routes)
 
 ---
 
-## 1. NEW — `src/lib/videoConversionActions.ts`
+## 1. NEW — `src/components/owner/VideoConversionModal.tsx`
 
-Pure mapper: `CtaKind → ConversionAction`. No side effects.
+A confirmation modal built on the existing shadcn `Dialog` primitive (already used elsewhere in `VideoLibraryManager.tsx`, lines 36–40) so it inherits the project's tokens, focus management, portal stability, and dark-mode styling — instead of hand-rolling `<div>` overlays.
 
-```ts
-/**
- * PHASE 8 RULES:
- * - No ranking logic here
- * - No DB writes
- * - Only user-triggered intent mapping
- * - All actions are explicit (never automatic)
- */
-import type { CtaKind } from './videoCtaSuggestions';
-
-export type ConversionAction =
-  | 'open_program_builder'
-  | 'open_bundle_builder'
-  | 'open_consultation_flow'
-  | null;
-
-export function mapCtaToAction(cta: CtaKind): ConversionAction {
-  if (cta === 'program') return 'open_program_builder';
-  if (cta === 'bundle') return 'open_bundle_builder';
-  if (cta === 'consultation') return 'open_consultation_flow';
-  return null;
-}
-```
-
----
-
-## 2. NEW — `src/lib/videoConversionAnalytics.ts`
-
-Lightweight, fail-silent breadcrumb emitter. No network calls, no DB. Just structured `console.log` for now — Phase 9 can replace the body with a real telemetry sink without touching callers.
-
-```ts
-/**
- * PHASE 8 — analytics only.
- * No ranking influence. No DB mutation. Never throws.
- */
-export function trackCtaClick(videoId: string, action: string) {
-  try {
-    console.log('[CTA_CLICK]', {
-      videoId,
-      action,
-      timestamp: Date.now(),
-    });
-  } catch {
-    // silent fail (never break UI)
-  }
-}
-```
-
----
-
-## 3. EDIT — `src/lib/videoCtaSuggestions.ts`
-
-Append a Phase 8 guardrail comment to the existing header (no logic change):
-
-```
- * PHASE 8 NOTE:
- * Suggestions are pre-execution hints only.
- * Never assume business context or override owner intent.
-```
-
----
-
-## 4. EDIT — `src/components/owner/VideoLibraryManager.tsx`
-
-**A. Imports** (add):
-```ts
-import { mapCtaToAction } from '@/lib/videoConversionActions';
-import { trackCtaClick } from '@/lib/videoConversionAnalytics';
-```
-
-**B. Inside the per-video render block** (around line 215, right after `const cta = suggestCta(monetizationVideo);`):
-```ts
-const action = mapCtaToAction(cta);
-```
-
-**C. Replace the CTA hint block** (lines 247–252) with an execution-ready, click-only intent surface. Keep "Hammer Suggestion — Owner Decides" wording, append an `Execute` link button beside it. Guard on `cta && !isThrottled && action`.
+Key rules baked in:
+- No DB writes, no ranking effects.
+- `if (!action) return null;` guard before `<Dialog>` so we never render an empty modal.
+- "Continue" handler logs the routing intent, then navigates to a placeholder owner route. Phase 10 will swap `window.location.href` for a real router push + actual builder pages.
+- Cancel always closes; no side effects.
 
 ```tsx
-{cta && !isThrottled && action && (
-  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
-    <span className="text-muted-foreground italic">
-      <span className="font-medium not-italic">Hammer Suggestion — Owner Decides:</span>{' '}
-      {CTA_LABEL[cta]}
-    </span>
-    <button
-      type="button"
-      onClick={() => {
-        trackCtaClick(video.id, action);
-        // Phase 8: explicit intent emission only.
-        // Phase 9+ hook point: route to builder / open modal / start checkout.
-        console.log('[CONVERSION_ACTION]', action, video.id);
-      }}
-      className="underline text-primary hover:text-primary/80 font-medium"
-    >
-      Execute
-    </button>
-  </div>
-)}
+/**
+ * PHASE 9 — Conversion Execution Modal
+ * - No ranking logic
+ * - No DB writes
+ * - Only explicit owner-triggered navigation
+ * - Phase 10 hook point: replace window.location.href with real router + builder pages
+ */
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import type { ConversionAction } from '@/lib/videoConversionActions';
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  action: ConversionAction;
+  videoId: string;
+};
+
+const ACTION_LABEL: Record<Exclude<ConversionAction, null>, string> = {
+  open_program_builder: 'Create Training Program',
+  open_bundle_builder: 'Build Video Bundle',
+  open_consultation_flow: 'Start Consultation Flow',
+};
+
+export function VideoConversionModal({ open, onClose, action, videoId }: Props) {
+  if (!action) return null;
+
+  const label = ACTION_LABEL[action];
+
+  const handleProceed = () => {
+    console.log('[PHASE_9_ROUTE]', {
+      action,
+      videoId,
+      timestamp: Date.now(),
+    });
+    // Phase 9 placeholder — Phase 10 will replace with router.push + real builder pages.
+    window.location.href = `/owner/${action}?videoId=${encodeURIComponent(videoId)}`;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Conversion Action</DialogTitle>
+          <DialogDescription>
+            {label} for the selected video. This is an owner-confirmed action — nothing
+            is charged or persisted yet.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleProceed}>Continue</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 ```
 
-Notes:
-- Uses `text-primary` (design token) instead of raw `text-blue-500` to stay on-brand.
-- `<button type="button">` so it never submits a parent form.
-- No router/modal wiring yet — that's Phase 9. The console logs are the explicit hook points.
+---
+
+## 2. EDIT — `src/components/owner/VideoLibraryManager.tsx`
+
+**A. Imports** (add near the existing owner-component imports, e.g. right after line 26):
+```ts
+import { VideoConversionModal } from "./VideoConversionModal";
+import type { ConversionAction } from "@/lib/videoConversionActions";
+```
+
+**B. Component state** — add three pieces of state alongside the existing `useState` hooks in `VideoLibraryManager`:
+```ts
+const [convModalOpen, setConvModalOpen] = useState(false);
+const [convAction, setConvAction] = useState<ConversionAction>(null);
+const [convVideoId, setConvVideoId] = useState<string>('');
+```
+
+**C. Replace the Execute button's onClick** (currently lines 258–263) so it opens the modal instead of just logging. Keep `trackCtaClick` so Phase 8 analytics still fire on intent — the modal then represents confirmation:
+```tsx
+onClick={() => {
+  trackCtaClick(video.id, action);
+  setConvAction(action);
+  setConvVideoId(video.id);
+  setConvModalOpen(true);
+}}
+```
+(The surrounding `<button type="button" className="underline text-primary ...">Execute</button>` and the `cta && !isThrottled && action` guard stay exactly as-is — render purity from the prior fix is preserved.)
+
+**D. Render the modal** once at the bottom of the component's returned JSX (a single instance, driven by state — not per-card, to keep the DOM clean for large lists):
+```tsx
+<VideoConversionModal
+  open={convModalOpen}
+  onClose={() => setConvModalOpen(false)}
+  action={convAction}
+  videoId={convVideoId}
+/>
+```
 
 ---
 
-## 5. Guardrails (verified, no changes)
+## 3. Guardrails (verified, no changes)
 
-- `videoRecommendationEngine.ts` — untouched. Ranking remains Phase 6 deterministic.
-- `videoMonetization.ts` — untouched. Overlay stays derived.
+- `videoRecommendationEngine.ts` — untouched. Phase 6 ranking stays deterministic.
+- `videoMonetization.ts` — untouched. Phase 7 overlay stays derived.
+- `videoConversionActions.ts` / `videoConversionAnalytics.ts` / `videoCtaSuggestions.ts` — untouched.
 - `useVideoLibrary.ts` / `useVideoSuggestions.ts` — untouched.
-- DB / migrations — none. Phase 8 is **pure runtime intent emission**.
-- `library_video_monetization` table — still NOT written to. Reserved for Phase 9 explicit wiring.
+- DB / migrations — none. Phase 9 is pure UI + placeholder navigation.
+- `library_video_monetization` table — still NOT written to. Reserved for Phase 10.
 
 ---
 
-## 6. Owner Authority — invariants preserved
+## 4. Owner Authority — invariants preserved
 
-- ✅ No auto-execution
-- ✅ No auto-checkout / auto-enrollment
-- ✅ No DB writes from CTA system
-- ✅ No ranking feedback loops
-- ✅ Click is the only trigger; suggestion remains advisory until then
+- ✅ Suggestion is advisory; Execute is the first explicit click.
+- ✅ Modal Continue is the second explicit click — no auto-navigation.
+- ✅ No checkout, no enrollment, no DB mutation triggered.
+- ✅ No ranking feedback loop introduced.
+- ✅ Cancel is a true no-op.
 
 ---
 
-## Files
+## 5. Files
 
-**Created (2):** `src/lib/videoConversionActions.ts`, `src/lib/videoConversionAnalytics.ts`
-**Edited (2):** `src/lib/videoCtaSuggestions.ts` (comment-only), `src/components/owner/VideoLibraryManager.tsx`
+**Created (1):** `src/components/owner/VideoConversionModal.tsx`
+**Edited (1):** `src/components/owner/VideoLibraryManager.tsx`
 **Migration:** none.
 
-## Outcome
+---
+
+## 6. Outcome
 
 - Phase 6 ranking integrity: preserved
 - Phase 7 monetization overlay: preserved
-- CTA pipeline now has a clean, owner-gated execution seam ready for Phase 9 (real routing → builders → Stripe/checkout) without any architectural rework.
+- Phase 8 intent emitter: preserved (still fires on Execute click)
+- New: a confirmed, owner-gated routing bridge ready for Phase 10 to swap placeholder URLs for real builder/checkout pages without touching the suggestion or ranking pipelines.
