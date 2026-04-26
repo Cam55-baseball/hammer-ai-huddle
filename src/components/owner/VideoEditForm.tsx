@@ -312,19 +312,183 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
         </p>
       </div>
 
+      {/* ─── ENGINE FIELDS (Required for Recommendations) ─── */}
+      <div
+        data-engine-fields
+        className="space-y-4 rounded-lg border-2 border-primary/30 bg-primary/5 p-4"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h4 className="font-semibold text-sm flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Engine Fields
+            </h4>
+            <p className="text-[11px] text-muted-foreground">Required for recommendations</p>
+          </div>
+          <Badge variant={isReady ? "default" : "outline"} className="text-[10px]">
+            {isReady ? "Ready" : `${4 - missing.length}/4 done`}
+          </Badge>
+        </div>
+
+        {/* Video Format */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Video Format</Label>
+          <Select value={videoFormat} onValueChange={setVideoFormat} disabled={isProcessing}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Pick a format (drill, breakdown, etc.)" />
+            </SelectTrigger>
+            <SelectContent>
+              {VIDEO_FORMATS.map(f => (
+                <SelectItem key={f} value={f} className="capitalize text-xs">
+                  {f.replace(/_/g, ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Skill Domains */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Skill Domains</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {SKILL_DOMAINS.map(d => (
+              <Badge
+                key={d}
+                variant={skillDomains.includes(d) ? "default" : "outline"}
+                className="cursor-pointer text-[11px] capitalize"
+                onClick={() => !isProcessing && toggleDomain(d)}
+              >
+                {d.replace('_', ' ')}
+              </Badge>
+            ))}
+          </div>
+          {skillDomains.length === 0 && (
+            <p className="text-[10px] text-muted-foreground italic">Pick at least one.</p>
+          )}
+        </div>
+
+        {/* AI Description + Auto-suggest */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">AI Description (what the engine reads)</Label>
+          <Textarea
+            value={aiDescription}
+            onChange={e => setAiDescription(e.target.value)}
+            placeholder="Best for hitters rolling over on inside fastballs due to early hand drift. Focus on keeping barrel behind hands."
+            rows={4}
+            disabled={isProcessing}
+            className="text-xs"
+          />
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] text-muted-foreground">
+              {aiDescription.trim().length} chars · 20+ to enable Auto-Suggest
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRegenAI}
+              disabled={!canAutoSuggest || regenLoading || isProcessing}
+              className="h-7 text-xs"
+            >
+              {regenLoading ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Wand2 className="h-3 w-3 mr-1" />
+              )}
+              Auto-Suggest Tags
+            </Button>
+          </div>
+        </div>
+
+        {/* Tag assignments grouped by layer */}
+        <div className="space-y-2">
+          <Label className="text-xs">Tag Assignments ({Object.keys(assignments).length} picked, need 2+)</Label>
+          {!primaryDomain ? (
+            <p className="text-[11px] text-muted-foreground italic px-2 py-3 rounded bg-background/60">
+              Pick a skill domain above to load taxonomy.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {(['movement_pattern', 'result', 'context', 'correction'] as TagLayer[]).map(layer => (
+                <div key={layer} className="space-y-1">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    {LAYER_LABELS[layer]}
+                  </p>
+                  {grouped[layer].length === 0 ? (
+                    <p className="text-[10px] text-muted-foreground italic">
+                      No {LAYER_LABELS[layer].toLowerCase()} tags yet — add some in the Taxonomy tab.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {grouped[layer].map(tag => {
+                        const selected = assignments[tag.id] != null;
+                        const w = assignments[tag.id];
+                        return (
+                          <div key={tag.id} className="inline-flex items-center gap-0.5">
+                            <Badge
+                              variant={selected ? "default" : "outline"}
+                              className="cursor-pointer text-[10px]"
+                              onClick={() => !isProcessing && toggleAssignment(tag.id)}
+                            >
+                              {tag.label}
+                            </Badge>
+                            {selected && (
+                              <div className="inline-flex rounded border border-border overflow-hidden">
+                                {([1, 3, 5] as const).map(val => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    onClick={() => setAssignmentWeight(tag.id, val)}
+                                    disabled={isProcessing}
+                                    className={`px-1.5 text-[9px] font-medium transition-colors ${
+                                      w === val
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-background hover:bg-muted'
+                                    }`}
+                                    title={val === 1 ? 'Low' : val === 3 ? 'Medium' : 'High'}
+                                  >
+                                    {val === 1 ? 'L' : val === 3 ? 'M' : 'H'}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Missing-fields list */}
+      {!isReady && (
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">
+            Before saving:
+          </p>
+          <ul className="text-xs space-y-0.5 list-disc pl-4 text-amber-700/90 dark:text-amber-400/90">
+            {missing.map(m => <li key={m.key}>{m.message}</li>)}
+          </ul>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" onClick={onCancel} disabled={isProcessing}>
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={isProcessing}>
+        <Button onClick={handleSave} disabled={isProcessing || !isReady}>
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               {uploading ? "Uploading…" : "Saving…"}
             </>
           ) : (
-            "Save Changes"
+            isReady ? "Save Changes" : `Save (${missing.length} to fix)`
           )}
         </Button>
       </div>
