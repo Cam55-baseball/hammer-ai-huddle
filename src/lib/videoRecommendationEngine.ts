@@ -1,7 +1,14 @@
 /**
  * Video Recommendation Engine — Hammer Tagging V1
  * Pure, testable function. Ranks library videos against analysis/session/long-term inputs.
+ *
+ * PHASE 6 SYSTEM RULES:
+ * - Blocked videos NEVER surface
+ * - Tier is authoritative over raw score noise
+ * - Confidence is a tie-breaker, not a driver
+ * - UI must reflect DB tier exactly (no divergence)
  */
+import { normalizeTier, TIER_BOOST } from './videoTier';
 
 export type SuggestionMode = 'immediate' | 'session' | 'long_term';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
@@ -38,13 +45,7 @@ export interface VideoWithTags {
   distribution_tier?: DistributionTier | null;
 }
 
-const TIER_MULTIPLIER: Record<DistributionTier, number> = {
-  blocked: 0,
-  throttled: 0.55,
-  normal: 1.0,
-  boosted: 1.15,
-  featured: 1.30,
-};
+// Tier multipliers live in src/lib/videoTier.ts (TIER_BOOST) — single source of truth.
 
 export interface VideoTagRule {
   id: string;
