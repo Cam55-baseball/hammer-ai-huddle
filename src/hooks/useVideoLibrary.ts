@@ -58,6 +58,8 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       let query = supabase
         .from('library_videos')
         .select('*')
+        // Phase 6 — athletes never see blocked (Empty) videos.
+        .neq('distribution_tier' as any, 'blocked')
         .range(from, to);
 
       if (search && search.trim()) {
@@ -80,7 +82,10 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       if (sort === 'most_liked') {
         query = query.order('likes_count', { ascending: false });
       } else {
-        query = query.order('created_at', { ascending: false });
+        // Phase 6 — confidence-weighted recency: featured/boosted surface first.
+        query = query
+          .order('confidence_score' as any, { ascending: false })
+          .order('created_at', { ascending: false });
       }
 
       const { data, error } = await query;
