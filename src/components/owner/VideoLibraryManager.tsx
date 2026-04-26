@@ -23,6 +23,8 @@ import { revenueLabel } from "@/lib/videoMonetization";
 import { suggestCta, CTA_LABEL } from "@/lib/videoCtaSuggestions";
 import { mapCtaToAction } from "@/lib/videoConversionActions";
 import { trackCtaClick } from "@/lib/videoConversionAnalytics";
+import { VideoConversionModal } from "./VideoConversionModal";
+import type { ConversionAction } from "@/lib/videoConversionActions";
 import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
 import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
@@ -88,6 +90,10 @@ export function VideoLibraryManager() {
   const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
   const [backfillOpen, setBackfillOpen] = useState(false);
   const [confirmCloseEdit, setConfirmCloseEdit] = useState(false);
+  // Phase 9 — conversion modal state (no DB writes, no ranking impact).
+  const [convModalOpen, setConvModalOpen] = useState(false);
+  const [convAction, setConvAction] = useState<ConversionAction>(null);
+  const [convVideoId, setConvVideoId] = useState<string>('');
 
   const { videos, tags, refetch } = useVideoLibrary({ limit: 100 });
   const { data: readinessRows } = useVideoReadiness();
@@ -257,9 +263,10 @@ export function VideoLibraryManager() {
                             type="button"
                             onClick={() => {
                               trackCtaClick(video.id, action);
-                              // Phase 8: explicit intent emission only.
-                              // Phase 9+ hook point: route to builder / open modal / start checkout.
-                              console.log('[CONVERSION_ACTION]', action, video.id);
+                              // Phase 9: open owner-confirmation modal instead of direct routing.
+                              setConvAction(action);
+                              setConvVideoId(video.id);
+                              setConvModalOpen(true);
                             }}
                             className="underline text-primary hover:text-primary/80 font-medium"
                           >
@@ -408,6 +415,14 @@ export function VideoLibraryManager() {
       </AlertDialog>
 
       <BackfillQueueDialog open={backfillOpen} onOpenChange={setBackfillOpen} />
+
+      {/* Phase 9 — Conversion execution modal (owner-confirmed routing bridge) */}
+      <VideoConversionModal
+        open={convModalOpen}
+        onClose={() => setConvModalOpen(false)}
+        action={convAction}
+        videoId={convVideoId}
+      />
     </div>
   );
 }
