@@ -19,6 +19,8 @@ import { ConfidenceBadge } from "./ConfidenceBadge";
 import { VideoFastEditor } from "./VideoFastEditor";
 import { QuickFixActions, type QuickFixIntent } from "./QuickFixActions";
 import { normalizeTier } from "@/lib/videoTier";
+import { revenueLabel } from "@/lib/videoMonetization";
+import { suggestCta, CTA_LABEL } from "@/lib/videoCtaSuggestions";
 import { OwnerCoachingNudge } from "./OwnerCoachingNudge";
 import { SYSTEM_TONE } from "@/lib/systemTone";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
@@ -203,6 +205,14 @@ export function VideoLibraryManager() {
               // Phase 6 safety: blocked videos must never render, even if a server-side filter slips.
               if (tier === 'blocked') return null;
               const isThrottled = tier === 'throttled';
+              // Phase 7 — derived monetization overlay (no DB writes, no ranking impact).
+              const monetizationVideo = {
+                ...video,
+                confidence_score: conf?.score ?? null,
+                distribution_tier: (video as any).distribution_tier ?? null,
+              } as any;
+              const revLabel = revenueLabel(monetizationVideo);
+              const cta = suggestCta(monetizationVideo);
               return (
                 <Card key={video.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -211,11 +221,33 @@ export function VideoLibraryManager() {
                         <h4 className="font-semibold text-sm truncate">{video.title}</h4>
                         <ReadinessBadge r={r} />
                         {conf && <ConfidenceBadge score={conf.score} tier={conf.tier} compact />}
+                        {revLabel === 'revenue_ready' && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                          >
+                            Revenue Ready
+                          </Badge>
+                        )}
+                        {revLabel === 'upgradeable' && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                          >
+                            Upgradeable
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
                       {isThrottled && (
                         <p className="mt-1.5 text-[11px] text-destructive font-medium">
                           {SYSTEM_TONE.throttledOwnerCard}
+                        </p>
+                      )}
+                      {cta && !isThrottled && (
+                        <p className="mt-1.5 text-[11px] text-muted-foreground italic">
+                          <span className="font-medium not-italic">Hammer Suggestion — Owner Decides:</span>{' '}
+                          {CTA_LABEL[cta]}
                         </p>
                       )}
                       <div className="flex flex-wrap gap-1 mt-2">
