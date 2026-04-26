@@ -153,7 +153,8 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
     }
   };
 
-  const progress = (step / 4) * 100;
+  const progress = (step / totalSteps) * 100;
+  const visibleSteps = fastMode ? STEPS.slice(0, 3) : STEPS;
 
   return (
     <Card className="p-5 space-y-5">
@@ -161,13 +162,14 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              Step {step} of 4
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <span>Step {step} of {totalSteps}</span>
+              {fastMode && <span className="text-primary">⚡ Fast Mode</span>}
             </p>
             <h3 className="font-semibold text-base">{STEPS[step - 1].title}</h3>
           </div>
           <div className="flex gap-1">
-            {STEPS.map(s => (
+            {visibleSteps.map(s => (
               <div
                 key={s.n}
                 className={`h-1.5 w-6 rounded-full transition-colors ${
@@ -355,7 +357,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
           <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
         </Button>
 
-        {step < 4 ? (
+        {step < totalSteps ? (
           <Button
             size="sm"
             onClick={() => setStep(s => s + 1)}
@@ -368,7 +370,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
             {uploading ? (
               <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Publishing…</>
             ) : (
-              <><Check className="h-3.5 w-3.5 mr-1" /> Publish to Library</>
+              <><Check className="h-3.5 w-3.5 mr-1" /> {fastMode ? 'Publish' : 'Publish to Library'}</>
             )}
           </Button>
         )}
