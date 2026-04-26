@@ -13,6 +13,7 @@ import { useVideoTaxonomy, groupTaxonomyByLayer } from "@/hooks/useVideoTaxonomy
 import { supabase } from "@/integrations/supabase/client";
 import type { LibraryVideo, LibraryTag } from "@/hooks/useVideoLibrary";
 import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
+import { computeMissingFields } from "@/lib/videoReadiness";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -100,14 +101,23 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     setAssignments(prev => {
       const next = { ...prev };
       if (next[tagId] != null) delete next[tagId];
-      else next[tagId] = 3;
+      else next[tagId] = 3; // default: Medium
       return next;
     });
   };
 
-  const setAssignmentWeight = (tagId: string, w: number) => {
+  const setAssignmentWeight = (tagId: string, w: 1 | 3 | 5) => {
     setAssignments(prev => ({ ...prev, [tagId]: w }));
   };
+
+  const missing = computeMissingFields({
+    videoFormat,
+    skillDomains,
+    aiDescription,
+    assignmentCount: Object.keys(assignments).length,
+  });
+  const isReady = missing.length === 0;
+  const canAutoSuggest = aiDescription.trim().length >= 20;
 
   const handleRegenAI = async () => {
     if (!aiDescription.trim()) {
