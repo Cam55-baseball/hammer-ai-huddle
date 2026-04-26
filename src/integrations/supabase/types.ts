@@ -3895,6 +3895,7 @@ export type Database = {
           sport: string[]
           tags: string[]
           thumbnail_url: string | null
+          tier_rank: number
           title: string
           updated_at: string
           video_format: Database["public"]["Enums"]["video_type_enum"] | null
@@ -3919,6 +3920,7 @@ export type Database = {
           sport?: string[]
           tags?: string[]
           thumbnail_url?: string | null
+          tier_rank?: number
           title: string
           updated_at?: string
           video_format?: Database["public"]["Enums"]["video_type_enum"] | null
@@ -3943,6 +3945,7 @@ export type Database = {
           sport?: string[]
           tags?: string[]
           thumbnail_url?: string | null
+          tier_rank?: number
           title?: string
           updated_at?: string
           video_format?: Database["public"]["Enums"]["video_type_enum"] | null
@@ -10305,6 +10308,7 @@ export type Database = {
           sport: string[] | null
           tags: string[] | null
           thumbnail_url: string | null
+          tier_rank: number | null
           title: string | null
           updated_at: string | null
           video_format: Database["public"]["Enums"]["video_type_enum"] | null
@@ -10329,6 +10333,7 @@ export type Database = {
           sport?: string[] | null
           tags?: string[] | null
           thumbnail_url?: string | null
+          tier_rank?: number | null
           title?: string | null
           updated_at?: string | null
           video_format?: Database["public"]["Enums"]["video_type_enum"] | null
@@ -10353,6 +10358,7 @@ export type Database = {
           sport?: string[] | null
           tags?: string[] | null
           thumbnail_url?: string | null
+          tier_rank?: number | null
           title?: string | null
           updated_at?: string | null
           video_format?: Database["public"]["Enums"]["video_type_enum"] | null
