@@ -145,7 +145,10 @@ export function VideoLibraryManager() {
     <div className="space-y-4">
       {/* Top bar */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="text-lg font-semibold">Video Library</h2>
+        <div>
+          <h2 className="text-lg font-semibold">Video Library</h2>
+          <p className="text-xs text-muted-foreground">{SYSTEM_TONE.libraryHeader}</p>
+        </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <Zap className={`h-3.5 w-3.5 ${fastMode ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -155,6 +158,8 @@ export function VideoLibraryManager() {
           <VideoLibraryHelpSheet />
         </div>
       </div>
+
+      <OwnerCoachingNudge onFixThrottled={filterThrottled} />
 
       <OwnerTaggingPerformancePanel />
 
