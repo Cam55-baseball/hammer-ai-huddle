@@ -198,6 +198,8 @@ export function VideoLibraryManager() {
             visibleVideos.map(video => {
               const r = readinessMap.get(video.id);
               const conf = confidenceMap?.get(video.id);
+              const tier = (video as any).distribution_tier as string | undefined;
+              const isThrottled = tier === 'throttled';
               return (
                 <Card key={video.id} className="p-4">
                   <div className="flex items-start justify-between gap-4">
@@ -208,6 +210,11 @@ export function VideoLibraryManager() {
                         {conf && <ConfidenceBadge score={conf.score} tier={conf.tier} compact />}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
+                      {isThrottled && (
+                        <p className="mt-1.5 text-[11px] text-destructive font-medium">
+                          {SYSTEM_TONE.throttledOwnerCard}
+                        </p>
+                      )}
                       <div className="flex flex-wrap gap-1 mt-2">
                         {video.sport.map(s => (
                           <Badge key={s} variant="default" className="text-[10px] capitalize">{s}</Badge>
@@ -220,6 +227,10 @@ export function VideoLibraryManager() {
                         <span>❤️ {video.likes_count}</span>
                         <span>Type: {video.video_type}</span>
                       </div>
+                      <QuickFixActions
+                        readiness={r}
+                        onAction={(intent, focus) => openQuickFix(video, intent, focus)}
+                      />
                     </div>
                     <div className="flex shrink-0 gap-1">
                       <Button
