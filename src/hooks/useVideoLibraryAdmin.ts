@@ -274,9 +274,98 @@ export function useVideoLibraryAdmin() {
     };
   }, []);
 
+  /**
+   * Update the engine-critical structured fields on an existing video.
+   * Additive — does not touch the legacy fields handled by updateVideo().
+   */
+  const updateStructuredFields = useCallback(async (
+    videoId: string,
+    fields: {
+      videoFormat?: string | null;
+      skillDomains?: string[];
+      aiDescription?: string | null;
+    },
+  ) => {
+    const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (fields.videoFormat !== undefined) updateData.video_format = fields.videoFormat || null;
+    if (fields.skillDomains !== undefined) updateData.skill_domains = fields.skillDomains;
+    if (fields.aiDescription !== undefined) updateData.ai_description = fields.aiDescription?.trim() || null;
+
+    const { error } = await supabase
+      .from('library_videos')
+      .update(updateData as any)
+      .eq('id', videoId);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    return true;
+  }, []);
+
+  /**
+   * Replace the full set of structured tag assignments for a video.
+   */
+  const syncTagAssignments = useCallback(async (
+    videoId: string,
+    assignments: Record<string, number>,
+  ) => {
+    const { error: delErr } = await (supabase as any)
+      .from('video_tag_assignments')
+      .delete()
+      .eq('video_id', videoId);
+    if (delErr) {
+      toast({ title: 'Error', description: delErr.message, variant: 'destructive' });
+      return false;
+    }
+
+    const entries = Object.entries(assignments);
+    if (entries.length === 0) return true;
+
+    const rows = entries.map(([tag_id, weight]) => ({ video_id: videoId, tag_id, weight }));
+    const { error: insErr } = await (supabase as any).from('video_tag_assignments').insert(rows);
+    if (insErr) {
+      toast({ title: 'Tags not saved', description: insErr.message, variant: 'destructive' });
+      return false;
+    }
+    return true;
+  }, []);
+
+  /**
+   * Re-trigger the AI tag suggestion function for an existing video.
+   * Returns the count of newly inserted suggestions, or null on failure.
+   */
+  const regenerateAISuggestions = useCallback(async (videoId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-video-description', {
+        body: { videoId },
+      });
+      if (error) throw error;
+      const inserted = (data as any)?.inserted ?? 0;
+      toast({
+        title: inserted > 0 ? 'AI suggestions ready' : 'No new suggestions',
+        description: inserted > 0
+          ? `${inserted} new tags proposed — review in AI Suggestions tab.`
+          : 'The engine had nothing new to add for this description.',
+      });
+      return inserted as number;
+    } catch (err: any) {
+      console.error('regenerateAISuggestions failed:', err);
+      toast({
+        title: 'Auto-suggest unavailable',
+        description: err?.message || 'Try again in a moment.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  }, []);
+
   return {
     uploadVideo,
     updateVideo,
+    updateStructuredFields,
+    syncTagAssignments,
+    regenerateAISuggestions,
     replaceVideoFile,
     deleteVideo,
     addTag,
