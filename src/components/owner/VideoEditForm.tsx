@@ -1,14 +1,28 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, Upload, X, FileVideo } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Upload, X, FileVideo, Sparkles, Wand2 } from "lucide-react";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
+import { useVideoTaxonomy, groupTaxonomyByLayer } from "@/hooks/useVideoTaxonomy";
+import { supabase } from "@/integrations/supabase/client";
 import type { LibraryVideo, LibraryTag } from "@/hooks/useVideoLibrary";
+import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
 import { toast } from "@/hooks/use-toast";
+
+const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
+const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
+const LAYER_LABELS: Record<TagLayer, string> = {
+  movement_pattern: 'Movement',
+  result: 'Result',
+  context: 'Context',
+  correction: 'Correction',
+};
 
 interface VideoEditFormProps {
   video: LibraryVideo;
