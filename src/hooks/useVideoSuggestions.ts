@@ -9,6 +9,7 @@ import {
   type VideoWithTags,
   type RecommendResult,
 } from '@/lib/videoRecommendationEngine';
+import { normalizeTier } from '@/lib/videoTier';
 import { useVideoTaxonomy, useVideoTagRules } from './useVideoTaxonomy';
 
 interface UseSuggestionsParams {
@@ -86,7 +87,7 @@ export function useVideoSuggestions(params: UseSuggestionsParams) {
           skill_domains: m.skill_domains,
           ai_description: m.ai_description,
           confidence_score: m.confidence_score,
-          distribution_tier: m.distribution_tier,
+          distribution_tier: normalizeTier(m.distribution_tier),
           assignments: assignMap.get(v.id) || [],
         };
       });

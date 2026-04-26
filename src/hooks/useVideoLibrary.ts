@@ -82,9 +82,11 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       if (sort === 'most_liked') {
         query = query.order('likes_count', { ascending: false });
       } else {
-        // Phase 6 — confidence-weighted recency: featured/boosted surface first.
+        // Phase 6 — deterministic ordering: tier first (authoritative),
+        // confidence as tie-breaker, recency as final tie-breaker.
         query = query
-          .order('confidence_score', { ascending: false })
+          .order('tier_rank', { ascending: false })
+          .order('confidence_score', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false });
       }
 
