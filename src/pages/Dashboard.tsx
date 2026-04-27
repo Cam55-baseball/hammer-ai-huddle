@@ -23,12 +23,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
-import { StandardActivationBanner } from "@/components/identity/StandardActivationBanner";
-import { IdentityBanner } from "@/components/identity/IdentityBanner";
-import { DayControlCard } from "@/components/game-plan/DayControlCard";
-
-import { DayStateBanner } from "@/components/game-plan/DayStateBanner";
-import { TodayCommandBar } from "@/components/today/TodayCommandBar";
+import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
@@ -581,26 +576,21 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Today Command Bar — Hammer State + Readiness + Quick Log (additive, mounted above Game Plan) */}
-        <TodayCommandBar />
-
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
-        {/* Identity Banner — primary status; dominates above all metrics */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityBanner />}
+        {/* Identity Command Card — single consolidated header above the Game Plan.
+            Replaces TodayCommandBar + IdentityBanner + DailyStandardCheck +
+            BehavioralPressureToast + DayControlCard + DayStateBanner +
+            StandardActivationBanner. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <>
-            <DayControlCard />
-            <DayStateBanner />
-            <StandardActivationBanner />
-            <GamePlanCard selectedSport={selectedSport} />
-          </>
+          <GamePlanCard selectedSport={selectedSport} />
         )}
 
         {/* Sport Switch Confirmation Dialog */}
