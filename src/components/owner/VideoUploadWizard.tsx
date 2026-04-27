@@ -18,7 +18,8 @@ import { toast } from "@/hooks/use-toast";
 
 interface Props {
   tags: LibraryTag[];
-  onSuccess: () => void;
+  /** Called after a successful upload. The new video id is passed when available. */
+  onSuccess: (newVideoId?: string) => void;
   /** When true, smart defaults pre-fill domain & format and Step 4 review is skipped. */
   fastMode?: boolean;
 }
@@ -149,7 +150,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       setMode('link'); setExternalUrl(''); setVideoFile(null);
       setTitle(''); setSport(''); setCategory(''); setDescription('');
       setStructured(emptyStructuredTagState);
-      onSuccess();
+      onSuccess((result as any)?.id);
     }
   };
 
