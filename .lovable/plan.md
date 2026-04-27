@@ -1,17 +1,33 @@
-# Fix: Back Button 404 in Builders
+# Fix: Sell/Share button appears to do nothing
 
 ## Root cause
-The Owner Dashboard is registered in `src/App.tsx` at the route **`/owner`**, but the new back buttons (and post-save redirects) in the three builders navigate to **`/owner-dashboard`**, which has no matching route. React Router falls through to `NotFound`, producing the 404.
+The `handleSellBuild` handler in `src/pages/OwnerDashboard.tsx` calls `create-build-checkout` (which is succeeding — edge logs confirm a Stripe `cs_live_...` session was created at 19:55:08), then runs:
+
+```ts
+window.location.href = data.url;
+```
+
+The Owner Dashboard is being viewed inside the **Lovable preview iframe**. Top-level navigation from a sandboxed iframe to an external origin (`checkout.stripe.com`) is silently blocked by the browser, so the page never changes and the user sees nothing happen. The same pattern affects any in-preview Stripe redirect.
 
 ## Fix
-Replace every `/owner-dashboard` reference in the builder pages with `/owner` (preserving the `?section=...` query string where used).
+In `src/pages/OwnerDashboard.tsx` (lines ~101–109), open the Stripe Checkout URL in a **new tab** instead of replacing the current location, with a graceful fallback:
+
+```ts
+const win = window.open(data.url, '_blank', 'noopener,noreferrer');
+if (!win) {
+  // Popup blocked → fall back to current-tab navigation
+  window.location.href = data.url;
+} else {
+  toast({
+    title: 'Checkout opened',
+    description: 'Complete the payment in the new tab.',
+  });
+}
+```
+
+This matches the project's existing convention for Stripe checkout sessions (one-off payments doc: "By default open the checkout session in a new tab").
 
 ## Files to update
-- `src/pages/owner/ProgramBuilder.tsx` — 3 occurrences (back button, post-save nav, "Add one in the Video Library" link)
-- `src/pages/owner/BundleBuilder.tsx` — 3 occurrences (same pattern)
-- `src/pages/owner/ConsultationFlow.tsx` — 2 occurrences (back button, post-create nav)
+- `src/pages/OwnerDashboard.tsx` — replace the single `window.location.href = data.url;` line in `handleSellBuild` with the new-tab open + fallback shown above.
 
-Each `navigate('/owner-dashboard')` → `navigate('/owner')`
-Each `navigate('/owner-dashboard?section=videos')` → `navigate('/owner?section=videos')`
-
-No router, dashboard, or sidebar changes needed — `OwnerDashboard` already lives at `/owner` and already reads the `section` query param.
+No edge function or DB changes needed. The function itself is healthy.
