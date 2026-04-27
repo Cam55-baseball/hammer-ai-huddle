@@ -46,6 +46,7 @@ interface AdminRequest {
 
 const sectionLabels: Record<OwnerSection, string> = {
   'overview': 'Overview',
+  'builds': 'Builds',
   'users': 'User Management',
   'admin-requests': 'Admin Requests',
   'scout-applications': 'Scout Applications',
