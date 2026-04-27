@@ -433,6 +433,7 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     }
   }
 
+  if (dayTypeToday === "skip") {
     if (!(await dedupeToday("skip_day_used")))
       pushEvent("skip_day_used", null, { date: todayUTC });
   } else if (dayTypeToday === "push") {
