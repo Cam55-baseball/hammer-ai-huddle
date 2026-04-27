@@ -1,25 +1,43 @@
 ## Problem
 
-The Identity banner above the Game Plan uses tier color tokens where the text color and background gradient are the *same hue family* at low opacity. For the ELITE tier this produces light fuchsia text (`text-fuchsia-400`) sitting on a light fuchsia gradient (`from-fuchsia-600/20 to-violet-600/10`), which is unreadable. Other tiers (sky on sky, amber on amber, rose on rose, emerald on emerald) have the same structural issue — ELITE is just the worst.
+In the Bundle Builder and Program Builder, when there are no videos in the library the only entry point is a link reading "Add one in the Video Library" pointing to `/owner?section=videos`. Two issues:
+
+1. `OwnerDashboard` does not read the `?section=` query param, so the link does nothing useful — it lands on the overview, not the library.
+2. Even if it worked, bouncing the user out of the builder mid-flow loses their in-progress bundle/program.
+
+You also need to be able to add videos *while* building, not only when the library is empty.
 
 ## Fix
 
-Update the tier color metadata in `src/hooks/useIdentityState.ts` so the **text tone** uses a high-contrast bright shade while the **background gradient** uses a darker, neutral-leaning base. Keep the colored ring as the tier accent.
+Embed the existing `VideoUploadWizard` directly inside both builders via a dialog, and refresh the picker after upload so the new video appears immediately and can be selected.
 
-### New `TIER_META` values
+### Bundle Builder (`src/pages/owner/BundleBuilder.tsx`)
+- Add an "Upload new video" button next to the picker (always visible, not just when library is empty).
+- Clicking opens a Dialog containing `<VideoUploadWizard tags={tags} onSuccess={...} fastMode />`.
+- Pull `tags` and `refetch` from `useVideoLibrary`.
+- On `onSuccess`: close the dialog, call `refetch()`, and auto-add the newly uploaded video to `videoIds`.
+- Replace the "Add one in the Video Library" empty-state link with the same upload button so the empty state actually works.
 
-| Tier | Text tone (was → now) | Background gradient (was → now) |
-|---|---|---|
-| elite | `text-fuchsia-400` → `text-fuchsia-200` | `from-fuchsia-600/20 to-violet-600/10` → `from-fuchsia-950/60 to-violet-950/40` |
-| locked_in | `text-emerald-400` → `text-emerald-200` | `from-emerald-600/20 to-teal-600/10` → `from-emerald-950/60 to-teal-950/40` |
-| consistent | `text-sky-400` → `text-sky-200` | `from-sky-600/20 to-blue-600/10` → `from-sky-950/60 to-blue-950/40` |
-| building | `text-amber-400` → `text-amber-200` | `from-amber-600/20 to-orange-600/10` → `from-amber-950/60 to-orange-950/40` |
-| slipping | `text-rose-400` → `text-rose-200` | `from-rose-600/20 to-red-600/10` → `from-rose-950/60 to-red-950/40` |
+### Program Builder (`src/pages/owner/ProgramBuilder.tsx`)
+- Same treatment: "Upload new video" button beside the anchor-video Select.
+- On success: refetch, then auto-set `videoId` to the newly uploaded video.
+- Replace the broken empty-state link with the upload button.
 
-This keeps the tier color identity (ring + subtle hue tint) but pushes text/background apart on the lightness axis so the label and consistency score are clearly legible against any theme.
+### Identifying the new video after upload
+`VideoUploadWizard.onSuccess` does not return the new video id. Two options:
 
-No other files need to change — `IdentityBanner.tsx` consumes `tone`, `ring`, and `bg` from this hook.
+- **Preferred**: capture the videos list length / latest `created_at` before upload, then after `refetch()` find the newest entry (`videos[0]` once sorted by `created_at desc`) and select it. The library hook already orders by `created_at desc` as final tie-breaker, so the new upload will appear first for the owner's session.
+- Alternatively, lightly extend `VideoUploadWizard`'s `onSuccess` signature to `(newVideoId?: string) => void` and pass the inserted id from `useVideoLibraryAdmin.uploadVideo`. This is cleaner and avoids the heuristic. We'll do this if `uploadVideo` already returns the row; otherwise use the heuristic.
 
-## Files changed
+### Files touched
+- `src/pages/owner/BundleBuilder.tsx` — add Dialog + upload button + auto-select new video.
+- `src/pages/owner/ProgramBuilder.tsx` — same.
+- `src/components/owner/VideoUploadWizard.tsx` — only if needed to surface the new video id via `onSuccess`.
 
-- `src/hooks/useIdentityState.ts` — update `TIER_META` color tokens only.
+### Out of scope
+- Wiring `?section=` query-param routing into `OwnerDashboard` (separate concern; not needed once upload is in-builder).
+- Changing the Video Library Manager itself.
+
+## Outcome
+
+From inside the Bundle or Program Builder you can click "Upload new video", complete the wizard in a dialog, and the newly uploaded video appears in the picker (and is auto-selected/added) without losing the rest of your in-progress build.
