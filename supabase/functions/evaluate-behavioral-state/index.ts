@@ -252,12 +252,15 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   // 5. NN templates
   const { data: nnTemplates } = await supabase
     .from("custom_activity_templates")
-    .select("id, estimated_duration_min")
+    .select("id, estimated_duration_min, title, display_nickname")
     .eq("user_id", userId).eq("is_non_negotiable", true).is("deleted_at", null);
   const nnList = (nnTemplates ?? []).slice().sort(
     (a: any, b: any) => (a.estimated_duration_min ?? 999) - (b.estimated_duration_min ?? 999),
   );
   const nnIds: string[] = nnList.map((t: any) => t.id);
+  const nnTitleById = new Map<string, string>(
+    nnList.map((t: any) => [t.id, String(t.display_nickname || t.title || "Non-Negotiable")]),
+  );
   const smallestNnId: string | null = nnList[0]?.id ?? null;
 
   // Previous tier (for DDA)
