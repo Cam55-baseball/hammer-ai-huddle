@@ -106,7 +106,17 @@ const OwnerDashboard = () => {
         });
         return;
       }
-      window.location.href = data.url;
+      // Open Stripe Checkout in a new tab — the preview iframe blocks top-level redirects.
+      const win = window.open(data.url, '_blank', 'noopener,noreferrer');
+      if (!win) {
+        // Popup blocked → fall back to current-tab navigation.
+        window.location.href = data.url;
+      } else {
+        toast({
+          title: 'Checkout opened',
+          description: 'Complete the payment in the new tab.',
+        });
+      }
     } catch (err) {
       toast({
         title: 'Checkout error',
