@@ -10,10 +10,20 @@ import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Library, Send, Users } from 'lucide-react';
-import { getBuilds, type BuildItem } from '@/lib/ownerBuildStorage';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Loader2, Library, Send, Users, Pencil } from 'lucide-react';
+import { getBuilds, updateBuild, type BuildItem } from '@/lib/ownerBuildStorage';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+
+function formatPrice(meta: Record<string, any> | undefined): string | null {
+  const raw = meta?.price;
+  const n = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return `$${n.toFixed(2).replace(/\.00$/, '')}`;
+}
 
 const TYPE_LABEL: Record<BuildItem['type'], string> = {
   program: 'Program',
