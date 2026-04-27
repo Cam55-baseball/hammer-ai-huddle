@@ -1,44 +1,51 @@
-# Price Normalization & Edit Price Workflow
+# Edit & Delete Builds from BuildLibrary
 
 ## Current State
-- Validation already accepts 0.5, 1, 49.9 (`priceValid = >= 0.5`).
-- Edit-price dialog already exists in `BuildLibrary.tsx` (Pencil button → modal → `updateBuild`).
-- Gap: prices are stored as raw `Number(price)` — `49.9` saves as `49.9`, not `49.90`. No 2-decimal normalization on save anywhere.
-- Edit dialog still uses `type="number"` (spinner arrows + the same overlap issue we just fixed in the builders).
+- `BuildLibrary.tsx` already has Edit Price and Sell/Share/View Buyers actions.
+- `ownerBuildStorage.ts` exposes `getBuilds`, `saveBuild`, `updateBuild` — **no `deleteBuild`** and no way to edit name/description/videos.
 
 ## Fix
 
-### 1. Normalize to 2 decimals on every save
-Add a helper inline in each save path:
-```ts
-const normalized = Math.round(priceNum * 100) / 100;
-```
-Store `normalized` (not `priceNum`) in `meta.price`.
+### 1. Storage layer — `src/lib/ownerBuildStorage.ts`
+- Add `deleteBuild(id: string): boolean` — filters the array and persists.
+- Widen `updateBuild` patch type to also allow `name` (already present) — confirm `meta` merge handles videoIds replacement (it does via `...patch.meta`).
 
-Apply in:
-- **`src/pages/owner/BundleBuilder.tsx`** — `handleSave`, both the saved meta and the toast.
-- **`src/pages/owner/ProgramBuilder.tsx`** — `handleSave`, both the saved meta and the toast.
-- **`src/pages/owner/BuildLibrary.tsx`** — `savePrice`, normalize before calling `updateBuild` and in the toast.
+### 2. BuildLibrary card actions — `src/pages/owner/BuildLibrary.tsx`
+Replace the current single "Edit price" button with two buttons:
+- **Edit** (Pencil icon) → opens the full Edit dialog (see below).
+- **Delete** (Trash icon, destructive variant) → opens a confirm AlertDialog. On confirm: call `deleteBuild`, splice from local `builds` state, toast "Build deleted".
 
-### 2. Polish the Edit Price input (BuildLibrary.tsx)
-Match the builder fix:
-- Switch `type="number"` → `type="text"` with `inputMode="decimal"`.
-- Add regex-gated onChange: `/^\d*\.?\d{0,2}$/` (caps at 2 decimals as you type).
-- Bump `pl-7` → `pl-8` so digits clear the `$`.
-- Drop the `min`/`step` attributes (no longer applicable on text input).
+Keep Sell/Share and View Buyers as-is.
 
-### 3. Confirmed accepted values
-With the above, the field accepts and stores:
-- `0.5` → `0.50`
-- `1` → `1.00`
-- `49.9` → `49.90`
-- `49.99` → `49.99`
+### 3. Full Edit dialog (replaces the price-only dialog)
+A single modal that edits all owner-controllable fields based on build type:
 
-Values below `$0.50` continue to block save with the existing inline error.
+**Common fields:**
+- Name (required, text)
+- Price (USD, same text+regex+pl-8 pattern, normalized to 2 decimals on save, min $0.50)
+
+**Program-specific (`type === 'program'`):**
+- Description (textarea)
+- Anchor Video (Select from `useVideoLibrary`, optional/clearable)
+
+**Bundle-specific (`type === 'bundle'`):**
+- Videos in Bundle: list with remove (X) buttons + an "Add from library…" Select for available videos. Mirrors BundleBuilder UX in compact form.
+
+**Save:** calls `updateBuild(id, { name, meta: {...existingMeta, ...patch} })` with normalized price + updated fields. Bundle saves both `videoIds` and `videoId` (first item) for backward-compat — same as BundleBuilder.
+
+**Validation:** Save disabled until name is non-empty, price valid, and (bundle) at least one video.
+
+### 4. State & wiring in BuildLibrary
+- Replace `editPrice` state with full draft state: `editDraft: { name, price, description, videoId, videoIds }`.
+- Open handler hydrates draft from the selected build.
+- Add `useVideoLibrary({ limit: 200 })` hook call so the Select pickers work.
+- Add `confirmDeleteId` state for the delete AlertDialog.
+
+### 5. Imports
+Add `Trash2` from lucide-react, `AlertDialog*` from `@/components/ui/alert-dialog`, `Select*` from `@/components/ui/select`, `Textarea` from `@/components/ui/textarea`, `useVideoLibrary` from `@/hooks/useVideoLibrary`, `deleteBuild` from `@/lib/ownerBuildStorage`.
 
 ## Files Touched
-- `src/pages/owner/BundleBuilder.tsx` (save normalization)
-- `src/pages/owner/ProgramBuilder.tsx` (save normalization)
-- `src/pages/owner/BuildLibrary.tsx` (save normalization + input polish)
+- `src/lib/ownerBuildStorage.ts` — add `deleteBuild`.
+- `src/pages/owner/BuildLibrary.tsx` — full edit dialog, delete confirm, button row.
 
-No DB, schema, or storage-layer changes. `meta.price` remains a JS number — Stripe checkout already reads it as-is.
+No DB or schema changes. Stripe checkout unaffected (still reads `meta.price` and `meta.videoId(s)`).
