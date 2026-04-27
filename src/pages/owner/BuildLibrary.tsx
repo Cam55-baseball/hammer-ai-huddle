@@ -60,10 +60,11 @@ export default function BuildLibrary() {
       toast({ title: 'Invalid price', description: 'Minimum $0.50', variant: 'destructive' });
       return;
     }
-    const next = updateBuild(editing.id, { meta: { ...editing.meta, price: n } });
+    const normalized = Math.round(n * 100) / 100;
+    const next = updateBuild(editing.id, { meta: { ...editing.meta, price: normalized } });
     if (next) {
       setBuilds((prev) => prev.map((b) => (b.id === next.id ? next : b)));
-      toast({ title: 'Price updated', description: `${next.name} • $${n.toFixed(2)}` });
+      toast({ title: 'Price updated', description: `${next.name} • $${normalized.toFixed(2)}` });
     }
     setEditing(null);
   };
@@ -222,13 +223,14 @@ export default function BuildLibrary() {
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
               <Input
                 id="edit-price"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                min="0.5"
-                step="0.01"
                 value={editPrice}
-                onChange={(e) => setEditPrice(e.target.value)}
-                className="pl-7"
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) setEditPrice(v);
+                }}
+                className="pl-8"
                 autoFocus
               />
             </div>

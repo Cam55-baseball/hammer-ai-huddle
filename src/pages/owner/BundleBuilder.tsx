@@ -87,6 +87,7 @@ export default function BundleBuilder() {
 
   const handleSave = () => {
     if (!canSave) return;
+    const normalized = Math.round(priceNum * 100) / 100;
     saveBuild({
       id: crypto.randomUUID(),
       type: 'bundle',
@@ -94,12 +95,12 @@ export default function BundleBuilder() {
       meta: {
         videoIds,
         videoId: videoIds[0] ?? null, // backward-compat
-        price: priceNum,
+        price: normalized,
       },
       createdAt: Date.now(),
     });
-    console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoIds, price: priceNum });
-    toast({ title: 'Bundle saved', description: `${name} • $${priceNum.toFixed(2)} • ${videoIds.length} videos` });
+    console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoIds, price: normalized });
+    toast({ title: 'Bundle saved', description: `${name} • $${normalized.toFixed(2)} • ${videoIds.length} videos` });
     navigate('/owner');
   };
 
