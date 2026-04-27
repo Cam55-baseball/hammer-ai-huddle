@@ -385,8 +385,8 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   if (prevSnap && Number(prevSnap.consistency_score) < 65 && score >= 80)
     pushEvent("consistency_recover", score - Number(prevSnap.consistency_score), {});
 
-  if (nnMiss7 > 0) pushEvent("nn_miss", nnMiss7, { window_days: 7 },
-    { smallest_nn_template_id: smallestNnId });
+  // nn_miss is emitted further down — only when TODAY has unmet NNs and the day
+  // isn't rest/injury/skip/push-complete. See block after dedupeToday is defined.
 
   if (restDays7 > maxRestPerWeek)
     pushEvent("rest_overuse", restDays7 - maxRestPerWeek, { rest_days_7d: restDays7, cap: maxRestPerWeek });
