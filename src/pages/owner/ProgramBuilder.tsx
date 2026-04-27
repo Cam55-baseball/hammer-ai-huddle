@@ -78,15 +78,16 @@ export default function ProgramBuilder() {
 
   const handleSave = () => {
     if (!canSave) return;
+    const normalized = Math.round(priceNum * 100) / 100;
     saveBuild({
       id: crypto.randomUUID(),
       type: 'program',
       name,
-      meta: { description, videoId: videoId || null, price: priceNum },
+      meta: { description, videoId: videoId || null, price: normalized },
       createdAt: Date.now(),
     });
-    console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId, price: priceNum });
-    toast({ title: 'Program saved', description: `${name} • $${priceNum.toFixed(2)}` });
+    console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId, price: normalized });
+    toast({ title: 'Program saved', description: `${name} • $${normalized.toFixed(2)}` });
     navigate('/owner');
   };
 
