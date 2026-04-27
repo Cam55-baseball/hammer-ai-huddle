@@ -576,26 +576,21 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Today Command Bar — Hammer State + Readiness + Quick Log (additive, mounted above Game Plan) */}
-        <TodayCommandBar />
-
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
-        {/* Identity Banner — primary status; dominates above all metrics */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityBanner />}
+        {/* Identity Command Card — single consolidated header above the Game Plan.
+            Replaces TodayCommandBar + IdentityBanner + DailyStandardCheck +
+            BehavioralPressureToast + DayControlCard + DayStateBanner +
+            StandardActivationBanner. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <>
-            <DayControlCard />
-            <DayStateBanner />
-            <StandardActivationBanner />
-            <GamePlanCard selectedSport={selectedSport} />
-          </>
+          <GamePlanCard selectedSport={selectedSport} />
         )}
 
         {/* Sport Switch Confirmation Dialog */}
