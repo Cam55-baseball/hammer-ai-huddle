@@ -10,7 +10,7 @@ import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Library, Send } from 'lucide-react';
+import { Loader2, Library, Send, Users } from 'lucide-react';
 import { getBuilds, type BuildItem } from '@/lib/ownerBuildStorage';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -115,7 +115,7 @@ export default function BuildLibrary() {
                     </p>
                   )}
                 </div>
-                <div className="shrink-0">
+                <div className="shrink-0 flex flex-col gap-1.5">
                   <Button
                     size="sm"
                     onClick={() => handleSell(b)}
@@ -132,6 +132,26 @@ export default function BuildLibrary() {
                         Sell / Share
                       </>
                     )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      const { data, error } = await supabase
+                        .from('user_build_access')
+                        .select('user_id, granted_at')
+                        .eq('build_id', b.id)
+                        .order('granted_at', { ascending: false });
+                      // Phase 13 light: console-only owner view of buyers.
+                      console.log('[Buyers]', b.id, { rows: data ?? [], error });
+                      toast({
+                        title: 'Buyers logged to console',
+                        description: `${data?.length ?? 0} buyer(s) for "${b.name || 'Untitled'}"`,
+                      });
+                    }}
+                  >
+                    <Users className="h-3.5 w-3.5 mr-1.5" />
+                    View Buyers
                   </Button>
                 </div>
               </Card>

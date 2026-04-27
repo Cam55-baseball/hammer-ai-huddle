@@ -133,7 +133,24 @@ export default function Success() {
             </p>
           )}
           <div className="flex flex-wrap justify-center gap-2 pt-4">
-            <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+            {purchase && (
+              <Button
+                onClick={() => {
+                  const t = purchase.build_type;
+                  const path =
+                    t === 'program' ? `/program/${purchase.build_id}` :
+                    t === 'bundle' ? `/bundle/${purchase.build_id}` :
+                    t === 'consultation' ? `/consultation/${purchase.build_id}` :
+                    '/dashboard';
+                  navigate(path);
+                }}
+              >
+                Access Your Purchase
+              </Button>
+            )}
+            <Button variant={purchase ? 'outline' : 'default'} onClick={() => navigate('/dashboard')}>
+              Back to Dashboard
+            </Button>
             {isOwner && (
               <Button variant="outline" onClick={() => navigate('/owner/builds')}>
                 View Builds

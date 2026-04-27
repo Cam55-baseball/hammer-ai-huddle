@@ -7914,6 +7914,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_build_access: {
+        Row: {
+          build_id: string
+          build_type: string
+          granted_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          build_id: string
+          build_type: string
+          granted_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          build_id?: string
+          build_type?: string
+          granted_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_consistency_snapshots: {
         Row: {
           consistency_score: number
