@@ -23,10 +23,7 @@ import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
-import { StandardActivationBanner } from "@/components/identity/StandardActivationBanner";
-import { IdentityBanner } from "@/components/identity/IdentityBanner";
-import { DayControlCard } from "@/components/game-plan/DayControlCard";
-
+import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { DayStateBanner } from "@/components/game-plan/DayStateBanner";
 import { TodayCommandBar } from "@/components/today/TodayCommandBar";
 import { toast } from "sonner";
