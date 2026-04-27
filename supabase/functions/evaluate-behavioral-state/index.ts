@@ -45,12 +45,27 @@ function weekKey(ds: string): string {
 
 function eventCopy(type: string, ctx: any): { command_text: string; action_type: string; action_payload: any } {
   switch (type) {
-    case "nn_miss":
+    case "nn_miss": {
+      const titles: string[] = Array.isArray(ctx.missed_today_titles) ? ctx.missed_today_titles : [];
+      const count: number = Number(ctx.missed_today_count ?? 0);
+      let command_text: string;
+      if (count <= 0) {
+        command_text = "Today's standard isn't met yet. Open Non-Negotiables to fix it.";
+      } else if (count === 1 && titles[0]) {
+        command_text = `You haven't done ${titles[0]} yet today. Lock it in.`;
+      } else if (count >= 2 && titles.length >= 2) {
+        command_text = `${count} non-negotiables still open today: ${titles.slice(0, 2).join(", ")}. Lock them in.`;
+      } else if (count >= 2) {
+        command_text = `${count} non-negotiables still open today. Lock them in.`;
+      } else {
+        command_text = "Today's standard isn't met yet. Open Non-Negotiables to fix it.";
+      }
       return {
-        command_text: "Standard broken. Fix it now.",
+        command_text,
         action_type: "complete_nn",
         action_payload: ctx.smallest_nn_template_id ? { template_id: ctx.smallest_nn_template_id } : {},
       };
+    }
     case "rest_overuse":
       return {
         command_text: "Rest limit exceeded — standard slipping.",
