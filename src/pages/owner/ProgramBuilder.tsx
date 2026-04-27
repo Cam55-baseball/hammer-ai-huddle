@@ -30,7 +30,7 @@ export default function ProgramBuilder() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState<string>('99');
+  const [price, setPrice] = useState<string>('');
   const [videoId, setVideoId] = useState(initialVideoId);
   const [quickOpen, setQuickOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -141,14 +141,15 @@ export default function ProgramBuilder() {
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
               <Input
                 id="program-price"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                min="0.5"
-                step="0.01"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) setPrice(v);
+                }}
                 placeholder="99.00"
-                className="pl-7"
+                className="pl-8"
               />
             </div>
             {!priceValid && price.length > 0 ? (
