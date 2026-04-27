@@ -259,77 +259,103 @@ export function IdentityCommandCard({ className }: Props) {
           onClick={handleToggle}
           aria-expanded={open}
           aria-label={open ? 'Collapse identity card' : 'Open identity card'}
-          className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-background/20 transition-colors"
+          className="w-full text-left px-3 sm:px-4 py-3 hover:bg-background/20 transition-colors"
         >
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Identity
-              </span>
-              {dayType !== 'standard' && (
-                <span
-                  className={cn(
-                    'text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border',
-                    dayMeta.chipClass,
-                  )}
-                >
-                  {dayMeta.label} day
+          {/* Row 1 (mobile): eyebrow + day chip + chevron.
+              On sm+, this row holds the full identity column; score + chevron live to the right. */}
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  Identity
                 </span>
-              )}
+                {dayType !== 'standard' && (
+                  <span
+                    className={cn(
+                      'text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border',
+                      dayMeta.chipClass,
+                    )}
+                  >
+                    {dayMeta.label} day
+                  </span>
+                )}
+              </div>
+
+              {/* Row 2 (mobile): big tier label on the left, score on the right.
+                  On sm+, the score column on the right takes over and this becomes label-only. */}
+              <div className="mt-1 flex items-end justify-between gap-3 sm:block">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className={cn('text-2xl font-black tracking-tight leading-tight sm:text-2xl break-words', tone)}>
+                      {label}
+                    </span>
+                    {standardConfirmed && (
+                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                        ✓ Confirmed
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile-only score (right side of row 2). Hidden on sm+ where the
+                    dedicated right column takes over. */}
+                <div className="flex flex-col items-end shrink-0 sm:hidden">
+                  <div className={cn('text-3xl font-black tabular-nums leading-none', tone)}>
+                    {score}
+                  </div>
+                  <div className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Consistency
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-baseline gap-2 mt-0.5">
-              <span className={cn('text-xl font-black tracking-tight sm:text-2xl', tone)}>
-                {label}
-              </span>
-              {standardConfirmed && (
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-                  ✓ Confirmed
-                </span>
-              )}
+
+            {/* Right column on sm+: score + chevron stacked. */}
+            <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
+              <div className={cn('text-3xl font-black tabular-nums leading-none', tone)}>
+                {score}
+              </div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                Consistency
+              </div>
             </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
-                <Flame className="h-3 w-3 text-orange-400" />
-                {perfStreak}d perf
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
-                <ShieldCheck className="h-3 w-3 text-emerald-400" />
-                {discStreak}d active
-              </span>
-              {nnMiss > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 font-semibold text-rose-400">
-                  {nnMiss} miss/7d
-                </span>
+
+            {/* Chevron — always top-right */}
+            <div className="relative shrink-0 self-start pt-0.5">
+              {hasUnreadAlert && !open && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse" />
               )}
+              <ChevronDown
+                className={cn(
+                  'h-5 w-5 text-muted-foreground transition-transform',
+                  open && 'rotate-180',
+                )}
+              />
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <div className={cn('text-2xl font-black tabular-nums sm:text-3xl leading-none', tone)}>
-              {score}
-            </div>
-            <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-              Consistency
-            </div>
-          </div>
-
-          <div className="relative shrink-0">
-            {hasUnreadAlert && !open && (
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse" />
+          {/* Row 3: streak chips on their own line — full width, no collision with score. */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
+              <Flame className="h-3 w-3 text-orange-400" />
+              {perfStreak}d perf
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
+              <ShieldCheck className="h-3 w-3 text-emerald-400" />
+              {discStreak}d active
+            </span>
+            {nnMiss > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 font-semibold text-rose-400">
+                {nnMiss} miss/7d
+              </span>
             )}
-            <ChevronDown
-              className={cn(
-                'h-5 w-5 text-muted-foreground transition-transform',
-                open && 'rotate-180',
-              )}
-            />
           </div>
         </button>
 
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
         <Collapsible open={open}>
           <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-            <div className="px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
+            <div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
 
               {/* ── 1. Today's Standard ──────────────────────────────── */}
               <section>
@@ -430,17 +456,31 @@ export function IdentityCommandCard({ className }: Props) {
                       return (
                         <div
                           key={ev.id}
-                          className={cn('flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs font-semibold', t)}
+                          className={cn(
+                            'rounded-lg border px-2.5 py-2 text-xs font-semibold',
+                            'flex flex-col gap-2 sm:flex-row sm:items-center',
+                            t,
+                          )}
                           role="status"
                         >
-                          <Icon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="flex-1 min-w-0 leading-snug">{text}</span>
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
+                            <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            <span className="flex-1 min-w-0 leading-snug break-words">{text}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); acknowledge(ev.id); }}
+                              aria-label="Dismiss"
+                              className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 sm:hidden"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
                           {actionType && (
                             <Button
                               size="sm"
                               onClick={() => handleEventAction(ev)}
                               disabled={running}
-                              className="h-6 px-2 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold text-[10px]"
+                              className="h-7 px-2 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold text-[10px] w-full sm:w-auto sm:h-6"
                             >
                               <Zap className="h-3 w-3" />
                               {actionLabel}
@@ -450,7 +490,7 @@ export function IdentityCommandCard({ className }: Props) {
                             type="button"
                             onClick={() => acknowledge(ev.id)}
                             aria-label="Dismiss"
-                            className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0"
+                            className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 hidden sm:grid"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -477,7 +517,7 @@ export function IdentityCommandCard({ className }: Props) {
                     <HammerStateBadge />
                     <ReadinessChip />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <button
                       type="button"
                       onClick={() => navigate(next.route)}
@@ -490,21 +530,23 @@ export function IdentityCommandCard({ className }: Props) {
                         {next.label}
                       </p>
                     </button>
-                    <Button
-                      size="sm" variant="outline"
-                      onClick={() => navigate(next.route)}
-                      className="text-xs shrink-0"
-                    >
-                      {next.ctaLabel}
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setLogOpen(true)}
-                      className="gap-1 text-xs shrink-0"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Log
-                    </Button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm" variant="outline"
+                        onClick={() => navigate(next.route)}
+                        className="text-xs flex-1 sm:flex-none"
+                      >
+                        {next.ctaLabel}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setLogOpen(true)}
+                        className="gap-1 text-xs flex-1 sm:flex-none"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Log
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -560,12 +602,12 @@ function DayButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'h-10 gap-1.5 text-xs font-black',
+        'h-10 gap-1 sm:gap-1.5 px-1 sm:px-3 text-[11px] sm:text-xs font-black',
         active && activeClass,
       )}
     >
-      <Icon className="h-3.5 w-3.5" />
-      {label.toUpperCase()}
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{label.toUpperCase()}</span>
     </Button>
   );
 }
