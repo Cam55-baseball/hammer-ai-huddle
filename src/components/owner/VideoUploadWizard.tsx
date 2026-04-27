@@ -150,7 +150,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       setMode('link'); setExternalUrl(''); setVideoFile(null);
       setTitle(''); setSport(''); setCategory(''); setDescription('');
       setStructured(emptyStructuredTagState);
-      onSuccess();
+      onSuccess((result as any)?.id);
     }
   };
 
