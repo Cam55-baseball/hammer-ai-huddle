@@ -1,48 +1,40 @@
-## Phase 14 — Post-Purchase UX + Safe Owner Bypass
+## Add "Builds" tab to existing Owner Dashboard
 
-Single-file change to `src/pages/BuildAccessGate.tsx`. No backend, RLS, webhook, or table changes.
+The Owner Dashboard at `/owner-dashboard` already uses a sidebar (`OwnerSidebar.tsx`) with sections like Overview, User Management, Video Library, etc. I'll add one new section: **Builds**.
 
-### 1. Owner Bypass (safe, client-side preview only)
+No new page. No new route. No changes to the athlete `/dashboard` or Game Plan.
 
-- Import `useOwnerAccess` (already exists at `src/hooks/useOwnerAccess.ts`).
-- In the access-check `useEffect`, after auth settles:
-  - If `isOwner === true`, short-circuit: `setAllowed(true); setChecking(false);` and skip `hasAccess()` entirely.
-  - Otherwise run existing `hasAccess(user.id, buildId)` flow unchanged.
-- Wait for both `authLoading` and `useOwnerAccess`'s `loading` to be false before deciding, to avoid a flash of "Access denied" for the owner.
-- No writes to `user_build_access`. No analytics calls. No RLS impact (RLS still enforced server-side; owner bypass is purely a UI gate skip — owner already has elevated read rights via existing role).
+### Changes
 
-### 2. UX Dead-End Fix (allowed === true branch)
+**1. `src/components/owner/OwnerSidebar.tsx`**
+- Extend the `OwnerSection` type union with `'builds'`.
+- Add a sidebar item: `{ id: 'builds', label: 'Builds', icon: Package }` (lucide `Package`), placed right under Overview so it's the first revenue-related entry.
 
-Replace the bare "Content coming soon" with the same minimal `Wrap` layout plus action buttons:
+**2. `src/pages/OwnerDashboard.tsx`**
+- Add `'builds': 'Builds'` to `sectionLabels`.
+- Add a one-line subtitle for the section header: *"Create programs, bundles, and consultations — and see what you've made."*
+- Add a new conditional block `{activeSection === 'builds' && <BuildsSection />}` after the existing section blocks.
+- The `BuildsSection` is rendered inline (small local component or JSX block in the same file, matching the pattern used for the other sections) and contains:
+  - **Quick Create row** — 3 buttons in a responsive grid (1 col mobile, 3 cols ≥640px):
+    - **New Program** → `navigate('/owner/open_program_builder')`
+    - **New Bundle** → `navigate('/owner/open_bundle_builder')`
+    - **New Consultation** → `navigate('/owner/open_consultation_flow')`
+  - **Your Builds list** — reads from `getBuilds()` in `src/lib/ownerBuildStorage.ts` and renders the same Card layout already used in `src/pages/owner/BuildLibrary.tsx`, including the **Sell / Share** button (calls `create-build-checkout` edge function) and **View Buyers** button (queries `user_build_access`, logs to console + toast). Empty state: *"No builds yet — use Quick Create above."*
+  - A small "Open full library page" link to `/owner/builds` for users who prefer the standalone view (the existing `BuildLibrary` page stays as-is).
 
-- Heading: capitalized `buildType` (kept).
-- Text: "Content coming soon" (kept).
-- Subtext: `buildId` in muted mono (kept, optional).
-- If `isOwner`, render a small badge above the heading: **"Owner Preview Mode"** (subtle muted pill, no heavy styling).
-- Buttons (stacked vertically, small gap, using existing shadcn `Button`):
-  1. Primary: **"Back to Dashboard"** → `navigate('/dashboard')`
-  2. Secondary (`variant="outline"`): **"My Purchases"** → `navigate('/purchases')` — since that route does not currently exist in the app, the handler falls back to `/dashboard` (we will simply route to `/dashboard` for now, keeping the label per spec; no new pages added this phase).
+**3. Nothing else changes**
+- `src/pages/Dashboard.tsx` — untouched.
+- `src/pages/owner/BuildLibrary.tsx`, `ProgramBuilder.tsx`, `BundleBuilder.tsx`, `ConsultationFlow.tsx` — untouched.
+- `App.tsx` routes — untouched.
+- Backend, RLS, Stripe, webhooks — untouched.
 
-Decision: To strictly honor "no new pages" and avoid a 404, the "My Purchases" button will navigate to `/dashboard` as the fallback. Label remains "My Purchases" per spec; behavior is the safe fallback the spec allows.
+### Mobile behavior
+Quick Create grid: 1 col at 390px → 3 cols ≥640px. Build cards stack the action buttons in a column on the right (already the pattern in `BuildLibrary`).
 
-### 3. What stays untouched
-
-- `webhook` logic, `purchases` table, `user_build_access` writes, RLS policies, `hasAccess()` implementation, monetization, analytics.
-
-### Technical details
-
-File: `src/pages/BuildAccessGate.tsx`
-
-- New imports: `Button` from `@/components/ui/button`, `useOwnerAccess` from `@/hooks/useOwnerAccess`.
-- Effect dependencies extend to include `isOwner` and owner-loading state.
-- Render order in the allowed `Wrap`:
-  1. `{isOwner && <span className="inline-block text-[10px] uppercase tracking-wide px-2 py-0.5 rounded bg-muted text-muted-foreground">Owner Preview Mode</span>}`
-  2. `<h1>` buildType
-  3. "Content coming soon"
-  4. buildId mono subtext
-  5. Vertical button stack (`flex flex-col gap-2 pt-2`)
+### Technical notes
+- Reuses existing helpers: `getBuilds`, `BuildItem`, `supabase.functions.invoke('create-build-checkout')`, `supabase.from('user_build_access')`, `toast`.
+- Pulls in `Package`, `Send`, `Users`, `Loader2` from lucide (already used elsewhere).
+- Local state in `OwnerDashboard.tsx`: `builds` (loaded once on `activeSection === 'builds'` first view via `useEffect`) and `pendingId` for the Sell button.
 
 ### Outcome
-
-- Real purchasers: see actionable buttons instead of a dead end.
-- Owner: instant access to any build, clearly labeled "Owner Preview Mode", with zero impact on payments, access tracking, or security.
+Open Owner Dashboard → click **Builds** in the sidebar → you see your builds list and one-click Quick Create for Program / Bundle / Consultation. Same page, same shell, just a new tab.

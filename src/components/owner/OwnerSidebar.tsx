@@ -12,7 +12,8 @@ import {
   ArrowLeft,
   Library,
   Film,
-  Dumbbell
+  Dumbbell,
+  Package
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
