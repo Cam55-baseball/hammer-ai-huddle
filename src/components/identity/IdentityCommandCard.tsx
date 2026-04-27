@@ -602,12 +602,12 @@ function DayButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'h-10 gap-1.5 text-xs font-black',
+        'h-10 gap-1 sm:gap-1.5 px-1 sm:px-3 text-[11px] sm:text-xs font-black',
         active && activeClass,
       )}
     >
-      <Icon className="h-3.5 w-3.5" />
-      {label.toUpperCase()}
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{label.toUpperCase()}</span>
     </Button>
   );
 }
