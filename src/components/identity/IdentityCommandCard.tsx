@@ -355,7 +355,7 @@ export function IdentityCommandCard({ className }: Props) {
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
         <Collapsible open={open}>
           <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-            <div className="px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
+            <div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
 
               {/* ── 1. Today's Standard ──────────────────────────────── */}
               <section>
