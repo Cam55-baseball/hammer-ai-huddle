@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { VideoUploadWizard } from '@/components/owner/VideoUploadWizard';
-import { Loader2, Wrench, ArrowLeft, Upload } from 'lucide-react';
+import { QuickAttachVideo } from '@/components/owner/QuickAttachVideo';
+import { Loader2, Wrench, ArrowLeft, Paperclip } from 'lucide-react';
 import { saveBuild } from '@/lib/ownerBuildStorage';
 import { toast } from '@/hooks/use-toast';
 
@@ -29,8 +30,10 @@ export default function ProgramBuilder() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState<string>('99');
   const [videoId, setVideoId] = useState(initialVideoId);
-  const [uploadOpen, setUploadOpen] = useState(false);
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [pendingSelect, setPendingSelect] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,23 +60,33 @@ export default function ProgramBuilder() {
   }
   if (!isOwner) return null;
 
-  const handleUploadSuccess = (newVideoId?: string) => {
-    setUploadOpen(false);
+  const handleAttached = (newVideoId: string) => {
+    setPendingSelect(newVideoId);
+    refetch();
+  };
+
+  const handleAdvancedSuccess = (newVideoId?: string) => {
+    setAdvancedOpen(false);
     if (newVideoId) setPendingSelect(newVideoId);
     refetch();
     toast({ title: 'Video added', description: newVideoId ? 'Set as your anchor video.' : 'Available in the picker.' });
   };
 
+  const priceNum = Number(price);
+  const priceValid = Number.isFinite(priceNum) && priceNum >= 0.5;
+  const canSave = name.trim().length > 0 && priceValid;
+
   const handleSave = () => {
+    if (!canSave) return;
     saveBuild({
       id: crypto.randomUUID(),
       type: 'program',
       name,
-      meta: { description, videoId: videoId || null },
+      meta: { description, videoId: videoId || null, price: priceNum },
       createdAt: Date.now(),
     });
-    console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId });
-    toast({ title: 'Program saved', description: name });
+    console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId, price: priceNum });
+    toast({ title: 'Program saved', description: `${name} • $${priceNum.toFixed(2)}` });
     navigate('/owner');
   };
 
@@ -122,15 +135,47 @@ export default function ProgramBuilder() {
               rows={4}
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="program-price">Price (USD)</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <Input
+                id="program-price"
+                type="number"
+                inputMode="decimal"
+                min="0.5"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="99.00"
+                className="pl-7"
+              />
+            </div>
+            {!priceValid && price.length > 0 ? (
+              <p className="text-xs text-destructive">Minimum $0.50</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">What buyers will pay at checkout.</p>
+            )}
+          </div>
         </Card>
 
         <Card className="p-6 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Anchor Video</h2>
-            <Button variant="outline" size="sm" onClick={() => setUploadOpen(true)}>
-              <Upload className="h-4 w-4 mr-1.5" />
-              Upload new video
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setQuickOpen(true)}>
+                <Paperclip className="h-4 w-4 mr-1.5" />
+                Attach video
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => setAdvancedOpen(true)}
+              >
+                Advanced upload
+              </Button>
+            </div>
           </div>
           {videosLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -138,12 +183,12 @@ export default function ProgramBuilder() {
             </div>
           ) : videos.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No videos in your library yet. Click <span className="text-foreground font-medium">Upload new video</span> above to add one.
+              No videos yet. Click <span className="text-foreground font-medium">Attach video</span> to add one by link or upload.
             </p>
           ) : (
             <Select value={videoId} onValueChange={setVideoId}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose a video…" />
+                <SelectValue placeholder="Choose from library…" />
               </SelectTrigger>
               <SelectContent className="max-h-72">
                 {videos.map((v) => (
@@ -167,16 +212,22 @@ export default function ProgramBuilder() {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={!name.trim()}>Save Program</Button>
+          <Button onClick={handleSave} disabled={!canSave}>Save Program</Button>
         </div>
       </div>
 
-      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+      <QuickAttachVideo
+        open={quickOpen}
+        onOpenChange={setQuickOpen}
+        onAttached={handleAttached}
+      />
+
+      <Dialog open={advancedOpen} onOpenChange={setAdvancedOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Upload new video</DialogTitle>
+            <DialogTitle>Advanced upload</DialogTitle>
           </DialogHeader>
-          <VideoUploadWizard tags={tags} onSuccess={handleUploadSuccess} fastMode />
+          <VideoUploadWizard tags={tags} onSuccess={handleAdvancedSuccess} fastMode />
         </DialogContent>
       </Dialog>
     </DashboardLayout>

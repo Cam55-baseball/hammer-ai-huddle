@@ -34,3 +34,22 @@ export function saveBuild(item: BuildItem): void {
     /* noop */
   }
 }
+
+export function updateBuild(id: string, patch: Partial<Pick<BuildItem, 'name' | 'meta'>>): BuildItem | null {
+  try {
+    const existing = getBuilds();
+    const idx = existing.findIndex((b) => b.id === id);
+    if (idx === -1) return null;
+    const current = existing[idx];
+    const next: BuildItem = {
+      ...current,
+      ...(patch.name !== undefined ? { name: patch.name } : {}),
+      meta: patch.meta ? { ...current.meta, ...patch.meta } : current.meta,
+    };
+    existing[idx] = next;
+    safeSet(KEY, JSON.stringify(existing));
+    return next;
+  } catch {
+    return null;
+  }
+}

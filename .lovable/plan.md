@@ -1,43 +1,54 @@
-## Problem
+# Fix: Quick Video Attach + Price for Bundles and Programs
 
-In the Bundle Builder and Program Builder, when there are no videos in the library the only entry point is a link reading "Add one in the Video Library" pointing to `/owner?section=videos`. Two issues:
+Two focused fixes to the Bundle Builder and Program Builder.
 
-1. `OwnerDashboard` does not read the `?section=` query param, so the link does nothing useful — it lands on the overview, not the library.
-2. Even if it worked, bouncing the user out of the builder mid-flow loses their in-progress bundle/program.
+## 1. Attach a video without the full Video Library wizard
 
-You also need to be able to add videos *while* building, not only when the library is empty.
+Today the "Upload new video" button opens the full 4-step `VideoUploadWizard` (title, sport, category, structured engine tags, etc.) — overkill when you just want to drop a video into a build.
 
-## Fix
+Add a **"Quick Attach"** option on both builders with two simple inputs:
 
-Embed the existing `VideoUploadWizard` directly inside both builders via a dialog, and refresh the picker after upload so the new video appears immediately and can be selected.
+- **Paste video link** (YouTube / Vimeo / direct URL), or
+- **Upload a file** (drag/drop or file picker)
 
-### Bundle Builder (`src/pages/owner/BundleBuilder.tsx`)
-- Add an "Upload new video" button next to the picker (always visible, not just when library is empty).
-- Clicking opens a Dialog containing `<VideoUploadWizard tags={tags} onSuccess={...} fastMode />`.
-- Pull `tags` and `refetch` from `useVideoLibrary`.
-- On `onSuccess`: close the dialog, call `refetch()`, and auto-add the newly uploaded video to `videoIds`.
-- Replace the "Add one in the Video Library" empty-state link with the same upload button so the empty state actually works.
+Only one required field beyond the source: **Title** (auto-filled from the file name or URL slug, editable).
 
-### Program Builder (`src/pages/owner/ProgramBuilder.tsx`)
-- Same treatment: "Upload new video" button beside the anchor-video Select.
-- On success: refetch, then auto-set `videoId` to the newly uploaded video.
-- Replace the broken empty-state link with the upload button.
+On confirm:
+- Create a minimal video library record (title + url/file + `owner_id`) — no sport/category/engine tags required.
+- Auto-add to the bundle (or set as the program's anchor video) immediately.
+- Stay on the builder page — no navigation, no progress lost.
 
-### Identifying the new video after upload
-`VideoUploadWizard.onSuccess` does not return the new video id. Two options:
+The existing full `VideoUploadWizard` stays available behind a secondary "Advanced upload (full metadata)" link for when you do want to fill in tags.
 
-- **Preferred**: capture the videos list length / latest `created_at` before upload, then after `refetch()` find the newest entry (`videos[0]` once sorted by `created_at desc`) and select it. The library hook already orders by `created_at desc` as final tie-breaker, so the new upload will appear first for the owner's session.
-- Alternatively, lightly extend `VideoUploadWizard`'s `onSuccess` signature to `(newVideoId?: string) => void` and pass the inserted id from `useVideoLibraryAdmin.uploadVideo`. This is cleaner and avoids the heuristic. We'll do this if `uploadVideo` already returns the row; otherwise use the heuristic.
+## 2. Set the price before sharing
 
-### Files touched
-- `src/pages/owner/BundleBuilder.tsx` — add Dialog + upload button + auto-select new video.
-- `src/pages/owner/ProgramBuilder.tsx` — same.
-- `src/components/owner/VideoUploadWizard.tsx` — only if needed to surface the new video id via `onSuccess`.
+Right now you can save a Bundle or Program but you never get to set a price — `BuildLibrary` "Sell / Share" sends it to Stripe Checkout, which falls back to a hard-coded default ($49 bundle / $99 program) in the `create-build-checkout` edge function.
 
-### Out of scope
-- Wiring `?section=` query-param routing into `OwnerDashboard` (separate concern; not needed once upload is in-builder).
-- Changing the Video Library Manager itself.
+Add a **Price (USD)** input to both builders:
 
-## Outcome
+- Required field, numeric, min $0.50.
+- Stored in `build.meta.price` (the edge function already reads this and only falls back to the default when missing).
+- Shown on the Build Library cards next to the name (e.g. "$79").
+- Editable from the Build Library too — small "Edit price" action on each card so you can adjust without re-creating the build.
 
-From inside the Bundle or Program Builder you can click "Upload new video", complete the wizard in a dialog, and the newly uploaded video appears in the picker (and is auto-selected/added) without losing the rest of your in-progress build.
+Save is blocked until name + price + at least one video are filled.
+
+---
+
+## Technical notes
+
+**Files to modify**
+- `src/pages/owner/BundleBuilder.tsx` — add Price input, add `QuickAttachVideo` trigger, gate save on price.
+- `src/pages/owner/ProgramBuilder.tsx` — same: Price input + Quick Attach + save gating.
+- `src/pages/owner/BuildLibrary.tsx` — show price on each card; add inline "Edit price" using a small dialog that calls a new `updateBuild` helper.
+- `src/lib/ownerBuildStorage.ts` — add `updateBuild(id, patch)` helper (writes back to the same localStorage key).
+- New: `src/components/owner/QuickAttachVideo.tsx` — compact dialog with two tabs (Link / Upload), one Title field, one confirm button. Reuses `useVideoLibraryAdmin().uploadVideo` under the hood with minimal payload.
+
+**Edge function** (`supabase/functions/create-build-checkout/index.ts`) — no change needed; it already honors `build.meta.price` and only falls back when missing. We will simply make sure the price is always set client-side now.
+
+**Validation**
+- Price parsed as `Number(value)`; reject `NaN`, `<= 0`, or `< 0.50`.
+- Quick Attach link: must start with `http(s)://`.
+- Quick Attach upload: same file-size/type checks already in `validateVideoFile` (`src/data/videoLimits.ts`).
+
+**No DB schema changes.** Builds remain in localStorage (`owner_builds` key) — just one new optional `price` field on `meta`.
