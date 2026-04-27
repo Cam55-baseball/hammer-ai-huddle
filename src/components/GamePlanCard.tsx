@@ -31,7 +31,7 @@ import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
-import { GamePlanPushDayDialog } from '@/components/game-plan/GamePlanPushDayDialog';
+
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
@@ -225,9 +225,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [sendToCoachTitle, setSendToCoachTitle] = useState('');
   const [sendToCoachTemplateData, setSendToCoachTemplateData] = useState<Json | null>(null);
-  const [pushDayDialogOpen, setPushDayDialogOpen] = useState(false);
   const [daySkipped, setDaySkipped] = useState(false);
-  const [dayPushed, setDayPushed] = useState(false);
   const skippedTaskIdsRef = useRef<string[]>([]);
 
   // Initialize folder checkbox states when dialog opens
@@ -671,16 +669,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return [...incomplete, ...completed];
   }, []);
 
-  const cycleSortMode = () => {
-    if (todayLocked) {
-      toast.error(t('gamePlan.lockOrder.locked'));
-      return;
-    }
-    const modes: ('auto' | 'manual' | 'timeline')[] = ['auto', 'manual', 'timeline'];
-    const currentIdx = modes.indexOf(sortMode);
-    const nextMode = modes[(currentIdx + 1) % modes.length];
-    setSortMode(nextMode);
-    localStorage.setItem('gameplan-sort-mode', nextMode);
+  const selectSortMode = (mode: 'auto' | 'manual' | 'timeline') => {
+    setSortMode(mode);
+    localStorage.setItem('gameplan-sort-mode', mode);
   };
 
 
