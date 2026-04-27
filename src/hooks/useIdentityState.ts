@@ -21,11 +21,11 @@ export interface IdentitySnapshot {
 }
 
 const TIER_META: Record<IdentityTier, { label: string; tone: string; ring: string; bg: string }> = {
-  elite:      { label: 'ELITE',      tone: 'text-fuchsia-400', ring: 'ring-fuchsia-500/40', bg: 'from-fuchsia-600/20 to-violet-600/10' },
-  locked_in:  { label: 'LOCKED IN',  tone: 'text-emerald-400', ring: 'ring-emerald-500/40', bg: 'from-emerald-600/20 to-teal-600/10' },
-  consistent: { label: 'CONSISTENT', tone: 'text-sky-400',     ring: 'ring-sky-500/40',     bg: 'from-sky-600/20 to-blue-600/10' },
-  building:   { label: 'BUILDING',   tone: 'text-amber-400',   ring: 'ring-amber-500/40',   bg: 'from-amber-600/20 to-orange-600/10' },
-  slipping:   { label: 'SLIPPING',   tone: 'text-rose-400',    ring: 'ring-rose-500/40',    bg: 'from-rose-600/20 to-red-600/10' },
+  elite:      { label: 'ELITE',      tone: 'text-fuchsia-200', ring: 'ring-fuchsia-500/40', bg: 'from-fuchsia-950/60 to-violet-950/40' },
+  locked_in:  { label: 'LOCKED IN',  tone: 'text-emerald-200', ring: 'ring-emerald-500/40', bg: 'from-emerald-950/60 to-teal-950/40' },
+  consistent: { label: 'CONSISTENT', tone: 'text-sky-200',     ring: 'ring-sky-500/40',     bg: 'from-sky-950/60 to-blue-950/40' },
+  building:   { label: 'BUILDING',   tone: 'text-amber-200',   ring: 'ring-amber-500/40',   bg: 'from-amber-950/60 to-orange-950/40' },
+  slipping:   { label: 'SLIPPING',   tone: 'text-rose-200',    ring: 'ring-rose-500/40',    bg: 'from-rose-950/60 to-red-950/40' },
 };
 
 export function useIdentityState() {
