@@ -122,6 +122,7 @@ const BundleBuilder = lazyWithRetry(() => import("./pages/owner/BundleBuilder"))
 const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationFlow"));
 const BuildLibrary = lazyWithRetry(() => import("./pages/owner/BuildLibrary"));
 const Success = lazyWithRetry(() => import("./pages/Success"));
+const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -222,6 +223,9 @@ const App = () => {
               <Route path="/drill-library" element={<DrillLibraryPlayer />} />
               <Route path="/training-block" element={<TrainingBlock />} />
               <Route path="/help-desk" element={<HelpDesk />} />
+              <Route path="/program/:id" element={<BuildAccessGate buildType="program" />} />
+              <Route path="/bundle/:id" element={<BuildAccessGate buildType="bundle" />} />
+              <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
