@@ -31,7 +31,7 @@ import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
-import { GamePlanPushDayDialog } from '@/components/game-plan/GamePlanPushDayDialog';
+
 import { PendingSessionApprovals } from '@/components/practice/PendingSessionApprovals';
 import { SchedulePracticeDialog } from '@/components/practice/SchedulePracticeDialog';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
@@ -225,9 +225,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [sendToCoachTitle, setSendToCoachTitle] = useState('');
   const [sendToCoachTemplateData, setSendToCoachTemplateData] = useState<Json | null>(null);
-  const [pushDayDialogOpen, setPushDayDialogOpen] = useState(false);
   const [daySkipped, setDaySkipped] = useState(false);
-  const [dayPushed, setDayPushed] = useState(false);
   const skippedTaskIdsRef = useRef<string[]>([]);
 
   // Initialize folder checkbox states when dialog opens
@@ -671,16 +669,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return [...incomplete, ...completed];
   }, []);
 
-  const cycleSortMode = () => {
-    if (todayLocked) {
-      toast.error(t('gamePlan.lockOrder.locked'));
-      return;
-    }
-    const modes: ('auto' | 'manual' | 'timeline')[] = ['auto', 'manual', 'timeline'];
-    const currentIdx = modes.indexOf(sortMode);
-    const nextMode = modes[(currentIdx + 1) % modes.length];
-    setSortMode(nextMode);
-    localStorage.setItem('gameplan-sort-mode', nextMode);
+  const selectSortMode = (mode: 'auto' | 'manual' | 'timeline') => {
+    setSortMode(mode);
+    localStorage.setItem('gameplan-sort-mode', mode);
   };
 
 
@@ -1623,41 +1614,36 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               {daySkipped ? <Undo2 className="h-3.5 w-3.5" /> : <SkipForward className="h-3.5 w-3.5" />}
               {daySkipped ? 'Undo Skip' : 'Skip Day'}
             </Button>
-            {/* Push Day / Undo Push */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                if (dayPushed) {
-                  const result = await undoLastAction();
-                  if (result === false) toast.error('Unable to undo push');
-                  else toast.success('Push undone');
-                  setDayPushed(false);
-                } else {
-                  setPushDayDialogOpen(true);
-                }
-              }}
-              className={dayPushed
-                ? "text-green-400 hover:text-green-300 h-8 px-2 gap-1 text-xs font-medium"
-                : "text-white/70 hover:text-white h-8 px-2 gap-1 text-xs font-medium"
-              }
-            >
-              {dayPushed ? <Undo2 className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
-              {dayPushed ? 'Undo Push' : 'Push Day'}
-            </Button>
-            {/* Sort mode toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={cycleSortMode}
-              className="flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white h-8"
-            >
-              <ArrowUpDown className="h-3.5 w-3.5" />
-              {sortMode === 'auto' ? t('gamePlan.autoSort') : sortMode === 'manual' ? t('gamePlan.manualSort') : t('gamePlan.timelineSort')}
-            </Button>
-            
-            {/* Lock Order dropdown (timeline mode only) */}
-            {sortMode === 'timeline' && (
+            {/* Sort mode toggle - 3-segment Auto / Timeline / Manual */}
+            <div className="inline-flex items-center rounded-md border border-white/10 bg-white/5 p-0.5 h-8">
+              {([
+                { mode: 'auto' as const, label: t('gamePlan.autoSort'), Icon: ArrowUpDown },
+                { mode: 'timeline' as const, label: t('gamePlan.timelineSort'), Icon: Clock },
+                { mode: 'manual' as const, label: t('gamePlan.manualSort'), Icon: GripVertical },
+              ]).map(({ mode, label, Icon }) => {
+                const active = sortMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => selectSortMode(mode)}
+                    className={cn(
+                      "flex items-center gap-1 px-2 h-7 rounded text-[11px] font-medium transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "text-white/60 hover:text-white"
+                    )}
+                    aria-pressed={active}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Lock Order dropdown (always available) */}
+            {(
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -3166,18 +3152,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }
       `}</style>
 
-      {/* Push Day Dialog */}
-      <GamePlanPushDayDialog
-        open={pushDayDialogOpen}
-        onOpenChange={setPushDayDialogOpen}
-        taskIds={tasks.filter(t => !t.completed).map(t => t.id)}
-        onPushComplete={() => setDayPushed(true)}
-        skipDay={skipDay}
-        pushForwardOneDay={pushForwardOneDay}
-        pushToDate={pushToDate}
-        replaceDay={replaceDay}
-        undoLastAction={undoLastAction}
-      />
+
 
       {/* Quick Note Dialog */}
       <QuickNoteDialog open={quickNoteOpen} onOpenChange={setQuickNoteOpen} />
