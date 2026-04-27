@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Package, ArrowLeft, X, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { VideoUploadWizard } from '@/components/owner/VideoUploadWizard';
+import { Loader2, Package, ArrowLeft, X, Plus, Upload } from 'lucide-react';
 import { saveBuild } from '@/lib/ownerBuildStorage';
 import { toast } from '@/hooks/use-toast';
 
@@ -22,15 +24,26 @@ export default function BundleBuilder() {
   const [params] = useSearchParams();
   const initialVideoId = params.get('videoId') ?? '';
 
-  const { videos, loading: videosLoading } = useVideoLibrary({ limit: 200 });
+  const { videos, tags, loading: videosLoading, refetch } = useVideoLibrary({ limit: 200 });
 
   const [name, setName] = useState('');
   const [videoIds, setVideoIds] = useState<string[]>(initialVideoId ? [initialVideoId] : []);
   const [pickerValue, setPickerValue] = useState<string>('');
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [pendingAutoAdd, setPendingAutoAdd] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !isOwner) navigate('/dashboard');
   }, [isOwner, loading, navigate]);
+
+  // After refetch finishes and the new video is in `videos`, auto-add it.
+  useEffect(() => {
+    if (!pendingAutoAdd) return;
+    if (videos.some((v) => v.id === pendingAutoAdd)) {
+      setVideoIds((prev) => (prev.includes(pendingAutoAdd) ? prev : [...prev, pendingAutoAdd]));
+      setPendingAutoAdd(null);
+    }
+  }, [videos, pendingAutoAdd]);
 
   if (loading) {
     return (
@@ -51,6 +64,13 @@ export default function BundleBuilder() {
 
   const removeVideo = (id: string) => {
     setVideoIds((prev) => prev.filter((v) => v !== id));
+  };
+
+  const handleUploadSuccess = (newVideoId?: string) => {
+    setUploadOpen(false);
+    if (newVideoId) setPendingAutoAdd(newVideoId);
+    refetch();
+    toast({ title: 'Video added', description: newVideoId ? 'Added to your bundle.' : 'Available in the picker.' });
   };
 
   const handleSave = () => {
@@ -112,6 +132,10 @@ export default function BundleBuilder() {
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Videos in Bundle ({videoIds.length})
             </h2>
+            <Button variant="outline" size="sm" onClick={() => setUploadOpen(true)}>
+              <Upload className="h-4 w-4 mr-1.5" />
+              Upload new video
+            </Button>
           </div>
 
           {videosLoading ? (
@@ -120,14 +144,7 @@ export default function BundleBuilder() {
             </div>
           ) : videos.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No videos in your library yet.{' '}
-              <button
-                className="underline text-foreground"
-                onClick={() => navigate('/owner?section=videos')}
-              >
-                Add one in the Video Library
-              </button>
-              .
+              No videos in your library yet. Click <span className="text-foreground font-medium">Upload new video</span> above to add one.
             </p>
           ) : (
             <div className="flex gap-2">
@@ -188,6 +205,15 @@ export default function BundleBuilder() {
           </Button>
         </div>
       </div>
+
+      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Upload new video</DialogTitle>
+          </DialogHeader>
+          <VideoUploadWizard tags={tags} onSuccess={handleUploadSuccess} fastMode />
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
