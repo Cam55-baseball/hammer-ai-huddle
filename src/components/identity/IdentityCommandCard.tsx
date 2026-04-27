@@ -517,7 +517,7 @@ export function IdentityCommandCard({ className }: Props) {
                     <HammerStateBadge />
                     <ReadinessChip />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <button
                       type="button"
                       onClick={() => navigate(next.route)}
@@ -530,21 +530,23 @@ export function IdentityCommandCard({ className }: Props) {
                         {next.label}
                       </p>
                     </button>
-                    <Button
-                      size="sm" variant="outline"
-                      onClick={() => navigate(next.route)}
-                      className="text-xs shrink-0"
-                    >
-                      {next.ctaLabel}
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setLogOpen(true)}
-                      className="gap-1 text-xs shrink-0"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Log
-                    </Button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm" variant="outline"
+                        onClick={() => navigate(next.route)}
+                        className="text-xs flex-1 sm:flex-none"
+                      >
+                        {next.ctaLabel}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setLogOpen(true)}
+                        className="gap-1 text-xs flex-1 sm:flex-none"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Log
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </section>
