@@ -25,6 +25,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export type OwnerSection = 
   | 'overview' 
+  | 'builds'
   | 'users' 
   | 'admin-requests' 
   | 'scout-applications' 
