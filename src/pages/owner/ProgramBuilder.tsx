@@ -13,7 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Wrench, ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { VideoUploadWizard } from '@/components/owner/VideoUploadWizard';
+import { Loader2, Wrench, ArrowLeft, Upload } from 'lucide-react';
 import { saveBuild } from '@/lib/ownerBuildStorage';
 import { toast } from '@/hooks/use-toast';
 
@@ -23,15 +25,26 @@ export default function ProgramBuilder() {
   const [params] = useSearchParams();
   const initialVideoId = params.get('videoId') ?? '';
 
-  const { videos, loading: videosLoading } = useVideoLibrary({ limit: 200 });
+  const { videos, tags, loading: videosLoading, refetch } = useVideoLibrary({ limit: 200 });
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [videoId, setVideoId] = useState(initialVideoId);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [pendingSelect, setPendingSelect] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !isOwner) navigate('/dashboard');
   }, [isOwner, loading, navigate]);
+
+  // Auto-select the freshly uploaded video once it appears in the list.
+  useEffect(() => {
+    if (!pendingSelect) return;
+    if (videos.some((v) => v.id === pendingSelect)) {
+      setVideoId(pendingSelect);
+      setPendingSelect(null);
+    }
+  }, [videos, pendingSelect]);
 
   if (loading) {
     return (
@@ -43,6 +56,13 @@ export default function ProgramBuilder() {
     );
   }
   if (!isOwner) return null;
+
+  const handleUploadSuccess = (newVideoId?: string) => {
+    setUploadOpen(false);
+    if (newVideoId) setPendingSelect(newVideoId);
+    refetch();
+    toast({ title: 'Video added', description: newVideoId ? 'Set as your anchor video.' : 'Available in the picker.' });
+  };
 
   const handleSave = () => {
     saveBuild({
@@ -105,21 +125,20 @@ export default function ProgramBuilder() {
         </Card>
 
         <Card className="p-6 space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Anchor Video</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Anchor Video</h2>
+            <Button variant="outline" size="sm" onClick={() => setUploadOpen(true)}>
+              <Upload className="h-4 w-4 mr-1.5" />
+              Upload new video
+            </Button>
+          </div>
           {videosLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading library…
             </div>
           ) : videos.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No videos in your library yet.{' '}
-              <button
-                className="underline text-foreground"
-                onClick={() => navigate('/owner?section=videos')}
-              >
-                Add one in the Video Library
-              </button>
-              .
+              No videos in your library yet. Click <span className="text-foreground font-medium">Upload new video</span> above to add one.
             </p>
           ) : (
             <Select value={videoId} onValueChange={setVideoId}>
@@ -151,6 +170,15 @@ export default function ProgramBuilder() {
           <Button onClick={handleSave} disabled={!name.trim()}>Save Program</Button>
         </div>
       </div>
+
+      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Upload new video</DialogTitle>
+          </DialogHeader>
+          <VideoUploadWizard tags={tags} onSuccess={handleUploadSuccess} fastMode />
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
