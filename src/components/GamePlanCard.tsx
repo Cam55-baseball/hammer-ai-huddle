@@ -16,7 +16,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info, GraduationCap, SkipForward, ArrowRight, NotebookPen, Flame, AlertTriangle, CheckCircle2, Moon } from 'lucide-react';
-import { NonNegotiableBadge } from '@/components/identity/NonNegotiableBadge';
+
 import { useDayState } from '@/hooks/useDayState';
 import { useDailyOutcome, type DailyOutcomeStatus } from '@/hooks/useDailyOutcome';
 import { Badge } from '@/components/ui/badge';
@@ -1159,7 +1159,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           "group relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
           task.completed && "bg-green-500/20 border-green-500/50",
-          isNN && !task.completed && "border-l-4 border-l-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]",
+          // NN tasks no longer get a red border/glow on the row — full NN context lives in the task detail.
           skipDimming && isCustom && "opacity-60 grayscale pointer-events-none",
           showTimeBadge && "pt-8"
         )}
@@ -1221,7 +1221,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               )}>
                 {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
               </h3>
-              {isNN && <NonNegotiableBadge />}
+              {isNN && (
+                <span
+                  aria-label="Non-Negotiable"
+                  title="Non-Negotiable — required for today's standard"
+                  className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-400"
+                >
+                  <Flame className="h-2.5 w-2.5 fill-red-500/60" />
+                </span>
+              )}
               {isCustom && !task.completed && (
                 <span 
                   className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"

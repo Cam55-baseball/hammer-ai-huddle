@@ -38,9 +38,24 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
 
   switch (ev.event_type) {
     case 'nn_miss': {
-      const n = ev.magnitude ?? 1;
+      const titles = Array.isArray((ev.metadata as any)?.missed_today_titles)
+        ? ((ev.metadata as any).missed_today_titles as string[])
+        : [];
+      const n = Number((ev.metadata as any)?.missed_today_count ?? ev.magnitude ?? 0);
+      let text: string;
+      if (n <= 0) {
+        text = "Today's standard isn't met yet. Open Non-Negotiables to fix it.";
+      } else if (n === 1 && titles[0]) {
+        text = `You haven't done ${titles[0]} yet today. Lock it in.`;
+      } else if (n >= 2 && titles.length >= 2) {
+        text = `${n} non-negotiables still open today: ${titles.slice(0, 2).join(', ')}. Lock them in.`;
+      } else if (n >= 2) {
+        text = `${n} non-negotiables still open today. Lock them in.`;
+      } else {
+        text = "Today's standard isn't met yet. Open Non-Negotiables to fix it.";
+      }
       return {
-        text: n > 1 ? `Standard broken — ${n} non-negotiables missed. Fix it now.` : 'Standard broken. Fix it now.',
+        text,
         tone: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
         Icon: AlertTriangle,
       };

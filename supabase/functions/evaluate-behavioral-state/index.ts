@@ -45,12 +45,27 @@ function weekKey(ds: string): string {
 
 function eventCopy(type: string, ctx: any): { command_text: string; action_type: string; action_payload: any } {
   switch (type) {
-    case "nn_miss":
+    case "nn_miss": {
+      const titles: string[] = Array.isArray(ctx.missed_today_titles) ? ctx.missed_today_titles : [];
+      const count: number = Number(ctx.missed_today_count ?? 0);
+      let command_text: string;
+      if (count <= 0) {
+        command_text = "Today's standard isn't met yet. Open Non-Negotiables to fix it.";
+      } else if (count === 1 && titles[0]) {
+        command_text = `You haven't done ${titles[0]} yet today. Lock it in.`;
+      } else if (count >= 2 && titles.length >= 2) {
+        command_text = `${count} non-negotiables still open today: ${titles.slice(0, 2).join(", ")}. Lock them in.`;
+      } else if (count >= 2) {
+        command_text = `${count} non-negotiables still open today. Lock them in.`;
+      } else {
+        command_text = "Today's standard isn't met yet. Open Non-Negotiables to fix it.";
+      }
       return {
-        command_text: "Standard broken. Fix it now.",
+        command_text,
         action_type: "complete_nn",
         action_payload: ctx.smallest_nn_template_id ? { template_id: ctx.smallest_nn_template_id } : {},
       };
+    }
     case "rest_overuse":
       return {
         command_text: "Rest limit exceeded — standard slipping.",
@@ -237,12 +252,15 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   // 5. NN templates
   const { data: nnTemplates } = await supabase
     .from("custom_activity_templates")
-    .select("id, estimated_duration_min")
+    .select("id, estimated_duration_min, title, display_nickname")
     .eq("user_id", userId).eq("is_non_negotiable", true).is("deleted_at", null);
   const nnList = (nnTemplates ?? []).slice().sort(
     (a: any, b: any) => (a.estimated_duration_min ?? 999) - (b.estimated_duration_min ?? 999),
   );
   const nnIds: string[] = nnList.map((t: any) => t.id);
+  const nnTitleById = new Map<string, string>(
+    nnList.map((t: any) => [t.id, String(t.display_nickname || t.title || "Non-Negotiable")]),
+  );
   const smallestNnId: string | null = nnList[0]?.id ?? null;
 
   // Previous tier (for DDA)
@@ -367,8 +385,8 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
   if (prevSnap && Number(prevSnap.consistency_score) < 65 && score >= 80)
     pushEvent("consistency_recover", score - Number(prevSnap.consistency_score), {});
 
-  if (nnMiss7 > 0) pushEvent("nn_miss", nnMiss7, { window_days: 7 },
-    { smallest_nn_template_id: smallestNnId });
+  // nn_miss is emitted further down — only when TODAY has unmet NNs and the day
+  // isn't rest/injury/skip/push-complete. See block after dedupeToday is defined.
 
   if (restDays7 > maxRestPerWeek)
     pushEvent("rest_overuse", restDays7 - maxRestPerWeek, { rest_days_7d: restDays7, cap: maxRestPerWeek });
@@ -381,6 +399,39 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
       .gte("created_at", eventsTodaySince).limit(1);
     return !!(data && data.length);
   };
+
+  // Today-only NN miss emission. Suppress on rest/injury/skip days; suppress when
+  // today is push and all required NNs are already done. Dedupe to once per day.
+  if (
+    nnIds.length > 0 &&
+    dayTypeToday !== "rest" &&
+    dayTypeToday !== "injury" &&
+    dayTypeToday !== "skip"
+  ) {
+    const requiredIdsToday = ddaRelief ? nnIds.slice(0, -1) : nnIds;
+    const doneToday = completedTemplatesByDay.get(todayUTC) ?? new Set<string>();
+    const missedTodayIds = requiredIdsToday.filter((id) => !doneToday.has(id));
+    if (missedTodayIds.length > 0) {
+      const missedTitles = missedTodayIds.map((id) => nnTitleById.get(id) || "Non-Negotiable");
+      if (!(await dedupeToday("nn_miss"))) {
+        pushEvent(
+          "nn_miss",
+          missedTodayIds.length,
+          {
+            scope: "today",
+            missed_today_count: missedTodayIds.length,
+            missed_today_titles: missedTitles,
+            missed_today_template_ids: missedTodayIds,
+          },
+          {
+            smallest_nn_template_id: missedTodayIds[0] ?? smallestNnId,
+            missed_today_count: missedTodayIds.length,
+            missed_today_titles: missedTitles,
+          },
+        );
+      }
+    }
+  }
 
   if (dayTypeToday === "skip") {
     if (!(await dedupeToday("skip_day_used")))
