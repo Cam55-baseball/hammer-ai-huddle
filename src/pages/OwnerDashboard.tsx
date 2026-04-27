@@ -502,6 +502,7 @@ const OwnerDashboard = () => {
             <h2 className="text-2xl font-bold">{sectionLabels[activeSection]}</h2>
             <p className="text-sm text-muted-foreground mt-1">
               {activeSection === 'overview' && 'Platform analytics and key metrics'}
+              {activeSection === 'builds' && 'Create programs, bundles, and consultations — and see what you\'ve made'}
               {activeSection === 'users' && 'Manage user accounts and admin privileges'}
               {activeSection === 'admin-requests' && 'Review pending admin access requests'}
               {activeSection === 'scout-applications' && 'Review scout and coach applications'}
