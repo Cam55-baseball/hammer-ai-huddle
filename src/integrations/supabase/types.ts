@@ -5747,6 +5747,45 @@ export type Database = {
         }
         Relationships: []
       }
+      purchases: {
+        Row: {
+          amount_cents: number | null
+          build_id: string
+          build_name: string | null
+          build_type: string
+          buyer_email: string
+          buyer_user_id: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          stripe_session_id: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          build_id: string
+          build_name?: string | null
+          build_type: string
+          buyer_email: string
+          buyer_user_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          stripe_session_id: string
+        }
+        Update: {
+          amount_cents?: number | null
+          build_id?: string
+          build_name?: string | null
+          build_type?: string
+          buyer_email?: string
+          buyer_user_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          stripe_session_id?: string
+        }
+        Relationships: []
+      }
       recap_engine_settings: {
         Row: {
           disabled_sections: string[]

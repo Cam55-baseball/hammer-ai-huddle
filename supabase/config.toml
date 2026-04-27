@@ -251,3 +251,6 @@ verify_jwt = false
 
 [functions.engine-data-integrity-check]
 verify_jwt = false
+
+[functions.get-build-purchase]
+verify_jwt = true
