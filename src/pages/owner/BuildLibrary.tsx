@@ -9,8 +9,11 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Library } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Library, Send } from 'lucide-react';
 import { getBuilds, type BuildItem } from '@/lib/ownerBuildStorage';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const TYPE_LABEL: Record<BuildItem['type'], string> = {
   program: 'Program',
@@ -30,6 +33,33 @@ export default function BuildLibrary() {
   const { isOwner, loading } = useOwnerAccess();
   const navigate = useNavigate();
   const [builds, setBuilds] = useState<BuildItem[]>([]);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const handleSell = async (build: BuildItem) => {
+    setPendingId(build.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-build-checkout', {
+        body: { build },
+      });
+      if (error || !data?.url) {
+        toast({
+          title: 'Could not start checkout',
+          description: error?.message ?? 'Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      toast({
+        title: 'Checkout error',
+        description: err instanceof Error ? err.message : 'Unexpected error',
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !isOwner) navigate('/dashboard');
@@ -84,6 +114,25 @@ export default function BuildLibrary() {
                       video: {b.meta.videoId}
                     </p>
                   )}
+                </div>
+                <div className="shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSell(b)}
+                    disabled={pendingId === b.id}
+                  >
+                    {pendingId === b.id ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        Opening…
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-3.5 w-3.5 mr-1.5" />
+                        Sell / Share
+                      </>
+                    )}
+                  </Button>
                 </div>
               </Card>
             ))}
