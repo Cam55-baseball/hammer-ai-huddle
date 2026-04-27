@@ -599,7 +599,103 @@ const OwnerDashboard = () => {
             </div>
           )}
 
-          {/* User Management Section */}
+          {/* Builds Section */}
+          {activeSection === 'builds' && (
+            <div className="space-y-6">
+              {/* Quick Create */}
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Quick Create</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col gap-2"
+                    onClick={() => navigate('/owner/open_program_builder')}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="font-semibold">New Program</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col gap-2"
+                    onClick={() => navigate('/owner/open_bundle_builder')}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="font-semibold">New Bundle</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col gap-2"
+                    onClick={() => navigate('/owner/open_consultation_flow')}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="font-semibold">New Consultation</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Your Builds */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Your Builds</h3>
+                  <Button variant="link" size="sm" onClick={() => navigate('/owner/builds')} className="h-auto p-0 text-xs">
+                    Open full library page →
+                  </Button>
+                </div>
+                {builds.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <p className="text-muted-foreground text-sm">
+                      No builds yet — use Quick Create above.
+                    </p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {builds.map((b) => (
+                      <Card key={b.id} className="p-4 flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-semibold truncate">{b.name || 'Untitled'}</h4>
+                            <Badge variant="secondary" className="text-[10px] capitalize">{b.type}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(b.createdAt).toLocaleString()}
+                          </p>
+                          {b.meta?.videoId && (
+                            <p className="text-[11px] font-mono text-muted-foreground mt-1 truncate">
+                              video: {b.meta.videoId}
+                            </p>
+                          )}
+                        </div>
+                        <div className="shrink-0 flex flex-col gap-1.5">
+                          <Button
+                            size="sm"
+                            onClick={() => handleSellBuild(b)}
+                            disabled={pendingBuildId === b.id}
+                          >
+                            {pendingBuildId === b.id ? (
+                              <>
+                                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                Opening…
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-3.5 w-3.5 mr-1.5" />
+                                Sell / Share
+                              </>
+                            )}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleViewBuyers(b)}>
+                            <Users className="h-3.5 w-3.5 mr-1.5" />
+                            View Buyers
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeSection === 'users' && (
             <Card className="overflow-hidden">
               <div className="divide-y">
