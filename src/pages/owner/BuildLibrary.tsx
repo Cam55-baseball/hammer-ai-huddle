@@ -140,6 +140,13 @@ export default function BuildLibrary() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold truncate">{b.name || 'Untitled'}</h3>
                     <Badge variant="secondary" className="text-[10px]">{TYPE_LABEL[b.type]}</Badge>
+                    {formatPrice(b.meta) ? (
+                      <Badge className="text-[10px]">{formatPrice(b.meta)}</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-destructive border-destructive/40">
+                        No price set
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{formatWhen(b.createdAt)}</p>
                   {b.type === 'bundle' && Array.isArray(b.meta?.videoIds) ? (
@@ -170,6 +177,10 @@ export default function BuildLibrary() {
                       </>
                     )}
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => openEdit(b)}>
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                    Edit price
+                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -196,6 +207,38 @@ export default function BuildLibrary() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit price</DialogTitle>
+            <DialogDescription>
+              {editing?.name || 'Untitled'} — what buyers pay at checkout.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="edit-price">Price (USD)</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <Input
+                id="edit-price"
+                type="number"
+                inputMode="decimal"
+                min="0.5"
+                step="0.01"
+                value={editPrice}
+                onChange={(e) => setEditPrice(e.target.value)}
+                className="pl-7"
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button onClick={savePrice}>Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
