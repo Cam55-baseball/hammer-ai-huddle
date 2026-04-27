@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film, Package, Send, Loader2, Plus } from "lucide-react";
+import { getBuilds, type BuildItem } from "@/lib/ownerBuildStorage";
 import { VideoLibraryManager } from "@/components/owner/VideoLibraryManager";
 import { PromoEngineTab } from "@/components/promo-engine/PromoEngineTab";
 import { DrillCmsManager } from "@/components/owner/DrillCmsManager";
@@ -45,6 +46,7 @@ interface AdminRequest {
 
 const sectionLabels: Record<OwnerSection, string> = {
   'overview': 'Overview',
+  'builds': 'Builds',
   'users': 'User Management',
   'admin-requests': 'Admin Requests',
   'scout-applications': 'Scout Applications',
@@ -81,6 +83,53 @@ const OwnerDashboard = () => {
   const [rankingsVisible, setRankingsVisible] = useState(true);
   const [activeSection, setActiveSection] = useState<OwnerSection>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [builds, setBuilds] = useState<BuildItem[]>([]);
+  const [pendingBuildId, setPendingBuildId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeSection === 'builds') {
+      setBuilds(getBuilds());
+    }
+  }, [activeSection]);
+
+  const handleSellBuild = async (build: BuildItem) => {
+    setPendingBuildId(build.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-build-checkout', {
+        body: { build },
+      });
+      if (error || !data?.url) {
+        toast({
+          title: 'Could not start checkout',
+          description: error?.message ?? 'Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      toast({
+        title: 'Checkout error',
+        description: err instanceof Error ? err.message : 'Unexpected error',
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingBuildId(null);
+    }
+  };
+
+  const handleViewBuyers = async (build: BuildItem) => {
+    const { data, error } = await supabase
+      .from('user_build_access')
+      .select('user_id, granted_at')
+      .eq('build_id', build.id)
+      .order('granted_at', { ascending: false });
+    console.log('[Buyers]', build.id, { rows: data ?? [], error });
+    toast({
+      title: 'Buyers logged to console',
+      description: `${data?.length ?? 0} buyer(s) for "${build.name || 'Untitled'}"`,
+    });
+  };
 
   useEffect(() => {
     if (!loading && !isOwner) {
@@ -453,6 +502,7 @@ const OwnerDashboard = () => {
             <h2 className="text-2xl font-bold">{sectionLabels[activeSection]}</h2>
             <p className="text-sm text-muted-foreground mt-1">
               {activeSection === 'overview' && 'Platform analytics and key metrics'}
+              {activeSection === 'builds' && 'Create programs, bundles, and consultations — and see what you\'ve made'}
               {activeSection === 'users' && 'Manage user accounts and admin privileges'}
               {activeSection === 'admin-requests' && 'Review pending admin access requests'}
               {activeSection === 'scout-applications' && 'Review scout and coach applications'}
@@ -549,7 +599,103 @@ const OwnerDashboard = () => {
             </div>
           )}
 
-          {/* User Management Section */}
+          {/* Builds Section */}
+          {activeSection === 'builds' && (
+            <div className="space-y-6">
+              {/* Quick Create */}
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Quick Create</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col gap-2"
+                    onClick={() => navigate('/owner/open_program_builder')}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="font-semibold">New Program</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col gap-2"
+                    onClick={() => navigate('/owner/open_bundle_builder')}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="font-semibold">New Bundle</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex-col gap-2"
+                    onClick={() => navigate('/owner/open_consultation_flow')}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="font-semibold">New Consultation</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Your Builds */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Your Builds</h3>
+                  <Button variant="link" size="sm" onClick={() => navigate('/owner/builds')} className="h-auto p-0 text-xs">
+                    Open full library page →
+                  </Button>
+                </div>
+                {builds.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <p className="text-muted-foreground text-sm">
+                      No builds yet — use Quick Create above.
+                    </p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {builds.map((b) => (
+                      <Card key={b.id} className="p-4 flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-semibold truncate">{b.name || 'Untitled'}</h4>
+                            <Badge variant="secondary" className="text-[10px] capitalize">{b.type}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(b.createdAt).toLocaleString()}
+                          </p>
+                          {b.meta?.videoId && (
+                            <p className="text-[11px] font-mono text-muted-foreground mt-1 truncate">
+                              video: {b.meta.videoId}
+                            </p>
+                          )}
+                        </div>
+                        <div className="shrink-0 flex flex-col gap-1.5">
+                          <Button
+                            size="sm"
+                            onClick={() => handleSellBuild(b)}
+                            disabled={pendingBuildId === b.id}
+                          >
+                            {pendingBuildId === b.id ? (
+                              <>
+                                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                Opening…
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-3.5 w-3.5 mr-1.5" />
+                                Sell / Share
+                              </>
+                            )}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleViewBuyers(b)}>
+                            <Users className="h-3.5 w-3.5 mr-1.5" />
+                            View Buyers
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeSection === 'users' && (
             <Card className="overflow-hidden">
               <div className="divide-y">
