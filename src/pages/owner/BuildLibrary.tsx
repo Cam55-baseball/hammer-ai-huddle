@@ -44,6 +44,29 @@ export default function BuildLibrary() {
   const navigate = useNavigate();
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<BuildItem | null>(null);
+  const [editPrice, setEditPrice] = useState('');
+
+  const openEdit = (b: BuildItem) => {
+    setEditing(b);
+    const p = b.meta?.price;
+    setEditPrice(typeof p === 'number' ? String(p) : typeof p === 'string' ? p : '');
+  };
+
+  const savePrice = () => {
+    if (!editing) return;
+    const n = Number(editPrice);
+    if (!Number.isFinite(n) || n < 0.5) {
+      toast({ title: 'Invalid price', description: 'Minimum $0.50', variant: 'destructive' });
+      return;
+    }
+    const next = updateBuild(editing.id, { meta: { ...editing.meta, price: n } });
+    if (next) {
+      setBuilds((prev) => prev.map((b) => (b.id === next.id ? next : b)));
+      toast({ title: 'Price updated', description: `${next.name} • $${n.toFixed(2)}` });
+    }
+    setEditing(null);
+  };
 
   const handleSell = async (build: BuildItem) => {
     setPendingId(build.id);
