@@ -453,8 +453,126 @@ export function CustomActivityDetailDialog({
               </div>
             )}
 
-            {/* Quick Complete empty state — no sub-tasks to track */}
-            {totalCheckableCount === 0 && (
+            {/* === Non-Negotiable / System Standard Context Block ===
+                When the template carries Purpose / Action / Success Criteria
+                (set by Hammer for system NN cards like Daily Mental Reset),
+                render them as a real, depth-rich task brief. */}
+            {(() => {
+              const purpose = (template.purpose ?? '').trim();
+              const action = (template.action ?? '').trim();
+              const success = (template.success_criteria ?? '').trim();
+              const source = (template.source ?? '').trim();
+              const hasNNContext = !!(purpose || action || success);
+              if (!hasNNContext) return null;
+
+              return (
+                <div
+                  className="rounded-xl border p-4 space-y-3"
+                  style={{
+                    borderColor: `${customColor}40`,
+                    backgroundColor: `${customColor}08`,
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <h4
+                      className="text-[11px] font-black uppercase tracking-widest"
+                      style={{ color: customColor }}
+                    >
+                      The Standard
+                    </h4>
+                    {source && (
+                      <span
+                        className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                        style={{
+                          color: customColor,
+                          borderColor: `${customColor}50`,
+                        }}
+                      >
+                        Hammer · {source}
+                      </span>
+                    )}
+                  </div>
+
+                  {purpose && (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                        Why
+                      </div>
+                      <p className="text-sm italic text-muted-foreground leading-snug">
+                        {purpose}
+                      </p>
+                    </div>
+                  )}
+
+                  {action && (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                        Do This
+                      </div>
+                      <p className="text-base font-semibold text-foreground leading-snug">
+                        {action}
+                      </p>
+                    </div>
+                  )}
+
+                  {success && (
+                    <div className="flex items-start gap-2 pt-1 border-t border-border/40">
+                      <Target
+                        className="h-4 w-4 mt-0.5 flex-shrink-0"
+                        style={{ color: customColor }}
+                      />
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">
+                          Counts as Done
+                        </div>
+                        <p className="text-sm font-medium text-foreground leading-snug">
+                          {success}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* === Embedded Reset Timer ===
+                Surface a real interactive task for timed NN standards
+                (e.g. Daily Mental Reset = 2 min). Triggers when the action
+                implies a timed focus block OR a duration is declared. */}
+            {(() => {
+              const purpose = (template.purpose ?? '').trim();
+              const action = (template.action ?? '').trim();
+              const success = (template.success_criteria ?? '').trim();
+              const hasNNContext = !!(purpose || action || success);
+              if (!hasNNContext) return null;
+
+              const blob = `${action} ${success} ${template.title ?? ''}`.toLowerCase();
+              const looksTimed =
+                /\bminute|\bmin\b|breath|reset|focus|breathe|pause/.test(blob);
+              if (!looksTimed && !template.duration_minutes) return null;
+
+              const minutes = template.duration_minutes ?? 2;
+              const seconds = Math.max(15, Math.min(60 * 60, minutes * 60));
+
+              return (
+                <NNResetTimer
+                  durationSeconds={seconds}
+                  accentColor={customColor}
+                  onComplete={() => {
+                    if (!task.completed) onComplete();
+                  }}
+                />
+              );
+            })()}
+
+            {/* Quick Complete empty state — only when no sub-tasks AND no NN context.
+                NN cards with context get the Standard block + timer above and
+                the standard Mark Complete control still appears at the bottom
+                via the existing dialog actions. */}
+            {totalCheckableCount === 0 &&
+              !((template.purpose ?? '').trim() ||
+                (template.action ?? '').trim() ||
+                (template.success_criteria ?? '').trim()) && (
               <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/40 border border-border/50 text-center space-y-4">
                 <div 
                   className="p-3 rounded-full"
@@ -486,6 +604,27 @@ export function CustomActivityDetailDialog({
                 </Button>
               </div>
             )}
+
+            {/* Manual Mark Complete for NN-context cards with no sub-tasks
+                (escape hatch + visible action when timer isn't applicable). */}
+            {totalCheckableCount === 0 &&
+              ((template.purpose ?? '').trim() ||
+                (template.action ?? '').trim() ||
+                (template.success_criteria ?? '').trim()) && (
+                <Button
+                  onClick={() => {
+                    onComplete();
+                    onOpenChange(false);
+                  }}
+                  className="w-full gap-2 font-bold"
+                  style={{ backgroundColor: customColor }}
+                >
+                  <Check className="h-4 w-4" />
+                  {task.completed
+                    ? t('customActivity.detail.markedComplete')
+                    : t('customActivity.detail.markComplete')}
+                </Button>
+              )}
 
             {/* Traditional Exercises Section */}
             {template.exercises && Array.isArray(template.exercises) && (template.exercises as Exercise[]).length > 0 && (
