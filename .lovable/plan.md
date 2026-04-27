@@ -1,97 +1,179 @@
-## Phase 11 — Stripe Checkout for Owner Builds
+## Phase 12 — Stripe Webhook Build Payment Delivery
 
-Activate real monetization on Phase 10.5 builds. Owner clicks "Sell / Share" on a saved build → Stripe Checkout session → Success page. No DB schema changes, no impact to ranking (Phase 6) or monetization eligibility (Phase 7).
+Extend the existing `stripe-webhook` to handle one-off build purchases, persist them in a new `purchases` table, and surface a meaningful confirmation on `/success`. No impact to ranking (Phase 6), monetization eligibility (Phase 7), or the existing subscription flow.
 
 ---
 
 ### Architecture
 
 ```text
-BuildLibrary  ──[Sell/Share]──▶  edge fn: create-build-checkout
-                                       │  (validates owner, builds Stripe session
-                                       │   from BuildItem payload sent by client)
-                                       ▼
-                                Stripe Checkout (hosted)
-                                       │
-                          success_url ─┴─ cancel_url
-                                  │            │
-                               /success     /owner/builds
+Stripe Checkout (build)
+        │
+        ▼
+checkout.session.completed
+        │
+        ▼
+stripe-webhook (existing, extended)
+   ├─ subscription path  → unchanged
+   └─ one-off build path → INSERT into public.purchases
+                            (build_id, build_type, buyer_email, amount, session_id)
+        ▼
+/success page
+   └─ get-build-purchase edge fn (by session_id)
+        └─ returns { build_type, build_name, buyer_email }
+              ▼
+         Conditional message:
+           consultation → "We will contact you"
+           program/bundle → "Access will be granted shortly"
 ```
-
-Builds live in `localStorage` (Phase 10.5), so the client sends the full `BuildItem` to the edge function — the function validates shape + price and creates the session. No new tables.
 
 ---
 
 ### Files
 
 **New**
-1. `supabase/functions/create-build-checkout/index.ts` — owner-gated Stripe Checkout session creator for a single `BuildItem`.
-2. `src/pages/Success.tsx` — post-payment confirmation page.
+1. Migration: create `public.purchases` table + RLS.
+2. `supabase/functions/get-build-purchase/index.ts` — auth'd lookup of a purchase by `session_id` for the `/success` page.
 
 **Edited**
-3. `src/pages/owner/BuildLibrary.tsx` — add "Sell / Share" button per build that invokes the function and redirects.
-4. `src/App.tsx` — register lazy `/success` route.
+3. `supabase/functions/stripe-webhook/index.ts` — extend `handleCheckoutCompleted` to branch on `metadata.build_id`.
+4. `supabase/config.toml` — register `get-build-purchase` (`verify_jwt = true`).
+5. `src/pages/Success.tsx` — fetch purchase, render type-specific delivery message.
 
-No edits to ranking, monetization eligibility, builder pages, or storage utility.
-
----
-
-### 1. Edge function `create-build-checkout`
-
-- Standard CORS + JWT validation against `auth.getUser(token)`.
-- Verify caller has `owner` role in `user_roles` (mirrors existing `create-checkout` pattern); reject 403 otherwise.
-- Validate request body with Zod:
-  ```ts
-  { build: { id, type: 'program'|'bundle'|'consultation', name: string(1..200),
-             meta: { price?: string|number, videoId?: string }, createdAt: number } }
-  ```
-- Resolve unit amount (cents):
-  - If `meta.price` parses to a positive number → use it (× 100, rounded).
-  - Else fall back to a default per type: program $99, bundle $49, consultation $199 (constants at top of file, easy to tune).
-- Create Stripe customer lookup by email (reuse pattern from `create-checkout`).
-- `stripe.checkout.sessions.create({ mode: 'payment', line_items: [{ price_data: { currency: 'usd', unit_amount, product_data: { name: build.name, metadata: { build_id, build_type, video_id } } }, quantity: 1 }], success_url: '${origin}/success?session_id={CHECKOUT_SESSION_ID}&build=${build.id}', cancel_url: '${origin}/owner/builds', metadata: { user_id, build_id, build_type } })`.
-- Use `price_data` (not pre-created Stripe products) because builds are owner-defined locally — no per-build Stripe product needed. This is intentional and matches the "no architecture changes later" goal: Phase 12 can swap to real `price` IDs without UI changes.
-- Returns `{ url }`.
-- `verify_jwt` left at default (validated in code).
-
-### 2. `src/pages/Success.tsx`
-
-- Reads `session_id` and `build` from query string.
-- Card with: ✅ "Payment Successful", "Thank you — your purchase is confirmed.", small line "Build ID: {build}", placeholder "Delivery details will follow shortly." 
-- Buttons: "Back to Dashboard" → `/dashboard`, "View Builds" → `/owner/builds` (owner only — show conditionally via `useOwnerAccess`).
-- No gated content / unlock logic (Phase 12).
-
-### 3. `BuildLibrary.tsx` updates
-
-- Add `Button` "Sell / Share" (with `Send` icon) in each build's `Card`.
-- `onClick` handler:
-  ```ts
-  const { data, error } = await supabase.functions.invoke('create-build-checkout', { body: { build } });
-  if (error || !data?.url) { toast({ title: 'Could not start checkout', variant: 'destructive' }); return; }
-  window.location.href = data.url;
-  ```
-- Loading state per-row (disable button, swap label to "Opening…").
-- Owner gating already enforced by page-level `useOwnerAccess`.
-
-### 4. `App.tsx`
-
-- `const Success = lazyWithRetry(() => import("./pages/Success"));`
-- `<Route path="/success" element={<Success />} />` near other top-level routes.
+No changes to `create-build-checkout`, `BuildLibrary`, ranking, or monetization code.
 
 ---
 
-### Secrets / infra
-- `STRIPE_SECRET_KEY` — already configured. ✅
-- No new secrets required. `STRIPE_WEBHOOK_SECRET` exists but unused this phase (Phase 12 will add a webhook for delivery/unlock).
+### 1. `purchases` table (migration)
 
-### Out of scope (Phase 12)
-- Webhook → DB write of purchases
-- Access control / program unlock / enrollment
-- Per-build Stripe Product/Price persistence
-- Refunds, customer portal for these one-offs
+```sql
+create table public.purchases (
+  id uuid primary key default gen_random_uuid(),
+  stripe_session_id text unique not null,
+  build_id text not null,
+  build_type text not null check (build_type in ('program','bundle','consultation')),
+  build_name text,
+  buyer_email text not null,
+  buyer_user_id uuid references auth.users(id) on delete set null,
+  amount_cents integer,
+  currency text default 'usd',
+  created_at timestamptz not null default now()
+);
+
+alter table public.purchases enable row level security;
+
+-- Buyers can read their own purchases.
+create policy "Buyers read own purchases"
+on public.purchases for select to authenticated
+using (buyer_user_id = auth.uid() or buyer_email = (auth.jwt() ->> 'email'));
+
+-- Owners can read all purchases.
+create policy "Owners read all purchases"
+on public.purchases for select to authenticated
+using (public.has_role(auth.uid(), 'owner'));
+
+-- No client INSERT/UPDATE/DELETE policies → only service role (webhook) writes.
+```
+
+`stripe_session_id UNIQUE` → idempotent webhook re-delivery is safe.
+
+### 2. Webhook extension (`stripe-webhook/index.ts`)
+
+In `handleCheckoutCompleted`, branch before the existing subscription path:
+
+```ts
+const session = event.data.object as Stripe.Checkout.Session;
+
+// One-off build purchase (Phase 11/12)
+if (session.metadata?.build_id) {
+  await handleBuildPurchase(session, supabaseClient);
+  return;
+}
+
+// Existing subscription path — unchanged
+if (!session.subscription) return;
+// ...existing code
+```
+
+New helper:
+
+```ts
+async function handleBuildPurchase(
+  session: Stripe.Checkout.Session,
+  supabaseClient: any
+) {
+  const buildId   = session.metadata?.build_id ?? '';
+  const buildType = session.metadata?.build_type ?? '';
+  const userId    = session.metadata?.user_id ?? null;
+  const email     = session.customer_details?.email ?? session.customer_email ?? '';
+  const name      = session.line_items_data?.[0]?.description ?? null; // best-effort
+  if (!buildId || !buildType || !email) {
+    logStep("Build purchase missing fields", { buildId, buildType, email });
+    return;
+  }
+  const { error } = await supabaseClient.from('purchases').insert({
+    stripe_session_id: session.id,
+    build_id: buildId,
+    build_type: buildType,
+    build_name: name,
+    buyer_email: email,
+    buyer_user_id: userId,
+    amount_cents: session.amount_total ?? null,
+    currency: session.currency ?? 'usd',
+  });
+  if (error && !error.message.includes('duplicate')) {
+    logStep("Purchase insert failed", { message: error.message });
+  } else {
+    logStep("Build purchase recorded", { buildId, buildType });
+  }
+}
+```
+
+Existing idempotency on `processed_webhook_events` plus the `stripe_session_id UNIQUE` constraint make replays safe.
+
+### 3. `get-build-purchase` edge function
+
+- `verify_jwt = true`.
+- Body: `{ session_id: string }`.
+- Validates user via `auth.getUser`, then selects from `purchases` where `stripe_session_id = session_id`. RLS ensures the caller is either the buyer or an owner.
+- Returns `{ build_id, build_type, build_name, buyer_email, amount_cents, created_at }` or 404.
+
+Why a function (vs. direct client query): payment confirmations typically arrive 1–3s after redirect. The function will retry up to ~5x with 600ms backoff before returning 404, smoothing the race between Stripe redirect and webhook write.
+
+### 4. Success page updates (`src/pages/Success.tsx`)
+
+- On mount, if `session_id` present, invoke `get-build-purchase`.
+- Local `useState` for `{ status: 'loading'|'ready'|'pending'|'error', purchase? }`.
+- Render:
+  - Loading: spinner + "Confirming your purchase…"
+  - Pending (404 after retries): "Your payment was received — confirmation is still processing. Refresh in a moment."
+  - Ready:
+    - Headline: "Payment Successful"
+    - "You purchased: **{build_name}**" (fall back to `Build {build_type}`)
+    - Delivery message:
+      - `consultation` → "We will contact you shortly to schedule."
+      - `program` | `bundle` → "Access will be granted shortly."
+- Keep existing buttons (Back to Dashboard / View Builds for owners).
+
+### 5. `supabase/config.toml`
+
+Append:
+```toml
+[functions.get-build-purchase]
+verify_jwt = true
+```
+
+(Existing `stripe-webhook` block with `verify_jwt = false` is unchanged.)
+
+---
+
+### Out of scope (Phase 13)
+- Actual program unlock / bundle access grants / consultation scheduling
+- Owner "Purchases" admin view (data is queryable; UI later)
+- Email receipts (Stripe sends its own)
+- Refund handling
 
 ---
 
 ### Outcome
-Owner: Build Library → Sell/Share → Stripe Checkout → /success.
-Buyer: pays via Stripe, lands on confirmation. Revenue flows; no user-facing exposure of the builder system; ranking + monetization eligibility untouched.
+Buyer pays → webhook records purchase → `/success` shows what they bought + a type-specific delivery message. Owner can later query `purchases` for fulfillment. End-to-end loop closed; ready for Phase 13 access grants.
