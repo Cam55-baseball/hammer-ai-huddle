@@ -344,6 +344,12 @@ async function handleCheckoutCompleted(
   const session = event.data.object as Stripe.Checkout.Session;
   logStep("Checkout completed", { sessionId: session.id, customer: session.customer });
 
+  // PHASE 12 — One-off build purchase (program / bundle / consultation).
+  if (session.metadata?.build_id) {
+    await handleBuildPurchase(session, supabaseClient);
+    return;
+  }
+
   if (!session.subscription) return;
 
   const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
@@ -352,6 +358,55 @@ async function handleCheckoutCompleted(
     supabaseClient,
     stripe
   );
+}
+
+// PHASE 12 — Persist a one-off build purchase. The `purchases` table has
+// stripe_session_id UNIQUE, so re-deliveries are naturally idempotent.
+async function handleBuildPurchase(
+  session: Stripe.Checkout.Session,
+  supabaseClient: any
+) {
+  const buildId = session.metadata?.build_id ?? "";
+  const buildType = session.metadata?.build_type ?? "";
+  const userId = session.metadata?.user_id ?? null;
+  const email =
+    session.customer_details?.email ?? session.customer_email ?? "";
+  // Best-effort name from Stripe's expandable line items, if Stripe ever
+  // populates it on the session payload; otherwise the success page falls
+  // back to a generic "Build {type}" label.
+  const lineItem = (session as any).line_items_data?.[0];
+  const name = lineItem?.description ?? null;
+
+  if (!buildId || !buildType || !email) {
+    logStep("Build purchase missing required fields", {
+      hasBuildId: !!buildId,
+      hasBuildType: !!buildType,
+      hasEmail: !!email,
+    });
+    return;
+  }
+
+  const { error } = await supabaseClient.from("purchases").insert({
+    stripe_session_id: session.id,
+    build_id: buildId,
+    build_type: buildType,
+    build_name: name,
+    buyer_email: email,
+    buyer_user_id: userId,
+    amount_cents: session.amount_total ?? null,
+    currency: session.currency ?? "usd",
+  });
+
+  if (error) {
+    // Duplicate (re-delivery) is expected and safe to ignore.
+    if (error.code === "23505" || error.message?.includes("duplicate")) {
+      logStep("Purchase already recorded (duplicate)", { sessionId: session.id });
+    } else {
+      logStep("Purchase insert failed", { message: error.message });
+    }
+  } else {
+    logStep("Build purchase recorded", { buildId, buildType, sessionId: session.id });
+  }
 }
 
 async function handlePaymentSuccess(
