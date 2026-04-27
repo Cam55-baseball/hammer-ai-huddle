@@ -1,106 +1,97 @@
-## Phase 10.5 — Local Persistence + Owner Build Library
+## Phase 11 — Stripe Checkout for Owner Builds
 
-Add a lightweight localStorage layer so owner-created programs/bundles/consultations persist and are viewable in a new owner-only "Build Library" page. **No DB, no schema, no ranking/monetization changes.**
+Activate real monetization on Phase 10.5 builds. Owner clicks "Sell / Share" on a saved build → Stripe Checkout session → Success page. No DB schema changes, no impact to ranking (Phase 6) or monetization eligibility (Phase 7).
 
 ---
 
-### 1. NEW — `src/lib/ownerBuildStorage.ts`
+### Architecture
 
-Tiny utility around `localStorage` (key: `owner_builds`).
-
-```ts
-export type BuildItem = {
-  id: string;
-  type: 'program' | 'bundle' | 'consultation';
-  name: string;
-  meta: Record<string, any>;
-  createdAt: number;
-};
-
-const KEY = 'owner_builds';
-
-export function saveBuild(item: BuildItem): void { /* try/catch unshift+set */ }
-export function getBuilds(): BuildItem[] { /* try/catch parse, default [] */ }
+```text
+BuildLibrary  ──[Sell/Share]──▶  edge fn: create-build-checkout
+                                       │  (validates owner, builds Stripe session
+                                       │   from BuildItem payload sent by client)
+                                       ▼
+                                Stripe Checkout (hosted)
+                                       │
+                          success_url ─┴─ cancel_url
+                                  │            │
+                               /success     /owner/builds
 ```
 
-All access wrapped in `try/catch` for SSR/quota safety.
+Builds live in `localStorage` (Phase 10.5), so the client sends the full `BuildItem` to the edge function — the function validates shape + price and creates the session. No new tables.
 
 ---
 
-### 2. EDIT — Three builder pages (replace console-log save handlers)
+### Files
 
-**`src/pages/owner/ProgramBuilder.tsx`** — `handleSave`:
-```ts
-saveBuild({
-  id: crypto.randomUUID(),
-  type: 'program',
-  name,
-  meta: { description, videoId },
-  createdAt: Date.now(),
-});
-console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId });
-// toast success + navigate to /owner/builds
-```
+**New**
+1. `supabase/functions/create-build-checkout/index.ts` — owner-gated Stripe Checkout session creator for a single `BuildItem`.
+2. `src/pages/Success.tsx` — post-payment confirmation page.
 
-**`src/pages/owner/BundleBuilder.tsx`** — `handleSave`:
-```ts
-saveBuild({ id: crypto.randomUUID(), type: 'bundle', name, meta: { videoId }, createdAt: Date.now() });
-```
+**Edited**
+3. `src/pages/owner/BuildLibrary.tsx` — add "Sell / Share" button per build that invokes the function and redirects.
+4. `src/App.tsx` — register lazy `/success` route.
 
-**`src/pages/owner/ConsultationFlow.tsx`** — `handleCreate`:
-```ts
-saveBuild({ id: crypto.randomUUID(), type: 'consultation', name: title, meta: { price, videoId }, createdAt: Date.now() });
-```
-
-Each page: keep existing `console.log`, add a `toast` confirming save, then `navigate('/owner/builds')`.
+No edits to ranking, monetization eligibility, builder pages, or storage utility.
 
 ---
 
-### 3. NEW — `src/pages/owner/BuildLibrary.tsx`
+### 1. Edge function `create-build-checkout`
 
-Owner-gated page (mirrors existing builder pages):
-- `useOwnerAccess()` redirect guard + `Loader2` while loading
-- `DashboardLayout` wrapper
-- Header: "Your Builds" with `Library` icon
-- Reads `getBuilds()` once on mount into `useState`
-- Renders list of `Card`s — each shows name, type badge, formatted `createdAt`, and a small meta line (e.g. videoId)
-- Empty state: "No builds yet — create one from your videos."
+- Standard CORS + JWT validation against `auth.getUser(token)`.
+- Verify caller has `owner` role in `user_roles` (mirrors existing `create-checkout` pattern); reject 403 otherwise.
+- Validate request body with Zod:
+  ```ts
+  { build: { id, type: 'program'|'bundle'|'consultation', name: string(1..200),
+             meta: { price?: string|number, videoId?: string }, createdAt: number } }
+  ```
+- Resolve unit amount (cents):
+  - If `meta.price` parses to a positive number → use it (× 100, rounded).
+  - Else fall back to a default per type: program $99, bundle $49, consultation $199 (constants at top of file, easy to tune).
+- Create Stripe customer lookup by email (reuse pattern from `create-checkout`).
+- `stripe.checkout.sessions.create({ mode: 'payment', line_items: [{ price_data: { currency: 'usd', unit_amount, product_data: { name: build.name, metadata: { build_id, build_type, video_id } } }, quantity: 1 }], success_url: '${origin}/success?session_id={CHECKOUT_SESSION_ID}&build=${build.id}', cancel_url: '${origin}/owner/builds', metadata: { user_id, build_id, build_type } })`.
+- Use `price_data` (not pre-created Stripe products) because builds are owner-defined locally — no per-build Stripe product needed. This is intentional and matches the "no architecture changes later" goal: Phase 12 can swap to real `price` IDs without UI changes.
+- Returns `{ url }`.
+- `verify_jwt` left at default (validated in code).
+
+### 2. `src/pages/Success.tsx`
+
+- Reads `session_id` and `build` from query string.
+- Card with: ✅ "Payment Successful", "Thank you — your purchase is confirmed.", small line "Build ID: {build}", placeholder "Delivery details will follow shortly." 
+- Buttons: "Back to Dashboard" → `/dashboard`, "View Builds" → `/owner/builds` (owner only — show conditionally via `useOwnerAccess`).
+- No gated content / unlock logic (Phase 12).
+
+### 3. `BuildLibrary.tsx` updates
+
+- Add `Button` "Sell / Share" (with `Send` icon) in each build's `Card`.
+- `onClick` handler:
+  ```ts
+  const { data, error } = await supabase.functions.invoke('create-build-checkout', { body: { build } });
+  if (error || !data?.url) { toast({ title: 'Could not start checkout', variant: 'destructive' }); return; }
+  window.location.href = data.url;
+  ```
+- Loading state per-row (disable button, swap label to "Opening…").
+- Owner gating already enforced by page-level `useOwnerAccess`.
+
+### 4. `App.tsx`
+
+- `const Success = lazyWithRetry(() => import("./pages/Success"));`
+- `<Route path="/success" element={<Success />} />` near other top-level routes.
 
 ---
 
-### 4. ROUTE — `src/App.tsx`
+### Secrets / infra
+- `STRIPE_SECRET_KEY` — already configured. ✅
+- No new secrets required. `STRIPE_WEBHOOK_SECRET` exists but unused this phase (Phase 12 will add a webhook for delivery/unlock).
 
-Add lazy import + route alongside the other `/owner/*` routes (line ~173):
-```tsx
-const BuildLibrary = lazyWithRetry(() => import("./pages/owner/BuildLibrary"));
-<Route path="/owner/builds" element={<BuildLibrary />} />
-```
-
----
-
-### 5. OwnerDashboard link
-
-In `src/pages/OwnerDashboard.tsx`, add a small "View Your Builds" button/link → `/owner/builds` near the top of the dashboard. (Owner-only page already, so no extra gating needed.)
+### Out of scope (Phase 12)
+- Webhook → DB write of purchases
+- Access control / program unlock / enrollment
+- Per-build Stripe Product/Price persistence
+- Refunds, customer portal for these one-offs
 
 ---
 
-### 6. Files
-
-**Created (2):**
-- `src/lib/ownerBuildStorage.ts`
-- `src/pages/owner/BuildLibrary.tsx`
-
-**Edited (5):**
-- `src/pages/owner/ProgramBuilder.tsx`
-- `src/pages/owner/BundleBuilder.tsx`
-- `src/pages/owner/ConsultationFlow.tsx`
-- `src/App.tsx` — lazy import + route
-- `src/pages/OwnerDashboard.tsx` — link to `/owner/builds`
-
-**Migrations:** none. **Backend:** none.
-
----
-
-### 7. Outcome
-
-Execute → Continue → Builder → Save → redirected to Build Library showing the new entry. Persists across reloads via `localStorage`. Ready for Phase 11 (DB + Stripe) drop-in: swap `saveBuild`/`getBuilds` for Supabase calls without UI rework.
+### Outcome
+Owner: Build Library → Sell/Share → Stripe Checkout → /success.
+Buyer: pays via Stripe, lands on confirmation. Revenue flows; no user-facing exposure of the builder system; ranking + monetization eligibility untouched.
