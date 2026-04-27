@@ -83,6 +83,53 @@ const OwnerDashboard = () => {
   const [rankingsVisible, setRankingsVisible] = useState(true);
   const [activeSection, setActiveSection] = useState<OwnerSection>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [builds, setBuilds] = useState<BuildItem[]>([]);
+  const [pendingBuildId, setPendingBuildId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeSection === 'builds') {
+      setBuilds(getBuilds());
+    }
+  }, [activeSection]);
+
+  const handleSellBuild = async (build: BuildItem) => {
+    setPendingBuildId(build.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-build-checkout', {
+        body: { build },
+      });
+      if (error || !data?.url) {
+        toast({
+          title: 'Could not start checkout',
+          description: error?.message ?? 'Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      toast({
+        title: 'Checkout error',
+        description: err instanceof Error ? err.message : 'Unexpected error',
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingBuildId(null);
+    }
+  };
+
+  const handleViewBuyers = async (build: BuildItem) => {
+    const { data, error } = await supabase
+      .from('user_build_access')
+      .select('user_id, granted_at')
+      .eq('build_id', build.id)
+      .order('granted_at', { ascending: false });
+    console.log('[Buyers]', build.id, { rows: data ?? [], error });
+    toast({
+      title: 'Buyers logged to console',
+      description: `${data?.length ?? 0} buyer(s) for "${build.name || 'Untitled'}"`,
+    });
+  };
 
   useEffect(() => {
     if (!loading && !isOwner) {
