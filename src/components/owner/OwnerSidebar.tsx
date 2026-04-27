@@ -67,6 +67,7 @@ export const OwnerSidebar = ({
 
   const sidebarItems: SidebarItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'builds', label: 'Builds', icon: Package },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'admin-requests', label: 'Admin Requests', icon: UserCog, badgeCount: pendingAdminRequests },
     { id: 'scout-applications', label: 'Scout Applications', icon: UserPlus, badgeCount: pendingScoutApplications },
