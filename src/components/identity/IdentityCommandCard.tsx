@@ -456,17 +456,31 @@ export function IdentityCommandCard({ className }: Props) {
                       return (
                         <div
                           key={ev.id}
-                          className={cn('flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs font-semibold', t)}
+                          className={cn(
+                            'rounded-lg border px-2.5 py-2 text-xs font-semibold',
+                            'flex flex-col gap-2 sm:flex-row sm:items-center',
+                            t,
+                          )}
                           role="status"
                         >
-                          <Icon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="flex-1 min-w-0 leading-snug">{text}</span>
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
+                            <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            <span className="flex-1 min-w-0 leading-snug break-words">{text}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); acknowledge(ev.id); }}
+                              aria-label="Dismiss"
+                              className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 sm:hidden"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
                           {actionType && (
                             <Button
                               size="sm"
                               onClick={() => handleEventAction(ev)}
                               disabled={running}
-                              className="h-6 px-2 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold text-[10px]"
+                              className="h-7 px-2 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold text-[10px] w-full sm:w-auto sm:h-6"
                             >
                               <Zap className="h-3 w-3" />
                               {actionLabel}
@@ -476,7 +490,7 @@ export function IdentityCommandCard({ className }: Props) {
                             type="button"
                             onClick={() => acknowledge(ev.id)}
                             aria-label="Dismiss"
-                            className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0"
+                            className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 hidden sm:grid"
                           >
                             <X className="h-3 w-3" />
                           </button>
