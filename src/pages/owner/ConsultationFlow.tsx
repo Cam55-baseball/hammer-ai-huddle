@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Calendar } from 'lucide-react';
+import { Loader2, Calendar, ArrowLeft } from 'lucide-react';
 import { saveBuild } from '@/lib/ownerBuildStorage';
 import { toast } from '@/hooks/use-toast';
 
@@ -48,19 +48,33 @@ export default function ConsultationFlow() {
     });
     console.log('[PHASE_10_CONSULTATION_CREATE]', { title, price, videoId });
     toast({ title: 'Consultation offer created', description: title });
-    navigate('/owner/builds');
+    navigate('/owner-dashboard');
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-2xl mx-auto">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/owner-dashboard')}
+          className="-ml-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1.5" />
+          Back to Owner Dashboard
+        </Button>
+
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Calendar className="h-8 w-8" />
             Consultation Setup
           </h1>
           <p className="text-muted-foreground mt-1">
-            Based on Video ID: <span className="font-mono text-foreground">{videoId || '—'}</span>
+            {videoId ? (
+              <>Based on Video ID: <span className="font-mono text-foreground">{videoId}</span></>
+            ) : (
+              <>Optional: open a video from the Video Library to attach a reference clip.</>
+            )}
           </p>
         </div>
 
