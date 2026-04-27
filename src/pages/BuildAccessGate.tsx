@@ -1,13 +1,15 @@
 /**
- * PHASE 13.5 — Access enforcement for purchased builds.
- * Renders one of: loading, sign-in required, invalid link, denied, or
- * "content coming soon" placeholder. RLS guarantees server-side safety
- * even though hasAccess() runs from the client.
+ * PHASE 14 — Access enforcement + post-purchase UX + safe owner bypass.
+ * - Owner role bypasses hasAccess() for preview/testing (no DB writes).
+ * - "Allowed" state offers clear next actions instead of a dead end.
+ * RLS still enforced server-side; this is a UI gate refinement only.
  */
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { hasAccess } from '@/lib/userBuildAccess';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   buildType: 'program' | 'bundle' | 'consultation';
@@ -15,17 +17,27 @@ interface Props {
 
 export default function BuildAccessGate({ buildType }: Props) {
   const { id: buildId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const [checking, setChecking] = useState(true);
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    if (authLoading) return;
+    if (authLoading || ownerLoading) return;
     if (!user?.id || !buildId) {
       setChecking(false);
       return;
     }
+
+    // Owner bypass — preview only, no writes to user_build_access.
+    if (isOwner) {
+      setAllowed(true);
+      setChecking(false);
+      return;
+    }
+
     setChecking(true);
     hasAccess(user.id, buildId).then((ok) => {
       if (!cancelled) {
@@ -36,15 +48,15 @@ export default function BuildAccessGate({ buildType }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, buildId, authLoading]);
+  }, [user?.id, buildId, authLoading, ownerLoading, isOwner]);
 
   const Wrap = ({ children }: { children: React.ReactNode }) => (
     <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="max-w-md text-center space-y-2">{children}</div>
+      <div className="max-w-md w-full text-center space-y-2">{children}</div>
     </div>
   );
 
-  if (authLoading || checking) {
+  if (authLoading || ownerLoading || checking) {
     return <Wrap><p className="text-muted-foreground">Loading…</p></Wrap>;
   }
   if (!buildId) {
@@ -63,14 +75,30 @@ export default function BuildAccessGate({ buildType }: Props) {
       <Wrap>
         <h1 className="text-xl font-semibold">Access denied</h1>
         <p className="text-muted-foreground">You do not have access to this content.</p>
+        <div className="flex flex-col gap-2 pt-3">
+          <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+        </div>
       </Wrap>
     );
   }
   return (
     <Wrap>
+      {isOwner && (
+        <div className="flex justify-center">
+          <span className="inline-block text-[10px] uppercase tracking-wide px-2 py-0.5 rounded bg-muted text-muted-foreground">
+            Owner Preview Mode
+          </span>
+        </div>
+      )}
       <h1 className="text-xl font-semibold capitalize">{buildType}</h1>
       <p className="text-muted-foreground">Content coming soon.</p>
-      <p className="text-xs text-muted-foreground/70 break-all">{buildId}</p>
+      <p className="text-xs text-muted-foreground/70 break-all font-mono">{buildId}</p>
+      <div className="flex flex-col gap-2 pt-3">
+        <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+        <Button variant="outline" onClick={() => navigate('/dashboard')}>
+          My Purchases
+        </Button>
+      </div>
     </Wrap>
   );
 }

@@ -1,42 +1,48 @@
-## Problem
+## Phase 14 — Post-Purchase UX + Safe Owner Bypass
 
-On mobile (≤640px), the Identity Command Card header crams three columns side-by-side:
-1. Identity label + tier badge + streak chips (flame, shield, NN miss)
-2. Large consistency score + "Consistency" label
-3. Chevron toggle
+Single-file change to `src/pages/BuildAccessGate.tsx`. No backend, RLS, webhook, or table changes.
 
-This forces the tier label (e.g. "LOCKED IN") to clip, the streak chips to wrap onto multiple lines under a too-narrow column, and the explainer copy in expanded sections to feel cramped. The whole card becomes hard to parse at a glance.
+### 1. Owner Bypass (safe, client-side preview only)
 
-## Fix
+- Import `useOwnerAccess` (already exists at `src/hooks/useOwnerAccess.ts`).
+- In the access-check `useEffect`, after auth settles:
+  - If `isOwner === true`, short-circuit: `setAllowed(true); setChecking(false);` and skip `hasAccess()` entirely.
+  - Otherwise run existing `hasAccess(user.id, buildId)` flow unchanged.
+- Wait for both `authLoading` and `useOwnerAccess`'s `loading` to be false before deciding, to avoid a flash of "Access denied" for the owner.
+- No writes to `user_build_access`. No analytics calls. No RLS impact (RLS still enforced server-side; owner bypass is purely a UI gate skip — owner already has elevated read rights via existing role).
 
-Restructure the header into a **mobile-first stacked layout**, then promote to the current side-by-side only on `sm:` and up. Same component, no behavior change — just layout responsiveness.
+### 2. UX Dead-End Fix (allowed === true branch)
 
-### New mobile header structure
+Replace the bare "Content coming soon" with the same minimal `Wrap` layout plus action buttons:
 
-```text
-┌────────────────────────────────────────────────┐
-│ IDENTITY  [REST day]                  [▼]      │  ← row 1: meta + chevron
-│ LOCKED IN                              92      │  ← row 2: big label + score
-│ ✓ Confirmed                       Consistency  │
-│ ────────────────────────────────────────────── │
-│ [🔥 5d perf] [🛡 12d active] [⚠ 2 miss/7d]    │  ← row 3: chips full-width
-└────────────────────────────────────────────────┘
-```
+- Heading: capitalized `buildType` (kept).
+- Text: "Content coming soon" (kept).
+- Subtext: `buildId` in muted mono (kept, optional).
+- If `isOwner`, render a small badge above the heading: **"Owner Preview Mode"** (subtle muted pill, no heavy styling).
+- Buttons (stacked vertically, small gap, using existing shadcn `Button`):
+  1. Primary: **"Back to Dashboard"** → `navigate('/dashboard')`
+  2. Secondary (`variant="outline"`): **"My Purchases"** → `navigate('/purchases')` — since that route does not currently exist in the app, the handler falls back to `/dashboard` (we will simply route to `/dashboard` for now, keeping the label per spec; no new pages added this phase).
 
-- Row 1: small "IDENTITY" eyebrow + day-type chip on the left, chevron pinned right.
-- Row 2: tier label (`text-2xl`, allowed to wrap if needed) on left, consistency score + caption on right — both larger and breathing.
-- Row 3: streak chips on their own line, full width, no wrap-collision with the score column.
-- On `sm:` breakpoint and up, collapse rows 1+2+3 back into the existing two-column layout.
+Decision: To strictly honor "no new pages" and avoid a 404, the "My Purchases" button will navigate to `/dashboard` as the fallback. Label remains "My Purchases" per spec; behavior is the safe fallback the spec allows.
 
-### Body section adjustments (mobile)
+### 3. What stays untouched
 
-- Day Intent buttons: keep `grid-cols-3` but reduce icon+label to allow `text-[11px]` on narrow widths so "STANDARD"/"PUSH" don't truncate.
-- Active Alerts row: stack the action button + dismiss under the message text on `< sm` (`flex-col sm:flex-row`) so long alert copy ("2 non-negotiables still open today: …") stays readable instead of being squeezed.
-- Quick Actions "Next up" row: stack the label and the two CTA buttons vertically on `< sm` so the truncated `next.label` gets full width.
-- Increase outer padding on mobile from `px-4` to `px-3` and the section spacing already at `space-y-4` is fine.
+- `webhook` logic, `purchases` table, `user_build_access` writes, RLS policies, `hasAccess()` implementation, monetization, analytics.
 
-### Files
+### Technical details
 
-- **Modify**: `src/components/identity/IdentityCommandCard.tsx` — header JSX (lines ~256–327), Day Intent grid (~376), Active Alerts row (~431), Quick Actions row (~480).
+File: `src/pages/BuildAccessGate.tsx`
 
-No other files, no data/logic changes, no new components. Pure responsive CSS restructure.
+- New imports: `Button` from `@/components/ui/button`, `useOwnerAccess` from `@/hooks/useOwnerAccess`.
+- Effect dependencies extend to include `isOwner` and owner-loading state.
+- Render order in the allowed `Wrap`:
+  1. `{isOwner && <span className="inline-block text-[10px] uppercase tracking-wide px-2 py-0.5 rounded bg-muted text-muted-foreground">Owner Preview Mode</span>}`
+  2. `<h1>` buildType
+  3. "Content coming soon"
+  4. buildId mono subtext
+  5. Vertical button stack (`flex flex-col gap-2 pt-2`)
+
+### Outcome
+
+- Real purchasers: see actionable buttons instead of a dead end.
+- Owner: instant access to any build, clearly labeled "Owner Preview Mode", with zero impact on payments, access tracking, or security.
