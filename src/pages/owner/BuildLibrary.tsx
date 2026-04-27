@@ -109,11 +109,15 @@ export default function BuildLibrary() {
                     <Badge variant="secondary" className="text-[10px]">{TYPE_LABEL[b.type]}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{formatWhen(b.createdAt)}</p>
-                  {b.meta?.videoId && (
+                  {b.type === 'bundle' && Array.isArray(b.meta?.videoIds) ? (
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      {b.meta.videoIds.length} video{b.meta.videoIds.length === 1 ? '' : 's'}
+                    </p>
+                  ) : b.meta?.videoId ? (
                     <p className="text-[11px] font-mono text-muted-foreground mt-1 truncate">
                       video: {b.meta.videoId}
                     </p>
-                  )}
+                  ) : null}
                 </div>
                 <div className="shrink-0 flex flex-col gap-1.5">
                   <Button
