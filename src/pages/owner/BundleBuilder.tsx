@@ -28,7 +28,7 @@ export default function BundleBuilder() {
   const { videos, tags, loading: videosLoading, refetch } = useVideoLibrary({ limit: 200 });
 
   const [name, setName] = useState('');
-  const [price, setPrice] = useState<string>('49');
+  const [price, setPrice] = useState<string>('');
   const [videoIds, setVideoIds] = useState<string[]>(initialVideoId ? [initialVideoId] : []);
   const [pickerValue, setPickerValue] = useState<string>('');
   const [quickOpen, setQuickOpen] = useState(false);
@@ -145,14 +145,15 @@ export default function BundleBuilder() {
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
               <Input
                 id="bundle-price"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                min="0.5"
-                step="0.01"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) setPrice(v);
+                }}
                 placeholder="49.00"
-                className="pl-7"
+                className="pl-8"
               />
             </div>
             {!priceValid && price.length > 0 ? (

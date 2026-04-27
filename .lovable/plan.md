@@ -1,54 +1,24 @@
-# Fix: Quick Video Attach + Price for Bundles and Programs
+# Fix Price Input in Bundle & Program Builder
 
-Two focused fixes to the Bundle Builder and Program Builder.
+## Problem
+- The price field is prefilled with `'49'` (Bundle) and `'99'` (Program). This looks like "a number that won't erase" — it reappears any time the page reloads, and overlaps visually with the `$` prefix.
+- The `$` symbol sits at `left-3` while the input only has `pl-7` padding, so on small viewports (402px) typed digits visually collide with the `$`.
+- Native number-input spinner arrows further crowd the field on mobile.
 
-## 1. Attach a video without the full Video Library wizard
+## Fix
 
-Today the "Upload new video" button opens the full 4-step `VideoUploadWizard` (title, sport, category, structured engine tags, etc.) — overkill when you just want to drop a video into a build.
+**`src/pages/owner/BundleBuilder.tsx`** and **`src/pages/owner/ProgramBuilder.tsx`**:
 
-Add a **"Quick Attach"** option on both builders with two simple inputs:
+1. Start price state empty: `useState<string>('')` instead of `'49'` / `'99'`.
+2. Increase input left padding from `pl-7` to `pl-8` so digits clear the `$`.
+3. Switch from `type="number"` to `type="text"` with `inputMode="decimal"` and a digit/decimal regex filter on change. This kills the spinner overlap and the stuck-default-value feel, while still showing the numeric keypad on mobile.
+4. Keep the same `priceValid` check (`>= 0.5`) and the `canSave` gate. Save button stays disabled until a valid price is entered — so the user is forced to set it before sharing.
+5. Placeholder stays as `49.00` / `99.00` (greyed hint only — disappears on type).
 
-- **Paste video link** (YouTube / Vimeo / direct URL), or
-- **Upload a file** (drag/drop or file picker)
+No other files touched. No DB or schema changes.
 
-Only one required field beyond the source: **Title** (auto-filled from the file name or URL slug, editable).
-
-On confirm:
-- Create a minimal video library record (title + url/file + `owner_id`) — no sport/category/engine tags required.
-- Auto-add to the bundle (or set as the program's anchor video) immediately.
-- Stay on the builder page — no navigation, no progress lost.
-
-The existing full `VideoUploadWizard` stays available behind a secondary "Advanced upload (full metadata)" link for when you do want to fill in tags.
-
-## 2. Set the price before sharing
-
-Right now you can save a Bundle or Program but you never get to set a price — `BuildLibrary` "Sell / Share" sends it to Stripe Checkout, which falls back to a hard-coded default ($49 bundle / $99 program) in the `create-build-checkout` edge function.
-
-Add a **Price (USD)** input to both builders:
-
-- Required field, numeric, min $0.50.
-- Stored in `build.meta.price` (the edge function already reads this and only falls back to the default when missing).
-- Shown on the Build Library cards next to the name (e.g. "$79").
-- Editable from the Build Library too — small "Edit price" action on each card so you can adjust without re-creating the build.
-
-Save is blocked until name + price + at least one video are filled.
-
----
-
-## Technical notes
-
-**Files to modify**
-- `src/pages/owner/BundleBuilder.tsx` — add Price input, add `QuickAttachVideo` trigger, gate save on price.
-- `src/pages/owner/ProgramBuilder.tsx` — same: Price input + Quick Attach + save gating.
-- `src/pages/owner/BuildLibrary.tsx` — show price on each card; add inline "Edit price" using a small dialog that calls a new `updateBuild` helper.
-- `src/lib/ownerBuildStorage.ts` — add `updateBuild(id, patch)` helper (writes back to the same localStorage key).
-- New: `src/components/owner/QuickAttachVideo.tsx` — compact dialog with two tabs (Link / Upload), one Title field, one confirm button. Reuses `useVideoLibraryAdmin().uploadVideo` under the hood with minimal payload.
-
-**Edge function** (`supabase/functions/create-build-checkout/index.ts`) — no change needed; it already honors `build.meta.price` and only falls back when missing. We will simply make sure the price is always set client-side now.
-
-**Validation**
-- Price parsed as `Number(value)`; reject `NaN`, `<= 0`, or `< 0.50`.
-- Quick Attach link: must start with `http(s)://`.
-- Quick Attach upload: same file-size/type checks already in `validateVideoFile` (`src/data/videoLimits.ts`).
-
-**No DB schema changes.** Builds remain in localStorage (`owner_builds` key) — just one new optional `price` field on `meta`.
+## Result
+- Field opens empty with a faint `49.00` / `99.00` placeholder.
+- `$` no longer overlaps typed digits.
+- No spinner arrows.
+- Save remains gated on a valid price ≥ $0.50.
