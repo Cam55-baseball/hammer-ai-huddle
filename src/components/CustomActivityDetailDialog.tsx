@@ -19,6 +19,7 @@ import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
 import { SendCardToCoachDialog } from '@/components/custom-activities/SendCardToCoachDialog';
 import { Json } from '@/integrations/supabase/types';
+import { NNResetTimer } from '@/components/identity/NNResetTimer';
 
 // Helper to get all checkable item IDs from a template
 export const getAllCheckableIds = (template: CustomActivityTemplate): string[] => {
