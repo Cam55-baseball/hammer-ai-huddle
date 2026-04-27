@@ -1,44 +1,71 @@
-## Game Plan toolbar restoration
+## Problems
 
-The user's three issues all live in `src/components/GamePlanCard.tsx` (header toolbar, lines ~1596–1750):
+**1. Non-Negotiable UI is cluttered on the Game Plan**
+- `NonNegotiableProgressStrip` sits above the Game Plan ("X / N Non-Negotiables completed") AND every NN task in the list gets a red left border + red `NON-NEGOTIABLE` badge + red glow shadow. On a 440px viewport this stacks visually noisy red elements that compete with the actual task content.
+- The user's standard: NN identity should live **inside the task detail** (when the card is tapped), not be plastered all over the list.
 
-1. **Lock system "gone"** — The Lock dropdown only renders when `sortMode === 'timeline'` (line 1660: `{sortMode === 'timeline' && (...)}`). Users in Auto or Manual mode never see it, so it appears removed. It must be visible in **all** modes.
+**2. "Daily Mental Reset" countdown clock is unusable**
+- Any NN custom activity with a duration renders the shared `CountdownTimer` (mono badge, pulses orange under 5min) inline inside the cramped NN row. With the red border + badge + flame + title + time badge stacked on a 440px screen it gets clipped and hard to read.
 
-2. **Auto/Timeline/Manual rotation broken** — The toggle is rendered as a single ghost button that calls `cycleSortMode` (lines 1649–1657). `cycleSortMode` (line 674) early-returns with an error toast whenever `todayLocked` is true — so anyone with a locked day is stuck on whatever mode they were in. Plus, a single button labeled only with the current mode is not discoverable as a rotator.
+**3. "Standard broken — 7 non-negotiables missed. Fix it now." is incomprehensible**
+- Source: `evaluate-behavioral-state/index.ts` line 370 emits `nn_miss` with `magnitude = nnMiss7` (count over the last 7 days). The toast in `BehavioralPressureToast.tsx` reads that magnitude and just says "7 non-negotiables missed" with no time window, no NN name, and no actionable next step. Users with 2 NNs and a few missed days see "7" and panic.
+- It also fires every recompute as long as `nnMiss7 > 0`, so it nags daily even after the user is back on track.
 
-3. **Push Day is obsolete** — A push/skip/rest day bar already sits above the Game Plan (the day-control row above `TodayCommandBar`/`GamePlanCard`). The in-card "Push Day / Undo Push" button (lines 1626–1647) duplicates that and should be removed.
+---
 
-### Changes — `src/components/GamePlanCard.tsx`
+## Plan
 
-**A. Always show the Lock control**
-- Remove the `{sortMode === 'timeline' && (...)}` wrapper around the Lock Popover (line 1660).
-- The Lock dropdown, its `Popover`/`PopoverContent`, and all its handlers (`handleLockCurrentOrder`, `handleOpenUnlockDialog`, `handleUnlockSave`, `handleLockDays`, `unlockDate`, etc.) stay exactly as they are.
-- The lock applies to the **day**, not the view mode, so it should never have been gated by `sortMode`.
+### A. Clean up NN visuals on the Game Plan (`src/components/GamePlanCard.tsx`, `src/pages/Dashboard.tsx`)
 
-**B. Replace the single sort-mode button with a 3-segment toggle**
-- Replace lines 1649–1657 with a compact segmented control showing all three modes side-by-side: `Auto | Timeline | Manual`.
-- Use existing icons: `ArrowUpDown` (Auto), `Clock` (Timeline), `GripVertical` (Manual). Active segment uses `bg-primary text-primary-foreground`; inactive uses `text-white/70 hover:text-white`. Built with three small `<Button>`s in a `flex` row with rounded container — no new dependency needed (the existing `ToggleGroup` primitive is fine if cleaner, but plain buttons match the rest of the toolbar).
-- Each segment calls `setSortMode('auto' | 'timeline' | 'manual')` directly and writes to `localStorage('gameplan-sort-mode')`.
-- **Remove the `todayLocked` block** from `cycleSortMode`. Switching the **view** of tasks must never be blocked by a day lock; the lock prevents reordering/editing, not viewing. The existing `todayLocked` checks on the reorder handlers (`handleReorderCheckin`, etc.) and on `Reorder.Item drag={!todayLocked}` already enforce that correctly.
-- Delete the now-unused `cycleSortMode` function (or keep as a no-op shim if referenced elsewhere — quick grep first).
+1. **Remove `NonNegotiableProgressStrip` from above the Game Plan** in `Dashboard.tsx`. The Identity Banner and Daily Outcome already convey standard status; this strip duplicates it.
+2. **Demote the in-row NN treatment** in `renderTask`:
+   - Drop the red left border (`border-l-4 border-l-red-500`) and the red glow shadow on incomplete NN rows.
+   - Replace the inline `<NonNegotiableBadge />` next to the title with a small **flame dot** (single red flame icon, no "NON-NEGOTIABLE" text pill) tucked next to the icon. Keeps NN identifiable at a glance without screaming.
+3. **Move full NN context into the task detail** (the dialog/sheet that opens when the card is tapped). In the detail view, surface:
+   - "Non-Negotiable" label with explanation copy (already in `NonNegotiableBadge` tooltip — promote to inline in the detail).
+   - The toggle to make/unmake NN (already exists at line 1335; keep it there).
+   - The countdown timer (if duration-based) gets full width inside the detail, not crammed into the row.
 
-**C. Remove the redundant Push Day button**
-- Delete lines 1626–1647 (the entire Push Day / Undo Push `<Button>` block).
-- Remove `pushDayDialogOpen` / `setPushDayDialogOpen` state, `dayPushed` / `setDayPushed` state.
-- Remove the `<GamePlanPushDayDialog>` mount and its import (`line 34`).
-- Audit the `useRescheduleEngine` destructure (line 112) — keep `undoLastAction`, `skipDay`, etc. only if still referenced after the Push removal. Skip Day stays untouched.
+### B. Fix the "Daily Mental Reset" countdown placement
+- Stop rendering `CountdownTimer` (or any per-task time pill) inside the row layout for NN tasks. The countdown only renders inside the **task detail dialog**, where it has room to breathe (full-width, larger mono digits, clear label).
+- The row keeps just the small flame dot + title + completion checkbox.
 
-### Resulting toolbar (right side of header, mobile-first)
+### C. Rewrite the "Standard broken" message with real context
 
-```text
-[ Schedule Practice ]  [ Skip Day ]  [ Auto | Timeline | Manual ]  [ 🔒 Lock ]
-```
+Edit `supabase/functions/evaluate-behavioral-state/index.ts` and `src/components/identity/BehavioralPressureToast.tsx`:
 
-All four controls visible in every mode. Push Day removed.
+1. **Server-side (`evaluate-behavioral-state`)**:
+   - Only emit `nn_miss` when **today** has a missed NN (not just "any miss in the last 7 days"). Add a `missed_today_count` and `missed_today_titles` (top 1–2) to the event metadata.
+   - If today is already complete or it's a rest/skip/push day, do **not** emit `nn_miss`.
+   - Update `eventCopy('nn_miss')` to produce contextual text using the NN title when available:
+     - 1 missed today: `"You haven't done [NN title] yet today. Lock it in."`
+     - 2+ missed today: `"2 non-negotiables still open today: [A], [B]. Lock them in."`
+     - Fallback (no titles): `"Today's standard isn't met yet. Open Non-Negotiables to fix it."`
+   - Keep `magnitude` = today's missed count (not the rolling 7-day total).
 
-### Out of scope
+2. **Client-side (`BehavioralPressureToast.tsx`)**:
+   - Trust `command_text` first (already does). Remove the legacy fallback line that prints "7 non-negotiables missed" using a 7-day count — replace with: `"Today's standard isn't met yet. Open Non-Negotiables to fix it."`
+   - Keep the "Complete NN" action button (already wired via `complete_nn` action).
 
-- No DB or schema changes.
-- `useGamePlanLock`, `useRescheduleEngine`, `useCalendarDayOrders`, and `TodayCommandBar` untouched.
-- No changes to scout/coach Game Plan cards.
-- `GamePlanPushDayDialog.tsx` left on disk; not deleted (safe cleanup for a follow-up after confirming no other consumers).
+3. **De-noise**:
+   - In the evaluator, dedupe `nn_miss` to once per day (same pattern as `dedupeToday` already used for `skip_day_used` / `push_fail`). Stops the same alert firing on every recompute.
+
+---
+
+## Files Touched
+
+- `src/pages/Dashboard.tsx` — remove `NonNegotiableProgressStrip` mount + import.
+- `src/components/GamePlanCard.tsx` — replace inline NN badge/border/glow with a small flame dot; move NN context + countdown into the existing task detail dialog.
+- `supabase/functions/evaluate-behavioral-state/index.ts` — change `nn_miss` to today-only, attach NN titles, dedupe per day, rewrite copy.
+- `src/components/identity/BehavioralPressureToast.tsx` — replace legacy `nn_miss` fallback copy.
+- `src/components/game-plan/NonNegotiableProgressStrip.tsx` — keep file (other surfaces may still want it later) but it stops rendering on the dashboard.
+
+## Out of Scope
+- No changes to NN scoring, streaks, or the Hammer state engine.
+- No changes to `useDailyOutcome` (already the source of truth for "Standard met / not met").
+- No changes to the lock / mode toggle / Skip Day toolbar work just shipped.
+
+## Outcome
+- Game Plan is visually calm: one small flame dot identifies NN tasks; full context lives in the detail view.
+- The "Daily Mental Reset" countdown gets a usable, full-width display in the task detail.
+- The pressure toast finally tells the user **what** they missed, **today**, and stops nagging once it's done.
