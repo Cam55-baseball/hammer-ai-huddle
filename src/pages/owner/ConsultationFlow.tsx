@@ -48,7 +48,7 @@ export default function ConsultationFlow() {
     });
     console.log('[PHASE_10_CONSULTATION_CREATE]', { title, price, videoId });
     toast({ title: 'Consultation offer created', description: title });
-    navigate('/owner-dashboard');
+    navigate('/owner');
   };
 
   return (
@@ -57,7 +57,7 @@ export default function ConsultationFlow() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/owner-dashboard')}
+          onClick={() => navigate('/owner')}
           className="-ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-1.5" />

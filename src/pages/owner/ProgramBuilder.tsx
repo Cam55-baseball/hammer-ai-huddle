@@ -54,7 +54,7 @@ export default function ProgramBuilder() {
     });
     console.log('[PHASE_10_PROGRAM_SAVE]', { name, description, videoId });
     toast({ title: 'Program saved', description: name });
-    navigate('/owner-dashboard');
+    navigate('/owner');
   };
 
   const selectedVideo = videos.find((v) => v.id === videoId);
@@ -65,7 +65,7 @@ export default function ProgramBuilder() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/owner-dashboard')}
+          onClick={() => navigate('/owner')}
           className="-ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-1.5" />
@@ -115,7 +115,7 @@ export default function ProgramBuilder() {
               No videos in your library yet.{' '}
               <button
                 className="underline text-foreground"
-                onClick={() => navigate('/owner-dashboard?section=videos')}
+                onClick={() => navigate('/owner?section=videos')}
               >
                 Add one in the Video Library
               </button>

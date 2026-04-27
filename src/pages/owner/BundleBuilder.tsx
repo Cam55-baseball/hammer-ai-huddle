@@ -66,7 +66,7 @@ export default function BundleBuilder() {
     });
     console.log('[PHASE_10_BUNDLE_SAVE]', { name, videoIds });
     toast({ title: 'Bundle saved', description: `${name} (${videoIds.length} videos)` });
-    navigate('/owner-dashboard');
+    navigate('/owner');
   };
 
   const titleFor = (id: string) => videos.find((v) => v.id === id)?.title ?? id;
@@ -78,7 +78,7 @@ export default function BundleBuilder() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/owner-dashboard')}
+          onClick={() => navigate('/owner')}
           className="-ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-1.5" />
@@ -123,7 +123,7 @@ export default function BundleBuilder() {
               No videos in your library yet.{' '}
               <button
                 className="underline text-foreground"
-                onClick={() => navigate('/owner-dashboard?section=videos')}
+                onClick={() => navigate('/owner?section=videos')}
               >
                 Add one in the Video Library
               </button>
