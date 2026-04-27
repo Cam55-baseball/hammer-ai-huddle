@@ -407,6 +407,27 @@ async function handleBuildPurchase(
   } else {
     logStep("Build purchase recorded", { buildId, buildType, sessionId: session.id });
   }
+
+  // PHASE 13 — Grant access (idempotent on user_id + build_id).
+  // Skip if checkout was guest (no user_id in metadata); buyer-by-email
+  // reconciliation is out of scope for this phase.
+  if (userId) {
+    const { error: accessErr } = await supabaseClient
+      .from("user_build_access")
+      .insert({ user_id: userId, build_id: buildId, build_type: buildType });
+
+    if (accessErr) {
+      if (accessErr.code === "23505" || accessErr.message?.includes("duplicate")) {
+        logStep("Access already granted (duplicate)", { userId, buildId });
+      } else {
+        logStep("Access grant failed", { message: accessErr.message });
+      }
+    } else {
+      logStep("Build access granted", { userId, buildId, buildType });
+    }
+  } else {
+    logStep("Skipping access grant — no user_id on session", { sessionId: session.id });
+  }
 }
 
 async function handlePaymentSuccess(
