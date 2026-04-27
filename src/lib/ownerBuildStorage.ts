@@ -53,3 +53,15 @@ export function updateBuild(id: string, patch: Partial<Pick<BuildItem, 'name' | 
     return null;
   }
 }
+
+export function deleteBuild(id: string): boolean {
+  try {
+    const existing = getBuilds();
+    const next = existing.filter((b) => b.id !== id);
+    if (next.length === existing.length) return false;
+    safeSet(KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
+}
