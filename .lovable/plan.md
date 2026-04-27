@@ -1,58 +1,92 @@
-# Make System Non-Negotiable Cards Real Tasks (Daily Mental Reset, etc.)
+# Consolidate Above-Game-Plan Messages into One Identity Command Card
 
 ## The problem
 
-When an athlete taps a system-created Non-Negotiable on the Game Plan (e.g. **Daily Mental Reset**), the detail dialog opens but it currently shows nothing actionable:
+Today, the area above the Game Plan stacks **six separate components** that all pile onto the screen on first load:
 
-- The template's `purpose`, `action`, and `success_criteria` (which exist in the DB and are full of context) are never rendered.
-- Because the template has zero sub-tasks, the dialog falls into the "No sub-tasks to track. Tap the button below when you're done" empty state.
-- There is no countdown / timer / guided execution — so a "2-minute mental reset" has no 2-minute element. The user just sees a "Mark Complete" button, which feels fake.
+1. `TodayCommandBar` (Hammer state + readiness + Next Up + Log Now)
+2. `IdentityBanner` (identity tier + consistency score + streaks + Rest button)
+3. `BehavioralPressureToast` (e.g. "Non-negotiables still open today")
+4. `DailyStandardCheck` ("Operating at X standard?" — no explanation of what it means or what tapping Confirm does)
+5. `DayControlCard` (Rest / Skip / Push buttons + weekly budget + recurring schedule)
+6. `DayStateBanner` (a second small banner restating Rest/Skip/Push)
+7. `StandardActivationBanner` ("You have a standard today")
 
-The Game Plan row itself is clean (small flame icon, no clutter — keep that). The fix is entirely inside the **detail dialog** that opens on tap.
+That's noisy, redundant (Day state shown twice; pressure + activation often say overlapping things), and the "Operating at standard?" prompt has zero context. Mobile users (440px) see a wall of cards before any actual to-do appears.
 
-## What we'll change
+## What we'll build
 
-### 1. Render the NN context block (always, when present)
+One **Identity Command Card** directly above the Game Plan. Collapsed by default once the user has scrolled it once today; opens with a single tap.
 
-In `src/components/CustomActivityDetailDialog.tsx`, directly under the header, render a structured **"What this is"** block whenever the template has any of `purpose`, `action`, or `success_criteria`:
+### Collapsed header (always visible — the only persistent strip)
 
-- **Purpose** — one-line "why" (italic, muted)
-- **The Action** — the exact instruction (bold body text, primary readability)
-- **Success Criteria** — what counts as done (with a small target icon)
-- **Source** badge (e.g. "Hammer Standard · Phase 9") in the corner, only when `template.source` is set — signals this is a system standard, not a user activity.
+A single row:
 
-This replaces the current "No sub-tasks to track" empty state for system NN cards. For ordinary user activities with no NN context, the existing empty state stays.
+```text
+[ Tier dot ]  ELITE          Consistency 87        ▾
+              3d perf · 5d active · 1 NN open
+```
 
-### 2. Add a real interactive task: the Reset Timer
+- Left: identity tier label, color tone, small streak chips.
+- Right: consistency score, expand chevron.
+- If there's an unacknowledged high-priority pressure event (NN miss, streak risk, tier slip), a small pulsing dot shows next to the chevron — never an extra banner.
 
-For NN templates whose `action` clearly implies a timed focus block (detected via `duration_minutes` being set OR action text matching "minute"/"breath"/"reset"), render an embedded **Reset Timer**:
+### Expanded panel (one tap)
 
-- Big, legible MM:SS display, monospaced, ~5xl on mobile so it's actually usable on the 440px viewport.
-- **Start / Pause / Reset** controls.
-- Uses `performance.now()` + `requestAnimationFrame` (per the CNS Readiness Test standard) so it stays accurate when the tab backgrounds.
-- Default duration = `template.duration_minutes ?? 2` minutes for Daily Mental Reset.
-- On natural completion: light haptic + auto-trigger the existing `onComplete()` flow and close — the timer **is** the verification of `success_criteria`.
-- Manual "Mark Complete" button stays visible underneath as an escape hatch.
+Single `Collapsible` with four clearly-titled sections, each with its own short explainer:
 
-### 3. Wire it up cleanly
+1. **Today's standard** — "You're being held to the **Elite** standard today. Tap Confirm to lock in that you're operating at it. Skipping logs a light pressure event."
+   - Confirm button (replaces the standalone DailyStandardCheck card).
+   - Once confirmed, this section collapses to a green "✓ Standard confirmed for today" line.
 
-- Keep the Game Plan row visuals exactly as they are now (clean, flame icon only).
-- All depth lives inside the dialog → row stays minimal, dialog becomes the real task.
-- Reuse `customColor` from the template for timer accent so each NN keeps its identity.
-- No new tables, no edge function changes, no new dependencies.
+2. **Day intent** — Rest / Skip / Push 3-button row + one-line explainer for the active state + weekly rest budget pill + collapsed "Recurring rest schedule".
+   - Replaces both `DayControlCard` and `DayStateBanner` (no more duplicate banner above the game plan; the active state already shows up as a pill in the collapsed header AND inside this panel).
 
-## Files touched
+3. **Active alerts** — Behavioral pressure messages (NN miss, streak risk, etc.) rendered inline here with their action buttons. Replaces the floating `BehavioralPressureToast` and the `StandardActivationBanner`. Empty state: "All clear. Standard intact."
 
-- `src/components/CustomActivityDetailDialog.tsx` — add NN context block + Reset Timer subcomponent; replace empty state for NN templates.
-- (New) `src/components/identity/NNResetTimer.tsx` — small self-contained rAF-based timer used by the dialog.
+4. **Quick actions** — Hammer state badge + readiness chip + Next Up + Log Now (the existing `TodayCommandBar` content), tucked at the bottom of the panel.
+   - Removes the standalone `TodayCommandBar` from above the Identity card.
 
-## What stays the same
+### Auto-open vs collapsed behavior
 
-- Game Plan row UI (flame icon, no red glow) — unchanged.
-- Behavioral evaluator, notifications, NN suggestions, Hammer engine — unchanged.
-- The "Mark Complete" button continues to write to `custom_activity_logs` via the existing `onComplete` path (single source of truth preserved).
+- **First visit of the day** OR **any unread pressure event** OR **standard not yet confirmed** → expanded by default. The user sees everything once.
+- After the user confirms standard / dismisses alerts → collapsed. State persists per-day in `safeStorage` (key `hm:identityCard:lastCollapsed`).
+- On day rollover, re-expand automatically (same pattern `StandardActivationBanner` already uses).
 
-## Out of scope
+### "Operating at X standard?" — fixing the missing context
 
-- Editing system NN templates from the UI (still owner-only).
-- New NN types beyond the timer pattern (future: breath-pacing visual, journaling prompt) — intentionally deferred.
+Inside the **Today's standard** section, render a 2-line explainer above the Confirm button:
+
+> Your tier is **Elite**. Confirming declares you're holding yourself to it today. The engine uses this to weight your day: a confirmed standard with met NNs locks the streak; a confirmed-but-missed day applies pressure.
+
+Plus a small "What is this?" link that opens a tooltip with one more sentence on consequences. No more naked prompt.
+
+## Files
+
+**New:**
+- `src/components/identity/IdentityCommandCard.tsx` — the consolidated card (header + collapsible panel + 4 sections).
+
+**Edited:**
+- `src/pages/Dashboard.tsx` — remove `TodayCommandBar`, `IdentityBanner`, `DayControlCard`, `DayStateBanner`, `StandardActivationBanner` from the above-game-plan stack. Replace with single `<IdentityCommandCard />`.
+
+**Reused (no changes):**
+- `useIdentityState`, `useDayState`, `useDailyOutcome`, `useBehavioralEvents`, `useNextAction`, `useQuickActionExecutor`.
+- Existing sub-pieces composed inline: `HammerStateBadge`, `ReadinessChip`, `RestDayButton` (Rest button absorbed into the Day intent row), `QuickLogSheet`.
+
+**Deleted/orphaned (kept on disk for now, no longer mounted on Dashboard):**
+- `IdentityBanner.tsx`, `DailyStandardCheck.tsx`, `BehavioralPressureToast.tsx`, `StandardActivationBanner.tsx`, `DayControlCard.tsx`, `DayStateBanner.tsx`, `TodayCommandBar.tsx`.
+  These remain importable for other pages (e.g. `ProgressDashboard`) so we don't break anything outside Dashboard. We just stop mounting them on Dashboard.
+
+## What this does NOT change
+
+- Game Plan row UI, NN detail dialog, NN timer, Hammer engine, evaluator function, behavioral events table — all untouched.
+- Coach / Scout dashboards — the stack only mounts for athletes today, same gating preserved.
+- Hooks and data sources — same hooks, same data, just one container.
+
+## Why this works for retention
+
+- **One thing to look at**: athletes open the app and see one identity card + their game plan. No wall of red banners.
+- **Every prompt explains itself**: "Operating at Elite standard?" becomes "Your tier is Elite. Confirming declares you're holding yourself to it today. Here's why it matters."
+- **Active alerts surface in context**: pressure messages live next to the standard they reference, not as floating toast clutter.
+- **Day intent is one-stop**: rest/skip/push live where the user already opened the card to act, and the duplicate banner above the Game Plan is gone.
+
