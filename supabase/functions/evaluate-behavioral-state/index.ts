@@ -400,7 +400,39 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     return !!(data && data.length);
   };
 
-  if (dayTypeToday === "skip") {
+  // Today-only NN miss emission. Suppress on rest/injury/skip days; suppress when
+  // today is push and all required NNs are already done. Dedupe to once per day.
+  if (
+    nnIds.length > 0 &&
+    dayTypeToday !== "rest" &&
+    dayTypeToday !== "injury" &&
+    dayTypeToday !== "skip"
+  ) {
+    const requiredIdsToday = ddaRelief ? nnIds.slice(0, -1) : nnIds;
+    const doneToday = completedTemplatesByDay.get(todayUTC) ?? new Set<string>();
+    const missedTodayIds = requiredIdsToday.filter((id) => !doneToday.has(id));
+    if (missedTodayIds.length > 0) {
+      const missedTitles = missedTodayIds.map((id) => nnTitleById.get(id) || "Non-Negotiable");
+      if (!(await dedupeToday("nn_miss"))) {
+        pushEvent(
+          "nn_miss",
+          missedTodayIds.length,
+          {
+            scope: "today",
+            missed_today_count: missedTodayIds.length,
+            missed_today_titles: missedTitles,
+            missed_today_template_ids: missedTodayIds,
+          },
+          {
+            smallest_nn_template_id: missedTodayIds[0] ?? smallestNnId,
+            missed_today_count: missedTodayIds.length,
+            missed_today_titles: missedTitles,
+          },
+        );
+      }
+    }
+  }
+
     if (!(await dedupeToday("skip_day_used")))
       pushEvent("skip_day_used", null, { date: todayUTC });
   } else if (dayTypeToday === "push") {
