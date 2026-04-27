@@ -1,56 +1,44 @@
-## Phase 13.5 — Access Enforcement
+## Game Plan toolbar restoration
 
-Complete Phase 13 by gating purchased build routes. Paid users see a placeholder; everyone else sees a denial message. No styling, no content, no data fetch beyond the access check.
+The user's three issues all live in `src/components/GamePlanCard.tsx` (header toolbar, lines ~1596–1750):
 
----
+1. **Lock system "gone"** — The Lock dropdown only renders when `sortMode === 'timeline'` (line 1660: `{sortMode === 'timeline' && (...)}`). Users in Auto or Manual mode never see it, so it appears removed. It must be visible in **all** modes.
 
-### Files
+2. **Auto/Timeline/Manual rotation broken** — The toggle is rendered as a single ghost button that calls `cycleSortMode` (lines 1649–1657). `cycleSortMode` (line 674) early-returns with an error toast whenever `todayLocked` is true — so anyone with a locked day is stuck on whatever mode they were in. Plus, a single button labeled only with the current mode is not discoverable as a rotator.
 
-**New (1 component, reused for all 3 routes)**
-- `src/pages/BuildAccessGate.tsx` — generic access-gated placeholder. Reads `:id` from params, current user from `useAuth()`, calls `hasAccess(user.id, buildId)`. Accepts a `buildType` prop for the headline.
+3. **Push Day is obsolete** — A push/skip/rest day bar already sits above the Game Plan (the day-control row above `TodayCommandBar`/`GamePlanCard`). The in-card "Push Day / Undo Push" button (lines 1626–1647) duplicates that and should be removed.
 
-**Edited**
-- `src/App.tsx` — register 3 lazy routes:
-  - `/program/:id` → `<BuildAccessGate buildType="program" />`
-  - `/bundle/:id` → `<BuildAccessGate buildType="bundle" />`
-  - `/consultation/:id` → `<BuildAccessGate buildType="consultation" />`
+### Changes — `src/components/GamePlanCard.tsx`
 
-No new edge function. No new tables. Reuses existing `hasAccess()` helper and RLS from Phase 13.
+**A. Always show the Lock control**
+- Remove the `{sortMode === 'timeline' && (...)}` wrapper around the Lock Popover (line 1660).
+- The Lock dropdown, its `Popover`/`PopoverContent`, and all its handlers (`handleLockCurrentOrder`, `handleOpenUnlockDialog`, `handleUnlockSave`, `handleLockDays`, `unlockDate`, etc.) stay exactly as they are.
+- The lock applies to the **day**, not the view mode, so it should never have been gated by `sortMode`.
 
----
+**B. Replace the single sort-mode button with a 3-segment toggle**
+- Replace lines 1649–1657 with a compact segmented control showing all three modes side-by-side: `Auto | Timeline | Manual`.
+- Use existing icons: `ArrowUpDown` (Auto), `Clock` (Timeline), `GripVertical` (Manual). Active segment uses `bg-primary text-primary-foreground`; inactive uses `text-white/70 hover:text-white`. Built with three small `<Button>`s in a `flex` row with rounded container — no new dependency needed (the existing `ToggleGroup` primitive is fine if cleaner, but plain buttons match the rest of the toolbar).
+- Each segment calls `setSortMode('auto' | 'timeline' | 'manual')` directly and writes to `localStorage('gameplan-sort-mode')`.
+- **Remove the `todayLocked` block** from `cycleSortMode`. Switching the **view** of tasks must never be blocked by a day lock; the lock prevents reordering/editing, not viewing. The existing `todayLocked` checks on the reorder handlers (`handleReorderCheckin`, etc.) and on `Reorder.Item drag={!todayLocked}` already enforce that correctly.
+- Delete the now-unused `cycleSortMode` function (or keep as a no-op shim if referenced elsewhere — quick grep first).
 
-### `BuildAccessGate.tsx` behavior
+**C. Remove the redundant Push Day button**
+- Delete lines 1626–1647 (the entire Push Day / Undo Push `<Button>` block).
+- Remove `pushDayDialogOpen` / `setPushDayDialogOpen` state, `dayPushed` / `setDayPushed` state.
+- Remove the `<GamePlanPushDayDialog>` mount and its import (`line 34`).
+- Audit the `useRescheduleEngine` destructure (line 112) — keep `undoLastAction`, `skipDay`, etc. only if still referenced after the Push removal. Skip Day stays untouched.
+
+### Resulting toolbar (right side of header, mobile-first)
 
 ```text
-mount
-  ├─ authLoading? → "Loading..."
-  ├─ no user?     → "You must sign in to access this content"
-  ├─ no buildId?  → "Invalid link"
-  └─ hasAccess(user.id, buildId)
-        ├─ checking → "Checking access..."
-        ├─ true     → "Content coming soon" (+ buildType label, + buildId)
-        └─ false    → "You do not have access to this content"
+[ Schedule Practice ]  [ Skip Day ]  [ Auto | Timeline | Manual ]  [ 🔒 Lock ]
 ```
 
-Minimal markup: a centered `<div>` with one heading and one paragraph. No cards, no buttons, no styling beyond default Tailwind text utilities.
-
----
-
-### Server-safety
-
-- `userId` is read from `useAuth()` (Supabase session), never from URL or props.
-- `hasAccess()` queries `user_build_access` with RLS policy `user_id = auth.uid()`, so even a spoofed client-side `user.id` cannot return another user's row — Postgres enforces it.
-- No write paths added. The gate is read-only.
-
----
+All four controls visible in every mode. Push Day removed.
 
 ### Out of scope
-- Real content rendering for programs / bundles / consultations.
-- Loading the build definition (title, modules, etc.).
-- Refund-driven revocation.
-- Owner-bypass (owners currently must purchase to view; their `View Buyers` flow is unchanged).
 
----
-
-### Outcome
-After this phase, the routes referenced by the Success page's "Access Your Purchase" button resolve to real pages. Paid users land on a "Content coming soon" placeholder; unpaid users (including direct URL guessers) are blocked. The monetization loop — pay → record → grant → **enforce** — is fully closed.
+- No DB or schema changes.
+- `useGamePlanLock`, `useRescheduleEngine`, `useCalendarDayOrders`, and `TodayCommandBar` untouched.
+- No changes to scout/coach Game Plan cards.
+- `GamePlanPushDayDialog.tsx` left on disk; not deleted (safe cleanup for a follow-up after confirming no other consumers).
