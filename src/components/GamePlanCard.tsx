@@ -3152,18 +3152,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }
       `}</style>
 
-      {/* Push Day Dialog */}
-      <GamePlanPushDayDialog
-        open={pushDayDialogOpen}
-        onOpenChange={setPushDayDialogOpen}
-        taskIds={tasks.filter(t => !t.completed).map(t => t.id)}
-        onPushComplete={() => setDayPushed(true)}
-        skipDay={skipDay}
-        pushForwardOneDay={pushForwardOneDay}
-        pushToDate={pushToDate}
-        replaceDay={replaceDay}
-        undoLastAction={undoLastAction}
-      />
+
 
       {/* Quick Note Dialog */}
       <QuickNoteDialog open={quickNoteOpen} onOpenChange={setQuickNoteOpen} />
