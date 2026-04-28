@@ -680,7 +680,9 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
           l.id === logId ? { ...l, performance_data: merged } : l
         ));
 
-        await fetchTodayLogs();
+        // Delayed background reconcile (don't await — never block the next
+        // queued write or let a slow refetch race the user's next click).
+        setTimeout(() => { fetchTodayLogs(); }, 400);
         return true;
       } catch (error) {
         console.error('[useCustomActivities] Error updating performance data:', error);
