@@ -22,7 +22,7 @@ export function QuickActionsCard({ className }: Props) {
     <TooltipProvider delayDuration={200}>
       <div
         className={cn(
-          'rounded-2xl border bg-card/60 p-3 sm:p-4 shadow-sm',
+          'rounded-2xl border-2 border-zinc-900 bg-card/60 p-3 sm:p-4 shadow-sm',
           className,
         )}
       >
@@ -46,10 +46,10 @@ export function QuickActionsCard({ className }: Props) {
           </Tooltip>
         </div>
 
-        <div className="rounded-lg border border-border/60 bg-background/30 p-2.5 space-y-2">
+        <div className="rounded-lg border-2 border-zinc-900 bg-background/30 p-2.5 space-y-2">
           <div className="flex flex-wrap items-center gap-1.5">
-            <HammerStateBadge />
-            <ReadinessChip />
+            <HammerStateBadge className="border-2 border-zinc-900" />
+            <ReadinessChip className="border-2 border-zinc-900" />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <button
@@ -68,7 +68,7 @@ export function QuickActionsCard({ className }: Props) {
               <Button
                 size="sm" variant="outline"
                 onClick={() => navigate(next.route)}
-                className="text-xs flex-1 sm:flex-none"
+                className="text-xs flex-1 sm:flex-none border-2 border-zinc-900"
               >
                 {next.ctaLabel}
               </Button>
