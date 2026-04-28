@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Scale, Play, Square, RotateCcw, CheckCircle2, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Scale, Play, Square, RotateCcw, CheckCircle2, ArrowRight, AlertTriangle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BalanceTestProps {
@@ -11,12 +11,23 @@ interface BalanceTestProps {
 
 type Phase = 'idle' | 'left_running' | 'left_done' | 'right_running' | 'result';
 
+// ---- Asymmetry contract (locked) -------------------------------------------
+// A "significant" asymmetry warning is ONLY shown when ALL of these hold:
+//   - Both legs held >= ASYMMETRY_MIN_HOLD_SEC (below this, balance noise dominates)
+//   - Percent difference > ASYMMETRY_PCT_THRESHOLD
+//   - Absolute gap >= ASYMMETRY_MIN_GAP_SEC
+//   - Neither leg has hit the diagnostic ceiling (ASYMMETRY_CEILING_SEC)
+const ASYMMETRY_PCT_THRESHOLD = 25;
+const ASYMMETRY_MIN_GAP_SEC = 4;
+const ASYMMETRY_MIN_HOLD_SEC = 8;
+const ASYMMETRY_CEILING_SEC = 60;
+
 export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>('idle');
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [leftSeconds, setLeftSeconds] = useState(0);
-  const [rightSeconds, setRightSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0); // float
+  const [leftSeconds, setLeftSeconds] = useState(0); // float, 1 decimal
+  const [rightSeconds, setRightSeconds] = useState(0); // float, 1 decimal
   const startTimeRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -33,13 +44,15 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
 
   const startTimer = useCallback(() => {
     setElapsedSeconds(0);
-    startTimeRef.current = Date.now();
-    
+    startTimeRef.current = performance.now();
+
     intervalRef.current = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      setElapsedSeconds(elapsed);
+      const elapsed = (performance.now() - startTimeRef.current) / 1000;
+      setElapsedSeconds(Math.round(elapsed * 10) / 10);
     }, 100);
   }, []);
+
+  const captureFinal = () => Math.round(((performance.now() - startTimeRef.current) / 1000) * 10) / 10;
 
   const startLeftTest = useCallback(() => {
     setPhase('left_running');
@@ -48,8 +61,7 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
 
   const stopLeftTest = useCallback(() => {
     cleanup();
-    const finalSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    setLeftSeconds(finalSeconds);
+    setLeftSeconds(captureFinal());
     setPhase('left_done');
     if (navigator.vibrate) navigator.vibrate(20);
   }, [cleanup]);
@@ -61,10 +73,11 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
 
   const stopRightTest = useCallback(() => {
     cleanup();
-    const finalSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    const finalSeconds = captureFinal();
     setRightSeconds(finalSeconds);
     setPhase('result');
-    onComplete(leftSeconds, finalSeconds);
+    // Report integer seconds to upstream consumers (preserve existing contract)
+    onComplete(Math.round(leftSeconds), Math.round(finalSeconds));
     if (navigator.vibrate) navigator.vibrate(20);
   }, [cleanup, leftSeconds, onComplete]);
 
@@ -87,23 +100,43 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
   const getAsymmetry = (left: number, right: number) => {
     const max = Math.max(left, right);
     const min = Math.min(left, right);
-    if (max === 0) return { percent: 0, weakerSide: 'none', isSignificant: false };
-    const percentDiff = ((max - min) / max) * 100;
+    const gap = max - min;
+
+    if (max === 0) {
+      return { percent: 0, gap: 0, weakerSide: 'none' as const, isSignificant: false, belowGate: true, ceilingHit: false };
+    }
+
+    const percentDiff = (gap / max) * 100;
+    const belowGate = min < ASYMMETRY_MIN_HOLD_SEC;
+    const ceilingHit = max >= ASYMMETRY_CEILING_SEC;
+    const isSignificant =
+      !belowGate &&
+      !ceilingHit &&
+      percentDiff > ASYMMETRY_PCT_THRESHOLD &&
+      gap >= ASYMMETRY_MIN_GAP_SEC;
+
     return {
       percent: Math.round(percentDiff),
-      weakerSide: left < right ? 'left' : 'right',
-      isSignificant: percentDiff > 20
+      gap: Math.round(gap * 10) / 10,
+      weakerSide: left < right ? ('left' as const) : ('right' as const),
+      isSignificant,
+      belowGate,
+      ceilingHit,
     };
   };
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
+    if (seconds >= 60) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    // 1-decimal under 60s for precision
+    return `${seconds.toFixed(1)}s`;
   };
 
   const asymmetry = getAsymmetry(leftSeconds, rightSeconds);
-  const averageSeconds = Math.round((leftSeconds + rightSeconds) / 2);
+  const averageSeconds = Math.round(((leftSeconds + rightSeconds) / 2) * 10) / 10;
 
   return (
     <div className="space-y-3 p-4 bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-xl border border-violet-500/20">
@@ -122,7 +155,7 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
           <p className="text-xs text-muted-foreground text-center">
             {t('vault.quiz.cns.balanceInstructions', 'Close your eyes and balance on one leg. Tap Stop when you lose balance.')}
           </p>
-          
+
           {/* Progress indicators */}
           <div className="flex items-center justify-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/20 border border-violet-500/30">
@@ -145,7 +178,7 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
             <Play className="h-4 w-4 mr-2" />
             {t('vault.quiz.cns.startLeftLeg', 'Start LEFT Leg Test')}
           </Button>
-          
+
           <p className="text-xs text-amber-500/80 text-center flex items-center justify-center gap-1">
             <AlertTriangle className="h-3 w-3" />
             {t('vault.quiz.cns.eyesClosed', 'Keep eyes CLOSED')}
@@ -166,7 +199,7 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
               {t('vault.quiz.cns.eyesClosed', 'Keep eyes CLOSED')}
             </p>
           </div>
-          
+
           <Button
             type="button"
             onClick={stopLeftTest}
@@ -214,7 +247,7 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
             <Play className="h-4 w-4 mr-2" />
             {t('vault.quiz.cns.startRightLeg', 'Start RIGHT Leg Test')}
           </Button>
-          
+
           <p className="text-xs text-amber-500/80 text-center flex items-center justify-center gap-1">
             <AlertTriangle className="h-3 w-3" />
             {t('vault.quiz.cns.eyesClosed', 'Keep eyes CLOSED')}
@@ -240,7 +273,7 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
               {t('vault.quiz.cns.eyesClosed', 'Keep eyes CLOSED')}
             </p>
           </div>
-          
+
           <Button
             type="button"
             onClick={stopRightTest}
@@ -260,7 +293,7 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
               <CheckCircle2 className="h-5 w-5 text-violet-500" />
               <span className="font-bold text-violet-400">{t('vault.quiz.cns.bothComplete', 'Balance Tests Complete!')}</span>
             </div>
-            
+
             {/* Individual leg results */}
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div className="p-3 rounded-lg bg-background/50 text-center">
@@ -287,14 +320,40 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">{t('vault.quiz.cns.difference', 'Difference')}</p>
-                <p className={cn("text-sm font-bold", asymmetry.isSignificant ? 'text-amber-500' : 'text-green-500')}>
+                <p
+                  className={cn(
+                    'text-sm font-bold',
+                    asymmetry.belowGate
+                      ? 'text-muted-foreground'
+                      : asymmetry.isSignificant
+                      ? 'text-amber-500'
+                      : 'text-green-500'
+                  )}
+                >
                   {asymmetry.percent}%
                 </p>
               </div>
             </div>
 
-            {/* Asymmetry warning */}
-            {asymmetry.isSignificant && (
+            {/* Asymmetry verdict — three states: not enough data / balanced / significant */}
+            {asymmetry.belowGate && (
+              <div className="mt-3 p-2 rounded-lg bg-muted/40 border border-border flex items-start gap-2">
+                <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-foreground/90">
+                    {t('vault.quiz.cns.asymmetryNeedMore', 'Hold longer for an asymmetry read')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      'vault.quiz.cns.asymmetryNeedMoreTip',
+                      `Need at least ${ASYMMETRY_MIN_HOLD_SEC}s on each side to compare reliably.`
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!asymmetry.belowGate && asymmetry.isSignificant && (
               <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
@@ -303,18 +362,20 @@ export function BalanceTest({ onComplete, disabled }: BalanceTestProps) {
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {t('vault.quiz.cns.asymmetryTip', 'Focus on single-leg stability work for your weaker side')}
+                    {' '}
+                    ({asymmetry.gap}s gap)
                   </p>
                 </div>
               </div>
             )}
 
-            {!asymmetry.isSignificant && (
+            {!asymmetry.belowGate && !asymmetry.isSignificant && (
               <p className="text-xs text-green-500 text-center mt-2">
                 ✓ {t('vault.quiz.cns.balancedStability', 'Balanced stability')}
               </p>
             )}
           </div>
-          
+
           <Button
             type="button"
             variant="outline"
