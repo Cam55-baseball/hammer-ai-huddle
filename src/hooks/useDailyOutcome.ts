@@ -97,6 +97,7 @@ function deriveOutcome(args: {
     standardMet,
     nnCompleted,
     nnTotal,
+    anyActivityLogged,
     dayType,
     streakImpact,
     summary: SUMMARY[status],
