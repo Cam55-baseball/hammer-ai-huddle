@@ -256,6 +256,7 @@ export function CustomActivityDetailDialog({
       debounceTimers.current = {};
       savedFieldIds.current.clear();
       setLocalFieldValues({});
+      setLocalCheckboxStates({});
     }
   }, [open]);
 
