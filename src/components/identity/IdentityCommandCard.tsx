@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import {
   ChevronDown, Flame, ShieldCheck, AlertTriangle, CheckCircle2, X,
   Moon, SkipForward, HelpCircle, Plus, ArrowUpRight, TrendingDown, TrendingUp,
@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useIdentityState } from '@/hooks/useIdentityState';
 import { useDayState, type DayType } from '@/hooks/useDayState';
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
-import { useNextAction } from '@/hooks/useNextAction';
+
 import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,9 +18,6 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { HammerStateBadge } from '@/components/hammer/HammerStateBadge';
-import { ReadinessChip } from '@/components/hammer/ReadinessChip';
-import { QuickLogSheet } from '@/components/practice/QuickLogSheet';
 import { safeGet, safeSet } from '@/lib/safeStorage';
 import { getTodayDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
@@ -132,8 +129,6 @@ export function IdentityCommandCard({ className }: Props) {
   const { dayType, setDayType, restBudgetLeft, usedThisWeek, maxPerWeek, overBudget } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
-  const next = useNextAction();
-  const navigate = useNavigate();
   useEngineRecomputeTrigger();
 
   // ─── Standard-confirmed state ───────────────────────────────────────────
@@ -230,7 +225,7 @@ export function IdentityCommandCard({ className }: Props) {
   };
 
   // ─── Quick log ───────────────────────────────────────────────────────────
-  const [logOpen, setLogOpen] = useState(false);
+  
 
   if (loading) {
     return (
