@@ -1382,7 +1382,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="flex-shrink-0 h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
+            className="flex-shrink-0 h-8 w-8 hidden sm:inline-flex text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
             onClick={(e) => {
               e.stopPropagation();
               setSendToCoachTitle(task.taskType === 'custom' ? task.titleKey : '');
