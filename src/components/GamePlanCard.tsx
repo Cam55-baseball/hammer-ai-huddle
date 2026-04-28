@@ -1227,14 +1227,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               )}
               {isCustom && !task.completed && (
                 <span 
-                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
+                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
                 >
                   {t('customActivity.badge')}
                 </span>
               )}
               {isCustom && task.completed && (
                 <span 
-                  className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-white/10 text-white/60"
+                  className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium uppercase tracking-wider bg-white/10 text-white/60"
                 >
                   <Eye className="h-3 w-3" />
                   {t('customActivity.tapToView', 'View')}
@@ -1242,7 +1242,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               )}
               {task.badge && !task.completed && (
                 <span 
-                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase tracking-wider"
                   style={{
                     backgroundColor: hexToRgba(activeColors.icon, 0.3),
                     color: activeColors.text,
