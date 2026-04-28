@@ -94,6 +94,19 @@ export function NutritionHubContent() {
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
+  // Deep-link from Game Plan: /nutrition-hub#log-meal scrolls to the Log Meal card
+  useEffect(() => {
+    if (location.hash !== '#log-meal') return;
+    setActiveTab('today');
+    const scroll = () => {
+      document.getElementById('log-meal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const t1 = setTimeout(scroll, 100);
+    const t2 = setTimeout(scroll, 500);
+    const t3 = setTimeout(scroll, 1000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [location.hash]);
+
   // Use React Query for macro progress - auto-syncs with all logging entry points
   const { data: consumedTotals = { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }, isLoading: loadingConsumed } = useQuery({
     queryKey: ['macroProgress', today, user?.id],
