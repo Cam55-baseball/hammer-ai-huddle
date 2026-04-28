@@ -1488,7 +1488,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
     return (
       <div className="space-y-2">
-        <h3 className={`text-xs font-black ${titleColor} uppercase tracking-widest flex items-center gap-2`}>
+        <h3 className={`text-[11px] sm:text-xs font-black ${titleColor} uppercase tracking-wider sm:tracking-widest flex items-center gap-2`}>
           <span className={`h-px flex-1 ${lineColor}`} />
           {title}
           <span className={`h-px flex-1 ${lineColor}`} />
