@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -69,6 +69,7 @@ export function NutritionHubContent() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { createRecipe } = useRecipes();
@@ -92,6 +93,19 @@ export function NutritionHubContent() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const today = format(new Date(), 'yyyy-MM-dd');
+
+  // Deep-link from Game Plan: /nutrition-hub#log-meal scrolls to the Log Meal card
+  useEffect(() => {
+    if (location.hash !== '#log-meal') return;
+    setActiveTab('today');
+    const scroll = () => {
+      document.getElementById('log-meal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const t1 = setTimeout(scroll, 100);
+    const t2 = setTimeout(scroll, 500);
+    const t3 = setTimeout(scroll, 1000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [location.hash]);
 
   // Use React Query for macro progress - auto-syncs with all logging entry points
   const { data: consumedTotals = { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }, isLoading: loadingConsumed } = useQuery({
@@ -456,21 +470,23 @@ export function NutritionHubContent() {
       />
 
       {/* Log Meal (with nested Quick Pick Foods, Favorites, Quick Actions, Supplements) */}
-      <LogMealCard
-        onLogMeal={(mealType) => handleLogMeal(mealType)}
-        onSelectFood={handleGalleryFoodSelect}
-        favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
-        quickActionsSlot={
-          <QuickLogActions
-            onLogMeal={handleLogMeal}
-            onSwitchTab={(tab) => {
-              setActiveTab(tab);
-              setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-            }}
-          />
-        }
-        supplementsSlot={<VitaminSupplementTracker />}
-      />
+      <div id="log-meal" className="scroll-mt-24">
+        <LogMealCard
+          onLogMeal={(mealType) => handleLogMeal(mealType)}
+          onSelectFood={handleGalleryFoodSelect}
+          favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
+          quickActionsSlot={
+            <QuickLogActions
+              onLogMeal={handleLogMeal}
+              onSwitchTab={(tab) => {
+                setActiveTab(tab);
+                setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+              }}
+            />
+          }
+          supplementsSlot={<VitaminSupplementTracker />}
+        />
+      </div>
 
       {/* Physio Nutrition Suggestions */}
       <PhysioNutritionSuggestions />
