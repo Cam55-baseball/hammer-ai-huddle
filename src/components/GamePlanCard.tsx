@@ -1351,15 +1351,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               const tpl = task.customActivityData!.template;
               toggleNonNegotiable(tpl.id, !!tpl.is_non_negotiable);
             }}
-            title={isNN ? 'Remove from Non-Negotiables' : 'Mark as Non-Negotiable'}
+            aria-label={isNN ? 'Remove Non-Negotiable' : 'Lock in as Non-Negotiable'}
+            title={isNN ? 'Remove from Non-Negotiables' : 'Lock in as Non-Negotiable'}
             className={cn(
-              "flex-shrink-0 h-8 w-8 rounded-md flex items-center justify-center transition-all",
+              "flex-shrink-0 h-9 min-w-[2.25rem] px-1.5 rounded-md flex flex-col items-center justify-center gap-0 transition-all",
               isNN
-                ? "text-red-400 hover:bg-red-500/15"
-                : "text-white/30 hover:text-red-300 hover:bg-white/5"
+                ? "text-red-400 bg-red-500/10 hover:bg-red-500/20"
+                : "text-white/40 hover:text-red-300 hover:bg-white/5"
             )}
           >
             <Flame className={cn("h-4 w-4", isNN && "fill-red-400")} />
+            <span className="text-[8px] font-black uppercase tracking-wider leading-none mt-0.5">
+              {isNN ? 'Locked' : 'Lock In'}
+            </span>
           </button>
         )}
 
