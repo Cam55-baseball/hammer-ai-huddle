@@ -172,7 +172,7 @@ export function useDailyOutcome(): DailyOutcome {
   const nnTotal = nn.data?.total ?? 0;
   const anyActivityLogged = nn.data?.anyActivityLogged ?? false;
   const curStreak = snapshot?.performance_streak ?? 0;
-  const allReady = !nn.isLoading;
+  const allReady = !nn.isLoading && !dayStateLoading;
 
   useEffect(() => {
     if (!allReady) return;
