@@ -1,51 +1,31 @@
-# Edit & Delete Builds from BuildLibrary
+## Goal
+Make text in the Identity banner (above the Game Plan) easier to read by darkening / strengthening the text colors against its dark gradient background.
 
-## Current State
-- `BuildLibrary.tsx` already has Edit Price and Sell/Share/View Buyers actions.
-- `ownerBuildStorage.ts` exposes `getBuilds`, `saveBuild`, `updateBuild` — **no `deleteBuild`** and no way to edit name/description/videos.
+## Current issue
+In `src/hooks/useIdentityState.ts`, each tier uses very light pastel-200 text on a dark `*-950` gradient — but several pieces inside `src/components/identity/IdentityBanner.tsx` still use low-contrast classes:
 
-## Fix
+- "Identity" eyebrow and "Consistency" caption use `text-muted-foreground` (washed out).
+- Streak chips use `bg-background/60` with default foreground (low contrast on the tinted gradient).
+- Tier label + score use `tone` colors set to `*-200` (e.g. `text-amber-200`, `text-sky-200`) — readable but a bit thin at small weights.
 
-### 1. Storage layer — `src/lib/ownerBuildStorage.ts`
-- Add `deleteBuild(id: string): boolean` — filters the array and persists.
-- Widen `updateBuild` patch type to also allow `name` (already present) — confirm `meta` merge handles videoIds replacement (it does via `...patch.meta`).
+## Changes
 
-### 2. BuildLibrary card actions — `src/pages/owner/BuildLibrary.tsx`
-Replace the current single "Edit price" button with two buttons:
-- **Edit** (Pencil icon) → opens the full Edit dialog (see below).
-- **Delete** (Trash icon, destructive variant) → opens a confirm AlertDialog. On confirm: call `deleteBuild`, splice from local `builds` state, toast "Build deleted".
+### 1. `src/hooks/useIdentityState.ts`
+Bump tier `tone` from `*-200` → `*-100` for stronger contrast on the dark gradient:
+- elite: `text-fuchsia-100`
+- locked_in: `text-emerald-100`
+- consistent: `text-sky-100`
+- building: `text-amber-100`
+- slipping: `text-rose-100`
 
-Keep Sell/Share and View Buyers as-is.
+### 2. `src/components/identity/IdentityBanner.tsx`
+- Change "Identity" eyebrow from `text-muted-foreground` → `text-foreground/80`.
+- Change "Consistency" caption from `text-muted-foreground` → `text-foreground/80`.
+- Streak chips: replace `bg-background/60` with `bg-background/80 text-foreground` so the "5d perf" / "3d active" labels are crisp.
+- Keep the rose "NN miss" chip but bump text to `text-rose-300` for readability.
 
-### 3. Full Edit dialog (replaces the price-only dialog)
-A single modal that edits all owner-controllable fields based on build type:
+No structural / behavior changes — purely contrast tweaks.
 
-**Common fields:**
-- Name (required, text)
-- Price (USD, same text+regex+pl-8 pattern, normalized to 2 decimals on save, min $0.50)
-
-**Program-specific (`type === 'program'`):**
-- Description (textarea)
-- Anchor Video (Select from `useVideoLibrary`, optional/clearable)
-
-**Bundle-specific (`type === 'bundle'`):**
-- Videos in Bundle: list with remove (X) buttons + an "Add from library…" Select for available videos. Mirrors BundleBuilder UX in compact form.
-
-**Save:** calls `updateBuild(id, { name, meta: {...existingMeta, ...patch} })` with normalized price + updated fields. Bundle saves both `videoIds` and `videoId` (first item) for backward-compat — same as BundleBuilder.
-
-**Validation:** Save disabled until name is non-empty, price valid, and (bundle) at least one video.
-
-### 4. State & wiring in BuildLibrary
-- Replace `editPrice` state with full draft state: `editDraft: { name, price, description, videoId, videoIds }`.
-- Open handler hydrates draft from the selected build.
-- Add `useVideoLibrary({ limit: 200 })` hook call so the Select pickers work.
-- Add `confirmDeleteId` state for the delete AlertDialog.
-
-### 5. Imports
-Add `Trash2` from lucide-react, `AlertDialog*` from `@/components/ui/alert-dialog`, `Select*` from `@/components/ui/select`, `Textarea` from `@/components/ui/textarea`, `useVideoLibrary` from `@/hooks/useVideoLibrary`, `deleteBuild` from `@/lib/ownerBuildStorage`.
-
-## Files Touched
-- `src/lib/ownerBuildStorage.ts` — add `deleteBuild`.
-- `src/pages/owner/BuildLibrary.tsx` — full edit dialog, delete confirm, button row.
-
-No DB or schema changes. Stripe checkout unaffected (still reads `meta.price` and `meta.videoId(s)`).
+## Files touched
+- `src/hooks/useIdentityState.ts`
+- `src/components/identity/IdentityBanner.tsx`
