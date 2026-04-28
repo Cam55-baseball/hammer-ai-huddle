@@ -99,12 +99,75 @@ const OwnerDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [pendingBuildId, setPendingBuildId] = useState<string | null>(null);
+  const { videos } = useVideoLibrary({ limit: 200 });
+  const [editingBuild, setEditingBuild] = useState<BuildItem | null>(null);
+  const [buildDraft, setBuildDraft] = useState<{ name: string; price: string; description: string; videoId: string; videoIds: string[] }>({
+    name: '',
+    price: '',
+    description: '',
+    videoId: '',
+    videoIds: [],
+  });
+  const [bundlePickerValue, setBundlePickerValue] = useState('');
+  const [confirmDeleteBuildId, setConfirmDeleteBuildId] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeSection === 'builds') {
       setBuilds(getBuilds());
     }
   }, [activeSection]);
+
+  const openEditBuild = (b: BuildItem) => {
+    const p = b.meta?.price;
+    setBuildDraft({
+      name: b.name ?? '',
+      price: typeof p === 'number' ? String(p) : typeof p === 'string' ? p : '',
+      description: typeof b.meta?.description === 'string' ? b.meta.description : '',
+      videoId: typeof b.meta?.videoId === 'string' ? b.meta.videoId : '',
+      videoIds: Array.isArray(b.meta?.videoIds) ? [...b.meta.videoIds] : [],
+    });
+    setBundlePickerValue('');
+    setEditingBuild(b);
+  };
+
+  const buildPriceNum = Number(buildDraft.price);
+  const buildPriceValid = Number.isFinite(buildPriceNum) && buildPriceNum >= 0.5;
+  const buildNameValid = buildDraft.name.trim().length > 0;
+  const buildBundleValid = editingBuild?.type !== 'bundle' || buildDraft.videoIds.length > 0;
+  const canSaveBuild = buildNameValid && buildPriceValid && buildBundleValid;
+  const buildVideoTitle = (id: string) => videos.find((v) => v.id === id)?.title ?? id;
+  const buildAvailableToAdd = videos.filter((v) => !buildDraft.videoIds.includes(v.id));
+
+  const saveBuildEdit = () => {
+    if (!editingBuild || !canSaveBuild) return;
+    const normalized = Math.round(buildPriceNum * 100) / 100;
+    const metaPatch: Record<string, any> = { price: normalized };
+    if (editingBuild.type === 'program') {
+      metaPatch.description = buildDraft.description;
+      metaPatch.videoId = buildDraft.videoId || null;
+    } else if (editingBuild.type === 'bundle') {
+      metaPatch.videoIds = buildDraft.videoIds;
+      metaPatch.videoId = buildDraft.videoIds[0] ?? null;
+    }
+    const next = updateBuild(editingBuild.id, { name: buildDraft.name.trim(), meta: metaPatch });
+    if (next) {
+      setBuilds((prev) => prev.map((b) => (b.id === next.id ? next : b)));
+      toast({ title: 'Build updated', description: `${next.name} • $${normalized.toFixed(2)}` });
+    }
+    setEditingBuild(null);
+  };
+
+  const handleDeleteBuild = () => {
+    if (!confirmDeleteBuildId) return;
+    const ok = deleteBuild(confirmDeleteBuildId);
+    if (ok) {
+      setBuilds((prev) => prev.filter((b) => b.id !== confirmDeleteBuildId));
+      toast({ title: 'Build deleted' });
+    } else {
+      toast({ title: 'Could not delete', variant: 'destructive' });
+    }
+    setConfirmDeleteBuildId(null);
+  };
 
   const handleSellBuild = async (build: BuildItem) => {
     setPendingBuildId(build.id);
