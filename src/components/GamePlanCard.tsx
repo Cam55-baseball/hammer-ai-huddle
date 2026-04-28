@@ -27,6 +27,7 @@ import { SystemTaskScheduleDrawer, displayDaysToSkipDays, skipDaysToDisplayDays 
 import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
+import { useGamePlanPreferences } from '@/hooks/useGamePlanPreferences';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
