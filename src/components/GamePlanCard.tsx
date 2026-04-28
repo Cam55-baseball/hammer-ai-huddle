@@ -1340,7 +1340,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             aria-label={isNN ? 'Remove Non-Negotiable' : 'Lock in as Non-Negotiable'}
             title={isNN ? 'Remove from Non-Negotiables' : 'Lock in as Non-Negotiable'}
             className={cn(
-              "flex-shrink-0 h-9 min-w-[2.25rem] px-1.5 rounded-md flex flex-col items-center justify-center gap-0 transition-all",
+              "flex-shrink-0 h-9 min-w-[2.25rem] px-1.5 rounded-md hidden sm:flex flex-col items-center justify-center gap-0 transition-all",
               isNN
                 ? "text-red-400 bg-red-500/10 hover:bg-red-500/20"
                 : "text-white/40 hover:text-red-300 hover:bg-white/5"
