@@ -774,6 +774,19 @@ const OwnerDashboard = () => {
                               </>
                             )}
                           </Button>
+                          <Button size="sm" variant="outline" onClick={() => openEditBuild(b)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                            onClick={() => setConfirmDeleteBuildId(b.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                            Delete
+                          </Button>
                           <Button size="sm" variant="ghost" onClick={() => handleViewBuyers(b)}>
                             <Users className="h-3.5 w-3.5 mr-1.5" />
                             View Buyers
