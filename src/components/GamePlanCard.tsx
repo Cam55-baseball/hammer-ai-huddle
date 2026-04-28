@@ -2420,52 +2420,63 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }}
         onToggleCheckbox={async (fieldId, checked) => {
           if (!selectedCustomTask?.customActivityData) return;
-          
+
           try {
             const template = selectedCustomTask.customActivityData.template;
-            let log = selectedCustomTask.customActivityData.log;
-            
-            // Build new checkbox states
-            const currentData = (log?.performance_data as Record<string, any>) || {};
-            const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
-            const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
-            const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
-            
-            // OPTIMISTIC UI UPDATE: Immediately update the checkbox state
+
+            // Capture the merged state INSIDE the functional updater so we
+            // always operate on the latest in-memory checkboxStates, even
+            // when clicks are queued back-to-back.
+            let mergedPerformanceData: Record<string, any> | null = null;
+            let logIdAtCommit: string | undefined;
+
             setSelectedCustomTask(prev => {
               if (!prev?.customActivityData) return prev;
+              const prevLog = prev.customActivityData.log;
+              const prevPd = (prevLog?.performance_data as Record<string, any>) || {};
+              const prevStates = (prevPd.checkboxStates as Record<string, boolean>) || {};
+              const nextStates = { ...prevStates, [fieldId]: checked };
+              const nextPd = { ...prevPd, checkboxStates: nextStates };
+
+              mergedPerformanceData = nextPd;
+              logIdAtCommit = prevLog?.id;
+
               return {
                 ...prev,
                 customActivityData: {
                   ...prev.customActivityData,
-                  log: prev.customActivityData.log 
-                    ? { ...prev.customActivityData.log, performance_data: newPerformanceData }
-                    : { id: 'pending', template_id: template.id, completed: false, performance_data: newPerformanceData } as any
-                }
+                  log: prevLog
+                    ? { ...prevLog, performance_data: nextPd }
+                    : { id: 'pending', template_id: template.id, completed: false, performance_data: nextPd } as any,
+                },
               };
             });
-            
-            // ENSURE LOG EXISTS: Get log directly (avoids stale closure!)
-            if (!log) {
+
+            // ENSURE LOG EXISTS
+            let log = selectedCustomTask.customActivityData.log;
+            if (!log || logIdAtCommit === undefined || logIdAtCommit === 'pending') {
               const newLog = await ensureLogExists(template.id);
               if (!newLog) {
                 toast.error(t('customActivity.addError'));
                 return;
               }
               log = newLog;
-              
-              // Update selected task with real log
               setSelectedCustomTask(prev => prev ? {
                 ...prev,
                 customActivityData: prev.customActivityData ? {
                   ...prev.customActivityData,
-                  log: { ...log!, performance_data: newPerformanceData }
+                  log: { ...log!, performance_data: mergedPerformanceData ?? (log!.performance_data as any) }
                 } : undefined
               } : null);
             }
-            
-            // PERSIST: Save checkbox states to database
-            await updateLogPerformanceData(log.id, newPerformanceData);
+
+            // PERSIST: Save the captured merged object — never the closure-stale one.
+            // updateLogPerformanceData now serializes per-log writes and merges
+            // checkboxStates against the latest server row, so concurrent
+            // toggles cannot lose updates.
+            if (mergedPerformanceData) {
+              await updateLogPerformanceData(log.id, mergedPerformanceData);
+            }
 
             // DEMOTE rule: if user previously clicked "Mark all complete" (check_all)
             // and is now unchecking a box, demote completion back to in_progress.
