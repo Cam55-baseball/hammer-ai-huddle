@@ -375,10 +375,10 @@ export function IdentityCommandCard({ className }: Props) {
                     </span>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-3 space-y-2.5">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                  <div className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-3 space-y-2.5">
+                    <p className="text-xs text-neutral-900 font-medium leading-relaxed">
                       You're being held to the{' '}
-                      <span className={cn('font-black', tone)}>{label}</span> standard today.
+                      <span className="font-black text-neutral-900">{label}</span> standard today.
                       Tap Confirm to lock in that you're operating at it.
                     </p>
                     <Button
