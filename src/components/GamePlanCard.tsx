@@ -2941,27 +2941,31 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 }}
                 onToggleCheckbox={async (fieldId, checked) => {
                   const itemId = selectedFolderTask.folderItemData!.itemId;
-                  const currentPd = performanceData || {};
-                  const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
-                  const newStates = { ...currentStates, [fieldId]: checked };
 
-                  // Optimistic update so the dialog re-renders immediately
+                  // Capture merged state inside the functional updater so
+                  // back-to-back clicks always derive from the latest state.
+                  let mergedStates: Record<string, boolean> | null = null;
                   setSelectedFolderTask(prev => {
                     if (!prev?.customActivityData) return prev;
                     const prevPd = (prev.customActivityData.log?.performance_data as Record<string, any>) || {};
+                    const prevStates = (prevPd.checkboxStates as Record<string, boolean>) || {};
+                    const nextStates = { ...prevStates, [fieldId]: checked };
+                    mergedStates = nextStates;
                     return {
                       ...prev,
                       customActivityData: {
                         ...prev.customActivityData,
                         log: {
                           ...(prev.customActivityData.log as any),
-                          performance_data: { ...prevPd, checkboxStates: newStates },
+                          performance_data: { ...prevPd, checkboxStates: nextStates },
                         } as any,
                       },
                     };
                   });
 
-                  await saveFolderCheckboxState(itemId, newStates);
+                  if (mergedStates) {
+                    await saveFolderCheckboxState(itemId, mergedStates);
+                  }
 
                   // DEMOTE rule: if previously marked complete via check_all and user unchecks → in_progress
                   const currentState = (selectedFolderTask as any).completionState as string | undefined;
