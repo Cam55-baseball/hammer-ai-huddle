@@ -1357,7 +1357,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="flex-shrink-0 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+          className="flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 text-white/60 hover:text-white hover:bg-white/10"
           onClick={(e) => { 
             e.stopPropagation(); 
             if (isCustom) {
@@ -1374,7 +1374,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             }
           }}
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
 
         {/* Send to Coach button - only for custom activities */}
