@@ -27,6 +27,7 @@ import { SystemTaskScheduleDrawer, displayDaysToSkipDays, skipDaysToDisplayDays 
 import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
+import { useGamePlanPreferences } from '@/hooks/useGamePlanPreferences';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
@@ -119,11 +120,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
-  const [sortMode, setSortMode] = useState<'auto' | 'manual' | 'timeline'>(() => {
-    const stored = localStorage.getItem('gameplan-sort-mode');
-    if (stored === 'manual' || stored === 'timeline') return stored;
-    return 'auto';
-  });
+  const {
+    sortMode,
+    timelineOrder: prefTimelineOrder,
+    manualOrders: prefManualOrders,
+    setSortMode: setSortModePref,
+    setTimelineOrder: setTimelineOrderPref,
+    setManualOrder: setManualOrderPref,
+  } = useGamePlanPreferences();
   const autoSort = sortMode === 'auto';
   
   // View mode: today or calendar
@@ -408,25 +412,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const trackingTasksList = tasks.filter(t => t.section === 'tracking');
     const customTasksList = tasks.filter(t => t.section === 'custom');
 
-    // Restore saved orders helper
-    const restoreOrder = (sectionTasks: GamePlanTask[], storageKey: string): GamePlanTask[] => {
-      const savedOrder = localStorage.getItem(storageKey);
-      if (savedOrder) {
-        try {
-          const orderIds = JSON.parse(savedOrder) as string[];
-          return [...sectionTasks].sort((a, b) => {
-            const aIdx = orderIds.indexOf(a.id);
-            const bIdx = orderIds.indexOf(b.id);
-            if (aIdx === -1 && bIdx === -1) return 0;
-            if (aIdx === -1) return 1;
-            if (bIdx === -1) return -1;
-            return aIdx - bIdx;
-          });
-        } catch {
-          return sectionTasks;
-        }
-      }
-      return sectionTasks;
+    // Restore saved orders helper — reads from server-backed preferences
+    const restoreOrder = (sectionTasks: GamePlanTask[], orderIds: string[]): GamePlanTask[] => {
+      if (!orderIds || orderIds.length === 0) return sectionTasks;
+      return [...sectionTasks].sort((a, b) => {
+        const aIdx = orderIds.indexOf(a.id);
+        const bIdx = orderIds.indexOf(b.id);
+        if (aIdx === -1 && bIdx === -1) return 0;
+        if (aIdx === -1) return 1;
+        if (bIdx === -1) return -1;
+        return aIdx - bIdx;
+      });
     };
 
     if (sortMode === 'timeline') {
@@ -481,33 +477,27 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           if (timesChanged) setTaskTimes(newTimes);
           if (remindersChanged) setTaskReminders(newReminders);
         } else {
-          // PRIORITY 3: Fall back to localStorage
-          const savedTimelineOrder = localStorage.getItem('gameplan-timeline-order');
-          if (savedTimelineOrder) {
-            try {
-              const orderIds = JSON.parse(savedTimelineOrder) as string[];
-              const allTasks = [...tasks].sort((a, b) => {
-                const aIdx = orderIds.indexOf(a.id);
-                const bIdx = orderIds.indexOf(b.id);
-                if (aIdx === -1 && bIdx === -1) return 0;
-                if (aIdx === -1) return 1;
-                if (bIdx === -1) return -1;
-                return aIdx - bIdx;
-              });
-              setTimelineTasks(allTasks);
-            } catch {
-              setTimelineTasks([...tasks]);
-            }
+          // PRIORITY 3: Fall back to user preferences (server-backed)
+          if (prefTimelineOrder && prefTimelineOrder.length > 0) {
+            const allTasks = [...tasks].sort((a, b) => {
+              const aIdx = prefTimelineOrder.indexOf(a.id);
+              const bIdx = prefTimelineOrder.indexOf(b.id);
+              if (aIdx === -1 && bIdx === -1) return 0;
+              if (aIdx === -1) return 1;
+              if (bIdx === -1) return -1;
+              return aIdx - bIdx;
+            });
+            setTimelineTasks(allTasks);
           } else {
             setTimelineTasks([...tasks]);
           }
         }
       }
     } else if (sortMode === 'manual') {
-      setOrderedCheckin(restoreOrder(checkinTasksList, 'gameplan-checkin-order'));
-      setOrderedTraining(restoreOrder(trainingTasksList, 'gameplan-training-order'));
-      setOrderedTracking(restoreOrder(trackingTasksList, 'gameplan-tracking-order'));
-      setOrderedCustom(restoreOrder(customTasksList, 'gameplan-custom-order'));
+      setOrderedCheckin(restoreOrder(checkinTasksList, prefManualOrders.checkin));
+      setOrderedTraining(restoreOrder(trainingTasksList, prefManualOrders.training));
+      setOrderedTracking(restoreOrder(trackingTasksList, prefManualOrders.tracking));
+      setOrderedCustom(restoreOrder(customTasksList, prefManualOrders.custom));
     } else {
       setOrderedCheckin(checkinTasksList);
       setOrderedTraining(trainingTasksList);
@@ -515,7 +505,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       setOrderedCustom(customTasksList);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
+  }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey, prefTimelineOrder, prefManualOrders]);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -670,33 +660,32 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   }, []);
 
   const selectSortMode = (mode: 'auto' | 'manual' | 'timeline') => {
-    setSortMode(mode);
-    localStorage.setItem('gameplan-sort-mode', mode);
+    setSortModePref(mode);
   };
 
 
   const handleReorderCheckin = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedCheckin(newOrder);
-    localStorage.setItem('gameplan-checkin-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('checkin', newOrder.map(t => t.id));
   };
 
   const handleReorderTraining = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedTraining(newOrder);
-    localStorage.setItem('gameplan-training-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('training', newOrder.map(t => t.id));
   };
 
   const handleReorderTracking = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedTracking(newOrder);
-    localStorage.setItem('gameplan-tracking-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('tracking', newOrder.map(t => t.id));
   };
 
   const handleReorderCustom = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedCustom(newOrder);
-    localStorage.setItem('gameplan-custom-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('custom', newOrder.map(t => t.id));
   };
 
   // Custom activity handlers
@@ -909,7 +898,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       return aIdx - bIdx;
     });
     setTimelineTasks(newOrderedTasks);
-    localStorage.setItem('gameplan-timeline-order', JSON.stringify(orderedIds));
+    setTimelineOrderPref(orderedIds);
     
     // Apply times and reminders
     const newTimes: Record<string, string | null> = {};
@@ -989,8 +978,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     });
     
     setTimelineTasks(mergedOrder);
-    localStorage.setItem('gameplan-timeline-order', JSON.stringify(mergedOrder.map(t => t.id)));
-  }, [todayLocked, timelineTasks, isTaskHiddenToday]);
+    setTimelineOrderPref(mergedOrder.map(t => t.id));
+  }, [todayLocked, timelineTasks, isTaskHiddenToday, setTimelineOrderPref]);
 
   // Get display tasks based on sort mode, filtering out skipped (today only) AND weekly-skipped tasks
   const filterSkippedAndScheduledOff = useCallback((taskList: GamePlanTask[]) => 
