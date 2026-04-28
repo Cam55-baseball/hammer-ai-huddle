@@ -1089,8 +1089,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   }, [dailyOutcome.nnCompleted, dailyOutcome.nnTotal, __dayType]);
 
-  // Toggle NON-NEGOTIABLE on a custom activity template (1-click)
+  // Toggle NON-NEGOTIABLE on a custom activity template (1-click).
+  // In-flight guard prevents rapid double-taps from racing the optimistic
+  // patch in useCustomActivities.updateTemplate. We rely on its built-in
+  // optimistic local update + the realtime subscription in useDailyOutcome
+  // for reconciliation — no manual refetch (which previously raced and made
+  // the flame appear to "snap back").
+  const nnInFlightRef = useRef<Set<string>>(new Set());
   const toggleNonNegotiable = async (templateId: string, current: boolean) => {
+    if (nnInFlightRef.current.has(templateId)) return;
+    nnInFlightRef.current.add(templateId);
     const next = !current;
     try {
       const ok = await updateTemplate(templateId, { is_non_negotiable: next } as any);
@@ -1100,14 +1108,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         supabase.functions.invoke('evaluate-behavioral-state', { body: { user_id: user.id } }).catch(() => {});
         supabase.functions.invoke('compute-hammer-state',     { body: { user_id: user.id } }).catch(() => {});
       }
-      refetch();
-      refetchActivities();
       toast.success(next
-        ? 'Set as Non-Negotiable — now required daily.'
+        ? 'Locked in as Non-Negotiable — required daily.'
         : 'Removed from Non-Negotiables.');
     } catch (e) {
       console.error('[toggleNonNegotiable]', e);
       toast.error('Could not update standard');
+    } finally {
+      // Hold the guard briefly after resolve so the realtime echo settles.
+      setTimeout(() => { nnInFlightRef.current.delete(templateId); }, 600);
     }
   };
 
