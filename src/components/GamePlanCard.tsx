@@ -120,11 +120,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
-  const [sortMode, setSortMode] = useState<'auto' | 'manual' | 'timeline'>(() => {
-    const stored = localStorage.getItem('gameplan-sort-mode');
-    if (stored === 'manual' || stored === 'timeline') return stored;
-    return 'auto';
-  });
+  const {
+    sortMode,
+    timelineOrder: prefTimelineOrder,
+    manualOrders: prefManualOrders,
+    setSortMode: setSortModePref,
+    setTimelineOrder: setTimelineOrderPref,
+    setManualOrder: setManualOrderPref,
+  } = useGamePlanPreferences();
   const autoSort = sortMode === 'auto';
   
   // View mode: today or calendar
