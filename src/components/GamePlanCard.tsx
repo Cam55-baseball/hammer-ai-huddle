@@ -1207,9 +1207,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           
           {/* Content */}
           <div className="flex-1 text-left min-w-0">
-            <div className="flex items-start gap-2 flex-wrap">
+            <div className="flex items-start gap-1.5 sm:gap-2 flex-wrap">
               <h3 className={cn(
-                "text-sm sm:text-base line-clamp-2",
+                "text-[15px] leading-snug sm:text-base line-clamp-2",
                 task.completed 
                   ? "font-semibold text-white/50 line-through" 
                   : "font-black text-white"
