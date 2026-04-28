@@ -1147,7 +1147,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const setFolderItemCompletionState = useCallback(async (
     itemId: string,
     state: 'not_started' | 'in_progress' | 'completed',
-    method: 'none' | 'done_button' | 'check_all',
+    method: 'none' | 'done_button' | 'check_all' | 'auto_check_all',
   ) => {
     if (!user) return;
     const today = getTodayDate();
