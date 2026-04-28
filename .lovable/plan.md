@@ -1,31 +1,39 @@
-## Goal
-Make text in the Identity banner (above the Game Plan) easier to read by darkening / strengthening the text colors against its dark gradient background.
+# Add Edit & Delete to Owner Dashboard Builds Section
 
-## Current issue
-In `src/hooks/useIdentityState.ts`, each tier uses very light pastel-200 text on a dark `*-950` gradient — but several pieces inside `src/components/identity/IdentityBanner.tsx` still use low-contrast classes:
+## Problem
+Edit and Delete controls already exist on the standalone Build Library page (`/owner/builds`), but the inline "Your Builds" list shown on the Owner Dashboard (`/owner`, Builds section) only exposes "Sell / Share" and "View Buyers". The user expects edit/delete inline as well.
 
-- "Identity" eyebrow and "Consistency" caption use `text-muted-foreground` (washed out).
-- Streak chips use `bg-background/60` with default foreground (low contrast on the tinted gradient).
-- Tier label + score use `tone` colors set to `*-200` (e.g. `text-amber-200`, `text-sky-200`) — readable but a bit thin at small weights.
+## Fix
+Bring the same edit and delete UX from `BuildLibrary.tsx` into `OwnerDashboard.tsx`'s inline Builds section so the controls are available wherever builds are listed.
 
-## Changes
+### Changes to `src/pages/OwnerDashboard.tsx`
 
-### 1. `src/hooks/useIdentityState.ts`
-Bump tier `tone` from `*-200` → `*-100` for stronger contrast on the dark gradient:
-- elite: `text-fuchsia-100`
-- locked_in: `text-emerald-100`
-- consistent: `text-sky-100`
-- building: `text-amber-100`
-- slipping: `text-rose-100`
+1. Imports
+   - Add `updateBuild`, `deleteBuild` from `@/lib/ownerBuildStorage`.
+   - Add `useVideoLibrary` hook for the video picker.
+   - Add `Pencil`, `Trash2`, `X` icons from lucide-react.
+   - Add `Dialog*`, `AlertDialog*`, `Input`, `Label`, `Textarea`, `Select*` UI primitives (reuse existing imports where present).
 
-### 2. `src/components/identity/IdentityBanner.tsx`
-- Change "Identity" eyebrow from `text-muted-foreground` → `text-foreground/80`.
-- Change "Consistency" caption from `text-muted-foreground` → `text-foreground/80`.
-- Streak chips: replace `bg-background/60` with `bg-background/80 text-foreground` so the "5d perf" / "3d active" labels are crisp.
-- Keep the rose "NN miss" chip but bump text to `text-rose-300` for readability.
+2. State
+   - `editing: BuildItem | null`
+   - `draft: { name; price; description; videoId; videoIds[] }`
+   - `pickerValue: string` (bundle add picker)
+   - `confirmDeleteId: string | null`
 
-No structural / behavior changes — purely contrast tweaks.
+3. Handlers (ported from BuildLibrary)
+   - `openEdit(build)` — seed draft from build meta.
+   - `saveEdit()` — validate (name non-empty, price ≥ 0.50, bundle has ≥1 video), call `updateBuild`, update local state, toast.
+   - `handleDelete()` — call `deleteBuild`, update local state, toast.
 
-## Files touched
-- `src/hooks/useIdentityState.ts`
-- `src/components/identity/IdentityBanner.tsx`
+4. UI additions in the existing build card (lines ~682–704)
+   - Add `Edit` button (outline, Pencil icon) → `openEdit(b)`.
+   - Add `Delete` button (outline + destructive styling, Trash2 icon) → `setConfirmDeleteId(b.id)`.
+
+5. Append two portals at the end of the Builds section:
+   - **Edit Dialog** — same fields as BuildLibrary (name, price, description+anchor video for `program`, video list for `bundle`). Plain price/name for `consultation`.
+   - **Delete AlertDialog** — same confirmation copy: existing buyers retain access; only removes from library and stops new sales.
+
+## Notes
+- Reuses existing `ownerBuildStorage` helpers — no schema/DB changes.
+- No changes to `/owner/builds` page (already complete).
+- Follows the project's dialog interaction stability rules and existing UI primitives.
