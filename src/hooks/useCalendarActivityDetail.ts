@@ -363,8 +363,8 @@ export function useCalendarActivityDetail(
               template_id: currentTemplateId,
               user_id: user.id,
               entry_date: dateStr,
-              performance_data: mergedPerformanceData ?? { checkboxStates: { [fieldId]: checked } },
-            })
+              performance_data: (mergedPerformanceData ?? { checkboxStates: { [fieldId]: checked } }) as any,
+            } as any)
             .select()
             .single();
           log = newLog as CustomActivityLog;
