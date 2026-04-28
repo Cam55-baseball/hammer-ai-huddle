@@ -83,9 +83,14 @@ function SourceSheet({ open, onOpenChange, state }: { open: boolean; onOpenChang
           <div className="rounded-lg border bg-muted/30 p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Composite</span>
-              <span className="text-2xl font-bold">{state.score}</span>
+              <span className="text-2xl font-bold">{state.score ?? '—'}</span>
             </div>
-            <Progress value={state.score} className="mt-2 h-2" />
+            <Progress value={state.score ?? 0} className="mt-2 h-2" />
+            {!state.hasSignal && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Not enough fresh signals yet. Log an HIE check, regulation report, or focus quiz in the last 36–48h.
+              </p>
+            )}
           </div>
           {state.sources.length === 0 ? (
             <p className="text-sm text-muted-foreground">No source signals yet — log a session to seed readiness.</p>
