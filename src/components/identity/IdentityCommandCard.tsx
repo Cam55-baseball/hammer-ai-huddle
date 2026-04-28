@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import {
   ChevronDown, Flame, ShieldCheck, AlertTriangle, CheckCircle2, X,
-  Moon, SkipForward, HelpCircle, Plus, ArrowUpRight, TrendingDown, TrendingUp,
+  Moon, SkipForward, HelpCircle, ArrowUpRight, TrendingDown, TrendingUp,
   Lightbulb, Zap, Info,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIdentityState } from '@/hooks/useIdentityState';
 import { useDayState, type DayType } from '@/hooks/useDayState';
 import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioralEvents';
-import { useNextAction } from '@/hooks/useNextAction';
+
 import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,9 +18,6 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { HammerStateBadge } from '@/components/hammer/HammerStateBadge';
-import { ReadinessChip } from '@/components/hammer/ReadinessChip';
-import { QuickLogSheet } from '@/components/practice/QuickLogSheet';
 import { safeGet, safeSet } from '@/lib/safeStorage';
 import { getTodayDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
@@ -132,8 +129,6 @@ export function IdentityCommandCard({ className }: Props) {
   const { dayType, setDayType, restBudgetLeft, usedThisWeek, maxPerWeek, overBudget } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
-  const next = useNextAction();
-  const navigate = useNavigate();
   useEngineRecomputeTrigger();
 
   // ─── Standard-confirmed state ───────────────────────────────────────────
@@ -230,7 +225,7 @@ export function IdentityCommandCard({ className }: Props) {
   };
 
   // ─── Quick log ───────────────────────────────────────────────────────────
-  const [logOpen, setLogOpen] = useState(false);
+  
 
   if (loading) {
     return (
@@ -506,57 +501,10 @@ export function IdentityCommandCard({ className }: Props) {
                 )}
               </section>
 
-              {/* ── 4. Quick Actions ─────────────────────────────────── */}
-              <section>
-                <SectionHeader
-                  title="Quick Actions"
-                  helpText="Your fastest path forward right now: where Hammer thinks you should go, plus a shortcut to log anything."
-                />
-                <div className="rounded-lg border border-border/60 bg-background/30 p-2.5 space-y-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <HammerStateBadge />
-                    <ReadinessChip />
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => navigate(next.route)}
-                      className="flex-1 min-w-0 text-left"
-                    >
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Next up
-                      </p>
-                      <p className="text-sm font-semibold truncate hover:text-primary transition-colors">
-                        {next.label}
-                      </p>
-                    </button>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button
-                        size="sm" variant="outline"
-                        onClick={() => navigate(next.route)}
-                        className="text-xs flex-1 sm:flex-none"
-                      >
-                        {next.ctaLabel}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => setLogOpen(true)}
-                        className="gap-1 text-xs flex-1 sm:flex-none"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        Log
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
             </div>
           </CollapsibleContent>
         </Collapsible>
       </div>
-
-      <QuickLogSheet open={logOpen} onOpenChange={setLogOpen} suggestedModule={next.moduleHint} />
     </TooltipProvider>
   );
 }

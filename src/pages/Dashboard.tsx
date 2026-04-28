@@ -24,6 +24,7 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
+import { QuickActionsCard } from "@/components/identity/QuickActionsCard";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
@@ -584,6 +585,7 @@ export default function Dashboard() {
             BehavioralPressureToast + DayControlCard + DayStateBanner +
             StandardActivationBanner. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <QuickActionsCard />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
