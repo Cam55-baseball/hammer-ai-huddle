@@ -611,6 +611,12 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     return next;
   }, []);
 
+  // Per-template/day "ensure log exists" queue. Without this, two near-simultaneous
+  // checkbox clicks on a not-yet-logged activity each try to INSERT, and the
+  // second one trips the (user_id, template_id, entry_date, instance_index=0)
+  // unique constraint -> "custom activity add" error toast.
+  const ensureChainRef = useRef<Map<string, Promise<CustomActivityLog | null>>>(new Map());
+
   // Update log performance data (for daily checkbox states, etc.)
   // IMPORTANT: This re-reads the row from the DB inside a serialized write
   // queue and deep-merges `checkboxStates` and `fieldValues` per-key so two
