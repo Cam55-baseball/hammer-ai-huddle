@@ -359,7 +359,11 @@ export function CustomActivityDetailDialog({
 
   const handleToggleCheckbox = async (fieldId: string, checked: boolean) => {
     if (!onToggleCheckbox) return;
-    
+
+    // Synchronous local commit FIRST — guarantees the user's click stays
+    // visually reflected even if the parent state momentarily lags or echoes
+    // a stale value back through the `task` prop.
+    setLocalCheckboxStates(prev => ({ ...prev, [fieldId]: checked }));
     setSavingFieldIds(prev => new Set(prev).add(fieldId));
     try {
       await onToggleCheckbox(fieldId, checked);
