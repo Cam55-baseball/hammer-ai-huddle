@@ -1589,6 +1589,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             const el = document.getElementById('nn-section');
             el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}
+          showQuickAdd={favorites.length > 0}
+          onQuickAdd={() => setFavoritesDrawerOpen(true)}
         />
 
         {/* Bold Header */}
