@@ -568,7 +568,7 @@ export function IdentityCommandCard({ className }: Props) {
 function SectionHeader({ title, helpText }: { title: string; helpText: string }) {
   return (
     <div className="flex items-center gap-1.5 mb-2">
-      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-900">
         {title}
       </h4>
       <Tooltip>
@@ -576,7 +576,7 @@ function SectionHeader({ title, helpText }: { title: string; helpText: string })
           <button
             type="button"
             aria-label={`What is ${title}?`}
-            className="text-muted-foreground/60 hover:text-foreground transition-colors"
+            className="text-neutral-700 hover:text-neutral-900 transition-colors"
           >
             <Info className="h-3 w-3" />
           </button>
