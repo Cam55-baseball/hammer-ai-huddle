@@ -99,7 +99,7 @@ const OwnerDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [pendingBuildId, setPendingBuildId] = useState<string | null>(null);
-  const { videos } = useVideoLibrary({ limit: 200 });
+  const { videos: libraryVideos } = useVideoLibrary({ limit: 200 });
   const [editingBuild, setEditingBuild] = useState<BuildItem | null>(null);
   const [buildDraft, setBuildDraft] = useState<{ name: string; price: string; description: string; videoId: string; videoIds: string[] }>({
     name: '',
