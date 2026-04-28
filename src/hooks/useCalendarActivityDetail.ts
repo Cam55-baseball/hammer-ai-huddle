@@ -344,30 +344,53 @@ export function useCalendarActivityDetail(
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get or create log
+      // Get or create log. Use upsert with onConflict so back-to-back checklist
+      // taps on a not-yet-logged activity can never trip the
+      // (user_id, template_id, entry_date, instance_index) unique constraint.
       let log = selectedTask.customActivityData.log;
       if (!log || (log as unknown as { id: string }).id === 'pending') {
         const { data: existingLog } = await supabase
           .from('custom_activity_logs')
           .select('*')
           .eq('template_id', currentTemplateId)
+          .eq('user_id', user.id)
           .eq('entry_date', dateStr)
+          .order('instance_index', { ascending: true })
+          .limit(1)
           .maybeSingle();
 
         if (existingLog) {
           log = existingLog as CustomActivityLog;
         } else {
-          const { data: newLog } = await supabase
+          const { data: newLog, error: insertErr } = await supabase
             .from('custom_activity_logs')
             .insert({
               template_id: currentTemplateId,
               user_id: user.id,
               entry_date: dateStr,
+              instance_index: 0,
               performance_data: (mergedPerformanceData ?? { checkboxStates: { [fieldId]: checked } }) as any,
             } as any)
             .select()
             .single();
-          log = newLog as CustomActivityLog;
+
+          if (insertErr) {
+            const isDup = (insertErr as any)?.code === '23505'
+              || /duplicate key|unique constraint/i.test((insertErr as any)?.message || '');
+            if (!isDup) throw insertErr;
+            const { data: recovered } = await supabase
+              .from('custom_activity_logs')
+              .select('*')
+              .eq('template_id', currentTemplateId)
+              .eq('user_id', user.id)
+              .eq('entry_date', dateStr)
+              .order('instance_index', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+            log = recovered as CustomActivityLog;
+          } else {
+            log = newLog as CustomActivityLog;
+          }
         }
       }
 
