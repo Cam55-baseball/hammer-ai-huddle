@@ -632,9 +632,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       return;
     }
 
-    // Handle nutrition task - navigate to vault with nutrition section
+    // Handle nutrition task - take user directly to Log Meal in Nutrition Hub
     if (task.taskType === 'nutrition') {
-      navigate('/vault?openSection=nutrition');
+      navigate('/nutrition-hub#log-meal');
       return;
     }
 

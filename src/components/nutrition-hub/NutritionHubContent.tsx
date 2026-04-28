@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -69,6 +69,7 @@ export function NutritionHubContent() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { createRecipe } = useRecipes();
@@ -456,21 +457,23 @@ export function NutritionHubContent() {
       />
 
       {/* Log Meal (with nested Quick Pick Foods, Favorites, Quick Actions, Supplements) */}
-      <LogMealCard
-        onLogMeal={(mealType) => handleLogMeal(mealType)}
-        onSelectFood={handleGalleryFoodSelect}
-        favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
-        quickActionsSlot={
-          <QuickLogActions
-            onLogMeal={handleLogMeal}
-            onSwitchTab={(tab) => {
-              setActiveTab(tab);
-              setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-            }}
-          />
-        }
-        supplementsSlot={<VitaminSupplementTracker />}
-      />
+      <div id="log-meal" className="scroll-mt-24">
+        <LogMealCard
+          onLogMeal={(mealType) => handleLogMeal(mealType)}
+          onSelectFood={handleGalleryFoodSelect}
+          favoritesSlot={<FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />}
+          quickActionsSlot={
+            <QuickLogActions
+              onLogMeal={handleLogMeal}
+              onSwitchTab={(tab) => {
+                setActiveTab(tab);
+                setTimeout(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+              }}
+            />
+          }
+          supplementsSlot={<VitaminSupplementTracker />}
+        />
+      </div>
 
       {/* Physio Nutrition Suggestions */}
       <PhysioNutritionSuggestions />

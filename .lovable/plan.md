@@ -1,31 +1,46 @@
-# Move "Quick Add" up to the Game Plan header
-
 ## What
 
-Place the existing "Quick Add" favorites button inline with the new Standard Awareness Header at the very top of the Game Plan card — right next to the "Tap the flame…" primer (and next to the "STANDARD NOT MET / X/Y done today" line in the normal state). The two existing Quick Add buttons further down inside the customizable-activities section stay as-is for now (they're contextual to that section); the new top-of-card placement is the fast path users want after reading their Identity card.
-
-## Files
-
-- `src/components/GamePlanCard.tsx`
+Right now, tapping the "Log Your Nutrition" task on the Game Plan card sends the user to `/vault?openSection=nutrition`, which is the wrong destination. It should take them to the **Nutrition Hub** and land them on the **Log Meal** card (the section with Breakfast / Lunch / Dinner / Snack / Pre-Workout / Post-Workout buttons), so they can log a meal in one tap.
 
 ## Changes
 
-1. **Extend `StandardAwarenessHeader` props** with `showQuickAdd: boolean` and `onQuickAdd: () => void`. Render a compact pill-style button inline on the right side of the header, vertically centered with the title row:
-   - Yellow palette to match the existing Quick Add styling (`border-yellow-500/50 bg-yellow-500/10 text-yellow-400`)
-   - `Star` icon (filled) + "Quick Add" label, 11px black uppercase tracking-wider
-   - 28px tall pill so it fits cleanly beside both the rose "STANDARD NOT MET" header and the neutral "No Non-Negotiables set" primer
-   - Hidden entirely when `showQuickAdd` is false (i.e. user has no favorites yet)
+### 1. `src/components/GamePlanCard.tsx` (~line 635-639)
 
-2. **Wrap both header layouts** (the no-NN primer and the normal status banner) in a `flex items-start justify-between gap-3` row so the Quick Add pill sits flush to the right edge of the card without disrupting the existing left-side text stack.
+Change the nutrition task handler to navigate to the Nutrition Hub with a hash anchor instead of vault:
 
-3. **At the call site (~line 1567)**, pass:
-   - `showQuickAdd={favorites.length > 0}`
-   - `onQuickAdd={() => setFavoritesDrawerOpen(true)}`
+```ts
+if (task.taskType === 'nutrition') {
+  navigate('/nutrition-hub#log-meal');
+  return;
+}
+```
 
-   Both `favorites` and `setFavoritesDrawerOpen` are already in scope.
+### 2. `src/components/nutrition-hub/NutritionHubContent.tsx`
+
+- Wrap the `<LogMealCard />` block (around line 459) in a `<div id="log-meal" className="scroll-mt-24">…</div>` so it becomes an anchor target with breathing room beneath the sticky header.
+- Add a `useEffect` that watches `useLocation().hash` and, when it equals `#log-meal`, ensures the `today` tab is active (it is by default, but this guards against future changes) and smooth-scrolls the `#log-meal` element into view. Mirror the retry pattern already used in `src/pages/Nutrition.tsx` (multiple `setTimeout` attempts at 100/500/1000ms) to handle async data loads (`useTDEE`, macro query) that can shift layout after mount.
+
+```ts
+const location = useLocation();
+useEffect(() => {
+  if (location.hash !== '#log-meal') return;
+  setActiveTab('today');
+  const scroll = () => {
+    document.getElementById('log-meal')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const t1 = setTimeout(scroll, 100);
+  const t2 = setTimeout(scroll, 500);
+  const t3 = setTimeout(scroll, 1000);
+  return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+}, [location.hash]);
+```
+
+Add `useLocation` to the existing `react-router-dom` import.
 
 ## Out of scope
 
-- No change to the `QuickAddFavoritesDrawer` itself.
-- The lower in-section Quick Add buttons stay; removing them is a separate decision.
-- No new translation keys — uses literal "Quick Add" to match the new header copy style.
+- No changes to the `MealLoggingDialog` flow itself — once on the Log Meal card the user picks the meal type as today.
+- No change to the vault nutrition card; other vault entry points still work.
+- No copy / i18n changes.
+- Not auto-opening the meal type dialog on arrival — clicking through from Game Plan should land on the visible Log Meal card so the user can pick the right meal type, not force them into a default.
