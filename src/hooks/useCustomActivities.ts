@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { 
@@ -595,31 +595,92 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     return true;
   };
 
+  // Per-log write queue: serialize concurrent writes to the same log so a fast
+  // sequence of checkbox toggles can never race each other and lose updates.
+  const writeChainRef = useRef<Map<string, Promise<unknown>>>(new Map());
+  const enqueueLogWrite = useCallback(<T,>(logId: string, fn: () => Promise<T>): Promise<T> => {
+    const prev = writeChainRef.current.get(logId) ?? Promise.resolve();
+    const next = prev.catch(() => {}).then(fn);
+    writeChainRef.current.set(logId, next);
+    // Cleanup map entry once chain settles to avoid unbounded growth.
+    next.finally(() => {
+      if (writeChainRef.current.get(logId) === next) {
+        writeChainRef.current.delete(logId);
+      }
+    });
+    return next;
+  }, []);
+
   // Update log performance data (for daily checkbox states, etc.)
+  // IMPORTANT: This re-reads the row from the DB inside a serialized write
+  // queue and deep-merges `checkboxStates` and `fieldValues` per-key so two
+  // rapid client calls (e.g. checking two boxes back-to-back) cannot trample
+  // each other, even if the caller computed `performanceData` from a stale
+  // closure.
   const updateLogPerformanceData = async (
     logId: string,
     performanceData: Record<string, any>
   ): Promise<boolean> => {
     if (!user) return false;
 
-    try {
-      const { error } = await supabase
-        .from('custom_activity_logs')
-        .update({ performance_data: performanceData })
-        .eq('id', logId)
-        .eq('user_id', user.id);
+    return enqueueLogWrite(logId, async () => {
+      try {
+        // Read the latest row so per-key merges always see the freshest server state.
+        const { data: latest, error: readErr } = await supabase
+          .from('custom_activity_logs')
+          .select('performance_data')
+          .eq('id', logId)
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      if (error) {
+        if (readErr) {
+          console.error('[useCustomActivities] Error reading log for merge:', readErr);
+          return false;
+        }
+
+        const serverPd = (latest?.performance_data as Record<string, any> | null) || {};
+        const incoming = performanceData || {};
+
+        // Per-key merge for known race-prone subobjects; everything else is a
+        // shallow override (matches prior behaviour for nn_gate, etc.).
+        const merged: Record<string, any> = { ...serverPd, ...incoming };
+        if (serverPd.checkboxStates || incoming.checkboxStates) {
+          merged.checkboxStates = {
+            ...((serverPd.checkboxStates as Record<string, boolean>) || {}),
+            ...((incoming.checkboxStates as Record<string, boolean>) || {}),
+          };
+        }
+        if (serverPd.fieldValues || incoming.fieldValues) {
+          merged.fieldValues = {
+            ...((serverPd.fieldValues as Record<string, string>) || {}),
+            ...((incoming.fieldValues as Record<string, string>) || {}),
+          };
+        }
+
+        const { error } = await supabase
+          .from('custom_activity_logs')
+          .update({ performance_data: merged })
+          .eq('id', logId)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('[useCustomActivities] Error updating performance data:', error);
+          return false;
+        }
+
+        // Optimistically reflect the merged state locally so a slower
+        // fetchTodayLogs() can never temporarily regress the UI.
+        setTodayLogs(prev => prev.map(l =>
+          l.id === logId ? { ...l, performance_data: merged } : l
+        ));
+
+        await fetchTodayLogs();
+        return true;
+      } catch (error) {
         console.error('[useCustomActivities] Error updating performance data:', error);
         return false;
       }
-
-      await fetchTodayLogs();
-      return true;
-    } catch (error) {
-      console.error('[useCustomActivities] Error updating performance data:', error);
-      return false;
-    }
+    });
   };
 
   // Ensure a log exists for a template and return it directly (avoids stale closure)

@@ -305,28 +305,37 @@ export function useCalendarActivityDetail(
     // Store previous state for rollback
     const previousTask = selectedTask;
     const template = selectedTask.customActivityData.template;
-    const currentLog = selectedTask.customActivityData.log;
-    const currentData = (currentLog?.performance_data as Record<string, unknown>) || {};
-    const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
-    const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
-    const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
 
-    // DERIVE COMPLETION locally for optimistic UI only — DB trigger is source of truth
+    // Capture the merged state INSIDE the functional updater so back-to-back
+    // clicks always operate on the latest in-memory checkboxStates and never
+    // overwrite each other through a stale closure.
+    let mergedPerformanceData: Record<string, unknown> | null = null;
+    let derivedCompleted = false;
     const allCheckableIds = getAllCheckableIds(template);
-    const derivedCompleted = allCheckableIds.length > 0 
-      ? allCheckableIds.every(id => newCheckboxStates[id] === true)
-      : (currentLog?.completed || false);
 
-    // OPTIMISTIC UPDATE: Immediately update UI with derived completion
-    setSelectedTask({
-      ...selectedTask,
-      completed: derivedCompleted,
-      customActivityData: {
-        ...selectedTask.customActivityData,
-        log: currentLog 
-          ? { ...currentLog, performance_data: newPerformanceData, completed: derivedCompleted } as CustomActivityLog
-          : { id: 'pending', template_id: currentTemplateId, completed: derivedCompleted, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
-      }
+    setSelectedTask(prev => {
+      if (!prev?.customActivityData) return prev;
+      const prevLog = prev.customActivityData.log;
+      const prevPd = (prevLog?.performance_data as Record<string, unknown>) || {};
+      const prevStates = (prevPd.checkboxStates as Record<string, boolean>) || {};
+      const nextStates = { ...prevStates, [fieldId]: checked };
+      const nextPd = { ...prevPd, checkboxStates: nextStates };
+
+      mergedPerformanceData = nextPd;
+      derivedCompleted = allCheckableIds.length > 0
+        ? allCheckableIds.every(id => nextStates[id] === true)
+        : (prevLog?.completed || false);
+
+      return {
+        ...prev,
+        completed: derivedCompleted,
+        customActivityData: {
+          ...prev.customActivityData,
+          log: prevLog
+            ? { ...prevLog, performance_data: nextPd, completed: derivedCompleted } as CustomActivityLog
+            : { id: 'pending', template_id: currentTemplateId, completed: derivedCompleted, performance_data: nextPd, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog,
+        },
+      };
     });
 
     // PERSIST IN BACKGROUND — only send performance_data, trigger handles completed
@@ -336,7 +345,7 @@ export function useCalendarActivityDetail(
       if (!user) return;
 
       // Get or create log
-      let log = currentLog;
+      let log = selectedTask.customActivityData.log;
       if (!log || (log as unknown as { id: string }).id === 'pending') {
         const { data: existingLog } = await supabase
           .from('custom_activity_logs')
@@ -354,21 +363,36 @@ export function useCalendarActivityDetail(
               template_id: currentTemplateId,
               user_id: user.id,
               entry_date: dateStr,
-              performance_data: newPerformanceData,
-            })
+              performance_data: (mergedPerformanceData ?? { checkboxStates: { [fieldId]: checked } }) as any,
+            } as any)
             .select()
             .single();
           log = newLog as CustomActivityLog;
         }
       }
 
-      if (!log) return;
+      if (!log || !mergedPerformanceData) return;
 
-      // Only send performance_data — DB trigger derives completed/completed_at
+      // Re-read the row and per-key merge checkboxStates against server state
+      // so two near-simultaneous toggles cannot trample each other.
+      const { data: latest } = await supabase
+        .from('custom_activity_logs')
+        .select('performance_data')
+        .eq('id', log.id)
+        .maybeSingle();
+      const serverPd = ((latest?.performance_data as Record<string, unknown> | null) || {});
+      const serverStates = (serverPd.checkboxStates as Record<string, boolean>) || {};
+      const mergedStates = (mergedPerformanceData.checkboxStates as Record<string, boolean>) || {};
+      const finalPd: Record<string, unknown> = {
+        ...serverPd,
+        ...mergedPerformanceData,
+        checkboxStates: { ...serverStates, ...mergedStates },
+      };
+
       await supabase
         .from('custom_activity_logs')
-        .update({ 
-          performance_data: newPerformanceData,
+        .update({
+          performance_data: finalPd as any,
         })
         .eq('id', log.id);
 

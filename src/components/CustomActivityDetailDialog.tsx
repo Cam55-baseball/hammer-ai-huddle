@@ -219,6 +219,11 @@ export function CustomActivityDetailDialog({
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [localFieldValues, setLocalFieldValues] = useState<Record<string, string>>({});
+  // Optimistic shadow for checkbox toggles. Mirrors the pattern used for text
+  // fields above so the UI is driven by the user's most recent click and
+  // cannot be visually overridden by any in-flight parent / realtime update.
+  // Cleared on dialog close.
+  const [localCheckboxStates, setLocalCheckboxStates] = useState<Record<string, boolean>>({});
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const isMounted = useRef(true);
   const onUpdateFieldValueRef = useRef(onUpdateFieldValue);
@@ -251,8 +256,32 @@ export function CustomActivityDetailDialog({
       debounceTimers.current = {};
       savedFieldIds.current.clear();
       setLocalFieldValues({});
+      setLocalCheckboxStates({});
     }
   }, [open]);
+
+  // Reconcile the local checkbox shadow against the canonical prop state.
+  // Once the parent / DB has caught up to a value the user clicked, drop the
+  // shadow entry so future external changes (e.g. another tab) can flow
+  // through normally.
+  useEffect(() => {
+    if (!open) return;
+    const performanceData = task?.customActivityData?.log?.performance_data as Record<string, any> | null | undefined;
+    const serverStates = (performanceData?.checkboxStates as Record<string, boolean> | undefined) || {};
+    setLocalCheckboxStates(prev => {
+      let changed = false;
+      const next: Record<string, boolean> = {};
+      for (const [fieldId, val] of Object.entries(prev)) {
+        if (serverStates[fieldId] === val) {
+          // Server matches — shadow no longer needed for this field.
+          changed = true;
+          continue;
+        }
+        next[fieldId] = val;
+      }
+      return changed ? next : prev;
+    });
+  }, [open, task]);
 
   if (!task || !task.customActivityData) return null;
 
@@ -261,8 +290,13 @@ export function CustomActivityDetailDialog({
   const IconComponent = getActivityIcon(template.icon);
   const customColor = template.color || '#10b981';
 
-  // Get checkbox states from log's performance_data (resets daily) or fall back to template defaults
+  // Get checkbox states. Local optimistic shadow always wins so a user's most
+  // recent click is never visually reverted by a slower parent re-render or
+  // realtime echo. Falls back to log's performance_data, then template default.
   const getCheckboxState = (fieldId: string, defaultValue?: string): boolean => {
+    if (fieldId in localCheckboxStates) {
+      return localCheckboxStates[fieldId];
+    }
     const performanceData = log?.performance_data as Record<string, any> | null;
     const checkboxStates = performanceData?.checkboxStates as Record<string, boolean> | undefined;
     if (checkboxStates && fieldId in checkboxStates) {
@@ -349,7 +383,11 @@ export function CustomActivityDetailDialog({
 
   const handleToggleCheckbox = async (fieldId: string, checked: boolean) => {
     if (!onToggleCheckbox) return;
-    
+
+    // Synchronous local commit FIRST — guarantees the user's click stays
+    // visually reflected even if the parent state momentarily lags or echoes
+    // a stale value back through the `task` prop.
+    setLocalCheckboxStates(prev => ({ ...prev, [fieldId]: checked }));
     setSavingFieldIds(prev => new Set(prev).add(fieldId));
     try {
       await onToggleCheckbox(fieldId, checked);
