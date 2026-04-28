@@ -800,6 +800,172 @@ const OwnerDashboard = () => {
             </div>
           )}
 
+          {/* Build Edit Dialog */}
+          <Dialog open={!!editingBuild} onOpenChange={(o) => !o && setEditingBuild(null)}>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit {editingBuild?.type ?? 'build'}</DialogTitle>
+                <DialogDescription>Update the details below. Changes save locally.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="ob-edit-name">Name</Label>
+                  <Input
+                    id="ob-edit-name"
+                    value={buildDraft.name}
+                    onChange={(e) => setBuildDraft((d) => ({ ...d, name: e.target.value }))}
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ob-edit-price">Price (USD)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    <Input
+                      id="ob-edit-price"
+                      type="text"
+                      inputMode="decimal"
+                      value={buildDraft.price}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) {
+                          setBuildDraft((d) => ({ ...d, price: v }));
+                        }
+                      }}
+                      className="pl-8"
+                      placeholder="49.00"
+                    />
+                  </div>
+                  {!buildPriceValid && buildDraft.price.length > 0 && (
+                    <p className="text-xs text-destructive">Minimum $0.50</p>
+                  )}
+                </div>
+
+                {editingBuild?.type === 'program' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="ob-edit-desc">Description</Label>
+                      <Textarea
+                        id="ob-edit-desc"
+                        value={buildDraft.description}
+                        onChange={(e) => setBuildDraft((d) => ({ ...d, description: e.target.value }))}
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Anchor Video</Label>
+                      <div className="flex gap-2">
+                        <Select
+                          value={buildDraft.videoId}
+                          onValueChange={(v) => setBuildDraft((d) => ({ ...d, videoId: v }))}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Choose from library…" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-72">
+                            {libraryVideos.map((v) => (
+                              <SelectItem key={v.id} value={v.id}>
+                                <span className="truncate">{v.title}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {buildDraft.videoId && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setBuildDraft((d) => ({ ...d, videoId: '' }))}
+                            aria-label="Clear video"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {editingBuild?.type === 'bundle' && (
+                  <div className="space-y-2">
+                    <Label>Videos in Bundle ({buildDraft.videoIds.length})</Label>
+                    <Select
+                      value={bundlePickerValue}
+                      onValueChange={(id) => {
+                        if (!id || buildDraft.videoIds.includes(id)) return;
+                        setBuildDraft((d) => ({ ...d, videoIds: [...d.videoIds, id] }));
+                        setBundlePickerValue('');
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={buildAvailableToAdd.length === 0 ? 'All videos added' : 'Add from library…'} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {buildAvailableToAdd.map((v) => (
+                          <SelectItem key={v.id} value={v.id}>
+                            <span className="truncate">{v.title}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {buildDraft.videoIds.length === 0 ? (
+                      <p className="text-xs text-destructive italic">At least one video required.</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {buildDraft.videoIds.map((id, idx) => (
+                          <li
+                            key={id}
+                            className="flex items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-1.5"
+                          >
+                            <div className="min-w-0 flex items-center gap-2">
+                              <span className="text-xs font-mono text-muted-foreground w-5 shrink-0">{idx + 1}.</span>
+                              <span className="text-sm truncate">{buildVideoTitle(id)}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() =>
+                                setBuildDraft((d) => ({ ...d, videoIds: d.videoIds.filter((v) => v !== id) }))
+                              }
+                              aria-label={`Remove ${buildVideoTitle(id)}`}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 mt-2">
+                <Button variant="ghost" onClick={() => setEditingBuild(null)}>Cancel</Button>
+                <Button onClick={saveBuildEdit} disabled={!canSaveBuild}>Save</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Build Delete Confirm */}
+          <AlertDialog open={!!confirmDeleteBuildId} onOpenChange={(o) => !o && setConfirmDeleteBuildId(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this build?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  "{builds.find((b) => b.id === confirmDeleteBuildId)?.name || 'Untitled'}" will be removed permanently. Existing buyers keep access; this only removes it from your library and stops new sales.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteBuild}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           {activeSection === 'users' && (
             <Card className="overflow-hidden">
               <div className="divide-y">
