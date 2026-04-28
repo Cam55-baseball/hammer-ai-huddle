@@ -1,32 +1,47 @@
-I found the likely cause of the repeat failure: when a custom activity has not yet been added/logged for today, multiple fast checklist clicks can run multiple “create today log” paths at the same time. The database only allows one log for the same user/activity/date/instance, so the second rapid click can hit the add/create error. That failed save then lets refresh/realtime data override the optimistic UI, making items appear to uncheck.
+## Problem
 
-Plan:
+When a user checks every item in a custom activity's checklist, the activity should automatically be marked as **Completed** (same outcome as pressing **Complete Activity**). Today it stays as "in progress" because checkbox toggles only persist `performance_data.checkboxStates` — they never promote `completion_state` to `completed`. There is a DEMOTE rule (uncheck after `check_all` → `in_progress`) but no PROMOTE rule.
 
-1. Make custom activity log creation concurrency-safe
-   - Add a per-template/day “ensure log exists” queue in `useCustomActivities.ts`.
-   - If several checklist clicks happen before the first log is created, they will all wait on the same creation request instead of trying to insert duplicate logs.
-   - Treat duplicate-insert conflicts as recoverable by re-reading and returning the existing log instead of surfacing `customActivity.addError`.
+## Fix
 
-2. Preserve the user’s checklist state while the first log is being created
-   - When a new log is created from a checklist click, include the already-merged `performance_data.checkboxStates` in that initial insert whenever available.
-   - After the real log ID is known, continue saving through the existing per-log serialized write queue.
-   - This prevents the first server row from briefly existing with empty checkbox state and causing a snap-back.
+Add a single **PROMOTE rule** wherever a checkbox is toggled: after the merged checkbox state is computed, if **all checkable items are now true**, also write `completion_state='completed'`, `completion_method='auto_check_all'`, `completed=true`, `completed_at=now()`. If at least one item is now false and the activity was previously `completed` via either `check_all` or `auto_check_all`, demote to `in_progress` (extends the existing demote rule).
 
-3. Stop background refresh from regressing checklist state
-   - Avoid immediate blocking refreshes inside the high-frequency checkbox save path where they can race with queued writes.
-   - Keep optimistic local state authoritative until the queued save reconciles.
-   - Keep the user’s most recent checked/unchecked choice unless they click it again.
+This mirrors what the existing `markAllCheckboxesAndComplete` ("Complete Activity" button) already does — we just trigger it implicitly when the user reaches 100% via individual clicks.
 
-4. Apply the same race-proofing to calendar checklist flow
-   - `useCalendarActivityDetail.ts` has its own get/create/update path for checklist toggles.
-   - Update it to use a safe upsert/re-read pattern and preserve merged checkbox states during rapid taps.
+## Where to change
 
-5. Harden folder-assigned checklist items too
-   - Folder item checklist saves use a similar select-then-insert pattern against `folder_item_completions`.
-   - Update that path to avoid duplicate insert races and merge checkbox state per key.
+1. **`src/components/GamePlanCard.tsx`** — three `onToggleCheckbox` handlers:
+   - Line ~2421 (custom activity detail dialog)
+   - Line ~2942 and ~3124 (folder item dialogs)
 
-6. Verify the behavior
-   - Test opening a custom activity checklist that is not yet logged today.
-   - Rapidly check multiple items back-to-back.
-   - Confirm there is no “custom activity add” error and no checked item unchecks itself unless clicked again.
-   - Also verify unchecking still works intentionally and “check all / complete” still behaves correctly.
+   After persisting `performance_data`, compute `allCheckableIds` from the template, check whether every id is `true` in the merged states, and:
+   - If yes and not already completed → call `setCompletionState(template.id, 'completed', 'auto_check_all', logId)` (or the folder equivalent `setFolderItemCompletionState(itemId, 'completed', 'auto_check_all')`) and update local `selectedCustomTask` / `selectedFolderTask` to reflect `completed=true`, `completionState='completed'`, `completionMethod='auto_check_all'`.
+   - Extend the existing demote check to also fire when `currentMethod === 'auto_check_all'`.
+
+2. **`src/hooks/useCalendarActivityDetail.ts`** — `handleToggleCheckbox` (line 302):
+   - It already computes `derivedCompleted`. Persist it: include `completion_state`, `completion_method`, `completed`, `completed_at` in the `update({ performance_data: finalPd, ... })` call when `derivedCompleted` flips on, and demote to `in_progress` (clear `completed_at`) when it flips off and prior method was `check_all`/`auto_check_all`.
+
+3. **`src/hooks/useCustomActivities.ts`** — export a small helper `setCompletionStateForLog(logId, state, method)` only if needed; otherwise reuse `setCompletionState(templateId, state, method, logId)` which already routes through `ensureLogExists` and is race-safe.
+
+## Behavior summary
+
+| User action | Result |
+|---|---|
+| Check every item one-by-one | Auto-promoted to Completed (method `auto_check_all`) |
+| Press "Complete Activity" | Completed (method `check_all`) — unchanged |
+| Press "Done" with partial checks | Stays in_progress — unchanged |
+| Uncheck an item after auto/check_all completion | Demoted to in_progress |
+| Activity has no checklist items | No change — Mark Complete button still required |
+
+## Edge cases handled
+
+- Race-safe: promotion piggybacks on the existing serialized `enqueueLogWrite` chain via `setCompletionState` → `ensureLogExists`.
+- Optimistic UI: local task state updated synchronously to `completed=true` so the green "Fully completed" pill appears immediately.
+- Reopen still works: `reopenActivity` already handles both methods.
+- "Complete Activity" button still wins when pressed mid-checklist (it forces all boxes true + `check_all` method).
+
+## Files touched
+
+- `src/components/GamePlanCard.tsx`
+- `src/hooks/useCalendarActivityDetail.ts`
+- `src/hooks/useCustomActivities.ts` (only if a new helper is needed; likely not)
