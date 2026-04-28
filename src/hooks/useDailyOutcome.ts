@@ -36,6 +36,7 @@ export interface DailyOutcome {
   standardMet: boolean;
   nnCompleted: number;
   nnTotal: number;
+  anyActivityLogged: boolean;
   dayType: 'standard' | 'rest' | 'skip' | 'push';
   streakImpact: StreakImpact;
   summary: string;
