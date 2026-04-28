@@ -898,7 +898,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       return aIdx - bIdx;
     });
     setTimelineTasks(newOrderedTasks);
-    localStorage.setItem('gameplan-timeline-order', JSON.stringify(orderedIds));
+    setTimelineOrderPref(orderedIds);
     
     // Apply times and reminders
     const newTimes: Record<string, string | null> = {};
