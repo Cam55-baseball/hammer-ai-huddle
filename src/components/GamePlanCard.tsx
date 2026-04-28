@@ -1283,21 +1283,21 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             {isNN && nnCtx ? (
               // Phase 12 — Structured NN body. Every NN ships with purpose,
               // action, and success criteria so the card is self-explanatory.
-              <div className="mt-1 space-y-1">
+              <div className="mt-1 space-y-1.5 sm:space-y-1">
                 <p className={cn(
-                  "text-[11px] sm:text-xs leading-snug",
+                  "text-[12px] leading-snug sm:text-xs",
                   task.completed ? "text-white/35" : "text-white/60"
                 )}>
                   {nnCtx.purpose}
                 </p>
                 <p className={cn(
-                  "text-xs sm:text-sm leading-snug",
+                  "text-[13px] leading-snug sm:text-sm font-medium",
                   task.completed ? "text-white/40" : "text-white/85"
                 )}>
                   {nnCtx.action}
                 </p>
                 <p className={cn(
-                  "text-[10px] sm:text-[11px] leading-snug",
+                  "text-[11px] leading-snug sm:text-[11px]",
                   task.completed ? "text-white/30" : "text-white/50"
                 )}>
                   <span className="font-bold uppercase tracking-wider">Done when:</span>{' '}
@@ -1316,9 +1316,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-0.5">
                 <p className={cn(
-                  "text-xs sm:text-sm line-clamp-1",
+                  "text-[12px] leading-snug sm:text-sm line-clamp-2 sm:line-clamp-1",
                   task.completed ? "text-white/40" : "text-white/70"
                 )}>
                   {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
