@@ -691,8 +691,11 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     });
   };
 
-  // Ensure a log exists for a template and return it directly (avoids stale closure)
-  // If logId is provided AND that log exists, return it directly without inserting.
+  // Ensure a log exists for a template and return it directly (avoids stale closure).
+  // Race-safe: serializes per (user, template, today) so back-to-back checklist
+  // clicks on a not-yet-logged activity share ONE create attempt instead of
+  // each tripping the (user_id, template_id, entry_date, instance_index) unique
+  // constraint and surfacing a "custom activity add" error.
   const ensureLogExists = async (templateId: string, logId?: string): Promise<CustomActivityLog | null> => {
     if (!user) return null;
 
@@ -702,51 +705,83 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
 
     const today = getTodayDate();
+    const ensureKey = `${user.id}:${templateId}:${today}`;
 
-    try {
-      // Look for an existing log (instance 0 preferred) for this template/today
-      const { data: existingRows, error: selErr } = await supabase
-        .from('custom_activity_logs')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('template_id', templateId)
-        .eq('entry_date', today)
-        .order('instance_index', { ascending: true })
-        .limit(1);
+    const inFlight = ensureChainRef.current.get(ensureKey);
+    if (inFlight) return inFlight;
 
-      if (selErr) throw selErr;
-      if (existingRows && existingRows.length > 0) {
-        // Refresh state in background
-        fetchTodayLogs();
-        return existingRows[0] as CustomActivityLog;
-      }
+    const run = (async (): Promise<CustomActivityLog | null> => {
+      try {
+        // Look for an existing log (instance 0 preferred) for this template/today
+        const { data: existingRows, error: selErr } = await supabase
+          .from('custom_activity_logs')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('template_id', templateId)
+          .eq('entry_date', today)
+          .order('instance_index', { ascending: true })
+          .limit(1);
 
-      // None exists — insert at instance_index 0
-      const { data, error } = await supabase
-        .from('custom_activity_logs')
-        .insert({
-          user_id: user.id,
-          template_id: templateId,
-          entry_date: today,
-          completed: false,
-          instance_index: 0,
-        } as any)
-        .select()
-        .single();
+        if (selErr) throw selErr;
+        if (existingRows && existingRows.length > 0) {
+          // Background refresh, never block the caller.
+          setTimeout(() => { fetchTodayLogs(); }, 400);
+          return existingRows[0] as CustomActivityLog;
+        }
 
-      if (error) {
+        // None exists — insert at instance_index 0
+        const { data, error } = await supabase
+          .from('custom_activity_logs')
+          .insert({
+            user_id: user.id,
+            template_id: templateId,
+            entry_date: today,
+            completed: false,
+            instance_index: 0,
+          } as any)
+          .select()
+          .single();
+
+        if (error) {
+          // 23505 = unique_violation. Another concurrent ensureLogExists won
+          // the insert race (e.g. across tabs / strict-mode double-mount).
+          // Re-read and treat as success rather than surfacing addError.
+          const isDup = (error as any)?.code === '23505'
+            || /duplicate key|unique constraint/i.test((error as any)?.message || '');
+          if (isDup) {
+            const { data: recovered } = await supabase
+              .from('custom_activity_logs')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('template_id', templateId)
+              .eq('entry_date', today)
+              .order('instance_index', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+            if (recovered) {
+              setTimeout(() => { fetchTodayLogs(); }, 400);
+              return recovered as CustomActivityLog;
+            }
+          }
+          console.error('[useCustomActivities] Error ensuring log exists:', error);
+          return null;
+        }
+
+        setTimeout(() => { fetchTodayLogs(); }, 400);
+        return data as CustomActivityLog;
+      } catch (error) {
         console.error('[useCustomActivities] Error ensuring log exists:', error);
         return null;
+      } finally {
+        // Allow the next caller to attempt fresh once this resolves.
+        if (ensureChainRef.current.get(ensureKey) === run) {
+          ensureChainRef.current.delete(ensureKey);
+        }
       }
+    })();
 
-      // Refresh state in background (non-blocking)
-      fetchTodayLogs();
-
-      return data as CustomActivityLog;
-    } catch (error) {
-      console.error('[useCustomActivities] Error ensuring log exists:', error);
-      return null;
-    }
+    ensureChainRef.current.set(ensureKey, run);
+    return run;
   };
 
   // Update template schedule settings (display days, time, reminder)
