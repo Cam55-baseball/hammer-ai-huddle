@@ -477,33 +477,27 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           if (timesChanged) setTaskTimes(newTimes);
           if (remindersChanged) setTaskReminders(newReminders);
         } else {
-          // PRIORITY 3: Fall back to localStorage
-          const savedTimelineOrder = localStorage.getItem('gameplan-timeline-order');
-          if (savedTimelineOrder) {
-            try {
-              const orderIds = JSON.parse(savedTimelineOrder) as string[];
-              const allTasks = [...tasks].sort((a, b) => {
-                const aIdx = orderIds.indexOf(a.id);
-                const bIdx = orderIds.indexOf(b.id);
-                if (aIdx === -1 && bIdx === -1) return 0;
-                if (aIdx === -1) return 1;
-                if (bIdx === -1) return -1;
-                return aIdx - bIdx;
-              });
-              setTimelineTasks(allTasks);
-            } catch {
-              setTimelineTasks([...tasks]);
-            }
+          // PRIORITY 3: Fall back to user preferences (server-backed)
+          if (prefTimelineOrder && prefTimelineOrder.length > 0) {
+            const allTasks = [...tasks].sort((a, b) => {
+              const aIdx = prefTimelineOrder.indexOf(a.id);
+              const bIdx = prefTimelineOrder.indexOf(b.id);
+              if (aIdx === -1 && bIdx === -1) return 0;
+              if (aIdx === -1) return 1;
+              if (bIdx === -1) return -1;
+              return aIdx - bIdx;
+            });
+            setTimelineTasks(allTasks);
           } else {
             setTimelineTasks([...tasks]);
           }
         }
       }
     } else if (sortMode === 'manual') {
-      setOrderedCheckin(restoreOrder(checkinTasksList, 'gameplan-checkin-order'));
-      setOrderedTraining(restoreOrder(trainingTasksList, 'gameplan-training-order'));
-      setOrderedTracking(restoreOrder(trackingTasksList, 'gameplan-tracking-order'));
-      setOrderedCustom(restoreOrder(customTasksList, 'gameplan-custom-order'));
+      setOrderedCheckin(restoreOrder(checkinTasksList, prefManualOrders.checkin));
+      setOrderedTraining(restoreOrder(trainingTasksList, prefManualOrders.training));
+      setOrderedTracking(restoreOrder(trackingTasksList, prefManualOrders.tracking));
+      setOrderedCustom(restoreOrder(customTasksList, prefManualOrders.custom));
     } else {
       setOrderedCheckin(checkinTasksList);
       setOrderedTraining(trainingTasksList);
@@ -511,7 +505,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       setOrderedCustom(customTasksList);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
+  }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey, prefTimelineOrder, prefManualOrders]);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
