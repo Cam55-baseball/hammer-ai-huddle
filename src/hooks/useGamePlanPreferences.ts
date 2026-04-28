@@ -108,7 +108,7 @@ const writeLocalCache = (next: PreferencesState) => {
 };
 
 export function useGamePlanPreferences() {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const userId = user?.id ?? null;
 
   const [state, setState] = useState<PreferencesState>(() => initialFromCache());
