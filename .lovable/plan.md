@@ -1,47 +1,42 @@
 ## Problem
 
-When a user checks every item in a custom activity's checklist, the activity should automatically be marked as **Completed** (same outcome as pressing **Complete Activity**). Today it stays as "in progress" because checkbox toggles only persist `performance_data.checkboxStates` — they never promote `completion_state` to `completed`. There is a DEMOTE rule (uncheck after `check_all` → `in_progress`) but no PROMOTE rule.
+When a custom activity is marked completed (either by checking every checklist item — which now auto-promotes — or by pressing **Complete Activity**), two things must happen on the Game Plan:
+
+1. The row must **visually show as completed** (strike-through title, dimmed text, green check icon) — same treatment any other completed task gets.
+2. Position behavior depends on sort mode:
+   - **Auto** — completed items move to the bottom of their section (current behavior, keep).
+   - **Manual** — the activity stays where the user placed it.
+   - **Timeline** — the activity stays where the user placed it.
+
+Today: Manual already preserves position. Auto already moves to bottom. **Timeline incorrectly re-sorts completed tasks to the bottom** in two handlers (`handleCustomActivityToggle` and `handleNNGateSatisfied` in `GamePlanCard.tsx`) — that violates the rule.
+
+The strike-through itself is already keyed on `task.completed`, which `useGamePlan` correctly derives from `completion_state === 'completed' || completed`. So once `refetch()` lands after the auto-promote write, the row repaints as completed. The only remaining gap is timeline re-sorting.
 
 ## Fix
 
-Add a single **PROMOTE rule** wherever a checkbox is toggled: after the merged checkbox state is computed, if **all checkable items are now true**, also write `completion_state='completed'`, `completion_method='auto_check_all'`, `completed=true`, `completed_at=now()`. If at least one item is now false and the activity was previously `completed` via either `check_all` or `auto_check_all`, demote to `in_progress` (extends the existing demote rule).
+### 1. `src/components/GamePlanCard.tsx`
 
-This mirrors what the existing `markAllCheckboxesAndComplete` ("Complete Activity" button) already does — we just trigger it implicitly when the user reaches 100% via individual clicks.
+**`handleCustomActivityToggle`** (line ~703): when `sortMode === 'timeline'`, update the task's `completed` field in `timelineTasks` **in place** — do **not** call `sortTimelineByCompletion` and do **not** rewrite `gameplan-timeline-order` in localStorage. The user's chosen order must survive completion.
 
-## Where to change
+**`handleNNGateSatisfied`** (line ~726): same fix — drop the `sortTimelineByCompletion` call and the `localStorage.setItem('gameplan-timeline-order', ...)` write. Just flip `completed: true` in place inside `timelineTasks`.
 
-1. **`src/components/GamePlanCard.tsx`** — three `onToggleCheckbox` handlers:
-   - Line ~2421 (custom activity detail dialog)
-   - Line ~2942 and ~3124 (folder item dialogs)
+Manual mode already preserves position (no re-sort code path on toggle).
+Auto mode keeps using `autoSort ? sortByCompletion(...) : ...` at lines 1003-1006 — unchanged.
 
-   After persisting `performance_data`, compute `allCheckableIds` from the template, check whether every id is `true` in the merged states, and:
-   - If yes and not already completed → call `setCompletionState(template.id, 'completed', 'auto_check_all', logId)` (or the folder equivalent `setFolderItemCompletionState(itemId, 'completed', 'auto_check_all')`) and update local `selectedCustomTask` / `selectedFolderTask` to reflect `completed=true`, `completionState='completed'`, `completionMethod='auto_check_all'`.
-   - Extend the existing demote check to also fire when `currentMethod === 'auto_check_all'`.
+### 2. Strike-through verification (no code change required)
 
-2. **`src/hooks/useCalendarActivityDetail.ts`** — `handleToggleCheckbox` (line 302):
-   - It already computes `derivedCompleted`. Persist it: include `completion_state`, `completion_method`, `completed`, `completed_at` in the `update({ performance_data: finalPd, ... })` call when `derivedCompleted` flips on, and demote to `in_progress` (clear `completed_at`) when it flips off and prior method was `check_all`/`auto_check_all`.
+`useGamePlan.ts` line 1578 already sets `completed: (activity.log?.completion_state === 'completed') || activity.log?.completed`, so an `auto_check_all` promotion (which writes both fields) flips `task.completed` to `true` on the next render. The existing JSX at `GamePlanCard.tsx` lines 1228 (`line-through`), 1303/1309/1315/1336 (dimmed text), and 1436 (`bg-green-500` check) already react to `task.completed`. Nothing else to change.
 
-3. **`src/hooks/useCustomActivities.ts`** — export a small helper `setCompletionStateForLog(logId, state, method)` only if needed; otherwise reuse `setCompletionState(templateId, state, method, logId)` which already routes through `ensureLogExists` and is race-safe.
+If the user reports the strike-through is not appearing immediately after auto-completion, the cause is the local optimistic state in the dialog updating `selectedCustomTask` only — the parent list waits for `refetch()` to reflect the new `completion_state`. We can add a second optimistic patch into `tasks`/section arrays if the lag is noticeable, but the existing `refetch()` call already runs in the same handler and should resolve within ~400 ms.
 
 ## Behavior summary
 
-| User action | Result |
-|---|---|
-| Check every item one-by-one | Auto-promoted to Completed (method `auto_check_all`) |
-| Press "Complete Activity" | Completed (method `check_all`) — unchanged |
-| Press "Done" with partial checks | Stays in_progress — unchanged |
-| Uncheck an item after auto/check_all completion | Demoted to in_progress |
-| Activity has no checklist items | No change — Mark Complete button still required |
-
-## Edge cases handled
-
-- Race-safe: promotion piggybacks on the existing serialized `enqueueLogWrite` chain via `setCompletionState` → `ensureLogExists`.
-- Optimistic UI: local task state updated synchronously to `completed=true` so the green "Fully completed" pill appears immediately.
-- Reopen still works: `reopenActivity` already handles both methods.
-- "Complete Activity" button still wins when pressed mid-checklist (it forces all boxes true + `check_all` method).
+| Sort mode | Complete via "Complete Activity" or auto-check-all | Uncomplete (reopen) |
+|---|---|---|
+| Auto | Strikes through; moves to bottom of section | Moves back into incomplete group |
+| Manual | Strikes through; stays in place | Stays in place |
+| Timeline | Strikes through; stays in place | Stays in place |
 
 ## Files touched
 
-- `src/components/GamePlanCard.tsx`
-- `src/hooks/useCalendarActivityDetail.ts`
-- `src/hooks/useCustomActivities.ts` (only if a new helper is needed; likely not)
+- `src/components/GamePlanCard.tsx` — two small edits inside `handleCustomActivityToggle` and `handleNNGateSatisfied` to stop re-sorting in timeline mode.

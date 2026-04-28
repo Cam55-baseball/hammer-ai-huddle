@@ -704,14 +704,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     if (task.customActivityData) {
       const success = await toggleComplete(task.customActivityData.template.id, task.customActivityData.log?.id);
       if (success) {
-        // In timeline mode, re-sort to move completed to bottom
+        // Timeline & Manual modes preserve user's chosen position — only Auto re-sorts on completion.
         if (sortMode === 'timeline') {
-          const updatedTasks = timelineTasks.map(t => 
+          const updatedTasks = timelineTasks.map(t =>
             t.id === task.id ? { ...t, completed: !t.completed } : t
           );
-          const sorted = sortTimelineByCompletion(updatedTasks);
-          setTimelineTasks(sorted);
-          localStorage.setItem('gameplan-timeline-order', JSON.stringify(sorted.map(t => t.id)));
+          setTimelineTasks(updatedTasks);
         }
         refetch();
         toast.success(task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
@@ -739,13 +737,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       }
       const success = await toggleComplete(ca.template.id, logId ?? undefined);
       if (success) {
+        // Timeline & Manual modes preserve user's chosen position — only Auto re-sorts on completion.
         if (sortMode === 'timeline') {
           const updatedTasks = timelineTasks.map(t =>
             t.id === task.id ? { ...t, completed: true } : t
           );
-          const sorted = sortTimelineByCompletion(updatedTasks);
-          setTimelineTasks(sorted);
-          localStorage.setItem('gameplan-timeline-order', JSON.stringify(sorted.map(t => t.id)));
+          setTimelineTasks(updatedTasks);
         }
         refetch();
         toast.success(t('customActivity.markedComplete'));
