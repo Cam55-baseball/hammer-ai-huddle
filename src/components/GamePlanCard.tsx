@@ -1151,12 +1151,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return (
       <div
         className={cn(
-          "group relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
+          "group relative w-full flex items-center gap-2 sm:gap-4 px-3 py-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
           task.completed && "bg-green-500/20 border-green-500/50",
           // NN tasks no longer get a red border/glow on the row — full NN context lives in the task detail.
           skipDimming && isCustom && "opacity-60 grayscale pointer-events-none",
-          showTimeBadge && "pt-8"
+          showTimeBadge && "pt-9 sm:pt-8"
         )}
         style={!task.completed ? {
           backgroundColor: activeColors.background,
