@@ -978,8 +978,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     });
     
     setTimelineTasks(mergedOrder);
-    localStorage.setItem('gameplan-timeline-order', JSON.stringify(mergedOrder.map(t => t.id)));
-  }, [todayLocked, timelineTasks, isTaskHiddenToday]);
+    setTimelineOrderPref(mergedOrder.map(t => t.id));
+  }, [todayLocked, timelineTasks, isTaskHiddenToday, setTimelineOrderPref]);
 
   // Get display tasks based on sort mode, filtering out skipped (today only) AND weekly-skipped tasks
   const filterSkippedAndScheduledOff = useCallback((taskList: GamePlanTask[]) => 
