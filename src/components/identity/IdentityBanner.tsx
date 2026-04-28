@@ -35,23 +35,23 @@ export function IdentityBanner({ className }: Props) {
       >
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/80">
               Identity
             </div>
             <div className={cn('mt-1 text-2xl font-black tracking-tight sm:text-3xl', tone)}>
               {label}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 font-semibold text-foreground">
                 <Flame className="h-3 w-3 text-orange-400" />
                 {perfStreak}d perf
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 font-semibold text-foreground">
                 <ShieldCheck className="h-3 w-3 text-emerald-400" />
                 {discStreak}d active
               </span>
               {snapshot && snapshot.nn_miss_count_7d > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 font-semibold text-rose-400">
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/20 px-2 py-0.5 font-semibold text-rose-300">
                   {snapshot.nn_miss_count_7d} NN miss/7d
                 </span>
               )}
@@ -62,7 +62,7 @@ export function IdentityBanner({ className }: Props) {
           </div>
           <div className="flex flex-col items-end">
             <div className={cn('text-3xl font-black tabular-nums sm:text-4xl', tone)}>{score}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-foreground/80">
               Consistency
             </div>
           </div>
