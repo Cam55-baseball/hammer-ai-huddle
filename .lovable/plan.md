@@ -1,31 +1,31 @@
-## Goal
-Make text in the Identity banner (above the Game Plan) easier to read by darkening / strengthening the text colors against its dark gradient background.
+## Issue
+The text the user calls out ("Identity", "Day intent", "Today's standard", "You're being held to the X standard today. Tap Confirm to lock in that you're operating at it.", "Operate at your current identity standard", etc.) lives in `src/components/identity/IdentityCommandCard.tsx` (the expanded panel of the Identity card above the Game Plan). All of it currently uses `text-muted-foreground`, which renders as washed-out gray on the dark tier gradient.
 
-## Current issue
-In `src/hooks/useIdentityState.ts`, each tier uses very light pastel-200 text on a dark `*-950` gradient — but several pieces inside `src/components/identity/IdentityBanner.tsx` still use low-contrast classes:
+Pure black text on the existing dark gradient would be invisible. To make it actually black and readable, the **expanded panel surface** must become a light/white background. The collapsed header keeps the bold tier gradient (so the identity tier still pops), but the moment the card expands, the readable section flips to a high-contrast surface with black text.
 
-- "Identity" eyebrow and "Consistency" caption use `text-muted-foreground` (washed out).
-- Streak chips use `bg-background/60` with default foreground (low contrast on the tinted gradient).
-- Tier label + score use `tone` colors set to `*-200` (e.g. `text-amber-200`, `text-sky-200`) — readable but a bit thin at small weights.
+## Changes — `src/components/identity/IdentityCommandCard.tsx`
 
-## Changes
+1. **Expanded panel surface → white**
+   - In `<CollapsibleContent>`, wrap the inner `<div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">` with `bg-white text-neutral-900` so all content beneath the header sits on white with black default text.
 
-### 1. `src/hooks/useIdentityState.ts`
-Bump tier `tone` from `*-200` → `*-100` for stronger contrast on the dark gradient:
-- elite: `text-fuchsia-100`
-- locked_in: `text-emerald-100`
-- consistent: `text-sky-100`
-- building: `text-amber-100`
-- slipping: `text-rose-100`
+2. **All gray labels → black**
+   - `SectionHeader` `<h4>`: `text-muted-foreground` → `text-neutral-900`.
+   - `SectionHeader` info button: `text-muted-foreground/60 hover:text-foreground` → `text-neutral-700 hover:text-neutral-900`.
+   - "Today's Standard" body paragraph (`text-xs text-muted-foreground leading-relaxed`) → `text-xs text-neutral-900 leading-relaxed`. The tier word inside it keeps its colored `tone` class.
+   - Day intent explanation paragraph (`text-xs text-muted-foreground leading-relaxed`) → `text-xs text-neutral-900 leading-relaxed`.
+   - Rest budget chip surface: `bg-background/40 border-border/60` → `bg-neutral-100 border-neutral-300`, and the in-budget label gets `text-neutral-900`.
+   - Quick Actions container: `bg-background/30 border-border/60` → `bg-neutral-100 border-neutral-300`.
+   - "Next up" eyebrow + label: `text-muted-foreground` → `text-neutral-900`; main label uses `text-neutral-900 hover:text-primary`.
 
-### 2. `src/components/identity/IdentityBanner.tsx`
-- Change "Identity" eyebrow from `text-muted-foreground` → `text-foreground/80`.
-- Change "Consistency" caption from `text-muted-foreground` → `text-foreground/80`.
-- Streak chips: replace `bg-background/60` with `bg-background/80 text-foreground` so the "5d perf" / "3d active" labels are crisp.
-- Keep the rose "NN miss" chip but bump text to `text-rose-300` for readability.
+3. **Collapsed header (kept as-is, dark gradient)**
+   - The header row, tier label, score, and streak chips at the top stay on the dark gradient. Those already use bumped contrast from the previous pass (`text-foreground/80`, white tier tones). No change there.
 
-No structural / behavior changes — purely contrast tweaks.
+4. **Tooltip content**
+   - `TooltipContent` (white-on-dark by default) is fine; no change.
 
 ## Files touched
-- `src/hooks/useIdentityState.ts`
-- `src/components/identity/IdentityBanner.tsx`
+- `src/components/identity/IdentityCommandCard.tsx`
+
+## Out of scope
+- `IdentityBanner.tsx` — already updated previously and not the source of the gray text.
+- Behavior, state, or layout — purely visual contrast changes.

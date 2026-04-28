@@ -355,7 +355,7 @@ export function IdentityCommandCard({ className }: Props) {
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
         <Collapsible open={open}>
           <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-            <div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
+            <div className="px-3 sm:px-4 pb-4 pt-3 space-y-4 border-t border-border/40 bg-white text-neutral-900">
 
               {/* ── 1. Today's Standard ──────────────────────────────── */}
               <section>
@@ -375,10 +375,10 @@ export function IdentityCommandCard({ className }: Props) {
                     </span>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-3 space-y-2.5">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                  <div className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-3 space-y-2.5">
+                    <p className="text-xs text-neutral-900 font-medium leading-relaxed">
                       You're being held to the{' '}
-                      <span className={cn('font-black', tone)}>{label}</span> standard today.
+                      <span className="font-black text-neutral-900">{label}</span> standard today.
                       Tap Confirm to lock in that you're operating at it.
                     </p>
                     <Button
@@ -419,21 +419,21 @@ export function IdentityCommandCard({ className }: Props) {
                     onClick={() => handleDayClick('push')}
                   />
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                <p className="mt-2 text-xs text-neutral-900 font-medium leading-relaxed">
                   {dayMeta.explanation}
                 </p>
-                <div className="mt-2 flex items-center gap-2 rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5 text-[11px]">
+                <div className="mt-2 flex items-center gap-2 rounded-md border border-neutral-300 bg-neutral-100 px-2.5 py-1.5 text-[11px]">
                   {overBudget ? (
                     <>
-                      <AlertTriangle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                      <span className="font-bold text-rose-400">
+                      <AlertTriangle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                      <span className="font-bold text-rose-700">
                         {usedThisWeek}/{maxPerWeek} rest used — over budget.
                       </span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                      <span className="font-semibold">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="font-semibold text-neutral-900">
                         {usedThisWeek}/{maxPerWeek} rest used this week
                       </span>
                     </>
@@ -512,7 +512,7 @@ export function IdentityCommandCard({ className }: Props) {
                   title="Quick Actions"
                   helpText="Your fastest path forward right now: where Hammer thinks you should go, plus a shortcut to log anything."
                 />
-                <div className="rounded-lg border border-border/60 bg-background/30 p-2.5 space-y-2">
+                <div className="rounded-lg border border-neutral-300 bg-neutral-100 p-2.5 space-y-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <HammerStateBadge />
                     <ReadinessChip />
@@ -523,10 +523,10 @@ export function IdentityCommandCard({ className }: Props) {
                       onClick={() => navigate(next.route)}
                       className="flex-1 min-w-0 text-left"
                     >
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <p className="text-[10px] uppercase tracking-wider text-neutral-700 font-bold">
                         Next up
                       </p>
-                      <p className="text-sm font-semibold truncate hover:text-primary transition-colors">
+                      <p className="text-sm font-semibold text-neutral-900 truncate hover:text-primary transition-colors">
                         {next.label}
                       </p>
                     </button>
@@ -568,7 +568,7 @@ export function IdentityCommandCard({ className }: Props) {
 function SectionHeader({ title, helpText }: { title: string; helpText: string }) {
   return (
     <div className="flex items-center gap-1.5 mb-2">
-      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-900">
         {title}
       </h4>
       <Tooltip>
@@ -576,7 +576,7 @@ function SectionHeader({ title, helpText }: { title: string; helpText: string })
           <button
             type="button"
             aria-label={`What is ${title}?`}
-            className="text-muted-foreground/60 hover:text-foreground transition-colors"
+            className="text-neutral-700 hover:text-neutral-900 transition-colors"
           >
             <Info className="h-3 w-3" />
           </button>
