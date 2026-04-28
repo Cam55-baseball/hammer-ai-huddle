@@ -1194,13 +1194,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           {/* Icon */}
           <div 
             className={cn(
-              "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
+              "flex-shrink-0 p-1.5 sm:p-2.5 rounded-lg",
               task.completed && "bg-green-500"
             )}
             style={!task.completed ? { backgroundColor: activeColors.icon } : undefined}
           >
             <Icon className={cn(
-              "h-5 w-5 sm:h-6 sm:w-6",
+              "h-4 w-4 sm:h-6 sm:w-6",
               task.completed ? "text-white" : "text-white"
             )} />
           </div>
