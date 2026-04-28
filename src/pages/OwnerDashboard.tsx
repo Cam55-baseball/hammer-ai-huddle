@@ -8,8 +8,22 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film, Package, Send, Loader2, Plus } from "lucide-react";
-import { getBuilds, type BuildItem } from "@/lib/ownerBuildStorage";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film, Package, Send, Loader2, Plus, Pencil, Trash2, X } from "lucide-react";
+import { getBuilds, updateBuild, deleteBuild, type BuildItem } from "@/lib/ownerBuildStorage";
+import { useVideoLibrary } from "@/hooks/useVideoLibrary";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { VideoLibraryManager } from "@/components/owner/VideoLibraryManager";
 import { PromoEngineTab } from "@/components/promo-engine/PromoEngineTab";
 import { DrillCmsManager } from "@/components/owner/DrillCmsManager";
