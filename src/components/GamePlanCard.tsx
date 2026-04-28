@@ -3187,18 +3187,50 @@ const STANDARD_HEADER_META: Record<DailyOutcomeStatus, {
 
 function StandardAwarenessHeader({
   status,
-  remaining,
-  showRemaining,
+  nnCompleted,
+  nnTotal,
+  anyActivityLogged,
+  dayType,
   loading,
+  onJumpToNN,
 }: {
   status: DailyOutcomeStatus;
-  remaining: number;
-  showRemaining: boolean;
+  nnCompleted: number;
+  nnTotal: number;
+  anyActivityLogged: boolean;
+  dayType: 'standard' | 'rest' | 'skip' | 'push';
   loading: boolean;
+  onJumpToNN: () => void;
 }) {
   if (loading) return null;
+
+  // New-user / no-NN guard:
+  // If the user has zero Non-Negotiables AND hasn't logged anything yet today,
+  // do NOT show the rose "STANDARD NOT MET" banner. Show a neutral primer
+  // explaining how to set their first standard. This kills the false alarm.
+  const noNNsNoLogs =
+    nnTotal === 0 &&
+    !anyActivityLogged &&
+    (dayType === 'standard' || dayType === 'push');
+
+  if (noNNsNoLogs) {
+    return (
+      <div className="rounded-md border-l-4 border-primary/60 bg-primary/5 px-3 py-2">
+        <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-foreground">
+          <Flame className="h-4 w-4 shrink-0 text-red-400" />
+          <span>No Non-Negotiables set</span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Tap the flame on any activity below to lock it in as a daily standard.
+        </p>
+      </div>
+    );
+  }
+
   const meta = STANDARD_HEADER_META[status];
   const Icon = meta.Icon;
+  const showProgress = nnTotal > 0 && status === 'STANDARD NOT MET';
+
   return (
     <div
       className={cn(
@@ -3211,12 +3243,17 @@ function StandardAwarenessHeader({
         <Icon className="h-4 w-4 shrink-0" />
         <span>{status}</span>
       </div>
-      {showRemaining && remaining > 0 && (
-        <p className="text-xs text-muted-foreground mt-1">
-          {remaining} required action{remaining === 1 ? '' : 's'} remaining
-        </p>
+      {showProgress && (
+        <button
+          type="button"
+          onClick={onJumpToNN}
+          className="mt-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline text-left"
+        >
+          {nnCompleted}/{nnTotal} Non-Negotiables done today — tap to view
+        </button>
       )}
     </div>
   );
 }
+
 
