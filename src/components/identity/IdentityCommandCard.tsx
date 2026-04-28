@@ -512,7 +512,7 @@ export function IdentityCommandCard({ className }: Props) {
                   title="Quick Actions"
                   helpText="Your fastest path forward right now: where Hammer thinks you should go, plus a shortcut to log anything."
                 />
-                <div className="rounded-lg border border-border/60 bg-background/30 p-2.5 space-y-2">
+                <div className="rounded-lg border border-neutral-300 bg-neutral-100 p-2.5 space-y-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <HammerStateBadge />
                     <ReadinessChip />
@@ -523,10 +523,10 @@ export function IdentityCommandCard({ className }: Props) {
                       onClick={() => navigate(next.route)}
                       className="flex-1 min-w-0 text-left"
                     >
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <p className="text-[10px] uppercase tracking-wider text-neutral-700 font-bold">
                         Next up
                       </p>
-                      <p className="text-sm font-semibold truncate hover:text-primary transition-colors">
+                      <p className="text-sm font-semibold text-neutral-900 truncate hover:text-primary transition-colors">
                         {next.label}
                       </p>
                     </button>
