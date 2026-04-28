@@ -266,10 +266,6 @@ export function CustomActivityDetailDialog({
   const IconComponent = getActivityIcon(template.icon);
   const customColor = template.color || '#10b981';
 
-  // Get checkbox states from log's performance_data (resets daily) or fall back to template defaults
-  const getCheckboxState = (fieldId: string, defaultValue?: string): boolean => {
-    const performanceData = log?.performance_data as Record<string, any> | null;
-    const checkboxStates = performanceData?.checkboxStates as Record<string, boolean> | undefined;
   // Get checkbox states. Local optimistic shadow always wins so a user's most
   // recent click is never visually reverted by a slower parent re-render or
   // realtime echo. Falls back to log's performance_data, then template default.
