@@ -36,6 +36,7 @@ export interface DailyOutcome {
   standardMet: boolean;
   nnCompleted: number;
   nnTotal: number;
+  anyActivityLogged: boolean;
   dayType: 'standard' | 'rest' | 'skip' | 'push';
   streakImpact: StreakImpact;
   summary: string;
@@ -96,6 +97,7 @@ function deriveOutcome(args: {
     standardMet,
     nnCompleted,
     nnTotal,
+    anyActivityLogged,
     dayType,
     streakImpact,
     summary: SUMMARY[status],
@@ -111,7 +113,7 @@ function deriveOutcome(args: {
 export function useDailyOutcome(): DailyOutcome {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { dayType } = useDayState();
+  const { dayType, loading: dayStateLoading } = useDayState();
   const { snapshot } = useIdentityState();
   const prevStreakRef = useRef<number | null>(null);
 
@@ -158,6 +160,7 @@ export function useDailyOutcome(): DailyOutcome {
     standardMet: false,
     nnCompleted: 0,
     nnTotal: 0,
+    anyActivityLogged: false,
     dayType: 'standard',
     streakImpact: 'held',
     summary: SUMMARY['STANDARD NOT MET'],
@@ -169,7 +172,7 @@ export function useDailyOutcome(): DailyOutcome {
   const nnTotal = nn.data?.total ?? 0;
   const anyActivityLogged = nn.data?.anyActivityLogged ?? false;
   const curStreak = snapshot?.performance_streak ?? 0;
-  const allReady = !nn.isLoading;
+  const allReady = !nn.isLoading && !dayStateLoading;
 
   useEffect(() => {
     if (!allReady) return;

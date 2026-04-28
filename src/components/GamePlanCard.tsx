@@ -1089,8 +1089,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   }, [dailyOutcome.nnCompleted, dailyOutcome.nnTotal, __dayType]);
 
-  // Toggle NON-NEGOTIABLE on a custom activity template (1-click)
+  // Toggle NON-NEGOTIABLE on a custom activity template (1-click).
+  // In-flight guard prevents rapid double-taps from racing the optimistic
+  // patch in useCustomActivities.updateTemplate. We rely on its built-in
+  // optimistic local update + the realtime subscription in useDailyOutcome
+  // for reconciliation — no manual refetch (which previously raced and made
+  // the flame appear to "snap back").
+  const nnInFlightRef = useRef<Set<string>>(new Set());
   const toggleNonNegotiable = async (templateId: string, current: boolean) => {
+    if (nnInFlightRef.current.has(templateId)) return;
+    nnInFlightRef.current.add(templateId);
     const next = !current;
     try {
       const ok = await updateTemplate(templateId, { is_non_negotiable: next } as any);
@@ -1100,14 +1108,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         supabase.functions.invoke('evaluate-behavioral-state', { body: { user_id: user.id } }).catch(() => {});
         supabase.functions.invoke('compute-hammer-state',     { body: { user_id: user.id } }).catch(() => {});
       }
-      refetch();
-      refetchActivities();
       toast.success(next
-        ? 'Set as Non-Negotiable — now required daily.'
+        ? 'Locked in as Non-Negotiable — required daily.'
         : 'Removed from Non-Negotiables.');
     } catch (e) {
       console.error('[toggleNonNegotiable]', e);
       toast.error('Could not update standard');
+    } finally {
+      // Hold the guard briefly after resolve so the realtime echo settles.
+      setTimeout(() => { nnInFlightRef.current.delete(templateId); }, 600);
     }
   };
 
@@ -1342,15 +1351,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               const tpl = task.customActivityData!.template;
               toggleNonNegotiable(tpl.id, !!tpl.is_non_negotiable);
             }}
-            title={isNN ? 'Remove from Non-Negotiables' : 'Mark as Non-Negotiable'}
+            aria-label={isNN ? 'Remove Non-Negotiable' : 'Lock in as Non-Negotiable'}
+            title={isNN ? 'Remove from Non-Negotiables' : 'Lock in as Non-Negotiable'}
             className={cn(
-              "flex-shrink-0 h-8 w-8 rounded-md flex items-center justify-center transition-all",
+              "flex-shrink-0 h-9 min-w-[2.25rem] px-1.5 rounded-md flex flex-col items-center justify-center gap-0 transition-all",
               isNN
-                ? "text-red-400 hover:bg-red-500/15"
-                : "text-white/30 hover:text-red-300 hover:bg-white/5"
+                ? "text-red-400 bg-red-500/10 hover:bg-red-500/20"
+                : "text-white/40 hover:text-red-300 hover:bg-white/5"
             )}
           >
             <Flame className={cn("h-4 w-4", isNN && "fill-red-400")} />
+            <span className="text-[8px] font-black uppercase tracking-wider leading-none mt-0.5">
+              {isNN ? 'Locked' : 'Lock In'}
+            </span>
           </button>
         )}
 
@@ -1567,9 +1580,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* Phase 10.4 — Live Standard Header (single source of truth) */}
         <StandardAwarenessHeader
           status={dailyOutcome.status}
-          remaining={nnRemaining}
-          showRemaining={standardIncomplete}
+          nnCompleted={dailyOutcome.nnCompleted}
+          nnTotal={dailyOutcome.nnTotal}
+          anyActivityLogged={dailyOutcome.anyActivityLogged}
+          dayType={dailyOutcome.dayType}
           loading={dailyOutcome.loading}
+          onJumpToNN={() => {
+            const el = document.getElementById('nn-section');
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
         />
 
         {/* Bold Header */}
@@ -3187,18 +3206,50 @@ const STANDARD_HEADER_META: Record<DailyOutcomeStatus, {
 
 function StandardAwarenessHeader({
   status,
-  remaining,
-  showRemaining,
+  nnCompleted,
+  nnTotal,
+  anyActivityLogged,
+  dayType,
   loading,
+  onJumpToNN,
 }: {
   status: DailyOutcomeStatus;
-  remaining: number;
-  showRemaining: boolean;
+  nnCompleted: number;
+  nnTotal: number;
+  anyActivityLogged: boolean;
+  dayType: 'standard' | 'rest' | 'skip' | 'push';
   loading: boolean;
+  onJumpToNN: () => void;
 }) {
   if (loading) return null;
+
+  // New-user / no-NN guard:
+  // If the user has zero Non-Negotiables AND hasn't logged anything yet today,
+  // do NOT show the rose "STANDARD NOT MET" banner. Show a neutral primer
+  // explaining how to set their first standard. This kills the false alarm.
+  const noNNsNoLogs =
+    nnTotal === 0 &&
+    !anyActivityLogged &&
+    (dayType === 'standard' || dayType === 'push');
+
+  if (noNNsNoLogs) {
+    return (
+      <div className="rounded-md border-l-4 border-primary/60 bg-primary/5 px-3 py-2">
+        <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-foreground">
+          <Flame className="h-4 w-4 shrink-0 text-red-400" />
+          <span>No Non-Negotiables set</span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Tap the flame on any activity below to lock it in as a daily standard.
+        </p>
+      </div>
+    );
+  }
+
   const meta = STANDARD_HEADER_META[status];
   const Icon = meta.Icon;
+  const showProgress = nnTotal > 0 && status === 'STANDARD NOT MET';
+
   return (
     <div
       className={cn(
@@ -3211,12 +3262,17 @@ function StandardAwarenessHeader({
         <Icon className="h-4 w-4 shrink-0" />
         <span>{status}</span>
       </div>
-      {showRemaining && remaining > 0 && (
-        <p className="text-xs text-muted-foreground mt-1">
-          {remaining} required action{remaining === 1 ? '' : 's'} remaining
-        </p>
+      {showProgress && (
+        <button
+          type="button"
+          onClick={onJumpToNN}
+          className="mt-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline text-left"
+        >
+          {nnCompleted}/{nnTotal} Non-Negotiables done today — tap to view
+        </button>
       )}
     </div>
   );
 }
+
 
