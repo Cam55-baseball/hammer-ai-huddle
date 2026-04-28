@@ -160,6 +160,7 @@ export function useDailyOutcome(): DailyOutcome {
     standardMet: false,
     nnCompleted: 0,
     nnTotal: 0,
+    anyActivityLogged: false,
     dayType: 'standard',
     streakImpact: 'held',
     summary: SUMMARY['STANDARD NOT MET'],
