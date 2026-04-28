@@ -2986,10 +2986,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     await saveFolderCheckboxState(itemId, mergedStates);
                   }
 
-                  // DEMOTE rule: if previously marked complete via check_all and user unchecks → in_progress
+                  // PROMOTE / DEMOTE rules.
                   const currentState = (selectedFolderTask as any).completionState as string | undefined;
                   const currentMethod = (selectedFolderTask as any).completionMethod as string | undefined;
-                  if (!checked && currentState === 'completed' && currentMethod === 'check_all') {
+                  const tplForCheck = selectedFolderTask.customActivityData?.template;
+                  const allIdsForCheck = tplForCheck ? getAllCheckableIds(tplForCheck) : [];
+                  const allCheckedNow = allIdsForCheck.length > 0
+                    && mergedStates !== null
+                    && allIdsForCheck.every(id => (mergedStates as Record<string, boolean>)[id] === true);
+
+                  if (checked && allCheckedNow && currentState !== 'completed') {
+                    await setFolderItemCompletionState(itemId, 'completed', 'auto_check_all');
+                    setSelectedFolderTask(prev => prev ? { ...prev, completed: true, completionState: 'completed', completionMethod: 'auto_check_all' } as any : null);
+                  } else if (!checked && currentState === 'completed' && (currentMethod === 'check_all' || currentMethod === 'auto_check_all')) {
                     await setFolderItemCompletionState(itemId, 'in_progress', 'none');
                     setSelectedFolderTask(prev => prev ? { ...prev, completed: false, completionState: 'in_progress', completionMethod: 'none' } as any : null);
                   }
@@ -3168,10 +3177,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   await saveFolderCheckboxState(itemId, mergedStates);
                 }
 
-                // DEMOTE rule: if previously marked complete via check_all and user unchecks → in_progress
+                // PROMOTE / DEMOTE rules.
                 const currentState = (selectedFolderTask as any).completionState as string | undefined;
                 const currentMethod = (selectedFolderTask as any).completionMethod as string | undefined;
-                if (!checked && currentState === 'completed' && currentMethod === 'check_all') {
+                const tplForCheck = selectedFolderTask.customActivityData?.template;
+                const allIdsForCheck = tplForCheck ? getAllCheckableIds(tplForCheck) : [];
+                const allCheckedNow = allIdsForCheck.length > 0
+                  && mergedStates !== null
+                  && allIdsForCheck.every(id => (mergedStates as Record<string, boolean>)[id] === true);
+
+                if (checked && allCheckedNow && currentState !== 'completed') {
+                  await setFolderItemCompletionState(itemId, 'completed', 'auto_check_all');
+                  setSelectedFolderTask(prev => prev ? { ...prev, completed: true, completionState: 'completed', completionMethod: 'auto_check_all' } as any : null);
+                } else if (!checked && currentState === 'completed' && (currentMethod === 'check_all' || currentMethod === 'auto_check_all')) {
                   await setFolderItemCompletionState(itemId, 'in_progress', 'none');
                   setSelectedFolderTask(prev => prev ? { ...prev, completed: false, completionState: 'in_progress', completionMethod: 'none' } as any : null);
                 }
