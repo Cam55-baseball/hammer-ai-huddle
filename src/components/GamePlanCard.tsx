@@ -1567,9 +1567,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* Phase 10.4 — Live Standard Header (single source of truth) */}
         <StandardAwarenessHeader
           status={dailyOutcome.status}
-          remaining={nnRemaining}
-          showRemaining={standardIncomplete}
+          nnCompleted={dailyOutcome.nnCompleted}
+          nnTotal={dailyOutcome.nnTotal}
+          anyActivityLogged={dailyOutcome.anyActivityLogged}
+          dayType={dailyOutcome.dayType}
           loading={dailyOutcome.loading}
+          onJumpToNN={() => {
+            const el = document.getElementById('nn-section');
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
         />
 
         {/* Bold Header */}
