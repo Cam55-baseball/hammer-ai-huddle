@@ -260,6 +260,29 @@ export function CustomActivityDetailDialog({
     }
   }, [open]);
 
+  // Reconcile the local checkbox shadow against the canonical prop state.
+  // Once the parent / DB has caught up to a value the user clicked, drop the
+  // shadow entry so future external changes (e.g. another tab) can flow
+  // through normally.
+  useEffect(() => {
+    if (!open) return;
+    const performanceData = task?.customActivityData?.log?.performance_data as Record<string, any> | null | undefined;
+    const serverStates = (performanceData?.checkboxStates as Record<string, boolean> | undefined) || {};
+    setLocalCheckboxStates(prev => {
+      let changed = false;
+      const next: Record<string, boolean> = {};
+      for (const [fieldId, val] of Object.entries(prev)) {
+        if (serverStates[fieldId] === val) {
+          // Server matches — shadow no longer needed for this field.
+          changed = true;
+          continue;
+        }
+        next[fieldId] = val;
+      }
+      return changed ? next : prev;
+    });
+  }, [open, task]);
+
   if (!task || !task.customActivityData) return null;
 
   const template = task.customActivityData.template;
