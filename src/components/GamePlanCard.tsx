@@ -1182,7 +1182,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             "flex-shrink-0 text-white/60",
             todayLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
           )}>
-            <GripVertical className="h-5 w-5" />
+            <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         )}
         
