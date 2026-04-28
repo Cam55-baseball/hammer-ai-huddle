@@ -135,8 +135,8 @@ const OwnerDashboard = () => {
   const buildNameValid = buildDraft.name.trim().length > 0;
   const buildBundleValid = editingBuild?.type !== 'bundle' || buildDraft.videoIds.length > 0;
   const canSaveBuild = buildNameValid && buildPriceValid && buildBundleValid;
-  const buildVideoTitle = (id: string) => videos.find((v) => v.id === id)?.title ?? id;
-  const buildAvailableToAdd = videos.filter((v) => !buildDraft.videoIds.includes(v.id));
+  const buildVideoTitle = (id: string) => libraryVideos.find((v) => v.id === id)?.title ?? id;
+  const buildAvailableToAdd = libraryVideos.filter((v) => !buildDraft.videoIds.includes(v.id));
 
   const saveBuildEdit = () => {
     if (!editingBuild || !canSaveBuild) return;
