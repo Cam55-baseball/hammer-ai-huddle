@@ -1589,6 +1589,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             const el = document.getElementById('nn-section');
             el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}
+          showQuickAdd={favorites.length > 0}
+          onQuickAdd={() => setFavoritesDrawerOpen(true)}
         />
 
         {/* Bold Header */}
@@ -3212,6 +3214,8 @@ function StandardAwarenessHeader({
   dayType,
   loading,
   onJumpToNN,
+  showQuickAdd,
+  onQuickAdd,
 }: {
   status: DailyOutcomeStatus;
   nnCompleted: number;
@@ -3220,8 +3224,22 @@ function StandardAwarenessHeader({
   dayType: 'standard' | 'rest' | 'skip' | 'push';
   loading: boolean;
   onJumpToNN: () => void;
+  showQuickAdd: boolean;
+  onQuickAdd: () => void;
 }) {
   if (loading) return null;
+
+  const QuickAddBtn = showQuickAdd ? (
+    <button
+      type="button"
+      onClick={onQuickAdd}
+      className="shrink-0 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-yellow-500/50 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 text-[11px] font-black uppercase tracking-wider transition-colors"
+      aria-label="Quick Add favorite activity"
+    >
+      <Star className="h-3.5 w-3.5 fill-yellow-500" />
+      Quick Add
+    </button>
+  ) : null;
 
   // New-user / no-NN guard:
   // If the user has zero Non-Negotiables AND hasn't logged anything yet today,
@@ -3235,13 +3253,18 @@ function StandardAwarenessHeader({
   if (noNNsNoLogs) {
     return (
       <div className="rounded-md border-l-4 border-primary/60 bg-primary/5 px-3 py-2">
-        <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-foreground">
-          <Flame className="h-4 w-4 shrink-0 text-red-400" />
-          <span>No Non-Negotiables set</span>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-foreground">
+              <Flame className="h-4 w-4 shrink-0 text-red-400" />
+              <span>No Non-Negotiables set</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tap the flame on any activity below to lock it in as a daily standard.
+            </p>
+          </div>
+          {QuickAddBtn}
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Tap the flame on any activity below to lock it in as a daily standard.
-        </p>
       </div>
     );
   }
@@ -3258,21 +3281,27 @@ function StandardAwarenessHeader({
         meta.bgClass,
       )}
     >
-      <div className={cn('flex items-center gap-2 text-sm font-bold uppercase tracking-wide', meta.textClass)}>
-        <Icon className="h-4 w-4 shrink-0" />
-        <span>{status}</span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className={cn('flex items-center gap-2 text-sm font-bold uppercase tracking-wide', meta.textClass)}>
+            <Icon className="h-4 w-4 shrink-0" />
+            <span>{status}</span>
+          </div>
+          {showProgress && (
+            <button
+              type="button"
+              onClick={onJumpToNN}
+              className="mt-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline text-left"
+            >
+              {nnCompleted}/{nnTotal} Non-Negotiables done today — tap to view
+            </button>
+          )}
+        </div>
+        {QuickAddBtn}
       </div>
-      {showProgress && (
-        <button
-          type="button"
-          onClick={onJumpToNN}
-          className="mt-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline text-left"
-        >
-          {nnCompleted}/{nnTotal} Non-Negotiables done today — tap to view
-        </button>
-      )}
     </div>
   );
 }
+
 
 
