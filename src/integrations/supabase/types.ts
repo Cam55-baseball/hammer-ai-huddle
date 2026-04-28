@@ -2810,6 +2810,42 @@ export type Database = {
         }
         Relationships: []
       }
+      game_plan_user_preferences: {
+        Row: {
+          created_at: string
+          manual_order_checkin: string[]
+          manual_order_custom: string[]
+          manual_order_tracking: string[]
+          manual_order_training: string[]
+          sort_mode: string
+          timeline_order: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          manual_order_checkin?: string[]
+          manual_order_custom?: string[]
+          manual_order_tracking?: string[]
+          manual_order_training?: string[]
+          sort_mode?: string
+          timeline_order?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          manual_order_checkin?: string[]
+          manual_order_custom?: string[]
+          manual_order_tracking?: string[]
+          manual_order_training?: string[]
+          sort_mode?: string
+          timeline_order?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       game_plan_week_overrides: {
         Row: {
           created_at: string | null
