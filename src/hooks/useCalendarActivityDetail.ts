@@ -392,7 +392,7 @@ export function useCalendarActivityDetail(
       await supabase
         .from('custom_activity_logs')
         .update({
-          performance_data: finalPd,
+          performance_data: finalPd as any,
         })
         .eq('id', log.id);
 
