@@ -270,6 +270,15 @@ export function CustomActivityDetailDialog({
   const getCheckboxState = (fieldId: string, defaultValue?: string): boolean => {
     const performanceData = log?.performance_data as Record<string, any> | null;
     const checkboxStates = performanceData?.checkboxStates as Record<string, boolean> | undefined;
+  // Get checkbox states. Local optimistic shadow always wins so a user's most
+  // recent click is never visually reverted by a slower parent re-render or
+  // realtime echo. Falls back to log's performance_data, then template default.
+  const getCheckboxState = (fieldId: string, defaultValue?: string): boolean => {
+    if (fieldId in localCheckboxStates) {
+      return localCheckboxStates[fieldId];
+    }
+    const performanceData = log?.performance_data as Record<string, any> | null;
+    const checkboxStates = performanceData?.checkboxStates as Record<string, boolean> | undefined;
     if (checkboxStates && fieldId in checkboxStates) {
       return checkboxStates[fieldId];
     }
