@@ -167,7 +167,7 @@ export interface CustomActivityTemplate {
 }
 
 export type CompletionState = 'not_started' | 'in_progress' | 'completed';
-export type CompletionMethod = 'none' | 'done_button' | 'check_all';
+export type CompletionMethod = 'none' | 'done_button' | 'check_all' | 'auto_check_all';
 
 export interface CustomActivityLog {
   id: string;
