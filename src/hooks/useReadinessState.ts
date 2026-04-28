@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-export type ReadinessState = 'green' | 'yellow' | 'red';
+export type ReadinessState = 'green' | 'yellow' | 'red' | 'unknown';
 
 export interface ReadinessSource {
   name: string;
@@ -14,18 +14,40 @@ export interface ReadinessSource {
 
 export interface ReadinessResult {
   state: ReadinessState;
-  score: number;
+  score: number | null;
   sources: ReadinessSource[];
   confidence: number;
+  hasSignal: boolean;
   loading: boolean;
 }
 
-const stateFor = (s: number): ReadinessState =>
+const stateFor = (s: number): Exclude<ReadinessState, 'unknown'> =>
   s >= 70 ? 'green' : s >= 50 ? 'yellow' : 'red';
+
+// Freshness windows per source (ms). Stale rows are dropped from the composite
+// so users don't see a never-changing number based on weeks-old data.
+const HIE_MAX_AGE_MS = 48 * 3600 * 1000;
+const PHYSIO_MAX_AGE_MS = 36 * 3600 * 1000;
+const FOCUS_MAX_AGE_MS = 36 * 3600 * 1000;
+
+const isFresh = (iso: string | null | undefined, maxAgeMs: number) => {
+  if (!iso) return false;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t <= maxAgeMs;
+};
 
 /**
  * Confidence-weighted synthesis of readiness signals across HIE,
  * physio regulation, and recent focus quizzes.
+ *
+ * Behavior:
+ * - Only fresh sources contribute (see *_MAX_AGE_MS).
+ * - When no fresh source exists, score is null and state is 'unknown'.
+ *   The UI must render a neutral "set up" state instead of a fake 60.
+ * - Confidence < 0.3 (i.e. only the low-weight Focus Quiz) is treated as
+ *   insufficient — score is suppressed so a single self-report can't masquerade
+ *   as a full readiness reading.
  */
 export function useReadinessState(): ReadinessResult {
   const { user } = useAuth();
@@ -35,7 +57,7 @@ export function useReadinessState(): ReadinessResult {
     queryKey: ['readiness-state', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const since = new Date(Date.now() - 36 * 3600 * 1000).toISOString();
+      const since = new Date(Date.now() - FOCUS_MAX_AGE_MS).toISOString();
 
       const [hieRes, physioRes, focusRes] = await Promise.all([
         supabase
@@ -63,22 +85,52 @@ export function useReadinessState(): ReadinessResult {
       ]);
 
       const sources: ReadinessSource[] = [];
-      if (hieRes.data?.readiness_score != null) {
-        sources.push({ name: 'HIE Readiness', score: Number(hieRes.data.readiness_score), weight: 0.5, capturedAt: hieRes.data.computed_at });
+      if (
+        hieRes.data?.readiness_score != null &&
+        isFresh(hieRes.data.computed_at, HIE_MAX_AGE_MS)
+      ) {
+        sources.push({
+          name: 'HIE Readiness',
+          score: Number(hieRes.data.readiness_score),
+          weight: 0.5,
+          capturedAt: hieRes.data.computed_at,
+        });
       }
-      if (physioRes.data?.regulation_score != null) {
-        sources.push({ name: 'Regulation Index', score: Number(physioRes.data.regulation_score), weight: 0.3, capturedAt: physioRes.data.created_at });
+      if (
+        physioRes.data?.regulation_score != null &&
+        isFresh(physioRes.data.created_at, PHYSIO_MAX_AGE_MS)
+      ) {
+        sources.push({
+          name: 'Regulation Index',
+          score: Number(physioRes.data.regulation_score),
+          weight: 0.3,
+          capturedAt: physioRes.data.created_at,
+        });
       }
-      if (focusRes.data?.focus_score != null) {
-        sources.push({ name: 'Focus Quiz', score: Number(focusRes.data.focus_score), weight: 0.2, capturedAt: focusRes.data.created_at });
+      if (
+        focusRes.data?.focus_score != null &&
+        isFresh(focusRes.data.created_at, FOCUS_MAX_AGE_MS)
+      ) {
+        sources.push({
+          name: 'Focus Quiz',
+          score: Number(focusRes.data.focus_score),
+          weight: 0.2,
+          capturedAt: focusRes.data.created_at,
+        });
       }
 
-      const totalWeight = sources.reduce((s, x) => s + x.weight, 0) || 1;
+      // Confidence is computed from RAW (pre-renormalized) weights so a single
+      // low-weight source doesn't artificially look "100% confident".
+      const rawWeightSum = sources.reduce((s, x) => s + x.weight, 0);
+      const confidence = Math.min(1, rawWeightSum); // raw weights sum to 1.0 if all 3 present
+
+      // Renormalize for the weighted average display.
+      const totalWeight = rawWeightSum || 1;
       sources.forEach(s => { s.weight = s.weight / totalWeight; });
+
       const score = sources.length
         ? Math.round(sources.reduce((acc, s) => acc + s.score * s.weight, 0))
-        : 60;
-      const confidence = Math.min(1, sources.length / 3);
+        : null;
 
       return { score, sources, confidence };
     },
@@ -94,16 +146,25 @@ export function useReadinessState(): ReadinessResult {
         () => qc.invalidateQueries({ queryKey: ['readiness-state', user.id] }))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'physio_daily_reports', filter: `user_id=eq.${user.id}` },
         () => qc.invalidateQueries({ queryKey: ['readiness-state', user.id] }))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vault_focus_quizzes', filter: `user_id=eq.${user.id}` },
+        () => qc.invalidateQueries({ queryKey: ['readiness-state', user.id] }))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user?.id, qc]);
 
   const data = query.data;
+  const score = data?.score ?? null;
+  const confidence = data?.confidence ?? 0;
+  const sources = data?.sources ?? [];
+  // Require at least HIE (0.5) OR HIE+Focus / Regulation+anything to display a number.
+  const hasSignal = score !== null && confidence >= 0.3;
+
   return {
-    state: stateFor(data?.score ?? 60),
-    score: data?.score ?? 60,
-    sources: data?.sources ?? [],
-    confidence: data?.confidence ?? 0,
+    state: hasSignal ? stateFor(score!) : 'unknown',
+    score: hasSignal ? score : null,
+    sources,
+    confidence,
+    hasSignal,
     loading: query.isLoading,
   };
 }
