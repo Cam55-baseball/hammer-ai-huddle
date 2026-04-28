@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import {
   ChevronDown, Flame, ShieldCheck, AlertTriangle, CheckCircle2, X,
-  Moon, SkipForward, HelpCircle, Plus, ArrowUpRight, TrendingDown, TrendingUp,
+  Moon, SkipForward, HelpCircle, ArrowUpRight, TrendingDown, TrendingUp,
   Lightbulb, Zap, Info,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
