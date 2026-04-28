@@ -660,33 +660,32 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   }, []);
 
   const selectSortMode = (mode: 'auto' | 'manual' | 'timeline') => {
-    setSortMode(mode);
-    localStorage.setItem('gameplan-sort-mode', mode);
+    setSortModePref(mode);
   };
 
 
   const handleReorderCheckin = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedCheckin(newOrder);
-    localStorage.setItem('gameplan-checkin-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('checkin', newOrder.map(t => t.id));
   };
 
   const handleReorderTraining = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedTraining(newOrder);
-    localStorage.setItem('gameplan-training-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('training', newOrder.map(t => t.id));
   };
 
   const handleReorderTracking = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedTracking(newOrder);
-    localStorage.setItem('gameplan-tracking-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('tracking', newOrder.map(t => t.id));
   };
 
   const handleReorderCustom = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
     setOrderedCustom(newOrder);
-    localStorage.setItem('gameplan-custom-order', JSON.stringify(newOrder.map(t => t.id)));
+    setManualOrderPref('custom', newOrder.map(t => t.id));
   };
 
   // Custom activity handlers
