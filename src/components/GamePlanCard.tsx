@@ -412,25 +412,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const trackingTasksList = tasks.filter(t => t.section === 'tracking');
     const customTasksList = tasks.filter(t => t.section === 'custom');
 
-    // Restore saved orders helper
-    const restoreOrder = (sectionTasks: GamePlanTask[], storageKey: string): GamePlanTask[] => {
-      const savedOrder = localStorage.getItem(storageKey);
-      if (savedOrder) {
-        try {
-          const orderIds = JSON.parse(savedOrder) as string[];
-          return [...sectionTasks].sort((a, b) => {
-            const aIdx = orderIds.indexOf(a.id);
-            const bIdx = orderIds.indexOf(b.id);
-            if (aIdx === -1 && bIdx === -1) return 0;
-            if (aIdx === -1) return 1;
-            if (bIdx === -1) return -1;
-            return aIdx - bIdx;
-          });
-        } catch {
-          return sectionTasks;
-        }
-      }
-      return sectionTasks;
+    // Restore saved orders helper — reads from server-backed preferences
+    const restoreOrder = (sectionTasks: GamePlanTask[], orderIds: string[]): GamePlanTask[] => {
+      if (!orderIds || orderIds.length === 0) return sectionTasks;
+      return [...sectionTasks].sort((a, b) => {
+        const aIdx = orderIds.indexOf(a.id);
+        const bIdx = orderIds.indexOf(b.id);
+        if (aIdx === -1 && bIdx === -1) return 0;
+        if (aIdx === -1) return 1;
+        if (bIdx === -1) return -1;
+        return aIdx - bIdx;
+      });
     };
 
     if (sortMode === 'timeline') {
