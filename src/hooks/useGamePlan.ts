@@ -22,7 +22,7 @@ export interface FolderGamePlanTask {
   isOwner: boolean;
   performanceData?: any;
   completionState?: 'not_started' | 'in_progress' | 'completed';
-  completionMethod?: 'none' | 'done_button' | 'check_all';
+  completionMethod?: 'none' | 'done_button' | 'check_all' | 'auto_check_all';
 }
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
@@ -57,7 +57,7 @@ export interface GamePlanTask {
   descriptionKey: string;
   completed: boolean;
   completionState?: 'not_started' | 'in_progress' | 'completed';
-  completionMethod?: 'none' | 'done_button' | 'check_all';
+  completionMethod?: 'none' | 'done_button' | 'check_all' | 'auto_check_all';
   icon: LucideIcon;
   link: string;
   module?: 'hitting' | 'pitching' | 'throwing';
@@ -1147,7 +1147,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const setFolderItemCompletionState = useCallback(async (
     itemId: string,
     state: 'not_started' | 'in_progress' | 'completed',
-    method: 'none' | 'done_button' | 'check_all',
+    method: 'none' | 'done_button' | 'check_all' | 'auto_check_all',
   ) => {
     if (!user) return;
     const today = getTodayDate();

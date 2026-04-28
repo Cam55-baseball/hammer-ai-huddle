@@ -400,23 +400,42 @@ export function useCalendarActivityDetail(
       // so two near-simultaneous toggles cannot trample each other.
       const { data: latest } = await supabase
         .from('custom_activity_logs')
-        .select('performance_data')
+        .select('performance_data, completion_state, completion_method')
         .eq('id', log.id)
         .maybeSingle();
       const serverPd = ((latest?.performance_data as Record<string, unknown> | null) || {});
       const serverStates = (serverPd.checkboxStates as Record<string, boolean>) || {};
       const mergedStates = (mergedPerformanceData.checkboxStates as Record<string, boolean>) || {};
+      const finalStates = { ...serverStates, ...mergedStates };
       const finalPd: Record<string, unknown> = {
         ...serverPd,
         ...mergedPerformanceData,
-        checkboxStates: { ...serverStates, ...mergedStates },
+        checkboxStates: finalStates,
       };
+
+      // PROMOTE / DEMOTE based on whether ALL checkable items are now true.
+      const allNowChecked = allCheckableIds.length > 0
+        && allCheckableIds.every(id => finalStates[id] === true);
+      const prevState = latest?.completion_state as string | undefined;
+      const prevMethod = latest?.completion_method as string | undefined;
+
+      const updatePayload: Record<string, unknown> = { performance_data: finalPd as any };
+
+      if (allNowChecked && prevState !== 'completed') {
+        updatePayload.completion_state = 'completed';
+        updatePayload.completion_method = 'auto_check_all';
+        updatePayload.completed = true;
+        updatePayload.completed_at = new Date().toISOString();
+      } else if (!allNowChecked && prevState === 'completed' && (prevMethod === 'check_all' || prevMethod === 'auto_check_all')) {
+        updatePayload.completion_state = 'in_progress';
+        updatePayload.completion_method = 'none';
+        updatePayload.completed = false;
+        updatePayload.completed_at = null;
+      }
 
       await supabase
         .from('custom_activity_logs')
-        .update({
-          performance_data: finalPd as any,
-        })
+        .update(updatePayload)
         .eq('id', log.id);
 
       // Trigger game plan refresh so completion propagates
