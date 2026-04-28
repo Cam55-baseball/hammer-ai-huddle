@@ -113,7 +113,7 @@ function deriveOutcome(args: {
 export function useDailyOutcome(): DailyOutcome {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { dayType } = useDayState();
+  const { dayType, loading: dayStateLoading } = useDayState();
   const { snapshot } = useIdentityState();
   const prevStreakRef = useRef<number | null>(null);
 
