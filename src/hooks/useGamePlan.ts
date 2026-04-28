@@ -1064,7 +1064,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           })
           .eq('id', existing.id);
       } else {
-        await supabase
+        const { error: insErr } = await supabase
           .from('folder_item_completions')
           .insert({
             folder_item_id: itemId,
@@ -1073,6 +1073,32 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
             completed: false,
             performance_data: { checkboxStates },
           });
+        if (insErr) {
+          // 23505 = another concurrent click already inserted the row.
+          // Recover by reading + merging instead of erroring out.
+          const isDup = (insErr as any)?.code === '23505'
+            || /duplicate key|unique constraint/i.test((insErr as any)?.message || '');
+          if (isDup) {
+            const { data: recovered } = await supabase
+              .from('folder_item_completions')
+              .select('id, performance_data')
+              .eq('folder_item_id', itemId)
+              .eq('user_id', user.id)
+              .eq('entry_date', today)
+              .maybeSingle();
+            if (recovered) {
+              const recPd = (recovered.performance_data as Record<string, any>) || {};
+              await supabase
+                .from('folder_item_completions')
+                .update({
+                  performance_data: { ...recPd, checkboxStates: { ...((recPd.checkboxStates as Record<string, boolean>) || {}), ...checkboxStates } },
+                })
+                .eq('id', recovered.id);
+            }
+          } else {
+            throw insErr;
+          }
+        }
       }
     } catch (error) {
       console.error('Error saving folder checkbox state:', error);
