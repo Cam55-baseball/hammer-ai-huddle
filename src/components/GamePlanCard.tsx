@@ -1151,12 +1151,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return (
       <div
         className={cn(
-          "group relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
+          "group relative w-full flex items-center gap-2 sm:gap-4 px-3 py-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
           task.completed && "bg-green-500/20 border-green-500/50",
           // NN tasks no longer get a red border/glow on the row — full NN context lives in the task detail.
           skipDimming && isCustom && "opacity-60 grayscale pointer-events-none",
-          showTimeBadge && "pt-8"
+          showTimeBadge && "pt-9 sm:pt-8"
         )}
         style={!task.completed ? {
           backgroundColor: activeColors.background,
@@ -1167,7 +1167,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* Time badge - positioned absolutely at top right with proper spacing */}
         {showTimeBadge && (
           <button
-            className="absolute top-1.5 right-12 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors shadow-sm"
+            className="absolute top-1 right-2 sm:right-12 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-[9px] sm:text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors shadow-sm"
             onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
           >
             <Clock className="h-2.5 w-2.5" />
@@ -1182,7 +1182,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             "flex-shrink-0 text-white/60",
             todayLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
           )}>
-            <GripVertical className="h-5 w-5" />
+            <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         )}
         
@@ -1194,22 +1194,22 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           {/* Icon */}
           <div 
             className={cn(
-              "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
+              "flex-shrink-0 p-1.5 sm:p-2.5 rounded-lg",
               task.completed && "bg-green-500"
             )}
             style={!task.completed ? { backgroundColor: activeColors.icon } : undefined}
           >
             <Icon className={cn(
-              "h-5 w-5 sm:h-6 sm:w-6",
+              "h-4 w-4 sm:h-6 sm:w-6",
               task.completed ? "text-white" : "text-white"
             )} />
           </div>
           
           {/* Content */}
           <div className="flex-1 text-left min-w-0">
-            <div className="flex items-start gap-2 flex-wrap">
+            <div className="flex items-start gap-1.5 sm:gap-2 flex-wrap">
               <h3 className={cn(
-                "text-sm sm:text-base line-clamp-2",
+                "text-[15px] leading-snug sm:text-base line-clamp-2",
                 task.completed 
                   ? "font-semibold text-white/50 line-through" 
                   : "font-black text-white"
@@ -1227,14 +1227,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               )}
               {isCustom && !task.completed && (
                 <span 
-                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
+                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
                 >
                   {t('customActivity.badge')}
                 </span>
               )}
               {isCustom && task.completed && (
                 <span 
-                  className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-white/10 text-white/60"
+                  className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium uppercase tracking-wider bg-white/10 text-white/60"
                 >
                   <Eye className="h-3 w-3" />
                   {t('customActivity.tapToView', 'View')}
@@ -1242,7 +1242,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               )}
               {task.badge && !task.completed && (
                 <span 
-                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase tracking-wider"
                   style={{
                     backgroundColor: hexToRgba(activeColors.icon, 0.3),
                     color: activeColors.text,
@@ -1283,21 +1283,21 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             {isNN && nnCtx ? (
               // Phase 12 — Structured NN body. Every NN ships with purpose,
               // action, and success criteria so the card is self-explanatory.
-              <div className="mt-1 space-y-1">
+              <div className="mt-1 space-y-1.5 sm:space-y-1">
                 <p className={cn(
-                  "text-[11px] sm:text-xs leading-snug",
+                  "text-[12px] leading-snug sm:text-xs",
                   task.completed ? "text-white/35" : "text-white/60"
                 )}>
                   {nnCtx.purpose}
                 </p>
                 <p className={cn(
-                  "text-xs sm:text-sm leading-snug",
+                  "text-[13px] leading-snug sm:text-sm font-medium",
                   task.completed ? "text-white/40" : "text-white/85"
                 )}>
                   {nnCtx.action}
                 </p>
                 <p className={cn(
-                  "text-[10px] sm:text-[11px] leading-snug",
+                  "text-[11px] leading-snug sm:text-[11px]",
                   task.completed ? "text-white/30" : "text-white/50"
                 )}>
                   <span className="font-bold uppercase tracking-wider">Done when:</span>{' '}
@@ -1316,9 +1316,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-0.5">
                 <p className={cn(
-                  "text-xs sm:text-sm line-clamp-1",
+                  "text-[12px] leading-snug sm:text-sm line-clamp-2 sm:line-clamp-1",
                   task.completed ? "text-white/40" : "text-white/70"
                 )}>
                   {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
@@ -1340,7 +1340,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             aria-label={isNN ? 'Remove Non-Negotiable' : 'Lock in as Non-Negotiable'}
             title={isNN ? 'Remove from Non-Negotiables' : 'Lock in as Non-Negotiable'}
             className={cn(
-              "flex-shrink-0 h-9 min-w-[2.25rem] px-1.5 rounded-md flex flex-col items-center justify-center gap-0 transition-all",
+              "flex-shrink-0 h-9 min-w-[2.25rem] px-1.5 rounded-md hidden sm:flex flex-col items-center justify-center gap-0 transition-all",
               isNN
                 ? "text-red-400 bg-red-500/10 hover:bg-red-500/20"
                 : "text-white/40 hover:text-red-300 hover:bg-white/5"
@@ -1357,7 +1357,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="flex-shrink-0 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+          className="flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 text-white/60 hover:text-white hover:bg-white/10"
           onClick={(e) => { 
             e.stopPropagation(); 
             if (isCustom) {
@@ -1374,7 +1374,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             }
           }}
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </Button>
 
         {/* Send to Coach button - only for custom activities */}
@@ -1382,7 +1382,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="flex-shrink-0 h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
+            className="flex-shrink-0 h-8 w-8 hidden sm:inline-flex text-blue-400 hover:text-blue-300 hover:bg-blue-500/20"
             onClick={(e) => {
               e.stopPropagation();
               setSendToCoachTitle(task.taskType === 'custom' ? task.titleKey : '');
@@ -1488,7 +1488,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
     return (
       <div className="space-y-2">
-        <h3 className={`text-xs font-black ${titleColor} uppercase tracking-widest flex items-center gap-2`}>
+        <h3 className={`text-[11px] sm:text-xs font-black ${titleColor} uppercase tracking-wider sm:tracking-widest flex items-center gap-2`}>
           <span className={`h-px flex-1 ${lineColor}`} />
           {title}
           <span className={`h-px flex-1 ${lineColor}`} />

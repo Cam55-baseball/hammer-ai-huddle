@@ -1,127 +1,67 @@
-## Problem
-
-Game Plan sort mode (`auto` / `manual` / `timeline`) and the user-defined order of activities are currently stored **only in `localStorage`**:
-
-- `gameplan-sort-mode` → which mode the user picked
-- `gameplan-timeline-order` → timeline mode order (single global list)
-- `gameplan-checkin-order` / `gameplan-training-order` / `gameplan-tracking-order` / `gameplan-custom-order` → manual mode per-section order
-
-Because nothing is written to the database, the user's choices are lost when they:
-
-- Sign in on another device
-- Clear browser data / use private mode
-- Switch browsers
-- Reinstall the PWA
-- Have multiple tabs open (no cross-tab sync)
-
-The order also silently drifts because completion handlers in `auto` mode reshuffle, but neither timeline nor manual orders are mirrored to the server, so if the device-local copy disappears the app falls back to its computed default.
-
 ## Goal
 
-Sort mode and order are 100% persistent end-to-end:
+Activity rows in the Game Plan currently feel crammed on phones because the title, badges, description, NN copy, drag handle, lock-in button, edit, send-to-coach, and check button all compete for a narrow row. Fix this purely on mobile (≤ `sm`) without changing tablet/desktop appearance or any logic.
 
-| What | Where it lives now | Where it must live |
-|---|---|---|
-| Sort mode (`auto` / `manual` / `timeline`) | localStorage only | DB (per user), with localStorage as cache |
-| Timeline global order | localStorage (+ `calendar_day_orders` only when "locked" for a date) | DB (per user, default daily order), with localStorage as cache |
-| Manual per-section order (checkin / training / tracking / custom) | localStorage only | DB (per user, per section), with localStorage as cache |
+## Problems observed in `GamePlanCard.tsx` (`renderTask`, lines ~1151–1474)
 
-Order and mode must only change when **the user changes them** — never spontaneously after a refresh, login, or completion event in manual/timeline mode.
+1. Row uses `gap-3` and `p-3` on mobile — combined with up to 5 right-side icon buttons, the title block gets squeezed to a tiny column.
+2. Title (`text-sm`) and description (`text-xs`) sit very close with no real line spacing, and `line-clamp-2` + multiple inline badges wrap awkwardly.
+3. NN block stacks 3 paragraphs (purpose / action / done-when) at `text-[11px]` / `text-[10px]` — unreadable on phones.
+4. Time badge overlaps the title area because of `right-12` + `pt-8`, eating vertical room.
+5. Icon tile (`p-2`) plus drag handle take ~80px before the title even starts.
 
-## Fix
+## Changes (mobile-only, all in `src/components/GamePlanCard.tsx`)
 
-### 1. New table: `game_plan_user_preferences`
+### 1. Row container
+- Reduce horizontal gap on mobile: `gap-2 sm:gap-4` (was `gap-3 sm:gap-4`).
+- Slightly more breathing room vertically: `px-3 py-3 sm:p-4` instead of `p-3 sm:p-4`.
+- Increase top padding when time badge is shown: `pt-9 sm:pt-8` so the badge stops crowding the title.
 
-One row per user. Holds the chosen sort mode plus the default (non-date-locked) order for each mode.
+### 2. Drag handle
+- Make it smaller on mobile so the title gets more room: `h-4 w-4 sm:h-5 sm:w-5`.
 
-```text
-game_plan_user_preferences
-  user_id              uuid  PK, FK -> auth.users
-  sort_mode            text  CHECK in ('auto','manual','timeline')  default 'auto'
-  timeline_order       text[]  default '{}'   -- ordered task ids
-  manual_order_checkin text[]  default '{}'
-  manual_order_training text[] default '{}'
-  manual_order_tracking text[] default '{}'
-  manual_order_custom  text[]  default '{}'
-  updated_at           timestamptz default now()
-```
+### 3. Icon tile
+- Tighten on mobile: `p-1.5 sm:p-2.5` and `h-4 w-4 sm:h-6 sm:w-6` for the icon (was `p-2 sm:p-2.5`, `h-5 w-5 sm:h-6 sm:w-6`).
 
-- RLS: owner-only select / insert / update (mirrors `calendar_day_orders` policies).
-- Add to `supabase_realtime` publication so other tabs/devices see the update.
-- `updated_at` trigger using existing `update_updated_at_column()`.
+### 4. Title + badges block
+- Title: bump readability with `text-[15px] leading-snug sm:text-base` and keep `line-clamp-2`.
+- Switch the badge row from `gap-2 flex-wrap` to `gap-1.5 sm:gap-2 flex-wrap` and add `mt-0` so badges hug the title.
+- Cap badge text at `text-[9px] sm:text-[10px]` so chips don't force the title onto a 3rd visual line on phones.
 
-No CHECK on the array contents — task ids include unstable values like `template-<uuid>`, so we just store strings. Validation is done client-side when sorting.
+### 5. Description line
+- Change description from `text-xs sm:text-sm line-clamp-1` to `text-[12px] leading-snug sm:text-sm line-clamp-2 mt-0.5` so it's readable and can use a second line when there's room (still clamped).
 
-### 2. New hook: `useGamePlanPreferences`
+### 6. NN structured body (purpose / action / done-when)
+- Purpose: `text-[12px] leading-snug sm:text-xs`.
+- Action: `text-[13px] leading-snug sm:text-sm font-medium`.
+- Done-when: `text-[11px] leading-snug sm:text-[11px]`.
+- Add `space-y-1.5 sm:space-y-1` so the three lines visually separate on mobile.
 
-`src/hooks/useGamePlanPreferences.ts` — single source of truth, server-backed:
+### 7. Right-side controls — collapse on mobile
+Mobile rows currently render up to: drag, NN flame, edit, send-to-coach, check. That's the root cause of the cramped title.
 
-- On mount: read row for `auth.uid()` (upsert empty row if missing). Hydrate from DB; localStorage is used only as a **first-paint cache** to avoid flicker.
-- Exposes:
-  - `sortMode`, `setSortMode(mode)`
-  - `timelineOrder`, `setTimelineOrder(ids)`
-  - `manualOrder(section)`, `setManualOrder(section, ids)`
-- Each setter:
-  1. Updates local state immediately (optimistic).
-  2. Writes the new value to localStorage (cache).
-  3. Upserts the row in `game_plan_user_preferences` (debounced ~400 ms to coalesce drag events).
-  4. Broadcasts via `BroadcastChannel('data-sync')` with `TAB_ID` (per the multi-tab sync rule in core memory).
-- Subscribes to `postgres_changes` on `game_plan_user_preferences` filtered by `user_id` so other tabs/devices repaint without manual refresh.
-- Falls back gracefully if offline: keeps optimistic value, retries on reconnect (uses the existing pattern from `useCustomActivities` for queued writes).
+- Hide the **inline NN "Lock In" button** on mobile (`hidden sm:flex`). The same toggle is reachable from the activity detail; on mobile we only keep the red flame badge in the title row as the NN signal.
+- Hide the **Send-to-Coach** button on mobile (`hidden sm:inline-flex`). It remains accessible from the activity detail / edit screen.
+- Keep Edit and the Check/Status button visible on mobile (these are the primary actions).
+- Shrink the Edit button on mobile: `h-7 w-7 sm:h-8 sm:w-8` with `h-3.5 w-3.5 sm:h-4 sm:w-4` icon.
 
-### 3. Refactor `GamePlanCard.tsx`
+### 8. Time badge
+- Shrink and reposition slightly on mobile so it doesn't crash into the check button: `top-1 right-2 sm:right-12` and `text-[9px] sm:text-[10px]`.
+- On mobile, since it sits on its own line above (already accounted for via `pt-9`), this prevents the previous overlap with the action buttons.
 
-Replace localStorage reads/writes with the hook:
-
-- Remove the `useState` initializers that read `localStorage.getItem('gameplan-sort-mode')` and the order keys; instead pull from `useGamePlanPreferences`.
-- `handleReorderCheckin / Training / Tracking / Custom` → call `setManualOrder(section, ids)` instead of `localStorage.setItem`.
-- `handleReorderTimeline` and `handleApplyTemplate` → call `setTimelineOrder(ids)` instead of `localStorage.setItem('gameplan-timeline-order', ...)`.
-- Sort-mode toggle (line 673-674) → call `setSortMode(mode)`.
-- The order-restoration `useEffect` (lines 405-518) keeps using `restoreOrder`, but reads the order from the hook (DB) instead of localStorage. localStorage is read only as the synchronous first-paint cache before the DB query resolves.
-- Date-locked timeline (`calendar_day_orders`) keeps priority over the default `timeline_order` — that behavior is unchanged.
-
-### 4. Stop auto-mutating order on completion in non-Auto modes
-
-Confirm (already true after the previous fix) that `handleCustomActivityToggle` and `handleNNGateSatisfied` do **not** call any setter that writes order when `sortMode !== 'auto'`. They flip `completed` in place only. No DB write to `timeline_order` happens on completion.
-
-### 5. One-time migration of existing localStorage values
-
-In `useGamePlanPreferences`, on first successful DB read where the row is empty AND localStorage has values, migrate them once:
-
-- Read all six localStorage keys.
-- Upsert into the new row.
-- Tag completion in localStorage (`gameplan-prefs-migrated = '1'`) so we don't repeat.
-
-This preserves the order existing users already curated.
-
-### 6. Multi-tab consistency
-
-Per the core memory rule, every setter broadcasts on `BroadcastChannel('data-sync')`:
-
-```text
-{ type: 'gameplan-prefs', tabId: TAB_ID, payload: { sortMode, timelineOrder, manualOrder* } }
-```
-
-Listeners ignore messages from their own `TAB_ID` and apply the payload to local state. This pairs with the realtime subscription to cover both same-device tabs and cross-device updates.
-
-## Files touched
-
-- **New**: `supabase/migrations/<timestamp>_game_plan_user_preferences.sql` (table + RLS + realtime + trigger)
-- **New**: `src/hooks/useGamePlanPreferences.ts`
-- **Edited**: `src/components/GamePlanCard.tsx` — replace 12 localStorage call sites with hook calls; thread `sortMode` through props instead of local state.
-
-## Behavior summary
-
-| Action | Result |
-|---|---|
-| User picks `Manual` on phone | Row upsert; next login on laptop opens in `Manual` |
-| User drags activities in `Timeline` mode | DB write within 400 ms; other tabs/devices repaint via realtime |
-| User completes a custom activity in `Manual` or `Timeline` | Strike-through only; **no** order write |
-| User completes one in `Auto` | Section re-sorts to bottom (existing behavior, not persisted because Auto is computed) |
-| User clears browser data | Order/mode hydrate from DB on next load — nothing lost |
-| Two tabs open | Reorder in tab A is visible in tab B within ~1 s via BroadcastChannel + realtime |
+### 9. Section headings (`renderTaskSection`)
+- Tighten heading on mobile: `text-[11px] sm:text-xs` and `tracking-wider sm:tracking-widest` so the "PRE-PRACTICE / TRAINING" dividers stop dominating narrow screens.
 
 ## Out of scope
+- No changes to data, ordering, completion logic, persistence, or any hooks.
+- No changes to tablet (`sm:`) or desktop styles beyond what's listed.
+- No changes to icons, colors, or NN behavior — purely typography, spacing, and mobile-only visibility of two secondary buttons.
 
-- Changing how `calendar_day_orders` (date-locked timeline) works — that already persists per date and stays the source of truth when a date is locked.
-- Server-side persistence of `taskTimes` / `taskReminders` — those already round-trip via `game_plan_task_schedule` and `game_plan_locked_days`.
+## Files touched
+- `src/components/GamePlanCard.tsx` (only)
+
+## QA checklist after build
+- 360–414px width: title is readable (no cramped 3-line wrap from badges), description has room, action buttons don't overlap the time badge.
+- ≥640px (`sm`): layout is visually identical to today (NN Lock-In and Send-to-Coach buttons reappear, sizes match current).
+- Completed state still shows strikethrough title and green check.
+- NN cards still show purpose / action / done-when, just with better spacing on phones.
