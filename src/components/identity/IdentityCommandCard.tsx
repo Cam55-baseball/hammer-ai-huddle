@@ -419,21 +419,21 @@ export function IdentityCommandCard({ className }: Props) {
                     onClick={() => handleDayClick('push')}
                   />
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                <p className="mt-2 text-xs text-neutral-900 font-medium leading-relaxed">
                   {dayMeta.explanation}
                 </p>
-                <div className="mt-2 flex items-center gap-2 rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5 text-[11px]">
+                <div className="mt-2 flex items-center gap-2 rounded-md border border-neutral-300 bg-neutral-100 px-2.5 py-1.5 text-[11px]">
                   {overBudget ? (
                     <>
-                      <AlertTriangle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                      <span className="font-bold text-rose-400">
+                      <AlertTriangle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                      <span className="font-bold text-rose-700">
                         {usedThisWeek}/{maxPerWeek} rest used — over budget.
                       </span>
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                      <span className="font-semibold">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="font-semibold text-neutral-900">
                         {usedThisWeek}/{maxPerWeek} rest used this week
                       </span>
                     </>
