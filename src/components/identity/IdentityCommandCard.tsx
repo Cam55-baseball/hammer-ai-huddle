@@ -506,57 +506,10 @@ export function IdentityCommandCard({ className }: Props) {
                 )}
               </section>
 
-              {/* ── 4. Quick Actions ─────────────────────────────────── */}
-              <section>
-                <SectionHeader
-                  title="Quick Actions"
-                  helpText="Your fastest path forward right now: where Hammer thinks you should go, plus a shortcut to log anything."
-                />
-                <div className="rounded-lg border border-border/60 bg-background/30 p-2.5 space-y-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <HammerStateBadge />
-                    <ReadinessChip />
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => navigate(next.route)}
-                      className="flex-1 min-w-0 text-left"
-                    >
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Next up
-                      </p>
-                      <p className="text-sm font-semibold truncate hover:text-primary transition-colors">
-                        {next.label}
-                      </p>
-                    </button>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button
-                        size="sm" variant="outline"
-                        onClick={() => navigate(next.route)}
-                        className="text-xs flex-1 sm:flex-none"
-                      >
-                        {next.ctaLabel}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => setLogOpen(true)}
-                        className="gap-1 text-xs flex-1 sm:flex-none"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        Log
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
             </div>
           </CollapsibleContent>
         </Collapsible>
       </div>
-
-      <QuickLogSheet open={logOpen} onOpenChange={setLogOpen} suggestedModule={next.moduleHint} />
     </TooltipProvider>
   );
 }
