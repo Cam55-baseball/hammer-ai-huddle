@@ -1167,7 +1167,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* Time badge - positioned absolutely at top right with proper spacing */}
         {showTimeBadge && (
           <button
-            className="absolute top-1.5 right-12 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors shadow-sm"
+            className="absolute top-1 right-2 sm:right-12 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-[9px] sm:text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors shadow-sm"
             onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
           >
             <Clock className="h-2.5 w-2.5" />
