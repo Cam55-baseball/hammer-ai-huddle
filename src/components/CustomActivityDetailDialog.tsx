@@ -219,6 +219,11 @@ export function CustomActivityDetailDialog({
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
   const [localFieldValues, setLocalFieldValues] = useState<Record<string, string>>({});
+  // Optimistic shadow for checkbox toggles. Mirrors the pattern used for text
+  // fields above so the UI is driven by the user's most recent click and
+  // cannot be visually overridden by any in-flight parent / realtime update.
+  // Cleared on dialog close.
+  const [localCheckboxStates, setLocalCheckboxStates] = useState<Record<string, boolean>>({});
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const isMounted = useRef(true);
   const onUpdateFieldValueRef = useRef(onUpdateFieldValue);
