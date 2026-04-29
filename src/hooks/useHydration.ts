@@ -485,6 +485,7 @@ export function useHydration() {
 
       if (error) throw error;
 
+      // Single source of truth: optimistic UI then reconcile from DB.
       const newTotal = todayTotal + amount;
       setTodayTotal(newTotal);
 
@@ -494,22 +495,6 @@ export function useHydration() {
         toast.success(`+${amount} oz logged!`);
       }
 
-      fetchTodayLogs();
-      try {
-        const ch = new BroadcastChannel('data-sync');
-        ch.postMessage({ type: HYDRATION_CHANGED_EVENT, userId: user.id, tabId: TAB_ID });
-        ch.close();
-      } catch {}
-      setTodayTotal(newTotal);
-      
-      // Check if goal reached
-      if (newTotal >= dailyGoal && todayTotal < dailyGoal) {
-        toast.success('🎉 Daily hydration goal reached!', { duration: 5000 });
-      } else {
-        toast.success(`+${amount} oz logged!`);
-      }
-
-      // Refresh logs
       fetchTodayLogs();
       try {
         const ch = new BroadcastChannel('data-sync');
