@@ -154,6 +154,19 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                     onChange={e => updateSet(index, 'reps', e.target.value ? Number(e.target.value) : undefined)}
                     className="h-7 w-14 text-xs px-1.5 min-w-0"
                   />
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="Force"
+                      value={set.force_lbs ?? ''}
+                      onChange={e => updateSet(index, 'force_lbs', e.target.value ? parseFloat(e.target.value) : undefined)}
+                      className="h-7 w-16 text-xs px-1.5 min-w-0"
+                    />
+                    <span className="text-[10px] text-muted-foreground">lbs force</span>
+                  </div>
                 </>
               )}
 
@@ -161,12 +174,15 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                 <div className="flex items-center gap-1">
                   <Input
                     type="number"
-                    placeholder={mode === 'duration' ? 'Min' : 'Time'}
+                    step="0.01"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="Sec"
                     value={set.time ?? ''}
-                    onChange={e => updateSet(index, 'time', e.target.value ? Number(e.target.value) : undefined)}
-                    className="h-7 w-14 text-xs px-1.5 min-w-0"
+                    onChange={e => updateSet(index, 'time', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-7 w-16 text-xs px-1.5 min-w-0"
                   />
-                  <span className="text-[10px] text-muted-foreground">min</span>
+                  <span className="text-[10px] text-muted-foreground">sec</span>
                 </div>
               )}
 
