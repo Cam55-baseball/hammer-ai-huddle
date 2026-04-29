@@ -99,7 +99,18 @@ export function useHydration() {
   const [stats, setStats] = useState<HydrationStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const today = format(new Date(), 'yyyy-MM-dd');
+  // Stable "today" — only changes when the calendar day rolls over.
+  // Recomputing this every render destabilized fetchTodayLogs and caused
+  // the realtime subscription to tear down/resubscribe constantly, dropping
+  // postgres_changes events for newly inserted hydration logs.
+  const [today, setToday] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const next = format(new Date(), 'yyyy-MM-dd');
+      setToday(prev => (prev === next ? prev : next));
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch today's logs
   const fetchTodayLogs = useCallback(async () => {
