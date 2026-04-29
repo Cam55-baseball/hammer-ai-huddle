@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { 
   Rocket, ChevronRight, ChevronLeft, Dumbbell, Video, Target, 
-  BarChart3, BookOpen, HelpCircle, Check, Sparkles, User, Trophy
+  BarChart3, BookOpen, HelpCircle, Check, Sparkles, User, ListChecks
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
