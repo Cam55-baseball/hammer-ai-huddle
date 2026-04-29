@@ -1,81 +1,68 @@
 ## Goal
 
-Make Game Plan activities draggable **only** via the six-dot grip handle on the left of each card. Touching anywhere else on the card (title, body, badges, empty space) should never initiate a drag, so users can scroll their Game Plan freely without accidentally reordering activities.
+Make the small "i" info dots in the **Identity Command Card** open on **mobile tap** (touch), not just desktop mouse hover.
 
-This applies to both **Manual** mode (per-section reorder) and **Timeline** mode (unified reorder).
+## Why it's broken today
 
-## Current behavior (the bug)
-
-In `src/components/GamePlanCard.tsx`, each activity is wrapped in a Framer Motion `<Reorder.Item drag={!todayLocked}>`. With Framer Motion's default settings, the **entire item** is the drag listener, so any pointer-down on the card body starts a drag. The `<GripVertical>` icon is purely decorative — it isn't wired to anything.
-
-Result on mobile: a vertical scroll gesture that begins on a card frequently triggers a reorder instead of scrolling the page.
+In `src/components/identity/IdentityCommandCard.tsx`, each section header (`SectionHeader`, ~lines 516–538) wraps its info icon in a Radix `<Tooltip>`. Radix Tooltip is a **hover/focus-only** primitive — touch devices have no hover, so tapping the dot does nothing.
 
 ## Fix
 
-Use Framer Motion's standard "drag handle" pattern: disable the item's built-in drag listener and only start a drag when the user presses the grip icon.
+Swap the `Tooltip` used inside `SectionHeader` for a `Popover`. Popover opens on click/tap on every device (mouse, touch, keyboard) and closes on outside tap or Escape. Visuals stay identical.
 
-### Changes (single file: `src/components/GamePlanCard.tsx`)
+### Single file change: `src/components/identity/IdentityCommandCard.tsx`
 
-1. **Import `useDragControls`** from `framer-motion` alongside the existing `Reorder` import.
-
-2. **Create a per-item wrapper component** (e.g. `DraggableTaskItem`) so each row can own its own `useDragControls()` instance (hooks can't be called inside `.map`). It accepts: `task`, `disabled` (`todayLocked`), drag lifecycle callbacks (`onDragStart`/`onDragEnd`/`onDrag` for timeline auto-scroll), and a `renderContent(controls, disabled)` render prop.
-
-   Inside, render:
-   ```tsx
-   <Reorder.Item
-     value={task}
-     drag={disabled ? false : 'y'}
-     dragListener={false}          // <-- key change: body no longer initiates drag
-     dragControls={controls}
-     onDragStart={...}
-     onDragEnd={...}
-     onDrag={...}
-   >
-     {renderContent(controls, disabled)}
-   </Reorder.Item>
+1. Add the import (component already exists at `@/components/ui/popover.tsx`):
+   ```ts
+   import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
    ```
 
-3. **Update `renderTask`** to accept the `dragControls` (and `disabled` flag) and attach them to the existing grip handle:
+2. Rewrite `SectionHeader` to use Popover:
    ```tsx
-   <div
-     onPointerDown={(e) => {
-       if (disabled) return;
-       e.preventDefault();         // prevents text-selection on desktop
-       dragControls?.start(e);
-     }}
-     style={{ touchAction: 'none' }}  // ensures touch drag isn't stolen by scroll
-     className={cn(
-       "flex-shrink-0 text-white/60 select-none",
-       disabled ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
-     )}
-     role="button"
-     aria-label="Drag to reorder"
-   >
-     <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-   </div>
+   function SectionHeader({ title, helpText }: { title: string; helpText: string }) {
+     return (
+       <div className="flex items-center gap-1.5 mb-2">
+         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+           {title}
+         </h4>
+         <Popover>
+           <PopoverTrigger asChild>
+             <button
+               type="button"
+               aria-label={`What is ${title}?`}
+               onClick={(e) => e.stopPropagation()}
+               className="text-muted-foreground/60 hover:text-foreground transition-colors p-1 -m-1"
+             >
+               <Info className="h-3 w-3" />
+             </button>
+           </PopoverTrigger>
+           <PopoverContent
+             side="top"
+             align="start"
+             className="max-w-[260px] text-xs leading-relaxed p-3"
+             onClick={(e) => e.stopPropagation()}
+           >
+             {helpText}
+           </PopoverContent>
+         </Popover>
+       </div>
+     );
+   }
    ```
-   The handle is only rendered in `manual` and `timeline` modes (already the case), so `auto` mode is unaffected.
 
-4. **Wire the wrapper into both reorder sites:**
-   - Manual section list (around line 1519–1525): replace `<Reorder.Item>` with `<DraggableTaskItem>`.
-   - Timeline list (around line 2012–2024): same replacement, passing through `onDragStart`, `onDragEnd`, `handleDrag` so `useAutoScrollOnDrag` keeps working.
+   - `stopPropagation` prevents the parent card's `handleToggle` (line 254) from collapsing when the dot is tapped.
+   - `p-1 -m-1` enlarges the touch target to ≥24px without changing layout.
+   - `side="top"` + `max-w-[260px]` matches today's tooltip footprint.
 
-5. **Mobile hit-target tweak:** add `p-1 -m-1` (or similar) to the grip wrapper so the touch target is comfortably ≥32px without changing visual layout. Keep the icon size as-is.
+3. Leave the surrounding `TooltipProvider` and unrelated tooltips alone. Only the info-dot pattern in `SectionHeader` changes.
 
-### Auto mode
+## Out of scope
 
-No change. Auto mode never wraps items in `Reorder.Item` (line 1510–1517 just uses plain divs), so cards there are inherently non-draggable.
+- No copy, layout, or styling changes elsewhere in the card.
+- No changes to other identity files — all info dots in the identity card flow through `SectionHeader`.
 
-### What this does NOT change
+## Validation
 
-- Sort-mode persistence, ordering persistence, completion strike-through, mobile typography work, NN behavior, time badges, edit/coach/complete buttons — all untouched.
-- The card body remains fully clickable (opens the activity detail dialog) because the body is still a `<button>` with its own `onClick`, and the body no longer competes with a drag listener.
-
-## Validation checklist
-
-- Manual mode: pressing and dragging anywhere on a card body only scrolls/clicks; only the grip icon reorders.
-- Timeline mode: same, plus auto-scroll near viewport edges still works while dragging from the grip.
-- Auto mode: no grip, no drag, unchanged.
-- `todayLocked`: grip is dimmed and pointer-down is a no-op (no drag starts).
-- Desktop mouse: cursor shows `grab`/`grabbing` on the handle only.
-- Mobile (≤402px viewport): vertical page scroll started on a card body works without triggering reorder.
+- **Mobile (touch):** tap an info dot → popover opens; tap outside → closes; parent card does not collapse.
+- **Desktop (mouse):** click info dot → opens; click outside → closes.
+- **Keyboard:** Tab to icon → Enter/Space opens; Escape closes.
