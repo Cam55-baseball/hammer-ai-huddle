@@ -257,50 +257,8 @@ export function AppSidebar() {
       });
     }
 
-    // Legacy: if user has old keys but no new tier, show old-style modules
-    if (!showAll && !activeTier) {
-      const hasHitting = modules.some(m => m.includes('hitting'));
-      const hasPitching = modules.some(m => m.includes('pitching'));
-      const hasThrowing = modules.some(m => m.includes('throwing'));
-
-      if (hasHitting) {
-        items.push({
-          key: 'hitting',
-          title: t('dashboard.modules.completeHitterShort'),
-          url: '/complete-hitter',
-          icon: Target,
-          subModules: [
-            { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.hittingDescription') },
-            { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "6-week workout" },
-            { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
-          ]
-        });
-      }
-      if (hasPitching) {
-        items.push({
-          key: 'pitching',
-          title: t('dashboard.modules.completePitcherShort'),
-          url: '/complete-pitcher',
-          icon: Target,
-          subModules: [
-            { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
-            { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: "6-week workout" },
-          ]
-        });
-      }
-      if (hasThrowing) {
-        items.push({
-          key: 'throwing',
-          title: t('dashboard.modules.completePlayerShort'),
-          url: '/complete-player',
-          icon: Zap,
-          subModules: [
-            { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.throwingDescription') },
-            { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
-          ]
-        });
-      }
-    }
+    // Legacy fallback removed — the per-tier blocks above now also catch legacy
+    // _hitting / _pitching / _throwing module keys directly.
 
     // Players Club always visible
     items.push({ key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked });
