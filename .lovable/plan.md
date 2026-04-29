@@ -1,68 +1,37 @@
 ## Goal
 
-Make the small "i" info dots in the **Identity Command Card** open on **mobile tap** (touch), not just desktop mouse hover.
+Ensure the "Welcome to Your Training Hub" popup is dismissed permanently when a user closes it via the X button — same behavior as completing the full walkthrough. Today, only finishing the last step writes `tutorial_completed = true`; closing with X just hides the dialog locally, so it reopens on the next page load.
 
-## Why it's broken today
+## Root cause
 
-In `src/components/identity/IdentityCommandCard.tsx`, each section header (`SectionHeader`, ~lines 516–538) wraps its info icon in a Radix `<Tooltip>`. Radix Tooltip is a **hover/focus-only** primitive — touch devices have no hover, so tapping the dot does nothing.
+In `src/components/DashboardLayout.tsx`, the Dialog's `onOpenChange` handler (`setTutorialOpen`) only updates local state. The DB flag `profiles.tutorial_completed` is only written inside `StartHereGuide.handleComplete`, which fires only from the final step's CTAs. Closing via the X (or pressing Esc / clicking the overlay) skips that write, so on the next mount `DashboardLayout`'s `useEffect` re-reads `tutorial_completed = false` and auto-opens the dialog again.
 
 ## Fix
 
-Swap the `Tooltip` used inside `SectionHeader` for a `Popover`. Popover opens on click/tap on every device (mouse, touch, keyboard) and closes on outside tap or Escape. Visuals stay identical.
+Persist `tutorial_completed = true` whenever the dialog is dismissed by the user — regardless of how (X button, Esc, overlay click, or finishing the flow).
 
-### Single file change: `src/components/identity/IdentityCommandCard.tsx`
+### Changes
 
-1. Add the import (component already exists at `@/components/ui/popover.tsx`):
-   ```ts
-   import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-   ```
+**`src/components/StartHereGuide.tsx`**
+- Extract the "mark tutorial completed" DB write into a small helper (e.g. `markTutorialCompleted`).
+- Wrap the Dialog's `onOpenChange` so that when the dialog transitions from open → closed, we call `markTutorialCompleted()` before invoking the parent's `onOpenChange(false)`. This covers X, Esc, and overlay clicks.
+- `handleComplete` continues to set the flag (now via the same helper) so behavior on the final step is unchanged.
+- Also optimistically update local UI assumptions so a second open in the same session doesn't auto-trigger.
 
-2. Rewrite `SectionHeader` to use Popover:
-   ```tsx
-   function SectionHeader({ title, helpText }: { title: string; helpText: string }) {
-     return (
-       <div className="flex items-center gap-1.5 mb-2">
-         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-           {title}
-         </h4>
-         <Popover>
-           <PopoverTrigger asChild>
-             <button
-               type="button"
-               aria-label={`What is ${title}?`}
-               onClick={(e) => e.stopPropagation()}
-               className="text-muted-foreground/60 hover:text-foreground transition-colors p-1 -m-1"
-             >
-               <Info className="h-3 w-3" />
-             </button>
-           </PopoverTrigger>
-           <PopoverContent
-             side="top"
-             align="start"
-             className="max-w-[260px] text-xs leading-relaxed p-3"
-             onClick={(e) => e.stopPropagation()}
-           >
-             {helpText}
-           </PopoverContent>
-         </Popover>
-       </div>
-     );
-   }
-   ```
-
-   - `stopPropagation` prevents the parent card's `handleToggle` (line 254) from collapsing when the dot is tapped.
-   - `p-1 -m-1` enlarges the touch target to ≥24px without changing layout.
-   - `side="top"` + `max-w-[260px]` matches today's tooltip footprint.
-
-3. Leave the surrounding `TooltipProvider` and unrelated tooltips alone. Only the info-dot pattern in `SectionHeader` changes.
+**`src/components/DashboardLayout.tsx`**
+- After the dialog closes, set `tutorialCompleted = true` in local state so the auto-open `useEffect` won't re-trigger if the component re-mounts before the next profile fetch.
+- No DB write needed here (handled by the guide).
 
 ## Out of scope
 
-- No copy, layout, or styling changes elsewhere in the card.
-- No changes to other identity files — all info dots in the identity card flow through `SectionHeader`.
+- No copy, layout, or step changes.
+- No changes to the auto-open trigger logic for genuinely new users (still opens once on first login).
+- No new routes or DB schema changes — `profiles.tutorial_completed` already exists.
 
 ## Validation
 
-- **Mobile (touch):** tap an info dot → popover opens; tap outside → closes; parent card does not collapse.
-- **Desktop (mouse):** click info dot → opens; click outside → closes.
-- **Keyboard:** Tab to icon → Enter/Space opens; Escape closes.
+- New user logs in → popup appears once.
+- Click X (or press Esc, or click outside) → popup closes; navigate to any other route → popup does NOT reappear.
+- Refresh the page → popup does NOT reappear.
+- Existing users who already have `tutorial_completed = true` → unchanged, popup never shows.
+- Completing the full walkthrough still works and still navigates to `/practice`.

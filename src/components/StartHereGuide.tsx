@@ -75,12 +75,27 @@ export function StartHereGuide({ open, onOpenChange }: StartHereGuideProps) {
     setStep(2);
   };
 
-  const handleComplete = async (route: string) => {
-    if (user) {
+  const markTutorialCompleted = async () => {
+    if (!user) return;
+    try {
       await supabase.from('profiles').update({
         tutorial_completed: true,
       }).eq('id', user.id);
+    } catch (e) {
+      console.error('Failed to mark tutorial completed:', e);
     }
+  };
+
+  const handleDialogOpenChange = (next: boolean) => {
+    if (!next && open) {
+      // User dismissed (X, Esc, overlay) — persist so it never reopens
+      void markTutorialCompleted();
+    }
+    onOpenChange(next);
+  };
+
+  const handleComplete = async (route: string) => {
+    await markTutorialCompleted();
     onOpenChange(false);
     navigate(route);
     toast.success('You\'re all set! Let\'s get to work 💪');
@@ -89,7 +104,7 @@ export function StartHereGuide({ open, onOpenChange }: StartHereGuideProps) {
   const positions = sport === 'softball' ? POSITIONS_SOFTBALL : POSITIONS_BASEBALL;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-lg">
         {/* Progress indicator */}
         <div className="flex gap-1 mb-2">
