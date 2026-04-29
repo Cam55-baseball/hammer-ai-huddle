@@ -109,7 +109,7 @@ export function TeamWeaknessEngine() {
           <div className="mt-4 space-y-2">
             <div className="text-sm font-semibold flex items-center gap-2">
               <Dumbbell className="h-4 w-4 text-primary" />
-              AI Team Practice Plan
+              Hammer Team Practice Plan
             </div>
             {drillBlocks.map((block, i) => (
               <div key={i} className="border rounded-lg p-3 bg-accent/30">

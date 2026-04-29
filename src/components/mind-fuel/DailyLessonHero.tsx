@@ -92,7 +92,7 @@ export default function DailyLessonHero({ lesson, stats, isLoading, onGetNewLess
           {lesson?.is_ai_generated && (
             <Badge variant="outline" className="border-violet-500/50 text-violet-300 text-xs">
               <Sparkles className="h-3 w-3 mr-1" />
-              AI
+              Hammer
             </Badge>
           )}
         </div>

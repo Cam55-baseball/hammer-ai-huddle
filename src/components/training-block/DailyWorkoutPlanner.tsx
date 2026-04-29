@@ -93,7 +93,7 @@ export function DailyWorkoutPlanner() {
             Daily Workout Plan
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Generate a single AI workout for any day. It lands on your Game Plan automatically.
+            Generate a single Hammer workout for any day. It lands on your Game Plan automatically.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

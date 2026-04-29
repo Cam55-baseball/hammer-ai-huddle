@@ -1,44 +1,42 @@
-## Problem
+# Rebrand "AI" → "Hammer" across user-facing UI
 
-Users report that when they log hydration (water or any beverage), the entry briefly appears and then disappears from today's totals — even though the row IS being persisted to the database (verified: `hydration_logs` rows for users today are present and intact).
+Per the Hammer branding rule, the word "AI" should not appear in the UI. This pass replaces every visible "AI" label with "Hammer" (or removes it where the brand context already makes it implied). Code identifiers, comments, console logs, error logs, and DB column names are left untouched — only display strings change.
 
-The root cause is in `src/hooks/useHydration.ts`. Several instances of this hook run simultaneously across the page (the header `HydrationTrackerWidget`, the `HydrationQualityBreakdown` card, and `QuickLogActions`). The hook has unstable references and a duplicated post-write block that combine to drop today's logs from local state.
+## Primary fix (the reported issue)
 
-## Root Causes
+**`src/components/nutrition-hub/MealLogCard.tsx`** (line 55)
+- `'AI Estimated'` → `'Hammer Estimated'` on the meal source badge.
 
-1. **Unstable `today` and callbacks** (`useHydration.ts` line 102):
-   `const today = format(new Date(), 'yyyy-MM-dd')` is recomputed on every render. This causes:
-   - `fetchTodayLogs` (deps `[user, today]`) to be recreated every render.
-   - The realtime subscription `useEffect` (deps `[user, fetchTodayLogs]`) to **tear down and resubscribe on every render**. While the channel is mid-resubscribe, postgres_changes events for newly inserted hydration logs are missed by the *other* hook instances on the page, so their `todayLogs` never include the new row. The instance that inserted it shows it (via optimistic `setTodayTotal`), then `fetchTodayLogs` runs once and the result is overwritten by a later effect cycle that re-runs `fetchTodayLogs` *before* the row is committed in some cases.
-   - The cross-instance `BroadcastChannel` does NOT deliver messages within the same tab, so the only sync mechanism between instances in the same tab is the (broken) realtime subscription.
+## Other user-visible "AI" labels to rebrand
 
-2. **Duplicated post-insert block** (lines 477–507):
-   After a successful insert the code runs `setTodayTotal(newTotal)` → `fetchTodayLogs()` → BroadcastChannel post **twice in a row**. This causes two refetches and two toast pops, and the second `setTodayTotal(newTotal)` clobbers any concurrent realtime-driven update, sometimes resetting the displayed total back to a stale value if the second fetch resolves before the first.
+Athlete-facing:
+- **`src/components/nutrition-hub/QuickLogActions.tsx`** (118): toast `'AI credits exhausted...'` → `'Hammer credits exhausted. Add credits to continue.'`
+- **`src/components/TodaysTipsReview.tsx`** (139): badge text `AI` → `Hammer`
+- **`src/components/vault/VaultRecapCard.tsx`** (193): badge text `AI` → `Hammer`
+- **`src/components/mind-fuel/DailyLessonHero.tsx`** (95): badge text `AI` → `Hammer`
+- **`src/components/analytics/AskHammerPanel.tsx`** (174): badge `AI Coach` → `Hammer Coach`
+- **`src/components/base-stealing/LiveRepRunner.tsx`** (306): on-screen status `'AI analyzing movement...'` → `'Hammer analyzing movement...'`
+- **`src/components/base-stealing/PostRepInput.tsx`** (100): visible label `AI: {reasoning}` → `Hammer: {reasoning}`
+- **`src/components/hie/TeamWeaknessEngine.tsx`** (112): heading `AI Team Practice Plan` → `Hammer Team Practice Plan`
+- **`src/components/training-block/DailyWorkoutPlanner.tsx`** (96): copy `Generate a single AI workout...` → `Generate a single Hammer workout...`
 
-3. **No date rollover guard**: If the tab stays open across midnight, `today` only updates on re-render, and the realtime filter on `user_id` still works, but the local `log_date` filter in `fetchTodayLogs` becomes stale silently. (Lower priority, but worth fixing while we're here.)
+Owner / admin-facing (still part of the app UI):
+- **`src/components/owner/VideoLibraryManager.tsx`** (192): tab `AI Suggestions` → `Hammer Suggestions`
+- **`src/components/owner/VideoEditForm.tsx`** (394): label `AI Description (what the engine reads)` → `Hammer Description (what the engine reads)`
+- **`src/components/owner/StructuredTagEditor.tsx`** (140): label `AI Description (required) *` → `Hammer Description (required) *`
+- **`src/components/owner/DrillEditorDialog.tsx`** (407): label `AI Context` → `Hammer Context`
+- **`src/components/owner/AISuggestionsReview.tsx`** (42): empty-state copy `Trigger AI analysis...` → `Trigger Hammer analysis...`
+- **`src/components/owner/PendingDrillsQueue.tsx`** (179): empty-state copy `...create AI suggestions.` → `...create Hammer suggestions.`
+- **`src/components/owner/VideoUploadWizard.tsx`** (345): copy `...trigger AI tag suggestions...` → `...trigger Hammer tag suggestions...`
+- **`src/hooks/useVideoLibraryAdmin.ts`** (109, 365, 367): toast titles/descriptions `AI suggestions ready` / `review in AI Suggestions tab` → `Hammer suggestions ready` / `review in Hammer Suggestions tab`
 
-## Fix
+## Out of scope (intentionally NOT changed)
 
-### `src/hooks/useHydration.ts`
+- **i18n locale files** (`src/i18n/locales/*.json`): translation strings still reference `AI`; these will be addressed in a separate localization pass so we don't ship half-translated keys.
+- **Code identifiers, props, prop types, function names** (e.g. `AIMealSuggestions`, `handleAddAISuggestion`, `is_ai_generated`, `useSmartFoodLookup` console log `AI path`): non-visible; leaving as-is to avoid churn.
+- **Comments / JSDoc** referencing "AI" (e.g. `{/* AI Meal Suggestions */}`, `lib/ownerAuthority.tsx` doc comments): not user-visible.
+- **Error/console logs** (`'AI analysis failed:'`, `'AI function error:'`): developer logs only.
 
-1. **Stabilize `today`** with `useState` + a periodic check (every 60 s) so it only changes when the calendar day rolls over — not on every render.
+## Verification
 
-2. **Remove the duplicated block** at lines 492–507 inside `addWater`. The post-insert flow runs exactly once: optimistic `setTodayTotal`, single `fetchTodayLogs()`, single BroadcastChannel post, single goal-reached / "+X oz logged" toast.
-
-3. **Stabilize realtime subscription** — keep the channel alive across renders by depending only on `user?.id` (not on the `fetchTodayLogs` reference), and call `fetchTodayLogs` via a ref so the latest version is always used. This prevents the resubscribe storm and guarantees other hook instances receive postgres_changes events for the newly inserted row.
-
-4. **Use `fetchTodayLogs` after insert as the source of truth** (since it's now reliable). Keep optimistic `setTodayTotal` for snappy UI but let the subsequent `fetchTodayLogs` reconcile.
-
-### Verification
-
-After the fix:
-- Log +8 oz from `QuickLogActions` on `/nutrition-hub` → total updates immediately, persists.
-- Reload the page → entry still present (already true, but now also true visually without flicker).
-- The header widget and the quality breakdown card both reflect the new entry within ~1 s via realtime.
-- No duplicate toasts.
-
-## Files Changed
-
-- `src/hooks/useHydration.ts` — stabilize `today`, dedupe post-insert block, stabilize realtime subscription via ref.
-
-No DB schema changes, no RLS changes, no edge function changes.
+After edits, re-run `rg -n "\"AI |'AI |>AI<|>AI |AI Coach|AI Estimated|AI Suggest" src/ --glob '!src/i18n/**'` and confirm zero remaining hits.

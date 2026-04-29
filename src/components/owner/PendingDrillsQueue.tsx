@@ -176,7 +176,7 @@ export function PendingDrillsQueue() {
             <div className="text-center py-6 text-muted-foreground animate-pulse">Loading...</div>
           ) : count === 0 ? (
             <div className="text-center py-6 text-muted-foreground text-sm">
-              No pending drills. Click "Generate Drills" to create AI suggestions.
+              No pending drills. Click "Generate Drills" to create Hammer suggestions.
             </div>
           ) : (
             <div className="overflow-x-auto">

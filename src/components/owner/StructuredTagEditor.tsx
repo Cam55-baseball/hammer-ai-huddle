@@ -137,7 +137,7 @@ export function StructuredTagEditor({ value, onChange }: Props) {
 
       {/* AI description */}
       <div className="space-y-1.5">
-        <Label className="text-xs">AI Description (required) *</Label>
+        <Label className="text-xs">Hammer Description (required) *</Label>
         <Textarea
           value={value.aiDescription}
           onChange={e => onChange({ ...value, aiDescription: e.target.value })}

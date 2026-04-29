@@ -404,7 +404,7 @@ export function DrillEditorDialog({ open, onOpenChange, drillId, onSaved }: Dril
                 />
               </div>
               <div className="space-y-2">
-                <Label>AI Context</Label>
+                <Label>Hammer Context</Label>
                 <p className="text-xs text-muted-foreground">Explain WHEN this drill should be used and WHAT it fixes</p>
                 <Textarea
                   value={aiContext}
