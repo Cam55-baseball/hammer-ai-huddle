@@ -188,12 +188,14 @@ export function NightCheckInSuccess({
             </h3>
             
             <div className="grid gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+              {todayStats.checkinsCompleted > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                  </div>
+                  <span>{t('vault.quiz.nightSuccess.checkinsCompleted', { count: todayStats.checkinsCompleted })}</span>
                 </div>
-                <span>{t('vault.quiz.nightSuccess.checkinsCompleted', { count: todayStats.checkinsCompleted })}</span>
-              </div>
+              )}
               
               {todayStats.workoutsLogged > 0 && (
                 <div className="flex items-center gap-2">
