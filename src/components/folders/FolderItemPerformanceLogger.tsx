@@ -10,9 +10,11 @@ interface SetRow {
   set: number;
   weight?: number;
   reps?: number;
-  time?: number;
-  distance?: number;
+  time?: number; // seconds (new rows). Legacy rows without time_unit may be minutes.
+  time_unit?: 'sec' | 'min';
+  distance?: number; // feet
   steps?: number;
+  force_lbs?: number; // pounds of force produced (concentric/isometric)
   unit?: string;
 }
 
@@ -46,7 +48,7 @@ function getInputMode(itemType: string | null): InputMode {
 }
 
 function getDefaultSet(mode: InputMode, setNum: number): SetRow {
-  const base: SetRow = { set: setNum, unit: 'lbs' };
+  const base: SetRow = { set: setNum, unit: 'lbs', time_unit: 'sec' };
   if (mode === 'weight_reps') return { ...base, weight: undefined, reps: undefined };
   if (mode === 'duration') return { ...base, time: undefined };
   return { ...base, weight: undefined, reps: undefined, time: undefined, distance: undefined };
@@ -110,7 +112,7 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
     }
   };
 
-  const hasSomeData = sets.some(s => s.weight || s.reps || s.time || s.distance || s.steps);
+  const hasSomeData = sets.some(s => s.weight || s.reps || s.time || s.distance || s.steps || s.force_lbs);
 
   return (
     <div className="space-y-2 mt-2">
@@ -152,6 +154,19 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                     onChange={e => updateSet(index, 'reps', e.target.value ? Number(e.target.value) : undefined)}
                     className="h-7 w-14 text-xs px-1.5 min-w-0"
                   />
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      inputMode="decimal"
+                      placeholder="Force"
+                      value={set.force_lbs ?? ''}
+                      onChange={e => updateSet(index, 'force_lbs', e.target.value ? parseFloat(e.target.value) : undefined)}
+                      className="h-7 w-16 text-xs px-1.5 min-w-0"
+                    />
+                    <span className="text-[10px] text-muted-foreground">lbs force</span>
+                  </div>
                 </>
               )}
 
@@ -159,12 +174,15 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                 <div className="flex items-center gap-1">
                   <Input
                     type="number"
-                    placeholder={mode === 'duration' ? 'Min' : 'Time'}
+                    step="0.01"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="Sec"
                     value={set.time ?? ''}
-                    onChange={e => updateSet(index, 'time', e.target.value ? Number(e.target.value) : undefined)}
-                    className="h-7 w-14 text-xs px-1.5 min-w-0"
+                    onChange={e => updateSet(index, 'time', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-7 w-16 text-xs px-1.5 min-w-0"
                   />
-                  <span className="text-[10px] text-muted-foreground">min</span>
+                  <span className="text-[10px] text-muted-foreground">sec</span>
                 </div>
               )}
 
@@ -177,13 +195,19 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
 
             {mode === 'flexible' && (
               <div className="flex items-center gap-1.5 flex-wrap pl-5">
-                <Input
-                  type="number"
-                  placeholder="Dist"
-                  value={set.distance ?? ''}
-                  onChange={e => updateSet(index, 'distance', e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-7 w-14 text-xs px-1.5 min-w-0"
-                />
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="Dist"
+                    value={set.distance ?? ''}
+                    onChange={e => updateSet(index, 'distance', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-7 w-16 text-xs px-1.5 min-w-0"
+                  />
+                  <span className="text-[10px] text-muted-foreground">ft</span>
+                </div>
                 <Input
                   type="number"
                   placeholder="Steps"
@@ -191,6 +215,19 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                   onChange={e => updateSet(index, 'steps', e.target.value ? Number(e.target.value) : undefined)}
                   className="h-7 w-14 text-xs px-1.5 min-w-0"
                 />
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="Force"
+                    value={set.force_lbs ?? ''}
+                    onChange={e => updateSet(index, 'force_lbs', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-7 w-16 text-xs px-1.5 min-w-0"
+                  />
+                  <span className="text-[10px] text-muted-foreground">lbs force</span>
+                </div>
               </div>
             )}
           </div>

@@ -1,37 +1,46 @@
-# Hitting rep logging fixes: Movement selector visibility + "Missed" contact quality
+## Goal
+Improve set logging in custom activities so users can capture sprint times to the hundredth of a second, see clearly that distance is in feet, and record pounds of force produced for concentric/isometric exercises.
 
-Two issues to fix in the hitting rep logging form (`src/components/practice/RepScorer.tsx`):
+## Changes
 
-## 1. Movement Direction (+/−/up/down/left/right) selector not showing for hitting
+### 1. Sprint time precision (hundredth of a second)
+File: `src/components/folders/FolderItemPerformanceLogger.tsx`
 
-The `PitchMovementSelector` (the arrow grid for pitch movement) is currently rendered at the very bottom of the form (line 1512), AFTER the entire hitting block (lines 801–1129) AND a long pitching-only block (lines 1132–1509). On hitting sessions the pitching block is skipped, so it should render — but in practice users are missing it because:
+- Change the time `Input` from integer minutes to a decimal seconds field:
+  - `type="number"`, `step="0.01"`, `min="0"`, `inputMode="decimal"`
+  - Placeholder: `Sec`
+  - Unit label next to it changes from `min` to `sec`
+- Update `SetRow.time` semantics to seconds (still a `number`, now decimal). Parse with `parseFloat` instead of `Number(...)` and preserve 2-decimal precision on display (`set.time?.toFixed(2)` only when not focused — simplest: just bind raw value).
+- Add `mode === 'sprint'` (or reuse `flexible`) — simplest path: keep current `duration`/`flexible` modes but always allow hundredth-second precision since this also benefits any timed activity.
 
-- It sits below the "Advanced" sub-section, well below the contact quality / swing decision area where the user expects pitch context to live.
-- Some narrow conditions (e.g. specific rep sources or layout reflows) can push it off-screen or below the Add Rep button.
+### 2. Distance measured in feet
+File: `src/components/folders/FolderItemPerformanceLogger.tsx`
 
-**Fix:** Move the Movement Direction selector INSIDE the hitting block, positioned right after Pitch Type / Pitch Location / ABS Guess (around line ~938) and BEFORE Swing Decision. This:
-- Guarantees it always renders for hitting (no longer dependent on the form's tail).
-- Puts it next to other pitch-context controls where users intuitively look for it.
-- Keep the existing copy at line 1512 ONLY for `isPitching` (i.e. change condition from `(isHitting || isPitching)` to just `isPitching`) so pitching keeps its current placement.
+- Replace the bare `Dist` placeholder with `Dist (ft)`.
+- Add a small `ft` suffix label to the right of the distance input, matching the `min`/`sec` pattern.
+- Document in `SetRow` that `distance` is stored in feet.
 
-## 2. Add "Missed" to Contact Quality
+### 3. Pounds of force for concentric / isometric exercises
+Files: `src/components/folders/FolderItemPerformanceLogger.tsx`, `src/types/activityFolder.ts` (extend `SetRow`-equivalent / performance shape if typed there).
 
-The `contactOptions` array at line 206 currently has: Barrel, Solid, Flare/Burner, Miss-hit/Clip, Weak, Whiff. The user wants an explicit **Missed** option (distinct from "Whiff" — Whiff = swung and missed; "Missed" = the user missed/didn't connect for any other reason, e.g. took the pitch when they meant to swing, foul tip miss, etc.).
+- Extend `SetRow` with `force_lbs?: number`.
+- Render a new input `Force (lbs)` in the set row whenever:
+  - `mode === 'weight_reps'` (covers strength/skill_work where isometrics live), OR
+  - the item name / `item_type` indicates an isometric or concentric movement.
+- Simpler rule for v1: always show the `Force (lbs)` input in `weight_reps` and `flexible` modes (small, optional field). It stays optional and only saves if filled.
+- Include `force_lbs` in the `hasSomeData` check so a force-only entry can be saved.
+- Persist as part of the existing `sets` array in `performance_data` — no DB schema change required (JSONB).
 
-**Fix:** Add a new option to `contactOptions`:
-```ts
-{ value: 'missed', label: '🚫 Missed', color: 'bg-slate-500/20 text-slate-700 border-slate-300' }
-```
-Placed between `weak` and `whiff` so the severity progression reads naturally. The same `contactOptions` array is reused inside the pitcher-vs-hitter outcome panel (line 1387), so that picker gets the new option automatically.
+### 4. Downstream readers
+- `customActivityLoadCalculation.ts` and any analytics that read `sets[].time` currently treat it as minutes. Quick scan needed; if minutes are assumed, multiply seconds→minutes when feeding load calc, OR add a `time_unit: 'sec' | 'min'` discriminator on the set and default new entries to `'sec'`. Plan to add `time_unit` so historical rows (minutes) keep working.
 
-No DB migration needed — `contact_quality` is a free-form text column already.
+## Technical notes
+- All changes are JSONB-only; no migration.
+- `SetRow.time` becomes `{ time?: number; time_unit?: 'sec' | 'min' }`. New rows write `time_unit: 'sec'`; legacy rows without the field continue to be interpreted as minutes by readers.
+- Inputs use `step="0.01"` and `inputMode="decimal"` for clean mobile keypads.
+- No new dependencies.
 
-## Files
-
-- `src/components/practice/RepScorer.tsx` — relocate `PitchMovementSelector` block into the hitting fields section; restrict the existing bottom block to `isPitching` only; append `missed` to `contactOptions`.
-
-## Verification
-
-1. Start a hitting practice session → open rep logger → confirm the Movement Direction arrow grid appears under the pitch zone area on every hitting rep, in both Quick and Advanced modes, regardless of rep source.
-2. Confirm the Contact Quality grid shows 7 options including the new "🚫 Missed" tile, and that selecting it commits a rep with `contact_quality: "missed"`.
-3. Start a pitching session → confirm the Movement Direction selector still appears in its existing location at the bottom of the pitching fields (unchanged behavior).
+## Files to edit
+- `src/components/folders/FolderItemPerformanceLogger.tsx`
+- `src/types/activityFolder.ts` (extend performance/set typing if defined there)
+- `src/utils/customActivityLoadCalculation.ts` (respect `time_unit` when reading)
