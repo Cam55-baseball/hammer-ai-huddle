@@ -18,6 +18,7 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { safeGet, safeSet } from '@/lib/safeStorage';
 import { getTodayDate } from '@/utils/dateUtils';
 import { cn } from '@/lib/utils';
