@@ -189,6 +189,8 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   if (avgWhiffPct !== null) bqiRaw -= avgWhiffPct * 0.1;         // Phase 2: whiff_pct penalty
   if (avgIzContactPct !== null) bqiRaw += avgIzContactPct * 0.1; // Phase 2: in_zone_contact bonus
   bqiRaw *= velocityDifficultyMult;
+  // Apply rep-source toughness for hitting sessions (tee << flip << live BP).
+  if (isHittingSession) bqiRaw *= repSourceToughness;
 
   // ── FQI: blend with throw accuracy + Phase 2 fields ──
   let fqiRaw = normalizedScore * 0.9;
@@ -234,9 +236,11 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   if (avgZonePct !== null) peiRaw += avgZonePct * 0.1;              // Phase 2: zone_pct
   if (avgPitchWhiffPct !== null) peiRaw += avgPitchWhiffPct * 0.08; // Phase 2: pitch_whiff_pct
   if (avgPitchChasePct !== null) peiRaw += avgPitchChasePct * 0.05; // Phase 2: pitch_chase_pct
+  // Apply rep-source toughness for pitching sessions (bullpen << flat-ground vs hitter << live BP vs hitters).
+  if (isPitchingSession) peiRaw *= repSourceToughness;
 
-  // ── Decision: apply chase_pct penalty ──
-  let decisionRaw = normalizedScore * decisionMultiplier;
+  // ── Decision: apply chase_pct penalty (only meaningful when reps had a live read) ──
+  let decisionRaw = normalizedScore * decisionMultiplier * liveContextBonus;
   if (avgChasePct !== null) decisionRaw -= avgChasePct * 0.15; // Phase 2: chase_pct penalty
 
   // BP distance power trend
