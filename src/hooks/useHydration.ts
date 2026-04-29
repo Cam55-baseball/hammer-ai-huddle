@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns';
@@ -99,7 +99,18 @@ export function useHydration() {
   const [stats, setStats] = useState<HydrationStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const today = format(new Date(), 'yyyy-MM-dd');
+  // Stable "today" — only changes when the calendar day rolls over.
+  // Recomputing this every render destabilized fetchTodayLogs and caused
+  // the realtime subscription to tear down/resubscribe constantly, dropping
+  // postgres_changes events for newly inserted hydration logs.
+  const [today, setToday] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const next = format(new Date(), 'yyyy-MM-dd');
+      setToday(prev => (prev === next ? prev : next));
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch today's logs
   const fetchTodayLogs = useCallback(async () => {
@@ -474,6 +485,7 @@ export function useHydration() {
 
       if (error) throw error;
 
+      // Single source of truth: optimistic UI then reconcile from DB.
       const newTotal = todayTotal + amount;
       setTodayTotal(newTotal);
 
@@ -483,22 +495,6 @@ export function useHydration() {
         toast.success(`+${amount} oz logged!`);
       }
 
-      fetchTodayLogs();
-      try {
-        const ch = new BroadcastChannel('data-sync');
-        ch.postMessage({ type: HYDRATION_CHANGED_EVENT, userId: user.id, tabId: TAB_ID });
-        ch.close();
-      } catch {}
-      setTodayTotal(newTotal);
-      
-      // Check if goal reached
-      if (newTotal >= dailyGoal && todayTotal < dailyGoal) {
-        toast.success('🎉 Daily hydration goal reached!', { duration: 5000 });
-      } else {
-        toast.success(`+${amount} oz logged!`);
-      }
-
-      // Refresh logs
       fetchTodayLogs();
       try {
         const ch = new BroadcastChannel('data-sync');
@@ -601,6 +597,13 @@ export function useHydration() {
     return (data as unknown as HydrationLog[]) || [];
   }, [user]);
 
+  // Keep the latest fetchTodayLogs in a ref so the realtime subscription
+  // useEffect can depend only on user.id (stable) without missing events.
+  const fetchTodayLogsRef = useRef(fetchTodayLogs);
+  useEffect(() => {
+    fetchTodayLogsRef.current = fetchTodayLogs;
+  }, [fetchTodayLogs]);
+
   // Initial load
   useEffect(() => {
     if (user) {
@@ -611,9 +614,11 @@ export function useHydration() {
     }
   }, [user, fetchTodayLogs, fetchSettings]);
 
-  // Cross-instance + cross-tab sync
+  // Cross-instance + cross-tab sync. Depend on user.id ONLY so the channel
+  // is not torn down on every render (which dropped postgres_changes events
+  // and made hydration logs appear to "disappear" across hook instances).
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     let channel: BroadcastChannel | null = null;
     try {
@@ -625,7 +630,7 @@ export function useHydration() {
           data.userId === user.id &&
           data.tabId !== TAB_ID
         ) {
-          fetchTodayLogs();
+          fetchTodayLogsRef.current();
         }
       };
     } catch {}
@@ -635,7 +640,7 @@ export function useHydration() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'hydration_logs', filter: `user_id=eq.${user.id}` },
-        () => fetchTodayLogs()
+        () => fetchTodayLogsRef.current()
       )
       .subscribe();
 
@@ -643,7 +648,7 @@ export function useHydration() {
       try { channel?.close(); } catch {}
       supabase.removeChannel(realtime);
     };
-  }, [user, fetchTodayLogs]);
+  }, [user?.id]);
 
   // Refresh stats when todayTotal changes
   useEffect(() => {
