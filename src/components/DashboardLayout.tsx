@@ -140,7 +140,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {user && (
         <StartHereGuide
           open={tutorialOpen}
-          onOpenChange={setTutorialOpen}
+          onOpenChange={(next) => {
+            setTutorialOpen(next);
+            if (!next) setTutorialCompleted(true);
+          }}
         />
       )}
     </SidebarProvider>
