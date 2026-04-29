@@ -1563,9 +1563,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         ) : sortMode === 'manual' ? (
           <Reorder.Group axis="y" values={orderedTasks} onReorder={onReorder} className="space-y-2">
             {orderedTasks.map((task) => (
-              <Reorder.Item key={task.id} value={task} drag={!todayLocked}>
-                {renderTask(task)}
-              </Reorder.Item>
+              <DraggableTaskItem key={task.id} task={task} disabled={todayLocked}>
+                {(controls) => renderTask(task, undefined, controls)}
+              </DraggableTaskItem>
             ))}
           </Reorder.Group>
         ) : null}
