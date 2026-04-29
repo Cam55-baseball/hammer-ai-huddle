@@ -105,6 +105,17 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     velocityDifficultyMult = 1.0 + (highVeloCount / velocityReps.length) * 0.15;
   }
 
+  // ── Rep-source toughness (per-rep context: tee vs live BP, bullpen vs vs-hitter, etc.) ──
+  // This is the primary "practice toughness" signal — separates 100mph live BP from coach flips,
+  // and live-hitter pitching from a clean bullpen. Scales BQI / PEI / competitive_execution.
+  const moduleForToughness = (session.module ?? 'hitting') as string;
+  const { toughness: repSourceToughness, breakdown: repSourceBreakdown } =
+    computeSessionToughness(moduleForToughness, microReps);
+  const isHittingSession = moduleForToughness === 'hitting' || moduleForToughness === 'bunting';
+  const isPitchingSession = moduleForToughness === 'pitching';
+  // Decision multiplier only boosts when reps were against a live arm/hitter.
+  const liveContextBonus = repSourceToughness >= 1.05 ? repSourceToughness : 1.0;
+
   // Pitch command grade -> PEI
   const commandGrades = microReps.filter((r: any) => r.pitch_command_grade).map((r: any) => r.pitch_command_grade);
   const avgCommandGrade = commandGrades.length > 0 ? commandGrades.reduce((a: number, b: number) => a + b, 0) / commandGrades.length : null;
