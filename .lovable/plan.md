@@ -1,46 +1,38 @@
 ## Goal
-Improve set logging in custom activities so users can capture sprint times to the hundredth of a second, see clearly that distance is in feet, and record pounds of force produced for concentric/isometric exercises.
+The left-side menu should show **only the training modules a user actually subscribed to**. A user with just Complete Pitcher must not see 5Tool Player or Golden 2Way (and vice versa). Owner/Admin still see everything for testing.
 
-## Changes
+## Root cause
+`AppSidebar.tsx` currently uses `getActiveTier(modules, sport)` which collapses the user's subscriptions into a single "highest" tier and renders one block based on that. Two real problems:
 
-### 1. Sprint time precision (hundredth of a second)
-File: `src/components/folders/FolderItemPerformanceLogger.tsx`
+1. **Owner/Admin show-all is fine**, but any non-owner user whose `modules` contain multiple tier keys (e.g. they bought Pitcher + 5Tool separately) only sees one block.
+2. **Tier inclusion logic** treats Golden 2Way as superseding 5Tool/Pitcher in `getActiveTier`, so a Golden subscriber correctly sees only Golden — but the *individual* tier blocks were always meant to be exclusive. The user's intent is simpler: render each block iff that specific tier key is in `modules`.
 
-- Change the time `Input` from integer minutes to a decimal seconds field:
-  - `type="number"`, `step="0.01"`, `min="0"`, `inputMode="decimal"`
-  - Placeholder: `Sec`
-  - Unit label next to it changes from `min` to `sec`
-- Update `SetRow.time` semantics to seconds (still a `number`, now decimal). Parse with `parseFloat` instead of `Number(...)` and preserve 2-decimal precision on display (`set.time?.toFixed(2)` only when not focused — simplest: just bind raw value).
-- Add `mode === 'sprint'` (or reuse `flexible`) — simplest path: keep current `duration`/`flexible` modes but always allow hundredth-second precision since this also benefits any timed activity.
+## Fix
+Replace the `activeTier`-based rendering in `AppSidebar.tsx` (lines ~185–248) with **direct per-module checks** against the subscribed `modules` array for the currently `selectedSport`:
 
-### 2. Distance measured in feet
-File: `src/components/folders/FolderItemPerformanceLogger.tsx`
+- Show **Complete Pitcher** block if `modules` includes `${sport}_pitcher` OR `${sport}_golden2way` (Golden grants pitching) OR legacy `${sport}_pitching`. Owner/Admin always.
+- Show **5Tool Player** block if `modules` includes `${sport}_5tool` OR `${sport}_golden2way` (Golden grants hitting/throwing). Owner/Admin always.
+- Show **Golden 2Way** block ONLY if `modules` includes `${sport}_golden2way`. Owner/Admin always.
 
-- Replace the bare `Dist` placeholder with `Dist (ft)`.
-- Add a small `ft` suffix label to the right of the distance input, matching the `min`/`sec` pattern.
-- Document in `SetRow` that `distance` is stored in feet.
+This means a Pitcher-only subscriber sees only the Complete Pitcher block. A Golden 2Way subscriber sees Pitcher + 5Tool + Golden (because they paid for the union). A 5Tool-only subscriber sees only 5Tool. Owner/Admin see all three.
 
-### 3. Pounds of force for concentric / isometric exercises
-Files: `src/components/folders/FolderItemPerformanceLogger.tsx`, `src/types/activityFolder.ts` (extend `SetRow`-equivalent / performance shape if typed there).
+Also remove the now-redundant `getActiveTier` call in this file (keep the helper itself; other files use it).
 
-- Extend `SetRow` with `force_lbs?: number`.
-- Render a new input `Force (lbs)` in the set row whenever:
-  - `mode === 'weight_reps'` (covers strength/skill_work where isometrics live), OR
-  - the item name / `item_type` indicates an isometric or concentric movement.
-- Simpler rule for v1: always show the `Force (lbs)` input in `weight_reps` and `flexible` modes (small, optional field). It stays optional and only saves if filled.
-- Include `force_lbs` in the `hasSomeData` check so a force-only entry can be saved.
-- Persist as part of the existing `sets` array in `performance_data` — no DB schema change required (JSONB).
-
-### 4. Downstream readers
-- `customActivityLoadCalculation.ts` and any analytics that read `sets[].time` currently treat it as minutes. Quick scan needed; if minutes are assumed, multiply seconds→minutes when feeding load calc, OR add a `time_unit: 'sec' | 'min'` discriminator on the set and default new entries to `'sec'`. Plan to add `time_unit` so historical rows (minutes) keep working.
+Players Club / Royal Timing / Video Library / Drill Library gating (any subscription) is unchanged.
 
 ## Technical notes
-- All changes are JSONB-only; no migration.
-- `SetRow.time` becomes `{ time?: number; time_unit?: 'sec' | 'min' }`. New rows write `time_unit: 'sec'`; legacy rows without the field continue to be interpreted as minutes by readers.
-- Inputs use `step="0.01"` and `inputMode="decimal"` for clean mobile keypads.
-- No new dependencies.
+- File: `src/components/AppSidebar.tsx`
+- Replace the `useMemo` block that builds `trainingModules` so each tier block has its own `if` based on a direct `modules.includes(...)` check, with the Golden-grants-lower-tiers semantics above.
+- Keep `selectedSport` dependency so switching sports re-evaluates which blocks appear.
+- No DB / hook / type changes. No edge-function changes.
+- Legacy `_hitting` / `_pitching` / `_throwing` block at lines 251–293 remains for users still on legacy keys.
+
+## Verification
+- User with `['baseball_pitcher']` → only Complete Pitcher block.
+- User with `['baseball_5tool']` → only 5Tool Player block.
+- User with `['baseball_golden2way']` → Pitcher + 5Tool + Golden blocks.
+- User with `['baseball_pitcher','baseball_5tool']` → Pitcher + 5Tool blocks (no Golden).
+- Owner/Admin → all three blocks.
 
 ## Files to edit
-- `src/components/folders/FolderItemPerformanceLogger.tsx`
-- `src/types/activityFolder.ts` (extend performance/set typing if defined there)
-- `src/utils/customActivityLoadCalculation.ts` (respect `time_unit` when reading)
+- `src/components/AppSidebar.tsx`

@@ -181,19 +181,29 @@ export function AppSidebar() {
     ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
 
-  // Determine active tier for sidebar display
+  // Determine active tier (kept for downstream display logic if needed)
   const activeTier = useMemo(() => getActiveTier(modules, selectedSport), [modules, selectedSport]);
 
-  // Build training modules based on active tier (or show all for owner/admin)
+  // Build training modules — show ONLY blocks the user is actually subscribed to.
+  // Owner/Admin always see all blocks for testing.
   const trainingModules = useMemo(() => {
     const showAll = isOwner || isAdmin;
     const items: any[] = [];
 
-    // Complete Pitcher (pitcher tier or golden2way or owner/admin)
-    if (showAll || activeTier === 'pitcher') {
+    const sport = selectedSport;
+    const hasGolden = modules.includes(`${sport}_golden2way`);
+    const hasPitcherTier = modules.includes(`${sport}_pitcher`);
+    const hasFiveTool = modules.includes(`${sport}_5tool`);
+    const hasLegacyPitching = modules.includes(`${sport}_pitching`);
+    const hasLegacyHitting = modules.includes(`${sport}_hitting`);
+    const hasLegacyThrowing = modules.includes(`${sport}_throwing`);
+
+    // Complete Pitcher — shown if user owns Pitcher tier, Golden (which includes pitching),
+    // or legacy pitching key. Owner/Admin always.
+    if (showAll || hasPitcherTier || hasGolden || hasLegacyPitching) {
       items.push({
         key: 'pitching',
-        title: activeTier === 'golden2way' || showAll ? t('dashboard.modules.completePitcherShort') : t('dashboard.modules.completePitcherShort'),
+        title: t('dashboard.modules.completePitcherShort'),
         url: '/complete-pitcher',
         icon: Target,
         subModules: [
@@ -205,8 +215,8 @@ export function AppSidebar() {
       });
     }
 
-    // 5Tool Player (5tool tier or owner/admin — NOT shown if golden2way)
-    if (showAll || activeTier === '5tool') {
+    // 5Tool Player — shown if user owns 5Tool tier or Golden (which includes hitting/throwing).
+    if (showAll || hasFiveTool || hasGolden || hasLegacyHitting || hasLegacyThrowing) {
       items.push({
         key: '5tool',
         title: '5Tool Player',
@@ -225,8 +235,8 @@ export function AppSidebar() {
       });
     }
 
-    // Golden 2Way (golden2way tier or owner/admin)
-    if (showAll || activeTier === 'golden2way') {
+    // Golden 2Way — shown ONLY if user owns the Golden tier specifically.
+    if (showAll || hasGolden) {
       items.push({
         key: 'golden2way',
         title: 'The Golden 2Way',
@@ -247,50 +257,8 @@ export function AppSidebar() {
       });
     }
 
-    // Legacy: if user has old keys but no new tier, show old-style modules
-    if (!showAll && !activeTier) {
-      const hasHitting = modules.some(m => m.includes('hitting'));
-      const hasPitching = modules.some(m => m.includes('pitching'));
-      const hasThrowing = modules.some(m => m.includes('throwing'));
-
-      if (hasHitting) {
-        items.push({
-          key: 'hitting',
-          title: t('dashboard.modules.completeHitterShort'),
-          url: '/complete-hitter',
-          icon: Target,
-          subModules: [
-            { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.hittingDescription') },
-            { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "6-week workout" },
-            { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
-          ]
-        });
-      }
-      if (hasPitching) {
-        items.push({
-          key: 'pitching',
-          title: t('dashboard.modules.completePitcherShort'),
-          url: '/complete-pitcher',
-          icon: Target,
-          subModules: [
-            { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
-            { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: "6-week workout" },
-          ]
-        });
-      }
-      if (hasThrowing) {
-        items.push({
-          key: 'throwing',
-          title: t('dashboard.modules.completePlayerShort'),
-          url: '/complete-player',
-          icon: Zap,
-          subModules: [
-            { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.throwingDescription') },
-            { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
-          ]
-        });
-      }
-    }
+    // Legacy fallback removed — the per-tier blocks above now also catch legacy
+    // _hitting / _pitching / _throwing module keys directly.
 
     // Players Club always visible
     items.push({ key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked });
