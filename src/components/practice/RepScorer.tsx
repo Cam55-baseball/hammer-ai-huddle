@@ -209,6 +209,7 @@ const contactOptions = [
   { value: 'flare_burner', label: '✨ Flare/Burner', color: 'bg-emerald-500/20 text-emerald-700 border-emerald-300' },
   { value: 'misshit_clip', label: '🔸 Miss-hit/Clip', color: 'bg-amber-500/20 text-amber-700 border-amber-300' },
   { value: 'weak', label: '⚠️ Weak', color: 'bg-orange-500/20 text-orange-700 border-orange-300' },
+  { value: 'missed', label: '🚫 Missed', color: 'bg-slate-500/20 text-slate-700 border-slate-300' },
   { value: 'whiff', label: '❌ Whiff', color: 'bg-red-500/20 text-red-700 border-red-300' },
 ];
 
@@ -937,6 +938,19 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
                 </div>
               )}
 
+              {/* Movement Direction (arrow grid) — always visible for hitting */}
+              <div>
+                <PitchMovementSelector
+                  value={current.pitch_movement?.directions ?? []}
+                  onChange={(v) =>
+                    updateField('pitch_movement', {
+                      directions: normalizeDirections(v),
+                      key: deriveMovementKey(v),
+                    })
+                  }
+                />
+              </div>
+
               {/* Swing Decision - always visible (most valuable self-assessment) */}
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">Swing Decision</Label>
@@ -1508,8 +1522,8 @@ export function RepScorer({ module, drillType, reps, onRepsChange, sessionConfig
             </>
           )}
 
-          {/* ===== SHARED: Movement Direction (hitting + pitching) ===== */}
-          {(isHitting || isPitching) && (
+          {/* ===== Movement Direction (pitching only — hitting renders inside its own block above) ===== */}
+          {isPitching && (
             <div>
               <PitchMovementSelector
                 value={current.pitch_movement?.directions ?? []}
