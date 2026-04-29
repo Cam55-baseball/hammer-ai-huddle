@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { 
   Rocket, ChevronRight, ChevronLeft, Dumbbell, Video, Target, 
-  BarChart3, BookOpen, HelpCircle, Check, Sparkles, User
+  BarChart3, BookOpen, HelpCircle, Check, Sparkles, User, Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -324,6 +324,21 @@ export function StartHereGuide({ open, onOpenChange }: StartHereGuideProps) {
                 <div>
                   <p className="font-bold">Upload First Video</p>
                   <p className="text-xs text-muted-foreground">Analyze your mechanics</p>
+                </div>
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => handleComplete('/game-scoring')}
+                className="w-full h-16 text-left justify-start gap-4"
+                size="lg"
+              >
+                <div className="p-2 rounded-lg bg-muted">
+                  <Trophy className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-bold">Go to Your Game Hub</p>
+                  <p className="text-xs text-muted-foreground">Score a live game and track stats</p>
                 </div>
               </Button>
             </div>
