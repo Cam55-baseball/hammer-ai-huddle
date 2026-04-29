@@ -104,7 +104,7 @@ export function StartHereGuide({ open, onOpenChange }: StartHereGuideProps) {
   const positions = sport === 'softball' ? POSITIONS_SOFTBALL : POSITIONS_BASEBALL;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-lg">
         {/* Progress indicator */}
         <div className="flex gap-1 mb-2">
