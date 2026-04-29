@@ -1,42 +1,37 @@
-# Rebrand "AI" → "Hammer" across user-facing UI
+# Hitting rep logging fixes: Movement selector visibility + "Missed" contact quality
 
-Per the Hammer branding rule, the word "AI" should not appear in the UI. This pass replaces every visible "AI" label with "Hammer" (or removes it where the brand context already makes it implied). Code identifiers, comments, console logs, error logs, and DB column names are left untouched — only display strings change.
+Two issues to fix in the hitting rep logging form (`src/components/practice/RepScorer.tsx`):
 
-## Primary fix (the reported issue)
+## 1. Movement Direction (+/−/up/down/left/right) selector not showing for hitting
 
-**`src/components/nutrition-hub/MealLogCard.tsx`** (line 55)
-- `'AI Estimated'` → `'Hammer Estimated'` on the meal source badge.
+The `PitchMovementSelector` (the arrow grid for pitch movement) is currently rendered at the very bottom of the form (line 1512), AFTER the entire hitting block (lines 801–1129) AND a long pitching-only block (lines 1132–1509). On hitting sessions the pitching block is skipped, so it should render — but in practice users are missing it because:
 
-## Other user-visible "AI" labels to rebrand
+- It sits below the "Advanced" sub-section, well below the contact quality / swing decision area where the user expects pitch context to live.
+- Some narrow conditions (e.g. specific rep sources or layout reflows) can push it off-screen or below the Add Rep button.
 
-Athlete-facing:
-- **`src/components/nutrition-hub/QuickLogActions.tsx`** (118): toast `'AI credits exhausted...'` → `'Hammer credits exhausted. Add credits to continue.'`
-- **`src/components/TodaysTipsReview.tsx`** (139): badge text `AI` → `Hammer`
-- **`src/components/vault/VaultRecapCard.tsx`** (193): badge text `AI` → `Hammer`
-- **`src/components/mind-fuel/DailyLessonHero.tsx`** (95): badge text `AI` → `Hammer`
-- **`src/components/analytics/AskHammerPanel.tsx`** (174): badge `AI Coach` → `Hammer Coach`
-- **`src/components/base-stealing/LiveRepRunner.tsx`** (306): on-screen status `'AI analyzing movement...'` → `'Hammer analyzing movement...'`
-- **`src/components/base-stealing/PostRepInput.tsx`** (100): visible label `AI: {reasoning}` → `Hammer: {reasoning}`
-- **`src/components/hie/TeamWeaknessEngine.tsx`** (112): heading `AI Team Practice Plan` → `Hammer Team Practice Plan`
-- **`src/components/training-block/DailyWorkoutPlanner.tsx`** (96): copy `Generate a single AI workout...` → `Generate a single Hammer workout...`
+**Fix:** Move the Movement Direction selector INSIDE the hitting block, positioned right after Pitch Type / Pitch Location / ABS Guess (around line ~938) and BEFORE Swing Decision. This:
+- Guarantees it always renders for hitting (no longer dependent on the form's tail).
+- Puts it next to other pitch-context controls where users intuitively look for it.
+- Keep the existing copy at line 1512 ONLY for `isPitching` (i.e. change condition from `(isHitting || isPitching)` to just `isPitching`) so pitching keeps its current placement.
 
-Owner / admin-facing (still part of the app UI):
-- **`src/components/owner/VideoLibraryManager.tsx`** (192): tab `AI Suggestions` → `Hammer Suggestions`
-- **`src/components/owner/VideoEditForm.tsx`** (394): label `AI Description (what the engine reads)` → `Hammer Description (what the engine reads)`
-- **`src/components/owner/StructuredTagEditor.tsx`** (140): label `AI Description (required) *` → `Hammer Description (required) *`
-- **`src/components/owner/DrillEditorDialog.tsx`** (407): label `AI Context` → `Hammer Context`
-- **`src/components/owner/AISuggestionsReview.tsx`** (42): empty-state copy `Trigger AI analysis...` → `Trigger Hammer analysis...`
-- **`src/components/owner/PendingDrillsQueue.tsx`** (179): empty-state copy `...create AI suggestions.` → `...create Hammer suggestions.`
-- **`src/components/owner/VideoUploadWizard.tsx`** (345): copy `...trigger AI tag suggestions...` → `...trigger Hammer tag suggestions...`
-- **`src/hooks/useVideoLibraryAdmin.ts`** (109, 365, 367): toast titles/descriptions `AI suggestions ready` / `review in AI Suggestions tab` → `Hammer suggestions ready` / `review in Hammer Suggestions tab`
+## 2. Add "Missed" to Contact Quality
 
-## Out of scope (intentionally NOT changed)
+The `contactOptions` array at line 206 currently has: Barrel, Solid, Flare/Burner, Miss-hit/Clip, Weak, Whiff. The user wants an explicit **Missed** option (distinct from "Whiff" — Whiff = swung and missed; "Missed" = the user missed/didn't connect for any other reason, e.g. took the pitch when they meant to swing, foul tip miss, etc.).
 
-- **i18n locale files** (`src/i18n/locales/*.json`): translation strings still reference `AI`; these will be addressed in a separate localization pass so we don't ship half-translated keys.
-- **Code identifiers, props, prop types, function names** (e.g. `AIMealSuggestions`, `handleAddAISuggestion`, `is_ai_generated`, `useSmartFoodLookup` console log `AI path`): non-visible; leaving as-is to avoid churn.
-- **Comments / JSDoc** referencing "AI" (e.g. `{/* AI Meal Suggestions */}`, `lib/ownerAuthority.tsx` doc comments): not user-visible.
-- **Error/console logs** (`'AI analysis failed:'`, `'AI function error:'`): developer logs only.
+**Fix:** Add a new option to `contactOptions`:
+```ts
+{ value: 'missed', label: '🚫 Missed', color: 'bg-slate-500/20 text-slate-700 border-slate-300' }
+```
+Placed between `weak` and `whiff` so the severity progression reads naturally. The same `contactOptions` array is reused inside the pitcher-vs-hitter outcome panel (line 1387), so that picker gets the new option automatically.
+
+No DB migration needed — `contact_quality` is a free-form text column already.
+
+## Files
+
+- `src/components/practice/RepScorer.tsx` — relocate `PitchMovementSelector` block into the hitting fields section; restrict the existing bottom block to `isPitching` only; append `missed` to `contactOptions`.
 
 ## Verification
 
-After edits, re-run `rg -n "\"AI |'AI |>AI<|>AI |AI Coach|AI Estimated|AI Suggest" src/ --glob '!src/i18n/**'` and confirm zero remaining hits.
+1. Start a hitting practice session → open rep logger → confirm the Movement Direction arrow grid appears under the pitch zone area on every hitting rep, in both Quick and Advanced modes, regardless of rep source.
+2. Confirm the Contact Quality grid shows 7 options including the new "🚫 Missed" tile, and that selecting it commits a rep with `contact_quality: "missed"`.
+3. Start a pitching session → confirm the Movement Direction selector still appears in its existing location at the bottom of the pitching fields (unchanged behavior).
