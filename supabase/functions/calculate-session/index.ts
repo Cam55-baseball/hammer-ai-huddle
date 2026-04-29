@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { computeSessionToughness } from "../_shared/repSourceToughness.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -104,6 +105,17 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     velocityDifficultyMult = 1.0 + (highVeloCount / velocityReps.length) * 0.15;
   }
 
+  // ── Rep-source toughness (per-rep context: tee vs live BP, bullpen vs vs-hitter, etc.) ──
+  // This is the primary "practice toughness" signal — separates 100mph live BP from coach flips,
+  // and live-hitter pitching from a clean bullpen. Scales BQI / PEI / competitive_execution.
+  const moduleForToughness = (session.module ?? 'hitting') as string;
+  const { toughness: repSourceToughness, breakdown: repSourceBreakdown } =
+    computeSessionToughness(moduleForToughness, microReps);
+  const isHittingSession = moduleForToughness === 'hitting' || moduleForToughness === 'bunting';
+  const isPitchingSession = moduleForToughness === 'pitching';
+  // Decision multiplier only boosts when reps were against a live arm/hitter.
+  const liveContextBonus = repSourceToughness >= 1.05 ? repSourceToughness : 1.0;
+
   // Pitch command grade -> PEI
   const commandGrades = microReps.filter((r: any) => r.pitch_command_grade).map((r: any) => r.pitch_command_grade);
   const avgCommandGrade = commandGrades.length > 0 ? commandGrades.reduce((a: number, b: number) => a + b, 0) / commandGrades.length : null;
@@ -177,6 +189,8 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   if (avgWhiffPct !== null) bqiRaw -= avgWhiffPct * 0.1;         // Phase 2: whiff_pct penalty
   if (avgIzContactPct !== null) bqiRaw += avgIzContactPct * 0.1; // Phase 2: in_zone_contact bonus
   bqiRaw *= velocityDifficultyMult;
+  // Apply rep-source toughness for hitting sessions (tee << flip << live BP).
+  if (isHittingSession) bqiRaw *= repSourceToughness;
 
   // ── FQI: blend with throw accuracy + Phase 2 fields ──
   let fqiRaw = normalizedScore * 0.9;
@@ -222,9 +236,11 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
   if (avgZonePct !== null) peiRaw += avgZonePct * 0.1;              // Phase 2: zone_pct
   if (avgPitchWhiffPct !== null) peiRaw += avgPitchWhiffPct * 0.08; // Phase 2: pitch_whiff_pct
   if (avgPitchChasePct !== null) peiRaw += avgPitchChasePct * 0.05; // Phase 2: pitch_chase_pct
+  // Apply rep-source toughness for pitching sessions (bullpen << flat-ground vs hitter << live BP vs hitters).
+  if (isPitchingSession) peiRaw *= repSourceToughness;
 
-  // ── Decision: apply chase_pct penalty ──
-  let decisionRaw = normalizedScore * decisionMultiplier;
+  // ── Decision: apply chase_pct penalty (only meaningful when reps had a live read) ──
+  let decisionRaw = normalizedScore * decisionMultiplier * liveContextBonus;
   if (avgChasePct !== null) decisionRaw -= avgChasePct * 0.15; // Phase 2: chase_pct penalty
 
   // BP distance power trend
@@ -252,13 +268,15 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     fqi: Math.min(100, Math.max(0, fqiRaw)),
     pei: Math.min(100, Math.max(0, peiRaw)),
     decision: Math.min(100, Math.max(0, decisionRaw)),
-    competitive_execution: Math.min(100, normalizedScore * competitiveMultiplier),
+    competitive_execution: Math.min(100, normalizedScore * competitiveMultiplier * repSourceToughness),
     volume_adjusted: totalReps * volumeMultiplier,
     // Micro aggregates for downstream analytics
     barrel_pct: barrelPct,
     hard_contact_pct: hardContactPct,
     line_drive_pct: lineDrivePct,
     velocity_difficulty_mult: velocityDifficultyMult,
+    rep_source_toughness: repSourceToughness,
+    rep_source_breakdown: repSourceBreakdown,
     bp_power_trend: bpPowerTrend,
     pro_readiness_velocity: proReadinessVelocity,
     // Phase 2: store micro aggregates for roadmap gates
