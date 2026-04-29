@@ -216,7 +216,7 @@ export function AppSidebar() {
     }
 
     // 5Tool Player — shown if user owns 5Tool tier or Golden (which includes hitting/throwing).
-    if (showAll || hasFiveTool || hasGolden) {
+    if (showAll || hasFiveTool || hasGolden || hasLegacyHitting || hasLegacyThrowing) {
       items.push({
         key: '5tool',
         title: '5Tool Player',
