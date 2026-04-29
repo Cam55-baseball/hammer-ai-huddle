@@ -10,9 +10,11 @@ interface SetRow {
   set: number;
   weight?: number;
   reps?: number;
-  time?: number;
-  distance?: number;
+  time?: number; // seconds (new rows). Legacy rows without time_unit may be minutes.
+  time_unit?: 'sec' | 'min';
+  distance?: number; // feet
   steps?: number;
+  force_lbs?: number; // pounds of force produced (concentric/isometric)
   unit?: string;
 }
 
