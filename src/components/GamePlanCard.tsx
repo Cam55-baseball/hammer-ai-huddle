@@ -1179,10 +1179,20 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         
         {/* Drag handle - visible in manual and timeline modes (disabled when locked) */}
         {(sortMode === 'manual' || sortMode === 'timeline') && (
-          <div className={cn(
-            "flex-shrink-0 text-white/60",
-            todayLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
-          )}>
+          <div
+            onPointerDown={(e) => {
+              if (todayLocked) return;
+              e.preventDefault();
+              dragControls?.start(e);
+            }}
+            style={{ touchAction: 'none' }}
+            role="button"
+            aria-label="Drag to reorder"
+            className={cn(
+              "flex-shrink-0 text-white/60 select-none p-1 -m-1",
+              todayLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
+            )}
+          >
             <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         )}
