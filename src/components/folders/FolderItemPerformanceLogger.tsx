@@ -48,7 +48,7 @@ function getInputMode(itemType: string | null): InputMode {
 }
 
 function getDefaultSet(mode: InputMode, setNum: number): SetRow {
-  const base: SetRow = { set: setNum, unit: 'lbs' };
+  const base: SetRow = { set: setNum, unit: 'lbs', time_unit: 'sec' };
   if (mode === 'weight_reps') return { ...base, weight: undefined, reps: undefined };
   if (mode === 'duration') return { ...base, time: undefined };
   return { ...base, weight: undefined, reps: undefined, time: undefined, distance: undefined };
