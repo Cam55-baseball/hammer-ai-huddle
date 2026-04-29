@@ -189,7 +189,7 @@ export function VideoLibraryManager() {
           <TabsTrigger value="tags"><Tags className="h-3.5 w-3.5 mr-1" /> Tags</TabsTrigger>
           <TabsTrigger value="taxonomy"><Network className="h-3.5 w-3.5 mr-1" /> Taxonomy</TabsTrigger>
           <TabsTrigger value="rules"><GitBranch className="h-3.5 w-3.5 mr-1" /> Rules</TabsTrigger>
-          <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" /> AI Suggestions</TabsTrigger>
+          <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" /> Hammer Suggestions</TabsTrigger>
           <TabsTrigger value="analytics"><BarChart3 className="h-3.5 w-3.5 mr-1" /> Analytics</TabsTrigger>
         </TabsList>
 

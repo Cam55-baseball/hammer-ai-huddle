@@ -106,7 +106,7 @@ export function useVideoLibraryAdmin() {
           .then((res: any) => {
             const inserted = res?.data?.inserted ?? 0;
             if (inserted > 0) {
-              toast({ title: 'AI suggestions ready', description: `${inserted} tags proposed — review in AI Suggestions tab.` });
+              toast({ title: 'Hammer suggestions ready', description: `${inserted} tags proposed — review in Hammer Suggestions tab.` });
             }
           })
           .catch(err => console.error('AI auto-tag failed:', err));
@@ -362,9 +362,9 @@ export function useVideoLibraryAdmin() {
       if (error) throw error;
       const inserted = (data as any)?.inserted ?? 0;
       toast({
-        title: inserted > 0 ? 'AI suggestions ready' : 'No new suggestions',
+        title: inserted > 0 ? 'Hammer suggestions ready' : 'No new suggestions',
         description: inserted > 0
-          ? `${inserted} new tags proposed — review in AI Suggestions tab.`
+          ? `${inserted} new tags proposed — review in Hammer Suggestions tab.`
           : 'The engine had nothing new to add for this description.',
       });
       return inserted as number;

@@ -171,7 +171,7 @@ export function AskHammerPanel({ dashboardContext }: AskHammerPanelProps) {
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="font-semibold text-sm">Ask Hammer</span>
-            <Badge variant="secondary" className="text-[10px]">AI Coach</Badge>
+            <Badge variant="secondary" className="text-[10px]">Hammer Coach</Badge>
           </div>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setOpen(false)}>
             <X className="h-4 w-4" />

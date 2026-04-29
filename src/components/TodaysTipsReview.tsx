@@ -136,7 +136,7 @@ export function TodaysTipsReview() {
                       {tip.is_ai_generated && (
                         <Badge variant="outline" className="text-xs gap-1">
                           <Sparkles className="h-2.5 w-2.5" />
-                          AI
+                          Hammer
                         </Badge>
                       )}
                       <span className="text-xs text-muted-foreground flex items-center gap-1">

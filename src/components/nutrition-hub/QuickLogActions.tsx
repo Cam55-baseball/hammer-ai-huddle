@@ -115,7 +115,7 @@ export function QuickLogActions({ onLogMeal, compact = false, onSwitchTab }: Qui
         const msg = status === 429
           ? 'Hammer is busy \u2014 try again in a moment.'
           : status === 402
-            ? 'AI credits exhausted. Add credits to continue.'
+            ? 'Hammer credits exhausted. Add credits to continue.'
             : (error.message || 'Failed to analyze beverage');
         toast.error(msg);
         return;

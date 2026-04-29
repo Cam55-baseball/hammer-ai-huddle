@@ -190,7 +190,7 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                             </div>
                             <Badge variant="outline" className="text-xs gap-1">
                               <Sparkles className="h-3 w-3" />
-                              AI
+                              Hammer
                             </Badge>
                           </div>
                           

@@ -52,7 +52,7 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
 
 const SOURCE_BADGE: Record<string, { label: string; cls: string; icon: typeof ShieldCheck }> = {
   database: { label: 'Verified', cls: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/30', icon: ShieldCheck },
-  ai: { label: 'AI Estimated', cls: 'text-amber-600 bg-amber-500/10 border-amber-500/30', icon: Bot },
+  ai: { label: 'Hammer Estimated', cls: 'text-amber-600 bg-amber-500/10 border-amber-500/30', icon: Bot },
   mixed: { label: 'Mixed', cls: 'text-amber-600 bg-amber-500/10 border-amber-500/30', icon: Bot },
 };
 

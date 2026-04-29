@@ -97,7 +97,7 @@ export function PostRepInput({ result, config, onNextRep, onEndSession, onDelete
 
           {result.aiReasoning && (
             <p className="text-xs text-muted-foreground italic border-t border-border pt-2">
-              AI: {result.aiReasoning}
+              Hammer: {result.aiReasoning}
             </p>
           )}
         </CardContent>

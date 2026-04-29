@@ -303,7 +303,7 @@ export function LiveRepRunner({ config, repNumber, onRepComplete, onEndSession }
         console.log('[FRAME EXTRACTION] Frame timestamps (ms from signal):', frameTimestampsMs);
         console.log('[FRAME EXTRACTION] Signal frame index:', signalFrameIndex);
 
-        setAnalyzingMsg('AI analyzing movement...');
+        setAnalyzingMsg('Hammer analyzing movement...');
         const { data, error } = await supabase.functions.invoke('analyze-base-stealing-rep', {
           body: {
             frames,

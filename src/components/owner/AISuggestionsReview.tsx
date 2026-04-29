@@ -39,7 +39,7 @@ export function AISuggestionsReview() {
         ) : tagSugg.length === 0 ? (
           <Card className="p-8 text-center text-muted-foreground text-sm">
             <Sparkles className="h-6 w-6 mx-auto mb-2" />
-            No pending tag suggestions. Trigger AI analysis on a video to generate proposals.
+            No pending tag suggestions. Trigger Hammer analysis on a video to generate proposals.
           </Card>
         ) : (
           tagSugg.map(s => (

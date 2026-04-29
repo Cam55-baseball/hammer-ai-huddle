@@ -391,7 +391,7 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
 
         {/* AI Description + Auto-suggest */}
         <div className="space-y-1.5">
-          <Label className="text-xs">AI Description (what the engine reads)</Label>
+          <Label className="text-xs">Hammer Description (what the engine reads)</Label>
           <Textarea
             value={aiDescription}
             onChange={e => setAiDescription(e.target.value)}

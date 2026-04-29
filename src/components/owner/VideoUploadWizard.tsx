@@ -342,7 +342,7 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
             <Row label="Tags"><span className="text-xs">{Object.keys(structured.tagAssignments).length} assigned</span></Row>
           </Card>
           <p className="text-[11px] text-muted-foreground text-center">
-            Publishing will add this video and trigger AI tag suggestions in the background.
+            Publishing will add this video and trigger Hammer tag suggestions in the background.
           </p>
         </div>
       )}
