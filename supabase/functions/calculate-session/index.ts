@@ -268,13 +268,15 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     fqi: Math.min(100, Math.max(0, fqiRaw)),
     pei: Math.min(100, Math.max(0, peiRaw)),
     decision: Math.min(100, Math.max(0, decisionRaw)),
-    competitive_execution: Math.min(100, normalizedScore * competitiveMultiplier),
+    competitive_execution: Math.min(100, normalizedScore * competitiveMultiplier * repSourceToughness),
     volume_adjusted: totalReps * volumeMultiplier,
     // Micro aggregates for downstream analytics
     barrel_pct: barrelPct,
     hard_contact_pct: hardContactPct,
     line_drive_pct: lineDrivePct,
     velocity_difficulty_mult: velocityDifficultyMult,
+    rep_source_toughness: repSourceToughness,
+    rep_source_breakdown: repSourceBreakdown,
     bp_power_trend: bpPowerTrend,
     pro_readiness_velocity: proReadinessVelocity,
     // Phase 2: store micro aggregates for roadmap gates
