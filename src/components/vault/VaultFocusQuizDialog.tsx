@@ -675,7 +675,7 @@ export function VaultFocusQuizDialog({
             streakDays={nightStats.streakDays}
             todayStats={{
               ...nightStats.todayStats,
-              checkinsCompleted: nightStats.todayStats.checkinsCompleted + 1, // Include this check-in
+              // Hook now counts unique quiz_types from DB after refetch — no manual +1.
               sleepGoalHours: nightSleepGoalHours,
               weightTracked: nightWeightLbs ? parseFloat(nightWeightLbs) : nightStats.todayStats.weightTracked,
             }}
