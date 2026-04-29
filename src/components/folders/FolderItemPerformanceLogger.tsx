@@ -195,13 +195,19 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
 
             {mode === 'flexible' && (
               <div className="flex items-center gap-1.5 flex-wrap pl-5">
-                <Input
-                  type="number"
-                  placeholder="Dist"
-                  value={set.distance ?? ''}
-                  onChange={e => updateSet(index, 'distance', e.target.value ? Number(e.target.value) : undefined)}
-                  className="h-7 w-14 text-xs px-1.5 min-w-0"
-                />
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="Dist"
+                    value={set.distance ?? ''}
+                    onChange={e => updateSet(index, 'distance', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-7 w-16 text-xs px-1.5 min-w-0"
+                  />
+                  <span className="text-[10px] text-muted-foreground">ft</span>
+                </div>
                 <Input
                   type="number"
                   placeholder="Steps"
@@ -209,6 +215,19 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
                   onChange={e => updateSet(index, 'steps', e.target.value ? Number(e.target.value) : undefined)}
                   className="h-7 w-14 text-xs px-1.5 min-w-0"
                 />
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    inputMode="decimal"
+                    placeholder="Force"
+                    value={set.force_lbs ?? ''}
+                    onChange={e => updateSet(index, 'force_lbs', e.target.value ? parseFloat(e.target.value) : undefined)}
+                    className="h-7 w-16 text-xs px-1.5 min-w-0"
+                  />
+                  <span className="text-[10px] text-muted-foreground">lbs force</span>
+                </div>
               </div>
             )}
           </div>
