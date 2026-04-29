@@ -326,6 +326,21 @@ export function StartHereGuide({ open, onOpenChange }: StartHereGuideProps) {
                   <p className="text-xs text-muted-foreground">Analyze your mechanics</p>
                 </div>
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => handleComplete('/game-scoring')}
+                className="w-full h-16 text-left justify-start gap-4"
+                size="lg"
+              >
+                <div className="p-2 rounded-lg bg-muted">
+                  <Trophy className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-bold">Go to Your Game Hub</p>
+                  <p className="text-xs text-muted-foreground">Score a live game and track stats</p>
+                </div>
+              </Button>
             </div>
 
             <Button variant="ghost" onClick={() => setStep(2)} className="gap-1">
