@@ -597,6 +597,13 @@ export function useHydration() {
     return (data as unknown as HydrationLog[]) || [];
   }, [user]);
 
+  // Keep the latest fetchTodayLogs in a ref so the realtime subscription
+  // useEffect can depend only on user.id (stable) without missing events.
+  const fetchTodayLogsRef = useRef(fetchTodayLogs);
+  useEffect(() => {
+    fetchTodayLogsRef.current = fetchTodayLogs;
+  }, [fetchTodayLogs]);
+
   // Initial load
   useEffect(() => {
     if (user) {
@@ -607,9 +614,11 @@ export function useHydration() {
     }
   }, [user, fetchTodayLogs, fetchSettings]);
 
-  // Cross-instance + cross-tab sync
+  // Cross-instance + cross-tab sync. Depend on user.id ONLY so the channel
+  // is not torn down on every render (which dropped postgres_changes events
+  // and made hydration logs appear to "disappear" across hook instances).
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     let channel: BroadcastChannel | null = null;
     try {
@@ -621,7 +630,7 @@ export function useHydration() {
           data.userId === user.id &&
           data.tabId !== TAB_ID
         ) {
-          fetchTodayLogs();
+          fetchTodayLogsRef.current();
         }
       };
     } catch {}
@@ -631,7 +640,7 @@ export function useHydration() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'hydration_logs', filter: `user_id=eq.${user.id}` },
-        () => fetchTodayLogs()
+        () => fetchTodayLogsRef.current()
       )
       .subscribe();
 
@@ -639,7 +648,7 @@ export function useHydration() {
       try { channel?.close(); } catch {}
       supabase.removeChannel(realtime);
     };
-  }, [user, fetchTodayLogs]);
+  }, [user?.id]);
 
   // Refresh stats when todayTotal changes
   useEffect(() => {
