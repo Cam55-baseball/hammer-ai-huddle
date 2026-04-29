@@ -520,20 +520,26 @@ function SectionHeader({ title, helpText }: { title: string; helpText: string })
       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
         {title}
       </h4>
-      <Tooltip>
-        <TooltipTrigger asChild>
+      <Popover>
+        <PopoverTrigger asChild>
           <button
             type="button"
             aria-label={`What is ${title}?`}
-            className="text-muted-foreground/60 hover:text-foreground transition-colors"
+            onClick={(e) => e.stopPropagation()}
+            className="text-muted-foreground/60 hover:text-foreground transition-colors p-1 -m-1"
           >
             <Info className="h-3 w-3" />
           </button>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          align="start"
+          className="max-w-[260px] text-xs leading-relaxed p-3"
+          onClick={(e) => e.stopPropagation()}
+        >
           {helpText}
-        </TooltipContent>
-      </Tooltip>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
