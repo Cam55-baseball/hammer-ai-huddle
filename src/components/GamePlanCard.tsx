@@ -1107,7 +1107,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
 
-  const renderTask = (task: GamePlanTask, index?: number) => {
+  const renderTask = (task: GamePlanTask, index?: number, dragControls?: DragControls) => {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
