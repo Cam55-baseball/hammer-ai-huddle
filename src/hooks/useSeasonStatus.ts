@@ -70,34 +70,41 @@ export function useSeasonStatus() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (updates: SeasonUpdates) => {
+    mutationFn: async (updates: SeasonUpdates & { __silent?: boolean }) => {
       if (!user) throw new Error('Not authenticated');
+      // Strip internal flag before sending to DB
+      const { __silent, ...payload } = updates;
       const { error } = await supabase
         .from('athlete_mpi_settings')
-        .update(updates)
+        .update(payload)
         .eq('user_id', user.id);
       if (error) throw error;
     },
     onMutate: async (updates) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<SeasonData>(queryKey);
+      const { __silent, ...payload } = updates;
       if (previous) {
-        queryClient.setQueryData<SeasonData>(queryKey, { ...previous, ...updates });
+        queryClient.setQueryData<SeasonData>(queryKey, { ...previous, ...payload });
       }
-      return { previous };
+      return { previous, silent: !!__silent };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(queryKey, context.previous);
       }
-      toast.error('Failed to save season status');
+      // Silent failures (e.g. background auto-correct from date detection)
+      // must not surface a scary toast — the user did nothing.
+      if (!context?.silent) {
+        toast.error('Failed to save season status');
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
     },
   });
 
-  // Auto-detect active phase from dates
+  // Auto-detect active phase from dates (silent — background correction)
   useEffect(() => {
     if (!query.data) return;
     const detected = detectCurrentPhase(query.data);
@@ -105,7 +112,7 @@ export function useSeasonStatus() {
       const key = JSON.stringify({ detected, stored: query.data.season_status });
       if (autoCorrectRef.current === key) return;
       autoCorrectRef.current = key;
-      mutation.mutate({ season_status: detected });
+      mutation.mutate({ season_status: detected, __silent: true });
     }
   }, [query.data]);
 
