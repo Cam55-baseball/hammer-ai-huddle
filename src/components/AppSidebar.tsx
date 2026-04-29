@@ -181,19 +181,27 @@ export function AppSidebar() {
     ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
 
-  // Determine active tier for sidebar display
+  // Determine active tier (kept for downstream display logic if needed)
   const activeTier = useMemo(() => getActiveTier(modules, selectedSport), [modules, selectedSport]);
 
-  // Build training modules based on active tier (or show all for owner/admin)
+  // Build training modules — show ONLY blocks the user is actually subscribed to.
+  // Owner/Admin always see all blocks for testing.
   const trainingModules = useMemo(() => {
     const showAll = isOwner || isAdmin;
     const items: any[] = [];
 
-    // Complete Pitcher (pitcher tier or golden2way or owner/admin)
-    if (showAll || activeTier === 'pitcher') {
+    const sport = selectedSport;
+    const hasGolden = modules.includes(`${sport}_golden2way`);
+    const hasPitcherTier = modules.includes(`${sport}_pitcher`);
+    const hasFiveTool = modules.includes(`${sport}_5tool`);
+    const hasLegacyPitching = modules.includes(`${sport}_pitching`);
+
+    // Complete Pitcher — shown if user owns Pitcher tier, Golden (which includes pitching),
+    // or legacy pitching key. Owner/Admin always.
+    if (showAll || hasPitcherTier || hasGolden || hasLegacyPitching) {
       items.push({
         key: 'pitching',
-        title: activeTier === 'golden2way' || showAll ? t('dashboard.modules.completePitcherShort') : t('dashboard.modules.completePitcherShort'),
+        title: t('dashboard.modules.completePitcherShort'),
         url: '/complete-pitcher',
         icon: Target,
         subModules: [
@@ -205,8 +213,8 @@ export function AppSidebar() {
       });
     }
 
-    // 5Tool Player (5tool tier or owner/admin — NOT shown if golden2way)
-    if (showAll || activeTier === '5tool') {
+    // 5Tool Player — shown if user owns 5Tool tier or Golden (which includes hitting/throwing).
+    if (showAll || hasFiveTool || hasGolden) {
       items.push({
         key: '5tool',
         title: '5Tool Player',
@@ -225,8 +233,8 @@ export function AppSidebar() {
       });
     }
 
-    // Golden 2Way (golden2way tier or owner/admin)
-    if (showAll || activeTier === 'golden2way') {
+    // Golden 2Way — shown ONLY if user owns the Golden tier specifically.
+    if (showAll || hasGolden) {
       items.push({
         key: 'golden2way',
         title: 'The Golden 2Way',
