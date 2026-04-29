@@ -2056,16 +2056,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </p>
               <Reorder.Group axis="y" values={timelineVisibleTasks} onReorder={handleReorderTimeline} className="space-y-2">
                 {timelineVisibleTasks.map((task, index) => (
-                  <Reorder.Item 
-                    key={task.id} 
-                    value={task}
-                    drag={!todayLocked}
+                  <DraggableTaskItem
+                    key={task.id}
+                    task={task}
+                    disabled={todayLocked}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDrag={(e) => handleDrag(e as any)}
                   >
-                    {renderTask(task, index)}
-                  </Reorder.Item>
+                    {(controls) => renderTask(task, index, controls)}
+                  </DraggableTaskItem>
                 ))}
               </Reorder.Group>
               
