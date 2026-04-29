@@ -195,6 +195,8 @@ export function AppSidebar() {
     const hasPitcherTier = modules.includes(`${sport}_pitcher`);
     const hasFiveTool = modules.includes(`${sport}_5tool`);
     const hasLegacyPitching = modules.includes(`${sport}_pitching`);
+    const hasLegacyHitting = modules.includes(`${sport}_hitting`);
+    const hasLegacyThrowing = modules.includes(`${sport}_throwing`);
 
     // Complete Pitcher — shown if user owns Pitcher tier, Golden (which includes pitching),
     // or legacy pitching key. Owner/Admin always.
