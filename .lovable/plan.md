@@ -1,22 +1,20 @@
 ## Goal
 
-On the final step ("Take Your First Action") of the Welcome to Your Training Hub popup, add a third option: **"Go to Your Game Hub"**. Selecting it dismisses the popup, marks the tutorial complete, and navigates the user to `/game-scoring`.
+Rename the third option on the final step of the Welcome popup from **"Go to Your Game Hub"** to **"Go to Your Game Plan"**, and route it to the user's Game Plan on the dashboard (`/dashboard`) instead of `/game-scoring`.
 
 ## Changes
 
 **`src/components/StartHereGuide.tsx`**
-- Import the `Trophy` icon from `lucide-react` (alongside existing icons).
-- In step 3, add a third button below "Upload First Video":
-  - Label: **Go to Your Game Hub**
-  - Subtext: *Score a live game and track stats*
-  - Icon: `Trophy`
-  - `onClick={() => handleComplete('/game-scoring')}`
-  - Same `variant="outline"` styling as the Upload Video button so the primary CTA (Log First Practice) remains visually dominant.
+- Replace the `Trophy` icon import with `ListChecks` (better fits a daily plan/checklist).
+- In step 3, update the third button:
+  - Title: **Go to Your Game Plan**
+  - Subtext: *Your daily to-do list, built for you*
+  - Icon: `ListChecks`
+  - `onClick={() => handleComplete('/dashboard')}`
 
-No other steps, copy, or logic change. `handleComplete` already marks `tutorial_completed = true` and closes the dialog before navigating, so this option behaves consistently with the other two.
+The Game Plan card (`GamePlanCard`) already renders prominently on `/dashboard`, so navigating there lands the user on it.
 
 ## Validation
 
-- Open welcome popup → click Get Started → Continue → Almost Done → land on step 3.
-- Three options visible: Log First Practice, Upload First Video, **Go to Your Game Hub**.
-- Click Go to Your Game Hub → dialog closes, navigates to `/game-scoring`, success toast shows, popup does not reappear on refresh.
+- Final step now shows: Log First Practice, Upload First Video, **Go to Your Game Plan**.
+- Clicking it closes the popup, marks the tutorial complete, and navigates to `/dashboard` where the Game Plan is visible.
