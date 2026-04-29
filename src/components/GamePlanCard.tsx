@@ -78,6 +78,40 @@ interface GamePlanCardProps {
 // Stable constant to avoid new array instances triggering re-renders
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 
+// Per-row wrapper so each Reorder.Item can own its own dragControls.
+// Drag is initiated ONLY from the grip handle (dragListener={false}); the card
+// body remains scrollable/clickable.
+function DraggableTaskItem({
+  task,
+  disabled,
+  onDragStart,
+  onDragEnd,
+  onDrag,
+  children,
+}: {
+  task: any;
+  disabled: boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
+  onDrag?: (e: any) => void;
+  children: (controls: DragControls, disabled: boolean) => React.ReactNode;
+}) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      value={task}
+      drag={disabled ? false : 'y'}
+      dragListener={false}
+      dragControls={controls}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDrag={onDrag as any}
+    >
+      {children(controls, disabled)}
+    </Reorder.Item>
+  );
+}
+
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
