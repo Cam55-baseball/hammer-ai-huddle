@@ -229,6 +229,9 @@ async function processSession(supabase: any, userId: string, sessionId: string) 
     const rqMap: Record<string, number> = { poor: -3, average: 0, elite: 5 };
     fqiRaw += recQualReps.reduce((sum: number, v: string) => sum + (rqMap[v] ?? 0), 0) / recQualReps.length;
   }
+  // FQI toughness: only amplify when reps occurred in live/game context (≥1.05).
+  // Pure drills stay neutral; a clean play in a real game outweighs a clean rep in solo work.
+  if (liveContextBonus > 1.0) fqiRaw *= liveContextBonus;
 
   // ── PEI: blend with command grade + Phase 2 fields ──
   let peiRaw = normalizedScore * 1.05;
