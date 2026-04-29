@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Reorder, motion, AnimatePresence } from 'framer-motion';
+import { Reorder, motion, AnimatePresence, useDragControls } from 'framer-motion';
+import type { DragControls } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,40 @@ interface GamePlanCardProps {
 
 // Stable constant to avoid new array instances triggering re-renders
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+
+// Per-row wrapper so each Reorder.Item can own its own dragControls.
+// Drag is initiated ONLY from the grip handle (dragListener={false}); the card
+// body remains scrollable/clickable.
+function DraggableTaskItem({
+  task,
+  disabled,
+  onDragStart,
+  onDragEnd,
+  onDrag,
+  children,
+}: {
+  task: any;
+  disabled: boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
+  onDrag?: (e: any) => void;
+  children: (controls: DragControls, disabled: boolean) => React.ReactNode;
+}) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      value={task}
+      drag={disabled ? false : 'y'}
+      dragListener={false}
+      dragControls={controls}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDrag={onDrag as any}
+    >
+      {children(controls, disabled)}
+    </Reorder.Item>
+  );
+}
 
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
@@ -1106,7 +1141,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
 
-  const renderTask = (task: GamePlanTask, index?: number) => {
+  const renderTask = (task: GamePlanTask, index?: number, dragControls?: DragControls) => {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
@@ -1178,10 +1213,20 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         
         {/* Drag handle - visible in manual and timeline modes (disabled when locked) */}
         {(sortMode === 'manual' || sortMode === 'timeline') && (
-          <div className={cn(
-            "flex-shrink-0 text-white/60",
-            todayLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
-          )}>
+          <div
+            onPointerDown={(e) => {
+              if (todayLocked) return;
+              e.preventDefault();
+              dragControls?.start(e);
+            }}
+            style={{ touchAction: 'none' }}
+            role="button"
+            aria-label="Drag to reorder"
+            className={cn(
+              "flex-shrink-0 text-white/60 select-none p-1 -m-1",
+              todayLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
+            )}
+          >
             <GripVertical className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         )}
@@ -1518,9 +1563,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         ) : sortMode === 'manual' ? (
           <Reorder.Group axis="y" values={orderedTasks} onReorder={onReorder} className="space-y-2">
             {orderedTasks.map((task) => (
-              <Reorder.Item key={task.id} value={task} drag={!todayLocked}>
-                {renderTask(task)}
-              </Reorder.Item>
+              <DraggableTaskItem key={task.id} task={task} disabled={todayLocked}>
+                {(controls) => renderTask(task, undefined, controls)}
+              </DraggableTaskItem>
             ))}
           </Reorder.Group>
         ) : null}
@@ -2011,16 +2056,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </p>
               <Reorder.Group axis="y" values={timelineVisibleTasks} onReorder={handleReorderTimeline} className="space-y-2">
                 {timelineVisibleTasks.map((task, index) => (
-                  <Reorder.Item 
-                    key={task.id} 
-                    value={task}
-                    drag={!todayLocked}
+                  <DraggableTaskItem
+                    key={task.id}
+                    task={task}
+                    disabled={todayLocked}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDrag={(e) => handleDrag(e as any)}
                   >
-                    {renderTask(task, index)}
-                  </Reorder.Item>
+                    {(controls) => renderTask(task, index, controls)}
+                  </DraggableTaskItem>
                 ))}
               </Reorder.Group>
               
