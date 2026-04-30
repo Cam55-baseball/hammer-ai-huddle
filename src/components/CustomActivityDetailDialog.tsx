@@ -1360,6 +1360,17 @@ export function CustomActivityDetailDialog({
                   </Button>
                 </div>
               )}
+              {onDeleteActivity && (
+                <Button
+                  variant="outline"
+                  disabled={deleting}
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  className="w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t('customActivity.detail.deleteActivity', 'Delete Activity')}
+                </Button>
+              )}
             </div>
           </div>
         </div>
