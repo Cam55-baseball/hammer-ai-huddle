@@ -152,6 +152,9 @@ export function QuickAttachVideo({ open, onOpenChange, onAttached }: Props) {
               accept="video/*"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
+            <p className="text-[11px] text-muted-foreground">
+              Max 2 GB per file. Larger videos should be compressed before uploading — you'll see an error message if the file is too big.
+            </p>
             {file ? (
               <p className="text-xs text-muted-foreground truncate">
                 {file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)
