@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Link2, Copy, Check, Loader2, Clock } from 'lucide-react';
+import { Link2, Copy, Check, Loader2, Clock, AlarmClockPlus } from 'lucide-react';
 import { useAbLinkStatus, AbLinkStatus } from '@/hooks/useAbLinkStatus';
 
 interface LiveAbLinkPanelProps {
@@ -33,7 +33,14 @@ const STATUS_LABEL: Record<AbLinkStatus, { text: string; className: string }> = 
   unknown: { text: 'Checking…', className: 'bg-muted text-muted-foreground border-border' },
 };
 
-function useCountdown(expiresAt: string | null): string | null {
+interface CountdownInfo {
+  text: string;
+  minutes: number;
+  tone: 'muted' | 'amber' | 'destructive';
+  pulse: boolean;
+}
+
+function useCountdown(expiresAt: string | null): CountdownInfo | null {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!expiresAt) return;
@@ -42,12 +49,29 @@ function useCountdown(expiresAt: string | null): string | null {
   }, [expiresAt]);
   if (!expiresAt) return null;
   const ms = new Date(expiresAt).getTime() - now;
-  if (ms <= 0) return 'expired';
-  const mins = Math.floor(ms / 60_000);
-  if (mins > 15) return null;
-  if (mins < 1) return '<1m left';
-  return `${mins}m left`;
+  if (ms <= 0) {
+    return { text: 'Expired', minutes: 0, tone: 'destructive', pulse: false };
+  }
+  const totalMins = Math.max(1, Math.floor(ms / 60_000));
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const text = hours > 0 ? `${hours}h ${mins}m left` : `${totalMins}m left`;
+  let tone: CountdownInfo['tone'] = 'muted';
+  let pulse = false;
+  if (totalMins <= 5) {
+    tone = 'destructive';
+    pulse = true;
+  } else if (totalMins <= 30) {
+    tone = 'amber';
+  }
+  return { text, minutes: totalMins, tone, pulse };
 }
+
+const COUNTDOWN_TONE_CLASS: Record<CountdownInfo['tone'], string> = {
+  muted: 'bg-muted text-muted-foreground border-border',
+  amber: 'bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300',
+  destructive: 'bg-destructive/15 text-destructive border-destructive/40',
+};
 
 export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveAbLinkPanelProps) {
   const { user } = useAuth();
