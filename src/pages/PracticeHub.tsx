@@ -141,6 +141,7 @@ export default function PracticeHub() {
     code: string;
     message: string;
   } | null>(null);
+  const [linkAttachConfirmed, setLinkAttachConfirmed] = useState<{ code: string } | null>(null);
   const [retryingLink, setRetryingLink] = useState(false);
 
   const attachSessionToLink = async (sessionId: string, code: string, userId: string) => {
