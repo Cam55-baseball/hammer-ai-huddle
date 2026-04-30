@@ -266,6 +266,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Folder item performance logger dialog state
   const [folderLoggerOpen, setFolderLoggerOpen] = useState(false);
   const [selectedFolderTask, setSelectedFolderTask] = useState<GamePlanTask | null>(null);
+  // Coach-origin info for the selected folder item (populated when a coach-shared folder dialog opens)
+  const [selectedFolderCoachOrigin, setSelectedFolderCoachOrigin] = useState<{
+    assignmentId: string;
+    senderId: string;
+    senderName: string;
+  } | null>(null);
   const [folderItemEditOpen, setFolderItemEditOpen] = useState(false);
   const [folderCheckboxStates, setFolderCheckboxStates] = useState<Record<string, boolean>>({});
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
