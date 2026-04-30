@@ -622,6 +622,14 @@ export default function PracticeHub() {
                       </Button>
                     </div>
                   )}
+                  {!linkAttachError && linkAttachConfirmed && (
+                    <div className="mb-3 p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-emerald-600" />
+                      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                        Session linked to <span className="font-mono">{linkAttachConfirmed.code}</span>
+                      </p>
+                    </div>
+                  )}
                   <PostSessionSummaryV2
                     sessionId={savedSessionId}
                     module={activeModule}
