@@ -82,6 +82,8 @@ function ReadinessBadge({ r }: { r?: VideoReadiness }) {
   );
 }
 
+type VideoFilter = 'all' | 'incomplete' | 'throttled';
+
 export function VideoLibraryManager() {
   const { isOwner } = useOwnerAccess();
   const qc = useQueryClient();
@@ -89,7 +91,8 @@ export function VideoLibraryManager() {
   const [editTarget, setEditTarget] = useState<LibraryVideo | null>(null);
   const [editFocus, setEditFocus] = useState<string | undefined>(undefined);
   const [editAutoSuggest, setEditAutoSuggest] = useState(false);
-  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
+  const [videoFilter, setVideoFilter] = useState<VideoFilter>('all');
+  const [activeTab, setActiveTab] = useState<string>('videos');
   const [backfillOpen, setBackfillOpen] = useState(false);
   const [confirmCloseEdit, setConfirmCloseEdit] = useState(false);
   // Phase 9 — conversion modal state (no DB writes, no ranking impact).
@@ -105,13 +108,32 @@ export function VideoLibraryManager() {
 
   const readinessMap = useMemo(() => readinessByVideoId(readinessRows), [readinessRows]);
 
+  // Source of truth for "throttled" — same signal the per-card badge & DB tier use.
+  const throttledCount = useMemo(
+    () => videos.filter(v => normalizeTier((v as any).distribution_tier) === 'throttled').length,
+    [videos],
+  );
+
   const visibleVideos = useMemo(() => {
-    if (!showOnlyIncomplete) return videos;
+    if (videoFilter === 'all') return videos;
+    if (videoFilter === 'throttled') {
+      return videos.filter(v => normalizeTier((v as any).distribution_tier) === 'throttled');
+    }
+    // 'incomplete'
     return videos.filter(v => {
       const r = readinessMap.get(v.id);
       return r && !r.is_ready;
     });
-  }, [videos, showOnlyIncomplete, readinessMap]);
+  }, [videos, videoFilter, readinessMap]);
+
+  // Back-compat for LibraryHealthStrip's binary toggle.
+  const showOnlyIncomplete = videoFilter === 'incomplete';
+  const setShowOnlyIncomplete = (next: boolean | ((prev: boolean) => boolean)) => {
+    const desired = typeof next === 'function'
+      ? (next as (p: boolean) => boolean)(showOnlyIncomplete)
+      : next;
+    setVideoFilter(desired ? 'incomplete' : 'all');
+  };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
