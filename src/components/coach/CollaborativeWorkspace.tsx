@@ -76,11 +76,11 @@ export function CollaborativeWorkspace() {
     const fetchNotifications = async () => {
       const { data } = await supabase
         .from('coach_notifications')
-        .select('id, sender_user_id, title, message, is_read, created_at, template_snapshot')
+        .select('id, sender_user_id, title, message, is_read, created_at, template_snapshot, notification_type')
         .eq('coach_user_id', user.id)
-        .eq('notification_type', 'card_shared')
+        .in('notification_type', ['card_shared', 'activity_removed', 'activity_restored'])
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(15);
 
       if (data && data.length > 0) {
         const senderIds = [...new Set(data.map(n => n.sender_user_id))];
