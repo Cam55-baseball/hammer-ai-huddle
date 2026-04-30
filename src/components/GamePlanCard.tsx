@@ -3289,6 +3289,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   handleSkipTask(selectedFolderTask.id);
                    handleFolderLoggerClose(false);
                 }}
+                deleteVariant={
+                  selectedFolderTask.folderItemData?.isOwner ? 'folder-own' : 'folder-coach'
+                }
+                isCoachSent={!selectedFolderTask.folderItemData?.isOwner}
+                coachName={selectedFolderCoachOrigin?.senderName}
+                onDeleteActivity={
+                  // Coach-shared: only enable once we've resolved the assignment so the handler has what it needs.
+                  selectedFolderTask.folderItemData?.isOwner || selectedFolderCoachOrigin
+                    ? handleFolderItemDelete
+                    : undefined
+                }
               />
               {item && (
                 <FolderItemEditDialog
@@ -3475,6 +3486,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 handleSkipTask(selectedFolderTask.id);
                 handleFolderLoggerClose(false);
               }}
+              deleteVariant={
+                selectedFolderTask.folderItemData?.isOwner ? 'folder-own' : 'folder-coach'
+              }
+              isCoachSent={!selectedFolderTask.folderItemData?.isOwner}
+              coachName={selectedFolderCoachOrigin?.senderName}
+              onDeleteActivity={
+                selectedFolderTask.folderItemData?.isOwner || selectedFolderCoachOrigin
+                  ? handleFolderItemDelete
+                  : undefined
+              }
             />
             {item && (
               <FolderItemEditDialog
