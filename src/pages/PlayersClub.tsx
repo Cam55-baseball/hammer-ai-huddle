@@ -514,15 +514,28 @@ export default function PlayersClub() {
           </div>
         </div>
 
-        {/* Source Filter Tabs */}
+        {/* Source Filter Tabs (practice/game tabs only show when legacy items exist) */}
         <Tabs value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="video">Videos</TabsTrigger>
-            <TabsTrigger value="practice">Practice Sessions</TabsTrigger>
-            <TabsTrigger value="game">Game Sessions</TabsTrigger>
+            {practices.length > 0 && (
+              <TabsTrigger value="practice">Practice (Legacy)</TabsTrigger>
+            )}
+            {games.length > 0 && (
+              <TabsTrigger value="game">Games (Legacy)</TabsTrigger>
+            )}
           </TabsList>
         </Tabs>
+
+        {/* Quick links to where practices and games now live */}
+        {isOwnLibrary && (
+          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <span>Looking for something specific?</span>
+            <Link to="/practice" className="text-primary hover:underline">Practice History →</Link>
+            <Link to="/game-scoring" className="text-primary hover:underline">Game Hub →</Link>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-stretch sm:items-center">
