@@ -133,6 +133,9 @@ export function SaveToLibraryDialog({
         saved_to_library: true,
         session_date: new Date().toISOString()
       };
+
+      if (practiceSessionId) updateData.practice_session_id = practiceSessionId;
+      if (gameId) updateData.game_id = gameId;
       
       if (thumbnailData.webpUrl) {
         updateData.thumbnail_webp_url = thumbnailData.webpUrl;
