@@ -23,6 +23,7 @@ interface CoachNotification {
   message: string | null;
   is_read: boolean;
   created_at: string;
+  notification_type: string;
   sender_name?: string;
   template_snapshot?: Json | null;
 }
