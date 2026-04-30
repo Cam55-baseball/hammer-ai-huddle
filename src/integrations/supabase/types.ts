@@ -10592,6 +10592,29 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      expire_ab_link: {
+        Args: { p_link_code: string; p_user_id: string }
+        Returns: {
+          claimed_at: string | null
+          created_at: string | null
+          creator_session_id: string | null
+          creator_user_id: string
+          expires_at: string | null
+          id: string
+          joiner_session_id: string | null
+          joiner_user_id: string | null
+          link_code: string
+          linked_at: string | null
+          sport: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "live_ab_links"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       expire_stale_links: { Args: never; Returns: undefined }
       folder_allows_coach_edit: {
         Args: { p_coach_id: string; p_folder_id: string }
