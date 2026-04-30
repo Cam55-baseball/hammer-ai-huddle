@@ -386,14 +386,18 @@ export default function PracticeHub() {
           setLinkAttachConfirmed({ code: sessionConfig.link_code });
         } catch (linkErr: any) {
           console.error('[PracticeHub] attach_session_to_link failed:', linkErr);
+          const expired = !!linkErr?.expired;
           setLinkAttachError({
             sessionId: result.id,
             code: sessionConfig.link_code,
             message: linkErr?.message ?? 'Unknown error',
+            expired,
           });
           toast({
-            title: 'Couldn\u2019t link sessions',
-            description: 'Your practice was saved. Tap Retry on the summary to try again.',
+            title: expired ? 'Link expired before save' : 'Couldn\u2019t link sessions',
+            description: expired
+              ? 'Your practice was saved. Generate a new code from your next session to link again.'
+              : 'Your practice was saved. Tap Retry on the summary to try again.',
             variant: 'destructive',
           });
         }
