@@ -351,7 +351,47 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     
     fetchSkippedTasks();
   }, [user]);
-  
+
+  // Resolve whether the currently selected custom activity originated from a coach.
+  // We look up sent_activity_templates by accepted_template_id; if found, capture
+  // the original sender so we can both adapt the delete-confirm copy AND notify
+  // them when the player removes the activity from their game plan.
+  useEffect(() => {
+    let cancelled = false;
+    const templateId = selectedCustomTask?.customActivityData?.template?.id;
+    if (!detailDialogOpen || !templateId) {
+      setSelectedTaskCoachOrigin(null);
+      return;
+    }
+    (async () => {
+      const { data: sentRow } = await supabase
+        .from('sent_activity_templates')
+        .select('id, sender_id, template_snapshot')
+        .eq('accepted_template_id', templateId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!sentRow) {
+        setSelectedTaskCoachOrigin(null);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', sentRow.sender_id)
+        .maybeSingle();
+      if (cancelled) return;
+      setSelectedTaskCoachOrigin({
+        sentId: sentRow.id,
+        senderId: sentRow.sender_id,
+        senderName: profile?.full_name || 'Your coach',
+        templateSnapshot: (sentRow.template_snapshot as Json) ?? null,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [detailDialogOpen, selectedCustomTask?.customActivityData?.template?.id]);
+
   // Skip task handler (load management) — routed through scheduling service
   const handleSkipTask = async (taskId: string) => {
     if (!user) return;
