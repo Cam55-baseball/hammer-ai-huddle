@@ -357,13 +357,20 @@ export default function PracticeHub() {
       // Attach session to link state machine (handles bidirectional linking atomically)
       if (sessionConfig.link_code && result.id && user?.id) {
         try {
-          await supabase.rpc('attach_session_to_link' as any, {
-            p_user_id: user.id,
-            p_link_code: sessionConfig.link_code,
-            p_session_id: result.id,
-          });
-        } catch (linkErr) {
+          await attachSessionToLink(result.id, sessionConfig.link_code, user.id);
+          setLinkAttachError(null);
+        } catch (linkErr: any) {
           console.error('[PracticeHub] attach_session_to_link failed:', linkErr);
+          setLinkAttachError({
+            sessionId: result.id,
+            code: sessionConfig.link_code,
+            message: linkErr?.message ?? 'Unknown error',
+          });
+          toast({
+            title: 'Couldn\u2019t link sessions',
+            description: 'Your practice was saved. Tap Retry on the summary to try again.',
+            variant: 'destructive',
+          });
         }
       }
 
