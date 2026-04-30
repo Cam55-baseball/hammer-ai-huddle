@@ -369,6 +369,7 @@ export function VideoLibraryManager() {
               );
             })
           )}
+          </div>
         </TabsContent>
 
         <TabsContent value="upload" className="mt-4">
