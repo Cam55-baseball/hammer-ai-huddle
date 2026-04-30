@@ -1,76 +1,77 @@
+## Why installed Home Screen apps don't update
 
-## Goal
+When a user taps "Add to Home Screen", the OS launches the app in **standalone PWA mode**, which behaves very differently from a browser tab:
 
-After clicking **Publish → Update**, users on the live site (`hammers-modality.lovable.app`) should automatically see the new build within seconds — no toast tap, no manual hard refresh. The editor preview must remain unaffected.
+1. **The service worker is killed aggressively.** iOS especially suspends the SW within seconds of the app being backgrounded. Our 60-second `setInterval(registration.update)` only fires while the SW thread is alive — on a Home Screen app it almost never gets the chance to run before the OS suspends it.
+2. **Standalone mode has its own HTTP cache layer.** Even with `NetworkFirst` on navigations, iOS standalone aggressively serves the precached `index.html` shell on cold launch before any network request is issued, then the JS bundle hashes inside it point at old chunks that are still in the precache.
+3. **`controllerchange` never fires on cold launch.** Our auto-reload only runs when a *running* tab sees a new SW take control. A Home Screen app cold-launches into the new SW already in control → no `controllerchange` event → no reload → user sees the shell that the new SW activated from precache, which is the *previous* build's `index.html`.
+4. **`clientsClaim` + precached HTML is the trap.** The new SW activates, claims the client, and immediately serves the precached old `index.html` from the previous deploy because precache entries beat `NetworkFirst` for the document request on the very first navigation of a cold launch.
+5. **`start_url: /dashboard` is auth-gated.** When the auth redirect kicks in, the SW serves the cached fallback for that route, compounding the staleness.
 
-## Current behavior (why it's stale)
+Net effect: installed users stay on whatever build they had when they installed, sometimes for weeks.
 
-- `vite.config.ts` uses `VitePWA({ registerType: 'prompt' })` with `injectRegister: null`.
-- `src/registerSW.ts` registers a Workbox service worker that **waits** when a new version is found.
-- `src/components/PWAUpdatePrompt.tsx` shows a toast saying "Update Available — Tap to update" and only activates the new SW when the user clicks.
+## Fix
 
-Result: returning visitors keep being served the old precached `index.html` shell + old JS chunks until they tap the toast. Many never do, so they perceive the published site as "not updated".
+Three coordinated changes:
 
-## Plan
-
-### 1. Switch registration strategy from `prompt` → `autoUpdate` (with safe iframe guard)
+### 1. Stop precaching `index.html`; always fetch it from the network on launch
 
 `vite.config.ts`
-- Change `registerType: 'prompt'` to `registerType: 'autoUpdate'`.
-- Keep `injectRegister: null` (we register manually so we can guard against iframes/preview hosts).
-- Switch HTML navigations to `NetworkFirst` so a fresh deploy is detected on the very first request after publish, instead of being served the cached shell first:
+- Remove `html` from `globPatterns` so `index.html` is **never** in the precache manifest.
   ```ts
-  runtimeCaching: [
-    // existing fonts entries…
-    {
-      urlPattern: ({ request }) => request.mode === 'navigate',
-      handler: 'NetworkFirst',
-      options: { cacheName: 'html-shell', networkTimeoutSeconds: 3 },
-    },
-  ]
+  globPatterns: ['**/*.{js,css}']
   ```
-- Keep `navigateFallbackDenylist: [/^\/~oauth/]`.
+- Remove `navigateFallback: 'index.html'` (it forces precached-shell fallback even when network is available — fatal for standalone).
+- Keep the `NetworkFirst` runtime cache for navigations, but lower `networkTimeoutSeconds` to `2` and reduce `maxAgeSeconds` to `60 * 60` (1h) so even offline launches recover quickly once back online.
+- Add an explicit `'no-store'` `runtimeCaching` entry for `/version.json` (next bullet).
 
-### 2. Make the SW take over immediately on activation
+### 2. Add a build-version probe + forced reload on cold launch
 
-`src/registerSW.ts`
-- On `waiting`: immediately `postMessage({ type: 'SKIP_WAITING' })` to the waiting worker (no UI tap required).
-- On `controlling` (the new SW has taken control): trigger a one-time silent reload using a `sessionStorage` flag (`__sw_reloaded_once`) to prevent infinite reload loops.
-- Preserve the existing **iframe / preview-host guard** so this never runs inside the Lovable editor:
+This is the only reliable way to catch the standalone "SW already in control of stale shell" case.
+
+**Build-time:**
+- Generate `public/version.json` at build time containing the current commit/build hash. We already use Vite — emit it via a tiny vite plugin in `vite.config.ts`:
   ```ts
-  const inIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
-  const isPreview =
-    location.hostname.includes('id-preview--') ||
-    location.hostname.includes('lovableproject.com') ||
-    location.hostname.includes('lovable.app') === false && location.hostname !== 'hammers-modality.lovable.app'
-      ? false : false; // (we only check iframe + id-preview)
-  if (inIframe || location.hostname.includes('id-preview--')) {
-    navigator.serviceWorker?.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
-    return;
+  {
+    name: 'emit-version',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: JSON.stringify({ build: Date.now().toString(36) }),
+      });
+    },
   }
   ```
-  (Editor preview already unregisters; published `*.lovable.app` and custom domain proceed normally.)
+- Inline the same `__BUILD_ID__` constant into the bundle via `define`:
+  ```ts
+  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) }
+  ```
 
-### 3. Add an active-version polling fallback (handles long-open tabs)
+**Runtime (`src/registerSW.ts`):**
+- On every app launch *and* on `visibilitychange → visible` (this is what fires when a user re-opens the Home Screen app), `fetch('/version.json', { cache: 'no-store' })` and compare to `__BUILD_ID__`.
+- If they differ:
+  1. Unregister all SWs.
+  2. `caches.keys()` → delete every cache.
+  3. Set the `__sw_reloaded_once` flag.
+  4. `location.reload()` (gated by the existing `isUserBusy` check).
+- This bypasses the SW lifecycle entirely and works even when the SW thread is suspended.
 
-For users who keep the tab open for hours (a common pattern in this app — practice sessions, video review), the browser may not re-check the SW until next navigation. Add lightweight polling so a new deploy is picked up within ~60s even on idle tabs.
+### 3. Make the kill-switch path safer
 
 `src/registerSW.ts`
-- Every 60 seconds (and on `visibilitychange` → visible, and on `online`), call `registration.update()`.
-- This is a HEAD-style check against `/sw.js`; cheap and respects existing cache headers.
+- On `activate` of a new SW (detected via `wb.addEventListener('activated', …)`), proactively `caches.delete('html-shell')` so the next navigation must hit the network for `index.html`.
+- Reduce the polling interval from 60s → 30s for foreground tabs (cheap; helps browser users too).
+- Add a `pageshow` listener (fires on iOS when the standalone app is restored from the bfcache after being backgrounded) that triggers the version probe immediately.
 
-### 4. Replace the manual "Update Available" toast with a passive notice
+### 4. Manifest tweak (defensive)
 
-`src/components/PWAUpdatePrompt.tsx`
-- Since the SW now self-installs and the page reloads automatically, the persistent toast becomes noise.
-- Replace it with a brief 2-second informational toast ("Updated to latest version") shown **after** the silent reload completes, gated by reading & clearing the `__sw_reloaded_once` flag on mount. If we'd rather keep the UI fully silent, we can delete the component entirely — recommend keeping the small confirmation toast so users understand why the page just refreshed.
+`public/manifest.json`
+- Change `start_url` from `/dashboard` to `/dashboard?source=pwa` and add `"id": "/"`. This won't help already-installed users (manifest fields are pinned at install time per OS-level PWA rules), but ensures **future** installs have a stable, non-auth-redirected `start_url` that the SW can match cleanly.
 
-### 5. Reload-loop & in-flight protection
+### 5. Existing-installed-user recovery (one-time)
 
-- The `__sw_reloaded_once` sessionStorage flag is set **before** `location.reload()` and only cleared at the start of a new session, guaranteeing exactly one auto-reload per tab session per new SW.
-- Skip the reload if the user is mid-action: check `document.visibilityState !== 'visible'` is false AND no `<input>`/`<textarea>` currently has focus AND no open `[role="dialog"]` element exists. If any of these are true, defer the reload until next `visibilitychange` to `hidden` → back to `visible`, or until the dialog closes (we just retry the gate every 5s).
-
-### 6. No changes needed to `index.html`, `manifest.json`, or any feature code.
+For users already on an old build, the version-probe in step 2 is what rescues them — on their next cold launch of the Home Screen app, the probe runs *before* React renders anything meaningful, sees a build mismatch, nukes caches, unregisters the SW, and reloads into the fresh bundle. After that one self-healing reload, all subsequent updates flow through the new auto-update path.
 
 ---
 
@@ -78,24 +79,24 @@ For users who keep the tab open for hours (a common pattern in this app — prac
 
 | File | Change |
 |------|--------|
-| `vite.config.ts` | `registerType: 'autoUpdate'`; add `NetworkFirst` runtime cache for navigations |
-| `src/registerSW.ts` | Auto-skipWaiting; one-shot silent reload with safety gate; 60s `update()` polling; iframe/preview guard |
-| `src/components/PWAUpdatePrompt.tsx` | Replace persistent toast with brief post-reload "Updated" confirmation (or delete if user prefers fully silent) |
+| `vite.config.ts` | Remove HTML from precache; drop `navigateFallback`; add `version.json` emit plugin; add `__BUILD_ID__` define; add `no-store` runtime cache for `/version.json` |
+| `src/registerSW.ts` | Add `version.json` probe on launch + visibility/pageshow; nuke caches & SW on mismatch; clear `html-shell` cache on SW `activated`; tighten polling to 30s |
+| `public/manifest.json` | `start_url` → `/dashboard?source=pwa`; add `"id": "/"` |
+| `src/vite-env.d.ts` | Declare `const __BUILD_ID__: string` |
 
-No DB, edge function, or backend changes. No new dependencies.
+No DB, edge function, or feature-code changes.
 
-## How it will behave after the next publish
+## How it will behave after this ships
 
-1. User has the live site open (or visits it).
-2. Within ~60s of you clicking Publish → Update, their SW polling detects the new `sw.js`.
-3. The new SW installs in the background and is auto-activated (no toast tap).
-4. If the user is idle / not typing / no dialog open → page silently reloads to the new bundle, then a small 2s "Updated to latest version" toast appears.
-5. If the user is mid-action → reload waits until they're idle again, then completes.
-6. Editor preview (`id-preview--…`) is fully unaffected — the guard early-returns and unregisters any leftover SW.
+1. You publish.
+2. A user with the Home Screen app re-opens it (cold launch *or* foreground after background).
+3. Within ~1 second, the version probe fetches `/version.json` (no-store, ~200 bytes), sees a mismatch with their bundled `__BUILD_ID__`.
+4. Caches and SW are wiped, the page silently reloads, and the new bundle loads from the network.
+5. A small "Updated to latest version" toast confirms the refresh.
+6. Future updates continue flowing through the same self-healing path automatically.
 
-## Risks & mitigations
+## Risks
 
-- **Reload loop**: Mitigated by the `sessionStorage` once-per-session flag + one-shot listener on `controllerchange`.
-- **Mid-action data loss**: Mitigated by the focus / dialog gate; reload deferred until safe.
-- **PWA install pinning**: Manifest fields (`start_url`, `display`) are unchanged, so installed PWAs continue to work.
-- **Editor preview interference**: Existing iframe + `id-preview--` host guard preserved; SW never registers there.
+- **Extra request per launch**: One ~200-byte `version.json` fetch per app launch and per tab-visibility-change. Negligible.
+- **Offline cold launch**: Without `navigateFallback: index.html`, a user launching the Home Screen app while fully offline will see the browser offline page. Acceptable trade-off — and the `NetworkFirst` runtime cache still serves the last good `index.html` for up to 1h, covering almost all real-world offline cases.
+- **Reload loop**: The existing `__sw_reloaded_once` sessionStorage flag prevents loops; the version probe additionally checks that the *new* `__BUILD_ID__` doesn't equal the *just-fetched* version before reloading.
