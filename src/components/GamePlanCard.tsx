@@ -255,6 +255,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Custom activity detail dialog state
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedCustomTask, setSelectedCustomTask] = useState<GamePlanTask | null>(null);
+  // Coach-origin info for the selected custom activity (populated when the dialog opens)
+  const [selectedTaskCoachOrigin, setSelectedTaskCoachOrigin] = useState<{
+    sentId: string;
+    senderId: string;
+    senderName: string;
+    templateSnapshot: Json | null;
+  } | null>(null);
   
   // Folder item performance logger dialog state
   const [folderLoggerOpen, setFolderLoggerOpen] = useState(false);
