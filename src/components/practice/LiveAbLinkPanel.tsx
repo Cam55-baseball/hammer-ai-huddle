@@ -265,13 +265,28 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
                 <Badge variant="outline" className={`text-[10px] ${label.className}`}>{label.text}</Badge>
               )}
               {countdown && !isLoading && (
-                <Badge variant="outline" className="text-[10px] gap-1">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] gap-1 ${COUNTDOWN_TONE_CLASS[countdown.tone]} ${countdown.pulse ? 'animate-pulse' : ''}`}
+                >
                   <Clock className="h-3 w-3" />
-                  {countdown}
+                  {countdown.text}
                 </Badge>
               )}
             </div>
           </div>
+          {canUnlink && countdown && countdown.minutes <= 30 && countdown.minutes > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExtend}
+              disabled={extending}
+              className="text-xs gap-1"
+            >
+              {extending ? <Loader2 className="h-3 w-3 animate-spin" /> : <AlarmClockPlus className="h-3 w-3" />}
+              Extend 2h
+            </Button>
+          )}
           {canUnlink && (
             <Button
               variant="ghost"
