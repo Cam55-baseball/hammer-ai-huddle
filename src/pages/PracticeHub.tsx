@@ -25,7 +25,7 @@ import { PendingSessionApprovals } from '@/components/practice/PendingSessionApp
 
 import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
-import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Loader2, Video } from 'lucide-react';
+import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Loader2, Video, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
