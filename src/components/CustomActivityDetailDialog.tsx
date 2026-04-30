@@ -7,7 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send, ChevronDown, GraduationCap } from 'lucide-react';
+import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send, ChevronDown, GraduationCap, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
@@ -181,6 +191,8 @@ interface CustomActivityDetailDialogProps {
   onToggleCheckbox?: (fieldId: string, checked: boolean) => void;
   onUpdateFieldValue?: (fieldId: string, value: string) => void;
   onSkipTask?: () => void;
+  /** Permanently remove this custom activity (soft-delete to Recently Deleted). */
+  onDeleteActivity?: () => Promise<void> | void;
   onSavePerformanceData?: (data: any) => Promise<void>;
   /** Partial completion: persist current progress, mark complete, do NOT auto-check remaining boxes */
   onDone?: () => Promise<void> | void;
@@ -204,6 +216,7 @@ export function CustomActivityDetailDialog({
   onToggleCheckbox,
   onUpdateFieldValue,
   onSkipTask,
+  onDeleteActivity,
   onSavePerformanceData,
   onDone,
   onCheckAll,
@@ -224,6 +237,8 @@ export function CustomActivityDetailDialog({
   // cannot be visually overridden by any in-flight parent / realtime update.
   // Cleared on dialog close.
   const [localCheckboxStates, setLocalCheckboxStates] = useState<Record<string, boolean>>({});
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const isMounted = useRef(true);
   const onUpdateFieldValueRef = useRef(onUpdateFieldValue);
@@ -1345,6 +1360,17 @@ export function CustomActivityDetailDialog({
                   </Button>
                 </div>
               )}
+              {onDeleteActivity && (
+                <Button
+                  variant="outline"
+                  disabled={deleting}
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  className="w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t('customActivity.detail.deleteActivity', 'Delete Activity')}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -1366,6 +1392,46 @@ export function CustomActivityDetailDialog({
         itemTitle={template?.title || ''}
         templateData={template as unknown as Json || null}
       />
+
+      {/* Confirm Delete Dialog */}
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('customActivity.detail.deleteConfirmTitle', 'Delete this activity?')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                'customActivity.detail.deleteConfirmDescription',
+                'It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>
+              {t('common.cancel', 'Cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!onDeleteActivity) return;
+                try {
+                  setDeleting(true);
+                  await onDeleteActivity();
+                  setConfirmDeleteOpen(false);
+                  onOpenChange(false);
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('common.delete', 'Delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

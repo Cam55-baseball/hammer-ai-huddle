@@ -1,38 +1,41 @@
-## Status
-The hitting and pitching toughness ladders you described are already deployed in `supabase/functions/_shared/repSourceToughness.ts` and wired into `calculate-session/index.ts`:
+## Add "Delete Activity" button to custom activities in Game Plan
 
-**Hitting ladder (BQI + competitive_execution):**
-tee 0.70 → soft_toss/flip 0.80 → front_toss 0.85 → coach_pitch 0.95 → machine_bp 1.05 → regular_bp 1.15 → live_bp 1.25 → live_abs/sim_game 1.30 → game 1.35
+When a user opens a custom activity from the Game Plan (the `CustomActivityDetailDialog`), they currently can Complete, Edit, Skip for Today, or Send to Coach — but there is no way to delete the activity from this entry point. Today, deletion is only reachable from the My Activities management screen. This plan adds a Delete button directly to the dialog opened from the Game Plan.
 
-**Pitching ladder (PEI + competitive_execution):**
-bullpen 0.85 → flat_ground 0.95 → flat_ground_vs_hitter 1.05 → bullpen_vs_hitter 1.15 → live_bp 1.25 → sim_game 1.30 → game 1.35
+### Behavior
 
-Already applied:
-- `bqiRaw *= repSourceToughness` for hitting/bunting sessions
-- `peiRaw *= repSourceToughness` for pitching sessions
-- `competitive_execution = normalizedScore * competitiveMultiplier * repSourceToughness` for all sessions
-- `decisionRaw *= liveContextBonus` (toughness if ≥1.05, else 1.0) so tee/coach-toss work cannot inflate decision-making
-- `composite_indexes.rep_source_toughness` and `rep_source_breakdown` surfaced for transparency
+- New "Delete Activity" button appears in the dialog's action footer, below the existing Skip / Send to Coach row.
+- Styled as a destructive outline button (red) so it is clearly separated from positive actions.
+- Click opens a confirmation `AlertDialog` ("Delete this activity? It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.").
+- On confirm: performs a **soft delete** (consistent with the rest of the app — sets `deleted_at` on `custom_activity_templates`), closes the dialog, removes the card from today's Game Plan, and shows a toast with an "Undo" action that clears `deleted_at`.
+- Deletion uses the existing `deleteTemplate(id)` from `useCustomActivities` so the item shows up in the existing "Recently Deleted" list and can be restored there.
+- Hidden when the activity originates from a coach-sent card or a folder item (those are managed elsewhere) — only shown for user-owned standalone custom activity templates.
 
-## Gap to close
-You explicitly named **FQI** as a target. It is currently not weighted by toughness — a clean fielding rep in a real game grades the same as a clean rep in pre-practice ground balls.
+### Technical details
 
-## Fix
-In `supabase/functions/calculate-session/index.ts`, after the FQI raw is fully assembled (after the receiving_quality block, ~line 231), apply:
+Files to change:
 
-```ts
-// FQI toughness: only amplify when reps occurred in live/game context (≥1.05).
-// Pure drills stay neutral; a clean play in a real game outweighs a clean rep in solo work.
-if (liveContextBonus > 1.0) fqiRaw *= liveContextBonus;
-```
+1. **`src/components/CustomActivityDetailDialog.tsx`**
+   - Add optional prop `onDeleteActivity?: () => Promise<void> | void`.
+   - Render a destructive "Delete Activity" button below the Skip / Send-to-Coach row, only when `onDeleteActivity` is provided.
+   - Wrap the click in an `AlertDialog` confirm (reuse `@/components/ui/alert-dialog`) so deletion isn't accidental.
+   - Close the parent dialog (`onOpenChange(false)`) after a successful delete.
+   - Add the i18n keys `customActivity.detail.deleteActivity`, `customActivity.detail.deleteConfirmTitle`, `customActivity.detail.deleteConfirmDescription`, `common.cancel`, `common.delete` (with English fallbacks inline as the rest of the file does).
 
-Why `liveContextBonus` (not full `repSourceToughness`):
-- Defensive drills (cone work, fungo) have no `rep_source` mapped → toughness = 1.0 → no change
-- Game/sim_game/live_bp fielding reps drive `liveContextBonus` ≥ 1.05 → FQI scales up
-- This avoids penalizing solo defensive work (which has no "soft" hitting analog like tee work)
+2. **`src/components/GamePlanCard.tsx`**
+   - Import `useCustomActivities` is already in use indirectly via `useGamePlan`; add a direct call to `deleteTemplate` from `useCustomActivities` (or expose `deleteTemplate` through `useGamePlan` to keep one source of truth — preferred since `useGamePlan` already holds the refresh logic).
+   - Pass an `onDeleteActivity` handler to `<CustomActivityDetailDialog ... />` (the instance at ~line 2403). Inside the handler:
+     - Pull `template.id` from `selectedCustomTask.customActivityData`.
+     - Skip if the activity is coach-sent / folder-derived (guard on `selectedCustomTask.folderItemData` or a `received` flag).
+     - Call `deleteTemplate(templateId)`; on success, call `refreshCustomActivities()` (already exposed) and broadcast via the existing `BroadcastChannel('data-sync')` pattern used elsewhere in this file so other tabs refresh.
+     - Show a `toast.success` with an Undo action that re-sets `deleted_at` to null on `custom_activity_templates` (mirroring `useDeletedActivities.restoreActivity`).
+   - Do **not** wire the same handler to the second `CustomActivityDetailDialog` instance (~line 2954) which renders folder-snapshot items — those aren't standalone templates.
 
-## Files
-- `supabase/functions/calculate-session/index.ts` — add the 3-line FQI toughness application
+3. **`src/hooks/useGamePlan.ts`** (small addition)
+   - Re-export `deleteTemplate` from the embedded `useCustomActivities` instance in the returned object so `GamePlanCard` doesn't need a second hook subscription.
 
-## Deploy
-- Redeploy `calculate-session` edge function
+### Out of scope
+
+- No schema changes (soft delete column already exists).
+- No changes to the Recently Deleted UI (already supports restoring within 30 days).
+- No changes to folder-item or coach-sent card handling.

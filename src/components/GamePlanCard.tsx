@@ -2443,6 +2443,20 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             handleDetailClose(false);
           }
         }}
+        onDeleteActivity={
+          selectedCustomTask?.taskType === 'custom' &&
+          selectedCustomTask?.customActivityData?.template?.id &&
+          !selectedCustomTask?.folderItemData
+            ? async () => {
+                const templateId = selectedCustomTask.customActivityData!.template.id;
+                const ok = await deleteActivityTemplate(templateId);
+                if (ok) {
+                  refreshCustomActivities();
+                  refetch();
+                }
+              }
+            : undefined
+        }
         onSaveTime={(time, reminder) => {
           if (selectedCustomTask) {
             setTaskTimes(prev => ({ ...prev, [selectedCustomTask.id]: time }));
