@@ -346,6 +346,7 @@ export default function PlayersClub() {
                 {new Date(game.game_date).toLocaleDateString()}
               </p>
             </div>
+            <Badge variant="outline" className="text-[10px] uppercase tracking-wide" title="Games now live in the Game Hub. This card is a legacy entry.">Legacy</Badge>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Badge variant="outline" className="capitalize">{game.sport}</Badge>
