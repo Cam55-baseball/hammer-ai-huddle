@@ -596,12 +596,34 @@ export default function PracticeHub() {
               )}
               {/* Step 5: Post-Session Summary */}
               {step === 'session_summary' && savedSessionId && sessionType && (
-                <PostSessionSummaryV2
-                  sessionId={savedSessionId}
-                  module={activeModule}
-                  sessionType={sessionType}
-                  onDone={handleSummaryDone}
-                />
+                <>
+                  {linkAttachError && (
+                    <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/5 flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-destructive">Session not linked</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          We saved your practice but couldn\u2019t attach it to link{' '}
+                          <span className="font-mono">{linkAttachError.code}</span>.
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRetryAttach}
+                        disabled={retryingLink}
+                      >
+                        {retryingLink ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                        Retry Link
+                      </Button>
+                    </div>
+                  )}
+                  <PostSessionSummaryV2
+                    sessionId={savedSessionId}
+                    module={activeModule}
+                    sessionType={sessionType}
+                    onDone={handleSummaryDone}
+                  />
+                </>
               )}
             </TabsContent>
           ))}
