@@ -1,78 +1,77 @@
-# Cross-Session Linking — Fixes #1, #2, #6
 
-Make the AB-link flow honest end-to-end: unlinking actually clears the server, attach failures surface to the user with a retry path, and the panel reflects true server state (Pending / Claimed / Linked / Expired) instead of guessing from local React state.
+# Cross-Session Linking — Follow-up Fixes
 
-## Scope
+Close the two remaining holes from the last pass:
 
-1. **Server-side unlink** — clean up `live_ab_links` when a user clicks Unlink.
-2. **Attach error surfacing + retry** — never silently swallow `attach_session_to_link` failures; let the user retry.
-3. **Real-state badge** — the panel subscribes to the row and shows the actual lifecycle status.
+1. **#2 silent-failure gap** — `attach_session_to_link` returns `void` and silently `RETURN`s in 4 cases (link missing, wrong status, uniqueness conflict, user not a participant). The current client only catches *thrown* errors, so the user can see "Linked" while the DB never attached them.
+2. **#6 flicker** — `useAbLinkStatus` starts with `status: 'unknown'`, so a freshly-generated code briefly shows the idle "Generate / Join" panel for ~100ms before snapping to the linked view.
 
-Out of scope for this pass: race conditions in `useLiveRepBroadcast`, expiration warnings, sport-mismatch enforcement (planned separately).
+## 1. Confirm-on-attach (kills silent failures)
 
----
+Add a verification read after every `attach_session_to_link` call. If the row's session column for the current user is still NULL, treat as failure even though no error was thrown.
 
-## 1. Server-side unlink
+**New helper** in `src/pages/PracticeHub.tsx` (and reused for retry):
 
-Add an RPC and call it from `handleUnlink`. Local-only state reset is the current bug.
+```ts
+async function attachAndVerify(sessionId: string, code: string, userId: string) {
+  const { error } = await supabase.rpc('attach_session_to_link' as any, {
+    p_user_id: userId,
+    p_link_code: code,
+    p_session_id: sessionId,
+  });
+  if (error) throw error;
 
-**New RPC** `expire_ab_link(p_user_id uuid, p_link_code text)`:
-- SECURITY DEFINER, search_path = public.
-- Updates the row to `status = 'expired'` only when `link_code = p_link_code` AND the caller is `creator_user_id` or `joiner_user_id` AND status is in `('pending','claimed')`.
-- No-op if already `linked` or `expired` (so we don't clobber a finalized link mid-save).
-- Does NOT touch `creator_session_id` / `joiner_session_id` / `linked_session_id` to preserve audit history.
+  const { data: row, error: readErr } = await supabase
+    .from('live_ab_links' as any)
+    .select('creator_user_id, joiner_user_id, creator_session_id, joiner_session_id, status')
+    .eq('link_code', code)
+    .maybeSingle();
+  if (readErr) throw readErr;
+  if (!row) throw new Error('Link no longer exists.');
 
-**Client** (`LiveAbLinkPanel.handleUnlink`):
-- Make async; call `supabase.rpc('expire_ab_link', ...)` before resetting local state.
-- Toast on error and keep the linked UI (don't lie about disconnection).
-- On success, reset state and call `onUnlink()`.
+  const isCreator = row.creator_user_id === userId;
+  const isJoiner = row.joiner_user_id === userId;
+  if (!isCreator && !isJoiner) throw new Error('You are not a participant on this link.');
 
-## 2. Attach error surfacing + retry
+  const mySessionId = isCreator ? row.creator_session_id : row.joiner_session_id;
+  if (mySessionId !== sessionId) {
+    // Most common silent cause: another session already occupies this slot,
+    // link expired between claim and save, or wrong status.
+    throw new Error('Link could not be attached (slot already taken or link expired).');
+  }
+  return { confirmed: true, status: row.status as string };
+}
+```
 
-`PracticeHub.handleSaveSession` currently `console.error`s and continues to a "Success" summary. Fix end-to-end:
+**Wire in `handleSaveSession`:** replace the bare RPC + `console.error` with `attachAndVerify`. On thrown error → set `linkAttachError`, destructive toast, but session save itself stays committed.
 
-- Store the attach error on a new state slot `linkAttachError: { sessionId, code, message } | null`.
-- Wrap the RPC: if it throws OR returns and the row's `creator_session_id`/`joiner_session_id` is still NULL for this user, treat as failure.
-- Toast (destructive) immediately: "Couldn't link sessions — your practice was saved, tap Retry to attempt linking again."
-- On the `session_summary` step, when `linkAttachError` is set, render an inline alert with a **Retry Link** button that re-invokes `attach_session_to_link` with the stored sessionId + code. Clear the error on success.
-- Only mark the saved session "linked" in UI after we confirm attach succeeded.
+**Wire the Retry button** to call the same helper. On success: clear `linkAttachError` AND set a `linkAttachConfirmed` flag for the summary to render the green "Session Linked" indicator. Only show "Session Linked" when `linkAttachConfirmed === true`, not when `linkAttachError == null`.
 
-## 3. Real-state badge in the panel
+## 2. Kill the linked-view flicker
 
-Replace the local `linked` boolean with server truth.
+In `src/components/practice/LiveAbLinkPanel.tsx`, the showLinkedView gate currently requires `linkState.status !== 'unknown'`. While loading, the panel falls back to the idle Generate/Join UI.
 
-- New hook `useAbLinkStatus(linkCode)` in `src/hooks/useAbLinkStatus.ts`:
-  - Initial fetch: `select status, creator_session_id, joiner_session_id, expires_at from live_ab_links where link_code = ?`.
-  - Realtime: subscribe via `supabase.channel` to `postgres_changes` on `live_ab_links` filtered by `link_code=eq.<code>`.
-  - Returns `{ status, isCreator, isJoiner, mySessionAttached, partnerSessionAttached, expiresAt }`.
-- `LiveAbLinkPanel`:
-  - Drive the badge from the hook, not local state. Map:
-    - `pending` → "Waiting for partner" (amber)
-    - `claimed` → "Partner joined — save to finalize" (blue)
-    - `linked` → "Linked" (green)
-    - `expired` → "Expired" (muted) + offer Generate New
-  - Add a small countdown chip when within 15 min of `expires_at`.
-  - Keep Unlink visible whenever status is `pending` or `claimed`.
+Fix: when we have a `generatedCode`, render the linked shell immediately and show a skeleton badge during `linkState.loading`. New gate:
 
-## Technical details
+```ts
+const showLinkedView = !!generatedCode;
+// in the badge slot:
+{linkState.loading
+  ? <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">Checking…</Badge>
+  : <Badge variant="outline" className={`text-[10px] ${label.className}`}>{label.text}</Badge>}
+```
 
-**Files to change**
-- `supabase/migrations/<timestamp>_ab_link_unlink_rpc.sql` — add `expire_ab_link` RPC + grant execute to `authenticated`.
-- `src/components/practice/LiveAbLinkPanel.tsx` — async unlink, badge driven by `useAbLinkStatus`.
-- `src/hooks/useAbLinkStatus.ts` — new hook (fetch + realtime subscription).
-- `src/pages/PracticeHub.tsx` — capture attach failures into state, surface toast, add Retry on summary view; only show "Session Linked" after confirmed attach.
+Disable Unlink while `linkState.loading` so the user can't fire an RPC against an unknown row.
 
-**RLS / realtime**
-- `live_ab_links` is already returned by `claim_ab_link`/`create_ab_link`; verify `SELECT` policy lets both `creator_user_id` and `joiner_user_id` read. If not, add it in the same migration.
-- Add the table to `supabase_realtime` publication if not already (`ALTER PUBLICATION supabase_realtime ADD TABLE public.live_ab_links;`).
+## 3. Acceptance
 
-**Failure semantics**
-- Unlink RPC failure → keep UI linked, show destructive toast. Do not mutate local state.
-- Attach RPC failure → session is saved; Retry button is the recovery path. Practice History still has the session, just unlinked.
+- Saving a session against a link that's already in `expired` state OR has the partner's slot taken produces a destructive toast + Retry button — no false "Session Linked." Verified by manually `UPDATE live_ab_links SET status='expired'` mid-flight.
+- Retry on a still-valid link confirms via the read-back and flips the summary to "Session Linked."
+- Generating a fresh code never shows the idle Generate/Join panel between click and badge — the linked shell appears immediately with a "Checking…" badge that resolves to "Waiting for partner."
 
-## Acceptance
+## Files
 
-- Clicking Unlink updates the DB row to `expired` (verified via `select status from live_ab_links where link_code=?`).
-- Killing the network during save produces a destructive toast and a visible Retry button on the summary; tapping Retry while online finalizes the link.
-- Panel badge changes from "Waiting" → "Partner joined" → "Linked" in real time on both devices without a refresh.
-- No silent failures; every error path produces a toast.
+- `src/pages/PracticeHub.tsx` — add `attachAndVerify`, replace existing attach calls (initial save + retry), add `linkAttachConfirmed` state, gate "Session Linked" UI on it.
+- `src/components/practice/LiveAbLinkPanel.tsx` — `showLinkedView = !!generatedCode`, skeleton badge during `linkState.loading`, disable Unlink while loading.
+
+No DB changes. No new RPCs. No edge function changes.

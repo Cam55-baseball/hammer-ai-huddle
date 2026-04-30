@@ -62,7 +62,7 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
 
   const linkState = useAbLinkStatus(generatedCode);
   const countdown = useCountdown(linkState.expiresAt);
-  const showLinkedView = !!generatedCode && linkState.status !== 'unknown';
+  const showLinkedView = !!generatedCode;
 
   const handleGenerate = async () => {
     if (!user) return;
@@ -160,7 +160,8 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
 
   if (showLinkedView && generatedCode) {
     const label = STATUS_LABEL[linkState.status];
-    const canUnlink = linkState.status === 'pending' || linkState.status === 'claimed';
+    const isLoading = linkState.loading;
+    const canUnlink = !isLoading && (linkState.status === 'pending' || linkState.status === 'claimed');
     return (
       <div className="space-y-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
         <div className="flex items-center gap-2">
@@ -169,8 +170,15 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
             <p className="text-xs font-medium">AB Link</p>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <Badge variant="outline" className="text-[10px] font-mono">{generatedCode}</Badge>
-              <Badge variant="outline" className={`text-[10px] ${label.className}`}>{label.text}</Badge>
-              {countdown && (
+              {isLoading ? (
+                <Badge variant="outline" className="text-[10px] gap-1 bg-muted text-muted-foreground border-border">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Checking…
+                </Badge>
+              ) : (
+                <Badge variant="outline" className={`text-[10px] ${label.className}`}>{label.text}</Badge>
+              )}
+              {countdown && !isLoading && (
                 <Badge variant="outline" className="text-[10px] gap-1">
                   <Clock className="h-3 w-3" />
                   {countdown}

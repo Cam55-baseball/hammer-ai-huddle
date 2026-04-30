@@ -25,7 +25,7 @@ import { PendingSessionApprovals } from '@/components/practice/PendingSessionApp
 
 import { VideoRepLogger } from '@/components/practice/VideoRepLogger';
 import { useScheduledPracticeSessions } from '@/hooks/useScheduledPracticeSessions';
-import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Loader2, Video } from 'lucide-react';
+import { Target, Flame, Wind, Shield, Zap, Hand, ArrowLeft, ArrowRight, Save, Loader2, Video, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionDefaults } from '@/hooks/useSessionDefaults';
@@ -141,6 +141,7 @@ export default function PracticeHub() {
     code: string;
     message: string;
   } | null>(null);
+  const [linkAttachConfirmed, setLinkAttachConfirmed] = useState<{ code: string } | null>(null);
   const [retryingLink, setRetryingLink] = useState(false);
 
   const attachSessionToLink = async (sessionId: string, code: string, userId: string) => {
@@ -174,7 +175,9 @@ export default function PracticeHub() {
     setRetryingLink(true);
     try {
       await attachSessionToLink(linkAttachError.sessionId, linkAttachError.code, user.id);
+      const code = linkAttachError.code;
       setLinkAttachError(null);
+      setLinkAttachConfirmed({ code });
       toast({ title: 'Linked', description: 'Session linked successfully.' });
     } catch (err: any) {
       toast({
@@ -356,10 +359,12 @@ export default function PracticeHub() {
       });
 
       // Attach session to link state machine (handles bidirectional linking atomically)
+      setLinkAttachError(null);
+      setLinkAttachConfirmed(null);
       if (sessionConfig.link_code && result.id && user?.id) {
         try {
           await attachSessionToLink(result.id, sessionConfig.link_code, user.id);
-          setLinkAttachError(null);
+          setLinkAttachConfirmed({ code: sessionConfig.link_code });
         } catch (linkErr: any) {
           console.error('[PracticeHub] attach_session_to_link failed:', linkErr);
           setLinkAttachError({
@@ -615,6 +620,14 @@ export default function PracticeHub() {
                         {retryingLink ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
                         Retry Link
                       </Button>
+                    </div>
+                  )}
+                  {!linkAttachError && linkAttachConfirmed && (
+                    <div className="mb-3 p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-emerald-600" />
+                      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                        Session linked to <span className="font-mono">{linkAttachConfirmed.code}</span>
+                      </p>
                     </div>
                   )}
                   <PostSessionSummaryV2
