@@ -227,6 +227,8 @@ export function CustomActivityDetailDialog({
   onReopen,
   categoryLabel,
   hideEdit,
+  isCoachSent,
+  coachName,
 }: CustomActivityDetailDialogProps) {
   const { t } = useTranslation();
   const [showTimePicker, setShowTimePicker] = useState(false);
