@@ -250,6 +250,7 @@ export default function PracticeHub() {
     
     setNotes('');
     setSavedSessionId(null);
+    setLinkAttachError(null);
     setScheduledId(null);
   };
 
