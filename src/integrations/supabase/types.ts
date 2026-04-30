@@ -2989,6 +2989,7 @@ export type Database = {
           id: string
           is_practice_game: boolean | null
           league_level: string
+          legacy_in_players_club: boolean
           lineup: Json
           mound_distance_ft: number
           opponent_name: string
@@ -3012,6 +3013,7 @@ export type Database = {
           id?: string
           is_practice_game?: boolean | null
           league_level: string
+          legacy_in_players_club?: boolean
           lineup?: Json
           mound_distance_ft: number
           opponent_name: string
@@ -3035,6 +3037,7 @@ export type Database = {
           id?: string
           is_practice_game?: boolean | null
           league_level?: string
+          legacy_in_players_club?: boolean
           lineup?: Json
           mound_distance_ft?: number
           opponent_name?: string
@@ -5037,6 +5040,7 @@ export type Database = {
           intent_compliance_pct: number | null
           is_locked: boolean | null
           is_retroactive: boolean | null
+          legacy_in_players_club: boolean
           link_code: string | null
           linked_session_id: string | null
           micro_layer_data: Json | null
@@ -5080,6 +5084,7 @@ export type Database = {
           intent_compliance_pct?: number | null
           is_locked?: boolean | null
           is_retroactive?: boolean | null
+          legacy_in_players_club?: boolean
           link_code?: string | null
           linked_session_id?: string | null
           micro_layer_data?: Json | null
@@ -5123,6 +5128,7 @@ export type Database = {
           intent_compliance_pct?: number | null
           is_locked?: boolean | null
           is_retroactive?: boolean | null
+          legacy_in_players_club?: boolean
           link_code?: string | null
           linked_session_id?: string | null
           micro_layer_data?: Json | null
@@ -9951,11 +9957,13 @@ export type Database = {
           contributes_to_progress: boolean
           created_at: string
           efficiency_score: number | null
+          game_id: string | null
           id: string
           library_notes: string | null
           library_title: string | null
           mocap_data: Json | null
           module: Database["public"]["Enums"]["module_type"]
+          practice_session_id: string | null
           saved_to_library: boolean | null
           session_date: string | null
           shared_with_scouts: boolean | null
@@ -9975,11 +9983,13 @@ export type Database = {
           contributes_to_progress?: boolean
           created_at?: string
           efficiency_score?: number | null
+          game_id?: string | null
           id?: string
           library_notes?: string | null
           library_title?: string | null
           mocap_data?: Json | null
           module: Database["public"]["Enums"]["module_type"]
+          practice_session_id?: string | null
           saved_to_library?: boolean | null
           session_date?: string | null
           shared_with_scouts?: boolean | null
@@ -9999,11 +10009,13 @@ export type Database = {
           contributes_to_progress?: boolean
           created_at?: string
           efficiency_score?: number | null
+          game_id?: string | null
           id?: string
           library_notes?: string | null
           library_title?: string | null
           mocap_data?: Json | null
           module?: Database["public"]["Enums"]["module_type"]
+          practice_session_id?: string | null
           saved_to_library?: boolean | null
           session_date?: string | null
           shared_with_scouts?: boolean | null
@@ -10016,7 +10028,22 @@ export type Database = {
           user_id?: string
           video_url?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "videos_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_practice_session_id_fkey"
+            columns: ["practice_session_id"]
+            isOneToOne: false
+            referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weakness_scores: {
         Row: {
