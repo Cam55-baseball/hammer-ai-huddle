@@ -62,7 +62,7 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
 
   const linkState = useAbLinkStatus(generatedCode);
   const countdown = useCountdown(linkState.expiresAt);
-  const showLinkedView = !!generatedCode && linkState.status !== 'unknown';
+  const showLinkedView = !!generatedCode;
 
   const handleGenerate = async () => {
     if (!user) return;
