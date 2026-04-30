@@ -2494,8 +2494,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         coachName={selectedTaskCoachOrigin?.senderName}
         onDeleteActivity={
           selectedCustomTask?.taskType === 'custom' &&
-          selectedCustomTask?.customActivityData?.template?.id &&
-          !selectedCustomTask?.folderItemData
+          selectedCustomTask?.customActivityData?.template?.id
             ? async () => {
                 const templateId = selectedCustomTask.customActivityData!.template.id;
                 const templateTitle = selectedCustomTask.customActivityData!.template.title || 'Activity';
