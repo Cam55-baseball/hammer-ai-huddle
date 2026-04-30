@@ -625,7 +625,20 @@ export default function PracticeHub() {
               {/* Step 5: Post-Session Summary */}
               {step === 'session_summary' && savedSessionId && sessionType && (
                 <>
-                  {linkAttachError && (
+                  {linkAttachError && linkAttachError.expired && (
+                    <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/5 flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-destructive">Link expired before save</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Your practice was saved. Link{' '}
+                          <span className="font-mono">{linkAttachError.code}</span> expired before both
+                          partners could finalize. Generate a new code from your next session to link with
+                          this partner again.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {linkAttachError && !linkAttachError.expired && (
                     <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/5 flex items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-destructive">Session not linked</p>
