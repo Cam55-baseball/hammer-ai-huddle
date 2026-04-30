@@ -216,7 +216,10 @@ export function VideoLibraryManager() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="videos">Videos ({visibleVideos.length}{showOnlyIncomplete ? ` / ${videos.length}` : ''})</TabsTrigger>
+          <TabsTrigger value="videos">
+            Videos ({visibleVideos.length}{videoFilter !== 'all' ? ` / ${videos.length}` : ''})
+            {videoFilter !== 'all' && <span className="ml-1 text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">· {videoFilter}</span>}
+          </TabsTrigger>
           <TabsTrigger value="upload"><Plus className="h-3.5 w-3.5 mr-1" /> Add</TabsTrigger>
           <TabsTrigger value="tags"><Tags className="h-3.5 w-3.5 mr-1" /> Tags</TabsTrigger>
           <TabsTrigger value="taxonomy"><Network className="h-3.5 w-3.5 mr-1" /> Taxonomy</TabsTrigger>
@@ -226,9 +229,25 @@ export function VideoLibraryManager() {
         </TabsList>
 
         <TabsContent value="videos" className="space-y-3 mt-4">
+          {videoFilter !== 'all' && (
+            <Card className="p-2.5 flex items-center justify-between gap-2 border-amber-500/30 bg-amber-500/5">
+              <p className="text-xs">
+                Showing <span className="font-semibold capitalize">{videoFilter}</span> only — {visibleVideos.length} of {videos.length}
+              </p>
+              <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setVideoFilter('all')}>
+                Show all
+              </Button>
+            </Card>
+          )}
+          <div id="owner-video-list" className="space-y-3">
           {visibleVideos.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
-              {showOnlyIncomplete ? (
+              {videoFilter === 'throttled' ? (
+                <div className="space-y-3">
+                  <p>No throttled videos. You're clear.</p>
+                  <Button size="sm" variant="outline" onClick={() => setVideoFilter('all')}>Show all</Button>
+                </div>
+              ) : videoFilter === 'incomplete' ? (
                 <p>All videos are engine-ready. Toggle the filter to see them all.</p>
               ) : (
                 <>
