@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { VideoRepMarker, type RepMarker } from './VideoRepMarker';
 import { RepScorer, type ScoredRep } from './RepScorer';
 import { isAnalyzableModule, RepVideoAnalysis } from './RepVideoAnalysis';
 import type { SessionConfig } from './SessionConfigPanel';
+import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
 
 interface VideoRepReviewProps {
   module: string;
@@ -32,6 +34,12 @@ export function VideoRepReview({ module, sessionConfig, onComplete }: VideoRepRe
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const validation = validateVideoFile(file);
+    if (!validation.valid) {
+      toast.error('Video too large to analyze', { description: validation.error });
+      e.target.value = '';
+      return;
+    }
     if (videoSrc) URL.revokeObjectURL(videoSrc);
     setVideoSrc(URL.createObjectURL(file));
     setMarkers([]);
@@ -111,6 +119,9 @@ export function VideoRepReview({ module, sessionConfig, onComplete }: VideoRepRe
               <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2">
                 <Upload className="h-4 w-4" /> Upload Session Video
               </Button>
+              <p className="text-[11px] text-muted-foreground text-center max-w-xs">
+                Max {VIDEO_LIMITS.MAX_FILE_SIZE_MB} MB ({(VIDEO_LIMITS.MAX_FILE_SIZE_MB / 1024).toFixed(0)} GB). If your file is too large, you'll see a message to try again with a shorter or compressed clip.
+              </p>
             </div>
           ) : (
             <>

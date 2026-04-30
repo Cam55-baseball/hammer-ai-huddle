@@ -1,84 +1,59 @@
+# Larger Video Uploads + Size-Limit Messaging
 
-# AB Link — Long-practice support
+## Goal
+1. Allow noticeably larger video files in the owner Video Library and in the rep-analysis modules (hitting / pitching / throwing / fielding / catching).
+2. When a user picks a file that exceeds the cap, show a clear, friendly error in the analysis modules ("Your video is too large — please try again with a smaller or shorter clip"), matching the existing toast pattern.
 
-Two changes that work together:
+## Current State
+- Client cap: `src/data/videoLimits.ts` → `MAX_FILE_SIZE_MB = 500` (already 500 MB on the client).
+- Server cap (the real bottleneck): the `videos` storage bucket has `file_size_limit = 52,428,800` (50 MB). Any upload >50 MB fails server-side regardless of the client value.
+- Owner Library uploads (`useVideoLibraryAdmin.ts`) call `validateVideoFile` then upload to the `videos` bucket — currently capped at 50 MB by the bucket.
+- Analysis entry points (`VideoRepReview.tsx` → `RepVideoAnalysis.tsx`) use `URL.createObjectURL` (no upload), and **do not validate size at all**. Very large files silently fail to play with no user feedback.
 
-1. **Extend button + 10-min toast warning** — never lose a link silently mid-practice.
-2. **Expired-recovery banner** on the session summary — when an attach fails because the link expired, the session still saves and the user gets a clear path forward.
+## New Limits
+- Bump client `MAX_FILE_SIZE_MB` to **2048 MB (2 GB)**.
+- Bump the `videos` bucket `file_size_limit` to **2,147,483,648** bytes (2 GB) via migration.
+- Keep `MAX_CLIP_DURATION_SEC` and supported formats unchanged.
 
-## 1. `extend_ab_link` RPC
+## Changes
 
-New SECURITY DEFINER function:
-
+### 1. Database migration — raise bucket cap
 ```sql
-CREATE OR REPLACE FUNCTION public.extend_ab_link(p_user_id uuid, p_link_code text)
-RETURNS SETOF live_ab_links
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-BEGIN
-  RETURN QUERY
-  UPDATE public.live_ab_links
-  SET expires_at = now() + interval '2 hours'
-  WHERE link_code = p_link_code
-    AND status IN ('pending', 'claimed')
-    AND (creator_user_id = p_user_id OR joiner_user_id = p_user_id)
-  RETURNING *;
-END;
-$$;
-GRANT EXECUTE ON FUNCTION public.extend_ab_link(uuid, text) TO authenticated;
+update storage.buckets
+set file_size_limit = 2147483648  -- 2 GB
+where id = 'videos';
 ```
 
-Idempotent. Won't touch `linked` or `expired` rows. Realtime push delivers the new `expires_at` to the partner's panel automatically.
+### 2. `src/data/videoLimits.ts`
+- `MAX_FILE_SIZE_MB: 2048`
+- `MAX_FILE_SIZE_BYTES: 2048 * 1024 * 1024`
+- Improve error copy returned by `validateVideoFile` so it reads:
+  `"Video is too large (X MB). Max is 2048 MB — try a shorter clip or compress the file and upload again."`
+  (compute `X` from `file.size`).
 
-## 2. Always-on escalating countdown
+### 3. `src/components/practice/VideoRepReview.tsx`
+- In `handleFileSelect`, call `validateVideoFile(file)` before `URL.createObjectURL`.
+- On failure: show a `toast({ variant: 'destructive', title: 'Video too large', description: validation.error })` and reset the input. Do not create the object URL.
 
-Replace the current 15-min gate in `LiveAbLinkPanel.useCountdown` with continuous output:
+### 4. `src/components/practice/RepVideoAnalysis.tsx`
+- This component receives a `videoUrl` from its parent, but the analysis tool description should also surface the limit so users know what to expect.
+- Add a small helper line under the dialog title (or near the Save button) reading: `"Max clip size 2 GB. If your file fails to load, try a shorter or compressed clip."` Use `text-xs text-muted-foreground`.
 
-| Time left | Tone | Text |
-|---|---|---|
-| > 30 min | muted | `1h 23m left` |
-| ≤ 30 min | amber | `27m left` |
-| ≤ 5 min | destructive (pulse) | `4m left` |
-| ≤ 0 | destructive | `Expired` |
+### 5. Owner Library upload UI (`QuickAttachVideo.tsx` + the admin form behind `useVideoLibraryAdmin.ts`)
+- Already routes through `validateVideoFile`; the new copy will flow automatically.
+- Add the same helper line ("Max 2 GB. Larger files should be compressed first.") under the file picker so owners know the limit before choosing a file.
 
-Chip lives next to the status badge for the entire link lifetime, not just the last 15 min.
+### 6. Other call sites of `validateVideoFile` (no logic change required, just inherit new limit)
+- `src/components/practice/SessionVideoUploader.tsx`
+- `src/components/game-scoring/GameVideoPlayer.tsx`
 
-## 3. One-time 10-min "expiring soon" toast
-
-Inside `LiveAbLinkPanel`, when minutes-left transitions from `> 10` to `≤ 10` for the first time per `link_code`, fire one persistent toast:
-
-- Title: "AB Link expiring soon"
-- Description: "Your link AB-XXXXX expires in 10 minutes."
-- Action button: **Extend 2h** → calls `supabase.rpc('extend_ab_link', ...)`
-- `duration: 0` (persistent until dismissed or extended)
-- Tracked in `useRef<Set<string>>` so it can't fire twice for the same code.
-
-A second one-time toast at `≤ 1 min` with the same Extend action.
-
-## 4. Inline Extend button on the panel
-
-When status is `pending` or `claimed` AND minutes-left ≤ 30, show a small "Extend 2h" button next to Unlink. Clicking it calls `extend_ab_link`, toast on success/failure, no other state mutation needed (realtime updates the row).
-
-## 5. Expired-recovery banner on session summary
-
-In `PracticeHub.tsx`, when `attachAndVerify` throws and the verification read returned `status = 'expired'`, set a new `linkExpired: true` flag on `linkAttachError`. The summary then renders a different banner:
-
-- Title: "Link expired before save"
-- Body: "Your practice was saved. The AB link AB-XXXXX expired before both partners could finalize. Generate a new code from your next session if you want to link with this partner again."
-- No Retry button (extending an expired link is not allowed by the RPC by design — surfaces "Generate New" path instead).
-
-For the *non-expired* failure case (slot conflict, RPC error, etc.), the existing destructive banner with **Retry Link** stays as-is.
-
-## Files
-
-- `supabase/migrations/<timestamp>_ab_link_extend.sql` — `extend_ab_link` RPC + GRANT.
-- `src/components/practice/LiveAbLinkPanel.tsx` — rewrite `useCountdown`, add Extend button, fire 10-min and 1-min toasts.
-- `src/pages/PracticeHub.tsx` — surface `linkExpired` flag on the summary error banner; differentiate copy + actions.
-
-No edge function changes. No client-side polling — all driven by realtime + the existing 30s tick in `useCountdown`.
+## Out of Scope
+- Chunked / resumable uploads (Supabase storage handles up to the new bucket cap with a single PUT; if reliability becomes an issue at 1–2 GB we can revisit with TUS / resumable uploads).
+- Server-side transcoding or compression.
+- Changing per-clip duration limit.
 
 ## Acceptance
-
-- A link generated 1h 50m ago shows `10m left` in amber and triggers a persistent toast with **Extend 2h**. Tapping it bumps `expires_at` by 2h and the chip resets to `2h 0m left`. Both creator and partner see the update without refresh.
-- A link allowed to expire and then attached at save time shows the Expired-recovery banner — no Retry button, just guidance.
-- A link that fails to attach for any other reason (slot taken, RPC error) still shows the original Retry banner.
-- `extend_ab_link` is a no-op on `linked` or `expired` rows (verified by manual SQL).
+- Owner can upload a >50 MB video into the library successfully.
+- Selecting a >2 GB file in the rep-analysis uploader shows the destructive toast and the file is not loaded.
+- Analysis dialog displays the 2 GB hint text.
+- Existing <50 MB uploads continue to work unchanged.
