@@ -34,6 +34,12 @@ export function VideoRepReview({ module, sessionConfig, onComplete }: VideoRepRe
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const validation = validateVideoFile(file);
+    if (!validation.valid) {
+      toast.error('Video too large to analyze', { description: validation.error });
+      e.target.value = '';
+      return;
+    }
     if (videoSrc) URL.revokeObjectURL(videoSrc);
     setVideoSrc(URL.createObjectURL(file));
     setMarkers([]);
