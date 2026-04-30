@@ -1,125 +1,85 @@
-## Make Delete Activity work on every custom activity in the Game Plan
+## Goal
 
-### The bug
+Players Club becomes a **video-only** library. Practice sessions belong in **Practice History / Calendar review**. Game sessions belong in the **Game Hub**. Existing practice/game cards already in users' Players Club views are grandfathered in (still visible) so nothing disappears retroactively.
 
-Today the "Delete Activity" button only appears for **standalone** custom activities the player created or accepted from a coach. It is missing for:
+## Behavior summary
 
-1. **Custom activities sitting inside a folder** (your own folders).
-2. **Activities inside coach-shared folders** that landed on your Game Plan via a `folder_assignments` accept.
-
-That happens because `GamePlanCard.tsx` mounts `CustomActivityDetailDialog` from three places:
-
-- standalone path (line ~2450) — passes `onDeleteActivity`, but only when `!folderItemData`.
-- folder-snapshot path (~3078) — does **not** pass `onDeleteActivity` at all.
-- folder raw-fields path (~3269) — does **not** pass `onDeleteActivity` at all.
-
-So clicking into any folder item shows no Delete button. We will fix this end-to-end.
-
-### Behavior after the fix
-
-For every custom activity opened from the Game Plan (standalone or folder item, owned or coach-shared), the detail dialog shows a destructive **Delete Activity** button with a confirmation prompt.
-
-Per type:
-
-| Source | Action | Coach notified? |
+| Item type | New home | Shows in Players Club? |
 |---|---|---|
-| Own standalone custom activity | Soft-delete template (Recently Deleted, restorable 30 days) — already works | n/a |
-| Coach-sent standalone activity (accepted) | Soft-delete template + insert `coach_notifications` row (`activity_removed`) — already works | Yes |
-| Item inside your own folder | Hard-delete the `activity_folder_items` row (folders aren't part of Recently Deleted) | n/a |
-| Item inside a coach-shared folder you accepted | Remove only your copy from your Game Plan (decline the assignment so it disappears for you), and notify the coach who shared the folder | Yes |
+| Standalone video upload (saved to library) | Players Club | Yes |
+| Practice session WITH attached video | Practice History + Players Club (as the video) | Video card only |
+| Practice session WITHOUT video | Practice History / Calendar review | No |
+| Game WITH attached video | Game Hub + Players Club (as the video) | Video card only |
+| Game WITHOUT video | Game Hub | No |
+| Pre-existing practice/game cards already visible in Players Club | Grandfathered | Yes (legacy flag) |
 
-Confirmation copy adapts:
-- Own folder item: *"Remove this item from the folder? This can't be undone."*
-- Coach-shared folder item: *"Remove this folder from your Game Plan? {coachName} will be notified."*
-- Own standalone: existing copy ("moved to Recently Deleted… 30 days").
-- Coach-sent standalone: existing copy ("the coach who sent it will be notified").
+## Database changes
 
-### Technical changes
+1. **Link videos to their source session/game**
+   - Add to `public.videos`:
+     - `practice_session_id uuid NULL REFERENCES performance_sessions(id) ON DELETE SET NULL`
+     - `game_id uuid NULL REFERENCES games(id) ON DELETE SET NULL`
+   - Indexes on both new columns.
+   - RLS unchanged (still owner-scoped).
 
-**1. `src/components/GamePlanCard.tsx`**
+2. **Grandfather flag for legacy Club entries**
+   - Add `legacy_in_players_club boolean NOT NULL DEFAULT false` to `performance_sessions` and `games`.
+   - One-time backfill: set `true` for every existing row created **before the migration timestamp**, owned by users who have ever opened Players Club. Safe default: backfill `true` for all existing rows so nothing visually disappears. New rows default to `false`.
 
-- Standalone path (~2450): drop the `!selectedCustomTask?.folderItemData` guard from `onDeleteActivity` — the standalone branch never has `folderItemData`, so the guard was just dead defensiveness, but keep `taskType === 'custom'` and the template id check.
-- Folder-snapshot path (~3078) and raw-fields path (~3269): wire `onDeleteActivity` on both `CustomActivityDetailDialog` mounts. Implementation is shared, so factor it into a local helper inside the component:
+## Edge function: `get-player-library`
 
-  ```ts
-  const buildFolderItemDeleteHandler = (task: GamePlanTask) => async () => {
-    const fid = task.folderItemData;
-    if (!fid) return;
-    const isOwnFolder = fid.isOwner;
+Rewrite the response to be video-centric:
 
-    if (isOwnFolder) {
-      // Hard delete the item from the folder (RLS allows owner)
-      const { error } = await supabase
-        .from('activity_folder_items')
-        .delete()
-        .eq('id', fid.itemId);
-      if (error) { toast.error(t('common.error')); return; }
-    } else {
-      // Coach-shared folder: decline the assignment so it leaves the player's plan
-      const { data: assignment } = await supabase
-        .from('folder_assignments')
-        .select('id, sender_id, folder_id')
-        .eq('recipient_id', user!.id)
-        .eq('folder_id', fid.folderId /* add to folderItemData */)
-        .eq('status', 'accepted')
-        .maybeSingle();
+- Return `videos` exactly as today (already filtered by `saved_to_library = true`).
+- Return `practices` only where `legacy_in_players_club = true`.
+- Return `games` only where `legacy_in_players_club = true`.
+- Continue scout/owner authorization checks unchanged.
 
-      if (assignment) {
-        await supabase
-          .from('folder_assignments')
-          .update({ status: 'declined' })
-          .eq('id', assignment.id);
+Going forward no new practice or game ever enters this list — only standalone or session-linked videos.
 
-        // Notify the coach
-        await supabase.from('coach_notifications').insert({
-          coach_user_id: assignment.sender_id,
-          sender_user_id: user!.id,
-          notification_type: 'folder_removed',
-          title: `${playerName} removed a folder from their Game Plan`,
-          message: `"${fid.folderName}" • Removed ${new Date().toLocaleString()}`,
-        });
-      }
-    }
+## Upload / save flows that must populate the new link columns
 
-    handleFolderLoggerClose(false);
-    refetch();
-    toast.success(t('customActivity.detail.removed', 'Removed from your Game Plan'));
-  };
-  ```
+When a video is uploaded or saved to library from inside one of these flows, set `practice_session_id` or `game_id`:
 
-  Pass `onDeleteActivity={buildFolderItemDeleteHandler(selectedFolderTask)}` into both folder-path `CustomActivityDetailDialog` instances. Pass `isCoachSent={!fid.isOwner}` and `coachName` (look up via `useReceivedFolders` assignments cache, fallback to "your coach").
+- `src/components/RealTimePlayback.tsx` (`handleSaveToLibrary`) — pass current session/game id when present.
+- `src/pages/AnalyzeVideo.tsx` (`SaveToLibraryDialog`) — accept and forward `practiceSessionId` / `gameId` props from the calling context.
+- `src/components/SaveToLibraryDialog.tsx` — accept optional `practiceSessionId` and `gameId` and include them in the insert payload.
+- Any game-hub video capture path (e.g. game playback recording) — same treatment.
 
-- Add `folderId` to `folderItemData` (small extension in `useGamePlan.ts`) so we can find the assignment to decline. The data is already available where `folderItemData` is built (line ~1615) — `folder.id`.
+This gives us a real "this video came from this session/game" relationship without depending on date matching.
 
-**2. `src/hooks/useGamePlan.ts`**
+## UI: Players Club (`src/pages/PlayersClub.tsx`)
 
-Extend `folderItemData` with `folderId: string` (line ~1615 area and the type definition near line 69). Also, when filtering tasks for the Game Plan (~line 622–650 where `folder_assignments` are read), ignore assignments with `status = 'declined'` so removed coach folders don't reappear (verify this — likely already the case, but assert it).
+- Header copy reframed to "Video Library" wording (keep route `/players-club`).
+- Source filter `practice` and `game` tabs are still available **only if the user has any legacy practice/game items** — otherwise hide them.
+- Practice and game cards that do appear get a small "Legacy" badge and a tooltip: *"Practices and games now live in Practice History and Game Hub."*
+- Video cards that have a `practice_session_id` or `game_id` get a "From practice" / "From game" chip that deep-links to the source.
 
-**3. `src/components/CustomActivityDetailDialog.tsx`**
+## UI: where things live now
 
-Add an optional `deleteVariant?: 'standalone' | 'folder-own' | 'folder-coach'` prop (default `'standalone'`). Use it to pick the correct AlertDialog title/description:
+- **Practices**: existing Practice History view at `/practice` (and Calendar review surfaces) — already loads from `performance_sessions`. No code change needed beyond confirming the user can see all their practices there.
+- **Games**: existing Game Hub at `/games` — already loads from `games`. No code change needed beyond confirming history view shows completed games.
+- Add quick links in Players Club empty state: "Looking for practices? Go to Practice History →" and "Looking for games? Go to Game Hub →".
 
-- `standalone` + `isCoachSent`: existing copy.
-- `standalone` + not coach-sent: existing copy.
-- `folder-own`: "Remove this item from the folder? This can't be undone."
-- `folder-coach`: "Remove this folder from your Game Plan? {coachName} will be notified."
+## Scout / owner viewing other players
 
-The existing destructive button + AlertDialog stay; only the copy branches.
+Same rules apply when `playerId` is provided: only saved videos + legacy practice/game items are returned, gated by accepted scout follow.
 
-**4. `src/components/coach/CollaborativeWorkspace.tsx`**
+## Out of scope (will not change)
 
-Add a render branch for `notification_type === 'folder_removed'` mirroring the existing `activity_removed` styling (red accent, "removed a folder").
+- Vault, dashboard cards, training blocks, nutrition logs — unaffected. The instruction is specific to the Players Club library surface.
+- Existing `saved_to_library` semantics on the `videos` table.
 
-### Out of scope
+## Files to edit
 
-- No DB migrations. `coach_notifications.notification_type` is a free-text column; `folder_removed` is additive.
-- No change to Recently Deleted UI — folder items are not added there (they use hard delete or assignment decline).
-- No change to the pending coach-folder Accept/Decline flow.
-- No Undo for folder-item deletion in this pass (folder items don't have a soft-delete column). Standalone Undo continues to work as today.
+- `supabase/migrations/<new>.sql` — schema + backfill described above
+- `supabase/functions/get-player-library/index.ts` — new filter rules
+- `src/pages/PlayersClub.tsx` — copy, badges, empty-state links, conditional tabs
+- `src/components/SaveToLibraryDialog.tsx` — accept and persist session/game link
+- `src/pages/AnalyzeVideo.tsx` — forward session/game context to dialog
+- `src/components/RealTimePlayback.tsx` — forward session/game context to dialog
+- Any other call site of `SaveToLibraryDialog` discovered during implementation
 
-### Files to edit
+## Open question I'll confirm during build
 
-- `src/components/GamePlanCard.tsx` — wire delete on both folder dialog mounts; drop dead guard on standalone path.
-- `src/hooks/useGamePlan.ts` — add `folderId` to `folderItemData`; verify declined assignments are excluded.
-- `src/components/CustomActivityDetailDialog.tsx` — add `deleteVariant` and folder-aware confirm copy.
-- `src/components/coach/CollaborativeWorkspace.tsx` — render `folder_removed` notifications.
+If a brand-new video is saved that *isn't* tied to a session, it still belongs in Players Club (standalone video upload). Confirmed by your earlier answers — keeping that behavior.

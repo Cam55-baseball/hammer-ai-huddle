@@ -24,6 +24,10 @@ interface SaveToLibraryDialogProps {
   videoId: string;
   sport: string;
   module: string;
+  /** Optional: links the saved video to the practice session it was captured in */
+  practiceSessionId?: string | null;
+  /** Optional: links the saved video to the game it was captured in */
+  gameId?: string | null;
 }
 
 export function SaveToLibraryDialog({
@@ -32,6 +36,8 @@ export function SaveToLibraryDialog({
   videoId,
   sport,
   module,
+  practiceSessionId,
+  gameId,
 }: SaveToLibraryDialogProps) {
   const { t } = useTranslation();
   const [title, setTitle] = useState(`${sport} ${module} - ${new Date().toLocaleDateString()}`);
@@ -127,6 +133,9 @@ export function SaveToLibraryDialog({
         saved_to_library: true,
         session_date: new Date().toISOString()
       };
+
+      if (practiceSessionId) updateData.practice_session_id = practiceSessionId;
+      if (gameId) updateData.game_id = gameId;
       
       if (thumbnailData.webpUrl) {
         updateData.thumbnail_webp_url = thumbnailData.webpUrl;

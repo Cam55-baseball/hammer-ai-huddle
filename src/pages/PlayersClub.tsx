@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -295,6 +295,7 @@ export default function PlayersClub() {
                 {new Date(ps.session_date).toLocaleDateString()}
               </p>
             </div>
+            <Badge variant="outline" className="text-[10px] uppercase tracking-wide" title="Practices now live in Practice History. This card is a legacy entry.">Legacy</Badge>
           </div>
 
           {/* Badges */}
@@ -345,6 +346,7 @@ export default function PlayersClub() {
                 {new Date(game.game_date).toLocaleDateString()}
               </p>
             </div>
+            <Badge variant="outline" className="text-[10px] uppercase tracking-wide" title="Games now live in the Game Hub. This card is a legacy entry.">Legacy</Badge>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Badge variant="outline" className="capitalize">{game.sport}</Badge>
@@ -512,15 +514,28 @@ export default function PlayersClub() {
           </div>
         </div>
 
-        {/* Source Filter Tabs */}
+        {/* Source Filter Tabs (practice/game tabs only show when legacy items exist) */}
         <Tabs value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="video">Videos</TabsTrigger>
-            <TabsTrigger value="practice">Practice Sessions</TabsTrigger>
-            <TabsTrigger value="game">Game Sessions</TabsTrigger>
+            {practices.length > 0 && (
+              <TabsTrigger value="practice">Practice (Legacy)</TabsTrigger>
+            )}
+            {games.length > 0 && (
+              <TabsTrigger value="game">Games (Legacy)</TabsTrigger>
+            )}
           </TabsList>
         </Tabs>
+
+        {/* Quick links to where practices and games now live */}
+        {isOwnLibrary && (
+          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <span>Looking for something specific?</span>
+            <Link to="/practice" className="text-primary hover:underline">Practice History →</Link>
+            <Link to="/game-scoring" className="text-primary hover:underline">Game Hub →</Link>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-stretch sm:items-center">
