@@ -1,77 +1,74 @@
-## Why installed Home Screen apps don't update
+## What's actually happening when the owner clicks "Fix now"
 
-When a user taps "Add to Home Screen", the OS launches the app in **standalone PWA mode**, which behaves very differently from a browser tab:
+The button **does** fire — but its handler is wired to the wrong thing, so nothing visible changes:
 
-1. **The service worker is killed aggressively.** iOS especially suspends the SW within seconds of the app being backgrounded. Our 60-second `setInterval(registration.update)` only fires while the SW thread is alive — on a Home Screen app it almost never gets the chance to run before the OS suspends it.
-2. **Standalone mode has its own HTTP cache layer.** Even with `NetworkFirst` on navigations, iOS standalone aggressively serves the precached `index.html` shell on cold launch before any network request is issued, then the JS bundle hashes inside it point at old chunks that are still in the precache.
-3. **`controllerchange` never fires on cold launch.** Our auto-reload only runs when a *running* tab sees a new SW take control. A Home Screen app cold-launches into the new SW already in control → no `controllerchange` event → no reload → user sees the shell that the new SW activated from precache, which is the *previous* build's `index.html`.
-4. **`clientsClaim` + precached HTML is the trap.** The new SW activates, claims the client, and immediately serves the precached old `index.html` from the previous deploy because precache entries beat `NetworkFirst` for the document request on the very first navigation of a cold launch.
-5. **`start_url: /dashboard` is auth-gated.** When the auth redirect kicks in, the SW serves the cached fallback for that route, compounding the staleness.
+1. **The nudge counts apples; the filter checks oranges.**
+   - The "11 videos are throttled" count comes from `useVideoConfidenceMap` and counts videos whose locally-computed `ConfidenceTier === 'needs_work'` (score < 70). See `src/lib/videoConfidence.ts:86` and `src/components/owner/OwnerCoachingNudge.tsx:40`.
+   - The handler `filterThrottled` in `VideoLibraryManager.tsx:155` just calls `setShowOnlyIncomplete(true)`.
+   - But `visibleVideos` (line 108-114) filters by `readinessMap.get(v.id)?.is_ready === false` — a totally different signal (from `useVideoReadiness`, server-side row).
+   - These three concepts (`needs_work` confidence tier, `distribution_tier === 'throttled'` from `library_videos`, and `is_ready` from readiness rows) are **not equivalent**. The nudge can say "11 throttled" while `is_ready=false` matches 0 videos — so the list either doesn't change or shows the wrong subset.
 
-Net effect: installed users stay on whatever build they had when they installed, sometimes for weeks.
+2. **No tab switch.** If the owner is on the Tags / Analytics / Hammer Suggestions tab when they click "Fix now", the Videos tab is never activated. State flips silently, owner sees no change.
+
+3. **No scroll.** Even on the Videos tab, the filter toggle doesn't scroll the list into view, and the Videos tab counter just changes from `(N)` to `(M / N)` — easy to miss.
+
+4. **No toast / no confirmation.** Click → silent state mutation → owner thinks the button is broken.
+
+5. **No way back.** Even if the filter does engage, there's no obvious "Show all" affordance besides re-toggling the (small) Health Strip filter pill.
 
 ## Fix
 
-Three coordinated changes:
+Make "Fix now" a real, observable action that filters to **actually-throttled videos** and takes the owner straight to the work.
 
-### 1. Stop precaching `index.html`; always fetch it from the network on launch
+### 1. Add a dedicated "throttled-only" filter mode
 
-`vite.config.ts`
-- Remove `html` from `globPatterns` so `index.html` is **never** in the precache manifest.
-  ```ts
-  globPatterns: ['**/*.{js,css}']
-  ```
-- Remove `navigateFallback: 'index.html'` (it forces precached-shell fallback even when network is available — fatal for standalone).
-- Keep the `NetworkFirst` runtime cache for navigations, but lower `networkTimeoutSeconds` to `2` and reduce `maxAgeSeconds` to `60 * 60` (1h) so even offline launches recover quickly once back online.
-- Add an explicit `'no-store'` `runtimeCaching` entry for `/version.json` (next bullet).
+`src/components/owner/VideoLibraryManager.tsx`
+- Replace the binary `showOnlyIncomplete: boolean` with a small union: `videoFilter: 'all' | 'incomplete' | 'throttled'` (keep `setShowOnlyIncomplete` as a thin wrapper for the existing Health Strip pill so we don't break it).
+- Update `visibleVideos` so:
+  - `'incomplete'` → existing `is_ready === false` behavior (unchanged).
+  - `'throttled'` → `normalizeTier((video as any).distribution_tier) === 'throttled'`. This is the **same** signal the per-card "Throttled" badge already uses (see line 217), so what the nudge promises is what the owner sees.
+- The Videos tab count label updates to `Videos (visible / total · filter: throttled)` so the active filter is obvious.
 
-### 2. Add a build-version probe + forced reload on cold launch
+### 2. Rewire `filterThrottled` to do all four things
 
-This is the only reliable way to catch the standalone "SW already in control of stale shell" case.
+`src/components/owner/VideoLibraryManager.tsx`
+```ts
+const filterThrottled = () => {
+  setVideoFilter('throttled');
+  // Switch to the Videos tab if not already there
+  setActiveTab('videos');
+  // Scroll the list into view on next paint
+  requestAnimationFrame(() => {
+    document.getElementById('owner-video-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  // Confirm the action so the owner knows the click registered
+  toast({
+    title: 'Filtered to throttled videos',
+    description: 'Open each one and use Quick Fix to restore reach.',
+  });
+};
+```
+- Convert the `<Tabs defaultValue="videos">` to a controlled `<Tabs value={activeTab} onValueChange={setActiveTab}>` so the programmatic switch actually happens.
+- Add `id="owner-video-list"` to the wrapper around `visibleVideos.map(...)`.
 
-**Build-time:**
-- Generate `public/version.json` at build time containing the current commit/build hash. We already use Vite — emit it via a tiny vite plugin in `vite.config.ts`:
-  ```ts
-  {
-    name: 'emit-version',
-    generateBundle() {
-      this.emitFile({
-        type: 'asset',
-        fileName: 'version.json',
-        source: JSON.stringify({ build: Date.now().toString(36) }),
-      });
-    },
-  }
-  ```
-- Inline the same `__BUILD_ID__` constant into the bundle via `define`:
-  ```ts
-  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) }
-  ```
+### 3. Fix the count consistency so the nudge's number matches the filter's result
 
-**Runtime (`src/registerSW.ts`):**
-- On every app launch *and* on `visibilitychange → visible` (this is what fires when a user re-opens the Home Screen app), `fetch('/version.json', { cache: 'no-store' })` and compare to `__BUILD_ID__`.
-- If they differ:
-  1. Unregister all SWs.
-  2. `caches.keys()` → delete every cache.
-  3. Set the `__sw_reloaded_once` flag.
-  4. `location.reload()` (gated by the existing `isUserBusy` check).
-- This bypasses the SW lifecycle entirely and works even when the SW thread is suspended.
+`src/components/owner/OwnerCoachingNudge.tsx`
+- Today the nudge counts `confidenceMap` `tier === 'needs_work'`. The filter target is `distribution_tier === 'throttled'`. These can diverge.
+- Switch the nudge to read `distribution_tier` directly (it's already on `library_videos` and already in the `videos` query result that `VideoLibraryManager` fetches). Pass a `throttledCount` prop from `VideoLibraryManager` instead of recomputing inside the nudge. Single source of truth → the "11 videos" claim and the filtered list always agree.
+- Lower the threshold to `>= 1` (currently `>= 3`): if even one video is throttled, the owner should know.
 
-### 3. Make the kill-switch path safer
+### 4. Add a clear empty/active-filter state on the Videos tab
 
-`src/registerSW.ts`
-- On `activate` of a new SW (detected via `wb.addEventListener('activated', …)`), proactively `caches.delete('html-shell')` so the next navigation must hit the network for `index.html`.
-- Reduce the polling interval from 60s → 30s for foreground tabs (cheap; helps browser users too).
-- Add a `pageshow` listener (fires on iOS when the standalone app is restored from the bfcache after being backgrounded) that triggers the version probe immediately.
+`src/components/owner/VideoLibraryManager.tsx`
+- When `videoFilter === 'throttled'`:
+  - If `visibleVideos.length === 0`: show a small success card — "No throttled videos. You're clear." — with a "Show all" button that resets the filter.
+  - If `> 0`: render a sticky filter chip at the top of the list — "Showing throttled only · [Show all]" — so the owner can always escape.
 
-### 4. Manifest tweak (defensive)
+### 5. Make Quick Fix the obvious next step on each throttled card
 
-`public/manifest.json`
-- Change `start_url` from `/dashboard` to `/dashboard?source=pwa` and add `"id": "/"`. This won't help already-installed users (manifest fields are pinned at install time per OS-level PWA rules), but ensures **future** installs have a stable, non-auth-redirected `start_url` that the SW can match cleanly.
-
-### 5. Existing-installed-user recovery (one-time)
-
-For users already on an old build, the version-probe in step 2 is what rescues them — on their next cold launch of the Home Screen app, the probe runs *before* React renders anything meaningful, sees a build mismatch, nukes caches, unregisters the SW, and reloads into the fresh bundle. After that one self-healing reload, all subsequent updates flow through the new auto-update path.
+`src/components/owner/VideoLibraryManager.tsx`
+- Throttled cards already render `SYSTEM_TONE.throttledOwnerCard` text (line 255). Add a primary "Quick Fix" button right next to it that calls the existing `openQuickFix(video, 'auto_suggest')`. This wires the nudge → filter → fix loop end-to-end in two clicks.
 
 ---
 
@@ -79,24 +76,25 @@ For users already on an old build, the version-probe in step 2 is what rescues t
 
 | File | Change |
 |------|--------|
-| `vite.config.ts` | Remove HTML from precache; drop `navigateFallback`; add `version.json` emit plugin; add `__BUILD_ID__` define; add `no-store` runtime cache for `/version.json` |
-| `src/registerSW.ts` | Add `version.json` probe on launch + visibility/pageshow; nuke caches & SW on mismatch; clear `html-shell` cache on SW `activated`; tighten polling to 30s |
-| `public/manifest.json` | `start_url` → `/dashboard?source=pwa`; add `"id": "/"` |
-| `src/vite-env.d.ts` | Declare `const __BUILD_ID__: string` |
+| `src/components/owner/VideoLibraryManager.tsx` | New `videoFilter` state; controlled Tabs; `filterThrottled` switches tab, scrolls, toasts; pass `throttledCount` to nudge; sticky filter chip + Quick Fix button |
+| `src/components/owner/OwnerCoachingNudge.tsx` | Accept `throttledCount` prop instead of recomputing; lower threshold; same wording |
+| (optional) `src/components/owner/LibraryHealthStrip.tsx` | If it reads `showOnlyIncomplete`, point it at the new state shape |
 
-No DB, edge function, or feature-code changes.
+No DB, RPC, or edge-function changes. No migrations.
 
-## How it will behave after this ships
+## Behavior after the fix
 
-1. You publish.
-2. A user with the Home Screen app re-opens it (cold launch *or* foreground after background).
-3. Within ~1 second, the version probe fetches `/version.json` (no-store, ~200 bytes), sees a mismatch with their bundled `__BUILD_ID__`.
-4. Caches and SW are wiped, the page silently reloads, and the new bundle loads from the network.
-5. A small "Updated to latest version" toast confirms the refresh.
-6. Future updates continue flowing through the same self-healing path automatically.
+1. Owner sees: *"11 videos are throttled — fix now to restore reach."*
+2. Click **Fix now** →
+   - Tab switches to **Videos** if not already there.
+   - List filters to exactly the 11 videos with `distribution_tier === 'throttled'`.
+   - Page smooth-scrolls to the list.
+   - Toast confirms: *"Filtered to throttled videos."*
+   - Sticky chip at the top of the list shows the active filter with a one-click **Show all** escape.
+3. Each throttled card shows a **Quick Fix** button that opens the editor with auto-suggest pre-armed.
+4. Save in the editor → `recompute_library_video_tier` trigger fires → `distribution_tier` flips off `throttled` → the card drops out of the filtered list → counter ticks down → done.
 
 ## Risks
 
-- **Extra request per launch**: One ~200-byte `version.json` fetch per app launch and per tab-visibility-change. Negligible.
-- **Offline cold launch**: Without `navigateFallback: index.html`, a user launching the Home Screen app while fully offline will see the browser offline page. Acceptable trade-off — and the `NetworkFirst` runtime cache still serves the last good `index.html` for up to 1h, covering almost all real-world offline cases.
-- **Reload loop**: The existing `__sw_reloaded_once` sessionStorage flag prevents loops; the version probe additionally checks that the *new* `__BUILD_ID__` doesn't equal the *just-fetched* version before reloading.
+- Tabs becoming controlled could regress if other code calls `document.querySelector('[data-value="upload"]').click()` — there's one such call in the empty-state CTA (line 204). Replaced with `setActiveTab('upload')` in the same edit.
+- Anyone else reading `showOnlyIncomplete` directly: only the Health Strip uses it; updated in lockstep.

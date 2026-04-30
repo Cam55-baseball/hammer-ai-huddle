@@ -53,6 +53,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 function ReadinessBadge({ r }: { r?: VideoReadiness }) {
   if (!r) return null;
@@ -82,6 +83,8 @@ function ReadinessBadge({ r }: { r?: VideoReadiness }) {
   );
 }
 
+type VideoFilter = 'all' | 'incomplete' | 'throttled';
+
 export function VideoLibraryManager() {
   const { isOwner } = useOwnerAccess();
   const qc = useQueryClient();
@@ -89,7 +92,8 @@ export function VideoLibraryManager() {
   const [editTarget, setEditTarget] = useState<LibraryVideo | null>(null);
   const [editFocus, setEditFocus] = useState<string | undefined>(undefined);
   const [editAutoSuggest, setEditAutoSuggest] = useState(false);
-  const [showOnlyIncomplete, setShowOnlyIncomplete] = useState(false);
+  const [videoFilter, setVideoFilter] = useState<VideoFilter>('all');
+  const [activeTab, setActiveTab] = useState<string>('videos');
   const [backfillOpen, setBackfillOpen] = useState(false);
   const [confirmCloseEdit, setConfirmCloseEdit] = useState(false);
   // Phase 9 — conversion modal state (no DB writes, no ranking impact).
@@ -105,13 +109,32 @@ export function VideoLibraryManager() {
 
   const readinessMap = useMemo(() => readinessByVideoId(readinessRows), [readinessRows]);
 
+  // Source of truth for "throttled" — same signal the per-card badge & DB tier use.
+  const throttledCount = useMemo(
+    () => videos.filter(v => normalizeTier((v as any).distribution_tier) === 'throttled').length,
+    [videos],
+  );
+
   const visibleVideos = useMemo(() => {
-    if (!showOnlyIncomplete) return videos;
+    if (videoFilter === 'all') return videos;
+    if (videoFilter === 'throttled') {
+      return videos.filter(v => normalizeTier((v as any).distribution_tier) === 'throttled');
+    }
+    // 'incomplete'
     return videos.filter(v => {
       const r = readinessMap.get(v.id);
       return r && !r.is_ready;
     });
-  }, [videos, showOnlyIncomplete, readinessMap]);
+  }, [videos, videoFilter, readinessMap]);
+
+  // Back-compat for LibraryHealthStrip's binary toggle.
+  const showOnlyIncomplete = videoFilter === 'incomplete';
+  const setShowOnlyIncomplete = (next: boolean | ((prev: boolean) => boolean)) => {
+    const desired = typeof next === 'function'
+      ? (next as (p: boolean) => boolean)(showOnlyIncomplete)
+      : next;
+    setVideoFilter(desired ? 'incomplete' : 'all');
+  };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -151,8 +174,17 @@ export function VideoLibraryManager() {
     setEditTarget(video);
   };
 
-  // Filter to throttled-only used by coaching nudge "Fix now" CTA.
-  const filterThrottled = () => setShowOnlyIncomplete(true);
+  // Coaching nudge "Fix now" CTA — must produce a visible, observable result.
+  const filterThrottled = () => {
+    setVideoFilter('throttled');
+    setActiveTab('videos');
+    requestAnimationFrame(() => {
+      document.getElementById('owner-video-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    toast.success('Filtered to throttled videos', {
+      description: 'Open each one and use Quick Fix to restore reach.',
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -172,7 +204,7 @@ export function VideoLibraryManager() {
         </div>
       </div>
 
-      <OwnerCoachingNudge onFixThrottled={filterThrottled} />
+      <OwnerCoachingNudge throttledCount={throttledCount} onFixThrottled={filterThrottled} />
 
       <OwnerTaggingPerformancePanel />
 
@@ -182,9 +214,12 @@ export function VideoLibraryManager() {
         filterActive={showOnlyIncomplete}
       />
 
-      <Tabs defaultValue="videos">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="videos">Videos ({visibleVideos.length}{showOnlyIncomplete ? ` / ${videos.length}` : ''})</TabsTrigger>
+          <TabsTrigger value="videos">
+            Videos ({visibleVideos.length}{videoFilter !== 'all' ? ` / ${videos.length}` : ''})
+            {videoFilter !== 'all' && <span className="ml-1 text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">· {videoFilter}</span>}
+          </TabsTrigger>
           <TabsTrigger value="upload"><Plus className="h-3.5 w-3.5 mr-1" /> Add</TabsTrigger>
           <TabsTrigger value="tags"><Tags className="h-3.5 w-3.5 mr-1" /> Tags</TabsTrigger>
           <TabsTrigger value="taxonomy"><Network className="h-3.5 w-3.5 mr-1" /> Taxonomy</TabsTrigger>
@@ -194,14 +229,30 @@ export function VideoLibraryManager() {
         </TabsList>
 
         <TabsContent value="videos" className="space-y-3 mt-4">
+          {videoFilter !== 'all' && (
+            <Card className="p-2.5 flex items-center justify-between gap-2 border-amber-500/30 bg-amber-500/5">
+              <p className="text-xs">
+                Showing <span className="font-semibold capitalize">{videoFilter}</span> only — {visibleVideos.length} of {videos.length}
+              </p>
+              <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setVideoFilter('all')}>
+                Show all
+              </Button>
+            </Card>
+          )}
+          <div id="owner-video-list" className="space-y-3">
           {visibleVideos.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
-              {showOnlyIncomplete ? (
+              {videoFilter === 'throttled' ? (
+                <div className="space-y-3">
+                  <p>No throttled videos. You're clear.</p>
+                  <Button size="sm" variant="outline" onClick={() => setVideoFilter('all')}>Show all</Button>
+                </div>
+              ) : videoFilter === 'incomplete' ? (
                 <p>All videos are engine-ready. Toggle the filter to see them all.</p>
               ) : (
                 <>
                   <p>No videos yet. Add your first video to get started.</p>
-                  <Button className="mt-3" onClick={() => document.querySelector<HTMLButtonElement>('[data-value="upload"]')?.click()}>
+                  <Button className="mt-3" onClick={() => setActiveTab('upload')}>
                     <Plus className="h-4 w-4 mr-2" /> Add Video
                   </Button>
                 </>
@@ -251,9 +302,20 @@ export function VideoLibraryManager() {
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
                       {isThrottled && (
-                        <p className="mt-1.5 text-[11px] text-destructive font-medium">
-                          {SYSTEM_TONE.throttledOwnerCard}
-                        </p>
+                        <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                          <p className="text-[11px] text-destructive font-medium">
+                            {SYSTEM_TONE.throttledOwnerCard}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-[11px] gap-1"
+                            onClick={() => openQuickFix(video, 'auto_suggest')}
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            Quick Fix
+                          </Button>
+                        </div>
                       )}
                       {isOwner && cta && !isThrottled && action && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
@@ -318,6 +380,7 @@ export function VideoLibraryManager() {
               );
             })
           )}
+          </div>
         </TabsContent>
 
         <TabsContent value="upload" className="mt-4">
