@@ -97,11 +97,12 @@ Deno.serve(async (req) => {
       throw videoError;
     }
 
-    // --- Practice sessions query ---
+    // --- Practice sessions query (Players Club is video-only going forward; only legacy entries appear) ---
     let practiceQuery = supabase
       .from('performance_sessions')
-      .select('id, user_id, sport, session_type, session_date, module, drill_blocks, notes, composite_indexes, coach_grade, created_at, season_context')
+      .select('id, user_id, sport, session_type, session_date, module, drill_blocks, notes, composite_indexes, coach_grade, created_at, season_context, legacy_in_players_club')
       .eq('user_id', targetUserId)
+      .eq('legacy_in_players_club', true)
       .is('deleted_at', null)
       .order('session_date', { ascending: false });
 
@@ -112,12 +113,13 @@ Deno.serve(async (req) => {
       throw practiceError;
     }
 
-    // --- Completed games query ---
+    // --- Completed games query (Players Club is video-only going forward; only legacy entries appear) ---
     let gameQuery = supabase
       .from('games')
-      .select('id, user_id, sport, team_name, opponent_name, game_type, league_level, game_date, venue, total_innings, lineup, game_summary, game_mode, is_practice_game, status, created_at')
+      .select('id, user_id, sport, team_name, opponent_name, game_type, league_level, game_date, venue, total_innings, lineup, game_summary, game_mode, is_practice_game, status, created_at, legacy_in_players_club')
       .eq('user_id', targetUserId)
       .eq('status', 'completed')
+      .eq('legacy_in_players_club', true)
       .order('game_date', { ascending: false });
 
     const { data: gameData, error: gameError } = await gameQuery;
