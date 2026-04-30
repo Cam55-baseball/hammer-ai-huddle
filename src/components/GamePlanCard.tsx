@@ -2490,16 +2490,79 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             handleDetailClose(false);
           }
         }}
+        isCoachSent={!!selectedTaskCoachOrigin}
+        coachName={selectedTaskCoachOrigin?.senderName}
         onDeleteActivity={
           selectedCustomTask?.taskType === 'custom' &&
           selectedCustomTask?.customActivityData?.template?.id &&
           !selectedCustomTask?.folderItemData
             ? async () => {
                 const templateId = selectedCustomTask.customActivityData!.template.id;
+                const templateTitle = selectedCustomTask.customActivityData!.template.title || 'Activity';
+                // Snapshot the coach origin BEFORE the dialog state resets, so the
+                // notification + Undo handler can still reference it after delete.
+                const coachOrigin = selectedTaskCoachOrigin;
                 const ok = await deleteActivityTemplate(templateId);
-                if (ok) {
-                  refreshCustomActivities();
-                  refetch();
+                if (!ok) return;
+                refreshCustomActivities();
+                refetch();
+
+                // Notify the original coach (if any) — non-blocking, never rolls back the delete.
+                if (coachOrigin && user) {
+                  try {
+                    const playerName =
+                      (user.user_metadata as { full_name?: string } | null)?.full_name ||
+                      user.email ||
+                      'A player';
+                    const removedAt = new Date();
+                    await supabase.from('coach_notifications').insert({
+                      coach_user_id: coachOrigin.senderId,
+                      sender_user_id: user.id,
+                      notification_type: 'activity_removed',
+                      title: `${playerName} removed an activity from their Game Plan`,
+                      message: `"${templateTitle}" • Removed ${removedAt.toLocaleString()}`,
+                      template_snapshot: coachOrigin.templateSnapshot ?? undefined,
+                    });
+                  } catch (err) {
+                    console.error('[GamePlan] Failed to notify coach of activity removal:', err);
+                  }
+
+                  // Toast with Undo — restoring also notifies the coach so history stays accurate.
+                  toast.success(
+                    t('customActivity.detail.deletedWithCoachNotice', 'Activity deleted. {{coach}} was notified.', {
+                      coach: coachOrigin.senderName,
+                    }),
+                    {
+                      action: {
+                        label: t('common.undo', 'Undo'),
+                        onClick: async () => {
+                          try {
+                            await supabase
+                              .from('custom_activity_templates')
+                              .update({ deleted_at: null, deleted_permanently_at: null })
+                              .eq('id', templateId);
+                            refreshCustomActivities();
+                            refetch();
+                            const playerName2 =
+                              (user.user_metadata as { full_name?: string } | null)?.full_name ||
+                              user.email ||
+                              'A player';
+                            await supabase.from('coach_notifications').insert({
+                              coach_user_id: coachOrigin.senderId,
+                              sender_user_id: user.id,
+                              notification_type: 'activity_restored',
+                              title: `${playerName2} restored an activity to their Game Plan`,
+                              message: `"${templateTitle}" • Restored ${new Date().toLocaleString()}`,
+                              template_snapshot: coachOrigin.templateSnapshot ?? undefined,
+                            });
+                            toast.success(t('customActivity.restored', 'Activity restored'));
+                          } catch (err) {
+                            console.error('[GamePlan] Failed to undo delete:', err);
+                          }
+                        },
+                      },
+                    }
+                  );
                 }
               }
             : undefined
