@@ -1,77 +1,84 @@
 
-# Cross-Session Linking — Follow-up Fixes
+# AB Link — Long-practice support
 
-Close the two remaining holes from the last pass:
+Two changes that work together:
 
-1. **#2 silent-failure gap** — `attach_session_to_link` returns `void` and silently `RETURN`s in 4 cases (link missing, wrong status, uniqueness conflict, user not a participant). The current client only catches *thrown* errors, so the user can see "Linked" while the DB never attached them.
-2. **#6 flicker** — `useAbLinkStatus` starts with `status: 'unknown'`, so a freshly-generated code briefly shows the idle "Generate / Join" panel for ~100ms before snapping to the linked view.
+1. **Extend button + 10-min toast warning** — never lose a link silently mid-practice.
+2. **Expired-recovery banner** on the session summary — when an attach fails because the link expired, the session still saves and the user gets a clear path forward.
 
-## 1. Confirm-on-attach (kills silent failures)
+## 1. `extend_ab_link` RPC
 
-Add a verification read after every `attach_session_to_link` call. If the row's session column for the current user is still NULL, treat as failure even though no error was thrown.
+New SECURITY DEFINER function:
 
-**New helper** in `src/pages/PracticeHub.tsx` (and reused for retry):
-
-```ts
-async function attachAndVerify(sessionId: string, code: string, userId: string) {
-  const { error } = await supabase.rpc('attach_session_to_link' as any, {
-    p_user_id: userId,
-    p_link_code: code,
-    p_session_id: sessionId,
-  });
-  if (error) throw error;
-
-  const { data: row, error: readErr } = await supabase
-    .from('live_ab_links' as any)
-    .select('creator_user_id, joiner_user_id, creator_session_id, joiner_session_id, status')
-    .eq('link_code', code)
-    .maybeSingle();
-  if (readErr) throw readErr;
-  if (!row) throw new Error('Link no longer exists.');
-
-  const isCreator = row.creator_user_id === userId;
-  const isJoiner = row.joiner_user_id === userId;
-  if (!isCreator && !isJoiner) throw new Error('You are not a participant on this link.');
-
-  const mySessionId = isCreator ? row.creator_session_id : row.joiner_session_id;
-  if (mySessionId !== sessionId) {
-    // Most common silent cause: another session already occupies this slot,
-    // link expired between claim and save, or wrong status.
-    throw new Error('Link could not be attached (slot already taken or link expired).');
-  }
-  return { confirmed: true, status: row.status as string };
-}
+```sql
+CREATE OR REPLACE FUNCTION public.extend_ab_link(p_user_id uuid, p_link_code text)
+RETURNS SETOF live_ab_links
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  RETURN QUERY
+  UPDATE public.live_ab_links
+  SET expires_at = now() + interval '2 hours'
+  WHERE link_code = p_link_code
+    AND status IN ('pending', 'claimed')
+    AND (creator_user_id = p_user_id OR joiner_user_id = p_user_id)
+  RETURNING *;
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.extend_ab_link(uuid, text) TO authenticated;
 ```
 
-**Wire in `handleSaveSession`:** replace the bare RPC + `console.error` with `attachAndVerify`. On thrown error → set `linkAttachError`, destructive toast, but session save itself stays committed.
+Idempotent. Won't touch `linked` or `expired` rows. Realtime push delivers the new `expires_at` to the partner's panel automatically.
 
-**Wire the Retry button** to call the same helper. On success: clear `linkAttachError` AND set a `linkAttachConfirmed` flag for the summary to render the green "Session Linked" indicator. Only show "Session Linked" when `linkAttachConfirmed === true`, not when `linkAttachError == null`.
+## 2. Always-on escalating countdown
 
-## 2. Kill the linked-view flicker
+Replace the current 15-min gate in `LiveAbLinkPanel.useCountdown` with continuous output:
 
-In `src/components/practice/LiveAbLinkPanel.tsx`, the showLinkedView gate currently requires `linkState.status !== 'unknown'`. While loading, the panel falls back to the idle Generate/Join UI.
+| Time left | Tone | Text |
+|---|---|---|
+| > 30 min | muted | `1h 23m left` |
+| ≤ 30 min | amber | `27m left` |
+| ≤ 5 min | destructive (pulse) | `4m left` |
+| ≤ 0 | destructive | `Expired` |
 
-Fix: when we have a `generatedCode`, render the linked shell immediately and show a skeleton badge during `linkState.loading`. New gate:
+Chip lives next to the status badge for the entire link lifetime, not just the last 15 min.
 
-```ts
-const showLinkedView = !!generatedCode;
-// in the badge slot:
-{linkState.loading
-  ? <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">Checking…</Badge>
-  : <Badge variant="outline" className={`text-[10px] ${label.className}`}>{label.text}</Badge>}
-```
+## 3. One-time 10-min "expiring soon" toast
 
-Disable Unlink while `linkState.loading` so the user can't fire an RPC against an unknown row.
+Inside `LiveAbLinkPanel`, when minutes-left transitions from `> 10` to `≤ 10` for the first time per `link_code`, fire one persistent toast:
 
-## 3. Acceptance
+- Title: "AB Link expiring soon"
+- Description: "Your link AB-XXXXX expires in 10 minutes."
+- Action button: **Extend 2h** → calls `supabase.rpc('extend_ab_link', ...)`
+- `duration: 0` (persistent until dismissed or extended)
+- Tracked in `useRef<Set<string>>` so it can't fire twice for the same code.
 
-- Saving a session against a link that's already in `expired` state OR has the partner's slot taken produces a destructive toast + Retry button — no false "Session Linked." Verified by manually `UPDATE live_ab_links SET status='expired'` mid-flight.
-- Retry on a still-valid link confirms via the read-back and flips the summary to "Session Linked."
-- Generating a fresh code never shows the idle Generate/Join panel between click and badge — the linked shell appears immediately with a "Checking…" badge that resolves to "Waiting for partner."
+A second one-time toast at `≤ 1 min` with the same Extend action.
+
+## 4. Inline Extend button on the panel
+
+When status is `pending` or `claimed` AND minutes-left ≤ 30, show a small "Extend 2h" button next to Unlink. Clicking it calls `extend_ab_link`, toast on success/failure, no other state mutation needed (realtime updates the row).
+
+## 5. Expired-recovery banner on session summary
+
+In `PracticeHub.tsx`, when `attachAndVerify` throws and the verification read returned `status = 'expired'`, set a new `linkExpired: true` flag on `linkAttachError`. The summary then renders a different banner:
+
+- Title: "Link expired before save"
+- Body: "Your practice was saved. The AB link AB-XXXXX expired before both partners could finalize. Generate a new code from your next session if you want to link with this partner again."
+- No Retry button (extending an expired link is not allowed by the RPC by design — surfaces "Generate New" path instead).
+
+For the *non-expired* failure case (slot conflict, RPC error, etc.), the existing destructive banner with **Retry Link** stays as-is.
 
 ## Files
 
-- `src/pages/PracticeHub.tsx` — add `attachAndVerify`, replace existing attach calls (initial save + retry), add `linkAttachConfirmed` state, gate "Session Linked" UI on it.
-- `src/components/practice/LiveAbLinkPanel.tsx` — `showLinkedView = !!generatedCode`, skeleton badge during `linkState.loading`, disable Unlink while loading.
+- `supabase/migrations/<timestamp>_ab_link_extend.sql` — `extend_ab_link` RPC + GRANT.
+- `src/components/practice/LiveAbLinkPanel.tsx` — rewrite `useCountdown`, add Extend button, fire 10-min and 1-min toasts.
+- `src/pages/PracticeHub.tsx` — surface `linkExpired` flag on the summary error banner; differentiate copy + actions.
 
-No DB changes. No new RPCs. No edge function changes.
+No edge function changes. No client-side polling — all driven by realtime + the existing 30s tick in `useCountdown`.
+
+## Acceptance
+
+- A link generated 1h 50m ago shows `10m left` in amber and triggers a persistent toast with **Extend 2h**. Tapping it bumps `expires_at` by 2h and the chip resets to `2h 0m left`. Both creator and partner see the update without refresh.
+- A link allowed to expire and then attached at save time shows the Expired-recovery banner — no Retry button, just guidance.
+- A link that fails to attach for any other reason (slot taken, RPC error) still shows the original Retry banner.
+- `extend_ab_link` is a no-op on `linked` or `expired` rows (verified by manual SQL).
