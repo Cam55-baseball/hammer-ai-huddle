@@ -193,6 +193,10 @@ interface CustomActivityDetailDialogProps {
   onSkipTask?: () => void;
   /** Permanently remove this custom activity (soft-delete to Recently Deleted). */
   onDeleteActivity?: () => Promise<void> | void;
+  /** True when this activity originated from a coach (player accepted a coach-sent activity). */
+  isCoachSent?: boolean;
+  /** Display name of the coach who originally sent this activity. */
+  coachName?: string;
   onSavePerformanceData?: (data: any) => Promise<void>;
   /** Partial completion: persist current progress, mark complete, do NOT auto-check remaining boxes */
   onDone?: () => Promise<void> | void;
