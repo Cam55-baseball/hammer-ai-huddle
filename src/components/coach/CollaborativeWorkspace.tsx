@@ -78,7 +78,7 @@ export function CollaborativeWorkspace() {
         .from('coach_notifications')
         .select('id, sender_user_id, title, message, is_read, created_at, template_snapshot, notification_type')
         .eq('coach_user_id', user.id)
-        .in('notification_type', ['card_shared', 'activity_removed', 'activity_restored'])
+        .in('notification_type', ['card_shared', 'activity_removed', 'activity_restored', 'folder_removed'])
         .order('created_at', { ascending: false })
         .limit(15);
 
@@ -284,13 +284,20 @@ export function CollaborativeWorkspace() {
               {notifications.map(n => {
                 const isRemoved = n.notification_type === 'activity_removed';
                 const isRestored = n.notification_type === 'activity_restored';
-                const verb = isRemoved ? ' removed ' : isRestored ? ' restored ' : ' shared ';
-                const accentClass = isRemoved
+                const isFolderRemoved = n.notification_type === 'folder_removed';
+                const verb = isRemoved
+                  ? ' removed '
+                  : isRestored
+                    ? ' restored '
+                    : isFolderRemoved
+                      ? ' removed folder '
+                      : ' shared ';
+                const accentClass = isRemoved || isFolderRemoved
                   ? 'text-destructive'
                   : isRestored
                     ? 'text-amber-500'
                     : 'text-primary';
-                const unreadBg = isRemoved
+                const unreadBg = isRemoved || isFolderRemoved
                   ? 'bg-destructive/5 border border-destructive/30'
                   : isRestored
                     ? 'bg-amber-500/5 border border-amber-500/30'
