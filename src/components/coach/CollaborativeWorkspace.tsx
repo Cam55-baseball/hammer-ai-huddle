@@ -23,6 +23,7 @@ interface CoachNotification {
   message: string | null;
   is_read: boolean;
   created_at: string;
+  notification_type: string;
   sender_name?: string;
   template_snapshot?: Json | null;
 }
@@ -75,11 +76,11 @@ export function CollaborativeWorkspace() {
     const fetchNotifications = async () => {
       const { data } = await supabase
         .from('coach_notifications')
-        .select('id, sender_user_id, title, message, is_read, created_at, template_snapshot')
+        .select('id, sender_user_id, title, message, is_read, created_at, template_snapshot, notification_type')
         .eq('coach_user_id', user.id)
-        .eq('notification_type', 'card_shared')
+        .in('notification_type', ['card_shared', 'activity_removed', 'activity_restored'])
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(15);
 
       if (data && data.length > 0) {
         const senderIds = [...new Set(data.map(n => n.sender_user_id))];
@@ -280,34 +281,47 @@ export function CollaborativeWorkspace() {
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                 <Bell className="h-3 w-3" /> Shared Activities
               </p>
-              {notifications.map(n => (
-                <div
-                  key={n.id}
-                  className={`flex items-center gap-2 text-xs p-2 rounded-md cursor-pointer hover:bg-primary/10 transition-colors ${
-                    !n.is_read
-                      ? 'bg-primary/5 border border-primary/20'
-                      : 'bg-muted/30 border border-border'
-                  }`}
-                  onClick={() => {
-                    if (n.template_snapshot) {
-                      setViewingTemplate(n.template_snapshot as unknown as CustomActivityTemplate);
-                    } else {
-                      toast.info('This activity was shared before full data capture was available. Ask the player to re-share it.');
-                    }
-                  }}
-                >
-                  <Bell className="h-3 w-3 text-primary flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium">{n.sender_name}</span>
-                    <span className="text-muted-foreground"> shared </span>
-                    <span className="font-medium">"{n.title}"</span>
+              {notifications.map(n => {
+                const isRemoved = n.notification_type === 'activity_removed';
+                const isRestored = n.notification_type === 'activity_restored';
+                const verb = isRemoved ? ' removed ' : isRestored ? ' restored ' : ' shared ';
+                const accentClass = isRemoved
+                  ? 'text-destructive'
+                  : isRestored
+                    ? 'text-amber-500'
+                    : 'text-primary';
+                const unreadBg = isRemoved
+                  ? 'bg-destructive/5 border border-destructive/30'
+                  : isRestored
+                    ? 'bg-amber-500/5 border border-amber-500/30'
+                    : 'bg-primary/5 border border-primary/20';
+                return (
+                  <div
+                    key={n.id}
+                    className={`flex items-center gap-2 text-xs p-2 rounded-md cursor-pointer hover:bg-primary/10 transition-colors ${
+                      !n.is_read ? unreadBg : 'bg-muted/30 border border-border'
+                    }`}
+                    onClick={() => {
+                      if (n.template_snapshot) {
+                        setViewingTemplate(n.template_snapshot as unknown as CustomActivityTemplate);
+                      } else {
+                        toast.info('This activity was shared before full data capture was available. Ask the player to re-share it.');
+                      }
+                    }}
+                  >
+                    <Bell className={`h-3 w-3 flex-shrink-0 ${accentClass}`} />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium">{n.sender_name}</span>
+                      <span className="text-muted-foreground">{verb}</span>
+                      <span className="font-medium">"{n.title}"</span>
+                    </div>
+                    <Eye className={`h-3 w-3 flex-shrink-0 ${accentClass}`} />
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                      {format(new Date(n.created_at), 'MMM d')}
+                    </span>
                   </div>
-                  <Eye className="h-3 w-3 text-primary flex-shrink-0" />
-                  <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                    {format(new Date(n.created_at), 'MMM d')}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

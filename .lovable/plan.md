@@ -1,41 +1,68 @@
-## Add "Delete Activity" button to custom activities in Game Plan
+## Allow deleting coach-sent activities from the Game Plan + notify the coach
 
-When a user opens a custom activity from the Game Plan (the `CustomActivityDetailDialog`), they currently can Complete, Edit, Skip for Today, or Send to Coach — but there is no way to delete the activity from this entry point. Today, deletion is only reachable from the My Activities management screen. This plan adds a Delete button directly to the dialog opened from the Game Plan.
+Currently the "Delete Activity" button in `CustomActivityDetailDialog` is shown only for self-created standalone custom activity templates — coach-sent activities (those a player accepted from a coach) are excluded. This plan extends deletion to coach-sent activities and notifies the original sender (coach) when the player deletes the activity.
 
 ### Behavior
 
-- New "Delete Activity" button appears in the dialog's action footer, below the existing Skip / Send to Coach row.
-- Styled as a destructive outline button (red) so it is clearly separated from positive actions.
-- Click opens a confirmation `AlertDialog` ("Delete this activity? It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.").
-- On confirm: performs a **soft delete** (consistent with the rest of the app — sets `deleted_at` on `custom_activity_templates`), closes the dialog, removes the card from today's Game Plan, and shows a toast with an "Undo" action that clears `deleted_at`.
-- Deletion uses the existing `deleteTemplate(id)` from `useCustomActivities` so the item shows up in the existing "Recently Deleted" list and can be restored there.
-- Hidden when the activity originates from a coach-sent card or a folder item (those are managed elsewhere) — only shown for user-owned standalone custom activity templates.
+- The "Delete Activity" button now appears for coach-sent activities on the Game Plan as well (still hidden for folder-snapshot items).
+- Confirmation dialog text adapts: when the activity was sent by a coach, mention that the coach who sent it will be notified that you removed it from your Game Plan.
+- On confirm:
+  1. Soft-delete the player-owned `custom_activity_templates` row (existing flow → goes to Recently Deleted, restorable for 30 days).
+  2. If the activity originated from a coach (i.e. there is a `sent_activity_templates` row with `accepted_template_id = <this template id>`), insert a row into `coach_notifications` for the original sender so they see it in their notifications panel.
+  3. Toast still offers Undo (re-clears `deleted_at`); if Undo is used we do NOT delete the notification — the coach already saw it. Instead we insert a follow-up "restored" notification so history is accurate.
+
+### Notification content
+
+- `coach_user_id` = original `sent_activity_templates.sender_id`
+- `sender_user_id` = the player (`auth.uid()`)
+- `notification_type` = `'activity_removed'` (new value, additive — no enum on the column)
+- `title` = "{Player full_name} removed an activity from their Game Plan"
+- `message` = "{Activity title} • Removed on {locale date+time}"
+- `template_snapshot` = the player's current template JSON (so the coach sees what was removed even after deletion)
+
+For the Undo case we insert a second row with `notification_type = 'activity_restored'` and similar title/message.
 
 ### Technical details
 
 Files to change:
 
-1. **`src/components/CustomActivityDetailDialog.tsx`**
-   - Add optional prop `onDeleteActivity?: () => Promise<void> | void`.
-   - Render a destructive "Delete Activity" button below the Skip / Send-to-Coach row, only when `onDeleteActivity` is provided.
-   - Wrap the click in an `AlertDialog` confirm (reuse `@/components/ui/alert-dialog`) so deletion isn't accidental.
-   - Close the parent dialog (`onOpenChange(false)`) after a successful delete.
-   - Add the i18n keys `customActivity.detail.deleteActivity`, `customActivity.detail.deleteConfirmTitle`, `customActivity.detail.deleteConfirmDescription`, `common.cancel`, `common.delete` (with English fallbacks inline as the rest of the file does).
+1. **`src/components/GamePlanCard.tsx`** (the existing `onDeleteActivity` wiring near line 2446)
+   - Remove the implicit "self-created only" restriction. Keep the guard that excludes folder-snapshot items (`!selectedCustomTask?.folderItemData`).
+   - Before deleting, look up whether this template originated from a coach:
+     ```ts
+     const { data: sentRow } = await supabase
+       .from('sent_activity_templates')
+       .select('id, sender_id, template_snapshot')
+       .eq('accepted_template_id', templateId)
+       .maybeSingle();
+     ```
+   - Pass `wasCoachSent: !!sentRow` and the coach's display name (fetch from `profiles` if needed, or rely on `useReceivedActivities` cache) into the dialog so it can show the right confirmation copy.
+   - After `deleteActivityTemplate(templateId)` succeeds and `sentRow` exists, insert a `coach_notifications` row (see SQL/insert shape below). Failure of the notification insert should NOT roll back the delete — log to console and continue.
+   - In the existing toast Undo handler (which currently clears `deleted_at`), additionally insert an `activity_restored` notification when `sentRow` existed.
 
-2. **`src/components/GamePlanCard.tsx`**
-   - Import `useCustomActivities` is already in use indirectly via `useGamePlan`; add a direct call to `deleteTemplate` from `useCustomActivities` (or expose `deleteTemplate` through `useGamePlan` to keep one source of truth — preferred since `useGamePlan` already holds the refresh logic).
-   - Pass an `onDeleteActivity` handler to `<CustomActivityDetailDialog ... />` (the instance at ~line 2403). Inside the handler:
-     - Pull `template.id` from `selectedCustomTask.customActivityData`.
-     - Skip if the activity is coach-sent / folder-derived (guard on `selectedCustomTask.folderItemData` or a `received` flag).
-     - Call `deleteTemplate(templateId)`; on success, call `refreshCustomActivities()` (already exposed) and broadcast via the existing `BroadcastChannel('data-sync')` pattern used elsewhere in this file so other tabs refresh.
-     - Show a `toast.success` with an Undo action that re-sets `deleted_at` to null on `custom_activity_templates` (mirroring `useDeletedActivities.restoreActivity`).
-   - Do **not** wire the same handler to the second `CustomActivityDetailDialog` instance (~line 2954) which renders folder-snapshot items — those aren't standalone templates.
+2. **`src/components/CustomActivityDetailDialog.tsx`**
+   - Add an optional `isCoachSent?: boolean` prop and an optional `coachName?: string` prop.
+   - When `isCoachSent`, swap the AlertDialog description to: *"Delete this activity? It will be moved to Recently Deleted and {coachName ?? 'the coach who sent it'} will be notified that you removed it from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted."*
+   - No new button — reuse the existing destructive button + AlertDialog already added.
 
-3. **`src/hooks/useGamePlan.ts`** (small addition)
-   - Re-export `deleteTemplate` from the embedded `useCustomActivities` instance in the returned object so `GamePlanCard` doesn't need a second hook subscription.
+3. **Notification insert (no schema change needed)**
+   `coach_notifications` already supports arbitrary `notification_type` strings (it's `text`, no CHECK). The existing INSERT RLS policy (`sender_user_id = auth.uid()`) already permits the player to write a notification addressed to the coach, so no migration is required.
+   ```ts
+   await supabase.from('coach_notifications').insert({
+     coach_user_id: sentRow.sender_id,
+     sender_user_id: user.id,
+     notification_type: 'activity_removed',
+     title: `${playerName} removed an activity from their Game Plan`,
+     message: `${template.title} • Removed ${new Date().toLocaleString()}`,
+     template_snapshot: sentRow.template_snapshot, // preserves what was sent
+   });
+   ```
+
+4. **Coach-side notification rendering** — verify the coach's notifications UI (search `coach_notifications` consumers) renders unknown `notification_type` values gracefully. If it switch/cases by type, add an `'activity_removed'` and `'activity_restored'` branch with a red/amber icon. (One file, additive.)
 
 ### Out of scope
 
-- No schema changes (soft delete column already exists).
-- No changes to the Recently Deleted UI (already supports restoring within 30 days).
-- No changes to folder-item or coach-sent card handling.
+- No DB schema migration (column types already permit the new values).
+- No change to folder-snapshot delete flow.
+- No change to the existing Recently Deleted UI or 30-day restore window.
+- No change to coach-sent activities still in `pending` status (those use the existing Accept/Reject flow on `PendingCoachActivityCard`).
