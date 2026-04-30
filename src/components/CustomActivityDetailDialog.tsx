@@ -1392,6 +1392,46 @@ export function CustomActivityDetailDialog({
         itemTitle={template?.title || ''}
         templateData={template as unknown as Json || null}
       />
+
+      {/* Confirm Delete Dialog */}
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('customActivity.detail.deleteConfirmTitle', 'Delete this activity?')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                'customActivity.detail.deleteConfirmDescription',
+                'It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>
+              {t('common.cancel', 'Cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!onDeleteActivity) return;
+                try {
+                  setDeleting(true);
+                  await onDeleteActivity();
+                  setConfirmDeleteOpen(false);
+                  onOpenChange(false);
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('common.delete', 'Delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
