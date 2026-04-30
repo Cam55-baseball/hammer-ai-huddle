@@ -602,7 +602,7 @@ export default function PracticeHub() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-destructive">Session not linked</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          We saved your practice but couldn\u2019t attach it to link{' '}
+                          We saved your practice but couldn&rsquo;t attach it to link{' '}
                           <span className="font-mono">{linkAttachError.code}</span>.
                         </p>
                       </div>
