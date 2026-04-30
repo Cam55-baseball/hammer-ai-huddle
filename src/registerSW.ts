@@ -1,15 +1,18 @@
 import { Workbox } from 'workbox-window';
 
 /**
- * Service Worker registration with auto-update + safe silent reload.
+ * Service Worker registration with auto-update + safe silent reload,
+ * plus a build-version probe that rescues installed Home Screen PWAs
+ * from stale precached shells.
  *
- * Behavior:
- * - In Lovable editor preview / iframes: never register; unregister any leftovers.
- * - In published builds: register, auto-skip-waiting, and silently reload the page
- *   exactly once when the new SW takes control — but only when the user is idle
- *   (no focused input, no open dialog) to avoid losing in-flight work.
- * - Polls registration.update() every 60s and on visibility/online events so
- *   long-open tabs pick up new deploys quickly.
+ * Why the version probe exists:
+ * - On iOS/Android, a standalone PWA cold-launches with the SW already in
+ *   control, so `controllerchange` never fires → our reload-on-new-SW path
+ *   is skipped → users stay on the old build forever.
+ * - The probe fetches /version.json on every launch + visibility/pageshow,
+ *   compares to the bundled __BUILD_ID__, and if mismatched: nukes caches,
+ *   unregisters the SW, and reloads. This works even when the SW thread
+ *   has been suspended by the OS.
  */
 
 let waitingSW: ServiceWorker | null = null;
@@ -19,6 +22,7 @@ export function getWaitingSW() {
 }
 
 const RELOAD_FLAG = '__sw_reloaded_once';
+const VERSION_URL = '/version.json';
 
 function isInIframe(): boolean {
   try {
@@ -34,7 +38,6 @@ function isPreviewHost(): boolean {
 }
 
 function isUserBusy(): boolean {
-  // Don't reload while typing
   const active = document.activeElement as HTMLElement | null;
   if (active) {
     const tag = active.tagName;
@@ -42,7 +45,6 @@ function isUserBusy(): boolean {
       return true;
     }
   }
-  // Don't reload while a modal/dialog/sheet is open
   if (document.querySelector('[role="dialog"]:not([aria-hidden="true"])')) return true;
   if (document.querySelector('[data-state="open"][role="alertdialog"]')) return true;
   return false;
@@ -58,14 +60,13 @@ function safeReload() {
 }
 
 function scheduleSafeReload() {
-  if (sessionStorage.getItem(RELOAD_FLAG) === '1') return; // already reloaded once
+  if (sessionStorage.getItem(RELOAD_FLAG) === '1') return;
 
   if (!isUserBusy()) {
     safeReload();
     return;
   }
 
-  // Retry every 5s; also retry on visibility change
   const interval = window.setInterval(() => {
     if (sessionStorage.getItem(RELOAD_FLAG) === '1') {
       window.clearInterval(interval);
@@ -87,6 +88,71 @@ function scheduleSafeReload() {
   document.addEventListener('visibilitychange', onVis);
 }
 
+async function nukeCachesAndSW() {
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k).catch(() => undefined)));
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister().catch(() => undefined)));
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+let probeInFlight = false;
+
+async function checkVersion() {
+  if (probeInFlight) return;
+  if (sessionStorage.getItem(RELOAD_FLAG) === '1') return;
+  probeInFlight = true;
+  try {
+    const res = await fetch(`${VERSION_URL}?t=${Date.now()}`, {
+      cache: 'no-store',
+      credentials: 'omit',
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { build?: string };
+    const remote = data?.build;
+    const local = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : '';
+    if (!remote || !local || remote === local) return;
+
+    // Build mismatch — wipe everything and reload (gated by isUserBusy via scheduleSafeReload).
+    await nukeCachesAndSW();
+    scheduleSafeReload();
+  } catch {
+    /* network error — try again next tick */
+  } finally {
+    probeInFlight = false;
+  }
+}
+
+function wireVersionProbe() {
+  // Initial check immediately on load
+  void checkVersion();
+
+  // Re-check whenever the tab becomes visible (covers Home Screen app foreground)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void checkVersion();
+  });
+
+  // pageshow fires on iOS standalone restore from bfcache
+  window.addEventListener('pageshow', () => void checkVersion());
+
+  // Also re-check on network restore
+  window.addEventListener('online', () => void checkVersion());
+
+  // Periodic safety net for long-open tabs
+  window.setInterval(() => void checkVersion(), 30_000);
+}
+
 export function registerSW() {
   if (!('serviceWorker' in navigator)) return;
 
@@ -98,35 +164,39 @@ export function registerSW() {
     return;
   }
 
-  // Clear the once-per-session reload flag at the start of a fresh page load that
-  // wasn't itself the auto-reload (sessionStorage already persists across reloads
-  // within the same tab session, so we leave it set to keep the loop guard).
-  // Nothing to clear here — the flag intentionally persists for the tab session.
+  // Stand up the version probe regardless of SW lifecycle — it's the most
+  // reliable signal for installed Home Screen PWAs.
+  wireVersionProbe();
 
   const wb = new Workbox('/sw.js');
 
   wb.addEventListener('waiting', () => {
-    // Capture for legacy PWAUpdatePrompt consumers
     wb.getSW().then((sw) => {
       waitingSW = sw;
     });
-    // Tell the waiting SW to activate immediately — no user tap required.
+    // Activate immediately — no user tap required.
     wb.messageSkipWaiting();
   });
 
+  wb.addEventListener('activated', () => {
+    // New SW is in charge. Drop the cached HTML shell so the next
+    // navigation forces a fresh index.html from the network.
+    if ('caches' in window) {
+      caches.delete('html-shell').catch(() => undefined);
+    }
+  });
+
   wb.addEventListener('controlling', () => {
-    // New SW has taken control. Reload once (gated by user-busy check).
+    // New SW has taken control of this tab. Reload once (gated).
     scheduleSafeReload();
   });
 
   wb.register().then((registration) => {
     if (!registration) return;
 
-    // Poll for new SW versions periodically
     const poll = () => registration.update().catch(() => undefined);
-    window.setInterval(poll, 60_000);
+    window.setInterval(poll, 30_000);
 
-    // Also check when the tab becomes visible or comes back online
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') poll();
     });

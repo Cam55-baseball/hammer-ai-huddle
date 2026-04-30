@@ -1,7 +1,8 @@
 {
   "name": "Hammers Modality",
   "short_name": "Hammers",
-  "start_url": "/dashboard",
+  "id": "/",
+  "start_url": "/dashboard?source=pwa",
   "display": "standalone",
   "theme_color": "#000000",
   "background_color": "#000000",
