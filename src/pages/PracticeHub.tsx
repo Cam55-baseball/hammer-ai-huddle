@@ -359,10 +359,12 @@ export default function PracticeHub() {
       });
 
       // Attach session to link state machine (handles bidirectional linking atomically)
+      setLinkAttachError(null);
+      setLinkAttachConfirmed(null);
       if (sessionConfig.link_code && result.id && user?.id) {
         try {
           await attachSessionToLink(result.id, sessionConfig.link_code, user.id);
-          setLinkAttachError(null);
+          setLinkAttachConfirmed({ code: sessionConfig.link_code });
         } catch (linkErr: any) {
           console.error('[PracticeHub] attach_session_to_link failed:', linkErr);
           setLinkAttachError({
