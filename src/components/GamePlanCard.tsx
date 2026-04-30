@@ -266,6 +266,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Folder item performance logger dialog state
   const [folderLoggerOpen, setFolderLoggerOpen] = useState(false);
   const [selectedFolderTask, setSelectedFolderTask] = useState<GamePlanTask | null>(null);
+  // Coach-origin info for the selected folder item (populated when a coach-shared folder dialog opens)
+  const [selectedFolderCoachOrigin, setSelectedFolderCoachOrigin] = useState<{
+    assignmentId: string;
+    senderId: string;
+    senderName: string;
+  } | null>(null);
   const [folderItemEditOpen, setFolderItemEditOpen] = useState(false);
   const [folderCheckboxStates, setFolderCheckboxStates] = useState<Record<string, boolean>>({});
   const [sendToCoachOpen, setSendToCoachOpen] = useState(false);
@@ -391,6 +397,123 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       cancelled = true;
     };
   }, [detailDialogOpen, selectedCustomTask?.customActivityData?.template?.id]);
+
+  // Resolve coach-origin info for the selected folder item: when the folder is
+  // coach-shared (isOwner === false), look up the folder_assignments row that
+  // delivered it so we can show "{coach} will be notified" copy and so the
+  // delete handler can decline the assignment + insert a notification.
+  useEffect(() => {
+    let cancelled = false;
+    const fid = selectedFolderTask?.folderItemData;
+    if (!folderLoggerOpen || !fid || fid.isOwner) {
+      setSelectedFolderCoachOrigin(null);
+      return;
+    }
+    if (!user) return;
+    (async () => {
+      const { data: assignment } = await supabase
+        .from('folder_assignments')
+        .select('id, sender_id')
+        .eq('recipient_id', user.id)
+        .eq('folder_id', fid.folderId)
+        .eq('status', 'accepted')
+        .maybeSingle();
+      if (cancelled || !assignment) {
+        if (!cancelled) setSelectedFolderCoachOrigin(null);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', assignment.sender_id)
+        .maybeSingle();
+      if (cancelled) return;
+      setSelectedFolderCoachOrigin({
+        assignmentId: assignment.id,
+        senderId: assignment.sender_id,
+        senderName: profile?.full_name || 'Your coach',
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    folderLoggerOpen,
+    selectedFolderTask?.folderItemData?.folderId,
+    selectedFolderTask?.folderItemData?.isOwner,
+    user,
+  ]);
+
+  // Delete handler shared by both folder-path CustomActivityDetailDialog mounts.
+  // - Own folder: hard-delete the activity_folder_items row (RLS allows owner).
+  // - Coach-shared folder: decline the folder_assignments row so the whole folder
+  //   leaves the player's Game Plan, and notify the coach. (Folder items don't
+  //   have soft-delete; per-item removal in a coach folder isn't supported by RLS.)
+  const handleFolderItemDelete = useCallback(async () => {
+    const task = selectedFolderTask;
+    const fid = task?.folderItemData;
+    if (!task || !fid || !user) return;
+
+    if (fid.isOwner) {
+      const { error } = await supabase
+        .from('activity_folder_items')
+        .delete()
+        .eq('id', fid.itemId);
+      if (error) {
+        console.error('[GamePlan] Failed to delete folder item:', error);
+        toast.error(t('common.error', 'Something went wrong'));
+        return;
+      }
+      handleFolderLoggerClose(false);
+      refetch();
+      toast.success(t('customActivity.detail.removedFromFolder', 'Removed from folder'));
+      return;
+    }
+
+    // Coach-shared folder
+    const coachOrigin = selectedFolderCoachOrigin;
+    if (!coachOrigin) {
+      toast.error(t('common.error', 'Something went wrong'));
+      return;
+    }
+
+    const { error: declineError } = await supabase
+      .from('folder_assignments')
+      .update({ status: 'declined' })
+      .eq('id', coachOrigin.assignmentId);
+    if (declineError) {
+      console.error('[GamePlan] Failed to decline folder assignment:', declineError);
+      toast.error(t('common.error', 'Something went wrong'));
+      return;
+    }
+
+    handleFolderLoggerClose(false);
+    refetch();
+
+    // Notify the coach — fire-and-forget, never roll back the removal.
+    try {
+      const playerName =
+        (user.user_metadata as { full_name?: string } | null)?.full_name ||
+        user.email ||
+        'A player';
+      await supabase.from('coach_notifications').insert({
+        coach_user_id: coachOrigin.senderId,
+        sender_user_id: user.id,
+        notification_type: 'folder_removed',
+        title: `${playerName} removed a folder from their Game Plan`,
+        message: `"${fid.folderName}" • Removed ${new Date().toLocaleString()}`,
+      });
+    } catch (err) {
+      console.error('[GamePlan] Failed to notify coach of folder removal:', err);
+    }
+
+    toast.success(
+      t('customActivity.detail.folderRemovedWithCoachNotice', 'Folder removed. {{coach}} was notified.', {
+        coach: coachOrigin.senderName,
+      })
+    );
+  }, [selectedFolderTask, selectedFolderCoachOrigin, user, t, refetch]);
+
 
   // Skip task handler (load management) — routed through scheduling service
   const handleSkipTask = async (taskId: string) => {
@@ -2494,8 +2617,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         coachName={selectedTaskCoachOrigin?.senderName}
         onDeleteActivity={
           selectedCustomTask?.taskType === 'custom' &&
-          selectedCustomTask?.customActivityData?.template?.id &&
-          !selectedCustomTask?.folderItemData
+          selectedCustomTask?.customActivityData?.template?.id
             ? async () => {
                 const templateId = selectedCustomTask.customActivityData!.template.id;
                 const templateTitle = selectedCustomTask.customActivityData!.template.title || 'Activity';
@@ -3167,6 +3289,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   handleSkipTask(selectedFolderTask.id);
                    handleFolderLoggerClose(false);
                 }}
+                deleteVariant={
+                  selectedFolderTask.folderItemData?.isOwner ? 'folder-own' : 'folder-coach'
+                }
+                isCoachSent={!selectedFolderTask.folderItemData?.isOwner}
+                coachName={selectedFolderCoachOrigin?.senderName}
+                onDeleteActivity={
+                  // Coach-shared: only enable once we've resolved the assignment so the handler has what it needs.
+                  selectedFolderTask.folderItemData?.isOwner || selectedFolderCoachOrigin
+                    ? handleFolderItemDelete
+                    : undefined
+                }
               />
               {item && (
                 <FolderItemEditDialog
@@ -3353,6 +3486,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 handleSkipTask(selectedFolderTask.id);
                 handleFolderLoggerClose(false);
               }}
+              deleteVariant={
+                selectedFolderTask.folderItemData?.isOwner ? 'folder-own' : 'folder-coach'
+              }
+              isCoachSent={!selectedFolderTask.folderItemData?.isOwner}
+              coachName={selectedFolderCoachOrigin?.senderName}
+              onDeleteActivity={
+                selectedFolderTask.folderItemData?.isOwner || selectedFolderCoachOrigin
+                  ? handleFolderItemDelete
+                  : undefined
+              }
             />
             {item && (
               <FolderItemEditDialog

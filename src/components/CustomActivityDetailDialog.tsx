@@ -197,6 +197,13 @@ interface CustomActivityDetailDialogProps {
   isCoachSent?: boolean;
   /** Display name of the coach who originally sent this activity. */
   coachName?: string;
+  /**
+   * Selects the confirm-delete copy.
+   * - 'standalone' (default): own / coach-sent standalone activity (soft-delete to Recently Deleted).
+   * - 'folder-own': item inside a folder you own (hard delete from folder).
+   * - 'folder-coach': item inside a coach-shared folder (removes whole folder from your Game Plan).
+   */
+  deleteVariant?: 'standalone' | 'folder-own' | 'folder-coach';
   onSavePerformanceData?: (data: any) => Promise<void>;
   /** Partial completion: persist current progress, mark complete, do NOT auto-check remaining boxes */
   onDone?: () => Promise<void> | void;
@@ -229,6 +236,7 @@ export function CustomActivityDetailDialog({
   hideEdit,
   isCoachSent,
   coachName,
+  deleteVariant = 'standalone',
 }: CustomActivityDetailDialogProps) {
   const { t } = useTranslation();
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -1404,19 +1412,34 @@ export function CustomActivityDetailDialog({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t('customActivity.detail.deleteConfirmTitle', 'Delete this activity?')}
+              {deleteVariant === 'folder-own'
+                ? t('customActivity.detail.removeFromFolderTitle', 'Remove this item from the folder?')
+                : deleteVariant === 'folder-coach'
+                  ? t('customActivity.detail.removeFolderTitle', 'Remove this folder from your Game Plan?')
+                  : t('customActivity.detail.deleteConfirmTitle', 'Delete this activity?')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {isCoachSent
+              {deleteVariant === 'folder-own'
                 ? t(
-                    'customActivity.detail.deleteConfirmDescriptionCoach',
-                    'It will be moved to Recently Deleted and removed from your Game Plan. {{coach}} will be notified that you removed it. You can restore it within 30 days from My Activities → Recently Deleted.',
-                    { coach: coachName || t('customActivity.detail.theCoachWhoSentIt', 'The coach who sent it') }
+                    'customActivity.detail.removeFromFolderDescription',
+                    "This will remove the item from the folder for everyone. This can't be undone."
                   )
-                : t(
-                    'customActivity.detail.deleteConfirmDescription',
-                    'It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
-                  )}
+                : deleteVariant === 'folder-coach'
+                  ? t(
+                      'customActivity.detail.removeFolderDescription',
+                      "This will remove the whole folder from your Game Plan. {{coach}} will be notified. You can re-accept the folder later if they share it again.",
+                      { coach: coachName || t('customActivity.detail.theCoachWhoSentIt', 'The coach who sent it') }
+                    )
+                  : isCoachSent
+                    ? t(
+                        'customActivity.detail.deleteConfirmDescriptionCoach',
+                        'It will be moved to Recently Deleted and removed from your Game Plan. {{coach}} will be notified that you removed it. You can restore it within 30 days from My Activities → Recently Deleted.',
+                        { coach: coachName || t('customActivity.detail.theCoachWhoSentIt', 'The coach who sent it') }
+                      )
+                    : t(
+                        'customActivity.detail.deleteConfirmDescription',
+                        'It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
+                      )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
