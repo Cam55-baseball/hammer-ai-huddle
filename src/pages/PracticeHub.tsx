@@ -175,7 +175,9 @@ export default function PracticeHub() {
     setRetryingLink(true);
     try {
       await attachSessionToLink(linkAttachError.sessionId, linkAttachError.code, user.id);
+      const code = linkAttachError.code;
       setLinkAttachError(null);
+      setLinkAttachConfirmed({ code });
       toast({ title: 'Linked', description: 'Session linked successfully.' });
     } catch (err: any) {
       toast({
