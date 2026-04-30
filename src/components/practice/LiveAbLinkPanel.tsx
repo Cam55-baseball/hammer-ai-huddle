@@ -82,11 +82,73 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
   const [joinInput, setJoinInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [unlinking, setUnlinking] = useState(false);
+  const [extending, setExtending] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const linkState = useAbLinkStatus(generatedCode);
   const countdown = useCountdown(linkState.expiresAt);
   const showLinkedView = !!generatedCode;
+
+  // Per-link, per-threshold one-shot warning toasts
+  const warnedRef = useRef<Set<string>>(new Set());
+
+  const handleExtend = async () => {
+    if (!user || !generatedCode) return;
+    setExtending(true);
+    try {
+      const { data, error } = await supabase.rpc('extend_ab_link' as any, {
+        p_user_id: user.id,
+        p_link_code: generatedCode,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) {
+        toast({
+          title: 'Could not extend',
+          description: 'Link is finalized or already expired.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      // Reset warning tokens so the new window can warn again later.
+      warnedRef.current.delete(`${generatedCode}:10`);
+      warnedRef.current.delete(`${generatedCode}:1`);
+      toast({ title: 'Extended', description: 'Link valid for another 2 hours.' });
+    } catch (err: any) {
+      toast({
+        title: 'Could not extend',
+        description: err?.message ?? 'Try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setExtending(false);
+    }
+  };
+
+  // One-time toasts at 10m and 1m thresholds, gated to active (pending/claimed) links.
+  useEffect(() => {
+    if (!generatedCode || !countdown) return;
+    if (linkState.status !== 'pending' && linkState.status !== 'claimed') return;
+    const fire = (threshold: 10 | 1) => {
+      const key = `${generatedCode}:${threshold}`;
+      if (warnedRef.current.has(key)) return;
+      warnedRef.current.add(key);
+      toast({
+        title: threshold === 10 ? 'AB Link expiring soon' : 'AB Link expires in <1 minute',
+        description: `Code ${generatedCode} expires in ${countdown.text.replace(' left', '')}. Extend to keep it alive.`,
+        duration: 0,
+        action: (
+          <Button size="sm" variant="outline" onClick={handleExtend} className="gap-1">
+            <AlarmClockPlus className="h-3 w-3" />
+            Extend 2h
+          </Button>
+        ) as any,
+      });
+    };
+    if (countdown.minutes <= 10 && countdown.minutes > 1) fire(10);
+    if (countdown.minutes <= 1 && countdown.minutes > 0) fire(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatedCode, countdown?.minutes, linkState.status]);
 
   const handleGenerate = async () => {
     if (!user) return;
