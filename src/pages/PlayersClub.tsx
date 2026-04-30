@@ -295,6 +295,7 @@ export default function PlayersClub() {
                 {new Date(ps.session_date).toLocaleDateString()}
               </p>
             </div>
+            <Badge variant="outline" className="text-[10px] uppercase tracking-wide" title="Practices now live in Practice History. This card is a legacy entry.">Legacy</Badge>
           </div>
 
           {/* Badges */}
