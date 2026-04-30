@@ -1407,10 +1407,16 @@ export function CustomActivityDetailDialog({
               {t('customActivity.detail.deleteConfirmTitle', 'Delete this activity?')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t(
-                'customActivity.detail.deleteConfirmDescription',
-                'It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
-              )}
+              {isCoachSent
+                ? t(
+                    'customActivity.detail.deleteConfirmDescriptionCoach',
+                    'It will be moved to Recently Deleted and removed from your Game Plan. {{coach}} will be notified that you removed it. You can restore it within 30 days from My Activities → Recently Deleted.',
+                    { coach: coachName || t('customActivity.detail.theCoachWhoSentIt', 'The coach who sent it') }
+                  )
+                : t(
+                    'customActivity.detail.deleteConfirmDescription',
+                    'It will be moved to Recently Deleted and removed from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted.'
+                  )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
