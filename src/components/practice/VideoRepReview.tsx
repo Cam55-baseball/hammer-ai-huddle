@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { VideoRepMarker, type RepMarker } from './VideoRepMarker';
 import { RepScorer, type ScoredRep } from './RepScorer';
 import { isAnalyzableModule, RepVideoAnalysis } from './RepVideoAnalysis';
 import type { SessionConfig } from './SessionConfigPanel';
+import { validateVideoFile, VIDEO_LIMITS } from '@/data/videoLimits';
 
 interface VideoRepReviewProps {
   module: string;
