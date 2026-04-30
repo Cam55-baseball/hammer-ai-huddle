@@ -1,85 +1,78 @@
-## Goal
+# Cross-Session Linking — Fixes #1, #2, #6
 
-Players Club becomes a **video-only** library. Practice sessions belong in **Practice History / Calendar review**. Game sessions belong in the **Game Hub**. Existing practice/game cards already in users' Players Club views are grandfathered in (still visible) so nothing disappears retroactively.
+Make the AB-link flow honest end-to-end: unlinking actually clears the server, attach failures surface to the user with a retry path, and the panel reflects true server state (Pending / Claimed / Linked / Expired) instead of guessing from local React state.
 
-## Behavior summary
+## Scope
 
-| Item type | New home | Shows in Players Club? |
-|---|---|---|
-| Standalone video upload (saved to library) | Players Club | Yes |
-| Practice session WITH attached video | Practice History + Players Club (as the video) | Video card only |
-| Practice session WITHOUT video | Practice History / Calendar review | No |
-| Game WITH attached video | Game Hub + Players Club (as the video) | Video card only |
-| Game WITHOUT video | Game Hub | No |
-| Pre-existing practice/game cards already visible in Players Club | Grandfathered | Yes (legacy flag) |
+1. **Server-side unlink** — clean up `live_ab_links` when a user clicks Unlink.
+2. **Attach error surfacing + retry** — never silently swallow `attach_session_to_link` failures; let the user retry.
+3. **Real-state badge** — the panel subscribes to the row and shows the actual lifecycle status.
 
-## Database changes
+Out of scope for this pass: race conditions in `useLiveRepBroadcast`, expiration warnings, sport-mismatch enforcement (planned separately).
 
-1. **Link videos to their source session/game**
-   - Add to `public.videos`:
-     - `practice_session_id uuid NULL REFERENCES performance_sessions(id) ON DELETE SET NULL`
-     - `game_id uuid NULL REFERENCES games(id) ON DELETE SET NULL`
-   - Indexes on both new columns.
-   - RLS unchanged (still owner-scoped).
+---
 
-2. **Grandfather flag for legacy Club entries**
-   - Add `legacy_in_players_club boolean NOT NULL DEFAULT false` to `performance_sessions` and `games`.
-   - One-time backfill: set `true` for every existing row created **before the migration timestamp**, owned by users who have ever opened Players Club. Safe default: backfill `true` for all existing rows so nothing visually disappears. New rows default to `false`.
+## 1. Server-side unlink
 
-## Edge function: `get-player-library`
+Add an RPC and call it from `handleUnlink`. Local-only state reset is the current bug.
 
-Rewrite the response to be video-centric:
+**New RPC** `expire_ab_link(p_user_id uuid, p_link_code text)`:
+- SECURITY DEFINER, search_path = public.
+- Updates the row to `status = 'expired'` only when `link_code = p_link_code` AND the caller is `creator_user_id` or `joiner_user_id` AND status is in `('pending','claimed')`.
+- No-op if already `linked` or `expired` (so we don't clobber a finalized link mid-save).
+- Does NOT touch `creator_session_id` / `joiner_session_id` / `linked_session_id` to preserve audit history.
 
-- Return `videos` exactly as today (already filtered by `saved_to_library = true`).
-- Return `practices` only where `legacy_in_players_club = true`.
-- Return `games` only where `legacy_in_players_club = true`.
-- Continue scout/owner authorization checks unchanged.
+**Client** (`LiveAbLinkPanel.handleUnlink`):
+- Make async; call `supabase.rpc('expire_ab_link', ...)` before resetting local state.
+- Toast on error and keep the linked UI (don't lie about disconnection).
+- On success, reset state and call `onUnlink()`.
 
-Going forward no new practice or game ever enters this list — only standalone or session-linked videos.
+## 2. Attach error surfacing + retry
 
-## Upload / save flows that must populate the new link columns
+`PracticeHub.handleSaveSession` currently `console.error`s and continues to a "Success" summary. Fix end-to-end:
 
-When a video is uploaded or saved to library from inside one of these flows, set `practice_session_id` or `game_id`:
+- Store the attach error on a new state slot `linkAttachError: { sessionId, code, message } | null`.
+- Wrap the RPC: if it throws OR returns and the row's `creator_session_id`/`joiner_session_id` is still NULL for this user, treat as failure.
+- Toast (destructive) immediately: "Couldn't link sessions — your practice was saved, tap Retry to attempt linking again."
+- On the `session_summary` step, when `linkAttachError` is set, render an inline alert with a **Retry Link** button that re-invokes `attach_session_to_link` with the stored sessionId + code. Clear the error on success.
+- Only mark the saved session "linked" in UI after we confirm attach succeeded.
 
-- `src/components/RealTimePlayback.tsx` (`handleSaveToLibrary`) — pass current session/game id when present.
-- `src/pages/AnalyzeVideo.tsx` (`SaveToLibraryDialog`) — accept and forward `practiceSessionId` / `gameId` props from the calling context.
-- `src/components/SaveToLibraryDialog.tsx` — accept optional `practiceSessionId` and `gameId` and include them in the insert payload.
-- Any game-hub video capture path (e.g. game playback recording) — same treatment.
+## 3. Real-state badge in the panel
 
-This gives us a real "this video came from this session/game" relationship without depending on date matching.
+Replace the local `linked` boolean with server truth.
 
-## UI: Players Club (`src/pages/PlayersClub.tsx`)
+- New hook `useAbLinkStatus(linkCode)` in `src/hooks/useAbLinkStatus.ts`:
+  - Initial fetch: `select status, creator_session_id, joiner_session_id, expires_at from live_ab_links where link_code = ?`.
+  - Realtime: subscribe via `supabase.channel` to `postgres_changes` on `live_ab_links` filtered by `link_code=eq.<code>`.
+  - Returns `{ status, isCreator, isJoiner, mySessionAttached, partnerSessionAttached, expiresAt }`.
+- `LiveAbLinkPanel`:
+  - Drive the badge from the hook, not local state. Map:
+    - `pending` → "Waiting for partner" (amber)
+    - `claimed` → "Partner joined — save to finalize" (blue)
+    - `linked` → "Linked" (green)
+    - `expired` → "Expired" (muted) + offer Generate New
+  - Add a small countdown chip when within 15 min of `expires_at`.
+  - Keep Unlink visible whenever status is `pending` or `claimed`.
 
-- Header copy reframed to "Video Library" wording (keep route `/players-club`).
-- Source filter `practice` and `game` tabs are still available **only if the user has any legacy practice/game items** — otherwise hide them.
-- Practice and game cards that do appear get a small "Legacy" badge and a tooltip: *"Practices and games now live in Practice History and Game Hub."*
-- Video cards that have a `practice_session_id` or `game_id` get a "From practice" / "From game" chip that deep-links to the source.
+## Technical details
 
-## UI: where things live now
+**Files to change**
+- `supabase/migrations/<timestamp>_ab_link_unlink_rpc.sql` — add `expire_ab_link` RPC + grant execute to `authenticated`.
+- `src/components/practice/LiveAbLinkPanel.tsx` — async unlink, badge driven by `useAbLinkStatus`.
+- `src/hooks/useAbLinkStatus.ts` — new hook (fetch + realtime subscription).
+- `src/pages/PracticeHub.tsx` — capture attach failures into state, surface toast, add Retry on summary view; only show "Session Linked" after confirmed attach.
 
-- **Practices**: existing Practice History view at `/practice` (and Calendar review surfaces) — already loads from `performance_sessions`. No code change needed beyond confirming the user can see all their practices there.
-- **Games**: existing Game Hub at `/games` — already loads from `games`. No code change needed beyond confirming history view shows completed games.
-- Add quick links in Players Club empty state: "Looking for practices? Go to Practice History →" and "Looking for games? Go to Game Hub →".
+**RLS / realtime**
+- `live_ab_links` is already returned by `claim_ab_link`/`create_ab_link`; verify `SELECT` policy lets both `creator_user_id` and `joiner_user_id` read. If not, add it in the same migration.
+- Add the table to `supabase_realtime` publication if not already (`ALTER PUBLICATION supabase_realtime ADD TABLE public.live_ab_links;`).
 
-## Scout / owner viewing other players
+**Failure semantics**
+- Unlink RPC failure → keep UI linked, show destructive toast. Do not mutate local state.
+- Attach RPC failure → session is saved; Retry button is the recovery path. Practice History still has the session, just unlinked.
 
-Same rules apply when `playerId` is provided: only saved videos + legacy practice/game items are returned, gated by accepted scout follow.
+## Acceptance
 
-## Out of scope (will not change)
-
-- Vault, dashboard cards, training blocks, nutrition logs — unaffected. The instruction is specific to the Players Club library surface.
-- Existing `saved_to_library` semantics on the `videos` table.
-
-## Files to edit
-
-- `supabase/migrations/<new>.sql` — schema + backfill described above
-- `supabase/functions/get-player-library/index.ts` — new filter rules
-- `src/pages/PlayersClub.tsx` — copy, badges, empty-state links, conditional tabs
-- `src/components/SaveToLibraryDialog.tsx` — accept and persist session/game link
-- `src/pages/AnalyzeVideo.tsx` — forward session/game context to dialog
-- `src/components/RealTimePlayback.tsx` — forward session/game context to dialog
-- Any other call site of `SaveToLibraryDialog` discovered during implementation
-
-## Open question I'll confirm during build
-
-If a brand-new video is saved that *isn't* tied to a session, it still belongs in Players Club (standalone video upload). Confirmed by your earlier answers — keeping that behavior.
+- Clicking Unlink updates the DB row to `expired` (verified via `select status from live_ab_links where link_code=?`).
+- Killing the network during save produces a destructive toast and a visible Retry button on the summary; tapping Retry while online finalizes the link.
+- Panel badge changes from "Waiting" → "Partner joined" → "Linked" in real time on both devices without a refresh.
+- No silent failures; every error path produces a toast.

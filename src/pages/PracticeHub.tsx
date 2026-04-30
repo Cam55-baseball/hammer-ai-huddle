@@ -136,6 +136,56 @@ export default function PracticeHub() {
 
   // Post-session summary
   const [savedSessionId, setSavedSessionId] = useState<string | null>(null);
+  const [linkAttachError, setLinkAttachError] = useState<{
+    sessionId: string;
+    code: string;
+    message: string;
+  } | null>(null);
+  const [retryingLink, setRetryingLink] = useState(false);
+
+  const attachSessionToLink = async (sessionId: string, code: string, userId: string) => {
+    const { error } = await supabase.rpc('attach_session_to_link' as any, {
+      p_user_id: userId,
+      p_link_code: code,
+      p_session_id: sessionId,
+    });
+    if (error) throw error;
+    // Verify attach actually landed on our side
+    const { data: row } = await supabase
+      .from('live_ab_links' as any)
+      .select('creator_user_id, joiner_user_id, creator_session_id, joiner_session_id')
+      .eq('link_code', code)
+      .maybeSingle();
+    if (!row) throw new Error('Link not found');
+    const r = row as any;
+    const mine =
+      r.creator_user_id === userId
+        ? r.creator_session_id
+        : r.joiner_user_id === userId
+          ? r.joiner_session_id
+          : null;
+    if (mine !== sessionId) {
+      throw new Error('Session was not attached to the link');
+    }
+  };
+
+  const handleRetryAttach = async () => {
+    if (!linkAttachError || !user?.id) return;
+    setRetryingLink(true);
+    try {
+      await attachSessionToLink(linkAttachError.sessionId, linkAttachError.code, user.id);
+      setLinkAttachError(null);
+      toast({ title: 'Linked', description: 'Session linked successfully.' });
+    } catch (err: any) {
+      toast({
+        title: 'Still couldn\u2019t link',
+        description: err?.message ?? 'Try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setRetryingLink(false);
+    }
+  };
 
   // Video+Log mode toggle
   const [videoLogMode, setVideoLogMode] = useState(false);
@@ -200,6 +250,7 @@ export default function PracticeHub() {
     
     setNotes('');
     setSavedSessionId(null);
+    setLinkAttachError(null);
     setScheduledId(null);
   };
 
@@ -307,13 +358,20 @@ export default function PracticeHub() {
       // Attach session to link state machine (handles bidirectional linking atomically)
       if (sessionConfig.link_code && result.id && user?.id) {
         try {
-          await supabase.rpc('attach_session_to_link' as any, {
-            p_user_id: user.id,
-            p_link_code: sessionConfig.link_code,
-            p_session_id: result.id,
-          });
-        } catch (linkErr) {
+          await attachSessionToLink(result.id, sessionConfig.link_code, user.id);
+          setLinkAttachError(null);
+        } catch (linkErr: any) {
           console.error('[PracticeHub] attach_session_to_link failed:', linkErr);
+          setLinkAttachError({
+            sessionId: result.id,
+            code: sessionConfig.link_code,
+            message: linkErr?.message ?? 'Unknown error',
+          });
+          toast({
+            title: 'Couldn\u2019t link sessions',
+            description: 'Your practice was saved. Tap Retry on the summary to try again.',
+            variant: 'destructive',
+          });
         }
       }
 
@@ -538,12 +596,34 @@ export default function PracticeHub() {
               )}
               {/* Step 5: Post-Session Summary */}
               {step === 'session_summary' && savedSessionId && sessionType && (
-                <PostSessionSummaryV2
-                  sessionId={savedSessionId}
-                  module={activeModule}
-                  sessionType={sessionType}
-                  onDone={handleSummaryDone}
-                />
+                <>
+                  {linkAttachError && (
+                    <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/5 flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-destructive">Session not linked</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          We saved your practice but couldn&rsquo;t attach it to link{' '}
+                          <span className="font-mono">{linkAttachError.code}</span>.
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRetryAttach}
+                        disabled={retryingLink}
+                      >
+                        {retryingLink ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                        Retry Link
+                      </Button>
+                    </div>
+                  )}
+                  <PostSessionSummaryV2
+                    sessionId={savedSessionId}
+                    module={activeModule}
+                    sessionType={sessionType}
+                    onDone={handleSummaryDone}
+                  />
+                </>
               )}
             </TabsContent>
           ))}
