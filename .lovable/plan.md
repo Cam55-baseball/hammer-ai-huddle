@@ -1,68 +1,125 @@
-## Allow deleting coach-sent activities from the Game Plan + notify the coach
+## Make Delete Activity work on every custom activity in the Game Plan
 
-Currently the "Delete Activity" button in `CustomActivityDetailDialog` is shown only for self-created standalone custom activity templates — coach-sent activities (those a player accepted from a coach) are excluded. This plan extends deletion to coach-sent activities and notifies the original sender (coach) when the player deletes the activity.
+### The bug
 
-### Behavior
+Today the "Delete Activity" button only appears for **standalone** custom activities the player created or accepted from a coach. It is missing for:
 
-- The "Delete Activity" button now appears for coach-sent activities on the Game Plan as well (still hidden for folder-snapshot items).
-- Confirmation dialog text adapts: when the activity was sent by a coach, mention that the coach who sent it will be notified that you removed it from your Game Plan.
-- On confirm:
-  1. Soft-delete the player-owned `custom_activity_templates` row (existing flow → goes to Recently Deleted, restorable for 30 days).
-  2. If the activity originated from a coach (i.e. there is a `sent_activity_templates` row with `accepted_template_id = <this template id>`), insert a row into `coach_notifications` for the original sender so they see it in their notifications panel.
-  3. Toast still offers Undo (re-clears `deleted_at`); if Undo is used we do NOT delete the notification — the coach already saw it. Instead we insert a follow-up "restored" notification so history is accurate.
+1. **Custom activities sitting inside a folder** (your own folders).
+2. **Activities inside coach-shared folders** that landed on your Game Plan via a `folder_assignments` accept.
 
-### Notification content
+That happens because `GamePlanCard.tsx` mounts `CustomActivityDetailDialog` from three places:
 
-- `coach_user_id` = original `sent_activity_templates.sender_id`
-- `sender_user_id` = the player (`auth.uid()`)
-- `notification_type` = `'activity_removed'` (new value, additive — no enum on the column)
-- `title` = "{Player full_name} removed an activity from their Game Plan"
-- `message` = "{Activity title} • Removed on {locale date+time}"
-- `template_snapshot` = the player's current template JSON (so the coach sees what was removed even after deletion)
+- standalone path (line ~2450) — passes `onDeleteActivity`, but only when `!folderItemData`.
+- folder-snapshot path (~3078) — does **not** pass `onDeleteActivity` at all.
+- folder raw-fields path (~3269) — does **not** pass `onDeleteActivity` at all.
 
-For the Undo case we insert a second row with `notification_type = 'activity_restored'` and similar title/message.
+So clicking into any folder item shows no Delete button. We will fix this end-to-end.
 
-### Technical details
+### Behavior after the fix
 
-Files to change:
+For every custom activity opened from the Game Plan (standalone or folder item, owned or coach-shared), the detail dialog shows a destructive **Delete Activity** button with a confirmation prompt.
 
-1. **`src/components/GamePlanCard.tsx`** (the existing `onDeleteActivity` wiring near line 2446)
-   - Remove the implicit "self-created only" restriction. Keep the guard that excludes folder-snapshot items (`!selectedCustomTask?.folderItemData`).
-   - Before deleting, look up whether this template originated from a coach:
-     ```ts
-     const { data: sentRow } = await supabase
-       .from('sent_activity_templates')
-       .select('id, sender_id, template_snapshot')
-       .eq('accepted_template_id', templateId)
-       .maybeSingle();
-     ```
-   - Pass `wasCoachSent: !!sentRow` and the coach's display name (fetch from `profiles` if needed, or rely on `useReceivedActivities` cache) into the dialog so it can show the right confirmation copy.
-   - After `deleteActivityTemplate(templateId)` succeeds and `sentRow` exists, insert a `coach_notifications` row (see SQL/insert shape below). Failure of the notification insert should NOT roll back the delete — log to console and continue.
-   - In the existing toast Undo handler (which currently clears `deleted_at`), additionally insert an `activity_restored` notification when `sentRow` existed.
+Per type:
 
-2. **`src/components/CustomActivityDetailDialog.tsx`**
-   - Add an optional `isCoachSent?: boolean` prop and an optional `coachName?: string` prop.
-   - When `isCoachSent`, swap the AlertDialog description to: *"Delete this activity? It will be moved to Recently Deleted and {coachName ?? 'the coach who sent it'} will be notified that you removed it from your Game Plan. You can restore it within 30 days from My Activities → Recently Deleted."*
-   - No new button — reuse the existing destructive button + AlertDialog already added.
+| Source | Action | Coach notified? |
+|---|---|---|
+| Own standalone custom activity | Soft-delete template (Recently Deleted, restorable 30 days) — already works | n/a |
+| Coach-sent standalone activity (accepted) | Soft-delete template + insert `coach_notifications` row (`activity_removed`) — already works | Yes |
+| Item inside your own folder | Hard-delete the `activity_folder_items` row (folders aren't part of Recently Deleted) | n/a |
+| Item inside a coach-shared folder you accepted | Remove only your copy from your Game Plan (decline the assignment so it disappears for you), and notify the coach who shared the folder | Yes |
 
-3. **Notification insert (no schema change needed)**
-   `coach_notifications` already supports arbitrary `notification_type` strings (it's `text`, no CHECK). The existing INSERT RLS policy (`sender_user_id = auth.uid()`) already permits the player to write a notification addressed to the coach, so no migration is required.
-   ```ts
-   await supabase.from('coach_notifications').insert({
-     coach_user_id: sentRow.sender_id,
-     sender_user_id: user.id,
-     notification_type: 'activity_removed',
-     title: `${playerName} removed an activity from their Game Plan`,
-     message: `${template.title} • Removed ${new Date().toLocaleString()}`,
-     template_snapshot: sentRow.template_snapshot, // preserves what was sent
-   });
-   ```
+Confirmation copy adapts:
+- Own folder item: *"Remove this item from the folder? This can't be undone."*
+- Coach-shared folder item: *"Remove this folder from your Game Plan? {coachName} will be notified."*
+- Own standalone: existing copy ("moved to Recently Deleted… 30 days").
+- Coach-sent standalone: existing copy ("the coach who sent it will be notified").
 
-4. **Coach-side notification rendering** — verify the coach's notifications UI (search `coach_notifications` consumers) renders unknown `notification_type` values gracefully. If it switch/cases by type, add an `'activity_removed'` and `'activity_restored'` branch with a red/amber icon. (One file, additive.)
+### Technical changes
+
+**1. `src/components/GamePlanCard.tsx`**
+
+- Standalone path (~2450): drop the `!selectedCustomTask?.folderItemData` guard from `onDeleteActivity` — the standalone branch never has `folderItemData`, so the guard was just dead defensiveness, but keep `taskType === 'custom'` and the template id check.
+- Folder-snapshot path (~3078) and raw-fields path (~3269): wire `onDeleteActivity` on both `CustomActivityDetailDialog` mounts. Implementation is shared, so factor it into a local helper inside the component:
+
+  ```ts
+  const buildFolderItemDeleteHandler = (task: GamePlanTask) => async () => {
+    const fid = task.folderItemData;
+    if (!fid) return;
+    const isOwnFolder = fid.isOwner;
+
+    if (isOwnFolder) {
+      // Hard delete the item from the folder (RLS allows owner)
+      const { error } = await supabase
+        .from('activity_folder_items')
+        .delete()
+        .eq('id', fid.itemId);
+      if (error) { toast.error(t('common.error')); return; }
+    } else {
+      // Coach-shared folder: decline the assignment so it leaves the player's plan
+      const { data: assignment } = await supabase
+        .from('folder_assignments')
+        .select('id, sender_id, folder_id')
+        .eq('recipient_id', user!.id)
+        .eq('folder_id', fid.folderId /* add to folderItemData */)
+        .eq('status', 'accepted')
+        .maybeSingle();
+
+      if (assignment) {
+        await supabase
+          .from('folder_assignments')
+          .update({ status: 'declined' })
+          .eq('id', assignment.id);
+
+        // Notify the coach
+        await supabase.from('coach_notifications').insert({
+          coach_user_id: assignment.sender_id,
+          sender_user_id: user!.id,
+          notification_type: 'folder_removed',
+          title: `${playerName} removed a folder from their Game Plan`,
+          message: `"${fid.folderName}" • Removed ${new Date().toLocaleString()}`,
+        });
+      }
+    }
+
+    handleFolderLoggerClose(false);
+    refetch();
+    toast.success(t('customActivity.detail.removed', 'Removed from your Game Plan'));
+  };
+  ```
+
+  Pass `onDeleteActivity={buildFolderItemDeleteHandler(selectedFolderTask)}` into both folder-path `CustomActivityDetailDialog` instances. Pass `isCoachSent={!fid.isOwner}` and `coachName` (look up via `useReceivedFolders` assignments cache, fallback to "your coach").
+
+- Add `folderId` to `folderItemData` (small extension in `useGamePlan.ts`) so we can find the assignment to decline. The data is already available where `folderItemData` is built (line ~1615) — `folder.id`.
+
+**2. `src/hooks/useGamePlan.ts`**
+
+Extend `folderItemData` with `folderId: string` (line ~1615 area and the type definition near line 69). Also, when filtering tasks for the Game Plan (~line 622–650 where `folder_assignments` are read), ignore assignments with `status = 'declined'` so removed coach folders don't reappear (verify this — likely already the case, but assert it).
+
+**3. `src/components/CustomActivityDetailDialog.tsx`**
+
+Add an optional `deleteVariant?: 'standalone' | 'folder-own' | 'folder-coach'` prop (default `'standalone'`). Use it to pick the correct AlertDialog title/description:
+
+- `standalone` + `isCoachSent`: existing copy.
+- `standalone` + not coach-sent: existing copy.
+- `folder-own`: "Remove this item from the folder? This can't be undone."
+- `folder-coach`: "Remove this folder from your Game Plan? {coachName} will be notified."
+
+The existing destructive button + AlertDialog stay; only the copy branches.
+
+**4. `src/components/coach/CollaborativeWorkspace.tsx`**
+
+Add a render branch for `notification_type === 'folder_removed'` mirroring the existing `activity_removed` styling (red accent, "removed a folder").
 
 ### Out of scope
 
-- No DB schema migration (column types already permit the new values).
-- No change to folder-snapshot delete flow.
-- No change to the existing Recently Deleted UI or 30-day restore window.
-- No change to coach-sent activities still in `pending` status (those use the existing Accept/Reject flow on `PendingCoachActivityCard`).
+- No DB migrations. `coach_notifications.notification_type` is a free-text column; `folder_removed` is additive.
+- No change to Recently Deleted UI — folder items are not added there (they use hard delete or assignment decline).
+- No change to the pending coach-folder Accept/Decline flow.
+- No Undo for folder-item deletion in this pass (folder items don't have a soft-delete column). Standalone Undo continues to work as today.
+
+### Files to edit
+
+- `src/components/GamePlanCard.tsx` — wire delete on both folder dialog mounts; drop dead guard on standalone path.
+- `src/hooks/useGamePlan.ts` — add `folderId` to `folderItemData`; verify declined assignments are excluded.
+- `src/components/CustomActivityDetailDialog.tsx` — add `deleteVariant` and folder-aware confirm copy.
+- `src/components/coach/CollaborativeWorkspace.tsx` — render `folder_removed` notifications.
