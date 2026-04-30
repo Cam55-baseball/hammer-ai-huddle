@@ -7,7 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send, ChevronDown, GraduationCap } from 'lucide-react';
+import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send, ChevronDown, GraduationCap, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
@@ -181,6 +191,8 @@ interface CustomActivityDetailDialogProps {
   onToggleCheckbox?: (fieldId: string, checked: boolean) => void;
   onUpdateFieldValue?: (fieldId: string, value: string) => void;
   onSkipTask?: () => void;
+  /** Permanently remove this custom activity (soft-delete to Recently Deleted). */
+  onDeleteActivity?: () => Promise<void> | void;
   onSavePerformanceData?: (data: any) => Promise<void>;
   /** Partial completion: persist current progress, mark complete, do NOT auto-check remaining boxes */
   onDone?: () => Promise<void> | void;
@@ -204,6 +216,7 @@ export function CustomActivityDetailDialog({
   onToggleCheckbox,
   onUpdateFieldValue,
   onSkipTask,
+  onDeleteActivity,
   onSavePerformanceData,
   onDone,
   onCheckAll,
