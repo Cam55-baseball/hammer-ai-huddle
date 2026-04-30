@@ -174,8 +174,17 @@ export function VideoLibraryManager() {
     setEditTarget(video);
   };
 
-  // Filter to throttled-only used by coaching nudge "Fix now" CTA.
-  const filterThrottled = () => setShowOnlyIncomplete(true);
+  // Coaching nudge "Fix now" CTA — must produce a visible, observable result.
+  const filterThrottled = () => {
+    setVideoFilter('throttled');
+    setActiveTab('videos');
+    requestAnimationFrame(() => {
+      document.getElementById('owner-video-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    toast.success('Filtered to throttled videos', {
+      description: 'Open each one and use Quick Fix to restore reach.',
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -195,7 +204,7 @@ export function VideoLibraryManager() {
         </div>
       </div>
 
-      <OwnerCoachingNudge onFixThrottled={filterThrottled} />
+      <OwnerCoachingNudge throttledCount={throttledCount} onFixThrottled={filterThrottled} />
 
       <OwnerTaggingPerformancePanel />
 
@@ -205,7 +214,7 @@ export function VideoLibraryManager() {
         filterActive={showOnlyIncomplete}
       />
 
-      <Tabs defaultValue="videos">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="videos">Videos ({visibleVideos.length}{showOnlyIncomplete ? ` / ${videos.length}` : ''})</TabsTrigger>
           <TabsTrigger value="upload"><Plus className="h-3.5 w-3.5 mr-1" /> Add</TabsTrigger>
@@ -224,7 +233,7 @@ export function VideoLibraryManager() {
               ) : (
                 <>
                   <p>No videos yet. Add your first video to get started.</p>
-                  <Button className="mt-3" onClick={() => document.querySelector<HTMLButtonElement>('[data-value="upload"]')?.click()}>
+                  <Button className="mt-3" onClick={() => setActiveTab('upload')}>
                     <Plus className="h-4 w-4 mr-2" /> Add Video
                   </Button>
                 </>
