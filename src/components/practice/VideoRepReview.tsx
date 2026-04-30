@@ -119,6 +119,9 @@ export function VideoRepReview({ module, sessionConfig, onComplete }: VideoRepRe
               <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="gap-2">
                 <Upload className="h-4 w-4" /> Upload Session Video
               </Button>
+              <p className="text-[11px] text-muted-foreground text-center max-w-xs">
+                Max {VIDEO_LIMITS.MAX_FILE_SIZE_MB} MB ({(VIDEO_LIMITS.MAX_FILE_SIZE_MB / 1024).toFixed(0)} GB). If your file is too large, you'll see a message to try again with a shorter or compressed clip.
+              </p>
             </div>
           ) : (
             <>
