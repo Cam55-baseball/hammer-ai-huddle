@@ -1,33 +1,32 @@
 import { useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { getWaitingSW } from '@/registerSW';
 
+const RELOAD_FLAG = '__sw_reloaded_once';
+
+/**
+ * Shows a brief confirmation toast immediately after the service worker
+ * auto-reload completes, so users know why the page just refreshed.
+ *
+ * The actual update + reload is fully automatic (see src/registerSW.ts);
+ * no user action is required.
+ */
 export function PWAUpdatePrompt() {
   useEffect(() => {
-    const handler = () => {
-      toast({
-        title: 'Update Available',
-        description: 'A new version is ready. Tap to update.',
-        duration: 0,
-        action: (
-          <button
-            className="rounded bg-primary px-3 py-1 text-sm font-medium text-primary-foreground"
-            onClick={() => {
-              const sw = getWaitingSW();
-              if (sw) {
-                sw.postMessage({ type: 'SKIP_WAITING' });
-              }
-              window.location.reload();
-            }}
-          >
-            Update
-          </button>
-        ),
-      });
-    };
+    let didReload = false;
+    try {
+      didReload = sessionStorage.getItem(RELOAD_FLAG) === '1';
+      if (didReload) sessionStorage.removeItem(RELOAD_FLAG);
+    } catch {
+      /* ignore */
+    }
 
-    window.addEventListener('sw-update-available', handler);
-    return () => window.removeEventListener('sw-update-available', handler);
+    if (didReload) {
+      toast({
+        title: 'Updated to latest version',
+        description: 'You\'re now running the newest build.',
+        duration: 2500,
+      });
+    }
   }, []);
 
   return null;

@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => ({
     react(), 
     mode === "development" && componentTagger(),
     mode === 'production' && VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       injectRegister: null,
       manifest: false,
       workbox: {
@@ -22,7 +22,20 @@ export default defineConfig(({ mode }) => ({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/~oauth/],
+        // Critical: clean up old precaches & take control immediately when activated
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
         runtimeCaching: [
+          {
+            // HTML navigations: NetworkFirst so a fresh deploy is detected on the first visit
+            urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-shell',
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 10, maxAgeSeconds: 24 * 60 * 60 },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
