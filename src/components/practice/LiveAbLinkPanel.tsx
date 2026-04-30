@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Link2, Copy, Check, Loader2, Clock } from 'lucide-react';
+import { Link2, Copy, Check, Loader2, Clock, AlarmClockPlus } from 'lucide-react';
 import { useAbLinkStatus, AbLinkStatus } from '@/hooks/useAbLinkStatus';
 
 interface LiveAbLinkPanelProps {
@@ -33,7 +33,14 @@ const STATUS_LABEL: Record<AbLinkStatus, { text: string; className: string }> = 
   unknown: { text: 'Checking…', className: 'bg-muted text-muted-foreground border-border' },
 };
 
-function useCountdown(expiresAt: string | null): string | null {
+interface CountdownInfo {
+  text: string;
+  minutes: number;
+  tone: 'muted' | 'amber' | 'destructive';
+  pulse: boolean;
+}
+
+function useCountdown(expiresAt: string | null): CountdownInfo | null {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!expiresAt) return;
@@ -42,12 +49,29 @@ function useCountdown(expiresAt: string | null): string | null {
   }, [expiresAt]);
   if (!expiresAt) return null;
   const ms = new Date(expiresAt).getTime() - now;
-  if (ms <= 0) return 'expired';
-  const mins = Math.floor(ms / 60_000);
-  if (mins > 15) return null;
-  if (mins < 1) return '<1m left';
-  return `${mins}m left`;
+  if (ms <= 0) {
+    return { text: 'Expired', minutes: 0, tone: 'destructive', pulse: false };
+  }
+  const totalMins = Math.max(1, Math.floor(ms / 60_000));
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const text = hours > 0 ? `${hours}h ${mins}m left` : `${totalMins}m left`;
+  let tone: CountdownInfo['tone'] = 'muted';
+  let pulse = false;
+  if (totalMins <= 5) {
+    tone = 'destructive';
+    pulse = true;
+  } else if (totalMins <= 30) {
+    tone = 'amber';
+  }
+  return { text, minutes: totalMins, tone, pulse };
 }
+
+const COUNTDOWN_TONE_CLASS: Record<CountdownInfo['tone'], string> = {
+  muted: 'bg-muted text-muted-foreground border-border',
+  amber: 'bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300',
+  destructive: 'bg-destructive/15 text-destructive border-destructive/40',
+};
 
 export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveAbLinkPanelProps) {
   const { user } = useAuth();
@@ -58,11 +82,73 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
   const [joinInput, setJoinInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [unlinking, setUnlinking] = useState(false);
+  const [extending, setExtending] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const linkState = useAbLinkStatus(generatedCode);
   const countdown = useCountdown(linkState.expiresAt);
   const showLinkedView = !!generatedCode;
+
+  // Per-link, per-threshold one-shot warning toasts
+  const warnedRef = useRef<Set<string>>(new Set());
+
+  const handleExtend = async () => {
+    if (!user || !generatedCode) return;
+    setExtending(true);
+    try {
+      const { data, error } = await supabase.rpc('extend_ab_link' as any, {
+        p_user_id: user.id,
+        p_link_code: generatedCode,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) {
+        toast({
+          title: 'Could not extend',
+          description: 'Link is finalized or already expired.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      // Reset warning tokens so the new window can warn again later.
+      warnedRef.current.delete(`${generatedCode}:10`);
+      warnedRef.current.delete(`${generatedCode}:1`);
+      toast({ title: 'Extended', description: 'Link valid for another 2 hours.' });
+    } catch (err: any) {
+      toast({
+        title: 'Could not extend',
+        description: err?.message ?? 'Try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setExtending(false);
+    }
+  };
+
+  // One-time toasts at 10m and 1m thresholds, gated to active (pending/claimed) links.
+  useEffect(() => {
+    if (!generatedCode || !countdown) return;
+    if (linkState.status !== 'pending' && linkState.status !== 'claimed') return;
+    const fire = (threshold: 10 | 1) => {
+      const key = `${generatedCode}:${threshold}`;
+      if (warnedRef.current.has(key)) return;
+      warnedRef.current.add(key);
+      toast({
+        title: threshold === 10 ? 'AB Link expiring soon' : 'AB Link expires in <1 minute',
+        description: `Code ${generatedCode} expires in ${countdown.text.replace(' left', '')}. Extend to keep it alive.`,
+        duration: 0,
+        action: (
+          <Button size="sm" variant="outline" onClick={handleExtend} className="gap-1">
+            <AlarmClockPlus className="h-3 w-3" />
+            Extend 2h
+          </Button>
+        ) as any,
+      });
+    };
+    if (countdown.minutes <= 10 && countdown.minutes > 1) fire(10);
+    if (countdown.minutes <= 1 && countdown.minutes > 0) fire(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatedCode, countdown?.minutes, linkState.status]);
 
   const handleGenerate = async () => {
     if (!user) return;
@@ -179,13 +265,28 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
                 <Badge variant="outline" className={`text-[10px] ${label.className}`}>{label.text}</Badge>
               )}
               {countdown && !isLoading && (
-                <Badge variant="outline" className="text-[10px] gap-1">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] gap-1 ${COUNTDOWN_TONE_CLASS[countdown.tone]} ${countdown.pulse ? 'animate-pulse' : ''}`}
+                >
                   <Clock className="h-3 w-3" />
-                  {countdown}
+                  {countdown.text}
                 </Badge>
               )}
             </div>
           </div>
+          {canUnlink && countdown && countdown.minutes <= 30 && countdown.minutes > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExtend}
+              disabled={extending}
+              className="text-xs gap-1"
+            >
+              {extending ? <Loader2 className="h-3 w-3 animate-spin" /> : <AlarmClockPlus className="h-3 w-3" />}
+              Extend 2h
+            </Button>
+          )}
           {canUnlink && (
             <Button
               variant="ghost"

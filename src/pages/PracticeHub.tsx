@@ -140,6 +140,7 @@ export default function PracticeHub() {
     sessionId: string;
     code: string;
     message: string;
+    expired: boolean;
   } | null>(null);
   const [linkAttachConfirmed, setLinkAttachConfirmed] = useState<{ code: string } | null>(null);
   const [retryingLink, setRetryingLink] = useState(false);
@@ -150,14 +151,22 @@ export default function PracticeHub() {
       p_link_code: code,
       p_session_id: sessionId,
     });
-    if (error) throw error;
+    if (error) {
+      const e: any = new Error(error.message || 'Attach failed');
+      e.expired = false;
+      throw e;
+    }
     // Verify attach actually landed on our side
     const { data: row } = await supabase
       .from('live_ab_links' as any)
-      .select('creator_user_id, joiner_user_id, creator_session_id, joiner_session_id')
+      .select('creator_user_id, joiner_user_id, creator_session_id, joiner_session_id, status')
       .eq('link_code', code)
       .maybeSingle();
-    if (!row) throw new Error('Link not found');
+    if (!row) {
+      const e: any = new Error('Link not found');
+      e.expired = false;
+      throw e;
+    }
     const r = row as any;
     const mine =
       r.creator_user_id === userId
@@ -166,7 +175,13 @@ export default function PracticeHub() {
           ? r.joiner_session_id
           : null;
     if (mine !== sessionId) {
-      throw new Error('Session was not attached to the link');
+      const e: any = new Error(
+        r.status === 'expired'
+          ? 'Link expired before save'
+          : 'Session was not attached to the link',
+      );
+      e.expired = r.status === 'expired';
+      throw e;
     }
   };
 
@@ -185,6 +200,10 @@ export default function PracticeHub() {
         description: err?.message ?? 'Try again in a moment.',
         variant: 'destructive',
       });
+      // Promote to expired banner if the retry revealed expiration
+      if (err?.expired) {
+        setLinkAttachError((prev) => (prev ? { ...prev, expired: true, message: err.message } : prev));
+      }
     } finally {
       setRetryingLink(false);
     }
@@ -367,14 +386,18 @@ export default function PracticeHub() {
           setLinkAttachConfirmed({ code: sessionConfig.link_code });
         } catch (linkErr: any) {
           console.error('[PracticeHub] attach_session_to_link failed:', linkErr);
+          const expired = !!linkErr?.expired;
           setLinkAttachError({
             sessionId: result.id,
             code: sessionConfig.link_code,
             message: linkErr?.message ?? 'Unknown error',
+            expired,
           });
           toast({
-            title: 'Couldn\u2019t link sessions',
-            description: 'Your practice was saved. Tap Retry on the summary to try again.',
+            title: expired ? 'Link expired before save' : 'Couldn\u2019t link sessions',
+            description: expired
+              ? 'Your practice was saved. Generate a new code from your next session to link again.'
+              : 'Your practice was saved. Tap Retry on the summary to try again.',
             variant: 'destructive',
           });
         }
@@ -602,7 +625,20 @@ export default function PracticeHub() {
               {/* Step 5: Post-Session Summary */}
               {step === 'session_summary' && savedSessionId && sessionType && (
                 <>
-                  {linkAttachError && (
+                  {linkAttachError && linkAttachError.expired && (
+                    <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/5 flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-destructive">Link expired before save</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Your practice was saved. Link{' '}
+                          <span className="font-mono">{linkAttachError.code}</span> expired before both
+                          partners could finalize. Generate a new code from your next session to link with
+                          this partner again.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {linkAttachError && !linkAttachError.expired && (
                     <div className="mb-3 p-3 rounded-lg border border-destructive/40 bg-destructive/5 flex items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-destructive">Session not linked</p>
