@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSportTheme } from '@/contexts/SportThemeContext';
@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Link2, Copy, Check, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Link2, Copy, Check, Loader2, Clock } from 'lucide-react';
+import { useAbLinkStatus, AbLinkStatus } from '@/hooks/useAbLinkStatus';
 
 interface LiveAbLinkPanelProps {
   linkCode: string | null;
@@ -25,23 +25,51 @@ function generateCode(): string {
   return `AB-${code}`;
 }
 
+const STATUS_LABEL: Record<AbLinkStatus, { text: string; className: string }> = {
+  pending: { text: 'Waiting for partner', className: 'bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300' },
+  claimed: { text: 'Partner joined — save to finalize', className: 'bg-blue-500/15 text-blue-700 border-blue-500/30 dark:text-blue-300' },
+  linked: { text: 'Linked', className: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300' },
+  expired: { text: 'Expired', className: 'bg-muted text-muted-foreground border-border' },
+  unknown: { text: 'Checking…', className: 'bg-muted text-muted-foreground border-border' },
+};
+
+function useCountdown(expiresAt: string | null): string | null {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!expiresAt) return;
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - now;
+  if (ms <= 0) return 'expired';
+  const mins = Math.floor(ms / 60_000);
+  if (mins > 15) return null;
+  if (mins < 1) return '<1m left';
+  return `${mins}m left`;
+}
+
 export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveAbLinkPanelProps) {
   const { user } = useAuth();
   const { sport } = useSportTheme();
   const { toast } = useToast();
-  const [mode, setMode] = useState<'idle' | 'generate' | 'join'>('idle');
+  const [mode, setMode] = useState<'idle' | 'generate' | 'join'>(linkCode ? 'generate' : 'idle');
   const [generatedCode, setGeneratedCode] = useState<string | null>(linkCode);
   const [joinInput, setJoinInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [linked, setLinked] = useState(!!linkCode);
+
+  const linkState = useAbLinkStatus(generatedCode);
+  const countdown = useCountdown(linkState.expiresAt);
+  const showLinkedView = !!generatedCode && linkState.status !== 'unknown';
 
   const handleGenerate = async () => {
     if (!user) return;
     setLoading(true);
     try {
       const code = generateCode();
-      const { data: result, error } = await supabase.rpc('create_ab_link' as any, {
+      const { error } = await supabase.rpc('create_ab_link' as any, {
         p_user_id: user.id,
         p_sport: sport || 'baseball',
         p_link_code: code,
@@ -63,24 +91,22 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
     setLoading(true);
     try {
       const code = joinInput.trim().toUpperCase();
-
-      // Atomic claim — handles expiration, self-join guard, and race conditions in one statement
       const { data: claimed, error: claimErr } = await supabase
-        .rpc('claim_ab_link', { p_code: code, p_user_id: user.id });
-
+        .rpc('claim_ab_link' as any, { p_code: code, p_user_id: user.id });
       if (claimErr) throw claimErr;
-
       const link = Array.isArray(claimed) ? claimed[0] : claimed;
       if (!link) {
-        toast({ title: 'Invalid Code', description: 'Code not found, expired, already used, or is your own.', variant: 'destructive' });
+        toast({
+          title: 'Invalid Code',
+          description: 'Code not found, expired, already used, or is your own.',
+          variant: 'destructive',
+        });
         setLoading(false);
         return;
       }
-
-      setLinked(true);
       setGeneratedCode(code);
       onLinkEstablished(code);
-      toast({ title: 'Claimed!', description: 'Session link claimed. Save to complete.' });
+      toast({ title: 'Claimed', description: 'Session link claimed. Save to finalize.' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
@@ -96,25 +122,94 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
     }
   };
 
-  const handleUnlink = () => {
-    setLinked(false);
-    setGeneratedCode(null);
-    setMode('idle');
-    setJoinInput('');
-    onUnlink();
+  const handleUnlink = async () => {
+    if (!user || !generatedCode) {
+      onUnlink();
+      return;
+    }
+    // If already linked, don't allow tearing down a finalized link from this UI
+    if (linkState.status === 'linked') {
+      toast({
+        title: 'Already linked',
+        description: 'This link is finalized and can no longer be cancelled.',
+      });
+      return;
+    }
+    setUnlinking(true);
+    try {
+      const { error } = await supabase.rpc('expire_ab_link' as any, {
+        p_user_id: user.id,
+        p_link_code: generatedCode,
+      });
+      if (error) throw error;
+      setGeneratedCode(null);
+      setMode('idle');
+      setJoinInput('');
+      onUnlink();
+      toast({ title: 'Unlinked', description: 'Link cancelled on the server.' });
+    } catch (err: any) {
+      toast({
+        title: 'Could not unlink',
+        description: err.message ?? 'Try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUnlinking(false);
+    }
   };
 
-  if (linked && generatedCode) {
+  if (showLinkedView && generatedCode) {
+    const label = STATUS_LABEL[linkState.status];
+    const canUnlink = linkState.status === 'pending' || linkState.status === 'claimed';
     return (
-      <div className="flex items-center gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
-        <Link2 className="h-4 w-4 text-primary" />
-        <div className="flex-1">
-          <p className="text-xs font-medium">Session Linked</p>
-          <Badge variant="outline" className="text-[10px] mt-0.5">{generatedCode}</Badge>
+      <div className="space-y-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+        <div className="flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-primary" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium">AB Link</p>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <Badge variant="outline" className="text-[10px] font-mono">{generatedCode}</Badge>
+              <Badge variant="outline" className={`text-[10px] ${label.className}`}>{label.text}</Badge>
+              {countdown && (
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  <Clock className="h-3 w-3" />
+                  {countdown}
+                </Badge>
+              )}
+            </div>
+          </div>
+          {canUnlink && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleUnlink}
+              disabled={unlinking}
+              className="text-xs text-destructive"
+            >
+              {unlinking ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Unlink'}
+            </Button>
+          )}
+          {linkState.status === 'expired' && (
+            <Button variant="outline" size="sm" onClick={handleGenerate} disabled={loading} className="text-xs">
+              New Code
+            </Button>
+          )}
         </div>
-        <Button variant="ghost" size="sm" onClick={handleUnlink} className="text-xs text-destructive">
-          Unlink
-        </Button>
+        {linkState.status === 'claimed' && (
+          <p className="text-[10px] text-muted-foreground">
+            {linkState.mySessionAttached
+              ? 'Your session is attached. Waiting on partner to save.'
+              : 'Save your session to finalize the link.'}
+          </p>
+        )}
+        {mode === 'generate' && linkState.status === 'pending' && (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 text-xs gap-1">
+              {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+              {copied ? 'Copied' : 'Copy code'}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -141,23 +236,11 @@ export function LiveAbLinkPanel({ linkCode, onLinkEstablished, onUnlink }: LiveA
         </div>
       )}
 
-      {mode === 'generate' && generatedCode && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Badge className="text-sm font-mono px-3 py-1">{generatedCode}</Badge>
-            <Button variant="ghost" size="sm" onClick={handleCopy} className="h-7 w-7 p-0">
-              {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
-            </Button>
-          </div>
-          <p className="text-[10px] text-muted-foreground">Share this code with your partner</p>
-        </div>
-      )}
-
       {mode === 'join' && (
         <div className="flex gap-2">
           <Input
             value={joinInput}
-            onChange={e => setJoinInput(e.target.value)}
+            onChange={(e) => setJoinInput(e.target.value)}
             placeholder="AB-XXXXX"
             className="h-8 text-xs font-mono uppercase"
             maxLength={8}
