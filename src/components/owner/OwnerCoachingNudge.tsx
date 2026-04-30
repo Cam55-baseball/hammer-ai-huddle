@@ -13,15 +13,20 @@ interface Nudge {
 }
 
 interface Props {
+  /**
+   * Authoritative throttled count from the parent — must match the same
+   * `distribution_tier === 'throttled'` signal the per-card badge & filter use,
+   * so the nudge claim and the "Fix now" filtered list always agree.
+   */
+  throttledCount?: number;
   onFixThrottled?: () => void;
 }
 
 /**
  * Phase 6 — Silent Coaching.
- * Surfaces ONE pattern at a time, derived from local confidence map.
- * Dismissible per session. Pure derivation — no DB writes.
+ * Surfaces ONE pattern at a time. Dismissible per session. Pure derivation.
  */
-export function OwnerCoachingNudge({ onFixThrottled }: Props) {
+export function OwnerCoachingNudge({ throttledCount = 0, onFixThrottled }: Props) {
   const { data: confidenceMap } = useVideoConfidenceMap();
   const [dismissed, setDismissed] = useState<boolean>(false);
 
@@ -30,6 +35,15 @@ export function OwnerCoachingNudge({ onFixThrottled }: Props) {
   }, []);
 
   const nudge = useMemo<Nudge | null>(() => {
+    // Highest-leverage nudge first — actionable throttled count from authoritative source.
+    if (throttledCount >= 1 && onFixThrottled) {
+      return {
+        id: 'throttled-batch',
+        message: `${throttledCount} ${throttledCount === 1 ? 'video is' : 'videos are'} throttled — fix now to restore reach.`,
+        cta: { label: 'Fix now', onClick: onFixThrottled },
+      };
+    }
+
     if (!confidenceMap || confidenceMap.size === 0) return null;
     const all = Array.from(confidenceMap.values());
     const recent = all.slice(0, 10);
@@ -37,16 +51,7 @@ export function OwnerCoachingNudge({ onFixThrottled }: Props) {
     const top5Avg = Math.round(
       [...all].sort((a, b) => b.score - a.score).slice(0, 5).reduce((s, c) => s + c.score, 0) / Math.max(1, Math.min(5, all.length))
     );
-    const needsWork = all.filter(c => c.tier === 'needs_work').length;
 
-    // Highest-leverage nudge first — throttled count (action-able).
-    if (needsWork >= 3 && onFixThrottled) {
-      return {
-        id: 'throttled-batch',
-        message: `${needsWork} videos are throttled — fix now to restore reach.`,
-        cta: { label: 'Fix now', onClick: onFixThrottled },
-      };
-    }
     if (recentAvg + 15 < top5Avg) {
       return {
         id: 'avg-vs-top',
@@ -60,7 +65,7 @@ export function OwnerCoachingNudge({ onFixThrottled }: Props) {
       };
     }
     return null;
-  }, [confidenceMap, onFixThrottled]);
+  }, [confidenceMap, throttledCount, onFixThrottled]);
 
   if (dismissed || !nudge) return null;
 
