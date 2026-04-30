@@ -302,9 +302,20 @@ export function VideoLibraryManager() {
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
                       {isThrottled && (
-                        <p className="mt-1.5 text-[11px] text-destructive font-medium">
-                          {SYSTEM_TONE.throttledOwnerCard}
-                        </p>
+                        <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                          <p className="text-[11px] text-destructive font-medium">
+                            {SYSTEM_TONE.throttledOwnerCard}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-[11px] gap-1"
+                            onClick={() => openQuickFix(video, 'auto_suggest')}
+                          >
+                            <Sparkles className="h-3 w-3" />
+                            Quick Fix
+                          </Button>
+                        </div>
                       )}
                       {isOwner && cta && !isThrottled && action && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
