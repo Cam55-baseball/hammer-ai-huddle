@@ -237,6 +237,8 @@ export function CustomActivityDetailDialog({
   // cannot be visually overridden by any in-flight parent / realtime update.
   // Cleared on dialog close.
   const [localCheckboxStates, setLocalCheckboxStates] = useState<Record<string, boolean>>({});
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const isMounted = useRef(true);
   const onUpdateFieldValueRef = useRef(onUpdateFieldValue);
