@@ -94,6 +94,9 @@ export function RepVideoAnalysis({
             {THROW_MECHANICS_MODULES.includes(module) ? 'Analyze Throw Mechanics' : 'Analyze'} — Rep #{repIndex + 1}
             <Badge variant="secondary" className="text-xs capitalize">{module}</Badge>
           </DialogTitle>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Max clip size 2 GB. If your video fails to load or upload, it's likely too large — try a shorter clip or compress the file and try again.
+          </p>
         </DialogHeader>
 
         <div className="space-y-3">
