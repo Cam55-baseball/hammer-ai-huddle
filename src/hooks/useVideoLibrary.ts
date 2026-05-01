@@ -64,9 +64,13 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       let query: any = (supabase as any)
         .from('library_videos')
         .select('*')
-        // Phase 6 — athletes never see blocked (Empty) videos.
-        .neq('distribution_tier', 'blocked')
         .range(from, to);
+
+      // Phase 6 — athletes never see blocked (Empty) videos.
+      // Owner manager opts in via includeBlocked so it can see/fix them.
+      if (!includeBlocked) {
+        query = query.neq('distribution_tier', 'blocked');
+      }
 
       if (search && search.trim()) {
         const term = `%${search.trim()}%`;
