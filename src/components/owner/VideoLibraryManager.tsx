@@ -310,10 +310,12 @@ export function VideoLibraryManager() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
-                      {isThrottled && (
+                      {needsFix && (
                         <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                           <p className="text-[11px] text-destructive font-medium">
-                            {SYSTEM_TONE.throttledOwnerCard}
+                            {isBlocked
+                              ? 'Hidden from athletes — fill in the missing fields to publish.'
+                              : SYSTEM_TONE.throttledOwnerCard}
                           </p>
                           <Button
                             size="sm"
@@ -326,7 +328,7 @@ export function VideoLibraryManager() {
                           </Button>
                         </div>
                       )}
-                      {isOwner && cta && !isThrottled && action && (
+                      {isOwner && cta && !needsFix && action && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
                           <span className="text-muted-foreground italic">
                             <span className="font-medium not-italic">Hammer Suggestion — Owner Decides:</span>{' '}
