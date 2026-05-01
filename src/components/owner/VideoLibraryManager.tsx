@@ -212,7 +212,7 @@ export function VideoLibraryManager() {
         </div>
       </div>
 
-      <OwnerCoachingNudge throttledCount={throttledCount} onFixThrottled={filterThrottled} />
+      <OwnerCoachingNudge throttledCount={throttledCount} blockedCount={blockedCount} onFixThrottled={filterThrottled} onFixBlocked={filterThrottled} />
 
       <OwnerTaggingPerformancePanel />
 
