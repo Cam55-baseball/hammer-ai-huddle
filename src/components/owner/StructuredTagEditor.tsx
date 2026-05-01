@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { useVideoTaxonomy, groupTaxonomyByLayer } from '@/hooks/useVideoTaxonomy';
 import type { SkillDomain, TagLayer } from '@/lib/videoRecommendationEngine';
+import { LAYER_GUIDANCE } from './TaxonomyManager';
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
 const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
@@ -97,6 +98,7 @@ export function StructuredTagEditor({ value, onChange }: Props) {
           {(['movement_pattern', 'result', 'context', 'correction'] as TagLayer[]).map(layer => (
             <div key={layer} className="space-y-1.5">
               <Label className="text-xs">{LAYER_LABELS[layer]}{layer === 'movement_pattern' ? ' *' : ''}</Label>
+              <p className="text-[10px] text-muted-foreground -mt-1">{LAYER_GUIDANCE[layer].short}</p>
               <div className="flex flex-wrap gap-1">
                 {grouped[layer].map(tag => {
                   const selected = value.tagAssignments[tag.id] != null;

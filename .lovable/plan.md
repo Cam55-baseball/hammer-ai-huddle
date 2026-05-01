@@ -1,78 +1,63 @@
-## What's actually broken
+## Goal
 
-In the public Video Library, several videos show a blank player even though a link was provided. Three distinct causes, all in `src/components/video-library/VideoPlayer.tsx` and `src/components/video-library/VideoCard.tsx`:
+Three improvements to the Owner → Video Library → Tag Taxonomy workflow:
 
-1. **YouTube Shorts and `youtu.be` short links don't parse.**
-   The current regex `(?:v=|\/embed\/|youtu\.be\/)([^&?#]+)` does not handle:
-   - `https://youtube.com/shorts/<id>` (Shorts) — falls through and uses the original watch URL as the iframe `src`, which YouTube refuses to embed → blank frame.
-   - `https://m.youtube.com/watch?v=<id>` parses, but the mobile domain occasionally trips embed cookies. We will normalize to `www.youtube.com/embed/<id>`.
-   - URLs with extra params (`?si=`, `&t=`, playlists) — already handled, but Shorts fail before they reach this.
+1. **Hard-delete inappropriate or misplaced tags** (today only soft-deactivates).
+2. **Hammer auto-analyzes new tags** added by the owner — propagating them across the library so existing videos get re-suggested with the new vocabulary.
+3. **Clear, opinionated descriptions for each layer** (Movement Pattern / Result / Context / Correction) so the owner picks the correct one when adding a tag.
 
-2. **X (Twitter) and TikTok links have no embed at all.**
-   Today they're saved as `video_type='external'`, which only renders an "Open in New Tab" button. The card has no thumbnail and the detail page shows no preview, which the user reads as "blank post / no video".
+---
 
-3. **One row has an empty `video_url`** ("Hip Action with Ted Williams Pt.2"). The detail view shows "No video available". This violates the project rule that empty URLs must be stored as NULL and never accepted on insert. It should also surface clearly to the owner so they can fix it.
+## What changes
 
-## Fix plan
+### 1. `src/components/owner/TaxonomyManager.tsx` — Delete + Layer guidance + New-tag flow
 
-### 1. Robust YouTube ID extraction (covers Shorts + every common variant)
+- **Layer descriptions (always visible).** Add a clear one-line definition + 1 example for each layer right under the Layer dropdown. When a layer is selected, show its full description card so the owner cannot misplace a tag:
+  - **Movement Pattern** — *What the body is doing (mechanics).* e.g. `hands_forward_early`, `early_extension`.
+  - **Result** — *What happened on the play (outcome).* e.g. `roll_over_contact`, `pop_up`, `barrel`.
+  - **Context** — *The situation around the rep.* e.g. `two_strike`, `risp`, `inside_pitch`.
+  - **Correction** — *Coaching intent / fix being demonstrated.* e.g. `stay_connected`, `load_back_side`.
 
-Replace the single regex with a helper that recognizes all of:
-- `youtube.com/watch?v=<id>` (any subdomain, including `m.` and `www.`)
-- `youtu.be/<id>`
-- `youtube.com/embed/<id>`
-- `youtube.com/shorts/<id>`  ← new
-- `youtube.com/live/<id>`     ← new
+- **Real delete (not just deactivate).** Replace the `Trash2` action with a confirm dialog offering two actions:
+  - **Deactivate** — current behavior (`active = false`); preserves history on already-tagged videos.
+  - **Delete permanently** — `DELETE FROM video_tag_taxonomy WHERE id = ...` (cascade removes dependent `video_tag_assignments` and `video_tag_rules` rows referencing it). Show a warning summarizing how many videos currently use the tag (count from `video_tag_assignments`) before confirming.
 
-Apply the same helper in **both**:
-- `VideoPlayer.tsx` (for the iframe `src`) — emit `https://www.youtube.com/embed/<id>` (and forward `?t=` as `?start=` when present).
-- `VideoCard.tsx` (for the thumbnail) — emit `https://img.youtube.com/vi/<id>/mqdefault.jpg` so Shorts get a thumbnail too.
+- **After adding a tag**, automatically trigger Hammer re-analysis (see step 2) for affected videos and toast the count of videos queued for re-suggestion.
 
-Extract this into a small shared util (e.g. `src/lib/videoEmbed.ts`) so the two components can never drift again.
+### 2. Hammer re-analysis when a new tag is added
 
-### 2. First-class support for X (Twitter) and TikTok
+- **New edge function `reanalyze-videos-for-new-tag`** (`supabase/functions/reanalyze-videos-for-new-tag/index.ts`):
+  - Owner-only (verifies `user_roles.role = 'owner'`).
+  - Input: `{ tagId }`.
+  - Loads the new tag (layer, key, label, skill_domain) and the **full active taxonomy** (so Hammer sees siblings/context).
+  - Selects all `library_videos` matching the tag's skill domain that have an `ai_description` or `description` and are not `blocked`. Caps the batch at 50 per call (paginates via `cursor` for larger libraries).
+  - For each video, calls Lovable AI Gateway (`google/gemini-2.5-flash`) with:
+    - The video's title, description, ai_description, existing assigned tags (labels), existing skill_domains.
+    - The full vocabulary grouped by layer.
+    - A directive: *"Only propose the new tag `<layer>:<key>` if explicitly supported by the description and existing tags. You may also propose other vocabulary tags missing from the video. Confidence must be 0–1."*
+  - Inserts proposals into the existing `video_tag_suggestions` table with `source = 'taxonomy_expansion'` so they appear in the existing owner review surface (no new UI needed for the queue).
+  - Returns `{ analyzed, proposals_inserted }`.
 
-Add two new player branches in `VideoPlayer.tsx`:
+- **Trigger from `TaxonomyManager`** right after a successful tag insert: fire-and-forget invoke, optimistic toast: *"Hammer is reviewing N videos for this tag — proposals will appear in the suggestion queue."*
 
-- **X / Twitter**: render via `https://platform.twitter.com/embed/Tweet.html?id=<tweetId>` inside an iframe. Parse `tweetId` from `https://(twitter|x).com/<user>/status/<id>` (strip `?s=...`). This produces a fully playable embedded tweet/video.
-- **TikTok**: render via `https://www.tiktok.com/embed/v2/<videoId>` iframe. Parse `videoId` from `https://www.tiktok.com/@<user>/video/<id>`.
+- **Why this satisfies the request**: Hammer considers *all corresponding tags and descriptions* (full vocabulary + each video's existing assignments + descriptions) so the new tag is integrated coherently across the library and starts driving recommendations as soon as the owner approves the proposals.
 
-Auto-detect the platform from `video_url` even when stored as `video_type='external'`, so existing rows start working immediately without needing a re-tag. Order: youtube → vimeo → x/twitter → tiktok → fallback.
+### 3. Layer-description tooltips on `StructuredTagEditor`
 
-Keep the existing "Open in New Tab" button as a secondary action under the embed in case a tweet is later deleted/protected.
+Mirror the same one-line layer definitions on `src/components/owner/StructuredTagEditor.tsx` next to each layer label so the same guidance appears when tagging an individual video.
 
-### 3. Use detected platform for thumbnails too
+---
 
-Update `VideoCard.tsx`'s `getThumbnail()` to use the same detection helper:
-- YouTube (any variant) → `img.youtube.com` thumbnail.
-- TikTok → keep the platform play icon (no public thumbnail API), but show the title prominently so the card is not "blank".
-- X / Twitter → same as TikTok.
+## Technical details
 
-This eliminates the visual "blank post" feel.
+**Schema check (no migration needed)** — `video_tag_taxonomy` already has FK cascade behavior via `video_tag_assignments.tag_id` and `video_tag_rules` references; will verify before delete and add `ON DELETE CASCADE` via a small migration only if missing.
 
-### 4. Don't let blank URLs ever ship again
+**Edge function config** — standard Lovable defaults (`verify_jwt = false`, in-code JWT validation, `persistSession: false`, `Deno.serve`). Uses existing `LOVABLE_API_KEY`.
 
-- In `useVideoLibraryAdmin.uploadVideo` and update flows, reject any `video_url` whose trimmed value is empty (already partially enforced for non-upload types — extend it to **all** insert/update paths and store `null` rather than `''`).
-- In `VideoLibraryManager`'s readiness signal, surface "Missing video URL" as its own row-level warning so the owner can spot the broken row immediately. The "Hip Action with Ted Williams Pt.2" row is the live example.
+**Files touched**
+- `src/components/owner/TaxonomyManager.tsx` — layer descriptions, delete dialog, post-add re-analysis trigger.
+- `src/components/owner/StructuredTagEditor.tsx` — layer description hints.
+- `supabase/functions/reanalyze-videos-for-new-tag/index.ts` — new function.
+- `supabase/migrations/<ts>_taxonomy_cascade.sql` — only if FK cascade is missing.
 
-### 5. Sanity sweep (no DB migration required)
-
-- Verify existing rows render after the fix using their current `video_type`:
-  - `youtube` Shorts → embed via new parser.
-  - `external` X / TikTok → auto-routed to the right embed branch.
-  - The one empty-URL row → flagged in the owner manager.
-- No schema changes. No data backfill needed. The behavior change is purely in the player + card components and a tiny shared helper.
-
-## Files touched
-
-- `src/lib/videoEmbed.ts` — **new** small util: `parseYouTubeId`, `parseVimeoId`, `parseTweetId`, `parseTikTokId`, `detectPlatform`.
-- `src/components/video-library/VideoPlayer.tsx` — use the util; add X and TikTok embed branches; auto-detect platform from URL.
-- `src/components/video-library/VideoCard.tsx` — use the util for thumbnails so Shorts and other YouTube variants show artwork.
-- `src/hooks/useVideoLibraryAdmin.ts` — enforce non-empty `video_url` on every insert/update path; store empty as `null`.
-- `src/components/owner/VideoLibraryManager.tsx` — surface "Missing video URL" as a per-card warning so broken rows are obvious.
-
-## Result the user will see
-
-- YouTube Shorts and mobile (`m.youtube.com`) links play inline.
-- X / Twitter posts and TikTok posts show an embedded, playable preview right in the library — no more "blank post".
-- Any row with a missing URL is loud and actionable in the owner manager instead of silently empty for athletes.
+**Out of scope** — no changes to the recommendation engine itself; new tags flow in through the existing `video_tag_suggestions` → owner approve → `video_tag_assignments` path which already triggers tier recompute via `trg_recompute_tier_on_assignment`.
