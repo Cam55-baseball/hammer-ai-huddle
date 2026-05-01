@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getEmbedInfo, detectPlatform } from "@/lib/videoEmbed";
 import type { LibraryVideo } from "@/hooks/useVideoLibrary";
 
 interface VideoCardProps {
@@ -12,16 +13,15 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
-  const getThumbnail = () => {
-    if (video.thumbnail_url) return video.thumbnail_url;
-    if (video.video_type === 'youtube' && video.video_url) {
-      const match = video.video_url.match(/(?:v=|\/embed\/|youtu\.be\/)([^&?#]+)/);
-      if (match) return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
-    }
-    return null;
-  };
-
-  const thumbnail = getThumbnail();
+  const info = getEmbedInfo(video.video_url);
+  const thumbnail = video.thumbnail_url || info.thumbnailUrl;
+  const platform = info.platform !== 'unknown' ? info.platform : detectPlatform(video.video_url);
+  const platformLabel =
+    platform === 'youtube' ? 'YouTube'
+    : platform === 'vimeo' ? 'Vimeo'
+    : platform === 'twitter' ? 'X / Twitter'
+    : platform === 'tiktok' ? 'TikTok'
+    : null;
 
   return (
     <Card className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onPlay(video)}>
