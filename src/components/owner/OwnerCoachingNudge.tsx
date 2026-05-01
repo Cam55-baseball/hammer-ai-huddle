@@ -81,7 +81,7 @@ export function OwnerCoachingNudge({ throttledCount = 0, blockedCount = 0, onFix
       };
     }
     return null;
-  }, [confidenceMap, throttledCount, onFixThrottled]);
+  }, [confidenceMap, throttledCount, blockedCount, onFixThrottled, onFixBlocked]);
 
   if (dismissed || !nudge) return null;
 
