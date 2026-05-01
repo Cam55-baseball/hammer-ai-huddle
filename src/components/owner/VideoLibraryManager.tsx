@@ -271,9 +271,10 @@ export function VideoLibraryManager() {
               const r = readinessMap.get(video.id);
               const conf = confidenceMap?.get(video.id);
               const tier = normalizeTier((video as any).distribution_tier);
-              // Phase 6 safety: blocked videos must never render, even if a server-side filter slips.
-              if (tier === 'blocked') return null;
+              // Owner sees blocked (Empty) videos so they can fix them — they remain hidden from athletes server-side.
               const isThrottled = tier === 'throttled';
+              const isBlocked = tier === 'blocked';
+              const needsFix = isThrottled || isBlocked;
               // Phase 7 — derived monetization overlay (no DB writes, no ranking impact).
               const monetizationVideo = {
                 ...video,
