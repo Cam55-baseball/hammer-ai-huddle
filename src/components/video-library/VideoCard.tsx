@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getEmbedInfo, detectPlatform } from "@/lib/videoEmbed";
 import type { LibraryVideo } from "@/hooks/useVideoLibrary";
 
 interface VideoCardProps {
@@ -12,16 +13,15 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
-  const getThumbnail = () => {
-    if (video.thumbnail_url) return video.thumbnail_url;
-    if (video.video_type === 'youtube' && video.video_url) {
-      const match = video.video_url.match(/(?:v=|\/embed\/|youtu\.be\/)([^&?#]+)/);
-      if (match) return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
-    }
-    return null;
-  };
-
-  const thumbnail = getThumbnail();
+  const info = getEmbedInfo(video.video_url);
+  const thumbnail = video.thumbnail_url || info.thumbnailUrl;
+  const platform = info.platform !== 'unknown' ? info.platform : detectPlatform(video.video_url);
+  const platformLabel =
+    platform === 'youtube' ? 'YouTube'
+    : platform === 'vimeo' ? 'Vimeo'
+    : platform === 'twitter' ? 'X / Twitter'
+    : platform === 'tiktok' ? 'TikTok'
+    : null;
 
   return (
     <Card className="overflow-hidden group cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onPlay(video)}>
@@ -29,7 +29,17 @@ export function VideoCard({ video, onPlay, onLike }: VideoCardProps) {
         {thumbnail ? (
           <img src={thumbnail} alt={video.title} className="w-full h-full object-cover" />
         ) : (
-          <Play className="h-10 w-10 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center gap-1.5 text-muted-foreground">
+            <Play className="h-10 w-10" />
+            {platformLabel && (
+              <span className="text-[10px] font-medium uppercase tracking-wide">{platformLabel}</span>
+            )}
+          </div>
+        )}
+        {platformLabel && thumbnail && (
+          <Badge variant="secondary" className="absolute top-1.5 left-1.5 text-[9px] px-1.5 py-0 backdrop-blur bg-background/80">
+            {platformLabel}
+          </Badge>
         )}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
           <Play className="h-12 w-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />

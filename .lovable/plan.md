@@ -1,47 +1,78 @@
-## The bug
+## What's actually broken
 
-Library Health says **0/11 ready** but the list is empty and "Show only incomplete" shows nothing. Confirmed via DB: **all 11 videos are currently tier `blocked`** (every video is missing all 4 engine fields — format, skill, description, ≥2 tag assignments — so `recompute_library_video_tier` classified them as `blocked`).
+In the public Video Library, several videos show a blank player even though a link was provided. Three distinct causes, all in `src/components/video-library/VideoPlayer.tsx` and `src/components/video-library/VideoCard.tsx`:
 
-Two compounding rules conspire to hide them from the owner:
+1. **YouTube Shorts and `youtu.be` short links don't parse.**
+   The current regex `(?:v=|\/embed\/|youtu\.be\/)([^&?#]+)` does not handle:
+   - `https://youtube.com/shorts/<id>` (Shorts) — falls through and uses the original watch URL as the iframe `src`, which YouTube refuses to embed → blank frame.
+   - `https://m.youtube.com/watch?v=<id>` parses, but the mobile domain occasionally trips embed cookies. We will normalize to `www.youtube.com/embed/<id>`.
+   - URLs with extra params (`?si=`, `&t=`, playlists) — already handled, but Shorts fail before they reach this.
 
-1. **Fetch-side block**: `src/hooks/useVideoLibrary.ts` always appends `.neq('distribution_tier', 'blocked')` to the SQL query. This is a Phase-6 "athletes never see blocked" rule — but the owner dashboard reuses this same hook, so the owner never receives the rows either.
-2. **Render-side block**: `VideoLibraryManager.tsx` has a "safety" early-return `if (tier === 'blocked') return null;` inside the map. Even if the rows were fetched, every card would be skipped.
+2. **X (Twitter) and TikTok links have no embed at all.**
+   Today they're saved as `video_type='external'`, which only renders an "Open in New Tab" button. The card has no thumbnail and the detail page shows no preview, which the user reads as "blank post / no video".
 
-Result: the readiness view (queried separately) sees 11 rows → "0/11 ready", but the video list is empty → owner has nothing to click and is stuck.
+3. **One row has an empty `video_url`** ("Hip Action with Ted Williams Pt.2"). The detail view shows "No video available". This violates the project rule that empty URLs must be stored as NULL and never accepted on insert. It should also surface clearly to the owner so they can fix it.
 
-## The fix
+## Fix plan
 
-Make the blocked-tier exclusion **audience-aware**, not absolute. Athletes still never see blocked videos. The owner must see them prominently — they're the highest-priority backfill targets.
+### 1. Robust YouTube ID extraction (covers Shorts + every common variant)
 
-### 1. `src/hooks/useVideoLibrary.ts`
-- Add an `includeBlocked?: boolean` option (default `false` to preserve athlete safety).
-- When `includeBlocked` is true, omit the `.neq('distribution_tier', 'blocked')` clause.
+Replace the single regex with a helper that recognizes all of:
+- `youtube.com/watch?v=<id>` (any subdomain, including `m.` and `www.`)
+- `youtu.be/<id>`
+- `youtube.com/embed/<id>`
+- `youtube.com/shorts/<id>`  ← new
+- `youtube.com/live/<id>`     ← new
 
-### 2. `src/components/owner/VideoLibraryManager.tsx`
-- Pass `includeBlocked: true` when calling `useVideoLibrary` (this is the owner-only manager — gated by `useOwnerAccess`, mounted on the owner dashboard).
-- Remove the `if (tier === 'blocked') return null;` early return in the card map. Owner must be able to see and edit Empty videos.
-- Update the per-card UX so blocked videos are unmistakable:
-  - The existing `ReadinessBadge` already renders a red **Empty** badge when all 4 fields are missing — keep it.
-  - Reuse the throttled treatment (red helper line + **Quick Fix** button) for blocked videos so the owner can one-click into the editor with `auto_suggest`. Change the trigger from `isThrottled` to `isThrottled || tier === 'blocked'`, and pick a tier-appropriate helper line (e.g. `SYSTEM_TONE.blockedOwnerCard` if it exists, otherwise reuse the throttled string with a small prefix like "Hidden from athletes — fix to publish.").
-- Recompute `throttledCount` is fine as-is. Add a parallel `blockedCount` and surface it in the existing OwnerCoachingNudge (or a sibling line) so the nudge truthfully reflects "11 hidden — fix now to publish" instead of "0 throttled".
+Apply the same helper in **both**:
+- `VideoPlayer.tsx` (for the iframe `src`) — emit `https://www.youtube.com/embed/<id>` (and forward `?t=` as `?start=` when present).
+- `VideoCard.tsx` (for the thumbnail) — emit `https://img.youtube.com/vi/<id>/mqdefault.jpg` so Shorts get a thumbnail too.
 
-### 3. `LibraryHealthStrip` / "Show only incomplete"
-No code change required once the hook returns blocked rows. The current `incomplete` filter is `r && !r.is_ready`, which already includes empty rows. The list will populate immediately.
+Extract this into a small shared util (e.g. `src/lib/videoEmbed.ts`) so the two components can never drift again.
 
-### 4. Sanity sweep
-Search for other consumers of `useVideoLibrary` to confirm none of them are owner-side and accidentally relying on the blocked-exclusion. Athlete-facing pages (`VideoLibrary.tsx`, `VideoLibraryPlayer.tsx`, etc.) keep the default `includeBlocked: false` and behavior is unchanged.
+### 2. First-class support for X (Twitter) and TikTok
 
-## What the owner will see after the fix
+Add two new player branches in `VideoPlayer.tsx`:
 
-- Library Health: **0/11 ready (0%)** — unchanged, still accurate.
-- Video list: **11 cards visible**, each with a red **Empty** badge, a "Hidden from athletes — fix to publish" line, and a **Quick Fix** button that opens the editor with auto-suggest.
-- Coaching nudge updates to reflect blocked count.
-- "Show only incomplete" and "Backfill missing data" both work end-to-end.
+- **X / Twitter**: render via `https://platform.twitter.com/embed/Tweet.html?id=<tweetId>` inside an iframe. Parse `tweetId` from `https://(twitter|x).com/<user>/status/<id>` (strip `?s=...`). This produces a fully playable embedded tweet/video.
+- **TikTok**: render via `https://www.tiktok.com/embed/v2/<videoId>` iframe. Parse `videoId` from `https://www.tiktok.com/@<user>/video/<id>`.
+
+Auto-detect the platform from `video_url` even when stored as `video_type='external'`, so existing rows start working immediately without needing a re-tag. Order: youtube → vimeo → x/twitter → tiktok → fallback.
+
+Keep the existing "Open in New Tab" button as a secondary action under the embed in case a tweet is later deleted/protected.
+
+### 3. Use detected platform for thumbnails too
+
+Update `VideoCard.tsx`'s `getThumbnail()` to use the same detection helper:
+- YouTube (any variant) → `img.youtube.com` thumbnail.
+- TikTok → keep the platform play icon (no public thumbnail API), but show the title prominently so the card is not "blank".
+- X / Twitter → same as TikTok.
+
+This eliminates the visual "blank post" feel.
+
+### 4. Don't let blank URLs ever ship again
+
+- In `useVideoLibraryAdmin.uploadVideo` and update flows, reject any `video_url` whose trimmed value is empty (already partially enforced for non-upload types — extend it to **all** insert/update paths and store `null` rather than `''`).
+- In `VideoLibraryManager`'s readiness signal, surface "Missing video URL" as its own row-level warning so the owner can spot the broken row immediately. The "Hip Action with Ted Williams Pt.2" row is the live example.
+
+### 5. Sanity sweep (no DB migration required)
+
+- Verify existing rows render after the fix using their current `video_type`:
+  - `youtube` Shorts → embed via new parser.
+  - `external` X / TikTok → auto-routed to the right embed branch.
+  - The one empty-URL row → flagged in the owner manager.
+- No schema changes. No data backfill needed. The behavior change is purely in the player + card components and a tiny shared helper.
 
 ## Files touched
 
-- `src/hooks/useVideoLibrary.ts` — add `includeBlocked` option.
-- `src/components/owner/VideoLibraryManager.tsx` — pass the flag, drop the render guard, extend Quick Fix to blocked tier, add blockedCount to nudge.
-- `src/components/owner/OwnerCoachingNudge.tsx` — accept optional `blockedCount` and render a line for it (small additive change).
+- `src/lib/videoEmbed.ts` — **new** small util: `parseYouTubeId`, `parseVimeoId`, `parseTweetId`, `parseTikTokId`, `detectPlatform`.
+- `src/components/video-library/VideoPlayer.tsx` — use the util; add X and TikTok embed branches; auto-detect platform from URL.
+- `src/components/video-library/VideoCard.tsx` — use the util for thumbnails so Shorts and other YouTube variants show artwork.
+- `src/hooks/useVideoLibraryAdmin.ts` — enforce non-empty `video_url` on every insert/update path; store empty as `null`.
+- `src/components/owner/VideoLibraryManager.tsx` — surface "Missing video URL" as a per-card warning so broken rows are obvious.
 
-No DB migration. No engine logic change. Athlete experience unchanged.
+## Result the user will see
+
+- YouTube Shorts and mobile (`m.youtube.com`) links play inline.
+- X / Twitter posts and TikTok posts show an embedded, playable preview right in the library — no more "blank post".
+- Any row with a missing URL is loud and actionable in the owner manager instead of silently empty for athletes.
