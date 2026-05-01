@@ -22,7 +22,7 @@ interface Props {
 
 export function BackfillQueueDialog({ open, onOpenChange }: Props) {
   const qc = useQueryClient();
-  const { videos, tags, refetch } = useVideoLibrary({ limit: 100 });
+  const { videos, tags, refetch } = useVideoLibrary({ limit: 100, includeBlocked: true });
   const { data: readiness } = useVideoReadiness();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());

@@ -19,14 +19,20 @@ interface Props {
    * so the nudge claim and the "Fix now" filtered list always agree.
    */
   throttledCount?: number;
+  /**
+   * Authoritative blocked (Empty) count — videos hidden from athletes entirely.
+   * Higher priority than throttled because they reach 0 athletes.
+   */
+  blockedCount?: number;
   onFixThrottled?: () => void;
+  onFixBlocked?: () => void;
 }
 
 /**
  * Phase 6 — Silent Coaching.
  * Surfaces ONE pattern at a time. Dismissible per session. Pure derivation.
  */
-export function OwnerCoachingNudge({ throttledCount = 0, onFixThrottled }: Props) {
+export function OwnerCoachingNudge({ throttledCount = 0, blockedCount = 0, onFixThrottled, onFixBlocked }: Props) {
   const { data: confidenceMap } = useVideoConfidenceMap();
   const [dismissed, setDismissed] = useState<boolean>(false);
 
@@ -35,7 +41,17 @@ export function OwnerCoachingNudge({ throttledCount = 0, onFixThrottled }: Props
   }, []);
 
   const nudge = useMemo<Nudge | null>(() => {
-    // Highest-leverage nudge first — actionable throttled count from authoritative source.
+    // Highest priority: blocked videos reach zero athletes.
+    const fixBlocked = onFixBlocked ?? onFixThrottled;
+    if (blockedCount >= 1 && fixBlocked) {
+      return {
+        id: 'blocked-batch',
+        message: `${blockedCount} ${blockedCount === 1 ? 'video is' : 'videos are'} hidden from athletes — fill in the missing fields to publish.`,
+        cta: { label: 'Fix now', onClick: fixBlocked },
+      };
+    }
+
+    // Next: throttled — visible but down-ranked.
     if (throttledCount >= 1 && onFixThrottled) {
       return {
         id: 'throttled-batch',
@@ -65,7 +81,7 @@ export function OwnerCoachingNudge({ throttledCount = 0, onFixThrottled }: Props
       };
     }
     return null;
-  }, [confidenceMap, throttledCount, onFixThrottled]);
+  }, [confidenceMap, throttledCount, blockedCount, onFixThrottled, onFixBlocked]);
 
   if (dismissed || !nudge) return null;
 

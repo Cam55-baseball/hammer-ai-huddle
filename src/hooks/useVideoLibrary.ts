@@ -37,10 +37,16 @@ interface UseVideoLibraryOptions {
   sort?: 'newest' | 'most_liked';
   savedOnly?: boolean;
   limit?: number;
+  /**
+   * Owner-only: include videos with `distribution_tier === 'blocked'`.
+   * Defaults to false so athlete-facing surfaces never see Empty videos.
+   * The owner Video Library Manager passes true so the owner can see and fix them.
+   */
+  includeBlocked?: boolean;
 }
 
 export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
-  const { search, sportFilter, categoryFilter, tagFilters, sort = 'newest', savedOnly = false, limit = 20 } = options;
+  const { search, sportFilter, categoryFilter, tagFilters, sort = 'newest', savedOnly = false, limit = 20, includeBlocked = false } = options;
   const { user } = useAuth();
   const [videos, setVideos] = useState<LibraryVideo[]>([]);
   const [tags, setTags] = useState<LibraryTag[]>([]);
@@ -58,9 +64,13 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       let query: any = (supabase as any)
         .from('library_videos')
         .select('*')
-        // Phase 6 — athletes never see blocked (Empty) videos.
-        .neq('distribution_tier', 'blocked')
         .range(from, to);
+
+      // Phase 6 — athletes never see blocked (Empty) videos.
+      // Owner manager opts in via includeBlocked so it can see/fix them.
+      if (!includeBlocked) {
+        query = query.neq('distribution_tier', 'blocked');
+      }
 
       if (search && search.trim()) {
         const term = `%${search.trim()}%`;
@@ -123,7 +133,7 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [user, search, sportFilter, categoryFilter, tagFilters, sort, savedOnly, limit]);
+  }, [user, search, sportFilter, categoryFilter, tagFilters, sort, savedOnly, limit, includeBlocked]);
 
   const fetchTags = useCallback(async () => {
     const { data } = await supabase
