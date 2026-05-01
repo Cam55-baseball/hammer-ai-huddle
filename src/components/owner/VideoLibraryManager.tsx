@@ -101,7 +101,9 @@ export function VideoLibraryManager() {
   const [convAction, setConvAction] = useState<ConversionAction>(null);
   const [convVideoId, setConvVideoId] = useState<string>('');
 
-  const { videos, tags, refetch } = useVideoLibrary({ limit: 100 });
+  // Owner-only: includeBlocked so the manager can see and fix Empty videos.
+  // Athlete surfaces leave the default false and never receive blocked rows.
+  const { videos, tags, refetch } = useVideoLibrary({ limit: 100, includeBlocked: true });
   const { data: readinessRows } = useVideoReadiness();
   const { data: confidenceMap } = useVideoConfidenceMap();
   const { fastMode, setFastMode } = useOwnerPrefs();
@@ -112,6 +114,12 @@ export function VideoLibraryManager() {
   // Source of truth for "throttled" — same signal the per-card badge & DB tier use.
   const throttledCount = useMemo(
     () => videos.filter(v => normalizeTier((v as any).distribution_tier) === 'throttled').length,
+    [videos],
+  );
+
+  // Blocked = Empty (all 4 engine fields missing). Owner-only signal.
+  const blockedCount = useMemo(
+    () => videos.filter(v => normalizeTier((v as any).distribution_tier) === 'blocked').length,
     [videos],
   );
 
