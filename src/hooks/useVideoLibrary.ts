@@ -37,10 +37,16 @@ interface UseVideoLibraryOptions {
   sort?: 'newest' | 'most_liked';
   savedOnly?: boolean;
   limit?: number;
+  /**
+   * Owner-only: include videos with `distribution_tier === 'blocked'`.
+   * Defaults to false so athlete-facing surfaces never see Empty videos.
+   * The owner Video Library Manager passes true so the owner can see and fix them.
+   */
+  includeBlocked?: boolean;
 }
 
 export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
-  const { search, sportFilter, categoryFilter, tagFilters, sort = 'newest', savedOnly = false, limit = 20 } = options;
+  const { search, sportFilter, categoryFilter, tagFilters, sort = 'newest', savedOnly = false, limit = 20, includeBlocked = false } = options;
   const { user } = useAuth();
   const [videos, setVideos] = useState<LibraryVideo[]>([]);
   const [tags, setTags] = useState<LibraryTag[]>([]);
