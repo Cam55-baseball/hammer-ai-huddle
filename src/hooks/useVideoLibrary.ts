@@ -133,7 +133,7 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [user, search, sportFilter, categoryFilter, tagFilters, sort, savedOnly, limit]);
+  }, [user, search, sportFilter, categoryFilter, tagFilters, sort, savedOnly, limit, includeBlocked]);
 
   const fetchTags = useCallback(async () => {
     const { data } = await supabase
