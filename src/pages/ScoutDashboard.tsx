@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Check, Clock, BookMarked, User, UserMinus } from 'lucide-react';
 import { ProfileCardSkeleton } from '@/components/skeletons/ProfileCardSkeleton';
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
+import { FollowerReportsInbox } from '@/components/follower-reports/FollowerReportsInbox';
 import { 
   Command,
   CommandEmpty,
