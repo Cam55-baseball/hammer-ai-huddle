@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Check, Clock, BookMarked, User, UserMinus } from 'lucide-react';
 import { ProfileCardSkeleton } from '@/components/skeletons/ProfileCardSkeleton';
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
+import { FollowerReportsInbox } from '@/components/follower-reports/FollowerReportsInbox';
 import { 
   Command,
   CommandEmpty,
@@ -370,6 +371,8 @@ export default function ScoutDashboard() {
           <TabsTrigger value="softball">{t('dashboard.softball')}</TabsTrigger>
         </TabsList>
       </Tabs>
+
+      <FollowerReportsInbox role="scout" />
 
       <Card>
           <CardHeader>

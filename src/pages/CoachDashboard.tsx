@@ -17,6 +17,7 @@ import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory'
 import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
 import { BulkSendDialog } from '@/components/coach/BulkSendDialog';
 import { SessionFeed } from '@/components/coach/SessionFeed';
+import { FollowerReportsInbox } from '@/components/follower-reports/FollowerReportsInbox';
 import { useOrganization } from '@/hooks/useOrganization';
 import { CollaborativeWorkspace } from '@/components/coach/CollaborativeWorkspace';
 import { CoachScheduleDialog } from '@/components/coach/CoachScheduleDialog';
@@ -266,6 +267,9 @@ export default function CoachDashboard() {
             Who needs help · Why · What to run today
           </p>
         </div>
+
+        {/* Hammer Progress Reports Inbox */}
+        <FollowerReportsInbox role="coach" />
 
         {/* HIE: Team Overview */}
         <TeamOverviewCard />
