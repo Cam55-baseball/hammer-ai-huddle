@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { AIPromptCard } from '@/components/analytics/AIPromptCard';
 import { CheckCircle, Loader2, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PostSessionVideoSuggestions } from './PostSessionVideoSuggestions';
 
 interface PostSessionSummaryProps {
   sessionId: string;
@@ -106,6 +107,9 @@ export function PostSessionSummary({ sessionId, module, sessionType, onDone }: P
           )}
         </CardContent>
       </Card>
+
+      {/* Hammer Picks for You — post-session video suggestions */}
+      <PostSessionVideoSuggestions sessionId={sessionId} />
 
       {/* Streak */}
       {mpiSettings?.streak_current != null && mpiSettings.streak_current > 0 && (

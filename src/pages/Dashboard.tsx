@@ -25,6 +25,7 @@ import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { QuickActionsCard } from "@/components/identity/QuickActionsCard";
+import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
@@ -594,6 +595,9 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <GamePlanCard selectedSport={selectedSport} />
         )}
+
+        {/* Long-term Hammer video picks — athletes only */}
+        {(!isScout && !isCoach) && <LongTermVideoSuggestions />}
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>

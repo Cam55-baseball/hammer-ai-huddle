@@ -895,24 +895,7 @@ export default function AnalyzeVideo() {
                     }}
                   />
 
-                  {/* Hammer Video Suggestions — Immediate Mode */}
-                  {(() => {
-                    const skillDomain = moduleToSkillDomain(module || 'hitting') || 'hitting';
-                    const movements = (analysis.summary || [])
-                      .map((s: string) => s.toLowerCase().replace(/[^a-z]+/g, '_'))
-                      .filter((s: string) => s.length > 3);
-                    const drillKeys = (analysis.drills || [])
-                      .map((d: any) => (d.title || '').toLowerCase().replace(/[^a-z]+/g, '_'))
-                      .filter((s: string) => s.length > 3);
-                    return (
-                      <VideoSuggestionsPanel
-                        skillDomain={skillDomain}
-                        mode="immediate"
-                        movementPatterns={[...movements, ...drillKeys].slice(0, 8)}
-                        className="mt-2"
-                      />
-                    );
-                  })()}
+                  {/* Per-rep video suggestions intentionally removed — Hammer surfaces picks post-session and long-term only. */}
 
                   {/* The Scorecard - Progress Report */}
                   {analysis.scorecard && (

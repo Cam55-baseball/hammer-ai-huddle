@@ -10,7 +10,7 @@
  */
 import { normalizeTier, TIER_BOOST } from './videoTier';
 
-export type SuggestionMode = 'immediate' | 'session' | 'long_term';
+export type SuggestionMode = 'session' | 'long_term';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
 export type TagLayer = 'movement_pattern' | 'result' | 'context' | 'correction';
 
@@ -80,7 +80,6 @@ export interface RecommendResult {
 }
 
 const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
-  immediate: { max: 2, minScore: 60 },
   session: { max: 4, minScore: 40 },
   long_term: { max: 4, minScore: 30 },
 };
