@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { AIPromptCard } from '@/components/analytics/AIPromptCard';
 import { CheckCircle, Loader2, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PostSessionVideoSuggestions } from './PostSessionVideoSuggestions';
 
 interface PostSessionSummaryProps {
   sessionId: string;
