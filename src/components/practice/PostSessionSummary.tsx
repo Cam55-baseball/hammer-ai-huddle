@@ -108,6 +108,9 @@ export function PostSessionSummary({ sessionId, module, sessionType, onDone }: P
         </CardContent>
       </Card>
 
+      {/* Hammer Picks for You — post-session video suggestions */}
+      <PostSessionVideoSuggestions sessionId={sessionId} />
+
       {/* Streak */}
       {mpiSettings?.streak_current != null && mpiSettings.streak_current > 0 && (
         <Card>
