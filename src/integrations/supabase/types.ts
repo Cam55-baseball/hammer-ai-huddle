@@ -2660,6 +2660,131 @@ export type Database = {
           },
         ]
       }
+      follower_notification_prefs: {
+        Row: {
+          created_at: string
+          delivery_hour_local: number
+          email_enabled: boolean
+          follower_id: string
+          milestone_alerts_enabled: boolean
+          monthly_per_player_enabled: boolean
+          timezone: string
+          updated_at: string
+          weekly_digest_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          delivery_hour_local?: number
+          email_enabled?: boolean
+          follower_id: string
+          milestone_alerts_enabled?: boolean
+          monthly_per_player_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+          weekly_digest_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          delivery_hour_local?: number
+          email_enabled?: boolean
+          follower_id?: string
+          milestone_alerts_enabled?: boolean
+          monthly_per_player_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+          weekly_digest_enabled?: boolean
+        }
+        Relationships: []
+      }
+      follower_report_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          follower_id: string
+          id: string
+          metadata: Json | null
+          player_id: string | null
+          report_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          follower_id: string
+          id?: string
+          metadata?: Json | null
+          player_id?: string | null
+          report_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          follower_id?: string
+          id?: string
+          metadata?: Json | null
+          player_id?: string | null
+          report_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follower_report_events_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "follower_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follower_reports: {
+        Row: {
+          created_at: string
+          follower_id: string
+          follower_role: string
+          headline: string | null
+          id: string
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          player_id: string
+          report_data: Json
+          report_type: string
+          status: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          follower_role: string
+          headline?: string | null
+          id?: string
+          pdf_url?: string | null
+          period_end: string
+          period_start: string
+          player_id: string
+          report_data?: Json
+          report_type: string
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          follower_role?: string
+          headline?: string | null
+          id?: string
+          pdf_url?: string | null
+          period_end?: string
+          period_start?: string
+          player_id?: string
+          report_data?: Json
+          report_type?: string
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
       game_opponents: {
         Row: {
           created_at: string | null
