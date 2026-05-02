@@ -84,7 +84,7 @@ const ReportRow = ({ report, onOpen }: { report: FollowerReportListItem; onOpen:
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="font-semibold truncate">{report.player?.full_name ?? 'Player'}</span>
+            <span className="font-semibold truncate">{report.player?.full_name ?? 'Unknown Player'}</span>
             <Badge variant="outline" className="text-xs">{typeLabel}</Badge>
             {isUnread && <Badge variant="default" className="text-xs">New</Badge>}
           </div>

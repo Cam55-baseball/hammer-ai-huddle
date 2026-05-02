@@ -39,10 +39,6 @@ export const useFollowerReport = (id: string | null) => {
     queryKey: ['follower-report', id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase.functions.invoke('get-follower-reports', {
-        body: undefined,
-      });
-      // Use query param via fetch for single
       const session = (await supabase.auth.getSession()).data.session;
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-follower-reports?id=${id}`;
       const res = await fetch(url, {
