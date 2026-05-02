@@ -10,7 +10,7 @@
  */
 import { normalizeTier, TIER_BOOST } from './videoTier';
 
-export type SuggestionMode = 'immediate' | 'session' | 'long_term';
+export type SuggestionMode = 'session' | 'long_term';
 export type SkillDomain = 'hitting' | 'fielding' | 'throwing' | 'base_running' | 'pitching';
 export type TagLayer = 'movement_pattern' | 'result' | 'context' | 'correction';
 
