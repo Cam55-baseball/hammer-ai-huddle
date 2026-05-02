@@ -268,6 +268,9 @@ export default function CoachDashboard() {
           </p>
         </div>
 
+        {/* Hammer Progress Reports Inbox */}
+        <FollowerReportsInbox role="coach" />
+
         {/* HIE: Team Overview */}
         <TeamOverviewCard />
 
