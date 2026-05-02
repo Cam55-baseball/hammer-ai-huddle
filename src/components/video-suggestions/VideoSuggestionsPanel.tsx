@@ -41,9 +41,7 @@ export function VideoSuggestionsPanel({
 
   if (isLoading || !suggestions.length) return null;
 
-  const heading = title || (mode === 'immediate'
-    ? 'Targeted next reps'
-    : mode === 'session'
+  const heading = title || (mode === 'session'
     ? 'Session insights — watch these'
     : 'Long-term development picks');
 
@@ -89,7 +87,7 @@ export function VideoSuggestionsPanel({
       </div>
 
       <p className="text-[10px] text-muted-foreground">
-        Why these? {mode === 'immediate' ? 'Based on your latest rep.' : mode === 'session' ? 'Based on patterns across this session.' : 'Based on your long-term weakness profile.'}
+        Why these? {mode === 'session' ? 'Based on patterns across this session.' : 'Based on your long-term weakness profile.'}
       </p>
     </Card>
   );

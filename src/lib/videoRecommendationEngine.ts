@@ -80,7 +80,6 @@ export interface RecommendResult {
 }
 
 const MODE_CAPS: Record<SuggestionMode, { max: number; minScore: number }> = {
-  immediate: { max: 2, minScore: 60 },
   session: { max: 4, minScore: 40 },
   long_term: { max: 4, minScore: 30 },
 };
