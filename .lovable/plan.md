@@ -1,111 +1,189 @@
-# Plan: Optimize Hammer Video Suggestions — Post-Session + Long-Term Only
 
-## Confirmation of your direction
+# Elite Scout & Coach Progress Reports
 
-Agreed. We are killing the `immediate` (per-rep) mode entirely. Hammer is not a helicopter coach. Suggestions surface in exactly two places:
+## Goal
 
-1. **Post-Session** — every single session, after save, based on what just happened in that session.
-2. **Long-Term** — on the dashboard / Vault, based on rolling weakness clusters from HIE + practice history.
-
-No popups mid-rep. No interruptions. No suggestions while logging.
+Turn followers (scouts + coaches) from passive profile-viewers into actively-informed evaluators with scheduled, deep, role-appropriate progress reports on every player they follow. Reports must surface **strengths, weaknesses, momentum, and what changed** — not just numbers.
 
 ---
 
-## What's broken today
+## Cadence & Surface
 
-- The recommendation engine (`videoRecommendationEngine.ts`) is built and tier-aware, but **nothing real feeds it**. The `useVideoSuggestions` hook requires `movementPatterns` / `resultTags` / `contextTags` arrays — and no caller currently passes session-derived values.
-- `PostSessionSummary.tsx` shows scores + an `AIPromptCard` but **no video suggestions**.
-- Long-term surfaces (Vault, dashboard) have no Hammer-driven video block tied to HIE weakness clusters.
-- `analysisToTaxonomy.ts` already exists with the mapping helpers (HIE area → movement, outcome tag → result, context → context) — it's just unused.
-
----
-
-## What we will build
-
-### 1. Remove `immediate` mode from the engine
-- Drop `'immediate'` from `SuggestionMode` type.
-- Remove its entry from `MODE_CAPS`.
-- Delete any per-rep call sites if found (search confirms none currently wired in production UI).
-- Update `trackVideoSuggestionShown` typing accordingly.
-
-### 2. Post-Session video block (every session, every time)
-New component: `src/components/practice/PostSessionVideoSuggestions.tsx`
-
-Signal extraction (runs once when summary opens):
-- Pull the just-saved session's `drill_blocks`, `composite_indexes`, `session_context`, and `module`.
-- Aggregate across the session's reps:
-  - **Movement patterns**: take the bottom-2 lowest `execution_grade` drill blocks → map their flagged mechanics via `mapHIEAreaToMovement`.
-  - **Result tags**: collect `outcome_tags` across reps, keep the top 3 most frequent → `mapOutcomeToResult`.
-  - **Context tags**: pull from `session_context` + session intent (handedness, pitch type focus, count focus) via `mapSessionContext`.
-- Resolve `skillDomain` from `module` via `moduleToSkillDomain`.
-- Call `useVideoSuggestions({ mode: 'session', ... })` → returns max 4 videos.
-
-Render rules:
-- Insert into `PostSessionSummary.tsx` between Performance Indexes and the Streak card.
-- Header: "Hammer Picks for You" + one-line rationale ("Based on this session's lowest-graded reps and outcomes").
-- Each card shows thumbnail, title, top reason, and "Why this video" expandable list (`reasons[]` from engine).
-- If <2 candidates qualify (minScore 40), show "No targeted picks this session — clean work." instead of filler.
-- Track impressions via `trackVideoSuggestionShown` on mount.
-
-### 3. Long-Term suggestions surface
-New component: `src/components/dashboard/LongTermVideoSuggestions.tsx`
-
-Signal source — rolling 14-day window:
-- Query `hie_weakness_clusters` (or equivalent — we'll confirm exact table during build) for the user's current top-3 unresolved areas → movement patterns.
-- Query `custom_activity_logs` + `performance_sessions` over 14 days → most frequent low-grade outcome tags → result tags.
-- Athlete profile (sport, position, handedness) → context tags.
-- Call `useVideoSuggestions({ mode: 'long_term', ... })` → 4 videos biased toward `drill` / `breakdown` formats.
-
-Placement:
-- Dashboard (role: athlete) — add a "Develop This Week" card slot.
-- Vault overview — add the same block under the existing weakness cluster section.
-
-Refresh cadence:
-- Recomputes on `BroadcastChannel('data-sync')` events for `session_saved` / `analysis_complete` (already wired in `useVideoSuggestions`).
-- Throttled by React Query `staleTime: 60s`.
-
-### 4. Strengthen `analysisToTaxonomy.ts`
-- Add a `aggregateSessionToTaxonomy(session)` helper that returns `{ movementPatterns, resultTags, contextTags, skillDomain }` so both post-session and long-term components share one pure mapper.
-- Add a `aggregateRollingWindowToTaxonomy(userId, days)` async helper for long-term.
-- Unit-test both with vitest fixtures (already used elsewhere).
-
-### 5. Outcome tracking (close the loop)
-- Already partially built (`video_user_outcomes`). Confirm:
-  - Impression logged when card appears (`trackVideoSuggestionShown`).
-  - Watch logged via `trackVideoWatched` from `VideoLibraryPlayer` when the user opens a suggested video.
-  - `post_score_delta` populated by an existing nightly job or add a tiny trigger in `calculate-session` to diff next session's composite vs prior baseline for any video watched in between.
-- This feeds `userOutcomes` back into the engine — videos that helped *you* rank higher next time; videos you watched 3x with no improvement get deprioritized.
+| Surface | Audience | Cadence | Trigger |
+|---|---|---|---|
+| **Weekly Digest** ("This Week in Your Roster") | Scouts + Coaches | Every Monday 7am local | pg_cron → edge function |
+| **Monthly Deep Report** (per player) | Scouts + Coaches | Every 30 days, aligned to player's existing `user_report_cycles` | Reuses player's monthly cycle |
+| **Milestone Alerts** (real-time) | Scouts + Coaches | Push as event occurs (throttled 1/day per player) | DB trigger → notification row |
+| **In-app Inbox** | Scouts + Coaches | Always available | New `follower_reports` table |
+| **PDF Export** | Scouts + Coaches | On-demand from any report | Client-side jsPDF / edge function |
+| **"What Changed This Week" Feed** | Scouts (parity with Coach SessionFeed) | Continuous | Existing session events, filtered |
 
 ---
 
-## Files to create / edit
+## Report Content (the elite part)
 
-**Create**
-- `src/components/practice/PostSessionVideoSuggestions.tsx`
-- `src/components/dashboard/LongTermVideoSuggestions.tsx`
-- `src/lib/analysisToTaxonomy.test.ts`
+Each **per-player monthly report** has 6 sections, generated by Hammer (Lovable AI Gateway, `google/gemini-2.5-pro`):
 
-**Edit**
-- `src/lib/videoRecommendationEngine.ts` — remove `immediate` from `SuggestionMode` + `MODE_CAPS`.
-- `src/hooks/useVideoSuggestions.ts` — type updates.
-- `src/lib/analysisToTaxonomy.ts` — add aggregation helpers.
-- `src/components/practice/PostSessionSummary.tsx` — mount the post-session block.
-- Athlete dashboard component (will locate during build — likely `src/pages/Index.tsx` or a dashboard cards file) — mount long-term block.
-- `supabase/functions/calculate-session/index.ts` — small addition to compute `post_score_delta` for previously-suggested videos (only if not already present).
+1. **Headline Verdict** — one paragraph: trajectory, top strength, top concern, recommendation ("Worth tracking", "Trending up", "Plateau risk", "Breakout candidate").
+2. **Tool Grades Snapshot** — current 20–80 scout grades from `gradeEngine.ts`, with delta vs last cycle. Visual: spider chart + delta bars.
+3. **Strengths** — top 3 tools at/above 55, with the *evidence* (specific session metrics, game stats, HIE clusters that prove it).
+4. **Weaknesses & Limiters** — top 3 from `hie_weakness_clusters` + lowest-graded drill blocks, classified (perception / decision / execution / consistency) using `coachingReportTypes.ts` schema.
+5. **Progress Curve** — `longitudinalEngine.computeTrends()` output: improving / plateaued / regressing per metric, with projection ("On pace to reach 60-grade Plus in ~12 weeks").
+6. **Context** — recent game count, competition level, injury/rest flags, season phase, training adherence.
+
+**Weekly digest** is a condensed roll-up across the whole roster:
+- "5 players moved", grouped: Trending Up / Trending Down / New Verified Stat / New Game Logged / Hit a Milestone.
+- One-line per player with click-through to full report.
 
 ---
 
-## Out of scope
-- Per-rep / `immediate` suggestions (explicitly rejected).
-- Changing taxonomy management (already shipped).
-- Changing tier/confidence math.
-- Push notifications for suggestions — surfaces are in-app only.
+## Scout vs Coach Gating
+
+| Feature | Scout | Coach |
+|---|---|---|
+| Headline verdict | Yes | Yes |
+| Tool grades + deltas | Yes | Yes |
+| Strengths / Weaknesses | Yes | Yes |
+| Progress curve & projections | Yes | Yes |
+| Raw session list ("What Changed") | Yes (read) | Yes (read + grade) |
+| Prescriptive Fixes (drills, cues, constraints) | **No** (evaluator, not coach) | **Yes** — full `prescriptiveFixes[]` block + "Send Drill" CTAs |
+| HIE team rollup across roster | No | Yes |
+| Coach grade overlay on sessions | No | Yes |
+| PDF export | Yes (evaluator-format) | Yes (coach-format with fixes) |
+| Player privacy gate | Only sessions with `shared_with_scouts = true` | Same + any session the player explicitly shared with this coach |
+
+Player privacy is preserved exactly as today — the report only aggregates data the player has already exposed to that follower.
+
+---
+
+## Architecture
+
+```text
+                +------------------------------+
+                |  pg_cron (Mon 7am, daily 1am)|
+                +---------------+--------------+
+                                |
+                +---------------v--------------+
+                | generate-follower-reports    |  (new edge fn)
+                | - reads scout_follows        |
+                | - per follower x player:     |
+                |   builds monthly OR weekly   |
+                | - calls Lovable AI for prose |
+                +---------------+--------------+
+                                |
+                +---------------v--------------+
+                | follower_reports (new table) |
+                | + follower_report_events     |
+                +---------------+--------------+
+                                |
+              +-----------------+-----------------+
+              |                                   |
+   In-app Inbox (Scout/Coach          PDF Export (on-demand
+   Dashboard "Reports" tab)           via export-follower-report fn)
+```
+
+### New tables
+
+- `follower_reports` — one row per (follower_id, player_id, period_start, report_type). Stores `report_data jsonb` (sections), `status`, `viewed_at`, `pdf_url`.
+- `follower_report_events` — append-only log: `report_generated`, `report_viewed`, `pdf_downloaded`, `milestone_alert_sent`. Fuels analytics + dedupe.
+- `follower_notification_prefs` — per-follower: `weekly_digest_enabled`, `monthly_per_player_enabled`, `milestone_alerts_enabled`, `email_enabled`, `delivery_hour_local`.
+
+RLS: follower can only see rows where `follower_id = auth.uid()`. Player can see "who has reports about me" via a dedicated view (transparency).
+
+### New edge functions
+
+- `generate-follower-reports` — cron-driven; builds reports for due (follower, player) pairs.
+- `get-follower-reports` — list/inbox for current user.
+- `get-follower-report` — single report payload.
+- `export-follower-report-pdf` — server-rendered PDF (uses jsPDF in function or HTML→PDF). Stored in `follower-report-pdfs` storage bucket, signed URL returned.
+- `mark-follower-report-viewed` — flips `viewed_at`.
+
+### Reuses existing engines (no rebuild)
+
+- `gradeEngine.ts` — tool grades
+- `longitudinalEngine.ts` — trends + projections
+- `coachingReportTypes.ts` — root-cause + prescriptive schema
+- `hie_weakness_clusters` — limiters
+- `analysisToTaxonomy.ts` — tag rollups
+- Lovable AI Gateway — prose generation
+
+---
+
+## UI
+
+### Scout Dashboard — new "Reports" tab
+- **Inbox** (unread badge): list of new reports, newest first.
+- **Weekly Digest** card at top: "5 of your 12 players moved this week."
+- **Per-player report drawer**: 6 sections, scrollable, with "Download PDF" and "Mark Reviewed".
+- **What Changed feed** (parity with coach `SessionFeed`, scout-safe): recent shared sessions, new verified stats, new game logs.
+
+### Coach Dashboard — same Reports tab + extras
+- Adds **Prescriptive Fixes** block in each report with inline "Send Drill" / "Schedule Session" CTAs (uses existing `BulkSendDialog`, `CoachScheduleDialog`).
+- Roster-level "HIE Team Trends" delta vs last week.
+
+### Notification settings
+- New `/settings/notifications` section for followers to toggle cadence, channels, quiet hours.
+
+### Email (optional, gated by Lovable Email setup)
+- If email infra configured, weekly digest also sent as email with deep links. Falls back to in-app only if not.
+
+---
+
+## Milestones that trigger real-time alerts
+
+- New verified stat boost approved
+- Tool grade crossed a tier boundary (e.g. 50→55, 55→60)
+- 3+ consecutive sessions with composite improvement
+- New game logged at higher competition level
+- Weakness cluster resolved (dropped off `hie_weakness_clusters`)
+- Injury/regression flag raised
+
+Throttled: max 1 alert per player per follower per day; rolls into the digest if suppressed.
 
 ---
 
 ## Acceptance checks
-- After saving any practice session, the summary shows a "Hammer Picks for You" block (or the empty-state line).
-- Suggestions reflect this session's worst-graded reps + frequent outcome tags + context.
-- Dashboard "Develop This Week" updates within 60s of a session save (cross-tab via BroadcastChannel).
-- No suggestion UI fires during rep entry.
-- Watching a suggested video is recorded; subsequent sessions show whether the score moved.
+
+- Every Monday, every active follower with ≥1 followed player receives a weekly digest in their inbox.
+- Every 30 days per (follower, player), a monthly deep report is generated and appears in the inbox.
+- Scouts never see prescriptive fixes; coaches always do.
+- PDF export reproduces the on-screen report verbatim, paginated cleanly.
+- Reports respect `shared_with_scouts` and explicit coach shares — no private data leaks.
+- Notification preferences are honored (off = no row generated, no email sent).
+- Milestone alerts dedupe to ≤1/player/day per follower.
+
+---
+
+## Out of scope (future)
+
+- Push notifications (mobile) — surfaces in-app + email only for v1.
+- Cross-player comparison reports.
+- Recruiter-style ranked lists across the scout's roster.
+- White-label PDF branding per coach/org.
+
+---
+
+## Files to create
+
+**Edge functions**
+- `supabase/functions/generate-follower-reports/index.ts`
+- `supabase/functions/get-follower-reports/index.ts`
+- `supabase/functions/get-follower-report/index.ts`
+- `supabase/functions/export-follower-report-pdf/index.ts`
+- `supabase/functions/mark-follower-report-viewed/index.ts`
+
+**Migration**
+- `follower_reports`, `follower_report_events`, `follower_notification_prefs` tables + RLS + pg_cron schedules.
+
+**Client**
+- `src/components/follower-reports/FollowerReportsInbox.tsx`
+- `src/components/follower-reports/WeeklyDigestCard.tsx`
+- `src/components/follower-reports/PlayerReportDrawer.tsx`
+- `src/components/follower-reports/WhatChangedFeed.tsx` (scout)
+- `src/components/follower-reports/PrescriptiveFixesBlock.tsx` (coach-only)
+- `src/hooks/useFollowerReports.ts`
+- Edits to `src/pages/ScoutDashboard.tsx` + `src/pages/CoachDashboard.tsx` to mount the Reports tab.
+- New notification settings section.
+
+**PDF**
+- Server-side render via lightweight HTML template in `export-follower-report-pdf`.
