@@ -86,3 +86,131 @@ export function moduleToSkillDomain(module: string): SkillDomain | null {
   if (m.includes('pitch')) return 'pitching';
   return null;
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Aggregation helpers — single mapper for both post-session and long-term
+// ──────────────────────────────────────────────────────────────────────────────
+
+interface DrillBlockLike {
+  drill_type?: string;
+  drill_name?: string;
+  intent?: string;
+  execution_grade?: number;
+  outcome_tags?: string[];
+  detected_issues?: string[];
+  micro_layer_data?: any[];
+}
+
+interface SessionLike {
+  module?: string | null;
+  session_type?: string | null;
+  drill_blocks?: any;
+  session_context?: any;
+  detected_issues?: string[] | null;
+  throwing_hand_used?: string | null;
+  batting_side_used?: string | null;
+}
+
+export interface AggregatedTaxonomy {
+  skillDomain: SkillDomain | null;
+  movementPatterns: string[];
+  resultTags: string[];
+  contextTags: string[];
+}
+
+/** Aggregate a single saved session's signals into taxonomy keys. */
+export function aggregateSessionToTaxonomy(session: SessionLike): AggregatedTaxonomy {
+  const skillDomain = moduleToSkillDomain(session.module || session.session_type || '');
+  const blocks: DrillBlockLike[] = Array.isArray(session.drill_blocks) ? session.drill_blocks : [];
+
+  // Movement: bottom-graded blocks + any detected_issues at session level
+  const sortedByGrade = [...blocks]
+    .filter(b => typeof b.execution_grade === 'number')
+    .sort((a, b) => (a.execution_grade ?? 100) - (b.execution_grade ?? 100));
+  const lowGradeBlocks = sortedByGrade.slice(0, 2);
+
+  const movementSet = new Set<string>();
+  for (const b of lowGradeBlocks) {
+    for (const issue of b.detected_issues || []) {
+      const k = mapHIEAreaToMovement(issue);
+      if (k) movementSet.add(k);
+    }
+    // Fall back to drill_type as a movement hint
+    if (b.drill_type) {
+      const k = mapHIEAreaToMovement(b.drill_type);
+      if (k) movementSet.add(k);
+    }
+  }
+  for (const issue of session.detected_issues || []) {
+    const k = mapHIEAreaToMovement(issue);
+    if (k) movementSet.add(k);
+  }
+
+  // Result: top-3 most frequent outcome tags across all blocks
+  const counts = new Map<string, number>();
+  for (const b of blocks) {
+    for (const tag of b.outcome_tags || []) {
+      const k = mapOutcomeToResult(tag);
+      if (k) counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+  }
+  const resultTags = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k]) => k);
+
+  // Context: from session_context + handedness/side
+  const ctx: SessionContext = (session.session_context && typeof session.session_context === 'object')
+    ? session.session_context as SessionContext
+    : {};
+  const contextTags = mapSessionContext(ctx);
+
+  return {
+    skillDomain,
+    movementPatterns: [...movementSet],
+    resultTags,
+    contextTags,
+  };
+}
+
+/** Aggregate weakness_clusters + recent sessions into long-term taxonomy signals. */
+export function aggregateWeaknessClustersToTaxonomy(
+  skillDomain: SkillDomain,
+  weaknessClusters: any,
+  recentSessions: SessionLike[] = []
+): AggregatedTaxonomy {
+  const movementSet = new Set<string>();
+
+  // weakness_clusters jsonb shape: array of { area, severity } or { metric, score }
+  const clusters = Array.isArray(weaknessClusters) ? weaknessClusters : [];
+  for (const c of clusters.slice(0, 5)) {
+    const area = c?.area || c?.metric || c?.weakness_metric;
+    if (typeof area === 'string') {
+      const k = mapHIEAreaToMovement(area);
+      if (k) movementSet.add(k);
+    }
+  }
+
+  // Roll-up of recent sessions for result + context signals
+  const counts = new Map<string, number>();
+  const ctxSet = new Set<string>();
+  for (const s of recentSessions) {
+    const agg = aggregateSessionToTaxonomy(s);
+    if (agg.skillDomain && agg.skillDomain !== skillDomain) continue;
+    agg.movementPatterns.forEach(m => movementSet.add(m));
+    agg.resultTags.forEach(r => counts.set(r, (counts.get(r) ?? 0) + 1));
+    agg.contextTags.forEach(c => ctxSet.add(c));
+  }
+
+  const resultTags = [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([k]) => k);
+
+  return {
+    skillDomain,
+    movementPatterns: [...movementSet].slice(0, 5),
+    resultTags,
+    contextTags: [...ctxSet].slice(0, 4),
+  };
+}
