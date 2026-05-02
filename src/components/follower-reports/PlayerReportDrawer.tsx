@@ -17,6 +17,8 @@ export const PlayerReportDrawer = ({ reportId, role, open, onOpenChange }: Props
   const { data, isLoading } = useFollowerReport(reportId);
   const markViewed = useMarkReportViewed();
 
+  if (!reportId) return null;
+
   useEffect(() => {
     if (open && reportId && data?.report && !data.report.viewed_at) {
       markViewed.mutate(reportId);
@@ -39,7 +41,7 @@ export const PlayerReportDrawer = ({ reportId, role, open, onOpenChange }: Props
           <>
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2">
-                {player?.full_name ?? 'Player Report'}
+                {player?.full_name ?? 'Unknown Player'}
                 <Badge variant="outline" className="text-xs">
                   {report.report_type === 'weekly_digest' ? 'Weekly' : 'Monthly'}
                 </Badge>
@@ -54,7 +56,7 @@ export const PlayerReportDrawer = ({ reportId, role, open, onOpenChange }: Props
             <div className="space-y-5 mt-6">
               {/* Headline Verdict */}
               <Section title="Verdict" icon={<Activity className="h-4 w-4" />}>
-                <p className="text-sm leading-relaxed">{rd.headline ?? report.headline}</p>
+                <p className="text-sm leading-relaxed">{rd?.headline ?? report?.headline ?? 'No headline available'}</p>
               </Section>
 
               {/* Period Metrics */}
