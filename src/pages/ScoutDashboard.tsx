@@ -372,6 +372,8 @@ export default function ScoutDashboard() {
         </TabsList>
       </Tabs>
 
+      <FollowerReportsInbox role="scout" />
+
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
