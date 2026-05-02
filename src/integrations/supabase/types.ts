@@ -2734,6 +2734,42 @@ export type Database = {
           },
         ]
       }
+      follower_report_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          follower_id: string | null
+          id: string
+          player_id: string | null
+          reason: string | null
+          report_type: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          follower_id?: string | null
+          id?: string
+          player_id?: string | null
+          reason?: string | null
+          report_type?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          follower_id?: string | null
+          id?: string
+          player_id?: string | null
+          reason?: string | null
+          report_type?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       follower_reports: {
         Row: {
           created_at: string
