@@ -9,7 +9,12 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+const PER_CALL_TIMEOUT_MS = 5_000;
+const AI_RETRIES = 2;
+const AI_BASE_DELAY_MS = 400;
+
 type Role = 'scout' | 'coach';
+type ReportType = 'weekly_digest' | 'monthly_deep';
 interface FollowerInfo { follower_id: string; player_id: string; follower_role: Role }
 
 type Snapshot = {
@@ -37,6 +42,7 @@ async function logResult(
   reason: string | null,
   error: string | null,
   durationMs: number,
+  retryable: boolean,
 ) {
   try {
     await supabase.from('follower_report_logs').insert({
@@ -47,6 +53,7 @@ async function logResult(
       reason,
       error,
       duration_ms: durationMs,
+      retryable,
     });
   } catch (_) { /* never throw from logger */ }
 }
@@ -120,7 +127,6 @@ async function bulkFetchSnapshots(
   }
   for (const g of (gamesRes.data ?? []) as any[]) map.get(g.user_id)?.games.push(g);
 
-  // cap sessions per player to 40
   for (const snap of map.values()) {
     if (snap.sessions.length > 40) snap.sessions = snap.sessions.slice(0, 40);
   }
@@ -154,35 +160,51 @@ function deterministicHeadline(snapshot: Snapshot, deltas: Deltas): string {
   return `${name} recorded ${deltas.sessions_count} sessions and ${deltas.games_count} games. Performance trends remain stable.`;
 }
 
-async function generateHeadline(
-  snapshot: Snapshot,
-  deltas: Deltas,
-  role: Role,
-  signal: AbortSignal,
-): Promise<string> {
-  if (!LOVABLE_API_KEY) return deterministicHeadline(snapshot, deltas);
-  try {
-    const sysPrompt = role === 'coach'
-      ? "You are Hammer, an elite player development coach. Write a 2-sentence headline verdict about a followed player's recent progress. Direct, actionable."
-      : "You are Hammer, an elite scouting analyst. Write a 2-sentence headline verdict about a followed prospect. Evaluator tone, no prescriptive advice.";
-    const userMsg = `Player: ${snapshot.profile?.full_name ?? 'Unknown'} (${snapshot.profile?.sport ?? '?'} / ${snapshot.profile?.primary_position ?? snapshot.profile?.position ?? '?'})\nPeriod metrics: ${JSON.stringify(deltas)}\nWeaknesses: ${(snapshot.weaknesses ?? []).slice(0, 3).map((w: any) => w.cluster_label || w.area).join(', ') || 'none'}\nSessions: ${snapshot.sessions.length}, Games: ${snapshot.games.length}.`;
-
-    const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
-      }),
-    });
-    if (!r.ok) return deterministicHeadline(snapshot, deltas);
-    const j = await r.json();
-    const text = j?.choices?.[0]?.message?.content?.trim();
-    return text && typeof text === 'string' ? text : deterministicHeadline(snapshot, deltas);
-  } catch {
-    return deterministicHeadline(snapshot, deltas);
+// ---------- Bounded retry AI call ----------
+async function callAIWithRetry(payload: unknown): Promise<string | null> {
+  if (!LOVABLE_API_KEY) return null;
+  let attempt = 0;
+  let lastErr: unknown = null;
+  while (attempt <= AI_RETRIES) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), PER_CALL_TIMEOUT_MS);
+    try {
+      const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}` },
+        body: JSON.stringify(payload),
+      });
+      clearTimeout(t);
+      if (!r.ok) throw new Error(`ai_status_${r.status}`);
+      const j = await r.json();
+      const text = j?.choices?.[0]?.message?.content;
+      if (typeof text === 'string' && text.trim()) return text.trim();
+      throw new Error('ai_empty_response');
+    } catch (e) {
+      clearTimeout(t);
+      lastErr = e;
+      if (attempt === AI_RETRIES) break;
+      await new Promise(res => setTimeout(res, AI_BASE_DELAY_MS * Math.pow(2, attempt)));
+      attempt++;
+    }
   }
+  console.warn('[ai] exhausted retries', lastErr instanceof Error ? lastErr.message : lastErr);
+  return null;
+}
+
+async function generateHeadline(snapshot: Snapshot, deltas: Deltas, role: Role): Promise<{ text: string; aiOk: boolean }> {
+  const sysPrompt = role === 'coach'
+    ? "You are Hammer, an elite player development coach. Write a 2-sentence headline verdict about a followed player's recent progress. Direct, actionable."
+    : "You are Hammer, an elite scouting analyst. Write a 2-sentence headline verdict about a followed prospect. Evaluator tone, no prescriptive advice.";
+  const userMsg = `Player: ${snapshot.profile?.full_name ?? 'Unknown'} (${snapshot.profile?.sport ?? '?'} / ${snapshot.profile?.primary_position ?? snapshot.profile?.position ?? '?'})\nPeriod metrics: ${JSON.stringify(deltas)}\nWeaknesses: ${(snapshot.weaknesses ?? []).slice(0, 3).map((w: any) => w.cluster_label || w.area).join(', ') || 'none'}\nSessions: ${snapshot.sessions.length}, Games: ${snapshot.games.length}.`;
+
+  const text = await callAIWithRetry({
+    model: 'google/gemini-2.5-flash',
+    messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }],
+  });
+  if (text) return { text, aiOk: true };
+  return { text: deterministicHeadline(snapshot, deltas), aiOk: false };
 }
 
 function buildReportData(snapshot: Snapshot, deltas: Deltas, role: Role, headline: string) {
@@ -246,42 +268,41 @@ function buildReportData(snapshot: Snapshot, deltas: Deltas, role: Role, headlin
     }));
   }
 
-  // Final shape guarantees
-  if (!data.snapshot) (data as any).snapshot = {};
-  if (!Array.isArray((data as any).recent_sessions)) (data as any).recent_sessions = [];
-  if (!Array.isArray((data as any).weaknesses)) (data as any).weaknesses = [];
-  if (!Array.isArray((data as any).strengths)) (data as any).strengths = [];
-
   return data;
 }
 
-// ---------- Per-follower generation ----------
+// ---------- Per-follower generation (fault-isolated) ----------
 async function generateForFollower(
   supabase: any,
   fi: FollowerInfo,
-  reportType: 'weekly_digest' | 'monthly_deep',
+  reportType: ReportType,
   periodStart: string,
   periodEnd: string,
   snapshotCache: Map<string, Snapshot>,
-  signal: AbortSignal,
 ): Promise<{ id?: string; skipped?: boolean; reason?: string; error?: string }> {
   const startedAt = Date.now();
 
-  // Whitelist role
   if (fi.follower_role !== 'scout' && fi.follower_role !== 'coach') {
-    await logResult(supabase, fi, reportType, 'skipped', 'invalid_role', null, Date.now() - startedAt);
+    await logResult(supabase, fi, reportType, 'skipped', 'invalid_role', null, Date.now() - startedAt, false);
     return { skipped: true, reason: 'invalid_role' };
   }
 
   const snapshot = snapshotCache.get(fi.player_id) ?? { profile: null, sessions: [], vaultGrades: [], weaknesses: [], games: [] };
+
+  // Snapshot validation guard
+  if (!Array.isArray(snapshot.sessions) || !Array.isArray(snapshot.games)) {
+    await logResult(supabase, fi, reportType, 'skipped', 'invalid_snapshot', null, Date.now() - startedAt, false);
+    return { skipped: true, reason: 'invalid_snapshot' };
+  }
+
   if (!snapshot.sessions.length && !snapshot.games.length && reportType === 'weekly_digest') {
-    await logResult(supabase, fi, reportType, 'skipped', 'no_activity', null, Date.now() - startedAt);
+    await logResult(supabase, fi, reportType, 'skipped', 'no_activity', null, Date.now() - startedAt, false);
     return { skipped: true, reason: 'no_activity' };
   }
 
   try {
     const deltas = deriveDeltas(snapshot);
-    const headline = await generateHeadline(snapshot, deltas, fi.follower_role, signal);
+    const { text: headline, aiOk } = await generateHeadline(snapshot, deltas, fi.follower_role);
     const reportData = buildReportData(snapshot, deltas, fi.follower_role, headline);
 
     const { data: upserted, error } = await supabase
@@ -301,44 +322,119 @@ async function generateForFollower(
       .single();
 
     if (error) {
-      await logResult(supabase, fi, reportType, 'failed', null, error.message, Date.now() - startedAt);
+      await logResult(supabase, fi, reportType, 'failed', 'db_upsert_error', error.message, Date.now() - startedAt, true);
       return { error: error.message };
     }
 
-    await logResult(supabase, fi, reportType, 'success', null, null, Date.now() - startedAt);
+    if (!aiOk) {
+      // Successful row, but AI fell back — log so retry worker can refresh later
+      await logResult(supabase, fi, reportType, 'failed', 'ai_exhausted', null, Date.now() - startedAt, true);
+    } else {
+      await logResult(supabase, fi, reportType, 'success', null, null, Date.now() - startedAt, false);
+    }
     return { id: upserted.id };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
-    await logResult(supabase, fi, reportType, 'failed', null, msg, Date.now() - startedAt);
+    await logResult(supabase, fi, reportType, 'failed', 'unexpected', msg, Date.now() - startedAt, true);
     return { error: msg };
   }
+}
+
+// ---------- Period helpers ----------
+function periodFor(mode: ReportType, anchorDate?: string): { periodStart: string; periodEnd: string } {
+  const today = anchorDate ? new Date(anchorDate) : new Date();
+  const periodEnd = today.toISOString().slice(0, 10);
+  const start = new Date(today);
+  start.setDate(today.getDate() - (mode === 'weekly_digest' ? 7 : 30));
+  return { periodStart: start.toISOString().slice(0, 10), periodEnd };
 }
 
 // ---------- Entrypoint ----------
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25_000);
-
   try {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
     const body = await req.json().catch(() => ({}));
-    const mode: 'weekly_digest' | 'monthly_deep' = body.mode === 'monthly_deep' ? 'monthly_deep' : 'weekly_digest';
+
+    // ===== Retry mode =====
+    const retryTargets = Array.isArray(body.retry_targets) ? body.retry_targets : null;
+    if (retryTargets && retryTargets.length > 0) {
+      let generated = 0, skipped = 0, failed = 0;
+      // Group by (reportType, periodStart, periodEnd) so we can bulk-fetch
+      const groups = new Map<string, { mode: ReportType; periodStart: string; periodEnd: string; pairs: FollowerInfo[] }>();
+
+      // Resolve roles for target followers
+      const followerIds = [...new Set(retryTargets.map((t: any) => t.follower_id).filter((x: any) => typeof x === 'string'))];
+      const { data: roles } = followerIds.length
+        ? await supabase.from('user_roles').select('user_id, role, status').in('user_id', followerIds).in('role', ['scout', 'coach']).eq('status', 'active')
+        : { data: [] as any[] };
+      const roleMap = new Map<string, Role>();
+      for (const r of (roles ?? []) as any[]) {
+        const cur = roleMap.get(r.user_id);
+        if (r.role === 'coach' || !cur) roleMap.set(r.user_id, r.role as Role);
+      }
+
+      for (const t of retryTargets) {
+        if (!t || typeof t.follower_id !== 'string' || typeof t.player_id !== 'string') continue;
+        const mode: ReportType = t.report_type === 'monthly_deep' ? 'monthly_deep' : 'weekly_digest';
+        const role = roleMap.get(t.follower_id);
+        if (!role) continue;
+        const periodStart = t.period_start ?? periodFor(mode).periodStart;
+        const periodEnd = t.period_end ?? periodFor(mode, periodStart ? new Date(new Date(periodStart).getTime() + (mode === 'weekly_digest' ? 7 : 30) * 86400000).toISOString().slice(0, 10) : undefined).periodEnd;
+        const key = `${mode}|${periodStart}|${periodEnd}`;
+        if (!groups.has(key)) groups.set(key, { mode, periodStart, periodEnd, pairs: [] });
+        groups.get(key)!.pairs.push({ follower_id: t.follower_id, player_id: t.player_id, follower_role: role });
+      }
+
+      for (const grp of groups.values()) {
+        const playerIds = [...new Set(grp.pairs.map(p => p.player_id))];
+        const cache = await bulkFetchSnapshots(supabase, playerIds, grp.periodStart, grp.periodEnd);
+        const BATCH = 5;
+        for (let i = 0; i < grp.pairs.length; i += BATCH) {
+          const batch = grp.pairs.slice(i, i + BATCH);
+          const results = await Promise.all(batch.map(p =>
+            generateForFollower(supabase, p, grp.mode, grp.periodStart, grp.periodEnd, cache),
+          ));
+          for (const r of results) {
+            if (r.id) generated++;
+            else if (r.skipped) skipped++;
+            else failed++;
+          }
+        }
+      }
+
+      // Mark old failed log rows for these pairs as no longer retryable
+      for (const t of retryTargets) {
+        if (!t?.follower_id || !t?.player_id) continue;
+        try {
+          await supabase.from('follower_report_logs')
+            .update({ retryable: false })
+            .eq('follower_id', t.follower_id)
+            .eq('player_id', t.player_id)
+            .eq('report_type', t.report_type ?? 'weekly_digest')
+            .eq('status', 'failed')
+            .eq('retryable', true)
+            .lt('created_at', new Date(Date.now() - 1000).toISOString());
+        } catch (_) { /* swallow */ }
+      }
+
+      return new Response(JSON.stringify({ ok: true, mode: 'retry', generated, skipped, failed, total: retryTargets.length }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ===== Normal scheduled mode =====
+    const mode: ReportType = body.mode === 'monthly_deep' ? 'monthly_deep' : 'weekly_digest';
     const targetedFollower = typeof body.follower_id === 'string' ? body.follower_id : undefined;
     const targetedPlayer = typeof body.player_id === 'string' ? body.player_id : undefined;
 
-    const today = new Date();
-    const periodEnd = today.toISOString().slice(0, 10);
-    const periodStartDate = new Date(today);
-    periodStartDate.setDate(today.getDate() - (mode === 'weekly_digest' ? 7 : 30));
-    const periodStart = periodStartDate.toISOString().slice(0, 10);
+    const { periodStart, periodEnd } = periodFor(mode);
 
     let pairs = await getActiveFollowers(supabase);
     if (targetedFollower) pairs = pairs.filter(p => p.follower_id === targetedFollower);
     if (targetedPlayer) pairs = pairs.filter(p => p.player_id === targetedPlayer);
 
-    // Apply preferences
     const followerIds = [...new Set(pairs.map(p => p.follower_id))];
     const { data: prefs } = followerIds.length
       ? await supabase.from('follower_notification_prefs').select('*').in('follower_id', followerIds)
@@ -350,21 +446,18 @@ Deno.serve(async (req) => {
       return !pref || pref[prefKey] !== false;
     });
 
-    // Cap work per invocation
     let capped = false;
     if (pairs.length > 200) { pairs = pairs.slice(0, 200); capped = true; }
 
-    // Bulk pre-fetch snapshots (one query each across all unique players)
     const playerIds = [...new Set(pairs.map(p => p.player_id))];
     const snapshotCache = await bulkFetchSnapshots(supabase, playerIds, periodStart, periodEnd);
 
-    // Batch process (controlled parallelism)
     const BATCH_SIZE = 5;
     let generated = 0, skipped = 0, failed = 0;
     for (let i = 0; i < pairs.length; i += BATCH_SIZE) {
       const batch = pairs.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(batch.map(p =>
-        generateForFollower(supabase, p, mode, periodStart, periodEnd, snapshotCache, controller.signal),
+        generateForFollower(supabase, p, mode, periodStart, periodEnd, snapshotCache),
       ));
       for (const r of results) {
         if (r.id) generated++;
@@ -373,12 +466,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    clearTimeout(timeoutId);
     return new Response(JSON.stringify({ ok: true, mode, generated, skipped, failed, total: pairs.length, capped }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
-    clearTimeout(timeoutId);
     console.error('[generate-follower-reports]', e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : 'unknown' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

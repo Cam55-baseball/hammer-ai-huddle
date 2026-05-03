@@ -19,7 +19,11 @@ Deno.serve(async (req) => {
     if (authErr || !user) throw new Error('Unauthorized');
 
     const url = new URL(req.url);
-    const reportId = url.searchParams.get('id');
+    let reportId = url.searchParams.get('id');
+    if (!reportId && (req.method === 'POST' || req.method === 'PUT')) {
+      const body = await req.json().catch(() => ({}));
+      if (typeof body?.id === 'string') reportId = body.id;
+    }
 
     if (reportId) {
       const { data, error } = await supabase
