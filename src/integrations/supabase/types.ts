@@ -2744,6 +2744,7 @@ export type Database = {
           player_id: string | null
           reason: string | null
           report_type: string | null
+          retryable: boolean
           status: string
         }
         Insert: {
@@ -2755,6 +2756,7 @@ export type Database = {
           player_id?: string | null
           reason?: string | null
           report_type?: string | null
+          retryable?: boolean
           status: string
         }
         Update: {
@@ -2766,6 +2768,7 @@ export type Database = {
           player_id?: string | null
           reason?: string | null
           report_type?: string | null
+          retryable?: boolean
           status?: string
         }
         Relationships: []
