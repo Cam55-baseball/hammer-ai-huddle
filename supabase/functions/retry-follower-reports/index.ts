@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const cutoff = new Date(Date.now() - 5 * 60_000).toISOString();
     const { data: failed, error } = await supabase
       .from('follower_report_logs')
-      .select('follower_id, player_id, report_type, created_at')
+      .select('follower_id, player_id, report_type, period_start, created_at')
       .eq('status', 'failed')
       .eq('retryable', true)
       .lt('created_at', cutoff)
@@ -31,14 +31,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Dedupe by (follower_id, player_id, report_type)
+    // Dedupe by FULL key (follower_id, player_id, report_type, period_start)
     const seen = new Set<string>();
-    const targets: Array<{ follower_id: string; player_id: string; report_type: string }> = [];
+    const targets: Array<{ follower_id: string; player_id: string; report_type: string; period_start: string | null }> = [];
     for (const f of failed) {
-      const k = `${f.follower_id}|${f.player_id}|${f.report_type}`;
+      const k = `${f.follower_id}|${f.player_id}|${f.report_type}|${f.period_start ?? ''}`;
       if (seen.has(k)) continue;
       seen.add(k);
-      targets.push({ follower_id: f.follower_id, player_id: f.player_id, report_type: f.report_type });
+      targets.push({
+        follower_id: f.follower_id,
+        player_id: f.player_id,
+        report_type: f.report_type,
+        period_start: f.period_start ?? null,
+      });
     }
 
     // Fire generator with retry_targets
