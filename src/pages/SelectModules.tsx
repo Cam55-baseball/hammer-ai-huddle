@@ -9,6 +9,7 @@ import { Loader2, Star, Check } from "lucide-react";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SkipNudgeBanner } from "@/components/demo/SkipNudgeBanner";
 
 const SelectModules = () => {
   const { t } = useTranslation();
