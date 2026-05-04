@@ -57,7 +57,8 @@ async function logResult(
       retryable,
       period_start: periodStart,
     });
-  } catch (_) { /* never throw from logger */ }
+  } catch (_) { // never throw from logger
+  }
 }
 
 // ---------- Active follower discovery ----------
