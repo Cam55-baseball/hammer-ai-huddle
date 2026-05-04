@@ -48,7 +48,7 @@ export default function DemoSubmodule() {
 
   return (
     <DemoLayout showBack>
-      <DemoModeProvider value={true}>
+      <DemoModeProvider value={{ isDemo: true, isPreview: true, tier, submodule: node.slug }}>
         <div className="mb-4">
           <h1 className="text-xl font-black">{node.title}</h1>
           {node.tagline && <p className="text-sm text-muted-foreground">{node.tagline}</p>}
