@@ -50,6 +50,7 @@ const SelectModules = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
       <div className="w-full max-w-5xl">
+        <SkipNudgeBanner />
         <div className="text-center mb-8">
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
