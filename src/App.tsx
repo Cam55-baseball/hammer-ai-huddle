@@ -123,7 +123,12 @@ const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationF
 const BuildLibrary = lazyWithRetry(() => import("./pages/owner/BuildLibrary"));
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
-
+const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
+const DemoTier = lazyWithRetry(() => import("./pages/demo/DemoTier"));
+const DemoCategory = lazyWithRetry(() => import("./pages/demo/DemoCategory"));
+const DemoSubmodule = lazyWithRetry(() => import("./pages/demo/DemoSubmodule"));
+const DemoUpgrade = lazyWithRetry(() => import("./pages/demo/DemoUpgrade"));
+import { DemoGate } from "./components/demo/DemoGate";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -153,6 +158,7 @@ const App = () => {
           <BrowserRouter>
             <QuickEditProfileProvider>
             <Suspense fallback={<PageLoadingSkeleton />}>
+              <DemoGate>
               <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -226,8 +232,14 @@ const App = () => {
               <Route path="/program/:id" element={<BuildAccessGate buildType="program" />} />
               <Route path="/bundle/:id" element={<BuildAccessGate buildType="bundle" />} />
               <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
+              <Route path="/demo" element={<DemoRoot />} />
+              <Route path="/demo/upgrade" element={<DemoUpgrade />} />
+              <Route path="/demo/:tier" element={<DemoTier />} />
+              <Route path="/demo/:tier/:category" element={<DemoCategory />} />
+              <Route path="/demo/:tier/:category/:submodule" element={<DemoSubmodule />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
+              </DemoGate>
             </Suspense>
             </QuickEditProfileProvider>
           </BrowserRouter>
