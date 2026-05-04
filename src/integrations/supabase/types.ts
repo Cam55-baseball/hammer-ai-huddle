@@ -1618,6 +1618,120 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: number
+          metadata: Json
+          node_slug: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: number
+          metadata?: Json
+          node_slug?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: number
+          metadata?: Json
+          node_slug?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      demo_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_node: string | null
+          demo_state: string
+          last_active_at: string
+          skipped_at: string | null
+          updated_at: string
+          user_id: string
+          variant: string | null
+          viewed_submodules: string[]
+          viewed_tiers: string[]
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_node?: string | null
+          demo_state?: string
+          last_active_at?: string
+          skipped_at?: string | null
+          updated_at?: string
+          user_id: string
+          variant?: string | null
+          viewed_submodules?: string[]
+          viewed_tiers?: string[]
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_node?: string | null
+          demo_state?: string
+          last_active_at?: string
+          skipped_at?: string | null
+          updated_at?: string
+          user_id?: string
+          variant?: string | null
+          viewed_submodules?: string[]
+          viewed_tiers?: string[]
+        }
+        Relationships: []
+      }
+      demo_registry: {
+        Row: {
+          ab_variant: string | null
+          component_key: string | null
+          created_at: string
+          display_order: number
+          icon_name: string | null
+          id: string
+          is_active: boolean
+          node_type: string
+          parent_slug: string | null
+          slug: string
+          tagline: string | null
+          title: string
+        }
+        Insert: {
+          ab_variant?: string | null
+          component_key?: string | null
+          created_at?: string
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          node_type: string
+          parent_slug?: string | null
+          slug: string
+          tagline?: string | null
+          title: string
+        }
+        Update: {
+          ab_variant?: string | null
+          component_key?: string | null
+          created_at?: string
+          display_order?: number
+          icon_name?: string | null
+          id?: string
+          is_active?: boolean
+          node_type?: string
+          parent_slug?: string | null
+          slug?: string
+          tagline?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       drill_assignments: {
         Row: {
           assigned_at: string | null
