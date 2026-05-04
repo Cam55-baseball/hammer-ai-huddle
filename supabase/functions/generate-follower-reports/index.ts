@@ -43,6 +43,7 @@ async function logResult(
   error: string | null,
   durationMs: number,
   retryable: boolean,
+  periodStart: string | null = null,
 ) {
   try {
     await supabase.from('follower_report_logs').insert({
@@ -54,6 +55,7 @@ async function logResult(
       error,
       duration_ms: durationMs,
       retryable,
+      period_start: periodStart,
     });
   } catch (_) { /* never throw from logger */ }
 }
