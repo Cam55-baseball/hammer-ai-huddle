@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, Sparkles } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { programSim, Goal, Experience } from '@/demo/sims/programSim';
+import { DemoLoopShell } from '@/components/demo/DemoLoopShell';
+import { useDemoInteract } from '@/hooks/useDemoInteract';
 
 const GOALS: Goal[] = ['power', 'speed', 'durability'];
 const DAYS: (3 | 4 | 5)[] = [3, 4, 5];
@@ -13,40 +15,57 @@ export default function IronBambinoDemo() {
   const [days, setDays] = useState<3 | 4 | 5>(4);
   const [exp, setExp] = useState<Experience>('intermediate');
   const program = programSim.run({ goal, daysPerWeek: days, experience: exp });
+  const { bump } = useDemoInteract('iron-bambino');
+
+  const set = <T,>(setter: (v: T) => void) => (v: T) => { setter(v); bump(); };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="space-y-3 p-4">
-          <Picker label="Goal" options={GOALS} value={goal} onChange={setGoal} />
-          <Picker label="Days / week" options={DAYS} value={days} onChange={setDays} />
-          <Picker label="Experience" options={LEVELS} value={exp} onChange={setExp} />
-        </CardContent>
-      </Card>
-
-      <div className="space-y-2">
-        {program.map((d) => (
-          <Card key={d.day} className={d.locked ? 'relative overflow-hidden border-primary/40' : ''}>
-            <CardContent className="p-3">
-              <div className="flex items-baseline justify-between">
-                <p className="text-sm font-bold">{d.day} · <span className="font-normal text-muted-foreground">{d.focus}</span></p>
-                {d.locked && <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary"><Lock className="h-3 w-3" /> Locked</span>}
-              </div>
-              {d.exercises.length > 0 && (
-                <ul className={`mt-1.5 space-y-0.5 text-xs text-muted-foreground ${d.locked ? 'blur-sm select-none' : ''}`}>
-                  {d.exercises.map(e => (
-                    <li key={e.name}>{e.name} — {e.sets}×{e.reps}</li>
-                  ))}
-                </ul>
-              )}
-              {d.locked && (
-                <Button size="sm" className="mt-2 gap-1.5"><Sparkles className="h-4 w-4" /> Unlock full plan</Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+    <DemoLoopShell
+      fromSlug="iron-bambino"
+      simId="program"
+      severity={program.benchmark.severity}
+      gap={program.benchmark.gapPct}
+      input={
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <Picker label="Goal" options={GOALS} value={goal} onChange={set(setGoal)} />
+            <Picker label="Days / week" options={DAYS} value={days} onChange={set(setDays)} />
+            <Picker label="Experience" options={LEVELS} value={exp} onChange={set(setExp)} />
+          </CardContent>
+        </Card>
+      }
+      diagnosis={
+        <div className="space-y-2">
+          {program.days.map((d) => (
+            <Card key={d.day} className={d.locked ? 'relative overflow-hidden border-primary/40' : ''}>
+              <CardContent className="p-3">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-sm font-bold">{d.day} · <span className="font-normal text-muted-foreground">{d.focus}</span></p>
+                  {d.locked && <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary"><Lock className="h-3 w-3" /> Locked</span>}
+                </div>
+                {d.exercises.length > 0 && (
+                  <ul className={`mt-1.5 space-y-0.5 text-xs text-muted-foreground ${d.locked ? 'blur-sm select-none' : ''}`}>
+                    {d.exercises.map(e => (
+                      <li key={e.name}>{e.name} — {e.sets}×{e.reps}</li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      }
+      benchmark={{
+        yourLabel: 'Your days',
+        yourValue: `${program.benchmark.yourDays}/wk`,
+        eliteLabel: 'Elite',
+        eliteValue: `${program.benchmark.eliteDays}/wk`,
+        gapLabel: 'Gap',
+        gapValue: `${program.benchmark.gapPct}%`,
+        projected: program.benchmark.projectedImprovement,
+        whyItMatters: program.benchmark.whyItMatters,
+      }}
+    />
   );
 }
 

@@ -1651,7 +1651,9 @@ export type Database = {
           created_at: string
           current_node: string | null
           demo_state: string
+          dwell_ms: Json
           incomplete: boolean
+          interaction_counts: Json
           last_active_at: string
           resume_path: string | null
           skipped_at: string | null
@@ -1667,7 +1669,9 @@ export type Database = {
           created_at?: string
           current_node?: string | null
           demo_state?: string
+          dwell_ms?: Json
           incomplete?: boolean
+          interaction_counts?: Json
           last_active_at?: string
           resume_path?: string | null
           skipped_at?: string | null
@@ -1683,7 +1687,9 @@ export type Database = {
           created_at?: string
           current_node?: string | null
           demo_state?: string
+          dwell_ms?: Json
           incomplete?: boolean
+          interaction_counts?: Json
           last_active_at?: string
           resume_path?: string | null
           skipped_at?: string | null
@@ -1750,6 +1756,39 @@ export type Database = {
           slug?: string
           tagline?: string | null
           title?: string
+        }
+        Relationships: []
+      }
+      demo_video_prescriptions: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          primary_axis: string | null
+          severity_band: string
+          sim_id: string
+          video_refs: Json
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          primary_axis?: string | null
+          severity_band: string
+          sim_id: string
+          video_refs: Json
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          primary_axis?: string | null
+          severity_band?: string
+          sim_id?: string
+          video_refs?: Json
         }
         Relationships: []
       }

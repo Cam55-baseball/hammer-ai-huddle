@@ -1,220 +1,203 @@
 
-# Demo-Gated Onboarding — Finalization Plan
+# Demo System Finalization Plan
 
-This plan closes every gap in the current Demo system and ships a true "for show" experience that's safe, interactive, conversion-optimized, and infinitely extensible.
+Transform the existing demo into a hardened, conversion-engineered system. Every simulation becomes a **Cause → Diagnosis → Insight → Prescribed Videos → Lock** loop.
 
 ---
 
-## Phase 1 — Critical System Fixes
+## PHASE 1 — Critical Fixes
 
-### 1. Real Demo Isolation Layer
+### 1. Fix DemoModeProvider (real context propagation)
+`src/contexts/DemoModeContext.tsx` already wraps `Context.Provider` correctly, but `value` defaults to `true` (boolean). Tighten:
+- Remove boolean shortcut. Require explicit `{ isDemo, isPreview, tier?, submodule? }`.
+- Add `useDemoModeStrict()` that throws if used outside a provider (guards real routes).
+- Memoize value object to prevent re-render storms.
 
-**Problem:** `DemoModeContext` is a boolean with no enforcement. A demo component could still hit Supabase.
+### 2. Global Demo Firewall
+**Server** — `supabase/functions/_shared/demoFirewall.ts`:
+- Add `withDemoProtection(handler, { allowReads?: boolean })` HOF wrapping every edge function.
+- On `x-demo-session: 1`: short-circuit with 403 + log to `demo_events` (action=`blocked_write`, function name, path).
+- Wrap all mutating edge functions (audit list — anything that writes). Reads pass-through when `allowReads`.
 
-**Fix:**
-- Replace `DemoModeContext` with a richer shape:
-  ```ts
-  { isDemo: boolean; isPreview: boolean; tier?: string; submodule?: string }
-  ```
-- Add `src/hooks/useDemoSafeQuery.ts` and `useDemoSafeMutation.ts`:
-  - In demo mode, `useDemoSafeQuery(key, fixtureLoader)` returns seeded data from `src/demo/fixtures/<key>.ts`, never touches Supabase.
-  - `useDemoSafeMutation` is a no-op that resolves with a synthetic response and logs a `demo_events` row (`event_type: 'sim_write_blocked'`).
-- Add `src/demo/guard.ts` with `assertNotDemo(ctx)` for any direct supabase call inside a demo shell — throws in dev, silently no-ops in prod.
-- Server-side firewall: new edge function middleware `supabase/functions/_shared/demoFirewall.ts` rejects writes when JWT custom claim `demo=true` is present (set client-side via a `is_demo_session` header that edge functions inspect; reject mutations to user data tables).
+**Client** — `src/demo/guard.ts`:
+- Export `demoSafeSupabase` proxy that wraps `from(table).insert/update/upsert/delete/rpc` and throws via `assertNotDemo` when the surrounding `useDemoMode().isDemo === true`.
+- All demo shells must use `demoSafeSupabase` (lint rule via comment + README).
+- Auto-inject `x-demo-session: 1` header on `supabase.functions.invoke` when in demo (via wrapper hook `useDemoFunctions()`).
 
-**Integration pattern (every demo shell):**
-```tsx
-const { isDemo } = useDemoMode();
-const { data } = useDemoSafeQuery('hitting.swings', loadHittingFixtures);
-const save = useDemoSafeMutation(realSaveFn);
+### 3. Harden Completion Engine
+Update `src/demo/completionRules.ts` + `demo_progress` schema:
+- Add columns: `interaction_counts jsonb` (`{ submodule_slug: count }`), `dwell_ms jsonb` (`{ submodule_slug: ms }`).
+- New rule: complete iff `tiers≥2 AND categories≥2 AND submodules≥4 AND ≥2 submodules have (count≥3 OR dwell≥20000ms)`.
+- `useDemoDwell(slug)` hook: tracks visibility-aware time on submodule, flushes to server on unmount/visibilitychange (debounced, capped at 5 min/slug).
+
+### 4. Anti-spam / Event Protection
+`src/hooks/useDemoProgress.ts`:
+- Debounce `markViewed` (500ms trailing) per slug.
+- Dedup: skip server write if `(slug, action)` was logged in last 2s (in-memory `Map<string, ts>`).
+- Per-session token-bucket rate limit: 30 events/min; excess → drop + single warn event.
+- Server-side `demo_events` insert RPC enforces same cap via `count() over last 60s` check.
+
+### 5. Failure + Fallback System
+- Bundle a **static fallback registry** at `src/demo/fallbackRegistry.ts` (compiled from seed). `useDemoRegistry` falls back if Supabase fetch fails AND localStorage cache empty.
+- Retry with exponential backoff (250/500/1000ms, max 3) on registry + progress fetches.
+- `useDemoProgress`: if write fails, queue to `localStorage` and replay on reconnect (BroadcastChannel + `online` listener).
+- Top-level `<DemoErrorBoundary>` in `DemoLayout` and `StartHereRunner` showing safe "Continue Tour" UI; never blank screen.
+
+---
+
+## PHASE 2 — Conversion Engine
+
+### 6. Core Loop Restructure (every shell)
+Every shell renders 5 stacked sections (shared `<DemoLoopShell>` component in `src/components/demo/DemoLoopShell.tsx`):
+
+```text
+[1 INPUT]      user controls (existing)
+[2 DIAGNOSIS]  raw metrics block (existing)
+[3 INSIGHT]    what's wrong / why / elite standard
+[4 PRESCRIBED] 3 locked video cards (thumbnail + title + purpose + expected gain)
+[5 LOCK CTA]   personalized headline + Unlock button → /demo/upgrade?from=<slug>&reason=<diag>
 ```
 
-### 2. Interactive Simulated Previews (3 reference shells)
+### 7. Upgrade Simulation Outputs
+Extend each sim's output type to include `benchmark` block:
+- `yourResult`, `eliteBenchmark`, `gap`, `projectedImprovement` (string + numeric delta), `severity: 'minor'|'moderate'|'critical'`.
+- `hittingSim`: elite EV by age cohort (use existing `data/baseball/velocityBands`); compute gap vs 95th percentile.
+- `programSim`: elite weekly volume vs prescribed; project "X% strength gain in 8 wks".
+- `vault`-style demos: gap = "missing data layers".
 
-Replace `DemoComingSoon` for the highest-value submodules. All shells live in `src/components/demo/shells/` and register in `DemoComponentRegistry.ts`.
+### 8. Primary Conversion Moment
+New file `src/demo/prescriptions/conversionCopy.ts` mapping `(simId, severity) → headline`:
+- Hitting critical: "You're leaving **{gap} mph** on the table. 3 drills fix this — already mapped for you."
+- Iron Bambino: "Your plan misses **{gap}%** of elite weekly load. Unlock the full 7-day build."
+- Vault: "{gap} performance layers hidden. Unlock to see your real ceiling."
 
-**a. `HittingAnalysisDemo.tsx`**
-- User picks pitch type + contact zone (chips).
-- Local deterministic engine (`src/demo/sims/hittingSim.ts`) returns an Exit Velo, Launch Angle, Bat Path Score, and a 0–100 "Swing IQ".
-- Shows a sample 3-frame swing strip with annotations; the "Elite Insight" panel is blurred with an Unlock CTA.
+Rendered in `[5 LOCK CTA]` band, large, with destination `/demo/upgrade?from=<slug>&reason=<severity>&gap=<n>`.
 
-**b. `IronBambinoDemo.tsx`**
-- 3-step mock builder: pick goal → pick days/wk → pick experience.
-- `programSim.ts` returns a 7-day mock plan with sets/reps; one day is locked behind upgrade.
-
-**c. `VaultDemo.tsx`**
-- Thumbnail grid (static assets in `public/demo/vault/`); 2 unlocked previews, rest blurred with a Lock badge.
-- Tapping a locked tile fires `view_locked` event and routes to `/demo/upgrade?from=vault`.
-
-**Reusable simulation engine pattern** (`src/demo/sims/simEngine.ts`):
+### 9. Video Prescription Engine
+New module `src/demo/prescriptions/videoPrescription.ts`:
 ```ts
-export interface DemoSim<I, O> { id: string; run(input: I, seed?: number): O }
+prescribe(simId, output): PrescribedVideo[]  // exactly 3, deterministic
 ```
-Deterministic via a small seeded PRNG so previews are stable across reloads (good for screenshots and trust).
+- Backed by static map keyed by `(simId, severity, primaryAxis)` → array of `library_video.id` references.
+- Each `PrescribedVideo`: `{ id, title, purpose, expectedImprovement, thumbnailUrl }`.
+- Shells call `prescribe()` and pass to `<PrescribedVideoStrip locked />`.
+- Map lives in DB later via `demo_video_prescriptions` table (slug, severity_band, video_ids[], display_order) — for now seed in code, structured for trivial DB migration.
 
-### 3. Demo Completion Engine
-
-**Rules (hard-coded constants in `src/demo/completionRules.ts`):**
-- `MIN_TIERS_VIEWED = 2`
-- `MIN_CATEGORIES_VIEWED = 2`
-- `MIN_SUBMODULES_VIEWED = 4`
-
-**Implementation:**
-- New DB column on `demo_progress`: `viewed_categories text[]` (migration).
-- `useDemoProgress.markViewed` updates submodules + parent category + parent tier.
-- New selector `useDemoCompletion()` returns `{ pct, isComplete, missing: { tiers, categories, submodules } }`.
-- Visual bar in `DemoLayout` switches from `viewed/total` to weighted % based on the three thresholds.
-- When `isComplete` first becomes true: auto-call `complete()`, fire confetti, route to `/demo/upgrade?reason=complete` with copy *"You've seen enough to choose."*
-
-### 4. Conversion-Safe Skip
-
-Replace current "Skip the tour?" dialog with a 2-step modal (`SkipDemoDialog.tsx`):
-- **Step 1 — Loss-framed copy:** *"Skipping means you'll choose your plan blind. The demo is what tells you which tier fits."*
-- Buttons: `Keep exploring` (primary) | `I'll skip anyway` (ghost).
-- **Step 2 (only if confirmed):** *"We'll keep your spot. You can resume anytime from the Demo button."*
-- On confirm: set `demo_state='skipped'`, but persist `incomplete=true` flag. Allow `/pricing` and `/select-modules` access.
-- **Nudge system:** `src/components/demo/SkipNudgeBanner.tsx` shows on Pricing/Checkout if `skipped && !completed`: *"You skipped the demo — see what fits in 60 seconds."* with `Resume demo` CTA.
-
-### 5. Start Here vs Demo (UX split)
-
-- **Start Here** = guided, sequential, recommended path. Route: `/start-here`. Wraps demo nodes in a step-runner that auto-advances via `Next →` and prevents tier-jumping. Shows a numbered stepper.
-- **Demo** = free exploration. Route stays `/demo`. Tile-based, jump anywhere.
-- Both write to the **same** `demo_progress` table — completion engine is shared.
-- `DemoGate` first-time users land on `/start-here`; the `/start-here` header has a **"Just let me explore"** link that flips to `/demo`.
-- Header `DemoButton` becomes a split: `Start Here` (if not started) → `Resume Demo` (if in_progress) → `Explore` (if completed/skipped).
+### 10. Locked Content UI
+New `src/components/demo/PrescribedVideoCard.tsx`:
+- Shows real thumbnail (or generated gradient placeholder), title, 1-line purpose, "Expected: +Xmph" badge.
+- Visual lock: blurred lower half + lock icon + "Unlock" button (no autoplay, no video element mounted).
+- Click → `/demo/upgrade?from=<slug>&video=<id>`.
 
 ---
 
-## Phase 2 — System Intelligence
+## PHASE 3 — System Hardening
 
-### 6. Master Taxonomy
+### 11. Registry Validation
+New `src/demo/registryValidator.ts` runs on `useDemoRegistry` load:
+- Unique slugs (per node_type).
+- Every `category.parent_slug` exists as tier; every `submodule.parent_slug` exists as category.
+- Required fields: `slug, title, node_type, display_order`.
+- Orphan submodules excluded from sequence + reported via `console.error` + `demo_events` (`registry_invalid`).
+- Server-side: SQL CHECK + new validation trigger on `demo_registry` insert/update enforcing same.
 
-`demo_registry` already supports tier → category → submodule. Lock the contract:
-- Migration adds `requires_features text[]` (for future gating like `requires_features={'ai_chat'}`) and `min_app_version text`.
-- Seed full catalog (one migration) for all 3 tiers × every category × every real submodule (Hitting, Pitching, Throwing, Iron Bambino, Tex Vision, Heat Factory, Speed Lab, Ask the Coach, Vault, Unicorn, etc.).
-- Documented add-flow in `src/demo/README.md`: insert row → optional add component to `DemoComponentRegistry` → done. Zero code changes for non-interactive previews.
+### 12. Start Here Hardening
+`StartHereRunner.tsx`:
+- Snapshot `recommendedSequence` into local state on mount (immune to mid-session registry reloads).
+- If a node's `component_key` is missing/unregistered, skip with toast "Preview unavailable, advancing".
+- Validate `step` param is in `[0, sequence.length)`; clamp + replace URL.
+- Persist current step to `demo_progress.resume_path = '/start-here?step=N'` on each advance.
 
-### 7. Psychological Flow
+### 13. Routing Protection
+- `DemoGate.tsx`: extend to **block** any `/dashboard|/training|/nutrition|/vault|/select-modules|/pricing|/checkout` access for `demo_state IN ('pending','in_progress')` users → redirect to `/start-here`.
+- `RealRouteGuard` (new): assert `useDemoMode().isDemo === false` on real routes (mounted in `App.tsx` for non-demo subtrees).
+- `/demo/upgrade` is the single upgrade entry; `/pricing` direct hits redirect through it for demo-incomplete users.
 
-Hard-wired into the components:
-- **Curiosity loop:** every shell shows ~60% of value, then a blurred "Elite Insight" with `Sparkles` Unlock CTA.
-- **Progressive reveal:** Start Here sequences tier 1 → 2 → 3 in ascending price; each tier ends on its strongest feature.
-- **Friction removed:** no auth re-prompts, instant fixtures, deterministic outputs (no spinners > 200ms).
-- **Friction added (intentional):** locked tiles, blurred panels, Upgrade modal at end of each tier.
-- **Strategic prompts:** Upgrade CTA appears (a) after 2nd submodule, (b) on completion, (c) after viewing a locked tile.
-
-### 8. Recommended Path
-
-- Add `is_recommended boolean` and `recommended_order int` to `demo_registry`.
-- `DemoTier` page shows a "⭐ Most athletes start here" ribbon on the recommended category.
-- Start Here uses `recommended_order` to sequence; users can override via `Demo` mode.
-
----
-
-## Phase 3 — Architecture Hardening
-
-### 9. State Machine
-
-Formalize in `src/demo/stateMachine.ts`:
-```text
-pending ──start──▶ in_progress ──explore──▶ exploring
-   │                    │                       │
-   │                    └──skip──▶ skipped ◀────┘
-   │                    └──meets thresholds──▶ completed
-   └──skip──▶ skipped
-```
-- `exploring` = `in_progress` after first submodule viewed (used to suppress Start Here re-entry).
-- Transitions enforced in `useDemoProgress.update()`; invalid transitions throw + log to `demo_events`.
-- Resume logic: `current_node` is restored on login on any device.
-
-### 10. Edge Cases
-
-| Case | Handling |
-|---|---|
-| Page refresh mid-demo | `current_node` restored from `demo_progress`; `DemoGate` re-routes there |
-| Exit and return | `Resume Demo` button in header; landing page banner if `in_progress` |
-| Direct URL to `/pricing` while `pending` | `DemoGate` redirects to `/start-here?intent=...` |
-| Direct URL to a `/demo/:tier/:cat/:sub` that doesn't exist | `DemoSubmodule` shows "Preview not found" + back link |
-| New feature added later | New `demo_registry` row auto-appears; `total` denominator updates; existing completed users keep `completed` (we don't downgrade) |
-| Demo write leak | `useDemoSafeMutation` + edge `demoFirewall` middleware double-block |
-| Multiple tabs | `BroadcastChannel('data-sync')` already used project-wide; emit `demo:progress` so progress bars stay in sync |
-| Auth race on first load | `DemoGate` waits for `isAuthStable` before redirect |
-| Crashed shell | `ErrorBoundary` per submodule with `Skip this preview` button that marks viewed and returns home |
-
-### 11. Routing & Guards
-
-```text
-/start-here                        → guided runner (gate: authed)
-/demo                              → free explore
-/demo/:tier
-/demo/:tier/:category
-/demo/:tier/:category/:submodule
-/demo/upgrade                      → CTA page
-/select-modules, /pricing, /checkout → DemoGate redirects if state=pending
-```
-- `<DemoGate>` wraps `<App>` routes (already in place); extend `GATED_PREFIXES` to include `/dashboard` for first-session users only (allow if `state ∈ {skipped, completed, in_progress}`).
-- Edge function middleware `_shared/demoFirewall.ts` rejects writes from headers flagged `x-demo-session: 1`.
-
-### 12. Expansion Model
-
-- **New submodule:** insert `demo_registry` row. Component optional.
-- **A/B test:** `ab_variant` column already exists. `useDemoRegistry` filters by `variant` from `demo_progress.variant` (assigned at first load via 50/50 hash of `user_id`).
-- **Personalized paths (future):** `recommended_order` can be overridden by a future `demo_personalization` table keyed on (sport, position, age_band) without breaking current schema.
+### 14. Expansion Guarantee
+- New submodule = insert into `demo_registry` only. No code change required *unless* a custom shell desired.
+- New shell = drop file in `src/components/demo/shells/` + add key to `DemoComponentRegistry.ts`. Missing key falls back to generic `<GenericSimShell>` driven by registry-defined `default_metrics`.
+- New prescription = insert into `demo_video_prescriptions` table (when migrated) — zero code.
+- `ab_variant` already on registry; future personalization reads `useUser()` traits and filters sequence.
 
 ---
 
-## Technical Section
+## Database Migration
 
-**DB migration (`20260505_demo_finalization.sql`):**
 ```sql
 ALTER TABLE demo_progress
-  ADD COLUMN viewed_categories text[] NOT NULL DEFAULT '{}',
-  ADD COLUMN incomplete boolean NOT NULL DEFAULT false,
-  ADD COLUMN resume_path text;
+  ADD COLUMN interaction_counts jsonb NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN dwell_ms jsonb NOT NULL DEFAULT '{}'::jsonb;
 
-ALTER TABLE demo_registry
-  ADD COLUMN is_recommended boolean NOT NULL DEFAULT false,
-  ADD COLUMN recommended_order int,
-  ADD COLUMN requires_features text[] NOT NULL DEFAULT '{}',
-  ADD COLUMN min_app_version text;
+CREATE TABLE demo_video_prescriptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  sim_id text NOT NULL,
+  severity_band text NOT NULL CHECK (severity_band IN ('minor','moderate','critical')),
+  primary_axis text,
+  video_refs jsonb NOT NULL,  -- [{id,title,purpose,expected,thumb}]
+  display_order int NOT NULL DEFAULT 0,
+  is_active bool NOT NULL DEFAULT true,
+  UNIQUE(sim_id, severity_band, primary_axis)
+);
+ALTER TABLE demo_video_prescriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public read prescriptions" ON demo_video_prescriptions
+  FOR SELECT USING (is_active);
+
+-- Validation trigger on demo_registry
+CREATE OR REPLACE FUNCTION validate_demo_registry_node() RETURNS trigger ...
+  -- enforces parent existence + slug uniqueness per node_type
 ```
-+ seed inserts for the full catalog and recommended flags.
 
-**New files:**
-- `src/contexts/DemoModeContext.tsx` (replaced — richer shape)
-- `src/hooks/useDemoSafeQuery.ts`, `useDemoSafeMutation.ts`, `useDemoCompletion.ts`
-- `src/demo/{completionRules,stateMachine,guard,README}.ts`
-- `src/demo/fixtures/{hitting,ironBambino,vault}.ts`
-- `src/demo/sims/{simEngine,hittingSim,programSim}.ts`
-- `src/components/demo/shells/{HittingAnalysisDemo,IronBambinoDemo,VaultDemo}.tsx`
-- `src/components/demo/{SkipDemoDialog,SkipNudgeBanner,RecommendedRibbon}.tsx`
-- `src/pages/start-here/StartHereRunner.tsx` + route
-- `supabase/functions/_shared/demoFirewall.ts`
+Plus `demo_events` rate-limit RPC + index on `(session_id, created_at)`.
 
-**Edited:**
-- `App.tsx` (add `/start-here`, extend gate)
-- `DashboardLayout.tsx` (split Start Here / Resume button)
-- `DemoLayout.tsx` (weighted progress, recommended ribbon)
-- `DemoSubmodule.tsx` (per-shell ErrorBoundary skip action)
-- `DemoComponentRegistry.ts` (register 3 shells)
-- `useDemoProgress.ts` (categories, state-machine guard, completion auto-trigger)
-- `useDemoRegistry.ts` (variant filter, recommended sort)
+---
+
+## Files
+
+**New**
+- `src/components/demo/DemoLoopShell.tsx`
+- `src/components/demo/PrescribedVideoCard.tsx`
+- `src/components/demo/GenericSimShell.tsx`
+- `src/components/demo/DemoErrorBoundary.tsx`
+- `src/demo/prescriptions/videoPrescription.ts`
+- `src/demo/prescriptions/conversionCopy.ts`
+- `src/demo/fallbackRegistry.ts`
+- `src/demo/registryValidator.ts`
+- `src/hooks/useDemoDwell.ts`
+- `src/hooks/useDemoFunctions.ts`
+- `src/components/demo/RealRouteGuard.tsx`
+- `supabase/migrations/<ts>_demo_hardening.sql`
+
+**Edited**
+- `src/contexts/DemoModeContext.tsx` (strict shape + memo)
+- `src/demo/guard.ts` (add `demoSafeSupabase` proxy)
+- `src/demo/completionRules.ts` (interaction + dwell rules)
+- `src/demo/sims/hittingSim.ts`, `programSim.ts` (add benchmark/gap/severity)
+- `src/components/demo/shells/HittingAnalysisDemo.tsx`, `IronBambinoDemo.tsx`, `VaultDemo.tsx` (rebuild on `DemoLoopShell`)
+- `src/hooks/useDemoProgress.ts` (debounce, dedup, rate-limit, retry queue, dwell/interaction writes)
+- `src/hooks/useDemoRegistry.ts` (retry + fallback + validator)
+- `src/components/demo/DemoGate.tsx` (extend gated paths)
+- `src/pages/start-here/StartHereRunner.tsx` (snapshot sequence, clamp step, resume)
+- `src/pages/demo/DemoUpgrade.tsx` (read `from/reason/gap` to personalize headline)
+- `supabase/functions/_shared/demoFirewall.ts` (`withDemoProtection` HOF)
+- All write edge functions: wrap export with `withDemoProtection`
 
 ---
 
 ## Weaknesses Fixed (audit)
 
-| Old weakness | Fix |
-|---|---|
-| `DemoModeProvider` was a no-op flag | Real isolation via safe query/mutation hooks + edge firewall |
-| All shells were "Coming Soon" | 3 deterministic interactive shells + reusable sim engine |
-| Completion was viewed-count only | Multi-axis rule (tiers+categories+submodules) with weighted % |
-| Skip was 1-click escape | 2-step loss-framed dialog + persistent nudge banner |
-| Start Here and Demo were the same thing | Two distinct entry points sharing one progress backend |
-| Registry only listed seed examples | Full catalog seeded + add-flow documented |
-| No state machine — ad-hoc state writes | Formal transitions enforced + logged |
-| No A/B / personalization hook | `ab_variant` + `recommended_order` wired through registry |
-| No write protection if a real component leaked in | Client guard + server `demoFirewall` |
-| Multi-tab progress drift | `BroadcastChannel('data-sync')` event for `demo:progress` |
+1. Provider could be invoked with boolean → strict shape now required.
+2. Firewall not enforced per-function → mandatory `withDemoProtection` HOF.
+3. No client-side write blocker → `demoSafeSupabase` proxy + assertions.
+4. Completion based only on view counts → adds interaction depth + dwell.
+5. `markViewed` could spam DB → debounce + dedup + rate-limit + RPC cap.
+6. Registry fetch single point of failure → retry + cache + bundled fallback.
+7. Shells delivered insight-free results → mandatory 5-step loop with prescribed videos.
+8. No conversion specificity → personalized gap-based copy + deterministic prescriptions.
+9. Locked content was vague → real thumbnails, expected gains, blurred lock UI.
+10. Registry could carry orphans → validator + DB trigger.
+11. Start Here vulnerable to mid-session registry change → snapshot + clamp + resume_path.
+12. Real routes could leak demo state / vice versa → `RealRouteGuard` + extended `DemoGate`.
+13. Adding features required code edits → registry-driven `GenericSimShell` + DB-driven prescriptions table.
+14. No graceful degradation on Supabase outage → retry queue + ErrorBoundary + offline replay.
 
-Approve to implement.
+After approval, I will implement in the order listed (DB migration → firewall → provider/guard → completion/anti-spam → fallbacks → conversion loop → prescription engine → routing/validation → expansion plumbing).

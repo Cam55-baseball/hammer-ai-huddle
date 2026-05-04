@@ -2,6 +2,7 @@ import { DemoSim, rng, seedFromString } from './simEngine';
 
 export type Goal = 'power' | 'speed' | 'durability';
 export type Experience = 'beginner' | 'intermediate' | 'advanced';
+export type Severity = 'minor' | 'moderate' | 'critical';
 
 export interface ProgramInput {
   goal: Goal;
@@ -16,13 +17,26 @@ export interface ProgramDay {
   locked?: boolean;
 }
 
+export interface ProgramOutput {
+  days: ProgramDay[];
+  benchmark: {
+    eliteDays: 5;
+    yourDays: number;
+    gapPct: number;
+    severity: Severity;
+    primaryAxis: 'volume' | 'frequency' | 'recovery';
+    projectedImprovement: string;
+    whyItMatters: string;
+  };
+}
+
 const FOCUS: Record<Goal, string[]> = {
   power: ['Triple Extension', 'Rotational Power', 'Posterior Chain', 'Plyo + Sprint', 'CNS Recovery', 'Med Ball Throws', 'Mobility'],
   speed: ['Acceleration', 'Top-End Speed', 'Lateral Quickness', 'Plyo Bounding', 'CNS Recovery', 'Sprint Mechanics', 'Mobility'],
   durability: ['Tendon Health', 'Hip Stability', 'T-Spine Mobility', 'Core Anti-Rotation', 'Aerobic Base', 'Recovery Flow', 'Mobility'],
 };
 
-const EXERCISES: Record<string, { name: string; sets: number; reps: string }[]> = {
+const EXERCISES: Record<Goal, { name: string; sets: number; reps: string }[]> = {
   power: [
     { name: 'Trap Bar Jump', sets: 4, reps: '3' },
     { name: 'Cable Rotational Chop', sets: 3, reps: '6/side' },
@@ -40,10 +54,10 @@ const EXERCISES: Record<string, { name: string; sets: number; reps: string }[]> 
   ],
 };
 
-export const programSim: DemoSim<ProgramInput, ProgramDay[]> = {
+export const programSim: DemoSim<ProgramInput, ProgramOutput> = {
   id: 'program',
   run(input) {
-    const r = rng(seedFromString(`${input.goal}:${input.daysPerWeek}:${input.experience}`));
+    rng(seedFromString(`${input.goal}:${input.daysPerWeek}:${input.experience}`));
     const days: ProgramDay[] = [];
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const focusList = FOCUS[input.goal];
@@ -57,10 +71,27 @@ export const programSim: DemoSim<ProgramInput, ProgramDay[]> = {
           ...e,
           sets: input.experience === 'advanced' ? e.sets + 1 : e.sets,
         })) : [],
-        // Lock the highest-value day to drive upgrade
         locked: isWorkout && i === input.daysPerWeek - 1,
       });
     }
-    return days;
+    const eliteDays = 5 as const;
+    const gapPct = Math.max(0, Math.round(((eliteDays - input.daysPerWeek) / eliteDays) * 100));
+    const severity: Severity = gapPct >= 40 ? 'critical' : gapPct >= 20 ? 'moderate' : 'minor';
+    return {
+      days,
+      benchmark: {
+        eliteDays,
+        yourDays: input.daysPerWeek,
+        gapPct,
+        severity,
+        primaryAxis: gapPct > 0 ? 'frequency' : 'volume',
+        projectedImprovement: gapPct > 0
+          ? `+${Math.round(gapPct * 0.4)}% strength + power gains by week 8 with the full plan`
+          : 'Volume bump unlocks the next 8% of your ceiling',
+        whyItMatters: gapPct > 0
+          ? `Elite athletes train ${eliteDays}+ days/week with periodized recovery. You're missing ${gapPct}% of weekly stimulus.`
+          : 'Your frequency is elite — the unlock is periodization and recovery quality.',
+      },
+    };
   },
 };
