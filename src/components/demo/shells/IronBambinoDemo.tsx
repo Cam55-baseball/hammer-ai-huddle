@@ -51,7 +51,7 @@ export default function IronBambinoDemo() {
 }
 
 function Picker<T extends string | number>({ label, options, value, onChange }: {
-  label: string; options: readonly T[]; value: T; onChange: (v: T) => void;
+  label: string; options: readonly T[]; value: T; onChange: (v: any) => void;
 }) {
   return (
     <div>
