@@ -364,6 +364,7 @@ Deno.serve(async (req) => {
     const retryTargets = Array.isArray(body.retry_targets) ? body.retry_targets : null;
     if (retryTargets && retryTargets.length > 0) {
       let generated = 0, skipped = 0, failed = 0;
+      const cutoff = new Date(Date.now() - 5 * 60_000).toISOString();
       // Group by (reportType, periodStart, periodEnd) so we can bulk-fetch
       const groups = new Map<string, { mode: ReportType; periodStart: string; periodEnd: string; pairs: FollowerInfo[] }>();
 
@@ -383,8 +384,30 @@ Deno.serve(async (req) => {
         const mode: ReportType = t.report_type === 'monthly_deep' ? 'monthly_deep' : 'weekly_digest';
         const role = roleMap.get(t.follower_id);
         if (!role) continue;
-        const periodStart = t.period_start ?? periodFor(mode).periodStart;
-        const periodEnd = t.period_end ?? periodFor(mode, periodStart ? new Date(new Date(periodStart).getTime() + (mode === 'weekly_digest' ? 7 : 30) * 86400000).toISOString().slice(0, 10) : undefined).periodEnd;
+
+        // Strict period determinism: cannot retry without original period_start
+        if (!t.period_start || typeof t.period_start !== 'string') {
+          await logResult(
+            supabase,
+            { follower_id: t.follower_id, player_id: t.player_id, follower_role: role },
+            mode,
+            'skipped',
+            'missing_period_start',
+            null,
+            0,
+            false,
+            null,
+          );
+          skipped++;
+          continue;
+        }
+
+        const periodStart = t.period_start;
+        const periodEnd = new Date(
+          new Date(periodStart).getTime() +
+          (mode === 'weekly_digest' ? 7 : 30) * 86400000,
+        ).toISOString().slice(0, 10);
+
         const key = `${mode}|${periodStart}|${periodEnd}`;
         if (!groups.has(key)) groups.set(key, { mode, periodStart, periodEnd, pairs: [] });
         groups.get(key)!.pairs.push({ follower_id: t.follower_id, player_id: t.player_id, follower_role: role });
@@ -409,18 +432,17 @@ Deno.serve(async (req) => {
 
       // Mark old failed log rows for these pairs as no longer retryable
       for (const t of retryTargets) {
-        if (!t?.follower_id || !t?.player_id) continue;
+        if (!t?.follower_id || !t?.player_id || !t?.period_start) continue;
         try {
-          let q = supabase.from('follower_report_logs')
+          await supabase.from('follower_report_logs')
             .update({ retryable: false })
             .eq('follower_id', t.follower_id)
             .eq('player_id', t.player_id)
             .eq('report_type', t.report_type ?? 'weekly_digest')
+            .eq('period_start', t.period_start)
             .eq('status', 'failed')
             .eq('retryable', true)
-            .lt('created_at', new Date(Date.now() - 1000).toISOString());
-          if (t.period_start) q = q.eq('period_start', t.period_start);
-          await q;
+            .lt('created_at', cutoff);
         } catch (_) { /* swallow */ }
       }
 
