@@ -403,9 +403,24 @@ Deno.serve(async (req) => {
         }
 
         const periodStart = t.period_start;
+        const startMs = new Date(periodStart).getTime();
+        if (Number.isNaN(startMs)) {
+          await logResult(
+            supabase,
+            { follower_id: t.follower_id, player_id: t.player_id, follower_role: role },
+            mode,
+            'skipped',
+            'invalid_period_start',
+            null,
+            0,
+            false,
+            null,
+          );
+          skipped++;
+          continue;
+        }
         const periodEnd = new Date(
-          new Date(periodStart).getTime() +
-          (mode === 'weekly_digest' ? 7 : 30) * 86400000,
+          startMs + (mode === 'weekly_digest' ? 7 : 30) * 86400000,
         ).toISOString().slice(0, 10);
 
         const key = `${mode}|${periodStart}|${periodEnd}`;
