@@ -285,7 +285,7 @@ async function generateForFollower(
   const startedAt = Date.now();
 
   if (fi.follower_role !== 'scout' && fi.follower_role !== 'coach') {
-    await logResult(supabase, fi, reportType, 'skipped', 'invalid_role', null, Date.now() - startedAt, false);
+    await logResult(supabase, fi, reportType, 'skipped', 'invalid_role', null, Date.now() - startedAt, false, periodStart);
     return { skipped: true, reason: 'invalid_role' };
   }
 
@@ -293,12 +293,12 @@ async function generateForFollower(
 
   // Snapshot validation guard
   if (!Array.isArray(snapshot.sessions) || !Array.isArray(snapshot.games)) {
-    await logResult(supabase, fi, reportType, 'skipped', 'invalid_snapshot', null, Date.now() - startedAt, false);
+    await logResult(supabase, fi, reportType, 'skipped', 'invalid_snapshot', null, Date.now() - startedAt, false, periodStart);
     return { skipped: true, reason: 'invalid_snapshot' };
   }
 
   if (!snapshot.sessions.length && !snapshot.games.length && reportType === 'weekly_digest') {
-    await logResult(supabase, fi, reportType, 'skipped', 'no_activity', null, Date.now() - startedAt, false);
+    await logResult(supabase, fi, reportType, 'skipped', 'no_activity', null, Date.now() - startedAt, false, periodStart);
     return { skipped: true, reason: 'no_activity' };
   }
 
@@ -324,20 +324,20 @@ async function generateForFollower(
       .single();
 
     if (error) {
-      await logResult(supabase, fi, reportType, 'failed', 'db_upsert_error', error.message, Date.now() - startedAt, true);
+      await logResult(supabase, fi, reportType, 'failed', 'db_upsert_error', error.message, Date.now() - startedAt, true, periodStart);
       return { error: error.message };
     }
 
     if (!aiOk) {
       // Successful row, but AI fell back — log so retry worker can refresh later
-      await logResult(supabase, fi, reportType, 'failed', 'ai_exhausted', null, Date.now() - startedAt, true);
+      await logResult(supabase, fi, reportType, 'failed', 'ai_exhausted', null, Date.now() - startedAt, true, periodStart);
     } else {
-      await logResult(supabase, fi, reportType, 'success', null, null, Date.now() - startedAt, false);
+      await logResult(supabase, fi, reportType, 'success', null, null, Date.now() - startedAt, false, periodStart);
     }
     return { id: upserted.id };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
-    await logResult(supabase, fi, reportType, 'failed', 'unexpected', msg, Date.now() - startedAt, true);
+    await logResult(supabase, fi, reportType, 'failed', 'unexpected', msg, Date.now() - startedAt, true, periodStart);
     return { error: msg };
   }
 }
