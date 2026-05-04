@@ -52,12 +52,12 @@ export function useDemoProgress() {
   const logEvent = useCallback(
     async (event_type: string, node_slug?: string, metadata: Record<string, unknown> = {}) => {
       if (!user) return;
-      await supabase.from('demo_events').insert({
+      await supabase.from('demo_events').insert([{
         user_id: user.id,
         event_type,
         node_slug: node_slug ?? null,
-        metadata,
-      });
+        metadata: metadata as any,
+      }]);
     },
     [user],
   );
