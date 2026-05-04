@@ -1651,11 +1651,14 @@ export type Database = {
           created_at: string
           current_node: string | null
           demo_state: string
+          incomplete: boolean
           last_active_at: string
+          resume_path: string | null
           skipped_at: string | null
           updated_at: string
           user_id: string
           variant: string | null
+          viewed_categories: string[]
           viewed_submodules: string[]
           viewed_tiers: string[]
         }
@@ -1664,11 +1667,14 @@ export type Database = {
           created_at?: string
           current_node?: string | null
           demo_state?: string
+          incomplete?: boolean
           last_active_at?: string
+          resume_path?: string | null
           skipped_at?: string | null
           updated_at?: string
           user_id: string
           variant?: string | null
+          viewed_categories?: string[]
           viewed_submodules?: string[]
           viewed_tiers?: string[]
         }
@@ -1677,11 +1683,14 @@ export type Database = {
           created_at?: string
           current_node?: string | null
           demo_state?: string
+          incomplete?: boolean
           last_active_at?: string
+          resume_path?: string | null
           skipped_at?: string | null
           updated_at?: string
           user_id?: string
           variant?: string | null
+          viewed_categories?: string[]
           viewed_submodules?: string[]
           viewed_tiers?: string[]
         }
@@ -1696,8 +1705,12 @@ export type Database = {
           icon_name: string | null
           id: string
           is_active: boolean
+          is_recommended: boolean
+          min_app_version: string | null
           node_type: string
           parent_slug: string | null
+          recommended_order: number | null
+          requires_features: string[]
           slug: string
           tagline: string | null
           title: string
@@ -1710,8 +1723,12 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_active?: boolean
+          is_recommended?: boolean
+          min_app_version?: string | null
           node_type: string
           parent_slug?: string | null
+          recommended_order?: number | null
+          requires_features?: string[]
           slug: string
           tagline?: string | null
           title: string
@@ -1724,8 +1741,12 @@ export type Database = {
           icon_name?: string | null
           id?: string
           is_active?: boolean
+          is_recommended?: boolean
+          min_app_version?: string | null
           node_type?: string
           parent_slug?: string | null
+          recommended_order?: number | null
+          requires_features?: string[]
           slug?: string
           tagline?: string | null
           title?: string

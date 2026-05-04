@@ -13,9 +13,11 @@ export interface DemoNode {
   display_order: number;
   is_active: boolean;
   ab_variant: string | null;
+  is_recommended: boolean;
+  recommended_order: number | null;
 }
 
-const CACHE_KEY = 'demo_registry_v1';
+const CACHE_KEY = 'demo_registry_v2';
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 export function useDemoRegistry() {
@@ -49,10 +51,17 @@ export function useDemoRegistry() {
   }, []);
 
   const tiers = nodes.filter(n => n.node_type === 'tier');
-  const categoriesOf = (tier: string) => nodes.filter(n => n.node_type === 'category' && n.parent_slug === tier);
+  const categoriesOf = (tier: string) => nodes
+    .filter(n => n.node_type === 'category' && n.parent_slug === tier)
+    .sort((a, b) => (b.is_recommended ? 1 : 0) - (a.is_recommended ? 1 : 0) || a.display_order - b.display_order);
   const submodulesOf = (category: string) => nodes.filter(n => n.node_type === 'submodule' && n.parent_slug === category);
   const findBySlug = (slug: string) => nodes.find(n => n.slug === slug);
   const allSubmodules = nodes.filter(n => n.node_type === 'submodule');
 
-  return { nodes, tiers, categoriesOf, submodulesOf, findBySlug, allSubmodules, loading };
+  // Recommended sequence across tiers, used by Start Here.
+  const recommendedSequence = nodes
+    .filter(n => n.node_type === 'submodule' && n.is_recommended && n.recommended_order != null)
+    .sort((a, b) => (a.recommended_order ?? 0) - (b.recommended_order ?? 0));
+
+  return { nodes, tiers, categoriesOf, submodulesOf, findBySlug, allSubmodules, recommendedSequence, loading };
 }

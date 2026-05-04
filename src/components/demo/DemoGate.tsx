@@ -16,10 +16,10 @@ export function DemoGate({ children }: { children: ReactNode }) {
     if (!user) return;
     if (!progress) return;
     if (progress.demo_state !== 'pending') return;
-    if (pathname.startsWith('/demo')) return;
+    if (pathname.startsWith('/demo') || pathname.startsWith('/start-here')) return;
     if (!GATED_PREFIXES.some(p => pathname.startsWith(p))) return;
     const intent = encodeURIComponent(pathname + search);
-    navigate(`/demo?intent=${intent}`, { replace: true });
+    navigate(`/start-here?intent=${intent}`, { replace: true });
   }, [user, progress, loading, authLoading, pathname, search, navigate]);
 
   return <>{children}</>;
