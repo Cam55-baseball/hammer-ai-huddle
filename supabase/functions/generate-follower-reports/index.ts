@@ -43,6 +43,7 @@ async function logResult(
   error: string | null,
   durationMs: number,
   retryable: boolean,
+  periodStart: string | null = null,
 ) {
   try {
     await supabase.from('follower_report_logs').insert({
@@ -54,6 +55,7 @@ async function logResult(
       error,
       duration_ms: durationMs,
       retryable,
+      period_start: periodStart,
     });
   } catch (_) { /* never throw from logger */ }
 }
@@ -283,7 +285,7 @@ async function generateForFollower(
   const startedAt = Date.now();
 
   if (fi.follower_role !== 'scout' && fi.follower_role !== 'coach') {
-    await logResult(supabase, fi, reportType, 'skipped', 'invalid_role', null, Date.now() - startedAt, false);
+    await logResult(supabase, fi, reportType, 'skipped', 'invalid_role', null, Date.now() - startedAt, false, periodStart);
     return { skipped: true, reason: 'invalid_role' };
   }
 
@@ -291,12 +293,12 @@ async function generateForFollower(
 
   // Snapshot validation guard
   if (!Array.isArray(snapshot.sessions) || !Array.isArray(snapshot.games)) {
-    await logResult(supabase, fi, reportType, 'skipped', 'invalid_snapshot', null, Date.now() - startedAt, false);
+    await logResult(supabase, fi, reportType, 'skipped', 'invalid_snapshot', null, Date.now() - startedAt, false, periodStart);
     return { skipped: true, reason: 'invalid_snapshot' };
   }
 
   if (!snapshot.sessions.length && !snapshot.games.length && reportType === 'weekly_digest') {
-    await logResult(supabase, fi, reportType, 'skipped', 'no_activity', null, Date.now() - startedAt, false);
+    await logResult(supabase, fi, reportType, 'skipped', 'no_activity', null, Date.now() - startedAt, false, periodStart);
     return { skipped: true, reason: 'no_activity' };
   }
 
@@ -322,20 +324,20 @@ async function generateForFollower(
       .single();
 
     if (error) {
-      await logResult(supabase, fi, reportType, 'failed', 'db_upsert_error', error.message, Date.now() - startedAt, true);
+      await logResult(supabase, fi, reportType, 'failed', 'db_upsert_error', error.message, Date.now() - startedAt, true, periodStart);
       return { error: error.message };
     }
 
     if (!aiOk) {
       // Successful row, but AI fell back — log so retry worker can refresh later
-      await logResult(supabase, fi, reportType, 'failed', 'ai_exhausted', null, Date.now() - startedAt, true);
+      await logResult(supabase, fi, reportType, 'failed', 'ai_exhausted', null, Date.now() - startedAt, true, periodStart);
     } else {
-      await logResult(supabase, fi, reportType, 'success', null, null, Date.now() - startedAt, false);
+      await logResult(supabase, fi, reportType, 'success', null, null, Date.now() - startedAt, false, periodStart);
     }
     return { id: upserted.id };
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
-    await logResult(supabase, fi, reportType, 'failed', 'unexpected', msg, Date.now() - startedAt, true);
+    await logResult(supabase, fi, reportType, 'failed', 'unexpected', msg, Date.now() - startedAt, true, periodStart);
     return { error: msg };
   }
 }
@@ -408,7 +410,7 @@ Deno.serve(async (req) => {
       for (const t of retryTargets) {
         if (!t?.follower_id || !t?.player_id) continue;
         try {
-          await supabase.from('follower_report_logs')
+          let q = supabase.from('follower_report_logs')
             .update({ retryable: false })
             .eq('follower_id', t.follower_id)
             .eq('player_id', t.player_id)
@@ -416,6 +418,8 @@ Deno.serve(async (req) => {
             .eq('status', 'failed')
             .eq('retryable', true)
             .lt('created_at', new Date(Date.now() - 1000).toISOString());
+          if (t.period_start) q = q.eq('period_start', t.period_start);
+          await q;
         } catch (_) { /* swallow */ }
       }
 
