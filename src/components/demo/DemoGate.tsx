@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
 
-const GATED_PREFIXES = ['/select-modules', '/pricing', '/checkout'];
+const GATED_PREFIXES = ['/select-modules', '/pricing', '/checkout', '/dashboard', '/training', '/nutrition', '/vault'];
 
 export function DemoGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
