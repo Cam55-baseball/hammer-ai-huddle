@@ -410,7 +410,7 @@ Deno.serve(async (req) => {
       for (const t of retryTargets) {
         if (!t?.follower_id || !t?.player_id) continue;
         try {
-          await supabase.from('follower_report_logs')
+          let q = supabase.from('follower_report_logs')
             .update({ retryable: false })
             .eq('follower_id', t.follower_id)
             .eq('player_id', t.player_id)
@@ -418,6 +418,8 @@ Deno.serve(async (req) => {
             .eq('status', 'failed')
             .eq('retryable', true)
             .lt('created_at', new Date(Date.now() - 1000).toISOString());
+          if (t.period_start) q = q.eq('period_start', t.period_start);
+          await q;
         } catch (_) { /* swallow */ }
       }
 
