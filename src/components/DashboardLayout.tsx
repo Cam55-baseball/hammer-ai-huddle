@@ -5,6 +5,7 @@ import { AppSidebar } from "./AppSidebar";
 import { FloatingChatButton } from "./FloatingChatButton";
 import { TutorialButton } from "./TutorialButton";
 import { StartHereGuide } from "./StartHereGuide";
+import { DemoButton } from "./demo/DemoButton";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { Button } from "@/components/ui/button";
 import { Menu, ShoppingBag, RefreshCw } from "lucide-react";
@@ -72,7 +73,10 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
         </Button>
         
         {user && (
-          <TutorialButton onClick={onTutorialOpen} />
+          <>
+            <DemoButton />
+            <TutorialButton onClick={onTutorialOpen} />
+          </>
         )}
       </div>
     </header>
