@@ -4,28 +4,25 @@ import { ChevronLeft, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
-import { useDemoRegistry } from '@/hooks/useDemoRegistry';
+import { useDemoCompletion } from '@/hooks/useDemoCompletion';
+import { SkipDemoDialog } from './SkipDemoDialog';
 
 export function DemoLayout({ children, showBack = false }: { children: ReactNode; showBack?: boolean }) {
   const navigate = useNavigate();
-  const { progress, skip } = useDemoProgress();
-  const { allSubmodules } = useDemoRegistry();
+  const { skip } = useDemoProgress();
+  const { pct, isComplete, missing } = useDemoCompletion();
   const [confirmSkip, setConfirmSkip] = useState(false);
-
-  const total = allSubmodules.length || 1;
-  const viewed = progress?.viewed_submodules.length ?? 0;
-  const pct = Math.min(100, Math.round((viewed / total) * 100));
 
   const handleSkip = async () => {
     await skip();
     setConfirmSkip(false);
     navigate('/select-modules', { replace: true });
   };
+
+  const remaining = `${missing.tiers ? `${missing.tiers} tier${missing.tiers > 1 ? 's' : ''} · ` : ''}` +
+    `${missing.categories ? `${missing.categories} category · ` : ''}` +
+    `${missing.submodules ? `${missing.submodules} feature${missing.submodules > 1 ? 's' : ''}` : ''}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,7 +39,9 @@ export function DemoLayout({ children, showBack = false }: { children: ReactNode
           )}
           <div className="flex-1 px-2">
             <Progress value={pct} className="h-1.5" />
-            <p className="mt-0.5 text-[10px] text-muted-foreground">{viewed}/{total} previewed</p>
+            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+              {isComplete ? 'Demo complete — pick your tier' : `${pct}% · ${remaining || 'almost there'}`}
+            </p>
           </div>
           <Button variant="ghost" size="sm" onClick={() => setConfirmSkip(true)} className="gap-1 text-muted-foreground">
             <X className="h-4 w-4" /> Skip
@@ -52,21 +51,7 @@ export function DemoLayout({ children, showBack = false }: { children: ReactNode
 
       <main className="mx-auto max-w-5xl px-3 py-4">{children}</main>
 
-      <AlertDialog open={confirmSkip} onOpenChange={setConfirmSkip}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Skip the tour?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You can return any time from the <strong>Demo</strong> button at the top of the app.
-              You haven't seen everything yet — most users say the previews change their mind on which tier fits them.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep exploring</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSkip}>Skip for now</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SkipDemoDialog open={confirmSkip} onOpenChange={setConfirmSkip} onConfirm={handleSkip} />
     </div>
   );
 }
