@@ -128,6 +128,7 @@ const DemoTier = lazyWithRetry(() => import("./pages/demo/DemoTier"));
 const DemoCategory = lazyWithRetry(() => import("./pages/demo/DemoCategory"));
 const DemoSubmodule = lazyWithRetry(() => import("./pages/demo/DemoSubmodule"));
 const DemoUpgrade = lazyWithRetry(() => import("./pages/demo/DemoUpgrade"));
+const StartHereRunner = lazyWithRetry(() => import("./pages/start-here/StartHereRunner"));
 import { DemoGate } from "./components/demo/DemoGate";
 const queryClient = new QueryClient({
   defaultOptions: {
