@@ -233,6 +233,7 @@ const App = () => {
               <Route path="/program/:id" element={<BuildAccessGate buildType="program" />} />
               <Route path="/bundle/:id" element={<BuildAccessGate buildType="bundle" />} />
               <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
+              <Route path="/start-here" element={<StartHereRunner />} />
               <Route path="/demo" element={<DemoRoot />} />
               <Route path="/demo/upgrade" element={<DemoUpgrade />} />
               <Route path="/demo/:tier" element={<DemoTier />} />
