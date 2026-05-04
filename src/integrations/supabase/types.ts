@@ -2741,6 +2741,7 @@ export type Database = {
           error: string | null
           follower_id: string | null
           id: string
+          period_start: string | null
           player_id: string | null
           reason: string | null
           report_type: string | null
@@ -2753,6 +2754,7 @@ export type Database = {
           error?: string | null
           follower_id?: string | null
           id?: string
+          period_start?: string | null
           player_id?: string | null
           reason?: string | null
           report_type?: string | null
@@ -2765,6 +2767,7 @@ export type Database = {
           error?: string | null
           follower_id?: string | null
           id?: string
+          period_start?: string | null
           player_id?: string | null
           reason?: string | null
           report_type?: string | null
