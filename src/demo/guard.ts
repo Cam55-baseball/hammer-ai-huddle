@@ -31,7 +31,7 @@ export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isD
 
   return new Proxy(client, {
     get(t, prop, recv) {
-      const v = Reflect.get(t, prop, recv);
+      const v: any = Reflect.get(t, prop, recv);
       if (prop === 'from' && typeof v === 'function') {
         return (...args: unknown[]) => wrapFromQuery(v.apply(t, args));
       }
