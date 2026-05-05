@@ -12,7 +12,11 @@ export interface PrescriptionInput {
   simId: string;
   severity: Severity;
   primaryAxis?: string;
+  /** Optional shown-id set across past prescriptions for this sim — used to avoid repeats. */
+  shownIds?: ReadonlySet<string>;
 }
+
+export const PRESCRIPTION_CATALOG_INTERNAL_KEY = '__catalog__';
 
 const CATALOG: Record<string, Record<Severity, PrescribedVideo[]>> = {
   hitting: {
