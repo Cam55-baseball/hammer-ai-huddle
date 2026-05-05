@@ -1,81 +1,89 @@
-## Phase X.6 — Demo Conversion Optimization
+## Phase X.7 — Revenue Engine: Commitment, Urgency, Friction Removal
 
-Pure persuasion upgrades to the demo loop. No gating changes, no navigation restrictions.
+Persuasion → revenue. No gating changes. All seven phases implemented exactly.
 
-### 1. `src/demo/prescriptions/conversionCopy.ts` — rewrite
+### 1. New: `src/components/demo/CommitIntentDialog.tsx`
+Reusable shadcn `Dialog`:
+- Title: "Want your personalized plan built from this result?"
+- Buttons: `Yes — build my plan` (primary, fires `onYes`) · `Not yet` (ghost, fires `onNo`).
+- Caller logs `commit_intent` on Yes; on No the caller flips an `aggressive` state.
 
-Extend signature: `conversionCopy(simId, severity, gap, opts?: { pct?: number; visiblePct?: number })`.
+### 2. `src/components/demo/DemoLoopShell.tsx` — commit gate + micro-yes escalation
+- New state: `commitOpen`, `aggressive`, `previewClicked`, `viewCount` (incremented every `onPreviewClick`).
+- When the user becomes `unlocked` (existing logic) OR clicks first prescribed video → open `CommitIntentDialog` once (guard with ref).
+- On Yes → `logDemoEvent('commit_intent', { simId, severity, gap, pct })` then call `goUpgrade()`.
+- On No → close, set `aggressive=true` (CTA card uses stronger primary glow + adds a small pulsing ring).
+- **Micro-yes CTA copy override** (takes precedence over severity copy):
+  - `viewCount >= 2` → "Get my full system"
+  - `previewClicked` (1 click) → "Finish unlocking your plan"
+  - else → "See how to fix this"
+  - `pct > 70` still wins as ultimate override → "Finish unlocking your system" (existing).
+- `goUpgrade()` unchanged URL params (already includes `simId/severity/gap/pct/your/elite/projected`).
 
-Return new shape:
-```ts
-{ headline, subhead, cta, lossStatement, socialProof, almostUnlockedLine }
+### 3. New: `src/hooks/useDemoUrgency.ts`
+- Returns `{ remainingMs, expired, startedAt }`.
+- Persists `demo_urgency_<from>_<simId>` in `sessionStorage` (start ts). 10-minute window.
+- On first call, fires `logDemoEvent('urgency_started', { from, simId })` once.
+- Updates every 1000ms via `setInterval`, cleans up on unmount.
+
+### 4. `src/pages/demo/DemoUpgrade.tsx` — urgency, value stack, 1-click checkout, exit intercept
+- **Urgency banner** above headline: clock icon + "Your analysis is saved for the next MM:SS" (uses `useDemoUrgency`). When expired: red banner "Analysis expired" and primary CTA text becomes "Re-run your analysis to unlock your system" (clicking navigates back to `/demo/${from}`).
+- **Value stack** (between recap and CTA):
+  - Header: "You're unlocking:"
+  - Bulleted list (✓ icons): personalized system / full drill library / progress tracking + performance history / adaptive programming.
+  - Anchor line below: "Most athletes spend $200–$500/month trying to fix this manually."
+  - No price shown.
+- **1-click continuation**: `handleContinue` builds `/checkout?prefill=${simId}&reason=${reason}&gap=${gap}&pct=${pctParam}&from=${from}` and navigates. Keeps the existing `complete()` call. (Even though `/checkout` route may not exist yet in the SPA, this is per spec; we'll add a graceful fallback note in code comments.)
+- **Exit intercept**: 
+  - `useEffect` adds a `popstate` listener; first attempt to back-navigate cancels by `history.pushState` and opens `ExitInterceptDialog`.
+  - Also intercept clicks on the demoted "Keep exploring" link the same way (call `e.preventDefault()` then open dialog).
+  - Dialog: "Do you want us to save your personalized plan?" — `Save my plan` (email input + Save) · `Leave` (proceeds to navigate away).
+  - On Save: insert into `demo_leads` (new table, see §5) `{ user_id, email, sim_id, severity, gap, pct, from_slug }` and `logDemoEvent('lead_captured', { simId, gap })`. Toast confirmation, then close intercept and stay on page (or proceed if user prefers — we keep them on page so they can still convert).
+
+### 5. New table: `demo_leads` (migration)
+```sql
+create table public.demo_leads (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  email text not null,
+  sim_id text,
+  severity text,
+  gap text,
+  pct integer,
+  from_slug text,
+  created_at timestamptz not null default now()
+);
+alter table public.demo_leads enable row level security;
+-- Anonymous + authed inserts allowed (lead capture is intentionally permissive)
+create policy "anyone can insert demo leads"
+  on public.demo_leads for insert
+  to anon, authenticated
+  with check (true);
+-- Only the owner (when known) can read their own
+create policy "owners read their leads"
+  on public.demo_leads for select
+  to authenticated
+  using (user_id = auth.uid());
+create index demo_leads_email_idx on public.demo_leads(email);
+create index demo_leads_created_idx on public.demo_leads(created_at desc);
 ```
 
-- **Headlines / CTAs** (per severity, sim-agnostic for consistency):
-  - critical → "You're leaving serious performance on the table" / "Fix this now"
-  - moderate → "You're close — this is the missing piece" / "Unlock your next level"
-  - minor → "You're near elite — refine the final edge" / "Finish the system"
-- **lossStatement** (sim-specific, gap-driven):
-  - hitting: `~${Math.round(gap*5)} ft per ball in play lost to this gap`
-  - program: `~${gap}% of weekly elite stimulus missing`
-  - vault: `Only ${visiblePct ?? 35}% of your performance history visible`
-- **socialProof** (subtle, no fake stats):
-  - hitting: "Athletes closing this gap typically gain +3–5 mph exit velocity in 6–8 weeks"
-  - program: "Athletes following this structure see ~10–20% strength gains in 8 weeks"
-  - vault: "Tracking full history dramatically improves consistency and progression"
-- **almostUnlockedLine** built from `pct`: `"You're ${pct}% of the way to unlocking your full system"`. If `pct > 70` override CTA to "Finish unlocking your system".
+### 6. New: `src/components/demo/ExitInterceptDialog.tsx`
+shadcn Dialog with email `Input`, basic regex validation, `Save my plan` and `Leave` buttons. `onSave(email)` and `onLeave()` callbacks.
 
-### 2. `src/components/demo/DemoLoopShell.tsx` — restructure
+### 7. Stripe alignment (§7)
+- Checkout URL carries `prefill=${simId}&reason=${reason}&gap=${gap}&pct=${pct}&from=${from}` so any future `/checkout` page (or existing one) can read these. No backend changes needed beyond emitting the params.
+- Update `useDemoProgress.logEvent('unlock_click', ...)` payload (already added `simId` previously) — confirmed.
 
-- Pull `pct` from `useDemoCompletion()` (`completion_pct`). Fallback formula if undefined: `clamp(((interactions[slug]||0)*15 + Math.min(60,(dwellMs[slug]||0)/1000))/100 * 100, 0, 100)`.
-- Pass `pct` + `visiblePct` (vault default 35) into `conversionCopy`.
-- New layout order:
-  1. Input
-  2. Diagnosis
-  3. **Insight** card — adds `lossStatement` row under "Where you stand" (small destructive-toned chip with TrendingDown icon).
-  4. Prescribed videos (now with soft preview, see §3).
-  5. **Almost-unlocked progress bar** (`Progress` component) + `almostUnlockedLine` text — placed directly above CTA.
-  6. **Lock CTA card** — gated by `hasMicroInteracted` state (see §6).
-  7. Below CTA: small muted `socialProof` line.
-- Telemetry: `logDemoEvent('cta_viewed', { simId, severity, gap, pct, fromSlug })` and same shape on `cta_clicked`. Already fires; just add `pct`.
+### Files
+- new: `src/components/demo/CommitIntentDialog.tsx`
+- new: `src/components/demo/ExitInterceptDialog.tsx`
+- new: `src/hooks/useDemoUrgency.ts`
+- new: SQL migration for `demo_leads`
+- edit: `src/components/demo/DemoLoopShell.tsx`
+- edit: `src/pages/demo/DemoUpgrade.tsx`
 
-### 3. `src/components/demo/PrescribedVideoCard.tsx` — soft gate
-
-- Keep thumbnail/title/purpose visible (already shown). Replace center `<Lock>` with a "Preview: first 10s unlocked" pill at bottom-left of the thumbnail.
-- Click handler: set local `loading` state for 600ms (spinner overlay), fire `logDemoEvent('preview_attempted', { videoId, fromSlug })`, then navigate to `/demo/upgrade?from=${fromSlug}&video=${v.id}&reason=preview`.
-- Notify parent via callback prop `onPreviewClick?` so shell can set `hasMicroInteracted=true`.
-
-### 4. Micro-interaction gate (§6)
-
-In `DemoLoopShell`:
-- `const [unlocked, setUnlocked] = useState(false)`.
-- Trigger `setUnlocked(true)` on: any `onPreviewClick` from a video card, an input-change callback (new optional `onInteract` prop the shell exposes to `input`/`diagnosis` consumers — wired through context `DemoShellInteractContext` to avoid breaking existing shells), or `IntersectionObserver` showing the prescribed strip for ≥1.5s.
-- While `!unlocked`, render a softened CTA card: muted background, no Sparkles glow, copy "Tap a drill to see your unlock path". Once `unlocked`, swap in the full conversion CTA.
-
-### 5. `src/pages/demo/DemoUpgrade.tsx` — context lock-in
-
-Above headline insert:
-- Eyebrow: `You just uncovered a ${reason} gap in your ${simLabel} performance`
-- **Recap block** (compact 4-cell grid): Your result · Elite benchmark · Gap · Projected improvement. Pull values from query params (`from`, `gap`, plus new `your`, `elite`, `projected` we'll start emitting from `DemoLoopShell`'s upgrade nav). Falls back gracefully when missing.
-- Demote "Keep exploring demo" → `variant="link"`, `size="sm"`, muted text, placed below CTA with extra top spacing. Primary CTA gets `size="lg"` and full width.
-- Telemetry already fires `upgrade_started`; ensure payload includes `simId, severity, gap, pct` (pct passed through via new query param).
-
-### 6. `DemoLoopShell` upgrade navigation
-
-Update CTA `onClick` to append `&your=${benchmark.yourValue}&elite=${benchmark.eliteValue}&projected=${encodeURIComponent(benchmark.projected)}&pct=${pct}` so the upgrade page recap is populated.
-
-### 7. Event payload completeness (§9)
-
-Audit `logDemoEvent` calls in shell + upgrade page so all four events (`cta_viewed`, `cta_clicked`, `upgrade_started`, `upgrade_completed`) carry `{ simId, severity, gap, pct }`. `useDemoTelemetry` already persists every BroadcastChannel event into `demo_events` — no DB schema changes needed.
-
-### Out of scope (explicitly NOT changed)
-- No registry/gating edits, no route changes, no removal of features.
-- No fabricated percentage social proof.
-- No new tables; uses existing `demo_events` for funnel analytics.
-
-### Files touched
-- `src/demo/prescriptions/conversionCopy.ts` (rewrite return shape)
-- `src/components/demo/DemoLoopShell.tsx` (insight, progress, micro-gate, social proof, richer nav)
-- `src/components/demo/PrescribedVideoCard.tsx` (soft preview + onPreviewClick)
-- `src/pages/demo/DemoUpgrade.tsx` (eyebrow, recap, de-emphasize secondary)
-- (new) tiny `src/contexts/DemoShellInteractContext.tsx` for input/diagnosis → shell interaction signal
+### Out of scope
+- No real Stripe enablement (user must already have it). We only pass params.
+- No price reveal on upgrade page (per spec).
+- No removal of `/select-modules` route — only the demo path skips it.
