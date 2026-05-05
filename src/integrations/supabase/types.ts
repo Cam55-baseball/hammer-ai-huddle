@@ -1625,6 +1625,7 @@ export type Database = {
           id: number
           metadata: Json
           node_slug: string | null
+          session_id: string | null
           user_id: string
         }
         Insert: {
@@ -1633,6 +1634,7 @@ export type Database = {
           id?: number
           metadata?: Json
           node_slug?: string | null
+          session_id?: string | null
           user_id: string
         }
         Update: {
@@ -1641,6 +1643,7 @@ export type Database = {
           id?: number
           metadata?: Json
           node_slug?: string | null
+          session_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -10698,6 +10701,18 @@ export type Database = {
       }
     }
     Views: {
+      demo_funnel: {
+        Row: {
+          clicked: number | null
+          completed: number | null
+          first_event: string | null
+          last_event: string | null
+          started: number | null
+          user_id: string | null
+          viewed: number | null
+        }
+        Relationships: []
+      }
       library_videos_readiness: {
         Row: {
           assignment_count: number | null

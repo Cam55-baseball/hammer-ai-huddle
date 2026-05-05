@@ -19,8 +19,17 @@ export const DEMO_SAFE_TABLES: ReadonlySet<string> = new Set([
 
 const BLOCKED_FROM_METHODS = new Set(['insert', 'update', 'upsert', 'delete']);
 
-/** Non-blocking telemetry emitter. Listeners (useDemoTelemetry) persist to demo_events. */
-function logDemoEvent(type: string, payload: Record<string, unknown>) {
+/**
+ * Strict mode flag. When `VITE_DEMO_STRICT=1` AND running in DEV, blocked reads
+ * THROW instead of silently returning empty. Production builds always silent-empty.
+ */
+const STRICT_DEMO = import.meta.env.VITE_DEMO_STRICT === '1';
+
+/**
+ * Non-blocking telemetry emitter. Listeners (useDemoTelemetry) persist to demo_events.
+ * Exported so any UI surface (CTA buttons, upgrade flow, etc.) can emit funnel events.
+ */
+export function logDemoEvent(type: string, payload: Record<string, unknown> = {}): void {
   try {
     if (typeof BroadcastChannel === 'undefined') return;
     const ch = new BroadcastChannel('demo-events');
@@ -60,6 +69,9 @@ export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isD
       apply() { return new Proxy(function () {}, handler); },
     };
     logDemoEvent('sim_read_blocked', { table });
+    if (STRICT_DEMO && import.meta.env.DEV) {
+      throw new Error(`[demo-guard] STRICT: blocked read on non-safe table: ${table}`);
+    }
     return new Proxy(function () {}, handler);
   };
 

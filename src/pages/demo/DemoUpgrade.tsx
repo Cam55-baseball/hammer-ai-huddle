@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
 import { conversionCopy } from '@/demo/prescriptions/conversionCopy';
+import { logDemoEvent } from '@/demo/guard';
 
 const SIM_BY_SLUG: Record<string, string> = {
   'hitting-analysis': 'hitting',
@@ -21,12 +22,16 @@ export default function DemoUpgrade() {
   const gap = params.get('gap') ?? '';
   const { complete, logEvent } = useDemoProgress();
 
-  useEffect(() => { void logEvent('unlock_click', from, { reason, gap }); }, [from, reason, gap, logEvent]);
+  useEffect(() => {
+    void logEvent('unlock_click', from, { reason, gap });
+    logDemoEvent('upgrade_started', { from, reason, gap });
+  }, [from, reason, gap, logEvent]);
 
   const simId = SIM_BY_SLUG[from] ?? 'hitting';
   const copy = conversionCopy(simId, reason, gap);
 
   const handleContinue = async () => {
+    logDemoEvent('upgrade_completed', { from, reason, gap });
     await complete();
     navigate(`/select-modules?context=${encodeURIComponent(from)}`, { replace: true });
   };

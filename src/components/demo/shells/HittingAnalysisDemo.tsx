@@ -5,14 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { hittingSim, PitchType, ContactZone } from '@/demo/sims/hittingSim';
 import { DemoLoopShell } from '@/components/demo/DemoLoopShell';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
+import { useAuth } from '@/hooks/useAuth';
 
 const PITCHES: PitchType[] = ['fastball', 'curveball', 'changeup', 'slider'];
 const ZONES: ContactZone[] = ['inside', 'middle', 'outside'];
 
 export default function HittingAnalysisDemo() {
+  const { user } = useAuth();
   const [pitch, setPitch] = useState<PitchType>('fastball');
   const [zone, setZone] = useState<ContactZone>('middle');
-  const result = hittingSim.run({ pitch, zone });
+  const result = hittingSim.run({ pitch, zone }, { userId: user?.id ?? null });
   const { bump } = useDemoInteract('hitting-analysis');
 
   const onPitch = (p: PitchType) => { setPitch(p); bump(); };
