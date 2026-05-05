@@ -45,11 +45,20 @@ export function DemoLayout({ children, showBack = false }: { children: ReactNode
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2">
-          {showBack ? (
-            <Button variant="ghost" size="sm" onClick={() => navigate('/demo')} className="gap-1">
-              <ChevronLeft className="h-4 w-4" /> Demo Home
-            </Button>
-          ) : (
+          {showBack ? (() => {
+            const idx = (typeof window !== 'undefined' && (window.history.state as any)?.idx) ?? 0;
+            const atEntry = idx === 0;
+            return (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => (atEntry ? navigate('/demo') : navigate(-1))}
+                className="gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" /> {atEntry ? 'Demo Home' : 'Back'}
+              </Button>
+            );
+          })() : (
             <Badge variant="secondary" className="gap-1">
               <Sparkles className="h-3 w-3" /> Demo Mode
             </Badge>
