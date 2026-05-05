@@ -54,10 +54,11 @@ const EXERCISES: Record<Goal, { name: string; sets: number; reps: string }[]> = 
   ],
 };
 
-export const programSim: DemoSim<ProgramInput, ProgramOutput> = {
+export const programSim = {
   id: 'program',
-  run(input) {
-    rng(seedFromString(`${input.goal}:${input.daysPerWeek}:${input.experience}`));
+  run(input: ProgramInput, opts?: { userId?: string | null }): ProgramOutput {
+    const userKey = opts?.userId ?? 'anon';
+    rng(seedFromString(`${input.goal}:${input.daysPerWeek}:${input.experience}:${userKey}`));
     const days: ProgramDay[] = [];
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const focusList = FOCUS[input.goal];

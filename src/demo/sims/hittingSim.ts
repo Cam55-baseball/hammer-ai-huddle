@@ -37,10 +37,11 @@ function severityFor(gap: number): Severity {
   return 'minor';
 }
 
-export const hittingSim: DemoSim<HittingInput, HittingOutput> = {
+export const hittingSim = {
   id: 'hitting',
-  run(input) {
-    const r = rng(seedFromString(`${input.pitch}:${input.zone}`));
+  run(input: HittingInput, opts?: { userId?: string | null }): HittingOutput {
+    const userKey = opts?.userId ?? 'anon';
+    const r = rng(seedFromString(`${input.pitch}:${input.zone}:${userKey}`));
     const baseEv = 82 + PITCH_BIAS[input.pitch] + ZONE_BIAS[input.zone] + between(r, 0, 8);
     const exitVelo = Math.round(baseEv * 10) / 10;
     const launchAngle = Math.round(between(r, 8, 28) * 10) / 10;
