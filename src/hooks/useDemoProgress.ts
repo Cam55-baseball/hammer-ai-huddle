@@ -22,6 +22,8 @@ export interface DemoProgress {
   resume_path: string | null;
   interaction_counts: Record<string, number>;
   dwell_ms: Record<string, number>;
+  prescribed_history: Record<string, { shown: string[]; accepted: string[]; skipped: string[] }>;
+  sim_signatures: Record<string, { firstRun: { severity: string; gap: number | string; ts: string }; lastRun: { severity: string; gap: number | string; ts: string }; runs: number }>;
 }
 
 const CHANNEL_NAME = 'data-sync';
