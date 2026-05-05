@@ -69,6 +69,9 @@ export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isD
       apply() { return new Proxy(function () {}, handler); },
     };
     logDemoEvent('sim_read_blocked', { table });
+    if (STRICT_DEMO && import.meta.env.DEV) {
+      throw new Error(`[demo-guard] STRICT: blocked read on non-safe table: ${table}`);
+    }
     return new Proxy(function () {}, handler);
   };
 
