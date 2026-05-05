@@ -8,6 +8,7 @@ import { conversionCopy } from '@/demo/prescriptions/conversionCopy';
 import { prescribe } from '@/demo/prescriptions/videoPrescription';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
+import { logDemoEvent } from '@/demo/guard';
 
 interface Benchmark {
   yourLabel: string;
