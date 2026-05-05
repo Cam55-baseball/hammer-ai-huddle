@@ -107,9 +107,9 @@ export function useDemoProgress() {
           if (r.error) throw r.error;
           return r.data;
         }, 'create-progress');
-        setProgress(created as DemoProgress | null);
+        setProgress(created as unknown as DemoProgress | null);
       } else {
-        setProgress(data as DemoProgress);
+        setProgress(data as unknown as DemoProgress);
       }
     } catch {
       setProgress(null);
@@ -169,8 +169,8 @@ export function useDemoProgress() {
           return r.data;
         }, 'update-progress');
         if (data) {
-          setProgress(data as DemoProgress);
-          broadcast(data as DemoProgress);
+          setProgress(data as unknown as DemoProgress);
+          broadcast(data as unknown as DemoProgress);
         }
       } catch (e) {
         // Queue the patch locally; will be retried on next call
