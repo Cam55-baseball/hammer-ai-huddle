@@ -1,119 +1,120 @@
-# Phase X.3 — Demo Integrity Verification, Telemetry & Weight Tuning
+# Phase X.4 — Deterministic Engine, Replay, Conversion Signals
 
-Locks the demo system with provable isolation, live observability, and runtime-tunable scoring — no logic redeploys needed.
+## Status of "bugs" called out in the prompt
 
----
+- **Math bug** in `completionRules.ts`: not present. Current code already reads `axes.tiers * W.tiers + …`. The prompt's "broken" example was a markdown rendering artifact (lost `*`). No change needed.
+- **Generic typing** in `guard.ts`: not present. Current code: `makeDemoSafeClient<T extends Record<string, any>>(...)`. No change needed.
+- **Sims non-deterministic**: not present. `simEngine.ts` already exposes `seedFromString` + Mulberry32 `rng`, and both `hittingSim` / `programSim` already seed by input. We will add **per-user salt** so seeds are stable per-user and add a public `src/demo/determinism.ts` re-export so future sims share one helper.
 
-## 1. Structured Telemetry in `src/demo/guard.ts`
+## 1. Per-user determinism layer
 
-Add a non-blocking event emitter:
+**New** `src/demo/determinism.ts` — re-exports `seedFromString` + `rng` from `simEngine` and adds:
 
 ```ts
-function logDemoEvent(type: string, payload: Record<string, unknown>) {
-  try {
-    const ch = new BroadcastChannel('demo-events');
-    ch.postMessage({ type, payload, ts: Date.now() });
-    ch.close();
-  } catch {}
+export function userScopedSeed(simId: string, userId: string | null | undefined) {
+  return seedFromString(`${simId}:${userId ?? 'anon'}`);
 }
 ```
 
-Replace existing `console.warn` calls:
-- Blocked read → `logDemoEvent('sim_read_blocked', { table })`
-- Blocked rpc → `logDemoEvent('sim_rpc_blocked', { fn: String(args[0]) })`
-- Blocked write → `logDemoEvent('sim_write_blocked', { method: String(prop) })`
+`hittingSim.run` and `programSim.run` accept an optional 2nd arg `{ userId?: string }`. When provided, the seed becomes `seedFromString(\`${input...}:${userId}\`)` so the same user always sees the same numbers. Backward compatible (omit → existing input-only seed).
 
-Keep `console.warn` in DEV alongside the emit for local debugging.
+`DemoLoopShell` callers (HittingAnalysisDemo, IronBambinoDemo) thread `user?.id` from `useAuth` into the sim call.
 
----
+## 2. Replay capability — `session_id` on `demo_events`
 
-## 2. Persist Telemetry → DB
-
-**New** `src/demo/useDemoTelemetry.ts` — subscribes to `BroadcastChannel('demo-events')` and inserts rows into `demo_events` (`event_type`, `metadata`, `created_at`). Wrapped in try/catch; fully fire-and-forget.
-
-The existing `demo_events` table uses column `metadata` (jsonb) — the hook will map `payload → metadata` to match the current schema. No migration needed.
-
-Mount once in `src/components/demo/DemoLayout.tsx` (single global mount point for all demo routes) via `useDemoTelemetry()`.
-
----
-
-## 3. Runtime-Tunable Completion Weights
-
-Update `src/demo/completionRules.ts`:
-
-- Rename `COMPLETION_WEIGHTS` → `DEFAULT_WEIGHTS` (keep export for back-compat).
-- Add `getWeights()` reading `localStorage.demo_completion_weights` with strict numeric validation; fallback to defaults on any parse/shape failure.
-- Add `assertWeights(w)` — warns when `|sum - 1| > 0.01`.
-- `computeCompletion()` calls `getWeights()` + `assertWeights()` instead of using the static const.
-
-Behavior unchanged in production (no localStorage key set).
-
----
-
-## 4. Dev Console Helper
-
-**New** `src/demo/devtools.ts` exporting `setDemoWeights(w)` which writes to localStorage and reloads. Imported once in `DemoLayout` via side-effect to attach to `window` for console access:
-
-```ts
-if (import.meta.env.DEV) (window as any).setDemoWeights = setDemoWeights;
+**Migration**:
+```sql
+ALTER TABLE public.demo_events
+  ADD COLUMN IF NOT EXISTS session_id uuid;
+CREATE INDEX IF NOT EXISTS idx_demo_events_session ON public.demo_events (session_id, created_at);
 ```
 
----
+Update `useDemoTelemetry`:
+- Generate one `sessionId = crypto.randomUUID()` per hook mount (stable across the demo session, persisted in `sessionStorage` under `demo_session_id` so reloads keep continuity).
+- Include `session_id: sessionId` in every `demo_events` insert.
 
-## 5. Optional Debug Overlay
+**New** `src/demo/replay/useDemoReplay.ts` — fetches all events for a session id, ordered by `created_at`. Pure read; uses raw `supabase` client (not demo-safe wrapper) so admin/debug routes can introspect.
 
-**New** `src/components/demo/DemoDebugPanel.tsx` — fixed bottom-right `<pre>` showing `progress` JSON. Renders only when `localStorage.demo_debug === '1'`. Mounted in `DemoLayout` next to header, receives `progress` from `useDemoProgress()`.
+## 3. Conversion-signal events
 
----
+Add explicit funnel events. Update `src/demo/guard.ts` to export a public `logDemoEvent` (currently file-private) so any UI can emit:
 
-## 6. E2E Isolation Tests
+```ts
+export function logDemoEvent(type: string, payload: Record<string, unknown>) { … }
+```
 
-**New** `tests/demo/isolation.spec.ts` (Playwright — config already exists at `playwright.config.ts`):
+Then in `DemoLoopShell.tsx`:
+- `useEffect(() => logDemoEvent('cta_viewed', { simId, severity, gap }), [simId, severity])`
+- Upgrade button onClick: `logDemoEvent('cta_clicked', { simId, severity, fromSlug })` before navigate.
 
-- Blocks non-demo tables: `supabase.from('profiles').select('*')` → `data: []`, `error: null`.
-- Allows demo-safe tables: `supabase.from('demo_registry').select('*')` → no error, array.
-- Blocks rpc: `supabase.rpc('some_sensitive_fn')` → `data: null`.
+In `DemoUpgrade.tsx`:
+- On mount: `logDemoEvent('upgrade_started', { from, reason, gap })`.
+- On any tier-select / checkout button click: `logDemoEvent('upgrade_completed', { tier })` (proxy for purchase intent — actual purchase still flows through Stripe webhooks).
 
-Requires exposing `supabase` on `window` in DEV only — add to `src/integrations/supabase/client.ts`? **No** (client.ts is auto-generated, off-limits). Instead expose in `DemoLayout` mount under `import.meta.env.DEV` so tests running against the dev server can access it without polluting prod.
+## 4. Funnel SQL view (read-only analytics)
 
----
+**Migration** (same file):
+```sql
+CREATE OR REPLACE VIEW public.demo_funnel AS
+SELECT
+  user_id,
+  COUNT(*) FILTER (WHERE event_type = 'cta_viewed')        AS viewed,
+  COUNT(*) FILTER (WHERE event_type = 'cta_clicked')       AS clicked,
+  COUNT(*) FILTER (WHERE event_type = 'upgrade_started')   AS started,
+  COUNT(*) FILTER (WHERE event_type = 'upgrade_completed') AS completed,
+  MIN(created_at) AS first_event,
+  MAX(created_at) AS last_event
+FROM public.demo_events
+GROUP BY user_id;
 
-## 7. Unit Test for Completion Math
+ALTER VIEW public.demo_funnel SET (security_invoker = on);
+```
+`security_invoker = on` makes the view honor each caller's RLS on `demo_events` (own rows only) — no privilege leak.
 
-**New** `src/demo/completionRules.test.ts` (vitest, matches existing `*.test.ts` pattern):
+## 5. Strict Demo Mode (env-flagged)
 
-- `computeCompletion({ tiers:1, categories:1, submodules:1, interactionCounts:{}, dwellMs:{} })` returns `pct > 0`.
-- Custom weights via mocked localStorage produce expected weighted sum.
-- `assertWeights` warns when sum drifts (spy on `console.warn`).
+In `guard.ts`:
+- `const STRICT_DEMO = import.meta.env.VITE_DEMO_STRICT === '1';`
+- Read-block path: when STRICT_DEMO + DEV, **throw** instead of returning empty (loud failure in staging). PROD always silent-empty.
+- Already-existing write-blocker keeps current `assertNotDemo` (throws in DEV) behavior.
 
-Note: existing field is named `pct`, not `percent` — test will use `pct`.
+## 6. Inspector upgrade (replaces raw JSON dump)
 
----
+Update `DemoDebugPanel.tsx`. Still gated by `localStorage.demo_debug === '1'`. Renders structured rows:
+- Completion %, demo_state
+- Last 5 events (read from in-memory ring populated by a tiny BroadcastChannel listener inside the panel — no DB call)
+- Session id (from sessionStorage)
+- Active prescription history count
+
+No new dependencies.
 
 ## Files
 
-**New (6)**:
-- `src/demo/useDemoTelemetry.ts`
-- `src/demo/devtools.ts`
-- `src/components/demo/DemoDebugPanel.tsx`
-- `tests/demo/isolation.spec.ts`
-- `src/demo/completionRules.test.ts`
+**Migration (1)**:
+- `session_id` column + index on `demo_events`
+- `demo_funnel` view (security_invoker)
 
-**Edited (3)**:
-- `src/demo/guard.ts` — emitter + 3 swap-ins
-- `src/demo/completionRules.ts` — runtime weights + assertion
-- `src/components/demo/DemoLayout.tsx` — mount telemetry hook, debug panel, dev `window.setDemoWeights`
+**New (2)**:
+- `src/demo/determinism.ts`
+- `src/demo/replay/useDemoReplay.ts`
 
-**No migration. No new dependencies. Zero impact on non-demo routes.**
+**Edited (7)**:
+- `src/demo/guard.ts` — export `logDemoEvent`, optional STRICT_DEMO throw
+- `src/demo/useDemoTelemetry.ts` — sessionStorage-stable `session_id`
+- `src/demo/sims/hittingSim.ts` + `programSim.ts` — accept optional `userId`
+- `src/components/demo/DemoLoopShell.tsx` — `cta_viewed` + `cta_clicked`, thread userId into sims (callers)
+- `src/components/demo/shells/HittingAnalysisDemo.tsx` + `IronBambinoDemo.tsx` — pass `user?.id` to sim
+- `src/pages/demo/DemoUpgrade.tsx` — `upgrade_started` + `upgrade_completed`
+- `src/components/demo/DemoDebugPanel.tsx` — structured inspector
 
----
+**Zero impact** on production routes; everything outside `/demo*` untouched. No new dependencies.
 
 ## Outcomes
 
 | Capability | Mechanism |
 |---|---|
-| Proof of isolation | Playwright spec |
-| Live observability | BroadcastChannel → `demo_events` insert |
-| Runtime tuning | localStorage-backed weights |
-| Math drift safety | `assertWeights` warning |
-| State introspection | Toggleable debug overlay |
+| Same user → same numbers | `userScopedSeed` salt |
+| Replay any user journey | `session_id` + `useDemoReplay` |
+| Funnel intelligence | 4 explicit events + `demo_funnel` view |
+| Loud staging leaks | `VITE_DEMO_STRICT=1` |
+| Live state introspection | Structured inspector |
