@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, X, Sparkles } from 'lucide-react';
+import { ChevronLeft, X, Sparkles, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -32,9 +32,13 @@ export function DemoLayout({ children, showBack = false }: { children: ReactNode
   const [confirmSkip, setConfirmSkip] = useState(false);
 
   const handleSkip = async () => {
-    await skip();
+    try { await skip(); } catch { /* navigate even if persistence fails */ }
     setConfirmSkip(false);
-    navigate('/select-modules', { replace: true });
+    navigate('/dashboard', { replace: true });
+  };
+
+  const handleExit = () => {
+    navigate('/dashboard', { replace: true });
   };
 
   const remaining = `${missing.tiers ? `${missing.tiers} tier${missing.tiers > 1 ? 's' : ''} · ` : ''}` +
@@ -71,6 +75,9 @@ export function DemoLayout({ children, showBack = false }: { children: ReactNode
           </div>
           <Button variant="ghost" size="sm" onClick={() => setConfirmSkip(true)} className="gap-1 text-muted-foreground">
             <X className="h-4 w-4" /> Skip
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleExit} className="gap-1 text-muted-foreground">
+            <LogOut className="h-4 w-4" /> Exit
           </Button>
         </div>
       </header>

@@ -3,29 +3,20 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
 
-// Adaptive entry button: shows "Start Here" for new users, "Resume Demo" mid-flow, "Explore" after.
+// Always-on entry button. Label is fixed as "Demo" regardless of progress state;
+// destination still resumes mid-flow when applicable.
 export function DemoButton() {
   const navigate = useNavigate();
   const { progress } = useDemoProgress();
 
-  let label = 'Demo';
-  let path = '/demo';
-  if (progress) {
-    if (progress.demo_state === 'pending') {
-      label = 'Start Here';
-      path = '/start-here';
-    } else if (progress.demo_state === 'in_progress') {
-      label = 'Resume Demo';
-      path = progress.resume_path || '/demo';
-    } else {
-      label = 'Explore';
-      path = '/demo';
-    }
-  }
+  const path =
+    progress?.demo_state === 'in_progress'
+      ? progress.resume_path || '/demo'
+      : '/demo';
 
   return (
     <Button variant="outline" size="sm" onClick={() => navigate(path)} className="gap-1.5 font-bold">
-      <Sparkles className="h-4 w-4" /> {label}
+      <Sparkles className="h-4 w-4" /> Demo
     </Button>
   );
 }

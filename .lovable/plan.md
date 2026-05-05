@@ -1,85 +1,30 @@
+## Issues confirmed
 
-## Audit Findings (current state)
+1. **No Exit button** — `DemoLayout` header only has a "Skip" button. There's no way to bail out to the dashboard/home.
+2. **Skip doesn't work** — `SkipDemoDialog` is two-step (1: "I'll skip anyway" → 2: "Skip for now"). Step 2's button calls `onConfirm`, which calls `skip()` then `navigate('/select-modules', { replace: true })`. The likely failure is that `navigate('/select-modules')` lands on a guarded route (or `/select-modules` no longer accepts pre-checkout traffic) so the user appears stuck. Either way the UX is broken — too many clicks and wrong destination.
+3. **Demo button label varies** — `DemoButton.tsx` switches between `Start Here`, `Resume Demo`, `Explore`, and `Demo` based on `progress.demo_state`. Should always read `Demo`.
 
-- **Friction at /checkout**: Demo users still see a "See other options" toggle, a generic "Proceed to Payment" button, and must click before anything happens. No auto-redirect.
-- **Stripe session** (`create-checkout/index.ts`): `mode: subscription`, metadata + ab variant ✓, wallets auto-enabled ✓. **Missing**: `automatic_tax`, `billing_address_collection`, intro/anchor pricing, post-abandon coupon support beyond raw `coupon` param.
-- **Pricing display**: Shows `$300/month` + per-day framing only. No struck-through anchor, no "locked in" intro framing.
-- **Recovery**: `checkout_attempts` rows are written, but a returning user sees the same screen with no urgency banner and no coupon auto-apply.
-- **Success path**: 800ms spinner then redirect — too short to reduce remorse.
-- **Copy**: CTA generic; guarantee not anchored adjacent to CTA on first paint.
+## Changes
 
-> **No trial periods.** Per product policy, subscriptions do not offer free trials. All trial logic is excluded from this plan.
+### `src/components/demo/DemoButton.tsx`
+- Hard-code label to `"Demo"`. Keep adaptive routing (resume mid-flow when `demo_state === 'in_progress'`) but no label changes.
 
-## Implementation Plan
+### `src/components/demo/DemoLayout.tsx`
+- Add a dedicated **Exit** button (icon: `LogOut`) to the right of Skip. On click → `navigate('/dashboard')` (or `/` for unauthenticated visitors — detect via `useAuth`).
+- Keep Skip button visible but fix its action (see below).
 
-### 1. `src/pages/Checkout.tsx`
+### `src/components/demo/SkipDemoDialog.tsx`
+- Collapse to a **single step**. One title, one description, two actions: `Keep exploring` / `Skip for now`. Removes the broken second-step flow and the dead "Resume Demo" reference.
 
-**Auto-redirect for demo users**
-- `useEffect` fires `handleCreateCheckout()` on mount when: `isFromDemo && selectedTier && !checkoutUrl && !checkoutLoading && user && !isOwner && !isAdmin && status !== 'success'`. Guard with `autoTriggeredRef` to prevent double-fire.
-- During auto-trigger, render a full-screen "Reserving your system…" state so the user never sees the plan picker.
+### `src/components/demo/DemoLayout.tsx` — `handleSkip`
+- Change destination from `/select-modules` to `/dashboard`. `/select-modules` is post-checkout territory and is the root cause of the apparent "doesn't function" behavior.
+- Add a `try/catch` around `await skip()` so a network failure still navigates the user away (current code silently fails before navigation if the update throws).
 
-**Pricing anchor (demo only)**
-- Compute `anchorPrice = Math.round(tierConfig.price * 1.33)`.
-- Render struck-through `$anchor`, current `$price/month`, label "Locked in for early athletes" — only when `isFromDemo`.
+## Out of scope
+- Removing `SkipNudgeBanner`'s "Resume demo" copy elsewhere — that's a separate banner component, untouched.
+- Changing `/start-here` flow.
 
-**Single-path lockdown (demo only)**
-- Hide "See other options" toggle when `isFromDemo`. Replace with subtle "Want a different plan?" link that opens a `Dialog` with the existing 3 tier cards.
-
-**CTA copy**
-- CTA text → `"Start my system now"` (no trial framing).
-- Move 7-day guarantee block immediately under the CTA on first paint with copy: "7-day performance guarantee — no risk".
-
-**Abandonment urgency banner + auto-coupon**
-- After auth, if `isFromDemo && user`, query `checkout_attempts` for `user_id = user.id AND completed_at IS NULL AND created_at > now() - 7 days` ordered desc limit 1.
-- If found → set `appliedCoupon = "RESUME10"`. Show banner: *"Your system is still reserved — finish unlocking now. 10% off applied."*
-- Pass `coupon: appliedCoupon` into `create-checkout` body.
-
-**Branded success state**
-- Replace 800ms timeout with a 2.5s sequence: 3 stepped check rows ("Loading your gap data ✓", "Calibrating your system ✓", "Routing to your dashboard ✓"), then `navigate(...)`. Keep existing destination logic.
-
-**Telemetry**
-- In auto-redirect path, suppress the "Redirecting to Checkout" toast (silent).
-
-### 2. `supabase/functions/create-checkout/index.ts`
-
-**Stripe session hardening**
-- `billing_address_collection: "auto"`
-- `automatic_tax: { enabled: true }` — wrap session creation in try/catch; on failure (account not configured for Stripe Tax), retry without `automatic_tax` and log a warning.
-- `phone_number_collection: { enabled: false }` (explicit)
-- `allow_promotion_codes: false` when `coupon` provided OR when `from` (demo) — anchor is set by us.
-
-**Guarantee metadata**
-- Always set `checkoutMetadata.guarantee = "7_day"`.
-
-**Coupon resilience**
-- Existing `coupon` path retained. Wrap `discounts: [{ coupon }]` in try/catch — if Stripe returns `resource_missing` (e.g. `RESUME10` missing), retry session creation without discount and return `couponSkipped: true` in JSON. Frontend ignores silently.
-
-**Explicitly NOT added**
-- `trial_period_days` — not used.
-- `subscription_data.trial_*` fields — not used.
-- No `checkoutMetadata.trial`.
-
-### 3. Stripe coupon
-
-- After approval, run `stripe--create_coupon` with `name: "RESUME10"`, `percent_off: 10`, `duration: "once"` so abandonment recovery has a real coupon to reference.
-
-## Out of Scope
-
-- Free trials (explicitly excluded per product policy)
-- Annual plan with 20% discount
-- Dynamic "Most athletes choose this" badge
-- Apple/Google Pay priority UI above CTA (already auto-enabled by Stripe)
-- Sending recovery emails (capture-only confirmed earlier)
-
-## Files Touched
-
-- `src/pages/Checkout.tsx` (edit)
-- `supabase/functions/create-checkout/index.ts` (edit)
-- `stripe--create_coupon` tool call for `RESUME10`
-
-## Success Criteria
-
-- Demo user landing on `/checkout` never sees a plan picker — they see "Reserving your system…" then Stripe in ≤1 click.
-- Stripe session includes automatic tax (with graceful fallback), billing address auto, guarantee metadata. **No trial.**
-- Returning abandoned demo user sees urgency banner with `RESUME10` auto-applied.
-- Non-demo `/checkout` traffic keeps existing 3-tier UX untouched.
+## Files touched
+- `src/components/demo/DemoButton.tsx`
+- `src/components/demo/DemoLayout.tsx`
+- `src/components/demo/SkipDemoDialog.tsx`

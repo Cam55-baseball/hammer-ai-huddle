@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -10,48 +9,22 @@ interface Props {
   onConfirm: () => void;
 }
 
-// Two-step loss-framed skip dialog.
+// Single-step skip confirmation.
 export function SkipDemoDialog({ open, onOpenChange, onConfirm }: Props) {
-  const [step, setStep] = useState<1 | 2>(1);
-
-  const handleClose = (v: boolean) => {
-    if (!v) setStep(1);
-    onOpenChange(v);
-  };
-
   return (
-    <AlertDialog open={open} onOpenChange={handleClose}>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
-        {step === 1 ? (
-          <>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Skip means choosing blind</AlertDialogTitle>
-              <AlertDialogDescription>
-                The demo is what tells you which tier actually fits you. Most athletes change
-                their pick after seeing the previews. Sure you want to skip?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Keep exploring</AlertDialogCancel>
-              <AlertDialogAction onClick={() => setStep(2)}>I'll skip anyway</AlertDialogAction>
-            </AlertDialogFooter>
-          </>
-        ) : (
-          <>
-            <AlertDialogHeader>
-              <AlertDialogTitle>We'll save your spot</AlertDialogTitle>
-              <AlertDialogDescription>
-                You can resume any time from the <strong>Resume Demo</strong> button at the top of the app.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setStep(1)}>Back</AlertDialogCancel>
-              <AlertDialogAction onClick={() => { onConfirm(); setStep(1); }}>
-                Skip for now
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </>
-        )}
+        <AlertDialogHeader>
+          <AlertDialogTitle>Skip the demo?</AlertDialogTitle>
+          <AlertDialogDescription>
+            The demo helps match you to the right tier. You can come back any time
+            from the <strong>Demo</strong> button.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep exploring</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>Skip for now</AlertDialogAction>
+        </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
