@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Sparkles, Target, TrendingUp, TrendingDown } from 'lucide-react';
 import { PrescribedVideoStrip } from './PrescribedVideoCard';
+import { CommitIntentDialog } from './CommitIntentDialog';
 import { conversionCopy } from '@/demo/prescriptions/conversionCopy';
 import { prescribe } from '@/demo/prescriptions/videoPrescription';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
@@ -58,6 +59,11 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
 
   // Micro-interaction gate — delay hard CTA until the user does ONE thing.
   const [unlocked, setUnlocked] = useState(false);
+  const [commitOpen, setCommitOpen] = useState(false);
+  const [aggressive, setAggressive] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
+  const previewClicked = viewCount > 0;
+  const commitShownRef = useRef(false);
   const stripRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (unlocked) return;
@@ -77,6 +83,14 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
     return () => { obs.disconnect(); if (timer) clearTimeout(timer); };
   }, [unlocked]);
 
+  // Open commit dialog once the user is engaged
+  useEffect(() => {
+    if ((unlocked || previewClicked) && !commitShownRef.current) {
+      commitShownRef.current = true;
+      setCommitOpen(true);
+    }
+  }, [unlocked, previewClicked]);
+
   // Persist sim run + prescription history + cta_viewed
   useEffect(() => {
     void recordSimRun(simId, severity, gap);
@@ -84,6 +98,14 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
     logDemoEvent('cta_viewed', { simId, severity, gap, pct, fromSlug });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [simId, severity, gap]);
+
+  // Micro-yes CTA copy escalation (overrides severity copy unless pct>70 wins)
+  const microCta = (() => {
+    if (pct > 70) return copy.cta; // existing override wins
+    if (viewCount >= 2) return 'Get my full system';
+    if (previewClicked) return 'Finish unlocking your plan';
+    return 'See how to fix this';
+  })();
 
   const goUpgrade = () => {
     logDemoEvent('cta_clicked', { simId, severity, gap, pct, fromSlug });
@@ -98,6 +120,21 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
       projected: benchmark.projected,
     });
     navigate(`/demo/upgrade?${params.toString()}`);
+  };
+
+  const handleCommitYes = () => {
+    logDemoEvent('commit_intent', { simId, severity, gap, pct, fromSlug });
+    setCommitOpen(false);
+    goUpgrade();
+  };
+  const handleCommitNo = () => {
+    setCommitOpen(false);
+    setAggressive(true);
+  };
+
+  const handlePreviewClick = () => {
+    setUnlocked(true);
+    setViewCount(c => c + 1);
   };
 
   return (
@@ -141,7 +178,7 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
         <PrescribedVideoStrip
           videos={videos}
           fromSlug={fromSlug}
-          onPreviewClick={() => setUnlocked(true)}
+          onPreviewClick={handlePreviewClick}
         />
       </div>
 
@@ -156,12 +193,12 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
 
       {/* 6 LOCK CTA — gated by micro-interaction */}
       {unlocked ? (
-        <Card className="border-primary/50 bg-gradient-to-b from-primary/15 to-transparent">
+        <Card className={`border-primary/50 bg-gradient-to-b from-primary/15 to-transparent ${aggressive ? 'ring-2 ring-primary/60 shadow-[0_0_24px_-6px_hsl(var(--primary))]' : ''}`}>
           <CardContent className="space-y-2 p-4 text-center">
             <h3 className="text-base font-black leading-tight">{copy.headline}</h3>
             <p className="text-xs text-muted-foreground">{copy.subhead}</p>
-            <Button size="sm" className="gap-1.5" onClick={goUpgrade}>
-              <Sparkles className="h-4 w-4" /> {copy.cta}
+            <Button size={aggressive ? 'default' : 'sm'} className="gap-1.5" onClick={goUpgrade}>
+              <Sparkles className="h-4 w-4" /> {microCta}
             </Button>
             <p className="pt-1 text-[10px] italic text-muted-foreground">{copy.socialProof}</p>
           </CardContent>
@@ -173,6 +210,13 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
           </CardContent>
         </Card>
       )}
+
+      <CommitIntentDialog
+        open={commitOpen}
+        onOpenChange={setCommitOpen}
+        onYes={handleCommitYes}
+        onNo={handleCommitNo}
+      />
     </div>
   );
 }
