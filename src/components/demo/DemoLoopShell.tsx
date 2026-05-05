@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { PrescribedVideoStrip } from './PrescribedVideoCard';
 import { conversionCopy } from '@/demo/prescriptions/conversionCopy';
 import { prescribe } from '@/demo/prescriptions/videoPrescription';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
+import { useDemoProgress } from '@/hooks/useDemoProgress';
 
 interface Benchmark {
   yourLabel: string;
