@@ -5,16 +5,18 @@ import { Lock } from 'lucide-react';
 import { programSim, Goal, Experience } from '@/demo/sims/programSim';
 import { DemoLoopShell } from '@/components/demo/DemoLoopShell';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
+import { useAuth } from '@/hooks/useAuth';
 
 const GOALS: Goal[] = ['power', 'speed', 'durability'];
 const DAYS: (3 | 4 | 5)[] = [3, 4, 5];
 const LEVELS: Experience[] = ['beginner', 'intermediate', 'advanced'];
 
 export default function IronBambinoDemo() {
+  const { user } = useAuth();
   const [goal, setGoal] = useState<Goal>('power');
   const [days, setDays] = useState<3 | 4 | 5>(4);
   const [exp, setExp] = useState<Experience>('intermediate');
-  const program = programSim.run({ goal, daysPerWeek: days, experience: exp });
+  const program = programSim.run({ goal, daysPerWeek: days, experience: exp }, { userId: user?.id ?? null });
   const { bump } = useDemoInteract('iron-bambino');
 
   const set = <T,>(setter: (v: T) => void) => (v: T) => { setter(v); bump(); };
