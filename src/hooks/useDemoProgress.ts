@@ -347,4 +347,3 @@ export function useDemoProgress() {
     recordPrescribedShown, recordSimRun,
   }), [progress, loading, refresh, update, markViewed, bumpInteraction, addDwell, skip, complete, startIfPending, logEvent, recordPrescribedShown, recordSimRun]);
 }
-}
