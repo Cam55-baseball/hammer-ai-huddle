@@ -57,6 +57,10 @@ const SelectModules = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const momentumContext = searchParams.get("context") ?? "";
+  const momentumGap = searchParams.get("gap") ?? "";
+  const momentumFrom = searchParams.get("from") ?? "";
   const { user, session, loading: authLoading, isAuthStable } = useAuth();
   const { modules: subscribedModules, loading: subscriptionLoading } = useSubscription();
   const state = location.state as { sport?: string; mode?: 'add' };
