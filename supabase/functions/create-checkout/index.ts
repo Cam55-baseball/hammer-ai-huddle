@@ -86,9 +86,9 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { tier, sport, modules, coupon } = body;
+    const { tier, sport, modules, coupon, simId, severity, gap, pct, from, abVariant } = body;
     
-    logStep("Received request", { tier, sport, modules, hasCoupon: !!coupon });
+    logStep("Received request", { tier, sport, modules, hasCoupon: !!coupon, simId, from, abVariant });
 
     // Validate sport
     if (!sport || !['baseball', 'softball'].includes(sport)) {
@@ -111,7 +111,13 @@ serve(async (req) => {
     }
 
     let lineItems: { price: string; quantity: number }[];
-    let checkoutMetadata: Record<string, string> = { user_id: user.id };
+    const checkoutMetadata: Record<string, string> = { user_id: user.id };
+    if (simId) checkoutMetadata.sim_id = String(simId);
+    if (severity) checkoutMetadata.severity = String(severity);
+    if (gap !== undefined && gap !== null) checkoutMetadata.gap = String(gap);
+    if (pct !== undefined && pct !== null) checkoutMetadata.pct = String(pct);
+    if (from) checkoutMetadata.from_slug = String(from);
+    if (abVariant) checkoutMetadata.ab_variant = String(abVariant);
 
     if (tier) {
       // NEW: Tier-based checkout
@@ -140,28 +146,37 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
+    const successParams = new URLSearchParams({ status: 'success' });
+    if (simId) successParams.set('sim', String(simId));
+    if (from) successParams.set('from', String(from));
+    if (gap !== undefined && gap !== null) successParams.set('gap', String(gap));
+
     const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
+      client_reference_id: user.id,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/checkout?status=success`,
+      success_url: `${origin}/checkout?${successParams.toString()}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout?status=cancel`,
       metadata: checkoutMetadata,
+      subscription_data: { metadata: checkoutMetadata },
+      // Wallets (Apple Pay/Google Pay/Link) auto-enable based on Stripe Dashboard settings
+      // when payment_method_types is omitted.
+      allow_promotion_codes: !coupon,
     };
 
-    // Apply coupon directly if provided (skips manual code entry); otherwise allow user to enter one.
+    // Apply coupon directly if provided (skips manual code entry)
     if (coupon) {
       sessionParams.discounts = [{ coupon }];
-    } else {
-      sessionParams.allow_promotion_codes = true;
+      delete sessionParams.allow_promotion_codes;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
