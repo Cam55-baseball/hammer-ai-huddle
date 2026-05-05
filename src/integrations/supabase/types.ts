@@ -1290,6 +1290,57 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_attempts: {
+        Row: {
+          ab_variant: string | null
+          completed_at: string | null
+          email: string | null
+          from_slug: string | null
+          gap: string | null
+          id: string
+          pct: number | null
+          severity: string | null
+          sim_id: string | null
+          sport: string | null
+          started_at: string
+          stripe_session_id: string | null
+          tier: string | null
+          user_id: string
+        }
+        Insert: {
+          ab_variant?: string | null
+          completed_at?: string | null
+          email?: string | null
+          from_slug?: string | null
+          gap?: string | null
+          id?: string
+          pct?: number | null
+          severity?: string | null
+          sim_id?: string | null
+          sport?: string | null
+          started_at?: string
+          stripe_session_id?: string | null
+          tier?: string | null
+          user_id: string
+        }
+        Update: {
+          ab_variant?: string | null
+          completed_at?: string | null
+          email?: string | null
+          from_slug?: string | null
+          gap?: string | null
+          id?: string
+          pct?: number | null
+          severity?: string | null
+          sim_id?: string | null
+          sport?: string | null
+          started_at?: string
+          stripe_session_id?: string | null
+          tier?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_grade_overrides: {
         Row: {
           coach_id: string
@@ -10737,6 +10788,15 @@ export type Database = {
       }
     }
     Views: {
+      checkout_ab_summary: {
+        Row: {
+          ab_variant: string | null
+          completed: number | null
+          conversion_pct: number | null
+          started: number | null
+        }
+        Relationships: []
+      }
       demo_funnel: {
         Row: {
           clicked: number | null

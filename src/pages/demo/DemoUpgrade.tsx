@@ -85,6 +85,10 @@ export default function DemoUpgrade() {
       gap: String(gap),
       pct: String(pctParam),
       from,
+      sim: simId,
+      your: yourValue,
+      elite: eliteValue,
+      projected,
     });
     allowLeaveRef.current = true;
     navigate(`/checkout?${qp.toString()}`);
