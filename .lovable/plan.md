@@ -1,105 +1,85 @@
-## Audit results
 
-**Checkout type:** Stripe Checkout (hosted), `mode: 'subscription'`.
+## Audit Findings (current state)
 
-**Current flow:** Demo CTA → `/checkout?prefill=...` → user clicks "Proceed to Payment" → `create-checkout` edge fn → Stripe-hosted page → `/checkout?status=success` → 800ms toast → `/dashboard`.
+- **Friction at /checkout**: Demo users still see a "See other options" toggle, a generic "Proceed to Payment" button, and must click before anything happens. No auto-redirect.
+- **Stripe session** (`create-checkout/index.ts`): `mode: subscription`, metadata + ab variant ✓, wallets auto-enabled ✓. **Missing**: `automatic_tax`, `billing_address_collection`, intro/anchor pricing, post-abandon coupon support beyond raw `coupon` param.
+- **Pricing display**: Shows `$300/month` + per-day framing only. No struck-through anchor, no "locked in" intro framing.
+- **Recovery**: `checkout_attempts` rows are written, but a returning user sees the same screen with no urgency banner and no coupon auto-apply.
+- **Success path**: 800ms spinner then redirect — too short to reduce remorse.
+- **Copy**: CTA generic; guarantee not anchored adjacent to CTA on first paint.
 
-**Steps from CTA → payment:** 3 screens (upgrade page → checkout page button → Stripe page).
+> **No trial periods.** Per product policy, subscriptions do not offer free trials. All trial logic is excluded from this plan.
 
-**Disconnect:** `/checkout` ignores `prefill / reason / gap / pct / from` params; reads `tier` from `location.state` or localStorage. Demo context is lost between upgrade page and Stripe.
+## Implementation Plan
 
-**Metadata to Stripe:** only `{ user_id, tier, sport }`. No sim, severity, gap, pct, from.
+### 1. `src/pages/Checkout.tsx`
 
-**Pricing:** real tiers are $200 / $300 / $400 per month — not $29 / $39. Per your direction, all demo conversions recommend **The Golden 2Way ($400/mo)**.
+**Auto-redirect for demo users**
+- `useEffect` fires `handleCreateCheckout()` on mount when: `isFromDemo && selectedTier && !checkoutUrl && !checkoutLoading && user && !isOwner && !isAdmin && status !== 'success'`. Guard with `autoTriggeredRef` to prevent double-fire.
+- During auto-trigger, render a full-screen "Reserving your system…" state so the user never sees the plan picker.
 
-**Stripe Checkout payment methods:** wallets (Apple Pay / Google Pay / Link) auto-enable when the Dashboard payment method settings include them. We are not disabling them in code, so they show automatically. We will additionally pass `payment_method_types` left unset (default = automatic) and `customer_email` for prefill, and we will pass full demo metadata.
+**Pricing anchor (demo only)**
+- Compute `anchorPrice = Math.round(tierConfig.price * 1.33)`.
+- Render struck-through `$anchor`, current `$price/month`, label "Locked in for early athletes" — only when `isFromDemo`.
 
-**No abandonment tracking, no A/B price assignment, no risk-reversal copy, no post-checkout continuity.**
+**Single-path lockdown (demo only)**
+- Hide "See other options" toggle when `isFromDemo`. Replace with subtle "Want a different plan?" link that opens a `Dialog` with the existing 3 tier cards.
 
----
+**CTA copy**
+- CTA text → `"Start my system now"` (no trial framing).
+- Move 7-day guarantee block immediately under the CTA on first paint with copy: "7-day performance guarantee — no risk".
 
-## Plan
+**Abandonment urgency banner + auto-coupon**
+- After auth, if `isFromDemo && user`, query `checkout_attempts` for `user_id = user.id AND completed_at IS NULL AND created_at > now() - 7 days` ordered desc limit 1.
+- If found → set `appliedCoupon = "RESUME10"`. Show banner: *"Your system is still reserved — finish unlocking now. 10% off applied."*
+- Pass `coupon: appliedCoupon` into `create-checkout` body.
 
-### Phase 1 — Contextualized checkout (Checkout.tsx)
+**Branded success state**
+- Replace 800ms timeout with a 2.5s sequence: 3 stepped check rows ("Loading your gap data ✓", "Calibrating your system ✓", "Routing to your dashboard ✓"), then `navigate(...)`. Keep existing destination logic.
 
-- Read `prefill, reason, gap, pct, from, sim` from `useSearchParams`.
-- If `prefill` is present and no explicit tier in state, default `selectedTier = 'golden2way'`.
-- Render a top context block above the existing card when `from === 'demo'`:
-  - Eyebrow: `You're unlocking your {SIM_LABEL} system`
-  - 3 chips: `Fix your {gap}` · `Close your {severity} performance gap` · `Projected: {projected}`
-  - Pulls labels from `src/demo/prescriptions/conversionCopy.ts` so wording matches the demo result exactly.
+**Telemetry**
+- In auto-redirect path, suppress the "Redirecting to Checkout" toast (silent).
 
-### Phase 2 — Single recommended plan
+### 2. `supabase/functions/create-checkout/index.ts`
 
-- Replace tier-config block with a single recommended card:
-  - Header: **The Golden 2Way** + badge "Recommended for you based on your result"
-  - Subtext: "Most athletes who hit your gap choose this"
-  - Small link below: `See other options` → expands the existing Pitcher / 5Tool / Golden cards inline (collapsed by default).
-- Selecting an alternate updates `selectedTier` state; default stays Golden 2Way.
+**Stripe session hardening**
+- `billing_address_collection: "auto"`
+- `automatic_tax: { enabled: true }` — wrap session creation in try/catch; on failure (account not configured for Stripe Tax), retry without `automatic_tax` and log a warning.
+- `phone_number_collection: { enabled: false }` (explicit)
+- `allow_promotion_codes: false` when `coupon` provided OR when `from` (demo) — anchor is set by us.
 
-### Phase 3 — Price presentation
+**Guarantee metadata**
+- Always set `checkoutMetadata.guarantee = "7_day"`.
 
-- Price block becomes: `$400 / month` · `Cancel anytime`
-- Directly under: `Less than $14 per day to fix this gap` (computed `Math.ceil(price/30)`).
-- Replace existing "Total per month" muted footer.
+**Coupon resilience**
+- Existing `coupon` path retained. Wrap `discounts: [{ coupon }]` in try/catch — if Stripe returns `resource_missing` (e.g. `RESUME10` missing), retry session creation without discount and return `couponSkipped: true` in JSON. Frontend ignores silently.
 
-### Phase 4 — Risk reversal
+**Explicitly NOT added**
+- `trial_period_days` — not used.
+- `subscription_data.trial_*` fields — not used.
+- No `checkoutMetadata.trial`.
 
-- New block under the primary CTA:
-  - Shield icon + **7-day performance guarantee**
-  - "If you don't see measurable progress, we'll refund you."
+### 3. Stripe coupon
 
-### Phase 5 — Stripe checkout optimization (`create-checkout` edge fn)
+- After approval, run `stripe--create_coupon` with `name: "RESUME10"`, `percent_off: 10`, `duration: "once"` so abandonment recovery has a real coupon to reference.
 
-- Accept new optional body fields: `simId, severity, gap, pct, from, abVariant`.
-- Add to `checkoutMetadata`: `sim_id, severity, gap, pct, from_slug, ab_variant`.
-- Pass `customer_email` (already does).
-- Add `payment_method_collection: 'always'` and leave `payment_method_types` unset so Stripe auto-includes wallets + Link based on Dashboard settings.
-- Add `subscription_data: { metadata: checkoutMetadata }` so the metadata persists on the subscription, not just the session.
-- Add `client_reference_id: user.id` (helps webhook + dashboards).
-- Success URL keeps params: `success_url: ${origin}/checkout?status=success&sim=${simId}&from=${from}` (so post-checkout redirect can preserve context).
+## Out of Scope
 
-### Phase 6 — Post-checkout continuity
+- Free trials (explicitly excluded per product policy)
+- Annual plan with 20% discount
+- Dynamic "Most athletes choose this" badge
+- Apple/Google Pay priority UI above CTA (already auto-enabled by Stripe)
+- Sending recovery emails (capture-only confirmed earlier)
 
-- On `status=success`, instead of `/dashboard`, redirect to:
-  - `/select-modules?context=${simId}&from=demo`
-- Add a one-time momentum banner at the top of `SelectModules.tsx`:
-  - "Building your system based on your {gap}…" with a 2.5s spinner-progress, then the banner becomes a static success strip: "Your {SIM_LABEL} system is ready to configure."
-- Banner reads context from query string; dismissible; no schema change.
+## Files Touched
 
-### Phase 7 — Abandonment capture (no email send yet)
+- `src/pages/Checkout.tsx` (edit)
+- `supabase/functions/create-checkout/index.ts` (edit)
+- `stripe--create_coupon` tool call for `RESUME10`
 
-- New table `checkout_attempts` (RLS: insert by authenticated user for own row; select restricted to owner/admin):
-  - `id uuid pk`, `user_id uuid`, `email text`, `tier text`, `sim_id text`, `severity text`, `gap text`, `pct int`, `from_slug text`, `ab_variant text`, `started_at timestamptz default now()`, `completed_at timestamptz null`, `stripe_session_id text null`.
-- `Checkout.tsx` inserts a row when `handleCreateCheckout` is invoked (after edge fn returns the session url, so we can store `stripe_session_id`).
-- On `status=success`, update the matching row's `completed_at`.
-- Rows older than 30 minutes with `completed_at IS NULL` are eligible for future recovery emails. We don't send anything now per your decision; data is captured for later.
+## Success Criteria
 
-### Phase 8 — A/B test (existing tiers, not invented prices)
-
-- Per your direction we keep real prices. The A/B becomes:
-  - **Group A:** Recommended = Golden 2Way ($400)
-  - **Group B:** Recommended = 5Tool Player ($300) with same urgency framing
-- Assignment: deterministic by `user.id` hash → `abVariant: 'A' | 'B'`. Stored in `localStorage('demo_ab_variant')` for stability across reloads.
-- Variant passed to checkout edge fn and persisted to `checkout_attempts.ab_variant` + Stripe metadata.
-- A new admin-readable view `checkout_ab_summary` (SQL view) aggregates `ab_variant → started, completed, conversion_rate, revenue` for later analysis.
-
----
-
-## Files to change
-
-- `src/pages/Checkout.tsx` — contextual header, single-plan UI, daily price, guarantee, post-success route.
-- `src/pages/demo/DemoUpgrade.tsx` — primary CTA forwards `simId, severity, gap, pct, from, sim` query params to `/checkout` and forces `tier=golden2way` (or A/B variant).
-- `src/pages/SelectModules.tsx` — momentum banner.
-- `supabase/functions/create-checkout/index.ts` — accept + persist metadata, success_url params.
-- `src/lib/demoAbVariant.ts` (new) — deterministic variant assignment hook.
-- DB migration:
-  - `checkout_attempts` table + RLS
-  - `checkout_ab_summary` view
-- `src/integrations/supabase/types.ts` regenerates automatically.
-
-## Out of scope
-
-- Sending actual abandonment emails (deferred per your direction).
-- Creating new $29 / $39 products in Stripe.
-- Switching to Stripe Elements (hosted Checkout retained).
+- Demo user landing on `/checkout` never sees a plan picker — they see "Reserving your system…" then Stripe in ≤1 click.
+- Stripe session includes automatic tax (with graceful fallback), billing address auto, guarantee metadata. **No trial.**
+- Returning abandoned demo user sees urgency banner with `RESUME10` auto-applied.
+- Non-demo `/checkout` traffic keeps existing 3-tier UX untouched.

@@ -8,8 +8,9 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Check, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, ShieldCheck, Sparkles, Clock } from "lucide-react";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { conversionCopy } from "@/demo/prescriptions/conversionCopy";
 import { getDemoAbVariant, tierForVariant } from "@/lib/demoAbVariant";
@@ -20,13 +21,19 @@ const SIM_LABEL: Record<string, string> = {
   vault: "performance history",
 };
 
+const SUCCESS_STEPS = [
+  "Loading your gap data",
+  "Calibrating your system",
+  "Routing to your dashboard",
+];
+
 const Checkout = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { user, session, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, refetch, loading: subLoading } = useSubscription();
+  const { user, loading: authLoading } = useAuth();
+  const { refetch, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { toast } = useToast();
@@ -56,18 +63,49 @@ const Checkout = () => {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [showManualLink, setShowManualLink] = useState(false);
   const [showSuccessState, setShowSuccessState] = useState(false);
+  const [successStepIdx, setSuccessStepIdx] = useState(0);
+  const [hasAbandoned, setHasAbandoned] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const popupRef = useRef<Window | null>(null);
   const successHandledRef = useRef(false);
   const attemptIdRef = useRef<string | null>(null);
+  const autoTriggeredRef = useRef(false);
 
   const tierConfig = selectedTier ? TIER_CONFIG[selectedTier] : null;
   const dailyPrice = tierConfig ? Math.ceil(tierConfig.price / 30) : 0;
+  const anchorPrice = tierConfig ? Math.round(tierConfig.price * 1.33) : 0;
 
   const copy = useMemo(
     () => (isFromDemo ? conversionCopy(simId || "hitting", reason, gap, { pct }) : null),
     [isFromDemo, simId, reason, gap, pct],
   );
   const simLabel = SIM_LABEL[simId] ?? "performance";
+
+  const status = searchParams.get("status") || searchParams.get("checkout");
+
+  // Detect prior abandoned attempt (demo users)
+  useEffect(() => {
+    if (!isFromDemo || !user || status === "success") return;
+    let cancelled = false;
+    (async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("checkout_attempts")
+        .select("id")
+        .eq("user_id", user.id)
+        .is("completed_at", null)
+        .gte("created_at", sevenDaysAgo)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data) {
+        setHasAbandoned(true);
+        setAppliedCoupon("RESUME10");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isFromDemo, user, status]);
 
   useEffect(() => {
     if (authLoading || ownerLoading || adminLoading) return;
@@ -82,15 +120,9 @@ const Checkout = () => {
       return;
     }
 
-    const status = searchParams.get("status") || searchParams.get("checkout");
     if (status === "success") {
       if (successHandledRef.current) return;
       successHandledRef.current = true;
-
-      toast({
-        title: "Access unlocked",
-        description: "Your training tier is now active.",
-      });
 
       localStorage.setItem(
         "pendingModuleActivation",
@@ -101,7 +133,6 @@ const Checkout = () => {
         }),
       );
 
-      // Mark abandonment row as completed
       const stripeSessionId = searchParams.get("session_id");
       if (stripeSessionId) {
         void supabase
@@ -113,14 +144,26 @@ const Checkout = () => {
 
       refetch();
       setShowSuccessState(true);
-      // Phase 6: post-checkout continuity
+
+      // 2.5s sequenced success state, then route forward
+      let i = 0;
+      const stepTimer = setInterval(() => {
+        i += 1;
+        if (i < SUCCESS_STEPS.length) {
+          setSuccessStepIdx(i);
+        } else {
+          clearInterval(stepTimer);
+        }
+      }, 800);
+
       setTimeout(() => {
+        clearInterval(stepTimer);
         const ctx = simId || searchParams.get("sim") || "";
         const dest = ctx
           ? `/select-modules?context=${encodeURIComponent(ctx)}&from=demo${gap ? `&gap=${encodeURIComponent(gap)}` : ""}`
           : "/dashboard";
         navigate(dest, { replace: true });
-      }, 800);
+      }, 2500);
       return;
     } else if (status === "cancel" || status === "cancelled") {
       localStorage.removeItem("pendingModuleActivation");
@@ -131,7 +174,7 @@ const Checkout = () => {
       navigate("/activate", { replace: true });
       return;
     }
-  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, selectedTier, selectedSport, simId, gap, location.search, toast]);
+  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, selectedTier, selectedSport, simId, gap, location.search, toast, status]);
 
   const redirectToStripe = (url: string) => {
     try {
@@ -147,14 +190,16 @@ const Checkout = () => {
     setTimeout(() => setShowManualLink(true), 1500);
   };
 
-  const handleCreateCheckout = async () => {
+  const handleCreateCheckout = async (opts?: { silent?: boolean }) => {
     if (!selectedTier) {
       toast({ title: "No tier selected", description: "Please select a training tier.", variant: "destructive" });
       return;
     }
 
     setCheckoutLoading(true);
-    popupRef.current = window.open("", "_blank", "") || null;
+    if (!opts?.silent) {
+      popupRef.current = window.open("", "_blank", "") || null;
+    }
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -183,13 +228,13 @@ const Checkout = () => {
           pct: pct || undefined,
           from: fromSlug || undefined,
           abVariant: isFromDemo ? abVariant : undefined,
+          coupon: appliedCoupon || undefined,
         },
       });
 
       if (error) throw error;
 
       if (data?.url) {
-        // Phase 7: capture checkout attempt
         if (user) {
           const { data: inserted } = await supabase
             .from("checkout_attempts")
@@ -212,7 +257,9 @@ const Checkout = () => {
         }
 
         setCheckoutUrl(data.url);
-        toast({ title: "Redirecting to Checkout", description: "You'll be redirected to complete your payment..." });
+        if (!opts?.silent) {
+          toast({ title: "Redirecting to Checkout", description: "You'll be redirected to complete your payment..." });
+        }
 
         setTimeout(() => setShowManualLink(true), 2000);
 
@@ -242,12 +289,37 @@ const Checkout = () => {
     }
   };
 
+  // Auto-redirect for demo users — turns checkout into ≤1-click
+  useEffect(() => {
+    if (autoTriggeredRef.current) return;
+    if (authLoading || ownerLoading || adminLoading || subLoading) return;
+    if (!isFromDemo || !user || isOwner || isAdmin) return;
+    if (!selectedTier || !tierConfig) return;
+    if (status === "success" || status === "cancel" || status === "cancelled") return;
+    if (checkoutUrl || checkoutLoading) return;
+    autoTriggeredRef.current = true;
+    void handleCreateCheckout({ silent: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, ownerLoading, adminLoading, subLoading, isFromDemo, user, isOwner, isAdmin, selectedTier, tierConfig, status, checkoutUrl, checkoutLoading]);
+
   if (showSuccessState) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-6" />
-        <h2 className="text-xl font-semibold text-foreground">Access unlocked.</h2>
-        <p className="text-sm text-muted-foreground mt-1">Building your system…</p>
+        <h2 className="text-xl font-semibold text-foreground mb-1">Your system is being built from your result</h2>
+        <p className="text-sm text-muted-foreground mb-6">Hold tight — finalizing access.</p>
+        <ul className="space-y-2 text-sm">
+          {SUCCESS_STEPS.map((label, i) => (
+            <li key={label} className={`flex items-center gap-2 ${i <= successStepIdx ? "text-foreground" : "text-muted-foreground/50"}`}>
+              {i <= successStepIdx ? (
+                <Check className="h-4 w-4 text-primary" />
+              ) : (
+                <Clock className="h-4 w-4" />
+              )}
+              <span>{label}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     );
   }
@@ -288,9 +360,32 @@ const Checkout = () => {
     );
   }
 
+  // Demo auto-redirect: render reservation state instead of plan picker
+  if (isFromDemo && (checkoutLoading || checkoutUrl) && !showManualLink) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-muted/30">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-6" />
+        <h2 className="text-xl font-bold">Reserving your system…</h2>
+        <p className="text-sm text-muted-foreground mt-1">Securing your {simLabel} access.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-2xl space-y-4">
+        {/* Abandonment urgency banner */}
+        {hasAbandoned && (
+          <Card className="border-amber-500/50 bg-amber-500/10 p-4">
+            <p className="text-sm font-bold text-amber-700 dark:text-amber-200">
+              Your system is still reserved — finish unlocking now.
+            </p>
+            <p className="text-xs text-amber-700/80 dark:text-amber-200/80 mt-1">
+              10% off applied automatically.
+            </p>
+          </Card>
+        )}
+
         {/* Phase 1: Contextual demo header */}
         {isFromDemo && copy && (
           <Card className="border-primary/40 bg-gradient-to-b from-primary/10 to-transparent p-5">
@@ -324,7 +419,6 @@ const Checkout = () => {
         )}
 
         <Card className="p-8">
-          {/* Phase 2: Single recommended plan */}
           <div className="mb-2 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
@@ -336,12 +430,22 @@ const Checkout = () => {
           </h1>
           <p className="text-xs text-muted-foreground mb-5">Most athletes who hit your gap choose this.</p>
 
-          {/* Phase 3: Price presentation */}
+          {/* Price presentation with anchor for demo */}
           <div className="mb-5 rounded-lg border bg-card p-4">
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-baseline gap-3">
+              {isFromDemo && (
+                <span className="text-lg font-semibold text-muted-foreground line-through">
+                  ${anchorPrice}
+                </span>
+              )}
               <span className="text-4xl font-black">${tierConfig.price}</span>
               <span className="text-sm text-muted-foreground">/ month</span>
             </div>
+            {isFromDemo && (
+              <p className="text-[11px] font-bold uppercase tracking-wider text-primary mt-1">
+                Locked in for early athletes
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">Cancel anytime</p>
             <p className="text-sm font-semibold text-primary mt-2">
               Less than ${dailyPrice} per day to fix this gap
@@ -375,30 +479,42 @@ const Checkout = () => {
             </div>
           )}
 
-          <Button onClick={handleCreateCheckout} disabled={checkoutLoading} className="w-full mb-3" size="lg">
-            {checkoutLoading ? t("subscriptionTiers.processing") : t("subscriptionTiers.proceedToPayment")}
+          <Button onClick={() => handleCreateCheckout()} disabled={checkoutLoading} className="w-full mb-3" size="lg">
+            {checkoutLoading ? t("subscriptionTiers.processing") : "Start my system now"}
           </Button>
 
-          {/* Phase 4: Risk reversal */}
+          {/* Risk reversal directly under CTA */}
           <div className="mb-3 flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             <div>
-              <p className="text-sm font-bold">7-day performance guarantee</p>
+              <p className="text-sm font-bold">7-day performance guarantee — no risk</p>
               <p className="text-xs text-muted-foreground">
                 If you don't see measurable progress, we'll refund you.
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowOtherOptions((v) => !v)}
-            className="text-xs text-muted-foreground hover:text-foreground underline w-full text-center"
-          >
-            {showOtherOptions ? "Hide other options" : "See other options"}
-          </button>
+          {/* Single-path lockdown for demo: dialog-based switcher only */}
+          {isFromDemo ? (
+            <button
+              type="button"
+              onClick={() => setShowOtherOptions(true)}
+              className="text-xs text-muted-foreground hover:text-foreground underline w-full text-center"
+            >
+              Want a different plan?
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowOtherOptions((v) => !v)}
+              className="text-xs text-muted-foreground hover:text-foreground underline w-full text-center"
+            >
+              {showOtherOptions ? "Hide other options" : "See other options"}
+            </button>
+          )}
 
-          {showOtherOptions && (
+          {/* Inline list (non-demo) */}
+          {!isFromDemo && showOtherOptions && (
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {TIER_ORDER.map((tk) => {
                 const tc = TIER_CONFIG[tk];
@@ -425,6 +541,39 @@ const Checkout = () => {
           </Button>
         </Card>
       </div>
+
+      {/* Demo: tier switcher dialog */}
+      {isFromDemo && (
+        <Dialog open={showOtherOptions} onOpenChange={setShowOtherOptions}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Choose a different plan</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {TIER_ORDER.map((tk) => {
+                const tc = TIER_CONFIG[tk];
+                const isActive = selectedTier === tk;
+                return (
+                  <button
+                    key={tk}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTier(tk);
+                      setShowOtherOptions(false);
+                    }}
+                    className={`rounded-md border p-3 text-left transition ${
+                      isActive ? "border-primary bg-primary/10" : "hover:bg-muted/40"
+                    }`}
+                  >
+                    <p className="text-xs font-bold">{tc.displayName}</p>
+                    <p className="text-lg font-black">${tc.price}<span className="text-[10px] font-normal text-muted-foreground">/mo</span></p>
+                  </button>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
