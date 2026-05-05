@@ -6,6 +6,14 @@ export const DEEP_INTERACTION_COUNT = 3;
 export const DEEP_DWELL_MS = 20_000;
 export const MIN_DEEPLY_ENGAGED = 2;
 
+/** Weighted axes: submodules + depth dominate, tiers are lightest. Must sum to 1. */
+export const COMPLETION_WEIGHTS = {
+  tiers: 0.15,
+  categories: 0.20,
+  submodules: 0.35,
+  deep: 0.30,
+} as const;
+
 export interface CompletionShape {
   tiers: number;
   categories: number;
