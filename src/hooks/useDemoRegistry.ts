@@ -6,6 +6,7 @@ export interface DemoNode {
   node_type: 'tier' | 'category' | 'submodule';
   slug: string;
   parent_slug: string | null;
+  parent_id: string | null;
   title: string;
   tagline: string | null;
   icon_name: string | null;

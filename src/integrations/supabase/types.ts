@@ -1655,7 +1655,9 @@ export type Database = {
           incomplete: boolean
           interaction_counts: Json
           last_active_at: string
+          prescribed_history: Json
           resume_path: string | null
+          sim_signatures: Json
           skipped_at: string | null
           updated_at: string
           user_id: string
@@ -1673,7 +1675,9 @@ export type Database = {
           incomplete?: boolean
           interaction_counts?: Json
           last_active_at?: string
+          prescribed_history?: Json
           resume_path?: string | null
+          sim_signatures?: Json
           skipped_at?: string | null
           updated_at?: string
           user_id: string
@@ -1691,7 +1695,9 @@ export type Database = {
           incomplete?: boolean
           interaction_counts?: Json
           last_active_at?: string
+          prescribed_history?: Json
           resume_path?: string | null
+          sim_signatures?: Json
           skipped_at?: string | null
           updated_at?: string
           user_id?: string
@@ -1714,6 +1720,7 @@ export type Database = {
           is_recommended: boolean
           min_app_version: string | null
           node_type: string
+          parent_id: string | null
           parent_slug: string | null
           recommended_order: number | null
           requires_features: string[]
@@ -1732,6 +1739,7 @@ export type Database = {
           is_recommended?: boolean
           min_app_version?: string | null
           node_type: string
+          parent_id?: string | null
           parent_slug?: string | null
           recommended_order?: number | null
           requires_features?: string[]
@@ -1750,6 +1758,7 @@ export type Database = {
           is_recommended?: boolean
           min_app_version?: string | null
           node_type?: string
+          parent_id?: string | null
           parent_slug?: string | null
           recommended_order?: number | null
           requires_features?: string[]
@@ -1757,7 +1766,15 @@ export type Database = {
           tagline?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "demo_registry_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "demo_registry"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demo_video_prescriptions: {
         Row: {

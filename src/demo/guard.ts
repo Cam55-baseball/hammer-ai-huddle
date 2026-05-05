@@ -7,20 +7,56 @@ export function assertNotDemo(isDemo: boolean, op: string): void {
 }
 
 /**
- * Wrap any supabase-like client to block writes when isDemo === true.
- * Reads pass through. Writes throw (or warn in prod) and return a typed no-op result.
+ * Allowlist of tables that demo subtrees may read from. Anything else returns
+ * an empty result so accidental real-PII reads cannot leak through demo UI.
+ */
+export const DEMO_SAFE_TABLES: ReadonlySet<string> = new Set([
+  'demo_registry',
+  'demo_progress',
+  'demo_events',
+  'demo_video_prescriptions',
+]);
+
+const BLOCKED_FROM_METHODS = new Set(['insert', 'update', 'upsert', 'delete']);
+
+function emptyResult() {
+  return Promise.resolve({ data: null, error: { message: 'demo:blocked', name: 'DemoBlocked' } });
+}
+
+/**
+ * Wrap any supabase-like client. In demo mode:
+ *   - writes to ANY table are blocked
+ *   - reads to non-allowlisted tables are blocked
+ *   - rpc() is blocked
+ * Reads to allowlisted tables pass through unchanged.
  */
 export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isDemo: () => boolean): T {
   if (typeof Proxy === 'undefined') return client;
-  const blockedFromMethods = new Set(['insert', 'update', 'upsert', 'delete']);
-  const wrapFromQuery = (q: any) => new Proxy(q, {
+
+  const wrapBlockedQuery = (table: string) => {
+    // A thenable that always resolves to empty + an arbitrary chainable surface.
+    const handler: ProxyHandler<any> = {
+      get(_t, prop) {
+        if (prop === 'then') {
+          return (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null, count: 0 });
+        }
+        // any chained call returns the same proxy so .select().eq().order()... all collapse
+        return () => new Proxy(function () {}, handler);
+      },
+      apply() { return new Proxy(function () {}, handler); },
+    };
+    console.warn(`[demo-guard] Blocked read on non-safe table: ${table}`);
+    return new Proxy(function () {}, handler);
+  };
+
+  const wrapAllowedQuery = (q: any) => new Proxy(q, {
     get(t, prop, recv) {
       const v = Reflect.get(t, prop, recv);
-      if (typeof prop === 'string' && blockedFromMethods.has(prop) && typeof v === 'function') {
+      if (typeof prop === 'string' && BLOCKED_FROM_METHODS.has(prop) && typeof v === 'function') {
         return (...args: unknown[]) => {
           if (isDemo()) {
             assertNotDemo(true, `supabase.from().${prop}`);
-            return Promise.resolve({ data: null, error: { message: 'demo:blocked', name: 'DemoBlocked' } });
+            return emptyResult();
           }
           return v.apply(t, args);
         };
@@ -33,13 +69,18 @@ export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isD
     get(t, prop, recv) {
       const v: any = Reflect.get(t, prop, recv);
       if (prop === 'from' && typeof v === 'function') {
-        return (...args: unknown[]) => wrapFromQuery(v.apply(t, args));
+        return (table: string, ...rest: unknown[]) => {
+          if (isDemo() && !DEMO_SAFE_TABLES.has(table)) {
+            return wrapBlockedQuery(table);
+          }
+          return wrapAllowedQuery(v.apply(t, [table, ...rest]));
+        };
       }
       if (prop === 'rpc' && typeof v === 'function') {
         return (...args: unknown[]) => {
           if (isDemo()) {
             assertNotDemo(true, `supabase.rpc(${String(args[0])})`);
-            return Promise.resolve({ data: null, error: { message: 'demo:blocked', name: 'DemoBlocked' } });
+            return emptyResult();
           }
           return v.apply(t, args);
         };

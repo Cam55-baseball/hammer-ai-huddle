@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { PrescribedVideoStrip } from './PrescribedVideoCard';
 import { conversionCopy } from '@/demo/prescriptions/conversionCopy';
 import { prescribe } from '@/demo/prescriptions/videoPrescription';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
+import { useDemoProgress } from '@/hooks/useDemoProgress';
 
 interface Benchmark {
   yourLabel: string;
@@ -38,9 +39,21 @@ export interface DemoLoopShellProps {
 
 export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis, benchmark }: DemoLoopShellProps) {
   const navigate = useNavigate();
-  const videos = prescribe({ simId, severity });
+  const { progress, recordPrescribedShown, recordSimRun } = useDemoProgress();
+  const shownIds = useMemo(
+    () => new Set(progress?.prescribed_history?.[simId]?.shown ?? []),
+    [progress, simId],
+  );
+  const videos = useMemo(() => prescribe({ simId, severity, shownIds }), [simId, severity, shownIds]);
   const copy = conversionCopy(simId, severity, gap);
-  useDemoInteract(fromSlug); // count container mounts as 1 interaction baseline; shells call bump() on input changes
+  useDemoInteract(fromSlug);
+
+  // Persist sim run + prescription history (debounced server-side via useDemoProgress.update)
+  useEffect(() => {
+    void recordSimRun(simId, severity, gap);
+    void recordPrescribedShown(simId, videos.map(v => v.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [simId, severity, gap]);
 
   return (
     <div className="space-y-4">

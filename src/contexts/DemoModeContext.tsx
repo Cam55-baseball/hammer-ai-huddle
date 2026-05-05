@@ -18,15 +18,19 @@ interface ProviderProps {
 
 export function DemoModeProvider({ value, children }: ProviderProps) {
   const shape = useMemo<DemoModeShape>(() => {
-    if (typeof value === 'boolean') return { isDemo: value, isPreview: value };
+    if (typeof value === 'boolean') return { isDemo: value, isPreview: false };
     return {
       isDemo: !!value.isDemo,
-      isPreview: value.isPreview ?? !!value.isDemo,
+      isPreview: !!value.isPreview, // decoupled from isDemo
       tier: value.tier,
       submodule: value.submodule,
     };
   }, [value]);
-  return <DemoModeContext.Provider value={shape}>{children}</DemoModeContext.Provider>;
+  return (
+    <DemoModeContext.Provider value={shape}>
+      {children}
+    </DemoModeContext.Provider>
+  );
 }
 
 export function useDemoMode(): DemoModeShape {

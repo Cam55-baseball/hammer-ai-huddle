@@ -6,6 +6,14 @@ export const DEEP_INTERACTION_COUNT = 3;
 export const DEEP_DWELL_MS = 20_000;
 export const MIN_DEEPLY_ENGAGED = 2;
 
+/** Weighted axes: submodules + depth dominate, tiers are lightest. Must sum to 1. */
+export const COMPLETION_WEIGHTS = {
+  tiers: 0.15,
+  categories: 0.20,
+  submodules: 0.35,
+  deep: 0.30,
+} as const;
+
 export interface CompletionShape {
   tiers: number;
   categories: number;
@@ -29,13 +37,17 @@ export function deeplyEngagedCount(c: CompletionShape): number {
 
 export function computeCompletion(c: CompletionShape) {
   const deep = deeplyEngagedCount(c);
-  const axes = [
-    Math.min(1, c.tiers / MIN_TIERS_VIEWED),
-    Math.min(1, c.categories / MIN_CATEGORIES_VIEWED),
-    Math.min(1, c.submodules / MIN_SUBMODULES_VIEWED),
-    Math.min(1, deep / MIN_DEEPLY_ENGAGED),
-  ];
-  const pct = Math.round((axes.reduce((a, b) => a + b, 0) / axes.length) * 100);
+  const axes = {
+    tiers: Math.min(1, c.tiers / MIN_TIERS_VIEWED),
+    categories: Math.min(1, c.categories / MIN_CATEGORIES_VIEWED),
+    submodules: Math.min(1, c.submodules / MIN_SUBMODULES_VIEWED),
+    deep: Math.min(1, deep / MIN_DEEPLY_ENGAGED),
+  };
+  const W = COMPLETION_WEIGHTS;
+  const pct = Math.round(
+    (axes.tiers * W.tiers + axes.categories * W.categories +
+     axes.submodules * W.submodules + axes.deep * W.deep) * 100
+  );
   const isComplete =
     c.tiers >= MIN_TIERS_VIEWED &&
     c.categories >= MIN_CATEGORIES_VIEWED &&

@@ -22,6 +22,8 @@ export interface DemoProgress {
   resume_path: string | null;
   interaction_counts: Record<string, number>;
   dwell_ms: Record<string, number>;
+  prescribed_history: Record<string, { shown: string[]; accepted: string[]; skipped: string[] }>;
+  sim_signatures: Record<string, { firstRun: { severity: string; gap: number | string; ts: string }; lastRun: { severity: string; gap: number | string; ts: string }; runs: number }>;
 }
 
 const CHANNEL_NAME = 'data-sync';
@@ -50,21 +52,34 @@ export function useDemoProgress() {
   const [progress, setProgress] = useState<DemoProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Always-fresh ref for async closures
+  const progressRef = useRef<DemoProgress | null>(null);
+  useEffect(() => { progressRef.current = progress; }, [progress]);
+
   // Refs for anti-spam
   const dedupRef = useRef<Map<string, number>>(new Map());
   const eventTimestampsRef = useRef<number[]>([]);
   const debounceRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const dwellBufferRef = useRef<Record<string, number>>({});
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // LWW per-field timestamp (ms) — local writes always win over older inbound broadcasts
+  const lastLocalWriteRef = useRef<number>(0);
 
-  // Multi-tab sync
+  // Multi-tab sync — LWW merge against local clock
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
     const ch = new BroadcastChannel(CHANNEL_NAME);
     ch.onmessage = (e) => {
-      if (e.data?.type === 'demo:progress' && e.data.payload?.user_id === user?.id) {
-        setProgress(e.data.payload as DemoProgress);
-      }
+      if (e.data?.type !== 'demo:progress') return;
+      const incoming = e.data.payload as (DemoProgress & { __ts?: number }) | undefined;
+      if (!incoming || incoming.user_id !== user?.id) return;
+      const incomingTs = e.data.__ts ?? Date.parse(incoming.last_active_at ?? '') ?? 0;
+      if (incomingTs < lastLocalWriteRef.current) return; // stale broadcast — ignore
+      setProgress(prev => {
+        if (!prev) return incoming;
+        // Field-level LWW: always merge in counts/dwell/sets safely
+        return { ...prev, ...incoming };
+      });
     };
     return () => ch.close();
   }, [user]);
@@ -73,7 +88,7 @@ export function useDemoProgress() {
     if (typeof BroadcastChannel === 'undefined') return;
     try {
       const ch = new BroadcastChannel(CHANNEL_NAME);
-      ch.postMessage({ type: 'demo:progress', payload: p });
+      ch.postMessage({ type: 'demo:progress', payload: p, __ts: Date.now() });
       ch.close();
     } catch { /* noop */ }
   }, []);
@@ -92,9 +107,9 @@ export function useDemoProgress() {
           if (r.error) throw r.error;
           return r.data;
         }, 'create-progress');
-        setProgress(created as DemoProgress | null);
+        setProgress(created as unknown as DemoProgress | null);
       } else {
-        setProgress(data as DemoProgress);
+        setProgress(data as unknown as DemoProgress);
       }
     } catch {
       setProgress(null);
@@ -138,14 +153,17 @@ export function useDemoProgress() {
 
   const update = useCallback(
     async (patch: Partial<DemoProgress>) => {
-      if (!user || !progress) return;
-      if (patch.demo_state && patch.demo_state !== progress.demo_state) {
-        try { assertTransition(progress.demo_state, patch.demo_state); }
+      if (!user) return;
+      const cur = progressRef.current;
+      if (!cur) return;
+      if (patch.demo_state && patch.demo_state !== cur.demo_state) {
+        try { assertTransition(cur.demo_state, patch.demo_state); }
         catch (e) {
-          await logEvent('invalid_transition', undefined, { from: progress.demo_state, to: patch.demo_state, error: String(e) });
+          await logEvent('invalid_transition', undefined, { from: cur.demo_state, to: patch.demo_state, error: String(e) });
           throw e;
         }
       }
+      lastLocalWriteRef.current = Date.now();
       try {
         const data = await withRetry(async () => {
           const r = await supabase.from('demo_progress').update({ ...patch, last_active_at: new Date().toISOString() })
@@ -154,11 +172,10 @@ export function useDemoProgress() {
           return r.data;
         }, 'update-progress');
         if (data) {
-          setProgress(data as DemoProgress);
-          broadcast(data as DemoProgress);
+          setProgress(data as unknown as DemoProgress);
+          broadcast(data as unknown as DemoProgress);
         }
       } catch (e) {
-        // Queue the patch locally; will be retried on next call
         try {
           const queue = JSON.parse(localStorage.getItem('demo_progress_queue') ?? '[]');
           queue.push({ patch, ts: Date.now() });
@@ -167,19 +184,20 @@ export function useDemoProgress() {
         console.warn('[demo] update queued for retry', e);
       }
     },
-    [user, progress, logEvent, broadcast],
+    [user, logEvent, broadcast],
   );
 
   const recomputeAndPersist = useCallback(
     async (next: { tiers: Set<string>; cats: Set<string>; subs: Set<string>; counts: Record<string, number>; dwell: Record<string, number>; submoduleSlug?: string; tierSlug?: string; categorySlug?: string | null; }) => {
-      if (!progress) return;
+      const cur = progressRef.current;
+      if (!cur) return;
       const completion = computeCompletion({
         tiers: next.tiers.size, categories: next.cats.size, submodules: next.subs.size,
         interactionCounts: next.counts, dwellMs: next.dwell,
       });
       const nextState: DemoState =
         completion.isComplete ? 'completed'
-        : (progress.demo_state === 'pending' ? 'in_progress' : progress.demo_state);
+        : (cur.demo_state === 'pending' ? 'in_progress' : cur.demo_state);
       await update({
         demo_state: nextState,
         viewed_submodules: Array.from(next.subs),
@@ -191,63 +209,67 @@ export function useDemoProgress() {
           current_node: `submodule:${next.submoduleSlug}`,
           resume_path: `/demo/${next.tierSlug ?? ''}/${next.categorySlug ?? ''}/${next.submoduleSlug}`.replace(/\/+/g, '/'),
         } : {}),
-        ...(nextState === 'completed' && !progress.completed_at ? { completed_at: new Date().toISOString() } : {}),
+        ...(nextState === 'completed' && !cur.completed_at ? { completed_at: new Date().toISOString() } : {}),
       });
-      if (nextState === 'completed' && progress.demo_state !== 'completed') {
+      if (nextState === 'completed' && cur.demo_state !== 'completed') {
         await logEvent('complete', undefined, { trigger: 'thresholds' });
       }
     },
-    [progress, update, logEvent],
+    [update, logEvent],
   );
 
   const markViewed = useCallback(
     async (submoduleSlug: string, tierSlug?: string) => {
-      if (!progress) return;
-      // Debounce per-slug
+      if (!progressRef.current) return;
       const key = `view:${submoduleSlug}`;
       const existing = debounceRef.current.get(key);
       if (existing) clearTimeout(existing);
       const handle = setTimeout(async () => {
         debounceRef.current.delete(key);
+        const cur = progressRef.current;
+        if (!cur) return;
         const sub = findBySlug(submoduleSlug);
         const categorySlug = sub?.parent_slug ?? null;
-        const subs = new Set(progress.viewed_submodules); subs.add(submoduleSlug);
-        const cats = new Set(progress.viewed_categories ?? []); if (categorySlug) cats.add(categorySlug);
-        const tiers = new Set(progress.viewed_tiers); if (tierSlug) tiers.add(tierSlug);
+        const subs = new Set(cur.viewed_submodules); subs.add(submoduleSlug);
+        const cats = new Set(cur.viewed_categories ?? []); if (categorySlug) cats.add(categorySlug);
+        const tiers = new Set(cur.viewed_tiers); if (tierSlug) tiers.add(tierSlug);
         await recomputeAndPersist({
           tiers, cats, subs,
-          counts: progress.interaction_counts ?? {},
-          dwell: progress.dwell_ms ?? {},
+          counts: cur.interaction_counts ?? {},
+          dwell: cur.dwell_ms ?? {},
           submoduleSlug, tierSlug, categorySlug,
         });
         await logEvent('view_node', submoduleSlug, { category: categorySlug, tier: tierSlug });
       }, MARK_DEBOUNCE_MS);
       debounceRef.current.set(key, handle);
     },
-    [progress, findBySlug, recomputeAndPersist, logEvent],
+    [findBySlug, recomputeAndPersist, logEvent],
   );
 
   const bumpInteraction = useCallback(
     async (submoduleSlug: string) => {
-      if (!progress) return;
-      const counts = { ...(progress.interaction_counts ?? {}) };
-      counts[submoduleSlug] = (counts[submoduleSlug] ?? 0) + 1;
-      // Debounced server flush
+      // Optimistic, functional update — no stale closure
+      setProgress(prev => {
+        if (!prev) return prev;
+        const counts = { ...(prev.interaction_counts ?? {}) };
+        counts[submoduleSlug] = (counts[submoduleSlug] ?? 0) + 1;
+        return { ...prev, interaction_counts: counts };
+      });
       const key = `bump:${submoduleSlug}`;
       const existing = debounceRef.current.get(key);
       if (existing) clearTimeout(existing);
       const handle = setTimeout(async () => {
         debounceRef.current.delete(key);
-        const subs = new Set(progress.viewed_submodules);
-        const cats = new Set(progress.viewed_categories ?? []);
-        const tiers = new Set(progress.viewed_tiers);
-        await recomputeAndPersist({ tiers, cats, subs, counts, dwell: progress.dwell_ms ?? {} });
+        const cur = progressRef.current;
+        if (!cur) return;
+        const subs = new Set(cur.viewed_submodules);
+        const cats = new Set(cur.viewed_categories ?? []);
+        const tiers = new Set(cur.viewed_tiers);
+        await recomputeAndPersist({ tiers, cats, subs, counts: cur.interaction_counts ?? {}, dwell: cur.dwell_ms ?? {} });
       }, MARK_DEBOUNCE_MS);
       debounceRef.current.set(key, handle);
-      // Optimistic local update
-      setProgress(p => p ? { ...p, interaction_counts: counts } : p);
     },
-    [progress, recomputeAndPersist],
+    [recomputeAndPersist],
   );
 
   const addDwell = useCallback(
@@ -257,19 +279,49 @@ export function useDemoProgress() {
       dwellTimerRef.current = setTimeout(async () => {
         const buffered = { ...dwellBufferRef.current };
         dwellBufferRef.current = {};
-        if (!progress) return;
-        const dwell = { ...(progress.dwell_ms ?? {}) };
+        const cur = progressRef.current;
+        if (!cur) return;
+        const dwell = { ...(cur.dwell_ms ?? {}) };
         for (const [s, v] of Object.entries(buffered)) {
           dwell[s] = Math.min(5 * 60 * 1000, (dwell[s] ?? 0) + v);
         }
-        const subs = new Set(progress.viewed_submodules);
-        const cats = new Set(progress.viewed_categories ?? []);
-        const tiers = new Set(progress.viewed_tiers);
-        await recomputeAndPersist({ tiers, cats, subs, counts: progress.interaction_counts ?? {}, dwell });
+        const subs = new Set(cur.viewed_submodules);
+        const cats = new Set(cur.viewed_categories ?? []);
+        const tiers = new Set(cur.viewed_tiers);
+        await recomputeAndPersist({ tiers, cats, subs, counts: cur.interaction_counts ?? {}, dwell });
       }, DWELL_FLUSH_MS);
     },
-    [progress, recomputeAndPersist],
+    [recomputeAndPersist],
   );
+
+  /** Persist that videos were prescribed for a given sim, so we never re-show them. */
+  const recordPrescribedShown = useCallback(async (simId: string, videoIds: string[]) => {
+    setProgress(prev => {
+      if (!prev) return prev;
+      const cur = prev.prescribed_history?.[simId] ?? { shown: [], accepted: [], skipped: [] };
+      const shown = Array.from(new Set([...cur.shown, ...videoIds]));
+      const next = { ...prev.prescribed_history, [simId]: { ...cur, shown } };
+      void update({ prescribed_history: next });
+      return { ...prev, prescribed_history: next };
+    });
+  }, [update]);
+
+  /** Persist sim run signature (severity + gap) for before/after intelligence. */
+  const recordSimRun = useCallback(async (simId: string, severity: string, gap: number | string) => {
+    setProgress(prev => {
+      if (!prev) return prev;
+      const now = new Date().toISOString();
+      const sigs = prev.sim_signatures ?? {};
+      const prevSig = sigs[simId];
+      const lastRun = { severity, gap, ts: now };
+      const nextSig = prevSig
+        ? { firstRun: prevSig.firstRun, lastRun, runs: prevSig.runs + 1 }
+        : { firstRun: lastRun, lastRun, runs: 1 };
+      const next = { ...sigs, [simId]: nextSig };
+      void update({ sim_signatures: next });
+      return { ...prev, sim_signatures: next };
+    });
+  }, [update]);
 
   const skip = useCallback(async () => {
     await update({ demo_state: 'skipped', skipped_at: new Date().toISOString(), incomplete: true });
@@ -282,15 +334,16 @@ export function useDemoProgress() {
   }, [update, logEvent]);
 
   const startIfPending = useCallback(async () => {
-    if (progress?.demo_state === 'pending') {
+    if (progressRef.current?.demo_state === 'pending') {
       await update({ demo_state: 'in_progress' });
       await logEvent('start');
     }
-  }, [progress, update, logEvent]);
+  }, [update, logEvent]);
 
   return useMemo(() => ({
     progress, loading, refresh, update,
     markViewed, bumpInteraction, addDwell,
     skip, complete, startIfPending, logEvent,
-  }), [progress, loading, refresh, update, markViewed, bumpInteraction, addDwell, skip, complete, startIfPending, logEvent]);
+    recordPrescribedShown, recordSimRun,
+  }), [progress, loading, refresh, update, markViewed, bumpInteraction, addDwell, skip, complete, startIfPending, logEvent, recordPrescribedShown, recordSimRun]);
 }
