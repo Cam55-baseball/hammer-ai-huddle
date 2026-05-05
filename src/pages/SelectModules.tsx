@@ -1,15 +1,57 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Loader2, Star, Check } from "lucide-react";
+import { Loader2, Star, Check, Sparkles, X } from "lucide-react";
 import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkipNudgeBanner } from "@/components/demo/SkipNudgeBanner";
+
+const MOMENTUM_SIM_LABEL: Record<string, string> = {
+  hitting: "hitting",
+  program: "training program",
+  vault: "performance history",
+};
+
+function MomentumBanner({ context, gap }: { context: string; gap: string }) {
+  const [phase, setPhase] = useState<"building" | "ready" | "hidden">("building");
+  useEffect(() => {
+    const t = setTimeout(() => setPhase("ready"), 2500);
+    return () => clearTimeout(t);
+  }, []);
+  if (phase === "hidden") return null;
+  const label = MOMENTUM_SIM_LABEL[context] ?? "performance";
+  return (
+    <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-primary/40 bg-gradient-to-r from-primary/15 to-transparent px-4 py-3">
+      <div className="flex items-center gap-3">
+        {phase === "building" ? (
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        ) : (
+          <Sparkles className="h-5 w-5 text-primary" />
+        )}
+        <div>
+          <p className="text-sm font-bold">
+            {phase === "building"
+              ? `Building your system based on your ${gap || label} gap…`
+              : `Your ${label} system is ready to configure.`}
+          </p>
+          {phase === "building" && (
+            <p className="text-xs text-muted-foreground">Locking in your prescription</p>
+          )}
+        </div>
+      </div>
+      {phase === "ready" && (
+        <button onClick={() => setPhase("hidden")} aria-label="Dismiss" className="text-muted-foreground hover:text-foreground">
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 const SelectModules = () => {
   const { t } = useTranslation();
