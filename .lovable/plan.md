@@ -1,153 +1,119 @@
+# Phase X.3 — Demo Integrity Verification, Telemetry & Weight Tuning
 
-# Demo System Hardening — 6 Critical Fixes
-
-Addresses every issue raised. Surgical, no scope creep.
-
----
-
-## 1. DB: Replace slug-based hierarchy with `parent_id` + native UNIQUE INDEX
-
-**Migration** (`supabase/migrations/<ts>_demo_registry_relational.sql`):
-
-- Add `parent_id uuid REFERENCES public.demo_registry(id) ON DELETE CASCADE` (nullable for tiers).
-- Backfill: `UPDATE demo_registry c SET parent_id = p.id FROM demo_registry p WHERE c.parent_slug = p.slug AND ((c.node_type='category' AND p.node_type='tier') OR (c.node_type='submodule' AND p.node_type='category'));`
-- `CREATE UNIQUE INDEX demo_registry_unique_slug_type ON public.demo_registry (slug, node_type);`
-- `CREATE INDEX demo_registry_parent_id_idx ON public.demo_registry (parent_id);`
-- Rewrite `validate_demo_registry_node()`: drop the slug-uniqueness branch (now handled by index); validate hierarchy via `parent_id` + `node_type` of parent row. Keep `parent_slug` in sync as a denormalized convenience column (trigger fills it from parent).
-- Keep `parent_slug` column for backward compat but mark it derived.
-
-**Code**: `src/hooks/useDemoRegistry.ts` — extend `DemoNode` with `parent_id`. Filtering helpers (`categoriesOf`, `submodulesOf`) keep slug-based public API (no UI churn) but internally use `parent_id` when available, fallback to `parent_slug`.
+Locks the demo system with provable isolation, live observability, and runtime-tunable scoring — no logic redeploys needed.
 
 ---
 
-## 2. Fix broken `DemoModeProvider` + decouple demo vs preview
+## 1. Structured Telemetry in `src/demo/guard.ts`
 
-`src/contexts/DemoModeContext.tsx`:
-
-```tsx
-return (
-  <DemoModeContext.Provider value={shape}>
-    {children}
-  </DemoModeContext.Provider>
-);
-```
-
-Update boolean coercion:
-```ts
-if (typeof value === 'boolean') return { isDemo: value, isPreview: false };
-```
-
-Add explicit `isPreview` plumbing where any caller currently passes `true` expecting preview semantics — audit `DemoLayout`, `DemoSubmodule`, `StartHereRunner` callers and pass `{ isDemo: true, isPreview: false }` (preview is a distinct future concept).
-
----
-
-## 3. Harden Supabase READ isolation in demo
-
-`src/demo/guard.ts` — extend `makeDemoSafeClient`:
-
-- Add `BLOCKED_TABLES` set (sensitive real-data tables): `profiles`, `subscriptions`, `athlete_daily_log`, `custom_activity_logs`, `performance_sessions`, `library_videos` (writes), `user_roles`, `payments`, `hie_*`, `engine_*`, `vault_*`, `nutrition_*`, plus a configurable allowlist for demo-safe tables (`demo_registry`, `demo_progress`, `demo_events`, `demo_video_prescriptions`).
-- Wrap `.from(table)`: if `isDemo()` and table not in `DEMO_SAFE_TABLES` → return a synthetic builder whose terminal awaits resolve to `{ data: [], error: null }` and which logs a `demo_events` row (`event_type: 'sim_read_blocked'`).
-- Fully wrap `.rpc()` already done — confirm same blocklist semantics.
-- Keep existing write blocker.
-
-This makes accidental `supabase.from('profiles').select('*')` in a demo subtree return empty + telemetry, never real data.
-
----
-
-## 4. Weighted completion scoring
-
-`src/demo/completionRules.ts`:
+Add a non-blocking event emitter:
 
 ```ts
-export const COMPLETION_WEIGHTS = {
-  tiers: 0.15,
-  categories: 0.20,
-  submodules: 0.35,
-  deep: 0.30,
-} as const;
+function logDemoEvent(type: string, payload: Record<string, unknown>) {
+  try {
+    const ch = new BroadcastChannel('demo-events');
+    ch.postMessage({ type, payload, ts: Date.now() });
+    ch.close();
+  } catch {}
+}
 ```
 
-Replace mean with weighted sum in `computeCompletion`:
+Replace existing `console.warn` calls:
+- Blocked read → `logDemoEvent('sim_read_blocked', { table })`
+- Blocked rpc → `logDemoEvent('sim_rpc_blocked', { fn: String(args[0]) })`
+- Blocked write → `logDemoEvent('sim_write_blocked', { method: String(prop) })`
+
+Keep `console.warn` in DEV alongside the emit for local debugging.
+
+---
+
+## 2. Persist Telemetry → DB
+
+**New** `src/demo/useDemoTelemetry.ts` — subscribes to `BroadcastChannel('demo-events')` and inserts rows into `demo_events` (`event_type`, `metadata`, `created_at`). Wrapped in try/catch; fully fire-and-forget.
+
+The existing `demo_events` table uses column `metadata` (jsonb) — the hook will map `payload → metadata` to match the current schema. No migration needed.
+
+Mount once in `src/components/demo/DemoLayout.tsx` (single global mount point for all demo routes) via `useDemoTelemetry()`.
+
+---
+
+## 3. Runtime-Tunable Completion Weights
+
+Update `src/demo/completionRules.ts`:
+
+- Rename `COMPLETION_WEIGHTS` → `DEFAULT_WEIGHTS` (keep export for back-compat).
+- Add `getWeights()` reading `localStorage.demo_completion_weights` with strict numeric validation; fallback to defaults on any parse/shape failure.
+- Add `assertWeights(w)` — warns when `|sum - 1| > 0.01`.
+- `computeCompletion()` calls `getWeights()` + `assertWeights()` instead of using the static const.
+
+Behavior unchanged in production (no localStorage key set).
+
+---
+
+## 4. Dev Console Helper
+
+**New** `src/demo/devtools.ts` exporting `setDemoWeights(w)` which writes to localStorage and reloads. Imported once in `DemoLayout` via side-effect to attach to `window` for console access:
+
 ```ts
-const pct = Math.round(
-  (axes.tiers * W.tiers + axes.categories * W.categories +
-   axes.submodules * W.submodules + axes.deep * W.deep) * 100
-);
+if (import.meta.env.DEV) (window as any).setDemoWeights = setDemoWeights;
 ```
-Hard `isComplete` thresholds unchanged (still gated on minimums). Only the displayed % becomes psychologically accurate.
 
 ---
 
-## 5. Prescription state continuity
+## 5. Optional Debug Overlay
 
-**Migration**: extend `demo_progress`:
-```sql
-ALTER TABLE public.demo_progress
-  ADD COLUMN IF NOT EXISTS prescribed_history jsonb NOT NULL DEFAULT '{}'::jsonb,
-  ADD COLUMN IF NOT EXISTS sim_signatures jsonb NOT NULL DEFAULT '{}'::jsonb;
-```
-Shape:
-- `prescribed_history`: `{ [simId]: { shown: string[], skipped: string[], accepted: string[] } }`
-- `sim_signatures`: `{ [simId]: { firstRun: { severity, gap, ts }, lastRun: {...}, runs: number } }` — for future before/after comparison.
-
-**Code**:
-- New `src/demo/prescriptions/prescriptionContinuity.ts`:
-  - `nextPrescription(simId, severity, history)` — filters `CATALOG[simId][severity]` to remove already-shown ids; if pool exhausted, escalates to next severity tier; always returns 3.
-  - `recordPrescriptionShown`, `recordSimRun(simId, output)` helpers.
-- `DemoLoopShell.tsx`: call `recordSimRun` + `recordPrescriptionShown` on mount (debounced via existing useDemoInteract pipeline; goes through `useDemoProgress` writes which already have firewall + retry).
-- `videoPrescription.ts.prescribe()` accepts optional `history` arg and delegates to continuity layer.
+**New** `src/components/demo/DemoDebugPanel.tsx` — fixed bottom-right `<pre>` showing `progress` JSON. Renders only when `localStorage.demo_debug === '1'`. Mounted in `DemoLayout` next to header, receives `progress` from `useDemoProgress()`.
 
 ---
 
-## 6. Stale-state safety in `useDemoProgress`
+## 6. E2E Isolation Tests
 
-`src/hooks/useDemoProgress.ts`:
+**New** `tests/demo/isolation.spec.ts` (Playwright — config already exists at `playwright.config.ts`):
 
-- Audit every `setProgress(...)` call site. Convert ALL mutators to functional form:
-  ```ts
-  setProgress(prev => {
-    if (!prev) return prev;
-    const subs = new Set(prev.viewed_submodules);
-    subs.add(slug);
-    return { ...prev, viewed_submodules: [...subs] };
-  });
-  ```
-- Add a `progressRef = useRef(progress)` synced via `useEffect`, used as the read source inside async retry/queue flushes (never closes over stale `progress`).
-- Persist queue (`localStorage`) reads from `progressRef.current`, not closure.
-- BroadcastChannel inbound messages also reduce via `setProgress(prev => merge(prev, incoming))` with a `last_write_ts` tiebreaker (LWW per field), preventing tab-A overwriting tab-B's newer increment.
+- Blocks non-demo tables: `supabase.from('profiles').select('*')` → `data: []`, `error: null`.
+- Allows demo-safe tables: `supabase.from('demo_registry').select('*')` → no error, array.
+- Blocks rpc: `supabase.rpc('some_sensitive_fn')` → `data: null`.
+
+Requires exposing `supabase` on `window` in DEV only — add to `src/integrations/supabase/client.ts`? **No** (client.ts is auto-generated, off-limits). Instead expose in `DemoLayout` mount under `import.meta.env.DEV` so tests running against the dev server can access it without polluting prod.
 
 ---
 
-## Files Touched
+## 7. Unit Test for Completion Math
 
-**Migration (1)**: relational `parent_id` + unique index + trigger rewrite + `prescribed_history`/`sim_signatures` columns.
+**New** `src/demo/completionRules.test.ts` (vitest, matches existing `*.test.ts` pattern):
 
-**Edited**:
-- `src/contexts/DemoModeContext.tsx` (Provider render fix + decouple)
-- `src/demo/guard.ts` (read isolation)
-- `src/demo/completionRules.ts` (weights)
-- `src/hooks/useDemoRegistry.ts` (parent_id support)
-- `src/hooks/useDemoProgress.ts` (functional setState + refs + LWW merge)
-- `src/demo/prescriptions/videoPrescription.ts` (continuity hook-in)
-- `src/components/demo/DemoLoopShell.tsx` (record sim runs + prescriptions; CTA already personalized via existing `conversionCopy`)
-- `src/integrations/supabase/types.ts` (auto-regen after migration)
+- `computeCompletion({ tiers:1, categories:1, submodules:1, interactionCounts:{}, dwellMs:{} })` returns `pct > 0`.
+- Custom weights via mocked localStorage produce expected weighted sum.
+- `assertWeights` warns when sum drifts (spy on `console.warn`).
 
-**New**:
-- `src/demo/prescriptions/prescriptionContinuity.ts`
+Note: existing field is named `pct`, not `percent` — test will use `pct`.
 
 ---
 
-## Failure Modes Closed
+## Files
 
-| Risk | Closed by |
+**New (6)**:
+- `src/demo/useDemoTelemetry.ts`
+- `src/demo/devtools.ts`
+- `src/components/demo/DemoDebugPanel.tsx`
+- `tests/demo/isolation.spec.ts`
+- `src/demo/completionRules.test.ts`
+
+**Edited (3)**:
+- `src/demo/guard.ts` — emitter + 3 swap-ins
+- `src/demo/completionRules.ts` — runtime weights + assertion
+- `src/components/demo/DemoLayout.tsx` — mount telemetry hook, debug panel, dev `window.setDemoWeights`
+
+**No migration. No new dependencies. Zero impact on non-demo routes.**
+
+---
+
+## Outcomes
+
+| Capability | Mechanism |
 |---|---|
-| Slug rename breaks hierarchy | `parent_id` FK |
-| Trigger logic drift on uniqueness | Native UNIQUE INDEX |
-| Demo provider renders nothing | Provider JSX fix |
-| Real PII leaks via `.select()` in demo | Read blocklist + safe-table allowlist |
-| Inflated/deflated completion % | Weighted axes |
-| Repeat prescriptions = trust loss | History-aware filter + escalation |
-| Stale closures wipe progress | Functional setState + ref + LWW merge |
-| Cross-tab overwrite | LWW tiebreaker on BroadcastChannel merge |
-
-No new dependencies. Zero impact on non-demo routes (all changes guarded by `isDemo`).
+| Proof of isolation | Playwright spec |
+| Live observability | BroadcastChannel → `demo_events` insert |
+| Runtime tuning | localStorage-backed weights |
+| Math drift safety | `assertWeights` warning |
+| State introspection | Toggleable debug overlay |
