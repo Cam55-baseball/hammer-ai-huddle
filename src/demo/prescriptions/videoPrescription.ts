@@ -72,7 +72,11 @@ const CATALOG: Record<string, Record<Severity, PrescribedVideo[]>> = {
   },
 };
 
-export function prescribe({ simId, severity }: PrescriptionInput): PrescribedVideo[] {
+import { pickUnseen } from './prescriptionContinuity';
+
+export function prescribe({ simId, severity, shownIds }: PrescriptionInput): PrescribedVideo[] {
   const entry = CATALOG[simId] ?? CATALOG.hitting;
-  return entry[severity] ?? entry.moderate;
+  const candidates = entry[severity] ?? entry.moderate;
+  if (!shownIds || shownIds.size === 0) return candidates.slice(0, 3);
+  return pickUnseen(candidates, entry, severity, shownIds);
 }
