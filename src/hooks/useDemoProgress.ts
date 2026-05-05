@@ -52,21 +52,34 @@ export function useDemoProgress() {
   const [progress, setProgress] = useState<DemoProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Always-fresh ref for async closures
+  const progressRef = useRef<DemoProgress | null>(null);
+  useEffect(() => { progressRef.current = progress; }, [progress]);
+
   // Refs for anti-spam
   const dedupRef = useRef<Map<string, number>>(new Map());
   const eventTimestampsRef = useRef<number[]>([]);
   const debounceRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const dwellBufferRef = useRef<Record<string, number>>({});
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // LWW per-field timestamp (ms) — local writes always win over older inbound broadcasts
+  const lastLocalWriteRef = useRef<number>(0);
 
-  // Multi-tab sync
+  // Multi-tab sync — LWW merge against local clock
   useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
     const ch = new BroadcastChannel(CHANNEL_NAME);
     ch.onmessage = (e) => {
-      if (e.data?.type === 'demo:progress' && e.data.payload?.user_id === user?.id) {
-        setProgress(e.data.payload as DemoProgress);
-      }
+      if (e.data?.type !== 'demo:progress') return;
+      const incoming = e.data.payload as (DemoProgress & { __ts?: number }) | undefined;
+      if (!incoming || incoming.user_id !== user?.id) return;
+      const incomingTs = e.data.__ts ?? Date.parse(incoming.last_active_at ?? '') ?? 0;
+      if (incomingTs < lastLocalWriteRef.current) return; // stale broadcast — ignore
+      setProgress(prev => {
+        if (!prev) return incoming;
+        // Field-level LWW: always merge in counts/dwell/sets safely
+        return { ...prev, ...incoming };
+      });
     };
     return () => ch.close();
   }, [user]);
@@ -75,7 +88,7 @@ export function useDemoProgress() {
     if (typeof BroadcastChannel === 'undefined') return;
     try {
       const ch = new BroadcastChannel(CHANNEL_NAME);
-      ch.postMessage({ type: 'demo:progress', payload: p });
+      ch.postMessage({ type: 'demo:progress', payload: p, __ts: Date.now() });
       ch.close();
     } catch { /* noop */ }
   }, []);
