@@ -1648,6 +1648,42 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_leads: {
+        Row: {
+          created_at: string
+          email: string
+          from_slug: string | null
+          gap: string | null
+          id: string
+          pct: number | null
+          severity: string | null
+          sim_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          from_slug?: string | null
+          gap?: string | null
+          id?: string
+          pct?: number | null
+          severity?: string | null
+          sim_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          from_slug?: string | null
+          gap?: string | null
+          id?: string
+          pct?: number | null
+          severity?: string | null
+          sim_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       demo_progress: {
         Row: {
           completed_at: string | null
