@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,27 @@ import { Badge } from '@/components/ui/badge';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
 import { useDemoCompletion } from '@/hooks/useDemoCompletion';
 import { SkipDemoDialog } from './SkipDemoDialog';
+import { DemoDebugPanel } from './DemoDebugPanel';
+import { useDemoTelemetry } from '@/demo/useDemoTelemetry';
+import { makeDemoSafeClient } from '@/demo/guard';
+import { supabase } from '@/integrations/supabase/client';
+import '@/demo/devtools'; // attaches window.setDemoWeights in DEV
 
 export function DemoLayout({ children, showBack = false }: { children: ReactNode; showBack?: boolean }) {
   const navigate = useNavigate();
-  const { skip } = useDemoProgress();
+  const { skip, progress } = useDemoProgress();
+  useDemoTelemetry();
+
+  // DEV-only: expose a demo-safe client on window so Playwright isolation tests
+  // can verify firewall behavior end-to-end. Never exposed in production builds.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (typeof window === 'undefined') return;
+    (window as any).supabase = makeDemoSafeClient(supabase, () => true);
+    return () => {
+      try { delete (window as any).supabase; } catch { /* noop */ }
+    };
+  }, []);
   const { pct, isComplete, missing } = useDemoCompletion();
   const [confirmSkip, setConfirmSkip] = useState(false);
 
