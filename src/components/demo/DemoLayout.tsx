@@ -69,6 +69,7 @@ export function DemoLayout({ children, showBack = false }: { children: ReactNode
       <main className="mx-auto max-w-5xl px-3 py-4">{children}</main>
 
       <SkipDemoDialog open={confirmSkip} onOpenChange={setConfirmSkip} onConfirm={handleSkip} />
+      <DemoDebugPanel progress={progress} />
     </div>
   );
 }
