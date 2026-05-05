@@ -53,6 +53,7 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
   useEffect(() => {
     void recordSimRun(simId, severity, gap);
     void recordPrescribedShown(simId, videos.map(v => v.id));
+    logDemoEvent('cta_viewed', { simId, severity, gap, fromSlug });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [simId, severity, gap]);
 
@@ -99,7 +100,10 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
           <h3 className="text-base font-black leading-tight">{copy.headline}</h3>
           <p className="text-xs text-muted-foreground">{copy.subhead}</p>
           <Button size="sm" className="gap-1.5"
-            onClick={() => navigate(`/demo/upgrade?from=${fromSlug}&reason=${severity}&gap=${encodeURIComponent(String(gap))}`)}>
+            onClick={() => {
+              logDemoEvent('cta_clicked', { simId, severity, gap, fromSlug });
+              navigate(`/demo/upgrade?from=${fromSlug}&reason=${severity}&gap=${encodeURIComponent(String(gap))}`);
+            }}>
             <Sparkles className="h-4 w-4" /> {copy.cta}
           </Button>
         </CardContent>
