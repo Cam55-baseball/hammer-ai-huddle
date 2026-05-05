@@ -118,6 +118,7 @@ serve(async (req) => {
     if (pct !== undefined && pct !== null) checkoutMetadata.pct = String(pct);
     if (from) checkoutMetadata.from_slug = String(from);
     if (abVariant) checkoutMetadata.ab_variant = String(abVariant);
+    checkoutMetadata.guarantee = "7_day";
 
     if (tier) {
       // NEW: Tier-based checkout
@@ -151,6 +152,7 @@ serve(async (req) => {
     if (from) successParams.set('from', String(from));
     if (gap !== undefined && gap !== null) successParams.set('gap', String(gap));
 
+    const isDemo = !!from;
     const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -161,22 +163,55 @@ serve(async (req) => {
       cancel_url: `${origin}/checkout?status=cancel`,
       metadata: checkoutMetadata,
       subscription_data: { metadata: checkoutMetadata },
-      // Wallets (Apple Pay/Google Pay/Link) auto-enable based on Stripe Dashboard settings
-      // when payment_method_types is omitted.
-      allow_promotion_codes: !coupon,
+      billing_address_collection: "auto",
+      phone_number_collection: { enabled: false },
+      automatic_tax: { enabled: true },
+      // Wallets (Apple Pay/Google Pay/Link) auto-enable based on Stripe Dashboard settings.
+      allow_promotion_codes: !(coupon || isDemo),
     };
 
-    // Apply coupon directly if provided (skips manual code entry)
     if (coupon) {
       sessionParams.discounts = [{ coupon }];
       delete sessionParams.allow_promotion_codes;
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    let session;
+    let couponSkipped = false;
+    let taxSkipped = false;
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams);
+    } catch (e: any) {
+      const msg = String(e?.message || "");
+      // Retry without coupon if missing
+      if (sessionParams.discounts && (msg.includes("resource_missing") || msg.includes("No such coupon"))) {
+        logStep("Coupon missing — retrying without discount", { coupon });
+        couponSkipped = true;
+        delete sessionParams.discounts;
+        sessionParams.allow_promotion_codes = !isDemo;
+      }
+      // Retry without automatic_tax if not configured
+      if (msg.includes("automatic_tax") || msg.includes("Tax")) {
+        logStep("Automatic tax unavailable — retrying without it", { msg });
+        taxSkipped = true;
+        delete sessionParams.automatic_tax;
+      }
+      try {
+        session = await stripe.checkout.sessions.create(sessionParams);
+      } catch (e2: any) {
+        // Final fallback: strip both
+        logStep("Second attempt failed — stripping discounts+tax", { msg: e2?.message });
+        couponSkipped = true;
+        taxSkipped = true;
+        delete sessionParams.discounts;
+        delete sessionParams.automatic_tax;
+        sessionParams.allow_promotion_codes = !isDemo;
+        session = await stripe.checkout.sessions.create(sessionParams);
+      }
+    }
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
-    return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
+    return new Response(JSON.stringify({ url: session.url, sessionId: session.id, couponSkipped, taxSkipped }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
