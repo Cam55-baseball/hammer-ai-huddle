@@ -1,13 +1,15 @@
-import { ReactNode, useEffect, useMemo } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Target, TrendingUp } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Sparkles, Target, TrendingUp, TrendingDown } from 'lucide-react';
 import { PrescribedVideoStrip } from './PrescribedVideoCard';
 import { conversionCopy } from '@/demo/prescriptions/conversionCopy';
 import { prescribe } from '@/demo/prescriptions/videoPrescription';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
 import { useDemoProgress } from '@/hooks/useDemoProgress';
+import { useDemoCompletion } from '@/hooks/useDemoCompletion';
 import { logDemoEvent } from '@/demo/guard';
 
 interface Benchmark {
@@ -22,40 +24,81 @@ interface Benchmark {
 }
 
 export interface DemoLoopShellProps {
-  /** Slug used for navigation and event tagging. */
   fromSlug: string;
-  /** Sim id (matches videoPrescription catalog key). */
   simId: string;
-  /** Severity from the simulation output. */
   severity: 'minor' | 'moderate' | 'critical';
-  /** Numeric or string gap surfaced into the conversion headline. */
   gap: number | string;
-  /** Step 1 — input controls UI. */
   input: ReactNode;
-  /** Step 2 — diagnosis / raw metrics UI. */
   diagnosis: ReactNode;
-  /** Step 3 — benchmark vs you (auto-rendered). */
   benchmark: Benchmark;
+  /** For vault-style sims: percent of history currently visible. */
+  visiblePct?: number;
 }
 
-export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis, benchmark }: DemoLoopShellProps) {
+export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis, benchmark, visiblePct }: DemoLoopShellProps) {
   const navigate = useNavigate();
   const { progress, recordPrescribedShown, recordSimRun } = useDemoProgress();
+  const { pct: completionPct } = useDemoCompletion();
   const shownIds = useMemo(
     () => new Set(progress?.prescribed_history?.[simId]?.shown ?? []),
     [progress, simId],
   );
   const videos = useMemo(() => prescribe({ simId, severity, shownIds }), [simId, severity, shownIds]);
-  const copy = conversionCopy(simId, severity, gap);
+
+  // Per-slug fallback if the global completion is 0 — keeps progress bar feeling alive on first interaction.
+  const fallbackPct = useMemo(() => {
+    const interactions = progress?.interaction_counts?.[fromSlug] ?? 0;
+    const dwellSec = Math.min(60, (progress?.dwell_ms?.[fromSlug] ?? 0) / 1000);
+    return Math.max(0, Math.min(100, Math.round(interactions * 15 + dwellSec)));
+  }, [progress, fromSlug]);
+  const pct = Math.max(completionPct ?? 0, fallbackPct);
+
+  const copy = conversionCopy(simId, severity, gap, { pct, visiblePct });
   useDemoInteract(fromSlug);
 
-  // Persist sim run + prescription history (debounced server-side via useDemoProgress.update)
+  // Micro-interaction gate — delay hard CTA until the user does ONE thing.
+  const [unlocked, setUnlocked] = useState(false);
+  const stripRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (unlocked) return;
+    const el = stripRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const obs = new IntersectionObserver((entries) => {
+      const visible = entries.some(e => e.isIntersecting);
+      if (visible && !timer) {
+        timer = setTimeout(() => setUnlocked(true), 1500);
+      } else if (!visible && timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    }, { threshold: 0.4 });
+    obs.observe(el);
+    return () => { obs.disconnect(); if (timer) clearTimeout(timer); };
+  }, [unlocked]);
+
+  // Persist sim run + prescription history + cta_viewed
   useEffect(() => {
     void recordSimRun(simId, severity, gap);
     void recordPrescribedShown(simId, videos.map(v => v.id));
-    logDemoEvent('cta_viewed', { simId, severity, gap, fromSlug });
+    logDemoEvent('cta_viewed', { simId, severity, gap, pct, fromSlug });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [simId, severity, gap]);
+
+  const goUpgrade = () => {
+    logDemoEvent('cta_clicked', { simId, severity, gap, pct, fromSlug });
+    const params = new URLSearchParams({
+      from: fromSlug,
+      reason: severity,
+      gap: String(gap),
+      pct: String(pct),
+      sim: simId,
+      your: benchmark.yourValue,
+      elite: benchmark.eliteValue,
+      projected: benchmark.projected,
+    });
+    navigate(`/demo/upgrade?${params.toString()}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -77,6 +120,10 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
             <Mini label={benchmark.eliteLabel} value={benchmark.eliteValue} highlight />
             <Mini label={benchmark.gapLabel} value={benchmark.gapValue} accent />
           </div>
+          <div className="flex items-start gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs">
+            <TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+            <span className="font-bold text-destructive-foreground/90">{copy.lossStatement}</span>
+          </div>
           <p className="text-[11px] leading-snug text-muted-foreground">{benchmark.whyItMatters}</p>
           <div className="flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1.5 text-xs">
             <TrendingUp className="h-3.5 w-3.5 text-primary" />
@@ -86,28 +133,46 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
       </Card>
 
       {/* 4 PRESCRIBED */}
-      <div className="space-y-2">
+      <div className="space-y-2" ref={stripRef}>
         <div className="flex items-baseline justify-between">
           <p className="text-xs font-black uppercase tracking-wide">Based on your result, we'd prescribe</p>
           <span className="text-[10px] text-muted-foreground">3 of {videos.length}</span>
         </div>
-        <PrescribedVideoStrip videos={videos} fromSlug={fromSlug} />
+        <PrescribedVideoStrip
+          videos={videos}
+          fromSlug={fromSlug}
+          onPreviewClick={() => setUnlocked(true)}
+        />
       </div>
 
-      {/* 5 LOCK CTA */}
-      <Card className="border-primary/50 bg-gradient-to-b from-primary/15 to-transparent">
-        <CardContent className="space-y-2 p-4 text-center">
-          <h3 className="text-base font-black leading-tight">{copy.headline}</h3>
-          <p className="text-xs text-muted-foreground">{copy.subhead}</p>
-          <Button size="sm" className="gap-1.5"
-            onClick={() => {
-              logDemoEvent('cta_clicked', { simId, severity, gap, fromSlug });
-              navigate(`/demo/upgrade?from=${fromSlug}&reason=${severity}&gap=${encodeURIComponent(String(gap))}`);
-            }}>
-            <Sparkles className="h-4 w-4" /> {copy.cta}
-          </Button>
-        </CardContent>
-      </Card>
+      {/* 5 ALMOST UNLOCKED */}
+      <div className="space-y-1.5 rounded-md border bg-muted/20 px-3 py-2">
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="font-bold">{copy.almostUnlockedLine}</span>
+          <span className="font-black text-primary">{pct}%</span>
+        </div>
+        <Progress value={pct} className="h-1.5" />
+      </div>
+
+      {/* 6 LOCK CTA — gated by micro-interaction */}
+      {unlocked ? (
+        <Card className="border-primary/50 bg-gradient-to-b from-primary/15 to-transparent">
+          <CardContent className="space-y-2 p-4 text-center">
+            <h3 className="text-base font-black leading-tight">{copy.headline}</h3>
+            <p className="text-xs text-muted-foreground">{copy.subhead}</p>
+            <Button size="sm" className="gap-1.5" onClick={goUpgrade}>
+              <Sparkles className="h-4 w-4" /> {copy.cta}
+            </Button>
+            <p className="pt-1 text-[10px] italic text-muted-foreground">{copy.socialProof}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-dashed bg-muted/20">
+          <CardContent className="p-3 text-center">
+            <p className="text-xs text-muted-foreground">Tap a drill above to see your unlock path.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
