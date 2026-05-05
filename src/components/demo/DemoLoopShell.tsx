@@ -39,9 +39,21 @@ export interface DemoLoopShellProps {
 
 export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis, benchmark }: DemoLoopShellProps) {
   const navigate = useNavigate();
-  const videos = prescribe({ simId, severity });
+  const { progress, recordPrescribedShown, recordSimRun } = useDemoProgress();
+  const shownIds = useMemo(
+    () => new Set(progress?.prescribed_history?.[simId]?.shown ?? []),
+    [progress, simId],
+  );
+  const videos = useMemo(() => prescribe({ simId, severity, shownIds }), [simId, severity, shownIds]);
   const copy = conversionCopy(simId, severity, gap);
-  useDemoInteract(fromSlug); // count container mounts as 1 interaction baseline; shells call bump() on input changes
+  useDemoInteract(fromSlug);
+
+  // Persist sim run + prescription history (debounced server-side via useDemoProgress.update)
+  useEffect(() => {
+    void recordSimRun(simId, severity, gap);
+    void recordPrescribedShown(simId, videos.map(v => v.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [simId, severity, gap]);
 
   return (
     <div className="space-y-4">
