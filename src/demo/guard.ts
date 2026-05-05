@@ -19,6 +19,21 @@ export const DEMO_SAFE_TABLES: ReadonlySet<string> = new Set([
 
 const BLOCKED_FROM_METHODS = new Set(['insert', 'update', 'upsert', 'delete']);
 
+/** Non-blocking telemetry emitter. Listeners (useDemoTelemetry) persist to demo_events. */
+function logDemoEvent(type: string, payload: Record<string, unknown>) {
+  try {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const ch = new BroadcastChannel('demo-events');
+    ch.postMessage({ type, payload, ts: Date.now() });
+    ch.close();
+  } catch {
+    /* swallow */
+  }
+  if (import.meta.env.DEV) {
+    console.warn(`[demo-guard] ${type}`, payload);
+  }
+}
+
 function emptyResult() {
   return Promise.resolve({ data: null, error: { message: 'demo:blocked', name: 'DemoBlocked' } });
 }
@@ -40,12 +55,11 @@ export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isD
         if (prop === 'then') {
           return (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null, count: 0 });
         }
-        // any chained call returns the same proxy so .select().eq().order()... all collapse
         return () => new Proxy(function () {}, handler);
       },
       apply() { return new Proxy(function () {}, handler); },
     };
-    console.warn(`[demo-guard] Blocked read on non-safe table: ${table}`);
+    logDemoEvent('sim_read_blocked', { table });
     return new Proxy(function () {}, handler);
   };
 
@@ -55,6 +69,7 @@ export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isD
       if (typeof prop === 'string' && BLOCKED_FROM_METHODS.has(prop) && typeof v === 'function') {
         return (...args: unknown[]) => {
           if (isDemo()) {
+            logDemoEvent('sim_write_blocked', { method: String(prop) });
             assertNotDemo(true, `supabase.from().${prop}`);
             return emptyResult();
           }
@@ -79,6 +94,7 @@ export function makeDemoSafeClient<T extends Record<string, any>>(client: T, isD
       if (prop === 'rpc' && typeof v === 'function') {
         return (...args: unknown[]) => {
           if (isDemo()) {
+            logDemoEvent('sim_rpc_blocked', { fn: String(args[0]) });
             assertNotDemo(true, `supabase.rpc(${String(args[0])})`);
             return emptyResult();
           }
