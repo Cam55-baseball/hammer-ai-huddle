@@ -1,95 +1,120 @@
-# Demo Visualization Layer — Plan
+# Eliminate "Coming Soon" — Build Interactive Previews for All 20 Demo Modules
 
-Goal: turn the demo from text/number readouts into a visually immersive flow that *shows* the gap, not just describes it. Five focused additions, all reusable across `HittingAnalysisDemo`, `IronBambinoDemo`, and `VaultDemo`.
+## Problem
 
-## New shared components (`src/components/demo/viz/`)
+Only 3 of ~20 demo `component_key`s have built shells (`hitting-analysis`, `iron-bambino`, `vault`). Every other module (Unicorn Engine, Pitching Analysis, Throwing Analysis, Pick-off Trainer, Drill Library, Pitch Design, Command Grid, Heat Factory, Speed Lab, Base Stealing, Baserunning IQ, Royal Timing, Tex Vision, Bullpen Planner, Custom Cards, Hammer Block Builder, Video Library, Nutrition, Regulation, Explosive Conditioning) falls back to the `DemoComingSoon` card with a placeholder line. That kills conversion.
 
-1. **`AnimatedNumber.tsx`**
-   - Count-up tween (rAF, ~400ms, easeOutCubic) when `value` prop changes.
-   - Props: `value: number`, `decimals?`, `suffix?`, `flashOnChange?` (brief primary-color pulse).
-   - Drop-in replacement for raw `{result.exitVelo}` etc. inside `Stat` and `Mini` tiles.
+## Strategy
 
-2. **`GapBarChart.tsx`** — *the headline visual, replaces the 3 text tiles in the Insight step*
-   - Two stacked horizontal bars: "You" (muted) and "Elite" (primary), with the delta region shaded destructive.
-   - Animated width on mount + on value change, with a labeled gap arrow between them.
-   - Projected-improvement ghost bar overlay on the "You" bar (dashed primary, animates from current → projected).
-   - Props: `yourValue`, `eliteValue`, `unit`, `projectedValue?`, `severity`.
+Rather than hand-build 20 bespoke shells, ship **one config-driven `GenericModuleDemo`** that consumes a per-key `ModuleConfig` describing inputs, sim outputs, and which visual to render. Each config is small (15–40 lines), uses the existing `DemoLoopShell` for the Insight/Prescribed/CTA scaffold, and renders one of a small set of new sport visuals.
 
-3. **`SeverityMeter.tsx`**
-   - Three-segment traffic-light arc (minor=emerald / moderate=amber / critical=destructive) with an animated needle.
-   - Sits inline above `GapBarChart` so severity becomes visual, not just a copy variant.
+This gives every node:
+- Real inputs the user can change (taps/toggles)
+- A live diagnosis that recomputes on input
+- A sport-appropriate animated diagram
+- The full You-vs-Elite gap chart, severity meter, projected sparkline, prescribed-video strip, and CTA
 
-4. **`SparkTrajectory.tsx`**
-   - Tiny 8-week SVG line chart projecting current → projected value with a glow tip.
-   - Used inside the "projected improvement" pill so `+3 mph in 8 weeks` shows a line, not just text.
+## New visualization components (`src/components/demo/viz/`)
 
-5. **`PrescribedVideoCard` upgrade** (edit existing file, not new)
-   - Replace flat hue gradient with: animated radial pulse behind Play icon, a faint motion-line SVG overlay (loops 3s), and a hover scale.
-   - Add a small per-video severity dot + projected-gain mini sparkline.
+1. `RadialDial.tsx` — animated 0–100 dial; for command %, regulation index, sleep score, etc.
+2. `BarRanking.tsx` — horizontal animated bar list; for drill rankings, pitch usage %, nutrient breakdown.
+3. `diagrams/PitchTunnelDiagram.tsx` — pitcher's mound → tunnel point → strike-zone, multiple pitches with bend; one highlighted. Used by `pitching-analysis`, `pitch-design`, `throwing-analysis`, `pickoff-trainer`, `bullpen-planner`.
+4. `diagrams/CommandGridDiagram.tsx` — 5×5 zone grid; intent cell lit, hits dotted. Used by `command-grid`, `royal-timing`.
+5. `diagrams/SpeedTrackDiagram.tsx` — two animated runners on lanes (You vs Elite) finishing at scaled speed. Used by `speed-lab`, `base-stealing`, `baserunning-iq`, `explosive-conditioning`.
+6. `diagrams/HeatBlockDiagram.tsx` — 3×3 lift block grid (squat/hinge/push/pull/carry/jump) lit by % volume; for `heat-factory`, `hammer-block-builder`, `merged-builder`, `unicorn-engine`.
+7. `diagrams/MacroRingDiagram.tsx` — 3 stacked rings (P/C/F) with target ticks; for `nutrition`.
+8. `diagrams/RegulationGaugeDiagram.tsx` — vertical thermometer with HRV/sleep/soreness inputs feeding a 0–100 readiness index; for `regulation`.
+9. `diagrams/TexVisionGridDiagram.tsx` — 16-cell daily drill matrix, completed cells lit; for `tex-vision`.
+10. `diagrams/CardStackDiagram.tsx` — fanned-out custom-card carousel, selected card scaled; for `custom-cards`, `drill-library`, `video-library`.
 
-## New sport-specific diagrams (`src/components/demo/viz/diagrams/`)
+All built with framer-motion + pure SVG; respect `prefers-reduced-motion`.
 
-6. **`StrikeZoneDiagram.tsx`** (Hitting demo)
-   - 9-cell SVG zone; selected `zone` (inside/middle/outside) highlights the corresponding column.
-   - Pitch icon dot animates in from pitcher origin to the selected cell, colored by `pitch` type.
-   - Replaces the "Simulated swing result" text-only Diagnosis card body (stats stay below).
+## New sims (`src/demo/sims/`)
 
-7. **`SwingArcDiagram.tsx`** (Hitting demo)
-   - SVG bat path arc whose curvature is driven by `batPathScore` and angle by `launchAngle`.
-   - Contact dot pulses; a faint "elite path" ghost arc shows the target.
+Each sim is ~30–60 lines following the existing `hittingSim`/`programSim` pattern (deterministic via `seedFromString` + `rng`, returns `{ benchmark: { severity, gap*, projectedImprovement, whyItMatters, ...numeric }, ... }`).
 
-8. **`WeekGridHeatmap.tsx`** (Iron Bambino demo)
-   - 7-cell week grid; each cell colored by training intensity, locked day shows lock + blur.
-   - Replaces vertical card list; gives a real "calendar at a glance" feel.
+- `pitchingSim.ts` — inputs: pitch type + intent location → outputs: velo, spin, command%, command grid hits, tunnel deviation
+- `throwingSim.ts` — inputs: position + arm slot → outputs: pop time, accuracy, carry distance
+- `pickoffSim.ts` — inputs: runner lead + pickoff type → outputs: success%, tag time, deception score
+- `pitchDesignSim.ts` — inputs: pitch + grip variation → outputs: spin axis, expected break, vsLHH/vsRHH whiff%
+- `commandGridSim.ts` — inputs: target zone + count situation → output: 25-cell hit distribution + accuracy%
+- `bullpenSim.ts` — inputs: pitch mix percentages → output: pitch counts, fatigue curve, tunneling overlap%
+- `royalTimingSim.ts` — inputs: tempo (slow/medium/quick) → output: balance score, timing variance
+- `speedLabSim.ts` — inputs: distance (10/30/60yd) + experience → output: your time, elite time, split breakdown
+- `baseStealingSim.ts` — inputs: lead + jump quality → output: success probability + slide adjustment
+- `baserunningIQSim.ts` — inputs: situation (1st-2nd, 0/1/2 outs) → output: correct read %, decision tree
+- `explosiveSim.ts` — inputs: focus (jump/sprint/throw) → output: peak power watts, RFD, vs elite
+- `heatFactorySim.ts` — inputs: phase + days/wk → output: lift block volumes, est strength gain
+- `hammerBlockSim.ts` — inputs: emphasis sliders → output: 3×3 block grid intensity, weekly volume
+- `nutritionSim.ts` — inputs: meal preset (lean/build/recover) → output: macros, top 2 limiters, hydration score
+- `regulationSim.ts` — inputs: sleep hrs + HRV qualitative + soreness → output: 0–100 readiness, recommendation
+- `texVisionSim.ts` — inputs: focus area (tracking/recognition/timing) → output: 16-cell daily plan, completion %
+- `customCardsSim.ts` — inputs: card type + difficulty → output: card preview, point value, est rep value
+- `drillLibrarySim.ts` — inputs: skill area → output: top 5 drill ranking with effectiveness scores
+- `videoLibrarySim.ts` — inputs: category → output: 6 video tiles with popularity bars
+- `unicornSim.ts` — inputs: hitter focus % vs pitcher focus % → output: weekly split, dual-track readiness
 
-9. **`VaultTimelineRibbon.tsx`** (Vault demo)
-   - Horizontal timeline with 12 month-tick markers; visible weeks lit, locked weeks faded with a lock glyph every Nth.
-   - Replaces (or augments) the 6-tile gradient grid so "history you can't see" is literal.
+## Generic module shell (`src/components/demo/shells/GenericModuleDemo.tsx`)
 
-## Wiring changes
+A single component that:
+1. Reads its `ModuleConfig` by `componentKey` prop (passed via a thin wrapper)
+2. Renders a Card of `Picker`s for each declared input
+3. Calls the module's `sim.run()` with current state
+4. Renders the configured diagram in the `diagnosis` slot
+5. Wires the sim's benchmark output into `DemoLoopShell` (numeric values for `GapBarChart`/`SparkTrajectory`)
 
-- **`DemoLoopShell.tsx`**
-  - Insight section: swap the 3 `Mini` tiles for `<SeverityMeter />` + `<GapBarChart />`.
-  - Keep `whyItMatters` text below, but render `projected` inside `<SparkTrajectory />`.
-  - Pass `severity`, `yourValue`, `eliteValue`, `projectedValue` numerically (extend `Benchmark` interface to accept optional `yourNumeric`, `eliteNumeric`, `projectedNumeric`, `unit`; fall back to current text rendering when missing — keeps Vault working without numeric values).
+```ts
+interface ModuleConfig {
+  fromSlug: string;
+  simId: string;
+  inputs: InputDef[];        // {key, label, options, default}
+  sim: (state) => SimResult; // returns { result, benchmark, diagramProps }
+  diagram: 'pitchTunnel' | 'commandGrid' | 'speedTrack' | 'heatBlock' | 'macroRing' | 'regulationGauge' | 'texGrid' | 'cardStack' | 'strikeZone' | 'swingArc' | 'weekGrid' | 'vaultTimeline';
+  statTiles?: { label: string; key: string; unit?: string; decimals?: number }[];
+}
+```
 
-- **`HittingAnalysisDemo.tsx`**
-  - Diagnosis card: add `<StrikeZoneDiagram pitch={pitch} zone={zone} />` at top, `<SwingArcDiagram score={batPathScore} angle={launchAngle} />` below stats.
-  - Wrap stat values in `<AnimatedNumber />`.
+## Module configs (`src/demo/modules/configs.ts`)
 
-- **`IronBambinoDemo.tsx`**
-  - Add `<WeekGridHeatmap days={program.days} />` above the existing per-day card list (keep list as detail).
+One entry per `component_key`, ~15-30 lines each, mapping `component_key` → `ModuleConfig`. Built-up modules (`hitting-analysis`, `iron-bambino`, `vault`) keep their custom shells; everything else uses the generic.
 
-- **`VaultDemo.tsx`**
-  - Add `<VaultTimelineRibbon visible={6 - lockedCount} total={6} />` above the tile grid.
+## Registry update (`DemoComponentRegistry.ts`)
 
-## Animation & perf rules
+Add lazy entries for each new key, each importing a tiny wrapper that calls `<GenericModuleDemo configKey="…" />`. Keys covered: `pitching-analysis`, `throwing-analysis`, `pickoff-trainer`, `pitch-design`, `command-grid`, `bullpen-planner`, `royal-timing`, `speed-lab`, `base-stealing`, `baserunning-iq`, `explosive-conditioning`, `heat-factory`, `hammer-block-builder`, `nutrition`, `regulation`, `tex-vision`, `custom-cards`, `drill-library`, `video-library`, `unicorn-engine`.
 
-- All viz uses `framer-motion` (already in deps via Tex Vision) for enter + value transitions; respect `prefers-reduced-motion` (skip count-ups, keep static end state).
-- No heavy libs — pure SVG + framer-motion. Recharts already loaded for some routes; do **not** add it just for the demo to keep the bundle small.
-- Determinism: all viz is driven by sim outputs only — no random animation seeds that diverge from `simEngine`'s `rng`.
+## Prescription catalog expansion (`src/demo/prescriptions/videoPrescription.ts`)
 
-## Out of scope
+Add 3-severity × 3-video entries for each new `simId` (≈60 new catalog entries) so the prescribed-video strip never empty-falls-back to `hitting`. Each video gets a sport-relevant title, purpose, expected improvement, and unique hue.
 
-- Real video thumbnails (still gradients with motion overlay; swapping in real frames is a separate content task).
-- Touch-drag interactions on diagrams (tap-only for now).
-- Telemetry events for viz interactions — current `useDemoInteract.bump()` already fires on input changes which drive viz.
+## DemoSubmodule cleanup
+
+Remove the user-visible `Interactive preview coming soon` line in `src/pages/demo/DemoSubmodule.tsx` (`DemoComingSoon` becomes a true 500-style fallback that just says "Loading preview…" — but in practice will never render once the registry is complete).
 
 ## Files
 
-New:
-- `src/components/demo/viz/AnimatedNumber.tsx`
-- `src/components/demo/viz/GapBarChart.tsx`
-- `src/components/demo/viz/SeverityMeter.tsx`
-- `src/components/demo/viz/SparkTrajectory.tsx`
-- `src/components/demo/viz/diagrams/StrikeZoneDiagram.tsx`
-- `src/components/demo/viz/diagrams/SwingArcDiagram.tsx`
-- `src/components/demo/viz/diagrams/WeekGridHeatmap.tsx`
-- `src/components/demo/viz/diagrams/VaultTimelineRibbon.tsx`
+**New (15):**
+- `src/components/demo/viz/RadialDial.tsx`
+- `src/components/demo/viz/BarRanking.tsx`
+- `src/components/demo/viz/diagrams/PitchTunnelDiagram.tsx`
+- `src/components/demo/viz/diagrams/CommandGridDiagram.tsx`
+- `src/components/demo/viz/diagrams/SpeedTrackDiagram.tsx`
+- `src/components/demo/viz/diagrams/HeatBlockDiagram.tsx`
+- `src/components/demo/viz/diagrams/MacroRingDiagram.tsx`
+- `src/components/demo/viz/diagrams/RegulationGaugeDiagram.tsx`
+- `src/components/demo/viz/diagrams/TexVisionGridDiagram.tsx`
+- `src/components/demo/viz/diagrams/CardStackDiagram.tsx`
+- `src/components/demo/shells/GenericModuleDemo.tsx`
+- `src/demo/modules/configs.ts`
+- 20 thin wrapper files in `src/components/demo/shells/generic/<key>.tsx` (each ~6 lines, just for `lazy()` import targets)
+- `src/demo/sims/*.ts` — 20 new sim files
 
-Edited:
-- `src/components/demo/DemoLoopShell.tsx` (Insight section + extended `Benchmark` type)
-- `src/components/demo/PrescribedVideoCard.tsx` (motion overlay + severity dot)
-- `src/components/demo/shells/HittingAnalysisDemo.tsx`
-- `src/components/demo/shells/IronBambinoDemo.tsx`
-- `src/components/demo/shells/VaultDemo.tsx`
+**Edited (3):**
+- `src/components/demo/DemoComponentRegistry.ts` — register all 20 keys
+- `src/demo/prescriptions/videoPrescription.ts` — add catalog entries for all 20 simIds
+- `src/pages/demo/DemoSubmodule.tsx` — strip the user-visible "Coming soon" fallback line
+
+## Out of scope
+
+- Real video playback in prescribed-video cards (gradients + motion overlay only — already shipped)
+- Persisting per-module sim state across navigation (each visit re-runs sim)
+- Re-themeing for softball variants (still uses primary token; sport theming follows separately)
