@@ -13,7 +13,7 @@ import { makeDemoSafeClient } from '@/demo/guard';
 import { supabase } from '@/integrations/supabase/client';
 import '@/demo/devtools'; // attaches window.setDemoWeights in DEV
 
-export function DemoLayout({ children, showBack = false }: { children: ReactNode; showBack?: boolean }) {
+export function DemoLayout({ children, showBack = true }: { children: ReactNode; showBack?: boolean }) {
   const navigate = useNavigate();
   const { skip, progress } = useDemoProgress();
   useDemoTelemetry();
@@ -49,22 +49,26 @@ export function DemoLayout({ children, showBack = false }: { children: ReactNode
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2">
-          {showBack ? (() => {
+          {(() => {
+            const path = typeof window !== 'undefined' ? window.location.pathname : '';
+            const atDemoHome = path === '/demo' || path === '/demo/';
             const idx = (typeof window !== 'undefined' && (window.history.state as any)?.idx) ?? 0;
             const atEntry = idx === 0;
+            const label = atDemoHome ? 'Dashboard' : (atEntry ? 'Demo Home' : 'Back');
+            const onClick = () => {
+              if (atDemoHome) navigate('/dashboard');
+              else if (atEntry) navigate('/demo');
+              else navigate(-1);
+            };
             return (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => (atEntry ? navigate('/demo') : navigate(-1))}
-                className="gap-1"
-              >
-                <ChevronLeft className="h-4 w-4" /> {atEntry ? 'Demo Home' : 'Back'}
+              <Button variant="ghost" size="sm" onClick={onClick} className="gap-1">
+                <ChevronLeft className="h-4 w-4" /> {label}
               </Button>
             );
-          })() : (
+          })()}
+          {!showBack && (
             <Badge variant="secondary" className="gap-1">
-              <Sparkles className="h-3 w-3" /> Demo Mode
+              <Sparkles className="h-3 w-3" /> Demo
             </Badge>
           )}
           <div className="flex-1 px-2">
