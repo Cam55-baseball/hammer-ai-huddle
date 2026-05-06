@@ -28,13 +28,23 @@ export function PrescribedVideoCard({ v, fromSlug, onPreviewClick }: PrescribedV
   };
 
   return (
-    <Card className="relative overflow-hidden cursor-pointer transition hover:border-primary/40" onClick={handleClick}>
-      <div className="relative aspect-video w-full" style={{ background: bg }}>
-        <div className="flex h-full items-center justify-center">
+    <Card className="group relative overflow-hidden cursor-pointer transition hover:border-primary/40 hover:scale-[1.02]" onClick={handleClick}>
+      <div className="relative aspect-video w-full overflow-hidden" style={{ background: bg }}>
+        {/* Animated motion lines */}
+        <svg className="absolute inset-0 h-full w-full opacity-40 mix-blend-screen" viewBox="0 0 100 56" preserveAspectRatio="none">
+          <path d="M-10 40 Q 30 10 60 30 T 110 20" stroke="white" strokeWidth="0.5" fill="none" className="animate-[pulse_3s_ease-in-out_infinite]" />
+          <path d="M-10 50 Q 40 25 70 38 T 110 30" stroke="white" strokeWidth="0.4" fill="none" opacity="0.6" />
+        </svg>
+        {/* Severity dot */}
+        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))] animate-pulse" />
+        <div className="relative flex h-full items-center justify-center">
           {loading ? (
-            <Loader2 className="h-6 w-6 text-white/90 animate-spin" />
+            <Loader2 className="h-6 w-6 text-white/95 animate-spin" />
           ) : (
-            <Play className="h-7 w-7 text-white/90" />
+            <div className="relative">
+              <span className="absolute inset-0 -m-3 rounded-full bg-white/20 blur-md group-hover:bg-white/30 animate-pulse" />
+              <Play className="relative h-8 w-8 text-white drop-shadow-lg" />
+            </div>
           )}
         </div>
         <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur">
