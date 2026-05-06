@@ -6,6 +6,7 @@ import { programSim, Goal, Experience } from '@/demo/sims/programSim';
 import { DemoLoopShell } from '@/components/demo/DemoLoopShell';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
 import { useAuth } from '@/hooks/useAuth';
+import { WeekGridHeatmap } from '@/components/demo/viz/diagrams/WeekGridHeatmap';
 
 const GOALS: Goal[] = ['power', 'speed', 'durability'];
 const DAYS: (3 | 4 | 5)[] = [3, 4, 5];
