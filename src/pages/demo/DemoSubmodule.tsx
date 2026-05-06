@@ -17,11 +17,9 @@ function DemoComingSoon({ title }: { title: string }) {
       <CardContent className="space-y-3 p-6 text-center">
         <Sparkles className="mx-auto h-8 w-8 text-primary" />
         <h2 className="text-lg font-bold">{title}</h2>
-        <p className="text-sm text-muted-foreground">
-          Interactive preview coming soon. The real feature is fully unlocked when you subscribe.
-        </p>
+        <p className="text-sm text-muted-foreground">Loading interactive preview…</p>
         <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-          <Lock className="h-3 w-3" /> Locked content blurred for show
+          <Lock className="h-3 w-3" /> Full feature unlocks when you subscribe
         </div>
       </CardContent>
     </Card>
