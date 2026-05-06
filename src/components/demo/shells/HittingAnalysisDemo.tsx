@@ -6,6 +6,9 @@ import { hittingSim, PitchType, ContactZone } from '@/demo/sims/hittingSim';
 import { DemoLoopShell } from '@/components/demo/DemoLoopShell';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
 import { useAuth } from '@/hooks/useAuth';
+import { AnimatedNumber } from '@/components/demo/viz/AnimatedNumber';
+import { StrikeZoneDiagram } from '@/components/demo/viz/diagrams/StrikeZoneDiagram';
+import { SwingArcDiagram } from '@/components/demo/viz/diagrams/SwingArcDiagram';
 
 const PITCHES: PitchType[] = ['fastball', 'curveball', 'changeup', 'slider'];
 const ZONES: ContactZone[] = ['inside', 'middle', 'outside'];
@@ -57,13 +60,15 @@ export default function HittingAnalysisDemo() {
               <h3 className="text-sm font-bold">Simulated swing result</h3>
               <Badge variant="secondary">{result.result}</Badge>
             </div>
+            <StrikeZoneDiagram pitch={pitch} zone={zone} />
             <div className="grid grid-cols-3 gap-2 text-center">
-              <Stat label="Exit Velo" value={`${result.exitVelo}`} unit="mph" />
-              <Stat label="Launch Angle" value={`${result.launchAngle}°`} />
-              <Stat label="Swing IQ" value={`${result.swingIQ}`} unit="/100" />
+              <Stat label="Exit Velo" value={result.exitVelo} unit="mph" />
+              <Stat label="Launch Angle" value={result.launchAngle} unit="°" />
+              <Stat label="Swing IQ" value={result.swingIQ} unit="/100" />
             </div>
+            <SwingArcDiagram batPathScore={result.batPathScore} launchAngle={result.launchAngle} />
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div className="h-full bg-primary transition-all" style={{ width: `${result.batPathScore}%` }} />
+              <div className="h-full bg-primary transition-all duration-500" style={{ width: `${result.batPathScore}%` }} />
             </div>
             <p className="text-[11px] text-muted-foreground">Bat path score {result.batPathScore}/100</p>
           </CardContent>
@@ -78,16 +83,20 @@ export default function HittingAnalysisDemo() {
         gapValue: `${result.benchmark.gapMph} mph`,
         projected: result.benchmark.projectedImprovement,
         whyItMatters: result.benchmark.whyItMatters,
+        yourNumeric: result.exitVelo,
+        eliteNumeric: result.benchmark.eliteEv,
+        projectedNumeric: result.exitVelo + Math.min(result.benchmark.gapMph, 4),
+        unit: 'mph',
       }}
     />
   );
 }
 
-function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
+function Stat({ label, value, unit }: { label: string; value: number; unit?: string }) {
   return (
     <div className="rounded-md border bg-muted/30 p-2">
       <p className="text-[10px] uppercase text-muted-foreground">{label}</p>
-      <p className="text-lg font-black">{value}{unit && <span className="text-xs font-normal text-muted-foreground"> {unit}</span>}</p>
+      <p className="text-lg font-black"><AnimatedNumber value={value} suffix={unit} /></p>
     </div>
   );
 }

@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Sparkles, Target, TrendingUp, TrendingDown } from 'lucide-react';
+import { Sparkles, Target, TrendingDown } from 'lucide-react';
 import { PrescribedVideoStrip } from './PrescribedVideoCard';
+import { GapBarChart } from './viz/GapBarChart';
+import { SeverityMeter } from './viz/SeverityMeter';
+import { SparkTrajectory } from './viz/SparkTrajectory';
 import { CommitIntentDialog } from './CommitIntentDialog';
 import { conversionCopy } from '@/demo/prescriptions/conversionCopy';
 import { prescribe } from '@/demo/prescriptions/videoPrescription';
@@ -22,6 +25,12 @@ interface Benchmark {
   gapValue: string;
   projected: string;
   whyItMatters: string;
+  /** Optional numeric values to power the GapBarChart + SparkTrajectory visuals. */
+  yourNumeric?: number;
+  eliteNumeric?: number;
+  projectedNumeric?: number;
+  unit?: string;
+  decimals?: number;
 }
 
 export interface DemoLoopShellProps {
@@ -147,24 +156,47 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
 
       {/* 3 INSIGHT */}
       <Card className="border-primary/30">
-        <CardContent className="space-y-2 p-3">
-          <div className="flex items-center gap-1.5">
-            <Target className="h-4 w-4 text-primary" />
-            <p className="text-xs font-black uppercase tracking-wide">Where you stand</p>
+        <CardContent className="space-y-3 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <Target className="h-4 w-4 text-primary" />
+              <p className="text-xs font-black uppercase tracking-wide">Where you stand</p>
+            </div>
+            <SeverityMeter severity={severity} />
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <Mini label={benchmark.yourLabel} value={benchmark.yourValue} />
-            <Mini label={benchmark.eliteLabel} value={benchmark.eliteValue} highlight />
-            <Mini label={benchmark.gapLabel} value={benchmark.gapValue} accent />
-          </div>
+          {benchmark.yourNumeric != null && benchmark.eliteNumeric != null ? (
+            <GapBarChart
+              yourValue={benchmark.yourNumeric}
+              eliteValue={benchmark.eliteNumeric}
+              yourLabel={benchmark.yourLabel}
+              eliteLabel={benchmark.eliteLabel}
+              unit={benchmark.unit}
+              projectedValue={benchmark.projectedNumeric}
+              decimals={benchmark.decimals ?? 0}
+            />
+          ) : (
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <Mini label={benchmark.yourLabel} value={benchmark.yourValue} />
+              <Mini label={benchmark.eliteLabel} value={benchmark.eliteValue} highlight />
+              <Mini label={benchmark.gapLabel} value={benchmark.gapValue} accent />
+            </div>
+          )}
           <div className="flex items-start gap-1.5 rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs">
             <TrendingDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
             <span className="font-bold text-destructive-foreground/90">{copy.lossStatement}</span>
           </div>
           <p className="text-[11px] leading-snug text-muted-foreground">{benchmark.whyItMatters}</p>
-          <div className="flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1.5 text-xs">
-            <TrendingUp className="h-3.5 w-3.5 text-primary" />
-            <span className="font-bold">{benchmark.projected}</span>
+          <div className="flex items-center justify-between gap-2 rounded-md bg-primary/10 px-2 py-1.5 text-xs">
+            {benchmark.yourNumeric != null && benchmark.projectedNumeric != null ? (
+              <SparkTrajectory
+                from={benchmark.yourNumeric}
+                to={benchmark.projectedNumeric}
+                unit={benchmark.unit}
+                label={benchmark.projected}
+              />
+            ) : (
+              <span className="font-bold">{benchmark.projected}</span>
+            )}
           </div>
         </CardContent>
       </Card>

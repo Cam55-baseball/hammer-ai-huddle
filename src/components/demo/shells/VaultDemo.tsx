@@ -3,6 +3,7 @@ import { Lock, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DemoLoopShell } from '@/components/demo/DemoLoopShell';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
+import { VaultTimelineRibbon } from '@/components/demo/viz/diagrams/VaultTimelineRibbon';
 
 const TILES = [
   { id: 1, title: 'Hitting · Week 1', locked: false },
@@ -26,8 +27,9 @@ export default function VaultDemo() {
       gap={lockedCount}
       input={
         <Card>
-          <CardContent className="p-3">
-            <p className="mb-2 text-xs text-muted-foreground">Tap a thumbnail — see how the Vault stores your full history.</p>
+          <CardContent className="space-y-3 p-3">
+            <VaultTimelineRibbon visible={TILES.length - lockedCount} total={TILES.length} />
+            <p className="text-xs text-muted-foreground">Tap a thumbnail — see how the Vault stores your full history.</p>
             <div className="grid grid-cols-3 gap-2">
               {TILES.map(t => (
                 <Card

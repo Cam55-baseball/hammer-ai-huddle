@@ -6,6 +6,7 @@ import { programSim, Goal, Experience } from '@/demo/sims/programSim';
 import { DemoLoopShell } from '@/components/demo/DemoLoopShell';
 import { useDemoInteract } from '@/hooks/useDemoInteract';
 import { useAuth } from '@/hooks/useAuth';
+import { WeekGridHeatmap } from '@/components/demo/viz/diagrams/WeekGridHeatmap';
 
 const GOALS: Goal[] = ['power', 'speed', 'durability'];
 const DAYS: (3 | 4 | 5)[] = [3, 4, 5];
@@ -38,6 +39,7 @@ export default function IronBambinoDemo() {
       }
       diagnosis={
         <div className="space-y-2">
+          <WeekGridHeatmap days={program.days} />
           {program.days.map((d) => (
             <Card key={d.day} className={d.locked ? 'relative overflow-hidden border-primary/40' : ''}>
               <CardContent className="p-3">
@@ -66,6 +68,10 @@ export default function IronBambinoDemo() {
         gapValue: `${program.benchmark.gapPct}%`,
         projected: program.benchmark.projectedImprovement,
         whyItMatters: program.benchmark.whyItMatters,
+        yourNumeric: program.benchmark.yourDays,
+        eliteNumeric: program.benchmark.eliteDays,
+        projectedNumeric: program.benchmark.eliteDays,
+        unit: 'd/wk',
       }}
     />
   );

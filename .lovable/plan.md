@@ -1,30 +1,95 @@
-## Issues confirmed
+# Demo Visualization Layer — Plan
 
-1. **No Exit button** — `DemoLayout` header only has a "Skip" button. There's no way to bail out to the dashboard/home.
-2. **Skip doesn't work** — `SkipDemoDialog` is two-step (1: "I'll skip anyway" → 2: "Skip for now"). Step 2's button calls `onConfirm`, which calls `skip()` then `navigate('/select-modules', { replace: true })`. The likely failure is that `navigate('/select-modules')` lands on a guarded route (or `/select-modules` no longer accepts pre-checkout traffic) so the user appears stuck. Either way the UX is broken — too many clicks and wrong destination.
-3. **Demo button label varies** — `DemoButton.tsx` switches between `Start Here`, `Resume Demo`, `Explore`, and `Demo` based on `progress.demo_state`. Should always read `Demo`.
+Goal: turn the demo from text/number readouts into a visually immersive flow that *shows* the gap, not just describes it. Five focused additions, all reusable across `HittingAnalysisDemo`, `IronBambinoDemo`, and `VaultDemo`.
 
-## Changes
+## New shared components (`src/components/demo/viz/`)
 
-### `src/components/demo/DemoButton.tsx`
-- Hard-code label to `"Demo"`. Keep adaptive routing (resume mid-flow when `demo_state === 'in_progress'`) but no label changes.
+1. **`AnimatedNumber.tsx`**
+   - Count-up tween (rAF, ~400ms, easeOutCubic) when `value` prop changes.
+   - Props: `value: number`, `decimals?`, `suffix?`, `flashOnChange?` (brief primary-color pulse).
+   - Drop-in replacement for raw `{result.exitVelo}` etc. inside `Stat` and `Mini` tiles.
 
-### `src/components/demo/DemoLayout.tsx`
-- Add a dedicated **Exit** button (icon: `LogOut`) to the right of Skip. On click → `navigate('/dashboard')` (or `/` for unauthenticated visitors — detect via `useAuth`).
-- Keep Skip button visible but fix its action (see below).
+2. **`GapBarChart.tsx`** — *the headline visual, replaces the 3 text tiles in the Insight step*
+   - Two stacked horizontal bars: "You" (muted) and "Elite" (primary), with the delta region shaded destructive.
+   - Animated width on mount + on value change, with a labeled gap arrow between them.
+   - Projected-improvement ghost bar overlay on the "You" bar (dashed primary, animates from current → projected).
+   - Props: `yourValue`, `eliteValue`, `unit`, `projectedValue?`, `severity`.
 
-### `src/components/demo/SkipDemoDialog.tsx`
-- Collapse to a **single step**. One title, one description, two actions: `Keep exploring` / `Skip for now`. Removes the broken second-step flow and the dead "Resume Demo" reference.
+3. **`SeverityMeter.tsx`**
+   - Three-segment traffic-light arc (minor=emerald / moderate=amber / critical=destructive) with an animated needle.
+   - Sits inline above `GapBarChart` so severity becomes visual, not just a copy variant.
 
-### `src/components/demo/DemoLayout.tsx` — `handleSkip`
-- Change destination from `/select-modules` to `/dashboard`. `/select-modules` is post-checkout territory and is the root cause of the apparent "doesn't function" behavior.
-- Add a `try/catch` around `await skip()` so a network failure still navigates the user away (current code silently fails before navigation if the update throws).
+4. **`SparkTrajectory.tsx`**
+   - Tiny 8-week SVG line chart projecting current → projected value with a glow tip.
+   - Used inside the "projected improvement" pill so `+3 mph in 8 weeks` shows a line, not just text.
+
+5. **`PrescribedVideoCard` upgrade** (edit existing file, not new)
+   - Replace flat hue gradient with: animated radial pulse behind Play icon, a faint motion-line SVG overlay (loops 3s), and a hover scale.
+   - Add a small per-video severity dot + projected-gain mini sparkline.
+
+## New sport-specific diagrams (`src/components/demo/viz/diagrams/`)
+
+6. **`StrikeZoneDiagram.tsx`** (Hitting demo)
+   - 9-cell SVG zone; selected `zone` (inside/middle/outside) highlights the corresponding column.
+   - Pitch icon dot animates in from pitcher origin to the selected cell, colored by `pitch` type.
+   - Replaces the "Simulated swing result" text-only Diagnosis card body (stats stay below).
+
+7. **`SwingArcDiagram.tsx`** (Hitting demo)
+   - SVG bat path arc whose curvature is driven by `batPathScore` and angle by `launchAngle`.
+   - Contact dot pulses; a faint "elite path" ghost arc shows the target.
+
+8. **`WeekGridHeatmap.tsx`** (Iron Bambino demo)
+   - 7-cell week grid; each cell colored by training intensity, locked day shows lock + blur.
+   - Replaces vertical card list; gives a real "calendar at a glance" feel.
+
+9. **`VaultTimelineRibbon.tsx`** (Vault demo)
+   - Horizontal timeline with 12 month-tick markers; visible weeks lit, locked weeks faded with a lock glyph every Nth.
+   - Replaces (or augments) the 6-tile gradient grid so "history you can't see" is literal.
+
+## Wiring changes
+
+- **`DemoLoopShell.tsx`**
+  - Insight section: swap the 3 `Mini` tiles for `<SeverityMeter />` + `<GapBarChart />`.
+  - Keep `whyItMatters` text below, but render `projected` inside `<SparkTrajectory />`.
+  - Pass `severity`, `yourValue`, `eliteValue`, `projectedValue` numerically (extend `Benchmark` interface to accept optional `yourNumeric`, `eliteNumeric`, `projectedNumeric`, `unit`; fall back to current text rendering when missing — keeps Vault working without numeric values).
+
+- **`HittingAnalysisDemo.tsx`**
+  - Diagnosis card: add `<StrikeZoneDiagram pitch={pitch} zone={zone} />` at top, `<SwingArcDiagram score={batPathScore} angle={launchAngle} />` below stats.
+  - Wrap stat values in `<AnimatedNumber />`.
+
+- **`IronBambinoDemo.tsx`**
+  - Add `<WeekGridHeatmap days={program.days} />` above the existing per-day card list (keep list as detail).
+
+- **`VaultDemo.tsx`**
+  - Add `<VaultTimelineRibbon visible={6 - lockedCount} total={6} />` above the tile grid.
+
+## Animation & perf rules
+
+- All viz uses `framer-motion` (already in deps via Tex Vision) for enter + value transitions; respect `prefers-reduced-motion` (skip count-ups, keep static end state).
+- No heavy libs — pure SVG + framer-motion. Recharts already loaded for some routes; do **not** add it just for the demo to keep the bundle small.
+- Determinism: all viz is driven by sim outputs only — no random animation seeds that diverge from `simEngine`'s `rng`.
 
 ## Out of scope
-- Removing `SkipNudgeBanner`'s "Resume demo" copy elsewhere — that's a separate banner component, untouched.
-- Changing `/start-here` flow.
 
-## Files touched
-- `src/components/demo/DemoButton.tsx`
-- `src/components/demo/DemoLayout.tsx`
-- `src/components/demo/SkipDemoDialog.tsx`
+- Real video thumbnails (still gradients with motion overlay; swapping in real frames is a separate content task).
+- Touch-drag interactions on diagrams (tap-only for now).
+- Telemetry events for viz interactions — current `useDemoInteract.bump()` already fires on input changes which drive viz.
+
+## Files
+
+New:
+- `src/components/demo/viz/AnimatedNumber.tsx`
+- `src/components/demo/viz/GapBarChart.tsx`
+- `src/components/demo/viz/SeverityMeter.tsx`
+- `src/components/demo/viz/SparkTrajectory.tsx`
+- `src/components/demo/viz/diagrams/StrikeZoneDiagram.tsx`
+- `src/components/demo/viz/diagrams/SwingArcDiagram.tsx`
+- `src/components/demo/viz/diagrams/WeekGridHeatmap.tsx`
+- `src/components/demo/viz/diagrams/VaultTimelineRibbon.tsx`
+
+Edited:
+- `src/components/demo/DemoLoopShell.tsx` (Insight section + extended `Benchmark` type)
+- `src/components/demo/PrescribedVideoCard.tsx` (motion overlay + severity dot)
+- `src/components/demo/shells/HittingAnalysisDemo.tsx`
+- `src/components/demo/shells/IronBambinoDemo.tsx`
+- `src/components/demo/shells/VaultDemo.tsx`
