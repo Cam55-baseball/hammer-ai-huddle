@@ -210,6 +210,7 @@ export function DemoLoopShell({ fromSlug, simId, severity, gap, input, diagnosis
         <PrescribedVideoStrip
           videos={videos}
           fromSlug={fromSlug}
+          simId={simId}
           onPreviewClick={handlePreviewClick}
         />
       </div>
