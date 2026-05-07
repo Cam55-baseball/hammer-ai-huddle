@@ -139,7 +139,6 @@ export function buildPhasePromptBlock(resolution: SeasonResolution): string {
     ...p.directives.map(d => `  - ${d}`),
   ].join('\n');
 }
-};
 
 export function getSeasonProfile(phase: SeasonPhase): SeasonProgrammingProfile {
   return SEASON_PROFILES[phase] ?? SEASON_PROFILES.off_season;
