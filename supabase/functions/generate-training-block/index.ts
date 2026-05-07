@@ -368,28 +368,27 @@ ATHLETE CONTEXT:
 - Experience: ${experienceLevel}
 - Position: ${position}
 - Body Goal: ${bodyGoal?.goal_type || 'performance'}
-- Season Phase: ${seasonPhase.replace('_', '-')} ${seasonPhase === 'in_season' ? '(prioritize maintenance, low-CNS, recovery)' : seasonPhase === 'preseason' ? '(prioritize accumulation, strength build)' : '(prioritize rebuild + mobility)'}
 - Available days per week: ${workoutsPerWeek}
 - Equipment: ${JSON.stringify(equipment)}
 ${(injuries as string[]).length ? `- INJURIES/AVOID: ${(injuries as string[]).join(', ')}` : ''}
 
-PROGRAMMING RULES:
+${phasePromptBlock}
+
+PROGRAMMING RULES (must respect SEASON PHASE above):
 1. Generate exactly 6 weeks of training
 2. Each week has exactly ${workoutsPerWeek} workouts
-3. Weeks 1-2: Volume accumulation (higher reps, moderate weight)
-4. Weeks 3-4: Intensification (moderate reps, heavier weight)
-5. Week 5: Peak/overreach (highest intensity)
-6. Week 6: Deload (reduced volume and intensity by 40-50%)
-7. Each workout needs 3-6 exercises with sets, reps, and coaching cues
-8. Assign cns_demand (low/medium/high) to each exercise
-9. Avoid scheduling consecutive high-CNS exercises without medium/low buffer
-10. For ${sport} athletes, prioritize rotational power, arm health, and posterior chain
+3. Volume/intensity must match the phase Volume + Intensity tags. Hard cap: max ${phaseProfile.maxSetsPerExercise} sets per exercise, max ${phaseProfile.maxHighCnsPerWeek} high-CNS sessions per week.
+4. ${seasonPhase === 'in_season' ? 'In-Season: maintenance only — never propose new mechanical changes. Reps lower, weight 60-75%, prioritize recovery.' : seasonPhase === 'preseason' ? 'Pre-Season: ramp volume/intensity weekly, peak in week 5, deload week 6.' : seasonPhase === 'post_season' ? 'Post-Season: decompression — mobility, sleep, pain resolution. No max-effort lifts.' : 'Off-Season: aggressive build — strength, power, mechanics. Deload every 4th week.'}
+5. Each workout needs 3-6 exercises with sets, reps, and coaching cues
+6. Assign cns_demand (low/medium/high) to each exercise
+7. Avoid scheduling consecutive high-CNS exercises without medium/low buffer
+8. For ${sport} athletes, prioritize rotational power, arm health, and posterior chain
 
 Always respond using the generate_training_block function.`
           },
           {
             role: "user",
-            content: `Generate a complete 6-week ${goal} training block for a ${experienceLevel} ${sport} ${position}. ${workoutsPerWeek} workouts per week.`
+            content: `Generate a complete 6-week ${goal} training block for a ${experienceLevel} ${sport} ${position}. ${workoutsPerWeek} workouts per week. Respect the SEASON PHASE constraints strictly.`
           }
         ],
         tools: [
