@@ -380,7 +380,7 @@ export function IdentityCommandCard({ className }: Props) {
                   </div>
                 ) : (
                   <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-3 space-y-2.5">
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-foreground/85 leading-relaxed">
                       You're being held to the{' '}
                       <span className={cn('font-black', tone)}>{label}</span> standard today.
                       Tap Confirm to lock in that you're operating at it.
@@ -423,7 +423,7 @@ export function IdentityCommandCard({ className }: Props) {
                     onClick={() => handleDayClick('push')}
                   />
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                <p className="mt-2 text-xs text-foreground/85 leading-relaxed">
                   {dayMeta.explanation}
                 </p>
                 <div className="mt-2 flex items-center gap-2 rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5 text-[11px]">
