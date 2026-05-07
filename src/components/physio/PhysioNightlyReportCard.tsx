@@ -58,16 +58,16 @@ function ReportSectionCard({ sectionKey, section, response, onRespond }: ReportS
       </AccordionTrigger>
       <AccordionContent className="px-3 pb-3 space-y-3">
         <div className="space-y-2 text-sm">
-          <div className="p-2 rounded-lg bg-muted/30">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Why</p>
+          <div className="p-2.5 rounded-lg bg-muted/60 border border-border/40">
+            <p className="text-xs font-bold text-foreground/70 uppercase tracking-wide mb-1">Why</p>
             <p className="text-foreground">{section.why}</p>
           </div>
-          <div className="p-2 rounded-lg bg-primary/10">
-            <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">What To Do</p>
+          <div className="p-2.5 rounded-lg bg-primary/15 border border-primary/30">
+            <p className="text-xs font-bold text-primary uppercase tracking-wide mb-1">What To Do</p>
             <p className="text-foreground">{section.what_to_do}</p>
           </div>
-          <div className="p-2 rounded-lg bg-muted/20">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">How It Helps</p>
+          <div className="p-2.5 rounded-lg bg-muted/60 border border-border/40">
+            <p className="text-xs font-bold text-foreground/70 uppercase tracking-wide mb-1">How It Helps</p>
             <p className="text-foreground">{section.how_it_helps}</p>
           </div>
         </div>
