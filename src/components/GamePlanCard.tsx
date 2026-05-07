@@ -1787,8 +1787,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           dayType={dailyOutcome.dayType}
           loading={dailyOutcome.loading}
           onJumpToNN={() => {
-            const el = document.getElementById('nn-section');
-            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const el =
+              document.getElementById('nn-section') ||
+              document.getElementById('custom-activities-section') ||
+              document.getElementById('timeline-section');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              toast.message('No Non-Negotiables visible yet', {
+                description: 'Tap the flame on any activity below to lock it in as a daily standard.',
+              });
+            }
           }}
         />
 
