@@ -68,6 +68,7 @@ export function usePerformanceSession() {
     session_type: string;
     session_date: string;
     season_context?: string;
+    season_context_overridden?: boolean;
     drill_blocks: DrillBlock[];
     player_grade?: number;
     notes?: string;
@@ -101,6 +102,7 @@ export function usePerformanceSession() {
           session_type: data.session_type,
           session_date: data.session_date,
           season_context: data.season_context || 'in_season',
+          season_context_overridden: data.season_context_overridden ?? false,
           drill_blocks: data.drill_blocks as any,
           player_grade: data.player_grade,
           notes: data.notes,

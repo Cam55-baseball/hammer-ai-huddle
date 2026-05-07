@@ -355,6 +355,7 @@ export default function PracticeHub() {
         session_type: sessionType,
         session_date: new Date().toISOString().split('T')[0],
         season_context: sessionConfig.season_context,
+        season_context_overridden: sessionConfig.season_context_overridden ?? false,
         drill_blocks: drillBlocks,
         notes: notes || undefined,
         module: activeModule,
