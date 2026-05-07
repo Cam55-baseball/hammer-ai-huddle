@@ -252,7 +252,7 @@ export function IdentityCommandCard({ className }: Props) {
         {/* Tier accent overlay (subtle, doesn't kill contrast) */}
         <div className={cn('pointer-events-none absolute inset-0 opacity-60 bg-gradient-to-br', bg)} />
         {/* Top tier-color accent bar */}
-        <div className={cn('pointer-events-none absolute top-0 left-0 right-0 h-1', tone.replace('text-', 'bg-'))} />
+        <div className="pointer-events-none absolute top-0 left-0 right-0 h-1 bg-primary/80" />
 
         {/* ─── Always-visible header (acts as the toggle) ──────────────── */}
         <button
