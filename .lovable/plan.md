@@ -1,104 +1,58 @@
+## Remaining Season Phase E2E Items
 
-# Make Season Phase Truly End-to-End
+Wrap up the four deferred pieces from the prior pass so Season Phase is fully wired.
 
-Today the Pre-/In-/Post-Season selector only nudges the **Nightly Recap narrative** and adds a single line to the **Training Block** prompt. Practice sessions ignore it (they ask the user to re-pick season per session) and the engines that drive AI chat, recovery suggestions, HIE analysis, and adaptation never read it. This plan wires the phase into every surface that prescribes work or talks to the athlete.
+### 1. Database: `season_context_overridden`
 
-## 1. Centralize phase resolution
+Migration on `performance_sessions`:
+- Add `season_context_overridden boolean NOT NULL DEFAULT false`
+- Set to `true` whenever the athlete picks a season in `SessionConfigPanel` that differs from `resolvedPhase` from `useSeasonStatus`
+- Used by analytics + recap to know the session's phase came from the athlete, not the profile
 
-Create a single shared resolver `resolveSeasonPhase(mpiSettings, today)` used by both the client (`useSeasonStatus`) and edge functions:
+### 2. HIE phase filters
 
-- Date-window match wins over stored `season_status` (same logic that already exists in `contextEngine.ts` and `useSeasonStatus.ts` — extract once).
-- Returns `{ phase, daysIntoPhase, daysUntilNextPhase, source: 'date_window' | 'stored' | 'default' }`.
-- Client copy lives in `src/lib/seasonPhase.ts`. Edge copy lives in `supabase/functions/_shared/seasonPhase.ts`. Identical logic, zero drift.
+Files: `supabase/functions/hie-analyze/index.ts`, `supabase/functions/hie-verify/index.ts`, `supabase/functions/nightly-hie-process/index.ts`, `supabase/functions/_shared/contextEngine.ts`, `supabase/functions/_shared/interpretationProfiles.ts`.
 
-## 2. Phase-aware **training block generation** (`generate-training-block`)
+- Resolve phase via shared `resolveSeasonPhase` at the top of every HIE entrypoint and pass `phase` into `contextEngine` + `interpretationProfiles`.
+- **In-Season:** suppress any "introduce new tool development / mechanical overhaul" recommendations. Cap intervention severity to "refine / maintain". Verify protocols default to low-CNS variants.
+- **Pre-Season:** lower `min_context_reps` (game 5 → 3, practice 5 → 3) so ramp-up athletes get earlier guidance. Allow tool development.
+- **Post-Season:** bias toward mobility / restorative interventions; suppress velocity/intensity pushes.
+- **Off-Season:** full menu of interventions, including aggressive overhauls.
+- Log resolved `phase` + `source` on every HIE run row for QA.
 
-Replace the single prompt line with a structured directive block driven by phase:
+### 3. Nutrition & recovery phase shifts
 
-| Phase | Volume | Intensity | CNS cap/day | Recovery emphasis | New skill work |
-|---|---|---|---|---|---|
-| Pre-Season | high | rising | medium-high | medium | high |
-| In-Season | low | maintenance | low | high | low (refinement only) |
-| Post-Season | low | very low | very low | very high | rebuild/mobility |
-| Off-Season | high | high | high | medium | high |
+Files: `supabase/functions/suggest-meals/index.ts`, `supabase/functions/compute-hammer-state/index.ts`.
 
-These caps become hard constraints in the generation prompt **and** post-generation validators (clamp `sets`, `weight`, and `cns_demand` if the model overshoots).
+`suggest-meals`:
+- Read phase from shared resolver.
+- Macro tilts (applied as percentage shifts on the existing per-athlete target, not absolute overrides):
+  - **Pre-Season:** +8% carbs, +5% protein (build + fuel ramp).
+  - **In-Season:** +5% carbs on game/practice days, tighter hydration floor, prioritize fast-digest pre-game options.
+  - **Post-Season:** −10% carbs, +5% protein, emphasize anti-inflammatory foods.
+  - **Off-Season:** baseline; allow surplus if goal = mass.
+- Pass phase into the AI prompt so meal rationale references it ("Pre-season ramp — extra carbs to support volume").
 
-## 3. Phase-aware **adaptation** (`adapt-training-block`, `suggest-adaptation`)
+`compute-hammer-state`:
+- Tighter CNS ceilings in-season (drop the high-load threshold by ~15%) so Hammer flips to "deload" sooner.
+- Pre-season: allow higher sustained CNS before flagging.
+- Phase string included in the explanation payload for `hammer_state_explanations_v2`.
 
-- Pass current phase + days remaining in phase into the adaptation prompt.
-- In-Season: bias toward deload, never propose new mechanical changes.
-- Pre-Season: bias toward ramp-up volume.
-- Post-Season: bias toward mobility/rest swaps.
-- Off-Season: allow aggressive overhauls.
+### 4. Dashboard UI: phase chip + tooltips
 
-## 4. Phase-aware **AI chat** (`ai-chat`)
+Files: new `src/components/season/SeasonPhaseChip.tsx`; mount in `src/components/dashboard/DashboardHeader.tsx` (or equivalent) and in `PracticeHub.tsx` header.
 
-- Inject `season_phase` and `days_into_phase` into the system prompt.
-- Add tone guidance (reuse `interpretationProfiles.ts`, lift it to `_shared/`).
-- Hammer should refuse to prescribe in-season mechanical overhauls and instead suggest queuing them for off-season.
+- Chip shows `Pre-Season · Day 12` / `In-Season · 4 wks left` etc., color-coded per phase.
+- Click → small popover: current phase, days into phase, days until next, "Edit season dates" link to profile.
+- "Why this changed" tooltip on adapted training blocks and HIE recommendations: surface the phase that drove the decision (reads `generation_metadata.season_phase` / HIE log `phase`).
 
-## 5. Phase-aware **HIE analysis** (`hie-analyze`, `hie-verify`, `nightly-hie-process`)
+### 5. Telemetry & QA
 
-- Read phase from MPI settings.
-- Suppress "introduce new tool development" interventions when in-season; convert them to "stabilize current tool."
-- Lower context-required reps in pre-season (athletes have fewer game reps).
+- Persist `season_phase` + `season_phase_source` into `generation_metadata` (training blocks), HIE run logs, and meal suggestion logs.
+- Manual smoke test matrix: one athlete per phase → generate block, run HIE, request meals, open dashboard, start a practice session. Confirm phase visible everywhere and constraints applied.
 
-## 6. Phase-aware **recovery & nutrition signals**
+### Out of scope (still)
 
-- `suggest-meals`: shift macro emphasis (pre-season → build, in-season → recovery carbs, post-season → maintenance, off-season → growth).
-- Regulation/recovery thresholds: in-season uses tighter CNS load ceilings before throttling; off-season relaxes.
-- Hammer state explanations include the phase so it doesn't flag in-season low volume as under-training.
-
-## 7. Practice Hub auto-fill
-
-- `useSessionDefaults` reads `season_status` from `useSeasonStatus()` and uses it as the default for `season_context` on every new session.
-- The `SeasonContextToggle` stays editable (one-off override).
-- If user changes it, we tag the session with `season_context_overridden = true` so engines know it was a manual override.
-
-## 8. Visibility & education
-
-- Add a small **active-phase chip** to the dashboard header ("Pre-Season • day 12/45") so users always know what the engine thinks.
-- Add a one-line "Why this changed" tooltip on workouts/recap/AI replies that depend on phase.
-
-## 9. Telemetry & QA
-
-- Log resolved phase + source on every engine run into `audit_log` for debugging the "why is my plan light?" questions.
-- Add a unit test for `resolveSeasonPhase` covering: date-window match, stored fallback, today inside multiple windows (date-window wins), no settings (default off-season).
-- Add an integration smoke test that flipping `season_status` to `in_season` produces a generated block with lower total weekly volume than `off_season` for the same user.
-
----
-
-## Files touched
-
-**New**
-- `src/lib/seasonPhase.ts`
-- `supabase/functions/_shared/seasonPhase.ts`
-- `supabase/functions/_shared/seasonProfiles.ts` (lifted from `generate-vault-recap/interpretationProfiles.ts` with volume/intensity caps added)
-- `src/components/dashboard/SeasonPhaseChip.tsx`
-- `src/lib/__tests__/seasonPhase.test.ts`
-
-**Modified — client**
-- `src/hooks/useSeasonStatus.ts` — use shared resolver, expose `daysIntoPhase`
-- `src/hooks/useSessionDefaults.ts` — auto-fill `season_context` from current phase
-- `src/components/practice/SessionConfigPanel.tsx` — show "from your profile" hint, mark override
-- `src/pages/PracticeHub.tsx` — pass `season_context_overridden`
-- Dashboard header (role-specific views) — mount `SeasonPhaseChip`
-
-**Modified — edge functions**
-- `generate-training-block/index.ts` — phase-driven volume/intensity directives + post-gen clamp
-- `adapt-training-block/index.ts`, `suggest-adaptation/index.ts` — phase context in prompts
-- `ai-chat/index.ts` — phase + tone in system prompt
-- `hie-analyze/index.ts`, `hie-verify/index.ts`, `nightly-hie-process/index.ts` — phase-aware intervention filters and rep thresholds
-- `suggest-meals/index.ts` — phase-driven macro emphasis
-- `compute-hammer-state/index.ts` — phase-aware "low volume is fine" path
-- `generate-vault-recap/contextEngine.ts` & `interpretationProfiles.ts` — switch to shared module
-
-**Schema**
-- Add `season_context_overridden boolean default false` to `performance_sessions` (migration).
-- No other schema changes — `athlete_mpi_settings` already holds everything we need.
-
-## Out of scope
-- Auto-detecting phase from a sport calendar (still date-window driven by user input).
-- Coach-level dashboards for team season phase.
-- Past sessions are not retroactively re-scored by the new phase signal.
+- Auto-detecting phase from external sport calendars.
+- Coach dashboard rollups by phase.
+- Retroactive re-scoring of past sessions/meals.
