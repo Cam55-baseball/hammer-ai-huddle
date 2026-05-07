@@ -30,7 +30,7 @@ const FIXTURES: Fixture[] = [
     expectedSetCap: 6,
     expectedHighCns: 3,
     expectMacroTilt: true,
-    expectStateAtPrimeFixture: 'ready',
+    expectStateAtPrimeFixture: 'prime',
   },
   {
     label: 'in_season',
