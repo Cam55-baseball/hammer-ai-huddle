@@ -5,10 +5,19 @@ import { format, addDays } from 'date-fns';
 
 interface TodayStats {
   checkinsCompleted: number;
+  checkinsTotal: number;
   workoutsLogged: number;
   sleepGoalHours: number | null;
   weightTracked: number | null;
 }
+
+/**
+ * The three canonical daily check-ins counted in the Nightly Recap.
+ * Other quiz_type rows (e.g. 'confidence', 'weekly_wellness') must NOT
+ * inflate this count — users have reported false "3/3" recaps.
+ */
+const CANONICAL_QUIZ_TYPES = ['morning', 'pre_lift', 'night'] as const;
+type CanonicalQuizType = typeof CANONICAL_QUIZ_TYPES[number];
 
 interface TomorrowPreview {
   hasWorkout: boolean;

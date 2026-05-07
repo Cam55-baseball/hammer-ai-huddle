@@ -1,20 +1,41 @@
-## Add prominent "Back to login" button on Create Account view
+## Problem
 
-The sign-up (Create Account) view currently only shows a small muted text link "Already have an account?" at the bottom. Users who clicked Sign Up by accident may miss it. We'll promote it to a prominent button matching the styling we already use for the "Sign up" CTA on the login view, so the two flows feel symmetrical.
+The Nightly Recap shows "3/3 Check-ins completed" even when the user did not actually complete all three. Root cause is in `src/hooks/useNightCheckInStats.ts`:
 
-### Change
+```ts
+const uniqueQuizTypes = new Set(quizzes.map((q) => q.quiz_type));
+const checkinsCompleted = uniqueQuizTypes.size;
+```
 
-**File:** `src/pages/Auth.tsx` (lines 317–354)
+The hardcoded "/3" copy lives in i18n (`vault.quiz.nightSuccess.checkinsCompleted = "{{count}}/3 Check-ins completed"`), but the count is computed from **every** `vault_focus_quizzes` row for today regardless of `quiz_type`. The canonical 3 are `morning`, `pre_lift`, `night` — but other types are written to the same table (e.g. `confidence` from `ConfidenceTracker.tsx`, and `weekly_wellness` / partial entries from other flows). Any of those inflate the count, and submitting the Night quiz itself can push the visible total to 3/3 even when morning/pre_lift were never completed.
 
-Extend the existing conditional that currently only styles the login → signup CTA prominently. Add a third branch for the signup view (`!isForgotPassword && !isLogin`) that renders an equivalent prominent outline button labeled "Back to login" (using the existing `auth.alreadyHaveAccount` i18n key) with a `LogIn` icon from lucide-react, wrapped in the same divider block (label: "Already have an account?").
+## Fix
 
-Behavior: clicking it sets `isLogin(true)` and `isForgotPassword(false)` — same as the current text link.
+Make the count strictly reflect the three canonical daily check-ins.
 
-The forgot-password view keeps its small text link ("Back to sign in") unchanged.
+### 1. `src/hooks/useNightCheckInStats.ts`
 
-### Technical notes
+- Define `const CANONICAL_QUIZ_TYPES = ['morning', 'pre_lift', 'night'] as const;`
+- Filter the fetched quizzes to only those types before building the `Set`, so `checkinsCompleted` ∈ {0,1,2,3}.
+- Keep the weight lookup as-is (any quiz row with `weight_lbs` is still valid).
+- Confirm we still query `entry_date = today` (we do).
 
-- Add `LogIn` to the existing `lucide-react` imports.
-- Reuse the same Button classes: `border-2 border-primary/60 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary font-semibold`, `variant="outline"`, `size="lg"`, `w-full`.
-- No i18n additions needed; reuse `auth.alreadyHaveAccount`.
-- No backend, routing, or business-logic changes.
+### 2. `src/components/vault/quiz/NightCheckInSuccess.tsx`
+
+- Add a `checkinsTotal` to the `TodayStats` shape (always 3 for now, sourced from the hook) so the denominator is data-driven, not hardcoded in copy.
+- Pass `total` into the i18n call: `t('vault.quiz.nightSuccess.checkinsCompleted', { count, total })`.
+
+### 3. i18n strings (all 8 locales)
+
+Update `vault.quiz.nightSuccess.checkinsCompleted` from `"{{count}}/3 ..."` to `"{{count}}/{{total}} ..."` in `en, es, fr, de, nl, ko, ja, zh`. Translations otherwise unchanged.
+
+### 4. Verification
+
+- Read back the updated hook + component to confirm types compile.
+- Manually trace: with only `night` submitted today → count = 1 → renders "1/3". With morning + night → "2/3". With confidence + night → "1/3" (no longer inflated).
+
+## Out of scope
+
+- No DB schema changes.
+- No changes to other surfaces that read `vault_focus_quizzes` (Vault page, GamePlanCard) — they already filter by explicit `quiz_type`.
+- No changes to `workoutsLogged`, `weightTracked`, or tomorrow preview — those already use proper sources of truth.
