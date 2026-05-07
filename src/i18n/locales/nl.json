@@ -3582,7 +3582,7 @@
       "nightSuccess": {
         "title": "Dag Voltooid!",
         "todayHighlights": "Hoogtepunten van Vandaag",
-        "checkinsCompleted": "{{count}}/3 Check-ins voltooid",
+        "checkinsCompleted": "{{count}}/{{total}} Check-ins voltooid",
         "workoutsLogged": "{{count}} training gelogd",
         "sleepGoalSet": "{{hours}} uur slaapdoel ingesteld",
         "weightTracked": "{{weight}} lbs bijgehouden",
