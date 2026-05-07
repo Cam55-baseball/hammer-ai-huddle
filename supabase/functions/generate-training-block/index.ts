@@ -298,13 +298,16 @@ serve(async (req) => {
     const [{ data: bodyGoal }, { data: mpiSettings }] = await Promise.all([
       supabase.from('athlete_body_goals').select('goal_type, target_weight_lbs')
         .eq('user_id', user.id).eq('is_active', true).maybeSingle(),
-      supabase.from('athlete_mpi_settings').select('primary_position, sport, season_status')
+      supabase.from('athlete_mpi_settings').select('primary_position, sport, season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
         .eq('user_id', user.id).maybeSingle(),
     ]);
 
     const sport = mpiSettings?.sport || 'baseball';
     const position = mpiSettings?.primary_position || 'athlete';
-    const seasonPhase = mpiSettings?.season_status || 'in_season';
+    const phaseResolution = resolveSeasonPhase(mpiSettings as any);
+    const phaseProfile = getSeasonProfile(phaseResolution.phase);
+    const seasonPhase = phaseResolution.phase;
+    const phasePromptBlock = buildPhasePromptBlock(phaseResolution);
     const reqBody = await req.json().catch(() => ({}));
     const { sport: requestSport, force_new } = reqBody as {
       sport?: string;
