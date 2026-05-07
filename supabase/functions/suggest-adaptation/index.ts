@@ -78,7 +78,31 @@ Deno.serve(async (req) => {
 
     console.log('[suggest-adaptation] Analyzing for user:', userId);
 
+    // Phase context
+    const { data: mpiSettings } = await supabase
+      .from('athlete_mpi_settings')
+      .select('season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const phaseRes = resolveSeasonPhase(mpiSettings as any);
+    const profile = getSeasonProfile(phaseRes.phase);
+
     const suggestions: AdaptationSuggestion[] = [];
+
+    // Phase-driven baseline
+    if (phaseRes.phase === 'in_season') {
+      suggestions.push({ priority: 'medium', type: 'reduce_intensity',
+        message: 'In-Season: protecting game-day bandwidth — keep training submax.',
+        action: 'Cap intensity at 70-75% and avoid new mechanical changes.' });
+    } else if (phaseRes.phase === 'post_season') {
+      suggestions.push({ priority: 'high', type: 'add_recovery',
+        message: 'Post-Season: prioritize physical reset and pain resolution.',
+        action: 'Skip max-effort lifts; emphasize mobility, sleep, soft tissue.' });
+    } else if (phaseRes.phase === 'preseason') {
+      suggestions.push({ priority: 'low', type: 'reduce_intensity',
+        message: 'Pre-Season: ramping toward opening day — monitor fatigue closely.',
+        action: 'Add a recovery day for every 3 high-CNS days.' });
+    }
 
     if (readiness_score !== undefined) {
       if (readiness_score < 50) {
