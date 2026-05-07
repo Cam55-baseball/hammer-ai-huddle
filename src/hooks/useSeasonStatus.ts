@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { getLocalDateString } from '@/utils/dateUtils';
+import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from '@/lib/seasonPhase';
 
 export type SeasonStatus = 'in_season' | 'preseason' | 'post_season';
 
