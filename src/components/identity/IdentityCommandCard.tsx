@@ -245,24 +245,27 @@ export function IdentityCommandCard({ className }: Props) {
     <TooltipProvider delayDuration={200}>
       <div
         className={cn(
-          'relative overflow-hidden rounded-2xl border bg-gradient-to-br ring-1',
-          bg, ring, className,
+          'relative overflow-hidden rounded-2xl border-2 bg-card text-foreground shadow-lg',
+          ring, className,
         )}
       >
+        {/* Tier accent overlay (subtle, doesn't kill contrast) */}
+        <div className={cn('pointer-events-none absolute inset-0 opacity-60 bg-gradient-to-br', bg)} />
+        {/* Top tier-color accent bar */}
+        <div className={cn('pointer-events-none absolute top-0 left-0 right-0 h-1', tone.replace('text-', 'bg-'))} />
+
         {/* ─── Always-visible header (acts as the toggle) ──────────────── */}
         <button
           type="button"
           onClick={handleToggle}
           aria-expanded={open}
           aria-label={open ? 'Collapse identity card' : 'Open identity card'}
-          className="w-full text-left px-3 sm:px-4 py-3 hover:bg-background/20 transition-colors"
+          className="relative w-full text-left px-3 sm:px-4 py-3 hover:bg-background/30 transition-colors"
         >
-          {/* Row 1 (mobile): eyebrow + day chip + chevron.
-              On sm+, this row holds the full identity column; score + chevron live to the right. */}
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/70">
                   Identity
                 </span>
                 {dayType !== 'standard' && (
@@ -277,71 +280,76 @@ export function IdentityCommandCard({ className }: Props) {
                 )}
               </div>
 
-              {/* Row 2 (mobile): big tier label on the left, score on the right.
-                  On sm+, the score column on the right takes over and this becomes label-only. */}
               <div className="mt-1 flex items-end justify-between gap-3 sm:block">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className={cn('text-2xl font-black tracking-tight leading-tight sm:text-2xl break-words', tone)}>
+                    <span className={cn('text-2xl font-black tracking-tight leading-tight sm:text-2xl break-words drop-shadow-sm', tone)}>
                       {label}
                     </span>
                     {standardConfirmed && (
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                      <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/40 px-1.5 py-0.5 rounded">
                         ✓ Confirmed
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Mobile-only score (right side of row 2). Hidden on sm+ where the
-                    dedicated right column takes over. */}
+                {/* Mobile-only score */}
                 <div className="flex flex-col items-end shrink-0 sm:hidden">
-                  <div className={cn('text-3xl font-black tabular-nums leading-none', tone)}>
+                  <div className={cn(
+                    'rounded-lg bg-background/85 ring-1 ring-border px-2.5 py-1',
+                    'text-3xl font-black tabular-nums leading-none',
+                    tone,
+                  )}>
                     {score}
                   </div>
-                  <div className="mt-0.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <div className="mt-1 text-[9px] font-black uppercase tracking-widest text-foreground/70">
                     Consistency
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right column on sm+: score + chevron stacked. */}
+            {/* Right column on sm+ */}
             <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
-              <div className={cn('text-3xl font-black tabular-nums leading-none', tone)}>
+              <div className={cn(
+                'rounded-lg bg-background/85 ring-1 ring-border px-2.5 py-1',
+                'text-3xl font-black tabular-nums leading-none',
+                tone,
+              )}>
                 {score}
               </div>
-              <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className="text-[9px] font-black uppercase tracking-widest text-foreground/70">
                 Consistency
               </div>
             </div>
 
-            {/* Chevron — always top-right */}
+            {/* Chevron */}
             <div className="relative shrink-0 self-start pt-0.5">
               {hasUnreadAlert && !open && (
                 <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse" />
               )}
               <ChevronDown
                 className={cn(
-                  'h-5 w-5 text-muted-foreground transition-transform',
+                  'h-5 w-5 text-foreground/80 transition-transform',
                   open && 'rotate-180',
                 )}
               />
             </div>
           </div>
 
-          {/* Row 3: streak chips on their own line — full width, no collision with score. */}
+          {/* Row 3: streak chips */}
           <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
+            <span className="inline-flex items-center gap-1 rounded-full bg-background/90 ring-1 ring-border px-2 py-0.5 font-bold text-foreground">
               <Flame className="h-3 w-3 text-orange-400" />
               {perfStreak}d perf
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/60 px-2 py-0.5 font-semibold">
+            <span className="inline-flex items-center gap-1 rounded-full bg-background/90 ring-1 ring-border px-2 py-0.5 font-bold text-foreground">
               <ShieldCheck className="h-3 w-3 text-emerald-400" />
               {discStreak}d active
             </span>
             {nnMiss > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 font-semibold text-rose-400">
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/20 ring-1 ring-rose-500/40 px-2 py-0.5 font-bold text-rose-300">
                 {nnMiss} miss/7d
               </span>
             )}
