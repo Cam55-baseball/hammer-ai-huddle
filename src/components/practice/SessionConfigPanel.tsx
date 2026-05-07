@@ -193,6 +193,8 @@ export function SessionConfigPanel({ module, sessionType, onConfirm, onBack }: S
       pitch_distance_ft: pitchDistance,
       velocity_band: velocityBand,
       season_context: seasonContext,
+      season_context_overridden: showSeasonContext && seasonContext !== profilePhase,
+      resolved_phase: resolvedPhase,
       environment,
       indoor_outdoor: 'outdoor',
       coach_selection: coachSelection,
