@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { resolveSeasonPhase, getSeasonProfile, buildPhasePromptBlock } from "../_shared/seasonPhase.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -117,6 +118,16 @@ serve(async (req) => {
       royalTimingContextSection = `\n\nROYAL TIMING CONTEXT:\nThe athlete is using the Royal Timing video analysis module. They are studying timing mechanics via video comparison. Provide elite-level (top 0.01%) timing analysis insight that is sport-specific and actionable. Here is their study context:\n${royalTimingContext}\n`;
     }
 
+    // Resolve season phase for tone + constraints
+    const { data: mpiSettings } = await supabase
+      .from('athlete_mpi_settings')
+      .select('season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const phaseRes = resolveSeasonPhase(mpiSettings as any);
+    const phaseProfile = getSeasonProfile(phaseRes.phase);
+    const phaseSection = `\n\n${buildPhasePromptBlock(phaseRes)}\n\nCRITICAL: Respect the athlete's season phase. ${phaseRes.phase === 'in_season' ? 'NEVER prescribe new mechanical changes mid-season — queue them for off-season and offer maintenance/refinement cues only.' : phaseRes.phase === 'post_season' ? 'Prioritize recovery, sleep, and pain resolution over performance gains.' : phaseRes.phase === 'preseason' ? 'Sharpen what exists; avoid introducing brand-new patterns this close to opening day.' : 'Off-season — aggressive changes are appropriate when data supports them.'}\n`;
+
     const systemPrompt = `You are Hammer, an elite biomechanics coach for baseball and softball athletes. You provide detailed, actionable advice on hitting, pitching, and throwing mechanics.
 
 ${ownerBio ? `Follow the coaching philosophy below unless the user asks otherwise.\n\nCoach: ${ownerName}\nPhilosophy: ${ownerBio}\n` : ''}
@@ -124,7 +135,8 @@ ${userContext}
 ${analysisContextSection}
 ${dashboardContextSection}
 ${royalTimingContextSection}
-Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data when available.`;
+${phaseSection}
+Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.`;
 
     const useStreaming = stream === true;
 

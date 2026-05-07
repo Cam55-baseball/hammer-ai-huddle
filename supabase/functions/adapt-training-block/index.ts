@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveSeasonPhase } from "../_shared/seasonPhase.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -82,6 +83,18 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .in('workout_id', workoutIds);
 
+    // Resolve current season phase to bias adaptation thresholds
+    const { data: mpiSettings } = await supabase
+      .from('athlete_mpi_settings')
+      .select('season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const phase = resolveSeasonPhase(mpiSettings as any).phase;
+    // In-season: never push volume up, lower RPE threshold for deload.
+    // Off-season: more permissive — only deload at RPE>8.5.
+    const reduceRpeThreshold = phase === 'in_season' ? 7.5 : phase === 'off_season' ? 8.5 : 8;
+    const allowVolumeIncrease = phase !== 'in_season' && phase !== 'post_season';
+
     const adaptations: string[] = [];
     const today = new Date().toISOString().split('T')[0];
 
@@ -105,26 +118,28 @@ serve(async (req) => {
     // Take last 8 RPE samples (most recent by date)
     const rollingWindow = rpeValues.slice(-8);
 
-    // Rule 1: Rolling RPE > 8 with ≥4 samples → reduce volume
+    // Rule 1: Rolling RPE > threshold (phase-tuned) with ≥4 samples → reduce volume
     if (rollingWindow.length >= 4 && futureWorkoutIds.length > 0) {
       const avgRPE = rollingWindow.reduce((a, b) => a + b, 0) / rollingWindow.length;
-      if (avgRPE > 8) {
+      if (avgRPE > reduceRpeThreshold) {
         const { data: decremented } = await serviceClient.rpc('batch_decrement_sets', {
           p_workout_ids: futureWorkoutIds,
         });
         if (decremented && decremented > 0) {
-          adaptations.push(`Reduced volume (sets -1) for ${decremented} exercises — rolling RPE avg ${avgRPE.toFixed(1)}`);
+          adaptations.push(`Reduced volume (sets -1) for ${decremented} exercises — rolling RPE avg ${avgRPE.toFixed(1)} (${phase} threshold ${reduceRpeThreshold})`);
         }
       }
 
-      // Rule 2: Rolling RPE < 5 with ≥4 samples → increase volume
-      if (avgRPE < 5) {
+      // Rule 2: Rolling RPE < 5 with ≥4 samples → increase volume (only when phase allows)
+      if (avgRPE < 5 && allowVolumeIncrease) {
         const { data: incremented } = await serviceClient.rpc('batch_increment_sets', {
           p_workout_ids: futureWorkoutIds,
         });
         if (incremented && incremented > 0) {
           adaptations.push(`Increased volume (sets +1) for ${incremented} exercises — rolling RPE avg ${avgRPE.toFixed(1)}`);
         }
+      } else if (avgRPE < 5 && !allowVolumeIncrease) {
+        adaptations.push(`Holding volume despite low RPE — ${phase} phase prioritizes recovery and game-day bandwidth.`);
       }
     }
 

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveSeasonPhase, getSeasonProfile, buildPhasePromptBlock } from "../_shared/seasonPhase.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -298,13 +299,16 @@ serve(async (req) => {
     const [{ data: bodyGoal }, { data: mpiSettings }] = await Promise.all([
       supabase.from('athlete_body_goals').select('goal_type, target_weight_lbs')
         .eq('user_id', user.id).eq('is_active', true).maybeSingle(),
-      supabase.from('athlete_mpi_settings').select('primary_position, sport, season_status')
+      supabase.from('athlete_mpi_settings').select('primary_position, sport, season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
         .eq('user_id', user.id).maybeSingle(),
     ]);
 
     const sport = mpiSettings?.sport || 'baseball';
     const position = mpiSettings?.primary_position || 'athlete';
-    const seasonPhase = mpiSettings?.season_status || 'in_season';
+    const phaseResolution = resolveSeasonPhase(mpiSettings as any);
+    const phaseProfile = getSeasonProfile(phaseResolution.phase);
+    const seasonPhase = phaseResolution.phase;
+    const phasePromptBlock = buildPhasePromptBlock(phaseResolution);
     const reqBody = await req.json().catch(() => ({}));
     const { sport: requestSport, force_new } = reqBody as {
       sport?: string;
@@ -364,28 +368,27 @@ ATHLETE CONTEXT:
 - Experience: ${experienceLevel}
 - Position: ${position}
 - Body Goal: ${bodyGoal?.goal_type || 'performance'}
-- Season Phase: ${seasonPhase.replace('_', '-')} ${seasonPhase === 'in_season' ? '(prioritize maintenance, low-CNS, recovery)' : seasonPhase === 'preseason' ? '(prioritize accumulation, strength build)' : '(prioritize rebuild + mobility)'}
 - Available days per week: ${workoutsPerWeek}
 - Equipment: ${JSON.stringify(equipment)}
 ${(injuries as string[]).length ? `- INJURIES/AVOID: ${(injuries as string[]).join(', ')}` : ''}
 
-PROGRAMMING RULES:
+${phasePromptBlock}
+
+PROGRAMMING RULES (must respect SEASON PHASE above):
 1. Generate exactly 6 weeks of training
 2. Each week has exactly ${workoutsPerWeek} workouts
-3. Weeks 1-2: Volume accumulation (higher reps, moderate weight)
-4. Weeks 3-4: Intensification (moderate reps, heavier weight)
-5. Week 5: Peak/overreach (highest intensity)
-6. Week 6: Deload (reduced volume and intensity by 40-50%)
-7. Each workout needs 3-6 exercises with sets, reps, and coaching cues
-8. Assign cns_demand (low/medium/high) to each exercise
-9. Avoid scheduling consecutive high-CNS exercises without medium/low buffer
-10. For ${sport} athletes, prioritize rotational power, arm health, and posterior chain
+3. Volume/intensity must match the phase Volume + Intensity tags. Hard cap: max ${phaseProfile.maxSetsPerExercise} sets per exercise, max ${phaseProfile.maxHighCnsPerWeek} high-CNS sessions per week.
+4. ${seasonPhase === 'in_season' ? 'In-Season: maintenance only — never propose new mechanical changes. Reps lower, weight 60-75%, prioritize recovery.' : seasonPhase === 'preseason' ? 'Pre-Season: ramp volume/intensity weekly, peak in week 5, deload week 6.' : seasonPhase === 'post_season' ? 'Post-Season: decompression — mobility, sleep, pain resolution. No max-effort lifts.' : 'Off-Season: aggressive build — strength, power, mechanics. Deload every 4th week.'}
+5. Each workout needs 3-6 exercises with sets, reps, and coaching cues
+6. Assign cns_demand (low/medium/high) to each exercise
+7. Avoid scheduling consecutive high-CNS exercises without medium/low buffer
+8. For ${sport} athletes, prioritize rotational power, arm health, and posterior chain
 
 Always respond using the generate_training_block function.`
           },
           {
             role: "user",
-            content: `Generate a complete 6-week ${goal} training block for a ${experienceLevel} ${sport} ${position}. ${workoutsPerWeek} workouts per week.`
+            content: `Generate a complete 6-week ${goal} training block for a ${experienceLevel} ${sport} ${position}. ${workoutsPerWeek} workouts per week. Respect the SEASON PHASE constraints strictly.`
           }
         ],
         tools: [
@@ -585,7 +588,7 @@ Always respond using the generate_training_block function.`
         .map((ex, idx) => ({
           ordinal: idx, // recomputed AFTER filtering
           name: ex.name.trim(),
-          sets: clamp(Number(ex.sets) || 3, 1, 10),
+          sets: clamp(Number(ex.sets) || 3, 1, phaseProfile.maxSetsPerExercise),
           reps: clamp(Number(ex.reps) || 8, 1, 30),
           weight: ex.weight ?? null,
           tempo: ex.tempo || null,
@@ -620,6 +623,22 @@ Always respond using the generate_training_block function.`
         exercises,
       };
     });
+
+    // Phase clamp: cap high-CNS sessions per week to phaseProfile.maxHighCnsPerWeek.
+    // Surplus sessions get downgraded to medium-CNS (workout still runs, just lighter).
+    const highCnsPerWeek = new Map<number, number>();
+    for (const w of workoutsPayload) {
+      const isHigh = w.exercises.some(e => e.cns_demand === 'high');
+      if (!isHigh) continue;
+      const used = highCnsPerWeek.get(w.week_number) || 0;
+      if (used >= phaseProfile.maxHighCnsPerWeek) {
+        // Downgrade all high cns demand to medium for this workout
+        w.exercises = w.exercises.map(e => e.cns_demand === 'high' ? { ...e, cns_demand: 'medium' } : e);
+        console.log(`Phase clamp [${seasonPhase}]: downgraded high-CNS workout ${w.scheduled_date} (week ${w.week_number}, cap=${phaseProfile.maxHighCnsPerWeek})`);
+      } else {
+        highCnsPerWeek.set(w.week_number, used + 1);
+      }
+    }
 
     // Final payload sanity — only hard-throw on empty payload
     if (workoutsPayload.length === 0) {

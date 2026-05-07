@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { getLocalDateString } from '@/utils/dateUtils';
+import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from '@/lib/seasonPhase';
 
 export type SeasonStatus = 'in_season' | 'preseason' | 'post_season';
 
@@ -28,16 +28,10 @@ type SeasonUpdates = Partial<{
 }>;
 
 function detectCurrentPhase(data: SeasonData): SeasonStatus | null {
-  const today = getLocalDateString();
-  const phases: { status: SeasonStatus; start: string | null; end: string | null }[] = [
-    { status: 'preseason', start: data.preseason_start_date, end: data.preseason_end_date },
-    { status: 'in_season', start: data.in_season_start_date, end: data.in_season_end_date },
-    { status: 'post_season', start: data.post_season_start_date, end: data.post_season_end_date },
-  ];
-  for (const p of phases) {
-    if (p.start && p.end && today >= p.start && today <= p.end) return p.status;
-  }
-  return null;
+  const res = resolveSeasonPhase(data);
+  if (res.source !== 'date_window') return null;
+  if (res.phase === 'off_season') return null;
+  return res.phase as SeasonStatus;
 }
 
 export function useSeasonStatus() {
@@ -116,8 +110,18 @@ export function useSeasonStatus() {
     }
   }, [query.data]);
 
+  const resolution = query.data
+    ? resolveSeasonPhase(query.data)
+    : { phase: 'in_season' as SeasonPhase, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' as const };
+  const profile = getSeasonProfile(resolution.phase);
+
   return {
     seasonStatus: query.data?.season_status ?? 'in_season',
+    resolvedPhase: resolution.phase,
+    phaseDaysIn: resolution.daysIntoPhase,
+    phaseDaysRemaining: resolution.daysUntilNextPhase,
+    phaseSource: resolution.source,
+    phaseProfile: profile,
     preseasonStartDate: query.data?.preseason_start_date ?? null,
     preseasonEndDate: query.data?.preseason_end_date ?? null,
     inSeasonStartDate: query.data?.in_season_start_date ?? null,

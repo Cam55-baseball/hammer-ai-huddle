@@ -1,41 +1,104 @@
-## Problem
 
-The Nightly Recap shows "3/3 Check-ins completed" even when the user did not actually complete all three. Root cause is in `src/hooks/useNightCheckInStats.ts`:
+# Make Season Phase Truly End-to-End
 
-```ts
-const uniqueQuizTypes = new Set(quizzes.map((q) => q.quiz_type));
-const checkinsCompleted = uniqueQuizTypes.size;
-```
+Today the Pre-/In-/Post-Season selector only nudges the **Nightly Recap narrative** and adds a single line to the **Training Block** prompt. Practice sessions ignore it (they ask the user to re-pick season per session) and the engines that drive AI chat, recovery suggestions, HIE analysis, and adaptation never read it. This plan wires the phase into every surface that prescribes work or talks to the athlete.
 
-The hardcoded "/3" copy lives in i18n (`vault.quiz.nightSuccess.checkinsCompleted = "{{count}}/3 Check-ins completed"`), but the count is computed from **every** `vault_focus_quizzes` row for today regardless of `quiz_type`. The canonical 3 are `morning`, `pre_lift`, `night` — but other types are written to the same table (e.g. `confidence` from `ConfidenceTracker.tsx`, and `weekly_wellness` / partial entries from other flows). Any of those inflate the count, and submitting the Night quiz itself can push the visible total to 3/3 even when morning/pre_lift were never completed.
+## 1. Centralize phase resolution
 
-## Fix
+Create a single shared resolver `resolveSeasonPhase(mpiSettings, today)` used by both the client (`useSeasonStatus`) and edge functions:
 
-Make the count strictly reflect the three canonical daily check-ins.
+- Date-window match wins over stored `season_status` (same logic that already exists in `contextEngine.ts` and `useSeasonStatus.ts` — extract once).
+- Returns `{ phase, daysIntoPhase, daysUntilNextPhase, source: 'date_window' | 'stored' | 'default' }`.
+- Client copy lives in `src/lib/seasonPhase.ts`. Edge copy lives in `supabase/functions/_shared/seasonPhase.ts`. Identical logic, zero drift.
 
-### 1. `src/hooks/useNightCheckInStats.ts`
+## 2. Phase-aware **training block generation** (`generate-training-block`)
 
-- Define `const CANONICAL_QUIZ_TYPES = ['morning', 'pre_lift', 'night'] as const;`
-- Filter the fetched quizzes to only those types before building the `Set`, so `checkinsCompleted` ∈ {0,1,2,3}.
-- Keep the weight lookup as-is (any quiz row with `weight_lbs` is still valid).
-- Confirm we still query `entry_date = today` (we do).
+Replace the single prompt line with a structured directive block driven by phase:
 
-### 2. `src/components/vault/quiz/NightCheckInSuccess.tsx`
+| Phase | Volume | Intensity | CNS cap/day | Recovery emphasis | New skill work |
+|---|---|---|---|---|---|
+| Pre-Season | high | rising | medium-high | medium | high |
+| In-Season | low | maintenance | low | high | low (refinement only) |
+| Post-Season | low | very low | very low | very high | rebuild/mobility |
+| Off-Season | high | high | high | medium | high |
 
-- Add a `checkinsTotal` to the `TodayStats` shape (always 3 for now, sourced from the hook) so the denominator is data-driven, not hardcoded in copy.
-- Pass `total` into the i18n call: `t('vault.quiz.nightSuccess.checkinsCompleted', { count, total })`.
+These caps become hard constraints in the generation prompt **and** post-generation validators (clamp `sets`, `weight`, and `cns_demand` if the model overshoots).
 
-### 3. i18n strings (all 8 locales)
+## 3. Phase-aware **adaptation** (`adapt-training-block`, `suggest-adaptation`)
 
-Update `vault.quiz.nightSuccess.checkinsCompleted` from `"{{count}}/3 ..."` to `"{{count}}/{{total}} ..."` in `en, es, fr, de, nl, ko, ja, zh`. Translations otherwise unchanged.
+- Pass current phase + days remaining in phase into the adaptation prompt.
+- In-Season: bias toward deload, never propose new mechanical changes.
+- Pre-Season: bias toward ramp-up volume.
+- Post-Season: bias toward mobility/rest swaps.
+- Off-Season: allow aggressive overhauls.
 
-### 4. Verification
+## 4. Phase-aware **AI chat** (`ai-chat`)
 
-- Read back the updated hook + component to confirm types compile.
-- Manually trace: with only `night` submitted today → count = 1 → renders "1/3". With morning + night → "2/3". With confidence + night → "1/3" (no longer inflated).
+- Inject `season_phase` and `days_into_phase` into the system prompt.
+- Add tone guidance (reuse `interpretationProfiles.ts`, lift it to `_shared/`).
+- Hammer should refuse to prescribe in-season mechanical overhauls and instead suggest queuing them for off-season.
+
+## 5. Phase-aware **HIE analysis** (`hie-analyze`, `hie-verify`, `nightly-hie-process`)
+
+- Read phase from MPI settings.
+- Suppress "introduce new tool development" interventions when in-season; convert them to "stabilize current tool."
+- Lower context-required reps in pre-season (athletes have fewer game reps).
+
+## 6. Phase-aware **recovery & nutrition signals**
+
+- `suggest-meals`: shift macro emphasis (pre-season → build, in-season → recovery carbs, post-season → maintenance, off-season → growth).
+- Regulation/recovery thresholds: in-season uses tighter CNS load ceilings before throttling; off-season relaxes.
+- Hammer state explanations include the phase so it doesn't flag in-season low volume as under-training.
+
+## 7. Practice Hub auto-fill
+
+- `useSessionDefaults` reads `season_status` from `useSeasonStatus()` and uses it as the default for `season_context` on every new session.
+- The `SeasonContextToggle` stays editable (one-off override).
+- If user changes it, we tag the session with `season_context_overridden = true` so engines know it was a manual override.
+
+## 8. Visibility & education
+
+- Add a small **active-phase chip** to the dashboard header ("Pre-Season • day 12/45") so users always know what the engine thinks.
+- Add a one-line "Why this changed" tooltip on workouts/recap/AI replies that depend on phase.
+
+## 9. Telemetry & QA
+
+- Log resolved phase + source on every engine run into `audit_log` for debugging the "why is my plan light?" questions.
+- Add a unit test for `resolveSeasonPhase` covering: date-window match, stored fallback, today inside multiple windows (date-window wins), no settings (default off-season).
+- Add an integration smoke test that flipping `season_status` to `in_season` produces a generated block with lower total weekly volume than `off_season` for the same user.
+
+---
+
+## Files touched
+
+**New**
+- `src/lib/seasonPhase.ts`
+- `supabase/functions/_shared/seasonPhase.ts`
+- `supabase/functions/_shared/seasonProfiles.ts` (lifted from `generate-vault-recap/interpretationProfiles.ts` with volume/intensity caps added)
+- `src/components/dashboard/SeasonPhaseChip.tsx`
+- `src/lib/__tests__/seasonPhase.test.ts`
+
+**Modified — client**
+- `src/hooks/useSeasonStatus.ts` — use shared resolver, expose `daysIntoPhase`
+- `src/hooks/useSessionDefaults.ts` — auto-fill `season_context` from current phase
+- `src/components/practice/SessionConfigPanel.tsx` — show "from your profile" hint, mark override
+- `src/pages/PracticeHub.tsx` — pass `season_context_overridden`
+- Dashboard header (role-specific views) — mount `SeasonPhaseChip`
+
+**Modified — edge functions**
+- `generate-training-block/index.ts` — phase-driven volume/intensity directives + post-gen clamp
+- `adapt-training-block/index.ts`, `suggest-adaptation/index.ts` — phase context in prompts
+- `ai-chat/index.ts` — phase + tone in system prompt
+- `hie-analyze/index.ts`, `hie-verify/index.ts`, `nightly-hie-process/index.ts` — phase-aware intervention filters and rep thresholds
+- `suggest-meals/index.ts` — phase-driven macro emphasis
+- `compute-hammer-state/index.ts` — phase-aware "low volume is fine" path
+- `generate-vault-recap/contextEngine.ts` & `interpretationProfiles.ts` — switch to shared module
+
+**Schema**
+- Add `season_context_overridden boolean default false` to `performance_sessions` (migration).
+- No other schema changes — `athlete_mpi_settings` already holds everything we need.
 
 ## Out of scope
-
-- No DB schema changes.
-- No changes to other surfaces that read `vault_focus_quizzes` (Vault page, GamePlanCard) — they already filter by explicit `quiz_type`.
-- No changes to `workoutsLogged`, `weightTracked`, or tomorrow preview — those already use proper sources of truth.
+- Auto-detecting phase from a sport calendar (still date-window driven by user input).
+- Coach-level dashboards for team season phase.
+- Past sessions are not retroactively re-scored by the new phase signal.
