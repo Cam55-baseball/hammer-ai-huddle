@@ -3761,6 +3761,9 @@ export type Database = {
           readiness_score: number | null
           risk_alerts: Json | null
           schema_version: number
+          season_phase: string | null
+          season_phase_label: string | null
+          season_phase_source: string | null
           smart_week_plan: Json | null
           sport: string
           transfer_score: number | null
@@ -3787,6 +3790,9 @@ export type Database = {
           readiness_score?: number | null
           risk_alerts?: Json | null
           schema_version?: number
+          season_phase?: string | null
+          season_phase_label?: string | null
+          season_phase_source?: string | null
           smart_week_plan?: Json | null
           sport?: string
           transfer_score?: number | null
@@ -3813,6 +3819,9 @@ export type Database = {
           readiness_score?: number | null
           risk_alerts?: Json | null
           schema_version?: number
+          season_phase?: string | null
+          season_phase_label?: string | null
+          season_phase_source?: string | null
           smart_week_plan?: Json | null
           sport?: string
           transfer_score?: number | null
