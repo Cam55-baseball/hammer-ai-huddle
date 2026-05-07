@@ -314,22 +314,44 @@ const Auth = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsForgotPassword(false);
-                setIsLogin(!isLogin);
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {isForgotPassword 
-                ? t('auth.backToSignIn') 
-                : isLogin 
-                ? t('auth.dontHaveAccount') 
-                : t('auth.alreadyHaveAccount')}
-            </button>
-          </div>
+          {!isForgotPassword && isLogin ? (
+            <div className="mt-6">
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                  <span className="bg-background px-3 text-muted-foreground">New to {branding.appName}?</span>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setIsLogin(false);
+                }}
+                className="w-full border-2 border-primary/60 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary font-semibold"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                {t('auth.dontHaveAccount')}
+              </Button>
+            </div>
+          ) : (
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setIsLogin(!isLogin);
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {isForgotPassword ? t('auth.backToSignIn') : t('auth.alreadyHaveAccount')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
