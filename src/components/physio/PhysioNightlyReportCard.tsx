@@ -113,25 +113,25 @@ export function PhysioNightlyReportCard() {
   const responses = report.suggestion_responses as Record<string, string> | null;
 
   return (
-    <Card className="overflow-hidden border-2 border-border/50">
+    <Card className="overflow-hidden border-2 border-border bg-card/95 text-foreground">
       {/* Color header */}
-      <div className={cn('p-4 border-b', config.header)}>
+      <div className={cn('p-4 border-b border-border/60', config.header)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={cn('w-3 h-3 rounded-full animate-pulse', config.dot)} />
-            <span className="font-bold text-sm">{config.label}</span>
+            <span className="font-black text-sm text-foreground">{config.label}</span>
             <span className={cn('px-2 py-0.5 rounded-full border text-xs font-mono font-bold', config.badge)}>
               {regulationScore}/100
             </span>
           </div>
-          <Activity className="h-5 w-5 text-muted-foreground" />
+          <Activity className="h-5 w-5 text-foreground/70" />
         </div>
       </div>
 
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-4 space-y-4 text-foreground">
         {/* Headline */}
         {report.report_headline && (
-          <p className="text-sm text-foreground leading-relaxed font-medium">
+          <p className="text-sm text-foreground leading-relaxed font-semibold">
             {report.report_headline}
           </p>
         )}
@@ -149,7 +149,7 @@ export function PhysioNightlyReportCard() {
           ].map(({ label, score, title }) => (
             <div key={title} className="flex flex-col items-center gap-1">
               <span className="text-xs" title={title}>{label}</span>
-              <div className="w-full h-8 bg-muted/30 rounded-sm overflow-hidden">
+              <div className="w-full h-8 bg-muted/60 rounded-sm overflow-hidden border border-border/40">
                 <div
                   className={cn(
                     'w-full rounded-sm transition-all',
@@ -158,7 +158,7 @@ export function PhysioNightlyReportCard() {
                   style={{ height: `${score ?? 0}%` }}
                 />
               </div>
-              <span className="text-xs text-muted-foreground font-mono">{score ?? '?'}</span>
+              <span className="text-xs text-foreground font-bold tabular-nums">{score ?? '?'}</span>
             </div>
           ))}
         </div>
@@ -170,7 +170,7 @@ export function PhysioNightlyReportCard() {
               variant="ghost"
               size="sm"
               onClick={() => setShowFull(!showFull)}
-              className="w-full text-xs text-muted-foreground"
+              className="w-full text-xs text-foreground/80 hover:text-foreground"
             >
               <ChevronDown className={cn('h-4 w-4 mr-1 transition-transform', showFull && 'rotate-180')} />
               {showFull ? 'Hide' : 'View'} Full Report & Recommendations
@@ -193,9 +193,9 @@ export function PhysioNightlyReportCard() {
         )}
 
         {/* Disclaimer */}
-        <div className="flex items-start gap-2 p-2 bg-muted/20 rounded-lg">
-          <AlertTriangle className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-muted-foreground">
+        <div className="flex items-start gap-2 p-2.5 bg-muted/50 border border-border/40 rounded-lg">
+          <AlertTriangle className="h-3.5 w-3.5 text-foreground/70 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-foreground/80">
             Educational purposes only. Not medical advice. Consult a licensed professional for health concerns.
           </p>
         </div>
