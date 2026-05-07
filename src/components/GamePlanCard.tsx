@@ -2225,7 +2225,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           {/* Timeline Mode - Unified list with full control */}
           {sortMode === 'timeline' ? (
             <div className="space-y-2">
-              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+              <h3 id="timeline-section" className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2 scroll-mt-4">
                 <span className="h-px flex-1 bg-primary/30" />
                 {t('gamePlan.sections.timeline')}
                 <span className="h-px flex-1 bg-primary/30" />
