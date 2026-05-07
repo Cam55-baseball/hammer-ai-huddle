@@ -41,6 +41,8 @@ export interface SessionConfig {
   link_code?: string;
   bat_size?: string;
   bat_type?: string;
+  season_context_overridden?: boolean;
+  resolved_phase?: string;
 }
 
 interface SessionConfigPanelProps {
