@@ -1247,7 +1247,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     requestAnimationFrame(() => {
       // Re-check at fire time — user may have scrolled in the same frame
       if (userScrolledRef.current) return;
-      const el = document.getElementById('nn-section');
+      const el =
+        document.getElementById('nn-section') ||
+        document.getElementById('custom-activities-section') ||
+        document.getElementById('timeline-section');
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
