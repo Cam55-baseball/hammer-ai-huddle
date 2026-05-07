@@ -1,58 +1,68 @@
-## Remaining Season Phase E2E Items
+## Season Phase E2E Regression Tests
 
-Wrap up the four deferred pieces from the prior pass so Season Phase is fully wired.
+Add a focused regression suite that locks in the season phase contract end-to-end: resolver, workout clamps, nutrition macro tilts, and hammer-state thresholds. Pure unit/integration style (vitest + Deno test) — no live network.
 
-### 1. Database: `season_context_overridden`
+### Scope
 
-Migration on `performance_sessions`:
-- Add `season_context_overridden boolean NOT NULL DEFAULT false`
-- Set to `true` whenever the athlete picks a season in `SessionConfigPanel` that differs from `resolvedPhase` from `useSeasonStatus`
-- Used by analytics + recap to know the session's phase came from the athlete, not the profile
+Cover all 4 phases (`preseason`, `in_season`, `post_season`, `off_season`) plus the `default` fallback for each layer below.
 
-### 2. HIE phase filters
+### 1. Resolver tests — `src/test/seasonPhase.test.ts`
 
-Files: `supabase/functions/hie-analyze/index.ts`, `supabase/functions/hie-verify/index.ts`, `supabase/functions/nightly-hie-process/index.ts`, `supabase/functions/_shared/contextEngine.ts`, `supabase/functions/_shared/interpretationProfiles.ts`.
+Targets `resolveSeasonPhase` + `getSeasonProfile` from `src/lib/seasonPhase.ts`:
+- Returns `off_season` / `source: 'default'` when settings are null/empty.
+- Date-window match for each of preseason / in_season / post_season returns correct phase, `source: 'date_window'`, and sane `daysIntoPhase` / `daysUntilNextPhase`.
+- Falls back to `season_status` when no window matches → `source: 'stored'`.
+- Invalid `season_status` falls back to `off_season` default.
+- `SEASON_PROFILES` invariants per phase: `maxSetsPerExercise`, `maxHighCnsPerWeek`, `volume`, `intensity`, `newSkillWork` match the documented contract (in-season ≤ 4 sets / ≤ 1 high-CNS, post-season 0 high-CNS, off-season highest caps).
 
-- Resolve phase via shared `resolveSeasonPhase` at the top of every HIE entrypoint and pass `phase` into `contextEngine` + `interpretationProfiles`.
-- **In-Season:** suppress any "introduce new tool development / mechanical overhaul" recommendations. Cap intervention severity to "refine / maintain". Verify protocols default to low-CNS variants.
-- **Pre-Season:** lower `min_context_reps` (game 5 → 3, practice 5 → 3) so ramp-up athletes get earlier guidance. Allow tool development.
-- **Post-Season:** bias toward mobility / restorative interventions; suppress velocity/intensity pushes.
-- **Off-Season:** full menu of interventions, including aggressive overhauls.
-- Log resolved `phase` + `source` on every HIE run row for QA.
+### 2. Workout filtering tests — `src/test/seasonWorkoutClamps.test.ts`
 
-### 3. Nutrition & recovery phase shifts
+Extract the clamp logic used by `generate-training-block` and `adapt-training-block` into a small pure helper (or import the existing helper if already exported) and assert:
+- A generated block with 8 sets/exercise is clamped to `profile.maxSetsPerExercise` per phase.
+- A week containing 4 high-CNS sessions is trimmed to `profile.maxHighCnsPerWeek` (in-season → 1, post-season → 0).
+- `adapt-training-block` deload threshold returns `true` at RPE ≥ phase threshold (in-season 7.5, off-season 8.5) and `false` below.
+- In-season / post-season blocks reject volume-increase suggestions; off-season / preseason allow them.
 
-Files: `supabase/functions/suggest-meals/index.ts`, `supabase/functions/compute-hammer-state/index.ts`.
+If the clamp is currently inline in the edge function, the test file imports a thin wrapper added to `_shared/seasonPhase.ts` (no behavior change) so both edge runtime and vitest can reuse it.
 
-`suggest-meals`:
-- Read phase from shared resolver.
-- Macro tilts (applied as percentage shifts on the existing per-athlete target, not absolute overrides):
-  - **Pre-Season:** +8% carbs, +5% protein (build + fuel ramp).
-  - **In-Season:** +5% carbs on game/practice days, tighter hydration floor, prioritize fast-digest pre-game options.
-  - **Post-Season:** −10% carbs, +5% protein, emphasize anti-inflammatory foods.
-  - **Off-Season:** baseline; allow surplus if goal = mass.
-- Pass phase into the AI prompt so meal rationale references it ("Pre-season ramp — extra carbs to support volume").
+### 3. Nutrition tilt tests — `supabase/functions/suggest-meals/index.test.ts` (Deno)
 
-`compute-hammer-state`:
-- Tighter CNS ceilings in-season (drop the high-load threshold by ~15%) so Hammer flips to "deload" sooner.
-- Pre-season: allow higher sustained CNS before flagging.
-- Phase string included in the explanation payload for `hammer_state_explanations_v2`.
+Targets `PHASE_MACRO_TILTS` applied inside `suggest-meals`:
+- Pre-season: carbs delta ≈ +8%, protein ≈ +5%.
+- In-season: carbs ≈ +5%, hydration steering flag set on game/practice days.
+- Post-season: carbs ≈ -10%, protein ≈ +5%, anti-inflammatory bias flag set.
+- Off-season: no tilt (baseline macros preserved).
+- Snapshot the tilt application against a fixed baseline `{carbs: 300, protein: 150, fat: 80}` to lock numeric output.
 
-### 4. Dashboard UI: phase chip + tooltips
+If the tilt map isn't exported, export it (and the apply function) from the edge module without changing runtime behavior.
 
-Files: new `src/components/season/SeasonPhaseChip.tsx`; mount in `src/components/dashboard/DashboardHeader.tsx` (or equivalent) and in `PracticeHub.tsx` header.
+### 4. Hammer-state threshold tests — `supabase/functions/compute-hammer-state/index.test.ts` (Deno)
 
-- Chip shows `Pre-Season · Day 12` / `In-Season · 4 wks left` etc., color-coded per phase.
-- Click → small popover: current phase, days into phase, days until next, "Edit season dates" link to profile.
-- "Why this changed" tooltip on adapted training blocks and HIE recommendations: surface the phase that drove the decision (reads `generation_metadata.season_phase` / HIE log `phase`).
+Targets `PHASE_THRESHOLDS` in `compute-hammer-state`:
+- For an identical CNS/load fixture, off-season returns `Prime`/`Ready` while in-season and post-season return a more conservative state (~15% tighter ceilings).
+- Threshold values for in-season / post-season are within 13–17% of off-season baseline (lock the ratio, not the exact number).
+- Explanation payload contains the resolved `phase` string.
 
-### 5. Telemetry & QA
+### 5. Cross-layer integration test — `src/test/seasonPhaseE2E.test.ts`
 
-- Persist `season_phase` + `season_phase_source` into `generation_metadata` (training blocks), HIE run logs, and meal suggestion logs.
-- Manual smoke test matrix: one athlete per phase → generate block, run HIE, request meals, open dashboard, start a practice session. Confirm phase visible everywhere and constraints applied.
+One test per phase that walks a fixture user through the chain in-process:
+1. `resolveSeasonPhase(settings)` → phase
+2. `getSeasonProfile(phase)` → profile
+3. Apply workout clamp helper → asserts capped output
+4. Apply nutrition tilt helper → asserts macro shift
+5. Apply hammer-state threshold helper → asserts state tier
 
-### Out of scope (still)
+This guards against drift between the four layers (e.g. resolver returns `in_season` but nutrition still applies preseason tilt).
 
-- Auto-detecting phase from external sport calendars.
-- Coach dashboard rollups by phase.
-- Retroactive re-scoring of past sessions/meals.
+### Out of scope
+
+- Live edge function HTTP calls (covered by existing curl-based smoke tests).
+- HIE prescriptive filtering tests (already partly covered by `engine-invariants.test.ts`; can be added in a follow-up).
+- UI snapshot tests for `SeasonPhaseChip` (visual; not regression-critical).
+
+### Technical notes
+
+- Vitest tests run via the existing `vitest.config.ts`; no config changes needed.
+- Deno tests follow the project's existing pattern (`*_test.ts` with `dotenv/load.ts`) but these are pure unit tests, so no env required — they import the helpers directly.
+- Where helpers are currently inlined inside edge functions, export them as named exports without altering call sites. No behavioral changes.
+- Use frozen date (`vi.setSystemTime`) in resolver tests for deterministic date-window assertions.
