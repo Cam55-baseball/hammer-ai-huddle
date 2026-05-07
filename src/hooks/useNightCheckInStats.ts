@@ -132,9 +132,14 @@ export function useNightCheckInStats(): NightCheckInStats {
 
       const quizzes = quizzesResult.data || [];
 
-      // Count UNIQUE check-ins by quiz_type (morning / pre_lift / night each
-      // count at most once). Prevents inflated counts if a user re-submits.
-      const uniqueQuizTypes = new Set(quizzes.map((q: any) => q.quiz_type));
+      // Count UNIQUE check-ins among the THREE canonical types only.
+      // Other quiz_type rows (e.g. 'confidence') must not inflate the recap.
+      const canonicalSet = new Set<CanonicalQuizType>(CANONICAL_QUIZ_TYPES);
+      const uniqueQuizTypes = new Set(
+        quizzes
+          .map((q: any) => q.quiz_type)
+          .filter((t: any): t is CanonicalQuizType => canonicalSet.has(t))
+      );
       const checkinsCompleted = uniqueQuizTypes.size;
 
       // Weight: only from a real quiz row entered today
@@ -162,6 +167,7 @@ export function useNightCheckInStats(): NightCheckInStats {
 
       setTodayStats({
         checkinsCompleted,
+        checkinsTotal: CANONICAL_QUIZ_TYPES.length,
         workoutsLogged,
         sleepGoalHours: null, // populated from form data at the call site only
         weightTracked,
