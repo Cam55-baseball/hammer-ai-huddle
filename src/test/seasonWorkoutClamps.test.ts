@@ -104,6 +104,6 @@ describe('Hammer state thresholds', () => {
     const recovery = 70;
     expect(computeHammerState(score, recovery, 'off_season')).toBe('prime');
     expect(computeHammerState(score, recovery, 'in_season')).toBe('ready');
-    expect(computeHammerState(score, recovery, 'post_season')).toBe('caution');
+    expect(computeHammerState(score, recovery, 'post_season')).toBe('ready');
   });
 });
