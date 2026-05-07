@@ -2358,7 +2358,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <PendingSessionApprovals />
 
               {/* Custom Activities Section - Always visible */}
-              <div className="space-y-2">
+              <div id="custom-activities-section" className="space-y-2 scroll-mt-4">
                 <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
                   <span className="h-px flex-1 bg-emerald-500/30" />
                   {t('gamePlan.sections.customActivities')}
