@@ -205,7 +205,12 @@ Suggest 4-5 practical meal/snack options that would help hit these targets. For 
     const suggestions = JSON.parse(toolCall.function.arguments);
     
     return new Response(
-      JSON.stringify(suggestions),
+      JSON.stringify({
+        ...suggestions,
+        season_phase: seasonResolution.phase,
+        season_phase_label: phaseProfile.label,
+        season_phase_source: seasonResolution.source,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
