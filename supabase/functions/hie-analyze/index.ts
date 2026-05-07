@@ -1338,9 +1338,14 @@ Deno.serve(async (req) => {
     // 5. Settings
     const { data: settings } = await supabase
       .from("athlete_mpi_settings")
-      .select("coach_validation_met, primary_coach_id, primary_batting_side, primary_throwing_hand, primary_position, date_of_birth")
+      .select("coach_validation_met, primary_coach_id, primary_batting_side, primary_throwing_hand, primary_position, date_of_birth, season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date")
       .eq("user_id", user_id)
       .maybeSingle();
+
+    // ── SEASON PHASE RESOLUTION (drives recommendation filters) ──
+    const seasonResolution = resolveSeasonPhase(settings ?? null);
+    const seasonProfile = getSeasonProfile(seasonResolution.phase);
+    console.log(`[hie-analyze] user=${user_id} phase=${seasonResolution.phase} source=${seasonResolution.source}`);
 
     // 6. Speed Lab data
     const { data: speedSessions } = await supabase
