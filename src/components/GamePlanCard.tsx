@@ -1247,7 +1247,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     requestAnimationFrame(() => {
       // Re-check at fire time — user may have scrolled in the same frame
       if (userScrolledRef.current) return;
-      const el = document.getElementById('nn-section');
+      const el =
+        document.getElementById('nn-section') ||
+        document.getElementById('custom-activities-section') ||
+        document.getElementById('timeline-section');
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1787,8 +1790,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           dayType={dailyOutcome.dayType}
           loading={dailyOutcome.loading}
           onJumpToNN={() => {
-            const el = document.getElementById('nn-section');
-            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const el =
+              document.getElementById('nn-section') ||
+              document.getElementById('custom-activities-section') ||
+              document.getElementById('timeline-section');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              toast.message('No Non-Negotiables visible yet', {
+                description: 'Tap the flame on any activity below to lock it in as a daily standard.',
+              });
+            }
           }}
         />
 
@@ -2216,7 +2228,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           {/* Timeline Mode - Unified list with full control */}
           {sortMode === 'timeline' ? (
             <div className="space-y-2">
-              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+              <h3 id="timeline-section" className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2 scroll-mt-4">
                 <span className="h-px flex-1 bg-primary/30" />
                 {t('gamePlan.sections.timeline')}
                 <span className="h-px flex-1 bg-primary/30" />
@@ -2349,7 +2361,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <PendingSessionApprovals />
 
               {/* Custom Activities Section - Always visible */}
-              <div className="space-y-2">
+              <div id="custom-activities-section" className="space-y-2 scroll-mt-4">
                 <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
                   <span className="h-px flex-1 bg-emerald-500/30" />
                   {t('gamePlan.sections.customActivities')}
