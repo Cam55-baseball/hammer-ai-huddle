@@ -48,7 +48,7 @@ const FIXTURES: Fixture[] = [
     expectedSetCap: 3,
     expectedHighCns: 0,
     expectMacroTilt: true,
-    expectStateAtPrimeFixture: 'caution',
+    expectStateAtPrimeFixture: 'ready',
   },
   {
     label: 'off_season',
