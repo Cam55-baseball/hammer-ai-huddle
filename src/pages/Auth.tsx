@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, CheckCircle2, UserPlus } from "lucide-react";
+import { Info, CheckCircle2, UserPlus, LogIn } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
@@ -336,6 +336,30 @@ const Auth = () => {
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 {t('auth.dontHaveAccount')}
+              </Button>
+            </div>
+          ) : !isForgotPassword && !isLogin ? (
+            <div className="mt-6">
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                  <span className="bg-background px-3 text-muted-foreground">Already have an account?</span>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setIsLogin(true);
+                }}
+                className="w-full border-2 border-primary/60 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary font-semibold"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                {t('auth.alreadyHaveAccount')}
               </Button>
             </div>
           ) : (
