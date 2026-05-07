@@ -5500,6 +5500,7 @@ export type Database = {
           player_grade: number | null
           schema_version: number
           season_context: string | null
+          season_context_overridden: boolean
           session_date: string
           session_type: string
           sport: string
@@ -5544,6 +5545,7 @@ export type Database = {
           player_grade?: number | null
           schema_version?: number
           season_context?: string | null
+          season_context_overridden?: boolean
           session_date?: string
           session_type: string
           sport: string
@@ -5588,6 +5590,7 @@ export type Database = {
           player_grade?: number | null
           schema_version?: number
           season_context?: string | null
+          season_context_overridden?: boolean
           session_date?: string
           session_type?: string
           sport?: string
