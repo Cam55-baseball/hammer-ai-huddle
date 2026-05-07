@@ -139,3 +139,78 @@ export function buildPhasePromptBlock(resolution: SeasonResolution): string {
     ...p.directives.map(d => `  - ${d}`),
   ].join('\n');
 }
+};
+
+export function getSeasonProfile(phase: SeasonPhase): SeasonProgrammingProfile {
+  return SEASON_PROFILES[phase] ?? SEASON_PROFILES.off_season;
+}
+
+// ---------- Pure helpers shared with regression tests ----------
+// These mirror the contracts used by:
+//   - supabase/functions/generate-training-block (set/CNS clamps)
+//   - supabase/functions/adapt-training-block   (RPE deload + volume gate)
+//   - supabase/functions/suggest-meals          (macro tilts)
+//   - supabase/functions/compute-hammer-state   (state thresholds)
+// Keep these in sync with the edge functions if they change.
+
+export const PHASE_MACRO_TILTS: Record<SeasonPhase, { carbs: number; protein: number; fats: number; note: string }> = {
+  preseason:   { carbs: 1.08, protein: 1.05, fats: 1.00, note: 'Pre-season ramp — extra carbs to support volume.' },
+  in_season:   { carbs: 1.05, protein: 1.00, fats: 0.95, note: 'In-season — fast-digest carbs near training, protect bandwidth.' },
+  post_season: { carbs: 0.90, protein: 1.05, fats: 1.00, note: 'Post-season — anti-inflammatory bias, slightly less carbs.' },
+  off_season:  { carbs: 1.00, protein: 1.00, fats: 1.00, note: 'Off-season — baseline targets; allow surplus if goal is mass.' },
+};
+
+export const PHASE_HAMMER_THRESHOLDS: Record<SeasonPhase, { prime: number; ready: number; caution: number }> = {
+  preseason:   { prime: 80, ready: 60, caution: 40 },
+  in_season:   { prime: 85, ready: 68, caution: 48 },
+  post_season: { prime: 90, ready: 72, caution: 52 },
+  off_season:  { prime: 78, ready: 55, caution: 35 },
+};
+
+export function applyMacroTilt(
+  base: { calories?: number; protein: number; carbs: number; fats: number },
+  phase: SeasonPhase,
+) {
+  const t = PHASE_MACRO_TILTS[phase];
+  return {
+    protein: Math.round(base.protein * t.protein),
+    carbs:   Math.round(base.carbs   * t.carbs),
+    fats:    Math.round(base.fats    * t.fats),
+  };
+}
+
+export function clampWorkoutSets(sets: number, phase: SeasonPhase): number {
+  const cap = SEASON_PROFILES[phase].maxSetsPerExercise;
+  return Math.max(1, Math.min(sets, cap));
+}
+
+export function clampHighCnsSessions<T>(sessions: T[], phase: SeasonPhase): T[] {
+  const cap = SEASON_PROFILES[phase].maxHighCnsPerWeek;
+  return sessions.slice(0, cap);
+}
+
+export function rpeDeloadThreshold(phase: SeasonPhase): number {
+  return phase === 'in_season' ? 7.5 : phase === 'off_season' ? 8.5 : 8;
+}
+
+export function allowsVolumeIncrease(phase: SeasonPhase): boolean {
+  return phase !== 'in_season' && phase !== 'post_season';
+}
+
+export function shouldDeloadByRpe(avgRpe: number, phase: SeasonPhase): boolean {
+  return avgRpe > rpeDeloadThreshold(phase);
+}
+
+export type HammerState = 'prime' | 'ready' | 'caution' | 'recover';
+
+export function computeHammerState(
+  finalScore: number,
+  recoveryScore: number,
+  phase: SeasonPhase,
+): HammerState {
+  const t = PHASE_HAMMER_THRESHOLDS[phase];
+  if (finalScore >= t.prime && recoveryScore >= 60) return 'prime';
+  if (finalScore >= t.ready) return 'ready';
+  if (finalScore >= t.caution) return 'caution';
+  return 'recover';
+}
