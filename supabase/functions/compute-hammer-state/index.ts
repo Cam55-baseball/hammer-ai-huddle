@@ -271,10 +271,35 @@ async function computeForUser(supabase: any, userId: string) {
     : -Math.min((restDays7d - maxRestPerWeek) * 5, 15);
   let finalScore = clamp(base * dampingMultiplier - nnPenalty + streakBoost + restFactor);
 
+  // ── SEASON PHASE thresholds ──
+  // In-season: tighter ceilings → flips to caution/recover sooner to protect bandwidth.
+  // Pre-season: standard ceilings.
+  // Post-season: very tight (favor recovery).
+  // Off-season: looser, allow grinding.
+  let seasonPhase: SeasonPhase = 'off_season';
+  let seasonPhaseSource: string = 'default';
+  try {
+    const { data: mpi } = await supabase
+      .from('athlete_mpi_settings')
+      .select('season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const r = resolveSeasonPhase(mpi ?? null);
+    seasonPhase = r.phase;
+    seasonPhaseSource = r.source;
+  } catch (_) { /* keep defaults */ }
+  const PHASE_THRESHOLDS: Record<SeasonPhase, { prime: number; ready: number; caution: number }> = {
+    preseason:   { prime: 80, ready: 60, caution: 40 },
+    in_season:   { prime: 85, ready: 68, caution: 48 },  // ~15% tighter
+    post_season: { prime: 90, ready: 72, caution: 52 },
+    off_season:  { prime: 78, ready: 55, caution: 35 },
+  };
+  const t = PHASE_THRESHOLDS[seasonPhase];
+
   let overall: "prime" | "ready" | "caution" | "recover" = "ready";
-  if (finalScore >= 80 && recoveryScore >= 60) overall = "prime";
-  else if (finalScore >= 60) overall = "ready";
-  else if (finalScore >= 40) overall = "caution";
+  if (finalScore >= t.prime && recoveryScore >= 60) overall = "prime";
+  else if (finalScore >= t.ready) overall = "ready";
+  else if (finalScore >= t.caution) overall = "caution";
   else overall = "recover";
 
   // Recovery mode floor: planned rest day never drops below "ready"
