@@ -43,6 +43,7 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
         
       </div>
       <div className="ml-auto flex items-center gap-2">
+        <SeasonPhaseChip className="hidden sm:inline-flex" />
         {/* Refresh Button - Always visible for troubleshooting */}
         <Button
           variant="ghost"
