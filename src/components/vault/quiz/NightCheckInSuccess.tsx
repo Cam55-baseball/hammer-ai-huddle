@@ -194,7 +194,7 @@ export function NightCheckInSuccess({
                   <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
                     <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                   </div>
-                  <span>{t('vault.quiz.nightSuccess.checkinsCompleted', { count: todayStats.checkinsCompleted })}</span>
+                  <span>{t('vault.quiz.nightSuccess.checkinsCompleted', { count: todayStats.checkinsCompleted, total: todayStats.checkinsTotal })}</span>
                 </div>
               )}
               
