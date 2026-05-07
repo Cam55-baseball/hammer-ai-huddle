@@ -1843,6 +1843,38 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── PHASE-AWARE FILTER on prescriptive actions ──
+    // In-season / post-season: suppress aggressive "tool development" / mechanical-overhaul
+    // recommendations. We keep refinement & maintenance drills.
+    const OVERHAUL_KEYWORDS = ['rebuild', 'overhaul', 'rework', 'new mechanic', 'mechanical change'];
+    const isRestrictivePhase = seasonResolution.phase === 'in_season' || seasonResolution.phase === 'post_season';
+    const filteredPrescriptiveActions = isRestrictivePhase
+      ? prescriptiveActions
+          .map(a => ({
+            ...a,
+            drills: a.drills.filter(d => {
+              const text = `${d.name} ${d.description} ${d.constraints}`.toLowerCase();
+              return !OVERHAUL_KEYWORDS.some(k => text.includes(k));
+            }),
+          }))
+          .filter(a => a.drills.length > 0)
+      : prescriptiveActions;
+
+    const phaseRiskAlerts: RiskAlert[] = [];
+    if (seasonResolution.phase === 'in_season') {
+      phaseRiskAlerts.push({
+        type: 'season_phase',
+        severity: 'info',
+        message: `In-Season: protecting performance — refinement only, no mechanical overhauls.`,
+      });
+    } else if (seasonResolution.phase === 'post_season') {
+      phaseRiskAlerts.push({
+        type: 'season_phase',
+        severity: 'info',
+        message: `Post-Season: prioritize recovery and mobility before any rebuild work.`,
+      });
+    }
+
     // ── UPSERT SNAPSHOT ──
     const snapshot = {
       user_id,
@@ -1851,10 +1883,10 @@ Deno.serve(async (req) => {
       development_status: developmentStatus,
       primary_limiter: primaryLimiter,
       weakness_clusters: weaknessClusters,
-      prescriptive_actions: prescriptiveActions,
+      prescriptive_actions: filteredPrescriptiveActions,
       readiness_score: readinessScore,
       readiness_recommendation: readinessRecommendation,
-      risk_alerts: riskAlerts,
+      risk_alerts: [...phaseRiskAlerts, ...riskAlerts],
       development_confidence: developmentConfidence,
       smart_week_plan: smartWeekPlan,
       before_after_trends: beforeAfterTrends,
@@ -1865,6 +1897,9 @@ Deno.serve(async (req) => {
       transfer_score: transferScore,
       decision_speed_index: decisionSpeedIndex,
       movement_efficiency_score: movementEfficiencyScore,
+      season_phase: seasonResolution.phase,
+      season_phase_source: seasonResolution.source,
+      season_phase_label: seasonProfile.label,
     };
 
     const { error: upsertError } = await supabase
