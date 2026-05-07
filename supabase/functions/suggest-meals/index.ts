@@ -88,6 +88,23 @@ serve(async (req) => {
       .limit(20);
 
     const recentFoodNames = recentLogs?.map(log => log.food_name) || [];
+
+    // ── SEASON PHASE: tilt macros + steer rationale ──
+    const { data: mpiSettings } = await supabase
+      .from('athlete_mpi_settings')
+      .select('season_status, preseason_start_date, preseason_end_date, in_season_start_date, in_season_end_date, post_season_start_date, post_season_end_date')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const seasonResolution = resolveSeasonPhase(mpiSettings ?? null);
+    const phaseProfile = getSeasonProfile(seasonResolution.phase);
+    const tilt = PHASE_MACRO_TILTS[seasonResolution.phase];
+    const tiltedMacros = {
+      calories: Math.round((remainingMacros?.calories ?? 0) * ((tilt.carbs * 4 + tilt.protein * 4 + tilt.fats * 9) / 17)),
+      protein:  Math.round((remainingMacros?.protein  ?? 0) * tilt.protein),
+      carbs:    Math.round((remainingMacros?.carbs    ?? 0) * tilt.carbs),
+      fats:     Math.round((remainingMacros?.fats     ?? 0) * tilt.fats),
+    };
+    console.log(`[suggest-meals] user=${user.id} phase=${seasonResolution.phase} source=${seasonResolution.source}`);
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -100,19 +117,19 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a sports nutrition expert helping athletes hit their macro targets. Provide practical, accessible meal suggestions that help fill macro gaps. Consider the athlete's recent food choices for personalization.`
+            content: `You are a sports nutrition expert helping athletes hit their macro targets. Provide practical, accessible meal suggestions that help fill macro gaps. Consider the athlete's recent food choices for personalization.\n\nSEASON PHASE: ${phaseProfile.label}. ${tilt.note}\nTone: ${phaseProfile.toneGuidance}`
           },
           {
             role: "user",
-            content: `An athlete needs to fill these remaining macros for the day:
-- Calories: ${remainingMacros.calories} kcal
-- Protein: ${remainingMacros.protein}g
-- Carbs: ${remainingMacros.carbs}g
-- Fats: ${remainingMacros.fats}g
+            content: `An athlete needs to fill these remaining macros for the day (already adjusted for ${phaseProfile.label}):
+- Calories: ${tiltedMacros.calories} kcal
+- Protein: ${tiltedMacros.protein}g
+- Carbs: ${tiltedMacros.carbs}g
+- Fats: ${tiltedMacros.fats}g
 
 Their recent foods: ${recentFoodNames.slice(0, 10).join(', ') || 'No recent data'}
 
-Suggest 4-5 practical meal/snack options that would help hit these targets. For each suggestion, explain WHY it's a good choice based on the macro gaps.`
+Suggest 4-5 practical meal/snack options that would help hit these targets. For each suggestion, explain WHY it's a good choice based on the macro gaps and the current season phase (${phaseProfile.label}).`
           }
         ],
         tools: [
