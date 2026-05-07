@@ -68,6 +68,7 @@ export function usePerformanceSession() {
     session_type: string;
     session_date: string;
     season_context?: string;
+    season_context_overridden?: boolean;
     drill_blocks: DrillBlock[];
     player_grade?: number;
     notes?: string;
