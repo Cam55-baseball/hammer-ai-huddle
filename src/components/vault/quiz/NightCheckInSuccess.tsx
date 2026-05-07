@@ -33,6 +33,7 @@ import { useDailyOutcome, type DailyOutcomeStatus, type StreakImpact } from '@/h
 
 interface TodayStats {
   checkinsCompleted: number;
+  checkinsTotal: number;
   workoutsLogged: number;
   sleepGoalHours: number | null;
   weightTracked: number | null;
