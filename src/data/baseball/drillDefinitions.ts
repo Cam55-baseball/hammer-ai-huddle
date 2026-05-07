@@ -1,3 +1,5 @@
+import type { HittingPhaseId } from '../../lib/hittingPhases';
+
 export interface DrillDefinition {
   id: string;
   name: string;
@@ -6,6 +8,8 @@ export interface DrillDefinition {
   defaultReps: number;
   intensity: 'low' | 'medium' | 'high';
   equipmentNeeded: string[];
+  /** Hitting 1-2-3-4 phases this drill trains. Only applies to module === 'hitting'. */
+  phasesTrained?: HittingPhaseId[];
 }
 
 export const baseballDrills: DrillDefinition[] = [
