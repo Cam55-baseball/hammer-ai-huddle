@@ -311,6 +311,11 @@ async function computeForUser(supabase: any, userId: string) {
 
   const confidence = Math.min(1, (arousalConf + recoveryConf) / 2);
 
+  // Stamp season phase into the recovery_inputs payload (no schema change needed)
+  inputs.recovery.season_phase = seasonPhase;
+  inputs.recovery.season_phase_source = seasonPhaseSource;
+  inputs.recovery.season_phase_label = getSeasonProfile(seasonPhase).label;
+
   // Insert snapshot
   const { data: inserted, error } = await supabase.from("hammer_state_snapshots").insert({
     user_id: userId,
