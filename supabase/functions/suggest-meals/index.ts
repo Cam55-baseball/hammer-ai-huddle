@@ -1,5 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveSeasonPhase, getSeasonProfile, type SeasonPhase } from "../_shared/seasonPhase.ts";
+
+// Phase macro tilts: percentage shifts applied to remaining macro targets.
+const PHASE_MACRO_TILTS: Record<SeasonPhase, { carbs: number; protein: number; fats: number; note: string }> = {
+  preseason:  { carbs: 1.08, protein: 1.05, fats: 1.00, note: "Pre-season ramp — extra carbs to support volume." },
+  in_season:  { carbs: 1.05, protein: 1.00, fats: 0.95, note: "In-season — fast-digest carbs near training, protect bandwidth." },
+  post_season:{ carbs: 0.90, protein: 1.05, fats: 1.00, note: "Post-season — anti-inflammatory bias, slightly less carbs." },
+  off_season: { carbs: 1.00, protein: 1.00, fats: 1.00, note: "Off-season — baseline targets; allow surplus if goal is mass." },
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
