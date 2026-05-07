@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { resolveSeasonPhase, getSeasonProfile } from '../_shared/seasonPhase.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
