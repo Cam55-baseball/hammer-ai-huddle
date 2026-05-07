@@ -433,7 +433,7 @@ export default function Dashboard() {
                                hover:shadow-[0_0_36px_hsl(var(--primary)/0.65)] hover:scale-[1.03]"
                   >
                     <Sparkles className="h-4 w-4 sm:mr-2 animate-pulse" />
-                    Unlock Now{price ? ` — $${price}/mo` : ''}
+                    Unlock Now!
                   </Button>
                 )}
               </div>
