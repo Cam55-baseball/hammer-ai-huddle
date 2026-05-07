@@ -4954,7 +4954,7 @@
       "nightSuccess": {
         "title": "Day Complete!",
         "todayHighlights": "Today's Highlights",
-        "checkinsCompleted": "{{count}}/3 Check-ins completed",
+        "checkinsCompleted": "{{count}}/{{total}} Check-ins completed",
         "workoutsLogged": "{{count}} workout logged",
         "sleepGoalSet": "{{hours}} hours sleep goal set",
         "weightTracked": "{{weight}} lbs tracked",

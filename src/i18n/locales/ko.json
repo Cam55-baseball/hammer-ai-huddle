@@ -3567,7 +3567,7 @@
       "nightSuccess": {
         "title": "하루 완료!",
         "todayHighlights": "오늘의 하이라이트",
-        "checkinsCompleted": "{{count}}/3 체크인 완료",
+        "checkinsCompleted": "{{count}}/{{total}} 체크인 완료",
         "workoutsLogged": "{{count}} 운동 기록",
         "sleepGoalSet": "{{hours}} 시간 수면 목표 설정",
         "weightTracked": "{{weight}} lbs 기록",

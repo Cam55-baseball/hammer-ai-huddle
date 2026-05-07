@@ -3553,7 +3553,7 @@
       "nightSuccess": {
         "title": "今日完成！",
         "todayHighlights": "今日亮点",
-        "checkinsCompleted": "{{count}}/3 签到已完成",
+        "checkinsCompleted": "{{count}}/{{total}} 签到已完成",
         "workoutsLogged": "{{count}} 次锻炼已记录",
         "sleepGoalSet": "{{hours}} 小时睡眠目标已设定",
         "weightTracked": "已记录 {{weight}} 磅",

@@ -3682,7 +3682,7 @@
       "nightSuccess": {
         "title": "本日完了！",
         "todayHighlights": "今日のハイライト",
-        "checkinsCompleted": "{{count}}/3 チェックイン完了",
+        "checkinsCompleted": "{{count}}/{{total}} チェックイン完了",
         "workoutsLogged": "{{count}} ワークアウト記録",
         "sleepGoalSet": "{{hours}} 時間の睡眠目標設定",
         "weightTracked": "{{weight}} lbs を記録",

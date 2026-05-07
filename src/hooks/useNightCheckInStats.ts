@@ -5,10 +5,19 @@ import { format, addDays } from 'date-fns';
 
 interface TodayStats {
   checkinsCompleted: number;
+  checkinsTotal: number;
   workoutsLogged: number;
   sleepGoalHours: number | null;
   weightTracked: number | null;
 }
+
+/**
+ * The three canonical daily check-ins counted in the Nightly Recap.
+ * Other quiz_type rows (e.g. 'confidence', 'weekly_wellness') must NOT
+ * inflate this count — users have reported false "3/3" recaps.
+ */
+const CANONICAL_QUIZ_TYPES = ['morning', 'pre_lift', 'night'] as const;
+type CanonicalQuizType = typeof CANONICAL_QUIZ_TYPES[number];
 
 interface TomorrowPreview {
   hasWorkout: boolean;
@@ -49,6 +58,7 @@ export function useNightCheckInStats(): NightCheckInStats {
   const [loading, setLoading] = useState(true);
   const [todayStats, setTodayStats] = useState<TodayStats>({
     checkinsCompleted: 0,
+    checkinsTotal: CANONICAL_QUIZ_TYPES.length,
     workoutsLogged: 0,
     sleepGoalHours: null,
     weightTracked: null,
@@ -122,9 +132,14 @@ export function useNightCheckInStats(): NightCheckInStats {
 
       const quizzes = quizzesResult.data || [];
 
-      // Count UNIQUE check-ins by quiz_type (morning / pre_lift / night each
-      // count at most once). Prevents inflated counts if a user re-submits.
-      const uniqueQuizTypes = new Set(quizzes.map((q: any) => q.quiz_type));
+      // Count UNIQUE check-ins among the THREE canonical types only.
+      // Other quiz_type rows (e.g. 'confidence') must not inflate the recap.
+      const canonicalSet = new Set<CanonicalQuizType>(CANONICAL_QUIZ_TYPES);
+      const uniqueQuizTypes = new Set(
+        quizzes
+          .map((q: any) => q.quiz_type)
+          .filter((t: any): t is CanonicalQuizType => canonicalSet.has(t))
+      );
       const checkinsCompleted = uniqueQuizTypes.size;
 
       // Weight: only from a real quiz row entered today
@@ -152,6 +167,7 @@ export function useNightCheckInStats(): NightCheckInStats {
 
       setTodayStats({
         checkinsCompleted,
+        checkinsTotal: CANONICAL_QUIZ_TYPES.length,
         workoutsLogged,
         sleepGoalHours: null, // populated from form data at the call site only
         weightTracked,
