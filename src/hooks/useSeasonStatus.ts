@@ -28,16 +28,10 @@ type SeasonUpdates = Partial<{
 }>;
 
 function detectCurrentPhase(data: SeasonData): SeasonStatus | null {
-  const today = getLocalDateString();
-  const phases: { status: SeasonStatus; start: string | null; end: string | null }[] = [
-    { status: 'preseason', start: data.preseason_start_date, end: data.preseason_end_date },
-    { status: 'in_season', start: data.in_season_start_date, end: data.in_season_end_date },
-    { status: 'post_season', start: data.post_season_start_date, end: data.post_season_end_date },
-  ];
-  for (const p of phases) {
-    if (p.start && p.end && today >= p.start && today <= p.end) return p.status;
-  }
-  return null;
+  const res = resolveSeasonPhase(data);
+  if (res.source !== 'date_window') return null;
+  if (res.phase === 'off_season') return null;
+  return res.phase as SeasonStatus;
 }
 
 export function useSeasonStatus() {
