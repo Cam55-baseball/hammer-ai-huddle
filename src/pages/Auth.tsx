@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, CheckCircle2 } from "lucide-react";
+import { Info, CheckCircle2, UserPlus } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
 import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
