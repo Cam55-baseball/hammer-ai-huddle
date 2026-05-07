@@ -588,7 +588,7 @@ Always respond using the generate_training_block function.`
         .map((ex, idx) => ({
           ordinal: idx, // recomputed AFTER filtering
           name: ex.name.trim(),
-          sets: clamp(Number(ex.sets) || 3, 1, 10),
+          sets: clamp(Number(ex.sets) || 3, 1, phaseProfile.maxSetsPerExercise),
           reps: clamp(Number(ex.reps) || 8, 1, 30),
           weight: ex.weight ?? null,
           tempo: ex.tempo || null,
@@ -623,6 +623,22 @@ Always respond using the generate_training_block function.`
         exercises,
       };
     });
+
+    // Phase clamp: cap high-CNS sessions per week to phaseProfile.maxHighCnsPerWeek.
+    // Surplus sessions get downgraded to medium-CNS (workout still runs, just lighter).
+    const highCnsPerWeek = new Map<number, number>();
+    for (const w of workoutsPayload) {
+      const isHigh = w.exercises.some(e => e.cns_demand === 'high');
+      if (!isHigh) continue;
+      const used = highCnsPerWeek.get(w.week_number) || 0;
+      if (used >= phaseProfile.maxHighCnsPerWeek) {
+        // Downgrade all high cns demand to medium for this workout
+        w.exercises = w.exercises.map(e => e.cns_demand === 'high' ? { ...e, cns_demand: 'medium' } : e);
+        console.log(`Phase clamp [${seasonPhase}]: downgraded high-CNS workout ${w.scheduled_date} (week ${w.week_number}, cap=${phaseProfile.maxHighCnsPerWeek})`);
+      } else {
+        highCnsPerWeek.set(w.week_number, used + 1);
+      }
+    }
 
     // Final payload sanity — only hard-throw on empty payload
     if (workoutsPayload.length === 0) {
