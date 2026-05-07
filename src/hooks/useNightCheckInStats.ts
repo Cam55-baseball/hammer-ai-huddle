@@ -58,6 +58,7 @@ export function useNightCheckInStats(): NightCheckInStats {
   const [loading, setLoading] = useState(true);
   const [todayStats, setTodayStats] = useState<TodayStats>({
     checkinsCompleted: 0,
+    checkinsTotal: CANONICAL_QUIZ_TYPES.length,
     workoutsLogged: 0,
     sleepGoalHours: null,
     weightTracked: null,
