@@ -110,8 +110,18 @@ export function useSeasonStatus() {
     }
   }, [query.data]);
 
+  const resolution = query.data
+    ? resolveSeasonPhase(query.data)
+    : { phase: 'in_season' as SeasonPhase, phaseStartedAt: null, daysIntoPhase: null, daysUntilNextPhase: null, source: 'default' as const };
+  const profile = getSeasonProfile(resolution.phase);
+
   return {
     seasonStatus: query.data?.season_status ?? 'in_season',
+    resolvedPhase: resolution.phase,
+    phaseDaysIn: resolution.daysIntoPhase,
+    phaseDaysRemaining: resolution.daysUntilNextPhase,
+    phaseSource: resolution.source,
+    phaseProfile: profile,
     preseasonStartDate: query.data?.preseason_start_date ?? null,
     preseasonEndDate: query.data?.preseason_end_date ?? null,
     inSeasonStartDate: query.data?.in_season_start_date ?? null,
