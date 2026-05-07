@@ -8,6 +8,7 @@ import { StartHereGuide } from "./StartHereGuide";
 import { DemoButton } from "./demo/DemoButton";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { Button } from "@/components/ui/button";
+import { SeasonPhaseChip } from "./season/SeasonPhaseChip";
 import { Menu, ShoppingBag, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
