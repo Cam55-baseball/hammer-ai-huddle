@@ -185,7 +185,7 @@ DIALOGUE STYLE for P2 / P3:
   ask the hitter what they felt, offer the cause-and-effect, and suggest a
   single phase-isolation drill. Do NOT lecture. Hitters love dialogue.
 
-
+LEGACY CORRECT HITTING KINETIC CHAIN (FOOT → HIPS → BACK ELBOW → HANDS):
 
 1. FRONT FOOT LANDS & STABILIZES (ground connection) ⭐⭐⭐
 2. HIPS ROTATE toward ball WHILE:
