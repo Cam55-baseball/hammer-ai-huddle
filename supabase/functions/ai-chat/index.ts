@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { resolveSeasonPhase, getSeasonProfile, buildPhasePromptBlock } from "../_shared/seasonPhase.ts";
+import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -136,6 +137,15 @@ ${analysisContextSection}
 ${dashboardContextSection}
 ${royalTimingContextSection}
 ${phaseSection}
+
+${HITTING_DOCTRINE_PROMPT}
+
+When the conversation touches HITTING, you MUST answer through the 1-2-3-4 phase lens above:
+- Diagnose which phase is the likely root cause before suggesting a fix.
+- For Phase 2 / Phase 3 issues, ask the hitter what they FEEL and invite dialogue — hitters love dialogue and you should prompt for it.
+- Always tie a recommendation to one phase-isolation drill (hip_load_iso, load_sequence_pause, sideways_landing_check, elbow_first_fulcrum, catch_the_ball, no_stride_power) when relevant.
+- Remember: bigger early hip load = more power; Phase 4 is the most important phase; softball slap-progression at-bats relax P2 + P3.
+
 Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.`;
 
     const useStreaming = stream === true;

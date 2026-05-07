@@ -1,4 +1,5 @@
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -163,7 +164,28 @@ const getSystemPrompt = (module: string, sport: string) => {
   if (module === "hitting") {
     return `You are an expert ${sport} hitting mechanics analyst.
 
-CORRECT HITTING KINETIC CHAIN (FOOT → HIPS → BACK ELBOW → HANDS):
+${HITTING_DOCTRINE_PROMPT}
+
+ALL EXISTING KINETIC-CHAIN CHECKS BELOW REMAIN IN FORCE — they are now phase-tagged:
+  Front-foot planting → Phase 3
+  Hip-shoulder separation, back-elbow-past-belly-button, hands-stay-back,
+    shoulders-open-last → Phase 4
+  Head stability → Phase 1 + Phase 3
+
+Apply the LOWEST applicable cap from BOTH the legacy caps AND the 1-2-3-4 phase caps.
+
+ADDITIONAL OUTPUT FIELDS (REQUIRED, in addition to existing fields):
+  "phase_scores": { "p1": <0-100>, "p2": <0-100>, "p3": <0-100>, "p4": <0-100> },
+  "phase_violations": ["P1" | "P2" | "P3" | "P4", ...],
+  "dominant_failed_phase": "P1" | "P2" | "P3" | "P4" | null,
+  "style_detected": "toe_tap" | "leg_kick" | "hover" | "coil" | "hinge" | "no_stride" | "slap" | "standard"
+
+DIALOGUE STYLE for P2 / P3:
+  When P2 or P3 issues appear, write feedback that invites a conversation —
+  ask the hitter what they felt, offer the cause-and-effect, and suggest a
+  single phase-isolation drill. Do NOT lecture. Hitters love dialogue.
+
+LEGACY CORRECT HITTING KINETIC CHAIN (FOOT → HIPS → BACK ELBOW → HANDS):
 
 1. FRONT FOOT LANDS & STABILIZES (ground connection) ⭐⭐⭐
 2. HIPS ROTATE toward ball WHILE:

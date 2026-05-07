@@ -1,3 +1,5 @@
+import type { HittingPhaseId } from '../../lib/hittingPhases';
+
 export interface DrillDefinition {
   id: string;
   name: string;
@@ -6,6 +8,8 @@ export interface DrillDefinition {
   defaultReps: number;
   intensity: 'low' | 'medium' | 'high';
   equipmentNeeded: string[];
+  /** Hitting 1-2-3-4 phases this drill trains. Only applies to module === 'hitting'. */
+  phasesTrained?: HittingPhaseId[];
 }
 
 export const baseballDrills: DrillDefinition[] = [
@@ -17,13 +21,20 @@ export const baseballDrills: DrillDefinition[] = [
   { id: 'pitch_tunneling', name: 'Pitch Tunneling Drill', module: 'pitching', description: 'Sequencing pitches through the same tunnel point', defaultReps: 25, intensity: 'high', equipmentNeeded: ['baseballs', 'mound'] },
   { id: 'velocity_day', name: 'Velocity Day', module: 'pitching', description: 'Max intent fastball sessions with gun readings', defaultReps: 15, intensity: 'high', equipmentNeeded: ['baseballs', 'mound', 'radar gun'] },
   // Hitting
-  { id: 'bp_rounds', name: 'BP Rounds (Live)', module: 'hitting', description: 'Standard batting practice — overhand live pitching', defaultReps: 20, intensity: 'high', equipmentNeeded: ['bat', 'baseballs', 'cage/field'] },
-  { id: 'machine_bp', name: 'Machine BP', module: 'hitting', description: 'Batting practice off pitching machine', defaultReps: 25, intensity: 'high', equipmentNeeded: ['bat', 'baseballs', 'machine'] },
-  { id: 'front_toss', name: 'Front Toss', module: 'hitting', description: 'Underhand front toss for timing and load', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs', 'L-screen'] },
-  { id: 'flip_drill', name: 'Flips / Short Toss', module: 'hitting', description: 'Side flips for inside/outside pitch work', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs'] },
-  { id: 'tee_work', name: 'Tee Work', module: 'hitting', description: 'Hitting off a batting tee for swing mechanics', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'tee', 'baseballs'] },
-  { id: 'live_abs', name: 'Live At-Bats', module: 'hitting', description: 'Live at-bats against a pitcher (game intent)', defaultReps: 10, intensity: 'high', equipmentNeeded: ['bat', 'helmet', 'baseballs'] },
-  { id: 'soft_toss', name: 'Soft Toss', module: 'hitting', description: 'Front or side toss for timing and bat path', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs'] },
+  { id: 'bp_rounds', name: 'BP Rounds (Live)', module: 'hitting', description: 'Standard batting practice — overhand live pitching', defaultReps: 20, intensity: 'high', equipmentNeeded: ['bat', 'baseballs', 'cage/field'], phasesTrained: ['P1', 'P2', 'P3', 'P4'] },
+  { id: 'machine_bp', name: 'Machine BP', module: 'hitting', description: 'Batting practice off pitching machine', defaultReps: 25, intensity: 'high', equipmentNeeded: ['bat', 'baseballs', 'machine'], phasesTrained: ['P3', 'P4'] },
+  { id: 'front_toss', name: 'Front Toss', module: 'hitting', description: 'Underhand front toss for timing and load', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs', 'L-screen'], phasesTrained: ['P1', 'P2', 'P3'] },
+  { id: 'flip_drill', name: 'Flips / Short Toss', module: 'hitting', description: 'Side flips for inside/outside pitch work', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs'], phasesTrained: ['P4'] },
+  { id: 'tee_work', name: 'Tee Work', module: 'hitting', description: 'Hitting off a batting tee for swing mechanics', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'tee', 'baseballs'], phasesTrained: ['P1', 'P2', 'P4'] },
+  { id: 'live_abs', name: 'Live At-Bats', module: 'hitting', description: 'Live at-bats against a pitcher (game intent)', defaultReps: 10, intensity: 'high', equipmentNeeded: ['bat', 'helmet', 'baseballs'], phasesTrained: ['P1', 'P2', 'P3', 'P4'] },
+  { id: 'soft_toss', name: 'Soft Toss', module: 'hitting', description: 'Front or side toss for timing and bat path', defaultReps: 25, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs'], phasesTrained: ['P2', 'P4'] },
+  // Hitting 1-2-3-4 phase-isolation drills
+  { id: 'hip_load_iso', name: 'Hip Load Isolation', module: 'hitting', description: 'P1: Slow back-hip load only, hands frozen — feel balanced loaded back hip before any hand movement. Mirror or video.', defaultReps: 15, intensity: 'low', equipmentNeeded: ['bat', 'mirror or phone'], phasesTrained: ['P1'] },
+  { id: 'load_sequence_pause', name: 'Load Sequence Pause', module: 'hitting', description: 'P1→P2: Hip load → 1-count freeze → hand load. Locks correct order so hands never fire before hips.', defaultReps: 15, intensity: 'low', equipmentNeeded: ['bat'], phasesTrained: ['P1', 'P2'] },
+  { id: 'sideways_landing_check', name: 'Sideways Landing Check', module: 'hitting', description: 'P3: Stride and freeze at landing — chest + shoulders square to plate, body sideways, both feet down. Photograph or video.', defaultReps: 12, intensity: 'low', equipmentNeeded: ['bat', 'phone'], phasesTrained: ['P3'] },
+  { id: 'elbow_first_fulcrum', name: 'Elbow-First Fulcrum', module: 'hitting', description: 'P4: Knob acts as fulcrum — drive back elbow forward FIRST while hands stay back. Tee or front toss. Hands must trail elbow.', defaultReps: 20, intensity: 'medium', equipmentNeeded: ['bat', 'tee', 'baseballs'], phasesTrained: ['P4'] },
+  { id: 'catch_the_ball', name: 'Catch The Ball', module: 'hitting', description: 'P4: Soft toss focus — line your hands up with the ball and try to "catch it" with your hands. Extension comes after contact.', defaultReps: 20, intensity: 'medium', equipmentNeeded: ['bat', 'baseballs'], phasesTrained: ['P4'] },
+  { id: 'no_stride_power', name: 'No-Stride Power', module: 'hitting', description: 'P1: Stanceless reps — prove that hip load alone produces power. Removes stride variable to expose true hip-load quality.', defaultReps: 15, intensity: 'medium', equipmentNeeded: ['bat', 'tee', 'baseballs'], phasesTrained: ['P1'] },
   // Fielding
   { id: 'ground_ball_work', name: 'Ground Ball Work', module: 'fielding', description: 'Fielding ground balls with proper footwork', defaultReps: 20, intensity: 'medium', equipmentNeeded: ['glove', 'baseballs'] },
   { id: 'fly_ball_reads', name: 'Fly Ball Reads', module: 'fielding', description: 'Reading fly balls off the bat for routes', defaultReps: 15, intensity: 'medium', equipmentNeeded: ['glove', 'baseballs'] },

@@ -1,84 +1,121 @@
-## Goals
+# Hitting 1-2-3-4 Framework — End-to-End Integration
 
-Frontend-only polish + one bug fix on the Dashboard / Game Plan area. No business logic, no engine changes.
+## Doctrine (locked, single source of truth)
 
-1. **QuickActionsCard** — make it visually pop (it's the user's primary "what's next" CTA but currently looks like a flat outlined box).
-2. **IdentityCommandCard** — fix readability (low-contrast text on gradient background) and make it more visually appealing.
-3. **PhysioNightlyReportCard** — fix near-unreadable text on the dark card background (component-score numbers, labels, headline copy).
-4. **Bug:** the "0/2 Non-Negotiables done today — tap to view" link in `StandardAwarenessHeader` does nothing when tapped.
+The 1-2-3-4 sequence becomes the canonical phase model for every hitting touchpoint. Existing kinetic-chain rules are **kept verbatim** and **re-tagged** into the phases below. Style variants (toe tap, leg kick, hover, coil, hinge, no-stride, slap) are equivalent valid expressions inside each phase.
 
----
+```
+Phase 1 — HIP LOAD (NN)
+  Back-hip load executed slow, controlled, balanced, BEFORE the hand load,
+  timed to the pitcher's delivery start. Bigger hip load = more swing power
+  regardless of stride style (no-stride / toe tap / high pick-up).
+  Failure visual: hand load happens first, head drifts toward pitcher,
+  no separation, jammed elbow.
 
-## 1. QuickActionsCard (`src/components/identity/QuickActionsCard.tsx`)
+Phase 2 — HAND LOAD (style-permitted; flagged when consequences appear)
+  Bat/scap/knob load behind the head, locks the balance Phase 1 created.
+  Only graded when its absence is causing: long over-stride, head drift to
+  pitcher, weight falling forward on front knee, front shoulder pulling out, chest/shoulders
+  not staying square.
 
-Currently: muted card, small text, low hierarchy.
+Phase 3 — STRIDE / LANDING (style-permitted; flagged when consequences appear)
+  Short controlled back-hip step, "punch the back glute through the inside
+  of the ball." Lands SIDEWAYS, chest+shoulders square to plate, both feet
+  down, core max-tensioned, hips do NOT turn shoulders. Only graded when
+  its absence shows: stuck on back side, can't reach outside pitch, can't get elbow through/elbow jammed behind hands, late foul ball/jammed/late swing and miss, late on high velocity pitches
+  foot down too late, off balance at contact.
 
-Changes:
-- Replace the flat `border-zinc-900 bg-card/60` shell with a gradient surface using design tokens (e.g. `bg-gradient-to-br from-primary/15 via-card to-card`) plus a subtle glowing ring (`ring-1 ring-primary/30 shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.4)]`).
-- Promote the "Next up" line: larger, bolder, semantic foreground; add a small Hammer/Target icon accent.
-- Make the primary CTA button (`{next.ctaLabel}`) visually dominant: solid primary, slightly larger, with a hover lift. Demote the "Log" button to secondary outline with an icon-only feel on small screens.
-- Keep `HammerStateBadge` + `ReadinessChip` but place them inside a thin top "status row" above the action area for clearer hierarchy.
-- Add a subtle pulse on the CTA when `next.label` is a fresh recommendation (purely CSS, no logic change).
-
-## 2. IdentityCommandCard (`src/components/identity/IdentityCommandCard.tsx`)
-
-Currently: tier-tinted gradient + small `text-muted-foreground` everywhere — eyebrow and helper text wash out, especially in Hammer/Champion tiers.
-
-Changes (visual only — keep all logic, hooks, and structure intact):
-- Lighten the gradient overlay so foreground text always meets contrast: replace `bg-gradient-to-br` with a layered approach (`bg-card` base + lower-opacity tier accent overlay), and bump tone classes to `text-foreground` / `text-foreground/80` instead of `text-muted-foreground` for headline and chip text.
-- Add a stronger top border accent in the tier color (e.g. 2px top border using the `tone` color), giving identity instantly readable even at a glance.
-- Increase the consistency score's contrast: render on a small dark "scoreboard" pill (`bg-background/80 ring-1 ring-border`) so the big number is always legible on any tier gradient.
-- Streak chips: bump from `bg-background/60` to `bg-background/90` and use `text-foreground` so they stop disappearing on tinted backgrounds.
-- Inside expanded sections, change copy text from `text-muted-foreground` to `text-foreground/85` for the explainer paragraphs (Today's Standard, Day Intent).
-- Keep all section structure, buttons, and behavior identical.
-
-## 3. PhysioNightlyReportCard (`src/components/physio/PhysioNightlyReportCard.tsx`)
-
-The colored gradient header is fine, but the card body inherits the dark `Card` background and the muted/mono text under each emoji bar plus the disclaimer is nearly invisible.
-
-Changes:
-- Switch `Card` shell to a slightly lighter surface: `bg-card` → `bg-card/95` with `border-border` instead of `border-border/50`, and brighten `CardContent` text defaults (wrap in a `text-foreground` container).
-- Component-score grid (the 7-tile bar): label emoji stays, but bump tile background from `bg-muted/30` to `bg-muted/60`, and change the score number under each tile from `text-muted-foreground` to `text-foreground font-bold`.
-- Headline: change to `text-foreground` (already mostly is) but bump font weight and line-height for readability.
-- Disclaimer block at the bottom: replace `bg-muted/20` + `text-muted-foreground` with `bg-muted/50` + `text-foreground/80` so it stops melting into the background.
-- Inside `ReportSectionCard`: change the three info blocks (Why / What To Do / How It Helps) — bump `bg-muted/30`, `bg-muted/20` → `bg-muted/50` and ensure all body copy is `text-foreground` (not inherited muted).
-
-## 4. Bug fix — "tap to view" does nothing
-
-Source: `src/components/GamePlanCard.tsx` ~line 1789. The handler does:
-
-```ts
-onJumpToNN={() => {
-  const el = document.getElementById('nn-section');
-  el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}}
+Phase 4 — HITTER'S MOVE (NN, MOST IMPORTANT)
+  Knob = fulcrum. Back elbow drives forward FIRST while hands stay back
+  and shoulders stay closed; barrel catapults last. Hitter "lines hands
+  up with the ball" and tries to make contact with the hands — extension
+  comes naturally after contact from leftover core tension.
+  Failure visual: hands lead elbow, casting, early barrel flip, rollover, weak pop up to opposite field, swing and miss, late, foul ball opposite field, foul ball ground ball pull side,
+  swing-and-miss on offspeed away.
 ```
 
-Failure modes:
-- `nn-section` is rendered only when `sortMode !== 'timeline'` AND `!hideNN` AND `nnTasks.length > 0` (line 2407). If a user has NN templates but none of them happen to be in today's `customTasks` list (different schedule, archived for today, etc.), the anchor never exists → silent no-op. This matches the user's "0/2" complaint: total = 2 (templates), but the NN sub-section may render zero rows or not at all.
-- In timeline mode the entire `nn-section` is never rendered.
+All current checks (front-foot-plants, hip-shoulder separation, back-elbow-past-belly-button, hands-stay-back, shoulders-open-last, head stability) remain in force and are now phase-tagged: front foot landing → P3, separation/elbow/hands/shoulder timing → P4, head stability → P1+P3.
 
-Fix:
-- Add stable secondary anchors: also tag the Custom Activities header (`<h3>` around line 2353) with `id="custom-activities-section"`, and mark the timeline section header (line 2219) with `id="timeline-section"`.
-- Update `onJumpToNN` to:
-  1. Try `nn-section` first.
-  2. Fallback to `custom-activities-section` (or `timeline-section` when in timeline mode).
-  3. If still nothing found, show a small `toast` ("No Non-Negotiables set yet — tap the flame on any activity to lock it in.") so the click never feels broken.
-- Same two-line update for the older duplicate handler at line 1250.
+## Score caps (additive to existing caps; lower cap wins)
 
-No data changes, no engine changes — purely a frontend reliability fix and visual polish.
 
----
+| Violation                                             | Cap    |
+| ----------------------------------------------------- | ------ |
+| P1: hand-load-before-hip-load OR no balanced hip load | 80     |
+| P2: missing hand load AND P2 consequences visible     | 85     |
+| P3: not sideways at landing / shoulders not square    | 75     |
+| P4: hands lead elbow / early barrel flip / cast       | **50** |
+| Two or more phase violations                          | 65     |
 
-## Files touched
 
-- `src/components/identity/QuickActionsCard.tsx` — visual refresh
-- `src/components/identity/IdentityCommandCard.tsx` — contrast + visual refresh (logic untouched)
-- `src/components/physio/PhysioNightlyReportCard.tsx` — readability pass
-- `src/components/GamePlanCard.tsx` — fix `onJumpToNN` handlers (2 sites) + add 2 anchor ids
+Sport scope: identical for baseball + softball **except** softball slap-progression at-bats use a relaxed P2 and P3 (lack of hand load and front-foot drift allowed); P1 and P4 unchanged.
 
-## Verification
+Existing caps from `analyze-video` (early shoulder rotation 70, hands drift 75, elbow tucked 75, two+ critical 60) remain and stack — the lowest cap applies.
 
-- Load `/dashboard` and visually confirm: QuickActions stands out, Identity card text is legible across tiers, Physio card body is readable.
-- With NN total > 0 and zero NN rows in today's plan, click "tap to view" → page scrolls to Custom Activities and shows the helper toast.
-- With NN rows present, click → smooth scroll to NN section as before.
+## What changes, file by file
+
+### 1. Analysis engine — `supabase/functions/analyze-video/index.ts`
+
+- Extend the `module === "hitting"` system prompt with the four-phase doctrine, phase-tagged checkpoints, the new caps table, and slap-hitter exception.
+- Add the "bigger hip load = more power, kept early and quiet" rule explicitly.
+- Output JSON additions: `phase_scores: { p1, p2, p3, p4 }`, `phase_violations: string[]`, `dominant_failed_phase`, `style_detected` (toe-tap / leg-kick / hover / coil / no-stride / slap).
+- Phase-aware corrective feedback templates (varied wording, dialogue-style for P2/P3 to invite hitter conversation).
+
+### 2. Shared hitting doctrine — new `supabase/functions/_shared/hittingPhases.ts` + `src/lib/hittingPhases.ts`
+
+- Single exported constant `HITTING_PHASES` (id, name, NN flag, failure symptoms, style variants, score cap).
+- Symptom→phase attribution map used by inference engine.
+- Imported by analyze-video, ai-chat, ai-helpdesk, session-insights, generate-vault-recap, video recommendation engine, drill catalogs.
+
+### 3. Drill catalog — `src/data/baseball/drillDefinitions.ts` + `src/data/softball/drillDefinitions.ts`
+
+- Add `phasesTrained: ('P1'|'P2'|'P3'|'P4')[]` to every existing hitting drill (tee_work, front_toss, soft_toss, flips, machine_bp, bp_rounds, live_abs, slap_progression, reaction_speed).
+- Add new phase-isolation drills:
+  - `hip_load_iso` (P1) — back-hip load only, hands frozen, mirror/video.
+  - `load_sequence_pause` (P1+P2) — hip load → 1-count pause → hand load.
+  - `sideways_landing_check` (P3) — stride-and-freeze, photo on landing.
+  - `elbow_first_fulcrum` (P4) — knob-tied tee drill, elbow leads, hands trail.
+  - `catch_the_ball` (P4) — soft toss, "catch with hands, line them up."
+  - `no_stride_power` (P1) — stanceless reps to prove hip load = power.
+
+### 4. Symptom→phase inference for practice + game logs
+
+- New helper `attributePhaseFromSymptoms(symptoms[])` in shared lib.
+- Wired into:
+  - **Practice**: session-insights, calculate-session, generate-vault-recap — when at-bat tags include `rollover`, `swing_miss_offspeed_away`, `late`, `jammed`, `front_shoulder_pull`, `weight_forward`, `stuck_back_side`, `cant_reach_outside`, `foot_down_late`, attribute to most likely failed phase, surface in session feedback.
+  - **Game**: game-scoring richSummary post-AB hooks — same attribution, contributes to per-game "phase weakness trend" so the roadmap recommends drills that match.
+- No data-loss: existing scores untouched; phase attribution is metadata layered on top.
+
+### 5. Roadmap / drill recommendation
+
+- `videoRecommendationEngine.ts` and the drill recommender consume `dominant_failed_phase` + recent phase-trend to surface drills tagged with that phase first, then library videos tagged with that phase.
+
+### 6. Video Library auto-tagging
+
+- Video taxonomy gains four phase tags: `hitting_phase_1_hip_load`, `hitting_phase_2_hand_load`, `hitting_phase_3_stride_landing`, `hitting_phase_4_hitters_move`.
+- Owner-uploaded hitting videos: extend the AI tag-suggestion pipeline (generate-video-tags / Gemini description) to assign one or more phase tags from the description.
+- `recompute_library_video_tier` requires no schema change — phase tags ride existing `video_tag_assignments`.
+
+### 7. Hammer chat (`supabase/functions/ai-chat/index.ts`)
+
+- System prompt for `hitting` topics gains the full 1-2-3-4 doctrine, the symptom dictionary, the "dialogue first for P2/P3" instruction, and the "bigger early hip load = more power" rule.
+- Hammer must always answer hitting questions through the phase lens and may ask clarifying questions to diagnose phase failure.
+
+### 8. Memory updates
+
+- Replace `mem://features/hitting-analysis/elite-hitting-mechanics-formula` with the 1-2-3-4 doctrine (NN flags, caps, style variants, symptom map, slap exception, "bigger hip load = more power" rule).
+- Add Core line: `Hitting analysis uses 1-2-3-4 phases (P1 Hip Load NN, P2 Hand Load, P3 Stride/Land, P4 Hitter's Move NN); P4 cap 50.`
+
+## Non-changes (explicit)
+
+- No DB migration. No score recomputation of historical sessions. No removal of existing kinetic-chain rules, caps, or feedback templates. No change to grading bands. Slap-hitter rule is the only sport-specific divergence.
+
+## Acceptance checks
+
+1. `analyze-video` hitting response now returns `phase_scores`, `phase_violations`, `dominant_failed_phase`, `style_detected` and respects every cap (including P4=50).
+2. A swing where hands lead elbow caps at 50 even if everything else is perfect.
+3. A no-stride athlete with a strong hip load is **not** penalized on P3.
+4. A softball slap rep with front-foot drift is **not** penalized on P3.
+5. Logging "rollover" + "swing-miss offspeed away" on a practice rep surfaces a P4 attribution and recommends `elbow_first_fulcrum` / `catch_the_ball` drills + a P4-tagged library video.
+6. Asking Hammer "I keep pulling off the ball" returns a P2-anchored dialogue, not generic advice.
+7. Existing hitting drills retain every existing field and now carry `phasesTrained`.
