@@ -3,6 +3,7 @@ import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
 import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
 import { PrescriptiveActionsCard } from '@/components/hie/PrescriptiveActionsCard';
 import { ReadinessCard } from '@/components/hie/ReadinessCard';
+import { ReadinessBreakdownCard } from '@/components/hie/ReadinessBreakdownCard';
 import { SmartWeekPlan } from '@/components/hie/SmartWeekPlan';
 import { ProofCard } from '@/components/hie/ProofCard';
 import { RiskAlertsCard } from '@/components/hie/RiskAlertsCard';
@@ -112,6 +113,7 @@ Confidence: ${snapshot.development_confidence}%
 
                 {/* Section 4: Today's Readiness */}
                 <ReadinessCard />
+                <ReadinessBreakdownCard />
 
                 {/* Risk Alerts */}
                 <RiskAlertsCard />
