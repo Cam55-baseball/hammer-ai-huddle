@@ -591,106 +591,30 @@ const OwnerDashboard = () => {
 
         {/* Content */}
         <main className="flex-1 overflow-auto p-4 md:p-6">
-          {/* Section Header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">{sectionLabels[activeSection]}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {activeSection === 'overview' && 'Platform analytics and key metrics'}
-              {activeSection === 'builds' && 'Create programs, bundles, and consultations — and see what you\'ve made'}
-              {activeSection === 'users' && 'Manage user accounts and admin privileges'}
-              {activeSection === 'admin-requests' && 'Review pending admin access requests'}
-              {activeSection === 'scout-applications' && 'Review scout and coach applications'}
-              {activeSection === 'videos' && 'Recently analyzed training videos'}
-              {activeSection === 'subscriptions' && 'Active module subscriptions'}
-              {activeSection === 'settings' && 'Configure app-wide settings'}
-              {activeSection === 'player-search' && 'Search and view player profiles'}
-              {activeSection === 'promo-engine' && 'Build and manage cinematic promotional videos'}
-              {activeSection === 'engine-settings' && 'Tune HIE and Recap engine weights, thresholds, and behavior'}
-            </p>
+          {/* Section subtitle (compact) */}
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold">{sectionLabels[activeSection]}</h2>
           </div>
 
           {/* Overview Section */}
           {activeSection === 'overview' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Users</p>
-                  <p className="text-3xl font-bold mt-1">{totalUsers}</p>
-                </Card>
-
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <CreditCard className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Subscriptions</p>
-                  <p className="text-3xl font-bold mt-1">{activeSubscriptions}</p>
-                </Card>
-
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <VideoIcon className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Videos</p>
-                  <p className="text-3xl font-bold mt-1">{totalVideosAnalyzed}</p>
-                </Card>
-
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Target className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg. Score</p>
-                  <p className="text-3xl font-bold mt-1">{avgScore}%</p>
-                </Card>
-              </div>
-
-              {/* Quick Stats */}
-              <Card className="p-5">
-                <h3 className="font-semibold mb-4">Module Distribution</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Hitting</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{moduleStats.hitting}</span>
-                    </div>
-                    <Progress value={activeSubscriptions > 0 ? (moduleStats.hitting / activeSubscriptions) * 100 : 0} className="h-2" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CircleDot className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Pitching</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{moduleStats.pitching}</span>
-                    </div>
-                    <Progress value={activeSubscriptions > 0 ? (moduleStats.pitching / activeSubscriptions) * 100 : 0} className="h-2" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Throwing</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{moduleStats.throwing}</span>
-                    </div>
-                    <Progress value={activeSubscriptions > 0 ? (moduleStats.throwing / activeSubscriptions) * 100 : 0} className="h-2" />
-                  </div>
-                </div>
-              </Card>
-            </div>
+            <OwnerOverview
+              totalUsers={totalUsers}
+              activeSubscriptions={activeSubscriptions}
+              totalVideosAnalyzed={totalVideosAnalyzed}
+              avgScore={avgScore}
+              pendingAdminRequests={adminRequests.length}
+              pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
+              recentUsers={users.slice(0, 6)}
+              recentVideos={videos.slice(0, 6)}
+              recentScoutApplications={scoutApplications.slice(0, 6).map(a => ({
+                id: a.id,
+                status: a.status,
+                created_at: a.created_at,
+                full_name: a.full_name ?? a.applicant_name ?? null,
+              }))}
+              onJump={setActiveSection}
+            />
           )}
 
           {/* Builds Section */}
