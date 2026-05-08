@@ -1566,6 +1566,17 @@ Deno.serve(async (req) => {
     // ── READINESS (must be computed before prescription engine needs it) ──
     const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
 
+    // ── TRAINING LOAD READINESS (Hammers behavioral signal) ──
+    const { data: latestConsistencySnap } = await supabase
+      .from("user_consistency_snapshots")
+      .select("consistency_score, nn_miss_count_7d, snapshot_date")
+      .eq("user_id", user_id)
+      .order("snapshot_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const trainingReadinessScore = computeTrainingReadiness(latestConsistencySnap ?? null, dailyLogs ?? null);
+
+
     // ── PRESCRIPTIVE ACTIONS (AI + scoring hybrid with fallback) ──
     const prescriptiveActions: PrescriptiveAction[] = [];
     const usedAreas = new Set<string>();
