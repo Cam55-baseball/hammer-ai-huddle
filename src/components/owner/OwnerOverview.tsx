@@ -12,6 +12,9 @@ import {
   Search,
   Settings as SettingsIcon,
   Activity,
+  AlertCircle,
+  BarChart3,
+  Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -38,6 +41,45 @@ interface OwnerOverviewProps {
   onJump: (section: OwnerSection) => void;
 }
 
+interface SectionHeaderProps {
+  icon: React.ElementType;
+  label: string;
+  accent: "amber" | "blue" | "slate" | "emerald";
+}
+
+const ACCENT_TEXT: Record<SectionHeaderProps["accent"], string> = {
+  amber: "text-amber-600 dark:text-amber-400",
+  blue: "text-blue-600 dark:text-blue-400",
+  slate: "text-slate-600 dark:text-slate-300",
+  emerald: "text-emerald-600 dark:text-emerald-400",
+};
+
+const ACCENT_DOT: Record<SectionHeaderProps["accent"], string> = {
+  amber: "bg-amber-500",
+  blue: "bg-blue-500",
+  slate: "bg-slate-400",
+  emerald: "bg-emerald-500",
+};
+
+function SectionHeader({ icon: Icon, label, accent }: SectionHeaderProps) {
+  return (
+    <div className="flex items-center gap-2 px-1">
+      <span className={cn("h-2 w-2 rounded-full", ACCENT_DOT[accent])} />
+      <Icon className={cn("h-4 w-4", ACCENT_TEXT[accent])} />
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </h3>
+    </div>
+  );
+}
+
+const KIND_DOT: Record<ActivityItem["kind"], string> = {
+  user: "bg-primary",
+  video: "bg-blue-500",
+  scout: "bg-amber-500",
+  build: "bg-emerald-500",
+};
+
 export function OwnerOverview({
   totalUsers,
   activeSubscriptions,
@@ -56,26 +98,30 @@ export function OwnerOverview({
     {
       show: pendingAdminRequests > 0,
       icon: UserCog,
-      label: "Pending admin requests",
+      label: "Admin requests",
       count: pendingAdminRequests,
-      cta: "Review",
       onClick: () => onJump("admin-requests"),
     },
     {
       show: pendingScoutApplications > 0,
       icon: UserPlus,
-      label: "Pending scout applications",
+      label: "Scout applications",
       count: pendingScoutApplications,
-      cta: "Review",
       onClick: () => onJump("scout-applications"),
     },
   ].filter((a) => a.show);
 
-  const kpis = [
-    { label: "Users", value: totalUsers, icon: Users },
-    { label: "Active Subs", value: activeSubscriptions, icon: CreditCard },
-    { label: "Videos", value: totalVideosAnalyzed, icon: VideoIcon },
-    { label: "Avg Score", value: `${avgScore}%`, icon: Target },
+  const kpis: {
+    label: string;
+    value: number | string;
+    icon: React.ElementType;
+    tint: string;
+    iconColor: string;
+  }[] = [
+    { label: "Users", value: totalUsers, icon: Users, tint: "bg-primary/5 border-primary/20", iconColor: "text-primary" },
+    { label: "Active Subs", value: activeSubscriptions, icon: CreditCard, tint: "bg-emerald-500/5 border-emerald-500/20", iconColor: "text-emerald-600 dark:text-emerald-400" },
+    { label: "Videos", value: totalVideosAnalyzed, icon: VideoIcon, tint: "bg-blue-500/5 border-blue-500/20", iconColor: "text-blue-600 dark:text-blue-400" },
+    { label: "Avg Score", value: `${avgScore}%`, icon: Target, tint: "bg-amber-500/5 border-amber-500/20", iconColor: "text-amber-600 dark:text-amber-400" },
   ];
 
   const activity: ActivityItem[] = [
@@ -119,125 +165,136 @@ export function OwnerOverview({
 
   return (
     <div className="space-y-6">
-      {/* Action queue */}
+      {/* ========== Needs Attention ========== */}
       {actionCards.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {actionCards.map((a) => {
-            const Icon = a.icon;
+        <section className="space-y-2">
+          <SectionHeader icon={AlertCircle} label="Needs attention" accent="amber" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {actionCards.map((a) => {
+              const Icon = a.icon;
+              return (
+                <Card
+                  key={a.label}
+                  className="p-4 border-l-4 border-l-amber-500 bg-amber-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-11 w-11 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                      <Icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-2xl font-bold leading-none">{a.count}</p>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{a.label}</p>
+                    </div>
+                  </div>
+                  <Button size="sm" onClick={a.onClick} className="w-full sm:w-auto h-10 sm:h-9">
+                    Review
+                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ========== At a Glance ========== */}
+      <section className="space-y-2">
+        <SectionHeader icon={BarChart3} label="At a glance" accent="blue" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {kpis.map((k) => {
+            const Icon = k.icon;
             return (
-              <Card
-                key={a.label}
-                className="p-4 flex items-center justify-between gap-4 border-amber-500/40 bg-amber-500/5"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-10 w-10 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold leading-none">{a.count}</p>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{a.label}</p>
-                  </div>
+              <Card key={k.label} className={cn("p-3 border", k.tint)}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider truncate">
+                    {k.label}
+                  </span>
+                  <Icon className={cn("h-3.5 w-3.5 shrink-0", k.iconColor)} />
                 </div>
-                <Button size="sm" onClick={a.onClick}>
-                  {a.cta}
-                  <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                </Button>
+                <p className="text-xl sm:text-2xl font-bold mt-1.5">{k.value}</p>
               </Card>
             );
           })}
         </div>
-      )}
+      </section>
 
-      {/* Compact KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpis.map((k) => {
-          const Icon = k.icon;
-          return (
-            <Card key={k.label} className="p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {k.label}
-                </span>
-                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-              <p className="text-2xl font-bold mt-1.5">{k.value}</p>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Activity + Quick Actions */}
+      {/* ========== Activity + Quick Actions ========== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="p-4 lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-              Recent Activity
-            </h3>
-          </div>
-          {activity.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">No recent activity yet.</p>
-          ) : (
-            <ul className="divide-y">
-              {activity.map((a) => (
-                <li key={a.id} className="py-2 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{a.label}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{a.detail}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground shrink-0">{fmtTs(a.ts)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+        <section className="space-y-2 lg:col-span-2">
+          <SectionHeader icon={Activity} label="Recent activity" accent="slate" />
+          <Card className="p-4 border-l-4 border-l-slate-400/60">
+            {activity.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No recent activity yet.</p>
+            ) : (
+              <ul className="divide-y">
+                {activity.map((a) => (
+                  <li key={a.id} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={cn("h-2 w-2 rounded-full shrink-0", KIND_DOT[a.kind])} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{a.label}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{a.detail}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{fmtTs(a.ts)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </section>
 
-        <Card className="p-4">
-          <h3 className="font-semibold mb-3">Quick Actions</h3>
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => navigate("/owner/open_program_builder")}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Program
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => navigate("/owner/open_bundle_builder")}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Bundle
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => navigate("/owner/open_consultation_flow")}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Consultation
-            </Button>
-            <div className="h-px bg-border my-2" />
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => onJump("player-search")}
-            >
-              <Search className="h-4 w-4 mr-2" />
-              Player Search
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => onJump("engine-settings")}
-            >
-              <SettingsIcon className="h-4 w-4 mr-2" />
-              Engine Settings
-            </Button>
-          </div>
-        </Card>
+        <section className="space-y-2">
+          <SectionHeader icon={Zap} label="Quick actions" accent="emerald" />
+          <Card className="p-4 border-l-4 border-l-emerald-500/60">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Create</p>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start h-10"
+                onClick={() => navigate("/owner/open_program_builder")}
+              >
+                <Plus className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />
+                New Program
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start h-10"
+                onClick={() => navigate("/owner/open_bundle_builder")}
+              >
+                <Plus className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />
+                New Bundle
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start h-10"
+                onClick={() => navigate("/owner/open_consultation_flow")}
+              >
+                <Plus className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />
+                New Consultation
+              </Button>
+            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mt-4 mb-2">Jump to</p>
+            <div className="space-y-2">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-10"
+                onClick={() => onJump("player-search")}
+              >
+                <Search className="h-4 w-4 mr-2" />
+                Player Search
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-10"
+                onClick={() => onJump("engine-settings")}
+              >
+                <SettingsIcon className="h-4 w-4 mr-2" />
+                Engine Settings
+              </Button>
+            </div>
+          </Card>
+        </section>
       </div>
     </div>
   );
