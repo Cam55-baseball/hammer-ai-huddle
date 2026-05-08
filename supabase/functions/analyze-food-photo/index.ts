@@ -105,7 +105,11 @@ COMMON FOOD REFERENCES (per typical serving):
 - Banana (medium): 105 cal, 1g protein, 27g carbs, 0.4g fat
 - Apple (medium): 95 cal, 0.5g protein, 25g carbs, 0.3g fat
 
-Be thorough but realistic. If the image shows no food or is too unclear, indicate that.`;
+Be thorough but realistic. If the image shows no food or is too unclear, indicate that.
+
+=== UNIVERSAL CAUSE→EFFECT CONTRACT ===
+If you surface any nutrition limiter (low protein, missing micros, poor hydration quality, broken habit), express it as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) plus a 4-step Notice→Swap→Lock→Sustain roadmap, in dual register (athlete voice + "Coach's note:" technical mechanism). Nutrition phases: P1 Macro Floor protein (NN, hard cap 50), P2 Micro Coverage (cap 75), P3 Hydration Quality (cap 85), P4 Habit Lock-in (cap 80, +5 elite). Multi-violation chains stack 1→4.
+=== END CONTRACT ===`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
