@@ -50,7 +50,7 @@ export interface CustomActivityLogRow {
   completed: boolean | null;
   start_time?: string | null;
   notes?: string | null;
-  performance_data?: Record<string, unknown> | null;
+  performance_data?: unknown;
 }
 
 export interface CustomActivityTemplateRow {
