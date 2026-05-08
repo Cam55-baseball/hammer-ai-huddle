@@ -1,5 +1,6 @@
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
+import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, formatChainText, formatRoadmapText } from "../_shared/hittingCausalChains.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -165,6 +166,53 @@ const getSystemPrompt = (module: string, sport: string) => {
     return `You are an expert ${sport} hitting mechanics analyst.
 
 ${HITTING_DOCTRINE_PROMPT}
+
+${HITTING_CAUSAL_CHAIN_PROMPT}
+
+CANONICAL CHAINS + ROADMAPS (echo verbatim into causal_chains/roadmap output for the dominant failed phase — do NOT improvise):
+=== P1 ===
+${formatChainText(PHASE_CAUSAL_CHAINS.P1, 'athlete')}
+ROADMAP:
+${formatRoadmapText(PHASE_ROADMAPS.P1, 'athlete')}
+
+=== P2 ===
+${formatChainText(PHASE_CAUSAL_CHAINS.P2, 'athlete')}
+ROADMAP:
+${formatRoadmapText(PHASE_ROADMAPS.P2, 'athlete')}
+
+=== P3 ===
+${formatChainText(PHASE_CAUSAL_CHAINS.P3, 'athlete')}
+ROADMAP:
+${formatRoadmapText(PHASE_ROADMAPS.P3, 'athlete')}
+
+=== P4 (MOST IMPORTANT) ===
+${formatChainText(PHASE_CAUSAL_CHAINS.P4, 'athlete')}
+ROADMAP:
+${formatRoadmapText(PHASE_ROADMAPS.P4, 'athlete')}
+
+ADDITIONAL OUTPUT FIELDS — also REQUIRED (additive, do not remove existing fields):
+  "causal_chains": [
+    {
+      "phase": "P1" | "P2" | "P3" | "P4",
+      "trigger":   { "athlete": "...", "coach_note": "..." },
+      "cause":     { "athlete": "...", "coach_note": "..." },
+      "mechanism": { "athlete": "...", "coach_note": "..." },
+      "result":    { "athlete": "...", "coach_note": "..." },
+      "fix":       { "athlete": "...", "coach_note": "..." }
+    }
+  ],
+  "roadmap": [
+    {
+      "step": 1 | 2 | 3 | 4,
+      "key": "feel" | "iso" | "constraint" | "transfer",
+      "label": "Feel" | "Isolate" | "Constrain" | "Transfer",
+      "intent": "...",
+      "drill_id": "<id from drill catalog>",
+      "athlete_cue": "...",
+      "coach_note": "..."
+    }
+  ]
+Always output BOTH voice registers for every chain link. Pull from the canonical chains above whenever possible. Never give fragments; teach in the full 5-link chain.
 
 ALL EXISTING KINETIC-CHAIN CHECKS BELOW REMAIN IN FORCE — they are now phase-tagged:
   Front-foot planting → Phase 3
