@@ -319,7 +319,7 @@ function SorenessStiffnessBlock({
   );
 }
 
-
+export function VaultFocusQuizDialog({
   open,
   onOpenChange,
   quizType,
