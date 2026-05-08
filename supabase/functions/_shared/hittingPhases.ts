@@ -92,6 +92,95 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
 
 export const TWO_PLUS_PHASE_VIOLATION_CAP = 65;
 
+// === LOCKED 2026 EXTENSIONS ===
+// P4 severity grading (additive — original cap 50 = 'hard').
+export const P4_HARD_CAP = 50;
+export const P4_SOFT_CAP = 70;
+export const P4_ELITE_BONUS = 5; // raises final score ceiling when elite move verified.
+
+export type P4Severity = 'hard' | 'soft' | 'elite' | null;
+
+// Hard-P4 symptoms = full violation (cap 50).
+const P4_HARD_SYMPTOMS = new Set([
+  'casting',
+  'early_barrel_flip',
+  'rollover',
+  'shoulders_open_before_elbow_extends',
+  'hands_lead_elbow',
+]);
+
+// Soft-P4 symptoms = elbow lead present but extension shown AT contact (cap 70).
+const P4_SOFT_SYMPTOMS = new Set([
+  'extension_at_contact',
+  'hands_slightly_leading',
+  'early_extension_slight',
+]);
+
+export interface EliteMoveSignals {
+  elbowLeadsForward?: boolean;
+  handsStayBack?: boolean;
+  contactWithHands?: boolean;
+  extensionPostContact?: boolean;
+  barrelCatapultsLast?: boolean;
+}
+
+export function isEliteMove(signals?: EliteMoveSignals): boolean {
+  if (!signals) return false;
+  return !!(
+    signals.elbowLeadsForward &&
+    signals.handsStayBack &&
+    signals.contactWithHands &&
+    signals.extensionPostContact &&
+    signals.barrelCatapultsLast
+  );
+}
+
+export function gradeP4Severity(symptoms: string[], elite?: EliteMoveSignals): P4Severity {
+  if (isEliteMove(elite)) return 'elite';
+  const lc = (symptoms || []).map((s) => String(s).toLowerCase().trim());
+  if (lc.some((s) => P4_HARD_SYMPTOMS.has(s))) return 'hard';
+  if (lc.some((s) => P4_SOFT_SYMPTOMS.has(s))) return 'soft';
+  return null;
+}
+
+// P1 hands-break HARD timing rule. Pitcher tempo NEVER relaxes this.
+export interface P1TimingSignals {
+  hipsLoadedAtPitcherHandsBreak?: boolean; // explicit observation from analyzer/coach
+}
+export function evaluateP1HandsBreakTiming(sig?: P1TimingSignals): { violated: boolean } {
+  if (!sig || sig.hipsLoadedAtPitcherHandsBreak === undefined) return { violated: false };
+  return { violated: sig.hipsLoadedAtPitcherHandsBreak === false };
+}
+
+// Slap-elite gates (softball slap-progression only).
+export interface SlapEliteSignals {
+  runningStartTiming?: boolean;
+  topDownBarrel?: boolean;
+  alreadyMovingContact?: boolean;
+}
+export interface SlapEliteResult extends SlapEliteSignals {
+  isElite: boolean;
+}
+export function evaluateSlapEliteGates(sig?: SlapEliteSignals): SlapEliteResult {
+  const r = sig || {};
+  return {
+    runningStartTiming: !!r.runningStartTiming,
+    topDownBarrel: !!r.topDownBarrel,
+    alreadyMovingContact: !!r.alreadyMovingContact,
+    isElite: !!(r.runningStartTiming && r.topDownBarrel && r.alreadyMovingContact),
+  };
+}
+
+// Roadmap surface order:
+// - If P4 is the SOLE violation, lead with P4 alone.
+// - Otherwise (any of P1/P2/P3 violated), stack ALL violations in 1→2→3→4 kinetic order.
+export function prioritizePhasesForRoadmap(violated: HittingPhaseId[]): HittingPhaseId[] {
+  const set = new Set(violated);
+  if (set.size === 1 && set.has('P4')) return ['P4'];
+  const order: HittingPhaseId[] = ['P1', 'P2', 'P3', 'P4'];
+  return order.filter((p) => set.has(p));
+}
+
 // Slap-progression at-bats (softball): relax P2 + P3 only.
 export function isSlapContext(ctx?: { sport?: string; drillId?: string; tags?: string[] }): boolean {
   if (!ctx) return false;
@@ -163,18 +252,62 @@ export function attributePhaseFromSymptoms(symptoms: string[]): {
 }
 
 // Cap calculator. Pass the violated phase ids; returns the lowest applicable cap.
+// LOCKED EXTENSION: optional opts let callers pass P4 severity + elite-move signals
+// + slap-elite gates so the cap reflects soft (70) / hard (50) / elite (+5) outcomes.
 export function applyPhaseCaps(
   baseScore: number,
   violatedPhases: HittingPhaseId[],
-  ctx?: { sport?: string; drillId?: string; tags?: string[] }
-): { score: number; appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>; twoPlus: boolean } {
+  ctx?: { sport?: string; drillId?: string; tags?: string[] },
+  opts?: {
+    p4Severity?: P4Severity;
+    eliteMove?: EliteMoveSignals;
+    slapElite?: SlapEliteSignals;
+  }
+): {
+  score: number;
+  appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>;
+  twoPlus: boolean;
+  p4Severity: P4Severity;
+  eliteMove: boolean;
+  slapElite: SlapEliteResult;
+} {
   const slap = isSlapContext(ctx);
   const effective = violatedPhases.filter((p) => !(slap && (p === 'P2' || p === 'P3')));
-  const appliedCaps = effective.map((p) => ({ phase: p, cap: HITTING_PHASES[p].scoreCap }));
+
+  // Resolve P4 severity (passed-in or fall back to symptom-based hard).
+  let p4Sev: P4Severity = opts?.p4Severity ?? null;
+  if (effective.includes('P4') && !p4Sev) p4Sev = 'hard';
+  const elite = isEliteMove(opts?.eliteMove);
+  if (elite) p4Sev = 'elite';
+
+  const appliedCaps = effective.map((p) => {
+    if (p === 'P4') {
+      const cap = p4Sev === 'soft' ? P4_SOFT_CAP : p4Sev === 'elite' ? 100 : P4_HARD_CAP;
+      return { phase: p, cap };
+    }
+    return { phase: p, cap: HITTING_PHASES[p].scoreCap };
+  });
+
   let cap = appliedCaps.reduce((min, c) => Math.min(min, c.cap), 100);
   const twoPlus = effective.length >= 2;
   if (twoPlus) cap = Math.min(cap, TWO_PLUS_PHASE_VIOLATION_CAP);
-  return { score: Math.min(baseScore, cap), appliedCaps, twoPlus };
+
+  // Elite reward: +5 to the final cap (max 100), only if no other violations drag it down.
+  let finalScore = Math.min(baseScore, cap);
+  if (elite && effective.length <= 1) {
+    finalScore = Math.min(100, baseScore + P4_ELITE_BONUS);
+  }
+
+  const slapEliteResult = evaluateSlapEliteGates(opts?.slapElite);
+
+  return {
+    score: finalScore,
+    appliedCaps,
+    twoPlus,
+    p4Severity: p4Sev,
+    eliteMove: elite,
+    slapElite: slapEliteResult,
+  };
 }
 
 // Prompt block injectable into any system prompt that discusses hitting.
@@ -212,12 +345,28 @@ SCORE CAPS (lowest applicable cap wins; existing caps still apply):
   P1 violation → max 80
   P2 violation (with consequences) → max 85
   P3 violation (not sideways at landing) → max 75
-  P4 violation → MAX 50  (this is the most important phase)
+  P4 HARD violation (cast / rollover / barrel flip / shoulders open before elbow / hands clearly leading) → MAX 50
+  P4 SOFT violation (clean elbow lead BUT extension visible AT contact, OR hands very slightly leading) → MAX 70 (dialogue-tone teaching point)
+  P4 ELITE move (elbow leads → hands stay back → contact made with the hands → extension is post-contact → barrel catapults last) → +5 BONUS to final score (max 100), Elite Move badge, fed to differentiation engine
   Two or more phase violations → max 65
 
+P1 HANDS-BREAK HARD TIMING RULE:
+  If the hitter's legs are NOT loaded by the time the pitcher's hands break apart, P1 is violated.
+  Pitcher tempo (windup, stretch, slide-step, quick-pitch) does NOT relax this rule.
+
+MULTI-VIOLATION ROADMAP ORDER:
+  - If P4 is the SOLE violation: lead with P4.
+  - If ANY of P1/P2/P3 is also violated: stack ALL violated chains in 1→2→3→4 kinetic order.
+  - P4 always carries an "extreme importance" badge regardless of position in the stack.
+
 SLAP EXCEPTION (softball slap-progression at-bats only):
-  P2 and P3 are RELAXED (lack of hand load and front-foot drift allowed).
+  P2 and P3 are RELAXED entirely (no chains, no roadmaps surfaced).
   P1 and P4 are unchanged.
+  ELITE SLAP REP requires P1 + P4 PLUS three slap-specific gates ALL true:
+    1. Running-start timing — front foot lands in rhythm with pitcher's release
+    2. Top-down barrel — barrel comes down on the ball, no uppercut, ground-ball intent
+    3. Already-moving contact — body is moving toward 1B at contact (no stall)
+  Hitting all three = Elite Slap badge (same +5 reward + differentiation engine).
 
 STYLE NEUTRALITY:
   Never criticize a hitter for choosing toe-tap vs leg-kick vs hover vs coil vs no-stride.

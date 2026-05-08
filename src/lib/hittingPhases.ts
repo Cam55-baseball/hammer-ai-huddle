@@ -92,6 +92,86 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
 
 export const TWO_PLUS_PHASE_VIOLATION_CAP = 65;
 
+// === LOCKED 2026 EXTENSIONS (mirror of edge file) ===
+export const P4_HARD_CAP = 50;
+export const P4_SOFT_CAP = 70;
+export const P4_ELITE_BONUS = 5;
+
+export type P4Severity = 'hard' | 'soft' | 'elite' | null;
+
+const P4_HARD_SYMPTOMS = new Set([
+  'casting',
+  'early_barrel_flip',
+  'rollover',
+  'shoulders_open_before_elbow_extends',
+  'hands_lead_elbow',
+]);
+const P4_SOFT_SYMPTOMS = new Set([
+  'extension_at_contact',
+  'hands_slightly_leading',
+  'early_extension_slight',
+]);
+
+export interface EliteMoveSignals {
+  elbowLeadsForward?: boolean;
+  handsStayBack?: boolean;
+  contactWithHands?: boolean;
+  extensionPostContact?: boolean;
+  barrelCatapultsLast?: boolean;
+}
+
+export function isEliteMove(signals?: EliteMoveSignals): boolean {
+  if (!signals) return false;
+  return !!(
+    signals.elbowLeadsForward &&
+    signals.handsStayBack &&
+    signals.contactWithHands &&
+    signals.extensionPostContact &&
+    signals.barrelCatapultsLast
+  );
+}
+
+export function gradeP4Severity(symptoms: string[], elite?: EliteMoveSignals): P4Severity {
+  if (isEliteMove(elite)) return 'elite';
+  const lc = (symptoms || []).map((s) => String(s).toLowerCase().trim());
+  if (lc.some((s) => P4_HARD_SYMPTOMS.has(s))) return 'hard';
+  if (lc.some((s) => P4_SOFT_SYMPTOMS.has(s))) return 'soft';
+  return null;
+}
+
+export interface P1TimingSignals {
+  hipsLoadedAtPitcherHandsBreak?: boolean;
+}
+export function evaluateP1HandsBreakTiming(sig?: P1TimingSignals): { violated: boolean } {
+  if (!sig || sig.hipsLoadedAtPitcherHandsBreak === undefined) return { violated: false };
+  return { violated: sig.hipsLoadedAtPitcherHandsBreak === false };
+}
+
+export interface SlapEliteSignals {
+  runningStartTiming?: boolean;
+  topDownBarrel?: boolean;
+  alreadyMovingContact?: boolean;
+}
+export interface SlapEliteResult extends SlapEliteSignals {
+  isElite: boolean;
+}
+export function evaluateSlapEliteGates(sig?: SlapEliteSignals): SlapEliteResult {
+  const r = sig || {};
+  return {
+    runningStartTiming: !!r.runningStartTiming,
+    topDownBarrel: !!r.topDownBarrel,
+    alreadyMovingContact: !!r.alreadyMovingContact,
+    isElite: !!(r.runningStartTiming && r.topDownBarrel && r.alreadyMovingContact),
+  };
+}
+
+export function prioritizePhasesForRoadmap(violated: HittingPhaseId[]): HittingPhaseId[] {
+  const set = new Set(violated);
+  if (set.size === 1 && set.has('P4')) return ['P4'];
+  const order: HittingPhaseId[] = ['P1', 'P2', 'P3', 'P4'];
+  return order.filter((p) => set.has(p));
+}
+
 export function isSlapContext(ctx?: { sport?: string; drillId?: string; tags?: string[] }): boolean {
   if (!ctx) return false;
   const sport = (ctx.sport || '').toLowerCase();
@@ -158,15 +238,55 @@ export function attributePhaseFromSymptoms(symptoms: string[]): {
 export function applyPhaseCaps(
   baseScore: number,
   violatedPhases: HittingPhaseId[],
-  ctx?: { sport?: string; drillId?: string; tags?: string[] }
-): { score: number; appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>; twoPlus: boolean } {
+  ctx?: { sport?: string; drillId?: string; tags?: string[] },
+  opts?: {
+    p4Severity?: P4Severity;
+    eliteMove?: EliteMoveSignals;
+    slapElite?: SlapEliteSignals;
+  }
+): {
+  score: number;
+  appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>;
+  twoPlus: boolean;
+  p4Severity: P4Severity;
+  eliteMove: boolean;
+  slapElite: SlapEliteResult;
+} {
   const slap = isSlapContext(ctx);
   const effective = violatedPhases.filter((p) => !(slap && (p === 'P2' || p === 'P3')));
-  const appliedCaps = effective.map((p) => ({ phase: p, cap: HITTING_PHASES[p].scoreCap }));
+
+  let p4Sev: P4Severity = opts?.p4Severity ?? null;
+  if (effective.includes('P4') && !p4Sev) p4Sev = 'hard';
+  const elite = isEliteMove(opts?.eliteMove);
+  if (elite) p4Sev = 'elite';
+
+  const appliedCaps = effective.map((p) => {
+    if (p === 'P4') {
+      const cap = p4Sev === 'soft' ? P4_SOFT_CAP : p4Sev === 'elite' ? 100 : P4_HARD_CAP;
+      return { phase: p, cap };
+    }
+    return { phase: p, cap: HITTING_PHASES[p].scoreCap };
+  });
+
   let cap = appliedCaps.reduce((min, c) => Math.min(min, c.cap), 100);
   const twoPlus = effective.length >= 2;
   if (twoPlus) cap = Math.min(cap, TWO_PLUS_PHASE_VIOLATION_CAP);
-  return { score: Math.min(baseScore, cap), appliedCaps, twoPlus };
+
+  let finalScore = Math.min(baseScore, cap);
+  if (elite && effective.length <= 1) {
+    finalScore = Math.min(100, baseScore + P4_ELITE_BONUS);
+  }
+
+  const slapEliteResult = evaluateSlapEliteGates(opts?.slapElite);
+
+  return {
+    score: finalScore,
+    appliedCaps,
+    twoPlus,
+    p4Severity: p4Sev,
+    eliteMove: elite,
+    slapElite: slapEliteResult,
+  };
 }
 
 // Drill ids tagged with each phase (must match drillDefinitions.ts).

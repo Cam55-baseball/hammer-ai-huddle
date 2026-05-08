@@ -6,6 +6,12 @@ import {
   HittingPhaseId,
   attributePhaseFromSymptoms,
   isSlapContext,
+  prioritizePhasesForRoadmap,
+  P4Severity,
+  EliteMoveSignals,
+  SlapEliteSignals,
+  evaluateSlapEliteGates,
+  isEliteMove,
 } from './hittingPhases';
 
 export type RoadmapStepKey = 'feel' | 'iso' | 'constraint' | 'transfer';
@@ -131,4 +137,83 @@ export function formatChainText(chain: CausalChain, voice: ChainVoice = 'athlete
     `RESULT: ${link('result')}`,
     `FIX: ${link('fix')}`,
   ].join('\n');
+}
+
+// === LOCKED 2026 EXTENSIONS (mirror) ===
+export const P4_SOFT_CHAIN: CausalChain = {
+  phase: 'P4',
+  trigger: { athlete: 'Front foot is down. You decide to swing — and the elbow IS leading.', coach_note: 'Launch window: scap protraction precedes hand acceleration as designed.' },
+  cause: { athlete: 'But your hands sneak forward and arms extend AT contact instead of after it.', coach_note: 'Sub-optimal: terminal elbow extension synchronizes with ball-bat impact rather than post-impact.' },
+  mechanism: { athlete: 'You lose a touch of bat speed because the whip happens early, and the barrel can flatten just before the ball.', coach_note: 'Premature distal release reduces angular bat velocity at impact and shallows the attack angle.' },
+  result: { athlete: 'Solid contact but not your best — line drives that should be barrels, oppo balls that lack carry.', coach_note: 'Exit velocity ceiling clipped; opposite-field carry depressed; pull contact margin slightly compromised.' },
+  fix: { athlete: "You're 90% there — the elbow IS leading. Now keep the hands back THROUGH contact so extension shows up AFTER the ball, not at it.", coach_note: 'Dialogue cue: maintain hand depth through impact; let extension occur as a post-contact byproduct of residual core tension.' },
+};
+
+export interface EliteRecognition {
+  badge: 'elite_move' | 'elite_slap';
+  athlete: string;
+  coach_note: string;
+}
+
+export const P4_ELITE_RECOGNITION: EliteRecognition = {
+  badge: 'elite_move',
+  athlete: 'ELITE MOVE — elbow led, hands stayed back, you caught the ball with your hands and let extension happen AFTER contact. This is the move.',
+  coach_note: 'Elite kinetic sequence verified: scap-elbow drive precedes hand acceleration; impact occurs with knob fulcrum intact; terminal extension is a post-impact byproduct of residual core tension. Award +5 cap raise and feed differentiation engine.',
+};
+
+export const SLAP_ELITE_RECOGNITION: EliteRecognition = {
+  badge: 'elite_slap',
+  athlete: 'ELITE SLAP — running-start landed with the pitch, barrel came down on the ball, and your body was already moving to first at contact. Textbook.',
+  coach_note: 'Elite slap pattern verified: timed running-start landing, top-down attack angle (no uppercut), no contact-stall (COM continues toward 1B). Award +5 cap raise and feed differentiation engine.',
+};
+
+export interface MultiChainBuildResult {
+  ordered: HittingPhaseId[];
+  chains: Array<{ phaseId: HittingPhaseId; chain: CausalChain; roadmap: RoadmapStep[]; isP4Important: boolean; severity?: P4Severity }>;
+  slapRelaxed: boolean;
+  p4Severity: P4Severity;
+  eliteMove?: EliteRecognition;
+  slapElite?: EliteRecognition;
+}
+
+export function buildChainsForViolations(
+  violatedPhases: HittingPhaseId[],
+  ctx?: { sport?: string; drillId?: string; tags?: string[] },
+  opts?: {
+    p4Severity?: P4Severity;
+    eliteMove?: EliteMoveSignals;
+    slapElite?: SlapEliteSignals;
+  }
+): MultiChainBuildResult {
+  const slap = isSlapContext(ctx);
+  const filtered = violatedPhases.filter((p) => !(slap && (p === 'P2' || p === 'P3')));
+  const ordered = prioritizePhasesForRoadmap(filtered);
+
+  const eliteVerified = isEliteMove(opts?.eliteMove);
+  let p4Sev: P4Severity = opts?.p4Severity ?? null;
+  if (eliteVerified) p4Sev = 'elite';
+  if (filtered.includes('P4') && !p4Sev) p4Sev = 'hard';
+
+  const chains = ordered.map((phaseId) => {
+    let chain = PHASE_CAUSAL_CHAINS[phaseId];
+    if (phaseId === 'P4' && p4Sev === 'soft') chain = P4_SOFT_CHAIN;
+    return {
+      phaseId,
+      chain,
+      roadmap: PHASE_ROADMAPS[phaseId],
+      isP4Important: phaseId === 'P4',
+      severity: phaseId === 'P4' ? p4Sev : undefined,
+    };
+  });
+
+  const slapElite = evaluateSlapEliteGates(opts?.slapElite);
+
+  return {
+    ordered,
+    chains,
+    slapRelaxed: slap,
+    p4Severity: p4Sev,
+    eliteMove: eliteVerified ? P4_ELITE_RECOGNITION : undefined,
+    slapElite: slap && slapElite.isElite ? SLAP_ELITE_RECOGNITION : undefined,
+  };
 }

@@ -226,7 +226,32 @@ ADDITIONAL OUTPUT FIELDS (REQUIRED, in addition to existing fields):
   "phase_scores": { "p1": <0-100>, "p2": <0-100>, "p3": <0-100>, "p4": <0-100> },
   "phase_violations": ["P1" | "P2" | "P3" | "P4", ...],
   "dominant_failed_phase": "P1" | "P2" | "P3" | "P4" | null,
-  "style_detected": "toe_tap" | "leg_kick" | "hover" | "coil" | "hinge" | "no_stride" | "slap" | "standard"
+  "style_detected": "toe_tap" | "leg_kick" | "hover" | "coil" | "hinge" | "no_stride" | "slap" | "standard",
+  "p4_severity": "hard" | "soft" | "elite" | null,
+  "elite_move_signals": {
+    "elbow_leads_forward": <bool>,
+    "hands_stay_back": <bool>,
+    "contact_with_hands": <bool>,
+    "extension_post_contact": <bool>,
+    "barrel_catapults_last": <bool>
+  },
+  "p1_hands_break_timing": { "hips_loaded_at_pitcher_hands_break": <bool|null> },
+  "slap_elite_gates": { "running_start_timing": <bool>, "top_down_barrel": <bool>, "already_moving_contact": <bool>, "is_elite": <bool> }
+
+LOCKED P4 SEVERITY GRADING:
+  HARD P4 (cap 50): cast / rollover / early barrel flip / shoulders open before elbow extends / hands clearly leading.
+  SOFT P4 (cap 70): elbow IS leading BUT visible extension AT contact OR hands very slightly leading. Use dialogue tone, not punishment.
+  ELITE P4 (+5 bonus to final score, max 100, Elite Move badge): elbow leads → hands stay back → contact made WITH the hands → extension is post-contact → barrel catapults last. Set elite_move_signals all true ONLY when verified.
+
+LOCKED P1 HANDS-BREAK TIMING:
+  If the hitter's legs are NOT loaded by the time the pitcher's hands break apart, P1 IS violated.
+  Pitcher tempo (windup, stretch, slide-step, quick-pitch) does NOT relax this rule.
+
+LOCKED MULTI-VIOLATION ORDER:
+  When multiple phases fail, output causal_chains AND roadmap stacked in 1→2→3→4 order. P4 always carries an "extreme importance" badge regardless of position. P4 alone (no P1/P2/P3) leads with P4.
+
+LOCKED SLAP-ELITE (softball slap-progression at-bats only):
+  Suppress P2 and P3 chains entirely. Set slap_elite_gates per observation. is_elite true ONLY when all three gates true.
 
 DIALOGUE STYLE for P2 / P3:
   When P2 or P3 issues appear, write feedback that invites a conversation —
