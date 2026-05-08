@@ -58,7 +58,7 @@ export function useCalendarProjection({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('custom_activity_logs')
-        .select('id, entry_date, template_id, completed, start_time, notes')
+        .select('id, entry_date, template_id, completed, start_time, notes, performance_data')
         .eq('user_id', userId!)
         .gte('entry_date', startDate)
         .lte('entry_date', endDate);
