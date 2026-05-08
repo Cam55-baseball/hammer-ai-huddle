@@ -575,6 +575,11 @@ export function VaultFocusQuizDialog({
       data.mental_energy = mentalEnergy;
       // PHYSIO: Movement restriction
       data.movement_restriction = Object.keys(movementRestriction).length > 0 ? movementRestriction : undefined;
+      // NEW: Pre-workout soreness & stiffness
+      data.soreness_locations = sorenessLocations.length > 0 ? sorenessLocations : undefined;
+      data.soreness_scales = Object.keys(sorenessScales).length > 0 ? sorenessScales : undefined;
+      data.stiffness_locations = stiffnessLocations.length > 0 ? stiffnessLocations : undefined;
+      data.stiffness_scales = Object.keys(stiffnessScales).length > 0 ? stiffnessScales : undefined;
     }
 
     if (quizType === 'night') {
