@@ -257,7 +257,69 @@ function DisciplineRating({ value, onChange, t }: DisciplineRatingProps) {
   );
 }
 
-export function VaultFocusQuizDialog({
+// Reusable Soreness/Stiffness body block — used by morning + pre_lift
+interface SorenessStiffnessBlockProps {
+  kind: 'soreness' | 'stiffness';
+  locations: string[];
+  scales: Record<string, number>;
+  onLocationsChange: (areas: string[]) => void;
+  onScaleChange: (area: string, value: number) => void;
+  t: (key: string, fallback?: string) => string;
+}
+
+function SorenessStiffnessBlock({
+  kind, locations, scales, onLocationsChange, onScaleChange, t,
+}: SorenessStiffnessBlockProps) {
+  const titleKey = kind === 'soreness' ? 'vault.quiz.soreness.title' : 'vault.quiz.stiffness.title';
+  const titleFallback = kind === 'soreness' ? 'Soreness' : 'Stiffness';
+  const promptKey = kind === 'soreness' ? 'vault.quiz.soreness.prompt' : 'vault.quiz.stiffness.prompt';
+  const promptFallback = kind === 'soreness'
+    ? 'Tap any areas that feel sore'
+    : 'Tap any areas that feel stiff';
+  const accent = kind === 'soreness' ? 'text-amber-500' : 'text-sky-500';
+
+  const getLevelLabel = (val: number) => {
+    if (val <= 2) return t('vault.quiz.bodyStatus.level1', 'Minimal');
+    if (val <= 4) return t('vault.quiz.bodyStatus.level2', 'Mild');
+    if (val <= 6) return t('vault.quiz.bodyStatus.level3', 'Moderate');
+    if (val <= 8) return t('vault.quiz.bodyStatus.level4', 'Significant');
+    return t('vault.quiz.bodyStatus.level5', 'Severe');
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className={cn('text-sm font-semibold flex items-center gap-2', accent)}>
+          <Activity className="h-4 w-4" />
+          {t(titleKey, titleFallback)}
+        </Label>
+        <p className="text-xs text-muted-foreground mt-0.5">{t(promptKey, promptFallback)}</p>
+      </div>
+      <BodyAreaSelector
+        selectedAreas={locations}
+        onChange={onLocationsChange}
+      />
+      {locations.length > 0 && (
+        <div className="space-y-2">
+          {locations.map(areaId => (
+            <TenPointScale
+              key={areaId}
+              value={scales[areaId] || 0}
+              onChange={(v) => onScaleChange(areaId, v)}
+              label={getBodyAreaLabel(areaId)}
+              icon={<Activity className={cn('h-4 w-4', accent)} />}
+              getLevelLabel={getLevelLabel}
+              inverted={true}
+              compact={true}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
   open,
   onOpenChange,
   quizType,
