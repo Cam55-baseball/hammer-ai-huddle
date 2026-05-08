@@ -944,7 +944,7 @@ const OwnerDashboard = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <div className="flex items-center gap-2 flex-wrap sm:shrink-0 sm:ml-2">
                         {/* Active Admin: Show badge + revoke button */}
                         {isActiveAdmin(user.id) && (
                           <>
