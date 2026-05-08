@@ -1111,21 +1111,6 @@ const OwnerDashboard = () => {
                         />
                       ))
                   )}
-                </TabsContent>
-                
-                <TabsContent value="all" className="space-y-3 mt-4">
-                  {scoutApplications.length === 0 ? (
-                    <p className="py-8 text-center text-muted-foreground">No applications yet</p>
-                  ) : (
-                    scoutApplications.map(app => (
-                      <ScoutApplicationCard 
-                        key={app.id} 
-                        application={app}
-                        onUpdate={loadDashboardData}
-                      />
-                    ))
-                  )}
-                </TabsContent>
               </Tabs>
             </Card>
           )}
