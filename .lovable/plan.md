@@ -1,60 +1,45 @@
-# Scouting in demo + Ask the Coach + Scout demo
+# Restrict Coach/Scout demo cards to scout/coach signups
 
-## Answer first: scouting in the demo today
+## Goal
+The **Ask the Coach** and **Scout Feed** demo cards (and their parent **For Your Team** category) should only render for users whose signup role is Scout or Coach. Player signups should not see them at all.
 
-No. The demo registry has 55 nodes across `5tool`, `golden2way`, `pitcher` — all athlete-facing. There is **no scout or coach surface** in `demo_registry`, no scout/coach shells under `src/components/demo/shells/`, and no persona switch on `DemoRoot`. Scouts and coaches currently see only athlete previews.
+## How role is known today
+- `localStorage.userRole` — `'player' | 'scout'` (set in `SelectUserRole.tsx`)
+- `localStorage.selectedRole` — `'Player' | 'Scout/Coach' | 'Admin'` (set in `SelectRole.tsx`)
+- `user_roles` table — authoritative `scout` / `coach` rows for approved accounts (used by `useScoutAccess`)
 
-This pass adds both: a coach demo and a scout demo.
+We treat a user as "team audience" if **any** of:
+1. `localStorage.userRole === 'scout'`
+2. `localStorage.selectedRole === 'Scout/Coach'`
+3. `useScoutAccess()` returns `isScout || isCoach`
 
-## What gets built
+## Approach
+Add a per-node audience flag to `demo_registry` and filter in the registry hook. No component-level branching, no duplicated lists.
 
-Two new demo shells + registry seeding. All presentation-only, deterministic, safe inside the demo firewall (`x-demo-session: 1`). No edge functions, no RLS, no real AI calls.
+### 1. DB migration
+- Add column `demo_registry.audience text not null default 'all'` with check constraint `audience in ('all','team')`.
+- Set `audience = 'team'` for these slugs (all 3 tier mirrors):
+  - categories: `coach-hub-5tool`, `coach-hub-golden2way`, `coach-hub-pitcher`
+  - submodules: `ask-the-coach-5tool|golden2way|pitcher`, `scout-feed-5tool|golden2way|pitcher`
+- Public read RLS already allows everyone to fetch — filtering happens client-side, which is fine since this is marketing/preview content (no PII).
 
-### 1. AskTheCoachDemo
+### 2. New hook `useDemoAudience`
+Returns `'team' | 'player'`. Reads localStorage synchronously and layers in `useScoutAccess` once auth resolves. Memoized.
 
-`src/components/demo/shells/AskTheCoachDemo.tsx` — chat-style preview that mirrors `AskHammerPanel` styling.
+### 3. `useDemoRegistry` change
+After fetching nodes, filter out any node where `audience === 'team'` unless `useDemoAudience() === 'team'`. Bump `CACHE_KEY` to `demo_registry_v3` so existing caches drop the new column gracefully.
 
-- 6 canned coach prompts as suggestion chips:
-  - "Show my team's weakest hitters this week"
-  - "Which pitchers are at CNS overload risk?"
-  - "Build a 45-min team practice for tomorrow"
-  - "Who improved most in the last 14 days?"
-  - "Flag athletes missing nutrition logs"
-  - "Generate a coaching note on player #12"
-- Each chip plays a **scripted streamed response** (token-by-token via `setTimeout`) with a small inline evidence card (mini bar list of athletes / CNS gauge / practice block list). Reuses existing demo viz primitives where possible.
-- Footer chip: "Preview only — full Coach Hub unlocks with a Coach seat."
-
-### 2. ScoutFeedDemo
-
-`src/components/demo/shells/ScoutFeedDemo.tsx` — mock scout console.
-
-- **Player feed (left)**: 5 mock athlete cards with position, age, MPI, trend arrow, and a "rising / steady / cooling" badge. Click selects.
-- **Player snapshot (right)**: top 3 tools as bars, last 3 game lines, one elite badge, a sample scouting note.
-- **Action row (disabled w/ tooltip)**: "Follow", "Save to list", "Generate report" — all show `Lock` icon + "Unlocks with Scout seat".
-- Optional "Sort by: MPI / Trend / Recently Active" tabs (purely visual sort of the mock list).
-
-### 3. Registry seeding (one migration)
-
-Add a new **category** `for-your-team` with two submodules under it, mirrored under each of the 3 tiers so every persona's demo tree shows them. Idempotent inserts.
-
-- Categories: `coach-hub-5tool`, `coach-hub-g2w`, `coach-hub-pitcher` (parent = tier slug, title "For Your Team")
-- Submodules per category:
-  - `ask-the-coach-{tier}` → `component_key='ask-the-coach'`, title "Ask the Coach", tagline "See what coaches see"
-  - `scout-feed-{tier}` → `component_key='scout-feed'`, title "Scout Feed", tagline "What scouts see when they find you"
-
-### 4. Component registry
-
-Edit `src/components/demo/DemoComponentRegistry.ts` to register the two new keys (`ask-the-coach`, `scout-feed`).
-
-## Files
-
-- create `src/components/demo/shells/AskTheCoachDemo.tsx`
-- create `src/components/demo/shells/ScoutFeedDemo.tsx`
-- edit  `src/components/demo/DemoComponentRegistry.ts`
-- create `supabase/migrations/<ts>_demo_coach_and_scout.sql`
+### 4. TypeScript
+Add `audience: 'all' | 'team'` to the `DemoNode` interface.
 
 ## Out of scope
+- Reverse gating (hiding player-only nodes from scouts) — scouts/coaches still see everything.
+- A signup-time toggle for "I'm a parent evaluating for my player" — current heuristic is good enough.
+- Server-side RLS audience enforcement — content is non-sensitive marketing copy.
+- Owner/Admin dashboard changes.
 
-- Real coach/scout LLM chat (separate feature, gated by seat).
-- Coach/scout persona toggle on `DemoRoot` landing — keeping tier-first navigation; the new category surfaces inside each tier instead.
-- Any change to Owner dashboard, real scout flow, or RLS.
+## Files touched
+- New migration (column + backfill)
+- `src/hooks/useDemoRegistry.ts` (filter + type + cache key bump)
+- New `src/hooks/useDemoAudience.ts`
+- No changes to `DemoRoot`, `DemoTier`, `DemoCategory`, or the shells themselves.
