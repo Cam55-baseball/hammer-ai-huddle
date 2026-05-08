@@ -887,14 +887,31 @@ const OwnerDashboard = () => {
           </AlertDialog>
 
           {activeSection === 'users' && (
-            <Card className="overflow-hidden">
-              <div className="divide-y">
-                {users.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No users yet
-                  </div>
-                ) : (
-                  users.map((user) => (
+            <div className="space-y-3">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search users by name…"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Card className="overflow-hidden">
+                <div className="divide-y">
+                  {(() => {
+                    const q = userSearch.trim().toLowerCase();
+                    const filtered = q
+                      ? users.filter(u => (u.full_name || '').toLowerCase().includes(q))
+                      : users;
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-8 text-center text-muted-foreground">
+                          {q ? `No users match "${userSearch}"` : 'No users yet'}
+                        </div>
+                      );
+                    }
+                    return filtered.map((user) => (
                     <div
                       key={user.id}
                       className={cn(
