@@ -1,82 +1,87 @@
-## 1. Soreness & Stiffness scales on body check-in
+## Goal
+The Owner Dashboard currently shows 13 flat sidebar items, four low-signal stat cards, a Module Distribution panel, and dense list sections. We will rework it into a focused command center: grouped sidebar with owner-pinnable favorites, an action-first overview, and cleaner section layouts.
 
-**Where:** `VaultFocusQuizDialog` (`pre_lift` and `morning` quiz types).
+## 1. Sidebar — Grouped + Pinnable
 
-**UX (mirrors existing Pain section):**
-- New section "Body Status" with three sub-sections, each using `BodyAreaSelector` + per-area `TenPointScale` (1–10):
-  1. **Pain** (already exists in pre_lift — reuse as-is).
-  2. **Soreness** — new selector + per-area 0–10 scale, with simple level labels (Minimal / Mild / Moderate / Significant / Severe).
-  3. **Stiffness** — new selector + per-area 0–10 scale with the same labels.
-- Each scale collapses when no area is selected (same pattern as Pain).
-- For **morning**: insert a compact "Body Status" card containing Soreness and Stiffness only (no Pain — pain stays a pre-workout concern). Place it above the discipline/intentions block, after `perceived_recovery`.
-- For **pre_lift**: append Soreness and Stiffness sub-sections inside the existing Section 3 ("Pain or Limitation Check"), retitling it "Pain, Soreness & Stiffness".
-- No tissue-type or movement-question sub-prompts for soreness/stiffness — keep it light.
+Replace the flat 13-item list with collapsible groups and a "Pinned" header section the owner controls.
 
-**State (in component):**
-- `sorenessLocations: string[]`, `sorenessScales: Record<string, number>`
-- `stiffnessLocations: string[]`, `stiffnessScales: Record<string, number>`
-- Cleanup handlers mirror `handlePainLocationsChange` (drop scales for deselected areas).
+```text
+[ Pinned ]                 ← user-curated, drag/drop or pin button
+  ★ Admin Requests (3)
+  ★ Builds
 
-**Submission payload (extend the dialog's `onSubmit` shape):**
-- `soreness_locations?: string[]`
-- `soreness_scales?: Record<string, number>`
-- `stiffness_locations?: string[]`
-- `stiffness_scales?: Record<string, number>`
+[ Overview ]
+  Overview
 
-Wire these into the `data` object inside `handleSubmit` for both `morning` and `pre_lift` blocks.
+[ People ]
+  User Management
+  Admin Requests (badge)
+  Scout Applications (badge)
 
-**Database migration (`vault_focus_quizzes`):**
-- Add columns:
-  - `soreness_locations text[]`
-  - `soreness_scales jsonb`
-  - `stiffness_locations text[]`
-  - `stiffness_scales jsonb`
-- All nullable, no defaults. RLS unchanged.
-- Update the consumer that writes the row (`useVault` / wherever `onSubmit` resolves) to pass these new fields through.
+[ Content ]
+  Recent Videos
+  Video Library
+  Drill CMS
+  Promo Engine
 
-**Out of scope:** No engine/HIE scoring changes yet. Data is captured and persisted; behavioral consumption can come in a follow-up.
+[ Commerce ]
+  Builds
+  Subscriptions
 
-## 2. Favorite-meal bug in Nutrition Hub
+[ Engine & System ]
+  Engine Settings
+  Settings
+  Player Search
+```
 
-Two distinct "favorite" surfaces exist; both have real issues. Fix both.
+Behavior:
+- Each non-Pinned item shows a small `Pin` icon on hover; clicking adds/removes from the Pinned section.
+- Pinned section appears at the top, always expanded, with a star next to each item.
+- Pin order is editable via simple up/down arrows on hover (no drag library required).
+- Pins persist per-owner in `localStorage` under `owner_dashboard_pins_v1` (no DB change needed for a UI-only preference).
+- Groups are collapsible; the group containing the active section auto-expands. Collapsed state persists in `localStorage`.
+- Badges (admin requests, scout applications pending) follow the item into the Pinned section.
 
-### A. Per-food star (`FoodSearchDialog` → `useRecentFoods.toggleFavorite`)
+## 2. Overview — Action-First Command Center
 
-Issues found:
-- Uses `.single()` which throws PGRST116 when no row exists, silently swallowed by try/catch — first-time favorite still goes through the insert branch but the error is logged.
-- No toast on success/failure → user perceives no feedback ("didn't save").
-- After refresh, the food only appears in the Favorites list if it has a `user_food_history` row; new insert sets `use_count: 0` and order is `use_count desc` → it lands last but is visible. OK once feedback exists.
+Replace the four generic KPI cards + Module Distribution with a layout that surfaces what an owner actually needs to act on.
 
-Fix:
-- Replace `.single()` with `.maybeSingle()` in both `toggleFavorite` and `trackFoodUsage`.
-- Surface a `sonner` toast: "Added to favorites" / "Removed from favorites" / "Couldn't update favorite".
-- Optimistic update of `favoriteIds` so the star fills immediately, then reconcile on refresh.
+Top row — Action Queue (only renders cards that have items):
+- Pending Admin Requests → click jumps to that section
+- Pending Scout Applications → jumps
+- Builds awaiting payout / new buyers (if applicable, otherwise hidden)
 
-### B. Save-as-template / favorite meal template (`MealPlanningTab` → `useMealPlanning.saveAsTemplate`)
+Second row — Compact KPI strip (single row, smaller cards):
+- Users · Active Subs · Videos (7d) · Avg Score
+- Each card is a single line with label + number + tiny delta vs prior 7d when available; remove the oversized icon tiles.
 
-Issues found:
-- `handleSaveTemplate` in the tab toasts success unconditionally even when `saveAsTemplate` returns `null`.
-- `saveAsTemplate` saves `meals: []` if the current week has no planned meals — silent "save" with empty content; users see no template appear (list hidden when length 0 only on first load, but template with 0 meals is still useless).
-- `saveAsTemplate` toasts success internally AND the tab toasts again → double toast on success, misleading toast on failure.
-- DB confirms 0 rows in `meal_templates` despite usage attempts.
+Third row — Two-column:
+- Left: Recent Activity feed (last 10 events: new signups, new builds, new scout applications, recent video analyses) with timestamps.
+- Right: Quick Actions (New Program / New Bundle / New Consultation / Open Player Search / Open Engine Settings).
 
-Fix:
-- In `useMealPlanning.saveAsTemplate`: if `allMeals.length === 0`, abort with `toast.error("Add meals to this week before saving as a favorite")` and return `null`.
-- Remove the duplicate success toast in `MealPlanningTab.handleSaveTemplate`; rely on the hook's toast. Treat `null` return as failure.
-- Ensure the templates list section renders an empty-state row when `templates.length === 0` (so users see "No saved meal templates yet" instead of the section disappearing).
-- `toggleTemplateFavorite` already works; add a toast for visibility ("Added to favorites" / "Removed from favorites").
+Remove the standalone "Module Distribution" panel from Overview; move it into the Subscriptions section (where it belongs contextually).
 
-## Files to touch
+## 3. Section Layout Cleanup
 
-- `supabase/migrations/<new>.sql` — add 4 columns to `vault_focus_quizzes`.
-- `src/components/vault/VaultFocusQuizDialog.tsx` — new state, handlers, UI sections, payload extension.
-- `src/hooks/useVault.ts` (or wherever `vault_focus_quizzes` insert happens) — pass through new fields.
-- `src/hooks/useRecentFoods.ts` — `.maybeSingle()`, toasts, optimistic favorite toggle.
-- `src/hooks/useMealPlanning.ts` — empty-meals guard, single-source toast.
-- `src/components/nutrition-hub/MealPlanningTab.tsx` — drop duplicate toast, handle null return, render empty-state.
+- **Header simplification**: Remove the duplicated section title (currently appears in both the top header and the page body). Keep it only in the page body.
+- **Users section**: Add a search/filter bar at the top, role filter chips (All / Admin / Pending / Rejected / User), and condense the row layout — single-line meta, action buttons collapse into a `…` menu on small screens.
+- **Builds section**: Move "Quick Create" into a single `+ New` split-button in the section header (Program / Bundle / Consultation as menu items). The list of builds becomes the primary content.
+- **Scout Applications**: Keep tabs but remove the redundant "All" tab (use Pending by default; Approved/Rejected are enough).
+- **Videos**: Add date range + status filter, default to last 30 days. Show a compact table-like list.
+- **Subscriptions**: Move Module Distribution panel here above the existing per-module cards.
 
-## Verification
+## 4. Header Trim
 
-- Open morning check-in → Body Status card appears → select an area for Soreness, set scale, submit → row in `vault_focus_quizzes` has populated `soreness_locations` + `soreness_scales`. Same for Stiffness, and same for pre-workout.
-- Star a food in the search dialog → toast appears, star fills, food shows in Favorites strip.
-- Save current week as template with meals → toast appears once, template visible in list. Try with empty week → blocking error toast, no row inserted.
+- Drop the "Owner Dashboard" + section subtitle stack — replace with a single small breadcrumb: `Owner › {Section}`. This frees vertical space.
+- Keep Back, Sign Out, mobile menu trigger.
+
+## 5. Out of Scope
+- No backend/RLS changes.
+- No changes to engine logic, drill CMS internals, or video library manager internals — only the wrapping shell.
+- No new dependencies.
+
+## Technical notes
+- Edit `src/components/owner/OwnerSidebar.tsx`: introduce a `groups` config, a `usePinnedOwnerSections` hook (localStorage), and render Pinned + groups. Add hover Pin icon + collapse chevrons (use existing `Collapsible` from `@/components/ui/collapsible`).
+- Edit `src/pages/OwnerDashboard.tsx`: replace the Overview block; trim duplicated headers; add `+ New` menu in Builds; add filter bar in Users and Videos. Move Module Distribution into the Subscriptions block.
+- New small component: `src/components/owner/OwnerOverviewActionQueue.tsx` for the action queue + recent activity (data already loaded in `loadDashboardData`).
+- No new routes, no DB migrations, no edge functions.

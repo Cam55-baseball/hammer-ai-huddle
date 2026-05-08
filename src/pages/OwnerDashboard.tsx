@@ -8,7 +8,14 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film, Package, Send, Loader2, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film, Package, Send, Loader2, Plus, Pencil, Trash2, X, ChevronRight } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { OwnerOverview } from "@/components/owner/OwnerOverview";
 import { getBuilds, updateBuild, deleteBuild, type BuildItem } from "@/lib/ownerBuildStorage";
 import { useVideoLibrary } from "@/hooks/useVideoLibrary";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,6 +117,7 @@ const OwnerDashboard = () => {
   });
   const [bundlePickerValue, setBundlePickerValue] = useState('');
   const [confirmDeleteBuildId, setConfirmDeleteBuildId] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState('');
 
   useEffect(() => {
     if (activeSection === 'builds') {
@@ -568,11 +576,10 @@ const OwnerDashboard = () => {
                 <span className="hidden sm:inline">Back</span>
               </Button>
               <div className="h-6 w-px bg-border hidden sm:block" />
-              <div className="min-w-0">
-                <h1 className="font-semibold text-sm md:text-base truncate">Owner Dashboard</h1>
-                <p className="text-xs text-muted-foreground hidden md:block">
-                  {sectionLabels[activeSection]}
-                </p>
+              <div className="min-w-0 flex items-center gap-1.5 text-sm">
+                <span className="text-muted-foreground">Owner</span>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-semibold truncate">{sectionLabels[activeSection]}</span>
               </div>
             </div>
           </div>
@@ -584,154 +591,67 @@ const OwnerDashboard = () => {
 
         {/* Content */}
         <main className="flex-1 overflow-auto p-4 md:p-6">
-          {/* Section Header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">{sectionLabels[activeSection]}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {activeSection === 'overview' && 'Platform analytics and key metrics'}
-              {activeSection === 'builds' && 'Create programs, bundles, and consultations — and see what you\'ve made'}
-              {activeSection === 'users' && 'Manage user accounts and admin privileges'}
-              {activeSection === 'admin-requests' && 'Review pending admin access requests'}
-              {activeSection === 'scout-applications' && 'Review scout and coach applications'}
-              {activeSection === 'videos' && 'Recently analyzed training videos'}
-              {activeSection === 'subscriptions' && 'Active module subscriptions'}
-              {activeSection === 'settings' && 'Configure app-wide settings'}
-              {activeSection === 'player-search' && 'Search and view player profiles'}
-              {activeSection === 'promo-engine' && 'Build and manage cinematic promotional videos'}
-              {activeSection === 'engine-settings' && 'Tune HIE and Recap engine weights, thresholds, and behavior'}
-            </p>
+          {/* Section subtitle (compact) */}
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold">{sectionLabels[activeSection]}</h2>
           </div>
 
           {/* Overview Section */}
           {activeSection === 'overview' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Users</p>
-                  <p className="text-3xl font-bold mt-1">{totalUsers}</p>
-                </Card>
-
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <CreditCard className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Subscriptions</p>
-                  <p className="text-3xl font-bold mt-1">{activeSubscriptions}</p>
-                </Card>
-
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <VideoIcon className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Videos</p>
-                  <p className="text-3xl font-bold mt-1">{totalVideosAnalyzed}</p>
-                </Card>
-
-                <Card className="p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Target className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg. Score</p>
-                  <p className="text-3xl font-bold mt-1">{avgScore}%</p>
-                </Card>
-              </div>
-
-              {/* Quick Stats */}
-              <Card className="p-5">
-                <h3 className="font-semibold mb-4">Module Distribution</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Hitting</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{moduleStats.hitting}</span>
-                    </div>
-                    <Progress value={activeSubscriptions > 0 ? (moduleStats.hitting / activeSubscriptions) * 100 : 0} className="h-2" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CircleDot className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Pitching</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{moduleStats.pitching}</span>
-                    </div>
-                    <Progress value={activeSubscriptions > 0 ? (moduleStats.pitching / activeSubscriptions) * 100 : 0} className="h-2" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-primary" />
-                        <span className="font-medium">Throwing</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">{moduleStats.throwing}</span>
-                    </div>
-                    <Progress value={activeSubscriptions > 0 ? (moduleStats.throwing / activeSubscriptions) * 100 : 0} className="h-2" />
-                  </div>
-                </div>
-              </Card>
-            </div>
+            <OwnerOverview
+              totalUsers={totalUsers}
+              activeSubscriptions={activeSubscriptions}
+              totalVideosAnalyzed={totalVideosAnalyzed}
+              avgScore={avgScore}
+              pendingAdminRequests={adminRequests.length}
+              pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
+              recentUsers={users.slice(0, 6)}
+              recentVideos={videos.slice(0, 6)}
+              recentScoutApplications={scoutApplications.slice(0, 6).map(a => ({
+                id: a.id,
+                status: a.status,
+                created_at: a.created_at,
+                full_name: a.full_name ?? a.applicant_name ?? null,
+              }))}
+              onJump={setActiveSection}
+            />
           )}
 
           {/* Builds Section */}
           {activeSection === 'builds' && (
-            <div className="space-y-6">
-              {/* Quick Create */}
-              <div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Quick Create</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Button
-                    variant="outline"
-                    className="h-auto py-4 flex-col gap-2"
-                    onClick={() => navigate('/owner/open_program_builder')}
-                  >
-                    <Plus className="h-5 w-5" />
-                    <span className="font-semibold">New Program</span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Your Builds</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="link" size="sm" onClick={() => navigate('/owner/builds')} className="h-auto p-0 text-xs">
+                    Full library →
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="h-auto py-4 flex-col gap-2"
-                    onClick={() => navigate('/owner/open_bundle_builder')}
-                  >
-                    <Plus className="h-5 w-5" />
-                    <span className="font-semibold">New Bundle</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-auto py-4 flex-col gap-2"
-                    onClick={() => navigate('/owner/open_consultation_flow')}
-                  >
-                    <Plus className="h-5 w-5" />
-                    <span className="font-semibold">New Consultation</span>
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        New
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate('/owner/open_program_builder')}>
+                        Program
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/owner/open_bundle_builder')}>
+                        Bundle
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/owner/open_consultation_flow')}>
+                        Consultation
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
-
-              {/* Your Builds */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Your Builds</h3>
-                  <Button variant="link" size="sm" onClick={() => navigate('/owner/builds')} className="h-auto p-0 text-xs">
-                    Open full library page →
-                  </Button>
-                </div>
                 {builds.length === 0 ? (
                   <Card className="p-8 text-center">
                     <p className="text-muted-foreground text-sm">
-                      No builds yet — use Quick Create above.
+                      No builds yet — click <span className="font-semibold">+ New</span> above to get started.
                     </p>
                   </Card>
                 ) : (
@@ -967,14 +887,31 @@ const OwnerDashboard = () => {
           </AlertDialog>
 
           {activeSection === 'users' && (
-            <Card className="overflow-hidden">
-              <div className="divide-y">
-                {users.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No users yet
-                  </div>
-                ) : (
-                  users.map((user) => (
+            <div className="space-y-3">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search users by name…"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Card className="overflow-hidden">
+                <div className="divide-y">
+                  {(() => {
+                    const q = userSearch.trim().toLowerCase();
+                    const filtered = q
+                      ? users.filter(u => (u.full_name || '').toLowerCase().includes(q))
+                      : users;
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-8 text-center text-muted-foreground">
+                          {q ? `No users match "${userSearch}"` : 'No users yet'}
+                        </div>
+                      );
+                    }
+                    return filtered.map((user) => (
                     <div
                       key={user.id}
                       className={cn(
@@ -1076,10 +1013,11 @@ const OwnerDashboard = () => {
                         )}
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </Card>
+                    ));
+                  })()}
+                </div>
+              </Card>
+            </div>
           )}
 
           {/* Admin Requests Section */}
@@ -1131,7 +1069,7 @@ const OwnerDashboard = () => {
           {activeSection === 'scout-applications' && (
             <Card className="p-5">
               <Tabs defaultValue="pending" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+                <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
                   <TabsTrigger value="pending" className="gap-1">
                     Pending
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">
@@ -1140,7 +1078,6 @@ const OwnerDashboard = () => {
                   </TabsTrigger>
                   <TabsTrigger value="approved">Approved</TabsTrigger>
                   <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                  <TabsTrigger value="all">All</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="pending" className="space-y-3 mt-4">
@@ -1193,20 +1130,6 @@ const OwnerDashboard = () => {
                       ))
                   )}
                 </TabsContent>
-                
-                <TabsContent value="all" className="space-y-3 mt-4">
-                  {scoutApplications.length === 0 ? (
-                    <p className="py-8 text-center text-muted-foreground">No applications yet</p>
-                  ) : (
-                    scoutApplications.map(app => (
-                      <ScoutApplicationCard 
-                        key={app.id} 
-                        application={app}
-                        onUpdate={loadDashboardData}
-                      />
-                    ))
-                  )}
-                </TabsContent>
               </Tabs>
             </Card>
           )}
@@ -1252,6 +1175,31 @@ const OwnerDashboard = () => {
 
           {/* Subscriptions Section */}
           {activeSection === 'subscriptions' && (
+            <div className="space-y-4">
+              <Card className="p-5">
+                <h3 className="font-semibold mb-4">Module Distribution</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {([
+                    { key: 'hitting', label: 'Hitting', icon: Target, value: moduleStats.hitting },
+                    { key: 'pitching', label: 'Pitching', icon: CircleDot, value: moduleStats.pitching },
+                    { key: 'throwing', label: 'Throwing', icon: Zap, value: moduleStats.throwing },
+                  ] as const).map((m) => {
+                    const Icon = m.icon;
+                    return (
+                      <div key={m.key} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{m.label}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">{m.value}</span>
+                        </div>
+                        <Progress value={activeSubscriptions > 0 ? (m.value / activeSubscriptions) * 100 : 0} className="h-2" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="p-5">
                 <div className="flex items-center gap-3 mb-4">
@@ -1306,6 +1254,7 @@ const OwnerDashboard = () => {
                   className="h-2" 
                 />
               </Card>
+            </div>
             </div>
           )}
 
