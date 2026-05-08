@@ -1602,8 +1602,12 @@ Deno.serve(async (req) => {
       ? `\n\nIMPORTANT LANGUAGE REQUIREMENT: You MUST respond ENTIRELY in ${languageName}. ALL text including feedback, drill names, drill steps, drill purposes, drill cues, summary bullets, scorecard areas, and descriptions MUST be written in ${languageName}. Do not use any English except for proper nouns or technical terms that have no translation.`
       : '';
     
-    // Get system prompt based on module and sport
-    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction;
+    // Get system prompt based on module and sport + universal cause→effect contract
+    const moduleDomain: any = module === 'hitting' ? 'hitting' : module === 'pitching' ? 'pitching' : module === 'fielding' ? 'defense' : module === 'baserunning' ? 'baserunning' : 'hitting';
+    const causalSuffix = `\n\n=== UNIVERSAL CAUSE→EFFECT CONTRACT (MANDATORY) ===
+Every fault you surface in feedback/drill recommendations MUST be expressed as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) plus a 4-step roadmap with the appropriate domain ladder. Two registers: athlete voice + a one-line "Coach's note:" with the technical mechanism. Multi-violation diagnoses stack chains in phase order. Severity model: NN hard cap 50, NN soft cap 70, standard cap 80, secondary 75/85, two-or-more 65, elite +5. Domain for this analysis: ${moduleDomain}.
+=== END CONTRACT ===`;
+    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction + causalSuffix;
 
     // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
