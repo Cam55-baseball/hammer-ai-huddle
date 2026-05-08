@@ -31,15 +31,14 @@ export function MealPlanningTab() {
       toast.error(t('common.required'));
       return;
     }
-    
+
     setSavingTemplate(true);
     try {
-      await saveAsTemplate(newTemplateName.trim());
-      setNewTemplateName('');
-      setTemplateDialogOpen(false);
-      toast.success(t('mealPlanning.templates.saved'));
-    } catch (error) {
-      toast.error(t('common.error'));
+      const result = await saveAsTemplate(newTemplateName.trim());
+      if (result) {
+        setNewTemplateName('');
+        setTemplateDialogOpen(false);
+      }
     } finally {
       setSavingTemplate(false);
     }
