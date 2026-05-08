@@ -117,6 +117,7 @@ const OwnerDashboard = () => {
   });
   const [bundlePickerValue, setBundlePickerValue] = useState('');
   const [confirmDeleteBuildId, setConfirmDeleteBuildId] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState('');
 
   useEffect(() => {
     if (activeSection === 'builds') {
