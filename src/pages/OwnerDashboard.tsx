@@ -915,7 +915,7 @@ const OwnerDashboard = () => {
                     <div
                       key={user.id}
                       className={cn(
-                        "flex items-center justify-between p-4 transition-colors",
+                        "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 transition-colors",
                         isActiveAdmin(user.id) && "bg-success/5",
                         getAdminStatus(user.id) === 'pending' && "bg-amber-50/50 dark:bg-amber-950/20"
                       )}
@@ -944,7 +944,7 @@ const OwnerDashboard = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <div className="flex items-center gap-2 flex-wrap sm:shrink-0 sm:ml-2">
                         {/* Active Admin: Show badge + revoke button */}
                         {isActiveAdmin(user.id) && (
                           <>

@@ -237,8 +237,8 @@ export const OwnerSidebar = ({
             </Badge>
           )}
         </button>
-        {/* Pin / reorder controls */}
-        <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/item:flex items-center gap-0.5">
+        {/* Pin / reorder controls — always visible so they work on touch devices */}
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-50 group-hover/item:opacity-100 transition-opacity">
           {opts.pinned && (
             <>
               <Button
