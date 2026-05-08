@@ -264,7 +264,7 @@ interface SorenessStiffnessBlockProps {
   scales: Record<string, number>;
   onLocationsChange: (areas: string[]) => void;
   onScaleChange: (area: string, value: number) => void;
-  t: (key: string, fallback?: string) => string;
+  t: (key: string, fallback?: string) => any;
 }
 
 function SorenessStiffnessBlock({
