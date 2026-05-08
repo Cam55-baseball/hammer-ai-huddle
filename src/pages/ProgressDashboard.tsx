@@ -113,6 +113,7 @@ Confidence: ${snapshot.development_confidence}%
 
                 {/* Section 4: Today's Readiness */}
                 <ReadinessCard />
+                <ReadinessBreakdownCard />
 
                 {/* Risk Alerts */}
                 <RiskAlertsCard />
