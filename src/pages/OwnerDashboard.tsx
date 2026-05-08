@@ -1237,6 +1237,7 @@ const OwnerDashboard = () => {
                 />
               </Card>
             </div>
+            </div>
           )}
 
           {/* Settings Section */}
