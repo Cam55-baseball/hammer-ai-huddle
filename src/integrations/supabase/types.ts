@@ -1801,6 +1801,7 @@ export type Database = {
       demo_registry: {
         Row: {
           ab_variant: string | null
+          audience: string
           component_key: string | null
           created_at: string
           display_order: number
@@ -1820,6 +1821,7 @@ export type Database = {
         }
         Insert: {
           ab_variant?: string | null
+          audience?: string
           component_key?: string | null
           created_at?: string
           display_order?: number
@@ -1839,6 +1841,7 @@ export type Database = {
         }
         Update: {
           ab_variant?: string | null
+          audience?: string
           component_key?: string | null
           created_at?: string
           display_order?: number
