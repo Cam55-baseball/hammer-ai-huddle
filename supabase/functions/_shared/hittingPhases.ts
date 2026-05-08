@@ -345,12 +345,28 @@ SCORE CAPS (lowest applicable cap wins; existing caps still apply):
   P1 violation → max 80
   P2 violation (with consequences) → max 85
   P3 violation (not sideways at landing) → max 75
-  P4 violation → MAX 50  (this is the most important phase)
+  P4 HARD violation (cast / rollover / barrel flip / shoulders open before elbow / hands clearly leading) → MAX 50
+  P4 SOFT violation (clean elbow lead BUT extension visible AT contact, OR hands very slightly leading) → MAX 70 (dialogue-tone teaching point)
+  P4 ELITE move (elbow leads → hands stay back → contact made with the hands → extension is post-contact → barrel catapults last) → +5 BONUS to final score (max 100), Elite Move badge, fed to differentiation engine
   Two or more phase violations → max 65
 
+P1 HANDS-BREAK HARD TIMING RULE:
+  If the hitter's legs are NOT loaded by the time the pitcher's hands break apart, P1 is violated.
+  Pitcher tempo (windup, stretch, slide-step, quick-pitch) does NOT relax this rule.
+
+MULTI-VIOLATION ROADMAP ORDER:
+  - If P4 is the SOLE violation: lead with P4.
+  - If ANY of P1/P2/P3 is also violated: stack ALL violated chains in 1→2→3→4 kinetic order.
+  - P4 always carries an "extreme importance" badge regardless of position in the stack.
+
 SLAP EXCEPTION (softball slap-progression at-bats only):
-  P2 and P3 are RELAXED (lack of hand load and front-foot drift allowed).
+  P2 and P3 are RELAXED entirely (no chains, no roadmaps surfaced).
   P1 and P4 are unchanged.
+  ELITE SLAP REP requires P1 + P4 PLUS three slap-specific gates ALL true:
+    1. Running-start timing — front foot lands in rhythm with pitcher's release
+    2. Top-down barrel — barrel comes down on the ball, no uppercut, ground-ball intent
+    3. Already-moving contact — body is moving toward 1B at contact (no stall)
+  Hitting all three = Elite Slap badge (same +5 reward + differentiation engine).
 
 STYLE NEUTRALITY:
   Never criticize a hitter for choosing toe-tap vs leg-kick vs hover vs coil vs no-stride.
