@@ -1606,7 +1606,7 @@ Deno.serve(async (req) => {
           batting_side: settings?.primary_batting_side || 'R',
           throwing_hand: settings?.primary_throwing_hand || 'R',
         },
-        readiness_score: readinessScore,
+        readiness_score: readinessScore ?? trainingReadinessScore ?? 70,
         available_drills: (drillCatalogFull ?? []).map((d: any) => ({
           id: d.id, name: d.name, module: d.module, skill_target: d.skill_target || '', default_constraints: d.default_constraints || {},
         })),
