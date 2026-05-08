@@ -540,6 +540,11 @@ export function VaultFocusQuizDialog({
       data.resting_hr = restingHr ? parseInt(restingHr) : undefined;
       data.appetite = appetite || undefined;
       data.stress_sources = stressSources.length > 0 ? stressSources : undefined;
+      // NEW: Morning soreness & stiffness
+      data.soreness_locations = sorenessLocations.length > 0 ? sorenessLocations : undefined;
+      data.soreness_scales = Object.keys(sorenessScales).length > 0 ? sorenessScales : undefined;
+      data.stiffness_locations = stiffnessLocations.length > 0 ? stiffnessLocations : undefined;
+      data.stiffness_scales = Object.keys(stiffnessScales).length > 0 ? stiffnessScales : undefined;
     }
 
     if (quizType === 'pre_lift') {
