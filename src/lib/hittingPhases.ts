@@ -238,15 +238,55 @@ export function attributePhaseFromSymptoms(symptoms: string[]): {
 export function applyPhaseCaps(
   baseScore: number,
   violatedPhases: HittingPhaseId[],
-  ctx?: { sport?: string; drillId?: string; tags?: string[] }
-): { score: number; appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>; twoPlus: boolean } {
+  ctx?: { sport?: string; drillId?: string; tags?: string[] },
+  opts?: {
+    p4Severity?: P4Severity;
+    eliteMove?: EliteMoveSignals;
+    slapElite?: SlapEliteSignals;
+  }
+): {
+  score: number;
+  appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>;
+  twoPlus: boolean;
+  p4Severity: P4Severity;
+  eliteMove: boolean;
+  slapElite: SlapEliteResult;
+} {
   const slap = isSlapContext(ctx);
   const effective = violatedPhases.filter((p) => !(slap && (p === 'P2' || p === 'P3')));
-  const appliedCaps = effective.map((p) => ({ phase: p, cap: HITTING_PHASES[p].scoreCap }));
+
+  let p4Sev: P4Severity = opts?.p4Severity ?? null;
+  if (effective.includes('P4') && !p4Sev) p4Sev = 'hard';
+  const elite = isEliteMove(opts?.eliteMove);
+  if (elite) p4Sev = 'elite';
+
+  const appliedCaps = effective.map((p) => {
+    if (p === 'P4') {
+      const cap = p4Sev === 'soft' ? P4_SOFT_CAP : p4Sev === 'elite' ? 100 : P4_HARD_CAP;
+      return { phase: p, cap };
+    }
+    return { phase: p, cap: HITTING_PHASES[p].scoreCap };
+  });
+
   let cap = appliedCaps.reduce((min, c) => Math.min(min, c.cap), 100);
   const twoPlus = effective.length >= 2;
   if (twoPlus) cap = Math.min(cap, TWO_PLUS_PHASE_VIOLATION_CAP);
-  return { score: Math.min(baseScore, cap), appliedCaps, twoPlus };
+
+  let finalScore = Math.min(baseScore, cap);
+  if (elite && effective.length <= 1) {
+    finalScore = Math.min(100, baseScore + P4_ELITE_BONUS);
+  }
+
+  const slapEliteResult = evaluateSlapEliteGates(opts?.slapElite);
+
+  return {
+    score: finalScore,
+    appliedCaps,
+    twoPlus,
+    p4Severity: p4Sev,
+    eliteMove: elite,
+    slapElite: slapEliteResult,
+  };
 }
 
 // Drill ids tagged with each phase (must match drillDefinitions.ts).
