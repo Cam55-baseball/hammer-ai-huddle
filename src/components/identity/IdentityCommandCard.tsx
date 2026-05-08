@@ -297,9 +297,9 @@ export function IdentityCommandCard({ className }: Props) {
                 {/* Mobile-only score */}
                 <div className="flex flex-col items-end shrink-0 sm:hidden">
                   <div className={cn(
-                    'rounded-lg bg-background/85 ring-1 ring-border px-2.5 py-1',
+                    'rounded-lg border px-2.5 py-1',
                     'text-3xl font-black tabular-nums leading-none',
-                    tone,
+                    chip,
                   )}>
                     {score}
                   </div>

@@ -1,52 +1,43 @@
 ## Problem
 
-In `IdentityCommandCard.tsx`, the "Today's Standard" body renders the tier label inline:
+The big consistency score in the identity card sits in a `bg-background/85` pill (near-white in light tints) but is colored with `tone` (e.g. `text-amber-100` for BUILDING, `text-rose-100` for SLIPPING). Light-100 text on a near-white pill is unreadable — same root cause as the tier label fix.
 
+Two render sites in `src/components/identity/IdentityCommandCard.tsx`:
+- Mobile score pill: lines ~298-308
+- Desktop score pill: lines ~314-324
+
+Both use:
+```tsx
+<div className={cn('rounded-lg bg-background/85 ring-1 ring-border px-2.5 py-1 text-3xl font-black tabular-nums leading-none', tone)}>
+  {score}
+</div>
 ```
-You're being held to the <span className={cn('font-black', tone)}>{label}</span> standard today.
-```
-
-`tone` comes from `useIdentityState` and is designed for the card's dark, tier-tinted gradient header (e.g. `text-amber-100`, `text-rose-100`, `text-fuchsia-100`). Inside the standard prompt the background is `bg-primary/5` (a very light red wash), so light tones like `text-amber-100` (BUILDING) are washed out and unreadable. Same issue would hit `LOCKED IN` (emerald-100), `CONSISTENT` (sky-100), `SLIPPING` (rose-100), `ELITE` (fuchsia-100) on any light/red background.
-
-The big tier label in the header is fine because it sits on the tier's dark gradient — we should not change that.
 
 ## Fix
 
-Add a second per-tier style — a **high-contrast chip** — to `useIdentityState` and use it any time the tier label is rendered on a non-tier (light, primary, or neutral) background.
+Replace the `bg-background/85 ring-border` + `tone` combo with the existing per-tier `chip` class (already added in the previous fix). The chip provides a saturated tier-tinted background, matching border, and high-contrast foreground that stays readable in both light and dark surroundings.
 
-### 1. `src/hooks/useIdentityState.ts`
+### Edit `src/components/identity/IdentityCommandCard.tsx`
 
-Extend `TIER_META` with a `chip` field that pairs a saturated background, dark-mode-safe foreground, and matching border so the label stays readable on any surface (light red, white, card, etc.):
-
-```text
-elite      → bg-fuchsia-500/25  text-fuchsia-100  border-fuchsia-400/60
-locked_in  → bg-emerald-500/25  text-emerald-100  border-emerald-400/60
-consistent → bg-sky-500/25      text-sky-100      border-sky-400/60
-building   → bg-amber-500/30    text-amber-50     border-amber-400/70
-slipping   → bg-rose-500/30     text-rose-50      border-rose-400/70
-```
-
-Export it as `chip` from the hook (alongside `tone`, `ring`, `bg`, `label`).
-
-### 2. `src/components/identity/IdentityCommandCard.tsx`
-
-- Destructure `chip` from `useIdentityState`.
-- Replace the inline `<span className={cn('font-black', tone)}>{label}</span>` (line 385) with a chip pill:
+For both score pills (mobile + desktop), swap:
 
 ```tsx
-<span className={cn(
-  'inline-flex items-center px-1.5 py-0.5 rounded-md border text-[11px] font-black uppercase tracking-wider align-middle',
-  chip,
-)}>{label}</span>
+'rounded-lg bg-background/85 ring-1 ring-border px-2.5 py-1',
+'text-3xl font-black tabular-nums leading-none',
+tone,
 ```
 
-- Audit other inline usages of `tone` in the file — header label (line 286) and the big consistency score (lines 302, 318) sit on the dark gradient/`bg-background/85` and stay unchanged.
+to:
 
-### 3. Other call sites
+```tsx
+'rounded-lg border px-2.5 py-1',
+'text-3xl font-black tabular-nums leading-none',
+chip,
+```
 
-`grep` for `useIdentityState` to confirm no other component renders `tone` over a light surface. If any do, swap to `chip` the same way.
+`chip` is already destructured from `useIdentityState()` (added in the prior fix), so no hook changes are needed.
 
 ## Out of scope
 
-- No changes to engine logic, tier thresholds, or copy.
-- No changes to `BehavioralPressureToast` (its tones already pair text + matching dark bg).
+- No changes to engine, scoring math, or label copy.
+- The header tier label on the dark gradient remains unchanged (already readable).
