@@ -6,6 +6,12 @@ import {
   HittingPhaseId,
   attributePhaseFromSymptoms,
   isSlapContext,
+  prioritizePhasesForRoadmap,
+  P4Severity,
+  EliteMoveSignals,
+  SlapEliteSignals,
+  evaluateSlapEliteGates,
+  isEliteMove,
 } from './hittingPhases';
 
 export type RoadmapStepKey = 'feel' | 'iso' | 'constraint' | 'transfer';
