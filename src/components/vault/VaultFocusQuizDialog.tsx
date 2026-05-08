@@ -396,6 +396,29 @@ export function VaultFocusQuizDialog({
   const [trainingIntents, setTrainingIntents] = useState<string[]>([]);
   const [mentalEnergy, setMentalEnergy] = useState(3);
 
+  // NEW: Soreness & Stiffness (morning + pre_lift) — per body area, 0–10
+  const [sorenessLocations, setSorenessLocations] = useState<string[]>([]);
+  const [sorenessScales, setSorenessScales] = useState<Record<string, number>>({});
+  const [stiffnessLocations, setStiffnessLocations] = useState<string[]>([]);
+  const [stiffnessScales, setStiffnessScales] = useState<Record<string, number>>({});
+
+  const handleSorenessLocationsChange = (areas: string[]) => {
+    setSorenessLocations(areas);
+    setSorenessScales(prev => {
+      const next: Record<string, number> = {};
+      areas.forEach(a => { if (prev[a] !== undefined) next[a] = prev[a]; });
+      return next;
+    });
+  };
+  const handleStiffnessLocationsChange = (areas: string[]) => {
+    setStiffnessLocations(areas);
+    setStiffnessScales(prev => {
+      const next: Record<string, number> = {};
+      areas.forEach(a => { if (prev[a] !== undefined) next[a] = prev[a]; });
+      return next;
+    });
+  };
+
   // PHYSIO: Morning check-in additions
   const [restingHr, setRestingHr] = useState('');
   const [appetite, setAppetite] = useState('');
