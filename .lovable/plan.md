@@ -1,121 +1,135 @@
-# Hitting 1-2-3-4 Framework — End-to-End Integration
+# Cause→Effect + Roadmap Layer for 1-2-3-4 Hitting Doctrine
 
-## Doctrine (locked, single source of truth)
+Additive only. Nothing removed. Builds on the existing P1/P2/P3/P4 phases, caps, slap exception, symptom map, and drill catalog.
 
-The 1-2-3-4 sequence becomes the canonical phase model for every hitting touchpoint. Existing kinetic-chain rules are **kept verbatim** and **re-tagged** into the phases below. Style variants (toe tap, leg kick, hover, coil, hinge, no-stride, slap) are equivalent valid expressions inside each phase.
+## Doctrine extension (locked)
 
-```
-Phase 1 — HIP LOAD (NN)
-  Back-hip load executed slow, controlled, balanced, BEFORE the hand load,
-  timed to the pitcher's delivery start. Bigger hip load = more swing power
-  regardless of stride style (no-stride / toe tap / high pick-up).
-  Failure visual: hand load happens first, head drifts toward pitcher,
-  no separation, jammed elbow.
+Every phase failure is now taught as a **5-link causal chain** plus a **4-step roadmap** in **two voice registers**.
 
-Phase 2 — HAND LOAD (style-permitted; flagged when consequences appear)
-  Bat/scap/knob load behind the head, locks the balance Phase 1 created.
-  Only graded when its absence is causing: long over-stride, head drift to
-  pitcher, weight falling forward on front knee, front shoulder pulling out, chest/shoulders
-  not staying square.
+**Causal chain shape:**
 
-Phase 3 — STRIDE / LANDING (style-permitted; flagged when consequences appear)
-  Short controlled back-hip step, "punch the back glute through the inside
-  of the ball." Lands SIDEWAYS, chest+shoulders square to plate, both feet
-  down, core max-tensioned, hips do NOT turn shoulders. Only graded when
-  its absence shows: stuck on back side, can't reach outside pitch, can't get elbow through/elbow jammed behind hands, late foul ball/jammed/late swing and miss, late on high velocity pitches
-  foot down too late, off balance at contact.
-
-Phase 4 — HITTER'S MOVE (NN, MOST IMPORTANT)
-  Knob = fulcrum. Back elbow drives forward FIRST while hands stay back
-  and shoulders stay closed; barrel catapults last. Hitter "lines hands
-  up with the ball" and tries to make contact with the hands — extension
-  comes naturally after contact from leftover core tension.
-  Failure visual: hands lead elbow, casting, early barrel flip, rollover, weak pop up to opposite field, swing and miss, late, foul ball opposite field, foul ball ground ball pull side,
-  swing-and-miss on offspeed away.
+```text
+TRIGGER  →  CAUSE        →  MECHANISM            →  ON-FIELD RESULT       →  FIX (one-liner)
+(when)      (what fails)    (why body/bat fails)    (what shows up live)     (the corrective intent)
 ```
 
-All current checks (front-foot-plants, hip-shoulder separation, back-elbow-past-belly-button, hands-stay-back, shoulders-open-last, head stability) remain in force and are now phase-tagged: front foot landing → P3, separation/elbow/hands/shoulder timing → P4, head stability → P1+P3.
+**Roadmap shape (4-step ladder):**
 
-## Score caps (additive to existing caps; lower cap wins)
+```text
+1. FEEL    — body cue, no bat
+2. ISO     — drill with no ball (or tee), isolating the fix
+3. CONSTRAINT — tee/front-toss with a constraint that forces the fix
+4. TRANSFER  — front-toss → machine → live BP, fix held under speed
+```
 
+**Voice (two registers, always paired):**
 
-| Violation                                             | Cap    |
-| ----------------------------------------------------- | ------ |
-| P1: hand-load-before-hip-load OR no balanced hip load | 80     |
-| P2: missing hand load AND P2 consequences visible     | 85     |
-| P3: not sideways at landing / shoulders not square    | 75     |
-| P4: hands lead elbow / early barrel flip / cast       | **50** |
-| Two or more phase violations                          | 65     |
+- `athlete` — plain-English, kid-friendly, one sentence per link.
+- `coach_note` — technical mechanism, biomechanical precision, one sentence.
 
+## Canonical phase chains (seeded library)
 
-Sport scope: identical for baseball + softball **except** softball slap-progression at-bats use a relaxed P2 and P3 (lack of hand load and front-foot drift allowed); P1 and P4 unchanged.
+Stored in shared module so video analysis, Hammer chat, recaps, and drill cards all read the same source.
 
-Existing caps from `analyze-video` (early shoulder rotation 70, hands drift 75, elbow tucked 75, two+ critical 60) remain and stack — the lowest cap applies.
+**P1 — Hip Load failure**
 
-## What changes, file by file
+- Trigger: pitcher starts delivery (Hitters legs loaded by the time pitchers hands break apart)
+- Cause: hands load before / instead of back hip
+- Mechanism: no separation, weight stays centered or drifts forward, no rubber-band stretch in obliques
+- Result: weak contact, jammed elbow, no power even on barreled balls, late, swing and miss, chase balls
+- Fix: load the back hip slowly first; hands are the last thing to move
+- Rule reminder: bigger early hip load = more swing power (no-stride or high-pickup)
 
-### 1. Analysis engine — `supabase/functions/analyze-video/index.ts`
+**P2 — Hand Load failure**
 
-- Extend the `module === "hitting"` system prompt with the four-phase doctrine, phase-tagged checkpoints, the new caps table, and slap-hitter exception.
-- Add the "bigger hip load = more power, kept early and quiet" rule explicitly.
-- Output JSON additions: `phase_scores: { p1, p2, p3, p4 }`, `phase_violations: string[]`, `dominant_failed_phase`, `style_detected` (toe-tap / leg-kick / hover / coil / no-stride / slap).
-- Phase-aware corrective feedback templates (varied wording, dialogue-style for P2/P3 to invite hitter conversation).
+- Trigger: hip load complete, hand load starting
+- Cause: hands never get back / drift with the body
+- Mechanism: no bat-head depth, front shoulder leaks, chest opens early
+- Result: long stride, head drifts to pitcher, pull-off, weak fly to opposite field
+- Fix: Load hands before stepping forward (When you step, the front foot moves forward. & the hands will  move slightly back involuntarily)
 
-### 2. Shared hitting doctrine — new `supabase/functions/_shared/hittingPhases.ts` + `src/lib/hittingPhases.ts`
+**P3 — Stride / Landing failure**
 
-- Single exported constant `HITTING_PHASES` (id, name, NN flag, failure symptoms, style variants, score cap).
-- Symptom→phase attribution map used by inference engine.
-- Imported by analyze-video, ai-chat, ai-helpdesk, session-insights, generate-vault-recap, video recommendation engine, drill catalogs.
+- Trigger: Hip then hand load done, stride starts
+- Cause: lands open (toes/chest pointed at pitcher) instead of sideways
+- Mechanism: hips can't store torque, core can't tension, back side collapses or stays stuck
+- Result: late on velocity, can't reach outside pitch, off-balance at contact, jammed
+- Fix: land sideways with both feet down, chest still toward the plate, back hip controls the step forward, core max-tensioned
 
-### 3. Drill catalog — `src/data/baseball/drillDefinitions.ts` + `src/data/softball/drillDefinitions.ts`
+**P4 — Hitter's Move failure (most important)**
 
-- Add `phasesTrained: ('P1'|'P2'|'P3'|'P4')[]` to every existing hitting drill (tee_work, front_toss, soft_toss, flips, machine_bp, bp_rounds, live_abs, slap_progression, reaction_speed).
-- Add new phase-isolation drills:
-  - `hip_load_iso` (P1) — back-hip load only, hands frozen, mirror/video.
-  - `load_sequence_pause` (P1+P2) — hip load → 1-count pause → hand load.
-  - `sideways_landing_check` (P3) — stride-and-freeze, photo on landing.
-  - `elbow_first_fulcrum` (P4) — knob-tied tee drill, elbow leads, hands trail.
-  - `catch_the_ball` (P4) — soft toss, "catch with hands, line them up."
-  - `no_stride_power` (P1) — stanceless reps to prove hip load = power.
+- Trigger: front foot down, decision to swing made
+- Cause: hands fire before back elbow drives forward
+- Mechanism: knob loses its position/fulcrum; barrel casts/flips early; shoulders open before elbow extends, dragging the bat around the body instead of through the ball
+- Result: rollover, weak pop-up oppo, swing-and-miss on offspeed away, pulled foul grounder
+- Fix: back elbow leads forward first; hands stay back; the elbow turning your body **is** what gets the barrel to the ball
 
-### 4. Symptom→phase inference for practice + game logs
+Each chain ships in `athlete` + `coach_note` voice and links to its 4-step roadmap drill ids (already in the catalog: `hip_load_iso`, `load_sequence_pause`, `sideways_landing_check`, `elbow_first_fulcrum`, `catch_the_ball`, `no_stride_power`, plus existing `tee_work`, `front_toss`, `machine_bp`, `flip_drill`).
 
-- New helper `attributePhaseFromSymptoms(symptoms[])` in shared lib.
-- Wired into:
-  - **Practice**: session-insights, calculate-session, generate-vault-recap — when at-bat tags include `rollover`, `swing_miss_offspeed_away`, `late`, `jammed`, `front_shoulder_pull`, `weight_forward`, `stuck_back_side`, `cant_reach_outside`, `foot_down_late`, attribute to most likely failed phase, surface in session feedback.
-  - **Game**: game-scoring richSummary post-AB hooks — same attribution, contributes to per-game "phase weakness trend" so the roadmap recommends drills that match.
-- No data-loss: existing scores untouched; phase attribution is metadata layered on top.
+## Files to change
 
-### 5. Roadmap / drill recommendation
+### 1. New: `supabase/functions/_shared/hittingCausalChains.ts` + `src/lib/hittingCausalChains.ts` (mirror)
 
-- `videoRecommendationEngine.ts` and the drill recommender consume `dominant_failed_phase` + recent phase-trend to surface drills tagged with that phase first, then library videos tagged with that phase.
+Single source of truth. Exports:
 
-### 6. Video Library auto-tagging
+- `PHASE_CAUSAL_CHAINS: Record<HittingPhaseId, CausalChain>` — the 5-link chain in both voices.
+- `PHASE_ROADMAPS: Record<HittingPhaseId, RoadmapStep[]>` — 4 steps each, every step has `{ label, intent, drillId, athleteCue, coachNote }`.
+- `buildChainForSymptoms(symptoms[], ctx)` — picks the dominant phase via existing `attributePhaseFromSymptoms`, returns `{ chain, roadmap, phaseId }`.
+- `formatChainText(chain, voice)` — produces the inline string for AI prompts and recaps.
+- Slap-hitter exception: P2/P3 chains return a "style-permitted, focus on P1+P4" variant.
 
-- Video taxonomy gains four phase tags: `hitting_phase_1_hip_load`, `hitting_phase_2_hand_load`, `hitting_phase_3_stride_landing`, `hitting_phase_4_hitters_move`.
-- Owner-uploaded hitting videos: extend the AI tag-suggestion pipeline (generate-video-tags / Gemini description) to assign one or more phase tags from the description.
-- `recompute_library_video_tier` requires no schema change — phase tags ride existing `video_tag_assignments`.
+### 2. `supabase/functions/analyze-video/index.ts`
 
-### 7. Hammer chat (`supabase/functions/ai-chat/index.ts`)
+- Inject the canonical chains + roadmaps into the system prompt as the required teaching format.
+- Extend JSON output schema (additive — old keys preserved):
+  - `causal_chains: [{ phase, trigger, cause, mechanism, result, fix, voice }]`
+  - `roadmap: [{ step, label, intent, drill_id, athlete_cue, coach_note }]`
+- Require model to output **two voice registers** for every chain link.
+- Keep all existing fields (`phase_scores`, `phase_violations`, `dominant_failed_phase`, `style_detected`).
 
-- System prompt for `hitting` topics gains the full 1-2-3-4 doctrine, the symptom dictionary, the "dialogue first for P2/P3" instruction, and the "bigger early hip load = more power" rule.
-- Hammer must always answer hitting questions through the phase lens and may ask clarifying questions to diagnose phase failure.
+### 3. `supabase/functions/ai-chat/index.ts` (Hammer)
 
-### 8. Memory updates
+- System prompt: "When diagnosing a hitting problem, always answer in this order — TRIGGER → CAUSE → MECHANISM → RESULT → FIX, then give the 4-step ROADMAP. Default to athlete voice; append a one-line Coach's Note."
+- Inject the seeded chains/roadmaps so Hammer never improvises the canon.
+- Add the rule: "The elbow leading forward is what turns the body and whips the bat to the ball — never separate cause from effect."
 
-- Replace `mem://features/hitting-analysis/elite-hitting-mechanics-formula` with the 1-2-3-4 doctrine (NN flags, caps, style variants, symptom map, slap exception, "bigger hip load = more power" rule).
-- Add Core line: `Hitting analysis uses 1-2-3-4 phases (P1 Hip Load NN, P2 Hand Load, P3 Stride/Land, P4 Hitter's Move NN); P4 cap 50.`
+### 4. Drill descriptions — `src/data/baseball/drillDefinitions.ts` + `src/data/softball/drillDefinitions.ts`
 
-## Non-changes (explicit)
+Each drill (existing + new) gains:
 
-- No DB migration. No score recomputation of historical sessions. No removal of existing kinetic-chain rules, caps, or feedback templates. No change to grading bands. Slap-hitter rule is the only sport-specific divergence.
+- `fixesCause: string` — what cause it removes ("hands load before hips")
+- `eliminatesEffect: string` — what on-field result disappears ("rollover, weak pop-up oppo")
+- `roadmapStep: 'feel' | 'iso' | 'constraint' | 'transfer'` — its slot in the ladder
+No drills removed; only metadata added.
+
+### 5. Post-session surfaces (additive)
+
+- `supabase/functions/calculate-session/index.ts`, `supabase/functions/generate-vault-recap/`, `session-insights` paths: when a session has logged P-symptoms, attach `causalChain` + `roadmap` to the recap payload using `buildChainForSymptoms`. Existing fields untouched.
+- `richSummary` on game post-AB: same attachment when AB outcome maps to a phase symptom.
+
+### 6. Rep feedback (light touch)
+
+- Adaptive feedback hashing already exists. Add a phase-aware variant that, when a rep tags a P-symptom, emits the **athlete-voice fix line + step-1 feel cue** only (don't dump the full chain per rep).
+
+### 7. UI (presentation only — no business logic)
+
+- Recap cards and video analysis cards render the chain as a vertical 5-row strip + a 4-step roadmap chip row. Athlete voice shown by default, Coach's Note collapsed under "Coach's note ↓".
+- Components: new `HittingCausalChainCard.tsx` and `HittingRoadmapLadder.tsx` (used by video analysis result, session recap, vault recap).
+
+### 8. Memory
+
+- Update `mem://features/hitting-analysis/elite-hitting-mechanics-formula` to add the 5-link chain + 4-step roadmap + two-voice rule as canon.
+- Update `mem://index.md` Core line for hitting to mention "5-link cause→effect chain + 4-step roadmap, athlete + coach voice".
+
+## Non-changes
+
+- No DB migration. No score recomputation. No removal of the existing kinetic-chain rules, caps, slap exception, or symptom map. No new gates on the athlete UI.
 
 ## Acceptance checks
 
-1. `analyze-video` hitting response now returns `phase_scores`, `phase_violations`, `dominant_failed_phase`, `style_detected` and respects every cap (including P4=50).
-2. A swing where hands lead elbow caps at 50 even if everything else is perfect.
-3. A no-stride athlete with a strong hip load is **not** penalized on P3.
-4. A softball slap rep with front-foot drift is **not** penalized on P3.
-5. Logging "rollover" + "swing-miss offspeed away" on a practice rep surfaces a P4 attribution and recommends `elbow_first_fulcrum` / `catch_the_ball` drills + a P4-tagged library video.
-6. Asking Hammer "I keep pulling off the ball" returns a P2-anchored dialogue, not generic advice.
-7. Existing hitting drills retain every existing field and now carry `phasesTrained`.
+- Video analysis JSON for a P4 violation returns the full 5-link chain in both voices and a 4-step roadmap ending in `transfer`.
+- Hammer answers "why am I rolling over?" with TRIGGER→CAUSE→MECHANISM→RESULT→FIX + 4-step ladder, athlete-voice first, Coach's note appended.
+- A logged tee rep with `early_barrel_flip` symptom shows the P4 fix line + feel cue only (not the whole chain).
+- Vault recap surfaces the dominant phase's chain and roadmap when symptoms exist.
+- Slap-progression at-bats never surface P2/P3 chains; P1+P4 chains still fire.
+- Drill cards show `fixesCause` / `eliminatesEffect` / roadmap step badge.
