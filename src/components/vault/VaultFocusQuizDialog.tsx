@@ -85,6 +85,11 @@ interface VaultFocusQuizDialogProps {
     // New pre-workout intent fields
     training_intent?: string[];
     mental_energy?: number;
+    // New soreness & stiffness fields (morning + pre_lift)
+    soreness_locations?: string[];
+    soreness_scales?: Record<string, number>;
+    stiffness_locations?: string[];
+    stiffness_scales?: Record<string, number>;
   }) => Promise<{ success: boolean; error?: string }>;
 }
 
