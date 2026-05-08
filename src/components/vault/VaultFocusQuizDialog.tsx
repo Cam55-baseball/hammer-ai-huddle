@@ -973,7 +973,39 @@ export function VaultFocusQuizDialog({
             </div>
           )}
 
-          {/* Morning Quiz - Elite Check-in Section */}
+          {/* NEW: Morning Body Status — Soreness & Stiffness */}
+          {quizType === 'morning' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-amber-500/5 to-orange-500/5 rounded-xl border border-amber-500/20">
+              <div>
+                <h4 className="text-sm font-bold flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-amber-500" />
+                  {t('vault.quiz.bodyStatus.title', 'Body Status')}
+                </h4>
+                <p className="text-xs text-muted-foreground italic mt-1">
+                  {t('vault.quiz.bodyStatus.subtitle', 'How does your body feel waking up?')}
+                </p>
+              </div>
+
+              <SorenessStiffnessBlock
+                kind="soreness"
+                locations={sorenessLocations}
+                scales={sorenessScales}
+                onLocationsChange={handleSorenessLocationsChange}
+                onScaleChange={(area, val) => setSorenessScales(prev => ({ ...prev, [area]: val }))}
+                t={t}
+              />
+
+              <SorenessStiffnessBlock
+                kind="stiffness"
+                locations={stiffnessLocations}
+                scales={stiffnessScales}
+                onLocationsChange={handleStiffnessLocationsChange}
+                onScaleChange={(area, val) => setStiffnessScales(prev => ({ ...prev, [area]: val }))}
+                t={t}
+              />
+            </div>
+          )}
+
           {quizType === 'morning' && (
             <div className="space-y-4 pt-2">
               {/* Daily Motivation */}
