@@ -654,7 +654,7 @@ const OwnerDashboard = () => {
                       No builds yet — click <span className="font-semibold">+ New</span> above to get started.
                     </p>
                   </Card>
-                ) : null}
+                ) : (
                   <div className="space-y-3">
                     {builds.map((b) => (
                       <Card key={b.id} className="p-4 flex items-start justify-between gap-4">
