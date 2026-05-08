@@ -126,7 +126,7 @@ interface Props { className?: string }
 
 export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
-  const { snapshot, tier, label, tone, ring, bg, loading } = useIdentityState();
+  const { snapshot, tier, label, tone, ring, bg, chip, loading } = useIdentityState();
   const { dayType, setDayType, restBudgetLeft, usedThisWeek, maxPerWeek, overBudget } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
@@ -382,7 +382,10 @@ export function IdentityCommandCard({ className }: Props) {
                   <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-3 space-y-2.5">
                     <p className="text-xs text-foreground/85 leading-relaxed">
                       You're being held to the{' '}
-                      <span className={cn('font-black', tone)}>{label}</span> standard today.
+                      <span className={cn(
+                        'inline-flex items-center px-1.5 py-0.5 rounded-md border text-[11px] font-black uppercase tracking-wider align-middle',
+                        chip,
+                      )}>{label}</span> standard today.
                       Tap Confirm to lock in that you're operating at it.
                     </p>
                     <Button
