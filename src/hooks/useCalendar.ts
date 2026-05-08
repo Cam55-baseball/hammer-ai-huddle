@@ -203,19 +203,25 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
 
   const fetchEventsForRange = useCallback(async (startDate: Date, endDate: Date) => {
     if (!user) return;
-    
-    setLoading(true);
-    setCurrentRange({ start: startDate, end: endDate });
-    
+
+    // Only show full skeleton on first load. Month navigation keeps prior
+    // month visible while next month refreshes (no flash).
+    setCurrentRange((prev) => {
+      if (prev === null) setLoading(true);
+      return { start: startDate, end: endDate };
+    });
+
     const startStr = format(startDate, 'yyyy-MM-dd');
     const endStr = format(endDate, 'yyyy-MM-dd');
     
     try {
       // Fetch all data sources in parallel
+      // NOTE: custom_activity_templates and custom_activity_logs are now
+      // owned by the derived projection layer (useCalendarProjection +
+      // mergeDerivedAndLegacyEvents). Do NOT fetch them here — duplicate
+      // round-trips slow the calendar down with no benefit.
       const [
         athleteEventsRes,
-        customTemplatesRes,
-        customLogsRes,
         calendarEventsRes,
         taskSchedulesRes,
         subModuleProgressRes,
@@ -232,23 +238,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr),
-        
-        // Custom activity templates (for recurring activities)
-        supabase
-          .from('custom_activity_templates')
-          .select('*')
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .or(`sport.eq.${sport},sport.is.null`),
-        
-        // Custom activity logs (actual scheduled activities)
-        supabase
-          .from('custom_activity_logs')
-          .select('*, custom_activity_templates(*)')
-          .eq('user_id', user.id)
-          .gte('entry_date', startStr)
-          .lte('entry_date', endStr),
-        
+
         // Manual calendar events
         supabase
           .from('calendar_events')
@@ -256,20 +246,20 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr),
-        
+
         // Game Plan task schedules
         supabase
           .from('game_plan_task_schedule')
           .select('*')
           .eq('user_id', user.id),
-        
+
         // Program progress (Iron Bambino / Heat Factory)
         supabase
           .from('sub_module_progress')
           .select('*')
           .eq('user_id', user.id)
           .eq('sport', sport),
-        
+
         // Meal plans
         supabase
           .from('vault_meal_plans')
@@ -277,7 +267,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('planned_date', startStr)
           .lte('planned_date', endStr),
-          
+
         // Date-specific day orders (for calendar locking)
         (supabase
           .from('calendar_day_orders' as any)
@@ -285,13 +275,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr) as any),
-        
+
         // Scheduled practice sessions
         (supabase
           .from('scheduled_practice_sessions' as any)
           .select('*')
           .neq('status', 'cancelled') as any),
-        
+
         // Game Plan daily skips (syncs skip state from Game Plan → Calendar)
         supabase
           .from('game_plan_skipped_tasks')
@@ -364,89 +354,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         });
       }
 
-      // Process custom activity templates with recurring days
-      if (customTemplatesRes.data) {
-        customTemplatesRes.data.forEach(template => {
-          if (!template.display_on_game_plan) return;
-          
-          // Fix: Prefer recurring_days ONLY if it has content, otherwise fallback to display_days
-          // An empty array [] is falsy for .length but truthy for || check, so check .length explicitly
-          const templateRecurringDays = template.recurring_days as number[] | null;
-          const templateDisplayDays = template.display_days as number[] | null;
-          const recurringDays = (templateRecurringDays && templateRecurringDays.length > 0) 
-            ? templateRecurringDays 
-            : (templateDisplayDays && templateDisplayDays.length > 0 ? templateDisplayDays : []);
-          if (recurringDays.length === 0) return;
-          
-          daysInRange.forEach(day => {
-            const dayOfWeek = getDay(day);
-            if (!recurringDays.includes(dayOfWeek)) return;
-
-            // Check if this day is skipped via calendar_skipped_items
-            const templateSkipDays = calendarSkipMap.get(`custom_activity:template-${template.id}`) || [];
-            if (templateSkipDays.includes(dayOfWeek)) return;
-
-            if (true) {
-              const dateKey = format(day, 'yyyy-MM-dd');
-              if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
-              
-              // Check if there's already a log for this template on this day
-              const hasLog = customLogsRes.data?.some(
-                log => log.template_id === template.id && log.entry_date === dateKey
-              );
-              
-              if (!hasLog) {
-                const calEvent: CalendarEvent = {
-                  id: `template-${template.id}-${dateKey}`,
-                  date: dateKey,
-                  title: template.display_nickname || template.title,
-                  description: template.description || undefined,
-                  startTime: template.display_time,
-                  type: 'custom_activity',
-                  source: `template-${template.id}`,
-                  color: template.color || getEventColor('custom_activity'),
-                  icon: Activity,
-                  completed: false,
-                  editable: false,
-                  deletable: false,
-                  sport: template.sport,
-                };
-                calEvent.orderKey = getOrderKey(calEvent);
-                aggregatedEvents[dateKey].push(calEvent);
-              }
-            }
-          });
-        });
-      }
-
-      // Process custom activity logs
-      if (customLogsRes.data) {
-        customLogsRes.data.forEach(log => {
-          const dateKey = log.entry_date;
-          if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
-          
-          const template = log.custom_activity_templates;
-          // FIX: Use template-{uuid} format to match Game Plan task IDs
-          const sourceId = template?.id ? `template-${template.id}` : (template?.activity_type || 'custom');
-          const calEvent: CalendarEvent = {
-            id: log.id,
-            date: dateKey,
-            title: template?.display_nickname || template?.title || 'Custom Activity',
-            description: log.notes || template?.description || undefined,
-            startTime: log.start_time,
-            type: 'custom_activity',
-            source: sourceId,
-            color: template?.color || getEventColor('custom_activity'),
-            icon: Activity,
-            completed: log.completed || false,
-            editable: true,
-            deletable: true,
-            sport: template?.sport,
-          };
-          calEvent.orderKey = getOrderKey(calEvent);
-          aggregatedEvents[dateKey].push(calEvent);
-        });
-      }
+      // Custom activity templates + logs are now produced by the derived
+      // projection layer (see useCalendarProjection); legacy processing here
+      // was removed to avoid duplicate fetches and double-rendering.
 
       // Process manual calendar events
       if (calendarEventsRes.data) {

@@ -58,7 +58,7 @@ export function useCalendarProjection({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('custom_activity_logs')
-        .select('id, entry_date, template_id, completed, start_time, notes')
+        .select('id, entry_date, template_id, completed, start_time, notes, performance_data')
         .eq('user_id', userId!)
         .gte('entry_date', startDate)
         .lte('entry_date', endDate);
@@ -72,13 +72,14 @@ export function useCalendarProjection({
   const templatesQ = useQuery({
     queryKey: ['calendar-projection', 'templates', userId, sport ?? 'all'],
     queryFn: async () => {
+      // Include soft-deleted templates so historical logs can still resolve
+      // a title; the pure builder gates *recurring projection* on deleted_at.
       let q = supabase
         .from('custom_activity_templates')
         .select(
           'id, title, display_nickname, color, sport, deleted_at, display_on_game_plan, recurring_days, display_days, display_time',
         )
-        .eq('user_id', userId!)
-        .is('deleted_at', null);
+        .eq('user_id', userId!);
       if (sport) q = q.or(`sport.eq.${sport},sport.is.null`);
       const { data, error } = await q;
       if (error) throw error;
