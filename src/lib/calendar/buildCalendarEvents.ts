@@ -138,10 +138,11 @@ export function buildCalendarEvents(input: BuildCalendarEventsInput): DerivedCal
     rangeEnd,
   } = input;
 
-  // Index templates by id; filter out soft-deleted
+  // Index ALL templates by id (including soft-deleted) so historical logs
+  // can still resolve a title. Soft-deleted templates are excluded from
+  // *recurring projection* below — but their past logs still surface.
   const templateById = new Map<string, CustomActivityTemplateRow>();
   for (const t of templates) {
-    if (t.deleted_at) continue;
     templateById.set(t.id, t);
   }
 
@@ -166,30 +167,53 @@ export function buildCalendarEvents(input: BuildCalendarEventsInput): DerivedCal
   // Use a Map for dedupe by deterministic id
   const out = new Map<string, DerivedCalendarEvent>();
 
+  // Helper: derive a sane fallback title for orphan / quick-log rows
+  const fallbackTitle = (log: CustomActivityLogRow): string => {
+    const note = (log.notes ?? '').trim();
+    if (note) return note.split('\n')[0].slice(0, 60);
+    const pd = log.performance_data;
+    if (pd && typeof pd === 'object') {
+      const mod = (pd as Record<string, unknown>).module;
+      if (typeof mod === 'string' && mod.trim()) {
+        return mod.charAt(0).toUpperCase() + mod.slice(1);
+      }
+    }
+    return 'Quick Log';
+  };
+
   // 1. Custom activity LOGS (concrete instances)
+  //    Always emit — orphan logs (no template_id) and logs whose template
+  //    was soft-deleted both still surface so users never lose work.
   for (const log of logs) {
-    if (!log.template_id) continue; // orphan log, skip
-    const tpl = templateById.get(log.template_id);
-    if (!tpl) continue; // parent deleted/missing → exclude
+    const tpl = log.template_id ? templateById.get(log.template_id) : undefined;
+    const isOrphan = !tpl;
+    const title = tpl
+      ? (tpl.display_nickname || tpl.title)
+      : fallbackTitle(log);
     const id = eventId('custom_activity', log.id, log.entry_date);
     out.set(id, {
       id,
       date: log.entry_date,
-      title: tpl.display_nickname || tpl.title,
+      title,
       source: 'custom_activity',
       sourceId: log.id,
       completed: !!log.completed,
       meta: {
-        templateId: tpl.id,
-        color: tpl.color ?? null,
-        sport: tpl.sport ?? null,
-        startTime: log.start_time ?? tpl.display_time ?? null,
+        templateId: tpl?.id ?? null,
+        templateDeleted: tpl ? !!tpl.deleted_at : false,
+        orphan: isOrphan,
+        color: tpl?.color ?? null,
+        sport: tpl?.sport ?? null,
+        startTime: log.start_time ?? tpl?.display_time ?? null,
         notes: log.notes ?? null,
       },
     });
   }
 
-  // 2. Recurring TEMPLATES projected over rangeStart..rangeEnd (only when no log exists)
+  // 2. Recurring TEMPLATES projected over rangeStart..rangeEnd (only when no log exists).
+  //    Recurring projection requires the template to be live (not soft-deleted) and
+  //    to NOT have explicitly opted out via display_on_game_plan === false.
+  //    Templates with display_on_game_plan = null/undefined are treated as opt-IN.
   if (rangeStart && rangeEnd) {
     const days = eachDay(rangeStart, rangeEnd);
     // Pre-index logged template+date pairs to suppress duplicate template projection
@@ -198,7 +222,8 @@ export function buildCalendarEvents(input: BuildCalendarEventsInput): DerivedCal
       if (l.template_id) loggedKey.add(`${l.template_id}:${l.entry_date}`);
     }
     for (const tpl of templateById.values()) {
-      if (!tpl.display_on_game_plan) continue;
+      if (tpl.deleted_at) continue;
+      if (tpl.display_on_game_plan === false) continue;
       const recurring =
         (tpl.recurring_days && tpl.recurring_days.length > 0
           ? tpl.recurring_days
