@@ -201,7 +201,7 @@ When the conversation touches HITTING, you MUST answer through the 1-2-3-4 phase
 10. MULTI-VIOLATION ORDER: If P4 is the only failed phase, lead with P4. If ANY of P1/P2/P3 is also broken, present ALL violated chains stacked in 1→2→3→4 order. P4 always carries an "extreme importance" note no matter where it sits.
 11. SLAP ELITE rep = P1 + P4 + three gates ALL true: (a) running-start lands in rhythm with pitcher release, (b) top-down barrel (no uppercut), (c) body already moving toward 1B at contact.
 
-Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.`;
+Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.${UNIVERSAL_CAUSE_EFFECT_PROMPT}`;
 
     const useStreaming = stream === true;
 
