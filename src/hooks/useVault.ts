@@ -491,6 +491,11 @@ export function useVault() {
       // NEW: Pre-workout intent fields
       training_intent?: string[];
       mental_energy?: number;
+      // NEW: Soreness & Stiffness (morning + pre_lift)
+      soreness_locations?: string[];
+      soreness_scales?: Record<string, number>;
+      stiffness_locations?: string[];
+      stiffness_scales?: Record<string, number>;
     }
   ) => {
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -557,6 +562,11 @@ export function useVault() {
           // NEW: Pre-workout intent fields
           training_intent: data.training_intent,
           mental_energy: data.mental_energy,
+          // NEW: Soreness & Stiffness
+          soreness_locations: data.soreness_locations,
+          soreness_scales: data.soreness_scales,
+          stiffness_locations: data.stiffness_locations,
+          stiffness_scales: data.stiffness_scales,
           // Physio fields
           appetite: (data as any).appetite,
           stress_sources: (data as any).stress_sources,

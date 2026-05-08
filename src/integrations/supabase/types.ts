@@ -8994,6 +8994,10 @@ export type Database = {
           sleep_consistency_score: number | null
           sleep_quality: number | null
           sleep_time: string | null
+          soreness_locations: string[] | null
+          soreness_scales: Json | null
+          stiffness_locations: string[] | null
+          stiffness_scales: Json | null
           stress_level: number | null
           stress_sources: string[] | null
           training_intent: string[] | null
@@ -9040,6 +9044,10 @@ export type Database = {
           sleep_consistency_score?: number | null
           sleep_quality?: number | null
           sleep_time?: string | null
+          soreness_locations?: string[] | null
+          soreness_scales?: Json | null
+          stiffness_locations?: string[] | null
+          stiffness_scales?: Json | null
           stress_level?: number | null
           stress_sources?: string[] | null
           training_intent?: string[] | null
@@ -9086,6 +9094,10 @@ export type Database = {
           sleep_consistency_score?: number | null
           sleep_quality?: number | null
           sleep_time?: string | null
+          soreness_locations?: string[] | null
+          soreness_scales?: Json | null
+          stiffness_locations?: string[] | null
+          stiffness_scales?: Json | null
           stress_level?: number | null
           stress_sources?: string[] | null
           training_intent?: string[] | null

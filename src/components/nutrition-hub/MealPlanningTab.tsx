@@ -31,15 +31,14 @@ export function MealPlanningTab() {
       toast.error(t('common.required'));
       return;
     }
-    
+
     setSavingTemplate(true);
     try {
-      await saveAsTemplate(newTemplateName.trim());
-      setNewTemplateName('');
-      setTemplateDialogOpen(false);
-      toast.success(t('mealPlanning.templates.saved'));
-    } catch (error) {
-      toast.error(t('common.error'));
+      const result = await saveAsTemplate(newTemplateName.trim());
+      if (result) {
+        setNewTemplateName('');
+        setTemplateDialogOpen(false);
+      }
     } finally {
       setSavingTemplate(false);
     }
@@ -107,12 +106,16 @@ export function MealPlanningTab() {
       </div>
 
       {/* Templates List */}
-      {templates.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">{t('mealPlanning.templates.title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">{t('mealPlanning.templates.title', 'Favorite meals')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {templates.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-2">
+              {t('mealPlanning.templates.empty', 'No favorite meals yet. Add meals to a week and tap "Save" to create one.')}
+            </p>
+          ) : (
             <ScrollArea className="max-h-40">
               <div className="space-y-2">
                 {templates.map((template) => (
@@ -154,9 +157,9 @@ export function MealPlanningTab() {
                 ))}
               </div>
             </ScrollArea>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Calendar */}
       <MealPlanCalendar />

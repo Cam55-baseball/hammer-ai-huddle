@@ -230,6 +230,11 @@ export function useMealPlanning() {
         ...day.meals.snack,
       ]);
 
+      if (allMeals.length === 0) {
+        toast.error('Add meals to this week before saving as a favorite');
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('meal_templates')
         .insert({
@@ -243,11 +248,11 @@ export function useMealPlanning() {
       if (error) throw error;
 
       await fetchTemplates();
-      toast.success('Template saved');
+      toast.success('Favorite meal saved');
       return data;
     } catch (error) {
       console.error('Error saving template:', error);
-      toast.error('Failed to save template');
+      toast.error('Failed to save favorite meal');
       return null;
     }
   };
@@ -334,9 +339,11 @@ export function useMealPlanning() {
       if (error) throw error;
 
       await fetchTemplates();
+      toast.success(isFavorite ? 'Added to favorites' : 'Removed from favorites');
       return true;
     } catch (error) {
       console.error('Error updating template:', error);
+      toast.error("Couldn't update favorite");
       return false;
     }
   };

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { FoodSearchResult } from './useFoodSearch';
 
 interface UseRecentFoodsReturn {
@@ -136,7 +137,7 @@ export function useRecentFoods(): UseRecentFoodsReturn {
         .select('id, use_count')
         .eq('user_id', user.id)
         .eq('food_id', foodId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         await supabase
@@ -165,25 +166,47 @@ export function useRecentFoods(): UseRecentFoodsReturn {
   }, [fetchFoods]);
 
   const toggleFavorite = useCallback(async (foodId: string) => {
+    // Optimistic flip so the star fills instantly
+    const wasFavorite = favoriteIds.has(foodId);
+    setFavoriteIds(prev => {
+      const next = new Set(prev);
+      if (wasFavorite) next.delete(foodId);
+      else next.add(foodId);
+      return next;
+    });
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        toast.error('You must be signed in to favorite foods');
+        // revert
+        setFavoriteIds(prev => {
+          const next = new Set(prev);
+          if (wasFavorite) next.add(foodId);
+          else next.delete(foodId);
+          return next;
+        });
+        return;
+      }
 
-      const { data: existing } = await supabase
+      const { data: existing, error: selectError } = await supabase
         .from('user_food_history')
         .select('id, is_favorite')
         .eq('user_id', user.id)
         .eq('food_id', foodId)
-        .single();
+        .maybeSingle();
 
+      if (selectError) throw selectError;
+
+      let writeError = null;
       if (existing) {
-        await supabase
+        const { error } = await supabase
           .from('user_food_history')
           .update({ is_favorite: !existing.is_favorite })
           .eq('id', existing.id);
+        writeError = error;
       } else {
-        // Create new entry as favorite
-        await supabase
+        const { error } = await supabase
           .from('user_food_history')
           .insert({
             user_id: user.id,
@@ -191,14 +214,27 @@ export function useRecentFoods(): UseRecentFoodsReturn {
             is_favorite: true,
             use_count: 0,
           });
+        writeError = error;
       }
+
+      if (writeError) throw writeError;
+
+      toast.success(wasFavorite ? 'Removed from favorites' : 'Added to favorites');
 
       // Refresh the lists
       await fetchFoods();
     } catch (err) {
       console.error('Error toggling favorite:', err);
+      toast.error("Couldn't update favorite");
+      // revert optimistic update
+      setFavoriteIds(prev => {
+        const next = new Set(prev);
+        if (wasFavorite) next.add(foodId);
+        else next.delete(foodId);
+        return next;
+      });
     }
-  }, [fetchFoods]);
+  }, [fetchFoods, favoriteIds]);
 
   const isFavorite = useCallback((foodId: string) => {
     return favoriteIds.has(foodId);

@@ -85,6 +85,11 @@ interface VaultFocusQuizDialogProps {
     // New pre-workout intent fields
     training_intent?: string[];
     mental_energy?: number;
+    // New soreness & stiffness fields (morning + pre_lift)
+    soreness_locations?: string[];
+    soreness_scales?: Record<string, number>;
+    stiffness_locations?: string[];
+    stiffness_scales?: Record<string, number>;
   }) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -252,6 +257,68 @@ function DisciplineRating({ value, onChange, t }: DisciplineRatingProps) {
   );
 }
 
+// Reusable Soreness/Stiffness body block — used by morning + pre_lift
+interface SorenessStiffnessBlockProps {
+  kind: 'soreness' | 'stiffness';
+  locations: string[];
+  scales: Record<string, number>;
+  onLocationsChange: (areas: string[]) => void;
+  onScaleChange: (area: string, value: number) => void;
+  t: any;
+}
+
+function SorenessStiffnessBlock({
+  kind, locations, scales, onLocationsChange, onScaleChange, t,
+}: SorenessStiffnessBlockProps) {
+  const titleKey = kind === 'soreness' ? 'vault.quiz.soreness.title' : 'vault.quiz.stiffness.title';
+  const titleFallback = kind === 'soreness' ? 'Soreness' : 'Stiffness';
+  const promptKey = kind === 'soreness' ? 'vault.quiz.soreness.prompt' : 'vault.quiz.stiffness.prompt';
+  const promptFallback = kind === 'soreness'
+    ? 'Tap any areas that feel sore'
+    : 'Tap any areas that feel stiff';
+  const accent = kind === 'soreness' ? 'text-amber-500' : 'text-sky-500';
+
+  const getLevelLabel = (val: number) => {
+    if (val <= 2) return t('vault.quiz.bodyStatus.level1', 'Minimal');
+    if (val <= 4) return t('vault.quiz.bodyStatus.level2', 'Mild');
+    if (val <= 6) return t('vault.quiz.bodyStatus.level3', 'Moderate');
+    if (val <= 8) return t('vault.quiz.bodyStatus.level4', 'Significant');
+    return t('vault.quiz.bodyStatus.level5', 'Severe');
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className={cn('text-sm font-semibold flex items-center gap-2', accent)}>
+          <Activity className="h-4 w-4" />
+          {t(titleKey, titleFallback)}
+        </Label>
+        <p className="text-xs text-muted-foreground mt-0.5">{t(promptKey, promptFallback)}</p>
+      </div>
+      <BodyAreaSelector
+        selectedAreas={locations}
+        onChange={onLocationsChange}
+      />
+      {locations.length > 0 && (
+        <div className="space-y-2">
+          {locations.map(areaId => (
+            <TenPointScale
+              key={areaId}
+              value={scales[areaId] || 0}
+              onChange={(v) => onScaleChange(areaId, v)}
+              label={getBodyAreaLabel(areaId)}
+              icon={<Activity className={cn('h-4 w-4', accent)} />}
+              getLevelLabel={getLevelLabel}
+              inverted={true}
+              compact={true}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function VaultFocusQuizDialog({
   open,
   onOpenChange,
@@ -391,6 +458,29 @@ export function VaultFocusQuizDialog({
   const [trainingIntents, setTrainingIntents] = useState<string[]>([]);
   const [mentalEnergy, setMentalEnergy] = useState(3);
 
+  // NEW: Soreness & Stiffness (morning + pre_lift) — per body area, 0–10
+  const [sorenessLocations, setSorenessLocations] = useState<string[]>([]);
+  const [sorenessScales, setSorenessScales] = useState<Record<string, number>>({});
+  const [stiffnessLocations, setStiffnessLocations] = useState<string[]>([]);
+  const [stiffnessScales, setStiffnessScales] = useState<Record<string, number>>({});
+
+  const handleSorenessLocationsChange = (areas: string[]) => {
+    setSorenessLocations(areas);
+    setSorenessScales(prev => {
+      const next: Record<string, number> = {};
+      areas.forEach(a => { if (prev[a] !== undefined) next[a] = prev[a]; });
+      return next;
+    });
+  };
+  const handleStiffnessLocationsChange = (areas: string[]) => {
+    setStiffnessLocations(areas);
+    setStiffnessScales(prev => {
+      const next: Record<string, number> = {};
+      areas.forEach(a => { if (prev[a] !== undefined) next[a] = prev[a]; });
+      return next;
+    });
+  };
+
   // PHYSIO: Morning check-in additions
   const [restingHr, setRestingHr] = useState('');
   const [appetite, setAppetite] = useState('');
@@ -512,6 +602,11 @@ export function VaultFocusQuizDialog({
       data.resting_hr = restingHr ? parseInt(restingHr) : undefined;
       data.appetite = appetite || undefined;
       data.stress_sources = stressSources.length > 0 ? stressSources : undefined;
+      // NEW: Morning soreness & stiffness
+      data.soreness_locations = sorenessLocations.length > 0 ? sorenessLocations : undefined;
+      data.soreness_scales = Object.keys(sorenessScales).length > 0 ? sorenessScales : undefined;
+      data.stiffness_locations = stiffnessLocations.length > 0 ? stiffnessLocations : undefined;
+      data.stiffness_scales = Object.keys(stiffnessScales).length > 0 ? stiffnessScales : undefined;
     }
 
     if (quizType === 'pre_lift') {
@@ -542,6 +637,11 @@ export function VaultFocusQuizDialog({
       data.mental_energy = mentalEnergy;
       // PHYSIO: Movement restriction
       data.movement_restriction = Object.keys(movementRestriction).length > 0 ? movementRestriction : undefined;
+      // NEW: Pre-workout soreness & stiffness
+      data.soreness_locations = sorenessLocations.length > 0 ? sorenessLocations : undefined;
+      data.soreness_scales = Object.keys(sorenessScales).length > 0 ? sorenessScales : undefined;
+      data.stiffness_locations = stiffnessLocations.length > 0 ? stiffnessLocations : undefined;
+      data.stiffness_scales = Object.keys(stiffnessScales).length > 0 ? stiffnessScales : undefined;
     }
 
     if (quizType === 'night') {
@@ -935,7 +1035,39 @@ export function VaultFocusQuizDialog({
             </div>
           )}
 
-          {/* Morning Quiz - Elite Check-in Section */}
+          {/* NEW: Morning Body Status — Soreness & Stiffness */}
+          {quizType === 'morning' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-amber-500/5 to-orange-500/5 rounded-xl border border-amber-500/20">
+              <div>
+                <h4 className="text-sm font-bold flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-amber-500" />
+                  {t('vault.quiz.bodyStatus.title', 'Body Status')}
+                </h4>
+                <p className="text-xs text-muted-foreground italic mt-1">
+                  {t('vault.quiz.bodyStatus.subtitle', 'How does your body feel waking up?')}
+                </p>
+              </div>
+
+              <SorenessStiffnessBlock
+                kind="soreness"
+                locations={sorenessLocations}
+                scales={sorenessScales}
+                onLocationsChange={handleSorenessLocationsChange}
+                onScaleChange={(area, val) => setSorenessScales(prev => ({ ...prev, [area]: val }))}
+                t={t}
+              />
+
+              <SorenessStiffnessBlock
+                kind="stiffness"
+                locations={stiffnessLocations}
+                scales={stiffnessScales}
+                onLocationsChange={handleStiffnessLocationsChange}
+                onScaleChange={(area, val) => setStiffnessScales(prev => ({ ...prev, [area]: val }))}
+                t={t}
+              />
+            </div>
+          )}
+
           {quizType === 'morning' && (
             <div className="space-y-4 pt-2">
               {/* Daily Motivation */}
@@ -1344,7 +1476,7 @@ export function VaultFocusQuizDialog({
                   <div className="px-2 py-1 rounded-md bg-red-500/20 text-red-500 text-xs font-bold">
                     {t('vault.quiz.pain.section', 'Section 3')}
                   </div>
-                  <h4 className="text-sm font-bold">{t('vault.quiz.pain.title', 'Pain or Limitation Check')}</h4>
+                  <h4 className="text-sm font-bold">{t('vault.quiz.pain.title', 'Pain, Soreness & Stiffness')}</h4>
                 </div>
                 <p className="text-xs text-muted-foreground italic">
                   {t('vault.quiz.pain.subtitle', 'High Performers avoid accumulating micro-injury')}
@@ -1460,6 +1592,26 @@ export function VaultFocusQuizDialog({
               <p className="text-xs text-muted-foreground italic pt-1">
                 {t('vault.quiz.pain.footer', 'Spot motion-limiting issues early!')}
               </p>
+
+              {/* NEW: Soreness & Stiffness sub-sections */}
+              <div className="space-y-4 pt-2 border-t border-border/40">
+                <SorenessStiffnessBlock
+                  kind="soreness"
+                  locations={sorenessLocations}
+                  scales={sorenessScales}
+                  onLocationsChange={handleSorenessLocationsChange}
+                  onScaleChange={(area, val) => setSorenessScales(prev => ({ ...prev, [area]: val }))}
+                  t={t}
+                />
+                <SorenessStiffnessBlock
+                  kind="stiffness"
+                  locations={stiffnessLocations}
+                  scales={stiffnessScales}
+                  onLocationsChange={handleStiffnessLocationsChange}
+                  onScaleChange={(area, val) => setStiffnessScales(prev => ({ ...prev, [area]: val }))}
+                  t={t}
+                />
+              </div>
             </div>
           )}
 
