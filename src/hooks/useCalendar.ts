@@ -203,10 +203,12 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
 
   const fetchEventsForRange = useCallback(async (startDate: Date, endDate: Date) => {
     if (!user) return;
-    
-    setLoading(true);
+
+    // Only show full skeleton on the very first load — subsequent month
+    // navigations keep the previous month visible while data refreshes.
+    setLoading((prev) => (Object.keys(events).length === 0 ? true : prev));
     setCurrentRange({ start: startDate, end: endDate });
-    
+
     const startStr = format(startDate, 'yyyy-MM-dd');
     const endStr = format(endDate, 'yyyy-MM-dd');
     
