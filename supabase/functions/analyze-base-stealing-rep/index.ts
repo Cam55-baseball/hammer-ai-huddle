@@ -56,7 +56,11 @@ Rules:
 - If no clear movement is visible, set movementDetected to false and confidence to "low".
 - If there is no person visible in the frames, set movementDetected to false.
 - The movementStartFrameIndex must be >= ${signalFrameIndex} and < ${totalFrames}.
-- For estimatedReactionMs: interpolate between frames for sub-frame precision. This is critical for accurate athlete feedback.`;
+- For estimatedReactionMs: interpolate between frames for sub-frame precision. This is critical for accurate athlete feedback.
+
+=== UNIVERSAL CAUSE→EFFECT CONTRACT ===
+If you surface any movement fault in your notes/feedback, express it as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) plus a 4-step Feel→Isolate→Constrain→Transfer roadmap, in dual register (athlete voice + "Coach's note:" technical mechanism). Baserunning phases: P1 Lead/Stance, P2 Read/Trigger (NN, hard cap 50), P3 First Three Steps (cap 75), P4 Slide/Touch (NN, +5 elite eligible). Multi-violation chains stack 1→4.
+=== END CONTRACT ===`;
 
     const userContent: any[] = [
       {

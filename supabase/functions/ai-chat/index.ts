@@ -3,6 +3,30 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
 import { resolveSeasonPhase, getSeasonProfile, buildPhasePromptBlock } from "../_shared/seasonPhase.ts";
 import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, formatChainText, formatRoadmapText } from "../_shared/hittingCausalChains.ts";
+import { buildCausalContractPromptSuffix } from "../_shared/causalContract.ts";
+import { summarizeAnyDomain } from "../_shared/domainPhaseDoctrine.ts";
+
+const UNIVERSAL_CAUSE_EFFECT_PROMPT = `\n\n=== UNIVERSAL CAUSE→EFFECT MANDATE (ALL DOMAINS) ===
+Every diagnostic answer — hitting, pitching, defense, baserunning, strength, regulation/recovery, nutrition, mental — MUST be expressed as a 5-link causal chain (TRIGGER → CAUSE → MECHANISM → RESULT → FIX) followed by a 4-step roadmap. Two registers: athlete voice + a one-line "Coach's note:" with the technical mechanism. Multi-violation answers stack chains in phase order (P1 → P2 → P3 → P4). Severity model is universal: NN hard cap 50, NN soft cap 70, standard cap 80, secondary 75/85, two-or-more violations cap 65, elite execution +5.
+
+DOMAIN PHASE DOCTRINES (use as scaffolding when answering outside hitting):
+PITCHING:\n${summarizeAnyDomain('pitching')}
+DEFENSE:\n${summarizeAnyDomain('defense')}
+BASERUNNING:\n${summarizeAnyDomain('baserunning')}
+STRENGTH/CNS:\n${summarizeAnyDomain('strength')}
+REGULATION/RECOVERY:\n${summarizeAnyDomain('regulation')}
+NUTRITION/HYDRATION:\n${summarizeAnyDomain('nutrition')}
+MENTAL/DECISION:\n${summarizeAnyDomain('mental')}
+
+Domain-tuned 4-step ladders (use the right one for the topic):
+- Skill (hit/pitch/defense/baserunning): Feel → Isolate → Constrain → Transfer
+- Strength/CNS: Activate → Load → Integrate → Express
+- Nutrition/Hydration: Notice → Swap → Lock → Sustain
+- Recovery/Regulation: Detect → Downshift → Restore → Reload
+- Mental/Decision: See → Name → Choose → Repeat under pressure
+
+Never collapse to a single sentence. Never skip the chain. Never drop the coach voice.
+=== END UNIVERSAL MANDATE ===`;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -177,7 +201,7 @@ When the conversation touches HITTING, you MUST answer through the 1-2-3-4 phase
 10. MULTI-VIOLATION ORDER: If P4 is the only failed phase, lead with P4. If ANY of P1/P2/P3 is also broken, present ALL violated chains stacked in 1→2→3→4 order. P4 always carries an "extreme importance" note no matter where it sits.
 11. SLAP ELITE rep = P1 + P4 + three gates ALL true: (a) running-start lands in rhythm with pitcher release, (b) top-down barrel (no uppercut), (c) body already moving toward 1B at contact.
 
-Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.`;
+Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly. When referencing the athlete's data, be specific about numbers and trends. Never give vague or generic advice — every response should be actionable and grounded in the athlete's actual performance data and current season phase.${UNIVERSAL_CAUSE_EFFECT_PROMPT}`;
 
     const useStreaming = stream === true;
 
