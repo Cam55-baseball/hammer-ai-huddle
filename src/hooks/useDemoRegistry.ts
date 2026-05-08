@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDemoAudience } from './useDemoAudience';
 
 export interface DemoNode {
   id: string;
@@ -16,13 +17,15 @@ export interface DemoNode {
   ab_variant: string | null;
   is_recommended: boolean;
   recommended_order: number | null;
+  audience: 'all' | 'team';
 }
 
-const CACHE_KEY = 'demo_registry_v2';
+const CACHE_KEY = 'demo_registry_v3';
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
 export function useDemoRegistry() {
-  const [nodes, setNodes] = useState<DemoNode[]>(() => {
+  const audience = useDemoAudience();
+  const [allNodes, setAllNodes] = useState<DemoNode[]>(() => {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return [];
@@ -31,7 +34,7 @@ export function useDemoRegistry() {
     } catch { /* noop */ }
     return [];
   });
-  const [loading, setLoading] = useState(nodes.length === 0);
+  const [loading, setLoading] = useState(allNodes.length === 0);
 
   useEffect(() => {
     let alive = true;
@@ -43,13 +46,19 @@ export function useDemoRegistry() {
         .order('display_order');
       if (!alive) return;
       if (data) {
-        setNodes(data as DemoNode[]);
+        setAllNodes(data as DemoNode[]);
         try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch { /* noop */ }
       }
       setLoading(false);
     })();
     return () => { alive = false; };
   }, []);
+
+  // Filter team-only nodes when current viewer isn't a team audience.
+  const nodes = useMemo<DemoNode[]>(() => {
+    if (audience === 'team') return allNodes;
+    return allNodes.filter(n => (n.audience ?? 'all') !== 'team');
+  }, [allNodes, audience]);
 
   const tiers = nodes.filter(n => n.node_type === 'tier');
   const categoriesOf = (tier: string) => nodes
@@ -59,7 +68,6 @@ export function useDemoRegistry() {
   const findBySlug = (slug: string) => nodes.find(n => n.slug === slug);
   const allSubmodules = nodes.filter(n => n.node_type === 'submodule');
 
-  // Recommended sequence across tiers, used by Start Here.
   const recommendedSequence = nodes
     .filter(n => n.node_type === 'submodule' && n.is_recommended && n.recommended_order != null)
     .sort((a, b) => (a.recommended_order ?? 0) - (b.recommended_order ?? 0));
