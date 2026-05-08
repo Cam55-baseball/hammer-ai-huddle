@@ -1013,10 +1013,11 @@ const OwnerDashboard = () => {
                         )}
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </Card>
+                    ));
+                  })()}
+                </div>
+              </Card>
+            </div>
           )}
 
           {/* Admin Requests Section */}
