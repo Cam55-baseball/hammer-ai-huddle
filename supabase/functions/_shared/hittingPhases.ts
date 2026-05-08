@@ -252,18 +252,62 @@ export function attributePhaseFromSymptoms(symptoms: string[]): {
 }
 
 // Cap calculator. Pass the violated phase ids; returns the lowest applicable cap.
+// LOCKED EXTENSION: optional opts let callers pass P4 severity + elite-move signals
+// + slap-elite gates so the cap reflects soft (70) / hard (50) / elite (+5) outcomes.
 export function applyPhaseCaps(
   baseScore: number,
   violatedPhases: HittingPhaseId[],
-  ctx?: { sport?: string; drillId?: string; tags?: string[] }
-): { score: number; appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>; twoPlus: boolean } {
+  ctx?: { sport?: string; drillId?: string; tags?: string[] },
+  opts?: {
+    p4Severity?: P4Severity;
+    eliteMove?: EliteMoveSignals;
+    slapElite?: SlapEliteSignals;
+  }
+): {
+  score: number;
+  appliedCaps: Array<{ phase: HittingPhaseId; cap: number }>;
+  twoPlus: boolean;
+  p4Severity: P4Severity;
+  eliteMove: boolean;
+  slapElite: SlapEliteResult;
+} {
   const slap = isSlapContext(ctx);
   const effective = violatedPhases.filter((p) => !(slap && (p === 'P2' || p === 'P3')));
-  const appliedCaps = effective.map((p) => ({ phase: p, cap: HITTING_PHASES[p].scoreCap }));
+
+  // Resolve P4 severity (passed-in or fall back to symptom-based hard).
+  let p4Sev: P4Severity = opts?.p4Severity ?? null;
+  if (effective.includes('P4') && !p4Sev) p4Sev = 'hard';
+  const elite = isEliteMove(opts?.eliteMove);
+  if (elite) p4Sev = 'elite';
+
+  const appliedCaps = effective.map((p) => {
+    if (p === 'P4') {
+      const cap = p4Sev === 'soft' ? P4_SOFT_CAP : p4Sev === 'elite' ? 100 : P4_HARD_CAP;
+      return { phase: p, cap };
+    }
+    return { phase: p, cap: HITTING_PHASES[p].scoreCap };
+  });
+
   let cap = appliedCaps.reduce((min, c) => Math.min(min, c.cap), 100);
   const twoPlus = effective.length >= 2;
   if (twoPlus) cap = Math.min(cap, TWO_PLUS_PHASE_VIOLATION_CAP);
-  return { score: Math.min(baseScore, cap), appliedCaps, twoPlus };
+
+  // Elite reward: +5 to the final cap (max 100), only if no other violations drag it down.
+  let finalScore = Math.min(baseScore, cap);
+  if (elite && effective.length <= 1) {
+    finalScore = Math.min(100, baseScore + P4_ELITE_BONUS);
+  }
+
+  const slapEliteResult = evaluateSlapEliteGates(opts?.slapElite);
+
+  return {
+    score: finalScore,
+    appliedCaps,
+    twoPlus,
+    p4Severity: p4Sev,
+    eliteMove: elite,
+    slapElite: slapEliteResult,
+  };
 }
 
 // Prompt block injectable into any system prompt that discusses hitting.
