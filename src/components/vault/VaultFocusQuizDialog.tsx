@@ -1592,6 +1592,26 @@ export function VaultFocusQuizDialog({
               <p className="text-xs text-muted-foreground italic pt-1">
                 {t('vault.quiz.pain.footer', 'Spot motion-limiting issues early!')}
               </p>
+
+              {/* NEW: Soreness & Stiffness sub-sections */}
+              <div className="space-y-4 pt-2 border-t border-border/40">
+                <SorenessStiffnessBlock
+                  kind="soreness"
+                  locations={sorenessLocations}
+                  scales={sorenessScales}
+                  onLocationsChange={handleSorenessLocationsChange}
+                  onScaleChange={(area, val) => setSorenessScales(prev => ({ ...prev, [area]: val }))}
+                  t={t}
+                />
+                <SorenessStiffnessBlock
+                  kind="stiffness"
+                  locations={stiffnessLocations}
+                  scales={stiffnessScales}
+                  onLocationsChange={handleStiffnessLocationsChange}
+                  onScaleChange={(area, val) => setStiffnessScales(prev => ({ ...prev, [area]: val }))}
+                  t={t}
+                />
+              </div>
             </div>
           )}
 
