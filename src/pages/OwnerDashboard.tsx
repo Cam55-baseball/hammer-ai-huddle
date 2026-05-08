@@ -1157,6 +1157,31 @@ const OwnerDashboard = () => {
 
           {/* Subscriptions Section */}
           {activeSection === 'subscriptions' && (
+            <div className="space-y-4">
+              <Card className="p-5">
+                <h3 className="font-semibold mb-4">Module Distribution</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {([
+                    { key: 'hitting', label: 'Hitting', icon: Target, value: moduleStats.hitting },
+                    { key: 'pitching', label: 'Pitching', icon: CircleDot, value: moduleStats.pitching },
+                    { key: 'throwing', label: 'Throwing', icon: Zap, value: moduleStats.throwing },
+                  ] as const).map((m) => {
+                    const Icon = m.icon;
+                    return (
+                      <div key={m.key} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{m.label}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">{m.value}</span>
+                        </div>
+                        <Progress value={activeSubscriptions > 0 ? (m.value / activeSubscriptions) * 100 : 0} className="h-2" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="p-5">
                 <div className="flex items-center gap-3 mb-4">
