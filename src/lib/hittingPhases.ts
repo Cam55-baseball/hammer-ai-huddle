@@ -92,6 +92,86 @@ export const HITTING_PHASES: Record<HittingPhaseId, HittingPhase> = {
 
 export const TWO_PLUS_PHASE_VIOLATION_CAP = 65;
 
+// === LOCKED 2026 EXTENSIONS (mirror of edge file) ===
+export const P4_HARD_CAP = 50;
+export const P4_SOFT_CAP = 70;
+export const P4_ELITE_BONUS = 5;
+
+export type P4Severity = 'hard' | 'soft' | 'elite' | null;
+
+const P4_HARD_SYMPTOMS = new Set([
+  'casting',
+  'early_barrel_flip',
+  'rollover',
+  'shoulders_open_before_elbow_extends',
+  'hands_lead_elbow',
+]);
+const P4_SOFT_SYMPTOMS = new Set([
+  'extension_at_contact',
+  'hands_slightly_leading',
+  'early_extension_slight',
+]);
+
+export interface EliteMoveSignals {
+  elbowLeadsForward?: boolean;
+  handsStayBack?: boolean;
+  contactWithHands?: boolean;
+  extensionPostContact?: boolean;
+  barrelCatapultsLast?: boolean;
+}
+
+export function isEliteMove(signals?: EliteMoveSignals): boolean {
+  if (!signals) return false;
+  return !!(
+    signals.elbowLeadsForward &&
+    signals.handsStayBack &&
+    signals.contactWithHands &&
+    signals.extensionPostContact &&
+    signals.barrelCatapultsLast
+  );
+}
+
+export function gradeP4Severity(symptoms: string[], elite?: EliteMoveSignals): P4Severity {
+  if (isEliteMove(elite)) return 'elite';
+  const lc = (symptoms || []).map((s) => String(s).toLowerCase().trim());
+  if (lc.some((s) => P4_HARD_SYMPTOMS.has(s))) return 'hard';
+  if (lc.some((s) => P4_SOFT_SYMPTOMS.has(s))) return 'soft';
+  return null;
+}
+
+export interface P1TimingSignals {
+  hipsLoadedAtPitcherHandsBreak?: boolean;
+}
+export function evaluateP1HandsBreakTiming(sig?: P1TimingSignals): { violated: boolean } {
+  if (!sig || sig.hipsLoadedAtPitcherHandsBreak === undefined) return { violated: false };
+  return { violated: sig.hipsLoadedAtPitcherHandsBreak === false };
+}
+
+export interface SlapEliteSignals {
+  runningStartTiming?: boolean;
+  topDownBarrel?: boolean;
+  alreadyMovingContact?: boolean;
+}
+export interface SlapEliteResult extends SlapEliteSignals {
+  isElite: boolean;
+}
+export function evaluateSlapEliteGates(sig?: SlapEliteSignals): SlapEliteResult {
+  const r = sig || {};
+  return {
+    runningStartTiming: !!r.runningStartTiming,
+    topDownBarrel: !!r.topDownBarrel,
+    alreadyMovingContact: !!r.alreadyMovingContact,
+    isElite: !!(r.runningStartTiming && r.topDownBarrel && r.alreadyMovingContact),
+  };
+}
+
+export function prioritizePhasesForRoadmap(violated: HittingPhaseId[]): HittingPhaseId[] {
+  const set = new Set(violated);
+  if (set.size === 1 && set.has('P4')) return ['P4'];
+  const order: HittingPhaseId[] = ['P1', 'P2', 'P3', 'P4'];
+  return order.filter((p) => set.has(p));
+}
+
 export function isSlapContext(ctx?: { sport?: string; drillId?: string; tags?: string[] }): boolean {
   if (!ctx) return false;
   const sport = (ctx.sport || '').toLowerCase();
