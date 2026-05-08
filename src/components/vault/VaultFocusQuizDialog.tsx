@@ -1476,7 +1476,7 @@ export function VaultFocusQuizDialog({
                   <div className="px-2 py-1 rounded-md bg-red-500/20 text-red-500 text-xs font-bold">
                     {t('vault.quiz.pain.section', 'Section 3')}
                   </div>
-                  <h4 className="text-sm font-bold">{t('vault.quiz.pain.title', 'Pain or Limitation Check')}</h4>
+                  <h4 className="text-sm font-bold">{t('vault.quiz.pain.title', 'Pain, Soreness & Stiffness')}</h4>
                 </div>
                 <p className="text-xs text-muted-foreground italic">
                   {t('vault.quiz.pain.subtitle', 'High Performers avoid accumulating micro-injury')}
