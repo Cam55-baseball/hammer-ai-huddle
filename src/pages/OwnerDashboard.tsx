@@ -1051,7 +1051,7 @@ const OwnerDashboard = () => {
           {activeSection === 'scout-applications' && (
             <Card className="p-5">
               <Tabs defaultValue="pending" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+                <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
                   <TabsTrigger value="pending" className="gap-1">
                     Pending
                     <Badge variant="secondary" className="ml-1 h-5 px-1.5">
@@ -1060,7 +1060,6 @@ const OwnerDashboard = () => {
                   </TabsTrigger>
                   <TabsTrigger value="approved">Approved</TabsTrigger>
                   <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                  <TabsTrigger value="all">All</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="pending" className="space-y-3 mt-4">
