@@ -339,9 +339,11 @@ export function useMealPlanning() {
       if (error) throw error;
 
       await fetchTemplates();
+      toast.success(isFavorite ? 'Added to favorites' : 'Removed from favorites');
       return true;
     } catch (error) {
       console.error('Error updating template:', error);
+      toast.error("Couldn't update favorite");
       return false;
     }
   };
