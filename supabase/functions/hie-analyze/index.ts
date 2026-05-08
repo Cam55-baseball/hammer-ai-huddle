@@ -1933,6 +1933,7 @@ Deno.serve(async (req) => {
       weakness_clusters: weaknessClusters,
       prescriptive_actions: filteredPrescriptiveActions,
       readiness_score: readinessScore,
+      training_readiness_score: trainingReadinessScore,
       readiness_recommendation: readinessRecommendation,
       risk_alerts: [...phaseRiskAlerts, ...riskAlerts],
       development_confidence: developmentConfidence,
