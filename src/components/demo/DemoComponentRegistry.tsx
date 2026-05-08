@@ -5,6 +5,8 @@ import GenericModuleDemo from './shells/GenericModuleDemo';
 const HittingAnalysisDemo = lazy(() => import('./shells/HittingAnalysisDemo'));
 const IronBambinoDemo = lazy(() => import('./shells/IronBambinoDemo'));
 const VaultDemo = lazy(() => import('./shells/VaultDemo'));
+const AskTheCoachDemo = lazy(() => import('./shells/AskTheCoachDemo'));
+const ScoutFeedDemo = lazy(() => import('./shells/ScoutFeedDemo'));
 
 // Generic shells: one wrapper per component_key, all backed by GenericModuleDemo + per-key config.
 const generic = (key: string): ComponentType => {
@@ -43,4 +45,7 @@ export const demoComponents: Record<string, ComponentType<any>> = {
   'video-library': generic('video-library'),
   // Two-way
   'unicorn-engine': generic('unicorn-engine'),
+  // Coach + Scout previews (For Your Team category)
+  'ask-the-coach': AskTheCoachDemo,
+  'scout-feed': ScoutFeedDemo,
 };
