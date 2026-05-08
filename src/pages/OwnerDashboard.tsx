@@ -8,7 +8,14 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film, Package, Send, Loader2, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle, Library, Film, Package, Send, Loader2, Plus, Pencil, Trash2, X, ChevronRight } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { OwnerOverview } from "@/components/owner/OwnerOverview";
 import { getBuilds, updateBuild, deleteBuild, type BuildItem } from "@/lib/ownerBuildStorage";
 import { useVideoLibrary } from "@/hooks/useVideoLibrary";
 import { Textarea } from "@/components/ui/textarea";
