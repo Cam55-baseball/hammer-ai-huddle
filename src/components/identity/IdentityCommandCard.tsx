@@ -313,9 +313,9 @@ export function IdentityCommandCard({ className }: Props) {
             {/* Right column on sm+ */}
             <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
               <div className={cn(
-                'rounded-lg bg-background/85 ring-1 ring-border px-2.5 py-1',
+                'rounded-lg border px-2.5 py-1',
                 'text-3xl font-black tabular-nums leading-none',
-                tone,
+                chip,
               )}>
                 {score}
               </div>
