@@ -62,7 +62,7 @@ export function useReadinessState(): ReadinessResult {
       const [hieRes, physioRes, focusRes] = await Promise.all([
         supabase
           .from('hie_snapshots')
-          .select('readiness_score, computed_at')
+          .select('readiness_score, training_readiness_score, computed_at')
           .eq('user_id', user.id)
           .order('computed_at', { ascending: false })
           .limit(1)
@@ -85,15 +85,27 @@ export function useReadinessState(): ReadinessResult {
       ]);
 
       const sources: ReadinessSource[] = [];
+      const hieSnap = hieRes.data as { readiness_score: number | null; training_readiness_score: number | null; computed_at: string } | null;
       if (
-        hieRes.data?.readiness_score != null &&
-        isFresh(hieRes.data.computed_at, HIE_MAX_AGE_MS)
+        hieSnap?.readiness_score != null &&
+        isFresh(hieSnap.computed_at, HIE_MAX_AGE_MS)
       ) {
         sources.push({
-          name: 'HIE Readiness',
-          score: Number(hieRes.data.readiness_score),
-          weight: 0.5,
-          capturedAt: hieRes.data.computed_at,
+          name: 'HIE Subjective',
+          score: Number(hieSnap.readiness_score),
+          weight: 0.30,
+          capturedAt: hieSnap.computed_at,
+        });
+      }
+      if (
+        hieSnap?.training_readiness_score != null &&
+        isFresh(hieSnap.computed_at, HIE_MAX_AGE_MS)
+      ) {
+        sources.push({
+          name: 'Training Load',
+          score: Number(hieSnap.training_readiness_score),
+          weight: 0.30,
+          capturedAt: hieSnap.computed_at,
         });
       }
       if (
@@ -103,7 +115,7 @@ export function useReadinessState(): ReadinessResult {
         sources.push({
           name: 'Regulation Index',
           score: Number(physioRes.data.regulation_score),
-          weight: 0.3,
+          weight: 0.25,
           capturedAt: physioRes.data.created_at,
         });
       }
@@ -114,7 +126,7 @@ export function useReadinessState(): ReadinessResult {
         sources.push({
           name: 'Focus Quiz',
           score: Number(focusRes.data.focus_score),
-          weight: 0.2,
+          weight: 0.15,
           capturedAt: focusRes.data.created_at,
         });
       }
