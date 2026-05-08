@@ -216,10 +216,12 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     
     try {
       // Fetch all data sources in parallel
+      // NOTE: custom_activity_templates and custom_activity_logs are now
+      // owned by the derived projection layer (useCalendarProjection +
+      // mergeDerivedAndLegacyEvents). Do NOT fetch them here — duplicate
+      // round-trips slow the calendar down with no benefit.
       const [
         athleteEventsRes,
-        customTemplatesRes,
-        customLogsRes,
         calendarEventsRes,
         taskSchedulesRes,
         subModuleProgressRes,
@@ -236,23 +238,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr),
-        
-        // Custom activity templates (for recurring activities)
-        supabase
-          .from('custom_activity_templates')
-          .select('*')
-          .eq('user_id', user.id)
-          .is('deleted_at', null)
-          .or(`sport.eq.${sport},sport.is.null`),
-        
-        // Custom activity logs (actual scheduled activities)
-        supabase
-          .from('custom_activity_logs')
-          .select('*, custom_activity_templates(*)')
-          .eq('user_id', user.id)
-          .gte('entry_date', startStr)
-          .lte('entry_date', endStr),
-        
+
         // Manual calendar events
         supabase
           .from('calendar_events')
@@ -260,20 +246,20 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr),
-        
+
         // Game Plan task schedules
         supabase
           .from('game_plan_task_schedule')
           .select('*')
           .eq('user_id', user.id),
-        
+
         // Program progress (Iron Bambino / Heat Factory)
         supabase
           .from('sub_module_progress')
           .select('*')
           .eq('user_id', user.id)
           .eq('sport', sport),
-        
+
         // Meal plans
         supabase
           .from('vault_meal_plans')
@@ -281,7 +267,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('planned_date', startStr)
           .lte('planned_date', endStr),
-          
+
         // Date-specific day orders (for calendar locking)
         (supabase
           .from('calendar_day_orders' as any)
@@ -289,13 +275,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr) as any),
-        
+
         // Scheduled practice sessions
         (supabase
           .from('scheduled_practice_sessions' as any)
           .select('*')
           .neq('status', 'cancelled') as any),
-        
+
         // Game Plan daily skips (syncs skip state from Game Plan → Calendar)
         supabase
           .from('game_plan_skipped_tasks')
