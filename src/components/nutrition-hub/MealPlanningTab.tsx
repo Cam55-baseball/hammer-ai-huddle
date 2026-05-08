@@ -115,15 +115,7 @@ export function MealPlanningTab() {
             <p className="text-sm text-muted-foreground py-2">
               {t('mealPlanning.templates.empty', 'No favorite meals yet. Add meals to a week and tap "Save" to create one.')}
             </p>
-          ) : null}
-      {templates.length > 0 && (
-        <></>
-      )}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">{t('mealPlanning.templates.title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
+          ) : (
             <ScrollArea className="max-h-40">
               <div className="space-y-2">
                 {templates.map((template) => (
@@ -165,9 +157,9 @@ export function MealPlanningTab() {
                 ))}
               </div>
             </ScrollArea>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Calendar */}
       <MealPlanCalendar />
