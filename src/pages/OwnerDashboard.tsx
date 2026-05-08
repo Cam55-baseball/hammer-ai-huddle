@@ -1111,6 +1111,7 @@ const OwnerDashboard = () => {
                         />
                       ))
                   )}
+                </TabsContent>
               </Tabs>
             </Card>
           )}
