@@ -77,5 +77,6 @@ export function useIdentityState() {
     tone: meta.tone,
     ring: meta.ring,
     bg: meta.bg,
+    chip: meta.chip,
   };
 }
