@@ -3766,6 +3766,7 @@ export type Database = {
           season_phase_source: string | null
           smart_week_plan: Json | null
           sport: string
+          training_readiness_score: number | null
           transfer_score: number | null
           updated_at: string
           user_id: string
@@ -3795,6 +3796,7 @@ export type Database = {
           season_phase_source?: string | null
           smart_week_plan?: Json | null
           sport?: string
+          training_readiness_score?: number | null
           transfer_score?: number | null
           updated_at?: string
           user_id: string
@@ -3824,6 +3826,7 @@ export type Database = {
           season_phase_source?: string | null
           smart_week_plan?: Json | null
           sport?: string
+          training_readiness_score?: number | null
           transfer_score?: number | null
           updated_at?: string
           user_id?: string

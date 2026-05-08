@@ -1000,8 +1000,12 @@ function computeDevelopmentStatus(scores: { score: number; date: string }[]): { 
   return { status, trend7d: Math.round(trend7d * 10) / 10, trend30d: Math.round(trend30d * 10) / 10 };
 }
 
-function computeReadiness(vaultData: any[]): { score: number; recommendation: string } {
-  if (!vaultData || vaultData.length === 0) return { score: 70, recommendation: "No readiness data — train at moderate intensity" };
+function computeReadiness(vaultData: any[]): { score: number | null; recommendation: string } {
+  // No silent fallback: if athlete hasn't logged a focus quiz we have no
+  // subjective readiness signal at all and the snapshot must reflect that.
+  if (!vaultData || vaultData.length === 0) {
+    return { score: null, recommendation: "Log a focus quiz (sleep / stress / pain) to calibrate readiness." };
+  }
   const latest = vaultData[0];
   const sleep = latest.sleep_quality ?? 3;
   const stress = latest.stress_level ?? 3;
@@ -1016,6 +1020,39 @@ function computeReadiness(vaultData: any[]): { score: number; recommendation: st
   else if (score >= 40) recommendation = `You are ${score}% ready → Reduce volume, focus on timing and mechanics`;
   else recommendation = `You are ${score}% ready → Active recovery only`;
   return { score, recommendation };
+}
+
+/**
+ * Training Load Readiness — derived from Hammers behavioral data.
+ * Returns null when the athlete has no consistency snapshot yet, so two
+ * users with different training histories no longer collapse to the same
+ * subjective-only readiness number.
+ *
+ * Components (weights):
+ *   consistency_score      0.50  (canonical Hammers adherence 0-100)
+ *   nn_freshness           0.30  (1 - nn_miss_count_7d/7, clamped 0..1)
+ *   cns_headroom           0.20  (1 - avg7d_cns_load/100, clamped 0..1; neutral 0.7 if no logs)
+ */
+function computeTrainingReadiness(
+  consistencySnap: { consistency_score?: number | null; nn_miss_count_7d?: number | null } | null,
+  dailyLogs: Array<{ cns_load_actual?: number | null; entry_date?: string }> | null,
+): number | null {
+  if (!consistencySnap || consistencySnap.consistency_score == null) return null;
+
+  const consistency = Math.max(0, Math.min(100, Number(consistencySnap.consistency_score)));
+  const nnMiss = Math.max(0, Math.min(7, Number(consistencySnap.nn_miss_count_7d ?? 0)));
+  const nnFreshness = 1 - nnMiss / 7;
+
+  const recentCns = (dailyLogs ?? [])
+    .slice(0, 7)
+    .map((d) => Number(d.cns_load_actual ?? 0))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const avgCns = recentCns.length ? recentCns.reduce((a, b) => a + b, 0) / recentCns.length : null;
+  // Treat 100 as full daily CNS budget; headroom = how much capacity is unused.
+  const cnsHeadroom = avgCns == null ? 0.7 : Math.max(0, Math.min(1, 1 - avgCns / 100));
+
+  const raw = consistency * 0.5 + nnFreshness * 100 * 0.3 + cnsHeadroom * 100 * 0.2;
+  return Math.round(Math.max(0, Math.min(100, raw)));
 }
 
 function computeConfidence(sessionCount: number, dataRecencyDays: number, hasCoachValidation: boolean): number {
@@ -1529,6 +1566,17 @@ Deno.serve(async (req) => {
     // ── READINESS (must be computed before prescription engine needs it) ──
     const { score: readinessScore, recommendation: readinessRecommendation } = computeReadiness(vaultData ?? []);
 
+    // ── TRAINING LOAD READINESS (Hammers behavioral signal) ──
+    const { data: latestConsistencySnap } = await supabase
+      .from("user_consistency_snapshots")
+      .select("consistency_score, nn_miss_count_7d, snapshot_date")
+      .eq("user_id", user_id)
+      .order("snapshot_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const trainingReadinessScore = computeTrainingReadiness(latestConsistencySnap ?? null, dailyLogs ?? null);
+
+
     // ── PRESCRIPTIVE ACTIONS (AI + scoring hybrid with fallback) ──
     const prescriptiveActions: PrescriptiveAction[] = [];
     const usedAreas = new Set<string>();
@@ -1558,7 +1606,7 @@ Deno.serve(async (req) => {
           batting_side: settings?.primary_batting_side || 'R',
           throwing_hand: settings?.primary_throwing_hand || 'R',
         },
-        readiness_score: readinessScore,
+        readiness_score: readinessScore ?? trainingReadinessScore ?? 70,
         available_drills: (drillCatalogFull ?? []).map((d: any) => ({
           id: d.id, name: d.name, module: d.module, skill_target: d.skill_target || '', default_constraints: d.default_constraints || {},
         })),
@@ -1885,6 +1933,7 @@ Deno.serve(async (req) => {
       weakness_clusters: weaknessClusters,
       prescriptive_actions: filteredPrescriptiveActions,
       readiness_score: readinessScore,
+      training_readiness_score: trainingReadinessScore,
       readiness_recommendation: readinessRecommendation,
       risk_alerts: [...phaseRiskAlerts, ...riskAlerts],
       development_confidence: developmentConfidence,
