@@ -915,7 +915,7 @@ const OwnerDashboard = () => {
                     <div
                       key={user.id}
                       className={cn(
-                        "flex items-center justify-between p-4 transition-colors",
+                        "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 transition-colors",
                         isActiveAdmin(user.id) && "bg-success/5",
                         getAdminStatus(user.id) === 'pending' && "bg-amber-50/50 dark:bg-amber-950/20"
                       )}
