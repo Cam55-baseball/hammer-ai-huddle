@@ -3237,33 +3237,60 @@ export type Database = {
       foundation_video_outcomes: {
         Row: {
           clicked_at: string | null
+          completion_pct: number | null
           created_at: string
           helped_flag: boolean | null
+          helpful_vote: number | null
           id: string
+          post_watch_bqi_delta_7d: number | null
+          post_watch_pei_delta_7d: number | null
+          recovery_correlation: number | null
+          rewatched: boolean
+          saved: boolean
+          shared: boolean
           shown_at: string
           trigger_keys: string[]
+          trigger_resolved_within_7d: boolean | null
           user_id: string
           video_id: string
           watched_seconds: number | null
         }
         Insert: {
           clicked_at?: string | null
+          completion_pct?: number | null
           created_at?: string
           helped_flag?: boolean | null
+          helpful_vote?: number | null
           id?: string
+          post_watch_bqi_delta_7d?: number | null
+          post_watch_pei_delta_7d?: number | null
+          recovery_correlation?: number | null
+          rewatched?: boolean
+          saved?: boolean
+          shared?: boolean
           shown_at?: string
           trigger_keys?: string[]
+          trigger_resolved_within_7d?: boolean | null
           user_id: string
           video_id: string
           watched_seconds?: number | null
         }
         Update: {
           clicked_at?: string | null
+          completion_pct?: number | null
           created_at?: string
           helped_flag?: boolean | null
+          helpful_vote?: number | null
           id?: string
+          post_watch_bqi_delta_7d?: number | null
+          post_watch_pei_delta_7d?: number | null
+          recovery_correlation?: number | null
+          rewatched?: boolean
+          saved?: boolean
+          shared?: boolean
           shown_at?: string
           trigger_keys?: string[]
+          trigger_resolved_within_7d?: boolean | null
           user_id?: string
           video_id?: string
           watched_seconds?: number | null
