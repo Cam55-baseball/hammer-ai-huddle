@@ -1,44 +1,28 @@
-// Foundation Health Alerts monitor — Phase H3.
+// Foundation Health Alerts monitor — Phase H3 + Phase I.
 // Cron-callable. Evaluates threshold-based health checks and writes
 // auto-resolving rows into public.foundation_health_alerts.
 //
-// MIRROR WARNING: thresholds duplicated from src/lib/foundationThresholds.ts
-// (Deno cannot import src/). Update both when tuning.
+// Phase I: thresholds imported from the shared canonical module
+// (../_shared/foundationThresholds.ts). No mirrored constants here.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import {
+  CRON_STALE_MIN,
+  ALERT,
+  SYSTEM_USER_ID,
+  type AlertSeverity,
+} from '../_shared/foundationThresholds.ts';
+import { dispatch } from '../_shared/notificationAdapters.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// --- mirrored thresholds (keep in sync with src/lib/foundationThresholds.ts) ---
-const CRON_STALE_MIN: Record<string, number> = {
-  'hourly-trigger-decay': 90,
-  'daily-trace-prune': 60 * 26,
-  'nightly-foundation-health': 60 * 26,
-  'recompute-foundation-effectiveness': 60 * 26,
-  'foundation-health-alerts': 90,
-};
-const ALERT = {
-  SUPPRESSION_RATE_WARN: 0.55,
-  SUPPRESSION_RATE_CRIT: 0.75,
-  SUPPRESSION_MIN_SAMPLE: 50,
-  UNRESOLVED_TRIGGERS_WARN: 500,
-  UNRESOLVED_TRIGGERS_CRIT: 1500,
-  STUCK_TRIGGER_DAYS: 30,
-  STUCK_TRIGGER_WARN: 5,
-  STUCK_TRIGGER_CRIT: 25,
-  HEARTBEAT_MISSING_CRIT_RATIO: 2,
-};
-const SYSTEM_USER = '00000000-0000-0000-0000-000000000001';
-
-type Severity = 'info' | 'warning' | 'critical';
-
 interface Eval {
   key: string;
   fired: boolean;
-  severity?: Severity;
+  severity?: AlertSeverity;
   title?: string;
   detail?: Record<string, unknown>;
 }
@@ -106,14 +90,14 @@ Deno.serve(async (req) => {
     const { data: tr } = await supabase
       .from('foundation_recommendation_traces')
       .select('suppressed')
-      .neq('user_id', SYSTEM_USER)
+      .neq('user_id', SYSTEM_USER_ID)
       .gte('created_at', since24)
       .limit(20_000);
     const total = (tr ?? []).length;
     const supp = (tr ?? []).filter((r: any) => r.suppressed).length;
     if (total >= ALERT.SUPPRESSION_MIN_SAMPLE) {
       const rate = supp / total;
-      let sev: Severity | null = null;
+      let sev: AlertSeverity | null = null;
       if (rate >= ALERT.SUPPRESSION_RATE_CRIT) sev = 'critical';
       else if (rate >= ALERT.SUPPRESSION_RATE_WARN) sev = 'warning';
       if (sev) {
@@ -138,7 +122,7 @@ Deno.serve(async (req) => {
       .is('resolved_at', null);
     {
       const n = unresolved ?? 0;
-      let sev: Severity | null = null;
+      let sev: AlertSeverity | null = null;
       if (n >= ALERT.UNRESOLVED_TRIGGERS_CRIT) sev = 'critical';
       else if (n >= ALERT.UNRESOLVED_TRIGGERS_WARN) sev = 'warning';
       if (sev) {
@@ -163,7 +147,7 @@ Deno.serve(async (req) => {
       .lt('fired_at', stuckBefore);
     {
       const n = stuck ?? 0;
-      let sev: Severity | null = null;
+      let sev: AlertSeverity | null = null;
       if (n >= ALERT.STUCK_TRIGGER_CRIT) sev = 'critical';
       else if (n >= ALERT.STUCK_TRIGGER_WARN) sev = 'warning';
       if (sev) {
@@ -179,8 +163,37 @@ Deno.serve(async (req) => {
       }
     }
 
+    // 5) Replay mismatch rate over last 24h (Phase I).
+    const { data: ro } = await supabase
+      .from('foundation_replay_outcomes')
+      .select('matched')
+      .gte('ran_at', since24)
+      .limit(5_000);
+    const roTotal = (ro ?? []).length;
+    const roMismatch = (ro ?? []).filter((r: any) => r.matched === false).length;
+    if (roTotal >= ALERT.REPLAY_MISMATCH_MIN_SAMPLE) {
+      const rate = roMismatch / roTotal;
+      let sev: AlertSeverity | null = null;
+      if (rate >= ALERT.REPLAY_MISMATCH_CRIT) sev = 'critical';
+      else if (rate >= ALERT.REPLAY_MISMATCH_WARN) sev = 'warning';
+      if (sev) {
+        evals.push({
+          key: 'replay_mismatch_high',
+          fired: true,
+          severity: sev,
+          title: `Replay mismatch ${(rate * 100).toFixed(1)}% in last 24h`,
+          detail: { total: roTotal, mismatched: roMismatch, rate: Number(rate.toFixed(3)) },
+        });
+      } else {
+        evals.push({ key: 'replay_mismatch_high', fired: false });
+      }
+    } else {
+      evals.push({ key: 'replay_mismatch_high', fired: false });
+    }
+
     // Apply: upsert/refresh fired alerts; auto-resolve cleared keys.
     let opened = 0; let refreshed = 0; let resolved = 0;
+    const newlyOpened: Eval[] = [];
     for (const e of evals) {
       const { data: existing } = await supabase
         .from('foundation_health_alerts')
@@ -209,6 +222,7 @@ Deno.serve(async (req) => {
             detail: e.detail ?? {},
           });
           opened += 1;
+          newlyOpened.push(e);
         }
       } else if (existing) {
         await supabase
@@ -217,6 +231,16 @@ Deno.serve(async (req) => {
           .eq('id', existing.id);
         resolved += 1;
       }
+    }
+
+    // Notification fan-out (no-op unless FOUNDATION_NOTIFICATIONS_ENABLED=true).
+    for (const e of newlyOpened) {
+      await dispatch({
+        key: e.key,
+        severity: e.severity!,
+        title: e.title!,
+        detail: e.detail,
+      }).catch(() => {/* never block */});
     }
 
     await supabase.from('foundation_cron_heartbeats').insert({
