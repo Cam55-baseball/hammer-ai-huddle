@@ -275,26 +275,35 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
 
           <div className="space-y-1.5">
             <Label>Category (optional)</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger><SelectValue placeholder="Pick a category" /></SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map(c => (
-                  <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-1">
+              {CATEGORIES.map(c => (
+                <Badge
+                  key={c}
+                  variant={category === c ? 'default' : 'outline'}
+                  className="cursor-pointer text-[10px] capitalize"
+                  onClick={() => setCategory(prev => (prev === c ? '' : c))}
+                >
+                  {c}
+                </Badge>
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="wiz-desc">Short Description (optional)</Label>
-            <Textarea
-              id="wiz-desc"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={2}
-              placeholder="One-liner shown on the card."
-            />
-          </div>
+          <details className="group">
+            <summary className="text-[11px] cursor-pointer text-muted-foreground hover:text-foreground select-none">
+              Customize blurb (optional) — auto-generated from your selections
+            </summary>
+            <div className="space-y-1.5 mt-2">
+              <Label htmlFor="wiz-desc" className="text-xs">Short Description</Label>
+              <Textarea
+                id="wiz-desc"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={2}
+                placeholder="Override the auto blurb shown on the card."
+              />
+            </div>
+          </details>
         </div>
       )}
 
