@@ -1,32 +1,41 @@
 /**
- * Foundation Health & Alerts Dashboard — Phase G4.
- * Reads existing tables to surface operational heartbeat for crons,
- * recommendation funnel, trigger health, and state machine activity.
+ * Foundation Health & Alerts Dashboard — Phase G4 + Phase H3.
+ * Operational heartbeat for crons, recommendation funnel, trigger health,
+ * state-machine activity, and persisted health alerts.
  */
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  CRON_STALE_MIN,
+  ALERT,
+  SYSTEM_USER_ID,
+  type AlertSeverity,
+} from '@/lib/foundationThresholds';
 
 interface CronBeat { function_name: string; ran_at: string; duration_ms: number | null; status: string; error: string | null }
 interface FunnelDay { day: string; surfaced: number; suppressed: number; suppressedByReason: Record<string, number> }
 interface TriggerHealth { active: number; avg_confidence: number; stuck30d: number }
 interface StateHealth { transitions7d: number }
+interface AlertRow {
+  id: string;
+  alert_key: string;
+  severity: AlertSeverity;
+  title: string;
+  detail: Record<string, unknown>;
+  first_seen_at: string;
+  last_seen_at: string;
+}
 
-const CRON_FNS = [
-  'recompute-foundation-effectiveness',
-  'nightly-foundation-health',
-  'hourly-trigger-decay',
-  'daily-trace-prune',
-];
+const CRON_FNS = Object.keys(CRON_STALE_MIN);
 
-const SYSTEM_USER = '00000000-0000-0000-0000-000000000001';
-
-function statusFor(beat?: CronBeat, maxAgeMin = 90): 'green' | 'amber' | 'red' {
+function statusFor(beat: CronBeat | undefined, fn: string): 'green' | 'amber' | 'red' {
+  const maxAgeMin = CRON_STALE_MIN[fn] ?? 90;
   if (!beat) return 'red';
   if (beat.status !== 'ok') return 'red';
   const ageMin = (Date.now() - new Date(beat.ran_at).getTime()) / 60_000;
-  if (ageMin > maxAgeMin * 2) return 'red';
+  if (ageMin > maxAgeMin * ALERT.HEARTBEAT_MISSING_CRIT_RATIO) return 'red';
   if (ageMin > maxAgeMin) return 'amber';
   return 'green';
 }
@@ -38,26 +47,30 @@ const pill = (s: 'green' | 'amber' | 'red') => (
   } />
 );
 
+const sevVariant = (s: AlertSeverity) =>
+  s === 'critical' ? 'destructive' : s === 'warning' ? 'default' : 'outline';
+
 export default function FoundationHealthDashboard() {
   const [beats, setBeats] = useState<Record<string, CronBeat | undefined>>({});
   const [funnel, setFunnel] = useState<FunnelDay[]>([]);
   const [trigger, setTrigger] = useState<TriggerHealth | null>(null);
   const [stateH, setStateH] = useState<StateHealth | null>(null);
+  const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       const since7 = new Date(Date.now() - 7 * 86400_000).toISOString();
-      const [beatsRes, tracesRes, trigRes, stateRes] = await Promise.all([
+      const [beatsRes, tracesRes, trigRes, stateRes, alertsRes] = await Promise.all([
         (supabase as any)
           .from('foundation_cron_heartbeats')
-          .select('*')
+          .select('function_name, ran_at, duration_ms, status, error')
           .order('ran_at', { ascending: false })
-          .limit(100),
+          .limit(200),
         (supabase as any)
           .from('foundation_recommendation_traces')
           .select('created_at, suppressed, suppression_reason')
-          .neq('user_id', SYSTEM_USER)
+          .neq('user_id', SYSTEM_USER_ID)
           .gte('created_at', since7)
           .limit(5000),
         (supabase as any)
@@ -70,16 +83,21 @@ export default function FoundationHealthDashboard() {
           .select('state_entered_at')
           .gte('state_entered_at', since7)
           .limit(2000),
+        (supabase as any)
+          .from('foundation_health_alerts')
+          .select('id, alert_key, severity, title, detail, first_seen_at, last_seen_at')
+          .is('resolved_at', null)
+          .order('severity', { ascending: false })
+          .order('last_seen_at', { ascending: false })
+          .limit(50),
       ]);
 
-      // latest beat per function
       const beatsByFn: Record<string, CronBeat | undefined> = {};
       for (const b of (beatsRes.data ?? []) as CronBeat[]) {
         if (!beatsByFn[b.function_name]) beatsByFn[b.function_name] = b;
       }
       setBeats(beatsByFn);
 
-      // funnel rollup
       const dayMap = new Map<string, FunnelDay>();
       for (const t of (tracesRes.data ?? []) as any[]) {
         const d = String(t.created_at).slice(0, 10);
@@ -95,16 +113,17 @@ export default function FoundationHealthDashboard() {
       }
       setFunnel(Array.from(dayMap.values()).sort((a, b) => b.day.localeCompare(a.day)));
 
-      // trigger health
       const trigs = (trigRes.data ?? []) as any[];
       const avg = trigs.length > 0
         ? trigs.reduce((s, t) => s + Number(t.confidence ?? 0), 0) / trigs.length
         : 0;
-      const stuck = trigs.filter(t => (Date.now() - new Date(t.fired_at).getTime()) / 86400_000 > 30).length;
+      const stuck = trigs.filter(
+        t => (Date.now() - new Date(t.fired_at).getTime()) / 86400_000 > ALERT.STUCK_TRIGGER_DAYS,
+      ).length;
       setTrigger({ active: trigs.length, avg_confidence: Number(avg.toFixed(2)), stuck30d: stuck });
 
-      // state health
       setStateH({ transitions7d: (stateRes.data ?? []).length });
+      setAlerts(((alertsRes.data ?? []) as AlertRow[]));
 
       setLoading(false);
     })();
@@ -117,6 +136,36 @@ export default function FoundationHealthDashboard() {
         <p className="text-sm text-muted-foreground">Operational heartbeat for the Foundations engine.</p>
       </div>
 
+      {/* Active alerts — Phase H3 */}
+      <Card className="p-4">
+        <h2 className="font-semibold mb-2">Active alerts</h2>
+        {alerts.length === 0 ? (
+          <p className="text-sm text-muted-foreground">All clear.</p>
+        ) : (
+          <ul className="space-y-2 text-sm">
+            {alerts.map(a => (
+              <li key={a.id} className="border rounded p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Badge variant={sevVariant(a.severity)}>{a.severity}</Badge>
+                    <span className="font-medium truncate">{a.title}</span>
+                    <span className="font-mono text-xs text-muted-foreground truncate">{a.alert_key}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    since {new Date(a.first_seen_at).toLocaleString()}
+                  </span>
+                </div>
+                {a.detail && Object.keys(a.detail).length > 0 && (
+                  <pre className="bg-muted p-2 rounded text-xs mt-2 overflow-auto max-h-40">
+                    {JSON.stringify(a.detail, null, 2)}
+                  </pre>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
       {loading ? <p className="text-muted-foreground">Loading…</p> : (
         <div className="grid md:grid-cols-2 gap-4">
           <Card className="p-4">
@@ -124,7 +173,7 @@ export default function FoundationHealthDashboard() {
             <ul className="space-y-2 text-sm">
               {CRON_FNS.map(fn => {
                 const b = beats[fn];
-                const s = statusFor(b, fn === 'hourly-trigger-decay' ? 90 : 60 * 26);
+                const s = statusFor(b, fn);
                 return (
                   <li key={fn} className="flex items-center justify-between gap-3">
                     <span className="flex items-center gap-2">{pill(s)}<span className="font-mono">{fn}</span></span>
@@ -135,7 +184,9 @@ export default function FoundationHealthDashboard() {
                 );
               })}
             </ul>
-            <p className="text-xs text-muted-foreground mt-2">Heartbeats are written by each cron at completion. Missing beats = function never ran (or pre-Phase G).</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Heartbeats are written by each cron at completion. Missing beats = function never ran (or pre-Phase G).
+            </p>
           </Card>
 
           <Card className="p-4">
@@ -163,7 +214,12 @@ export default function FoundationHealthDashboard() {
               <div className="space-y-1 text-sm">
                 <div>Active unresolved: <Badge>{trigger.active}</Badge></div>
                 <div>Avg confidence: <Badge variant="outline">{trigger.avg_confidence}</Badge></div>
-                <div>Stuck &gt; 30d: <Badge variant={trigger.stuck30d > 0 ? 'destructive' : 'outline'}>{trigger.stuck30d}</Badge></div>
+                <div>
+                  Stuck &gt; {ALERT.STUCK_TRIGGER_DAYS}d:{' '}
+                  <Badge variant={trigger.stuck30d > ALERT.STUCK_TRIGGER_WARN ? 'destructive' : 'outline'}>
+                    {trigger.stuck30d}
+                  </Badge>
+                </div>
               </div>
             )}
           </Card>
