@@ -20,11 +20,13 @@ interface Options {
   limit?: number;
   /** When false, returns ALL foundations (no trigger filter) — used for the manual browse shelf. */
   triggerGated?: boolean;
+  /** Where these recommendations are being surfaced (drives observability traces). */
+  surface?: SurfaceOrigin;
 }
 
 export function useFoundationVideos(opts: Options = {}) {
   const { user } = useAuth();
-  const { domain, limit = 4, triggerGated = true } = opts;
+  const { domain, limit = 4, triggerGated = true, surface = 'library' } = opts;
   const [results, setResults] = useState<FoundationScoreResult[]>([]);
   const [activeTriggers, setActiveTriggers] = useState<FoundationTrigger[]>([]);
   const [loading, setLoading] = useState(true);
