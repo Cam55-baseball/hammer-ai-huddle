@@ -263,3 +263,14 @@ async function fetchFoundationSnapshot(userId: string): Promise<FoundationSnapsh
     primaryDomains,
   };
 }
+
+/** Pull the `byTrigger` slice out of the foundation_effectiveness payload, defensively. */
+function extractByTrigger(raw: unknown): any | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  // Legacy flat shape: { trigger: number } — pass through unchanged.
+  if (r.byTrigger && typeof r.byTrigger === 'object') {
+    return r.byTrigger as Record<string, unknown>;
+  }
+  return r as Record<string, unknown>;
+}
