@@ -518,6 +518,39 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_foundation_state: {
+        Row: {
+          confidence: number
+          created_at: string
+          current_state: string
+          last_transition_reason: string | null
+          prev_state: string | null
+          state_entered_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          current_state?: string
+          last_transition_reason?: string | null
+          prev_state?: string | null
+          state_entered_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          current_state?: string
+          last_transition_reason?: string | null
+          prev_state?: string | null
+          state_entered_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       athlete_load_tracking: {
         Row: {
           cns_load_total: number | null
@@ -3165,6 +3198,39 @@ export type Database = {
           trace_id?: string
           user_id?: string
           video_id?: string
+        }
+        Relationships: []
+      }
+      foundation_trigger_events: {
+        Row: {
+          confidence: number
+          fired_at: string
+          id: string
+          metadata: Json | null
+          resolution_reason: string | null
+          resolved_at: string | null
+          trigger: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          fired_at?: string
+          id?: string
+          metadata?: Json | null
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          trigger: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          fired_at?: string
+          id?: string
+          metadata?: Json | null
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          trigger?: string
+          user_id?: string
         }
         Relationships: []
       }

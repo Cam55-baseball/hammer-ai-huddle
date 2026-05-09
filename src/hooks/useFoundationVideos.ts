@@ -11,7 +11,10 @@ import {
   type FoundationTrigger,
 } from '@/lib/foundationVideos';
 import { TIER_BOOST } from '@/lib/videoTier';
-import { buildTraceRows, enqueueFoundationTraces, type SurfaceOrigin } from '@/lib/foundationTracing';
+import { buildTraceRows, enqueueFoundationTraces, type SurfaceOrigin, type TraceRow } from '@/lib/foundationTracing';
+import { reconcileFoundationState, recordAndFilterTriggerCooldown, type FoundationState } from '@/lib/foundationStateMachine';
+import { applyFatigue, loadFatigueState } from '@/lib/foundationFatigue';
+import { FOUNDATION_RECOMMENDATION_VERSION, FOUNDATION_META_VERSION } from '@/lib/foundationVideos';
 
 interface Options {
   /** Limit candidates to this domain (e.g. user's primary). When omitted, all foundations. */
@@ -22,13 +25,16 @@ interface Options {
   triggerGated?: boolean;
   /** Where these recommendations are being surfaced (drives observability traces). */
   surface?: SurfaceOrigin;
+  /** When true, enforce the "philosophy cap" because drill recs compete this render. */
+  competingDrillRecs?: boolean;
 }
 
 export function useFoundationVideos(opts: Options = {}) {
   const { user } = useAuth();
-  const { domain, limit = 4, triggerGated = true, surface = 'library' } = opts;
+  const { domain, limit = 4, triggerGated = true, surface = 'library', competingDrillRecs = false } = opts;
   const [results, setResults] = useState<FoundationScoreResult[]>([]);
   const [activeTriggers, setActiveTriggers] = useState<FoundationTrigger[]>([]);
+  const [foundationState, setFoundationState] = useState<FoundationState | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
 
@@ -51,7 +57,24 @@ export function useFoundationVideos(opts: Options = {}) {
       setLoading(true);
       try {
         const snapshot = user ? await fetchFoundationSnapshot(user.id) : null;
-        const triggers = snapshot ? computeFoundationTriggers(snapshot) : [];
+        const rawTriggers = snapshot ? computeFoundationTriggers(snapshot) : [];
+
+        // Wave B: cooldown filter + state-machine reconciliation.
+        let triggers = rawTriggers;
+        if (user && rawTriggers.length > 0 && triggerGated) {
+          triggers = await recordAndFilterTriggerCooldown({
+            userId: user.id,
+            triggers: rawTriggers,
+          });
+        }
+        if (user) {
+          const recon = await reconcileFoundationState({
+            userId: user.id,
+            activeTriggers: triggers,
+            layoffDays: snapshot?.layoffDays,
+          });
+          if (!cancelled) setFoundationState(recon.state);
+        }
         if (!cancelled) setActiveTriggers(triggers);
 
         // Recently-watched set (last 21d) for spam suppression.
@@ -90,24 +113,56 @@ export function useFoundationVideos(opts: Options = {}) {
           })
           .filter(Boolean) as Parameters<typeof scoreFoundationCandidates>[0]['candidates'];
 
+        // Score with a generous prefetch window so fatigue can suppress
+        // freely without starving the final list.
         const scored = scoreFoundationCandidates({
           candidates,
           activeTriggers: triggerGated ? triggers : [],
           tierBoost: TIER_BOOST as any,
-        }).slice(0, limit);
+        });
 
-        if (!cancelled) setResults(scored);
+        // Wave B: fatigue layer (per-domain quota, semantic dedupe, exposure cap).
+        const fatigue = user
+          ? await loadFatigueState(user.id)
+          : { exposureByVideo: new Map(), surfacedDomainsLast7d: new Map(), semanticHashesLast14d: new Set<string>() };
 
-        // Wave A — observability: log each surfaced recommendation.
-        // Fire-and-forget; never blocks render.
-        if (user && scored.length > 0) {
-          const rows = buildTraceRows({
-            userId: user.id,
-            surface,
-            activeTriggers: triggerGated ? triggers : [],
-            results: scored,
-          });
-          enqueueFoundationTraces(rows);
+        const decision = applyFatigue({
+          results: scored,
+          fatigue,
+          competingDrillRecs,
+        });
+
+        const final = decision.kept.slice(0, limit);
+        if (!cancelled) setResults(final);
+
+        // Wave A — observability: log surfaced + suppressed.
+        if (user) {
+          const rows: TraceRow[] = [];
+          if (final.length > 0) {
+            rows.push(...buildTraceRows({
+              userId: user.id,
+              surface,
+              activeTriggers: triggerGated ? triggers : [],
+              results: final,
+            }));
+          }
+          for (const sup of decision.suppressed) {
+            rows.push({
+              user_id: user.id,
+              video_id: sup.result.video.id,
+              surface_origin: surface,
+              active_triggers: triggerGated ? triggers : [],
+              matched_triggers: sup.result.matchedTriggers,
+              raw_score: sup.result.breakdown.preTier,
+              final_score: sup.result.score,
+              score_breakdown: sup.result.breakdown as unknown as Record<string, unknown>,
+              recommendation_version: FOUNDATION_RECOMMENDATION_VERSION,
+              foundation_meta_version: FOUNDATION_META_VERSION,
+              suppressed: true,
+              suppression_reason: sup.reason,
+            });
+          }
+          if (rows.length > 0) enqueueFoundationTraces(rows);
         }
       } catch (e) {
         console.error('useFoundationVideos failed:', e);
@@ -117,9 +172,9 @@ export function useFoundationVideos(opts: Options = {}) {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, domain, limit, triggerGated, surface, refreshTick]);
+  }, [user?.id, domain, limit, triggerGated, surface, competingDrillRecs, refreshTick]);
 
-  return { results, activeTriggers, loading };
+  return { results, activeTriggers, foundationState, loading };
 }
 
 async function fetchRecentlyWatchedVideoIds(userId: string, days: number): Promise<Set<string>> {
