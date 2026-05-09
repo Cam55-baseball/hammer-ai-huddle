@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Wand2, Zap, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,7 +14,7 @@ import { computeMissingFields } from "@/lib/videoReadiness";
 import { computeVideoConfidence } from "@/lib/videoConfidence";
 import { getSmartDefaults } from "@/lib/ownerLearning";
 import { ConfidenceBadge } from "./ConfidenceBadge";
-import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
+import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -24,6 +22,8 @@ const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_r
 const LAYER_LABELS: Record<TagLayer, string> = {
   movement_pattern: 'Movement', result: 'Result', context: 'Context', correction: 'Correction',
 };
+const NORMAL_WEIGHT = 1;
+const BOOST_WEIGHT = 3;
 
 interface Props {
   video: LibraryVideo;
