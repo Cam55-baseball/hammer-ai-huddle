@@ -190,6 +190,49 @@ export function useFoundationVideos(opts: Options = {}) {
             });
           }
           if (rows.length > 0) enqueueFoundationTraces(rows);
+
+          // Wave G — companion decision logs (fatigue + onboarding)
+          const fatigueRows = [
+            ...fatigueDecision.kept.map(r => ({
+              user_id: user.id,
+              video_id: r.video.id,
+              kept: true,
+              reason: null,
+              exposure_score: fatigue.exposureByVideo?.get?.(r.video.id) ?? null,
+              snapshot: { matched: r.matchedTriggers, score: r.score },
+            })),
+            ...fatigueDecision.suppressed.map(s => ({
+              user_id: user.id,
+              video_id: s.result.video.id,
+              kept: false,
+              reason: s.reason,
+              exposure_score: fatigue.exposureByVideo?.get?.(s.result.video.id) ?? null,
+              snapshot: { matched: s.result.matchedTriggers, score: s.result.score },
+            })),
+          ];
+          if (fatigueRows.length > 0) enqueueFatigueDecisions(fatigueRows);
+
+          const onboardingRows = [
+            ...onboarding.kept.map(r => ({
+              user_id: user.id,
+              video_id: r.video.id,
+              kept: true,
+              reason: null,
+              account_age_days: accountAgeDays,
+              weekly_count: surfacedThisWeek,
+              snapshot: { gate, matched: r.matchedTriggers },
+            })),
+            ...onboarding.suppressed.map(r => ({
+              user_id: user.id,
+              video_id: r.video.id,
+              kept: false,
+              reason: 'onboarding_gate',
+              account_age_days: accountAgeDays,
+              weekly_count: surfacedThisWeek,
+              snapshot: { gate, matched: r.matchedTriggers },
+            })),
+          ];
+          if (onboardingRows.length > 0) enqueueOnboardingDecisions(onboardingRows);
         }
       } catch (e) {
         console.error('useFoundationVideos failed:', e);
