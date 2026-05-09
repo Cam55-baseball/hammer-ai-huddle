@@ -8,6 +8,7 @@ import { VideoCard } from "@/components/video-library/VideoCard";
 import { VideoSearchBar } from "@/components/video-library/VideoSearchBar";
 import { VideoFilters } from "@/components/video-library/VideoFilters";
 import { SavedVideos } from "@/components/video-library/SavedVideos";
+import { FoundationsShelf } from "@/components/video-library/FoundationsShelf";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useVideoLibrary, type LibraryVideo } from "@/hooks/useVideoLibrary";
 
@@ -60,6 +61,8 @@ const VideoLibrary = () => {
               <p className="text-sm text-muted-foreground">Search our curated training video collection</p>
             </div>
           </div>
+
+          <FoundationsShelf />
 
           <VideoSearchBar onSearch={setSearch} onTrackSearch={trackSearch} />
 

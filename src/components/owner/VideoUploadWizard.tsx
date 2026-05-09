@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
+import { FoundationTagEditor, isFoundationMetaValid } from "./FoundationTagEditor";
+import { EMPTY_FOUNDATION_META, type FoundationMeta } from "@/lib/foundationVideos";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
 import { computeMissingFields } from "@/lib/videoReadiness";
 import { getSmartDefaults } from "@/lib/ownerLearning";
@@ -59,14 +61,16 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
 
+  // Foundation toggle (long-form A–Z philosophy videos)
+  const [isFoundation, setIsFoundation] = useState(false);
+  const [foundationMeta, setFoundationMeta] = useState<FoundationMeta>(EMPTY_FOUNDATION_META);
+
   // Step 3 (engine fields, reusing StructuredTagEditor) — Fast Mode pre-suggests format only
   const [structured, setStructured] = useState<StructuredTagState>(() => {
     if (!fastMode || !defaults) return emptyStructuredTagState;
     return {
       ...emptyStructuredTagState,
       videoFormat: defaults.topFormat ?? '',
-      // Skill domain is sport-aware in Step 2; we don't pre-fill skillDomains here
-      // because they are also driven by what the owner picks at Step 2.
     };
   });
 
@@ -79,13 +83,15 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
     ? externalUrl.trim().length > 0 && /^https?:\/\//.test(externalUrl.trim())
     : !!videoFile;
   const step2Valid = title.trim().length > 0 && !!sport;
-  const step3Missing = computeMissingFields({
+  const step3Missing = isFoundation ? [] : computeMissingFields({
     videoFormat: structured.videoFormat,
     skillDomains: structured.skillDomains,
     aiDescription: structured.aiDescription,
     assignmentCount: Object.keys(structured.tagAssignments).length,
   });
-  const step3Valid = step3Missing.length === 0;
+  const step3Valid = isFoundation
+    ? isFoundationMetaValid(foundationMeta) && structured.aiDescription.trim().length > 0
+    : step3Missing.length === 0;
 
   // Fast Mode treats Step 3 as the final step (auto-publish on advance).
   const totalSteps = fastMode ? 3 : 4;
@@ -142,10 +148,12 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       videoFile: videoFile || undefined,
       externalUrl: mode === 'link' ? externalUrl.trim() : undefined,
       videoType,
-      videoFormat: structured.videoFormat,
-      skillDomains: structured.skillDomains,
+      videoFormat: isFoundation ? undefined : structured.videoFormat,
+      skillDomains: isFoundation ? [] : structured.skillDomains,
       aiDescription: structured.aiDescription,
-      tagAssignments: structured.tagAssignments,
+      tagAssignments: isFoundation ? {} : structured.tagAssignments,
+      videoClass: isFoundation ? 'foundation' : 'application',
+      foundationMeta: isFoundation ? foundationMeta : null,
     });
     if (result) {
       // Reset
@@ -153,6 +161,8 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       setMode('link'); setExternalUrl(''); setVideoFile(null);
       setTitle(''); setSport(''); setCategory(''); setDescription('');
       setStructured(emptyStructuredTagState);
+      setIsFoundation(false);
+      setFoundationMeta(EMPTY_FOUNDATION_META);
       onSuccess((result as any)?.id);
     }
   };
@@ -249,6 +259,31 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       {/* Step 2 — Basic Info */}
       {step === 2 && (
         <div className="space-y-4">
+          {/* Foundation toggle — top-level class switch */}
+          <button
+            type="button"
+            onClick={() => setIsFoundation(v => !v)}
+            className={`w-full text-left rounded-lg border p-3 transition-colors ${
+              isFoundation
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary/50 bg-muted/30'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold">
+                  {isFoundation ? '✓ Foundation video' : 'This is a Foundation video'}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Long-form A–Z philosophy / mechanics primer / mental framework. Skips per-rep tagging.
+                </p>
+              </div>
+              <Badge variant={isFoundation ? 'default' : 'outline'} className="text-[10px] shrink-0">
+                {isFoundation ? 'Foundation' : 'Application'}
+              </Badge>
+            </div>
+          </button>
+
           <div className="space-y-1.5">
             <Label htmlFor="wiz-title">Title</Label>
             <Input
@@ -317,17 +352,35 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
           <div className="rounded border border-primary/30 bg-primary/5 p-3 text-xs">
             <p className="font-semibold flex items-center gap-1 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              These fields wire your video to the recommendation engine.
+              {isFoundation
+                ? 'Foundation chips wire this video to refresher triggers.'
+                : 'These fields wire your video to the recommendation engine.'}
             </p>
             <p className="text-muted-foreground mt-0.5">
-              Write a description, then accept the auto-suggested tags. Need 2+ tags to publish.
+              {isFoundation
+                ? 'Pick a domain, scope, audience, and the situations Hammer should surface this for.'
+                : 'Write a description, then accept the auto-suggested tags. Need 2+ tags to publish.'}
             </p>
           </div>
-          <StructuredTagEditor value={structured} onChange={setStructured} />
-          {!step3Valid && (
+          {isFoundation ? (
+            <FoundationTagEditor
+              value={foundationMeta}
+              onChange={setFoundationMeta}
+              aiDescription={structured.aiDescription}
+              onDescriptionChange={text => setStructured({ ...structured, aiDescription: text })}
+            />
+          ) : (
+            <StructuredTagEditor value={structured} onChange={setStructured} />
+          )}
+          {!step3Valid && !isFoundation && (
             <ul className="text-xs space-y-0.5 list-disc pl-4 text-amber-600 dark:text-amber-400">
               {step3Missing.map(m => <li key={m.key}>{m.message}</li>)}
             </ul>
+          )}
+          {!step3Valid && isFoundation && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Pick domain, scope, at least one audience level, at least one refresher trigger, and a Hammer description.
+            </p>
           )}
         </div>
       )}
