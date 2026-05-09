@@ -90,7 +90,7 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
       if (target === 'video_format') formatRef.current?.scrollIntoView({ block: 'center' });
       else if (target === 'skill_domains') domainsRef.current?.scrollIntoView({ block: 'center' });
       else if (target === 'tag_assignments') tagsRef.current?.scrollIntoView({ block: 'center' });
-      else descRef.current?.focus();
+      else descRef.current?.scrollIntoView({ block: 'center' });
     });
   }, [initialFocus]);
 
