@@ -259,6 +259,31 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       {/* Step 2 — Basic Info */}
       {step === 2 && (
         <div className="space-y-4">
+          {/* Foundation toggle — top-level class switch */}
+          <button
+            type="button"
+            onClick={() => setIsFoundation(v => !v)}
+            className={`w-full text-left rounded-lg border p-3 transition-colors ${
+              isFoundation
+                ? 'border-primary bg-primary/10'
+                : 'border-border hover:border-primary/50 bg-muted/30'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold">
+                  {isFoundation ? '✓ Foundation video' : 'This is a Foundation video'}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Long-form A–Z philosophy / mechanics primer / mental framework. Skips per-rep tagging.
+                </p>
+              </div>
+              <Badge variant={isFoundation ? 'default' : 'outline'} className="text-[10px] shrink-0">
+                {isFoundation ? 'Foundation' : 'Application'}
+              </Badge>
+            </div>
+          </button>
+
           <div className="space-y-1.5">
             <Label htmlFor="wiz-title">Title</Label>
             <Input
