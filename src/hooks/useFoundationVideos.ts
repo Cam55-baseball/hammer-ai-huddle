@@ -11,6 +11,7 @@ import {
   type FoundationTrigger,
 } from '@/lib/foundationVideos';
 import { TIER_BOOST } from '@/lib/videoTier';
+import { buildTraceRows, enqueueFoundationTraces, type SurfaceOrigin } from '@/lib/foundationTracing';
 
 interface Options {
   /** Limit candidates to this domain (e.g. user's primary). When omitted, all foundations. */
