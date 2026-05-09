@@ -137,6 +137,41 @@ export default function FoundationHealthDashboard() {
       setStateH({ transitions7d: (stateRes.data ?? []).length });
       setAlerts(((alertsRes.data ?? []) as AlertRow[]));
 
+      // Phase I: ops summary + replay drift (additive, bounded queries).
+      const since24 = new Date(Date.now() - 86_400_000).toISOString();
+      const [roRes, lastBeatRes] = await Promise.all([
+        (supabase as any)
+          .from('foundation_replay_outcomes')
+          .select('matched')
+          .gte('ran_at', since24)
+          .limit(5_000),
+        (supabase as any)
+          .from('foundation_cron_heartbeats')
+          .select('ran_at, duration_ms, status')
+          .eq('function_name', 'foundation-health-alerts')
+          .eq('status', 'ok')
+          .order('ran_at', { ascending: false })
+          .limit(1),
+      ]);
+      const ro = (roRes.data ?? []) as Array<{ matched: boolean }>;
+      const roTotal = ro.length;
+      const roMismatch = ro.filter(r => r.matched === false).length;
+      setDrift({
+        total: roTotal,
+        mismatched: roMismatch,
+        rate: roTotal > 0 ? Number((roMismatch / roTotal).toFixed(3)) : 0,
+      });
+      const allOpen = (alertsRes.data ?? []) as AlertRow[];
+      const lastBeat = (lastBeatRes.data ?? [])[0] as { ran_at: string; duration_ms: number | null } | undefined;
+      setOps({
+        open_critical: allOpen.filter(a => a.severity === 'critical').length,
+        open_warning: allOpen.filter(a => a.severity === 'warning').length,
+        open_info: allOpen.filter(a => a.severity === 'info').length,
+        last_alerter_at: lastBeat?.ran_at ?? null,
+        last_alerter_ms: lastBeat?.duration_ms ?? null,
+        failed_replays_24h: roMismatch,
+      });
+
       setLoading(false);
     })();
   }, []);
@@ -147,6 +182,40 @@ export default function FoundationHealthDashboard() {
         <h1 className="text-2xl font-bold">Foundations Health & Alerts</h1>
         <p className="text-sm text-muted-foreground">Operational heartbeat for the Foundations engine.</p>
       </div>
+
+      {/* Ops summary — Phase I */}
+      <Card className="p-4">
+        <h2 className="font-semibold mb-2">Foundations ops summary</h2>
+        {ops ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div>
+              <div className="text-xs text-muted-foreground">Open alerts</div>
+              <div className="flex gap-1 items-center mt-1">
+                <Badge variant="destructive">{ops.open_critical}</Badge>
+                <Badge>{ops.open_warning}</Badge>
+                <Badge variant="outline">{ops.open_info}</Badge>
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Last alerter run</div>
+              <div className="mt-1 text-xs">
+                {ops.last_alerter_at ? new Date(ops.last_alerter_at).toLocaleString() : '—'}
+                {ops.last_alerter_ms != null && <span className="text-muted-foreground"> · {ops.last_alerter_ms}ms</span>}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Failed replays (24h)</div>
+              <div className="mt-1"><Badge variant={ops.failed_replays_24h > 0 ? 'destructive' : 'outline'}>{ops.failed_replays_24h}</Badge></div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Replay drift rate (24h)</div>
+              <div className="mt-1"><Badge variant={drift && drift.rate >= ALERT.REPLAY_MISMATCH_WARN ? 'destructive' : 'outline'}>
+                {drift ? `${(drift.rate * 100).toFixed(1)}%` : '—'}
+              </Badge></div>
+            </div>
+          </div>
+        ) : <p className="text-xs text-muted-foreground">Loading…</p>}
+      </Card>
 
       {/* Active alerts — Phase H3 */}
       <Card className="p-4">
