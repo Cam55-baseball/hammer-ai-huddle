@@ -187,6 +187,7 @@ const App = () => {
               <Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
               <Route path="/owner/builds" element={<BuildLibrary />} />
               <Route path="/owner/foundations/traces" element={<FoundationTraceInspector />} />
+              <Route path="/owner/foundations/diagnostics" element={<FoundationDiagnosticsPanel />} />
               <Route path="/success" element={<Success />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />
