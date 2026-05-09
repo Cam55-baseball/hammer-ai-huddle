@@ -225,23 +225,44 @@ Deno.serve(async (req) => {
           newlyOpened.push(e);
         }
       } else if (existing) {
-        await supabase
+        // Phase II: flap suppression — never auto-resolve an alert that opened <2 min ago.
+        // Look up first_seen_at for the open row.
+        const { data: full } = await supabase
           .from('foundation_health_alerts')
-          .update({ resolved_at: new Date().toISOString() })
-          .eq('id', existing.id);
-        resolved += 1;
+          .select('first_seen_at')
+          .eq('id', existing.id)
+          .maybeSingle();
+        const firstSeen = full?.first_seen_at ? new Date(full.first_seen_at as string).getTime() : 0;
+        if (firstSeen && (Date.now() - firstSeen) < 2 * 60_000) {
+          // Refresh last_seen_at instead of resolving (anti-flap window).
+          await supabase
+            .from('foundation_health_alerts')
+            .update({ last_seen_at: new Date().toISOString() })
+            .eq('id', existing.id);
+        } else {
+          await supabase
+            .from('foundation_health_alerts')
+            .update({ resolved_at: new Date().toISOString() })
+            .eq('id', existing.id);
+          resolved += 1;
+        }
       }
     }
 
-    // Notification fan-out (no-op unless FOUNDATION_NOTIFICATIONS_ENABLED=true).
-    for (const e of newlyOpened) {
-      await dispatch({
+    // Notification fan-out — non-blocking, capped at 25s total via Promise.race.
+    // dispatch() itself enforces an internal 20s deadline; this is belt-and-suspenders.
+    const dispatchAll = Promise.allSettled(
+      newlyOpened.map((e) => dispatch({
         key: e.key,
         severity: e.severity!,
         title: e.title!,
         detail: e.detail,
-      }).catch(() => {/* never block */});
-    }
+      })),
+    );
+    await Promise.race([
+      dispatchAll,
+      new Promise((res) => setTimeout(res, 25_000)),
+    ]).catch(() => {/* never block evaluator */});
 
     await supabase.from('foundation_cron_heartbeats').insert({
       function_name: 'foundation-health-alerts',

@@ -1,12 +1,17 @@
 /**
- * Phase I — Notification dispatch scaffolding.
+ * Phase II — Notification dispatch (gated, critical-only).
  *
- * Adapters are present but inert. Live delivery is gated by the
- * FOUNDATION_NOTIFICATIONS_ENABLED env flag (default off). When enabled in
- * a future phase, the dispatcher will fan out to each registered adapter.
+ * Master gate: FOUNDATION_NOTIFICATIONS_ENABLED='true'
+ * Severity gate: critical-only (warning/info skipped even when enabled)
+ * Flapping window: 10 min (skip if same alert_key+adapter dispatched recently)
+ * Idempotency: alert_key + adapter + minute_bucket unique index
+ * Retries: per-adapter max 3, exp backoff 500/1500/4500ms, then DLQ
+ * Outer timeout: 20s hard ceiling — never blocks evaluator
  *
- * No webhook secrets are read in this phase.
+ * All attempts are logged to public.foundation_notification_dispatches.
  */
+
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 export type Severity = 'info' | 'warning' | 'critical';
 
@@ -17,51 +22,271 @@ export interface NotificationDispatch {
   detail?: Record<string, unknown>;
 }
 
-export interface NotificationAdapter {
-  name: string;
-  send(d: NotificationDispatch): Promise<{ ok: boolean; error?: string }>;
+export interface AdapterResult {
+  ok: boolean;
+  error?: string;
+  attempts: number;
 }
 
-// --- Stubs ---------------------------------------------------------------
-// Both adapters intentionally return ok without hitting the network. They
-// document the interface a future implementation must satisfy.
+export interface NotificationAdapter {
+  name: string;
+  send(d: NotificationDispatch, signal: AbortSignal): Promise<{ ok: boolean; error?: string }>;
+}
+
+const FLAP_WINDOW_MS = 10 * 60_000;
+const MAX_ATTEMPTS = 3;
+const BACKOFF_MS = [500, 1500, 4500];
+const DISPATCH_DEADLINE_MS = 20_000;
+const PER_ATTEMPT_TIMEOUT_MS = 5_000;
+
+// --- Adapters -----------------------------------------------------------
 
 export const slackAdapter: NotificationAdapter = {
   name: 'slack',
-  async send(_d) {
+  async send(d, signal) {
+    const url = Deno.env.get('SLACK_WEBHOOK_URL');
+    if (!url) return { ok: false, error: 'SLACK_WEBHOOK_URL not configured' };
+    const payload = {
+      text: `:rotating_light: *${d.severity.toUpperCase()}* — ${d.title}`,
+      attachments: [{
+        color: d.severity === 'critical' ? 'danger' : 'warning',
+        fields: [
+          { title: 'Alert key', value: d.key, short: true },
+          { title: 'Detail', value: '```' + JSON.stringify(d.detail ?? {}, null, 2).slice(0, 1500) + '```', short: false },
+        ],
+      }],
+    };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      return { ok: false, error: `slack ${res.status}: ${body.slice(0, 200)}` };
+    }
+    await res.text().catch(() => '');
     return { ok: true };
   },
 };
 
 export const emailAdapter: NotificationAdapter = {
   name: 'email',
-  async send(_d) {
+  async send(d, signal) {
+    const to = Deno.env.get('FOUNDATION_ALERT_EMAIL_TO');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!to || !supabaseUrl || !serviceKey) {
+      return { ok: false, error: 'email config missing (FOUNDATION_ALERT_EMAIL_TO/SUPABASE_*)' };
+    }
+    const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${serviceKey}`,
+        apikey: serviceKey,
+      },
+      body: JSON.stringify({
+        templateName: 'foundation-alert',
+        recipientEmail: to,
+        idempotencyKey: `foundation-alert-${d.key}-${minuteBucket().toISOString()}`,
+        templateData: {
+          severity: d.severity,
+          title: d.title,
+          alertKey: d.key,
+          detailJson: JSON.stringify(d.detail ?? {}, null, 2),
+        },
+      }),
+      signal,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      return { ok: false, error: `email ${res.status}: ${body.slice(0, 200)}` };
+    }
+    await res.text().catch(() => '');
     return { ok: true };
   },
 };
 
 const ADAPTERS: NotificationAdapter[] = [slackAdapter, emailAdapter];
 
-export interface DispatchResult {
-  skipped: boolean;
-  results?: Array<{ adapter: string; ok: boolean; error?: string }>;
+// --- Internal helpers ---------------------------------------------------
+
+export function minuteBucket(now: Date = new Date()): Date {
+  const b = new Date(now);
+  b.setUTCSeconds(0, 0);
+  return b;
 }
 
+function getSupabase(): SupabaseClient | null {
+  const url = Deno.env.get('SUPABASE_URL');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+async function logDispatch(
+  sb: SupabaseClient | null,
+  row: {
+    alert_key: string;
+    severity: Severity;
+    adapter: string;
+    status: string;
+    attempt: number;
+    error?: string | null;
+    payload?: Record<string, unknown> | null;
+    minute_bucket?: Date | null;
+  },
+): Promise<void> {
+  if (!sb) return;
+  try {
+    await sb.from('foundation_notification_dispatches').insert({
+      alert_key: row.alert_key,
+      severity: row.severity,
+      adapter: row.adapter,
+      status: row.status,
+      attempt: row.attempt,
+      error: row.error ?? null,
+      payload: row.payload ?? null,
+      minute_bucket: row.minute_bucket ? row.minute_bucket.toISOString() : null,
+    });
+  } catch {
+    // Never throw from logger.
+  }
+}
+
+async function isFlapping(sb: SupabaseClient, alertKey: string, adapter: string): Promise<boolean> {
+  const since = new Date(Date.now() - FLAP_WINDOW_MS).toISOString();
+  const { data } = await sb
+    .from('foundation_notification_dispatches')
+    .select('id')
+    .eq('alert_key', alertKey)
+    .eq('adapter', adapter)
+    .eq('status', 'ok')
+    .gte('dispatched_at', since)
+    .limit(1);
+  return (data?.length ?? 0) > 0;
+}
+
+async function sendWithRetry(
+  adapter: NotificationAdapter,
+  d: NotificationDispatch,
+  outerSignal: AbortSignal,
+): Promise<AdapterResult> {
+  let lastError: string | undefined;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    if (outerSignal.aborted) return { ok: false, error: 'outer_timeout', attempts: attempt - 1 };
+    const ctrl = new AbortController();
+    const onAbort = () => ctrl.abort();
+    outerSignal.addEventListener('abort', onAbort, { once: true });
+    const t = setTimeout(() => ctrl.abort(), PER_ATTEMPT_TIMEOUT_MS);
+    try {
+      const r = await adapter.send(d, ctrl.signal);
+      clearTimeout(t);
+      outerSignal.removeEventListener('abort', onAbort);
+      if (r.ok) return { ok: true, attempts: attempt };
+      lastError = r.error;
+    } catch (e) {
+      clearTimeout(t);
+      outerSignal.removeEventListener('abort', onAbort);
+      lastError = String((e as Error).message ?? e);
+    }
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise((res) => setTimeout(res, BACKOFF_MS[attempt - 1]));
+    }
+  }
+  return { ok: false, error: lastError ?? 'unknown', attempts: MAX_ATTEMPTS };
+}
+
+// --- Public API ---------------------------------------------------------
+
+export interface DispatchResult {
+  skipped: boolean;
+  reason?: string;
+  results?: Array<{ adapter: string; ok: boolean; error?: string; attempts: number }>;
+}
+
+let configWarned = false;
+
 /**
- * Dispatch a notification. No-op unless FOUNDATION_NOTIFICATIONS_ENABLED='true'.
- * Best-effort: never throws, never blocks the caller.
+ * Best-effort dispatch. Never throws. Returns within DISPATCH_DEADLINE_MS.
+ * Critical-only when enabled; warning/info are logged as skipped_severity.
  */
 export async function dispatch(d: NotificationDispatch): Promise<DispatchResult> {
   const enabled = (Deno.env.get('FOUNDATION_NOTIFICATIONS_ENABLED') ?? '').toLowerCase() === 'true';
-  if (!enabled) return { skipped: true };
-  const results: Array<{ adapter: string; ok: boolean; error?: string }> = [];
-  for (const a of ADAPTERS) {
-    try {
-      const r = await a.send(d);
-      results.push({ adapter: a.name, ok: r.ok, error: r.error });
-    } catch (e) {
-      results.push({ adapter: a.name, ok: false, error: String((e as Error).message ?? e) });
+  const sb = getSupabase();
+  const bucket = minuteBucket();
+
+  if (!enabled) {
+    for (const a of ADAPTERS) {
+      await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_disabled', attempt: 0, payload: { title: d.title } });
     }
+    return { skipped: true, reason: 'disabled' };
+  }
+
+  // Startup config validation (logged at most once per cold start).
+  if (!configWarned) {
+    const slackOk = !!Deno.env.get('SLACK_WEBHOOK_URL');
+    const emailOk = !!Deno.env.get('FOUNDATION_ALERT_EMAIL_TO');
+    if (!slackOk && !emailOk) {
+      await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: 'all', status: 'config_invalid', attempt: 0, error: 'no adapter configured' });
+    }
+    configWarned = true;
+  }
+
+  if (d.severity !== 'critical') {
+    for (const a of ADAPTERS) {
+      await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_severity', attempt: 0 });
+    }
+    return { skipped: true, reason: 'non_critical' };
+  }
+
+  // Outer 20s hard timeout
+  const outerCtrl = new AbortController();
+  const outerTimer = setTimeout(() => outerCtrl.abort(), DISPATCH_DEADLINE_MS);
+  const results: Array<{ adapter: string; ok: boolean; error?: string; attempts: number }> = [];
+
+  try {
+    await Promise.allSettled(ADAPTERS.map(async (a) => {
+      try {
+        if (sb && (await isFlapping(sb, d.key, a.name))) {
+          await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_flap', attempt: 0, minute_bucket: bucket });
+          results.push({ adapter: a.name, ok: true, attempts: 0 });
+          return;
+        }
+        const r = await sendWithRetry(a, d, outerCtrl.signal);
+        // Idempotency-aware insert: minute_bucket unique index prevents dup rows
+        // for the same (alert_key, adapter, minute) — second insert will conflict.
+        if (sb) {
+          const { error: insErr } = await sb.from('foundation_notification_dispatches').insert({
+            alert_key: d.key,
+            severity: d.severity,
+            adapter: a.name,
+            status: r.ok ? 'ok' : 'dlq',
+            attempt: r.attempts,
+            error: r.error ?? null,
+            payload: { title: d.title, detail: d.detail ?? {} },
+            minute_bucket: bucket.toISOString(),
+          });
+          if (insErr && /duplicate|unique/i.test(insErr.message)) {
+            await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_idem', attempt: r.attempts, minute_bucket: bucket });
+          }
+        }
+        results.push({ adapter: a.name, ...r });
+      } catch (e) {
+        const err = String((e as Error).message ?? e);
+        await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'dlq', attempt: 1, error: err, minute_bucket: bucket });
+        results.push({ adapter: a.name, ok: false, error: err, attempts: 1 });
+      }
+    }));
+  } finally {
+    clearTimeout(outerTimer);
   }
   return { skipped: false, results };
+}
+
+// Test seam — reset module state between tests.
+export function __resetForTests(): void {
+  configWarned = false;
 }
