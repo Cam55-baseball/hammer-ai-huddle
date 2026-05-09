@@ -60,18 +60,25 @@ export function useFoundationVideos(opts: Options = {}) {
     (async () => {
       setLoading(true);
       try {
+        // Wave E: kill switches + per-user rollout gate. Degrade gracefully.
+        const flags = await readFoundationKillSwitches();
+        if (!flags.enabled || (user && !userInRollout(user.id, flags.rolloutPct))) {
+          if (!cancelled) { setResults([]); setActiveTriggers([]); }
+          return;
+        }
+
         const snapshot = user ? await fetchFoundationSnapshot(user.id) : null;
         const rawTriggers = snapshot ? computeFoundationTriggers(snapshot) : [];
 
-        // Wave B: cooldown filter + state-machine reconciliation.
+        // Wave B: cooldown filter + state-machine reconciliation (gated by flag).
         let triggers = rawTriggers;
-        if (user && rawTriggers.length > 0 && triggerGated) {
+        if (user && rawTriggers.length > 0 && triggerGated && flags.stateMachineEnabled) {
           triggers = await recordAndFilterTriggerCooldown({
             userId: user.id,
             triggers: rawTriggers,
           });
         }
-        if (user) {
+        if (user && flags.stateMachineEnabled) {
           const recon = await reconcileFoundationState({
             userId: user.id,
             activeTriggers: triggers,
