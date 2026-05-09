@@ -1,6 +1,6 @@
 # Foundations — Intelligence, Observability & Lifecycle Hardening (Phases 8–19)
 
-**Status:** Wave A ✅. Wave B ✅. Wave C ✅. Wave D ✅ shipped (health scoring + nightly cron + admin diagnostics panel). Next: Wave E (Cold Start, Discovery, Cron, Rollback).
+**Status:** Wave A ✅. Wave B ✅. Wave C ✅. Wave D ✅. Wave E ✅ shipped (cold-start onboarding gate, kill switches, rollout %, hourly trigger decay, daily trace prune). Next: Wave F (Replay Tests + Architecture Maps).
 
 
 This plan turns the Foundations system from "feature-complete + hardened" into an **observable, self-healing, lifecycle-aware developmental brain**. Work is grouped into 6 shippable waves so each wave is independently deployable, testable, and reversible behind feature flags.
