@@ -352,17 +352,35 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
           <div className="rounded border border-primary/30 bg-primary/5 p-3 text-xs">
             <p className="font-semibold flex items-center gap-1 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              These fields wire your video to the recommendation engine.
+              {isFoundation
+                ? 'Foundation chips wire this video to refresher triggers.'
+                : 'These fields wire your video to the recommendation engine.'}
             </p>
             <p className="text-muted-foreground mt-0.5">
-              Write a description, then accept the auto-suggested tags. Need 2+ tags to publish.
+              {isFoundation
+                ? 'Pick a domain, scope, audience, and the situations Hammer should surface this for.'
+                : 'Write a description, then accept the auto-suggested tags. Need 2+ tags to publish.'}
             </p>
           </div>
-          <StructuredTagEditor value={structured} onChange={setStructured} />
-          {!step3Valid && (
+          {isFoundation ? (
+            <FoundationTagEditor
+              value={foundationMeta}
+              onChange={setFoundationMeta}
+              aiDescription={structured.aiDescription}
+              onDescriptionChange={text => setStructured({ ...structured, aiDescription: text })}
+            />
+          ) : (
+            <StructuredTagEditor value={structured} onChange={setStructured} />
+          )}
+          {!step3Valid && !isFoundation && (
             <ul className="text-xs space-y-0.5 list-disc pl-4 text-amber-600 dark:text-amber-400">
               {step3Missing.map(m => <li key={m.key}>{m.message}</li>)}
             </ul>
+          )}
+          {!step3Valid && isFoundation && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Pick domain, scope, at least one audience level, at least one refresher trigger, and a Hammer description.
+            </p>
           )}
         </div>
       )}
