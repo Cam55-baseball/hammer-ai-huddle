@@ -106,9 +106,7 @@ export function useFoundationVideos(opts: Options = {}) {
               distribution_tier: v.distribution_tier,
               foundation_meta: meta,
               recentlyWatched21d: recentlyWatched.has(v.id),
-              effectiveness: (v.foundation_effectiveness && typeof v.foundation_effectiveness === 'object')
-                ? v.foundation_effectiveness
-                : undefined,
+              effectiveness: extractByTrigger(v.foundation_effectiveness),
             };
           })
           .filter(Boolean) as Parameters<typeof scoreFoundationCandidates>[0]['candidates'];
