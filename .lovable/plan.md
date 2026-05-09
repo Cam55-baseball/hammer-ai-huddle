@@ -1,4 +1,10 @@
-## Phase G — Operational Intelligence Layer
+## Phase G — Operational Intelligence Layer  ✅ SHIPPED
+
+Companion-decision tables (`foundation_fatigue_decisions`, `foundation_onboarding_decisions`), cron heartbeats table, Trace Inspector v2 (filters + drilldown + replay), Health Dashboard at `/owner/foundations/health`, edge functions `foundations-replay` + `foundations-recompute-user`, heartbeat writes wired into all 4 foundation crons.
+
+---
+
+## Phase G — Operational Intelligence Layer (original plan)
 
 Turn Foundations from "tested + working" into "self-diagnosing + admin-operable + production-observable." No new recommendation logic — only explainability, replay safety, and ops tooling.
 
