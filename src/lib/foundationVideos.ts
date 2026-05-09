@@ -114,12 +114,15 @@ export function lengthTierForSeconds(s?: number | null): LengthTier | null {
   return 'masterclass';
 }
 
+export const FOUNDATION_META_VERSION = 1 as const;
+
 export interface FoundationMeta {
   domain: FoundationDomain;
   scope: FoundationScope;
   audience_levels: FoundationAudience[];
   refresher_triggers: FoundationTrigger[];
   length_tier?: LengthTier | null;
+  version?: number;
 }
 
 export const EMPTY_FOUNDATION_META: FoundationMeta = {
@@ -128,7 +131,43 @@ export const EMPTY_FOUNDATION_META: FoundationMeta = {
   audience_levels: [],
   refresher_triggers: [],
   length_tier: null,
+  version: FOUNDATION_META_VERSION,
 };
+
+/**
+ * Defensive parser. Returns null on any structural problem so callers
+ * can skip the row instead of throwing inside a render or scorer pass.
+ * Unknown enum values are stripped (forward compatible).
+ */
+export function parseFoundationMeta(raw: unknown): FoundationMeta | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  const domain = r.domain as FoundationDomain;
+  const scope = r.scope as FoundationScope;
+  if (!FOUNDATION_DOMAINS.includes(domain)) return null;
+  if (!FOUNDATION_SCOPES.includes(scope)) return null;
+
+  const audArr = Array.isArray(r.audience_levels) ? r.audience_levels : [];
+  const audience_levels = audArr.filter((a): a is FoundationAudience =>
+    typeof a === 'string' && (FOUNDATION_AUDIENCES as readonly string[]).includes(a),
+  );
+  if (audience_levels.length === 0) return null;
+
+  const trigArr = Array.isArray(r.refresher_triggers) ? r.refresher_triggers : [];
+  const refresher_triggers = trigArr.filter((t): t is FoundationTrigger =>
+    typeof t === 'string' && (FOUNDATION_TRIGGERS as readonly string[]).includes(t),
+  );
+  if (refresher_triggers.length === 0) return null;
+
+  const length_tier = (typeof r.length_tier === 'string'
+    && ['short', 'standard', 'deep_dive', 'masterclass'].includes(r.length_tier))
+    ? (r.length_tier as LengthTier)
+    : null;
+
+  const version = typeof r.version === 'number' ? r.version : FOUNDATION_META_VERSION;
+
+  return { domain, scope, audience_levels, refresher_triggers, length_tier, version };
+}
 
 // ---------------- Trigger derivation ----------------
 
