@@ -148,10 +148,12 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       videoFile: videoFile || undefined,
       externalUrl: mode === 'link' ? externalUrl.trim() : undefined,
       videoType,
-      videoFormat: structured.videoFormat,
-      skillDomains: structured.skillDomains,
+      videoFormat: isFoundation ? undefined : structured.videoFormat,
+      skillDomains: isFoundation ? [] : structured.skillDomains,
       aiDescription: structured.aiDescription,
-      tagAssignments: structured.tagAssignments,
+      tagAssignments: isFoundation ? {} : structured.tagAssignments,
+      videoClass: isFoundation ? 'foundation' : 'application',
+      foundationMeta: isFoundation ? foundationMeta : null,
     });
     if (result) {
       // Reset
@@ -159,6 +161,8 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       setMode('link'); setExternalUrl(''); setVideoFile(null);
       setTitle(''); setSport(''); setCategory(''); setDescription('');
       setStructured(emptyStructuredTagState);
+      setIsFoundation(false);
+      setFoundationMeta(EMPTY_FOUNDATION_META);
       onSuccess((result as any)?.id);
     }
   };
