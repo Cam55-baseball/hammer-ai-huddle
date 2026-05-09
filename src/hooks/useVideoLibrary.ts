@@ -72,6 +72,12 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
         query = query.neq('distribution_tier', 'blocked');
       }
 
+      // Foundation videos live exclusively in the dedicated shelf / route.
+      // The owner manager (includeBlocked=true) keeps full visibility.
+      if (!includeBlocked) {
+        query = query.or('video_class.is.null,video_class.eq.application');
+      }
+
       if (search && search.trim()) {
         const term = `%${search.trim()}%`;
         query = query.or(`title.ilike.${term},description.ilike.${term}`);
