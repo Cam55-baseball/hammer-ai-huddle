@@ -11,7 +11,10 @@ import {
   type FoundationTrigger,
 } from '@/lib/foundationVideos';
 import { TIER_BOOST } from '@/lib/videoTier';
-import { buildTraceRows, enqueueFoundationTraces, type SurfaceOrigin } from '@/lib/foundationTracing';
+import { buildTraceRows, enqueueFoundationTraces, type SurfaceOrigin, type TraceRow } from '@/lib/foundationTracing';
+import { reconcileFoundationState, recordAndFilterTriggerCooldown, type FoundationState } from '@/lib/foundationStateMachine';
+import { applyFatigue, loadFatigueState } from '@/lib/foundationFatigue';
+import { FOUNDATION_RECOMMENDATION_VERSION, FOUNDATION_META_VERSION } from '@/lib/foundationVideos';
 
 interface Options {
   /** Limit candidates to this domain (e.g. user's primary). When omitted, all foundations. */
