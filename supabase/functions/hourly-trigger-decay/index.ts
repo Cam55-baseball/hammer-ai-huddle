@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
   const url = Deno.env.get('SUPABASE_URL')!;
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const t0 = Date.now();
 
   const { data, error } = await supabase
     .from('foundation_trigger_events')
@@ -25,6 +26,12 @@ Deno.serve(async (req) => {
     .limit(5000);
 
   if (error) {
+    await supabase.from('foundation_cron_heartbeats').insert({
+      function_name: 'hourly-trigger-decay',
+      duration_ms: Date.now() - t0,
+      status: 'error',
+      error: error.message,
+    });
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -49,6 +56,13 @@ Deno.serve(async (req) => {
       decayed += 1;
     }
   }
+
+  await supabase.from('foundation_cron_heartbeats').insert({
+    function_name: 'hourly-trigger-decay',
+    duration_ms: Date.now() - t0,
+    status: 'ok',
+    metadata: { decayed, resolved, scanned: (data ?? []).length },
+  });
 
   return new Response(JSON.stringify({ ok: true, decayed, resolved }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },

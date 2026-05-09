@@ -40,6 +40,7 @@ Deno.serve(async (req) => {
   const url = Deno.env.get('SUPABASE_URL')!;
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
+  const t0 = Date.now();
 
   let cursor: string | null = null;
   try {
@@ -140,6 +141,12 @@ Deno.serve(async (req) => {
   }
 
   const nextCursor = videos.length === PAGE_SIZE ? videos[videos.length - 1].id : null;
+  await supabase.from('foundation_cron_heartbeats').insert({
+    function_name: 'recompute-foundation-effectiveness',
+    duration_ms: Date.now() - t0,
+    status: 'ok',
+    metadata: { processed, done: nextCursor === null },
+  });
   return new Response(JSON.stringify({
     done: nextCursor === null,
     processed,
