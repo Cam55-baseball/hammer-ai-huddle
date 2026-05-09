@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
     const byId = new Map((videos ?? []).map((v: any) => [v.id, v]));
 
     const differences: any[] = [];
+    const outcomes: any[] = [];
     let matched = 0;
     for (const t of traces) {
       const v = byId.get(t.video_id);
@@ -118,6 +119,26 @@ Deno.serve(async (req) => {
         recommendation_version_then: t.recommendation_version,
         drift,
       });
+      outcomes.push({
+        trace_id: t.trace_id,
+        user_id: t.user_id,
+        video_id: t.video_id,
+        matched: !drift,
+        drift_reason: drift,
+        original_score: t.final_score,
+        replay_score: null,
+        recommendation_version_then: t.recommendation_version,
+        recommendation_version_now: t.recommendation_version,
+        source: 'manual',
+      });
+    }
+
+    // Phase I: persist outcomes for rolling drift analytics. Best-effort.
+    if (outcomes.length > 0) {
+      const { error: persistErr } = await admin
+        .from('foundation_replay_outcomes')
+        .insert(outcomes);
+      if (persistErr) console.error('replay outcomes persist failed:', persistErr.message);
     }
 
     return new Response(

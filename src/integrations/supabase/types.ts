@@ -3333,6 +3333,51 @@ export type Database = {
         }
         Relationships: []
       }
+      foundation_replay_outcomes: {
+        Row: {
+          drift_reason: string | null
+          id: string
+          matched: boolean
+          original_score: number | null
+          ran_at: string
+          recommendation_version_now: number | null
+          recommendation_version_then: number | null
+          replay_score: number | null
+          source: string
+          trace_id: string
+          user_id: string | null
+          video_id: string | null
+        }
+        Insert: {
+          drift_reason?: string | null
+          id?: string
+          matched: boolean
+          original_score?: number | null
+          ran_at?: string
+          recommendation_version_now?: number | null
+          recommendation_version_then?: number | null
+          replay_score?: number | null
+          source?: string
+          trace_id: string
+          user_id?: string | null
+          video_id?: string | null
+        }
+        Update: {
+          drift_reason?: string | null
+          id?: string
+          matched?: boolean
+          original_score?: number | null
+          ran_at?: string
+          recommendation_version_now?: number | null
+          recommendation_version_then?: number | null
+          replay_score?: number | null
+          source?: string
+          trace_id?: string
+          user_id?: string | null
+          video_id?: string | null
+        }
+        Relationships: []
+      }
       foundation_trigger_events: {
         Row: {
           confidence: number

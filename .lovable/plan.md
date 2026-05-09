@@ -1,86 +1,186 @@
-## Phase H Stabilization & Verification Plan
+## Phase I — Regression Automation + Observability Hardening
 
-The foundation_health_alerts table, alerts edge function, dashboard panel, trace inspector pagination/CSV/replay/recompute actions, and centralized thresholds are already in place. Two gaps remain plus a verification sweep.
+Scope frozen against Phase H. Additive only. No UX redesign. No threshold tuning.
 
-### 1. Migration gap-fill (`supabase/migrations/<new>_foundation_health_alerts_hardening.sql`)
+---
 
-The existing migration covers: table, unique-open-key index, severity/last_seen partial index, RLS enable, admin SELECT policy. It is missing:
+### 1. Shared thresholds source of truth
 
-- An index on `(alert_key, resolved_at)` to keep the open-key upsert lookup cheap once history grows.
-- An index on `resolved_at DESC` for resolution audits.
-- An explicit "service role manages alerts" ALL policy. Service role bypasses RLS today, but stating the policy makes intent reviewable and survives any future `FORCE ROW LEVEL SECURITY` flip.
-- Comment block documenting auto-resolve semantics.
+**Goal:** Eliminate the mirrored ALERT/CRON_STALE_MIN block currently duplicated in `src/lib/foundationThresholds.ts` and `supabase/functions/foundation-health-alerts/index.ts`.
 
-No table-shape changes — additive only, safe to ship.
+- New canonical file: `supabase/functions/_shared/foundationThresholds.ts`
+  - Exports `CRON_STALE_MIN`, `ALERT`, `TRACE_PAGE_SIZE`, `TRACE_EXPORT_MAX`, `TRACE_EXPORT_CHUNK`, `TRACE_SEARCH_DEBOUNCE_MS`, `SYSTEM_USER_ID`, `AlertSeverity` — values **byte-identical** to current.
+- `src/lib/foundationThresholds.ts` becomes a thin re-export forwarder (Vite resolves the relative `../../supabase/functions/_shared/foundationThresholds` path; pure constants, no Deno-only imports, no runtime branches).
+- `foundation-health-alerts/index.ts` imports from `../_shared/foundationThresholds.ts`; mirror block deleted.
+- Compile-time check: identical literal values verified by a vitest snapshot test.
 
-### 2. Cron wiring (`supabase--insert`, not migration — contains project URL + anon key)
+No behavioral tuning.
 
-Schedule `foundation-health-alerts` hourly at minute 5 (offset from `:00` `hourly-trigger-decay` and `:15` decay sweep to avoid collision):
+---
 
+### 2. Replay mismatch analytics
+
+**New table** `public.foundation_replay_outcomes`:
+
+```text
+id              uuid pk default gen_random_uuid()
+trace_id        text not null
+user_id         uuid
+video_id        uuid
+ran_at          timestamptz not null default now()
+matched         boolean not null
+drift_reason    text                    -- nullable
+original_score  numeric
+replay_score    numeric
+recommendation_version_then  int
+recommendation_version_now   int
+source          text not null           -- 'manual' | 'cron' | 'admin'
 ```
-select cron.schedule(
-  'foundation-health-alerts-hourly',
-  '5 * * * *',
-  $$ select net.http_post(
-       url := 'https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/foundation-health-alerts',
-       headers := '{"Content-Type":"application/json","apikey":"<anon>"}'::jsonb,
-       body := '{}'::jsonb) $$);
+
+Indexes:
+- `idx_fro_ran_at` on `(ran_at desc)`
+- `idx_fro_matched_ran_at` on `(matched, ran_at desc)`
+- `idx_fro_trace` on `(trace_id, ran_at desc)`
+
+RLS:
+- enable RLS
+- admin SELECT (via existing `has_role(uid, 'admin')`)
+- service-role ALL (explicit for FORCE-RLS safety)
+
+**Edge function changes:**
+- `foundations-replay`: after computing `differences[]`, bulk-insert one row per trace into `foundation_replay_outcomes` with `source='manual'` (best-effort; failure logged, never blocks response).
+- `foundation-health-alerts`: add evaluator `replay_mismatch_high`
+  - window: last 24h, min sample 20
+  - rate = `count(matched=false) / count(*)`
+  - severity: `>= ALERT.REPLAY_MISMATCH_CRIT` → critical, `>= REPLAY_MISMATCH_WARN` → warning
+  - alert_key `replay_mismatch_high` (auto-resolves via existing lifecycle)
+
+**Dashboard:** new compact panel "Replay drift (24h)" showing total/mismatched/rate, bounded `.gte('ran_at', t-24h).limit(5000)`. Inserted next to existing Active alerts card. No layout redesign.
+
+---
+
+### 3. Resolved-alert retention
+
+**New edge function** `foundation-alert-retention`:
+- Deletes `foundation_health_alerts` rows where `resolved_at IS NOT NULL AND resolved_at < now() - interval '30 days'`.
+- **Hard guard:** query includes `.not('resolved_at','is',null).lt('resolved_at', cutoff)` — unresolved rows can never be touched. Verified by integration test that seeds an open alert and asserts it survives.
+- Writes heartbeat `foundation-alert-retention` with `{deleted_count}`.
+- Cron: daily `30 4 * * *` via `supabase--insert` (idempotent name check), payload `{}`.
+- Add `foundation-alert-retention` to `CRON_STALE_MIN` (`60*26`).
+
+---
+
+### 4. Metrics summary card
+
+Single `<Card>` "Foundations ops summary" on `FoundationHealthDashboard` showing:
+- Severity counters: open critical / warning / info (single query, `is('resolved_at',null)`).
+- Last successful `foundation-health-alerts` heartbeat timestamp + duration_ms (existing heartbeats table).
+- Failed replay count last 24h (`foundation_replay_outcomes` where `matched=false`).
+
+All queries bounded; reuse existing fetch pattern.
+
+---
+
+### 5. Notification scaffolding (NOT enabled)
+
+New file `supabase/functions/_shared/notificationAdapters.ts`:
+
+```ts
+export interface NotificationDispatch {
+  key: string; severity: 'info'|'warning'|'critical';
+  title: string; detail?: Record<string, unknown>;
+}
+export interface NotificationAdapter {
+  name: string;
+  send(d: NotificationDispatch): Promise<{ok:boolean; error?:string}>;
+}
+export const slackAdapter: NotificationAdapter = { name:'slack', send: async()=>({ok:true}) };
+export const emailAdapter: NotificationAdapter = { name:'email', send: async()=>({ok:true}) };
+
+export async function dispatch(d: NotificationDispatch) {
+  if (Deno.env.get('FOUNDATION_NOTIFICATIONS_ENABLED') !== 'true') return { skipped: true };
+  // future: fan out to enabled adapters
+  return { skipped: true };
+}
 ```
 
-Pre-check `cron.job` to skip if a row with that name already exists (idempotent).
+`foundation-health-alerts` calls `dispatch()` only on **newly opened** alerts (not refreshes/resolves). Default flag off → no-op. No webhook secrets requested in this phase.
 
-### 3. TypeScript / JSX integrity sweep
+---
 
-Targeted automated checks (no manual `tsc` per project rule — rely on harness build, then read result). In addition, explicit grep audits across the five Phase H files for the corruption patterns called out:
+### 6. Regression automation
 
-- Stripped operators: `rg -n " = =[^=]| =\\*[^*]|>=[^ =0-9a-zA-Z_(]| <[^=a-zA-Z<]| >[^=a-zA-Z>]" <files>`
-- Bare `*` / missing `*` in arithmetic: `rg -n "[a-zA-Z0-9_)]\\s+[0-9]" <files>` reviewed for missing operator
-- Broken JSX tags: `rg -n "<[A-Z][A-Za-z]*\\s[^>]*$" <files>` (unterminated)
-- Malformed ternaries: `rg -n "\\?[^:]*$" <files>` then visually inspect
-- Stripped generics: `rg -n "Map<\\s|Record<\\s|useState<\\s" <files>`
-- Map callback shape: `rg -n "\\.map\\(\\s*\\)" <files>`
+Vitest suites under `src/lib/__tests__/`:
 
-Files audited:
-- `src/lib/foundationThresholds.ts`
-- `src/pages/owner/FoundationHealthDashboard.tsx`
-- `src/pages/owner/FoundationTraceInspector.tsx`
-- `supabase/functions/foundation-health-alerts/index.ts`
-- `supabase/functions/foundations-recompute-user/index.ts`
-- `supabase/functions/foundations-replay/index.ts`
-
-Then run `bunx vitest run src/lib/__tests__/foundationFatigue.test.ts src/lib/__tests__/foundationScorer.replay.test.ts src/lib/__tests__/foundationStateMachine.test.ts src/lib/__tests__/foundationCornerCases.test.ts` to catch any regression to surrounding scorer/fatigue logic.
-
-### 4. Regression checks (read-only against live data)
-
-Each check uses `supabase--read_query` or `supabase--curl_edge_functions` — no writes:
-
-| Check | Method |
+| Test file | Covers |
 |---|---|
-| Cursor pagination contiguity | Inspect rendered network calls: first page `limit=100`, second page adds `created_at=lt.<cursor>`; verify no duplicate `trace_id` across pages by sampling DB |
-| CSV export cap/chunking | Code-path review — `while (total < TRACE_EXPORT_MAX)` with `Math.min(TRACE_EXPORT_CHUNK, TRACE_EXPORT_MAX - total)` and `cursor` advance. Confirm cap branch toasts `(capped)` |
-| Replay action | `supabase--curl_edge_functions` POST `/foundations-replay` with a real `traceId`; assert `matched_count`/`total` returned |
-| Recompute action | Same for `/foundations-recompute-user`; verify a new `admin_replay` trace row appears |
-| Alert auto-resolve | Manually invoke `/foundation-health-alerts` twice with no fault conditions; verify `opened=0`, second call returns `resolved>=0` and DB shows `resolved_at IS NOT NULL` for any prior open key |
-| System-user exclusion | `select count(*) from foundation_recommendation_traces where user_id = SYSTEM_USER` — confirm dashboard funnel and alerts function both filter via `.neq` |
-| Cron heartbeat transitions | Inspect `foundation_cron_heartbeats` last 5 rows per function; confirm `status` values and dashboard pill mapping (`green`/`amber`/`red`) at ages `< maxAge`, `> maxAge`, `> 2× maxAge` |
+| `foundationTraceInspector.pagination.test.ts` | cursor pagination contiguity (mock supabase chain, assert `lt('created_at', cursor)` and dedup) |
+| `foundationTraceInspector.csvExport.test.ts` | chunk size, cap at `TRACE_EXPORT_MAX`, `(capped)` toast branch |
+| `foundationTraceInspector.actions.test.ts` | replay/recompute state machine: idle→pending→ok/error, double-submit guard |
+| `foundationHealthAlerts.lifecycle.test.ts` | open→refresh→auto-resolve, no duplicate-key insert, system-user excluded from suppression rate |
+| `foundationCronSeverity.test.ts` | `statusFor()` mapping at `<max`, `>max`, `>2×max` |
+| `foundationThresholds.parity.test.ts` | snapshot of canonical constants (catches any drift if the shared module is touched) |
 
-### 5. Final deliverables
+Deno test under `supabase/functions/foundation-alert-retention/index.test.ts`:
+- seeds one resolved (35d old) + one open alert in a stub client; asserts only the resolved one is targeted.
 
-A consolidated report listing:
-- Compile issues found + fixes (or "none")
-- Runtime issues found + fixes (or "none")
-- Final files changed in this stabilization pass (only the new hardening migration + the cron-insert SQL — no source edits unless audit finds defects)
-- Confirmation of each regression check pass/fail
-- Remaining known risks (e.g., service-role bypass dependence, anon-key in cron)
+All tests are pure (mocked supabase clients) — no live DB writes.
+
+---
+
+### 7. Production verification gate
+
+Before declaring done:
+1. Harness build (auto) — read result; no manual `tsc`.
+2. `bunx vitest run` for the new + existing foundation suites.
+3. `supabase--test_edge_functions` for the retention function test.
+4. JSX/operator audit grep across all touched files (same patterns as Phase H stabilization).
+5. `supabase--read_query` spot checks: row counts on new table indexes (`EXPLAIN` not required — index presence verified via `pg_indexes`).
+6. Live invoke `foundation-health-alerts` once and confirm `replay_mismatch_high` evaluator returns `fired=false` on empty data (no crash).
+
+---
+
+### Files changed (planned)
+
+**New:**
+- `supabase/functions/_shared/foundationThresholds.ts`
+- `supabase/functions/_shared/notificationAdapters.ts`
+- `supabase/functions/foundation-alert-retention/index.ts`
+- `supabase/functions/foundation-alert-retention/index.test.ts`
+- `supabase/migrations/<ts>_foundation_replay_outcomes.sql`
+- `src/lib/__tests__/foundationTraceInspector.pagination.test.ts`
+- `src/lib/__tests__/foundationTraceInspector.csvExport.test.ts`
+- `src/lib/__tests__/foundationTraceInspector.actions.test.ts`
+- `src/lib/__tests__/foundationHealthAlerts.lifecycle.test.ts`
+- `src/lib/__tests__/foundationCronSeverity.test.ts`
+- `src/lib/__tests__/foundationThresholds.parity.test.ts`
+
+**Edited:**
+- `src/lib/foundationThresholds.ts` → re-export forwarder
+- `supabase/functions/foundation-health-alerts/index.ts` → import shared, add replay-mismatch evaluator, dispatch hook
+- `supabase/functions/foundations-replay/index.ts` → persist outcomes
+- `src/pages/owner/FoundationHealthDashboard.tsx` → add metrics summary + replay drift cards (additive)
+- `.lovable/plan.md` → updated phase log
+
+**Cron (via `supabase--insert`):**
+- `foundation-alert-retention-daily` `30 4 * * *`
+
+---
 
 ### Sequencing
 
-1. Author hardening migration → request user approval.
-2. After migration applied, run cron-insert SQL.
-3. Deploy `foundation-health-alerts` (already exists; redeploy to be safe).
-4. Curl-test each edge function.
-5. Run vitest + read harness build output.
-6. Run regression read-queries.
-7. Emit final report.
+1. Migration for `foundation_replay_outcomes` → user approves.
+2. Create shared thresholds module + forwarder + edge import refactor.
+3. Implement replay-outcome persistence + new evaluator + dispatch hook.
+4. Implement retention function + cron.
+5. Add dashboard cards.
+6. Add vitest + Deno tests; run and report.
+7. Final verification + concise diffs + risk list.
 
-No new feature work begins until every regression check passes.
+### Out of scope (deferred, listed only)
+
+- Live Slack/email delivery (adapters are stubs)
+- Drill-down filtering on alerts panel
+- Threshold tuning UI
+- Replay scheduling / automated periodic replays
+- FORCE RLS rollout
