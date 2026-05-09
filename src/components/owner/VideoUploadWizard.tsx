@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
+import { FoundationTagEditor, isFoundationMetaValid } from "./FoundationTagEditor";
+import { EMPTY_FOUNDATION_META, type FoundationMeta } from "@/lib/foundationVideos";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
 import { computeMissingFields } from "@/lib/videoReadiness";
 import { getSmartDefaults } from "@/lib/ownerLearning";
