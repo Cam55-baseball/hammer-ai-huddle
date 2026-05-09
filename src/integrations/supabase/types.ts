@@ -4387,6 +4387,7 @@ export type Database = {
           created_at: string
           description: string | null
           distribution_tier: string
+          foundation_meta: Json | null
           id: string
           likes_count: number
           notes: string | null
@@ -4400,6 +4401,7 @@ export type Database = {
           tier_rank: number
           title: string
           updated_at: string
+          video_class: string
           video_format: Database["public"]["Enums"]["video_type_enum"] | null
           video_type: string
           video_url: string | null
@@ -4412,6 +4414,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           distribution_tier?: string
+          foundation_meta?: Json | null
           id?: string
           likes_count?: number
           notes?: string | null
@@ -4425,6 +4428,7 @@ export type Database = {
           tier_rank?: number
           title: string
           updated_at?: string
+          video_class?: string
           video_format?: Database["public"]["Enums"]["video_type_enum"] | null
           video_type?: string
           video_url?: string | null
@@ -4437,6 +4441,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           distribution_tier?: string
+          foundation_meta?: Json | null
           id?: string
           likes_count?: number
           notes?: string | null
@@ -4450,6 +4455,7 @@ export type Database = {
           tier_rank?: number
           title?: string
           updated_at?: string
+          video_class?: string
           video_format?: Database["public"]["Enums"]["video_type_enum"] | null
           video_type?: string
           video_url?: string | null
