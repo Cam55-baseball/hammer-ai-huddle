@@ -233,14 +233,27 @@ export interface FoundationScoreInput {
   maxPerDomain?: number;
 }
 
+export interface FoundationScoreBreakdown {
+  base: number;
+  audienceBonus: number;
+  lengthBonus: number;
+  effectivenessBonus: number;
+  watchedPenalty: number;
+  preTier: number;
+  tier: string;
+  tierMultiplier: number;
+}
+
 export interface FoundationScoreResult {
   video: FoundationVideoCandidate;
   score: number;
   reason: string;
   matchedTriggers: FoundationTrigger[];
+  breakdown: FoundationScoreBreakdown;
 }
 
 export const FOUNDATION_BASE_CAP = 120;
+export const FOUNDATION_RECOMMENDATION_VERSION = 1 as const;
 
 export function scoreFoundationCandidates(input: FoundationScoreInput): FoundationScoreResult[] {
   const { candidates, activeTriggers, userLevel, preferredLength, tierBoost } = input;
