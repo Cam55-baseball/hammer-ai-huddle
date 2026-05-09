@@ -185,6 +185,7 @@ const App = () => {
               <Route path="/owner/open_bundle_builder" element={<BundleBuilder />} />
               <Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
               <Route path="/owner/builds" element={<BuildLibrary />} />
+              <Route path="/owner/foundations/traces" element={<FoundationTraceInspector />} />
               <Route path="/success" element={<Success />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />
