@@ -136,7 +136,7 @@ export function ResolvedAlertsPanel() {
   );
 }
 
-function bucketize(rows: Array<{ ran_at: string; matched: boolean }>): DriftBucket[] {
+export function bucketize(rows: Array<{ ran_at: string; matched: boolean }>): DriftBucket[] {
   const map = new Map<string, DriftBucket>();
   const now = Date.now();
   for (let i = 6; i >= 0; i--) {

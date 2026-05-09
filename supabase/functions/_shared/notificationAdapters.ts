@@ -71,32 +71,25 @@ export const slackAdapter: NotificationAdapter = {
   },
 };
 
+// Email adapter posts to a configurable webhook (FOUNDATION_ALERT_EMAIL_HOOK_URL).
+// Inert when unset — never references send-transactional-email so it cannot 4xx
+// when the transactional-email infra has not been scaffolded for this project.
+// To enable real email delivery, run the email-domain + scaffold flow and point
+// FOUNDATION_ALERT_EMAIL_HOOK_URL at the resulting endpoint (or any HTTPS sink).
 export const emailAdapter: NotificationAdapter = {
   name: 'email',
   async send(d, signal) {
-    const to = Deno.env.get('FOUNDATION_ALERT_EMAIL_TO');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!to || !supabaseUrl || !serviceKey) {
-      return { ok: false, error: 'email config missing (FOUNDATION_ALERT_EMAIL_TO/SUPABASE_*)' };
-    }
-    const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+    const hookUrl = Deno.env.get('FOUNDATION_ALERT_EMAIL_HOOK_URL');
+    if (!hookUrl) return { ok: false, error: 'email_disabled' };
+    const res = await fetch(hookUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${serviceKey}`,
-        apikey: serviceKey,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        templateName: 'foundation-alert',
-        recipientEmail: to,
-        idempotencyKey: `foundation-alert-${d.key}-${minuteBucket().toISOString()}`,
-        templateData: {
-          severity: d.severity,
-          title: d.title,
-          alertKey: d.key,
-          detailJson: JSON.stringify(d.detail ?? {}, null, 2),
-        },
+        severity: d.severity,
+        title: d.title,
+        alertKey: d.key,
+        detail: d.detail ?? {},
+        minute_bucket: minuteBucket().toISOString(),
       }),
       signal,
     });
@@ -228,7 +221,7 @@ export async function dispatch(d: NotificationDispatch): Promise<DispatchResult>
   // Startup config validation (logged at most once per cold start).
   if (!configWarned) {
     const slackOk = !!Deno.env.get('SLACK_WEBHOOK_URL');
-    const emailOk = !!Deno.env.get('FOUNDATION_ALERT_EMAIL_TO');
+    const emailOk = !!Deno.env.get('FOUNDATION_ALERT_EMAIL_HOOK_URL');
     if (!slackOk && !emailOk) {
       await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: 'all', status: 'config_invalid', attempt: 0, error: 'no adapter configured' });
     }
