@@ -97,6 +97,18 @@ export function useFoundationVideos(opts: Options = {}) {
         }).slice(0, limit);
 
         if (!cancelled) setResults(scored);
+
+        // Wave A — observability: log each surfaced recommendation.
+        // Fire-and-forget; never blocks render.
+        if (user && scored.length > 0) {
+          const rows = buildTraceRows({
+            userId: user.id,
+            surface,
+            activeTriggers: triggerGated ? triggers : [],
+            results: scored,
+          });
+          enqueueFoundationTraces(rows);
+        }
       } catch (e) {
         console.error('useFoundationVideos failed:', e);
         if (!cancelled) setResults([]);
