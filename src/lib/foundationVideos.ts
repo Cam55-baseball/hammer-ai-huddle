@@ -233,14 +233,27 @@ export interface FoundationScoreInput {
   maxPerDomain?: number;
 }
 
+export interface FoundationScoreBreakdown {
+  base: number;
+  audienceBonus: number;
+  lengthBonus: number;
+  effectivenessBonus: number;
+  watchedPenalty: number;
+  preTier: number;
+  tier: string;
+  tierMultiplier: number;
+}
+
 export interface FoundationScoreResult {
   video: FoundationVideoCandidate;
   score: number;
   reason: string;
   matchedTriggers: FoundationTrigger[];
+  breakdown: FoundationScoreBreakdown;
 }
 
 export const FOUNDATION_BASE_CAP = 120;
+export const FOUNDATION_RECOMMENDATION_VERSION = 1 as const;
 
 export function scoreFoundationCandidates(input: FoundationScoreInput): FoundationScoreResult[] {
   const { candidates, activeTriggers, userLevel, preferredLength, tierBoost } = input;
@@ -253,46 +266,50 @@ export function scoreFoundationCandidates(input: FoundationScoreInput): Foundati
     if (!meta || !Array.isArray(meta.refresher_triggers)) continue;
 
     const matched = meta.refresher_triggers.filter(t => triggerSet.has(t));
-
-    // Skip if no trigger overlap AND we have active triggers to filter on
     if (activeTriggers.length > 0 && matched.length === 0) continue;
 
-    // Base score, capped to prevent runaway stacking from competing with
-    // featured per-rep application drills in any unified surface.
     let base = matched.length > 0 ? 60 + 20 * (matched.length - 1) : 30;
     base = Math.min(FOUNDATION_BASE_CAP, base);
 
+    let audienceBonus = 0;
     if (userLevel && (meta.audience_levels.includes(userLevel) || meta.audience_levels.includes('all_levels'))) {
-      base += 15;
+      audienceBonus = 15;
     }
-    if (preferredLength && meta.length_tier === preferredLength) base += 10;
+    const lengthBonus = (preferredLength && meta.length_tier === preferredLength) ? 10 : 0;
 
-    // Effectiveness boost: bounded learning signal, never replaces deterministic logic.
+    let effectivenessBonus = 0;
     if (v.effectiveness && matched.length > 0) {
       let bonus = 0;
       for (const t of matched) {
         const rate = v.effectiveness[t] ?? 0;
         bonus += Math.max(0, Math.min(15, rate * 15));
       }
-      base += Math.min(15, bonus / matched.length);
+      effectivenessBonus = Math.min(15, bonus / matched.length);
     }
 
-    // Apply recently-watched penalty BEFORE tier multiply, then floor at a
-    // small positive — featured matched videos must remain visible to admin
-    // diagnostics rather than vanishing silently.
-    if (v.recentlyWatched21d) base -= 30;
-    base = Math.max(1, base);
+    const watchedPenalty = v.recentlyWatched21d ? 30 : 0;
+    let preTier = base + audienceBonus + lengthBonus + effectivenessBonus - watchedPenalty;
+    preTier = Math.max(1, preTier);
 
     const tier = (v.distribution_tier ?? 'normal') as keyof typeof tierBoost;
-    const score = base * (tierBoost[tier] ?? 1);
+    const tierMultiplier = tierBoost[tier] ?? 1;
+    const score = preTier * tierMultiplier;
 
     const reason = matched[0] ? TRIGGER_REASONS[matched[0]] : 'Foundational refresher';
-    out.push({ video: v, score, reason, matchedTriggers: matched });
+    out.push({
+      video: v,
+      score,
+      reason,
+      matchedTriggers: matched,
+      breakdown: {
+        base, audienceBonus, lengthBonus, effectivenessBonus,
+        watchedPenalty, preTier, tier: String(tier), tierMultiplier,
+      },
+    });
   }
 
   out.sort((a, b) => b.score - a.score);
 
-  // Diversity pass: at most N per domain.
   const perDomain: Partial<Record<FoundationDomain, number>> = {};
   const diverse: FoundationScoreResult[] = [];
   for (const r of out) {

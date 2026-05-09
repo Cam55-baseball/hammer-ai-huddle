@@ -11,6 +11,7 @@ import {
   type FoundationTrigger,
 } from '@/lib/foundationVideos';
 import { TIER_BOOST } from '@/lib/videoTier';
+import { buildTraceRows, enqueueFoundationTraces, type SurfaceOrigin } from '@/lib/foundationTracing';
 
 interface Options {
   /** Limit candidates to this domain (e.g. user's primary). When omitted, all foundations. */
@@ -19,11 +20,13 @@ interface Options {
   limit?: number;
   /** When false, returns ALL foundations (no trigger filter) — used for the manual browse shelf. */
   triggerGated?: boolean;
+  /** Where these recommendations are being surfaced (drives observability traces). */
+  surface?: SurfaceOrigin;
 }
 
 export function useFoundationVideos(opts: Options = {}) {
   const { user } = useAuth();
-  const { domain, limit = 4, triggerGated = true } = opts;
+  const { domain, limit = 4, triggerGated = true, surface = 'library' } = opts;
   const [results, setResults] = useState<FoundationScoreResult[]>([]);
   const [activeTriggers, setActiveTriggers] = useState<FoundationTrigger[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +97,18 @@ export function useFoundationVideos(opts: Options = {}) {
         }).slice(0, limit);
 
         if (!cancelled) setResults(scored);
+
+        // Wave A — observability: log each surfaced recommendation.
+        // Fire-and-forget; never blocks render.
+        if (user && scored.length > 0) {
+          const rows = buildTraceRows({
+            userId: user.id,
+            surface,
+            activeTriggers: triggerGated ? triggers : [],
+            results: scored,
+          });
+          enqueueFoundationTraces(rows);
+        }
       } catch (e) {
         console.error('useFoundationVideos failed:', e);
         if (!cancelled) setResults([]);
@@ -102,7 +117,7 @@ export function useFoundationVideos(opts: Options = {}) {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, domain, limit, triggerGated, refreshTick]);
+  }, [user?.id, domain, limit, triggerGated, surface, refreshTick]);
 
   return { results, activeTriggers, loading };
 }

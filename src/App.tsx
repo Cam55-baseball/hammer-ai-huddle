@@ -121,6 +121,7 @@ const ProgramBuilder = lazyWithRetry(() => import("./pages/owner/ProgramBuilder"
 const BundleBuilder = lazyWithRetry(() => import("./pages/owner/BundleBuilder"));
 const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationFlow"));
 const BuildLibrary = lazyWithRetry(() => import("./pages/owner/BuildLibrary"));
+const FoundationTraceInspector = lazyWithRetry(() => import("./pages/owner/FoundationTraceInspector"));
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
 const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
@@ -184,6 +185,7 @@ const App = () => {
               <Route path="/owner/open_bundle_builder" element={<BundleBuilder />} />
               <Route path="/owner/open_consultation_flow" element={<ConsultationFlow />} />
               <Route path="/owner/builds" element={<BuildLibrary />} />
+              <Route path="/owner/foundations/traces" element={<FoundationTraceInspector />} />
               <Route path="/success" element={<Success />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />
