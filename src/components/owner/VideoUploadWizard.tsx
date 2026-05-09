@@ -129,9 +129,13 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       return;
     }
     const videoType = mode === 'upload' ? 'upload' : detectVideoType(externalUrl);
+    // Auto-derive a short blurb from selections when the owner left it blank.
+    const autoBlurb = [category, structured.videoFormat?.replace(/_/g, ' '), structured.skillDomains[0]?.replace(/_/g, ' ')]
+      .filter(Boolean).join(' · ');
+    const finalDescription = description.trim() || autoBlurb;
     const result = await uploadVideo({
       title: title.trim(),
-      description: description.trim() || undefined,
+      description: finalDescription || undefined,
       tags: [],
       sport: sportArray,
       category: category || undefined,
