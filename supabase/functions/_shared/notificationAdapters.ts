@@ -221,7 +221,7 @@ export async function dispatch(d: NotificationDispatch): Promise<DispatchResult>
   // Startup config validation (logged at most once per cold start).
   if (!configWarned) {
     const slackOk = !!Deno.env.get('SLACK_WEBHOOK_URL');
-    const emailOk = !!Deno.env.get('FOUNDATION_ALERT_EMAIL_TO');
+    const emailOk = !!Deno.env.get('FOUNDATION_ALERT_EMAIL_HOOK_URL');
     if (!slackOk && !emailOk) {
       await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: 'all', status: 'config_invalid', attempt: 0, error: 'no adapter configured' });
     }
