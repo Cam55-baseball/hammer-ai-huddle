@@ -131,17 +131,30 @@ export function useFoundationVideos(opts: Options = {}) {
         });
 
         // Wave B: fatigue layer (per-domain quota, semantic dedupe, exposure cap).
-        const fatigue = user
+        const fatigue = (user && flags.fatigueEnabled)
           ? await loadFatigueState(user.id)
           : { exposureByVideo: new Map(), surfacedDomainsLast7d: new Map(), semanticHashesLast14d: new Set<string>() };
 
-        const decision = applyFatigue({
+        const fatigueDecision = applyFatigue({
           results: scored,
           fatigue,
           competingDrillRecs,
         });
 
-        const final = decision.kept.slice(0, limit);
+        // Wave E: onboarding cold-start gate (1-per-week, beginner-safe).
+        const accountAgeDays = snapshot?.accountAgeDays ?? 999;
+        const totalReps = Object.values(snapshot?.domainRepCount ?? {}).reduce((a, b) => a + (b ?? 0), 0);
+        const gate = computeOnboardingGate({ accountAgeDays, totalRepsLogged: totalReps });
+        const surfacedThisWeek = fatigue.surfacedDomainsLast7d
+          ? Array.from(fatigue.surfacedDomainsLast7d.values()).reduce((a, b) => a + b, 0)
+          : 0;
+        const onboarding = applyOnboardingGate({
+          results: fatigueDecision.kept,
+          gate,
+          surfacedThisWeek,
+        });
+
+        const final = onboarding.kept.slice(0, limit);
         if (!cancelled) setResults(final);
 
         // Wave A — observability: log surfaced + suppressed.
@@ -155,7 +168,12 @@ export function useFoundationVideos(opts: Options = {}) {
               results: final,
             }));
           }
-          for (const sup of decision.suppressed) {
+          // Combine fatigue + onboarding suppressions in trace log.
+          const allSuppressed: { result: typeof scored[number]; reason: string }[] = [
+            ...fatigueDecision.suppressed,
+            ...onboarding.suppressed.map(r => ({ result: r, reason: 'onboarding_gate' })),
+          ];
+          for (const sup of allSuppressed) {
             rows.push({
               user_id: user.id,
               video_id: sup.result.video.id,
