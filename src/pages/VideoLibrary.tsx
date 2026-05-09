@@ -62,6 +62,8 @@ const VideoLibrary = () => {
             </div>
           </div>
 
+          <FoundationsShelf />
+
           <VideoSearchBar onSearch={setSearch} onTrackSearch={trackSearch} />
 
           <Tabs defaultValue="browse">
