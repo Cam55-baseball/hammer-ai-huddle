@@ -144,10 +144,14 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
   const toggleDomain = (d: SkillDomain) =>
     setSkillDomains(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
 
-  const toggleAssignment = (id: string) =>
+  // Tap cycle: None → Normal (1) → Boost (3) → None
+  const cycleAssignment = (id: string) =>
     setAssignments(p => {
       const n = { ...p };
-      if (n[id] != null) delete n[id]; else n[id] = 3;
+      const cur = n[id];
+      if (cur == null) n[id] = NORMAL_WEIGHT;
+      else if (cur < BOOST_WEIGHT) n[id] = BOOST_WEIGHT;
+      else delete n[id];
       return n;
     });
 
