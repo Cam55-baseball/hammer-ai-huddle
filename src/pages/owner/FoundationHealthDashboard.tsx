@@ -13,6 +13,7 @@ import {
   SYSTEM_USER_ID,
   type AlertSeverity,
 } from '@/lib/foundationThresholds';
+import FoundationOpsObservability from './FoundationOpsObservability';
 
 interface CronBeat { function_name: string; ran_at: string; duration_ms: number | null; status: string; error: string | null }
 interface FunnelDay { day: string; surfaced: number; suppressed: number; suppressedByReason: Record<string, number> }
