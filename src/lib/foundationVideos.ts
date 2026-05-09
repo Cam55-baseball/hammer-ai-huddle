@@ -290,11 +290,21 @@ export function scoreFoundationCandidates(input: FoundationScoreInput): Foundati
     let effectivenessBonus = 0;
     if (v.effectiveness && matched.length > 0) {
       let bonus = 0;
+      let counted = 0;
       for (const t of matched) {
-        const rate = v.effectiveness[t] ?? 0;
-        bonus += Math.max(0, Math.min(15, rate * 15));
+        const stat = v.effectiveness[t];
+        if (!stat || stat.sample_n < FOUNDATION_EFFECTIVENESS_MIN_SAMPLE) continue;
+        // Composite: weight resolveRate highest, helpRate next, rewatchRate small.
+        const composite =
+          0.55 * stat.resolveRate +
+          0.30 * stat.helpRate +
+          0.15 * stat.rewatchRate;
+        bonus += Math.max(0, Math.min(FOUNDATION_EFFECTIVENESS_MAX_BONUS, composite * FOUNDATION_EFFECTIVENESS_MAX_BONUS));
+        counted += 1;
       }
-      effectivenessBonus = Math.min(15, bonus / matched.length);
+      if (counted > 0) {
+        effectivenessBonus = Math.min(FOUNDATION_EFFECTIVENESS_MAX_BONUS, bonus / counted);
+      }
     }
 
     const watchedPenalty = v.recentlyWatched21d ? 30 : 0;
