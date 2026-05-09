@@ -3240,6 +3240,45 @@ export type Database = {
         }
         Relationships: []
       }
+      foundation_notification_dispatches: {
+        Row: {
+          adapter: string
+          alert_key: string
+          attempt: number
+          dispatched_at: string
+          error: string | null
+          id: string
+          minute_bucket: string | null
+          payload: Json | null
+          severity: string
+          status: string
+        }
+        Insert: {
+          adapter: string
+          alert_key: string
+          attempt?: number
+          dispatched_at?: string
+          error?: string | null
+          id?: string
+          minute_bucket?: string | null
+          payload?: Json | null
+          severity: string
+          status: string
+        }
+        Update: {
+          adapter?: string
+          alert_key?: string
+          attempt?: number
+          dispatched_at?: string
+          error?: string | null
+          id?: string
+          minute_bucket?: string | null
+          payload?: Json | null
+          severity?: string
+          status?: string
+        }
+        Relationships: []
+      }
       foundation_onboarding_decisions: {
         Row: {
           account_age_days: number | null
