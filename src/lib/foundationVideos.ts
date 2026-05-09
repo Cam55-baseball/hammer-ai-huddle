@@ -188,9 +188,14 @@ export function computeFoundationTriggers(s: FoundationSnapshot): FoundationTrig
   const out: FoundationTrigger[] = [];
   if (s.accountAgeDays <= 30) out.push('new_user_30d');
 
-  // Fragile = primary domain has < 50 reps. We treat ANY domain with <50 as fragile.
-  const fragile = Object.values(s.domainRepCount).some(n => (n ?? 0) < 50);
-  if (fragile) out.push('fragile_foundation');
+  // Fragile = a domain the athlete actually plays has < 50 reps. If we don't
+  // know their primary domains we conservatively skip this trigger to avoid
+  // permanently flagging every new user across all 9 domains.
+  const primaries = (s.primaryDomains ?? []) as FoundationDomain[];
+  if (primaries.length > 0) {
+    const fragile = primaries.some(d => (s.domainRepCount[d] ?? 0) < 50);
+    if (fragile) out.push('fragile_foundation');
+  }
 
   if ((s.bqiDelta7d ?? 0) <= -10 && (s.peiDelta7d ?? 0) <= -10) out.push('lost_feel');
   if ((s.faultRateDelta14d ?? 0) >= 0.25) out.push('mechanics_decline');
@@ -212,6 +217,8 @@ export interface FoundationVideoCandidate {
   foundation_meta: FoundationMeta;
   distribution_tier?: string | null;
   recentlyWatched21d?: boolean;
+  /** Per-trigger helped-rate from foundation_effectiveness, optional. */
+  effectiveness?: Partial<Record<FoundationTrigger, number>>;
 }
 
 export interface FoundationScoreInput {
@@ -220,6 +227,8 @@ export interface FoundationScoreInput {
   userLevel?: FoundationAudience;
   preferredLength?: LengthTier;
   tierBoost: Record<string, number>;
+  /** Cap of results per domain in the final list. Default 2. */
+  maxPerDomain?: number;
 }
 
 export interface FoundationScoreResult {
@@ -229,35 +238,68 @@ export interface FoundationScoreResult {
   matchedTriggers: FoundationTrigger[];
 }
 
+export const FOUNDATION_BASE_CAP = 120;
+
 export function scoreFoundationCandidates(input: FoundationScoreInput): FoundationScoreResult[] {
   const { candidates, activeTriggers, userLevel, preferredLength, tierBoost } = input;
+  const maxPerDomain = input.maxPerDomain ?? 2;
   const triggerSet = new Set(activeTriggers);
   const out: FoundationScoreResult[] = [];
 
   for (const v of candidates) {
     const meta = v.foundation_meta;
-    const matched = (meta.refresher_triggers || []).filter(t => triggerSet.has(t));
+    if (!meta || !Array.isArray(meta.refresher_triggers)) continue;
+
+    const matched = meta.refresher_triggers.filter(t => triggerSet.has(t));
 
     // Skip if no trigger overlap AND we have active triggers to filter on
     if (activeTriggers.length > 0 && matched.length === 0) continue;
 
-    let score = matched.length > 0 ? 60 + 20 * (matched.length - 1) : 30;
+    // Base score, capped to prevent runaway stacking from competing with
+    // featured per-rep application drills in any unified surface.
+    let base = matched.length > 0 ? 60 + 20 * (matched.length - 1) : 30;
+    base = Math.min(FOUNDATION_BASE_CAP, base);
 
     if (userLevel && (meta.audience_levels.includes(userLevel) || meta.audience_levels.includes('all_levels'))) {
-      score += 15;
+      base += 15;
     }
-    if (preferredLength && meta.length_tier === preferredLength) score += 10;
+    if (preferredLength && meta.length_tier === preferredLength) base += 10;
+
+    // Effectiveness boost: bounded learning signal, never replaces deterministic logic.
+    if (v.effectiveness && matched.length > 0) {
+      let bonus = 0;
+      for (const t of matched) {
+        const rate = v.effectiveness[t] ?? 0;
+        bonus += Math.max(0, Math.min(15, rate * 15));
+      }
+      base += Math.min(15, bonus / matched.length);
+    }
+
+    // Apply recently-watched penalty BEFORE tier multiply, then floor at a
+    // small positive — featured matched videos must remain visible to admin
+    // diagnostics rather than vanishing silently.
+    if (v.recentlyWatched21d) base -= 30;
+    base = Math.max(1, base);
 
     const tier = (v.distribution_tier ?? 'normal') as keyof typeof tierBoost;
-    score *= (tierBoost[tier] ?? 1);
-
-    if (v.recentlyWatched21d) score -= 30;
-
-    if (score <= 0) continue;
+    const score = base * (tierBoost[tier] ?? 1);
 
     const reason = matched[0] ? TRIGGER_REASONS[matched[0]] : 'Foundational refresher';
     out.push({ video: v, score, reason, matchedTriggers: matched });
   }
 
-  return out.sort((a, b) => b.score - a.score);
+  out.sort((a, b) => b.score - a.score);
+
+  // Diversity pass: at most N per domain.
+  const perDomain: Partial<Record<FoundationDomain, number>> = {};
+  const diverse: FoundationScoreResult[] = [];
+  for (const r of out) {
+    const d = r.video.foundation_meta.domain;
+    const c = perDomain[d] ?? 0;
+    if (c >= maxPerDomain) continue;
+    perDomain[d] = c + 1;
+    diverse.push(r);
+  }
+  return diverse;
 }
+
