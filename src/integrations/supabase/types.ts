@@ -3144,6 +3144,105 @@ export type Database = {
         }
         Relationships: []
       }
+      foundation_cron_heartbeats: {
+        Row: {
+          duration_ms: number | null
+          error: string | null
+          function_name: string
+          id: string
+          metadata: Json
+          ran_at: string
+          status: string
+        }
+        Insert: {
+          duration_ms?: number | null
+          error?: string | null
+          function_name: string
+          id?: string
+          metadata?: Json
+          ran_at?: string
+          status?: string
+        }
+        Update: {
+          duration_ms?: number | null
+          error?: string | null
+          function_name?: string
+          id?: string
+          metadata?: Json
+          ran_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      foundation_fatigue_decisions: {
+        Row: {
+          decided_at: string
+          exposure_score: number | null
+          id: string
+          kept: boolean
+          reason: string | null
+          snapshot: Json
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          decided_at?: string
+          exposure_score?: number | null
+          id?: string
+          kept: boolean
+          reason?: string | null
+          snapshot?: Json
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          decided_at?: string
+          exposure_score?: number | null
+          id?: string
+          kept?: boolean
+          reason?: string | null
+          snapshot?: Json
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
+      foundation_onboarding_decisions: {
+        Row: {
+          account_age_days: number | null
+          decided_at: string
+          id: string
+          kept: boolean
+          reason: string | null
+          snapshot: Json
+          user_id: string
+          video_id: string
+          weekly_count: number | null
+        }
+        Insert: {
+          account_age_days?: number | null
+          decided_at?: string
+          id?: string
+          kept: boolean
+          reason?: string | null
+          snapshot?: Json
+          user_id: string
+          video_id: string
+          weekly_count?: number | null
+        }
+        Update: {
+          account_age_days?: number | null
+          decided_at?: string
+          id?: string
+          kept?: boolean
+          reason?: string | null
+          snapshot?: Json
+          user_id?: string
+          video_id?: string
+          weekly_count?: number | null
+        }
+        Relationships: []
+      }
       foundation_recommendation_traces: {
         Row: {
           active_triggers: string[]
@@ -11280,6 +11379,7 @@ export type Database = {
       cleanup_old_adversarial_logs: { Args: never; Returns: undefined }
       cleanup_old_advisory_logs: { Args: never; Returns: undefined }
       cleanup_old_explanations: { Args: never; Returns: undefined }
+      cleanup_old_foundation_decisions: { Args: never; Returns: undefined }
       cleanup_old_foundation_traces: { Args: never; Returns: undefined }
       cleanup_old_function_logs: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
