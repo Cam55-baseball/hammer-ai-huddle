@@ -117,7 +117,7 @@ export function useFoundationVideos(opts: Options = {}) {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, domain, limit, triggerGated, refreshTick]);
+  }, [user?.id, domain, limit, triggerGated, surface, refreshTick]);
 
   return { results, activeTriggers, loading };
 }
