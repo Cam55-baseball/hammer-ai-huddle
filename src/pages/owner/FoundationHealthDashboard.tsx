@@ -316,6 +316,9 @@ export default function FoundationHealthDashboard() {
           </Card>
         </div>
       )}
+
+      {/* Phase II — Resolved alerts, drift trend, mismatch samples */}
+      <FoundationOpsObservability />
     </div>
   );
 }
