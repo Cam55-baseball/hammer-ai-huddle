@@ -3111,6 +3111,63 @@ export type Database = {
         }
         Relationships: []
       }
+      foundation_recommendation_traces: {
+        Row: {
+          active_triggers: string[]
+          created_at: string
+          engine_version: string | null
+          final_score: number | null
+          foundation_meta_version: number | null
+          matched_triggers: string[]
+          raw_score: number | null
+          recommendation_version: number
+          score_breakdown: Json
+          snapshot_version: string | null
+          suppressed: boolean
+          suppression_reason: string | null
+          surface_origin: string
+          trace_id: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          active_triggers?: string[]
+          created_at?: string
+          engine_version?: string | null
+          final_score?: number | null
+          foundation_meta_version?: number | null
+          matched_triggers?: string[]
+          raw_score?: number | null
+          recommendation_version?: number
+          score_breakdown?: Json
+          snapshot_version?: string | null
+          suppressed?: boolean
+          suppression_reason?: string | null
+          surface_origin: string
+          trace_id?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          active_triggers?: string[]
+          created_at?: string
+          engine_version?: string | null
+          final_score?: number | null
+          foundation_meta_version?: number | null
+          matched_triggers?: string[]
+          raw_score?: number | null
+          recommendation_version?: number
+          score_breakdown?: Json
+          snapshot_version?: string | null
+          suppressed?: boolean
+          suppression_reason?: string | null
+          surface_origin?: string
+          trace_id?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
       foundation_video_outcomes: {
         Row: {
           clicked_at: string | null
@@ -11121,6 +11178,7 @@ export type Database = {
       cleanup_old_adversarial_logs: { Args: never; Returns: undefined }
       cleanup_old_advisory_logs: { Args: never; Returns: undefined }
       cleanup_old_explanations: { Args: never; Returns: undefined }
+      cleanup_old_foundation_traces: { Args: never; Returns: undefined }
       cleanup_old_function_logs: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
       cleanup_old_interventions: { Args: never; Returns: undefined }
