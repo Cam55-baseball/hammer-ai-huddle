@@ -57,7 +57,24 @@ export function useFoundationVideos(opts: Options = {}) {
       setLoading(true);
       try {
         const snapshot = user ? await fetchFoundationSnapshot(user.id) : null;
-        const triggers = snapshot ? computeFoundationTriggers(snapshot) : [];
+        const rawTriggers = snapshot ? computeFoundationTriggers(snapshot) : [];
+
+        // Wave B: cooldown filter + state-machine reconciliation.
+        let triggers = rawTriggers;
+        if (user && rawTriggers.length > 0 && triggerGated) {
+          triggers = await recordAndFilterTriggerCooldown({
+            userId: user.id,
+            triggers: rawTriggers,
+          });
+        }
+        if (user) {
+          const recon = await reconcileFoundationState({
+            userId: user.id,
+            activeTriggers: triggers,
+            layoffDays: snapshot?.layoffDays,
+          });
+          if (!cancelled) setFoundationState(recon.state);
+        }
         if (!cancelled) setActiveTriggers(triggers);
 
         // Recently-watched set (last 21d) for spam suppression.
