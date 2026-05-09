@@ -4596,6 +4596,9 @@ export type Database = {
           description: string | null
           distribution_tier: string
           foundation_effectiveness: Json
+          foundation_health_checked_at: string | null
+          foundation_health_flags: string[]
+          foundation_health_score: number | null
           foundation_meta: Json | null
           id: string
           likes_count: number
@@ -4624,6 +4627,9 @@ export type Database = {
           description?: string | null
           distribution_tier?: string
           foundation_effectiveness?: Json
+          foundation_health_checked_at?: string | null
+          foundation_health_flags?: string[]
+          foundation_health_score?: number | null
           foundation_meta?: Json | null
           id?: string
           likes_count?: number
@@ -4652,6 +4658,9 @@ export type Database = {
           description?: string | null
           distribution_tier?: string
           foundation_effectiveness?: Json
+          foundation_health_checked_at?: string | null
+          foundation_health_flags?: string[]
+          foundation_health_score?: number | null
           foundation_meta?: Json | null
           id?: string
           likes_count?: number
