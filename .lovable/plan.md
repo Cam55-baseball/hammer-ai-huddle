@@ -1,59 +1,183 @@
 
-# Phase G Stabilization Audit
+# Phase H — Observability & Admin Hardening
 
-Full integrity sweep of every file touched by Phase G. **TypeScript compiles cleanly** (`tsc --noEmit` passes with no errors). No malformed JSX, no broken generics, no truncated hooks, no stripped operators, no invalid `Record<>` declarations, no `.select("")` placeholders found anywhere in `src/` or `supabase/`. Edge functions all use `Deno.serve`, `persistSession: false`, and proper admin role checks.
+Five sequenced workstreams. All additive, no schema breaks, no regressions to existing routes (`/owner/foundations/traces|diagnostics|health`).
 
-However, the audit surfaced **4 real defects** that will cause incorrect runtime behavior. All are small, isolated fixes.
+---
 
-## Defects to fix
+## H0 — Centralized thresholds (do first, everything else imports from here)
 
-### D1 — Trace Inspector filter bug (functional, high impact)
-`FoundationTraceInspector.tsx` lines 110-121. Radix `SelectItem` cannot accept `value=""`, so the code maps the empty option to the literal string `"any"`. But `onValueChange={setSurface}` writes `"any"` into state, and then `if (surface) q = q.eq('surface_origin', surface)` runs `eq('surface_origin', 'any')` — which matches zero rows. Same bug on `reason`.
-**Fix:** translate sentinel back: `onValueChange={(v) => setSurface(v === 'any' ? '' : v)}` (and same for `reason`). Also pass `value={surface || 'any'}` so the dropdown reflects state.
+**New file:** `src/lib/foundationThresholds.ts`
 
-### D2 — Health Dashboard cron name mismatch (observability dead)
-`FoundationHealthDashboard.tsx` line 17 lists `'nightly-foundation-effectiveness'` in `CRON_FNS`, but the actual edge function is named `recompute-foundation-effectiveness` (and that's the name written into `foundation_cron_heartbeats`). The panel will permanently show "no beat yet / red" for that cron.
-**Fix:** change the constant to `'recompute-foundation-effectiveness'`.
+Single source of truth for every magic number that currently lives inline. Plain TypeScript constants with inline tuning comments — no runtime dependency.
 
-### D3 — Decision retention never runs (silent data growth)
-`daily-trace-prune/index.ts` only calls `rpc('cleanup_old_foundation_traces')`. The Phase G migration added `cleanup_old_foundation_decisions()` (covers `foundation_fatigue_decisions`, `foundation_onboarding_decisions`, `foundation_cron_heartbeats`) but nothing invokes it, so the 30/60-day retention promised in the plan never executes.
-**Fix:** in `daily-trace-prune`, after the existing call, also `await supabase.rpc('cleanup_old_foundation_decisions')`; merge both errors into the heartbeat row.
+```ts
+// Cron staleness (minutes since last heartbeat before status flips)
+export const CRON_STALE_MIN = {
+  'hourly-trigger-decay': 90,        // runs every 1h, allow 1.5x
+  'daily-trace-prune': 60 * 26,      // runs daily, allow 26h
+  'nightly-foundation-health': 60 * 26,
+  'recompute-foundation-effectiveness': 60 * 26,
+} as const;
 
-### D4 — Funnel rollup includes system user (metric pollution)
-`FoundationHealthDashboard.tsx` `tracesRes` query has no `neq('user_id', SYSTEM_USER)` filter. Phase 9 architecture mandates excluding `00000000-0000-0000-0000-000000000001` from all behavioral pipelines.
-**Fix:** add `.neq('user_id', '00000000-0000-0000-0000-000000000001')` to the traces query.
+// Health alerts
+export const ALERT = {
+  SUPPRESSION_RATE_WARN: 0.55,       // >55% of surfacings suppressed in 24h
+  SUPPRESSION_RATE_CRIT: 0.75,
+  UNRESOLVED_TRIGGERS_WARN: 500,     // org-wide active triggers
+  UNRESOLVED_TRIGGERS_CRIT: 1500,
+  STUCK_TRIGGER_DAYS: 30,            // already used in dashboard
+  STUCK_TRIGGER_WARN: 5,
+  STUCK_TRIGGER_CRIT: 25,
+  REPLAY_MISMATCH_WARN: 0.10,        // 10% of recent replays drift
+  REPLAY_MISMATCH_CRIT: 0.25,
+  HEARTBEAT_MISSING_CRIT_MIN_RATIO: 2, // >2× CRON_STALE_MIN = critical
+} as const;
 
-## Verified clean (no changes needed)
+// Trace inspector / export
+export const TRACE_PAGE_SIZE = 100;        // cursor pagination page size
+export const TRACE_EXPORT_MAX = 10_000;    // hard cap per CSV
+export const TRACE_EXPORT_CHUNK = 1_000;   // server fetch chunk
+export const TRACE_SEARCH_DEBOUNCE_MS = 300;
+```
 
-- **`foundationTracing.ts`** — batched flush logic, dedupe set, bounded queue all valid; companion `enqueueFatigueDecisions` / `enqueueOnboardingDecisions` symmetric and correct.
-- **`foundations-replay/index.ts`** — admin auth via `user_roles` lookup; reads only; explicit field list on `library_videos.select(...)`; bounded `±60min` window with `limit(50)`.
-- **`foundations-recompute-user/index.ts`** — admin gate, system-user guard, idempotent trigger resolution, marker trace uses allowed `surface_origin='admin_replay'` (no FK on `video_id`, so zero-UUID marker is safe).
-- **`hourly-trigger-decay/index.ts`** — heartbeat with both ok/error paths, bounded `limit(5000)`, decay math correct.
-- **`recompute-foundation-effectiveness/index.ts`** & **`nightly-foundation-health/index.ts`** — cursor pagination, system-user exclusion, heartbeat instrumentation all intact.
-- **Migration `20260509143443…`** — companion tables have RLS (user-own SELECT + admin SELECT + user-own INSERT), proper indexes (`user_id, decided_at DESC`), heartbeat table admin-only SELECT, `cleanup_old_foundation_decisions` SECURITY DEFINER with `search_path = public`. No duplicate policies. `types.ts` already reflects both RPCs.
-- **`App.tsx`** — three Foundation routes registered cleanly (`/owner/foundations/traces|diagnostics|health`); no syntax issues.
-- **No `.select("")` placeholders** anywhere; all queries use explicit field lists or `select('*')` with bounded `.limit()`.
+`FoundationHealthDashboard` and `FoundationTraceInspector` are refactored to import from this module — no inline numbers remain.
 
-## Known risks left as-is (called out, not fixed)
+---
 
-- **Funnel pulls up to 5,000 raw trace rows then aggregates client-side.** Fine for current volume; will need a server-side rollup (or the deferred `foundation_funnel_daily` materialized view from G6) once daily traces exceed ~5k.
-- **Trace inspector `limit(200)` with no pagination.** Acceptable for an admin tool; pagination upgrade is explicitly deferred per the user's instructions.
-- **`(supabase as any)` casts** in tracing/inspector/dashboard are now unnecessary (types.ts has the new tables) but removing them is a cosmetic refactor, not a stabilization fix.
+## H1 — Trace pagination & debounced search (foundation for H2 export)
 
-## Files modified by this stabilization pass
+`FoundationTraceInspector.tsx`:
 
-1. `src/pages/owner/FoundationTraceInspector.tsx` — D1
-2. `src/pages/owner/FoundationHealthDashboard.tsx` — D2, D4
-3. `supabase/functions/daily-trace-prune/index.ts` — D3
+- Replace the single `limit(200)` query with a cursor: `loadPage(after?: string)` that selects `TRACE_PAGE_SIZE` rows ordered by `created_at desc, trace_id desc`, using `.lt('created_at', cursor)` for the next-page boundary. "Load more" button at the bottom; existing "Apply filters" resets the cursor.
+- Debounced unified search box (300ms via `useEffect` timer, no lodash):
+  - `user_id` / `video_id` / `trace_id` — UUID detection (regex), use `.eq()` on the matching column
+  - `suppression_reason` substring → `.ilike('suppression_reason', '%term%')`
+  - `trigger` token → `.contains('active_triggers', [term])`
+  - Free text falls back to OR across reason + score_breakdown text representation (kept narrow to stay indexed)
+- Existing dropdown filters (`surface`, `reason`) still apply.
+- Performance: all filters compose on the same indexed columns already present (`idx_frt_user_created`, `idx_frt_video_created`, `idx_frt_active_triggers`, `idx_frt_suppressed`). No new indexes needed; the cursor uses the existing `(user_id, created_at desc)` and `(created_at desc) where suppressed=true` indexes effectively.
 
-No migrations, no new files, no schema changes, no behavior beyond bug fixes.
+**No schema change** for H1. Pagination is purely client-driven via Supabase REST.
 
-## Exit criteria
+---
 
-- `tsc --noEmit` passes (already passing; will re-verify after edits).
-- Trace Inspector "any" filter returns rows.
-- Health Dashboard shows green pill for `recompute-foundation-effectiveness` once it next runs.
-- `daily-trace-prune` heartbeat metadata reports both cleanup calls.
-- System user excluded from funnel counts.
+## H2 — Trace Export CSV
 
-After these four edits land, Phase G is stable and the deferred work (CSV export, alerts, thresholds, pagination, replay enhancements) can resume.
+Inside `FoundationTraceInspector.tsx`, add an "Export CSV" button next to "Apply filters":
+
+- Re-runs the **current active filters** (not just the visible page) against `foundation_recommendation_traces`.
+- Loops in chunks of `TRACE_EXPORT_CHUNK` using cursor pagination until either no more rows or `TRACE_EXPORT_MAX` reached. Shows a toast progress counter (`Exported 3,000 / ?`).
+- Companion enrichment: after primary fetch, batch-loads matching `foundation_fatigue_decisions` and `foundation_onboarding_decisions` rows for the (`user_id`, `video_id`) pairs in the export within ±60s of each trace's `created_at`. Joined client-side. Empty columns when no companion record exists.
+- CSV columns:
+  ```
+  trace_id, created_at, user_id, video_id, surface_origin,
+  active_triggers, matched_triggers, raw_score, final_score,
+  suppressed, suppression_reason, recommendation_version,
+  fatigue_kept, fatigue_reason, fatigue_exposure_score,
+  onboarding_kept, onboarding_reason, onboarding_account_age_days
+  ```
+- Streamed to disk via a `Blob` built incrementally per chunk and released after download (no full in-memory accumulation beyond the 10k cap; arrays/strings released between chunks). Manual `URL.revokeObjectURL` on completion.
+- Disabled while `exporting === true`; uses `sonner` toast for success / partial / error.
+
+**No schema change** for H2.
+
+---
+
+## H3 — Health Alerts (persisted, auto-resolving)
+
+### New migration
+
+```sql
+CREATE TABLE public.foundation_health_alerts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  alert_key text NOT NULL,           -- e.g. 'cron_missing:hourly-trigger-decay'
+  severity text NOT NULL CHECK (severity IN ('info','warning','critical')),
+  title text NOT NULL,
+  detail jsonb NOT NULL DEFAULT '{}'::jsonb,
+  first_seen_at timestamptz NOT NULL DEFAULT now(),
+  last_seen_at  timestamptz NOT NULL DEFAULT now(),
+  resolved_at   timestamptz,
+  UNIQUE (alert_key, resolved_at)    -- one open row per key
+);
+CREATE INDEX idx_fha_open ON public.foundation_health_alerts (severity, last_seen_at DESC)
+  WHERE resolved_at IS NULL;
+
+ALTER TABLE public.foundation_health_alerts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "admins read alerts" ON public.foundation_health_alerts
+  FOR SELECT USING (public.has_role(auth.uid(),'admin'));
+-- inserts/updates only via service role (edge function)
+```
+
+### New edge function `foundation-health-alerts`
+
+Cron-callable (scheduled hourly via existing pg_cron pattern; user can wire schedule after deploy). Logic:
+
+1. Read `foundation_cron_heartbeats` → if any function in `CRON_STALE_MIN` has no beat within window → upsert `cron_missing:<fn>` (warning) or `>2× window` (critical).
+2. Suppression rate over last 24h: `count(suppressed) / count(*)` from `foundation_recommendation_traces` (excluding system user). Compare to `ALERT.SUPPRESSION_RATE_*`.
+3. Unresolved triggers: `count(*) where resolved_at is null` from `foundation_trigger_events`. Compare to `ALERT.UNRESOLVED_TRIGGERS_*`.
+4. Stuck triggers: `count(*)` where `fired_at < now() - 30d AND resolved_at is null`. Compare to `ALERT.STUCK_TRIGGER_*`.
+5. Replay mismatch rate: scan last 200 admin-replay marker traces (none today; placeholder uses `score_breakdown->>'admin_recompute'` = false until G2 starts persisting replay outcomes — guarded so absence yields no alert, never a crash).
+
+**Auto-resolve:** for every check that does NOT trigger, look for an open alert with matching `alert_key` and set `resolved_at = now()`. Active alerts get `last_seen_at = now()` updated. Severity escalation just upserts a new row only after the previous open one is auto-resolved (UNIQUE constraint enforces single open per key).
+
+Heartbeat row written to `foundation_cron_heartbeats` like every other cron.
+
+Thresholds **only** read from `foundationThresholds.ts` — duplicated server-side via a small mirror constant block at the top of the function (Deno can't import `src/`). Comment in both files cross-references the other so they stay in sync.
+
+### Dashboard panel
+
+`FoundationHealthDashboard.tsx` gains a top-of-page "Active Alerts" card:
+- Reads `foundation_health_alerts where resolved_at is null order by severity, last_seen_at desc limit 50`.
+- Critical = red pill, warning = amber, info = slate. Shows `title`, `first_seen_at` relative time, expand for `detail` JSON.
+- Empty state: "All clear."
+- No client-side write of alerts (always service-role from edge function).
+
+---
+
+## H4 — Admin retry / recompute UX inside trace rows
+
+In each `FoundationTraceInspector` row:
+- Existing "Replay" + "Inspect" buttons stay.
+- Add "Recompute user" button (only for non-marker rows) → calls `foundations-recompute-user` with that row's `user_id`.
+- Add "Replay from this trace" → existing replay endpoint, but the result panel now opens the inspect drawer with replay diff merged.
+
+UX hardening:
+- Per-row state map keyed by `trace_id`: `'idle' | 'pending' | 'ok' | 'error'`.
+- Buttons disabled when state is `'pending'` (prevents duplicate clicks).
+- Spinner inline in the button label.
+- Result surfaced via `sonner` toast (success "Replayed: 8/10 matched", error "Recompute failed: <msg>").
+- Errors keep the row state visible (red badge) until next click.
+- Existing top-of-page "Recompute" input is left in place for the manual user_id flow.
+
+No backend changes — both endpoints already exist (`foundations-replay`, `foundations-recompute-user`).
+
+---
+
+## Sequencing & rollout
+
+1. **H0** (constants module — pure refactor, no behavior change).
+2. **H1** (pagination + search; smallest blast radius, unblocks export).
+3. **H2** (CSV export; depends on H1's chunked fetch path).
+4. **H3** (alerts table + edge function + dashboard panel; one migration).
+5. **H4** (per-row admin actions; pure UI, depends on nothing).
+
+Each step compiled and verified before the next. No regressions to `/owner/foundations/diagnostics` (untouched) or to existing companion-decision logging.
+
+## Files
+
+**Created**
+- `src/lib/foundationThresholds.ts`
+- `supabase/functions/foundation-health-alerts/index.ts`
+- `supabase/migrations/<ts>_foundation_health_alerts.sql`
+
+**Modified**
+- `src/pages/owner/FoundationTraceInspector.tsx` (H1, H2, H4)
+- `src/pages/owner/FoundationHealthDashboard.tsx` (H0, H3 panel)
+- `supabase/functions/daily-trace-prune/index.ts` (only if we extend retention to alerts; otherwise untouched)
+
+## Out of scope (deferred)
+
+- Materialized view `foundation_funnel_daily` (G6 still deferred).
+- External alerting (email/Slack/PagerDuty) — table is the single sink for now.
+- Replay-mismatch rate persistence (placeholder check only — full implementation needs G2 to log replay outcomes, which is a separate workstream).

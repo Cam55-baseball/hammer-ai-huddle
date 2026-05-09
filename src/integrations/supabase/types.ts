@@ -3207,6 +3207,39 @@ export type Database = {
         }
         Relationships: []
       }
+      foundation_health_alerts: {
+        Row: {
+          alert_key: string
+          detail: Json
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          resolved_at: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          alert_key: string
+          detail?: Json
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          resolved_at?: string | null
+          severity: string
+          title: string
+        }
+        Update: {
+          alert_key?: string
+          detail?: Json
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          resolved_at?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       foundation_onboarding_decisions: {
         Row: {
           account_age_days: number | null
