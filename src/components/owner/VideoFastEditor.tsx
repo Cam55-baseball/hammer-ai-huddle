@@ -63,7 +63,7 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
   const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
   const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
 
-  const descRef = useRef<HTMLTextAreaElement>(null);
+  const descRef = useRef<HTMLDivElement>(null);
   const formatRef = useRef<HTMLDivElement>(null);
   const domainsRef = useRef<HTMLDivElement>(null);
   const tagsRef = useRef<HTMLDivElement>(null);
