@@ -271,15 +271,14 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
         </div>
       </div>
 
-      {/* Description */}
-      <div className="space-y-1">
+      {/* Description — chip composer (no typing) */}
+      <div className="space-y-1" ref={descRef as any}>
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] flex items-center gap-1.5">
-            Description
-            {deltaFor('ai_description') && (
-              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('ai_description')}</span>
-            )}
-          </Label>
+          {deltaFor('ai_description') && (
+            <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 ml-auto">
+              +{deltaFor('ai_description')}
+            </span>
+          )}
           <Button
             size="sm" variant="ghost" className="h-6 text-[10px] px-1.5"
             disabled={!canAutoSuggest || regen || isProcessing}
@@ -289,22 +288,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
             Run Hammer Suggestions
           </Button>
         </div>
-        <OwnerAuthorityNote compact className="block" />
-        <Textarea
-          ref={descRef}
-          value={aiDescription}
-          onChange={e => setAiDescription(e.target.value)}
-          placeholder="What this video teaches, in one or two sentences."
-          rows={2}
-          className="text-xs"
-          disabled={isProcessing}
-        />
+        <HammerDescriptionComposer value={aiDescription} onChange={setAiDescription} compact />
       </div>
 
-      {/* Tags */}
+      {/* Tags — tap to add, tap again to Boost ⚡, third tap removes */}
       <div className="space-y-1" ref={tagsRef}>
         <div className="flex items-center justify-between">
-          <Label className="text-[10px]">Tags ({Object.keys(assignments).length})</Label>
+          <Label className="text-[10px]">Tags ({Object.keys(assignments).length}) · tap again to ⚡ Boost</Label>
           {deltaFor('tag_assignments') && (
             <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('tag_assignments')}</span>
           )}
@@ -319,16 +309,22 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
                 <div className="flex flex-wrap gap-1">
                   {grouped[layer].length === 0 ? (
                     <span className="text-[10px] text-muted-foreground italic">none</span>
-                  ) : grouped[layer].map(tag => (
-                    <Badge
-                      key={tag.id}
-                      variant={assignments[tag.id] != null ? 'default' : 'outline'}
-                      className="cursor-pointer text-[10px]"
-                      onClick={() => !isProcessing && toggleAssignment(tag.id)}
-                    >
-                      {tag.label}
-                    </Badge>
-                  ))}
+                  ) : grouped[layer].map(tag => {
+                    const w = assignments[tag.id];
+                    const selected = w != null;
+                    const boosted = selected && w >= BOOST_WEIGHT;
+                    return (
+                      <Badge
+                        key={tag.id}
+                        variant={selected ? 'default' : 'outline'}
+                        className={`cursor-pointer text-[10px] gap-0.5 ${boosted ? 'ring-2 ring-primary/60' : ''}`}
+                        onClick={() => !isProcessing && cycleAssignment(tag.id)}
+                      >
+                        {boosted && <Zap className="h-2.5 w-2.5" />}
+                        {tag.label}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             ))}
