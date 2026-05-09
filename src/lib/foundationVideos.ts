@@ -261,6 +261,8 @@ export interface FoundationScoreResult {
 }
 
 export const FOUNDATION_BASE_CAP = 120;
+export const FOUNDATION_EFFECTIVENESS_MIN_SAMPLE = 20;
+export const FOUNDATION_EFFECTIVENESS_MAX_BONUS = 15;
 export const FOUNDATION_RECOMMENDATION_VERSION = 1 as const;
 
 export function scoreFoundationCandidates(input: FoundationScoreInput): FoundationScoreResult[] {
