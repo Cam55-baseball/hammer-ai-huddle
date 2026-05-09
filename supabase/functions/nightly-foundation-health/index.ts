@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
   const url = Deno.env.get('SUPABASE_URL')!;
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
+  const t0 = Date.now();
 
   let cursor: string | null = null;
   try {
