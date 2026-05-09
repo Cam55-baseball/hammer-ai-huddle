@@ -272,7 +272,7 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
       </div>
 
       {/* Description — chip composer (no typing) */}
-      <div className="space-y-1" ref={descRef as any}>
+      <div className="space-y-1" ref={descRef}>
         <div className="flex items-center justify-between">
           {deltaFor('ai_description') && (
             <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 ml-auto">
