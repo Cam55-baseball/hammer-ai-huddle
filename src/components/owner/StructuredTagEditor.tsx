@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
+import { Zap } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
 import { useVideoTaxonomy, groupTaxonomyByLayer } from '@/hooks/useVideoTaxonomy';
 import type { SkillDomain, TagLayer } from '@/lib/videoRecommendationEngine';
 import { LAYER_GUIDANCE } from './TaxonomyManager';
+import { HammerDescriptionComposer } from './HammerDescriptionComposer';
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
 const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
@@ -18,11 +18,15 @@ const LAYER_LABELS: Record<TagLayer, string> = {
   correction: 'Correction / Intent',
 };
 
+// Tag weight model: tap-to-cycle. None → Normal (1) → Boost (3) → None.
+const NORMAL_WEIGHT = 1;
+const BOOST_WEIGHT = 3;
+
 export interface StructuredTagState {
   videoFormat: string;
   skillDomains: SkillDomain[];
   aiDescription: string;
-  tagAssignments: Record<string, number>; // tagId -> weight
+  tagAssignments: Record<string, number>; // tagId -> weight (1 = normal, 3 = boosted)
 }
 
 interface Props {
@@ -31,7 +35,6 @@ interface Props {
 }
 
 export function StructuredTagEditor({ value, onChange }: Props) {
-  // Pull taxonomy for the union of selected domains (or all if none picked yet)
   const primaryDomain = value.skillDomains[0];
   const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
 
@@ -44,15 +47,14 @@ export function StructuredTagEditor({ value, onChange }: Props) {
     onChange({ ...value, skillDomains: next });
   };
 
-  const toggleTag = (tagId: string) => {
+  // Tap cycles: None → Normal → Boost → None
+  const cycleTag = (tagId: string) => {
     const next = { ...value.tagAssignments };
-    if (next[tagId] != null) delete next[tagId];
-    else next[tagId] = 1;
+    const cur = next[tagId];
+    if (cur == null) next[tagId] = NORMAL_WEIGHT;
+    else if (cur < BOOST_WEIGHT) next[tagId] = BOOST_WEIGHT;
+    else delete next[tagId];
     onChange({ ...value, tagAssignments: next });
-  };
-
-  const setWeight = (tagId: string, w: number) => {
-    onChange({ ...value, tagAssignments: { ...value.tagAssignments, [tagId]: w } });
   };
 
   return (
@@ -92,23 +94,29 @@ export function StructuredTagEditor({ value, onChange }: Props) {
         </div>
       </div>
 
-      {/* Layers 3-6: Taxonomy tags */}
+      {/* Layers 3-6: Taxonomy tags — tap to cycle Normal → Boost → Off */}
       {primaryDomain ? (
         <div className="space-y-3">
+          <p className="text-[10px] text-muted-foreground -mb-1">
+            Tap a tag to add it. Tap again to <span className="font-semibold text-primary">Boost</span> ⚡ (treated as a strong signal).
+          </p>
           {(['movement_pattern', 'result', 'context', 'correction'] as TagLayer[]).map(layer => (
             <div key={layer} className="space-y-1.5">
               <Label className="text-xs">{LAYER_LABELS[layer]}{layer === 'movement_pattern' ? ' *' : ''}</Label>
               <p className="text-[10px] text-muted-foreground -mt-1">{LAYER_GUIDANCE[layer].short}</p>
               <div className="flex flex-wrap gap-1">
                 {grouped[layer].map(tag => {
-                  const selected = value.tagAssignments[tag.id] != null;
+                  const w = value.tagAssignments[tag.id];
+                  const selected = w != null;
+                  const boosted = selected && w >= BOOST_WEIGHT;
                   return (
                     <Badge
                       key={tag.id}
                       variant={selected ? 'default' : 'outline'}
-                      className="cursor-pointer text-[10px]"
-                      onClick={() => toggleTag(tag.id)}
+                      className={`cursor-pointer text-[10px] gap-0.5 ${boosted ? 'ring-2 ring-primary/60' : ''}`}
+                      onClick={() => cycleTag(tag.id)}
                     >
+                      {boosted && <Zap className="h-2.5 w-2.5" />}
                       {tag.label}
                     </Badge>
                   );
@@ -117,19 +125,6 @@ export function StructuredTagEditor({ value, onChange }: Props) {
                   <span className="text-[10px] text-muted-foreground italic">No tags yet — add some in Taxonomy tab.</span>
                 )}
               </div>
-              {/* Weight sliders for selected tags in this layer */}
-              {grouped[layer].filter(t => value.tagAssignments[t.id] != null).map(tag => (
-                <div key={`w-${tag.id}`} className="flex items-center gap-2 pl-2">
-                  <span className="text-[10px] w-32 truncate text-muted-foreground">{tag.label} weight</span>
-                  <Slider
-                    min={1} max={5} step={1}
-                    value={[value.tagAssignments[tag.id]]}
-                    onValueChange={([v]) => setWeight(tag.id, v)}
-                    className="flex-1 max-w-[140px]"
-                  />
-                  <span className="text-[10px] w-4">{value.tagAssignments[tag.id]}</span>
-                </div>
-              ))}
             </div>
           ))}
         </div>
@@ -137,20 +132,11 @@ export function StructuredTagEditor({ value, onChange }: Props) {
         <p className="text-[11px] text-muted-foreground italic">Select a skill domain to see its tag taxonomy.</p>
       )}
 
-      {/* AI description */}
-      <div className="space-y-1.5">
-        <Label className="text-xs">Hammer Description (required) *</Label>
-        <Textarea
-          value={value.aiDescription}
-          onChange={e => onChange({ ...value, aiDescription: e.target.value })}
-          placeholder="Best for hitters rolling over on inside fastballs due to early hand drift. Focus on keeping barrel behind hands."
-          rows={3}
-          className="text-xs"
-        />
-        <p className="text-[10px] text-muted-foreground">
-          Free text. Used by Hammer to refine recommendations beyond structured tags.
-        </p>
-      </div>
+      {/* Hammer description — chip composer (no typing) */}
+      <HammerDescriptionComposer
+        value={value.aiDescription}
+        onChange={text => onChange({ ...value, aiDescription: text })}
+      />
     </div>
   );
 }
