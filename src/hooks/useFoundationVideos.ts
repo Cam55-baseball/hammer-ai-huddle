@@ -15,6 +15,10 @@ import { buildTraceRows, enqueueFoundationTraces, type SurfaceOrigin, type Trace
 import { reconcileFoundationState, recordAndFilterTriggerCooldown, type FoundationState } from '@/lib/foundationStateMachine';
 import { applyFatigue, loadFatigueState } from '@/lib/foundationFatigue';
 import { FOUNDATION_RECOMMENDATION_VERSION, FOUNDATION_META_VERSION } from '@/lib/foundationVideos';
+import {
+  applyOnboardingGate, computeOnboardingGate,
+  readFoundationKillSwitches, userInRollout,
+} from '@/lib/foundationOnboarding';
 
 interface Options {
   /** Limit candidates to this domain (e.g. user's primary). When omitted, all foundations. */
