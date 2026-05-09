@@ -1,6 +1,6 @@
 # Foundations — Intelligence, Observability & Lifecycle Hardening (Phases 8–19)
 
-**Status:** Wave A ✅ shipped. Wave B ✅ shipped (state machine + cooldown + fatigue). Next: Wave C (Effectiveness Learning Loop).
+**Status:** Wave A ✅ shipped. Wave B ✅ shipped. Wave C ✅ shipped (effectiveness aggregator + nightly cron + scorer trust gate). Next: Wave D (Content Health + Admin Diagnostics).
 
 
 This plan turns the Foundations system from "feature-complete + hardened" into an **observable, self-healing, lifecycle-aware developmental brain**. Work is grouped into 6 shippable waves so each wave is independently deployable, testable, and reversible behind feature flags.

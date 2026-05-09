@@ -106,9 +106,7 @@ export function useFoundationVideos(opts: Options = {}) {
               distribution_tier: v.distribution_tier,
               foundation_meta: meta,
               recentlyWatched21d: recentlyWatched.has(v.id),
-              effectiveness: (v.foundation_effectiveness && typeof v.foundation_effectiveness === 'object')
-                ? v.foundation_effectiveness
-                : undefined,
+              effectiveness: extractByTrigger(v.foundation_effectiveness),
             };
           })
           .filter(Boolean) as Parameters<typeof scoreFoundationCandidates>[0]['candidates'];
@@ -264,4 +262,15 @@ async function fetchFoundationSnapshot(userId: string): Promise<FoundationSnapsh
     philosophyDriftIntents14d: 0,
     primaryDomains,
   };
+}
+
+/** Pull the `byTrigger` slice out of the foundation_effectiveness payload, defensively. */
+function extractByTrigger(raw: unknown): any | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Record<string, unknown>;
+  // Legacy flat shape: { trigger: number } — pass through unchanged.
+  if (r.byTrigger && typeof r.byTrigger === 'object') {
+    return r.byTrigger as Record<string, unknown>;
+  }
+  return r as Record<string, unknown>;
 }

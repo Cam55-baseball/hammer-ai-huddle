@@ -219,8 +219,16 @@ export interface FoundationVideoCandidate {
   foundation_meta: FoundationMeta;
   distribution_tier?: string | null;
   recentlyWatched21d?: boolean;
-  /** Per-trigger helped-rate from foundation_effectiveness, optional. */
-  effectiveness?: Partial<Record<FoundationTrigger, number>>;
+  /**
+   * Per-trigger effectiveness stats from `library_videos.foundation_effectiveness.byTrigger`.
+   * Scorer ignores entries with sample_n < FOUNDATION_EFFECTIVENESS_MIN_SAMPLE.
+   */
+  effectiveness?: Partial<Record<FoundationTrigger, {
+    resolveRate: number;
+    rewatchRate: number;
+    helpRate: number;
+    sample_n: number;
+  }>>;
 }
 
 export interface FoundationScoreInput {
@@ -253,6 +261,8 @@ export interface FoundationScoreResult {
 }
 
 export const FOUNDATION_BASE_CAP = 120;
+export const FOUNDATION_EFFECTIVENESS_MIN_SAMPLE = 20;
+export const FOUNDATION_EFFECTIVENESS_MAX_BONUS = 15;
 export const FOUNDATION_RECOMMENDATION_VERSION = 1 as const;
 
 export function scoreFoundationCandidates(input: FoundationScoreInput): FoundationScoreResult[] {
@@ -280,11 +290,21 @@ export function scoreFoundationCandidates(input: FoundationScoreInput): Foundati
     let effectivenessBonus = 0;
     if (v.effectiveness && matched.length > 0) {
       let bonus = 0;
+      let counted = 0;
       for (const t of matched) {
-        const rate = v.effectiveness[t] ?? 0;
-        bonus += Math.max(0, Math.min(15, rate * 15));
+        const stat = v.effectiveness[t];
+        if (!stat || stat.sample_n < FOUNDATION_EFFECTIVENESS_MIN_SAMPLE) continue;
+        // Composite: weight resolveRate highest, helpRate next, rewatchRate small.
+        const composite =
+          0.55 * stat.resolveRate +
+          0.30 * stat.helpRate +
+          0.15 * stat.rewatchRate;
+        bonus += Math.max(0, Math.min(FOUNDATION_EFFECTIVENESS_MAX_BONUS, composite * FOUNDATION_EFFECTIVENESS_MAX_BONUS));
+        counted += 1;
       }
-      effectivenessBonus = Math.min(15, bonus / matched.length);
+      if (counted > 0) {
+        effectivenessBonus = Math.min(FOUNDATION_EFFECTIVENESS_MAX_BONUS, bonus / counted);
+      }
     }
 
     const watchedPenalty = v.recentlyWatched21d ? 30 : 0;
