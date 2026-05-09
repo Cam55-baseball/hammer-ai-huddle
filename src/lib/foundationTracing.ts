@@ -104,3 +104,69 @@ async function flush() {
     if (queue.length > 0) void flush();
   }
 }
+
+/* ----------------------------- Wave G companion logging ----------------------------- */
+
+export interface FatigueDecisionRow {
+  user_id: string;
+  video_id: string;
+  kept: boolean;
+  reason?: string | null;
+  exposure_score?: number | null;
+  snapshot?: Record<string, unknown>;
+}
+
+export interface OnboardingDecisionRow {
+  user_id: string;
+  video_id: string;
+  kept: boolean;
+  reason?: string | null;
+  account_age_days?: number | null;
+  weekly_count?: number | null;
+  snapshot?: Record<string, unknown>;
+}
+
+const fQueue: FatigueDecisionRow[] = [];
+const oQueue: OnboardingDecisionRow[] = [];
+let fInFlight = false;
+let oInFlight = false;
+
+export function enqueueFatigueDecisions(rows: FatigueDecisionRow[]) {
+  if (!rows.length) return;
+  fQueue.push(...rows);
+  void flushDecisions('fatigue');
+}
+
+export function enqueueOnboardingDecisions(rows: OnboardingDecisionRow[]) {
+  if (!rows.length) return;
+  oQueue.push(...rows);
+  void flushDecisions('onboarding');
+}
+
+async function flushDecisions(kind: 'fatigue' | 'onboarding') {
+  if (kind === 'fatigue') {
+    if (fInFlight || fQueue.length === 0) return;
+    fInFlight = true;
+    const batch = fQueue.splice(0, fQueue.length);
+    try {
+      await (supabase as any).from('foundation_fatigue_decisions').insert(batch);
+    } catch (e) {
+      console.warn('fatigue decision insert failed', e);
+    } finally {
+      fInFlight = false;
+      if (fQueue.length > 0) void flushDecisions('fatigue');
+    }
+  } else {
+    if (oInFlight || oQueue.length === 0) return;
+    oInFlight = true;
+    const batch = oQueue.splice(0, oQueue.length);
+    try {
+      await (supabase as any).from('foundation_onboarding_decisions').insert(batch);
+    } catch (e) {
+      console.warn('onboarding decision insert failed', e);
+    } finally {
+      oInFlight = false;
+      if (oQueue.length > 0) void flushDecisions('onboarding');
+    }
+  }
+}
