@@ -121,6 +121,7 @@ const ProgramBuilder = lazyWithRetry(() => import("./pages/owner/ProgramBuilder"
 const BundleBuilder = lazyWithRetry(() => import("./pages/owner/BundleBuilder"));
 const ConsultationFlow = lazyWithRetry(() => import("./pages/owner/ConsultationFlow"));
 const BuildLibrary = lazyWithRetry(() => import("./pages/owner/BuildLibrary"));
+const FoundationTraceInspector = lazyWithRetry(() => import("./pages/owner/FoundationTraceInspector"));
 const Success = lazyWithRetry(() => import("./pages/Success"));
 const BuildAccessGate = lazyWithRetry(() => import("./pages/BuildAccessGate"));
 const DemoRoot = lazyWithRetry(() => import("./pages/demo/DemoRoot"));
