@@ -141,6 +141,12 @@ Deno.serve(async (req) => {
   }
 
   const nextCursor = videos.length === PAGE_SIZE ? videos[videos.length - 1].id : null;
+  await supabase.from('foundation_cron_heartbeats').insert({
+    function_name: 'recompute-foundation-effectiveness',
+    duration_ms: Date.now() - t0,
+    status: 'ok',
+    metadata: { processed, done: nextCursor === null },
+  });
   return new Response(JSON.stringify({
     done: nextCursor === null,
     processed,
