@@ -17,7 +17,7 @@ import { computeMissingFields } from "@/lib/videoReadiness";
 import { computeVideoConfidence } from "@/lib/videoConfidence";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { AIComparePanel } from "./AIComparePanel";
-import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
+import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
