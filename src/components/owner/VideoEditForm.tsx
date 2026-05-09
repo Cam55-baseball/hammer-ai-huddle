@@ -390,18 +390,10 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           )}
         </div>
 
-        {/* AI Description + Auto-suggest */}
+        {/* Hammer Description — chip composer (no typing) + Auto-Suggest */}
         <div className="space-y-1.5">
-          <Label className="text-xs">Hammer Description (what the engine reads)</Label>
-          <Textarea
-            value={aiDescription}
-            onChange={e => setAiDescription(e.target.value)}
-            placeholder="Best for hitters rolling over on inside fastballs due to early hand drift. Focus on keeping barrel behind hands."
-            rows={4}
-            disabled={isProcessing}
-            className="text-xs"
-          />
-          <div className="flex items-center justify-between gap-2">
+          <HammerDescriptionComposer value={aiDescription} onChange={setAiDescription} />
+          <div className="flex items-center justify-between gap-2 pt-1">
             <p className="text-[10px] text-muted-foreground">
               {aiDescription.trim().length} chars · 20+ to enable Auto-Suggest
             </p>
@@ -413,15 +405,10 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
               disabled={!canAutoSuggest || regenLoading || isProcessing}
               className="h-7 text-xs"
             >
-              {regenLoading ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Wand2 className="h-3 w-3 mr-1" />
-              )}
+              {regenLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Wand2 className="h-3 w-3 mr-1" />}
               Auto-Suggest Tags
             </Button>
           </div>
-          <OwnerAuthorityNote className="block" />
         </div>
 
         {/* Tag assignments grouped by layer */}
