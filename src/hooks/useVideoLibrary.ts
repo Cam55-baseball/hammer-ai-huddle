@@ -20,6 +20,9 @@ export interface LibraryVideo {
   video_format?: string | null;
   skill_domains?: string[] | null;
   ai_description?: string | null;
+  // Foundation class (long-form A–Z philosophy videos)
+  video_class?: 'application' | 'foundation' | null;
+  foundation_meta?: import('@/lib/foundationVideos').FoundationMeta | null;
 }
 
 export interface LibraryTag {
@@ -70,6 +73,12 @@ export function useVideoLibrary(options: UseVideoLibraryOptions = {}) {
       // Owner manager opts in via includeBlocked so it can see/fix them.
       if (!includeBlocked) {
         query = query.neq('distribution_tier', 'blocked');
+      }
+
+      // Foundation videos live exclusively in the dedicated shelf / route.
+      // The owner manager (includeBlocked=true) keeps full visibility.
+      if (!includeBlocked) {
+        query = query.or('video_class.is.null,video_class.eq.application');
       }
 
       if (search && search.trim()) {
