@@ -61,14 +61,16 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
 
+  // Foundation toggle (long-form A–Z philosophy videos)
+  const [isFoundation, setIsFoundation] = useState(false);
+  const [foundationMeta, setFoundationMeta] = useState<FoundationMeta>(EMPTY_FOUNDATION_META);
+
   // Step 3 (engine fields, reusing StructuredTagEditor) — Fast Mode pre-suggests format only
   const [structured, setStructured] = useState<StructuredTagState>(() => {
     if (!fastMode || !defaults) return emptyStructuredTagState;
     return {
       ...emptyStructuredTagState,
       videoFormat: defaults.topFormat ?? '',
-      // Skill domain is sport-aware in Step 2; we don't pre-fill skillDomains here
-      // because they are also driven by what the owner picks at Step 2.
     };
   });
 
@@ -81,13 +83,15 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
     ? externalUrl.trim().length > 0 && /^https?:\/\//.test(externalUrl.trim())
     : !!videoFile;
   const step2Valid = title.trim().length > 0 && !!sport;
-  const step3Missing = computeMissingFields({
+  const step3Missing = isFoundation ? [] : computeMissingFields({
     videoFormat: structured.videoFormat,
     skillDomains: structured.skillDomains,
     aiDescription: structured.aiDescription,
     assignmentCount: Object.keys(structured.tagAssignments).length,
   });
-  const step3Valid = step3Missing.length === 0;
+  const step3Valid = isFoundation
+    ? isFoundationMetaValid(foundationMeta) && structured.aiDescription.trim().length > 0
+    : step3Missing.length === 0;
 
   // Fast Mode treats Step 3 as the final step (auto-publish on advance).
   const totalSteps = fastMode ? 3 : 4;
