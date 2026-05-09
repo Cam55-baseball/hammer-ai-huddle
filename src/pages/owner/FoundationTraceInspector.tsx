@@ -107,13 +107,13 @@ export default function FoundationTraceInspector() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <Input placeholder="user_id" value={userFilter} onChange={e => setUserFilter(e.target.value)} />
           <Input placeholder="trigger (e.g. lost_feel)" value={trigger} onChange={e => setTrigger(e.target.value)} />
-          <Select value={surface} onValueChange={setSurface}>
+          <Select value={surface || 'any'} onValueChange={(v) => setSurface(v === 'any' ? '' : v)}>
             <SelectTrigger><SelectValue placeholder="surface_origin" /></SelectTrigger>
             <SelectContent>
               {SURFACES.map(s => <SelectItem key={s || 'any'} value={s || 'any'}>{s || 'any'}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={reason} onValueChange={setReason}>
+          <Select value={reason || 'any'} onValueChange={(v) => setReason(v === 'any' ? '' : v)}>
             <SelectTrigger><SelectValue placeholder="suppression_reason" /></SelectTrigger>
             <SelectContent>
               {REASONS.map(r => <SelectItem key={r || 'any'} value={r || 'any'}>{r || 'any'}</SelectItem>)}
