@@ -290,12 +290,16 @@ export function useVideoLibraryAdmin() {
       videoFormat?: string | null;
       skillDomains?: string[];
       aiDescription?: string | null;
+      videoClass?: 'application' | 'foundation';
+      foundationMeta?: import('@/lib/foundationVideos').FoundationMeta | null;
     },
   ) => {
     const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
     if (fields.videoFormat !== undefined) updateData.video_format = fields.videoFormat || null;
     if (fields.skillDomains !== undefined) updateData.skill_domains = fields.skillDomains;
     if (fields.aiDescription !== undefined) updateData.ai_description = fields.aiDescription?.trim() || null;
+    if (fields.videoClass !== undefined) updateData.video_class = fields.videoClass;
+    if (fields.foundationMeta !== undefined) updateData.foundation_meta = fields.foundationMeta;
 
     const { error } = await supabase
       .from('library_videos')
