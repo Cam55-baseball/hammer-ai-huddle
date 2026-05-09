@@ -113,24 +113,56 @@ export function useFoundationVideos(opts: Options = {}) {
           })
           .filter(Boolean) as Parameters<typeof scoreFoundationCandidates>[0]['candidates'];
 
+        // Score with a generous prefetch window so fatigue can suppress
+        // freely without starving the final list.
         const scored = scoreFoundationCandidates({
           candidates,
           activeTriggers: triggerGated ? triggers : [],
           tierBoost: TIER_BOOST as any,
-        }).slice(0, limit);
+        });
 
-        if (!cancelled) setResults(scored);
+        // Wave B: fatigue layer (per-domain quota, semantic dedupe, exposure cap).
+        const fatigue = user
+          ? await loadFatigueState(user.id)
+          : { exposureByVideo: new Map(), surfacedDomainsLast7d: new Map(), semanticHashesLast14d: new Set<string>() };
 
-        // Wave A — observability: log each surfaced recommendation.
-        // Fire-and-forget; never blocks render.
-        if (user && scored.length > 0) {
-          const rows = buildTraceRows({
-            userId: user.id,
-            surface,
-            activeTriggers: triggerGated ? triggers : [],
-            results: scored,
-          });
-          enqueueFoundationTraces(rows);
+        const decision = applyFatigue({
+          results: scored,
+          fatigue,
+          competingDrillRecs,
+        });
+
+        const final = decision.kept.slice(0, limit);
+        if (!cancelled) setResults(final);
+
+        // Wave A — observability: log surfaced + suppressed.
+        if (user) {
+          const rows: TraceRow[] = [];
+          if (final.length > 0) {
+            rows.push(...buildTraceRows({
+              userId: user.id,
+              surface,
+              activeTriggers: triggerGated ? triggers : [],
+              results: final,
+            }));
+          }
+          for (const sup of decision.suppressed) {
+            rows.push({
+              user_id: user.id,
+              video_id: sup.result.video.id,
+              surface_origin: surface,
+              active_triggers: triggerGated ? triggers : [],
+              matched_triggers: sup.result.matchedTriggers,
+              raw_score: sup.result.breakdown.preTier,
+              final_score: sup.result.score,
+              score_breakdown: sup.result.breakdown as unknown as Record<string, unknown>,
+              recommendation_version: FOUNDATION_RECOMMENDATION_VERSION,
+              foundation_meta_version: FOUNDATION_META_VERSION,
+              suppressed: true,
+              suppression_reason: sup.reason,
+            });
+          }
+          if (rows.length > 0) enqueueFoundationTraces(rows);
         }
       } catch (e) {
         console.error('useFoundationVideos failed:', e);
@@ -140,9 +172,9 @@ export function useFoundationVideos(opts: Options = {}) {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, domain, limit, triggerGated, surface, refreshTick]);
+  }, [user?.id, domain, limit, triggerGated, surface, competingDrillRecs, refreshTick]);
 
-  return { results, activeTriggers, loading };
+  return { results, activeTriggers, foundationState, loading };
 }
 
 async function fetchRecentlyWatchedVideoIds(userId: string, days: number): Promise<Set<string>> {
