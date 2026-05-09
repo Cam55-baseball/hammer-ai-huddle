@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Wand2, Zap, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,7 +14,7 @@ import { computeMissingFields } from "@/lib/videoReadiness";
 import { computeVideoConfidence } from "@/lib/videoConfidence";
 import { getSmartDefaults } from "@/lib/ownerLearning";
 import { ConfidenceBadge } from "./ConfidenceBadge";
-import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
+import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -24,6 +22,8 @@ const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_r
 const LAYER_LABELS: Record<TagLayer, string> = {
   movement_pattern: 'Movement', result: 'Result', context: 'Context', correction: 'Correction',
 };
+const NORMAL_WEIGHT = 1;
+const BOOST_WEIGHT = 3;
 
 interface Props {
   video: LibraryVideo;
@@ -63,7 +63,7 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
   const { data: taxonomy = [] } = useVideoTaxonomy(primaryDomain);
   const grouped = useMemo(() => groupTaxonomyByLayer(taxonomy), [taxonomy]);
 
-  const descRef = useRef<HTMLTextAreaElement>(null);
+  const descRef = useRef<HTMLDivElement>(null);
   const formatRef = useRef<HTMLDivElement>(null);
   const domainsRef = useRef<HTMLDivElement>(null);
   const tagsRef = useRef<HTMLDivElement>(null);
@@ -90,7 +90,7 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
       if (target === 'video_format') formatRef.current?.scrollIntoView({ block: 'center' });
       else if (target === 'skill_domains') domainsRef.current?.scrollIntoView({ block: 'center' });
       else if (target === 'tag_assignments') tagsRef.current?.scrollIntoView({ block: 'center' });
-      else descRef.current?.focus();
+      else descRef.current?.scrollIntoView({ block: 'center' });
     });
   }, [initialFocus]);
 
@@ -144,10 +144,14 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
   const toggleDomain = (d: SkillDomain) =>
     setSkillDomains(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
 
-  const toggleAssignment = (id: string) =>
+  // Tap cycle: None → Normal (1) → Boost (3) → None
+  const cycleAssignment = (id: string) =>
     setAssignments(p => {
       const n = { ...p };
-      if (n[id] != null) delete n[id]; else n[id] = 3;
+      const cur = n[id];
+      if (cur == null) n[id] = NORMAL_WEIGHT;
+      else if (cur < BOOST_WEIGHT) n[id] = BOOST_WEIGHT;
+      else delete n[id];
       return n;
     });
 
@@ -267,15 +271,14 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
         </div>
       </div>
 
-      {/* Description */}
-      <div className="space-y-1">
+      {/* Description — chip composer (no typing) */}
+      <div className="space-y-1" ref={descRef}>
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] flex items-center gap-1.5">
-            Description
-            {deltaFor('ai_description') && (
-              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('ai_description')}</span>
-            )}
-          </Label>
+          {deltaFor('ai_description') && (
+            <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 ml-auto">
+              +{deltaFor('ai_description')}
+            </span>
+          )}
           <Button
             size="sm" variant="ghost" className="h-6 text-[10px] px-1.5"
             disabled={!canAutoSuggest || regen || isProcessing}
@@ -285,22 +288,13 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
             Run Hammer Suggestions
           </Button>
         </div>
-        <OwnerAuthorityNote compact className="block" />
-        <Textarea
-          ref={descRef}
-          value={aiDescription}
-          onChange={e => setAiDescription(e.target.value)}
-          placeholder="What this video teaches, in one or two sentences."
-          rows={2}
-          className="text-xs"
-          disabled={isProcessing}
-        />
+        <HammerDescriptionComposer value={aiDescription} onChange={setAiDescription} compact />
       </div>
 
-      {/* Tags */}
+      {/* Tags — tap to add, tap again to Boost ⚡, third tap removes */}
       <div className="space-y-1" ref={tagsRef}>
         <div className="flex items-center justify-between">
-          <Label className="text-[10px]">Tags ({Object.keys(assignments).length})</Label>
+          <Label className="text-[10px]">Tags ({Object.keys(assignments).length}) · tap again to ⚡ Boost</Label>
           {deltaFor('tag_assignments') && (
             <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">+{deltaFor('tag_assignments')}</span>
           )}
@@ -315,16 +309,22 @@ export function VideoFastEditor({ video, onSuccess, onCancel, initialFocus, auto
                 <div className="flex flex-wrap gap-1">
                   {grouped[layer].length === 0 ? (
                     <span className="text-[10px] text-muted-foreground italic">none</span>
-                  ) : grouped[layer].map(tag => (
-                    <Badge
-                      key={tag.id}
-                      variant={assignments[tag.id] != null ? 'default' : 'outline'}
-                      className="cursor-pointer text-[10px]"
-                      onClick={() => !isProcessing && toggleAssignment(tag.id)}
-                    >
-                      {tag.label}
-                    </Badge>
-                  ))}
+                  ) : grouped[layer].map(tag => {
+                    const w = assignments[tag.id];
+                    const selected = w != null;
+                    const boosted = selected && w >= BOOST_WEIGHT;
+                    return (
+                      <Badge
+                        key={tag.id}
+                        variant={selected ? 'default' : 'outline'}
+                        className={`cursor-pointer text-[10px] gap-0.5 ${boosted ? 'ring-2 ring-primary/60' : ''}`}
+                        onClick={() => !isProcessing && cycleAssignment(tag.id)}
+                      >
+                        {boosted && <Zap className="h-2.5 w-2.5" />}
+                        {tag.label}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             ))}

@@ -17,7 +17,7 @@ import { computeMissingFields } from "@/lib/videoReadiness";
 import { computeVideoConfidence } from "@/lib/videoConfidence";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { AIComparePanel } from "./AIComparePanel";
-import { OwnerAuthorityNote } from "@/lib/ownerAuthority";
+import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -101,17 +101,18 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     setSkillDomains(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
   };
 
+  // Tap cycle: None → Normal (1) → Boost (3) → None
+  const NORMAL_WEIGHT = 1;
+  const BOOST_WEIGHT = 3;
   const toggleAssignment = (tagId: string) => {
     setAssignments(prev => {
       const next = { ...prev };
-      if (next[tagId] != null) delete next[tagId];
-      else next[tagId] = 3; // default: Medium
+      const cur = next[tagId];
+      if (cur == null) next[tagId] = NORMAL_WEIGHT;
+      else if (cur < BOOST_WEIGHT) next[tagId] = BOOST_WEIGHT;
+      else delete next[tagId];
       return next;
     });
-  };
-
-  const setAssignmentWeight = (tagId: string, w: 1 | 3 | 5) => {
-    setAssignments(prev => ({ ...prev, [tagId]: w }));
   };
 
   const layersCovered = useMemo<TagLayer[]>(() => {
@@ -389,18 +390,10 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           )}
         </div>
 
-        {/* AI Description + Auto-suggest */}
+        {/* Hammer Description — chip composer (no typing) + Auto-Suggest */}
         <div className="space-y-1.5">
-          <Label className="text-xs">Hammer Description (what the engine reads)</Label>
-          <Textarea
-            value={aiDescription}
-            onChange={e => setAiDescription(e.target.value)}
-            placeholder="Best for hitters rolling over on inside fastballs due to early hand drift. Focus on keeping barrel behind hands."
-            rows={4}
-            disabled={isProcessing}
-            className="text-xs"
-          />
-          <div className="flex items-center justify-between gap-2">
+          <HammerDescriptionComposer value={aiDescription} onChange={setAiDescription} />
+          <div className="flex items-center justify-between gap-2 pt-1">
             <p className="text-[10px] text-muted-foreground">
               {aiDescription.trim().length} chars · 20+ to enable Auto-Suggest
             </p>
@@ -412,15 +405,10 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
               disabled={!canAutoSuggest || regenLoading || isProcessing}
               className="h-7 text-xs"
             >
-              {regenLoading ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Wand2 className="h-3 w-3 mr-1" />
-              )}
+              {regenLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Wand2 className="h-3 w-3 mr-1" />}
               Auto-Suggest Tags
             </Button>
           </div>
-          <OwnerAuthorityNote className="block" />
         </div>
 
         {/* Tag assignments grouped by layer */}
@@ -444,38 +432,20 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {grouped[layer].map(tag => {
-                        const selected = assignments[tag.id] != null;
                         const w = assignments[tag.id];
+                        const selected = w != null;
+                        const boosted = selected && w >= BOOST_WEIGHT;
                         return (
-                          <div key={tag.id} className="inline-flex items-center gap-0.5">
-                            <Badge
-                              variant={selected ? "default" : "outline"}
-                              className="cursor-pointer text-[10px]"
-                              onClick={() => !isProcessing && toggleAssignment(tag.id)}
-                            >
-                              {tag.label}
-                            </Badge>
-                            {selected && (
-                              <div className="inline-flex rounded border border-border overflow-hidden">
-                                {([1, 3, 5] as const).map(val => (
-                                  <button
-                                    key={val}
-                                    type="button"
-                                    onClick={() => setAssignmentWeight(tag.id, val)}
-                                    disabled={isProcessing}
-                                    className={`px-1.5 text-[9px] font-medium transition-colors ${
-                                      w === val
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-background hover:bg-muted'
-                                    }`}
-                                    title={val === 1 ? 'Low' : val === 3 ? 'Medium' : 'High'}
-                                  >
-                                    {val === 1 ? 'L' : val === 3 ? 'M' : 'H'}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                          <Badge
+                            key={tag.id}
+                            variant={selected ? 'default' : 'outline'}
+                            className={`cursor-pointer text-[10px] gap-0.5 ${boosted ? 'ring-2 ring-primary/60' : ''}`}
+                            onClick={() => !isProcessing && toggleAssignment(tag.id)}
+                            title={boosted ? 'Boosted — tap again to remove' : selected ? 'Tap again to ⚡ Boost' : 'Tap to add'}
+                          >
+                            {boosted && <span className="text-[9px]">⚡</span>}
+                            {tag.label}
+                          </Badge>
                         );
                       })}
                     </div>

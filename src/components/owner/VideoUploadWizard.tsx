@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVideoLibraryAdmin } from "@/hooks/useVideoLibraryAdmin";
 import { StructuredTagEditor, emptyStructuredTagState, type StructuredTagState } from "./StructuredTagEditor";
 import type { LibraryTag } from "@/hooks/useVideoLibrary";
@@ -130,9 +129,13 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       return;
     }
     const videoType = mode === 'upload' ? 'upload' : detectVideoType(externalUrl);
+    // Auto-derive a short blurb from selections when the owner left it blank.
+    const autoBlurb = [category, structured.videoFormat?.replace(/_/g, ' '), structured.skillDomains[0]?.replace(/_/g, ' ')]
+      .filter(Boolean).join(' · ');
+    const finalDescription = description.trim() || autoBlurb;
     const result = await uploadVideo({
       title: title.trim(),
-      description: description.trim() || undefined,
+      description: finalDescription || undefined,
       tags: [],
       sport: sportArray,
       category: category || undefined,
@@ -276,26 +279,35 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
 
           <div className="space-y-1.5">
             <Label>Category (optional)</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger><SelectValue placeholder="Pick a category" /></SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map(c => (
-                  <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-1">
+              {CATEGORIES.map(c => (
+                <Badge
+                  key={c}
+                  variant={category === c ? 'default' : 'outline'}
+                  className="cursor-pointer text-[10px] capitalize"
+                  onClick={() => setCategory(prev => (prev === c ? '' : c))}
+                >
+                  {c}
+                </Badge>
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="wiz-desc">Short Description (optional)</Label>
-            <Textarea
-              id="wiz-desc"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={2}
-              placeholder="One-liner shown on the card."
-            />
-          </div>
+          <details className="group">
+            <summary className="text-[11px] cursor-pointer text-muted-foreground hover:text-foreground select-none">
+              Customize blurb (optional) — auto-generated from your selections
+            </summary>
+            <div className="space-y-1.5 mt-2">
+              <Label htmlFor="wiz-desc" className="text-xs">Short Description</Label>
+              <Textarea
+                id="wiz-desc"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={2}
+                placeholder="Override the auto blurb shown on the card."
+              />
+            </div>
+          </details>
         </div>
       )}
 
