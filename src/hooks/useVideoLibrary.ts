@@ -20,6 +20,9 @@ export interface LibraryVideo {
   video_format?: string | null;
   skill_domains?: string[] | null;
   ai_description?: string | null;
+  // Foundation class (long-form A–Z philosophy videos)
+  video_class?: 'application' | 'foundation' | null;
+  foundation_meta?: import('@/lib/foundationVideos').FoundationMeta | null;
 }
 
 export interface LibraryTag {
