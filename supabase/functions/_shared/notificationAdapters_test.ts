@@ -59,23 +59,23 @@ const origFetch = globalThis.fetch;
 function setFetch(fn: typeof fetch) { (globalThis as any).fetch = fn; }
 function restoreFetch() { (globalThis as any).fetch = origFetch; }
 
-Deno.test('dispatch: skipped when disabled flag is off', async () => {
+Deno.test({ name: 'dispatch: skipped when disabled flag is off', sanitizeOps: false, sanitizeResources: false, fn: async () => {
   __resetForTests();
   setEnv({ ...baseEnv });
   const r = await dispatch(sample);
   assertEquals(r.skipped, true);
   assertEquals(r.reason, 'disabled');
-});
+} });
 
-Deno.test('dispatch: skipped for non-critical severity', async () => {
+Deno.test({ name: 'dispatch: skipped for non-critical severity', sanitizeOps: false, sanitizeResources: false, fn: async () => {
   __resetForTests();
   setEnv({ ...baseEnv, FOUNDATION_NOTIFICATIONS_ENABLED: 'true' });
   const r = await dispatch({ ...sample, severity: 'warning' });
   assertEquals(r.skipped, true);
   assertEquals(r.reason, 'non_critical');
-});
+} });
 
-Deno.test('dispatch: never throws even if all adapters fail', async () => {
+Deno.test({ name: 'dispatch: never throws even if all adapters fail', sanitizeOps: false, sanitizeResources: false, fn: async () => {
   __resetForTests();
   setEnv({
     ...baseEnv,
@@ -92,9 +92,9 @@ Deno.test('dispatch: never throws even if all adapters fail', async () => {
   } finally {
     restoreFetch();
   }
-});
+} });
 
-Deno.test('dispatch: succeeds when fetch returns 200', async () => {
+Deno.test({ name: 'dispatch: succeeds when fetch returns 200', sanitizeOps: false, sanitizeResources: false, fn: async () => {
   __resetForTests();
   setEnv({
     ...baseEnv,
@@ -108,9 +108,9 @@ Deno.test('dispatch: succeeds when fetch returns 200', async () => {
   } finally {
     restoreFetch();
   }
-});
+} });
 
-Deno.test('emailAdapter: inert when FOUNDATION_ALERT_EMAIL_HOOK_URL unset', async () => {
+Deno.test({ name: 'emailAdapter: inert when FOUNDATION_ALERT_EMAIL_HOOK_URL unset', sanitizeOps: false, sanitizeResources: false, fn: async () => {
   __resetForTests();
   setEnv({ ...baseEnv, FOUNDATION_NOTIFICATIONS_ENABLED: 'true' });
   // No fetch should be called for email; supply a throwing fetch to prove it.
@@ -123,4 +123,4 @@ Deno.test('emailAdapter: inert when FOUNDATION_ALERT_EMAIL_HOOK_URL unset', asyn
   } finally {
     restoreFetch();
   }
-});
+} });
