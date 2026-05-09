@@ -101,17 +101,18 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     setSkillDomains(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
   };
 
+  // Tap cycle: None → Normal (1) → Boost (3) → None
+  const NORMAL_WEIGHT = 1;
+  const BOOST_WEIGHT = 3;
   const toggleAssignment = (tagId: string) => {
     setAssignments(prev => {
       const next = { ...prev };
-      if (next[tagId] != null) delete next[tagId];
-      else next[tagId] = 3; // default: Medium
+      const cur = next[tagId];
+      if (cur == null) next[tagId] = NORMAL_WEIGHT;
+      else if (cur < BOOST_WEIGHT) next[tagId] = BOOST_WEIGHT;
+      else delete next[tagId];
       return next;
     });
-  };
-
-  const setAssignmentWeight = (tagId: string, w: 1 | 3 | 5) => {
-    setAssignments(prev => ({ ...prev, [tagId]: w }));
   };
 
   const layersCovered = useMemo<TagLayer[]>(() => {
