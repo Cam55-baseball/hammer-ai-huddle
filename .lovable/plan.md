@@ -1,123 +1,128 @@
-# Foundations System — Hardening & Deep Integration Plan
+# Foundations — Intelligence, Observability & Lifecycle Hardening (Phases 8–19)
 
-A focused audit + implementation pass on the existing Foundations layer. Nothing about the application/per-rep recommendation engine is replaced — Foundations runs in parallel with its own scorer, candidate set, and surfaces.
-
----
-
-## Audit Findings (current state)
-
-Files in scope: `src/lib/foundationVideos.ts`, `src/hooks/useFoundationVideos.ts`, `src/components/video-library/FoundationsShelf.tsx`, `src/components/owner/FoundationTagEditor.tsx`, `src/hooks/useVideoLibraryAdmin.ts`, `src/pages/VideoLibrary.tsx`, migration `20260509044450_*`.
-
-### Integration gaps (silent failure today)
-1. **Owner Fast Editor + Video Edit Form** — Foundation toggle exists only in `VideoUploadWizard`. Editing an existing foundation video in `VideoFastEditor` / `VideoEditForm` cannot reach `foundation_meta` or `video_class`. Owner can silently strip a foundation video back to application by re-saving.
-2. **Hammer / Today Tips edge function (`get-today-tips`)** — does not query `video_class='foundation'`. Foundations never surface in Hammer chat or daily tips.
-3. **Trigger snapshot is mostly placeholder** — `domainRepCount: {}`, `regulationLow3d: false`, `seasonPhase: null`, `philosophyDriftIntents14d: 0`, all delta fields undefined. Only `new_user_30d` and `post_layoff` ever fire today.
-4. **`recentlyWatched21d` is never set** — the −30 spam guard is dead code; no read of `library_video_analytics` watch history.
-5. **Standard library feed (`useVideoLibrary`)** has no awareness of `video_class`. Foundations appear in the regular grid AND the shelf, double-surfacing and competing with application drills on the tier sort.
-6. **Scorer math review** — `score *= (tierBoost[tier] ?? 1)` is *correct* (multiplicative tier weight, parallel to application engine), but `recentlyWatched21d` is applied AFTER the multiply, then `if (score <= 0) continue` silently drops featured videos when matched=1 and not-watched penalty applied with low base. Needs floor + reordering.
-7. **No JSONB index on `foundation_meta`** — every shelf query scans 200 rows client-side.
-8. **No realtime/cross-tab invalidation** for foundation watches; user can mark a foundation watched in tab A and see it re-recommended in tab B.
-9. **No malformed-meta defense** — DB row with `foundation_meta = {}` will throw at `meta.refresher_triggers.filter(...)`.
-10. **Length tier never persisted** — `length_tier` is in the type but the wizard/editor never writes it; matching boost is dead.
-11. **No tests** for trigger derivation, scorer, completeness grading, or migration backfill.
-12. **No analytics events** for `foundation_shown` / `foundation_clicked` / `foundation_helped` → can't learn over time.
-
-### Logic risks
-- `fragile_foundation` fires when **any** domain has <50 reps, including domains the athlete doesn't play (every new user is permanently fragile across all 9 domains). Must scope to athlete's primary domain(s).
-- Trigger overlap formula: `60 + 20*(matched-1)` with no cap — 5 trigger overlap = 140 base before tier multiply, can exceed featured application drill scores in unified surfaces. Add cap at 120.
-- `recompute_library_video_tier` for foundations counts `v_missing >= 3` as blocked — but the editor enforces required chips, so a malformed JSONB write (e.g. from an admin SQL fix) will silently block the video without telemetry.
+This plan turns the Foundations system from "feature-complete + hardened" into an **observable, self-healing, lifecycle-aware developmental brain**. Work is grouped into 6 shippable waves so each wave is independently deployable, testable, and reversible behind feature flags.
 
 ---
 
-## Implementation Plan
+## Wave A — Observability Backbone (Phases 8 + 18 partial)
 
-### 1. Scorer + trigger correctness (`src/lib/foundationVideos.ts`)
-- Cap base score at 120 after overlap stacking.
-- Apply `recentlyWatched21d` penalty BEFORE tier multiply, then floor at 0 (never drop a featured/matched video silently — keep with low score so admin diagnostics see it).
-- Scope `fragile_foundation` to a passed-in `primaryDomains: FoundationDomain[]`.
-- Add a `diversity` pass: max 2 results per `domain` in the returned list (prevents 4 hitting philosophies in a row).
-- Add Zod schema `FoundationMetaSchema` + `parseFoundationMeta(raw): FoundationMeta | null` used by every reader.
-- Export `FOUNDATION_META_VERSION = 1` and stamp all writes.
+**Goal:** Every recommendation is traceable, replayable, and explainable.
 
-### 2. Real trigger wiring (`src/hooks/useFoundationVideos.ts` → split into `useFoundationSnapshot.ts`)
-Replace placeholders with real queries (single batched RPC where possible):
-- `domainRepCount` ← `custom_activity_logs` grouped by domain over last 90d.
-- `bqiDelta7d`, `peiDelta7d`, `competitiveDelta14d` ← `engine_snapshot_versions` latest two snapshots.
-- `faultRateDelta14d` ← `session_performance` fault aggregates.
-- `regulationLow3d` ← `regulation_daily_index` last 3 days < threshold.
-- `seasonPhase` ← `season_phases` table (already exists).
-- `layoffDays` ← already wired, keep.
-- `philosophyDriftIntents14d` ← count of distinct `practice_intent` values in last 14d > 2.
-- `primaryDomains` ← `athlete_mpi_settings.sport` + `profiles.position`.
-- Cache snapshot in React Query with `staleTime: 5 * 60_000`.
-
-### 3. Recently-watched (real)
-- Read `library_video_analytics` rows where `action='view'` and `created_at > now() - 21d` for current user, build `Set<videoId>` and stamp candidates.
-- Subscribe to `BroadcastChannel('data-sync')` `video_watched` events to invalidate the React Query key.
-
-### 4. Owner editing parity
-- Add `<FoundationTagEditor>` branch + `video_class` toggle to `VideoFastEditor.tsx` and `VideoEditForm.tsx`.
-- In `useVideoLibraryAdmin.updateStructuredFields`, validate via Zod; reject invalid foundation_meta with toast instead of silent partial write.
-- Auto-set `length_tier` from video duration in wizard + edit save.
-
-### 5. Standard feed segregation (`useVideoLibrary` + `VideoLibrary.tsx`)
-- Default `useVideoLibrary` query filters out `video_class='foundation'` (foundations only appear in their dedicated shelf + `/video-library/foundations` route).
-- Add filter chip "Foundations" that flips the predicate.
-- Shelf auto-hides when no triggers active AND user is not on the dedicated route (avoid permanent shelf clutter).
-
-### 6. Hammer / Today Tips integration
-- `supabase/functions/get-today-tips/index.ts`: after computing application tips, run a parallel foundation lookup (server-side scorer mirror in `_shared/foundationScorer.ts`) capped at 1 per day per domain; attach as `tips.foundation` field.
-- Surface in existing Today Tips UI as a single "Refresh your base" card with reason text.
-
-### 7. DB hardening (single migration)
-- `CREATE INDEX library_videos_foundation_class_idx ON library_videos (video_class) WHERE video_class='foundation';`
-- `CREATE INDEX library_videos_foundation_meta_gin ON library_videos USING GIN (foundation_meta jsonb_path_ops) WHERE video_class='foundation';`
-- Add CHECK trigger (not constraint — per project rules) validating foundation rows have `domain`, `scope`, non-empty audience/triggers arrays, version stamp.
-- New table `foundation_video_outcomes (user_id, video_id, shown_at, clicked_at, watched_seconds, helped_flag, trigger_keys text[])` with RLS (user owns own rows, owner reads aggregates via SECURITY DEFINER fn).
-- Backfill: stamp `foundation_meta->>'version' = '1'` on existing rows.
-
-### 8. Resilience
-- Every reader uses `parseFoundationMeta`; on failure log to `engine_sentinel_logs` with `kind='foundation_meta_malformed'` and skip the row instead of throwing.
-- Shelf wrapped in `<ErrorBoundary fallback={null}>`.
-- Thumbnail fallback already handled; add `video_url` empty/whitespace skip (per `data-integrity/video-url-standard` core rule).
-
-### 9. Learning loop (lightweight, no model)
-- Insert `foundation_video_outcomes` rows on shown/clicked/watched/helped.
-- Weekly cron edge function `recompute-foundation-effectiveness`: per (video_id, trigger_key) compute helped_rate = helped / shown; store on `library_videos.foundation_effectiveness jsonb`.
-- Scorer reads `foundation_effectiveness[trigger]` and adds up to +15 boost — deterministic, bounded.
-
-### 10. UX polish (mobile-first @ 440px)
-- Shelf header copy: "Return to your blueprint" with subcopy mapped to top trigger.
-- Empty/onboarding state for `/video-library/foundations` route when 0 videos.
-- Skeleton state during load (currently returns null → CLS jump).
-- Aria labels on cards, keyboard nav (`tabIndex`, `onKeyDown` Enter/Space).
-
-### 11. Tests
-- `src/lib/foundationVideos.test.ts`: trigger derivation matrix, scorer math (overlap cap, recently-watched, diversity, malformed meta).
-- `src/hooks/useFoundationSnapshot.test.ts`: mocked Supabase, assert real signals fire.
-- Migration test: insert malformed row → trigger raises; insert clean row → tier `normal`.
-- Edge function deno test for `get-today-tips` foundation branch.
+1. **`foundation_recommendation_traces` table** (one row per surfaced video):
+   - `trace_id` (uuid PK), `user_id`, `video_id`, `surface_origin` (enum: library/hammer/today_tip/onboarding/recovery_flow), `created_at`
+   - `active_triggers[]`, `matched_triggers[]`
+   - `raw_score`, `final_score`, `score_breakdown` (jsonb: base/audience/length/effectiveness/penalty/tierMultiplier)
+   - `recommendation_version`, `engine_version`, `snapshot_version`, `foundation_meta_version`
+   - `suppressed` (bool) + `suppression_reason` (enum)
+   - GIN index on `active_triggers`, btree on `(user_id, created_at desc)`, partial index on `suppressed=true`
+   - 90-day retention via existing cleanup pattern.
+2. **Tracing instrumentation** in `useFoundationVideos` + `scoreFoundationCandidates`: scorer returns a structured `breakdown` object instead of opaque number; hook batch-inserts traces (fire-and-forget, debounced).
+3. **`replayRecommendation(traceId)`** util (`src/lib/foundationReplay.ts`) — pulls trace + frozen snapshot + meta version, re-runs scorer, asserts deterministic equality.
+4. **Admin Trace Inspector** (route `/owner/foundations/traces`): table + drill-down JSON view + "Replay" button.
 
 ---
 
-## Out of scope
-- No changes to application/per-rep `videoRecommendationEngine.ts` ranking logic.
-- No new AI model; effectiveness learning is deterministic counters.
-- No paid-tier gating for foundations.
-- No bulk re-tagging of historical videos (owner does it via the parity-fixed Fast Editor).
+## Wave B — Trigger State Machine + Fatigue (Phases 10 + 11)
+
+**Goal:** Athlete state is temporally stable; foundations never spam.
+
+1. **`athlete_foundation_state` table**: `user_id` PK, `current_state` (healthy_foundation/fragile/active_recovery/lost_feel/post_recovery/chronic_decline/post_layoff_rebuild), `state_entered_at`, `confidence`, `last_transition_reason`, `prev_state`.
+2. **`foundation_trigger_events` table**: `user_id`, `trigger`, `fired_at`, `confidence`, `resolved_at` — drives decay + persistence windows.
+3. **State machine** (`src/lib/foundationStateMachine.ts`):
+   - Transition rules with **min-dwell time** (e.g., 48h) to prevent flapping
+   - Trigger **cooldowns** (per-trigger map, default 72h)
+   - **Decay**: confidence -= 0.1/day until removed
+   - **Resolution**: trigger auto-resolves when underlying signal disappears for N days
+4. **Fatigue layer** (`src/lib/foundationFatigue.ts`):
+   - `exposureScore[videoId]` from traces (last 30d, exponential decay)
+   - **Per-domain quota**: max 2 foundations/week surfaced
+   - **Semantic dedupe**: hash(domain+scope+top-2 triggers) — suppress duplicates within 14d
+   - **"Too much philosophy" cap**: ≤1 foundation in any single feed render when active drill recs exist
+5. Wire both into `useFoundationVideos`; emit `suppression_reason` to traces.
 
 ---
 
-## Deliverable order (one approval, executed sequentially)
-1. Migration (indexes, outcomes table, validation trigger, version stamp).
-2. `foundationVideos.ts` scorer + Zod + parser.
-3. `useFoundationSnapshot.ts` real signal wiring + cache.
-4. Recently-watched + cross-tab invalidation.
-5. Editor parity (Fast Editor + Edit Form + length_tier autofill).
-6. Standard feed segregation + filter chip.
-7. `get-today-tips` integration + shared scorer.
-8. Outcomes telemetry + weekly effectiveness cron.
-9. Shelf UX polish + skeleton + a11y.
-10. Tests (unit + integration + edge).
+## Wave C — Effectiveness Learning Loop (Phase 9)
 
-After implementation: architecture summary, data flow map, trigger flow map, recommendation flow map, failure recovery map delivered as a single `docs/foundations-architecture.md`.
+**Goal:** Bounded learning; deterministic triggers stay primary.
+
+1. Extend `foundation_video_outcomes` with: `completion_pct`, `rewatched`, `saved`, `shared`, `helpful_vote` (-1/0/1), `post_watch_bqi_delta_7d`, `post_watch_pei_delta_7d`, `trigger_resolved_within_7d` (bool), `recovery_correlation` (numeric).
+2. **`recompute-foundation-effectiveness`** edge function (cron, nightly):
+   - Aggregates 90d outcomes per (video_id, trigger) pair
+   - Writes to `library_videos.foundation_effectiveness` jsonb: `{ byTrigger: { [t]: { resolveRate, rewatchRate, helpRate, sample_n } } }`
+   - Bounded modifier: ±15 max in scorer (never overrides deterministic match)
+3. Scorer reads `effectiveness.byTrigger[matchedTrigger]` → small bonus only when `sample_n ≥ 20`.
+
+---
+
+## Wave D — Content Health + Admin Diagnostics (Phases 12 + 13)
+
+1. **`foundation_health_score`** (computed nightly, stored on `library_videos`):
+   - Penalties: zero-engagement 30d, broken URL, malformed meta, ultra-low completion, semantic duplicate, contradictory chips, orphaned domain
+   - 0–100 scale + `health_flags[]`
+2. **`FoundationDiagnosticsPanel`** (`/owner/foundations/diagnostics`):
+   - Tiles: active triggers (rolling 7d), recommendation frequency, top/bottom effectiveness, trigger heatmap, low-health videos, suppression breakdown, cooldown visibility, stale content alerts
+   - Drill-into trace inspector + replay
+3. **URL/meta verifier** as part of nightly health job (HEAD request, integrity check).
+
+---
+
+## Wave E — Cold Start, Discovery, Cron, Rollback (Phases 14 + 15 + 16 + 17)
+
+1. **Onboarding sequencer** (`src/lib/foundationOnboarding.ts`): first 30d = curated 1-per-week ramp by domain, beginner_safe gate, no advanced philosophies until `accountAgeDays ≥ 14` AND ≥10 reps logged.
+2. **Discovery integration**:
+   - `get-today-tips` edge function: include 1 foundation if state ∈ {fragile, lost_feel, post_layoff} AND no foundation surfaced in 7d
+   - Hammer chat retrieval: foundations indexed in same vector store with `class:foundation` filter; surfaced on philosophy/recovery intents
+   - "Return to your blueprint" + "Recommended because…" UI strings driven by `matched_triggers`
+3. **Cron jobs** (pg_cron + edge functions, all idempotent + resumable via continuation tokens):
+   - `nightly-foundation-effectiveness` (02:00)
+   - `nightly-foundation-health` (03:00)
+   - `hourly-trigger-decay` 
+   - `daily-trace-prune` (90d retention)
+   - `weekly-duplicate-detection`
+4. **Rollback + kill switches** (`engine_settings` flags):
+   - `foundations_enabled`, `foundations_learning_enabled`, `foundations_state_machine_enabled`, `foundations_fatigue_enabled`
+   - Per-flag fallback paths in `useFoundationVideos` (degrade to deterministic-only, never crash)
+   - Gradual rollout: `foundations_rollout_pct` (hash userId)
+
+---
+
+## Wave F — Replay Tests + Final Architecture Maps (Phases 18 + 19)
+
+1. **Vitest suites** (`src/lib/__tests__/`):
+   - `foundationScorer.replay.test.ts` — golden traces re-run deterministically
+   - `foundationStateMachine.test.ts` — anti-flap, cooldown, decay
+   - `foundationFatigue.test.ts` — quota, dedupe, exposure decay
+   - `foundationCornerCases.test.ts` — malformed meta, zero candidates, all-suppressed, cold start, multi-tab race
+2. **Architecture documentation** (`docs/foundations/`):
+   - `dependency-map.md`, `event-flow.md`, `state-flow.md`, `trigger-lifecycle.md`, `recommendation-lifecycle.md`, `observability-map.md`, `cron-map.md`
+3. **Memory updates**: add Core rule for foundations observability + reference entries for state machine, fatigue, effectiveness pipelines.
+
+---
+
+## Technical Notes
+
+- **No schema breaks**: all new columns are additive + nullable; new tables are net-new.
+- **JSONB versioning**: `foundation_effectiveness` gets `version: 1` stamp via existing `validate_foundation_meta` pattern; future migrations registered through `src/lib/jsonbMigrations.ts`.
+- **Edge function standards**: `persistSession: false`, `Deno.serve()`, dual-auth, continuation tokens for >500 user batches (per existing HIE pattern).
+- **System user `00000000-0000-0000-0000-000000000001`** excluded from all pipelines.
+- **`video_url.trim() !== ''`** integrity preserved in scorer + health checks.
+- **Multi-tab sync**: trace inserts + state transitions broadcast via `BroadcastChannel('data-sync')` with `TAB_ID`.
+
+## Sequencing & Risk
+
+- Wave A first — without traces, every later wave is unmeasurable.
+- Waves B/C/D in parallel (independent tables).
+- Wave E depends on B (state machine) + D (health).
+- Wave F closes the loop; no production change without it.
+- Each wave ships behind its kill switch; rollout can pause at any wave.
+
+## Out of Scope (intentional)
+
+- New athlete-facing UI surfaces beyond Today Tips integration + "Return to your blueprint" affordance.
+- Vector embedding generation for foundations (assumes existing Hammer retrieval pipeline; only adds class filter).
+- Multi-sport expansion beyond current baseball/softball domains.
+
+---
+
+Approve to begin **Wave A (Observability Backbone)**. I will not start later waves until A is verified in production traces.
