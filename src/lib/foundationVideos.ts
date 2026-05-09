@@ -219,8 +219,16 @@ export interface FoundationVideoCandidate {
   foundation_meta: FoundationMeta;
   distribution_tier?: string | null;
   recentlyWatched21d?: boolean;
-  /** Per-trigger helped-rate from foundation_effectiveness, optional. */
-  effectiveness?: Partial<Record<FoundationTrigger, number>>;
+  /**
+   * Per-trigger effectiveness stats from `library_videos.foundation_effectiveness.byTrigger`.
+   * Scorer ignores entries with sample_n < FOUNDATION_EFFECTIVENESS_MIN_SAMPLE.
+   */
+  effectiveness?: Partial<Record<FoundationTrigger, {
+    resolveRate: number;
+    rewatchRate: number;
+    helpRate: number;
+    sample_n: number;
+  }>>;
 }
 
 export interface FoundationScoreInput {
