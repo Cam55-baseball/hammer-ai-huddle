@@ -445,38 +445,20 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
                   ) : (
                     <div className="flex flex-wrap gap-1">
                       {grouped[layer].map(tag => {
-                        const selected = assignments[tag.id] != null;
                         const w = assignments[tag.id];
+                        const selected = w != null;
+                        const boosted = selected && w >= BOOST_WEIGHT;
                         return (
-                          <div key={tag.id} className="inline-flex items-center gap-0.5">
-                            <Badge
-                              variant={selected ? "default" : "outline"}
-                              className="cursor-pointer text-[10px]"
-                              onClick={() => !isProcessing && toggleAssignment(tag.id)}
-                            >
-                              {tag.label}
-                            </Badge>
-                            {selected && (
-                              <div className="inline-flex rounded border border-border overflow-hidden">
-                                {([1, 3, 5] as const).map(val => (
-                                  <button
-                                    key={val}
-                                    type="button"
-                                    onClick={() => setAssignmentWeight(tag.id, val)}
-                                    disabled={isProcessing}
-                                    className={`px-1.5 text-[9px] font-medium transition-colors ${
-                                      w === val
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-background hover:bg-muted'
-                                    }`}
-                                    title={val === 1 ? 'Low' : val === 3 ? 'Medium' : 'High'}
-                                  >
-                                    {val === 1 ? 'L' : val === 3 ? 'M' : 'H'}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                          <Badge
+                            key={tag.id}
+                            variant={selected ? 'default' : 'outline'}
+                            className={`cursor-pointer text-[10px] gap-0.5 ${boosted ? 'ring-2 ring-primary/60' : ''}`}
+                            onClick={() => !isProcessing && toggleAssignment(tag.id)}
+                            title={boosted ? 'Boosted — tap again to remove' : selected ? 'Tap again to ⚡ Boost' : 'Tap to add'}
+                          >
+                            {boosted && <span className="text-[9px]">⚡</span>}
+                            {tag.label}
+                          </Badge>
                         );
                       })}
                     </div>
