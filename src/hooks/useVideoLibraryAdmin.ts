@@ -80,6 +80,9 @@ export function useVideoLibraryAdmin() {
           video_format: payload.videoFormat || null,
           skill_domains: payload.skillDomains || [],
           ai_description: payload.aiDescription || null,
+          // Foundation class (long-form philosophy videos)
+          video_class: payload.videoClass ?? 'application',
+          foundation_meta: payload.foundationMeta ?? null,
         } as any)
         .select()
         .single();
