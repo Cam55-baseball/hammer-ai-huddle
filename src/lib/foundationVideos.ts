@@ -182,6 +182,8 @@ export interface FoundationSnapshot {
   seasonPhase?: 'pre_season' | 'in_season' | 'post_season' | null;
   layoffDays?: number;          // longest gap recently
   philosophyDriftIntents14d: number;
+  /** Athlete's primary domains (for scoping fragile-foundation trigger). */
+  primaryDomains?: FoundationDomain[];
 }
 
 export function computeFoundationTriggers(s: FoundationSnapshot): FoundationTrigger[] {
