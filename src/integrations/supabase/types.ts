@@ -3111,6 +3111,64 @@ export type Database = {
         }
         Relationships: []
       }
+      foundation_video_outcomes: {
+        Row: {
+          clicked_at: string | null
+          created_at: string
+          helped_flag: boolean | null
+          id: string
+          shown_at: string
+          trigger_keys: string[]
+          user_id: string
+          video_id: string
+          watched_seconds: number | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          created_at?: string
+          helped_flag?: boolean | null
+          id?: string
+          shown_at?: string
+          trigger_keys?: string[]
+          user_id: string
+          video_id: string
+          watched_seconds?: number | null
+        }
+        Update: {
+          clicked_at?: string | null
+          created_at?: string
+          helped_flag?: boolean | null
+          id?: string
+          shown_at?: string
+          trigger_keys?: string[]
+          user_id?: string
+          video_id?: string
+          watched_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foundation_video_outcomes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foundation_video_outcomes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "library_videos_readiness"
+            referencedColumns: ["video_id"]
+          },
+          {
+            foreignKeyName: "foundation_video_outcomes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "public_library_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_opponents: {
         Row: {
           created_at: string | null
@@ -4387,6 +4445,7 @@ export type Database = {
           created_at: string
           description: string | null
           distribution_tier: string
+          foundation_effectiveness: Json
           foundation_meta: Json | null
           id: string
           likes_count: number
@@ -4414,6 +4473,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           distribution_tier?: string
+          foundation_effectiveness?: Json
           foundation_meta?: Json | null
           id?: string
           likes_count?: number
@@ -4441,6 +4501,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           distribution_tier?: string
+          foundation_effectiveness?: Json
           foundation_meta?: Json | null
           id?: string
           likes_count?: number
