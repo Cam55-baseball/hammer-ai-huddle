@@ -50,12 +50,24 @@ const pill = (s: 'green' | 'amber' | 'red') => (
 const sevVariant = (s: AlertSeverity) =>
   s === 'critical' ? 'destructive' : s === 'warning' ? 'default' : 'outline';
 
+interface OpsSummary {
+  open_critical: number;
+  open_warning: number;
+  open_info: number;
+  last_alerter_at: string | null;
+  last_alerter_ms: number | null;
+  failed_replays_24h: number;
+}
+interface ReplayDrift { total: number; mismatched: number; rate: number }
+
 export default function FoundationHealthDashboard() {
   const [beats, setBeats] = useState<Record<string, CronBeat | undefined>>({});
   const [funnel, setFunnel] = useState<FunnelDay[]>([]);
   const [trigger, setTrigger] = useState<TriggerHealth | null>(null);
   const [stateH, setStateH] = useState<StateHealth | null>(null);
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
+  const [ops, setOps] = useState<OpsSummary | null>(null);
+  const [drift, setDrift] = useState<ReplayDrift | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
