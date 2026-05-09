@@ -25,13 +25,16 @@ interface Options {
   triggerGated?: boolean;
   /** Where these recommendations are being surfaced (drives observability traces). */
   surface?: SurfaceOrigin;
+  /** When true, enforce the "philosophy cap" because drill recs compete this render. */
+  competingDrillRecs?: boolean;
 }
 
 export function useFoundationVideos(opts: Options = {}) {
   const { user } = useAuth();
-  const { domain, limit = 4, triggerGated = true, surface = 'library' } = opts;
+  const { domain, limit = 4, triggerGated = true, surface = 'library', competingDrillRecs = false } = opts;
   const [results, setResults] = useState<FoundationScoreResult[]>([]);
   const [activeTriggers, setActiveTriggers] = useState<FoundationTrigger[]>([]);
+  const [foundationState, setFoundationState] = useState<FoundationState | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
 
