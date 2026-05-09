@@ -20,6 +20,9 @@ interface UploadVideoPayload {
   skillDomains?: string[];
   aiDescription?: string;
   tagAssignments?: Record<string, number>; // taxonomy tag id -> weight
+  // Foundation class (long-form A–Z philosophy videos)
+  videoClass?: 'application' | 'foundation';
+  foundationMeta?: import('@/lib/foundationVideos').FoundationMeta | null;
 }
 
 export function useVideoLibraryAdmin() {
