@@ -14,11 +14,13 @@ interface TriggerHealth { active: number; avg_confidence: number; stuck30d: numb
 interface StateHealth { transitions7d: number }
 
 const CRON_FNS = [
-  'nightly-foundation-effectiveness',
+  'recompute-foundation-effectiveness',
   'nightly-foundation-health',
   'hourly-trigger-decay',
   'daily-trace-prune',
 ];
+
+const SYSTEM_USER = '00000000-0000-0000-0000-000000000001';
 
 function statusFor(beat?: CronBeat, maxAgeMin = 90): 'green' | 'amber' | 'red' {
   if (!beat) return 'red';
@@ -55,6 +57,7 @@ export default function FoundationHealthDashboard() {
         (supabase as any)
           .from('foundation_recommendation_traces')
           .select('created_at, suppressed, suppression_reason')
+          .neq('user_id', SYSTEM_USER)
           .gte('created_at', since7)
           .limit(5000),
         (supabase as any)

@@ -13,15 +13,21 @@ Deno.serve(async (req) => {
   const supabase = createClient(url, key, { auth: { persistSession: false } });
 
   const t0 = Date.now();
-  const { error } = await supabase.rpc('cleanup_old_foundation_traces');
+  const { error: tracesErr } = await supabase.rpc('cleanup_old_foundation_traces');
+  const { error: decisionsErr } = await supabase.rpc('cleanup_old_foundation_decisions');
+  const errMsg = [tracesErr?.message, decisionsErr?.message].filter(Boolean).join(' | ') || null;
   await supabase.from('foundation_cron_heartbeats').insert({
     function_name: 'daily-trace-prune',
     duration_ms: Date.now() - t0,
-    status: error ? 'error' : 'ok',
-    error: error?.message ?? null,
+    status: errMsg ? 'error' : 'ok',
+    error: errMsg,
+    metadata: {
+      traces_cleanup: tracesErr ? 'error' : 'ok',
+      decisions_cleanup: decisionsErr ? 'error' : 'ok',
+    },
   });
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+  if (errMsg) {
+    return new Response(JSON.stringify({ error: errMsg }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

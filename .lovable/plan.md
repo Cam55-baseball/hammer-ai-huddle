@@ -1,152 +1,59 @@
-## Phase G — Operational Intelligence Layer  ✅ SHIPPED
 
-Companion-decision tables (`foundation_fatigue_decisions`, `foundation_onboarding_decisions`), cron heartbeats table, Trace Inspector v2 (filters + drilldown + replay), Health Dashboard at `/owner/foundations/health`, edge functions `foundations-replay` + `foundations-recompute-user`, heartbeat writes wired into all 4 foundation crons.
+# Phase G Stabilization Audit
 
----
+Full integrity sweep of every file touched by Phase G. **TypeScript compiles cleanly** (`tsc --noEmit` passes with no errors). No malformed JSX, no broken generics, no truncated hooks, no stripped operators, no invalid `Record<>` declarations, no `.select("")` placeholders found anywhere in `src/` or `supabase/`. Edge functions all use `Deno.serve`, `persistSession: false`, and proper admin role checks.
 
-## Phase G — Operational Intelligence Layer (original plan)
+However, the audit surfaced **4 real defects** that will cause incorrect runtime behavior. All are small, isolated fixes.
 
-Turn Foundations from "tested + working" into "self-diagnosing + admin-operable + production-observable." No new recommendation logic — only explainability, replay safety, and ops tooling.
+## Defects to fix
 
-### Reuse, do not duplicate
+### D1 — Trace Inspector filter bug (functional, high impact)
+`FoundationTraceInspector.tsx` lines 110-121. Radix `SelectItem` cannot accept `value=""`, so the code maps the empty option to the literal string `"any"`. But `onValueChange={setSurface}` writes `"any"` into state, and then `if (surface) q = q.eq('surface_origin', surface)` runs `eq('surface_origin', 'any')` — which matches zero rows. Same bug on `reason`.
+**Fix:** translate sentinel back: `onValueChange={(v) => setSurface(v === 'any' ? '' : v)}` (and same for `reason`). Also pass `value={surface || 'any'}` so the dropdown reflects state.
 
-Already in place (will be extended, not re-built):
-- `src/pages/owner/FoundationTraceInspector.tsx` — basic list + replay button (Wave A)
-- `src/pages/owner/FoundationDiagnosticsPanel.tsx` — 7d totals + low-health (Wave D)
-- `src/lib/foundationReplay.ts` — `replayRecommendation(traceId)`
-- `src/lib/foundationTracing.ts` — trace insertion
-- Crons: `nightly-foundation-effectiveness`, `nightly-foundation-health`, `hourly-trigger-decay`, `daily-trace-prune`
-- Tables: `foundation_recommendation_traces`, `foundation_trigger_events`, `athlete_foundation_state`, `foundation_video_outcomes`
+### D2 — Health Dashboard cron name mismatch (observability dead)
+`FoundationHealthDashboard.tsx` line 17 lists `'nightly-foundation-effectiveness'` in `CRON_FNS`, but the actual edge function is named `recompute-foundation-effectiveness` (and that's the name written into `foundation_cron_heartbeats`). The panel will permanently show "no beat yet / red" for that cron.
+**Fix:** change the constant to `'recompute-foundation-effectiveness'`.
 
-Phase G upgrades these in place + adds the missing ops surfaces.
+### D3 — Decision retention never runs (silent data growth)
+`daily-trace-prune/index.ts` only calls `rpc('cleanup_old_foundation_traces')`. The Phase G migration added `cleanup_old_foundation_decisions()` (covers `foundation_fatigue_decisions`, `foundation_onboarding_decisions`, `foundation_cron_heartbeats`) but nothing invokes it, so the 30/60-day retention promised in the plan never executes.
+**Fix:** in `daily-trace-prune`, after the existing call, also `await supabase.rpc('cleanup_old_foundation_decisions')`; merge both errors into the heartbeat row.
 
----
+### D4 — Funnel rollup includes system user (metric pollution)
+`FoundationHealthDashboard.tsx` `tracesRes` query has no `neq('user_id', SYSTEM_USER)` filter. Phase 9 architecture mandates excluding `00000000-0000-0000-0000-000000000001` from all behavioral pipelines.
+**Fix:** add `.neq('user_id', '00000000-0000-0000-0000-000000000001')` to the traces query.
 
-### G1 — Trace Inspector v2 (upgrade existing page)
+## Verified clean (no changes needed)
 
-Replace the current `FoundationTraceInspector.tsx` list with a filterable console at the same route (`/owner/foundations/traces`).
+- **`foundationTracing.ts`** — batched flush logic, dedupe set, bounded queue all valid; companion `enqueueFatigueDecisions` / `enqueueOnboardingDecisions` symmetric and correct.
+- **`foundations-replay/index.ts`** — admin auth via `user_roles` lookup; reads only; explicit field list on `library_videos.select(...)`; bounded `±60min` window with `limit(50)`.
+- **`foundations-recompute-user/index.ts`** — admin gate, system-user guard, idempotent trigger resolution, marker trace uses allowed `surface_origin='admin_replay'` (no FK on `video_id`, so zero-UUID marker is safe).
+- **`hourly-trigger-decay/index.ts`** — heartbeat with both ok/error paths, bounded `limit(5000)`, decay math correct.
+- **`recompute-foundation-effectiveness/index.ts`** & **`nightly-foundation-health/index.ts`** — cursor pagination, system-user exclusion, heartbeat instrumentation all intact.
+- **Migration `20260509143443…`** — companion tables have RLS (user-own SELECT + admin SELECT + user-own INSERT), proper indexes (`user_id, decided_at DESC`), heartbeat table admin-only SELECT, `cleanup_old_foundation_decisions` SECURITY DEFINER with `search_path = public`. No duplicate policies. `types.ts` already reflects both RPCs.
+- **`App.tsx`** — three Foundation routes registered cleanly (`/owner/foundations/traces|diagnostics|health`); no syntax issues.
+- **No `.select("")` placeholders** anywhere; all queries use explicit field lists or `select('*')` with bounded `.limit()`.
 
-Filters (server-side, paginated):
-- user_id (search by id or email via `profiles` join)
-- trigger (any in `active_triggers` / `matched_triggers`)
-- suppression_reason
-- surface_origin
-- recommendation_version
-- date range
+## Known risks left as-is (called out, not fixed)
 
-Per-trace drilldown drawer:
-- candidates (final_score, raw_score, score_breakdown, matched_triggers)
-- fatigue decision (read companion row from G3 below)
-- onboarding decision (read companion row from G3 below)
-- rollout eligibility snapshot
-- kill-switch snapshot at trace time
-- final surfaced result vs suppressed
-- "Replay" button → calls G2 endpoint
+- **Funnel pulls up to 5,000 raw trace rows then aggregates client-side.** Fine for current volume; will need a server-side rollup (or the deferred `foundation_funnel_daily` materialized view from G6) once daily traces exceed ~5k.
+- **Trace inspector `limit(200)` with no pagination.** Acceptable for an admin tool; pagination upgrade is explicitly deferred per the user's instructions.
+- **`(supabase as any)` casts** in tracing/inspector/dashboard are now unnecessary (types.ts has the new tables) but removing them is a cosmetic refactor, not a stabilization fix.
 
-### G2 — Replay Endpoint
+## Files modified by this stabilization pass
 
-New edge function `foundations-replay` (admin-only, JWT verified, `has_role(admin)` check):
+1. `src/pages/owner/FoundationTraceInspector.tsx` — D1
+2. `src/pages/owner/FoundationHealthDashboard.tsx` — D2, D4
+3. `supabase/functions/daily-trace-prune/index.ts` — D3
 
-```
-POST /functions/v1/foundations-replay
-{ userId, snapshotAt: ISO, recommendationVersion?: number }
-```
+No migrations, no new files, no schema changes, no behavior beyond bug fixes.
 
-Flow:
-1. Load athlete snapshot at `snapshotAt` (closest `engine_snapshot_versions` row ≤ snapshotAt)
-2. Recompute triggers from snapshot inputs
-3. Re-run scorer (`scoreFoundationCandidates`)
-4. Re-run fatigue (`foundationFatigue`)
-5. Re-run onboarding gate (`foundationOnboarding`)
-6. Diff vs the original trace(s) for that user near `snapshotAt`
+## Exit criteria
 
-Returns:
-```
-{ matched, differences: { scoreShift[], suppressionShift[], surfacedShift[] }, kill_switches_then, kill_switches_now }
-```
+- `tsc --noEmit` passes (already passing; will re-verify after edits).
+- Trace Inspector "any" filter returns rows.
+- Health Dashboard shows green pill for `recompute-foundation-effectiveness` once it next runs.
+- `daily-trace-prune` heartbeat metadata reports both cleanup calls.
+- System user excluded from funnel counts.
 
-Wired into Trace Inspector "Replay" button + standalone admin replay form.
-
-### G3 — Decision-companion logging (small additive schema)
-
-Today only the final scoring trace is persisted. To make G1 drilldown and G2 diff complete, add two thin companion tables (additive, nullable, no breaking changes):
-
-- `foundation_fatigue_decisions` — `user_id, decided_at, video_id, kept (bool), reason ('exposure'|'domain_quota'|'semantic_dupe'|'philosophy_cap'), exposure_score, snapshot (jsonb)`
-- `foundation_onboarding_decisions` — `user_id, decided_at, video_id, kept (bool), reason ('cold_start_quota'|'beginner_only'|'advanced_locked'|null), account_age_days, weekly_count, snapshot (jsonb)`
-
-Both: 30-day retention via existing prune pattern, indexed `(user_id, decided_at desc)`. `useFoundationVideos` writes to them in the same fire-and-forget batch as traces.
-
-### G4 — Health & Alerts Dashboard
-
-New page `/owner/foundations/health`. Reads from existing tables + a new `cron_run_log` view (or `engine_settings`-stored heartbeat written by each cron).
-
-Panels:
-- **Cron health** — last run, duration, error count for each foundation cron (heartbeat row written at function tail)
-- **Recommendation health** — recs/day, suppressions/day split by reason, rollout coverage %
-- **Trigger health** — active unresolved count, avg confidence, decay throughput, stuck >30d list
-- **State machine health** — transitions/day, dwell violations blocked, flap attempts blocked
-
-Each panel: sparkline (7/30d) + threshold-based status pill (green/amber/red). No external alerting wired yet — visual only this phase.
-
-### G5 — Manual "Recompute Foundations" tool
-
-Admin-only button on a user's profile drilldown (and standalone form on Trace Inspector). Calls a new edge function `foundations-recompute-user`:
-
-1. Recompute triggers
-2. Reconcile state machine (force evaluate)
-3. Invalidate fatigue cache for user
-4. Re-run scorer
-5. Insert a diagnostic trace tagged `surface_origin: 'admin_replay'`
-
-Returns the diagnostic trace_id so admin can jump straight into Trace Inspector.
-
-### G6 — Metrics instrumentation
-
-Add a single materialized view `foundation_funnel_daily` (or scheduled aggregate writer in `nightly-foundation-health`) that rolls up per day:
-
-- candidates_loaded, trigger_matched, fatigue_suppressed, onboarding_suppressed, surfaced, clicked, completed, helpful, rewatched, resolved_trigger
-- derived: trigger_resolution_rate, usefulness, rewatch_value, suppression_overfire_pct, fatigue_effectiveness, state_recovery_speed
-
-Surfaced as the top tiles on G4 dashboard. Source data already exists in traces + `foundation_video_outcomes` + `foundation_trigger_events`.
-
-### G7 — Routing, access, kill switches
-
-- Routes (lazy in `App.tsx`, admin-gated via `useAdminAccess`):
-  - `/owner/foundations/traces` (upgraded)
-  - `/owner/foundations/health` (new)
-- Edge functions `foundations-replay` and `foundations-recompute-user` both require admin role check inside the function (not just `verify_jwt`)
-- New kill switch `foundations_admin_tools_enabled` in `engine_settings` (default true) so the entire ops layer can be disabled without code changes
-
-### Out of scope (defer to Phase H)
-
-- Idempotency / race-condition / cache audits
-- Distributed lock verification
-- Cron overlap protection
-- Index + query plan optimization
-- External alerting (PagerDuty, email)
-- Trace retention scaling beyond current 90d
-
----
-
-### Technical notes
-
-- All new tables additive, nullable, RLS-restricted to admin via `has_role(auth.uid(), 'admin')`
-- Edge functions: `persistSession: false`, `Deno.serve()`, dual-auth, system user excluded
-- Companion-table writes share the existing trace fire-and-forget batch in `foundationTracing.ts` to avoid extra round-trips
-- All admin pages use existing `Card`/`Table`/`Badge` primitives — no new design tokens
-- BroadcastChannel `'data-sync'` already broadcasts trace inserts; companion rows piggyback on the same channel
-
-### Sequencing
-
-1. G3 schema (companion tables) → migration, approved
-2. G1 + G7 routing (Trace Inspector v2)
-3. G2 replay edge function
-4. G5 recompute edge function
-5. G6 funnel aggregate
-6. G4 health dashboard wires G6 + cron heartbeats
-
-Each step ships independently behind `foundations_admin_tools_enabled`.
-
----
-
-Approve to begin **G3 (companion-table migration)**.
+After these four edits land, Phase G is stable and the deferred work (CSV export, alerts, thresholds, pagination, replay enhancements) can resume.
