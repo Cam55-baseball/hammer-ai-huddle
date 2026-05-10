@@ -4811,6 +4811,8 @@ export type Database = {
           created_at: string
           description: string | null
           distribution_tier: string
+          formula_notes: string | null
+          formula_phases: string[]
           foundation_effectiveness: Json
           foundation_health_checked_at: string | null
           foundation_health_flags: string[]
@@ -4842,6 +4844,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           distribution_tier?: string
+          formula_notes?: string | null
+          formula_phases?: string[]
           foundation_effectiveness?: Json
           foundation_health_checked_at?: string | null
           foundation_health_flags?: string[]
@@ -4873,6 +4877,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           distribution_tier?: string
+          formula_notes?: string | null
+          formula_phases?: string[]
           foundation_effectiveness?: Json
           foundation_health_checked_at?: string | null
           foundation_health_flags?: string[]
