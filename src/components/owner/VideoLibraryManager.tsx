@@ -511,6 +511,13 @@ export function VideoLibraryManager() {
         action={convAction}
         videoId={convVideoId}
       />
+
+      {/* Owner quick preview */}
+      <VideoPreviewDialog
+        video={previewTarget}
+        open={!!previewTarget}
+        onOpenChange={(o) => { if (!o) setPreviewTarget(null); }}
+      />
     </div>
   );
 }
