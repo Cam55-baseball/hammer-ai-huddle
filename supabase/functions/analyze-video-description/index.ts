@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
     const { data: video, error: vErr } = await admin
       .from('library_videos')
-      .select('id, title, description, ai_description, skill_domains')
+      .select('id, title, description, ai_description, skill_domains, formula_phases, formula_notes')
       .eq('id', videoId)
       .single();
     if (vErr || !video) throw vErr || new Error('Video not found');
@@ -81,9 +81,12 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not set');
 
-    const systemPrompt = `You are an elite baseball/softball biomechanics tagger. Analyze a video's title and description and propose structured tags using ONLY the provided vocabulary keys. Be conservative — only propose a tag if explicitly supported.`;
+    const systemPrompt = `You are an elite baseball/softball biomechanics tagger. Analyze a video's title, the coach's freeform notes, and any formula linkage notes, then propose structured tags using ONLY the provided vocabulary keys. Be conservative — only propose a tag if explicitly supported by the coach's narrative.`;
 
-    const userPrompt = `Title: ${video.title}\nDescription: ${video.description || ''}\nIntent (ai_description): ${video.ai_description || ''}\nSkill domains: ${(video.skill_domains || []).join(', ') || 'unknown'}\n\nVocabulary by layer:\nmovement_pattern: ${vocab.movement_pattern.join(', ')}\nresult: ${vocab.result.join(', ')}\ncontext: ${vocab.context.join(', ')}\ncorrection: ${vocab.correction.join(', ')}\n\nReturn proposed tags with confidence 0-1 and short reasoning per tag.`;
+    const formulaPhases = ((video as any).formula_phases || []) as string[];
+    const formulaNotes = (video as any).formula_notes || '';
+
+    const userPrompt = `Title: ${video.title}\nDescription: ${video.description || ''}\nCoach's Notes to Hammer (primary intent): ${video.ai_description || ''}\nFormula Linkage Phases: ${formulaPhases.join(', ') || 'none'}\nFormula Linkage Notes: ${formulaNotes}\nSkill domains: ${(video.skill_domains || []).join(', ') || 'unknown'}\n\nVocabulary by layer:\nmovement_pattern: ${vocab.movement_pattern.join(', ')}\nresult: ${vocab.result.join(', ')}\ncontext: ${vocab.context.join(', ')}\ncorrection: ${vocab.correction.join(', ')}\n\nReturn proposed tags with confidence 0-1 and short reasoning per tag. Treat the coach's notes as the source of truth; the formula phases tell you which teaching checkpoints this video targets.`;
 
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

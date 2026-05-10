@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch, Sparkles, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch, Sparkles, CheckCircle2, AlertCircle, AlertTriangle, Play } from "lucide-react";
+import { VideoPreviewDialog } from "./VideoPreviewDialog";
 import { AISuggestionsReview } from "./AISuggestionsReview";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -100,6 +101,7 @@ export function VideoLibraryManager() {
   const [convModalOpen, setConvModalOpen] = useState(false);
   const [convAction, setConvAction] = useState<ConversionAction>(null);
   const [convVideoId, setConvVideoId] = useState<string>('');
+  const [previewTarget, setPreviewTarget] = useState<LibraryVideo | null>(null);
 
   // Owner-only: includeBlocked so the manager can see and fix Empty videos.
   // Athlete surfaces leave the default false and never receive blocked rows.
@@ -371,6 +373,16 @@ export function VideoLibraryManager() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        onClick={() => setPreviewTarget(video)}
+                        title="Watch video"
+                        disabled={!video.video_url?.trim()}
+                      >
+                        <Play className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => setEditTarget(video)}
                         title="Edit"
                       >
@@ -498,6 +510,13 @@ export function VideoLibraryManager() {
         onClose={() => setConvModalOpen(false)}
         action={convAction}
         videoId={convVideoId}
+      />
+
+      {/* Owner quick preview */}
+      <VideoPreviewDialog
+        video={previewTarget}
+        open={!!previewTarget}
+        onOpenChange={(o) => { if (!o) setPreviewTarget(null); }}
       />
     </div>
   );

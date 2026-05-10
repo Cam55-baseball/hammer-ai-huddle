@@ -43,6 +43,8 @@ export interface VideoWithTags {
   /** Phase 6 — engine leverage. Cached on library_videos. */
   confidence_score?: number | null;
   distribution_tier?: DistributionTier | null;
+  /** Owner-tagged teaching phases (e.g. ['p1_hip_load','p4_hitters_move']). Soft scoring boost. */
+  formula_phases?: string[] | null;
 }
 
 // Tier multipliers live in src/lib/videoTier.ts (TIER_BOOST) — single source of truth.
@@ -69,6 +71,8 @@ export interface RecommendInput {
   rules: VideoTagRule[];
   userOutcomes?: Map<string, { watchCount: number; avgPostDelta: number }>;
   globalMetrics?: Map<string, { improvementScore: number }>;
+  /** Active teaching-phase ids (e.g. ['p1_hip_load','p4_hitters_move']). Soft boost only. */
+  activePhases?: string[];
 }
 
 export interface RecommendResult {
@@ -92,7 +96,9 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics,
+    activePhases,
   } = input;
+  const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
 
   // Build key→tagId lookup scoped to this skill domain
   const keyToTagId = new Map<string, string>();
@@ -191,7 +197,18 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       score += 8;
     }
 
-    // Phase 6: tier boost is the FINAL multiplier — no late-stage tag-noise can out-rank a featured video.
+    // Formula linkage soft boost — owner-tagged teaching phases.
+    // Capped lift; never out-ranks hard sport/domain filters or featured tier.
+    if (activePhaseSet.size > 0 && v.formula_phases?.length) {
+      let phaseHits = 0;
+      for (const p of v.formula_phases) {
+        if (activePhaseSet.has(p)) phaseHits++;
+      }
+      if (phaseHits > 0) {
+        score += Math.min(20, 8 + phaseHits * 6);
+        reasons.push(`Teaches ${phaseHits === 1 ? 'this phase' : `${phaseHits} active phases`}`);
+      }
+    }
     score = score * tierBoost;
     if (tier === 'featured') reasons.push('Featured video — elite structure');
     else if (tier === 'boosted') reasons.push('Boosted — high-confidence');
