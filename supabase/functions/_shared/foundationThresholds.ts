@@ -41,6 +41,6 @@ export const TRACE_SEARCH_DEBOUNCE_MS = 300;
 
 export const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000001';
 
-export const ALERT_RETENTION_DAYS = 30;
+export const ALERT_RETENTION_DAYS = 365;
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';

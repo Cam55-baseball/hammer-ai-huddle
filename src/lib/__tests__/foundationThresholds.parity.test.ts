@@ -44,6 +44,6 @@ describe('foundation thresholds parity', () => {
     expect(TRACE_EXPORT_CHUNK).toBe(1_000);
     expect(TRACE_SEARCH_DEBOUNCE_MS).toBe(300);
     expect(SYSTEM_USER_ID).toBe('00000000-0000-0000-0000-000000000001');
-    expect(ALERT_RETENTION_DAYS).toBe(30);
+    expect(ALERT_RETENTION_DAYS).toBe(365);
   });
 });
