@@ -46,15 +46,23 @@ export function AlertsNotificationsTab() {
     <div className="space-y-4">
       <Card className="p-4">
         <h2 className="font-semibold mb-2 flex items-center gap-2">
-          <Bell className="h-4 w-4" /> Notification system status
+          <Bell className="h-4 w-4" /> Notification channels
         </h2>
         <div className="text-sm space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Master gate:</span>
-            <Badge variant="outline" className="gap-1"><BellOff className="h-3 w-3" /> Controlled by FOUNDATION_NOTIFICATIONS_ENABLED secret</Badge>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span><strong>In-app + bell badge</strong> — owner alert center</span>
+            <Badge variant="default">Active</Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
-            When the gate is OFF every dispatch is logged as <code className="font-mono">skipped_disabled</code> (path is exercised, no message sent). Critical-only severity. 3-attempt retry, 20s outer timeout. See enablement order below.
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span><strong>Browser push</strong> — OS notifications on each device</span>
+            <Badge variant="outline">Per-device opt-in (see Alert Center)</Badge>
+          </div>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span><strong>Email</strong> — owner inboxes</span>
+            <Badge variant="outline" className="gap-1"><BellOff className="h-3 w-3" /> Pending sender domain</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground pt-1">
+            In-app channel always runs. Email activates when a sender domain is configured and <code className="font-mono">FOUNDATION_NOTIFICATIONS_ENABLED=true</code>.
           </p>
         </div>
       </Card>

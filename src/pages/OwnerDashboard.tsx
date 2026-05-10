@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OwnerOverview } from "@/components/owner/OwnerOverview";
+import { OwnerAlertBell } from "@/components/owner/OwnerAlertBell";
 import { getBuilds, updateBuild, deleteBuild, type BuildItem } from "@/lib/ownerBuildStorage";
 import { useVideoLibrary } from "@/hooks/useVideoLibrary";
 import { Textarea } from "@/components/ui/textarea";
@@ -583,10 +584,13 @@ const OwnerDashboard = () => {
               </div>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 shrink-0">
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <OwnerAlertBell />
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </Button>
+          </div>
         </header>
 
         {/* Content */}

@@ -30,6 +30,9 @@ export interface AdapterResult {
 
 export interface NotificationAdapter {
   name: string;
+  /** When true, this adapter runs even if FOUNDATION_NOTIFICATIONS_ENABLED is off.
+   *  Used by in-app channels (owner alert center) that don't depend on external infra. */
+  alwaysOn?: boolean;
   send(d: NotificationDispatch, signal: AbortSignal): Promise<{ ok: boolean; error?: string }>;
 }
 
@@ -102,7 +105,33 @@ export const emailAdapter: NotificationAdapter = {
   },
 };
 
-const ADAPTERS: NotificationAdapter[] = [slackAdapter, emailAdapter];
+// In-app adapter — writes critical alerts to public.owner_alerts so they
+// show up in the Owner Alert Center bell, regardless of email/slack config.
+// Always on (no master gate dependency) — this is the primary owner channel.
+export const inAppOwnerAlertAdapter: NotificationAdapter = {
+  name: 'in_app_owner',
+  alwaysOn: true,
+  async send(d, _signal) {
+    const sb = getSupabase();
+    if (!sb) return { ok: false, error: 'no_supabase_client' };
+    const bucket = minuteBucket();
+    const { error } = await sb.from('owner_alerts').insert({
+      alert_key: d.key,
+      severity: d.severity,
+      title: d.title,
+      detail: d.detail ?? {},
+      minute_bucket: bucket.toISOString(),
+    });
+    if (error) {
+      // Duplicate key = already inserted this minute, that's success (idempotent).
+      if (/duplicate|unique/i.test(error.message)) return { ok: true };
+      return { ok: false, error: `in_app ${error.message}` };
+    }
+    return { ok: true };
+  },
+};
+
+const ADAPTERS: NotificationAdapter[] = [inAppOwnerAlertAdapter, slackAdapter, emailAdapter];
 
 // --- Internal helpers ---------------------------------------------------
 
@@ -211,28 +240,34 @@ export async function dispatch(d: NotificationDispatch): Promise<DispatchResult>
   const sb = getSupabase();
   const bucket = minuteBucket();
 
-  if (!enabled) {
-    for (const a of ADAPTERS) {
-      await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_disabled', attempt: 0, payload: { title: d.title } });
-    }
-    return { skipped: true, reason: 'disabled' };
-  }
-
   // Startup config validation (logged at most once per cold start).
-  if (!configWarned) {
+  if (!configWarned && enabled) {
     const slackOk = !!Deno.env.get('SLACK_WEBHOOK_URL');
     const emailOk = !!Deno.env.get('FOUNDATION_ALERT_EMAIL_HOOK_URL');
     if (!slackOk && !emailOk) {
-      await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: 'all', status: 'config_invalid', attempt: 0, error: 'no adapter configured' });
+      await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: 'all', status: 'config_invalid', attempt: 0, error: 'no external adapter configured (in-app still active)' });
     }
     configWarned = true;
   }
 
+  // Critical-only severity gate. Even alwaysOn adapters skip non-critical;
+  // they exist for the owner alert center which only surfaces criticals.
   if (d.severity !== 'critical') {
     for (const a of ADAPTERS) {
       await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_severity', attempt: 0 });
     }
     return { skipped: true, reason: 'non_critical' };
+  }
+
+  // Master gate: when off, only adapters marked alwaysOn run.
+  // Other adapters log skipped_disabled (path exercised, no external send).
+  const activeAdapters = enabled ? ADAPTERS : ADAPTERS.filter((a) => a.alwaysOn);
+  if (!enabled) {
+    for (const a of ADAPTERS) {
+      if (!a.alwaysOn) {
+        await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_disabled', attempt: 0, payload: { title: d.title } });
+      }
+    }
   }
 
   // Outer 20s hard timeout
@@ -241,7 +276,7 @@ export async function dispatch(d: NotificationDispatch): Promise<DispatchResult>
   const results: Array<{ adapter: string; ok: boolean; error?: string; attempts: number }> = [];
 
   try {
-    await Promise.allSettled(ADAPTERS.map(async (a) => {
+    await Promise.allSettled(activeAdapters.map(async (a) => {
       try {
         if (sb && (await isFlapping(sb, d.key, a.name))) {
           await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_flap', attempt: 0, minute_bucket: bucket });
