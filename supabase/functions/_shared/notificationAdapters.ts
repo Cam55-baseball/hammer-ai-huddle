@@ -30,6 +30,9 @@ export interface AdapterResult {
 
 export interface NotificationAdapter {
   name: string;
+  /** When true, this adapter runs even if FOUNDATION_NOTIFICATIONS_ENABLED is off.
+   *  Used by in-app channels (owner alert center) that don't depend on external infra. */
+  alwaysOn?: boolean;
   send(d: NotificationDispatch, signal: AbortSignal): Promise<{ ok: boolean; error?: string }>;
 }
 
