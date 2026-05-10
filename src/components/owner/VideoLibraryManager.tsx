@@ -101,6 +101,7 @@ export function VideoLibraryManager() {
   const [convModalOpen, setConvModalOpen] = useState(false);
   const [convAction, setConvAction] = useState<ConversionAction>(null);
   const [convVideoId, setConvVideoId] = useState<string>('');
+  const [previewTarget, setPreviewTarget] = useState<LibraryVideo | null>(null);
 
   // Owner-only: includeBlocked so the manager can see and fix Empty videos.
   // Athlete surfaces leave the default false and never receive blocked rows.
