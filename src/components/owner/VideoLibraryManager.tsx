@@ -373,6 +373,16 @@ export function VideoLibraryManager() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        onClick={() => setPreviewTarget(video)}
+                        title="Watch video"
+                        disabled={!video.video_url?.trim()}
+                      >
+                        <Play className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => setEditTarget(video)}
                         title="Edit"
                       >
