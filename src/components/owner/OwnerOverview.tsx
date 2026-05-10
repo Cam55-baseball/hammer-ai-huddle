@@ -96,6 +96,38 @@ export function OwnerOverview({
   onJump,
 }: OwnerOverviewProps) {
   const navigate = useNavigate();
+  const [opsHealth, setOpsHealth] = useState<{ open_critical: number; open_warning: number; last_beat_age_min: number | null; dispatch_failures_24h: number } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const since24 = new Date(Date.now() - 86_400_000).toISOString();
+        const [alertsRes, beatRes, dispatchRes] = await Promise.all([
+          (supabase as any).from('foundation_health_alerts').select('severity').is('resolved_at', null).limit(200),
+          (supabase as any).from('foundation_cron_heartbeats').select('ran_at').order('ran_at', { ascending: false }).limit(1),
+          (supabase as any).from('foundation_notification_dispatches').select('id', { count: 'exact', head: true }).in('status', ['dlq', 'config_invalid']).gte('dispatched_at', since24),
+        ]);
+        const open = (alertsRes.data ?? []) as Array<{ severity: string }>;
+        const lastBeat = (beatRes.data ?? [])[0] as { ran_at: string } | undefined;
+        setOpsHealth({
+          open_critical: open.filter((a) => a.severity === 'critical').length,
+          open_warning: open.filter((a) => a.severity === 'warning').length,
+          last_beat_age_min: lastBeat ? Math.floor((Date.now() - new Date(lastBeat.ran_at).getTime()) / 60_000) : null,
+          dispatch_failures_24h: (dispatchRes as any)?.count ?? 0,
+        });
+      } catch {
+        setOpsHealth(null);
+      }
+    })();
+  }, []);
+
+  const opsHealthColor = opsHealth
+    ? opsHealth.open_critical > 0 || opsHealth.dispatch_failures_24h > 0
+      ? 'bg-rose-500'
+      : opsHealth.open_warning > 0 || (opsHealth.last_beat_age_min ?? 0) > 120
+        ? 'bg-amber-500'
+        : 'bg-emerald-500'
+    : 'bg-muted';
 
   const actionCards = [
     {
