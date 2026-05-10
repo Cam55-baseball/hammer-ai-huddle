@@ -188,6 +188,8 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
         videoFormat: videoFormat || null,
         skillDomains,
         aiDescription,
+        formulaPhases: formulaLinkage.phases,
+        formulaNotes: formulaLinkage.notes.trim() ? formulaLinkage.notes : null,
       });
       if (!okStruct) return;
 
