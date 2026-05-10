@@ -253,7 +253,40 @@ export function OwnerOverview({
         </div>
       </section>
 
+      {/* ========== System Operations ========== */}
+      <section className="space-y-2">
+        <SectionHeader icon={ShieldCheck} label="System Operations" accent="emerald" />
+        <Card className="p-4 border-l-4 border-l-emerald-500/60">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className={cn("h-3 w-3 rounded-full shrink-0", opsHealthColor)} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">
+                  {opsHealth
+                    ? opsHealth.open_critical > 0
+                      ? `${opsHealth.open_critical} critical alert${opsHealth.open_critical > 1 ? 's' : ''} open`
+                      : opsHealth.open_warning > 0
+                        ? `${opsHealth.open_warning} warning${opsHealth.open_warning > 1 ? 's' : ''} open`
+                        : 'All systems healthy'
+                    : 'Loading system status…'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {opsHealth && opsHealth.last_beat_age_min != null
+                    ? `Last cron heartbeat ${opsHealth.last_beat_age_min}m ago · ${opsHealth.dispatch_failures_24h} notification failures (24h)`
+                    : 'Cron, alerts, retention rules, rollback procedures, runbook'}
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => navigate('/owner/foundations/health')} className="w-full sm:w-auto">
+              Open Ops Hub
+              <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+        </Card>
+      </section>
+
       {/* ========== Activity + Quick Actions ========== */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <section className="space-y-2 lg:col-span-2">
           <SectionHeader icon={Activity} label="Recent activity" accent="slate" />
