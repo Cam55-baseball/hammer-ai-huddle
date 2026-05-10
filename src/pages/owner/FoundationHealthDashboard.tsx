@@ -4,7 +4,10 @@
  * state-machine activity, and persisted health alerts.
  */
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -68,6 +71,7 @@ interface OpsSummary {
 interface ReplayDrift { total: number; mismatched: number; rate: number }
 
 export default function FoundationHealthDashboard() {
+  const navigate = useNavigate();
   const [beats, setBeats] = useState<Record<string, CronBeat | undefined>>({});
   const [funnel, setFunnel] = useState<FunnelDay[]>([]);
   const [trigger, setTrigger] = useState<TriggerHealth | null>(null);
@@ -185,6 +189,10 @@ export default function FoundationHealthDashboard() {
 
   return (
     <div className="container mx-auto py-8 space-y-4">
+      <Button variant="ghost" size="sm" onClick={() => navigate('/owner')} className="-ml-2">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to Dashboard
+      </Button>
       <div>
         <h1 className="text-2xl font-bold">Foundations Health & Alerts</h1>
         <p className="text-sm text-muted-foreground">Operational heartbeat for the Foundations engine.</p>
