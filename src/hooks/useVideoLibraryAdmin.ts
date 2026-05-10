@@ -20,6 +20,9 @@ interface UploadVideoPayload {
   skillDomains?: string[];
   aiDescription?: string;
   tagAssignments?: Record<string, number>; // taxonomy tag id -> weight
+  // Formula linkage (per-domain teaching phases + owner notes)
+  formulaPhases?: string[];
+  formulaNotes?: string;
   // Foundation class (long-form A–Z philosophy videos)
   videoClass?: 'application' | 'foundation';
   foundationMeta?: import('@/lib/foundationVideos').FoundationMeta | null;
@@ -80,6 +83,9 @@ export function useVideoLibraryAdmin() {
           video_format: payload.videoFormat || null,
           skill_domains: payload.skillDomains || [],
           ai_description: payload.aiDescription || null,
+          // Formula linkage
+          formula_phases: payload.formulaPhases ?? [],
+          formula_notes: payload.formulaNotes?.trim() || null,
           // Foundation class (long-form philosophy videos)
           video_class: payload.videoClass ?? 'application',
           foundation_meta: payload.foundationMeta ?? null,
@@ -290,6 +296,8 @@ export function useVideoLibraryAdmin() {
       videoFormat?: string | null;
       skillDomains?: string[];
       aiDescription?: string | null;
+      formulaPhases?: string[];
+      formulaNotes?: string | null;
       videoClass?: 'application' | 'foundation';
       foundationMeta?: import('@/lib/foundationVideos').FoundationMeta | null;
     },
@@ -298,6 +306,8 @@ export function useVideoLibraryAdmin() {
     if (fields.videoFormat !== undefined) updateData.video_format = fields.videoFormat || null;
     if (fields.skillDomains !== undefined) updateData.skill_domains = fields.skillDomains;
     if (fields.aiDescription !== undefined) updateData.ai_description = fields.aiDescription?.trim() || null;
+    if (fields.formulaPhases !== undefined) updateData.formula_phases = fields.formulaPhases ?? [];
+    if (fields.formulaNotes !== undefined) updateData.formula_notes = fields.formulaNotes?.trim() || null;
     if (fields.videoClass !== undefined) updateData.video_class = fields.videoClass;
     if (fields.foundationMeta !== undefined) updateData.foundation_meta = fields.foundationMeta;
 
