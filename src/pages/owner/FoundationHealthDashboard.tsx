@@ -71,6 +71,7 @@ interface OpsSummary {
 interface ReplayDrift { total: number; mismatched: number; rate: number }
 
 export default function FoundationHealthDashboard() {
+  const navigate = useNavigate();
   const [beats, setBeats] = useState<Record<string, CronBeat | undefined>>({});
   const [funnel, setFunnel] = useState<FunnelDay[]>([]);
   const [trigger, setTrigger] = useState<TriggerHealth | null>(null);
