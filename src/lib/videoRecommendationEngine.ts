@@ -197,7 +197,18 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
       score += 8;
     }
 
-    // Phase 6: tier boost is the FINAL multiplier — no late-stage tag-noise can out-rank a featured video.
+    // Formula linkage soft boost — owner-tagged teaching phases.
+    // Capped lift; never out-ranks hard sport/domain filters or featured tier.
+    if (activePhaseSet.size > 0 && v.formula_phases?.length) {
+      let phaseHits = 0;
+      for (const p of v.formula_phases) {
+        if (activePhaseSet.has(p)) phaseHits++;
+      }
+      if (phaseHits > 0) {
+        score += Math.min(20, 8 + phaseHits * 6);
+        reasons.push(`Teaches ${phaseHits === 1 ? 'this phase' : `${phaseHits} active phases`}`);
+      }
+    }
     score = score * tierBoost;
     if (tier === 'featured') reasons.push('Featured video — elite structure');
     else if (tier === 'boosted') reasons.push('Boosted — high-confidence');
