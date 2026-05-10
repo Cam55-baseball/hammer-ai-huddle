@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
-import { Zap } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useVideoTaxonomy, groupTaxonomyByLayer } from '@/hooks/useVideoTaxonomy';
 import type { SkillDomain, TagLayer } from '@/lib/videoRecommendationEngine';
 import { LAYER_GUIDANCE } from './TaxonomyManager';
 import { HammerDescriptionComposer } from './HammerDescriptionComposer';
+import { FormulaLinkageEditor, type FormulaLinkageValue, emptyFormulaLinkage } from './FormulaLinkageEditor';
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
 const SKILL_DOMAINS: SkillDomain[] = ['hitting', 'fielding', 'throwing', 'base_running', 'pitching'];
@@ -18,15 +19,16 @@ const LAYER_LABELS: Record<TagLayer, string> = {
   correction: 'Correction / Intent',
 };
 
-// Tag weight model: tap-to-cycle. None → Normal (1) → Boost (3) → None.
-const NORMAL_WEIGHT = 1;
-const BOOST_WEIGHT = 3;
+// Explicit weight model: 1 = Normal, 3 = Strong, 5 = Max priority.
+const WEIGHT_OPTIONS = [1, 3, 5] as const;
+const DEFAULT_WEIGHT = 1;
 
 export interface StructuredTagState {
   videoFormat: string;
   skillDomains: SkillDomain[];
   aiDescription: string;
-  tagAssignments: Record<string, number>; // tagId -> weight (1 = normal, 3 = boosted)
+  tagAssignments: Record<string, number>; // tagId -> weight (1 / 3 / 5)
+  formulaLinkage: FormulaLinkageValue;
 }
 
 interface Props {
@@ -47,14 +49,14 @@ export function StructuredTagEditor({ value, onChange }: Props) {
     onChange({ ...value, skillDomains: next });
   };
 
-  // Tap cycles: None → Normal → Boost → None
-  const cycleTag = (tagId: string) => {
+  const toggleTag = (tagId: string) => {
     const next = { ...value.tagAssignments };
-    const cur = next[tagId];
-    if (cur == null) next[tagId] = NORMAL_WEIGHT;
-    else if (cur < BOOST_WEIGHT) next[tagId] = BOOST_WEIGHT;
-    else delete next[tagId];
+    if (next[tagId] != null) delete next[tagId];
+    else next[tagId] = DEFAULT_WEIGHT;
     onChange({ ...value, tagAssignments: next });
+  };
+  const setWeight = (tagId: string, weight: number) => {
+    onChange({ ...value, tagAssignments: { ...value.tagAssignments, [tagId]: weight } });
   };
 
   return (
@@ -94,31 +96,86 @@ export function StructuredTagEditor({ value, onChange }: Props) {
         </div>
       </div>
 
-      {/* Layers 3-6: Taxonomy tags — tap to cycle Normal → Boost → Off */}
+      {/* Coach's Notes to Hammer — freeform primary */}
+      <div className="space-y-1.5">
+        <Label className="text-xs">Coach's Notes to Hammer *</Label>
+        <p className="text-[10px] text-muted-foreground -mt-0.5">
+          Talk to Hammer in your own voice. Tell it who this video is for, what it teaches, and the fault it fixes.
+        </p>
+        <Textarea
+          value={value.aiDescription}
+          onChange={e => onChange({ ...value, aiDescription: e.target.value })}
+          placeholder="e.g. Best for advanced hitters rolling over inside fastballs due to early hand drift…"
+          rows={4}
+          className="text-xs"
+        />
+        <details className="group rounded-md border border-border/60 bg-background/40">
+          <summary className="cursor-pointer list-none px-2 py-1.5 text-[10px] text-muted-foreground select-none flex items-center gap-1.5 hover:text-foreground">
+            <span className="transition-transform group-open:rotate-90">▸</span>
+            Quick-fill helpers (optional)
+          </summary>
+          <div className="p-2 border-t border-border/60">
+            <HammerDescriptionComposer
+              value=""
+              onChange={(text) => {
+                if (!text) return;
+                const cur = value.aiDescription.trim();
+                onChange({ ...value, aiDescription: cur ? `${cur}\n\n${text}` : text });
+              }}
+              compact
+            />
+          </div>
+        </details>
+      </div>
+
+      {/* Formula Linkage */}
+      <FormulaLinkageEditor
+        domains={value.skillDomains}
+        value={value.formulaLinkage}
+        onChange={(next) => onChange({ ...value, formulaLinkage: next })}
+      />
+
+      {/* Layers 3-6: Taxonomy tags with explicit 1 / 3 / 5 weights */}
       {primaryDomain ? (
         <div className="space-y-3">
           <p className="text-[10px] text-muted-foreground -mb-1">
-            Tap a tag to add it. Tap again to <span className="font-semibold text-primary">Boost</span> ⚡ (treated as a strong signal).
+            Tap a tag to add it. Choose <span className="font-semibold">1</span> normal, <span className="font-semibold">3</span> strong, <span className="font-semibold">5</span> max priority.
           </p>
           {(['movement_pattern', 'result', 'context', 'correction'] as TagLayer[]).map(layer => (
             <div key={layer} className="space-y-1.5">
               <Label className="text-xs">{LAYER_LABELS[layer]}{layer === 'movement_pattern' ? ' *' : ''}</Label>
               <p className="text-[10px] text-muted-foreground -mt-1">{LAYER_GUIDANCE[layer].short}</p>
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5">
                 {grouped[layer].map(tag => {
                   const w = value.tagAssignments[tag.id];
                   const selected = w != null;
-                  const boosted = selected && w >= BOOST_WEIGHT;
                   return (
-                    <Badge
-                      key={tag.id}
-                      variant={selected ? 'default' : 'outline'}
-                      className={`cursor-pointer text-[10px] gap-0.5 ${boosted ? 'ring-2 ring-primary/60' : ''}`}
-                      onClick={() => cycleTag(tag.id)}
-                    >
-                      {boosted && <Zap className="h-2.5 w-2.5" />}
-                      {tag.label}
-                    </Badge>
+                    <div key={tag.id} className="inline-flex items-center gap-0.5">
+                      <Badge
+                        variant={selected ? 'default' : 'outline'}
+                        className="cursor-pointer text-[10px]"
+                        onClick={() => toggleTag(tag.id)}
+                      >
+                        {tag.label}
+                      </Badge>
+                      {selected && (
+                        <div className="inline-flex rounded border border-border overflow-hidden">
+                          {WEIGHT_OPTIONS.map(val => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setWeight(tag.id, val)}
+                              className={`px-1.5 text-[9px] font-medium transition-colors ${
+                                w === val ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'
+                              }`}
+                              title={val === 5 ? 'Max priority' : val === 3 ? 'Strong' : 'Normal'}
+                            >
+                              {val}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
                 {grouped[layer].length === 0 && (
@@ -131,12 +188,6 @@ export function StructuredTagEditor({ value, onChange }: Props) {
       ) : (
         <p className="text-[11px] text-muted-foreground italic">Select a skill domain to see its tag taxonomy.</p>
       )}
-
-      {/* Hammer description — chip composer (no typing) */}
-      <HammerDescriptionComposer
-        value={value.aiDescription}
-        onChange={text => onChange({ ...value, aiDescription: text })}
-      />
     </div>
   );
 }
@@ -146,4 +197,5 @@ export const emptyStructuredTagState: StructuredTagState = {
   skillDomains: [],
   aiDescription: '',
   tagAssignments: {},
+  formulaLinkage: emptyFormulaLinkage,
 };
