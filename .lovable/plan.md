@@ -1,98 +1,79 @@
+## Goal
 
-# Plan — Operational Readiness Surfacing + 365-Day Log Retention
+Make critical foundation alerts actually land in the owners' inboxes:
+- HammersModality@gmail.com
+- rmhaus33@gmail.com
+- 55cam316@gmail.com
 
-## Goals
-1. Make every operational readiness piece (retention rules, cron jobs, alerts, rollback steps, runbook, troubleshooting) **visible inside the app** — no more "it's only in markdown files."
-2. Extend system-log retention windows from **90 days → 365 days** so deeper longitudinal debugging is possible. Athlete data stays untouched (already kept forever).
-3. Surface the ops hub from the **Owner dashboard** so it's discoverable.
+Today the alerter detects problems and tries to POST them to a "webhook URL" — but that URL doesn't exist yet, so the email adapter logs `email_disabled` and nothing is sent.
 
----
+## How the pieces fit together
 
-## Part A — Retention extension (90d → 365d)
+```text
+foundation-health-alerts (cron, hourly)
+        │  detects a CRITICAL issue
+        ▼
+notificationAdapters.dispatch()
+        │  POSTs JSON to FOUNDATION_ALERT_EMAIL_HOOK_URL
+        ▼
+NEW: foundation-alert-email edge function   ← this is the "webhook"
+        │  formats the JSON into a real email
+        ▼
+send-transactional-email (Lovable Email)
+        │  enqueues + sends
+        ▼
+3 owner inboxes
+```
 
-### What changes
-| Table | Before | After |
-|---|---|---|
-| `foundation_recommendation_traces` | 90d | **365d** |
-| `foundation_fatigue_decisions` | 90d | **365d** |
-| `foundation_onboarding_decisions` | 90d | **365d** |
-| `foundation_health_alerts` (resolved only) | 30d | **365d** |
-| `foundation_notification_dispatches` | unlimited | **365d** (new) |
-| `foundation_cron_heartbeats` | unlimited | **365d** (new) |
-| `foundation_replay_outcomes` | unlimited | **365d** (new) |
+The "webhook" is just a small edge function we own. It's the bridge between the alert engine and the email system.
 
-### What does NOT change (athlete data — kept forever)
-`custom_activity_logs`, `athlete_daily_log`, `engine_snapshot_versions`, all Vault tables, game scoring, MPI/BQI/PEI/FQI scores, nutrition logs, hydration, supplements, CNS load, regulation, profile/DOB/sport, foundation per-user state, all rollups on `library_videos.foundation_*`.
+## Steps
 
-### How
-- Migration: update the two prune RPCs (`cleanup_old_foundation_traces`, `cleanup_old_foundation_decisions`) to use a 365-day cutoff.
-- Migration: add `cleanup_old_foundation_ops_logs()` RPC that prunes the three ops-only tables at 365d.
-- Edge fn: extend `daily-trace-prune` to also call the new RPC. Heartbeat metadata records counts deleted per table.
-- No threshold or notification logic changes.
+### 1. Set up Lovable Email infrastructure
+- Set up an email sender domain through the in-app Email Setup dialog (one-time, ~5 min of clicking; DNS can verify in the background).
+- Run `setup_email_infra` so the email queue, send log, and cron processor exist.
+- Run `scaffold_transactional_email` so `send-transactional-email` is deployed.
 
----
+### 2. Create a `foundation-alert` email template
+- New React Email template at `supabase/functions/_shared/transactional-email-templates/foundation-alert.tsx`
+- Shows: severity badge (CRITICAL), alert title, alert key, timestamp, and a JSON detail block — styled in Hammer brand colors.
+- Register in `registry.ts` as `foundation-alert`.
 
-## Part B — Ops hub UI (lives at `/owner/foundations/ops`)
+### 3. Create the `foundation-alert-email` edge function (the "webhook")
+- New file: `supabase/functions/foundation-alert-email/index.ts`
+- Public POST endpoint (no JWT required) that accepts the alerter's payload `{ severity, title, alertKey, detail, minute_bucket }`.
+- Validates input, then for each of the 3 owner emails calls `send-transactional-email` with:
+  - `templateName: 'foundation-alert'`
+  - `recipientEmail: <owner>`
+  - `idempotencyKey: foundation-${alertKey}-${minute_bucket}-${owner}` (prevents duplicate sends if the alerter retries within the same minute)
+  - `templateData: { severity, title, alertKey, detail, when }`
+- Owner list lives in a single constant inside the function so it's easy to edit.
 
-Extend the existing `FoundationOpsObservability.tsx` page with a tabbed layout. Current content becomes the first tab; five new tabs added.
+### 4. Wire the secret
+- Add runtime secret `FOUNDATION_ALERT_EMAIL_HOOK_URL` pointing at the new function:
+  `https://wysikbsjalfvjwqzkihj.supabase.co/functions/v1/foundation-alert-email`
+- Add `FOUNDATION_NOTIFICATIONS_ENABLED=true` (master gate — currently off, which is why nothing fires).
+- Both managed via the secrets tool; nothing hardcoded.
 
-### Tab structure
-1. **Live Health** *(existing)* — current alerts, heartbeats, replay drift charts.
-2. **Data Retention** *(new)* — visual two-column table:
-   - 🟢 Kept Forever (athlete data) — list of tables with plain-English description
-   - 🟡 Pruned After 365 Days (system logs) — list with last-prune timestamp pulled from heartbeat metadata + row counts
-   - Banner explaining the rollup principle: "summaries live forever, raw breadcrumbs prune at 365d"
-3. **Cron Jobs** *(new)* — live table from `foundation_cron_heartbeats`:
-   - job name, schedule, last run, duration, status, next-expected
-   - "Run now" button per job (calls existing edge fn endpoint)
-   - Red/amber/green pill based on staleness vs `cron-inventory.md` thresholds
-4. **Alerts & Notifications** *(new)* — current open alerts + dispatch log:
-   - Master gate state (`FOUNDATION_NOTIFICATIONS_ENABLED` on/off pill)
-   - Slack/email adapter status (configured / not configured)
-   - Last 50 dispatches with status (`ok`/`dlq`/`skipped_*`)
-   - Link to enablement-order checklist (rendered from `notification-enablement.md`)
-5. **Rollback Procedures** *(new)* — read-only cards for each documented rollback scenario, rendered from `runbook.md`:
-   - "Notification flag enabled in error" → command + explanation
-   - "Alerter producing false-positive criticals" → steps
-   - "Retention deleted unintended rows" → recovery path
-   - "Phase II tables / indexes" → drop statements
-   - Each card has a copy-to-clipboard button for the command, but **no execute button** (intentional — owner runs these consciously).
-6. **Runbook & Troubleshooting** *(new)* — full searchable rendering of:
-   - Required env vars
-   - Alert lifecycle (open → refresh → auto-resolve)
-   - Replay drift interpretation
-   - Notification system rules
-   - Troubleshooting symptom → first-check table
+### 5. Surface it in the Ops Hub UI
+- In `AlertsNotificationsTab`, replace the generic "Controlled by FOUNDATION_NOTIFICATIONS_ENABLED secret" pill with a real status row that shows:
+  - Master gate: ON / OFF
+  - Email webhook: Configured / Not configured
+  - Recipients: list of the 3 owner emails (read from a small read-only edge function so we don't expose secrets to the browser)
+- Add a "Send test alert" button that POSTs a synthetic critical alert through the dispatch path so you can verify end-to-end without waiting for a real failure.
 
-### Data sources for tabs
-- Retention: `select count(*), max(created_at)` per table + last heartbeat for `daily-trace-prune`.
-- Cron: `foundation_cron_heartbeats` (last 50 per function) + static schedule map in code.
-- Alerts: existing queries on `foundation_health_alerts` + `foundation_notification_dispatches`.
-- Runbook/Rollback: markdown files imported via Vite `?raw` and rendered with `react-markdown` (already in deps if present, otherwise add).
-
----
-
-## Part C — Owner dashboard surfacing
-
-Add a new card to the Owner dashboard (`/owner`) titled **"System Operations"** with:
-- Current health pill (green/amber/red based on open critical alert count)
-- Three quick stats: open alerts, last cron heartbeat age, dispatch failures (24h)
-- "Open Ops Hub" button → `/owner/foundations/ops`
-
-Also add a sidebar/nav link in the owner area so it's reachable in one click from anywhere in the owner section.
-
----
+### 6. Update runbook + memory
+- Update `docs/foundations/runbook.md` and `notification-enablement.md` to reflect the new owner-email path.
+- Bump memory file `architecture/edge-functions/implementation-standards` (or add a new note) capturing the alert-email webhook pattern.
 
 ## Out of scope
-- No changes to athlete data, engines, recommendation logic, or thresholds.
-- No new alert rules or notification adapters.
-- No changes to the master notification gate (still off by default).
+- No changes to alert thresholds, severity rules, or what counts as critical.
+- No marketing emails, no per-user opt-outs (these are owner-only system alerts).
+- No Slack — we're doing email only per your selection. Easy to add later by setting `SLACK_WEBHOOK_URL`; the adapter is already built.
 
-## Technical details (for the AI implementing this)
-- **Migration**: single SQL file replacing the two existing RPCs with 365d cutoff + adding `cleanup_old_foundation_ops_logs()`.
-- **Edge fn**: extend `supabase/functions/daily-trace-prune/index.ts` only.
-- **UI**: refactor `FoundationOpsObservability.tsx` into a parent with `<Tabs>` (shadcn) + 6 child components in the same folder.
-- **Markdown rendering**: import docs as `?raw` strings, render via `react-markdown`.
-- **Owner dashboard**: edit `src/pages/owner/OwnerOverview.tsx` to add the System Operations card.
-- **Routing**: existing `/owner/foundations/ops` stays the URL; just internally tabbed.
-- **Memory update**: bump retention rule from 90d → 365d in the relevant memory file.
+## Technical notes
+- Uses Lovable's built-in email system (no third-party account needed).
+- `send-transactional-email` already has retry, queue, suppression-list, and DLQ — owner alerts inherit all of that.
+- Idempotency key includes minute_bucket so the alerter's anti-flap behavior naturally collapses duplicate criticals into one email per minute per recipient.
+- Multiple recipients are sent as 3 separate transactional sends (per Lovable rules — never loop a single send over a list). Each has its own idempotency key and unsubscribe-token row.
+- Owner emails are system-critical, so the unsubscribe link will still appear in the footer (Lovable appends it automatically and we cannot remove it). If an owner ever clicks it, future alerts to that address are blocked — we'll note this in the email body so nobody clicks it accidentally.
