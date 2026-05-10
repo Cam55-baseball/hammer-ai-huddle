@@ -71,6 +71,8 @@ export interface RecommendInput {
   rules: VideoTagRule[];
   userOutcomes?: Map<string, { watchCount: number; avgPostDelta: number }>;
   globalMetrics?: Map<string, { improvementScore: number }>;
+  /** Active teaching-phase ids (e.g. ['p1_hip_load','p4_hitters_move']). Soft boost only. */
+  activePhases?: string[];
 }
 
 export interface RecommendResult {
