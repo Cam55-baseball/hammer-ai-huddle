@@ -15,9 +15,12 @@ import {
   AlertCircle,
   BarChart3,
   Zap,
+  ShieldCheck,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import type { OwnerSection } from "./OwnerSidebar";
 
 interface ActivityItem {
@@ -93,6 +96,38 @@ export function OwnerOverview({
   onJump,
 }: OwnerOverviewProps) {
   const navigate = useNavigate();
+  const [opsHealth, setOpsHealth] = useState<{ open_critical: number; open_warning: number; last_beat_age_min: number | null; dispatch_failures_24h: number } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const since24 = new Date(Date.now() - 86_400_000).toISOString();
+        const [alertsRes, beatRes, dispatchRes] = await Promise.all([
+          (supabase as any).from('foundation_health_alerts').select('severity').is('resolved_at', null).limit(200),
+          (supabase as any).from('foundation_cron_heartbeats').select('ran_at').order('ran_at', { ascending: false }).limit(1),
+          (supabase as any).from('foundation_notification_dispatches').select('id', { count: 'exact', head: true }).in('status', ['dlq', 'config_invalid']).gte('dispatched_at', since24),
+        ]);
+        const open = (alertsRes.data ?? []) as Array<{ severity: string }>;
+        const lastBeat = (beatRes.data ?? [])[0] as { ran_at: string } | undefined;
+        setOpsHealth({
+          open_critical: open.filter((a) => a.severity === 'critical').length,
+          open_warning: open.filter((a) => a.severity === 'warning').length,
+          last_beat_age_min: lastBeat ? Math.floor((Date.now() - new Date(lastBeat.ran_at).getTime()) / 60_000) : null,
+          dispatch_failures_24h: (dispatchRes as any)?.count ?? 0,
+        });
+      } catch {
+        setOpsHealth(null);
+      }
+    })();
+  }, []);
+
+  const opsHealthColor = opsHealth
+    ? opsHealth.open_critical > 0 || opsHealth.dispatch_failures_24h > 0
+      ? 'bg-rose-500'
+      : opsHealth.open_warning > 0 || (opsHealth.last_beat_age_min ?? 0) > 120
+        ? 'bg-amber-500'
+        : 'bg-emerald-500'
+    : 'bg-muted';
 
   const actionCards = [
     {
@@ -218,7 +253,40 @@ export function OwnerOverview({
         </div>
       </section>
 
+      {/* ========== System Operations ========== */}
+      <section className="space-y-2">
+        <SectionHeader icon={ShieldCheck} label="System Operations" accent="emerald" />
+        <Card className="p-4 border-l-4 border-l-emerald-500/60">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className={cn("h-3 w-3 rounded-full shrink-0", opsHealthColor)} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">
+                  {opsHealth
+                    ? opsHealth.open_critical > 0
+                      ? `${opsHealth.open_critical} critical alert${opsHealth.open_critical > 1 ? 's' : ''} open`
+                      : opsHealth.open_warning > 0
+                        ? `${opsHealth.open_warning} warning${opsHealth.open_warning > 1 ? 's' : ''} open`
+                        : 'All systems healthy'
+                    : 'Loading system status…'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {opsHealth && opsHealth.last_beat_age_min != null
+                    ? `Last cron heartbeat ${opsHealth.last_beat_age_min}m ago · ${opsHealth.dispatch_failures_24h} notification failures (24h)`
+                    : 'Cron, alerts, retention rules, rollback procedures, runbook'}
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => navigate('/owner/foundations/health')} className="w-full sm:w-auto">
+              Open Ops Hub
+              <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+        </Card>
+      </section>
+
       {/* ========== Activity + Quick Actions ========== */}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <section className="space-y-2 lg:col-span-2">
           <SectionHeader icon={Activity} label="Recent activity" accent="slate" />
