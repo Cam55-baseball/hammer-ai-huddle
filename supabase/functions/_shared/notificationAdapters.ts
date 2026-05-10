@@ -105,7 +105,33 @@ export const emailAdapter: NotificationAdapter = {
   },
 };
 
-const ADAPTERS: NotificationAdapter[] = [slackAdapter, emailAdapter];
+// In-app adapter — writes critical alerts to public.owner_alerts so they
+// show up in the Owner Alert Center bell, regardless of email/slack config.
+// Always on (no master gate dependency) — this is the primary owner channel.
+export const inAppOwnerAlertAdapter: NotificationAdapter = {
+  name: 'in_app_owner',
+  alwaysOn: true,
+  async send(d, _signal) {
+    const sb = getSupabase();
+    if (!sb) return { ok: false, error: 'no_supabase_client' };
+    const bucket = minuteBucket();
+    const { error } = await sb.from('owner_alerts').insert({
+      alert_key: d.key,
+      severity: d.severity,
+      title: d.title,
+      detail: d.detail ?? {},
+      minute_bucket: bucket.toISOString(),
+    });
+    if (error) {
+      // Duplicate key = already inserted this minute, that's success (idempotent).
+      if (/duplicate|unique/i.test(error.message)) return { ok: true };
+      return { ok: false, error: `in_app ${error.message}` };
+    }
+    return { ok: true };
+  },
+};
+
+const ADAPTERS: NotificationAdapter[] = [inAppOwnerAlertAdapter, slackAdapter, emailAdapter];
 
 // --- Internal helpers ---------------------------------------------------
 
