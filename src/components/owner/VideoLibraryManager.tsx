@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch, Sparkles, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Pencil, BarChart3, Tags, Network, GitBranch, Sparkles, CheckCircle2, AlertCircle, AlertTriangle, Play } from "lucide-react";
+import { VideoPreviewDialog } from "./VideoPreviewDialog";
 import { AISuggestionsReview } from "./AISuggestionsReview";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
