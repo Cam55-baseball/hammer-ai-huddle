@@ -11497,6 +11497,7 @@ export type Database = {
       cleanup_old_advisory_logs: { Args: never; Returns: undefined }
       cleanup_old_explanations: { Args: never; Returns: undefined }
       cleanup_old_foundation_decisions: { Args: never; Returns: undefined }
+      cleanup_old_foundation_ops_logs: { Args: never; Returns: Json }
       cleanup_old_foundation_traces: { Args: never; Returns: undefined }
       cleanup_old_function_logs: { Args: never; Returns: undefined }
       cleanup_old_heartbeat_logs: { Args: never; Returns: undefined }
