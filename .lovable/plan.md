@@ -1,58 +1,98 @@
 
-## Phase II — Final hardening validation (read/test only, no code changes)
+# Plan — Operational Readiness Surfacing + 365-Day Log Retention
 
-All steps below are observation-only or use temporary seeded rows that I clean up at the end. No edge-function or schema edits.
+## Goals
+1. Make every operational readiness piece (retention rules, cron jobs, alerts, rollback steps, runbook, troubleshooting) **visible inside the app** — no more "it's only in markdown files."
+2. Extend system-log retention windows from **90 days → 365 days** so deeper longitudinal debugging is possible. Athlete data stays untouched (already kept forever).
+3. Surface the ops hub from the **Owner dashboard** so it's discoverable.
 
-### 1. Concurrent notification idempotency
-- Read current `uq_fnd_idem_minute` definition with `pg_indexes` to confirm column set `(alert_key, adapter, minute_bucket)`.
-- Spin up 10 parallel POSTs to a tiny ad-hoc Deno script (run via `code--exec deno run`) that imports `dispatch()` directly with stubbed `fetch` (counts call count) and a real Supabase client pointed at the project. All 10 share the same `alert_key` + minute.
-- Evidence: `select alert_key, adapter, minute_bucket, count(*) from foundation_notification_dispatches where alert_key='__idem_test__' group by 1,2,3` → expect ≤1 `ok`/`dlq` per (adapter, minute), with the rest as `skipped_idem`/`skipped_flap`. Stubbed-fetch call count printed.
-- Cleanup: `delete from foundation_notification_dispatches where alert_key='__idem_test__'` (via migration tool since delete requires write).
+---
 
-### 2. Notification timeout isolation
-- Run a local Deno harness that sets `FOUNDATION_NOTIFICATIONS_ENABLED=true`, `SLACK_WEBHOOK_URL` pointing at a hanging local server (`Deno.serve(() => new Promise(() => {}))`), then awaits `dispatch(...)` and records wall time.
-- Evidence: wall time < 21 s (DISPATCH_DEADLINE_MS=20 s + ~1 s overhead); returned `results` show `ok:false, error:'outer_timeout'` or per-attempt timeout strings; process exits cleanly (no leaked timers — verified by `--trace-leaks`-equivalent: re-running with `sanitizeOps:true` test wrapper).
+## Part A — Retention extension (90d → 365d)
 
-### 3. Retry-bound verification
-- Same harness, hanging server replaced with a counter that always returns 500.
-- Evidence: stubbed server logs exactly 3 hits per adapter; `dispatch` returns `attempts:3, ok:false`; one `dlq` row written per adapter for that minute bucket; no further hits after `MAX_ATTEMPTS`.
+### What changes
+| Table | Before | After |
+|---|---|---|
+| `foundation_recommendation_traces` | 90d | **365d** |
+| `foundation_fatigue_decisions` | 90d | **365d** |
+| `foundation_onboarding_decisions` | 90d | **365d** |
+| `foundation_health_alerts` (resolved only) | 30d | **365d** |
+| `foundation_notification_dispatches` | unlimited | **365d** (new) |
+| `foundation_cron_heartbeats` | unlimited | **365d** (new) |
+| `foundation_replay_outcomes` | unlimited | **365d** (new) |
 
-### 4. Query/index verification under volume
-- Seed via `supabase--insert`:
-  - 10 000 rows into `foundation_health_alerts` with `resolved_at` spanning last 30 d, varied `severity`, `alert_key` patterns.
-  - 5 000 rows into `foundation_replay_outcomes` over last 7 d, ~10 % `matched=false`.
-  - 5 000 rows into `foundation_notification_dispatches`.
-- Run `EXPLAIN (ANALYZE, BUFFERS)` via `supabase--read_query` on:
-  1. Resolved-alerts pagination (`severity='critical'` + `ilike 'cron_%'` + `range(0,25)`).
-  2. Replay drift trend (`ran_at >= now() - 7d`).
-  3. Mismatch samples (`matched=false order by ran_at desc limit 20`).
-  4. Dispatch lookup (`alert_key=? and adapter=? and status='ok' gte dispatched_at`).
-- Evidence: report `Index Scan` lines + `Execution Time` for each. Flag any `Seq Scan` on the four target tables.
-- Cleanup migration deletes all `__seed__`-prefixed rows.
+### What does NOT change (athlete data — kept forever)
+`custom_activity_logs`, `athlete_daily_log`, `engine_snapshot_versions`, all Vault tables, game scoring, MPI/BQI/PEI/FQI scores, nutrition logs, hydration, supplements, CNS load, regulation, profile/DOB/sport, foundation per-user state, all rollups on `library_videos.foundation_*`.
 
-### 5. Cron overlap safety
-- Issue 5 parallel `supabase--curl_edge_functions POST /foundation-health-alerts` and 5 parallel `POST /foundation-alert-retention`.
-- Evidence:
-  - `select alert_key, count(*) from foundation_health_alerts where resolved_at is null group by 1 having count(*) > 1` → expect empty (uq_fha_open_key holds).
-  - `select count(*) filter (where status='ok'), count(*) filter (where status='error') from foundation_cron_heartbeats where ran_at >= now() - interval '5 min' and function_name in ('foundation-health-alerts','foundation-alert-retention')`.
-  - `select count(*) from foundation_health_alerts where resolved_at >= now() - interval '5 min'` (sanity — must not spike).
-  - Retention: `select max(resolved_at) from foundation_health_alerts where resolved_at < now() - interval '90 days'` before vs after — should be unchanged because no resolved rows exist beyond cutoff in seeded data; deletion count from each invocation logged in heartbeat metadata.
+### How
+- Migration: update the two prune RPCs (`cleanup_old_foundation_traces`, `cleanup_old_foundation_decisions`) to use a 365-day cutoff.
+- Migration: add `cleanup_old_foundation_ops_logs()` RPC that prunes the three ops-only tables at 365d.
+- Edge fn: extend `daily-trace-prune` to also call the new RPC. Heartbeat metadata records counts deleted per table.
+- No threshold or notification logic changes.
 
-### 6. Final report contents
-- Commands executed (exact).
-- Tool outputs verbatim (truncated only at >2 k chars, with note).
-- EXPLAIN plans + timings.
-- Wall-time measurements for §2 and §3.
-- pg_indexes proof.
-- Discovered risks (if any).
-- Go / No-Go recommendation with explicit conditions.
+---
 
-### What I will NOT do
-- No code edits.
-- No threshold changes.
-- No new tests committed (the harness scripts run from `/tmp` and are not added to the repo).
-- Seeded rows are deleted in a final cleanup migration.
+## Part B — Ops hub UI (lives at `/owner/foundations/ops`)
 
-### Confirm before I run
-- OK to seed ~20 k temporary rows then delete them?
-- OK to insert ~30 ad-hoc `foundation_notification_dispatches` rows under `alert_key='__idem_test__'` for §1?
+Extend the existing `FoundationOpsObservability.tsx` page with a tabbed layout. Current content becomes the first tab; five new tabs added.
+
+### Tab structure
+1. **Live Health** *(existing)* — current alerts, heartbeats, replay drift charts.
+2. **Data Retention** *(new)* — visual two-column table:
+   - 🟢 Kept Forever (athlete data) — list of tables with plain-English description
+   - 🟡 Pruned After 365 Days (system logs) — list with last-prune timestamp pulled from heartbeat metadata + row counts
+   - Banner explaining the rollup principle: "summaries live forever, raw breadcrumbs prune at 365d"
+3. **Cron Jobs** *(new)* — live table from `foundation_cron_heartbeats`:
+   - job name, schedule, last run, duration, status, next-expected
+   - "Run now" button per job (calls existing edge fn endpoint)
+   - Red/amber/green pill based on staleness vs `cron-inventory.md` thresholds
+4. **Alerts & Notifications** *(new)* — current open alerts + dispatch log:
+   - Master gate state (`FOUNDATION_NOTIFICATIONS_ENABLED` on/off pill)
+   - Slack/email adapter status (configured / not configured)
+   - Last 50 dispatches with status (`ok`/`dlq`/`skipped_*`)
+   - Link to enablement-order checklist (rendered from `notification-enablement.md`)
+5. **Rollback Procedures** *(new)* — read-only cards for each documented rollback scenario, rendered from `runbook.md`:
+   - "Notification flag enabled in error" → command + explanation
+   - "Alerter producing false-positive criticals" → steps
+   - "Retention deleted unintended rows" → recovery path
+   - "Phase II tables / indexes" → drop statements
+   - Each card has a copy-to-clipboard button for the command, but **no execute button** (intentional — owner runs these consciously).
+6. **Runbook & Troubleshooting** *(new)* — full searchable rendering of:
+   - Required env vars
+   - Alert lifecycle (open → refresh → auto-resolve)
+   - Replay drift interpretation
+   - Notification system rules
+   - Troubleshooting symptom → first-check table
+
+### Data sources for tabs
+- Retention: `select count(*), max(created_at)` per table + last heartbeat for `daily-trace-prune`.
+- Cron: `foundation_cron_heartbeats` (last 50 per function) + static schedule map in code.
+- Alerts: existing queries on `foundation_health_alerts` + `foundation_notification_dispatches`.
+- Runbook/Rollback: markdown files imported via Vite `?raw` and rendered with `react-markdown` (already in deps if present, otherwise add).
+
+---
+
+## Part C — Owner dashboard surfacing
+
+Add a new card to the Owner dashboard (`/owner`) titled **"System Operations"** with:
+- Current health pill (green/amber/red based on open critical alert count)
+- Three quick stats: open alerts, last cron heartbeat age, dispatch failures (24h)
+- "Open Ops Hub" button → `/owner/foundations/ops`
+
+Also add a sidebar/nav link in the owner area so it's reachable in one click from anywhere in the owner section.
+
+---
+
+## Out of scope
+- No changes to athlete data, engines, recommendation logic, or thresholds.
+- No new alert rules or notification adapters.
+- No changes to the master notification gate (still off by default).
+
+## Technical details (for the AI implementing this)
+- **Migration**: single SQL file replacing the two existing RPCs with 365d cutoff + adding `cleanup_old_foundation_ops_logs()`.
+- **Edge fn**: extend `supabase/functions/daily-trace-prune/index.ts` only.
+- **UI**: refactor `FoundationOpsObservability.tsx` into a parent with `<Tabs>` (shadcn) + 6 child components in the same folder.
+- **Markdown rendering**: import docs as `?raw` strings, render via `react-markdown`.
+- **Owner dashboard**: edit `src/pages/owner/OwnerOverview.tsx` to add the System Operations card.
+- **Routing**: existing `/owner/foundations/ops` stays the URL; just internally tabbed.
+- **Memory update**: bump retention rule from 90d → 365d in the relevant memory file.
