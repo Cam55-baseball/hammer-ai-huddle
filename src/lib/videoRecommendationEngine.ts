@@ -43,6 +43,8 @@ export interface VideoWithTags {
   /** Phase 6 — engine leverage. Cached on library_videos. */
   confidence_score?: number | null;
   distribution_tier?: DistributionTier | null;
+  /** Owner-tagged teaching phases (e.g. ['p1_hip_load','p4_hitters_move']). Soft scoring boost. */
+  formula_phases?: string[] | null;
 }
 
 // Tier multipliers live in src/lib/videoTier.ts (TIER_BOOST) — single source of truth.
