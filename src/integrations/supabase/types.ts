@@ -5869,6 +5869,42 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_key: string
+          created_at: string
+          detail: Json
+          id: string
+          minute_bucket: string
+          severity: string
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_key: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          minute_bucket: string
+          severity: string
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_key?: string
+          created_at?: string
+          detail?: Json
+          id?: string
+          minute_bucket?: string
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       pending_drills: {
         Row: {
           ai_context: string | null
