@@ -18,6 +18,8 @@ import { computeVideoConfidence } from "@/lib/videoConfidence";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { AIComparePanel } from "./AIComparePanel";
 import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
+import { FormulaLinkageEditor, type FormulaLinkageValue } from "./FormulaLinkageEditor";
+import { WhatHammerHears } from "./WhatHammerHears";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -62,6 +64,10 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
   );
   const [aiDescription, setAiDescription] = useState<string>(video.ai_description || "");
   const [assignments, setAssignments] = useState<Record<string, number>>({});
+  const [formulaLinkage, setFormulaLinkage] = useState<FormulaLinkageValue>({
+    phases: (video as any).formula_phases ?? [],
+    notes: (video as any).formula_notes ?? "",
+  });
   const [regenLoading, setRegenLoading] = useState(false);
 
   const primaryDomain = skillDomains[0];
@@ -101,18 +107,19 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     setSkillDomains(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
   };
 
-  // Tap cycle: None → Normal (1) → Boost (3) → None
-  const NORMAL_WEIGHT = 1;
-  const BOOST_WEIGHT = 3;
+  // Explicit weight model: 1 = Normal, 3 = Strong, 5 = Max priority.
+  const WEIGHT_OPTIONS = [1, 3, 5] as const;
+  const DEFAULT_WEIGHT = 1;
   const toggleAssignment = (tagId: string) => {
     setAssignments(prev => {
       const next = { ...prev };
-      const cur = next[tagId];
-      if (cur == null) next[tagId] = NORMAL_WEIGHT;
-      else if (cur < BOOST_WEIGHT) next[tagId] = BOOST_WEIGHT;
-      else delete next[tagId];
+      if (next[tagId] != null) delete next[tagId];
+      else next[tagId] = DEFAULT_WEIGHT;
       return next;
     });
+  };
+  const setAssignmentWeight = (tagId: string, weight: number) => {
+    setAssignments(prev => ({ ...prev, [tagId]: weight }));
   };
 
   const layersCovered = useMemo<TagLayer[]>(() => {
