@@ -152,6 +152,8 @@ export function VideoUploadWizard({ tags, onSuccess, fastMode = false }: Props) 
       skillDomains: isFoundation ? [] : structured.skillDomains,
       aiDescription: structured.aiDescription,
       tagAssignments: isFoundation ? {} : structured.tagAssignments,
+      formulaPhases: isFoundation ? [] : structured.formulaLinkage.phases,
+      formulaNotes: isFoundation ? undefined : (structured.formulaLinkage.notes.trim() || undefined),
       videoClass: isFoundation ? 'foundation' : 'application',
       foundationMeta: isFoundation ? foundationMeta : null,
     });
