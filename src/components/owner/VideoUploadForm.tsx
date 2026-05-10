@@ -70,6 +70,8 @@ export function VideoUploadForm({ tags, onSuccess }: VideoUploadFormProps) {
       skillDomains: structured.skillDomains,
       aiDescription: structured.aiDescription,
       tagAssignments: structured.tagAssignments,
+      formulaPhases: structured.formulaLinkage.phases,
+      formulaNotes: structured.formulaLinkage.notes.trim() || undefined,
     });
 
     if (result) {
