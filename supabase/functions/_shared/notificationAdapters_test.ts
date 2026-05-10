@@ -59,12 +59,14 @@ const origFetch = globalThis.fetch;
 function setFetch(fn: typeof fetch) { (globalThis as any).fetch = fn; }
 function restoreFetch() { (globalThis as any).fetch = origFetch; }
 
-Deno.test({ name: 'dispatch: skipped when disabled flag is off', sanitizeOps: false, sanitizeResources: false, fn: async () => {
+Deno.test({ name: 'dispatch: external adapters skipped when disabled, in_app still runs', sanitizeOps: false, sanitizeResources: false, fn: async () => {
   __resetForTests();
   setEnv({ ...baseEnv });
   const r = await dispatch(sample);
-  assertEquals(r.skipped, true);
-  assertEquals(r.reason, 'disabled');
+  // No longer fully skipped: in_app adapter is alwaysOn.
+  assertEquals(r.skipped, false);
+  assert(r.results && r.results.length === 1);
+  assertEquals(r.results![0].adapter, 'in_app_owner');
 } });
 
 Deno.test({ name: 'dispatch: skipped for non-critical severity', sanitizeOps: false, sanitizeResources: false, fn: async () => {
@@ -75,7 +77,7 @@ Deno.test({ name: 'dispatch: skipped for non-critical severity', sanitizeOps: fa
   assertEquals(r.reason, 'non_critical');
 } });
 
-Deno.test({ name: 'dispatch: never throws even if all adapters fail', sanitizeOps: false, sanitizeResources: false, fn: async () => {
+Deno.test({ name: 'dispatch: never throws even if all external adapters fail', sanitizeOps: false, sanitizeResources: false, fn: async () => {
   __resetForTests();
   setEnv({
     ...baseEnv,
@@ -87,8 +89,11 @@ Deno.test({ name: 'dispatch: never throws even if all adapters fail', sanitizeOp
   try {
     const r = await dispatch(sample);
     assertEquals(r.skipped, false);
-    assert(r.results && r.results.length === 2);
-    for (const res of r.results!) assertEquals(res.ok, false);
+    // 3 adapters now: in_app_owner + slack + email.
+    assert(r.results && r.results.length === 3);
+    for (const res of r.results!.filter(x => x.adapter !== 'in_app_owner')) {
+      assertEquals(res.ok, false);
+    }
   } finally {
     restoreFetch();
   }
