@@ -257,11 +257,24 @@ export async function dispatch(d: NotificationDispatch): Promise<DispatchResult>
     configWarned = true;
   }
 
+  // Critical-only severity gate. Even alwaysOn adapters skip non-critical;
+  // they exist for the owner alert center which only surfaces criticals.
   if (d.severity !== 'critical') {
     for (const a of ADAPTERS) {
       await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_severity', attempt: 0 });
     }
     return { skipped: true, reason: 'non_critical' };
+  }
+
+  // Master gate: when off, only adapters marked alwaysOn run.
+  // Other adapters log skipped_disabled (path exercised, no external send).
+  const activeAdapters = enabled ? ADAPTERS : ADAPTERS.filter((a) => a.alwaysOn);
+  if (!enabled) {
+    for (const a of ADAPTERS) {
+      if (!a.alwaysOn) {
+        await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_disabled', attempt: 0, payload: { title: d.title } });
+      }
+    }
   }
 
   // Outer 20s hard timeout
@@ -270,7 +283,7 @@ export async function dispatch(d: NotificationDispatch): Promise<DispatchResult>
   const results: Array<{ adapter: string; ok: boolean; error?: string; attempts: number }> = [];
 
   try {
-    await Promise.allSettled(ADAPTERS.map(async (a) => {
+    await Promise.allSettled(activeAdapters.map(async (a) => {
       try {
         if (sb && (await isFlapping(sb, d.key, a.name))) {
           await logDispatch(sb, { alert_key: d.key, severity: d.severity, adapter: a.name, status: 'skipped_flap', attempt: 0, minute_bucket: bucket });
