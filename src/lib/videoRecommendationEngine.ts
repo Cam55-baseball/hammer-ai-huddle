@@ -96,7 +96,9 @@ export function recommendVideos(input: RecommendInput): RecommendResult[] {
   const {
     skillDomain, mode, movementPatterns, resultTags, contextTags,
     candidateVideos, taxonomy, rules, userOutcomes, globalMetrics,
+    activePhases,
   } = input;
+  const activePhaseSet = new Set((activePhases ?? []).filter(Boolean));
 
   // Build key→tagId lookup scoped to this skill domain
   const keyToTagId = new Map<string, string>();
