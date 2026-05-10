@@ -20,6 +20,9 @@ export interface LibraryVideo {
   video_format?: string | null;
   skill_domains?: string[] | null;
   ai_description?: string | null;
+  // Formula linkage (per-domain teaching phases + owner notes)
+  formula_phases?: string[] | null;
+  formula_notes?: string | null;
   // Foundation class (long-form A–Z philosophy videos)
   video_class?: 'application' | 'foundation' | null;
   foundation_meta?: import('@/lib/foundationVideos').FoundationMeta | null;

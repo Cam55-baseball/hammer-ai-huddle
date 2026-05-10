@@ -18,6 +18,8 @@ import { computeVideoConfidence } from "@/lib/videoConfidence";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { AIComparePanel } from "./AIComparePanel";
 import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
+import { FormulaLinkageEditor, type FormulaLinkageValue } from "./FormulaLinkageEditor";
+import { WhatHammerHears } from "./WhatHammerHears";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -62,6 +64,10 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
   );
   const [aiDescription, setAiDescription] = useState<string>(video.ai_description || "");
   const [assignments, setAssignments] = useState<Record<string, number>>({});
+  const [formulaLinkage, setFormulaLinkage] = useState<FormulaLinkageValue>({
+    phases: (video as any).formula_phases ?? [],
+    notes: (video as any).formula_notes ?? "",
+  });
   const [regenLoading, setRegenLoading] = useState(false);
 
   const primaryDomain = skillDomains[0];
@@ -101,18 +107,19 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     setSkillDomains(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
   };
 
-  // Tap cycle: None → Normal (1) → Boost (3) → None
-  const NORMAL_WEIGHT = 1;
-  const BOOST_WEIGHT = 3;
+  // Explicit weight model: 1 = Normal, 3 = Strong, 5 = Max priority.
+  const WEIGHT_OPTIONS = [1, 3, 5] as const;
+  const DEFAULT_WEIGHT = 1;
   const toggleAssignment = (tagId: string) => {
     setAssignments(prev => {
       const next = { ...prev };
-      const cur = next[tagId];
-      if (cur == null) next[tagId] = NORMAL_WEIGHT;
-      else if (cur < BOOST_WEIGHT) next[tagId] = BOOST_WEIGHT;
-      else delete next[tagId];
+      if (next[tagId] != null) delete next[tagId];
+      else next[tagId] = DEFAULT_WEIGHT;
       return next;
     });
+  };
+  const setAssignmentWeight = (tagId: string, weight: number) => {
+    setAssignments(prev => ({ ...prev, [tagId]: weight }));
   };
 
   const layersCovered = useMemo<TagLayer[]>(() => {
@@ -181,6 +188,8 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
         videoFormat: videoFormat || null,
         skillDomains,
         aiDescription,
+        formulaPhases: formulaLinkage.phases,
+        formulaNotes: formulaLinkage.notes.trim() ? formulaLinkage.notes : null,
       });
       if (!okStruct) return;
 
@@ -390,9 +399,23 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           )}
         </div>
 
-        {/* Hammer Description — chip composer (no typing) + Auto-Suggest */}
+        {/* Coach's Notes to Hammer — freeform (PRIMARY) + Auto-Suggest */}
         <div className="space-y-1.5">
-          <HammerDescriptionComposer value={aiDescription} onChange={setAiDescription} />
+          <Label htmlFor="edit-coach-notes" className="text-xs">
+            Coach's Notes to Hammer <span className="text-destructive">*</span>
+          </Label>
+          <p className="text-[10px] text-muted-foreground -mt-0.5">
+            Talk to Hammer in your own voice. Tell it who this video is for, what it teaches, and the fault it fixes. Hammer reads this verbatim.
+          </p>
+          <Textarea
+            id="edit-coach-notes"
+            value={aiDescription}
+            onChange={e => setAiDescription(e.target.value)}
+            placeholder="e.g. Best for advanced hitters rolling over inside fastballs due to early hand drift. Drills the P1 hands-break trigger and the P4 elite move…"
+            rows={5}
+            disabled={isProcessing}
+            className="text-xs"
+          />
           <div className="flex items-center justify-between gap-2 pt-1">
             <p className="text-[10px] text-muted-foreground">
               {aiDescription.trim().length} chars · 20+ to enable Auto-Suggest
@@ -409,11 +432,41 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
               Auto-Suggest Tags
             </Button>
           </div>
+
+          {/* Quick-fill helpers (optional) — chips append to the textarea */}
+          <details className="group rounded-md border border-border/60 bg-background/40 mt-1">
+            <summary className="cursor-pointer list-none px-2 py-1.5 text-[10px] text-muted-foreground select-none flex items-center gap-1.5 hover:text-foreground">
+              <span className="transition-transform group-open:rotate-90">▸</span>
+              Quick-fill helpers (optional) — append a structured sentence with chips
+            </summary>
+            <div className="p-2 border-t border-border/60">
+              <HammerDescriptionComposer
+                value=""
+                onChange={(text) => {
+                  if (!text) return;
+                  const cur = aiDescription.trim();
+                  setAiDescription(cur ? `${cur}\n\n${text}` : text);
+                }}
+                compact
+              />
+            </div>
+          </details>
         </div>
 
-        {/* Tag assignments grouped by layer */}
+        {/* Formula Linkage — what does this video teach? */}
+        <FormulaLinkageEditor
+          domains={skillDomains}
+          value={formulaLinkage}
+          onChange={setFormulaLinkage}
+          disabled={isProcessing}
+        />
+
+        {/* Tag assignments grouped by layer with explicit 1 / 3 / 5 weights */}
         <div className="space-y-2">
           <Label className="text-xs">Tag Assignments ({Object.keys(assignments).length} picked, need 2+)</Label>
+          <p className="text-[10px] text-muted-foreground -mt-1">
+            Tap to add. Use <span className="font-semibold">1</span> = normal, <span className="font-semibold">3</span> = strong, <span className="font-semibold">5</span> = max priority.
+          </p>
           {!primaryDomain ? (
             <p className="text-[11px] text-muted-foreground italic px-2 py-3 rounded bg-background/60">
               Pick a skill domain above to load taxonomy.
@@ -430,22 +483,41 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
                       No {LAYER_LABELS[layer].toLowerCase()} tags yet — add some in the Taxonomy tab.
                     </p>
                   ) : (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5">
                       {grouped[layer].map(tag => {
                         const w = assignments[tag.id];
                         const selected = w != null;
-                        const boosted = selected && w >= BOOST_WEIGHT;
                         return (
-                          <Badge
-                            key={tag.id}
-                            variant={selected ? 'default' : 'outline'}
-                            className={`cursor-pointer text-[10px] gap-0.5 ${boosted ? 'ring-2 ring-primary/60' : ''}`}
-                            onClick={() => !isProcessing && toggleAssignment(tag.id)}
-                            title={boosted ? 'Boosted — tap again to remove' : selected ? 'Tap again to ⚡ Boost' : 'Tap to add'}
-                          >
-                            {boosted && <span className="text-[9px]">⚡</span>}
-                            {tag.label}
-                          </Badge>
+                          <div key={tag.id} className="inline-flex items-center gap-0.5">
+                            <Badge
+                              variant={selected ? 'default' : 'outline'}
+                              className="cursor-pointer text-[10px]"
+                              onClick={() => !isProcessing && toggleAssignment(tag.id)}
+                              title={selected ? 'Tap to remove' : 'Tap to add'}
+                            >
+                              {tag.label}
+                            </Badge>
+                            {selected && (
+                              <div className="inline-flex rounded border border-border overflow-hidden">
+                                {WEIGHT_OPTIONS.map(val => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    onClick={() => !isProcessing && setAssignmentWeight(tag.id, val)}
+                                    disabled={isProcessing}
+                                    className={`px-1.5 text-[9px] font-medium transition-colors ${
+                                      w === val
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-background hover:bg-muted'
+                                    }`}
+                                    title={val === 5 ? 'Max priority' : val === 3 ? 'Strong' : 'Normal'}
+                                  >
+                                    {val}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -462,6 +534,17 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           taxonomy={taxonomy}
           ownerTagIds={Object.keys(assignments)}
           onAdoptTag={toggleAssignment}
+        />
+
+        {/* What Hammer hears — derived preview */}
+        <WhatHammerHears
+          domains={skillDomains}
+          videoFormat={videoFormat}
+          phases={formulaLinkage.phases}
+          aiDescription={aiDescription}
+          boostedTagLabels={taxonomy
+            .filter(t => (assignments[t.id] ?? 0) >= 3)
+            .map(t => t.label)}
         />
       </div>
 
