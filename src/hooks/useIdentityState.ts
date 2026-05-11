@@ -128,5 +128,10 @@ export function useIdentityState() {
     ring: meta.ring,
     bg: meta.bg,
     chip: meta.chip,
+    accent: meta.accent,
+    scoreText: meta.scoreText,
+    glow: meta.glow,
+    pill: meta.pill,
+    pulse: meta.pulse,
   };
 }
