@@ -45,20 +45,20 @@ export function DailyStandardCheck() {
 
   return (
     <div className={cn(
-      'flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-sm font-semibold',
-      'border-primary bg-card text-black'
+      'relative flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/95 px-3 py-2.5 text-sm font-semibold overflow-hidden'
     )} role="status">
-      <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
-      <span className="flex-1 min-w-0 text-black">
-        Operating at <span className="font-black text-black">{label}</span> standard?
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" aria-hidden />
+      <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary ml-1" />
+      <span className="flex-1 min-w-0 text-slate-100">
+        Operating at <span className="font-black text-white">{label}</span> standard?
       </span>
-      <Button size="sm" onClick={handleConfirm} className="h-8 font-bold">
+      <Button size="sm" onClick={handleConfirm} className="h-8 font-bold bg-white text-slate-950 hover:bg-slate-100">
         Confirm
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0 text-black/60 hover:text-black"
+        className="h-7 w-7 shrink-0 text-slate-400 hover:text-white hover:bg-white/10"
         onClick={() => setDismissed(true)}
         aria-label="Dismiss"
       >
