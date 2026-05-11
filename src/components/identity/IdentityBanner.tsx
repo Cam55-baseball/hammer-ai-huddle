@@ -33,7 +33,7 @@ function useCountUp(target: number, duration = 700) {
 }
 
 export function IdentityBanner({ className }: Props) {
-  const { snapshot, tier, label, tone, ring, bg, accent, scoreText, glow, pill, pulse, loading } = useIdentityState();
+  const { snapshot, tier, label, tone, ring, bg, accent, scoreText, glow, pill, loading } = useIdentityState();
   useEngineRecomputeTrigger();
 
   const score = snapshot?.consistency_score ?? 0;
@@ -53,16 +53,12 @@ export function IdentityBanner({ className }: Props) {
     <div className={cn('space-y-2', className)}>
       <div
         className={cn(
-          'relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br p-4 sm:p-5 ring-1 transition-shadow',
-          bg, ring, glow,
-          pulse && 'animate-[pulse_4s_ease-in-out_infinite]'
+          'relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br p-4 sm:p-5 ring-1',
+          bg, ring, glow
         )}
       >
         {/* Left tier accent bar */}
         <div className={cn('absolute left-0 top-0 bottom-0 w-1.5', accent)} aria-hidden />
-
-        {/* Subtle inner highlight */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 to-transparent" aria-hidden />
 
         <div className="relative flex items-start justify-between gap-4 pl-2">
           <div className="min-w-0 flex-1">
