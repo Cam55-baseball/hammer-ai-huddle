@@ -33,7 +33,7 @@ function useCountUp(target: number, duration = 700) {
 }
 
 export function IdentityBanner({ className }: Props) {
-  const { snapshot, tier, label, tone, ring, bg, accent, scoreText, glow, pill, pulse, loading } = useIdentityState();
+  const { snapshot, tier, label, tone, ring, bg, accent, scoreText, glow, pill, loading } = useIdentityState();
   useEngineRecomputeTrigger();
 
   const score = snapshot?.consistency_score ?? 0;
