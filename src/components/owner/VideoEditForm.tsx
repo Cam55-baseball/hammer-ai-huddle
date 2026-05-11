@@ -384,11 +384,48 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           <div className="flex items-center gap-1.5">
             <ConfidenceBadge score={conf.score} tier={conf.tier} compact />
             <Badge variant={isReady ? "default" : "outline"} className="text-[10px]">
-              {isReady ? "Ready" : `${4 - missing.length}/4 done`}
+              {isFoundation
+                ? (isReady ? "Foundation Ready" : "Foundation incomplete")
+                : (isReady ? "Ready" : `${4 - applicationMissing.length}/4 done`)}
             </Badge>
           </div>
         </div>
 
+        {/* Foundation toggle — flips the editor between Application and Foundation tracks */}
+        <button
+          type="button"
+          onClick={() => !isProcessing && setIsFoundation(v => !v)}
+          className={`w-full text-left rounded-lg border p-3 transition-colors ${
+            isFoundation
+              ? 'border-primary bg-primary/15'
+              : 'border-border hover:border-primary/50 bg-background/60'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold">
+                {isFoundation ? '✓ Foundation video' : 'This is a Foundation video'}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Long-form A–Z philosophy / mechanics primer / mental framework. Skips per-rep tagging — surfaces on refresher triggers.
+              </p>
+            </div>
+            <Badge variant={isFoundation ? 'default' : 'outline'} className="text-[10px] shrink-0">
+              {isFoundation ? 'Foundation' : 'Application'}
+            </Badge>
+          </div>
+        </button>
+
+        {isFoundation ? (
+          <FoundationTagEditor
+            value={foundationMeta}
+            onChange={setFoundationMeta}
+            aiDescription={aiDescription}
+            onDescriptionChange={setAiDescription}
+          />
+        ) : (
+        <>
+        
         {/* Video Format */}
         <div className="space-y-1.5">
           <Label className="text-xs">Video Format</Label>
@@ -573,6 +610,8 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
             .filter(t => (assignments[t.id] ?? 0) >= 3)
             .map(t => t.label)}
         />
+        </>
+        )}
       </div>
 
       {/* Missing-fields list */}
