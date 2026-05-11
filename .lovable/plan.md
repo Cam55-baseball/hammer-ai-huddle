@@ -1,79 +1,65 @@
-# Restore Foundation Videos in the Editor + Fix Playback
+## Why you're stuck at ~20% on Foundation videos
 
-Two bugs, one root cause for each. Both are in the owner-only Video Library Manager — no athlete-facing changes.
+The confidence score in the editor is computed by a single shared function (`computeVideoConfidence` in `src/lib/videoConfidence.ts`) that was designed for **Application** videos. It expects five things, summing to 100:
 
----
+| Component | Max | Where it comes from |
+|---|---|---|
+| Format | 15 | The "video format" dropdown |
+| Domain | 15 | `skill_domains` array |
+| Description | 25 | Length + an action verb in `ai_description` |
+| Tag count | 20 | Per-rep tag assignments |
+| Diversity | 25 | Spread across the 4 tag layers (movement / result / context / correction) |
 
-## Problem 1 — Videos won't play in the editor
+When you flip a video to **Foundation**, the editor intentionally clears format, skill domains, and per-rep tag assignments (Foundation videos use chips instead). But the score still runs through the Application formula, so:
 
-The edit form (`VideoEditForm.tsx`) and the new `VideoPreviewDialog.tsx` use a raw HTML5 `<video src={video.video_url}>` tag. That works for direct file uploads (.mp4 / .mov), but **silently fails** for:
+- format → 0 (cleared)
+- domain → 0 (cleared)
+- tagCount → 0 (Foundation has no per-rep tags)
+- diversity → 0 (no layers)
+- description → up to 25
 
-- YouTube / Vimeo links (need an `<iframe>` embed)
-- X (Twitter) / TikTok links (need their embed widgets)
-- Any other "external" link
+A perfectly written Foundation description therefore caps at **~25/100** — that's the "20%" you're seeing. It's a scoring bug, not a description-quality problem.
 
-We already have a smart component that handles all of these correctly: `src/components/video-library/VideoPlayer.tsx` (it uses `getEmbedInfo()` from `videoEmbed.ts` to detect the platform and pick the right embed). The athlete-facing player uses it; the owner editor doesn't.
+## The fix: a Foundation-native confidence formula
 
-## Problem 2 — Foundation/holistic videos can be uploaded but not edited
+Add a parallel scorer that grades what Foundation videos actually use, then route the editor to it when `isFoundation` is true. Same 0–100 scale, same Elite / Solid / Needs work tiers, so the badge reads consistently.
 
-Foundation tagging already exists end-to-end:
+Proposed Foundation breakdown (sums to 100):
 
-- `src/lib/foundationVideos.ts` — domain / scope / audience / refresher-trigger taxonomy
-- `src/components/owner/FoundationTagEditor.tsx` — the chip editor
-- `src/hooks/useFoundationVideos.ts` — projection used by athlete surfaces
-- `library_videos.video_class = 'foundation' | 'application'` + `foundation_meta` JSON in the DB
-- The **Upload Wizard** has the "This is a Foundation video" toggle and the editor
+| Component | Max | Earned when |
+|---|---|---|
+| Domain chip | 10 | A Foundation domain is selected |
+| Scope chip | 10 | A scope is selected |
+| Audience levels | 15 | 1 level = 8, 2 = 12, 3+ = 15 |
+| Refresher triggers | 25 | 1 trigger = 10, 2 = 18, 3 = 22, 4+ = 25 (this is what makes Hammer surface it) |
+| Coach's Notes length | 20 | <60 chars = 0, 60–199 = 10, 200–399 = 16, 400+ = 20 |
+| Coach's Notes quality | 20 | +6 if it contains an action verb (same regex as Application), +7 if it covers ≥2 of {cue, why, fix, when}, +7 if it has a clear structure (numbered steps, line breaks, or "first / next / finally" markers) |
 
-But `VideoEditForm.tsx` was never updated to include them. So once a Foundation video is uploaded, the owner can never re-tag it, can't flip an Application video into a Foundation video, and can't see / change refresher triggers. That's why it feels like "nothing for tagging holistic videos" — the entry point is missing in the Edit screen.
+A Foundation video that has all chips filled, ≥2 audiences, ≥2 triggers, and a 400+ char Coach's Notes with verbs and structure will hit 100%.
 
----
+The `hints[]` array will become Foundation-specific so you can see exactly what's missing the moment you're below Elite — e.g. "Add 1 more refresher trigger (+4)", "Coach's Notes is 180 chars; reach 200 for +6", "Add an action verb (drive, rotate, stack…)".
 
-## What we'll change
+## What to change
 
-### Track A — Playback (works for every URL type)
+Frontend / presentation only — no DB, no engine, no recommender changes.
 
-1. **`src/components/owner/VideoPreviewDialog.tsx`** — replace the raw `<video>` block with `<VideoPlayer videoUrl={video.video_url} videoType={video.video_type} title={video.title} />`. Keep the null-guard for empty URLs.
-2. **`src/components/owner/VideoEditForm.tsx`** — same swap inside the "Current Video" card. Title text remains.
-3. **`src/components/owner/VideoLibraryManager.tsx`** — Play button stays as-is; it already opens `VideoPreviewDialog`, so it inherits the fix automatically.
-
-### Track B — Foundation track in the Edit form
-
-1. **`VideoEditForm.tsx`**
-   - Add a "This is a Foundation video" toggle at the top of the Engine Fields card, mirroring the Upload Wizard.
-   - When ON: hide Video Format / Skill Domains / Formula Linkage / 1-3-5 tag weights and render `<FoundationTagEditor>` instead. Coach's Notes textarea stays in both modes.
-   - When OFF: show the existing Application editor unchanged.
-   - State: `isFoundation`, `foundationMeta` initialized from `video.video_class === 'foundation'` and `video.foundation_meta`.
-   - Save path: pass `videoClass` and `foundationMeta` (or null) through `updateStructuredFields`. If switching Application → Foundation, clear the Application-only fields with explicit `null` per the project's editing-integrity rule. If switching Foundation → Application, set `foundation_meta` to null.
-   - Readiness gate: when `isFoundation`, validation uses `isFoundationMetaValid()` instead of `computeMissingFields()`.
-
-2. **`src/hooks/useVideoLibraryAdmin.ts`** — extend `updateStructuredFields(...)` to accept `videoClass` and `foundationMeta` and write them. (Already supported in `uploadVideo`; we mirror it for updates.)
-
-3. **`src/components/owner/VideoLibraryManager.tsx`** — add a small "Foundation" badge next to the title when `video.video_class === 'foundation'`, and a one-line filter chip alongside `incomplete` / `throttled` so the owner can filter Foundation vs Application.
-
-4. **`src/components/owner/VideoLibraryHelpSheet.tsx`** — add a 2-sentence explainer of what a Foundation video is and when to use it, so the toggle is discoverable.
-
-### Track C — Memory
-
-- Update `mem://features/video-library/formula-linkage` (or add a sibling note) to record that the Edit form has both Application and Foundation tracks, and that playback in the editor goes through `VideoPlayer` for embed support.
-
----
+1. **`src/lib/videoConfidence.ts`** — add `computeFoundationConfidence(input)` returning the same `ConfidenceResult` shape (score, tier, breakdown, hints). Keep `computeVideoConfidence` unchanged for Application videos.
+2. **`src/components/owner/ConfidenceBadge.tsx`** — no behavior change; it already takes `score` + `tier`.
+3. **`src/components/owner/VideoEditForm.tsx`** — when `isFoundation` is true, call `computeFoundationConfidence({ foundationMeta, aiDescription })` instead of `computeVideoConfidence(...)`. Render the same badge and the new hints below it.
+4. **`src/components/owner/VideoFastEditor.tsx`** — same routing fix so the inline editor agrees with the full editor.
+5. **`src/hooks/useVideoConfidenceMap.ts`** — if a video's `video_class === 'foundation'`, run it through the Foundation scorer so the library list badges match.
+6. **`src/components/owner/OwnerTaggingPerformancePanel.tsx`** — split the rollup so Foundation videos are graded against the Foundation scale (otherwise the "needs work" count stays inflated).
 
 ## Out of scope
 
-- No DB migrations — `video_class` and `foundation_meta` columns already exist.
-- No changes to athlete-facing surfaces, recommendation engine weights, or RLS.
-- No changes to how the Upload Wizard works (already correct).
+- No changes to `FoundationTagEditor` chips, `HammerDescriptionComposer`, the recommender (`scoreFoundationCandidates`), DB columns, or RLS.
 - No new analytics events.
+- Application-video scoring stays exactly as it is today.
 
-## Files
+## Quick wins you can apply right now (before the code ships)
 
-**Edit**
-- `src/components/owner/VideoPreviewDialog.tsx`
-- `src/components/owner/VideoEditForm.tsx`
-- `src/components/owner/VideoLibraryManager.tsx`
-- `src/components/owner/VideoLibraryHelpSheet.tsx`
-- `src/hooks/useVideoLibraryAdmin.ts`
-- `mem://features/video-library/formula-linkage` (or new sibling)
+Even on the current (broken) formula, the Coach's Notes piece tops out at 25 only when:
+- Length ≥ 140 characters, AND
+- Contains one of these action verbs: fix, cue, drive, rotate, extend, stay, keep, load, land, swing, throw, catch, track, read, focus, shift, press, brace, prep, finish, follow, connect, stack.
 
-**Create**
-- _(none — all components already exist)_
+So a Foundation note like *"Drive the back hip, stack the spine, finish through the ball — keep the head still and track the release."* will score the full 25 on description today. That alone moves you from ~5% to ~25% until the Foundation scorer ships.
