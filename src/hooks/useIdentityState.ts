@@ -21,11 +21,11 @@ export interface IdentitySnapshot {
 }
 
 const TIER_META: Record<IdentityTier, { label: string; tone: string; ring: string; bg: string; chip: string }> = {
-  elite:      { label: 'ELITE',      tone: 'text-fuchsia-50', ring: 'ring-fuchsia-400/70', bg: 'from-fuchsia-900 to-violet-950',  chip: 'bg-fuchsia-500/40 text-fuchsia-50 border-fuchsia-300/70' },
-  locked_in:  { label: 'LOCKED IN',  tone: 'text-emerald-50', ring: 'ring-emerald-400/70', bg: 'from-emerald-900 to-teal-950',    chip: 'bg-emerald-500/40 text-emerald-50 border-emerald-300/70' },
-  consistent: { label: 'CONSISTENT', tone: 'text-sky-50',     ring: 'ring-sky-400/70',     bg: 'from-sky-900 to-blue-950',        chip: 'bg-sky-500/40 text-sky-50 border-sky-300/70' },
-  building:   { label: 'BUILDING',   tone: 'text-amber-50',   ring: 'ring-amber-400/70',   bg: 'from-amber-900 to-orange-950',    chip: 'bg-amber-500/40 text-amber-50 border-amber-300/70' },
-  slipping:   { label: 'SLIPPING',   tone: 'text-rose-50',    ring: 'ring-rose-400/70',    bg: 'from-rose-900 to-red-950',        chip: 'bg-rose-500/40 text-rose-50 border-rose-300/70' },
+  elite:      { label: 'ELITE',      tone: 'text-fuchsia-900', ring: 'ring-fuchsia-400', bg: 'from-fuchsia-100 to-violet-100', chip: 'bg-fuchsia-200 text-fuchsia-900 border-fuchsia-400' },
+  locked_in:  { label: 'LOCKED IN',  tone: 'text-emerald-900', ring: 'ring-emerald-400', bg: 'from-emerald-100 to-teal-100',   chip: 'bg-emerald-200 text-emerald-900 border-emerald-400' },
+  consistent: { label: 'CONSISTENT', tone: 'text-sky-900',     ring: 'ring-sky-400',     bg: 'from-sky-100 to-blue-100',       chip: 'bg-sky-200 text-sky-900 border-sky-400' },
+  building:   { label: 'BUILDING',   tone: 'text-amber-900',   ring: 'ring-amber-400',   bg: 'from-amber-100 to-orange-100',   chip: 'bg-amber-200 text-amber-900 border-amber-400' },
+  slipping:   { label: 'SLIPPING',   tone: 'text-rose-900',    ring: 'ring-rose-400',    bg: 'from-rose-100 to-red-100',       chip: 'bg-rose-200 text-rose-900 border-rose-400' },
 };
 
 export function useIdentityState() {
