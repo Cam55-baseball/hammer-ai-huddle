@@ -140,13 +140,15 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     return layers;
   }, [assignments, taxonomy]);
 
-  const missing = computeMissingFields({
+  const applicationMissing = computeMissingFields({
     videoFormat,
     skillDomains,
     aiDescription,
     assignmentCount: Object.keys(assignments).length,
   });
-  const isReady = missing.length === 0;
+  const foundationReady = isFoundationMetaValid(foundationMeta) && aiDescription.trim().length > 0;
+  const missing = isFoundation ? [] : applicationMissing;
+  const isReady = isFoundation ? foundationReady : applicationMissing.length === 0;
   const canAutoSuggest = aiDescription.trim().length >= 20;
   const conf = computeVideoConfidence({
     videoFormat,
@@ -195,15 +197,19 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
       if (!ok) return;
 
       const okStruct = await updateStructuredFields(video.id, {
-        videoFormat: videoFormat || null,
-        skillDomains,
+        // Foundation videos blank out the application-only fields with explicit nulls
+        videoFormat: isFoundation ? null : (videoFormat || null),
+        skillDomains: isFoundation ? [] : skillDomains,
         aiDescription,
-        formulaPhases: formulaLinkage.phases,
-        formulaNotes: formulaLinkage.notes.trim() ? formulaLinkage.notes : null,
+        formulaPhases: isFoundation ? [] : formulaLinkage.phases,
+        formulaNotes: isFoundation ? null : (formulaLinkage.notes.trim() ? formulaLinkage.notes : null),
+        videoClass: isFoundation ? 'foundation' : 'application',
+        foundationMeta: isFoundation ? foundationMeta : null,
       });
       if (!okStruct) return;
 
-      const okAssign = await syncTagAssignments(video.id, assignments);
+      // Foundation videos don't carry per-rep tag assignments — clear them.
+      const okAssign = await syncTagAssignments(video.id, isFoundation ? {} : assignments);
       if (!okAssign) return;
 
       toast({ title: "Saved", description: "Video updated." });
