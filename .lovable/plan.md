@@ -1,45 +1,77 @@
-## Goal
+## Vision
 
-All text on the Identity card (and its child rows: pressure toast, daily standard check) renders **black at all times** in both light and dark mode. Background gradients and chip colors stay colorful — only text/icon foreground changes.
+Make the Identity card the **single most visually striking, instantly readable** element on the dashboard. Treat it like a premium athlete badge — think Apple Fitness ring + Nike training club + a championship trophy plate. Every value must be legible in under 200ms.
 
-## Files to change (presentation only)
+## Design Principles
 
-### 1. `src/hooks/useIdentityState.ts` — `TIER_META`
-- Lighten gradients so black text reads cleanly (current `from-fuchsia-900 to-violet-950` is too dark for black). Switch each tier to a mid-tone colorful gradient:
-  - elite: `from-fuchsia-300 to-violet-400`
-  - locked_in: `from-emerald-300 to-teal-400`
-  - consistent: `from-sky-300 to-blue-400`
-  - building: `from-amber-300 to-orange-400`
-  - slipping: `from-rose-300 to-red-400`
-- Set every `tone` to `text-black` (was `text-fuchsia-50`, etc.).
-- Update `chip` to `bg-white/70 text-black border-black/20` per tier.
-- Keep `ring-*-400/70` rings as tier identity.
+1. **Dark canvas, bright signal** — Solid deep slate base (`#0B1120`-class) with a single tier-colored accent stripe and glow. Stop fighting with light gradients + black text.
+2. **Typographic hierarchy you can read across the room** — Massive consistency score as the hero numeral, tier label as the eyebrow badge, supporting chips small but high-contrast.
+3. **One color per tier, used with restraint** — Tier color shows up as: left accent bar, ring glow, score numeral, and tier pill. Everything else is neutral white/slate.
+4. **Depth through layering** — Subtle inner highlight, soft outer glow matching tier, hairline border. No flat candy gradient.
+5. **Black text rule retired** — Reason it failed: pastel backgrounds + black text reads like a sticky note, not a hero. Replacement keeps contrast WCAG AAA via dark surface + white text, tier color used only for accents.
 
-### 2. `src/components/identity/IdentityBanner.tsx`
-- Eyebrow ("Identity") and caption ("Consistency"): `text-white/80` → `text-black/70`.
-- Streak chip pills: `bg-black/40 text-white` → `bg-white/70 text-black`; icon colors shift to darker variants (`text-orange-700`, `text-emerald-700`).
-- NN miss chip: `bg-white/70 text-black border-black/30` with `text-rose-700` icon.
-- Score and tier label inherit `tone` (now `text-black`).
+## New Layout (same footprint, dramatic upgrade)
 
-### 3. `src/components/identity/DailyStandardCheck.tsx`
-- Force `text-black` explicitly on the row and the `{label}` span (override tier tone so it never depends on theme).
-- Dismiss `X`: `text-black/60 hover:text-black`.
-- Keep `CheckCircle2` `text-primary`.
+```text
+┌──────────────────────────────────────────────────────┐
+│ ▎ IDENTITY                              CONSISTENCY  │
+│ ▎                                                    │
+│ ▎  LOCKED IN              [tier pill]      87        │
+│ ▎  ─────────────                            ──       │
+│ ▎  [🔥 12d perf] [🛡 8d active] [● 1 NN/7d]          │
+│ ▎                                                    │
+│ ▎  [ Take rest day ]                                 │
+└──────────────────────────────────────────────────────┘
+```
 
-### 4. `src/components/identity/BehavioralPressureToast.tsx`
-- For all 7 event tones, replace `text-rose-900 dark:text-rose-50` (and equivalents) with `text-black` while keeping the colored `bg-*-500/15` and `border-*-500/60`.
-- Action button: switch to `bg-black text-white hover:bg-black/90` for guaranteed contrast.
-- Dismiss `X`: `text-black/70 hover:text-black hover:bg-black/10`.
+- **Surface**: `bg-slate-950` with `bg-gradient-to-br from-slate-900 via-slate-950 to-black`. Tier color injected as a 4px left accent bar + a soft `shadow-[0_0_40px_-10px_<tier>]` outer glow + 1px inner ring at tier hue.
+- **Tier label**: Display weight 900, tracking-tight, **white** with tier-colored underline accent, plus a small uppercase tier pill (e.g. `bg-emerald-500/15 text-emerald-300 border-emerald-500/40`) showing the same word in 10px caps for redundancy.
+- **Score**: 56–64px, `font-black tabular-nums`, **tier-colored** (`text-emerald-300`, etc.) with a faint matching glow. Caption "CONSISTENCY" is `text-slate-400` 10px tracking-widest.
+- **Eyebrow "IDENTITY"**: 10px, `text-slate-500`, tracking-[0.3em].
+- **Chips**: `bg-white/5 text-slate-100 border border-white/10`. Icons in tier-neutral but meaningful colors (flame `text-orange-400`, shield `text-emerald-400`, NN dot `text-rose-400`). Hover: `bg-white/10`.
+- **Rest button**: keep functionality; restyle to ghost-on-dark (`bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10`).
 
-## Out of scope
+## Tier Color System (accents only)
 
-- No logic, data, engine, or DB changes.
-- No new design tokens.
+| Tier | Accent | Score color | Glow |
+|---|---|---|---|
+| elite | fuchsia-400 | text-fuchsia-300 | fuchsia-500/30 |
+| locked_in | emerald-400 | text-emerald-300 | emerald-500/30 |
+| consistent | sky-400 | text-sky-300 | sky-500/30 |
+| building | amber-400 | text-amber-300 | amber-500/30 |
+| slipping | rose-400 | text-rose-300 | rose-500/30 |
+
+## Pressure Toast & Daily Standard Check
+
+Match the new dark aesthetic so the stack reads as one cohesive system:
+
+- **Toast**: `bg-slate-900/90 border-l-4 border-l-<tone> border border-white/10 text-slate-100`. Icon in tone color. Action button: tier-accent solid (`bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold`). Dismiss `X`: `text-slate-400 hover:text-white`.
+- **Daily Standard Check**: same dark surface, primary-bordered left bar, white text, "Confirm" button uses tier accent.
+
+## Subtle Motion (delight, not noise)
+
+- Score fades+counts up on mount (one-time, 600ms ease-out).
+- Outer glow pulses very slowly (4s) at low opacity — only when tier is `elite` or `locked_in` to reward the top tiers.
+- Tier pill has a faint shimmer sweep once on tier change.
+
+## Files to Change (presentation only)
+
+1. **`src/hooks/useIdentityState.ts`** — Replace `TIER_META`. New fields: `accent` (border/glow color class set), `scoreText` (text color), `pill` (pill bg+text+border). Drop the `bg` gradient + `chip` fields, replace with new tokens. Background becomes a fixed dark gradient handled in the component.
+2. **`src/components/identity/IdentityBanner.tsx`** — Restructure to: left accent bar, eyebrow row, tier label + pill, hero score on the right, chips row, rest button. Apply new dark surface, glow, ring, count-up animation on score.
+3. **`src/components/identity/BehavioralPressureToast.tsx`** — Swap all 7 tone classes from `bg-*-500/15 text-black` to `bg-slate-900/90 border-l-4 border-l-<tone>-400 border-white/10 text-slate-100`. Action button → tier-solid; dismiss → slate.
+4. **`src/components/identity/DailyStandardCheck.tsx`** — Dark surface, white text, primary left bar, confirm button uses `bg-primary text-primary-foreground`.
+
+## Out of Scope
+
+- No engine, data, query, or DB changes.
+- No new design tokens in `index.css` (using existing Tailwind palette consistently).
 - Other dashboard widgets untouched.
-- Black text persists in dark mode by explicit user requirement; lightened gradients ensure legibility.
+- No layout/footprint change — same vertical space.
 
 ## Acceptance
 
-- Every text element inside the Identity banner, streak chips, NN-miss chip, Daily Standard Check row, and Pressure Toast renders solid black in both light and dark mode.
-- Backgrounds remain visibly colorful (tier gradient + colored toast tints).
-- No layout shift.
+- Identity card reads as the premium hero of the dashboard at a glance.
+- Every text element passes WCAG AAA against its background (white/slate on near-black).
+- Tier identity instantly recognizable via accent bar + score color + pill, without relying on candy backgrounds.
+- Toast and Daily Standard Check visually belong to the same family.
+- Works identically in light and dark mode (card is intentionally dark in both — it's a hero surface).

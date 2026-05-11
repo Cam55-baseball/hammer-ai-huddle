@@ -20,12 +20,62 @@ export interface IdentitySnapshot {
   damping_multiplier: number;
 }
 
-const TIER_META: Record<IdentityTier, { label: string; tone: string; ring: string; bg: string; chip: string }> = {
-  elite:      { label: 'ELITE',      tone: 'text-black', ring: 'ring-fuchsia-400/70', bg: 'from-fuchsia-300 to-violet-400', chip: 'bg-white/70 text-black border-black/20' },
-  locked_in:  { label: 'LOCKED IN',  tone: 'text-black', ring: 'ring-emerald-400/70', bg: 'from-emerald-300 to-teal-400',   chip: 'bg-white/70 text-black border-black/20' },
-  consistent: { label: 'CONSISTENT', tone: 'text-black', ring: 'ring-sky-400/70',     bg: 'from-sky-300 to-blue-400',       chip: 'bg-white/70 text-black border-black/20' },
-  building:   { label: 'BUILDING',   tone: 'text-black', ring: 'ring-amber-400/70',   bg: 'from-amber-300 to-orange-400',   chip: 'bg-white/70 text-black border-black/20' },
-  slipping:   { label: 'SLIPPING',   tone: 'text-black', ring: 'ring-rose-400/70',    bg: 'from-rose-300 to-red-400',       chip: 'bg-white/70 text-black border-black/20' },
+interface TierMeta {
+  label: string;
+  tone: string;
+  ring: string;
+  bg: string;
+  chip: string;
+  accent: string;
+  scoreText: string;
+  glow: string;
+  pill: string;
+  pulse: boolean;
+}
+
+const DARK_SURFACE = 'from-slate-900 via-slate-950 to-black';
+
+const TIER_META: Record<IdentityTier, TierMeta> = {
+  elite: {
+    label: 'ELITE', tone: 'text-white', ring: 'ring-fuchsia-500/40', bg: DARK_SURFACE,
+    chip: 'bg-white/5 text-slate-100 border-white/10',
+    accent: 'bg-fuchsia-400', scoreText: 'text-fuchsia-300',
+    glow: 'shadow-[0_0_60px_-12px_rgba(232,121,249,0.6)]',
+    pill: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/40',
+    pulse: true,
+  },
+  locked_in: {
+    label: 'LOCKED IN', tone: 'text-white', ring: 'ring-emerald-500/40', bg: DARK_SURFACE,
+    chip: 'bg-white/5 text-slate-100 border-white/10',
+    accent: 'bg-emerald-400', scoreText: 'text-emerald-300',
+    glow: 'shadow-[0_0_60px_-12px_rgba(52,211,153,0.6)]',
+    pill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+    pulse: true,
+  },
+  consistent: {
+    label: 'CONSISTENT', tone: 'text-white', ring: 'ring-sky-500/40', bg: DARK_SURFACE,
+    chip: 'bg-white/5 text-slate-100 border-white/10',
+    accent: 'bg-sky-400', scoreText: 'text-sky-300',
+    glow: 'shadow-[0_0_50px_-14px_rgba(56,189,248,0.45)]',
+    pill: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
+    pulse: false,
+  },
+  building: {
+    label: 'BUILDING', tone: 'text-white', ring: 'ring-amber-500/40', bg: DARK_SURFACE,
+    chip: 'bg-white/5 text-slate-100 border-white/10',
+    accent: 'bg-amber-400', scoreText: 'text-amber-300',
+    glow: 'shadow-[0_0_50px_-14px_rgba(251,191,36,0.45)]',
+    pill: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+    pulse: false,
+  },
+  slipping: {
+    label: 'SLIPPING', tone: 'text-white', ring: 'ring-rose-500/40', bg: DARK_SURFACE,
+    chip: 'bg-white/5 text-slate-100 border-white/10',
+    accent: 'bg-rose-400', scoreText: 'text-rose-300',
+    glow: 'shadow-[0_0_50px_-14px_rgba(251,113,133,0.45)]',
+    pill: 'bg-rose-500/15 text-rose-300 border-rose-500/40',
+    pulse: false,
+  },
 };
 
 export function useIdentityState() {
@@ -78,5 +128,10 @@ export function useIdentityState() {
     ring: meta.ring,
     bg: meta.bg,
     chip: meta.chip,
+    accent: meta.accent,
+    scoreText: meta.scoreText,
+    glow: meta.glow,
+    pill: meta.pill,
+    pulse: meta.pulse,
   };
 }
