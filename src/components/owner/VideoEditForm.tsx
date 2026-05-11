@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LibraryVideo, LibraryTag } from "@/hooks/useVideoLibrary";
 import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
 import { computeMissingFields } from "@/lib/videoReadiness";
-import { computeVideoConfidence } from "@/lib/videoConfidence";
+import { computeVideoConfidence, computeFoundationConfidence } from "@/lib/videoConfidence";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { AIComparePanel } from "./AIComparePanel";
 import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
@@ -150,13 +150,15 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
   const missing = isFoundation ? [] : applicationMissing;
   const isReady = isFoundation ? foundationReady : applicationMissing.length === 0;
   const canAutoSuggest = aiDescription.trim().length >= 20;
-  const conf = computeVideoConfidence({
-    videoFormat,
-    skillDomains,
-    aiDescription,
-    layersCovered,
-    assignmentCount: Object.keys(assignments).length,
-  });
+  const conf = isFoundation
+    ? computeFoundationConfidence({ foundationMeta, aiDescription })
+    : computeVideoConfidence({
+        videoFormat,
+        skillDomains,
+        aiDescription,
+        layersCovered,
+        assignmentCount: Object.keys(assignments).length,
+      });
 
   const handleRegenAI = async () => {
     if (!aiDescription.trim()) {
@@ -390,6 +392,17 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
             </Badge>
           </div>
         </div>
+
+        {conf.score < 90 && conf.hints.length > 0 && (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-0.5">
+            <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+              How to reach Elite ({conf.score}/100)
+            </p>
+            <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
+              {conf.hints.slice(0, 5).map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          </div>
+        )}
 
         {/* Foundation toggle — flips the editor between Application and Foundation tracks */}
         <button
