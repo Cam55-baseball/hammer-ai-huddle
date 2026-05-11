@@ -35,23 +35,24 @@ export function IdentityBanner({ className }: Props) {
       >
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black/70">
               Identity
             </div>
             <div className={cn('mt-1 text-2xl font-black tracking-tight sm:text-3xl', tone)}>
               {label}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-2 py-0.5 font-semibold text-white">
-                <Flame className="h-3 w-3 text-orange-300" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 font-semibold text-black border border-black/20">
+                <Flame className="h-3 w-3 text-orange-700" />
                 {perfStreak}d perf
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-2 py-0.5 font-semibold text-white">
-                <ShieldCheck className="h-3 w-3 text-emerald-300" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 font-semibold text-black border border-black/20">
+                <ShieldCheck className="h-3 w-3 text-emerald-700" />
                 {discStreak}d active
               </span>
               {snapshot && snapshot.nn_miss_count_7d > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/40 px-2 py-0.5 font-semibold text-rose-50 border border-rose-300/60">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 font-semibold text-black border border-black/30">
+                  <span className="text-rose-700">●</span>
                   {snapshot.nn_miss_count_7d} NN miss/7d
                 </span>
               )}
@@ -62,7 +63,7 @@ export function IdentityBanner({ className }: Props) {
           </div>
           <div className="flex flex-col items-end">
             <div className={cn('text-3xl font-black tabular-nums sm:text-4xl', tone)}>{score}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-widest text-white/80">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-black/70">
               Consistency
             </div>
           </div>
