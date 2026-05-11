@@ -12,13 +12,13 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
   // Engine-provided command text takes precedence (Phase 10 identity-pressure copy)
   if (ev.command_text) {
     const tones: Record<string, string> = {
-      nn_miss: 'border-rose-400 bg-rose-100 text-rose-900',
-      streak_risk: 'border-amber-400 bg-amber-100 text-amber-900',
-      rest_overuse: 'border-orange-400 bg-orange-100 text-orange-900',
-      consistency_drop: 'border-amber-400 bg-amber-100 text-amber-900',
-      consistency_recover: 'border-emerald-400 bg-emerald-100 text-emerald-900',
-      coaching_insight: 'border-sky-400 bg-sky-100 text-sky-900',
-      identity_tier_change: 'border-fuchsia-400 bg-fuchsia-100 text-fuchsia-900',
+      nn_miss: 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
+      streak_risk: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
+      rest_overuse: 'border-orange-500/60 bg-orange-500/15 text-orange-900 dark:text-orange-50',
+      consistency_drop: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
+      consistency_recover: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50',
+      coaching_insight: 'border-sky-500/60 bg-sky-500/15 text-sky-900 dark:text-sky-50',
+      identity_tier_change: 'border-fuchsia-500/60 bg-fuchsia-500/15 text-fuchsia-900 dark:text-fuchsia-50',
     };
     const icons: Record<string, any> = {
       nn_miss: AlertTriangle,
@@ -56,27 +56,27 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       }
       return {
         text,
-        tone: 'border-rose-400 bg-rose-100 text-rose-900',
+        tone: 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
         Icon: AlertTriangle,
       };
     }
     case 'streak_risk':
       return {
         text: 'You are about to break your streak. Act.',
-        tone: 'border-amber-400 bg-amber-100 text-amber-900',
+        tone: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
         Icon: Flame,
       };
     case 'rest_overuse':
       return {
         text: 'Rest limit exceeded — standard slipping.',
-        tone: 'border-orange-400 bg-orange-100 text-orange-900',
+        tone: 'border-orange-500/60 bg-orange-500/15 text-orange-900 dark:text-orange-50',
         Icon: Moon,
       };
     case 'consistency_drop': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Consistency dropped ${d}%. Reset the standard.`,
-        tone: 'border-amber-400 bg-amber-100 text-amber-900',
+        tone: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
         Icon: TrendingDown,
       };
     }
@@ -88,22 +88,22 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       return {
         text: up ? `You moved to ${to}.` : `Slipped to ${to}. Reclaim it.`,
         tone: up
-          ? 'border-emerald-400 bg-emerald-100 text-emerald-900'
-          : 'border-rose-400 bg-rose-100 text-rose-900',
+          ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50'
+          : 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
         Icon: up ? ArrowUpRight : TrendingDown,
       };
     }
     case 'coaching_insight':
       return {
         text: String(ev.metadata?.insight ?? 'Coaching available.'),
-        tone: 'border-sky-400 bg-sky-100 text-sky-900',
+        tone: 'border-sky-500/60 bg-sky-500/15 text-sky-900 dark:text-sky-50',
         Icon: Lightbulb,
       };
     case 'consistency_recover': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Back on track. +${d}%. LOCKED IN.`,
-        tone: 'border-emerald-400 bg-emerald-100 text-emerald-900',
+        tone: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50',
         Icon: TrendingUp,
       };
     }
@@ -162,7 +162,7 @@ export function BehavioralPressureToast() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-zinc-700 hover:text-zinc-900 hover:bg-black/10"
+        className="h-6 w-6 shrink-0 text-current/70 hover:text-current hover:bg-foreground/10"
         onClick={() => acknowledge(active.id)}
         aria-label="Dismiss"
       >
