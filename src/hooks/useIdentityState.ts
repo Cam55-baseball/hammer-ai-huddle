@@ -21,11 +21,11 @@ export interface IdentitySnapshot {
 }
 
 const TIER_META: Record<IdentityTier, { label: string; tone: string; ring: string; bg: string; chip: string }> = {
-  elite:      { label: 'ELITE',      tone: 'text-fuchsia-50', ring: 'ring-fuchsia-400/70', bg: 'from-fuchsia-900 to-violet-950',  chip: 'bg-fuchsia-500/40 text-fuchsia-50 border-fuchsia-300/70' },
-  locked_in:  { label: 'LOCKED IN',  tone: 'text-emerald-50', ring: 'ring-emerald-400/70', bg: 'from-emerald-900 to-teal-950',    chip: 'bg-emerald-500/40 text-emerald-50 border-emerald-300/70' },
-  consistent: { label: 'CONSISTENT', tone: 'text-sky-50',     ring: 'ring-sky-400/70',     bg: 'from-sky-900 to-blue-950',        chip: 'bg-sky-500/40 text-sky-50 border-sky-300/70' },
-  building:   { label: 'BUILDING',   tone: 'text-amber-50',   ring: 'ring-amber-400/70',   bg: 'from-amber-900 to-orange-950',    chip: 'bg-amber-500/40 text-amber-50 border-amber-300/70' },
-  slipping:   { label: 'SLIPPING',   tone: 'text-rose-50',    ring: 'ring-rose-400/70',    bg: 'from-rose-900 to-red-950',        chip: 'bg-rose-500/40 text-rose-50 border-rose-300/70' },
+  elite:      { label: 'ELITE',      tone: 'text-black', ring: 'ring-fuchsia-400/70', bg: 'from-fuchsia-300 to-violet-400', chip: 'bg-white/70 text-black border-black/20' },
+  locked_in:  { label: 'LOCKED IN',  tone: 'text-black', ring: 'ring-emerald-400/70', bg: 'from-emerald-300 to-teal-400',   chip: 'bg-white/70 text-black border-black/20' },
+  consistent: { label: 'CONSISTENT', tone: 'text-black', ring: 'ring-sky-400/70',     bg: 'from-sky-300 to-blue-400',       chip: 'bg-white/70 text-black border-black/20' },
+  building:   { label: 'BUILDING',   tone: 'text-black', ring: 'ring-amber-400/70',   bg: 'from-amber-300 to-orange-400',   chip: 'bg-white/70 text-black border-black/20' },
+  slipping:   { label: 'SLIPPING',   tone: 'text-black', ring: 'ring-rose-400/70',    bg: 'from-rose-300 to-red-400',       chip: 'bg-white/70 text-black border-black/20' },
 };
 
 export function useIdentityState() {

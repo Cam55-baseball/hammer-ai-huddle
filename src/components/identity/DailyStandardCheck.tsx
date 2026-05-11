@@ -46,11 +46,11 @@ export function DailyStandardCheck() {
   return (
     <div className={cn(
       'flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-sm font-semibold',
-      'border-primary bg-card text-foreground'
+      'border-primary bg-card text-black'
     )} role="status">
       <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
-      <span className="flex-1 min-w-0">
-        Operating at <span className="font-black text-primary">{label}</span> standard?
+      <span className="flex-1 min-w-0 text-black">
+        Operating at <span className="font-black text-black">{label}</span> standard?
       </span>
       <Button size="sm" onClick={handleConfirm} className="h-8 font-bold">
         Confirm
@@ -58,7 +58,7 @@ export function DailyStandardCheck() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+        className="h-7 w-7 shrink-0 text-black/60 hover:text-black"
         onClick={() => setDismissed(true)}
         aria-label="Dismiss"
       >

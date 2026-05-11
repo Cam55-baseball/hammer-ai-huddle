@@ -12,13 +12,13 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
   // Engine-provided command text takes precedence (Phase 10 identity-pressure copy)
   if (ev.command_text) {
     const tones: Record<string, string> = {
-      nn_miss: 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
-      streak_risk: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
-      rest_overuse: 'border-orange-500/60 bg-orange-500/15 text-orange-900 dark:text-orange-50',
-      consistency_drop: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
-      consistency_recover: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50',
-      coaching_insight: 'border-sky-500/60 bg-sky-500/15 text-sky-900 dark:text-sky-50',
-      identity_tier_change: 'border-fuchsia-500/60 bg-fuchsia-500/15 text-fuchsia-900 dark:text-fuchsia-50',
+      nn_miss: 'border-rose-500/60 bg-rose-500/15 text-black',
+      streak_risk: 'border-amber-500/60 bg-amber-500/15 text-black',
+      rest_overuse: 'border-orange-500/60 bg-orange-500/15 text-black',
+      consistency_drop: 'border-amber-500/60 bg-amber-500/15 text-black',
+      consistency_recover: 'border-emerald-500/60 bg-emerald-500/15 text-black',
+      coaching_insight: 'border-sky-500/60 bg-sky-500/15 text-black',
+      identity_tier_change: 'border-fuchsia-500/60 bg-fuchsia-500/15 text-black',
     };
     const icons: Record<string, any> = {
       nn_miss: AlertTriangle,
@@ -56,27 +56,27 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       }
       return {
         text,
-        tone: 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
+        tone: 'border-rose-500/60 bg-rose-500/15 text-black',
         Icon: AlertTriangle,
       };
     }
     case 'streak_risk':
       return {
         text: 'You are about to break your streak. Act.',
-        tone: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
+        tone: 'border-amber-500/60 bg-amber-500/15 text-black',
         Icon: Flame,
       };
     case 'rest_overuse':
       return {
         text: 'Rest limit exceeded — standard slipping.',
-        tone: 'border-orange-500/60 bg-orange-500/15 text-orange-900 dark:text-orange-50',
+        tone: 'border-orange-500/60 bg-orange-500/15 text-black',
         Icon: Moon,
       };
     case 'consistency_drop': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Consistency dropped ${d}%. Reset the standard.`,
-        tone: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
+        tone: 'border-amber-500/60 bg-amber-500/15 text-black',
         Icon: TrendingDown,
       };
     }
@@ -88,22 +88,22 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       return {
         text: up ? `You moved to ${to}.` : `Slipped to ${to}. Reclaim it.`,
         tone: up
-          ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50'
-          : 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
+          ? 'border-emerald-500/60 bg-emerald-500/15 text-black'
+          : 'border-rose-500/60 bg-rose-500/15 text-black',
         Icon: up ? ArrowUpRight : TrendingDown,
       };
     }
     case 'coaching_insight':
       return {
         text: String(ev.metadata?.insight ?? 'Coaching available.'),
-        tone: 'border-sky-500/60 bg-sky-500/15 text-sky-900 dark:text-sky-50',
+        tone: 'border-sky-500/60 bg-sky-500/15 text-black',
         Icon: Lightbulb,
       };
     case 'consistency_recover': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Back on track. +${d}%. LOCKED IN.`,
-        tone: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50',
+        tone: 'border-emerald-500/60 bg-emerald-500/15 text-black',
         Icon: TrendingUp,
       };
     }
@@ -153,7 +153,7 @@ export function BehavioralPressureToast() {
           size="sm"
           onClick={handleAction}
           disabled={running}
-          className="h-7 gap-1 bg-foreground text-background hover:bg-foreground/90 border-0 font-bold"
+          className="h-7 gap-1 bg-black text-white hover:bg-black/90 border-0 font-bold"
         >
           <Zap className="h-3 w-3" />
           {actionLabel}
@@ -162,7 +162,7 @@ export function BehavioralPressureToast() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-current/70 hover:text-current hover:bg-foreground/10"
+        className="h-6 w-6 shrink-0 text-black/70 hover:text-black hover:bg-black/10"
         onClick={() => acknowledge(active.id)}
         aria-label="Dismiss"
       >
