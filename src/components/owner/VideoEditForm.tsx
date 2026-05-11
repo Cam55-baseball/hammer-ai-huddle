@@ -20,6 +20,9 @@ import { AIComparePanel } from "./AIComparePanel";
 import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
 import { FormulaLinkageEditor, type FormulaLinkageValue } from "./FormulaLinkageEditor";
 import { WhatHammerHears } from "./WhatHammerHears";
+import { FoundationTagEditor, isFoundationMetaValid } from "./FoundationTagEditor";
+import { EMPTY_FOUNDATION_META, type FoundationMeta } from "@/lib/foundationVideos";
+import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -68,6 +71,13 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     phases: (video as any).formula_phases ?? [],
     notes: (video as any).formula_notes ?? "",
   });
+  // Foundation track — long-form A–Z philosophy / mechanics primer videos.
+  const [isFoundation, setIsFoundation] = useState<boolean>(
+    (video as any).video_class === 'foundation'
+  );
+  const [foundationMeta, setFoundationMeta] = useState<FoundationMeta>(
+    ((video as any).foundation_meta as FoundationMeta) ?? EMPTY_FOUNDATION_META
+  );
   const [regenLoading, setRegenLoading] = useState(false);
 
   const primaryDomain = skillDomains[0];
