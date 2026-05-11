@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { LibraryVideo, LibraryTag } from "@/hooks/useVideoLibrary";
 import type { SkillDomain, TagLayer } from "@/lib/videoRecommendationEngine";
 import { computeMissingFields } from "@/lib/videoReadiness";
-import { computeVideoConfidence } from "@/lib/videoConfidence";
+import { computeVideoConfidence, computeFoundationConfidence } from "@/lib/videoConfidence";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { AIComparePanel } from "./AIComparePanel";
 import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
