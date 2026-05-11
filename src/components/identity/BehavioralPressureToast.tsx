@@ -12,13 +12,13 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
   // Engine-provided command text takes precedence (Phase 10 identity-pressure copy)
   if (ev.command_text) {
     const tones: Record<string, string> = {
-      nn_miss: 'border-rose-500/60 bg-rose-500/15 text-black',
-      streak_risk: 'border-amber-500/60 bg-amber-500/15 text-black',
-      rest_overuse: 'border-orange-500/60 bg-orange-500/15 text-black',
-      consistency_drop: 'border-amber-500/60 bg-amber-500/15 text-black',
-      consistency_recover: 'border-emerald-500/60 bg-emerald-500/15 text-black',
-      coaching_insight: 'border-sky-500/60 bg-sky-500/15 text-black',
-      identity_tier_change: 'border-fuchsia-500/60 bg-fuchsia-500/15 text-black',
+      nn_miss: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-rose-400 text-slate-100',
+      streak_risk: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-amber-400 text-slate-100',
+      rest_overuse: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-orange-400 text-slate-100',
+      consistency_drop: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-amber-400 text-slate-100',
+      consistency_recover: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-emerald-400 text-slate-100',
+      coaching_insight: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-sky-400 text-slate-100',
+      identity_tier_change: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-fuchsia-400 text-slate-100',
     };
     const icons: Record<string, any> = {
       nn_miss: AlertTriangle,
@@ -56,27 +56,27 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       }
       return {
         text,
-        tone: 'border-rose-500/60 bg-rose-500/15 text-black',
+        tone: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-rose-400 text-slate-100',
         Icon: AlertTriangle,
       };
     }
     case 'streak_risk':
       return {
         text: 'You are about to break your streak. Act.',
-        tone: 'border-amber-500/60 bg-amber-500/15 text-black',
+        tone: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-amber-400 text-slate-100',
         Icon: Flame,
       };
     case 'rest_overuse':
       return {
         text: 'Rest limit exceeded — standard slipping.',
-        tone: 'border-orange-500/60 bg-orange-500/15 text-black',
+        tone: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-orange-400 text-slate-100',
         Icon: Moon,
       };
     case 'consistency_drop': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Consistency dropped ${d}%. Reset the standard.`,
-        tone: 'border-amber-500/60 bg-amber-500/15 text-black',
+        tone: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-amber-400 text-slate-100',
         Icon: TrendingDown,
       };
     }
@@ -88,22 +88,22 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       return {
         text: up ? `You moved to ${to}.` : `Slipped to ${to}. Reclaim it.`,
         tone: up
-          ? 'border-emerald-500/60 bg-emerald-500/15 text-black'
-          : 'border-rose-500/60 bg-rose-500/15 text-black',
+          ? 'bg-slate-900/95 border border-white/10 border-l-4 border-l-emerald-400 text-slate-100'
+          : 'bg-slate-900/95 border border-white/10 border-l-4 border-l-rose-400 text-slate-100',
         Icon: up ? ArrowUpRight : TrendingDown,
       };
     }
     case 'coaching_insight':
       return {
         text: String(ev.metadata?.insight ?? 'Coaching available.'),
-        tone: 'border-sky-500/60 bg-sky-500/15 text-black',
+        tone: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-sky-400 text-slate-100',
         Icon: Lightbulb,
       };
     case 'consistency_recover': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Back on track. +${d}%. LOCKED IN.`,
-        tone: 'border-emerald-500/60 bg-emerald-500/15 text-black',
+        tone: 'bg-slate-900/95 border border-white/10 border-l-4 border-l-emerald-400 text-slate-100',
         Icon: TrendingUp,
       };
     }
