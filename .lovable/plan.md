@@ -1,124 +1,181 @@
 
-# Hammers Modality — Eternal System Laws (Phase 1C Doctrine)
+# Phase 2A Amendment — FINAL (Ratification-Ready)
 
-This document is **not an implementation plan**. It is the permanent operating constitution of the platform. Every future feature, edge function, table, AI prompt, dashboard, generator, and UX flow must be checked against these ten laws **before merge**. If a proposed change violates a law, the change is wrong — fix the change.
+Integrates the 6 constitutional clarifications into the longitudinal layer. No code, no migrations, no UI — discovery and canonical ownership only. On approval, the amendment + clarifications save to memory and become enforceable on every future plan.
 
-A companion doctrine memory will be saved (`mem://architecture/eternal-system-laws`) and added to Core so it loads on every future session.
-
----
-
-## LAW 1 — The Platform Is One Organism
-
-The app is an **athlete operating system**, not a collection of features. Every subsystem must read from and write to the shared organism state.
-
-Guardrails:
-- No subsystem may ship without declaring its **upstream inputs** and **downstream consumers**. A feature with zero downstream consumers is dead-on-arrival.
-- A central **Athlete State Bus** (logical, not necessarily a single table) is the only sanctioned channel between Hammer State, scheduling, recovery, sport load, AI, exercise selection, asymmetry, emotional load, speed, and nutrition.
-- Direct table-to-table coupling between feature modules is forbidden; cross-domain reads go through typed contracts (extend `EngineInputContractV2` pattern).
-- A quarterly **Integration Audit** lists every subsystem and its live edges. Orphan nodes are deleted or reconnected — never left "for later."
-
-## LAW 2 — No Unused Data
-
-Every collected signal must have a named downstream consumer at the moment it is introduced.
-
-Guardrails:
-- New tables/columns require a `data_contract` entry: *what writes it, what reads it, what decision it changes*. No contract → migration rejected.
-- A monthly **Dead Data Sweep** flags any signal not read by an engine, recommendation, dashboard, or coach view in 30 days. Flagged signals are either wired in or removed.
-- No "we might use it later" columns. Future use = future migration.
-
-## LAW 3 — Missingness Is a First-Class Signal
-
-Absence of data is data. The engine must never silently treat missing input as "fine."
-
-Guardrails:
-- Every athlete-state read carries a **confidence score** (0–1) alongside the value. Confidence decays with staleness, sparsity, and contradiction.
-- The engine must distinguish **rest, avoidance, friction, travel, injury, disengagement, and forgetting** as candidate explanations for silence — and prefer the most conservative interpretation when uncertain.
-- Recommendations carry their input-confidence forward; low-confidence states force the engine to **withdraw load, ask one targeted question, or defer** rather than prescribe blindly.
-- Streak/compliance UI must never punish missingness without first probing it.
-
-## LAW 4 — Speed Is Core Nervous-System Infrastructure
-
-Speed is not a module. It is a **diagnostic of the entire organism** — acceleration, elasticity, stiffness modulation, deceleration, reactive strength, and force transfer.
-
-Guardrails:
-- Speed Lab outputs are first-class inputs to readiness, scheduling, asymmetry, exercise selection, and Hammer State — not a sidebar metric.
-- Any meaningful drop in sprint quality, reactive output, or stiffness must trigger an organism-wide reassessment, not just a "speed score" update.
-- Throwing/hitting load, season phase, and emotional load must be allowed to **veto or modulate** speed prescriptions.
-
-## LAW 5 — Intent ≠ Completion
-
-A checked box is the shallowest possible signal. The engine must model **intent, expression, cost, and aftermath** of every session.
-
-Guardrails:
-- Every loggable activity supports: *intent (planned), expression (what happened), cost (CNS/tissue/emotional), aftermath (how the athlete changed)*. Missing dimensions reduce confidence (Law 3) — they do not get faked.
-- **Adaptive follow-up** is mandatory but bounded: max one micro-question per session, deferred if recent friction is high. UX cost is a first-class budget.
-- Inferred sessions (e.g. "I hit today" with no detail) are stored with explicit `inferred=true` and lower confidence — never promoted to verified data without athlete confirmation.
-
-## LAW 6 — The System Must Self-Correct
-
-Architecture entropy is the default; counteracting it must be automated.
-
-Guardrails:
-- A continuous **Drift Sentinel** monitors: signal-to-decision correlations, abandoned workflows, ignored recommendations, noisy warnings, AI underperformance, and athlete-model error. Findings flow to the owner dashboard, not silently into logs.
-- Conflicting logic (two systems prescribing opposite actions on the same input) raises a hard alert and blocks ambiguous prescriptions until reconciled.
-- Stale architecture (unused edge functions, dead cron jobs, orphan tables) is surfaced weekly and pruned monthly.
-
-## LAW 7 — The Engine Must Become More Elite Over Time
-
-The engine is a learning organism, not a frozen ruleset. Every season must leave it measurably smarter.
-
-Guardrails:
-- Every prescription writes a **prediction record** (expected outcome + horizon). Outcomes are evaluated; persistent error patterns adjust weights through a versioned, auditable path — not silent overwrites.
-- All engine logic is **versioned end-to-end** (already standardized via `engine_snapshot_versions.engine_version`). No silent algorithm changes.
-- Learning sources are explicit and ranked: athlete outcomes > compliance > coach input > population priors. Population priors never override individual evidence once it exists.
-
-## LAW 8 — No Fake AI
-
-AI must be **grounded, contextual, and auditable** — never a wrapper around random or static logic.
-
-Guardrails:
-- Every AI call must declare the **athlete-state inputs** it consumed and the **decision dimensions** it influenced. Calls without grounded inputs are rejected at the edge-function layer.
-- "Generated" content (workouts, drills, plans) must be reproducible from logged inputs + engine version. If the same inputs cannot reproduce the same output class, the generator is unsound.
-- Owner Authority (`src/lib/ownerAuthority.tsx`) extends to athlete-facing AI: AI suggests, the athlete (and engine state) decides. No silent auto-application of high-impact prescriptions.
-
-## LAW 9 — Closed Loop or Don't Ship It
-
-No read-only intelligence. Every important signal must eventually influence prescription, scheduling, recovery, or planning.
-
-Guardrails:
-- A signal is "important" if it appears in any athlete- or coach-facing surface. Important signals without a closed loop are filed as **bugs**, not backlog.
-- Dashboards are presentations of closed loops, never substitutes for them. A pretty chart with no downstream effect violates this law.
-- The Integration Audit (Law 1) doubles as the loop-closure audit.
-
-## LAW 10 — Optimize for Long-Season Durability
-
-Success = elite output preserved across the season at the lowest biological cost. Not weekly volume, not soreness, not streak length.
-
-Guardrails:
-- Reward systems, badges, copy, and notifications must celebrate **output preservation, withdrawal discipline, and recovery quality** alongside (or above) compliance streaks.
-- The engine must be allowed — and visibly trusted — to **prescribe less**. UI must make "do less today" feel like a win, not a failure.
-- Long-horizon metrics (rolling output retention, cost-per-output, in-season degradation slope) are first-class athlete and coach views.
+Laws check: 1, 2, 3, 4, 5, 7, 8, 9, 10.
+Canonical owner: Architecture / Phase 2A Canonical Organism Map.
+Longitudinal impact: defines the time-scale, quality, economy, and survivability layer for every future engine.
 
 ---
 
-## Enforcement Mechanism
+## Section A — The 6 Clarifications (constitutional, not feature creep)
 
-These laws are useless without teeth. The doctrine attaches to the codebase three ways:
+### C1. Output Quality ≠ Output Magnitude
+The Longitudinal Capacity Engine (LCE) must split every output event into **magnitude** AND **quality**. Preserved magnitude with decaying quality is a **silent degradation**, not retention.
 
-1. **Memory Core**: saved as `mem://architecture/eternal-system-laws` and referenced in `mem://index.md` Core so every future Lovable session loads it automatically.
-2. **PR/Plan Gate**: every future plan must include a one-line "Laws check" stating which laws apply and how the change honors them.
-3. **Quarterly Audit**: a recurring review (Integration Audit + Dead Data Sweep + Loop-Closure Audit + Drift Sentinel report) — the four together are the immune system.
+Required conceptual signals (owned by LCE, published on the State Bus):
+- `output_quality_index`
+- `sequencing_quality`
+- `timing_quality`
+- `coordination_efficiency`
+- `elastic_expression_quality`
+- `deceleration_quality`
+
+Consumers (mandatory): degradation slope, silent-degradation detector, adaptation-saturation detector, cost-per-output interpretation, Selector bias, Pre-Injury Layer.
+
+Rule: **No retention claim may be made on magnitude alone.** Quality decay with preserved magnitude triggers a Pre-Injury "compensation pattern" warning, not a green check.
+
+### C2. Recovery Capacity Is Trainable
+Recovery is modeled as a **capacity that adapts**, not just depletion.
+
+New canonical concept: `recovery_capacity_curve` (per-system, per-athlete, slope + freshness + confidence).
+
+The engine must distinguish three states and never collapse them:
+- **Overloaded** — debt > capacity, withdrawal required.
+- **Under-adapted** — capacity stagnant despite stimulus, progressive challenge required.
+- **Becoming more resilient** — capacity slope rising, ceiling may be raised by TPE.
+
+Without this, the system drifts overly conservative long-term and violates Law 10 by withholding the very stimulus that builds durability.
+
+### C3. Competitive Stress Is Not Only Physical
+Competitive Density Modeling expands beyond games/travel/density buckets to include psychological load.
+
+New conceptual topic: `competitive_psychological_density`, composed of (lightweight, confidence-scored — Law 3):
+- Pressure (playoff, showcase, recruiting, spotlight).
+- Emotional volatility, expectation load, failure accumulation.
+- Travel isolation, social exhaustion, adrenaline-dump cycles.
+
+Affects: coordination sharpness, timing precision, NS variability, recovery speed, movement efficiency. Mandatory inputs for: pitchers, catchers, two-way athletes, top prospects, youth in showcase ecosystems.
+
+Must remain low-burden to collect (probe budget honored, Law 5) and confidence-scored when absent.
+
+### C4. Elastic Economics As First-Class Infrastructure
+Elastic retention is currently mentioned. It is now **promoted to canonical organism infrastructure**.
+
+New conceptual signal: `elastic_economy_index`, composed of:
+- Spring efficiency, stiffness modulation efficiency.
+- Elastic-leak detection, tendon contribution retention.
+- Fascial recoil efficiency, ground-contact economy, force-transfer economy.
+
+Hidden-pathway rule the engine MUST detect: athlete preserves output by becoming **more muscular and less elastic**. This is a primary baseball/softball degradation pathway and must trigger a Pre-Injury Layer warning even when raw output is intact.
+
+Owned by: LCE. Consumed by: Selector (bias toward elastic preservation), Scheduler (insert decompression), Pre-Injury Layer.
+
+### C5. Developmental Protection Against Early Specialization
+The Developmental Age Layer + Tolerance Progression Engine (TPE) gain an explicit guardrail.
+
+New conceptual signal: `developmental_diversity_score`. The engine must actively protect, especially in youth:
+- Movement diversity, exploratory athleticism.
+- Coordination richness, elastic variability.
+
+And actively prevent:
+- Premature rotational over-specialization.
+- Premature throwing density, showcase density, velocity chasing.
+- Bilateral asymmetry fixation, year-round competition load.
+
+Hard rule: **The engine MUST NOT optimize youth athletes solely for near-term sport output.** TPE ceilings for youth are gated on diversity preservation, not just output progression.
+
+### C6. Organism Success = Career Survivability
+Law 10 is **expanded** in scope (not rewritten):
+
+> Success = elite output preserved across the season **and across the career** at the lowest biological cost, without silently borrowing from future seasons.
+
+New conceptual metric: `career_resilience_projection` — a rolling, confidence-scored sustainability estimate (NOT predictive destiny). Optimizes for:
+- Reduced chronic degradation, preserved movement variability.
+- Preserved elasticity into later years.
+- Reduced accumulated asymmetry burden.
+- Sustained explosiveness + rotational efficiency longevity.
+
+Hard rule: **Any prescription that improves short-term output while degrading career_resilience_projection beyond a confidence-bounded threshold must be flagged and require Owner Authority override.**
 
 ---
 
-## What Happens Next (only after you approve this doctrine)
+## Section B — Final Constraint: Interpretability Mandate
 
-Once these laws are ratified, future phases will:
-- **Phase 2 — Contracts**: codify the Athlete State Bus, the `data_contract` requirement, and the confidence-score envelope.
-- **Phase 3 — Tier A implementation**: land the first organism-aware change set (exercise library + closed-loop Hammer integration + per-system recovery) **under** these laws, not in parallel to them.
+The LCE and every signal in Section A must remain:
+- Interpretable, explainable, confidence-scored, auditable, overrideable via Owner Authority.
 
-No code, no migrations, no schema work happens until you ratify the doctrine.
+Forbidden: black-box "fatigue oracle" outputs. Every warning, withdrawal, and ceiling change must expose:
+1. Inputs consumed, 2. Confidence per input, 3. Reason chain, 4. Uncertainty, 5. Override path.
+
+Enforces Laws 3, 7, 8, 10. Any LCE feature that cannot expose these is an unshippable bug.
 
 ---
 
-**Decision requested**: ratify this as the permanent operating constitution (with any edits you want), or push back on specific laws. Once ratified, I will write the memory file and update Core in the next loop.
+## Section C — Contracts (additions to Section 13 of the prior amendment)
+
+- `OutputQualityContract` — magnitude + quality vector + confidence per output event.
+- `RecoveryCapacityContract` — per-system capacity slope, state classification (overloaded / under-adapted / adapting), confidence.
+- `PsychologicalDensityContract` — pressure/volatility/isolation buckets + freshness + confidence.
+- `ElasticEconomyContract` — spring/stiffness/leak/recoil/ground-contact/transfer indices + slope + confidence.
+- `DevelopmentalDiversityContract` — diversity score + protected-band flags + age-layer binding.
+- `CareerResilienceContract` — rolling projection + contributing slopes + confidence + override log.
+
+All extend the `data_contract` requirement (Law 2). All carry freshness + coverage + confidence + explanation candidate (Law 3 reinforcement).
+
+---
+
+## Section D — Amended Expansion Order
+
+```text
+Step 1    State Bus contract
+Step 2    Prediction-record + engine-version path
+Step 3    AIInputContract envelope
+Step 4    Per-system Load/Debt service
+Step 4a   Biological Cost Engine
+Step 4b   Competitive Density (physical)
+Step 4c   Competitive Psychological Density            ← C3
+Step 5    Readiness v2
+Step 5a   Longitudinal Capacity Engine + retention curves
+Step 5b   Output Quality vector (magnitude vs quality) ← C1
+Step 5c   Recovery Capacity Curve (trainable model)    ← C2
+Step 5d   Elastic Economy Index                        ← C4
+Step 6    Speed signal on bus + consumers
+Step 6a   Bilateral Dominance + asymmetry-creep loop
+Step 7    Exercise ontology
+Step 7a   Position-Specific Tolerance Profiles
+Step 7b   Developmental Age Layer + TPE
+Step 7c   Developmental Diversity guardrail            ← C5
+Step 8    Single Exercise Selector (respects TPE + diversity + elastic bias)
+Step 9    Subjective Probe + Notification Bus + friction budget
+Step 9a   Dual-Load Athlete conflict resolver
+Step 10   Drift Sentinel + audits
+Step 10a  Long-Horizon Warning Systems (pre-injury)
+Step 11   Organism Success Metrics view + UI reframing
+Step 11a  Career Resilience Projection surface         ← C6
+
+Only AFTER Step 11a: premium fascia content, sprint expansions,
+morphology-aware selection, force-strategy moving signature.
+```
+
+---
+
+## Section E — Plan Gate Updates (enforcement)
+
+Every future plan must include three lines (was two):
+1. **Laws check** — which of the 10 laws apply.
+2. **Canonical owner** — which Section-1 owner is touched (no orphan writes).
+3. **Longitudinal impact** — effect on LCE / quality / recovery capacity / elastic economy / diversity / career resilience, or `none (justified)`.
+
+Plans missing any of the three are rejected at review.
+
+---
+
+## Section F — What This Amendment Does NOT Do
+
+- No code, no migrations, no tables, no edge functions, no UI.
+- No exercise content, no engine changes (HIE, MPI, Hammer, physio continue under Phase 9).
+- Does not relitigate Phase 2A or the prior amendment — only locks the 6 clarifications into the same canonical layer.
+
+---
+
+## On Approval
+
+1. Save canonical map (Phase 2A + prior amendment + this final amendment) to `mem://architecture/canonical-organism-map`.
+2. Save longitudinal layer (with C1–C6) to `mem://architecture/longitudinal-capacity-engine`.
+3. Save the interpretability mandate (Section B) to `mem://architecture/lce-interpretability-mandate`.
+4. Update `mem://index.md` Core with: *"Every plan must include Laws check + Canonical owner + Longitudinal impact lines."*
+5. Phase 2B (State Bus contract, Step 1) becomes the next implementation-ready phase, sized from day one to carry: load/debt, biological cost, physical + psychological density, retention curves, output quality, recovery capacity, elastic economy, bilateral, diversity, career resilience.
+
+**Decision requested:** ratify the final amendment (Section A clarifications + Section B mandate + Section C contracts + Section D order + Section E gate) as the locked Phase 2A canonical organism map.
