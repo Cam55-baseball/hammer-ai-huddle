@@ -153,7 +153,7 @@ export function BehavioralPressureToast() {
           size="sm"
           onClick={handleAction}
           disabled={running}
-          className="h-7 gap-1 bg-foreground text-background hover:bg-foreground/90 border-0 font-bold"
+          className="h-7 gap-1 bg-black text-white hover:bg-black/90 border-0 font-bold"
         >
           <Zap className="h-3 w-3" />
           {actionLabel}
@@ -162,7 +162,7 @@ export function BehavioralPressureToast() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-current/70 hover:text-current hover:bg-foreground/10"
+        className="h-6 w-6 shrink-0 text-black/70 hover:text-black hover:bg-black/10"
         onClick={() => acknowledge(active.id)}
         aria-label="Dismiss"
       >
