@@ -21,11 +21,11 @@ export interface IdentitySnapshot {
 }
 
 const TIER_META: Record<IdentityTier, { label: string; tone: string; ring: string; bg: string; chip: string }> = {
-  elite:      { label: 'ELITE',      tone: 'text-fuchsia-100', ring: 'ring-fuchsia-500/40', bg: 'from-fuchsia-950/60 to-violet-950/40', chip: 'bg-fuchsia-500/25 text-fuchsia-100 border-fuchsia-400/60' },
-  locked_in:  { label: 'LOCKED IN',  tone: 'text-emerald-100', ring: 'ring-emerald-500/40', bg: 'from-emerald-950/60 to-teal-950/40',   chip: 'bg-emerald-500/25 text-emerald-100 border-emerald-400/60' },
-  consistent: { label: 'CONSISTENT', tone: 'text-sky-100',     ring: 'ring-sky-500/40',     bg: 'from-sky-950/60 to-blue-950/40',       chip: 'bg-sky-500/25 text-sky-100 border-sky-400/60' },
-  building:   { label: 'BUILDING',   tone: 'text-amber-100',   ring: 'ring-amber-500/40',   bg: 'from-amber-950/60 to-orange-950/40',   chip: 'bg-amber-500/30 text-amber-50 border-amber-400/70' },
-  slipping:   { label: 'SLIPPING',   tone: 'text-rose-100',    ring: 'ring-rose-500/40',    bg: 'from-rose-950/60 to-red-950/40',       chip: 'bg-rose-500/30 text-rose-50 border-rose-400/70' },
+  elite:      { label: 'ELITE',      tone: 'text-fuchsia-50', ring: 'ring-fuchsia-400/70', bg: 'from-fuchsia-900 to-violet-950',  chip: 'bg-fuchsia-500/40 text-fuchsia-50 border-fuchsia-300/70' },
+  locked_in:  { label: 'LOCKED IN',  tone: 'text-emerald-50', ring: 'ring-emerald-400/70', bg: 'from-emerald-900 to-teal-950',    chip: 'bg-emerald-500/40 text-emerald-50 border-emerald-300/70' },
+  consistent: { label: 'CONSISTENT', tone: 'text-sky-50',     ring: 'ring-sky-400/70',     bg: 'from-sky-900 to-blue-950',        chip: 'bg-sky-500/40 text-sky-50 border-sky-300/70' },
+  building:   { label: 'BUILDING',   tone: 'text-amber-50',   ring: 'ring-amber-400/70',   bg: 'from-amber-900 to-orange-950',    chip: 'bg-amber-500/40 text-amber-50 border-amber-300/70' },
+  slipping:   { label: 'SLIPPING',   tone: 'text-rose-50',    ring: 'ring-rose-400/70',    bg: 'from-rose-900 to-red-950',        chip: 'bg-rose-500/40 text-rose-50 border-rose-300/70' },
 };
 
 export function useIdentityState() {
