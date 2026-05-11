@@ -56,27 +56,27 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       }
       return {
         text,
-        tone: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+        tone: 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
         Icon: AlertTriangle,
       };
     }
     case 'streak_risk':
       return {
         text: 'You are about to break your streak. Act.',
-        tone: 'border-amber-500/50 bg-amber-500/10 text-amber-200',
+        tone: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
         Icon: Flame,
       };
     case 'rest_overuse':
       return {
         text: 'Rest limit exceeded — standard slipping.',
-        tone: 'border-orange-500/40 bg-orange-500/10 text-orange-200',
+        tone: 'border-orange-500/60 bg-orange-500/15 text-orange-900 dark:text-orange-50',
         Icon: Moon,
       };
     case 'consistency_drop': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Consistency dropped ${d}%. Reset the standard.`,
-        tone: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+        tone: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
         Icon: TrendingDown,
       };
     }
@@ -88,22 +88,22 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
       return {
         text: up ? `You moved to ${to}.` : `Slipped to ${to}. Reclaim it.`,
         tone: up
-          ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-          : 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+          ? 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50'
+          : 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
         Icon: up ? ArrowUpRight : TrendingDown,
       };
     }
     case 'coaching_insight':
       return {
         text: String(ev.metadata?.insight ?? 'Coaching available.'),
-        tone: 'border-sky-500/40 bg-sky-500/10 text-sky-200',
+        tone: 'border-sky-500/60 bg-sky-500/15 text-sky-900 dark:text-sky-50',
         Icon: Lightbulb,
       };
     case 'consistency_recover': {
       const d = Math.round(Number(ev.magnitude ?? 0));
       return {
         text: `Back on track. +${d}%. LOCKED IN.`,
-        tone: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+        tone: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50',
         Icon: TrendingUp,
       };
     }
