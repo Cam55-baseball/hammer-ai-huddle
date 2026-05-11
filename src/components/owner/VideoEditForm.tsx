@@ -393,6 +393,17 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           </div>
         </div>
 
+        {conf.score < 90 && conf.hints.length > 0 && (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 space-y-0.5">
+            <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+              How to reach Elite ({conf.score}/100)
+            </p>
+            <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
+              {conf.hints.slice(0, 5).map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          </div>
+        )}
+
         {/* Foundation toggle — flips the editor between Application and Foundation tracks */}
         <button
           type="button"
