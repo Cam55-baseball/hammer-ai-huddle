@@ -1,31 +1,124 @@
-# Fix the Identity card "tint/shadow" readability issue
 
-## Root cause
+# Hammers Modality — Eternal System Laws (Phase 1C Doctrine)
 
-Two layers are washing out the card:
+This document is **not an implementation plan**. It is the permanent operating constitution of the platform. Every future feature, edge function, table, AI prompt, dashboard, generator, and UX flow must be checked against these ten laws **before merge**. If a proposed change violates a law, the change is wrong — fix the change.
 
-1. **`animate-[pulse_4s_ease-in-out_infinite]`** is applied to the entire card wrapper for `elite` and `locked_in` tiers (in `IdentityBanner.tsx`). Tailwind's `pulse` keyframes animate **opacity from 1 → 0.5 → 1**, so the whole card — text, score, chips — fades to 50% every 4 seconds. That's the "tint/shadow" the user sees.
-2. A full-card **`bg-gradient-to-b from-white/5 to-transparent`** highlight overlay sits on top of the content, adding a milky film over the upper half.
+A companion doctrine memory will be saved (`mem://architecture/eternal-system-laws`) and added to Core so it loads on every future session.
 
-Combined with the dark slate gradient, the score and label visibly dim and become hard to read.
+---
 
-## Fix
+## LAW 1 — The Platform Is One Organism
 
-### `src/components/identity/IdentityBanner.tsx`
-- **Remove** `pulse && 'animate-[pulse_4s_ease-in-out_infinite]'` from the card wrapper. The card content must never animate opacity.
-- **Remove** the `<div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 to-transparent" />` overlay so nothing sits between the eye and the text.
-- Keep the tier left accent bar and the outer glow shadow — those are decorative and don't touch readability.
-- If we still want a subtle "alive" feel for elite/locked_in, restrict it to the **outer glow only** via a custom keyframe that animates `box-shadow` intensity (not opacity), or just drop the pulse entirely. Recommendation: drop it — the glow + accent bar are enough signal.
+The app is an **athlete operating system**, not a collection of features. Every subsystem must read from and write to the shared organism state.
 
-### `src/hooks/useIdentityState.ts`
-- Set `pulse: false` for all tiers (the field becomes unused but keeps the API stable; can be removed in a later pass).
-- Bump score text from `text-fuchsia-300` / `-emerald-300` / etc. to the **400** shade for stronger contrast against the near-black surface (e.g. `text-fuchsia-400`, `text-emerald-400`, `text-sky-400`, `text-amber-400`, `text-rose-400`). The drop-shadow stays.
+Guardrails:
+- No subsystem may ship without declaring its **upstream inputs** and **downstream consumers**. A feature with zero downstream consumers is dead-on-arrival.
+- A central **Athlete State Bus** (logical, not necessarily a single table) is the only sanctioned channel between Hammer State, scheduling, recovery, sport load, AI, exercise selection, asymmetry, emotional load, speed, and nutrition.
+- Direct table-to-table coupling between feature modules is forbidden; cross-domain reads go through typed contracts (extend `EngineInputContractV2` pattern).
+- A quarterly **Integration Audit** lists every subsystem and its live edges. Orphan nodes are deleted or reconnected — never left "for later."
 
-## Out of scope
-- No changes to engine, data, layout, or footprint.
-- `BehavioralPressureToast` and `DailyStandardCheck` already render correctly — not touched.
-- The "You're offline" banner the session replay showed is unrelated; it's the PWA offline notice, not the Identity card.
+## LAW 2 — No Unused Data
 
-## Files to edit
-- `src/components/identity/IdentityBanner.tsx`
-- `src/hooks/useIdentityState.ts`
+Every collected signal must have a named downstream consumer at the moment it is introduced.
+
+Guardrails:
+- New tables/columns require a `data_contract` entry: *what writes it, what reads it, what decision it changes*. No contract → migration rejected.
+- A monthly **Dead Data Sweep** flags any signal not read by an engine, recommendation, dashboard, or coach view in 30 days. Flagged signals are either wired in or removed.
+- No "we might use it later" columns. Future use = future migration.
+
+## LAW 3 — Missingness Is a First-Class Signal
+
+Absence of data is data. The engine must never silently treat missing input as "fine."
+
+Guardrails:
+- Every athlete-state read carries a **confidence score** (0–1) alongside the value. Confidence decays with staleness, sparsity, and contradiction.
+- The engine must distinguish **rest, avoidance, friction, travel, injury, disengagement, and forgetting** as candidate explanations for silence — and prefer the most conservative interpretation when uncertain.
+- Recommendations carry their input-confidence forward; low-confidence states force the engine to **withdraw load, ask one targeted question, or defer** rather than prescribe blindly.
+- Streak/compliance UI must never punish missingness without first probing it.
+
+## LAW 4 — Speed Is Core Nervous-System Infrastructure
+
+Speed is not a module. It is a **diagnostic of the entire organism** — acceleration, elasticity, stiffness modulation, deceleration, reactive strength, and force transfer.
+
+Guardrails:
+- Speed Lab outputs are first-class inputs to readiness, scheduling, asymmetry, exercise selection, and Hammer State — not a sidebar metric.
+- Any meaningful drop in sprint quality, reactive output, or stiffness must trigger an organism-wide reassessment, not just a "speed score" update.
+- Throwing/hitting load, season phase, and emotional load must be allowed to **veto or modulate** speed prescriptions.
+
+## LAW 5 — Intent ≠ Completion
+
+A checked box is the shallowest possible signal. The engine must model **intent, expression, cost, and aftermath** of every session.
+
+Guardrails:
+- Every loggable activity supports: *intent (planned), expression (what happened), cost (CNS/tissue/emotional), aftermath (how the athlete changed)*. Missing dimensions reduce confidence (Law 3) — they do not get faked.
+- **Adaptive follow-up** is mandatory but bounded: max one micro-question per session, deferred if recent friction is high. UX cost is a first-class budget.
+- Inferred sessions (e.g. "I hit today" with no detail) are stored with explicit `inferred=true` and lower confidence — never promoted to verified data without athlete confirmation.
+
+## LAW 6 — The System Must Self-Correct
+
+Architecture entropy is the default; counteracting it must be automated.
+
+Guardrails:
+- A continuous **Drift Sentinel** monitors: signal-to-decision correlations, abandoned workflows, ignored recommendations, noisy warnings, AI underperformance, and athlete-model error. Findings flow to the owner dashboard, not silently into logs.
+- Conflicting logic (two systems prescribing opposite actions on the same input) raises a hard alert and blocks ambiguous prescriptions until reconciled.
+- Stale architecture (unused edge functions, dead cron jobs, orphan tables) is surfaced weekly and pruned monthly.
+
+## LAW 7 — The Engine Must Become More Elite Over Time
+
+The engine is a learning organism, not a frozen ruleset. Every season must leave it measurably smarter.
+
+Guardrails:
+- Every prescription writes a **prediction record** (expected outcome + horizon). Outcomes are evaluated; persistent error patterns adjust weights through a versioned, auditable path — not silent overwrites.
+- All engine logic is **versioned end-to-end** (already standardized via `engine_snapshot_versions.engine_version`). No silent algorithm changes.
+- Learning sources are explicit and ranked: athlete outcomes > compliance > coach input > population priors. Population priors never override individual evidence once it exists.
+
+## LAW 8 — No Fake AI
+
+AI must be **grounded, contextual, and auditable** — never a wrapper around random or static logic.
+
+Guardrails:
+- Every AI call must declare the **athlete-state inputs** it consumed and the **decision dimensions** it influenced. Calls without grounded inputs are rejected at the edge-function layer.
+- "Generated" content (workouts, drills, plans) must be reproducible from logged inputs + engine version. If the same inputs cannot reproduce the same output class, the generator is unsound.
+- Owner Authority (`src/lib/ownerAuthority.tsx`) extends to athlete-facing AI: AI suggests, the athlete (and engine state) decides. No silent auto-application of high-impact prescriptions.
+
+## LAW 9 — Closed Loop or Don't Ship It
+
+No read-only intelligence. Every important signal must eventually influence prescription, scheduling, recovery, or planning.
+
+Guardrails:
+- A signal is "important" if it appears in any athlete- or coach-facing surface. Important signals without a closed loop are filed as **bugs**, not backlog.
+- Dashboards are presentations of closed loops, never substitutes for them. A pretty chart with no downstream effect violates this law.
+- The Integration Audit (Law 1) doubles as the loop-closure audit.
+
+## LAW 10 — Optimize for Long-Season Durability
+
+Success = elite output preserved across the season at the lowest biological cost. Not weekly volume, not soreness, not streak length.
+
+Guardrails:
+- Reward systems, badges, copy, and notifications must celebrate **output preservation, withdrawal discipline, and recovery quality** alongside (or above) compliance streaks.
+- The engine must be allowed — and visibly trusted — to **prescribe less**. UI must make "do less today" feel like a win, not a failure.
+- Long-horizon metrics (rolling output retention, cost-per-output, in-season degradation slope) are first-class athlete and coach views.
+
+---
+
+## Enforcement Mechanism
+
+These laws are useless without teeth. The doctrine attaches to the codebase three ways:
+
+1. **Memory Core**: saved as `mem://architecture/eternal-system-laws` and referenced in `mem://index.md` Core so every future Lovable session loads it automatically.
+2. **PR/Plan Gate**: every future plan must include a one-line "Laws check" stating which laws apply and how the change honors them.
+3. **Quarterly Audit**: a recurring review (Integration Audit + Dead Data Sweep + Loop-Closure Audit + Drift Sentinel report) — the four together are the immune system.
+
+---
+
+## What Happens Next (only after you approve this doctrine)
+
+Once these laws are ratified, future phases will:
+- **Phase 2 — Contracts**: codify the Athlete State Bus, the `data_contract` requirement, and the confidence-score envelope.
+- **Phase 3 — Tier A implementation**: land the first organism-aware change set (exercise library + closed-loop Hammer integration + per-system recovery) **under** these laws, not in parallel to them.
+
+No code, no migrations, no schema work happens until you ratify the doctrine.
+
+---
+
+**Decision requested**: ratify this as the permanent operating constitution (with any edits you want), or push back on specific laws. Once ratified, I will write the memory file and update Core in the next loop.
