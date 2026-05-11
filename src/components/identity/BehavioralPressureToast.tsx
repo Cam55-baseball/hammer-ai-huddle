@@ -162,7 +162,7 @@ export function BehavioralPressureToast() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-current hover:bg-white/10"
+        className="h-6 w-6 shrink-0 text-current/70 hover:text-current hover:bg-foreground/10"
         onClick={() => acknowledge(active.id)}
         aria-label="Dismiss"
       >
