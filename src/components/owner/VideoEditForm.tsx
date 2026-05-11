@@ -20,6 +20,9 @@ import { AIComparePanel } from "./AIComparePanel";
 import { HammerDescriptionComposer } from "./HammerDescriptionComposer";
 import { FormulaLinkageEditor, type FormulaLinkageValue } from "./FormulaLinkageEditor";
 import { WhatHammerHears } from "./WhatHammerHears";
+import { FoundationTagEditor, isFoundationMetaValid } from "./FoundationTagEditor";
+import { EMPTY_FOUNDATION_META, type FoundationMeta } from "@/lib/foundationVideos";
+import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 import { toast } from "@/hooks/use-toast";
 
 const VIDEO_FORMATS = ['drill', 'game_at_bat', 'practice_rep', 'breakdown', 'slow_motion', 'pov', 'comparison'];
@@ -68,6 +71,13 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     phases: (video as any).formula_phases ?? [],
     notes: (video as any).formula_notes ?? "",
   });
+  // Foundation track — long-form A–Z philosophy / mechanics primer videos.
+  const [isFoundation, setIsFoundation] = useState<boolean>(
+    (video as any).video_class === 'foundation'
+  );
+  const [foundationMeta, setFoundationMeta] = useState<FoundationMeta>(
+    ((video as any).foundation_meta as FoundationMeta) ?? EMPTY_FOUNDATION_META
+  );
   const [regenLoading, setRegenLoading] = useState(false);
 
   const primaryDomain = skillDomains[0];
@@ -130,13 +140,15 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
     return layers;
   }, [assignments, taxonomy]);
 
-  const missing = computeMissingFields({
+  const applicationMissing = computeMissingFields({
     videoFormat,
     skillDomains,
     aiDescription,
     assignmentCount: Object.keys(assignments).length,
   });
-  const isReady = missing.length === 0;
+  const foundationReady = isFoundationMetaValid(foundationMeta) && aiDescription.trim().length > 0;
+  const missing = isFoundation ? [] : applicationMissing;
+  const isReady = isFoundation ? foundationReady : applicationMissing.length === 0;
   const canAutoSuggest = aiDescription.trim().length >= 20;
   const conf = computeVideoConfidence({
     videoFormat,
@@ -185,15 +197,19 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
       if (!ok) return;
 
       const okStruct = await updateStructuredFields(video.id, {
-        videoFormat: videoFormat || null,
-        skillDomains,
+        // Foundation videos blank out the application-only fields with explicit nulls
+        videoFormat: isFoundation ? null : (videoFormat || null),
+        skillDomains: isFoundation ? [] : skillDomains,
         aiDescription,
-        formulaPhases: formulaLinkage.phases,
-        formulaNotes: formulaLinkage.notes.trim() ? formulaLinkage.notes : null,
+        formulaPhases: isFoundation ? [] : formulaLinkage.phases,
+        formulaNotes: isFoundation ? null : (formulaLinkage.notes.trim() ? formulaLinkage.notes : null),
+        videoClass: isFoundation ? 'foundation' : 'application',
+        foundationMeta: isFoundation ? foundationMeta : null,
       });
       if (!okStruct) return;
 
-      const okAssign = await syncTagAssignments(video.id, assignments);
+      // Foundation videos don't carry per-rep tag assignments — clear them.
+      const okAssign = await syncTagAssignments(video.id, isFoundation ? {} : assignments);
       if (!okAssign) return;
 
       toast({ title: "Saved", description: "Video updated." });
@@ -290,20 +306,15 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
         </div>
       </div>
 
-      {/* Current Video — inline preview */}
+      {/* Current Video — inline preview (uses smart player so YouTube/Vimeo/X/TikTok all work) */}
       <Card className="p-3 space-y-2">
         <Label>Current Video</Label>
         {video.video_url?.trim() ? (
-          <div className="aspect-video w-full bg-black rounded-md overflow-hidden">
-            <video
-              key={video.video_url}
-              src={video.video_url}
-              controls
-              preload="metadata"
-              poster={video.thumbnail_url ?? undefined}
-              className="w-full h-full"
-            />
-          </div>
+          <VideoPlayer
+            videoUrl={video.video_url}
+            videoType={video.video_type}
+            title={video.title}
+          />
         ) : (
           <div className="aspect-video w-full bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
             No file — external link
@@ -373,11 +384,48 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
           <div className="flex items-center gap-1.5">
             <ConfidenceBadge score={conf.score} tier={conf.tier} compact />
             <Badge variant={isReady ? "default" : "outline"} className="text-[10px]">
-              {isReady ? "Ready" : `${4 - missing.length}/4 done`}
+              {isFoundation
+                ? (isReady ? "Foundation Ready" : "Foundation incomplete")
+                : (isReady ? "Ready" : `${4 - applicationMissing.length}/4 done`)}
             </Badge>
           </div>
         </div>
 
+        {/* Foundation toggle — flips the editor between Application and Foundation tracks */}
+        <button
+          type="button"
+          onClick={() => !isProcessing && setIsFoundation(v => !v)}
+          className={`w-full text-left rounded-lg border p-3 transition-colors ${
+            isFoundation
+              ? 'border-primary bg-primary/15'
+              : 'border-border hover:border-primary/50 bg-background/60'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold">
+                {isFoundation ? '✓ Foundation video' : 'This is a Foundation video'}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Long-form A–Z philosophy / mechanics primer / mental framework. Skips per-rep tagging — surfaces on refresher triggers.
+              </p>
+            </div>
+            <Badge variant={isFoundation ? 'default' : 'outline'} className="text-[10px] shrink-0">
+              {isFoundation ? 'Foundation' : 'Application'}
+            </Badge>
+          </div>
+        </button>
+
+        {isFoundation ? (
+          <FoundationTagEditor
+            value={foundationMeta}
+            onChange={setFoundationMeta}
+            aiDescription={aiDescription}
+            onDescriptionChange={setAiDescription}
+          />
+        ) : (
+        <>
+        
         {/* Video Format */}
         <div className="space-y-1.5">
           <Label className="text-xs">Video Format</Label>
@@ -562,6 +610,8 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
             .filter(t => (assignments[t.id] ?? 0) >= 3)
             .map(t => t.label)}
         />
+        </>
+        )}
       </div>
 
       {/* Missing-fields list */}

@@ -70,6 +70,16 @@ export function VideoLibraryHelpSheet() {
             </ol>
           </section>
 
+          <section className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+            <h3 className="font-semibold text-base">Foundation videos (the holistic ones)</h3>
+            <p className="text-muted-foreground">
+              A <strong className="text-foreground">Foundation video</strong> is a long-form, A–Z teaching of a whole skill — your full philosophy of hitting, pitching, mental game, etc. They don't fit one drill, one phase, or one fault.
+            </p>
+            <p className="text-muted-foreground">
+              Flip the <strong className="text-foreground">"This is a Foundation video"</strong> toggle inside the editor. The per-rep tag fields disappear and you tag with: domain, scope, audience level, and the <strong className="text-foreground">refresher triggers</strong> Hammer should surface this for (lost feel, results decline, pre-season, etc.).
+            </p>
+          </section>
+
           <section className="space-y-2">
             <h3 className="font-semibold text-base">The simple rule of tags</h3>
             <p className="text-muted-foreground">

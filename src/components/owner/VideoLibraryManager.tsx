@@ -292,6 +292,15 @@ export function VideoLibraryManager() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="font-semibold text-sm truncate">{video.title}</h4>
+                        {(video as any).video_class === 'foundation' && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] border-primary/40 bg-primary/10 text-primary"
+                            title="Long-form foundation video — surfaces on refresher triggers"
+                          >
+                            Foundation
+                          </Badge>
+                        )}
                         <ReadinessBadge r={r} />
                         {conf && <ConfidenceBadge score={conf.score} tier={conf.tier} compact />}
                         {revLabel === 'revenue_ready' && (

@@ -1,4 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VideoPlayer } from "@/components/video-library/VideoPlayer";
 import type { LibraryVideo } from "@/hooks/useVideoLibrary";
 
 interface VideoPreviewDialogProps {
@@ -9,30 +10,26 @@ interface VideoPreviewDialogProps {
 
 /**
  * Owner-only quick preview of a library video.
- * Honors the video URL integrity rule (trim + null guard) and the
- * professional playback standard (controls, preload metadata, no autoplay).
+ * Delegates to <VideoPlayer> so YouTube / Vimeo / X / TikTok / direct uploads
+ * all play correctly with the right embed strategy.
  */
 export function VideoPreviewDialog({ video, open, onOpenChange }: VideoPreviewDialogProps) {
-  const url = video?.video_url?.trim() ? video.video_url : null;
+  const hasUrl = !!video?.video_url?.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="truncate pr-6">{video?.title ?? "Preview"}</DialogTitle>
+          <DialogDescription className="sr-only">Video preview</DialogDescription>
         </DialogHeader>
 
-        {url ? (
-          <div className="aspect-video w-full bg-black rounded-md overflow-hidden">
-            <video
-              key={url}
-              src={url}
-              controls
-              preload="metadata"
-              poster={video?.thumbnail_url ?? undefined}
-              className="w-full h-full"
-            />
-          </div>
+        {hasUrl && video ? (
+          <VideoPlayer
+            videoUrl={video.video_url}
+            videoType={video.video_type}
+            title={video.title}
+          />
         ) : (
           <div className="aspect-video w-full bg-muted rounded-md flex items-center justify-center text-sm text-muted-foreground">
             No video file attached
