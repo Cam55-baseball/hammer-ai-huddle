@@ -153,7 +153,7 @@ export function BehavioralPressureToast() {
           size="sm"
           onClick={handleAction}
           disabled={running}
-          className="h-7 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold"
+          className="h-7 gap-1 bg-foreground text-background hover:bg-foreground/90 border-0 font-bold"
         >
           <Zap className="h-3 w-3" />
           {actionLabel}
