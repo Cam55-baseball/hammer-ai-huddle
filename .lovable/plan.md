@@ -1,181 +1,102 @@
 
-# Phase 2A Amendment — FINAL (Ratification-Ready)
+# Phase 2A Addendum — Athlete Intent, Negotiation & Aspirational Intelligence Layer (AINL)
 
-Integrates the 6 constitutional clarifications into the longitudinal layer. No code, no migrations, no UI — discovery and canonical ownership only. On approval, the amendment + clarifications save to memory and become enforceable on every future plan.
+**Laws check:** 1, 3, 5, 7, 8, 9, 10
+**Canonical owner:** Athlete Intent & Negotiation Layer (AINL) — new first-class organism owner
+**Longitudinal impact:** Governs how ambition, psychology, adherence style, risk appetite, developmental patience, and personal definitions of success shape multi-year progression, survivability, and prescription acceptance. Directly modulates LCE retention, BCE cost-per-output acceptance thresholds, TPE ceiling negotiation, and Career Resilience Projection.
+**Behavioral impact:** Establishes the new mandatory plan line itself.
 
-Laws check: 1, 2, 3, 4, 5, 7, 8, 9, 10.
-Canonical owner: Architecture / Phase 2A Canonical Organism Map.
-Longitudinal impact: defines the time-scale, quality, economy, and survivability layer for every future engine.
-
----
-
-## Section A — The 6 Clarifications (constitutional, not feature creep)
-
-### C1. Output Quality ≠ Output Magnitude
-The Longitudinal Capacity Engine (LCE) must split every output event into **magnitude** AND **quality**. Preserved magnitude with decaying quality is a **silent degradation**, not retention.
-
-Required conceptual signals (owned by LCE, published on the State Bus):
-- `output_quality_index`
-- `sequencing_quality`
-- `timing_quality`
-- `coordination_efficiency`
-- `elastic_expression_quality`
-- `deceleration_quality`
-
-Consumers (mandatory): degradation slope, silent-degradation detector, adaptation-saturation detector, cost-per-output interpretation, Selector bias, Pre-Injury Layer.
-
-Rule: **No retention claim may be made on magnitude alone.** Quality decay with preserved magnitude triggers a Pre-Injury "compensation pattern" warning, not a green check.
-
-### C2. Recovery Capacity Is Trainable
-Recovery is modeled as a **capacity that adapts**, not just depletion.
-
-New canonical concept: `recovery_capacity_curve` (per-system, per-athlete, slope + freshness + confidence).
-
-The engine must distinguish three states and never collapse them:
-- **Overloaded** — debt > capacity, withdrawal required.
-- **Under-adapted** — capacity stagnant despite stimulus, progressive challenge required.
-- **Becoming more resilient** — capacity slope rising, ceiling may be raised by TPE.
-
-Without this, the system drifts overly conservative long-term and violates Law 10 by withholding the very stimulus that builds durability.
-
-### C3. Competitive Stress Is Not Only Physical
-Competitive Density Modeling expands beyond games/travel/density buckets to include psychological load.
-
-New conceptual topic: `competitive_psychological_density`, composed of (lightweight, confidence-scored — Law 3):
-- Pressure (playoff, showcase, recruiting, spotlight).
-- Emotional volatility, expectation load, failure accumulation.
-- Travel isolation, social exhaustion, adrenaline-dump cycles.
-
-Affects: coordination sharpness, timing precision, NS variability, recovery speed, movement efficiency. Mandatory inputs for: pitchers, catchers, two-way athletes, top prospects, youth in showcase ecosystems.
-
-Must remain low-burden to collect (probe budget honored, Law 5) and confidence-scored when absent.
-
-### C4. Elastic Economics As First-Class Infrastructure
-Elastic retention is currently mentioned. It is now **promoted to canonical organism infrastructure**.
-
-New conceptual signal: `elastic_economy_index`, composed of:
-- Spring efficiency, stiffness modulation efficiency.
-- Elastic-leak detection, tendon contribution retention.
-- Fascial recoil efficiency, ground-contact economy, force-transfer economy.
-
-Hidden-pathway rule the engine MUST detect: athlete preserves output by becoming **more muscular and less elastic**. This is a primary baseball/softball degradation pathway and must trigger a Pre-Injury Layer warning even when raw output is intact.
-
-Owned by: LCE. Consumed by: Selector (bias toward elastic preservation), Scheduler (insert decompression), Pre-Injury Layer.
-
-### C5. Developmental Protection Against Early Specialization
-The Developmental Age Layer + Tolerance Progression Engine (TPE) gain an explicit guardrail.
-
-New conceptual signal: `developmental_diversity_score`. The engine must actively protect, especially in youth:
-- Movement diversity, exploratory athleticism.
-- Coordination richness, elastic variability.
-
-And actively prevent:
-- Premature rotational over-specialization.
-- Premature throwing density, showcase density, velocity chasing.
-- Bilateral asymmetry fixation, year-round competition load.
-
-Hard rule: **The engine MUST NOT optimize youth athletes solely for near-term sport output.** TPE ceilings for youth are gated on diversity preservation, not just output progression.
-
-### C6. Organism Success = Career Survivability
-Law 10 is **expanded** in scope (not rewritten):
-
-> Success = elite output preserved across the season **and across the career** at the lowest biological cost, without silently borrowing from future seasons.
-
-New conceptual metric: `career_resilience_projection` — a rolling, confidence-scored sustainability estimate (NOT predictive destiny). Optimizes for:
-- Reduced chronic degradation, preserved movement variability.
-- Preserved elasticity into later years.
-- Reduced accumulated asymmetry burden.
-- Sustained explosiveness + rotational efficiency longevity.
-
-Hard rule: **Any prescription that improves short-term output while degrading career_resilience_projection beyond a confidence-bounded threshold must be flagged and require Owner Authority override.**
+This is constitutional ratification only. No code, no UI, no migrations, no tables, no prompts.
 
 ---
 
-## Section B — Final Constraint: Interpretability Mandate
+## What gets ratified
 
-The LCE and every signal in Section A must remain:
-- Interpretable, explainable, confidence-scored, auditable, overrideable via Owner Authority.
+### 1. New canonical owners (added to organism map)
 
-Forbidden: black-box "fatigue oracle" outputs. Every warning, withdrawal, and ceiling change must expose:
-1. Inputs consumed, 2. Confidence per input, 3. Reason chain, 4. Uncertainty, 5. Override path.
+- **AINL — Athlete Intent & Negotiation Layer** (parent organism owner)
+  - Sub-owner: `athlete_intent_profile` (AIP) — dynamic, longitudinal; NOT an onboarding survey snapshot
+  - Sub-owner: `adaptive_negotiation_engine` (ANE) — bidirectional desire-vs-organism reconciliation
+  - Sub-owner: `aspirational_pathway_model` (APM) — probability-adjusted developmental pathway projection
+  - Sub-owner: `communication_intelligence_layer` (CIL) — framing/style adaptation, never distorts truth
 
-Enforces Laws 3, 7, 8, 10. Any LCE feature that cannot expose these is an unshippable bug.
+### 2. New bus topics (proposed names; ratified at this level)
 
----
+- `athlete_intent_state` — current AIP snapshot + deltas
+- `negotiation_event` — request → engine response → athlete decision → override log
+- `aspirational_pathway_state` — pathway, timeline confidence, bottlenecks, survivability cost
+- `behavioral_adaptation_signal` — adherence style, frustration, avoidance, perfectionism, overachiever flags
+- `tool_capability_state` — expanded 20–80 organism-wide (speed, rotational, throwing, hitting, defense subdimensions per Section 5), feeds LCE/BCE/Selector/TPE/Elastic Economy/Bilateral/Career Resilience
+- `communication_style_state` — current framing profile per audience (athlete/coach/parent)
+- `human_authority_override` — explicit override events with risk acknowledgement + reason
 
-## Section C — Contracts (additions to Section 13 of the prior amendment)
+### 3. New contracts (ratified at constitutional level; schemas later)
 
-- `OutputQualityContract` — magnitude + quality vector + confidence per output event.
-- `RecoveryCapacityContract` — per-system capacity slope, state classification (overloaded / under-adapted / adapting), confidence.
-- `PsychologicalDensityContract` — pressure/volatility/isolation buckets + freshness + confidence.
-- `ElasticEconomyContract` — spring/stiffness/leak/recoil/ground-contact/transfer indices + slope + confidence.
-- `DevelopmentalDiversityContract` — diversity score + protected-band flags + age-layer binding.
-- `CareerResilienceContract` — rolling projection + contributing slopes + confidence + override log.
+- `AthleteIntentProfileContract` — short/long goals, role aspirations, risk tolerance, patience, motivation style, behavioral tendencies; longitudinal w/ confidence + last-updated per field
+- `NegotiationContract` — request, organism constraints surfaced, tradeoffs, recommended path, alternative paths, athlete decision, override log
+- `AspirationalPathwayContract` — pathway id, probability band, required tolerances, expected adaptation timeline, biological cost projection, bottlenecks, survivability impact
+- `BehavioralAdaptationContract` — detected behavioral profile vector, signal sources, confidence, programming modulators applied
+- `ToolCapabilityContract` — expanded subdimension 20–80 grades + quality + phase-awareness + position-awareness + LCE/BCE feed pointers
+- `CommunicationStyleContract` — audience, framing profile, detail level, motivational register; immutable rule that style never alters underlying organism truth payload
+- `HumanAuthorityOverrideContract` — recommendation id, risk surface, athlete acknowledgement, reason, downstream propagation
 
-All extend the `data_contract` requirement (Law 2). All carry freshness + coverage + confidence + explanation candidate (Law 3 reinforcement).
+### 4. Constitutional rules (locked)
 
----
+- **Human Authority Hierarchy:** Organism truth → Athlete authority → Coach authority → AI recommendation → Population priors. Population priors NEVER override athlete evidence. AI NEVER overrides athlete autonomy.
+- **High-impact overrides** (push through recovery withdrawal, accelerate throwing progression, add sprint density, increase rotational exposure, override developmental diversity) require explicit acknowledgement + risk explanation + override logging via `human_authority_override`.
+- **Engine MUST:** advise, warn, contextualize, predict, motivate, negotiate, protect, explain, score confidence, remain overrideable.
+- **Engine MUST NOT:** guilt, shame, manipulate, silently force, silently override, promise outcomes, present black-box logic.
+- **Communication adaptation** may change framing, detail, motivational register, timing — but MUST NEVER distort organism truth.
+- **Missingness in intent systems is signal, not punishment** (Law 3 extension): avoidance, skipped recovery, repeated overrides, declining engagement quality become organism inputs to AIP/BAS, never used as behavioral penalties.
+- **Optimization target:** highest sustainable adherence to elite development — NOT theoretically optimal program on paper.
 
-## Section D — Amended Expansion Order
+### 5. Tool Development expansion (Section 5) — ratified scope
+
+Every tool feeds organism systems; no isolated scorecards. Subdimensions enumerated in Section 5 (speed 14, rotational 6, throwing 6, hitting 7, defense 5) become canonical sub-grades under `tool_capability_state`, all routed to LCE / BCE / Selector / TPE / Elastic Economy / Bilateral / Career Resilience.
+
+### 6. Amended expansion order
+
+Insert BEFORE premium exercise systems and sprint expansion:
 
 ```text
-Step 1    State Bus contract
-Step 2    Prediction-record + engine-version path
-Step 3    AIInputContract envelope
-Step 4    Per-system Load/Debt service
-Step 4a   Biological Cost Engine
-Step 4b   Competitive Density (physical)
-Step 4c   Competitive Psychological Density            ← C3
-Step 5    Readiness v2
-Step 5a   Longitudinal Capacity Engine + retention curves
-Step 5b   Output Quality vector (magnitude vs quality) ← C1
-Step 5c   Recovery Capacity Curve (trainable model)    ← C2
-Step 5d   Elastic Economy Index                        ← C4
-Step 6    Speed signal on bus + consumers
-Step 6a   Bilateral Dominance + asymmetry-creep loop
-Step 7    Exercise ontology
-Step 7a   Position-Specific Tolerance Profiles
-Step 7b   Developmental Age Layer + TPE
-Step 7c   Developmental Diversity guardrail            ← C5
-Step 8    Single Exercise Selector (respects TPE + diversity + elastic bias)
-Step 9    Subjective Probe + Notification Bus + friction budget
-Step 9a   Dual-Load Athlete conflict resolver
-Step 10   Drift Sentinel + audits
-Step 10a  Long-Horizon Warning Systems (pre-injury)
-Step 11   Organism Success Metrics view + UI reframing
-Step 11a  Career Resilience Projection surface         ← C6
-
-Only AFTER Step 11a: premium fascia content, sprint expansions,
-morphology-aware selection, force-strategy moving signature.
+... existing 4c–7c ...
+Step 7d — Athlete Intent Profile (AIP) + Negotiation Layer (ANE)
+Step 7e — Behavioral Adaptation Infrastructure (BAS modulators)
+Step 7f — Aspirational Pathway Modeling (APM)
+Step 7g — Communication Intelligence Layer (CIL)
+... then premium exercise + sprint expansion ...
 ```
 
----
+Reason: premium exercise systems and advanced speed systems become unsafe and low-adherence without negotiation + intent infrastructure in place.
 
-## Section E — Plan Gate Updates (enforcement)
+### 7. Plan gate amendment
 
-Every future plan must include three lines (was two):
-1. **Laws check** — which of the 10 laws apply.
-2. **Canonical owner** — which Section-1 owner is touched (no orphan writes).
-3. **Longitudinal impact** — effect on LCE / quality / recovery capacity / elastic economy / diversity / career resilience, or `none (justified)`.
+Every future plan must now include FOUR lines (was three):
 
-Plans missing any of the three are rejected at review.
+- **Laws check**
+- **Canonical owner**
+- **Longitudinal impact**
+- **Behavioral impact** ← NEW (AIP/ANE/APM/CIL/BAS touchpoints, override pathways triggered, communication style implications, or `none (justified)`)
 
----
+Plans missing any line are rejected.
 
-## Section F — What This Amendment Does NOT Do
+### 8. End-of-project owner walkthrough requirement (Section 10)
 
-- No code, no migrations, no tables, no edge functions, no UI.
-- No exercise content, no engine changes (HIE, MPI, Hammer, physio continue under Phase 9).
-- Does not relitigate Phase 2A or the prior amendment — only locks the 6 clarifications into the same canonical layer.
+Constitutional delivery requirement locked: at project completion Lovable must produce an exhaustive owner walkthrough organized by subsystem covering every architectural addition, canonical owner, workflow, UX change (athlete + coach), engine pathway change, organism topic, recommendation flow, longitudinal system, override pathway, new contract, and migration impact from original state. No black-box handoff permitted.
 
 ---
 
-## On Approval
+## Memory writes performed on approval (no code, memory only)
 
-1. Save canonical map (Phase 2A + prior amendment + this final amendment) to `mem://architecture/canonical-organism-map`.
-2. Save longitudinal layer (with C1–C6) to `mem://architecture/longitudinal-capacity-engine`.
-3. Save the interpretability mandate (Section B) to `mem://architecture/lce-interpretability-mandate`.
-4. Update `mem://index.md` Core with: *"Every plan must include Laws check + Canonical owner + Longitudinal impact lines."*
-5. Phase 2B (State Bus contract, Step 1) becomes the next implementation-ready phase, sized from day one to carry: load/debt, biological cost, physical + psychological density, retention curves, output quality, recovery capacity, elastic economy, bilateral, diversity, career resilience.
+1. **Create** `mem://architecture/athlete-intent-negotiation-layer.md` — full AINL doctrine: AIP, ANE, APM, CIL, BAS, tool capability expansion, authority hierarchy, missingness rules, communication invariants, override logging, optimization target.
+2. **Update** `mem://architecture/canonical-organism-map.md` — add AINL parent + 4 sub-owners, 7 bus topics, 7 contracts, amended expansion order (insert 7d–7g), Section 10 walkthrough requirement.
+3. **Update** `mem://index.md` Core — add: (a) plan gate now requires 4 lines including **Behavioral impact**; (b) Human Authority Hierarchy rule (organism > athlete > coach > AI > priors; AI never overrides athlete; population priors never override athlete evidence); (c) communication adaptation never distorts organism truth.
+4. **Update** `mem://index.md` Memories — add reference to new AINL doctrine file.
 
-**Decision requested:** ratify the final amendment (Section A clarifications + Section B mandate + Section C contracts + Section D order + Section E gate) as the locked Phase 2A canonical organism map.
+---
+
+## Decision requested
+
+Ratify the AINL addendum (Sections 1–11) as locked Phase 2A canonical organism architecture, including the new fourth plan-gate line (**Behavioral impact**) and the end-of-project walkthrough requirement (Section 10).
+
+On approval: memory writes 1–4 above are performed. No implementation, no migrations, no UI.
