@@ -1,102 +1,110 @@
-
-# Phase 2A Addendum — Athlete Intent, Negotiation & Aspirational Intelligence Layer (AINL)
+# Phase 2A Final Addendum — OEAL + IRCL Ratification
 
 **Laws check:** 1, 3, 5, 7, 8, 9, 10
-**Canonical owner:** Athlete Intent & Negotiation Layer (AINL) — new first-class organism owner
-**Longitudinal impact:** Governs how ambition, psychology, adherence style, risk appetite, developmental patience, and personal definitions of success shape multi-year progression, survivability, and prescription acceptance. Directly modulates LCE retention, BCE cost-per-output acceptance thresholds, TPE ceiling negotiation, and Career Resilience Projection.
-**Behavioral impact:** Establishes the new mandatory plan line itself.
+**Canonical owner:** Organism Entry & Assessment Layer (OEAL) + Injury/Rehab Continuity Layer (IRCL) — two new top-level canonical owners; peers to LCE, AINL, and (forthcoming) ASB.
+**Longitudinal impact:** Defines how athletes ENTER, RE-ENTER, and CONTINUE through the organism across seasons, injuries, surgeries, growth phases, identity shifts, and rehab timelines without context loss. Without OEAL, every longitudinal system (LCE/BCE/TPE/Career Resilience/Retention) starts from a fragmented or absent baseline. Without IRCL, injury periods become organism black holes that destroy continuity, falsify retention curves, and break Law 10 long-season durability.
+**Behavioral impact:** Establishes Hammer-Companion principle as constitutional. AINL (AIP/ANE/APM/CIL/BAS) must remain active during injury, rehab, plateaus, growth spurts, role changes, and return-to-play. Identity disruption, movement fear, and compensation patterns become first-class behavioral signals. Existing athletes get a recontextualization path instead of forced restart — protecting trust and adherence.
 
-This is constitutional ratification only. No code, no UI, no migrations, no tables, no prompts.
+This is constitutional ratification only. No code, no migrations, no UI, no prompts, no medical diagnosis, no rehab protocol generation.
 
 ---
 
 ## What gets ratified
 
-### 1. New canonical owners (added to organism map)
+### 1. Two new top-level canonical owners
 
-- **AINL — Athlete Intent & Negotiation Layer** (parent organism owner)
-  - Sub-owner: `athlete_intent_profile` (AIP) — dynamic, longitudinal; NOT an onboarding survey snapshot
-  - Sub-owner: `adaptive_negotiation_engine` (ANE) — bidirectional desire-vs-organism reconciliation
-  - Sub-owner: `aspirational_pathway_model` (APM) — probability-adjusted developmental pathway projection
-  - Sub-owner: `communication_intelligence_layer` (CIL) — framing/style adaptation, never distorts truth
+- **OEAL — Organism Entry & Assessment Layer** — root intake, organism contextualizer, adaptive assessment orchestrator, trust-establishment layer. NOT a static onboarding form. Adaptive, conversational, longitudinal, revisitable.
+- **IRCL — Injury/Rehab Continuity Layer** — preserves organism continuity before, during, and after injury/surgery/rehab. Rehab is an organism state transition, not paused training.
 
-### 2. New bus topics (proposed names; ratified at this level)
+Both are peers to LCE, AINL, ASB. Every other canonical owner must be aware of OEAL baseline + IRCL state.
 
-- `athlete_intent_state` — current AIP snapshot + deltas
-- `negotiation_event` — request → engine response → athlete decision → override log
-- `aspirational_pathway_state` — pathway, timeline confidence, bottlenecks, survivability cost
-- `behavioral_adaptation_signal` — adherence style, frustration, avoidance, perfectionism, overachiever flags
-- `tool_capability_state` — expanded 20–80 organism-wide (speed, rotational, throwing, hitting, defense subdimensions per Section 5), feeds LCE/BCE/Selector/TPE/Elastic Economy/Bilateral/Career Resilience
-- `communication_style_state` — current framing profile per audience (athlete/coach/parent)
-- `human_authority_override` — explicit override events with risk acknowledgement + reason
+### 2. Canonical entry-context dimensions (OEAL Section 3)
 
-### 3. New contracts (ratified at constitutional level; schemas later)
+Locked top-level context families collected adaptively:
 
-- `AthleteIntentProfileContract` — short/long goals, role aspirations, risk tolerance, patience, motivation style, behavioral tendencies; longitudinal w/ confidence + last-updated per field
-- `NegotiationContract` — request, organism constraints surfaced, tradeoffs, recommended path, alternative paths, athlete decision, override log
-- `AspirationalPathwayContract` — pathway id, probability band, required tolerances, expected adaptation timeline, biological cost projection, bottlenecks, survivability impact
-- `BehavioralAdaptationContract` — detected behavioral profile vector, signal sources, confidence, programming modulators applied
-- `ToolCapabilityContract` — expanded subdimension 20–80 grades + quality + phase-awareness + position-awareness + LCE/BCE feed pointers
-- `CommunicationStyleContract` — audience, framing profile, detail level, motivational register; immutable rule that style never alters underlying organism truth payload
-- `HumanAuthorityOverrideContract` — recommendation id, risk surface, athlete acknowledgement, reason, downstream propagation
+- **A. Identity Context** — age, developmental age, biological maturity proxy, sport, position(s), handedness, switch-hitter/thrower status, competitive level, season phase, travel profile, team/coaching environment, schedule density, current goals, current frustrations.
+- **B. Organism Context** — injury history, surgery history, movement restrictions, pain points, fatigue state, sleep, recovery quality, movement confidence, current readiness, asymmetry awareness, movement history, sport-load history, throwing history, workload tolerance.
+- **C. Behavioral & Aspirational Context** — motivation style, urgency, discipline profile, emotional tendencies, burnout risk, confidence patterns, developmental patience, scholarship/pro aspirations, athlete identity. (Bridges into AINL/AIP.)
+- **D. Capability Context** — current tool grades, known strengths/weaknesses, sprint qualities, rotational, throwing, coordination, elastic, movement efficiency, force-strategy tendencies. (Bridges into Tool Capability State.)
+- **E. Environmental Context** — facility, coaching, equipment, field access, weather limitations, recovery resources, time constraints, school/travel demands.
 
-### 4. Constitutional rules (locked)
+Engine question is **"Where is this athlete actually starting from?"** — never "what generic program should we assign?"
 
-- **Human Authority Hierarchy:** Organism truth → Athlete authority → Coach authority → AI recommendation → Population priors. Population priors NEVER override athlete evidence. AI NEVER overrides athlete autonomy.
-- **High-impact overrides** (push through recovery withdrawal, accelerate throwing progression, add sprint density, increase rotational exposure, override developmental diversity) require explicit acknowledgement + risk explanation + override logging via `human_authority_override`.
-- **Engine MUST:** advise, warn, contextualize, predict, motivate, negotiate, protect, explain, score confidence, remain overrideable.
-- **Engine MUST NOT:** guilt, shame, manipulate, silently force, silently override, promise outcomes, present black-box logic.
-- **Communication adaptation** may change framing, detail, motivational register, timing — but MUST NEVER distort organism truth.
-- **Missingness in intent systems is signal, not punishment** (Law 3 extension): avoidance, skipped recovery, repeated overrides, declining engagement quality become organism inputs to AIP/BAS, never used as behavioral penalties.
-- **Optimization target:** highest sustainable adherence to elite development — NOT theoretically optimal program on paper.
+### 3. Adaptive assessment intelligence rules (Section 4)
 
-### 5. Tool Development expansion (Section 5) — ratified scope
+- Assessments MUST be: adaptive, staged, low-friction, confidence-scored, revisitable, progressive.
+- System MUST NOT force massive forms, excessive upfront burden, or unnecessary complexity.
+- Must ask only what matters, sequence intelligently, infer when confidence is high, revisit uncertainty later, refine longitudinally.
+- **Hard rule:** Assessment burden is part of the friction budget (Law 5). Excessive intake violates Intent ≠ Completion.
 
-Every tool feeds organism systems; no isolated scorecards. Subdimensions enumerated in Section 5 (speed 14, rotational 6, throwing 6, hitting 7, defense 5) become canonical sub-grades under `tool_capability_state`, all routed to LCE / BCE / Selector / TPE / Elastic Economy / Bilateral / Career Resilience.
+### 4. Hammer Companion principle (locked, Section 5)
 
-### 6. Amended expansion order
+Hammer must feel like a continuous adaptive companion — never abandoning, isolating, or disconnecting the athlete. Engine continuously explains, reassures, contextualizes, educates, adapts, maintains continuity. Especially required during: injuries, plateaus, growth spurts, confidence crashes, season transitions, surgeries, return-to-play, role changes.
 
-Insert BEFORE premium exercise systems and sprint expansion:
+### 5. IRCL canonical concepts (Sections 6–9)
+
+- **`rehab_organism_state`** — injury classification, tissue, surgery history, rehab phase, physician/PT restrictions, movement restrictions, pain trends, confidence trends, asymmetry trends, compensation patterns, movement fear, RTP readiness, workload tolerance rebuild, tissue healing timelines, emotional stress, identity disruption.
+- **`medical_translation_guidance_layer`** — translates/contextualizes medical terminology, rehab timelines, physician instructions, PT rationale, surgery implications, recovery uncertainty, tissue constraints, safe progression. **Hard rule: NEVER impersonates physicians, NEVER diagnoses.** Translates, organizes, contextualizes, integrates only.
+- **`return_to_play_engine`** — models tissue healing, movement confidence, coordination recovery, elastic restoration, asymmetry normalization, force-transfer restoration, sport-specific reintegration, psychological readiness, competitive readiness, workload reintroduction, role-specific tolerance rebuilding. Detects false readiness, compensation masking, muscular-replacing-elastic patterns, emotional over-pushing, premature return risk. **RTP is NOT "pain-free."**
+
+### 6. Injury Dialogue Continuity (Section 10) — AINL × IRCL integration
+
+During injury, AINL pathways stay active: negotiation, motivation, education, progression visibility, organism explanations, confidence support, future pathway visibility. Engine preserves identity continuity, developmental optimism, organism trust, long-term vision. Critical for youth, scholarship, pro aspirants, pitchers, two-way athletes, post-surgery athletes.
+
+### 7. Existing-athlete re-entry (Section 11)
+
+- **`organism_recontextualization_flow`** — existing users must NOT be force-restarted. Allows: establishing missing context, validating current state, refining goals, updating season phase, updating injury status, updating aspirations, progressively improving organism confidence — without restarting history.
+- System intelligently determines what context is missing, what confidence is low, what to revisit.
+
+### 8. New bus topics (Section 12)
+
+`organism_entry_state`, `assessment_confidence_state`, `rehab_organism_state`, `rehab_phase_state`, `medical_guidance_context`, `return_to_play_state`, `recontextualization_state`, `movement_confidence_state`, `compensation_pattern_state`, `identity_disruption_signal`.
+
+All carry freshness + confidence + coverage + explanation-candidate envelopes (Law 3).
+
+### 9. New contracts (Section 13)
+
+`OrganismEntryContract`, `AdaptiveAssessmentContract`, `RehabStateContract`, `MedicalGuidanceContract`, `ReturnToPlayContract`, `RecontextualizationContract`, `CompensationPatternContract`. All extend `data_contract` + interpretability mandate + confidence propagation + owner authority principles.
+
+### 10. Amended expansion order (Section 14)
+
+Insert **BEFORE** Phase 2B (ASB implementation) and BEFORE 7d–7g AINL implementation:
 
 ```text
-... existing 4c–7c ...
-Step 7d — Athlete Intent Profile (AIP) + Negotiation Layer (ANE)
-Step 7e — Behavioral Adaptation Infrastructure (BAS modulators)
-Step 7f — Aspirational Pathway Modeling (APM)
-Step 7g — Communication Intelligence Layer (CIL)
+Step 0a — Organism Entry & Assessment Layer (OEAL) realization
+Step 0b — Injury/Rehab Continuity Layer (IRCL) realization
+... then Phase 2B (ASB) ...
+... then 7d–7g (AIP/ANE/BAS/APM/CIL) ...
 ... then premium exercise + sprint expansion ...
 ```
 
-Reason: premium exercise systems and advanced speed systems become unsafe and low-adherence without negotiation + intent infrastructure in place.
+Reason: ASB without canonical entry baseline + rehab continuity creates fragmented athlete-state infrastructure requiring future rewrites. OEAL/IRCL define the producers ASB must transport.
 
-### 7. Plan gate amendment
+### 11. Integration Audit amendment
 
-Every future plan must now include FOUR lines (was three):
+Add new required consideration to all Integration Audits: **"Entry/Rehab continuity impact"** — every plan touching athlete experience must declare how the change behaves for: (a) brand-new athletes mid-OEAL flow, (b) athletes in active rehab, (c) returning athletes during recontextualization, (d) athletes entering RTP. Or `none (justified)`.
 
-- **Laws check**
-- **Canonical owner**
-- **Longitudinal impact**
-- **Behavioral impact** ← NEW (AIP/ANE/APM/CIL/BAS touchpoints, override pathways triggered, communication style implications, or `none (justified)`)
+### 12. End-state vision (Section 15) — locked
 
-Plans missing any line are rejected.
-
-### 8. End-of-project owner walkthrough requirement (Section 10)
-
-Constitutional delivery requirement locked: at project completion Lovable must produce an exhaustive owner walkthrough organized by subsystem covering every architectural addition, canonical owner, workflow, UX change (athlete + coach), engine pathway change, organism topic, recommendation flow, longitudinal system, override pathway, new contract, and migration impact from original state. No black-box handoff permitted.
+Hammer = world-class baseball/softball organism operating system + developmental intelligence companion + contextual performance guide + recovery/rehab continuity system + long-term adaptive career partner. NOT a workout app, disconnected chatbot, or fragmented feature collection.
 
 ---
 
-## Memory writes performed on approval (no code, memory only)
+## Memory writes performed on approval (no code)
 
-1. **Create** `mem://architecture/athlete-intent-negotiation-layer.md` — full AINL doctrine: AIP, ANE, APM, CIL, BAS, tool capability expansion, authority hierarchy, missingness rules, communication invariants, override logging, optimization target.
-2. **Update** `mem://architecture/canonical-organism-map.md` — add AINL parent + 4 sub-owners, 7 bus topics, 7 contracts, amended expansion order (insert 7d–7g), Section 10 walkthrough requirement.
-3. **Update** `mem://index.md` Core — add: (a) plan gate now requires 4 lines including **Behavioral impact**; (b) Human Authority Hierarchy rule (organism > athlete > coach > AI > priors; AI never overrides athlete; population priors never override athlete evidence); (c) communication adaptation never distorts organism truth.
-4. **Update** `mem://index.md` Memories — add reference to new AINL doctrine file.
+1. **Create** `mem://architecture/organism-entry-assessment-layer.md` — full OEAL doctrine: principle, entry flow A–E, adaptive assessment rules, Hammer Companion principle, recontextualization flow, friction budget rule, bus topics, contracts.
+2. **Create** `mem://architecture/injury-rehab-continuity-layer.md` — full IRCL doctrine: rehab organism state, medical translation/guidance layer (with non-impersonation hard rule), RTP engine, false-readiness/compensation detection, AINL×IRCL injury dialogue continuity, identity disruption handling.
+3. **Update** `mem://architecture/canonical-organism-map.md` — add OEAL + IRCL as new top-level canonical owners; add 10 new bus topics; add 7 new contracts; amend expansion order with Step 0a + Step 0b before Phase 2B; add "Entry/Rehab continuity impact" to Integration Audit checklist.
+4. **Update** `mem://architecture/athlete-intent-negotiation-layer.md` — add Section: AINL × IRCL injury dialogue continuity (negotiation/motivation/education/pathway visibility remain active during rehab; identity continuity preserved).
+5. **Update** `mem://index.md` Core — add three lines: (a) **OEAL is mandatory entry substrate; advanced prescription cannot begin before OEAL baseline establishes minimum context confidence.** (b) **Rehab is an organism state transition, not paused training; IRCL maintains continuity before/during/after injury.** (c) **Hammer never impersonates physicians or diagnoses; medical layer translates and contextualizes only.**
+6. **Update** `mem://index.md` Memories — add references to new OEAL and IRCL doctrine files.
+
+No file beyond `mem://` paths and `.lovable/plan.md` is touched. No `src/`, no `supabase/`, no migrations.
 
 ---
 
 ## Decision requested
 
-Ratify the AINL addendum (Sections 1–11) as locked Phase 2A canonical organism architecture, including the new fourth plan-gate line (**Behavioral impact**) and the end-of-project walkthrough requirement (Section 10).
+Ratify the OEAL + IRCL addendum (Sections 1–16) as locked Phase 2A canonical organism architecture, including the amended expansion order (Step 0a + Step 0b before Phase 2B), the medical-non-impersonation hard rule, the Hammer Companion principle, the recontextualization-not-restart rule for existing athletes, and the "Entry/Rehab continuity impact" Integration Audit requirement.
 
-On approval: memory writes 1–4 above are performed. No implementation, no migrations, no UI.
+On approval: memory writes 1–6 are performed. Phase 2B (ASB) ratification + implementation planning then proceeds with OEAL/IRCL as ratified upstream producers.
