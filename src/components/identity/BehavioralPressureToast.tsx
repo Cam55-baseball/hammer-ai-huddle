@@ -12,13 +12,13 @@ function formatMessage(ev: BehavioralEvent): { text: string; tone: string; Icon:
   // Engine-provided command text takes precedence (Phase 10 identity-pressure copy)
   if (ev.command_text) {
     const tones: Record<string, string> = {
-      nn_miss: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
-      streak_risk: 'border-amber-500/50 bg-amber-500/10 text-amber-200',
-      rest_overuse: 'border-orange-500/40 bg-orange-500/10 text-orange-200',
-      consistency_drop: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-      consistency_recover: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
-      coaching_insight: 'border-sky-500/40 bg-sky-500/10 text-sky-200',
-      identity_tier_change: 'border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200',
+      nn_miss: 'border-rose-500/60 bg-rose-500/15 text-rose-900 dark:text-rose-50',
+      streak_risk: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
+      rest_overuse: 'border-orange-500/60 bg-orange-500/15 text-orange-900 dark:text-orange-50',
+      consistency_drop: 'border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-50',
+      consistency_recover: 'border-emerald-500/60 bg-emerald-500/15 text-emerald-900 dark:text-emerald-50',
+      coaching_insight: 'border-sky-500/60 bg-sky-500/15 text-sky-900 dark:text-sky-50',
+      identity_tier_change: 'border-fuchsia-500/60 bg-fuchsia-500/15 text-fuchsia-900 dark:text-fuchsia-50',
     };
     const icons: Record<string, any> = {
       nn_miss: AlertTriangle,
