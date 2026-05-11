@@ -150,13 +150,15 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
   const missing = isFoundation ? [] : applicationMissing;
   const isReady = isFoundation ? foundationReady : applicationMissing.length === 0;
   const canAutoSuggest = aiDescription.trim().length >= 20;
-  const conf = computeVideoConfidence({
-    videoFormat,
-    skillDomains,
-    aiDescription,
-    layersCovered,
-    assignmentCount: Object.keys(assignments).length,
-  });
+  const conf = isFoundation
+    ? computeFoundationConfidence({ foundationMeta, aiDescription })
+    : computeVideoConfidence({
+        videoFormat,
+        skillDomains,
+        aiDescription,
+        layersCovered,
+        assignmentCount: Object.keys(assignments).length,
+      });
 
   const handleRegenAI = async () => {
     if (!aiDescription.trim()) {
