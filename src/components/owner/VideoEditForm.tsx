@@ -306,20 +306,15 @@ export function VideoEditForm({ video, tags, onSuccess, onCancel }: VideoEditFor
         </div>
       </div>
 
-      {/* Current Video — inline preview */}
+      {/* Current Video — inline preview (uses smart player so YouTube/Vimeo/X/TikTok all work) */}
       <Card className="p-3 space-y-2">
         <Label>Current Video</Label>
         {video.video_url?.trim() ? (
-          <div className="aspect-video w-full bg-black rounded-md overflow-hidden">
-            <video
-              key={video.video_url}
-              src={video.video_url}
-              controls
-              preload="metadata"
-              poster={video.thumbnail_url ?? undefined}
-              className="w-full h-full"
-            />
-          </div>
+          <VideoPlayer
+            videoUrl={video.video_url}
+            videoType={video.video_type}
+            title={video.title}
+          />
         ) : (
           <div className="aspect-video w-full bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">
             No file — external link
