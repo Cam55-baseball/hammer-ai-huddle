@@ -1,69 +1,52 @@
-# Phase 2F — Replay Determinism Specification (Doctrine-Only)
+# Phase 2G — Observability / SLO Doctrine (Doctrine-Only)
 
-**Status:** IIP doctrine-only. No code, schemas, SQL, edge functions, runtime, queues, projections, APIs, UI, dashboards, or infrastructure. Output is exactly **one new memory file + one index update**.
+**Status:** IIP doctrine-only. No code, schemas, SQL, dashboards, telemetry pipelines, alerts, tracing, runtime, UI, or infra. Output = exactly one new memory artifact + one index update.
 
-**Laws check:** 1, 2, 3, 5, 6, 7, 8, 9, 10
-**Canonical owner:** ASB Replay Engine / Determinism Substrate / Engine-Version Governance / Longitudinal Integrity Layer
-**Longitudinal impact:** Locks mathematical reproducibility of the organism across years and engine generations; prevents replay drift, silent rescoring, wall-clock leakage, confidence inflation, non-deterministic evolution.
-**Behavioral impact:** Foundational. Governs every inferred state, DGL safety decision, MAAL escalation, readiness score, capability classification, AI proposal lineage, rehab interpretation, onboarding adaptation, future scouting intelligence.
-**Envelope impact:** Defines deterministic execution law for all 2D envelope processing and 2E topic routing/materialization. Every authoritative organism interpretation must be replay-equivalent under identical envelope history + engine version + snapshot lineage.
-
----
+**Laws check:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+**Canonical owner:** ASB Observability Layer / Organism Integrity Surveillance / Drift Detection / Reliability Governance
+**Longitudinal impact:** Locks constitutional observability across organism nervous system; prevents silent corruption, invisible degradation, replay divergence, confidence inflation, stale projections, routing blindness, authority leakage, and undetected incoherence over multi-year engine evolution.
+**Behavioral impact:** Indirect but universal — governs reliability interpretation for DGL, MAAL, AINL, IRCL, MPI, onboarding/adaptive guidance, replay, capability classification, hard-stop routing, projections, and every future organism subsystem; defines what the organism may trust and when it must degrade conservatively.
+**Envelope impact:** Defines mandatory telemetry, lineage visibility, drift detection, replay verification, projection freshness, authority integrity, transport integrity, and SLO boundaries for all envelopes, topics, replay operations, projections, and materialized interpretations.
 
 ## Deliverables
 
-**Create:** `mem://architecture/asb-g2-replay-determinism-spec.md`
-**Update:** `mem://index.md`
+1. **Create** `mem://architecture/asb-g2-observability-slo-doctrine.md`
+2. **Update** `mem://index.md` (add 2 Core lines + 1 Memories entry)
 
-### Index Core lines to add
-1. "No authoritative organism interpretation may depend on runtime, execution order variance, floating-point behavior, wall-clock timing, hidden state, or non-replayable side effects."
-2. "Replay equivalence is constitutional; engine evolution must be additive, explainable, and historically reconstructable."
+No other files touched. No code, no schemas, no SQL, no edge functions, no UI.
 
-### Index Memories entry to add
-- `[ASB Replay Determinism Spec (Phase 2F)](mem://architecture/asb-g2-replay-determinism-spec)` — Deterministic replay law, fixed-point arithmetic doctrine, engine equivalence, replay vectors, snapshot lineage, migration semantics, replay ordering, runtime parity, side-effect isolation, deterministic materialization, replay observability, deferred replay questions, G2 replay gates.
+## Artifact structure (Sections A–N)
 
-No other files touched.
+- **A** Observability Philosophy — 10 visibility classes (transport/replay/projection/authority/confidence/missingness/degradation/lineage/safety/consumer); constitutional line: *"The organism may not trust what it cannot observe."*
+- **B** Organism Integrity Visibility Law — 10 mandatory exposure fields per authoritative interpretation; explicit prohibitions (silent degradation, hidden mutation, stale-as-live, invisible safety/replay/migration failures); line: *"Invisible organism mutation is constitutional corruption."*
+- **C** SLI / SLO Constitutional Doctrine — SLI vs SLO vs error budget; 17 mandatory SLI classes (replay parity/drift, projection freshness, transport latency, hard-stop delivery, authority/confidence/missingness consistency, snapshot reproducibility, lineage continuity, migration success, stale-state exposure, replay rebuild success, unauthorized producer/consumer attempts, topic corruption); each w/ purpose · measurement · replay implications · risk · escalation · lineage requirements; line: *"SLOs govern organism trust boundaries, not infrastructure vanity metrics."*
+- **D** Replay Observability Doctrine — extends 2F §K; mandatory replay telemetry (replay_id, lineage hashes, vector results, parity, drift, duration, invalidation/correction lineage); auditability requirements; prohibits replay success without parity verification.
+- **E** Authority Integrity Surveillance — 9 monitored incident classes (leakage, unauthorized override, AI mutation, hard-stop suppression, physician violation, org overreach, replay-time mutation, stale authority replay, missing lineage); per-incident severity/escalation/containment/protection; line: *"Authority without surveillance becomes organism corruption."*
+- **F** Confidence & Missingness Surveillance — 9 tracked failure modes; missingness as observable state; observability requirements for provenance chains, downstream inheritance, propagation graphs, degradation events, replay parity; line: *"Confidence must be explainable longitudinally."*
+- **G** Projection Freshness & Materialization Integrity — 8 projection telemetry classes; consumers must know live/replayed/stale/degraded/migrated/partial/incomplete state; prohibits stale-as-current authoritative truth.
+- **H** Safety & Hard-Stop Observability — safety telemetry (emission, delivery, ack, escalation, replay parity, stale exposure, offline violations, transport degradation, medical replay integrity); P0/P1/P2 escalation classes; line: *"Safety failures must become visible before organism harm."*
+- **I** Degradation Doctrine & Conservative Failure Behavior — 8 degradation states; per-state trigger/behavior/replay/UI/authority/escalation; core rule: under uncertainty authority narrows, confidence decays, projections degrade, AI weakens, safety escalates conservatively; never inflate certainty under degraded visibility; line: *"Integrity uncertainty propagates conservatively."*
+- **J** Observability Lineage & Auditability — 8 lineage exposures; immutable/replayable/additive auditability; defines lineage gap, audit corruption, observability corruption, invisible mutation incident; line: *"Organism trust requires reconstructable lineage."*
+- **K** Drift Detection & Reliability Containment — 8 drift classes (replay/projection/authority/confidence/migration/routing/lineage/observability); per-drift detection/containment/replay/protection/severity; unknown drift forces conservative degradation; prohibits authoritative interpretation during unresolved replay corruption.
+- **L** Deferred Questions Register — L1–L9 (cross-region parity, retention tiers, freshness SLO classes, multi-runtime tracing, replay cost boundaries, compression w/o lineage loss, audit retention, ML explainability, athlete-facing transparency); each w/ severity · doctrine risk · containment · review gate.
+- **M** G2 Realization Entry Requirements — observability implementation blocked until §B/C/D/E/F/I/J/K ratified; 2E + 2F must remain constitutionally frozen.
+- **N** Future Doctrine Hooks — Adaptive Academy observability, capability grading lineage, AI scouting explainability, onboarding traceability, developmental identity, subscription-aware adaptation; principle: *"Development guidance must remain longitudinally explainable."*
 
----
+**Mandatory Invariants block** (recorded in artifact): athlete-as-root tenancy · append-only lineage · replay determinism · no silent degradation · no silent rescoring · confidence first-class · missingness first-class · replay equivalence · additive-only correction · authority lineage preservation · conservative degradation · closed-loop intelligence · long-season durability · no invisible mutation · no shadow observability gaps.
 
-## Artifact Structure (Sections A–N)
+**Out of scope:** metrics vendors, dashboards, tracing infra, OpenTelemetry selection, runtime, SQL, queues, deployment topology, UI, APIs, alerting implementations, infra providers, worker orchestration, concrete SLO values.
 
-- **A — Replay Philosophy.** Replay as constitutional organism reconstruction; decade-scale continuity; distinguish raw event truth / interpreted state / replayed interpretation / migrated interpretation / speculative reasoning. Constitutional line: *"The organism must be reconstructable exactly from envelopes + engine versions + snapshots."*
-- **B — Deterministic Replay Law.** Formal equivalence: same envelopes + same engine version + same snapshot lineage = same interpretation. Prohibit randomness, unordered iteration, FP dependence, wall-clock timing, hidden state, network-time mutation, consumer-side divergence. Define determinism, equivalence, corruption, divergence, lineage. Line: *"Replay is authoritative reconstruction, not approximate simulation."*
-- **C — Replay Ordering Specification.** Canonical tuple `(occurred_at, server_received_at, envelope_id)` from 2D. Tie-breaking, stale insertion, delayed ingestion, out-of-order delivery, partition-local ordering, cross-athlete partial ordering, replay insertion invariants, immutable ordering. Prohibit consumer-defined ordering.
-- **D — Fixed-Point Arithmetic Doctrine.** Authoritative computation = fixed-point only. Canonical precision, per-domain families, scaling invariants, rounding law, overflow/underflow, deterministic division/aggregation, replay-safe combinators. FP prohibited in authoritative replay; permitted only in non-authoritative UI. Cross-ref 2C K13 + 2D §D/§F. Line: *"No authoritative organism interpretation may depend on floating-point runtime behavior."*
-- **E — Engine Execution Isolation.** No hidden globals, mutable singletons, runtime clocks, nondeterministic iteration, unseeded randomness, network during replay, replay-time side effects. Define replay-safe engines, deterministic transitions, dependency rules, side-effect quarantine.
-- **F — Snapshot & Materialization Determinism.** Snapshot lineage immutable, engine-pinned, hash-addressable, replay-verifiable. Snapshot equivalence, projection rebuild equivalence, replay rebuild lineage, stale handling, migration rebuild, deterministic rebuilds. Line: *"Materialized state must always be reproducible from canonical history."*
-- **G — Engine-Version Coexistence & Migration.** Extends 2C K4 + 2D §J. N/N-1 write fence, replay under historical engines, migration envelopes, shadow replay, replay comparison doctrine, migration rollback, dual-version coexistence, historical interpretation preservation. Prohibit silent historical rescoring.
-- **H — Replay Vector & Parity Doctrine.** Golden replay vectors as constitutional truth: confidence / missingness / authority / conflict / migration / offline / delayed-ingestion / hard-stop / degradation. Cross-runtime parity required (browser, Deno, Postgres, future). Replay equivalence gates engine promotion.
-- **I — Conflict & Correction Determinism.** Deterministic replay under conflicts, stale writes, delayed ingestion, authority disputes, offline reconciliation, migration overlap, replay-of-replay. Historical corrections additive only, never overwrite, deterministic reinsertion.
-- **J — Replay Safety & Hard-Stop Integrity.** Hard-stop / medical / rehab replay priority, DGL escalation guarantees, authority preservation, stale hard-stop handling, replay under missing safety signals. Continuity with 2C K6/K11, 2D §E/§I, 2E §H.
-- **K — Replay Observability & Drift Detection.** Replay drift, parity failure, silent mutation, nondeterministic execution, snapshot corruption, vector mismatch, authority/confidence replay corruption. Per-replay minimums: duration, parity status, drift count, rebuild count, migration lineage, vector pass/fail, reproducibility hash. Hooks into 2G.
-- **L — Replay Failure & Containment Doctrine.** Containment classes: recoverable divergence / unrecoverable corruption / vector mismatch / migration incompatibility / snapshot invalidation / engine regression. Per class: organism protection, rebuild, rollback, escalation, observability severity. Line: *"When replay integrity is uncertain, organism authority degrades conservatively."*
-- **M — Deferred Questions Register.** Each item: severity · doctrine risk · temporary containment · future review gate. Seed: precision selection per metric family; deterministic aggregation boundaries; replay scaling under partition compaction; replay rebuild batching; deterministic async constraints; replay hash canonicalization; future runtime parity expansion; deterministic ML inference boundaries; replay-safe probabilistic modeling limits.
-- **N — G2 Realization Entry Requirements.** Replay implementation blocked until: replay law, arithmetic doctrine, ordering, snapshot doctrine, migration doctrine, parity doctrine, observability minimums all ratified. Phase 2G must also land before replay infra begins. No replay engine, queues, materialization workers, snapshot infra, pipelines, projection rebuilds, migration runners, or deterministic scoring execution before ratification.
+## Index update (`mem://index.md`)
 
----
+**Add to Core (2 lines):**
+- "No authoritative organism interpretation may exist without observability lineage, replay traceability, confidence provenance, and drift visibility." (`architecture/asb-g2-observability-slo-doctrine`)
+- "Unknown integrity is organism risk; when observability confidence degrades, organism authority degrades conservatively." (`architecture/asb-g2-observability-slo-doctrine`)
 
-## Mandatory Invariants (recorded in artifact)
+**Add to Memories (1 entry, placed above Phase 2F line):**
+- `[ASB Observability & SLO Doctrine (Phase 2G)](mem://architecture/asb-g2-observability-slo-doctrine)` — Organism observability philosophy, integrity telemetry, replay observability, drift detection, SLO/SLI doctrine, authority integrity monitoring, confidence/missingness surveillance, degradation escalation, replay auditability, observability lineage, deferred reliability questions, G2 observability gates.
 
-athlete-as-root tenancy · append-only event sourcing · replay determinism · additive-only correction · no silent rescoring · fixed-point authority · no wall-clock dependence · deterministic replay ordering · deterministic engine evolution · replay-safe authority lineage · confidence first-class · missingness first-class · no hidden mutation · long-season durability.
+`code--write` on `mem://index.md` will preserve all existing Core + Memories content verbatim.
 
----
+## Decision
 
-## Out of Scope for 2F
-
-Implementation code, SQL, schemas, runtime engines, worker infra, projections, edge functions, observability dashboards, fixed-point library selection, queue infra, APIs, UI, deployment topology.
-
----
-
-## Future Doctrine Candidate (register only; do NOT author in 2F)
-
-Append a single short note at the bottom of the 2F artifact reserving a future phase:
-**"Adaptive Academy & Capability Classification Doctrine"** — AI-directed onboarding entry, subscription-aware progression orchestration, capability-based academy routing, position-aware pathways, age-normalized grading, AI scouting/capability classification, longitudinal developmental identity, playability-first prioritization, adaptive guidance, progression confidence, standardized capability grading. Core principle: *"Playability precedes weaponization; organism survivability precedes star optimization."* Deferred until replay + observability foundations are constitutionally locked (post-2G / post-G2 planning).
-
----
-
-## Decision Request
-
-Ratify Phase 2F as the locked replay determinism constitution governing all organism reconstruction, engine evolution, migration lineage, arithmetic correctness, replay equivalence, and longitudinal continuity. On approval: write the memory artifact + index update only. Next phase: **Phase 2G — Observability / SLO Doctrine.** No implementation begins.
+Ratify Phase 2G as the constitutional observability and organism reliability doctrine. On approval: write the memory artifact + index update only. No implementation. Next phase: **Phase 3A — Canonical Organism Interpretation & Capability Doctrine.**
