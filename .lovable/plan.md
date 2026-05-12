@@ -1,92 +1,99 @@
+# Phase 2D — Canonical Envelope Contract Doctrine (Plan)
 
-# Phase 2C — HIGH-Severity Resolution & Acceptance Pass
+**Status:** doctrine-only under IIP. No code, migrations, schemas, edge functions, UI, or runtime artifacts. Output is a single memory artifact + index update.
 
-**Status:** doctrine-only (IIP `specified`). No code, migrations, edge functions, Supabase execution, or UI. Output is a memory artifact + index update + decision request.
-
-**Laws check:** 1, 2, 3, 6, 7, 8, 9, 10
-**Canonical owner:** ASB Infrastructure / IIP / Replay & Authority subsystems
-**Longitudinal impact:** Removes hidden instability blocking G2; preserves replay determinism, engine-version pinning, athlete-as-root tenancy, append-only sourcing.
-**Behavioral impact:** Indirect — protects authority pathways (MAAL/DGL), hard-stop transport (medical/RTP), and offline trust boundaries (AINL).
+**Laws check:** 1 (One Organism), 2 (No Unused Data), 3 (Missingness Is a Signal), 6 (Self-Correct), 7 (Engine Becomes More Elite), 8 (No Fake AI), 9 (Closed Loop or Don't Ship), 10 (Long-Season Durability)
+**Canonical owner:** ASB envelope substrate / Replay & Authority subsystems / IIP governance
+**Longitudinal impact:** Locks the transport primitive that protects decade-scale replay determinism, engine-version pinning, confidence/missingness propagation, and athlete-root continuity.
+**Behavioral impact:** Indirect — defines the transport law for AINL proposals, MAAL authority assertions, DGL hard-stops, IRCL rehab state, OEAL entry events, and SIL scenario envelopes. No UI/voice changes.
 
 ---
 
 ## Deliverables (on approval)
 
-1. Create `mem://architecture/asb-g1-high-severity-resolution.md` — full Phase 2C doctrine artifact (Sections A–H below).
-2. Update `mem://index.md`:
-   - Replace the §K HIGH-blocker line with the resolved/accepted/deferred-with-containment status set produced by 2C.
-   - Add reference: `[ASB §K HIGH Resolution](mem://architecture/asb-g1-high-severity-resolution.md) — Phase 2C resolutions for K1/K2/K3/K4/K6/K11/K13`.
-3. No other files touched. No diagrams in 2C (diagram updates belong to 2D–2F).
+1. **Create** `mem://architecture/asb-g2-canonical-envelope-contract.md` — full Phase 2D doctrine (Sections A–M, mandatory invariants, out-of-scope, decision request).
+2. **Update** `mem://index.md`:
+   - Add Memories entry: `[ASB Canonical Envelope Contract](mem://architecture/asb-g2-canonical-envelope-contract.md) — Phase 2D envelope shape, event taxonomy, confidence/missingness/authority transport, replay determinism, AI proposal separation, materialization, offline/conflict, engine-version, observability, G2 entry gates`.
+   - Add a Core line locking the substrate: "All organism mutation must be explainable through ordered envelopes + engine versions + snapshots; no subsystem-to-subsystem mutation outside the envelope."
+   - Add a Core line: "Plans must additionally declare Envelope impact (transport/authority/confidence/missingness/replay/AI-separation/materialization/engine-version touchpoints, or `none (justified)`)." — extends the existing 4-line plan gate.
+3. No diagrams in 2D (topology/replay diagrams already live in G1; envelope-flow diagrams belong to 2E/2F if needed).
+4. No other files touched.
 
 ---
 
-## Artifact structure
+## Artifact structure (Sections A–M)
 
-The new memory file follows the exact 8-section format the user specified, and IIP §11 reporting on every recommendation.
+The artifact uses the exact section headings the user specified. Each section follows IIP §11 reporting (Implementation state / Verification status / Remaining uncertainty / Drift risks) at the section tail.
 
-### SECTION A — Executive Risk Summary
-One-paragraph framing per blocker + a single matrix (blocker → severity → recommended disposition → G2 impact). No claims of resolution beyond what the per-blocker analysis supports.
+### A — Canonical Envelope Philosophy
+Envelope as organism-state transport primitive; append-only; athlete-root identity; no direct subsystem-to-subsystem mutation; envelopes as replay-complete history; the four-state distinction (event truth → interpreted state → proposed adaptation → authoritative applied state); decade-scale rationale; explicit constitutional sentence: *"Every organism mutation must be explainable entirely through ordered envelopes + engine versions + snapshots."*
 
-### SECTION B — Per-Blocker Deep Analysis
-For each of K1, K2, K3, K4, K6, K11, K13, the artifact will contain the 13 required subsections in a fixed template:
+### B — Canonical Envelope Shape
+Doctrine-only field categories (no schema):
+identity · athlete_root · topic · event_type · producer · authority · confidence · missingness · engine_version · temporal · replay · conflict · ai_lifecycle · audit · tenant_scope · safety_classification.
+For each: purpose · invariants · mutation rules · replay implications · offline implications · authority implications · observability implications · mutable/immutable · client-supplied/server-derived · authoritative/advisory.
 
-```text
-B.K{n} — {title}
-  1. Why dangerous
-  2. Failure modes
-  3. Longitudinal risk to organism continuity
-  4. Supabase-specific constraints (Realtime fan-out, WAL, RLS, pg_partman, FCM bridge, etc.)
-  5. Temporary doctrine currently assumed (from G1)
-  6. Is current assumption acceptable? (yes / no / partial)
-  7. Evidence required before production trust
-  8. What can be deferred safely
-  9. What CANNOT be deferred
- 10. Recommended doctrine decision
- 11. Disposition: resolved | accepted-with-mitigation | deferred-with-containment | remains-blocking
- 12. Exact impact on G2 readiness
- 13. IIP §11 line: Implementation state / Verification status / Remaining uncertainty / Drift risks
-```
+### C — Event Taxonomy Doctrine
+Permanent classes: `organism_truth`, `athlete_intent`, `observed_behavior`, `inferred_state`, `ai_proposal`, `authority_override`, `hard_stop`, `rehabilitation_state`, `replay_control`, `migration_event`, `tenant_scope_event`, `observability_event`, `calibration_event`, `degradation_event`. Per class: replay eligibility · authority requirements · confidence ceilings · missingness handling · offline eligibility · stale-write handling · engine-version pinning · materialization eligibility · audit retention. Explicit `intent ≠ completion` doctrine.
 
-Working dispositions to be encoded (subject to ratification):
+### D — Confidence + Missingness Propagation Law
+Confidence + missingness as first-class primitives. Propagation, decay, stale-amplification prevention, conflict suppression, longitudinal accumulation, floors, producer-tier ceilings (T0–T7 from G1), replay recomputation, inheritance, bounded-certainty doctrine. Constitutional line: *"No downstream engine may silently upgrade confidence."* Behaviors under collision, partial sync, offline replay, delayed ingestion, engine migration.
 
-- **K1 — Realtime fan-out ceiling (org-of-orgs):** *deferred-with-containment.* Doctrine: ASB Realtime is for soft-RT athlete-scoped channels only; org-of-orgs aggregation runs through pull/materialized projections, not fan-out. Hard cap on per-channel subscribers; overflow routed to projection polling. Containment: explicit channel-tier registry + load-test gate before any org-of-orgs feature ships.
-- **K2 — Event-log partitioning beyond month:** *accepted-with-mitigation.* Doctrine: monthly partitions for hot window, quarterly roll-up partitions thereafter; partition key = `(athlete_id, occurred_at)` to preserve athlete-as-root locality. Mitigation: partition manager spec + retention/compaction policy must precede any production write. No cross-partition mutation; replay reads partitions in occurred_at order.
-- **K3 — Producer signing / device key rotation:** *deferred-with-containment.* Pre-signing era: every event carries `producer_id`, `producer_trust_tier`, `device_install_id`, `client_clock`, `server_received_at`. Authority decisions never trust client-only signals. Containment: signing is required before any T0/T1 sensor producer is admitted; until then, sensor tiers cannot bypass server reconciliation.
-- **K4 — Multi-engine-version coexistence beyond N/N-1:** *resolved (constrained).* Doctrine: only N and N−1 engines may write; older engines are read/replay-only via `engine_snapshot_versions`. Snapshots pinned to `engine_version`; recompute requires explicit migration record. No silent re-scoring of historical events.
-- **K6 — iOS PWA background sync durability:** *accepted-with-mitigation.* Doctrine: treat iOS background sync as **non-durable**. Client queue is foreground-flush + opportunistic; safety-critical hard-stops are **never** trusted to client background delivery. Mitigation: hard-stops always travel server-push (see K11); UI surfaces "unsynced" state honestly; no completion claim until server ACK.
-- **K11 — Hard-stop push transport:** *resolved (constrained).* Doctrine: hard-stop and medical-override notifications are delivered via FCM/APNs (server→device push), not Realtime. Realtime is best-effort UX; push is the authority transport. Dual-path: push for delivery, Realtime for live UI mirror, server log as truth.
-- **K13 — Replay determinism under FP drift cross-runtime:** *accepted-with-mitigation.* Doctrine: all longitudinal scoring math uses fixed-point (integer-scaled) arithmetic at canonical precision; floating-point allowed only in non-authoritative UI. Mitigation: replay golden-vector test suite required as a G2 entry artifact; cross-runtime parity test (browser vs Deno vs Postgres) gates every engine version bump.
+### E — Authority Transport Semantics
+Per actor (athlete, coach, parent, physician, organizational, AI advisory, DGL hard, MAAL escalation): assertion · revocation · expiration · replay reconstruction · lineage · scope inheritance · emergency handling · conflicts · offline behavior · precedence · audit permanence. Constitutional line: *"Authority is transported WITH organism state, never inferred afterward."*
 
-### SECTION C — Cross-Blocker Interaction Risks
-- K6 × K11: iOS background unreliability forces K11's push-as-authority decision.
-- K1 × K2: fan-out containment depends on partition-aware projections; projection cost is bounded only if K2 partitioning holds.
-- K3 × K4: unsigned producers + multi-engine coexistence = replay ambiguity; both must be constrained together.
-- K13 × K4: FP drift compounds across engine versions; fixed-point doctrine must precede any engine version bump.
-- K1 × K11: do not collapse hard-stop transport into Realtime to "save" fan-out budget; that would silently weaken authority.
+### F — Temporal & Replay Determinism Doctrine
+Five canonical timestamps (`occurred_at`, `client_recorded_at`, `server_received_at`, `materialized_at`, `replayed_at`); ordering guarantees; deterministic-replay law; snapshot pinning; replay equivalence/drift; engine-version isolation; migration envelopes; temporal-branching prohibition; immutable replay history; historical correction via additive envelopes only; stale-event ingestion; replay under partial data. Constitutional line: *"No organism state may depend on wall-clock execution timing."*
 
-### SECTION D — Production Trust Requirements
-Enumerated, testable preconditions before each blocker may be called `verified` (not just specified): golden replay vectors (K13), partition manager + retention runbook (K2), channel-tier load tests (K1), push delivery SLO + dead-letter (K11), foreground-flush honesty UX + server-ACK contract (K6), engine-version write-fence enforcement test (K4), producer envelope completeness audit (K3).
+### G — AI Proposal vs Applied-State Separation
+Strict envelope-level separation: AI proposal → athlete acknowledgement → negotiated adaptation → authoritative applied state → completed execution → observed result. Explicit prohibition: AI may not mutate organism truth. Envelope kinds: proposal · negotiation · acceptance/rejection · override · execution-confirmation · rollback. Closed-loop enforcement (Law 9).
 
-### SECTION E — Recommended Resolutions
-Consolidated table mirroring B.11 dispositions, plus the ordered prerequisite list feeding 2D–2G.
+### H — Materialized State Doctrine
+Event log canonical; materialized state disposable. Latest-state projections, snapshot materializations, stale projections, partial-sync projections, replay rebuilds, invalidation, confidence-aware projections, tenant-scoped projections, safety-critical projections, rebuild priority. Constitutional line: *"Materialized state is disposable; event history is canonical."*
 
-### SECTION F — G2 Readiness Matrix
-Per blocker: `G2-unblocking? yes/no` and `condition`. G2 may begin when all seven entries are either `resolved`, `accepted-with-mitigation` (with mitigation owner named), or `deferred-with-containment` (with containment owner + scope named). Any `remains-blocking` halts G2.
+### I — Offline & Conflict Doctrine
+Offline queue envelope requirements; delayed-ingestion behavior; stale-write audit; conflict envelopes; resolution ordering; reconciliation visibility; athlete-visible conflicts; replay after reconciliation; offline hard-stop behavior (per K6/K11 from 2C); offline authority restrictions; offline confidence decay. Explicit behaviors for: athlete vs coach disagreement, AI vs physician disagreement, stale queue reconnect after hard-stop, offline events crossing engine-version boundaries.
 
-Working summary (subject to ratification): K1 deferred-with-containment, K2 accepted, K3 deferred-with-containment, K4 resolved, K6 accepted, K11 resolved, K13 accepted → **G2 entry permitted** once 2D–2F doctrine lands.
+### J — Engine Version Doctrine
+`engine_version` as immutable replay dimension; N/N-1 coexistence (per K4); migration envelopes; historical preservation; no silent rescoring; replay equivalence; migration rollback; shadow replay; dual-write migration; version audit permanence. Constitutional line: *"No historical organism interpretation may silently change."*
 
-### SECTION G — Remaining Unknowns
-Explicitly named, not hand-waved: org-of-orgs scale numbers, iOS WebKit roadmap, FCM/APNs cost envelope at scale, signing key custody model, fixed-point precision selection per metric family, partition compaction cadence under real load.
+### K — Observability & Audit Transport
+Required lineages per envelope: replay · authority · confidence · producer · engine-version · conflict · materialization · override. Minimum observability guarantees. Definitions of: unverifiable state · replay corruption · authority corruption · silent mutation · confidence fraud.
 
-### SECTION H — Ratification Decision Request
-Single decision: ratify the dispositions in B/E/F as the locked Phase 2C resolution set, unblocking sequence 2D → 2E → 2F → 2G → G2 realization planning → shadow-mode implementation. No implementation begins on approval.
+### L — Deferred Questions Register (envelope-doctrine scope only)
+Seeded items (each with severity / doctrine risk / temporary containment / future review gate):
+- L1 Confidence arithmetic family (per metric domain) — fixed-point precision selection.
+- L2 Missingness taxonomy completeness (sensor vs semantic vs authority-withheld).
+- L3 Authority revocation retroactivity bounds.
+- L4 Migration envelope shape for cross-version semantic shifts.
+- L5 Replay equivalence tolerance under floating-UI rendering.
+- L6 AI proposal expiration semantics (TTL vs explicit withdrawal).
+- L7 Conflict envelope ordering when wall-clock is untrusted.
+No infrastructure questions (those remain in G1 §K / 2C registry).
+
+### M — G2 Realization Entry Requirements
+Schema realization may not begin until ALL of the following are ratified:
+1. Canonical envelope shape (B)
+2. Event taxonomy (C)
+3. Confidence/missingness propagation law (D)
+4. Authority transport semantics (E)
+5. Temporal/replay determinism doctrine (F)
+6. AI proposal separation (G)
+7. Materialization doctrine (H)
+8. Engine-version doctrine (J)
+9. Observability lineage minimums (K)
+Explicit prohibition on schema/DDL/runtime work before ratification + completion of 2E (topic registry), 2F (replay determinism spec), 2G (observability/SLO).
 
 ---
 
-## Invariants preserved (explicit)
+## Mandatory invariants (restated in artifact)
 
-Athlete-as-root tenancy · append-only event sourcing · replay determinism · engine-version pinning · closed-loop intelligence · no big-bang migration · offline survivability without fake authority · long-season durability over convenience.
+athlete-as-root tenancy · append-only event sourcing · replay determinism · confidence first-class · missingness first-class · authority travels with state · no fake AI autonomy · closed-loop intelligence · long-season durability · additive-only evolution · shadow migration · no silent rescoring · no wall-clock dependence · no client authority for organism safety.
 
-## Out of scope for 2C
+## Out of scope for 2D
 
-Schema DDL, ingress endpoints, edge functions, RLS policies, partition SQL, push integration code, fixed-point library selection, observability dashboards, UI. Those belong to 2D–2G and G2.
+SQL · DDL · Supabase execution · edge functions · TypeScript · UI · API routes · queue implementation · concrete schemas · runtime code · migrations · infrastructure deployment · diagrams (deferred to 2E/2F if needed).
+
+## Decision request
+
+Ratify Phase 2D as the locked canonical envelope doctrine governing all future organism transport, replay, authority, confidence, AI orchestration, and longitudinal continuity. On ratification, the next phase is **Phase 2E — Topic Registry & Organism State Materialization Doctrine**. No implementation begins.
