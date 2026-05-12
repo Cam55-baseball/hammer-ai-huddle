@@ -1,422 +1,325 @@
-# Phase 2B — Athlete State Bus (ASB) Realization Plan (IIP-Governed)
+# Phase 2B — G1 ASB Infrastructure Design Review
 
-**Mode:** Implementation-planning only. No code, migrations, UI, prompts, or tables. All claims tagged with IIP §4 implementation states. No simulated completion.
+**Artifact type:** IIP-governed design review. Doctrine only. No code, migrations, UI, prompts, or runtime artifacts. No completion claims.
+
+---
 
 ## IIP §11 Header
-- **Laws check:** 1, 2, 3, 5, 6, 7, 8, 9, 10
-- **Canonical owner:** ASB (Athlete State Bus) — transport/state-infrastructure peer to LCE/BCE/TPE; governed by IIP, OEAL, IRCL, AINL, DGL, MAAL, SIL.
-- **Longitudinal impact:** Establishes the substrate that carries organism truth, confidence, missingness, freshness, authority, and rehab/RTP state across multi-season operation. Every longitudinal subsystem (LCE, recovery capacity, elastic economy, career resilience) reads/writes through ASB; without it, longitudinal coherence cannot be guaranteed.
-- **Behavioral impact:** AIP/ANE/APM/CIL/BAS, override pathways, authority hierarchy, uncertainty surfacing, youth protection, scenario bounds — all transit ASB. Pressure-environment, authority conflict, and override-escalation signals are first-class topics.
-- **Scope touched (this artifact):** memory/doctrine planning only.
-- **Implementation state (ASB overall):** `specified` → graduating to `implementation-planned` upon ratification of this document. All subsystems below carry their own state.
-- **Verification status:** N/A — no implementation claimed.
-- **Remaining uncertainty:** Section 13 enumerates known unknowns.
-- **Drift risks:** Pre-implementation drift risk = doctrine fragmentation between owners; mitigated by single ASB doctrine file + Integration Audit gate.
-- **Observable proof:** None yet; observability surfaces specified in §7.
-- **Next dependency gates:** §11 sequencing gates G0–G7.
+
+- **Laws check:** 1 (One Organism), 2 (No Unused Data), 3 (Missingness Is a Signal), 4 (Speed Is Core NS Infra), 5 (Intent≠Completion), 6 (Self-Correct), 7 (Engine Becomes More Elite), 8 (No Fake AI), 9 (Closed Loop or Don't Ship), 10 (Long-Season Durability).
+- **Canonical owner(s):** Athlete State Bus (ASB) — infrastructure substrate. Cross-owners: LCE, BCE, TPE, OEAL, IRCL, AINL, DGL, MAAL, SIL, IIP.
+- **Longitudinal impact:** Establishes the transport substrate that every longitudinal subsystem depends on across multi-year athlete timelines, multi-org rosters, and engine-version transitions. Choices locked here govern decade-scale replayability, elastic economy continuity, and career resilience auditability.
+- **Behavioral impact:** Defines the runtime surfaces where AINL/DGL/MAAL negotiation, override propagation, authority enforcement, and uncertainty-bound communication actually execute. Wrong topology = silent authority bypass.
+- **Scope touched:** Architectural doctrine only. Two memory artifacts proposed (one new, one updated). No tables, edge functions, hooks, or UI.
+- **Current implementation state:** `specified` for all ASB subsystems. Adjacent subsystems (TPE snapshots, Readiness, Foundation tracing) remain `partially-implemented` and continue under their existing contracts until shadow-read milestones (G4/G5).
+- **Verification status:** Doctrine artifact — verification = peer ratification. Runtime verification deferred to G2+.
+- **Remaining uncertainty:** Multiple HIGH-severity items registered in §K (Deferred Decisions). None block G1 ratification; all block G2 entry.
+- **Drift risks:** (a) Premature implementation before G2 schema review; (b) Supabase-coupling decisions becoming irreversible; (c) offline semantics under-specified at G2; (d) tenant model drifting from athlete-as-root.
+- **Observable proof:** Memory files written + index updated; no runtime proof claimed.
+- **Next dependency gates:** G2 (schema + ingress + event-log realization plan); blocked until §K HIGH items are resolved/deferred-with-mitigation/accepted-and-logged per §L.
 
 ---
 
-## 1. ASB Canonical Definition
+## Conceptual / Planned / Deferred Separation (IIP)
 
-**Role.** ASB is the organism-state transport substrate. It carries typed, versioned, timestamped, confidence-bound, missingness-aware state envelopes between canonical owners. It is **NOT** business logic, recommendation logic, UI state, scoring, prescription, or decision authority.
-
-**Transport responsibilities:** publish/subscribe of typed envelopes; ordering guarantees per (user_id, topic); idempotent delivery via producer-supplied keys; envelope validation against contract registry; routing to persistence + downstream consumers.
-
-**ASB does NOT own:** organism truth (owned by canonical feature owners), decision states (DGL), authority resolution (MAAL), scenario reasoning (SIL), recommendation generation (downstream engines), UI rendering, or ML inference.
-
-**Canonical guarantees:**
-1. Every published envelope is typed, versioned, signed by producer, and carries `confidence`, `missingness_reason?`, `freshness_at`, `engine_version`, `schema_version`, `idempotency_key`.
-2. Exactly-one canonical producer per topic (enforced by registry).
-3. At-least-once delivery with idempotent consumers.
-4. Per-(user, topic) monotonic ordering by `freshness_at` then producer sequence.
-5. No silent drops; rejected envelopes are logged to audit with reason.
-
-**Persistence expectations:** every envelope persisted to an append-only event log; latest-per-(user, topic) materialized to a current-state table; longitudinal snapshots written on cadence per topic policy.
-
-**Replay expectations:** any (user_id, as_of) state must be reconstructable from the event log against a pinned `engine_version`.
-
-**Freshness propagation:** every derived envelope carries `min(freshness_at)` of its inputs; consumers must surface staleness, never hide it.
-
-**Confidence propagation:** derived envelopes carry contract-specified combinator output (typically conservative min or weighted product); never inflated above any input.
-
-**Missingness propagation:** absent inputs produce explicit `missingness_reason`; downstream MUST NOT coerce missing → neutral/healthy.
-
-**Observability guarantees:** producer health, consumer lag, contract-rejection rate, stale-topic detection, orphan-topic detection, duplicate-producer detection, replay-drift detection — all surfaced (see §7).
-
-**Anti-drift guarantees:** contract registry is the single source of truth; producers/consumers fail closed on schema mismatch; CI contract diff gate; runtime enforcer rejects unregistered topics.
+| Category | Items |
+|---|---|
+| **Conceptual doctrine (this artifact)** | All Sections A–L below |
+| **Implementation-planned infrastructure** | Envelope contract shape, event-log append-only model, replay-from-snapshot model, per-topic real-time class, trust-tier weighting model |
+| **Unresolved unknowns** | Every item in §K |
+| **Deferred infrastructure** | Cross-region replay, motion-capture ingestion, multi-engine-version coexistence beyond N/N-1, federated org-of-orgs, on-device LCE inference |
+| **Verified assumptions** | Lovable Cloud (Supabase) is current backend; PostgREST + Realtime available; client = React PWA; edge functions = Deno |
+| **Unverified assumptions** | Realtime fan-out throughput at org scale; logical-replication ceilings; pg event-log partitioning costs at multi-year horizon; offline queue durability across iOS PWA backgrounding |
 
 ---
 
-## 2. Full Topic Inventory
+## SECTION A — Runtime Topology Design
 
-Format per topic: `topic` — owner | producer | consumers | persist | freshness | confidence | missingness | replay | observability | drift risks | state.
+**Responsibilities:**
 
-> All topics below are `specified` unless noted. Producers/consumers refer to canonical owners, not concrete services.
+- **Client (PWA):** local intent capture, offline queueing, optimistic UI under bounded confidence, AINL negotiation surfaces, override acknowledgement capture, last-known-state replay for offline UX. Never authoritative for organism truth, hard-stops, or authority transitions.
+- **Edge functions:** envelope validation, idempotency enforcement, producer-identity verification, topic routing, confidence/missingness normalization, DGL/MAAL runtime gates for high-impact writes, AI orchestration calls, external-producer trust adjudication.
+- **Database (Postgres):** authoritative event log (`asb_events`), latest-state materializations, snapshot store, engine-version registry, override audit, authority transitions, tenant boundary enforcement via RLS.
+- **Event log:** append-only, monotonic per (athlete, topic), envelope-versioned, engine-version-pinned, replay-complete.
+- **Realtime transport:** Supabase Realtime (Postgres logical replication) for soft real-time topics; edge-invoked fan-out for hard real-time hard-stops; client polling fallback for replay-only and async.
+- **Replay runtime:** deterministic re-execution against pinned engine_version + snapshot baseline + event tail, mirroring the existing `foundationReplay` pattern but generalized.
+- **Orchestration runtime:** edge-side AINL/DGL/MAAL adjudicators; never client-side for authority decisions.
+- **Observability runtime:** trace insertion (mirrors `foundation_recommendation_traces`), drift detectors, replay drills, SLO emitters.
 
-### LCE
-- `lce.quality_density` — LCE | LCE compositor | AINL, DGL, SIL | append+snapshot | 24h | weighted from rep_source toughness + freshness | absent → withhold | yes | per-user histogram | quality vs magnitude conflation | specified.
-- `lce.recovery_capacity` — LCE | recovery model | DGL, AINL, IRCL | append+snapshot | 24h | model + input coverage | partial-input → low-confidence emit | yes | trend dashboard | population-prior leakage | specified.
-- `lce.elastic_economy` — LCE | elastic model | AINL, SIL | append+snapshot | 7d | coverage of stride/throw economy inputs | absent → withhold | yes | dashboard | metric drift | specified.
-- `lce.developmental_diversity` — LCE | diversity scorer | AINL, SIL | append+snapshot | 30d | coverage | absent → withhold | yes | dashboard | sport bias | specified.
-- `lce.career_resilience` — LCE | resilience compositor | DGL, SIL, MAAL | snapshot | 30d | downstream of all LCE inputs | absent → withhold | yes | dashboard | optimism bias | specified.
+**Current intended stack:** Lovable Cloud (Supabase Postgres + Realtime + Edge), React PWA client, Workbox SW, BroadcastChannel multi-tab.
 
-### BCE (Behavioral / Phase 9)
-- `bce.aip` (athlete intent posture) — AINL | AIP scorer | DGL, ANE, BAS | append+latest | 24h | input coverage | absent → unknown | yes | per-user trace | drift vs APM | specified.
-- `bce.ane` (negotiation events) — AINL | ANE | DGL, audit | append | event | n/a | n/a | yes | event log | duplicate negotiations | specified.
-- `bce.apm` (pattern memory) — AINL | APM aggregator | AIP, BAS | snapshot | 7d | coverage | absent → cold-start | yes | dashboard | overfitting | specified.
-- `bce.cil` (communication intent layer) — AINL | CIL | UI consumers | latest | 24h | derived | absent → default register | yes | A/B audit | distortion of organism truth | specified.
-- `bce.bas` (behavioral adaptation signal) — AINL | BAS | DGL | latest | 24h | derived | absent → no-op | yes | trace | feedback loop with AIP | specified.
+**Probable future evolution:** dedicated event-log partition cluster; CDC pipeline to analytical store; dedicated orchestration runtime if edge-function cold-start becomes hard-real-time blocker; on-device inference for Speed-Is-Core-NS-Infra topics.
 
-### TPE (Training/Performance Engine — current Hammer engine)
-- `tpe.session_completion` — TPE | activity logger | LCE, BCE, hammer | append | event | producer | n/a | yes | event log | duplicate logs (idempotency_key) | partially-implemented (today's `custom_activity_logs` is the source of truth; envelope wrapping pending).
-- `tpe.cns_load` — TPE | universal CNS load calc | LCE, hammer, readiness | append+latest | 24h | input coverage | absent → withhold | yes | trend | non-universal contributors | partially-implemented.
-- `tpe.rep_quality` — TPE | per-rep scorer | LCE, MPI | append | event | per-rep | n/a | yes | trace | rep_source toughness drift | partially-implemented.
+**Irreversible architectural assumptions (locked):**
+1. Append-only event log is the source of truth.
+2. Athlete is the root tenant entity (orgs are overlays — see §B).
+3. Engine-version is pinned per envelope.
+4. Confidence + missingness are first-class envelope fields.
+5. Authority decisions are server-side.
 
-### OEAL
-- `oeal.intake_context` — OEAL | intake flow | AINL, LCE, IRCL | snapshot | per-event | input coverage | absent → block advanced prescription (per Core rule) | yes | audit | recontextualization vs restart confusion | specified.
-- `oeal.context_confidence` — OEAL | OEAL scorer | DGL gate | latest | 24h | derived | low → restrict advanced prescription | yes | dashboard | premature graduation | specified.
-- `oeal.recontextualization_event` — OEAL | OEAL | AINL, LCE | append | event | n/a | n/a | yes | audit | data overwrite | specified.
+**Temporary implementation shortcuts (must be auditable, not load-bearing):**
+- Single-region Supabase deployment.
+- Single-table `asb_events` partition strategy at G2 (logical partitioning by topic-class deferred to post-G7).
+- Edge functions handle orchestration directly (dedicated runtime deferred).
 
-### IRCL
-- `ircl.organism_state` — IRCL | rehab state machine | DGL, AINL, LCE, MAAL | latest+append | per-event | derived | absent → assume non-rehab w/ low confidence (NOT healthy) | yes | audit + dashboard | silent state regression | specified.
-- `ircl.medical_restriction` — IRCL | medical translator | DGL (hard-stop), MAAL | latest+append | per-event | physician-sourced | absent → no restriction asserted | yes | audit | impersonation | specified.
-- `ircl.rtp_phase` — IRCL | RTP engine | DGL, AINL, SIL | latest+append | daily | derived | absent → not-in-RTP | yes | audit | premature RTP advance | specified.
-- `ircl.rehab_uncertainty` — IRCL | uncertainty model | DGL, AINL | latest | daily | derived | gaps amplify uncertainty | yes | dashboard | uncertainty collapse | specified.
+**Anti-lock-in strategy:** all consumers go through `EngineInputContractV2`-style adapters; no direct table coupling; envelope schema is the only stable contract; Supabase-specific features (Realtime, RLS) abstracted behind `BusTransport` / `TenancyEnforcer` interfaces (specified at G2).
 
-### AINL
-- `ainl.authority_intent` — AINL | intent resolver | DGL, MAAL | event+latest | per-event | derived | absent → AI may not act on athlete behalf | yes | audit | silent override | specified.
-- `ainl.override_log` — AINL | override recorder | DGL, MAAL, audit | append (immutable) | event | n/a | n/a | yes | immutable log | tamper | specified.
+**Supabase constraints to respect:**
+- Realtime fan-out limits (per-channel subscriber ceilings).
+- Logical replication slot pressure under high write volume.
+- Edge function cold-start unsuited to hard real-time (<200ms) — handled via persistent connections + warm pools.
+- RLS recursion (use `has_role`-style SECURITY DEFINER functions per project memory).
 
-### DGL
-- `dgl.decision_state` — DGL | decision resolver | UI, AINL, audit | latest+append | per-decision | derived w/ confidence band | absent → informational-uncertainty | yes | trace per decision | green/yellow/red collapse (forbidden) | specified.
-- `dgl.uncertainty_band` — DGL | uncertainty calc | DGL self, UI | latest | per-decision | derived | low coverage → widens band → may downgrade decision state | yes | trace | hidden precision | specified.
-- `dgl.hard_stop` — DGL | medical/safety gate | all consumers | latest+append | event | physician/IRCL | absent → no hard-stop asserted | yes | audit | bypass | specified.
-
-### MAAL
-- `maal.actor_authority_state` — MAAL | authority resolver | DGL, AINL | latest | per-event | derived | absent → default to most protective | yes | audit | silent coach/parent override | specified.
-- `maal.authority_conflict` — MAAL | conflict detector | DGL, audit | append | event | derived | n/a | yes | audit | unresolved conflict aging | specified.
-- `maal.youth_protection_state` — MAAL | youth gate | DGL, SIL | latest | per-event | DOB-derived | absent → assume protected | yes | audit | DOB drift (Core: DOB authoritative) | specified.
-- `maal.competitive_pressure_environment` — MAAL | pressure tracker | DGL, SIL, AINL | latest+append | event | self-report + signals | absent → unknown | yes | dashboard | weaponization | specified.
-
-### SIL
-- `sil.scenario_projection` — SIL | scenario engine | UI, AINL, DGL | append+latest | per-request | bounded band | absent → no projection | yes | trace | deterministic-destiny language (forbidden) | specified.
-- `sil.pathway_tradeoff` — SIL | tradeoff calc | UI, AINL | append | per-request | derived | n/a | yes | trace | pressure-biased framing | specified.
-- `sil.rtp_simulation` — SIL | RTP scenario | IRCL, DGL | append | per-request | derived from IRCL | absent → no sim | yes | trace | over-promise | specified.
-
-### Hammer (engine snapshot)
-- `hammer.state_snapshot` — Hammer | engine compositor | UI, AINL, DGL | append+latest | per-recompute | derived | absent → unknown | yes | trace + version | engine_version drift (Core: `engine_snapshot_versions.engine_version` only) | partially-implemented.
-- `hammer.recompute_request` — Hammer | activity completion + cron | engine compositor | event | event | producer | n/a | yes | event log | throttle bypass (Core: 8s throttle) | partially-implemented.
-
-### Load / Debt
-- `load.debt_24h` / `load.debt_7d` / `load.debt_28d` — TPE/LCE | load model | DGL, AINL, IRCL | latest+append | per-cadence | input coverage | absent → withhold | yes | dashboard | dampening drift (Core: rest engine) | partially-implemented.
-
-### Readiness
-- `readiness.composite` — Readiness | `useReadinessState` evolved into producer | DGL, UI | latest | per-source freshness windows | weighted (current code: HIE/Physio/Focus, raw weights, ≥0.3 confidence floor) | stale source dropped; insufficient → `unknown` | yes | trace | "fake 60" regression (already prevented in code) | partially-implemented (client-side; needs server-side producer envelope).
-- `readiness.source_breakdown` — Readiness | same | UI, audit | latest | per-source | per-source | absent source emitted as missing, not zero | yes | trace | source weight drift | partially-implemented.
-
-### Competitive Density
-- `competitive.density_index` — TPE/LCE | competitive density calc | LCE, DGL, SIL | snapshot | 7d | rep_source toughness coverage | absent → withhold | yes | dashboard | tee/game mislabel | specified.
-
-### Psychological Density
-- `psych.density_index` — LCE | psych density model | AINL, DGL | snapshot | 7d | coverage | absent → withhold | yes | dashboard | self-report bias | specified.
-
-### Bilateral
-- `bilateral.asymmetry_index` — TPE | bilateral calc | LCE, IRCL | snapshot | 7d | side-coverage | absent → withhold | yes | dashboard | handedness mislabel (Core: session intent gate) | specified.
-
-### Elastic Economy
-- `elastic.economy_index` — LCE | elastic model | AINL, SIL | snapshot | 7d | coverage | absent → withhold | yes | dashboard | metric drift | specified.
-
-### Recovery Capacity
-- `recovery.capacity_index` — LCE | recovery model | DGL, AINL, IRCL | snapshot | daily | coverage | partial → low-confidence | yes | dashboard | trainable-recovery doctrine drift | specified.
-
-### Career Resilience
-- `career.resilience_index` — LCE | resilience compositor | DGL, SIL, MAAL | snapshot | 30d | coverage | absent → withhold | yes | dashboard | optimism bias | specified.
-
-### Tool Capability
-- `tool.capability_state` — Performance Intel | tool gap engine | DGL, SIL, AINL | snapshot | weekly | ≥15pt-delta logic (Core: HIE tool gap unification, ≥5 game/practice reps) | absent → withhold | yes | dashboard | unification drift | partially-implemented.
-
-### Return To Play
-- `rtp.gate_state` — IRCL | RTP gate | DGL (hard-stop interface), AINL, SIL | latest+append | per-event | derived | absent → not-in-RTP | yes | audit | premature green-light | specified.
-
-### Authority / Override
-- `authority.hierarchy_state` — MAAL | hierarchy evaluator | DGL, AINL | latest | per-event | derived | absent → most protective | yes | audit | silent bypass | specified.
-- `authority.override_event` — AINL/MAAL | recorder | audit, DGL | append (immutable) | event | actor-attested | n/a | yes | immutable log | tamper | specified.
-- `authority.high_impact_override_ack` — AINL | override flow | audit | append | event | required by Core rule | n/a | yes | immutable log | missing ack | specified.
-
-### Scenario
-- (covered under SIL above)
-
-### Missingness
-- `missingness.coverage_report` — ASB | coverage scanner | DGL, observability | snapshot | hourly | self | n/a | yes | dashboard | silent gaps | specified.
-- `missingness.spike_event` — ASB | drift detector | observability, DGL | append | event | self | n/a | yes | alert | alert fatigue | specified.
+**Replay scalability ceiling:** at G2 baseline, full-history replay viable to ~10⁶ events/athlete; beyond that requires snapshot-cadence enforcement (§G).
 
 ---
 
-## 3. Producer / Consumer Dependency Graph
+## SECTION B — Multi-Tenant / Multi-Actor Architecture
 
-```text
-                 ┌──────────────────────────────────────────────────────┐
-                 │                  IIP (governance)                    │
-                 └──────────────────────────────────────────────────────┘
-                                       │
-                ┌──────────────────────┼──────────────────────┐
-                │                      │                      │
-              OEAL ──▶ AINL ──▶  ┌─── ASB (transport) ───┐ ◀── IRCL
-                                 │                       │
-   TPE ──▶ load/cns/reps ───────▶│                       │◀── medical/RTP
-   LCE ──▶ longitudinal ────────▶│  contract registry +  │
-   Readiness ──▶ composite ─────▶│  event log + latest   │──▶ DGL ──▶ MAAL ──▶ SIL
-   MAAL ──▶ authority/youth ────▶│  + snapshots + audit  │             │
-   AINL ──▶ overrides ──────────▶│                       │             ▼
-                                 └───────────────────────┘           UI / Hammer
-```
+**Locked decision:** **Athlete-as-root.** Every envelope is keyed to `athlete_id`. Organizations, teams, academies, facilities, colleges, pro orgs are **overlays** that grant scoped visibility/authority via `organization_members`-style mappings, never own the organism.
 
-**Sequencing (must precede ASB code):** IIP (locked), OEAL, IRCL, DGL, MAAL, SIL, AINL doctrines (all `specified`/ratified). Contract registry skeleton.
+**Hierarchy model:** athlete ⟵ (membership) ⟶ org; org ⟵ (parent_org_id) ⟶ parent org. Inheritance flows org→athlete only for visibility scopes, never for organism truth.
 
-**Must exist before ASB serves traffic:** envelope contract spec, append-only event log, latest-state materialization, idempotency-key enforcement, contract validator, audit log.
+**Authority scoping:** MAAL actor taxonomy (athlete, coach, parent, physician, org-admin, scout) attaches to memberships with explicit scope grants. No silent inheritance across org transfers.
 
-**Cannot be implemented before ASB:** unified Hammer recompute pipeline at organism-truth fidelity, DGL runtime enforcer, MAAL authority resolver runtime, SIL scenario engine binding, OEAL recontextualization runtime, IRCL state-machine runtime.
+**Data isolation:** RLS enforced on every table containing envelopes; tenant leakage is a §H catastrophic failure class.
 
-**Can be mocked temporarily:** SIL projections (bounded stub), `psych.density_index`, `elastic.economy_index`, `career.resilience_index` (emit `missingness_reason: model_pending`).
+**Cross-org visibility:** explicit grant model (athlete-controlled), not transitive. Showcase/scout visibility is a time-bounded grant envelope.
 
-**Replay-safe persistence required day one:** all `*_event`, `*_log`, `override_*`, `medical_restriction`, `decision_state`, `hard_stop`, `recontextualization_event`, `hammer.state_snapshot`.
+**Transfer semantics:** athlete leaving an org revokes that org's future visibility, preserves historical authority audit. Organism continuity is unbroken (athlete-as-root).
 
-**Circular-dependency risks:** AINL ↔ DGL (intent vs decision), DGL ↔ MAAL (decision vs authority). Resolved by **sequencing rule**: MAAL evaluated → AINL resolves intent within authority bounds → DGL emits decision; no back-edges within a single tick.
+**Replay implications:** replays must respect tenant boundaries at the read-model layer; raw event log is athlete-scoped, so replay is naturally clean.
 
-**Eventual-consistency concerns:** latest-per-topic may lag event log; consumers must read by `freshness_at` and tolerate replay reorder.
-
-**Stale-state risks:** readiness sources beyond freshness window (already handled in code); IRCL state during data gaps (uncertainty must amplify).
-
-**Confidence-decay pathways:** every hop applies a contract-declared combinator; no hop may inflate.
+**Audit implications:** every authority assertion logs (actor_id, actor_role, org_context_id, scope_grant_id).
 
 ---
 
-## 4. Canonical Contract Realization Plan
+## SECTION C — Real-Time Classification Matrix
 
-Per contract: `current state | priority | validation | runtime enforcement | observability | drift detection | migration | replay | confidence rule`.
+| Class | Acceptable lag | Examples | Reconciliation | Stale-state | Offline | Replay |
+|---|---|---|---|---|---|---|
+| **Hard real-time** | <500ms | DGL hard-stops (medical restriction, RTP block), live in-rep injury flag | Server-confirmed before action; client may not act on stale | Block UI action | Block (cannot act offline) | Replay-safe |
+| **Soft real-time** | <5s | LCE recompute on rep completion, BCE state refresh, AINL negotiation prompt | Last-write-wins per topic with monotonic seq | Show with staleness badge | Queue + warn | Replay-safe |
+| **Async reflective** | seconds–minutes | Foundation recommendations, longitudinal aggregations, daily readiness | Idempotent recompute | Acceptable | Queue | Replay-safe |
+| **Replay-only** | n/a | Engine-version migrations, historical re-derivation | Batch | n/a | n/a | Primary path |
+| **Immutable audit** | append-only | Authority overrides, MAAL escalations, IRCL transitions | None (append-only) | n/a | Queue with strong durability | Primary source |
+| **Eventually consistent** | minutes–hours | Cross-org analytics, cohort priors, population baselines | Periodic reconciliation | Show with timestamp | Acceptable | Replay-safe |
 
-- **EnvelopeV1** (universal wrapper: `topic, user_id, payload, schema_version, engine_version, freshness_at, confidence, missingness_reason?, idempotency_key, producer_id, signature?`) — `specified` | P0 | JSON schema + zod | reject-on-mismatch at ASB ingress | ingress accept/reject counters | CI schema diff | additive only; new versions side-by-side | required for replay | confidence ∈ [0,1].
-- **DecisionGovernanceContract** — `specified` | P0 (DGL) | schema + 8-state enum | DGL runtime | per-decision trace | CI | additive | required | confidence band attached.
-- **AuthorityResolutionContract** — `specified` | P0 (MAAL) | schema + actor taxonomy | MAAL runtime | conflict log | CI | additive | required | conservative combinator.
-- **ScenarioProjectionContract** — `specified` | P1 (SIL) | schema + bounds | SIL runtime | trace | CI | additive | required | bounded bands mandatory.
-- **OEALIntakeContract** — `specified` | P0 | schema + coverage rules | OEAL runtime | coverage dashboard | CI | additive | required | coverage→confidence.
-- **IRCLStateContract** — `specified` | P0 | schema + state machine | IRCL runtime | state log | CI | additive | required | rehab gaps amplify uncertainty.
-- **LCEOutputContract** — `specified` | P1 | schema + interpretability fields (Core: 5 exposures) | LCE runtime | per-output trace | CI | additive | required | inputs+per-input confidence required.
-- **HammerSnapshotContract** — `partially-implemented` | P0 | schema + `engine_version` (Core authoritative) | engine compositor | snapshot trace | CI | engine_version pinning | required | coverage→confidence.
-- **ReadinessContract** — `partially-implemented` | P1 | schema + per-source freshness | readiness producer | trace | CI | side-by-side | required | ≥0.3 floor (existing).
-- **OverrideLogContract** — `specified` | P0 | schema + ack requirement (Core: high-impact) | AINL runtime | immutable log | CI | append-only | required | actor-attested.
-
-Distinguish for each: **conceptual contract** (doctrine), **transport envelope** (EnvelopeV1 wrapper), **persistence schema** (event log + latest + snapshot tables), **runtime validator** (zod + ASB ingress), **consumer interface** (typed read API + missingness branches mandatory).
+**Per-topic class assignment** is deferred to G2 topic registry, but the classifier doctrine is locked here.
 
 ---
 
-## 5. Confidence / Missingness Transport Architecture
+## SECTION D — Offline / Sync / Reconciliation Architecture
 
-**Freshness:** every envelope carries `freshness_at`. Derived envelopes set `freshness_at = min(inputs.freshness_at)`. Consumers compare against per-topic `max_age`; stale → drop from composite (matches existing `useReadinessState` pattern) and emit `missingness_reason: stale`.
-
-**Confidence decay:** combinators declared per derived topic — default conservative `min`; weighted product allowed only when contract specifies. No hop may inflate. Population priors may inform but **never** raise confidence above athlete-evidence ceiling (Core: human-authority hierarchy).
-
-**Coverage scoring:** OEAL emits `oeal.context_confidence`; LCE/Readiness/Hammer carry `coverage` field (fraction of expected inputs present and fresh). DGL gates advanced prescription on coverage thresholds.
-
-**Explanation candidates:** every confidence value travels with a structured `reason_chain[]` (input ids + per-input confidence + transformation). Required by LCE Interpretability Mandate.
-
-**Partial-read behavior:** consumer receives `{value?, confidence, missingness_reason?, reason_chain[]}`. Branches MUST handle missing.
-
-**Stale-read behavior:** treat as missing with `reason: stale`. Never coerce to neutral.
-
-**Absent-topic behavior:** consumer receives explicit absence sentinel; default-to-most-protective (MAAL/IRCL/DGL).
-
-**Low-confidence withdrawal:** DGL may downgrade to `informational-uncertainty` or `restriction` when confidence band exceeds threshold.
-
-**Replay semantics:** confidence and missingness reconstructed deterministically from event log against pinned `engine_version`.
-
-**Longitudinal decay:** snapshots record point-in-time confidence; LCE applies time-based decay only via declared combinators; never silently.
-
-**Hard rule (restated):** No consumer may silently interpret missing data as healthy state. Enforced by typed consumer interface that has no "default value" path.
+- **Offline queue strategy:** durable IndexedDB queue with envelope pre-stamped (athlete_id, client_ts, idempotency_key via `crypto.randomUUID()`, last-known engine_version).
+- **Client persistence boundary:** queue + last-known materialized state for current athlete only. No cross-athlete data offline.
+- **Sync arbitration:** server applies envelopes in (server_received_ts, client_ts, idempotency_key) order. Idempotency key dedupes.
+- **Stale-write rejection:** envelopes older than current authoritative state for that topic by > topic-defined staleness window are rejected with `stale_write` audit row, never silently dropped (Law 3).
+- **Conflict-resolution hierarchy:** Medical → Organism Safety → Longitudinal Survivability → Athlete → Coach/Parent/Org → AI → Population priors (per Decision Governance Layer).
+- **Delayed-event ingestion:** events with `client_ts` < snapshot baseline trigger snapshot invalidation + replay from prior snapshot.
+- **Local replay expectation:** client replays last-known state from local snapshot + queued tail for offline UX continuity; UI always shows confidence + staleness.
+- **Reconnect reconciliation:** drain queue → fetch authoritative tail → resolve conflicts → emit reconciliation report to observability.
+- **Partial-sync organism state:** organism state is marked `partial_sync` with explicit missingness reasons; AINL/DGL operate on bounded confidence.
+- **Client truth vs server truth:** server is always authoritative. Client truth is operational convenience under bounded staleness.
+- **Authoritative timestamping:** server_received_ts is authoritative for ordering; client_ts is preserved for forensic replay only.
+- **Offline override handling:** athlete overrides queued; coach/parent overrides queued with delayed-effect flag; physician/medical overrides require online confirmation (cannot apply offline — Law 1, organism safety).
+- **Duplicate handling:** idempotency_key uniqueness constraint at event-log layer.
+- **Stale-confidence amplification:** confidence decays monotonically with staleness; never inflates on reconnect.
 
 ---
 
-## 6. Replay + Time-Travel Architecture
+## SECTION E — External Producer Trust Model
 
-- **Event model:** append-only `asb_events` partitioned by (user_id, month). Immutable.
-- **Immutable vs mutable:** events immutable; latest-per-topic and snapshots are derived/mutable (recomputable from events).
-- **Snapshots:** per-topic cadence (e.g., daily for hammer, per-event for IRCL/DGL/overrides). Snapshots include `engine_version` and `schema_version`.
-- **Recomputation:** `replay(user_id, as_of, engine_version)` rebuilds state by replaying events ≤ `as_of` through pinned engine version.
-- **Engine-version handling:** every snapshot pinned to `engine_snapshot_versions.engine_version` (Core authoritative). Old snapshots remain valid; new engine writes new snapshots — never overwrites historical organism truth.
-- **Audit reconstruction:** any decision, override, recommendation, or RTP transition reconstructable from event log + pinned engine version.
-- **Historical recommendation reconstruction:** `dgl.decision_state` events + inputs preserve full trace.
-- **Override reconstruction:** immutable `override_log` + ack events.
-- **Rehab timeline:** IRCL events form a closed timeline; gaps explicit, not inferred.
-- **Longitudinal curve:** LCE snapshots replayable via pinned model versions.
+| Tier | Source | Trust weight | Confidence ceiling | Notes |
+|---|---|---|---|---|
+| **T0 — Organism truth** | Internal sensors (logged reps, completed activities, in-app tests) | 1.0 | 100 | Authority root |
+| **T1 — Athlete-entered** | Self-report, journal, perceived effort | 0.85 | 90 | Always trusted as athlete intent (AINL); may be challenged by T0 |
+| **T2 — Coach-entered** | Coach observations, manual scores | 0.75 | 85 | Tenant-scoped; org-context required |
+| **T3 — Calibrated wearables** | Verified-device HRV/sleep/load | 0.65 | 80 | Device fingerprint required; calibration audit |
+| **T4 — Imported medical documents** | PT plans, physician notes | Translation only | n/a | Never authority root; IRCL contextualizes (memory rule) |
+| **T5 — Uncalibrated wearables / consumer APIs** | Generic fitness APIs | 0.40 | 60 | Advisory only |
+| **T6 — Motion capture / force plates** | Lab-grade systems | 0.90 | 95 | When source-verified; deferred ingestion |
+| **T7 — Future vendor integrations** | Unknown | Default 0.30 | 50 | Quarantined until certified |
 
-**Future engine upgrades:** new engine version writes new snapshots side-by-side. Historical snapshots remain authoritative for their period. Replays specify engine version explicitly. No retroactive overwrite permitted.
+**Conflict arbitration:** higher tier wins on the same topic; cross-tier conflicts emit `producer_conflict` event for AINL surfacing.
 
----
+**Source lineage:** every envelope carries `producer_id`, `producer_tier`, `producer_calibration_id` (nullable).
 
-## 7. Observability + Drift Infrastructure
-
-Per signal: `detection source | severity | response | surface | audit`.
-
-- **Producer health (heartbeat / publish rate)** — ASB ingress | warn/crit | alert + degrade | ops dashboard | yes.
-- **Consumer lag** — consumer ack offsets | warn/crit | alert | dashboard | yes.
-- **Stale-topic** — freshness scanner | warn | mark missing downstream | dashboard | yes.
-- **Orphan-topic** (no consumer) — registry diff | warn | block deploy | CI + dashboard | yes.
-- **Duplicate producer** — registry | crit | reject deploy | CI | yes.
-- **Contract divergence** — schema diff | crit | reject envelope at ingress | CI + ingress log | yes.
-- **Confidence collapse** (sudden drop) — anomaly detector | warn | DGL widens bands | dashboard | yes.
-- **Replay drift** — periodic replay vs stored snapshots | crit | freeze writes for affected topic | dashboard + immutable audit | yes.
-- **Authority hierarchy violation** — MAAL runtime | crit | reject decision; require ack | immutable audit | yes.
-- **Override escalation anomaly** — AINL/MAAL | crit | escalate + notify | audit | yes.
-- **Missingness spike** — ASB scanner | warn | DGL informational-uncertainty | dashboard | yes.
-- **Silent consumer failure** (no progress, no error) — ack-gap detector | crit | alert + degrade | dashboard | yes.
+**Producer identity:** signed producer tokens for T3+; spoofing protection via per-device key rotation (deferred to G3).
 
 ---
 
-## 8. Persistence & State Classification
+## SECTION F — Runtime Authority Enforcement
 
-- **Transient:** in-flight envelopes (queues), client UI hover state.
-- **Replayable event state:** `asb_events` (all topics).
-- **Longitudinal snapshots:** `asb_snapshots_*` per topic policy.
-- **Immutable audit:** `override_log`, `medical_restriction`, `decision_state` (immutable copy), `recontextualization_event`.
-- **Derived state:** `asb_latest_*` materializations.
-- **Recomputable state:** anything derivable from events at a pinned engine version.
-- **Authoritative state:** medical restrictions, DOB-derived youth-protection state, override acks.
-- **Cache-only state:** UI denormalizations.
-
-**Must persist:** all events, all immutable audit, snapshots required for replay/longitudinal continuity.
-**May be recomputed:** latest materializations, derived dashboards, non-audit aggregates.
-
----
-
-## 9. OEAL + IRCL Integration
-
-- **Intake → bus:** OEAL emits `oeal.intake_context` + `oeal.context_confidence` envelopes; downstream advanced prescription gated until threshold met (Core).
-- **Recontextualization (existing athletes):** OEAL emits `recontextualization_event`; consumers refresh, do **not** wipe history.
-- **Rehab supersession:** when `ircl.organism_state` ∈ rehab states, DGL routes readiness/load decisions through IRCL gates; normal readiness logic suppressed (not deleted) and tagged `superseded_by: ircl`.
-- **RTP transitions:** `ircl.rtp_phase` transitions emit immutable events; SIL `rtp_simulation` may project but never decide.
-- **Medical restrictions:** `ircl.medical_restriction` → `dgl.hard_stop` (no other path may bypass).
-- **Uncertainty in rehab gaps:** `ircl.rehab_uncertainty` widens with gap duration; never narrows during data absence.
+- **MAAL enforcement:** edge-side adjudicator on every envelope that asserts authority (override, restriction, scope grant). Never client-trusted.
+- **DGL hard-stops:** edge-side gate on every envelope in topics flagged `safety_critical`; database-layer trigger as defense-in-depth.
+- **Override interception:** edge function `asb_authority_gate` (planned G6); client receives structured rejection with negotiation pathway (AINL).
+- **Orchestration approval flow:** AI-initiated adaptations write `proposed_adaptation` envelope → AINL surfaces to athlete → athlete decision envelope → DGL validates → applied envelope. Closed loop or it doesn't ship (Law 9).
+- **Replay handling:** authority transitions are immutable audit events; replay reconstructs authority state at any `as_of` time.
+- **Emergency restriction propagation:** hard real-time class; broadcast via Realtime + edge push; client refuses conflicting actions even if locally queued.
+- **Never client-authoritative:** medical restrictions, RTP gates, scope grants, engine-version selection, snapshot integrity.
+- **May operate locally (bounded):** athlete intent capture, perceived-effort logging, journal entries, drill rep logging.
+- **Requires server confirmation:** all overrides affecting other actors, all medical-context envelopes, all org-scope changes.
+- **During connectivity loss:** safety-critical actions blocked with explicit user-visible reason; non-safety queued.
 
 ---
 
-## 10. DGL + MAAL + SIL Integration
+## SECTION G — Replay Scalability & Temporal Architecture
 
-- **Authority conflicts:** MAAL emits `maal.authority_conflict`; DGL must resolve before emitting non-informational decision; unresolved → `informational-uncertainty`.
-- **Override persistence:** AINL/MAAL append immutable `override_event` + `high_impact_override_ack` (Core). DGL reads and tags downstream decisions.
-- **Uncertainty modifies decisions:** `dgl.uncertainty_band` widens → DGL may downgrade state per §11 of DGL doctrine.
-- **Scenario bounds:** SIL outputs always include confidence bands + tradeoffs + survivability/biological/retention/elasticity/opportunity-cost (Core); deterministic-destiny language forbidden at producer.
-- **Pressure environments:** `maal.competitive_pressure_environment` is a tracked signal; never authoritative; DGL may down-weight pressure-driven inputs.
-- **Youth protection:** `maal.youth_protection_state` propagates as a hard gate to SIL projections and DGL high-impact decisions; absent DOB → assume protected.
-
----
-
-## 11. Implementation Sequencing Plan
-
-**Gates (must pass in order before next begins):**
-
-- **G0 — Doctrine Lock (this artifact ratified).** Implementation state: `implementation-planned`.
-- **G1 — Contract Registry skeleton + EnvelopeV1 schema** (no producers yet). Verification: schema in repo, CI diff gate active, no runtime traffic. Rollback: delete files. Observability: CI only.
-- **G2 — ASB ingress + append-only event log + audit log** (no consumers). Verification: synthetic envelopes ingested + queryable; reject-on-mismatch test; idempotency test. Rollback: drop tables (no production data yet). Observability: ingress counters.
-- **G3 — Latest-state materialization + replay primitive.** Verification: replay equality test on synthetic stream; snapshot vs replay diff = 0. Rollback: drop materializations.
-- **G4 — First producer migration: `tpe.session_completion`, `tpe.cns_load`, `hammer.state_snapshot` wrap existing flows in EnvelopeV1** (dual-write; legacy remains source of truth). Verification: dual-write parity ≥ 99.9% over N days; trace per write. Rollback: disable dual-write flag.
-- **G5 — First consumers (read-only shadow): readiness composite, hammer recompute** consume from ASB; outputs compared to legacy. Verification: shadow diff dashboard; no user-visible change. Rollback: disable shadow read.
-- **G6 — DGL/MAAL/AINL/IRCL/OEAL runtime binding behind feature flag** per cohort. Verification: per-decision trace, override audit, authority-conflict audit; no silent missingness coercion. Rollback: flag off.
-- **G7 — LCE / SIL producers + Tool Capability + Competitive Density.** Verification: per-output reason_chain present, confidence bounded, drift detector green ≥ N days. Rollback: producer disable + consumers fall back to missingness.
-
-**Anti-drift checkpoints between gates:** orphan-topic scan = 0; duplicate-producer scan = 0; contract-diff CI green; replay-equality green; missingness-coverage report reviewed.
-
-**Implementation-state definitions (binding):**
-- `partially-implemented` — code exists for some producers/consumers; dual-write or shadow-read active; not yet authoritative.
-- `implemented-unverified` — full producer+consumer+persistence path exists but proof-of-closure (§12) incomplete.
-- `verified` — all §12 proofs satisfied for the topic.
-- `production-observed` — `verified` + ≥ N days of production observability green + at least one successful replay drill + at least one successful rollback drill.
+- **Replay horizon:** lifetime athlete (multi-decade target).
+- **Snapshot cadence:** rolling daily for hot topics; weekly for cold; on-demand pre-replay snapshot.
+- **Partitioning:** `asb_events` partitioned by month (G2) → by (month, topic_class) post-G7.
+- **Archival:** events older than 24 months tiered to cold storage with replay-on-demand rehydration.
+- **Replay-from-snapshot:** load snapshot at `t0` → apply event tail → assert engine_version match.
+- **Temporal queries:** `state_as_of(athlete_id, ts, engine_version)` is a first-class read API.
+- **Engine-version pinning:** every envelope carries `engine_version`; replay refuses cross-version mixing without explicit migration envelope.
+- **Multi-version coexistence:** N and N-1 supported; older requires migration replay.
+- **Org-scale replay:** batched per athlete; no cross-athlete replay coupling.
+- **Rebuild-time ceiling:** target <5min for 1-year athlete replay; <30min for full lifetime (post-snapshot).
 
 ---
 
-## 12. Proof-of-Closure Criteria (per topic, then per ASB)
+## SECTION H — Operational Failure Modes
 
-A topic is `verified` only when ALL of:
-1. Canonical producer present, registered, signature-validated.
-2. ≥1 canonical consumer present, ack offsets advancing.
-3. Persistence: event log write + latest materialization + snapshot policy active.
-4. Replay: deterministic equality test passes against pinned engine_version.
-5. Confidence propagation: per-input reason_chain present; no inflation observed.
-6. Missingness propagation: missing/stale paths exercised in tests; no neutral coercion.
-7. Observability: all §7 signals wired for the topic.
-8. Authority handling (where applicable): MAAL/AINL paths exercised; override audit complete.
-9. Rehab continuity (where applicable): IRCL supersession exercised; gap uncertainty widens.
-10. Longitudinal reconstruction: historical query at arbitrary `as_of` returns deterministic result.
-
-**ASB overall** is `verified` only when every P0 topic is `verified` and §13 risks have declared mitigation paths in `production-observed` state.
-
-No "ASB complete" claim may occur without all of the above. Banned phrases (Core IIP) apply.
-
----
-
-## 13. Known Unknowns / Architectural Risks
-
-Each: `severity | affected owners | mitigation | observability`.
-
-- **Replay performance at multi-year scale** — high | ASB, LCE | per-user partitioning, snapshot cadence tuning, replay-from-snapshot+delta | replay-duration histogram.
-- **Schema evolution without breaking replay** — high | ASB | additive-only + side-by-side versions; never edit historical envelopes | CI schema diff + replay drift detector.
-- **Confidence combinator correctness** — high | LCE, DGL | property-based tests; declared per-topic combinators; no defaulting | confidence anomaly detector.
-- **Authority-conflict deadlocks** (AINL ↔ DGL ↔ MAAL) — high | DGL, MAAL, AINL | strict per-tick sequencing rule (§3); deadlock detector | conflict-aging alert.
-- **Silent consumer failure under feature-flag rollout** — high | ASB, all consumers | ack-gap detector + canary cohort | dashboard.
-- **Population-prior leakage into athlete-evidence confidence** — high | LCE, MAAL | combinator forbids inflation; tests | reason_chain audit.
-- **Engine-version drift between writers** — high | Hammer, LCE | single source `engine_snapshot_versions.engine_version` (Core) + ingress check | drift detector.
-- **Missingness coercion in UI consumers** — medium | UI | typed consumer interface without default path; lint rule | coverage report.
-- **Override tamper / misattribution** — high | AINL, MAAL | immutable log + actor signature + ack | immutable audit.
-- **OEAL recontextualization overwriting history** — high | OEAL | events append-only; recontextualization is a new event, never an edit | audit.
-- **IRCL state regression silently** — high | IRCL | state-machine guards + audit on every transition | dashboard.
-- **Pressure-environment weaponization** — medium | MAAL, SIL | pressure is signal-only, never authoritative (Core) | audit.
-- **Deterministic-destiny language leaking into SIL outputs** — medium | SIL | producer-side lint + reviewer gate | sample audits.
-- **Test coverage gap for missingness branches** — high | all consumers | mandatory missingness-branch tests in consumer SDK | CI.
-- **Idempotency-key collisions** — medium | all producers | producer-supplied UUID v4 (Core: `crypto.randomUUID()` for sessions) + ingress dedupe | counter.
-- **Multi-tab race conditions** — medium | UI consumers | `BroadcastChannel('data-sync')` with `TAB_ID` (Core) | logs.
-- **PWA stale clients reading stale envelopes** — medium | UI | `/version.json` probe vs `__BUILD_ID__` (Core) | client telemetry.
+| Failure | Detection | Observability | Degradation | Rollback | Organism protection |
+|---|---|---|---|---|---|
+| Replay drift | Replay-drill diff | Drift dashboard | Read-only mode for affected topics | Pin prior engine_version | Suppress new prescriptions until resolved |
+| Duplicate producers | Topic registry violation | Producer-conflict trace | Quarantine duplicate | Disable secondary | No double-counting in LCE |
+| Stale offline clients | Reconnect reconciliation report | Staleness histogram | Force resync | Reject stale writes | Confidence floor enforced |
+| Authority desync | Authority-audit cron | Authority-diff dashboard | Block high-impact actions | Replay authority log | Hard-stop wins |
+| Event-order corruption | Monotonic-seq assertion | Order-violation alert | Halt topic ingest | Replay from snapshot | Topic frozen until clean |
+| Partial-write success | Envelope idempotency check | Write-failure trace | Retry with same key | Idempotent dedup | No phantom state |
+| Realtime outage | Heartbeat miss | Transport SLO | Fall back to polling | Auto-restore | UI shows degraded mode |
+| Snapshot corruption | Hash mismatch | Snapshot-integrity alert | Rebuild from prior snapshot | Replay full tail | Block reads until rebuilt |
+| Engine-version mismatch | Envelope validation | Version-skew dashboard | Reject envelope | Force client refresh | No silent downgrade |
+| Offline override collision | Reconcile-time conflict | Override-conflict trace | Surface in AINL | Athlete-resolves | Safety wins |
+| Tenant leakage | RLS audit + cross-tenant query test | Leak alert (P0) | Block reads | Patch RLS | Immediate |
+| Stale rehab restriction | IRCL reconciliation | Rehab-state drift | Re-apply restriction | Restore from audit | Restriction defaults to active |
+| Delayed hard-stop | Hard-stop SLO | Latency alert | Escalate to push | N/A | Local refusal |
 
 ---
 
-## 14. Final Deliverable
+## SECTION I — Observability & Production Certification
 
-### A. Implementation Dependency Graph
-`IIP → (OEAL, IRCL, DGL, MAAL, SIL, AINL doctrines) → Contract Registry + EnvelopeV1 → ASB ingress + event log + audit → Latest materialization + replay primitive → TPE/Hammer dual-write producers → Readiness/Hammer shadow consumers → DGL/MAAL/AINL/IRCL/OEAL runtime (flagged) → LCE/SIL/Tool Capability/Competitive Density producers → Production-observed.`
-
-### B. Canonical Implementation Order
-G0 → G1 → G2 → G3 → G4 → G5 → G6 → G7 (per §11). No gate may be skipped or parallelized across gate boundaries.
-
-### C. Current Implementation State of Every Subsystem
-- **IIP:** `verified` (doctrine; runtime enforcement = `implementation-planned`).
-- **OEAL, IRCL, DGL, MAAL, SIL, AINL, LCE, ASB:** `specified` (doctrine ratified; code = `conceptual`).
-- **TPE (`custom_activity_logs`, CNS load, rep quality), Hammer engine snapshot, Readiness composite, Load/Debt, Tool Capability:** `partially-implemented` (legacy code present; ASB envelope wrapping + dual-write pending).
-- **All other topics in §2:** `specified` unless explicitly noted.
-
-### D. Gates Required Before First ASB Code Is Allowed
-1. This artifact ratified (G0).
-2. Contract registry repo location + ownership confirmed.
-3. EnvelopeV1 schema reviewed + approved.
-4. Append-only event log persistence design reviewed (partitioning, retention, cost).
-5. CI gates (schema diff, orphan/duplicate scan) designed.
-6. Rollback plan + feature-flag strategy approved.
-7. Observability surfaces (§7) confirmed deliverable in target stack.
-
-### E. Gates Required Before ASB May Be Called "Verified"
-All of §12 satisfied for every P0 topic; §11 G7 reached; §13 high-severity risks each in `production-observed` mitigation; one successful replay drill; one successful rollback drill; orphan/duplicate scans = 0 for ≥ N days.
-
-### F. Future Audit Requirements (Lifetime Anti-Drift)
-- Quarterly contract-diff audit (registry vs producers vs consumers).
-- Quarterly replay-drift drill per P0 topic.
-- Continuous orphan/duplicate scans in CI + runtime registry.
-- Per-PR Integration Audit declaration (Laws / Canonical owner / Longitudinal / Behavioral / Authority+Uncertainty+Pressure+Youth+Scenario / Entry+Rehab continuity / IIP §11 reporting).
-- Annual engine-version inventory + replay-equality recertification.
-- Annual missingness-coverage review per topic.
-- Override-log integrity audit (signature + ack chain) every release.
+- **SLO philosophy:** every topic class has an SLO (latency, replay-determinism, missingness rate, confidence-floor adherence).
+- **Production certification requirements (per subsystem):**
+  1. Trace coverage ≥99% (untraced = silent failure).
+  2. Replay-drill green for ≥30 days.
+  3. Drift detector clean for ≥14 days.
+  4. Authority audit clean.
+  5. Missingness reasons populated ≥99%.
+  6. Offline-sync audit passing.
+- **Cadences:** drift recertification weekly; replay-drill nightly; rollback-drill monthly; authority audit weekly; confidence audit weekly; missingness audit weekly; offline-sync audit weekly.
+- **Verified =** all six certification gates green + IIP §11 evidence.
+- **Production-observed =** verified + ≥30 days continuous green in production with non-trivial volume.
+- **Longitudinally trusted =** production-observed + ≥1 successful engine-version migration replay + ≥1 cross-season continuity audit.
 
 ---
 
-## Out of Scope
-No code, migrations, edge functions, UI, prompts, database tables, or feature implementation. This is implementation-grade planning only. Phase 2B implementation begins only after this plan is ratified and §11 G0 gates close.
+## SECTION J — Infrastructure Evolution Map
 
-## Decision Requested
-Ratify this Phase 2B ASB Realization Plan as the executable map governing all subsequent ASB implementation. On approval, no implementation begins until G1 design review (separate artifact) is also approved.
+- **Intentionally temporary:** single-region Supabase; edge-function-hosted orchestration; single-table event log.
+- **Expected to evolve:** transport layer (Realtime → dedicated bus); orchestration runtime; analytical store; on-device inference.
+- **Stable forever:** envelope contract shape; athlete-as-root tenancy; append-only event log; engine-version pinning; confidence + missingness as first-class.
+- **Anti-corruption boundaries:** `BusTransport`, `TenancyEnforcer`, `EngineInputContract`, `ProducerTrustAdjudicator` interfaces (specified G2).
+- **Migration philosophy:** additive-only schema; dual-write before cutover; shadow-read before promotion; never big-bang.
+- **Anti-big-bang doctrine:** every infrastructure swap must run in shadow mode with replay-equivalence proof for ≥14 days before promotion.
+- **Deprecation protocol:** mark `deprecated` → emit deprecation envelopes → wait ≥1 engine-version cycle → remove.
+- **Shadow-runtime expectations:** every G2+ subsystem must support shadow-mode execution emitting parallel envelopes for diff.
+
+---
+
+## SECTION K — Deferred Decisions Register
+
+| ID | Decision | Severity | Blocked-by | Temp doctrine | Future review |
+|---|---|---|---|---|---|
+| K1 | Realtime fan-out ceiling at org-of-orgs scale | HIGH | Load testing | Single-org channels | Pre-G2 load test |
+| K2 | Event-log partition strategy beyond month | HIGH | G2 schema | Monthly partitions | Post-G5 |
+| K3 | Producer signing / device key rotation | HIGH | Vendor decision | T3+ unsigned-but-fingerprinted | G3 |
+| K4 | Multi-engine-version coexistence beyond N/N-1 | HIGH | Migration replay proof | N/N-1 only | Post-G7 |
+| K5 | Cross-org analytics tenancy model | MEDIUM | MAAL ratification | Athlete-grant only | Post-G7 |
+| K6 | iOS PWA background sync durability | HIGH | Empirical test | Foreground-only durability claim | Pre-G4 |
+| K7 | On-device LCE inference | LOW | Future stack | Server-only | Post-production-observed |
+| K8 | Federated org-of-orgs hierarchy depth | MEDIUM | Real customer | 2 levels | Post-G7 |
+| K9 | Motion-capture / force-plate ingestion contract | MEDIUM | Vendor partnership | T6 deferred | Post-G7 |
+| K10 | Cold-storage rehydration SLA | MEDIUM | Archival design | <24mo hot only | Pre-G7 |
+| K11 | Hard-stop push transport (FCM/APNs vs Realtime) | HIGH | Connectivity testing | Realtime + polling | Pre-G6 |
+| K12 | Snapshot integrity hash algorithm + rotation | MEDIUM | Crypto review | sha256 placeholder | Pre-G2 |
+| K13 | Replay determinism under floating-point drift across runtimes | HIGH | Cross-runtime test | Server-only replay | Pre-G6 |
+| K14 | Stale-confidence decay curve specification | MEDIUM | LCE doctrine | Linear decay placeholder | Pre-G2 |
+| K15 | Authority-audit retention horizon | MEDIUM | Legal/compliance | Forever | Pre-production |
+
+**No fake certainty:** items above are explicitly unresolved. K1, K2, K3, K4, K6, K11, K13 are HIGH and gate G2 entry per §L.
+
+---
+
+## SECTION L — G2 Entry Requirements
+
+G2 (ingress + event-log realization planning) may begin only when:
+
+1. **Schema review readiness:** envelope DDL drafted with all HIGH §K items resolved or explicitly accepted.
+2. **Runtime review readiness:** edge-function topology reviewed; cold-start budgets validated against hard real-time SLOs.
+3. **Observability readiness:** trace table design + SLO definitions ratified.
+4. **Rollback readiness:** rollback-drill protocol drafted.
+5. **Replay test readiness:** replay-equivalence test harness specified.
+6. **Authority enforcement readiness:** MAAL/DGL adjudicator interfaces specified.
+7. **Offline reconciliation readiness:** queue durability + conflict-resolution protocol specified; K6 resolved or accepted.
+8. **Tenancy review readiness:** RLS policy templates drafted; tenant-leakage test harness specified.
+9. **Drift detection readiness:** drift detector spec + cadence ratified.
+
+Until all nine are met, no ASB code, migration, or runtime artifact may begin. No "ASB implementation started" claim permitted.
+
+---
+
+## Diagrams (Deliverables)
+
+The following diagrams will accompany this artifact as `.mmd` files in `/mnt/documents/`:
+
+1. **Dependency graph** — owners → ASB → consumers
+2. **Runtime topology** — client / edge / db / realtime / replay
+3. **Replay topology** — snapshot + tail + engine-version pinning
+4. **Authority enforcement flow** — envelope → MAAL/DGL gate → audit
+5. **Offline reconciliation flow** — queue → reconnect → arbitrate → audit
+6. **Multi-tenant boundary map** — athlete-root + org overlays
+7. **Event lifecycle** — produce → validate → append → materialize → fan-out → replay
+8. **Failure-state lifecycle** — detect → degrade → rollback → recertify
+
+---
+
+## Current Implementation-State Inventory
+
+| Subsystem | State | Evidence |
+|---|---|---|
+| ASB envelope contract | `specified` | Phase 2B doctrine |
+| `asb_events` table | `conceptual` | None |
+| Edge ingress | `conceptual` | None |
+| Replay runtime | `conceptual` (pattern proven by `foundationReplay`) | `src/lib/foundationReplay.ts` |
+| Trace observability | `partially-implemented` (Foundation only) | `src/lib/foundationTracing.ts` |
+| TPE snapshots | `partially-implemented` | `EngineInputContractV2` |
+| Realtime fan-out | `partially-implemented` (scheduling only) | `useSchedulingRealtime` |
+| Tenancy / orgs | `partially-implemented` | `useOrganization`, `usePlayerOrganization` |
+| Offline queue | `conceptual` | None |
+| MAAL/DGL runtime adjudicators | `conceptual` | None |
+| AINL negotiation surfaces | `conceptual` | None |
+| IRCL rehab state | `conceptual` | None |
+
+---
+
+## Files this plan will create/update on approval (memory only — no code)
+
+1. **Create** `mem://architecture/asb-g1-infrastructure-design-review.md` — full content of Sections A–L above.
+2. **Update** `mem://index.md` — add Memories entry pointing to the G1 review and one Core line: *"ASB G2 entry blocked until §K HIGH items (K1, K2, K3, K4, K6, K11, K13) resolved/accepted."*
+3. **Generate** 8 `.mmd` diagrams in `/mnt/documents/` and emit them as `<lov-artifact>` tags.
+
+No code, no migrations, no edge functions, no UI, no prompts.
+
+---
+
+## Decision requested
+
+Ratify this G1 ASB Infrastructure Design Review as the locked architectural baseline. On approval:
+- Persist memory artifacts (1 + 2 above).
+- Generate the 8 diagrams.
+- Open §K HIGH items for explicit resolution/acceptance pass before G2 may begin.
+
+No implementation. No completion language. Next gate = §K HIGH resolution, then G2 schema + ingress realization planning.
