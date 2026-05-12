@@ -1,54 +1,44 @@
-# Phase 3A — Canonical Organism Interpretation & Capability Doctrine (Plan)
+# Phase 3B — Developmental Engine Doctrine (Plan)
 
-**Status:** IIP doctrine-only. No code, schemas, SQL, edge functions, scoring engines, ontology tables, AI classifiers, onboarding flows, runtime, UI, APIs, or infrastructure. Output = exactly **one new memory artifact + one index update**.
+**Status:** IIP doctrine-only. No code, schemas, SQL, engines, schedulers, AI prompts, edge functions, APIs, UI, or infrastructure.
 
 **Laws check:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-**Canonical owner:** ASB Organism Interpretation Layer / Capability Ontology / Developmental Identity / Adaptive Academy Doctrine / Scouting Equivalence
-**Longitudinal impact:** Constitutionalizes the interpretive brain of the organism — capability ontology, playability hierarchy, age normalization, position interpretation, longitudinal identity, AI classification boundaries, adaptive academy onboarding, subscription-aware routing, scouting equivalence. Locks doctrine before any developmental engine, scouting engine, or projection engine is realized.
-**Behavioral impact:** Defines the canonical interpretation surface consumed by AINL/DGL/MAAL/IRCL/OEAL/SIL/LCE — every coaching, communication, override, restriction, and adaptation negotiation downstream depends on these interpretations remaining authority-bounded, confidence-visible, and replay-stable.
-**Envelope impact:** Establishes a new envelope class — `interpretation_event` (capability classification, playability assessment, developmental identity update, projection emission, academy routing decision) — registered through 2E topic governance, replayable under 2F determinism, observable under 2G integrity law. AI never authors `organism_truth`; AI authors `interpretation_proposal` envelopes only.
+**Canonical owner:** ASB Developmental Engine Layer / Adaptation Timing / Skill Acquisition / Movement-Diet Governance / Organism Load Intelligence
+**Longitudinal impact:** Constitutionalizes adaptation sequencing, overload timing, skill acquisition, survivability gating, recovery orchestration, developmental debt, and progression pacing before any engine is built.
+**Behavioral impact:** Governs every developmental recommendation across AINL, DGL, IRCL, Adaptive Academy routing, capability prioritization, recovery pacing, and projection interpretation.
+**Envelope impact:** Introduces `development_event` and `adaptation_event` interpretation classes (under 2E governance). AI emits `developmental_proposal` envelopes only — never authoritative `organism_truth` mutation.
+**Sport scope impact:** Constitutionally splits baseball (male) and softball (female) developmental interpretation where organism realities diverge, while preserving one canonical organism framework and one grading language.
 
-## Deliverables
+## Deliverables (exactly two file touches)
 
-1. **Create** `mem://architecture/asb-g3-organism-interpretation-doctrine.md`
-2. **Update** `mem://index.md` (add 2 Core lines + 1 Memories entry)
+1. **Create** `mem://architecture/asb-g3-developmental-engine-doctrine.md` containing Sections A–O exactly as specified:
+   - A — Developmental Philosophy
+   - B — Developmental Engine Architecture (10 canonical engines)
+   - C — Playability-First Development Law
+   - D — Skill Acquisition & Learning Sequencing
+   - E — Movement-Diet Doctrine
+   - F — Adaptation Timing & Recovery Law
+   - G — Developmental Debt Doctrine
+   - H — Overload / Underload Governance
+   - I — Position-Specific Development Doctrine (baseball + softball)
+   - J — Adaptive Progression Orchestration ("organism-aware developmental GPS")
+   - K — AI Developmental Guidance Doctrine
+   - L — Developmental Observability
+   - M — Baseball / Softball Divergence Doctrine
+   - N — Deferred Questions Register (N1–N10)
+   - O — G3 Realization Entry Gates + Mandatory Invariants + Out-of-scope
 
-No other files touched.
+2. **Update** `mem://index.md`:
+   - **Core additions:**
+     - "Development must preserve playability, survivability, and future adaptability before weaponization optimization (`architecture/asb-g3-developmental-engine-doctrine`)."
+     - "One organism framework governs all athletes, but baseball and softball developmental interpretation diverge where organism realities diverge (`architecture/asb-g3-developmental-engine-doctrine`)."
+   - **Memories addition:**
+     - "[ASB Developmental Engine Doctrine (Phase 3B)](mem://architecture/asb-g3-developmental-engine-doctrine) — Development philosophy, playability-first progression, movement-diet doctrine, overload governance, developmental debt, adaptation timing, baseball/softball divergence, AI developmental guidance, adaptive progression orchestration, developmental observability, deferred register, G3 realization gates"
 
-## Artifact structure (Sections A–N)
+## Out of scope
 
-- **A — Organism Interpretation Philosophy:** observation vs interpretation; capability vs trait; survivability vs ceiling; playability vs weaponization; longitudinal identity vs point-in-time score; developmental continuity. Constitutional line: *"Interpretation exists to preserve long-term playability while maximizing organism potential."*
-- **B — Capability Ontology:** canonical capability graph split into **PRIMARY (playability-first)** — hitting ability, fielding serviceability, throwing serviceability, throwing accuracy, baserunning efficiency, movement survivability, decision reliability, organism durability — and **SECONDARY (weaponization)** — power, arm strength, top speed, start speed, rotational explosiveness, force output, velocity, acceleration, elasticity, recovery amplification. Each capability gets: definition · primary/secondary class · dependencies · survivability contribution · weaponization contribution · measurability requirements · uncertainty profile · sport applicability scope. Cross-sport inheritance flagged as L-question.
-- **C — Capability Hierarchy Law:** primary determines whether the athlete can PLAY; secondary determines how dangerous they become. Defines minimum viable playability, capability dependency edges, survivability gates, developmental sequencing rules, anti-stardom guardrails (80 power + unstable movement = developmental risk; elite velo + poor command = unstable weaponization; high sprint + poor deceleration = survivability concern). Constitutional line: *"Weaponization without serviceability is organism instability."*
-- **D — Age-Normalized Capability Doctrine:** ONE grading language with age-compromise normalization (NOT separate systems per age). Defines developmental age bands · biological maturity modifiers · survivability expectations · adaptation tolerance · confidence ceilings for youth · uncertainty amplification during growth phases · DOB-as-truth integration (mem core). Youth uncertainty must remain visible — no fake certainty. Constitutional line: *"Youth uncertainty is organism reality, not noise to smooth."*
-- **E — Position-Aware Organism Interpretation:** positional capability weighting · survivability demands by role · developmental asymmetry · rotational load implications · recovery interpretation per position · movement-risk interpretation per position · role adaptability bands. Examples codified: catcher durability ≠ MIF durability; pitcher force ≠ hitter force; OF acceleration survivability ≠ corner-IF survivability. Foundational for academy routing.
-- **F — Longitudinal Developmental Identity:** the athlete is a trajectory, not a score. Defines developmental archetypes · adaptation identity · survivability identity · fatigue responsiveness · progression responsiveness · developmental volatility · learning responsiveness · resilience profile · capability momentum · identity drift handling. Composes with LCE.
-- **G — AI Capability Classification Doctrine:** AI is classifier / interpreter / developmental navigator / onboarding orchestrator / progression director — **never autonomous authority** (anchors to MAAL/AINL hierarchy). Defines classification confidence bands · uncertainty visibility · scouting lineage · interpretation explainability · capability evolution tracking · projection confidence · longitudinal reclassification rules. AI emits `interpretation_proposal` envelopes only; classifications are always lineage-visible and replayable. Constitutional line: *"AI classifies the organism; only the organism is the truth."*
-- **H — Adaptive Academy Entry Doctrine:** subscription-aware onboarding · required completion flows · AI-guided entry routing · initial organism interpretation · position-aware intake · capability baseline establishment · developmental-path assignment · onboarding confidence scoring · adaptive academy progression · "where do I start?" orchestration · anti-confusion doctrine. Composes with OEAL recontextualization for existing athletes. Constitutional line: *"The organism must never be directionless; every athlete enters a known pathway."*
-- **I — Subscription-Aware Development Routing:** subscription overlays unlock developmental surfaces; **organism truth remains canonical regardless of tier**. Defines routing restrictions · progression gates · educational sequencing · AI guidance ceilings · developmental-access doctrine. Constitutional line: *"No subscription tier may distort organism interpretation."*
-- **J — Progression & Guidance Intelligence:** developmental prioritization · adaptive recommendations · navigation orchestration · progression sequencing · confusion prevention · overload suppression · organism-aware pacing · developmental debt management. "Hammers as developmental GPS." Composes with AINL communication adaptation rules.
-- **K — Scouting Equivalence Doctrine:** standardized AI scouting language · capability-to-playability conversion · longitudinal projection logic · uncertainty-weighted future projection · developmental risk classification · organism projection ceilings/floors · recruitability interpretation. Hooks 3C scouting/projection doctrine without pre-deciding it. Constitutional line: *"Projections are bounded organism trajectories, not deterministic destinies."* (anchors to SIL).
-- **L — Interpretation Observability:** every interpretation inherits 2F replay determinism + 2G observability — confidence lineage, missingness lineage, authority lineage, engine-version lineage, degradation visibility, projection freshness, reclassification audit chain. No invisible interpretation. Constitutional line: *"Interpretation without lineage is hallucination."*
-- **M — Deferred Questions Register (M1–M9):** M1 multi-sport ontology inheritance · M2 capability interaction combinators · M3 projection uncertainty decay model · M4 developmental ceiling modeling · M5 probabilistic projection limits · M6 coach-vs-AI interpretation boundary edge cases · M7 scouting portability across organizations · M8 biological maturity inference (no medical impersonation, anchors to IRCL) · M9 identity drift over long careers. Each: severity · doctrine risk · containment · review gate.
-- **N — G3 Realization Entry Gates:** no engine, schema, or AI classifier may be implemented until the following are constitutionally frozen — capability ontology (B) · playability hierarchy (C) · age normalization (D) · position interpretation (E) · longitudinal identity (F) · AI classification law (G) · academy entry doctrine (H) · subscription routing (I) · progression doctrine (J). 2E + 2F + 2G must remain constitutionally frozen as substrate.
+No other files touched. No code, schemas, SQL, engines, schedulers, AI prompts, dashboards, UI, APIs, edge functions, or infrastructure. No implementation begins.
 
-**Mandatory Invariants block** (recorded in artifact): athlete-as-root tenancy · primary-before-secondary capability hierarchy · playability-precedes-weaponization · one grading language across ages · DOB-as-truth · youth-uncertainty-visible · position-aware interpretation · longitudinal-identity-over-point-score · AI-classifies-never-authorizes · interpretation-lineage-mandatory · subscription-never-distorts-truth · no-deterministic-destiny-language · replay-equivalence preserved · conservative degradation under uncertainty · authority hierarchy preserved (Medical → Organism Safety → Longitudinal Survivability → Athlete → Coach/Parent/Org → AI → Population priors).
+## Next phase
 
-**Out of scope:** capability scoring formulas · concrete grading scales · ontology tables · AI prompt engineering · onboarding screen designs · subscription tier definitions · projection math · runtime engines · UI · SQL · edge functions · APIs · infrastructure.
-
-## Index update (`mem://index.md`)
-
-**Add to Core (2 lines):**
-- "Primary capabilities (playability/serviceability/durability) gate organism participation; secondary capabilities (power/velo/speed) determine weaponization — never invert this hierarchy." (`architecture/asb-g3-organism-interpretation-doctrine`)
-- "AI classifies and interprets; AI never authors `organism_truth` and never overrides authority hierarchy. Every interpretation carries confidence + lineage + replay parity." (`architecture/asb-g3-organism-interpretation-doctrine`)
-
-**Add to Memories (1 entry, placed above Phase 2G line):**
-- `[ASB Organism Interpretation & Capability Doctrine (Phase 3A)](mem://architecture/asb-g3-organism-interpretation-doctrine)` — Interpretation philosophy, primary/secondary capability ontology, playability hierarchy law, age-normalized grading, position-aware interpretation, longitudinal developmental identity, AI classification doctrine, adaptive academy entry, subscription-aware routing, progression GPS, scouting equivalence, interpretation observability, deferred register, G3 entry gates.
-
-`code--write` on `mem://index.md` will preserve all existing Core + Memories content verbatim.
-
-## Decision
-
-Ratify Phase 3A as the constitutional organism-interpretation and capability doctrine — the interpretive brain layer that converts organism truth into developmental meaning. On approval: write the memory artifact + index update only. No implementation.
-
-**Next phase:** Phase 3B — Developmental Engine Doctrine (progression engines, adaptation timing, skill acquisition sequencing, movement-diet adaptation, overload/underload balancing).
+Phase 3C — Scouting, Projection & Longitudinal Projection Doctrine.
