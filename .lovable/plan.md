@@ -1,47 +1,54 @@
-# Phase 3E — Competitive Environment, Scheduling Density & Seasonality Doctrine
+# Phase 3F — Psychological Resilience, Identity Continuity & Cognitive Load Doctrine
 
-**Status:** IIP doctrine-only. No code, schemas, SQL, AI prompts, schedulers, APIs, edge functions, runtime, dashboards, UI, or infrastructure.
+IIP doctrine-only. No code, schemas, runtime, UI. Exactly two file touches.
 
-**Laws check:** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-**Canonical owner:** ASB Competitive Environment Layer / Schedule Density Intelligence / Seasonal Adaptation Layer / Environmental Load Governance / Competition Context Interpretation Layer
-**Longitudinal impact:** Constitutionalizes how schedules, tournament density, travel, seasonal timing, climate, academic compression, showcase accumulation, recovery windows, competition cadence, and environmental conditions alter organism interpretation, survivability pacing, volatility, developmental continuity, and projection confidence — before any scheduling or environmental engine exists.
-**Behavioral impact:** Governs all future interpretation involving workload density, tournament accumulation, showcase stacking, in-season adaptation, off-season rebuilding, postseason survivability, travel compression, climate exposure, circadian disruption, environmental fatigue, academic/life compression, competition cadence, organizational scheduling overlays — across AINL, DGL, SIL, MAAL, OEAL, IRCL, Adaptive Academy, projection systems, survivability systems, future environmental engines.
-**Envelope impact:** Introduces `competition_environment_event`, `schedule_density_event`, `environmental_load_event`, `seasonality_state_event`, `travel_stress_event`, `competitive_cadence_event`, `recovery_window_event` under 2E governance, replayable under 2F, observable under 2G. AI emits `environment_interpretation_proposal` only; never authors `organism_truth`.
-**Sport scope impact:** Baseball and softball maintain separate scheduling realities, tournament structures, pitching density realities, travel behaviors, developmental calendars, and environmental survivability profiles while preserving one canonical organism framework.
+## Laws check
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10 — all satisfied (doctrine-only, additive, observable, bounded, autonomy-preserving, no fake AI, no simulated completion).
+
+## Canonical owner
+ASB Psychological Resilience Layer / Identity Continuity Layer / Cognitive Load Interpretation Layer / Emotional Survivability Governance / Human Continuity Architecture.
+
+## Longitudinal impact
+Constitutionalizes how psychological load, emotional volatility, identity pressure, cognitive fatigue, burnout, confidence instability, fear, motivation fluctuation, shame, comparison, expectation, and autonomy strain alter organism interpretation, survivability pacing, developmental continuity, projection confidence, and long-term sustainability — before any psychological engine exists.
+
+## Behavioral impact
+Governs all future interpretation of confidence/burnout/emotional/identity/cognitive/perfectionism/fear/pressure/comparison/motivation/discouragement/expectation/autonomy/decision-fatigue/recovery/attention/survivability across AINL, SIL, DGL, IRCL, MAAL, OEAL, Adaptive Academy, projection, developmental, lifecycle, and future psychological engines.
+
+## Envelope impact
+Introduces under 2E governance, replayable under 2F, observable under 2G:
+`psychological_state_event`, `cognitive_load_event`, `emotional_volatility_event`, `identity_continuity_event`, `burnout_risk_event`, `motivation_shift_event`, `autonomy_strain_event`, `confidence_stability_event`. AI emits `psychological_interpretation_proposal` only — never authors `psychological_truth`, diagnosis, or `organism_truth`.
 
 ## Deliverables (exactly two file touches)
 
-1. **Create** `mem://architecture/asb-g3-competitive-environment-seasonality-doctrine.md` — Sections A–P verbatim per spec:
-   - A — Competitive Environment Philosophy (environment alters interpretation, not truth; survivability-context interpretation; long-season durability priority; environmental accumulation awareness). Line: *"Environment changes organism stress expression, not organism identity."*
-   - B — Seasonal State Architecture (12 canonical states: offseason rebuild, preseason ramp, in-season stable, in-season compressed, tournament escalation, showcase accumulation, postseason survival, recovery restoration, travel-compressed, environmentally elevated, academic compression, organizational transition season; required properties: density lineage, recovery availability, survivability/volatility/adaptation timing implications, replay determinism, freshness lineage). Line: *"Seasonal context alters adaptation timing and survivability exposure."*
-   - C — Scheduling Density Doctrine (compression, doubleheaders, tournament stacking, showcase accumulation, bullpen/live-game interaction, pitching density, catcher compression, travel overlap, recovery insufficiency, hidden overload accumulation; density visibility, survivability escalation visibility, developmental pacing reassessment, projection confidence reassessment). Line: *"Density accumulation compounds organism stress beyond isolated workload."*
-   - D — Travel & Circadian Doctrine (travel compression, sleep/timezone/circadian disruption, nutritional/hydration inconsistency, recovery access reduction, psychological fatigue accumulation; travel lineage, schedule-adjusted recovery interpretation, confidence-bounded, no deterministic fatigue assumptions). Line: *"Travel load alters organism recovery capacity."*
-   - E — Environmental Exposure Doctrine (heat, humidity, cold, altitude, surface variability, indoor/outdoor transitions, weather instability, air quality, sun exposure; environmental lineage, exposure accumulation, survivability-aware interpretation, degradation visibility). Line: *"Environmental exposure modifies organism stress behavior."*
-   - F — Competition Cadence Doctrine (game frequency, practice-game balance, bullpen cadence, showcase frequency, high-leverage clustering, rest interval quality, rhythm instability; cadence visibility, adaptation timing reassessment, workload continuity interpretation). Line: *"Competition rhythm shapes adaptation quality."*
-   - G — Academic & Life Compression Doctrine (academic stress, exams, social/family stress, emotional compression, sleep disruption, schedule overload; bounded interpretation only, psychological continuity protection, anti-invasive doctrine, survivability-aware interpretation). Line: *"Non-sport stress alters organism recovery and adaptation."*
-   - H — In-Season vs Off-Season Adaptation Doctrine (in-season: maintenance/survivability/stability/fatigue suppression; off-season: rebuild/capacity expansion/movement diversity/adaptation restoration; season-aware pacing, overload-aware progression suppression, adaptation timing differentiation). Line: *"Adaptation priorities shift across seasonal phases."*
-   - I — Tournament & Showcase Doctrine (showcase stacking, velocity-chasing, short-rest exposure, attention-driven overexertion, organizational pressure, travel-ball accumulation; survivability escalation, volatility reassessment, projection confidence adjustment, roadmap continuity protection). Line: *"Exposure environments increase organism risk when survivability yields to visibility."*
-   - J — Long-Season Durability Doctrine (long-season erosion, adaptation decay, movement degradation, fatigue masking, psychological wear, recovery debt accumulation, competitive survival capacity; durability visibility, erosion lineage, survivability continuity interpretation). Line: *"Long-season durability is a primary organism capability."*
-   - K — Environmental Volatility Doctrine (climate, schedule, travel, competition, recovery, environment-driven instability; volatility visibility, confidence-bounded, no catastrophic framing). Line: *"Environmental instability must remain visible."*
-   - L — Organization Scheduling Overlay Doctrine (orgs MAY add contextual scheduling interpretation, travel weighting, organizational cadence overlays; orgs MAY NOT suppress survivability warnings, erase density lineage, mutate replay equivalence, mutate organism truth). Line: *"Scheduling overlays contextualize stress; they do not erase it."*
-   - M — Athlete & Organization Communication Doctrine (audience hierarchy: athlete → parents → MLB/AUSL → college → international → agents → performance staff → travel orgs → external observers; roadmap-first, survivability-visible, psychologically survivable, anti-glorification of overload, anti-grind-culture framing, confidence/volatility visible). Line: *"Competitive interpretation must preserve long-term organism continuity."*
-   - N — Environmental Observability Doctrine (density, travel, environmental, volatility, replay, recalibration, survivability, freshness lineage; forbids invisible schedule compression, hidden tournament accumulation, stale environmental interpretation, silent survivability degradation). Line: *"Environmental interpretation without lineage is hallucination."*
-   - O — Deferred Questions Register O1–O10 (youth tournament survivability boundaries, climate normalization limits, wearable-derived recovery interpretation, travel-ball overuse detection, showcase survivability ethics, academic-stress interpretation boundaries, circadian forecasting limits, environmental survivability weighting, long-season psychological erosion, climate-change adaptation implications — each severity · doctrine risk · containment · review gate; bounded interpretation, survivability precedence, confidence ceilings, anti-deterministic framing, athlete autonomy preserved).
-   - P — G3 Realization Entry Gates + Mandatory Invariants + Out-of-Scope (B–N frozen; 2E/2F/2G/3A/3B/3C/3D frozen; invariants: environment never mutates truth, survivability/density/volatility visible, replay equivalence, long-season durability prioritized, anti-overload-glorification, season-aware adaptation, psychological continuity, overlays bounded, integrity over exposure hype).
+### 1. Create `mem://architecture/asb-g3-psychological-resilience-doctrine.md`
+Sections A–P verbatim per spec, with all constitutional lines verbatim:
+- A — Psychological Resilience Philosophy ("The organism must remain psychologically survivable throughout development.")
+- B — Psychological State Architecture (12 canonical states; lineage, volatility, continuity, cognitive-load, replay, freshness, confidence-bounded properties; "Psychological state alters adaptation quality and organism continuity.")
+- C — Cognitive Load Doctrine ("Cognitive overload reduces organism adaptability.")
+- D — Confidence & Emotional Volatility Doctrine ("Emotional volatility must remain visible without defining identity.")
+- E — Burnout & Psychological Erosion Doctrine ("Burnout accumulation is an organism survivability threat.")
+- F — Identity Continuity Doctrine ("Performance fluctuation must not destabilize organism identity.")
+- G — Fear, Pressure & Expectation Doctrine ("Pressure alters organism behavior and decision quality.")
+- H — Motivation & Autonomy Doctrine ("Autonomy preservation is required for sustainable development.")
+- I — Social & Comparative Environment Doctrine ("Comparative environments can destabilize organism continuity.")
+- J — Psychological Recovery Doctrine ("Psychological recovery is organism reconstruction.")
+- K — Psychological Volatility Doctrine ("Psychological instability must remain visible without becoming destiny.")
+- L — AI Psychological Interpretation Doctrine (MAY/MAY NOT lists; "AI may support psychological survivability; it may not define psychological truth.")
+- M — Athlete & Organization Communication Doctrine (audience hierarchy athlete → parents → MLB/AUSL → college → international → agents → performance staff → travel orgs → external observers; "Psychological interpretation must preserve long-term human continuity.")
+- N — Psychological Observability Doctrine (8 mandatory lineages; forbidden patterns; "Psychological interpretation without lineage is hallucination.")
+- O — Deferred Questions Register O1–O10 (each with severity · doctrine risk · containment · review gate)
+- P — G3 Realization Entry Gates + Mandatory Invariants + Out-of-Scope
 
-   All 14 constitutional lines included verbatim.
-
-2. **Update** `mem://index.md`:
-   - **Core additions (2 lines):**
-     - "Competitive environments, schedule density, and seasonality alter organism stress interpretation and survivability pacing without mutating organism truth (`architecture/asb-g3-competitive-environment-seasonality-doctrine`)."
-     - "Long-season durability, environmental volatility, and recovery continuity are constitutional organism realities, not secondary optimization concerns (`architecture/asb-g3-competitive-environment-seasonality-doctrine`)."
-   - **Memories addition (1 entry):**
-     - "[ASB Competitive Environment & Seasonality Doctrine (Phase 3E)](mem://architecture/asb-g3-competitive-environment-seasonality-doctrine) — Seasonal state architecture, schedule density doctrine, travel/circadian interpretation, environmental exposure governance, competition cadence, academic/life compression, showcase doctrine, long-season durability, environmental volatility, scheduling overlays, observability, deferred register, realization gates"
+### 2. Update `mem://index.md`
+- Add two Core lines:
+  - "Psychological survivability, identity continuity, and cognitive-load interpretation are constitutional organism realities that must remain bounded, observable, autonomy-preserving, and non-diagnostic (`architecture/asb-g3-psychological-resilience-doctrine`)."
+  - "Performance optimization may never destabilize long-term human continuity, emotional survivability, or athlete identity integrity (`architecture/asb-g3-psychological-resilience-doctrine`)."
+- Add Memories entry (top of list):
+  - "[ASB Psychological Resilience & Identity Continuity Doctrine (Phase 3F)](mem://architecture/asb-g3-psychological-resilience-doctrine) — Psychological-state architecture, cognitive-load doctrine, burnout governance, confidence volatility, identity continuity, fear/pressure interpretation, autonomy doctrine, social-comparison governance, psychological recovery, AI interpretation boundaries, observability, deferred register, realization gates"
+- Preserve all existing Core and Memories content verbatim.
 
 ## Out of scope
-
-No other files touched. No schedulers, calendar engines, weather APIs, wearable integrations, travel booking, runtime logic, dashboards, schemas, SQL, infrastructure, or implementation details. No engine implementation begins.
+No other files touched. No implementation, schemas, SQL, runtime, dashboards, UI, APIs, infrastructure, scoring engines, therapy/clinical systems, or diagnostic logic.
 
 ## Next phase
-
-Phase 3F — Psychological Resilience, Identity Continuity & Cognitive Load Doctrine.
+Phase 3G — Relational Ecosystem, Family Dynamics & Authority Interaction Doctrine.
