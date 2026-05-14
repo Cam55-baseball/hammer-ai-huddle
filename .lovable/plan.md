@@ -1,57 +1,57 @@
-# Phase 4B — Canonical Movement Ontology, Exercise Taxonomy & Prescription Evolution Doctrine
+# Phase 4C — Adaptive Prescription Intelligence, Readiness Interpretation & Survivability Pacing Doctrine
 
-IIP doctrine-only. No code, schemas, runtime, UI, APIs, recommendation engines, prescription engines, or infrastructure. Exactly two file touches.
+IIP doctrine-only. No code, schemas, runtime, APIs, recommendation engines, adaptive engines, dashboards, scoring systems, or infrastructure. Exactly two file touches.
 
 ## Laws check
-1, 2, 3, 4, 5, 6, 7, 8, 9, 10 — all satisfied (doctrine-only, additive, replayable, observable, anti-fragmentation, ontology-evolution-safe, anti-fake-AI, intent-vs-completion-preserving, longitudinally continuous).
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10 — all satisfied (doctrine-only, additive, replayable, observable, survivability-first, anti-deterministic, intent-vs-completion-preserving, anti-fake-AI, longitudinally continuous).
 
 ## Canonical owner
-ASB Movement Ontology Layer / Exercise Taxonomy Governance / Prescription Evolution Architecture / Movement Relationship Intelligence Layer / Adaptive Exercise Continuity Governance.
+ASB Adaptive Prescription Intelligence Layer / Readiness Interpretation Architecture / Survivability Pacing Governance / Dynamic Adaptation Layer / Contextual Prescription Intelligence Governance.
 
 ## Longitudinal impact
-Constitutionalizes the permanent ontology governing exercises, movement patterns, prescriptions, loading strategies, progressions, regressions, substitutions, dosage interpretation, autoregulation, adaptation intent, movement relationships, contextual exercise evolution, and longitudinal prescription continuity across the entire organism lifecycle — without erasing historical meaning as exercise systems evolve.
+Constitutionalizes how organism readiness, fatigue accumulation, environmental context, psychological state, developmental timing, recovery availability, movement volatility, throwing stress, competitive density, and survivability pacing alter prescription interpretation, adaptation timing, progression eligibility, dosage governance, overload suppression, and longitudinal organism continuity — without mutating organism truth or enabling deterministic prescription authority.
 
 ## Behavioral impact
-Governs all future interpretation involving exercises, prescriptions, loading, intensity, percentages, velocity intent, readiness adjustment, substitutions, regressions, progressions, exercise relationships, fatigue-aware modifications, environmental constraints, injury-aware adaptation, equipment variability, developmental pacing, baseball/softball transfer systems, owner-authored exercise expansion, and future adaptive prescription systems across AINL, DGL, SIL, IRCL, MAAL, OEAL, Adaptive Academy, future prescription engines, and all organism programming systems.
+Governs all future interpretation involving adaptive loading, readiness-aware prescriptions, autoregulation, fatigue-aware progression suppression, throwing-intensity modulation, environmental prescription adaptation, overload/underload strategies, weighted-implement interpretation, movement-density redistribution, survivability pacing, contextual substitutions, velocity-development timing, recovery-aware scaling, tissue-tolerance pacing, long-season workload continuity, and future adaptive intelligence systems across AINL, SIL, DGL, IRCL, MAAL, OEAL, Adaptive Academy, future throwing engines, and all organism prescription systems.
 
 ## Envelope impact
 Introduces under 2E governance, replayable under 2F, observable under 2G:
-`movement_ontology_event`, `exercise_taxonomy_event`, `prescription_context_event`, `loading_interpretation_event`, `progression_relationship_event`, `regression_relationship_event`, `substitution_relationship_event`, `dosage_interpretation_event`, `autoregulation_event`, `ontology_evolution_event`. AI emits `prescription_interpretation_proposal` only — never authors organism truth, deterministic loading truth, or irreversible prescription authority.
+`adaptive_prescription_event`, `readiness_interpretation_event`, `survivability_pacing_event`, `fatigue_suppression_event`, `progression_eligibility_event`, `contextual_modification_event`, `overload_modulation_event`, `throwing_intensity_event`, `autoregulation_adjustment_event`, `recovery_scaling_event`. AI emits `adaptive_prescription_proposal` only — never authors deterministic prescription truth, irreversible progression authority, or organism truth.
 
 ## Sport scope impact
-Baseball and softball maintain separate movement-transfer realities, positional demands, throwing/load sensitivities, developmental sequencing, rotational-power requirements, and prescription ecosystems while preserving one canonical movement ontology framework.
+Baseball and softball maintain separate throwing ecosystems, workload tolerances, rotational demands, stress-transfer realities, seasonal pacing structures, weighted-implement sensitivities, and velocity-development pathways while preserving one canonical adaptive prescription framework.
 
 ## Deliverables (exactly two file touches)
 
-### 1. Create `mem://architecture/asb-g4b-movement-ontology-doctrine.md`
+### 1. Create `mem://architecture/asb-g4c-adaptive-prescription-doctrine.md`
 Sections A–P verbatim per spec:
-- A — Canonical Movement Philosophy ("The organism expresses adaptation through movement relationships, not isolated exercises."): movement-first architecture, anti-isolated-exercise doctrine, adaptation-intent governance, ontology continuity, exercise evolution preservation, contextual prescription interpretation, replayable prescription lineage, movement relationship integrity.
-- B — Movement State Architecture (12 states: movement-stable, progression-expanding, regression-required, substitution-adapting, fatigue-modified, readiness-adjusted, mechanically-constrained, environmentally-modified, developmentally-progressing, overload-suppressed, transfer-optimized, ontology-evolving; required properties: movement lineage, prescription continuity, dosage implications, adaptation implications, replay determinism, freshness lineage, confidence-bounded interpretation; "Movement context alters prescription interpretation and adaptation quality.")
-- C — Exercise Taxonomy Doctrine ("The ontology must preserve exercise meaning across evolution.")
-- D — Prescription Context Doctrine ("Prescription meaning depends on organism context.")
-- E — Progression & Regression Doctrine ("Progressions and regressions must preserve adaptation continuity.")
-- F — Substitution Relationship Doctrine ("Exercise substitutions must preserve organism adaptation intent.")
-- G — Dosage & Loading Doctrine ("Dosage alters organism adaptation and survivability.")
-- H — Readiness & Autoregulation Doctrine ("Readiness modifies prescription interpretation without mutating organism identity.")
-- I — Baseball & Softball Transfer Doctrine ("Sport transfer interpretation must preserve organism continuity.")
-- J — Ontology Evolution Doctrine ("Movement ontologies may evolve without erasing historical prescription meaning.")
-- K — Movement Volatility Doctrine ("Movement instability must remain visible without corrupting organism continuity.")
-- L — AI Movement Interpretation Doctrine (MAY/MAY NOT lists; "AI may interpret movement relationships; it may not fabricate adaptation truth.")
-- M — Athlete & Organization Communication Doctrine (audience hierarchy athlete → parents → MLB/AUSL → college → international → agents → performance staff → travel orgs → external observers; "Movement interpretation must preserve long-term organism continuity.")
-- N — Movement Observability Doctrine (8 mandatory lineages; forbidden patterns; "Movement interpretation without lineage is hallucination.")
-- O — Deferred Questions Register O1–O10 (percentage autoregulation ethics; VBT prescription governance; AI-generated progression boundaries; owner-authored ontology mutation governance; wearable-informed loading; exercise retirement doctrine; equipment-normalization limits; future movement-scoring ethics; substitution confidence thresholds; autonomous prescription generation limits — each with severity · doctrine risk · containment · review gate; universal containment block: bounded interpretation · replay equivalence · survivability precedence · anti-deterministic framing · ontology continuity · athlete autonomy preserved)
-- P — G4B Realization Entry Gates + Mandatory Invariants + Out-of-Scope
+- A — Adaptive Prescription Philosophy ("The prescription must adapt to the organism without destabilizing organism continuity."): survivability-first adaptation, anti-deterministic prescription doctrine, readiness-aware interpretation, adaptation timing governance, overload suppression precedence, contextual prescription continuity, long-season pacing intelligence, organism-over-output doctrine.
+- B — Adaptive State Architecture (12 states: readiness-stable, fatigue-elevated, overload-suppressed, progression-eligible, recovery-prioritized, throwing-stress-elevated, environmentally-modified, psychologically-compressed, tissue-tolerance-limited, velocity-development-focused, survivability-pacing, adaptation-recovering; required properties: readiness lineage, fatigue implications, progression implications, survivability implications, replay determinism, freshness lineage, confidence-bounded interpretation; "Adaptive context alters prescription timing and survivability pacing.")
+- C — Readiness Interpretation Doctrine ("Readiness modifies prescription interpretation without mutating organism identity."): readiness-aware scaling, fatigue-aware interpretation, psychological readiness, environmental readiness, confidence-bounded readiness interpretation, anti-punitive adaptation doctrine.
+- D — Survivability Pacing Doctrine ("Long-term survivability supersedes short-term output escalation."): long-season pacing, overload suppression, developmental pacing, adaptation preservation, recovery continuity, anti-grind-culture governance, durability prioritization.
+- E — Fatigue Suppression Doctrine ("Fatigue accumulation may suppress progression without erasing adaptation continuity."): progression suppression, fatigue-aware substitutions, readiness-aware modification, overload visibility, confidence-bounded suppression.
+- F — Throwing & Velocity Modulation Doctrine ("Throwing intensity must adapt to organism survivability context."): weighted-implement interpretation, underload/overload governance, arm-speed modulation, tissue-stress redistribution, throwing-density interpretation, velocity-development timing, deceleration stress awareness, intent-preserving modification, confidence-bounded transfer interpretation, anti-reckless-intensity doctrine.
+- G — Recovery Scaling Doctrine ("Recovery availability alters adaptation pacing."): sleep-aware interpretation, environmental recovery limitations, psychological recovery interaction, density-aware scaling, tissue-reconstruction pacing, recovery-debt visibility.
+- H — Contextual Modification Doctrine ("Contextual modifications must preserve adaptation intent."): equipment-aware modifications, environmental modifications, travel-aware modifications, injury-aware modifications, developmental modifications, confidence-bounded contextual adaptation.
+- I — Progression Eligibility Doctrine ("Progression eligibility depends on survivability continuity, not isolated readiness."): longitudinal readiness, fatigue accumulation, developmental continuity, psychological survivability, environmental stability, anti-forced-progression doctrine.
+- J — Adaptation Timing Doctrine ("Adaptation timing alters organism survivability and developmental continuity."): timing windows, seasonal timing, competition timing, tissue adaptation timing, velocity-development timing, recovery-aware timing, overload-aware timing.
+- K — Adaptive Volatility Doctrine ("Adaptive instability must remain visible without corrupting organism continuity."): readiness volatility, fatigue volatility, progression volatility, throwing-stress volatility, recovery volatility, adaptation-confidence volatility.
+- L — AI Adaptive Interpretation Doctrine (MAY: interpret readiness context, suggest survivability pacing, suggest contextual modifications, identify overload accumulation, identify recovery insufficiency, support progression timing interpretation; MAY NOT: force progression, prescribe deterministic loading truth, erase fatigue lineage, bypass survivability safeguards, fabricate readiness certainty; "AI may support adaptive survivability; it may not replace organism-aware judgment.")
+- M — Athlete & Organization Communication Doctrine (audience hierarchy athlete → parents → MLB/AUSL → college → international → agents → performance staff → travel organizations → external observers; survivability-visible · overload-visible · confidence-visible · psychologically survivable · anti-shame · roadmap-centered · anti-grind-culture framing; "Adaptive interpretation must preserve long-term organism continuity.")
+- N — Adaptive Observability Doctrine (mandatory lineages: readiness · fatigue · progression · overload · replay · recalibration · survivability · freshness; forbidden: invisible overload suppression, silent progression escalation, stale readiness interpretation, hidden fatigue accumulation; "Adaptive interpretation without lineage is hallucination.")
+- O — Deferred Questions Register O1–O10 (weighted-ball survivability ethics; AI progression authority limits; wearable-derived readiness interpretation; autoregulation confidence thresholds; velocity-development escalation doctrine; fatigue-prediction governance; tissue-tolerance forecasting limits; adaptive prescription conflict arbitration; seasonal pacing ethics; autonomous prescription-generation boundaries — each with severity · doctrine risk · containment · review gate; universal containment block: bounded interpretation · survivability precedence · replay equivalence · anti-deterministic framing · confidence visibility · athlete autonomy preserved)
+- P — G4C Realization Entry Gates + Mandatory Invariants + Out-of-Scope
 
 ### 2. Update `mem://index.md`
 - Add two Core lines:
-  - "Canonical movement ontologies, exercise taxonomies, and prescription continuity are constitutional foundations of all organism programming intelligence (`architecture/asb-g4b-movement-ontology-doctrine`)."
-  - "Exercises, loading systems, substitutions, and prescriptions may evolve without erasing historical adaptation meaning or organism continuity (`architecture/asb-g4b-movement-ontology-doctrine`)."
+  - "Adaptive prescription intelligence, readiness interpretation, and survivability pacing are constitutional foundations of all organism-aware prescription systems (`architecture/asb-g4c-adaptive-prescription-doctrine`)."
+  - "Fatigue visibility, overload suppression, contextual adaptation, and long-season survivability supersede short-term output escalation across all prescription systems (`architecture/asb-g4c-adaptive-prescription-doctrine`)."
 - Add Memories entry (top of list):
-  - "[ASB Canonical Movement Ontology & Prescription Evolution Doctrine (Phase 4B)](mem://architecture/asb-g4b-movement-ontology-doctrine) — Movement-state architecture, exercise taxonomy doctrine, prescription-context governance, progression/regression doctrine, substitution relationships, dosage/loading doctrine, readiness/autoregulation governance, baseball/softball transfer doctrine, ontology evolution, movement volatility, AI movement boundaries, observability, deferred register, realization gates"
+  - "[ASB Adaptive Prescription Intelligence & Survivability Pacing Doctrine (Phase 4C)](mem://architecture/asb-g4c-adaptive-prescription-doctrine) — Adaptive-state architecture, readiness interpretation doctrine, survivability pacing, fatigue suppression governance, throwing/velocity modulation, recovery scaling, contextual modification doctrine, progression eligibility, adaptation timing, adaptive volatility, AI adaptive boundaries, observability, deferred register, realization gates"
 - Preserve all existing Core and Memories content verbatim.
 
 ## Out of scope
-No other files touched. No implementation, schemas, SQL, vector systems, recommendation engines, scoring engines, runtime logic, dashboards, infrastructure, or autonomous prescription systems.
+No other files touched. No implementation, schemas, SQL, recommendation engines, runtime logic, dashboards, infrastructure, autonomous prescription systems, or deterministic coaching engines.
 
 ## Next phase
-Phase 4C — Adaptive Prescription Intelligence, Readiness Interpretation & Survivability Pacing Doctrine.
+Phase 4D — Throwing Intelligence, Arm Care Ecosystem & Tissue Stress Redistribution Doctrine.
