@@ -1,55 +1,55 @@
-# Phase 5O — Canonical System Integrity, Global Constraint Arbitration & Full-Stack Organism Stability Doctrine
+# Phase 6M — Daily Execution Engine, Microcycle Prescription & Athlete Runtime Interface Doctrine
 
-Doctrine-only. Exactly two file touches. No code, schemas, runtime, APIs, UI, enforcement engines, or infrastructure.
+IIP doctrine-only. Exactly two file touches. No code, schemas, runtime, APIs, UI, autonomous enforcement, medical systems, or infrastructure.
 
 ## Laws check
-1–10 satisfied: doctrine-only, additive, replayable, observable, integrity-first, conflict-resolving, survivability-preserving, anti-fragmentation, anti-deterministic-overreach, longitudinally continuous.
+1–10 satisfied: doctrine-only, additive, replayable, observable, survivability-first, anti-deterministic, anti-fabricated certainty, confidence-bounded, longitudinally continuous, no fake AI.
 
 ## Canonical owner
-ASB System Integrity Layer / Global Constraint Arbitration / Full-Stack Stability Governance / Conflict Resolution & Priority Enforcement / Organism Stability Continuity Governance.
+ASB Daily Execution Layer / Microcycle Prescription Engine / Athlete Runtime Interface / Daily State-to-Load Translation Governance.
 
 ## Longitudinal impact
-Constitutionalizes how all ASB systems resolve competing constraints (performance vs recovery, development vs competition, fatigue vs adaptation, short-term output vs long-term survivability, cognitive load vs execution clarity, biomechanical stress vs velocity development) at the doctrine level without breaking continuity, fragmenting interpretation, or letting subsystems override survivability.
+First realization layer of ASB — converts all prior G3–G6L intelligence into executable daily prescriptions while preserving long-season survivability, fascia/contractile recovery distinction, and adaptation continuity across microcycles.
 
 ## Behavioral impact
-Governs system-wide conflict resolution, cross-doctrine arbitration, constraint prioritization, stability enforcement, cascading tradeoff resolution, multi-system reconciliation, and global decision stability across G4/G5.
+Governs daily state intake, readiness computation, load allocation, microcycle construction, session compilation, exercise arbitration, recovery placement, fatigue-aware skill integration, sport branching, real-time mid-week recalibration, safety lock, and athlete-facing communication tone.
 
 ## Envelope impact
 Under 2E governance, replayable under 2F, observable under 2G:
-constraint_conflict_event, global_arbitration_event, stability_resolution_event, priority_collision_event, systemic_tradeoff_event, integrity_rebalancing_event, cross_doctrine_resolution_event, survivability_override_event, coherence_recalibration_event, full_stack_stability_event.
-AI emits constraint_interpretation_proposal only.
+daily_state_input_event, dasv_computation_event, readiness_domain_event, load_allocation_event, microcycle_construction_event, session_prescription_event, exercise_arbitration_event, recovery_placement_event, real_time_adjustment_event, safety_lock_event, adherence_event, fatigue_response_event.
+AI emits prescription_proposal only; never authoritative organism truth.
 
 ## Sport scope impact
-Baseball and softball maintain separate constraint profiles while sharing one canonical global arbitration framework.
+Baseball and softball share canonical daily-execution framework; throwing intensity progression, rotational stress constraints, sprint/locomotion demands, and game-density translation branch per sport.
 
 ## Deliverables (exactly two file touches)
 
-### 1. Create `mem://architecture/asb-g5o-system-integrity-arbitration-doctrine.md`
+### 1. Create `mem://architecture/asb-g6m-daily-execution-engine-microcycle-runtime-doctrine.md`
 Sections A–P verbatim per spec:
-- A — System Integrity Philosophy
-- B — Constraint State Architecture (12 states + required properties)
-- C — Global Constraint Arbitration Doctrine
-- D — Survivability Priority Doctrine
-- E — Performance vs Recovery Arbitration Doctrine
-- F — Development vs Competition Arbitration Doctrine
-- G — Biomechanical Stress Arbitration Doctrine
-- H — Cognitive Load Arbitration Doctrine
-- I — Workload Distribution Doctrine
-- J — Cross-System Conflict Resolution Doctrine
-- K — Stability Volatility Doctrine
-- L — AI Arbitration Doctrine (MAY / MAY NOT)
-- M — Athlete & Organization Communication Doctrine
-- N — Observability Doctrine
-- O — Deferred Questions Register O1–O10 (severity · doctrine risk · containment · review gate; universal containment block)
-- P — G5O Realization Entry Gates + Mandatory Invariants + Out-of-Scope
+- A — Daily Execution Philosophy
+- B — Daily Athlete State Input Layer (DASV)
+- C — Readiness Computation Engine (5 domains; fascia vs contractile separation; decay curves)
+- D — Daily Load Allocation Doctrine
+- E — Microcycle Construction Engine (7-day rolling: accumulation / expression / recovery integration / neural sharpening / deload)
+- F — Session Prescription Compiler (SPC)
+- G — Exercise Selection Arbitration
+- H — Recovery Placement Doctrine
+- I — Fatigue-Aware Skill Integration
+- J — Sport-Specific Execution Branching (baseball / softball)
+- K — Real-Time Adjustment Engine
+- L — Safety & Survivability Lock
+- M — Communication Layer (User Interface Doctrine)
+- N — Observability Layer
+- O — Deferred Questions O1–O10 (severity · doctrine risk · containment · review gate; universal containment block)
+- P — G6M Realization Gates + Mandatory Invariants + Out-of-Scope
 
 ### 2. Update `mem://index.md`
-- Append two Core lines (global arbitration/integrity foundation + survivability-weighted resolution supersedes isolated optimization).
-- Insert Phase 5O Memories entry at top of `## Memories` list.
+- Append two Core lines (daily execution = first realization layer; effectiveness = state-to-load translation accuracy under survivability constraints).
+- Insert Phase 6M Memories entry at top of `## Memories` list.
 - Preserve all existing Core and Memories content verbatim.
 
 ## Out of scope
-No other files touched. No implementation, schemas, runtime, enforcement engines, dashboards, autonomous arbitration systems, or operational decision engines.
+No other files touched. No implementation, schemas, SQL, runtime systems, dashboards, infrastructure, autonomous training enforcement, medical diagnosis systems, deterministic injury prediction, or guaranteed performance engines.
 
 ## Next phase
-Phase 5P — Canonical System Completion, Final Integration Closure & Full Organism Intelligence Unification Doctrine.
+Phase 6N — Athlete-Facing UI Layer (the "what do I do today?" interface system).
