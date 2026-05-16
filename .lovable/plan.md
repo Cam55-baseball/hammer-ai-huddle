@@ -1,53 +1,30 @@
-# Phase 7 — ASB Runtime Realization Constitution
+# ASB Canonical Data Architecture Spec — Ratification
 
-IIP doctrine-only. Exactly two file touches. No code, schemas, runtime, APIs, UI, infrastructure, or autonomous enforcement.
+First implementation-specification document translating constitutional/runtime doctrine into canonical engineering structures. Not doctrine expansion.
 
-## Laws check
-All 10 eternal laws satisfied: doctrine-only, additive, replayable, observable, survivability-first, anti-deterministic, anti-fabricated certainty, confidence-bounded, longitudinally continuous, no fake AI.
+## File touches (exactly two)
 
-## Canonical owner
-ASB Runtime Realization Layer / Canonical Runtime Objects / State Propagation / Arbitration Hierarchy / Execution + Interface + Organizational Runtime / Governance + Observability + Persistence Doctrine.
+1. **Create** `mem://implementation/asb-canonical-data-architecture-spec.md`
+   - Sections A–M verbatim per user spec
+   - A: Data architecture philosophy (state-first, append-only, replay-safe, anti-destructive, survivability-first)
+   - B: Canonical entity map (athletes, orgs, cohorts, 16 state entities, override_log, confidence_lineage, observability_event, organizational_state)
+   - C: Canonical state relationships (propagation ownership, dependency hierarchy, recalc ordering, temporal continuity, replay lineage)
+   - D: Event ledger architecture (append-only, immutable lineage, replay sequencing, causality, confidence attribution, override traceability)
+   - E: State snapshot doctrine (cadence, replay reconstruction, historical continuity, recalibration persistence, uncertainty preservation)
+   - F: Runtime propagation rules (triggers, cross-system, organizational, fatigue/recovery carryover, adaptation drift)
+   - G: Confidence architecture (sparse-data, decay, conflict, visibility, lineage persistence)
+   - H: Constraint architecture (fascia vs contractile, tissue, rotational, locomotion, scheduling, developmental gating, survivability escalation)
+   - I: Organizational architecture (cohort mapping, staff relationships, org fatigue, scheduling/resource constraints, multi-athlete propagation integrity)
+   - J: API/data boundary preparation (canonical IDs, immutable references, audit-safe relationships, replay-safe querying, uncertainty exposure)
+   - K: Observability architecture (event auditability, replay visibility, recommendation lineage, override lineage, drift detection, historical reconstruction)
+   - L: Implementation constraints (MAY / MAY NOT)
+   - M: Realization gates (invalidation conditions)
 
-## Longitudinal impact
-Consolidates Phases 1–6 into the final constitutional runtime blueprint preceding engineering implementation. Preserves survivability-first arbitration, replay continuity, confidence lineage, and organizational scaling across all future runtime realization.
-
-## Behavioral impact
-Governs runtime state propagation, decision arbitration, athlete/coach execution outputs, override continuity, organizational propagation, safeguard enforcement, event contracts, API boundaries, persistence, UI/UX operational doctrine, and verification gates.
-
-## Envelope impact
-Under 2E governance, replayable under 2F, observable under 2G: athlete_state, recovery_state, constraint_envelope, session_execution, daily_execution_payload, coach_override, organizational_state, confidence_lineage objects plus readiness/fatigue/recovery/adaptation/execution/organizational/governance event families. AI emits proposals only; never authoritative organism truth.
-
-## Sport scope impact
-Baseball and softball share canonical runtime framework; sport-specific branching inherited from prior phases without runtime divergence.
-
-## Deliverables (exactly two file touches)
-
-### 1. Create `mem://architecture/asb-phase7-runtime-realization-constitution.md`
-Sections A–P verbatim per spec:
-- A — Runtime Realization Philosophy
-- B — Canonical Runtime Objects (Athlete/Recovery/Constraint/Session/DailyExecution/CoachOverride/Organizational/ConfidenceLineage)
-- C — Runtime State Propagation
-- D — Runtime Arbitration Hierarchy
-- E — Decision Runtime Layer (DASE/CDK/APC/EMFAL/CHATE/CIFRE interaction)
-- F — Human Execution Runtime (athlete-mode + coach-mode)
-- G — Interface Runtime Continuity
-- H — Organizational Runtime Layer
-- I — Runtime Safety & Governance
-- J — Runtime Observability & Replay
-- K — Runtime Event Contracts
-- L — Runtime API & Service Boundaries
-- M — Runtime Database & Persistence Doctrine
-- N — Runtime UI/UX Operational Doctrine
-- O — Runtime Verification & Operational Testing
-- P — Realization Gates + Out-of-Scope
-
-### 2. Update `mem://index.md`
-- Append two Core lines (runtime realization blueprint; implementation fidelity + replay + uncertainty + survivability supersede engineering convenience).
-- Insert Phase 7 Memories entry at top of `## Memories` list.
-- Preserve all existing Core and Memories content verbatim.
+2. **Update** `mem://index.md`
+   - Append two Core lines: canonical data architecture mandate + replay-safe persistence mandate
+   - Prepend one Memories entry pointing at the new spec
+   - Preserve all prior Core and Memories content verbatim
 
 ## Out of scope
-No other files touched. No implementation code, schemas, SQL, APIs, runtime services, UI components, infrastructure, deterministic injury prediction, guaranteed performance forecasting, autonomous coaching replacement, or hidden optimization engines.
 
-## Post-ratification
-Constitutional expansion STOPS. Next work transitions to implementation specs, database architecture, event contracts, API structures, UI flows, operational testing, runtime observability, and engineering execution.
+No code, SQL, migrations, schemas, API endpoints, services, UI, or infra. No edits to other files. No new doctrine — implementation spec only, fully consistent with all prior phases (DASE/CDK/APC/EMFAL/CHATE/CIFRE/LAOS, fascia vs contractile, survivability arbitration, observability, uncertainty visibility, organizational scaling).
