@@ -1,30 +1,37 @@
-# ASB Canonical Data Architecture Spec — Ratification
+# ASB Canonical Event System & Runtime Propagation Spec — Ratification
 
-First implementation-specification document translating constitutional/runtime doctrine into canonical engineering structures. Not doctrine expansion.
+Second implementation-spec document. Continues the Phase 7 implementation layer started by the Canonical Data Architecture Spec. Not doctrine — execution-level system design.
 
 ## File touches (exactly two)
 
-1. **Create** `mem://implementation/asb-canonical-data-architecture-spec.md`
-   - Sections A–M verbatim per user spec
-   - A: Data architecture philosophy (state-first, append-only, replay-safe, anti-destructive, survivability-first)
-   - B: Canonical entity map (athletes, orgs, cohorts, 16 state entities, override_log, confidence_lineage, observability_event, organizational_state)
-   - C: Canonical state relationships (propagation ownership, dependency hierarchy, recalc ordering, temporal continuity, replay lineage)
-   - D: Event ledger architecture (append-only, immutable lineage, replay sequencing, causality, confidence attribution, override traceability)
-   - E: State snapshot doctrine (cadence, replay reconstruction, historical continuity, recalibration persistence, uncertainty preservation)
-   - F: Runtime propagation rules (triggers, cross-system, organizational, fatigue/recovery carryover, adaptation drift)
-   - G: Confidence architecture (sparse-data, decay, conflict, visibility, lineage persistence)
-   - H: Constraint architecture (fascia vs contractile, tissue, rotational, locomotion, scheduling, developmental gating, survivability escalation)
-   - I: Organizational architecture (cohort mapping, staff relationships, org fatigue, scheduling/resource constraints, multi-athlete propagation integrity)
-   - J: API/data boundary preparation (canonical IDs, immutable references, audit-safe relationships, replay-safe querying, uncertainty exposure)
-   - K: Observability architecture (event auditability, replay visibility, recommendation lineage, override lineage, drift detection, historical reconstruction)
-   - L: Implementation constraints (MAY / MAY NOT)
-   - M: Realization gates (invalidation conditions)
+1. **Create** `mem://implementation/asb-canonical-event-system-runtime-propagation-spec.md`
+   - Sections A–P verbatim per user spec
+   - A: Event system philosophy (event-driven, immutable, no direct overwrite)
+   - B: Canonical event model (event_id, timestamp, actor, entity_target, event_type, payload, confidence_value, lineage_reference, causality_reference)
+   - C: Core event categories (athlete_state / recovery / fatigue / constraint / execution / prescription / adaptation / override / organizational / observability)
+   - D: Event propagation engine (recalc triggers, ordering, cross-entity propagation, cascading, dependency resolution)
+   - E: State reconstruction (replay mechanism, snapshot rules, temporal ordering)
+   - F: Conflict resolution (simultaneous events, arbitration, survivability-first)
+   - G: Confidence propagation (flow, decay, conflict adjustment, sparse data)
+   - H: Real-time runtime (latency, batching vs immediate)
+   - I: Override event governance (structure, precedence, lineage, safety)
+   - J: Organizational event propagation (multi-athlete, cohort aggregation, org fatigue)
+   - K: Replay engine integration (deterministic reconstruction, audit/debug)
+   - L: Observability event system (first-class logging, audit completeness, transparency)
+   - M: Anti-drift safeguards (no hidden mutation, event-only enforcement, unauthorized change detection)
+   - N: Performance/scalability (throughput, batching, load handling)
+   - O: Implementation constraints (MAY / MAY NOT)
+   - P: Realization gates (invalidation conditions)
 
 2. **Update** `mem://index.md`
-   - Append two Core lines: canonical data architecture mandate + replay-safe persistence mandate
+   - Append two Core lines: event-driven architecture mandate + state-reconstruction-from-immutable-event-log mandate
    - Prepend one Memories entry pointing at the new spec
    - Preserve all prior Core and Memories content verbatim
 
+## Alignment
+
+Fully consistent with Canonical Data Architecture Spec: same append-only ledger, same 5-timestamp envelope, same confidence/missingness/authority transport, same survivability-first arbitration, same replay determinism, same DASE/CDK/APC/EMFAL/CHATE/CIFRE/LAOS runtime flow. Adds the runtime behavior of the event system (propagation, conflict, real-time, override, replay, anti-drift, scalability).
+
 ## Out of scope
 
-No code, SQL, migrations, schemas, API endpoints, services, UI, or infra. No edits to other files. No new doctrine — implementation spec only, fully consistent with all prior phases (DASE/CDK/APC/EMFAL/CHATE/CIFRE/LAOS, fascia vs contractile, survivability arbitration, observability, uncertainty visibility, organizational scaling).
+No code, SQL, migrations, schemas, API endpoints, services, UI, or infra. No edits to other files. No new doctrine — implementation spec only.
