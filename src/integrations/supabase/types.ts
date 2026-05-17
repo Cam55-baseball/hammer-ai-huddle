@@ -380,6 +380,343 @@ export type Database = {
         }
         Relationships: []
       }
+      asb_authority_overrides: {
+        Row: {
+          actor_id: string | null
+          actor_role: Database["public"]["Enums"]["asb_actor_role"]
+          athlete_id: string
+          justification: string
+          occurred_at: string
+          override_id: string
+          risk_acknowledgement: Json
+          target_event_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: Database["public"]["Enums"]["asb_actor_role"]
+          athlete_id: string
+          justification: string
+          occurred_at?: string
+          override_id?: string
+          risk_acknowledgement?: Json
+          target_event_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: Database["public"]["Enums"]["asb_actor_role"]
+          athlete_id?: string
+          justification?: string
+          occurred_at?: string
+          override_id?: string
+          risk_acknowledgement?: Json
+          target_event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asb_authority_overrides_target_event_id_fkey"
+            columns: ["target_event_id"]
+            isOneToOne: false
+            referencedRelation: "asb_events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
+      asb_confidence_records: {
+        Row: {
+          confidence: number
+          created_at: string
+          event_id: string
+          missingness_markers: Json
+          record_id: string
+          signal_key: string
+          uncertainty_flags: Json
+        }
+        Insert: {
+          confidence: number
+          created_at?: string
+          event_id: string
+          missingness_markers?: Json
+          record_id?: string
+          signal_key: string
+          uncertainty_flags?: Json
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          event_id?: string
+          missingness_markers?: Json
+          record_id?: string
+          signal_key?: string
+          uncertainty_flags?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asb_confidence_records_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "asb_events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
+      asb_engine_versions: {
+        Row: {
+          deprecated_at: string | null
+          engine_version: string
+          notes: string | null
+          released_at: string
+          schema_version: number
+        }
+        Insert: {
+          deprecated_at?: string | null
+          engine_version: string
+          notes?: string | null
+          released_at?: string
+          schema_version: number
+        }
+        Update: {
+          deprecated_at?: string | null
+          engine_version?: string
+          notes?: string | null
+          released_at?: string
+          schema_version?: number
+        }
+        Relationships: []
+      }
+      asb_event_lineage: {
+        Row: {
+          child_event_id: string
+          created_at: string
+          derivation_type: string
+          engine_version: string
+          lineage_id: string
+          parent_event_id: string
+        }
+        Insert: {
+          child_event_id: string
+          created_at?: string
+          derivation_type: string
+          engine_version: string
+          lineage_id?: string
+          parent_event_id: string
+        }
+        Update: {
+          child_event_id?: string
+          created_at?: string
+          derivation_type?: string
+          engine_version?: string
+          lineage_id?: string
+          parent_event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asb_event_lineage_child_event_id_fkey"
+            columns: ["child_event_id"]
+            isOneToOne: false
+            referencedRelation: "asb_events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "asb_event_lineage_engine_version_fkey"
+            columns: ["engine_version"]
+            isOneToOne: false
+            referencedRelation: "asb_engine_versions"
+            referencedColumns: ["engine_version"]
+          },
+          {
+            foreignKeyName: "asb_event_lineage_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "asb_events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
+      asb_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: Database["public"]["Enums"]["asb_actor_role"]
+          athlete_id: string
+          causality_refs: Json
+          effective_at: string
+          engine_version: string
+          event_id: string
+          idempotency_key: string
+          ingested_at: string
+          lineage_refs: Json
+          occurred_at: string
+          payload: Json
+          topic_id: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: Database["public"]["Enums"]["asb_actor_role"]
+          athlete_id: string
+          causality_refs?: Json
+          effective_at: string
+          engine_version: string
+          event_id?: string
+          idempotency_key: string
+          ingested_at?: string
+          lineage_refs?: Json
+          occurred_at: string
+          payload?: Json
+          topic_id: string
+          valid_from: string
+          valid_to?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: Database["public"]["Enums"]["asb_actor_role"]
+          athlete_id?: string
+          causality_refs?: Json
+          effective_at?: string
+          engine_version?: string
+          event_id?: string
+          idempotency_key?: string
+          ingested_at?: string
+          lineage_refs?: Json
+          occurred_at?: string
+          payload?: Json
+          topic_id?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asb_events_engine_version_fkey"
+            columns: ["engine_version"]
+            isOneToOne: false
+            referencedRelation: "asb_engine_versions"
+            referencedColumns: ["engine_version"]
+          },
+          {
+            foreignKeyName: "asb_events_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "asb_topic_registry"
+            referencedColumns: ["topic_id"]
+          },
+        ]
+      }
+      asb_org_propagation_log: {
+        Row: {
+          athlete_id: string
+          log_id: string
+          occurred_at: string
+          org_id: string
+          propagated_event_id: string
+          propagation_kind: string
+        }
+        Insert: {
+          athlete_id: string
+          log_id?: string
+          occurred_at?: string
+          org_id: string
+          propagated_event_id: string
+          propagation_kind: string
+        }
+        Update: {
+          athlete_id?: string
+          log_id?: string
+          occurred_at?: string
+          org_id?: string
+          propagated_event_id?: string
+          propagation_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asb_org_propagation_log_propagated_event_id_fkey"
+            columns: ["propagated_event_id"]
+            isOneToOne: false
+            referencedRelation: "asb_events"
+            referencedColumns: ["event_id"]
+          },
+        ]
+      }
+      asb_state_snapshots: {
+        Row: {
+          as_of_event_id: string
+          athlete_id: string
+          created_at: string
+          engine_version: string
+          payload: Json
+          snapshot_id: string
+          snapshot_kind: string
+        }
+        Insert: {
+          as_of_event_id: string
+          athlete_id: string
+          created_at?: string
+          engine_version: string
+          payload: Json
+          snapshot_id?: string
+          snapshot_kind: string
+        }
+        Update: {
+          as_of_event_id?: string
+          athlete_id?: string
+          created_at?: string
+          engine_version?: string
+          payload?: Json
+          snapshot_id?: string
+          snapshot_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asb_state_snapshots_as_of_event_id_fkey"
+            columns: ["as_of_event_id"]
+            isOneToOne: false
+            referencedRelation: "asb_events"
+            referencedColumns: ["event_id"]
+          },
+          {
+            foreignKeyName: "asb_state_snapshots_engine_version_fkey"
+            columns: ["engine_version"]
+            isOneToOne: false
+            referencedRelation: "asb_engine_versions"
+            referencedColumns: ["engine_version"]
+          },
+        ]
+      }
+      asb_topic_registry: {
+        Row: {
+          authority_pathway: Database["public"]["Enums"]["asb_authority_pathway"]
+          created_at: string
+          deprecated_at: string | null
+          description: string
+          introduced_in_engine_version: string
+          materialization_policy: Database["public"]["Enums"]["asb_materialization_policy"]
+          replay_policy: Database["public"]["Enums"]["asb_replay_policy"]
+          topic_class: Database["public"]["Enums"]["asb_topic_class"]
+          topic_id: string
+        }
+        Insert: {
+          authority_pathway: Database["public"]["Enums"]["asb_authority_pathway"]
+          created_at?: string
+          deprecated_at?: string | null
+          description: string
+          introduced_in_engine_version: string
+          materialization_policy: Database["public"]["Enums"]["asb_materialization_policy"]
+          replay_policy: Database["public"]["Enums"]["asb_replay_policy"]
+          topic_class: Database["public"]["Enums"]["asb_topic_class"]
+          topic_id: string
+        }
+        Update: {
+          authority_pathway?: Database["public"]["Enums"]["asb_authority_pathway"]
+          created_at?: string
+          deprecated_at?: string | null
+          description?: string
+          introduced_in_engine_version?: string
+          materialization_policy?: Database["public"]["Enums"]["asb_materialization_policy"]
+          replay_policy?: Database["public"]["Enums"]["asb_replay_policy"]
+          topic_class?: Database["public"]["Enums"]["asb_topic_class"]
+          topic_id?: string
+        }
+        Relationships: []
+      }
       athlete_body_goals: {
         Row: {
           created_at: string | null
@@ -11743,6 +12080,45 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "coach" | "player" | "recruiter" | "scout"
+      asb_actor_role:
+        | "medical"
+        | "athlete"
+        | "coach"
+        | "parent"
+        | "org"
+        | "ai"
+        | "system"
+      asb_authority_pathway:
+        | "medical"
+        | "organism_safety"
+        | "longitudinal_survivability"
+        | "athlete"
+        | "coach_parent_org"
+        | "ai"
+        | "population_priors"
+        | "system"
+      asb_materialization_policy: "snapshot" | "on_demand" | "transient"
+      asb_replay_policy:
+        | "deterministic"
+        | "deterministic_with_inputs"
+        | "non_replayable_informational"
+      asb_topic_class:
+        | "organism_truth"
+        | "athlete_intent"
+        | "authority_override"
+        | "hard_stop"
+        | "rehabilitation_state"
+        | "readiness"
+        | "training_prescription"
+        | "session_execution"
+        | "session_feedback"
+        | "recovery_state"
+        | "constraint_signal"
+        | "confidence_signal"
+        | "observability"
+        | "org_propagation"
+        | "ai_proposal"
+        | "medical_event"
       batting_side: "R" | "L" | "B"
       commitment_status: "committed" | "uncommitted"
       drill_tag_category:
@@ -11907,6 +12283,49 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "coach", "player", "recruiter", "scout"],
+      asb_actor_role: [
+        "medical",
+        "athlete",
+        "coach",
+        "parent",
+        "org",
+        "ai",
+        "system",
+      ],
+      asb_authority_pathway: [
+        "medical",
+        "organism_safety",
+        "longitudinal_survivability",
+        "athlete",
+        "coach_parent_org",
+        "ai",
+        "population_priors",
+        "system",
+      ],
+      asb_materialization_policy: ["snapshot", "on_demand", "transient"],
+      asb_replay_policy: [
+        "deterministic",
+        "deterministic_with_inputs",
+        "non_replayable_informational",
+      ],
+      asb_topic_class: [
+        "organism_truth",
+        "athlete_intent",
+        "authority_override",
+        "hard_stop",
+        "rehabilitation_state",
+        "readiness",
+        "training_prescription",
+        "session_execution",
+        "session_feedback",
+        "recovery_state",
+        "constraint_signal",
+        "confidence_signal",
+        "observability",
+        "org_propagation",
+        "ai_proposal",
+        "medical_event",
+      ],
       batting_side: ["R", "L", "B"],
       commitment_status: ["committed", "uncommitted"],
       drill_tag_category: [
