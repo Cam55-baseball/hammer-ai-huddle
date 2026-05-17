@@ -1,41 +1,138 @@
-# ASB Engineering Realization Roadmap — Memory Write
+# ASB Production Realization — Phase 1 Implementation Plan
 
-Translate the completed ASB architecture into the first operational engineering build sequence. Two file touches only.
+The constitutional / runtime / implementation specs are now frozen. This plan begins **direct production realization** in the strict dependency order mandated. Implementation fidelity supersedes feature expansion.
 
-## Files
+This plan covers **Phase 1 only** (Foundation: Data + Event Ledger). Subsequent phases (runtime, state reconstruction, API, athlete execution, coach layer, observability, tests) will be planned individually once each predecessor is verified — building them in one batch would violate the canonical dependency ordering and replay/lineage guarantees.
 
-1. **Create** `mem://implementation/asb-engineering-realization-roadmap.md`
-2. **Update** `mem://index.md` — append 2 Core lines, prepend 1 Memories entry, preserve all prior content verbatim.
+---
 
-## New file structure (Sections A–L)
+## Scope of this plan (Phase 1)
 
-- **A. Engineering realization philosophy** — architecture complete; fidelity > expansion; replay continuity + survivability integrity mandatory; engineering may not reinterpret constitutional hierarchy.
-- **B. Canonical implementation order** — schema → event bus → state reconstruction → propagation → confidence → API → athlete UI → coach UI → org coordination → observability/replay → testing → deployment/scaling.
-- **C. Database realization layer** — append-only event tables, immutable lineage, replay-safe snapshots, confidence persistence, organizational propagation persistence, override audit persistence.
-- **D. Event runtime realization** — ingestion, propagation ordering, replay sequencing, causality integrity, async handling, batching constraints.
-- **E. State reconstruction implementation** — deterministic rebuilds, replay reconstruction, temporal ordering, snapshot recovery, uncertainty reconstruction.
-- **F. API implementation layer** — read projections, event-write architecture, override ingestion, replay endpoints, confidence-visible responses.
-- **G. Athlete execution interface priorities** — first surfaces only: daily readiness, daily training output, session execution, post-session feedback, recovery guidance. Deprioritized: vanity analytics, social systems, engagement loops, unnecessary dashboards.
-- **H. Coach operational interface priorities** — override workflows, athlete readiness visibility, cohort load visibility, scheduling coordination, escalation visibility.
-- **I. Observability + replay tooling** — replay debugger, event lineage inspection, override audit tooling, confidence tracing, drift detection.
-- **J. Testing + integrity enforcement** — replay determinism, propagation integrity, survivability arbitration, confidence propagation, organizational scaling, override auditability, anti-drift.
-- **K. Anti-patterns prohibited** — no event bypass, no direct organism state mutation, no uncertainty suppression, no hidden scoring, no black-box optimization, no engagement-over-execution, no individuality collapse.
-- **L. Production realization gates** — invalid if replay breaks, uncertainty visibility disappears, lineage incomplete, survivability bypassed, override auditability lost, org scaling corrupts athlete truth.
+Translate the canonical data architecture spec into the production database foundation. Nothing else. No reads, no API, no UI.
 
-Frontmatter: `name`, `description`, `type: feature`.
+### What we build
 
-## Index updates
+1. **Append-only event ledger** — `asb_events`
+   - immutable, no UPDATE/DELETE
+   - canonical envelope: event_id, timestamp (5 canonical timestamps), actor, entity_target, event_type, payload (jsonb), confidence, lineage_refs (jsonb), causality_refs (jsonb), engine_version, idempotency_key
+   - partitioned by month on `occurred_at`
+   - RLS: athletes can only read their own events; system actor inserts via service role; no client UPDATE/DELETE
 
-- Append 2 Core lines:
-  - Implementation fidelity supersedes feature expansion; engineering may not reinterpret constitutional hierarchy.
-  - Canonical engineering build sequence: schema → events → state reconstruction → propagation → confidence → API → athlete UI → coach UI → org → observability → testing → deployment.
-- Prepend 1 Memories entry at top of `## Memories` referencing the new roadmap file with section summary.
-- All other content preserved verbatim.
+2. **Immutable lineage table** — `asb_event_lineage`
+   - parent_event_id → child_event_id
+   - derivation_type, engine_version
+   - append-only
 
-## Plan gate
+3. **Replay-safe snapshots** — `asb_state_snapshots`
+   - athlete_id, snapshot_kind, as_of_event_id, engine_version
+   - snapshot payload (jsonb) — disposable, regenerable from events
+   - unique on (athlete_id, snapshot_kind, as_of_event_id, engine_version)
 
-- **Laws check:** none — memory-only doctrine write; no runtime mutation.
-- **Canonical owner:** Documentation / system constitution layer.
-- **Longitudinal impact:** none (justified) — operational roadmap, no organism state change.
-- **Behavioral impact:** none (justified) — no AIP/ANE/APM/CIL/BAS touchpoints.
-- **Envelope impact:** none (justified) — no envelope, topic, or event mutation.
+4. **Confidence persistence** — `asb_confidence_records`
+   - bound to event_id; per-signal confidence + uncertainty flags + missingness markers
+   - append-only
+
+5. **Override audit ledger** — `asb_authority_overrides`
+   - actor_role (medical / athlete / coach / ai / system)
+   - override_target_event_id, justification, risk_acknowledgement
+   - immutable
+
+6. **Organizational propagation persistence** — `asb_org_propagation_log`
+   - org_id, athlete_id, propagated_event_id, propagation_kind
+   - records cohort-level effects without mutating per-athlete truth
+
+7. **Canonical topic + engine version registries** — `asb_topic_registry`, `asb_engine_versions`
+   - enforce that every event references a registered topic + engine_version
+
+### What we do NOT build in this plan
+
+- Event runtime / propagation engine (Phase 2)
+- State reconstruction (Phase 3)
+- API layer (Phase 4)
+- Any UI (Phase 5+)
+- Edge functions or business logic
+
+---
+
+## Compliance gates
+
+**Laws check:** Honors all 10 Eternal Laws — One Organism (single athlete_id root), No Unused Data (append-only, no eviction), Missingness Is a Signal (uncertainty_flags + missingness persisted), No Fake AI (AI actor role separated and forbidden from authoring `organism_truth`), Closed Loop (lineage + replay foundation).
+
+**Canonical owner:** Data Architecture layer (Implementation §1). No subsystem owns mutation outside the event ledger.
+
+**Longitudinal impact:** Establishes the substrate for LCE, recovery capacity, elastic economy, and career resilience continuity. No historical data exists yet to migrate.
+
+**Behavioral impact:** Substrate only — AIP/ANE/APM/CIL/BAS will write through this in later phases. Authority hierarchy enforced via RLS + actor_role column + override audit.
+
+**Envelope impact:** Establishes canonical envelope transport (authority + confidence + missingness + engine_version travel WITH each event row). Materialization (snapshots) is disposable and event-derived.
+
+---
+
+## Technical section
+
+### Migration outline
+
+```text
+asb_topic_registry         (topic_id PK, authority_pathway, replay_policy, materialization_policy)
+asb_engine_versions        (engine_version PK, schema_version, released_at, deprecated_at)
+asb_events                 (event_id PK, athlete_id, topic_id FK, actor_role, actor_id,
+                            occurred_at, ingested_at, effective_at, valid_from, valid_to,
+                            payload jsonb, engine_version FK, idempotency_key UNIQUE,
+                            causality_refs jsonb, lineage_refs jsonb)
+                           PARTITION BY RANGE (occurred_at), monthly partitions
+asb_event_lineage          (parent_event_id FK, child_event_id FK, derivation_type, engine_version)
+asb_confidence_records     (record_id PK, event_id FK, signal_key, confidence numeric,
+                            uncertainty_flags jsonb, missingness_markers jsonb)
+asb_authority_overrides    (override_id PK, actor_role, actor_id, target_event_id FK,
+                            justification text, risk_acknowledgement jsonb, occurred_at)
+asb_state_snapshots        (snapshot_id PK, athlete_id, snapshot_kind, as_of_event_id FK,
+                            engine_version FK, payload jsonb,
+                            UNIQUE(athlete_id, snapshot_kind, as_of_event_id, engine_version))
+asb_org_propagation_log    (log_id PK, org_id, athlete_id, propagated_event_id FK,
+                            propagation_kind, occurred_at)
+```
+
+### Immutability enforcement
+
+- Postgres triggers on each table block UPDATE and DELETE for non-service roles.
+- Snapshots table allows DELETE (disposable) but not UPDATE.
+- All inserts validate engine_version + topic_id existence.
+
+### RLS
+
+- Athletes: SELECT own rows via `athlete_id = auth.uid()` (or profile linkage).
+- Coaches/orgs: SELECT scoped through `user_roles` + `org_athletes` mapping (deferred to phase that introduces it; for now, no coach/org reads).
+- Inserts: restricted to service role / verified producers; `actor_role = 'ai'` rows MUST NOT carry `organism_truth` topic (enforced by trigger).
+
+### What this plan does NOT do
+
+- No application code changes.
+- No edge functions.
+- No types regeneration logic — Lovable auto-regenerates `types.ts` after the migration.
+- No backfill (no prior ASB events exist).
+
+---
+
+## Realization gate (must pass before Phase 2 is planned)
+
+- Migration applies cleanly.
+- Immutability triggers reject UPDATE/DELETE attempts from non-service roles.
+- RLS verified: athlete cannot read another athlete's events.
+- `asb_topic_registry` + `asb_engine_versions` seeded with the initial canonical set.
+- Insert of a sample event round-trips with full envelope + lineage + confidence rows.
+
+If any gate fails, Phase 1 is rejected and re-planned. Phase 2 cannot begin.
+
+---
+
+## Next planning cycles (not part of this approval)
+
+Phase 2: Event runtime + propagation engine
+Phase 3: State reconstruction engine
+Phase 4: API/runtime layer
+Phase 5: Athlete execution E2E (readiness → training → session → feedback → recovery)
+Phase 6: Coach operational layer
+Phase 7: Observability + replay tooling
+Phase 8: Integrity testing framework
+
+Each will be presented as its own plan, only after the predecessor's realization gate passes.
