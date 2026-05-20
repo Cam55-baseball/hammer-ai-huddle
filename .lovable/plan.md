@@ -1,51 +1,53 @@
-# Phase 18 — Canonical Immune System, Illness Adaptation & Organism Resilience Constitution
+# Phase 19 — Canonical Parent, Guardian & Minor-Athlete Safeguarding Continuity Constitution
 
-Constitutional governance phase only. No code, UI, runtime, infrastructure, scoring, diagnostic, or clinical systems. Strict continuation of Eternal Laws, Canonical Organism Architecture, and Phases 1–17.
+Constitutional safeguarding-governance phase. No code, UI, runtime, or moderation tooling. Strict continuation of Phases 1–18.
 
 ## Scope — exactly two file touches
 
-1. **Create** `mem://architecture/asb-phase-18-immune-system-illness-adaptation-organism-resilience-constitution.md` — full constitution covering §A–§P at exhaustive constitutional depth.
-2. **Update** `mem://index.md` — prepend 1 Memories entry, append 8 Core lines, preserve all prior content verbatim.
+1. **Create** `mem://architecture/asb-phase-19-parent-guardian-minor-athlete-safeguarding-continuity-constitution.md` containing the full §A–§P constitution.
+2. **Update** `mem://index.md`:
+   - Prepend 1 Memories entry referencing Phase 19.
+   - Append 8 Core lines (safeguarding doctrines below).
+   - Preserve all prior content verbatim.
 
 No other files touched.
 
-## Constitution structure (§A–§P)
+## Constitution sections
 
-- §A Canonical Immune System Philosophy — resilience as survivability layer; anti-grind-through-illness; bounded AI authority; replay-safe resilience lineage.
-- §B Immune & Illness State Architecture — canonical states (immune-stable, inflammatory-elevated, infection-suspected, viral-recovering, immune-suppressed, systemic-fatigue-elevated, resilience-compromised, reintegration-progressing, resilience-recovering, post-illness-sensitive, survivability-prioritized, organism-resilient); lineage-bearing events; confidence inheritance.
-- §C Illness Adaptation Governance — illness as organism-state modifier; adaptation suppression under systemic stress; anti-hidden-illness-pressure.
-- §D Immune Stress & Recovery Governance — immune-load continuity; sleep/stress/travel-density interaction; inflammatory-load interpretation.
-- §E Training, Competition & Reintegration Governance — post-illness pacing; confidence-bounded reintegration; anti-forced-participation; replay-visible lineage.
-- §F Long-Horizon Organism Resilience Governance — season/career resilience continuity; cumulative stress visibility; anti-reset doctrine.
-- §G Psychological & Cognitive Illness Continuity — anti-shame, anti-toughness-culture, dignity-preserving communication.
-- §H Youth & Developmental Resilience Governance — youth immune variability; school/travel/competition density.
-- §I Female Physiology & Immune Interaction Governance — hormonal/immune interaction; cycle-aware resilience; confidence-bounded cross-system interpretation.
-- §J Environmental & Organizational Illness Governance — travel, climate, shared-facility risk, competition-density; anti-hidden-contagion-pressure.
-- §K AI Immune Interpretation Boundaries — MAY interpret trends/pacing/survivability risk; MAY NOT diagnose, prescribe, fabricate infection certainty, override medical authority, or author organism truth.
-- §L Immune Observability & Auditability — lineage-complete events; replay-visible continuity; confidence + missingness continuity.
-- §M Long-Horizon Organism Resilience Continuity — illness history becomes permanent organism lineage; replay permanence absolute.
-- §N Deferred Questions Register (O1–O10) — post-viral adaptation, autoimmune continuity, biomarker boundaries, vaccination context, contagious-exposure arbitration, immune-load quantification, chronic-fatigue interpretation, wearable-derived inference, external-provider reconciliation, autonomous illness-boundary containment.
-- §O Immutable Immune & Resilience Invariants (IRI-1 … IRI-10) — anti-grind-through-illness supremacy; survivability-first resilience; replay-visible illness lineage; confidence-bounded interpretation; bounded AI medical authority; resilience-history permanence; systemic-fatigue visibility; anti-hidden-contagion; post-illness reintegration continuity; longitudinal organism resilience permanence.
-- §P Realization Gates + Mandatory Invariants + Out-of-Scope.
+- §A Canonical Minor-Athlete Safeguarding Philosophy
+- §B Parent & Guardian Continuity Architecture
+- §C Minor-Athlete State Architecture (12 canonical states: guardian-supported, autonomy-developing, overscheduled-risk, psychological-pressure-elevated, burnout-risk-elevated, identity-fragile, competition-overloaded, recruitment-pressure-exposed, developmentally-protected, trust-compromised, safeguarding-elevated, longitudinally-supported)
+- §D Consent, Assent & Authority Governance
+- §E Developmental Protection & Burnout Governance
+- §F Recruitment, Exposure & Scholarship Pressure Governance
+- §G Psychological Safety & Identity Continuity Governance
+- §H Educational, Academic & Life Continuity Governance
+- §I Communication & Transparency Governance (audience hierarchy + mandatory properties)
+- §J Organizational Safeguarding & Escalation Governance
+- §K AI Minor-Athlete Interpretation Boundaries (MAY / MAY NOT)
+- §L Safeguarding Observability & Auditability
+- §M Long-Horizon Minor-to-Adult Continuity Governance
+- §N Deferred Questions Register (O1–O10) with universal containment block
+- §O Immutable Minor-Athlete Safeguarding Invariants (MSI-1…MSI-10)
+- §P Realization Gates + Mandatory Invariants + Out-of-Scope
 
-## Index update (`mem://index.md`)
+## Core lines to append to mem://index.md
 
-- Prepend 1 Memories entry referencing Phase 18 constitution.
-- Append 8 Core lines:
-  1. immune resilience constitutional governance
-  2. anti-grind-through-illness supremacy
-  3. systemic-fatigue visibility continuity
-  4. survivability-first illness adaptation
-  5. replay-visible illness lineage
-  6. confidence-bounded immune interpretation
-  7. post-illness reintegration continuity
-  8. longitudinal organism resilience permanence
-- All prior content preserved verbatim.
+1. Parent & guardian continuity governance.
+2. Safeguarding supremacy over performance extraction.
+3. Anti-coercive developmental governance.
+4. Burnout prevention continuity.
+5. Replay-visible safeguarding lineage.
+6. Developmental dignity permanence.
+7. Bounded AI safeguarding authority.
+8. Long-horizon minor-athlete survivability protection.
+
+Each cites `architecture/asb-phase-19-parent-guardian-minor-athlete-safeguarding-continuity-constitution`.
 
 ## Out of scope
 
-No diagnosis, treatment, infection prediction, medical compliance tooling, autonomous medical recommendations, implementation infrastructure, runtime systems, dashboards, or scoring engines.
+No moderation tooling, legal systems, reporting systems, runtime services, dashboards, autonomous disciplinary systems, clinical safeguarding systems, or AI-led intervention systems.
 
 ## Next phase
 
-Phase 19 — Canonical Parent, Guardian & Minor-Athlete Safeguarding Continuity Constitution.
+Phase 20 — Canonical Attention Protection, Notification Governance & Anti-Addiction Continuity Constitution.
