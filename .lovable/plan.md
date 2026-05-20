@@ -1,52 +1,51 @@
-# Phase 17 — Canonical Rehabilitation, Return-to-Play & Organism Reconstruction Continuity Constitution
+# Phase 18 — Canonical Immune System, Illness Adaptation & Organism Resilience Constitution
 
-Constitutional organism-reconstruction governance phase. No implementation, code, UI, runtime, or scoring systems. Strict continuation of Eternal Laws, Canonical Organism Architecture, Recovery Intelligence, Tissue Stress Redistribution, Adaptive Prescription Intelligence, Female Physiology Governance, Survivability Governance, and Phases 1–16.
+Constitutional governance phase only. No code, UI, runtime, infrastructure, scoring, diagnostic, or clinical systems. Strict continuation of Eternal Laws, Canonical Organism Architecture, and Phases 1–17.
 
 ## Scope — exactly two file touches
 
-1. **Create** `mem://architecture/asb-phase-17-rehabilitation-return-to-play-organism-reconstruction-continuity-constitution.md`
-2. **Update** `mem://index.md` — prepend one Memories entry, append 8 Core lines, preserve all prior content verbatim.
+1. **Create** `mem://architecture/asb-phase-18-immune-system-illness-adaptation-organism-resilience-constitution.md` — full constitution covering §A–§P at exhaustive constitutional depth.
+2. **Update** `mem://index.md` — prepend 1 Memories entry, append 8 Core lines, preserve all prior content verbatim.
 
 No other files touched.
 
-## Constitution sections (exhaustive constitutional depth)
+## Constitution structure (§A–§P)
 
-- **§A Canonical Rehabilitation Philosophy** — rehabilitation as organism continuity preservation; reconstruction-over-reset; survivability-first reintegration; anti-rush-return; bounded AI authority; replay-safe reconstruction lineage.
-- **§B Rehabilitation State Architecture** — canonical reconstruction states (acute-injury, inflammatory, rebuilding, reintegration, asymmetry-elevated, compensation-detected, tissue-capacity-limited, return-progressing, return-constrained, reinjury-risk-elevated, survivability-prioritized, reconstruction-stable); lineage-bearing events; confidence inheritance; replay continuity.
-- **§C Injury & Tissue Reconstruction Governance** — injury continuity; tissue-healing lineage; adaptation preservation; connective-tissue/bone/tendon/fascia continuity; reconstruction pacing; anti-hidden-compensation.
-- **§D Return-to-Play Sequencing Governance** — phased reintegration; workload reintroduction; confidence-bounded progression; survivability-first pacing; replay-visible return lineage; anti-forced-clearance.
-- **§E Compensation & Movement Protection Governance** — compensation detection as protection signal; asymmetry continuity; stress redistribution visibility; anti-mask; survivability-aware modification precedence.
-- **§F Surgical & Medical Continuity Governance** — surgery lineage permanence; reconstruction history continuity; medical-context observability; bounded interpretation authority; anti-medical-certainty; organism-history permanence.
-- **§G Psychological Reconstruction & Identity Continuity** — psychological survivability during injury/reconstruction; identity preservation; anti-isolation; confidence rebuilding continuity; trauma-aware communication; dignity supremacy.
-- **§H Recovery & Reconstruction Capacity Governance** — reconstruction-aware recovery; sleep/nutrition/recovery continuity under rehabilitation; tissue-rebuilding pacing; recovery debt visibility during reintegration.
-- **§I Long-Horizon Durability & Reintegration Governance** — post-rehab survivability; reinjury suppression; long-season pacing after reconstruction; adaptation continuity after return; anti-short-term-output escalation.
-- **§J Rehabilitation Communication & Safeguarding Governance** — athlete/parent/coach/medical hierarchy; anti-shame language; safeguarding escalation; bounded authority; replay-visible clearance communication.
-- **§K AI Rehabilitation Interpretation Boundaries** — AI MAY interpret reconstruction continuity, workload reintegration, compensation visibility, survivability pacing. AI MAY NOT diagnose, clear athletes, override medical authority, predict injury certainty, fabricate healing certainty, or author organism truth.
-- **§L Rehabilitation Observability & Auditability** — lineage-complete events; replay-visible reintegration sequencing; compensation observability; progression lineage; confidence + missingness continuity; hidden reconstruction opacity prohibited.
-- **§M Long-Horizon Organism Reconstruction Continuity** — injuries never reset organism history; rehabilitation becomes permanent organism lineage; replay permanence absolute; survivability continuity across entire career lifespan.
-- **§N Deferred Questions Register (O1–O10)** — surgical-reconstruction arbitration, chronic pain governance, imaging-system integration, scar-tissue adaptation, neurorehabilitation interpretation, minor-athlete rehab safeguards, reinjury-confidence weighting, external-provider reconciliation, rehab-load arbitration, autonomous reconstruction-boundary containment.
-- **§O Immutable Rehabilitation Invariants (RPI-1 … RPI-10)** — reconstruction-over-reset supremacy; anti-rush-return permanence; compensation visibility; replay-visible rehabilitation lineage; bounded AI medical authority; survivability-first reintegration; organism-history permanence; anti-hidden-reinjury-risk; confidence-bounded reconstruction interpretation; longitudinal reconstruction continuity.
-- **§P Realization Gates + Mandatory Invariants + Out-of-Scope**.
+- §A Canonical Immune System Philosophy — resilience as survivability layer; anti-grind-through-illness; bounded AI authority; replay-safe resilience lineage.
+- §B Immune & Illness State Architecture — canonical states (immune-stable, inflammatory-elevated, infection-suspected, viral-recovering, immune-suppressed, systemic-fatigue-elevated, resilience-compromised, reintegration-progressing, resilience-recovering, post-illness-sensitive, survivability-prioritized, organism-resilient); lineage-bearing events; confidence inheritance.
+- §C Illness Adaptation Governance — illness as organism-state modifier; adaptation suppression under systemic stress; anti-hidden-illness-pressure.
+- §D Immune Stress & Recovery Governance — immune-load continuity; sleep/stress/travel-density interaction; inflammatory-load interpretation.
+- §E Training, Competition & Reintegration Governance — post-illness pacing; confidence-bounded reintegration; anti-forced-participation; replay-visible lineage.
+- §F Long-Horizon Organism Resilience Governance — season/career resilience continuity; cumulative stress visibility; anti-reset doctrine.
+- §G Psychological & Cognitive Illness Continuity — anti-shame, anti-toughness-culture, dignity-preserving communication.
+- §H Youth & Developmental Resilience Governance — youth immune variability; school/travel/competition density.
+- §I Female Physiology & Immune Interaction Governance — hormonal/immune interaction; cycle-aware resilience; confidence-bounded cross-system interpretation.
+- §J Environmental & Organizational Illness Governance — travel, climate, shared-facility risk, competition-density; anti-hidden-contagion-pressure.
+- §K AI Immune Interpretation Boundaries — MAY interpret trends/pacing/survivability risk; MAY NOT diagnose, prescribe, fabricate infection certainty, override medical authority, or author organism truth.
+- §L Immune Observability & Auditability — lineage-complete events; replay-visible continuity; confidence + missingness continuity.
+- §M Long-Horizon Organism Resilience Continuity — illness history becomes permanent organism lineage; replay permanence absolute.
+- §N Deferred Questions Register (O1–O10) — post-viral adaptation, autoimmune continuity, biomarker boundaries, vaccination context, contagious-exposure arbitration, immune-load quantification, chronic-fatigue interpretation, wearable-derived inference, external-provider reconciliation, autonomous illness-boundary containment.
+- §O Immutable Immune & Resilience Invariants (IRI-1 … IRI-10) — anti-grind-through-illness supremacy; survivability-first resilience; replay-visible illness lineage; confidence-bounded interpretation; bounded AI medical authority; resilience-history permanence; systemic-fatigue visibility; anti-hidden-contagion; post-illness reintegration continuity; longitudinal organism resilience permanence.
+- §P Realization Gates + Mandatory Invariants + Out-of-Scope.
 
-## Index update
+## Index update (`mem://index.md`)
 
-Prepend one Memories entry referencing the Phase 17 constitution. Append 8 Core lines:
-
-- rehabilitation continuity governance
-- reconstruction-over-reset supremacy
-- anti-rush-return permanence
-- compensation visibility continuity
-- survivability-first reintegration governance
-- bounded AI medical authority (rehab)
-- replay-visible rehabilitation lineage
-- longitudinal organism reconstruction continuity
-
-All prior `mem://index.md` content preserved verbatim.
+- Prepend 1 Memories entry referencing Phase 18 constitution.
+- Append 8 Core lines:
+  1. immune resilience constitutional governance
+  2. anti-grind-through-illness supremacy
+  3. systemic-fatigue visibility continuity
+  4. survivability-first illness adaptation
+  5. replay-visible illness lineage
+  6. confidence-bounded immune interpretation
+  7. post-illness reintegration continuity
+  8. longitudinal organism resilience permanence
+- All prior content preserved verbatim.
 
 ## Out of scope
 
-No medical diagnosis, clinical treatment, rehab protocols, imaging analysis, autonomous medical recommendations, injury-prediction engines, implementation infrastructure, runtime, dashboards, or scoring engines.
+No diagnosis, treatment, infection prediction, medical compliance tooling, autonomous medical recommendations, implementation infrastructure, runtime systems, dashboards, or scoring engines.
 
 ## Next phase
 
-Phase 18 — Canonical Immune System, Illness Adaptation & Organism Resilience Constitution.
+Phase 19 — Canonical Parent, Guardian & Minor-Athlete Safeguarding Continuity Constitution.
