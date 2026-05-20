@@ -1,35 +1,39 @@
-# Phase 10 — Canonical Data Topology, Event Fabric & Organism Ledger Constitution
+# Phase 11 — Canonical Engine Topology, Operational Domains & Execution Sequencing Constitution
 
-Constitutional architecture phase only. No implementation, source, migrations, pseudocode, UI, or product discussion. Strict continuation of Eternal Laws, Canonical Organism Architecture, Validation & Determinism, and Phases 3–9.
+Constitutional architecture phase only. No implementation, no code, no migrations, no UI, no product discussion.
 
 ## Scope — exactly two file touches
 
-1. **Create** `mem://architecture/asb-phase-10-canonical-data-topology-event-fabric-organism-ledger-constitution.md`
-2. **Update** `mem://index.md` (prepend one Memories entry, append Core lines, preserve all prior content verbatim)
+1. **Create** `mem://architecture/asb-phase-11-canonical-engine-topology-operational-domains-execution-sequencing-constitution.md`
+2. **Update** `mem://index.md` (prepend one Memories entry + append 8 Core lines, all prior content preserved verbatim)
 
-No other files. No implementation artifacts.
+No other files touched.
 
-## Constitution file — section outline (exhaustive constitutional depth)
+## Constitutional file structure
 
-- **§A. Canonical Organism Ledger Doctrine** — organism-ledger supremacy; append-only organism truth; canonical event permanence; immutable organism history; ledger authority hierarchy; deterministic ledger guarantees; organism-history continuity; replay-safe organism chronology; anti-history-rewrite doctrine; survivability-first ledger governance. The ledger is the permanent constitutional source of organism truth.
-- **§B. Event Topology Architecture** — canonical event topology; deterministic event routing; organism-safe event partitioning; event-domain boundaries; bounded event propagation; replay-safe topology guarantees; event ancestry continuity; anti-fragmentation event doctrine; cross-engine event integrity; lineage-visible topology governance. Events remain lineage-complete and replay-reconstructable.
-- **§C. Temporal Event Fabric** — temporal sequencing doctrine; causal ordering guarantees; organism-time continuity; event-time supremacy; deterministic mutation ordering; anti-wall-clock-authority doctrine; temporal replay guarantees; chronology reconstruction governance; cross-engine temporal consistency; anti-temporal-drift enforcement.
-- **§D. Mutation & State Transition Governance** — mutation legality; append-only mutation authority; deterministic state-transition governance; mutation lineage permanence; replay-safe mutation reconstruction; anti-hidden-write doctrine; mutation confidence inheritance; mutation auditability; survivability-first mutation precedence; anti-illegal-transition enforcement.
-- **§E. Event Lineage & Ancestry Constitution** — event ancestry permanence; lineage-complete event governance; parent-child mutation lineage; cross-engine lineage continuity; replay-visible ancestry; lineage confidence inheritance; lineage contradiction surfacing; anti-orphan-event doctrine; deterministic lineage reconstruction; organism-history ancestry supremacy.
-- **§F. Replay Fabric & Reconstruction Governance** — replay-fabric doctrine; deterministic replay guarantees; replay-safe infrastructure requirements; replay topology continuity; historical organism reconstruction; engine-version replay governance; replay auditability; anti-replay-drift doctrine; replay lineage integrity; survivability-first replay governance.
-- **§G. Event Failure Modes** — lineage fragmentation handling; event corruption containment; append-order corruption handling; replay divergence containment; mutation contradiction handling; orphan-event handling; topology corruption handling; temporal inconsistency handling; cross-engine lineage corruption; organism-safe ledger emergency posture.
-- **§H. Event Observability & Ledger Auditability** — ledger inspection; event lineage visualization; mutation ancestry tooling; replay topology observability; append-order inspection; lineage contradiction inspection; replay integrity monitoring; temporal continuity observability; organism-history audit tooling; constitutional ledger observability.
-- **§I. Long-Horizon Data Coherence & Maintainability** — anti-entropy data doctrine; long-horizon lineage coherence; replay-safe maintainability; bounded topology evolution; anti-fragmentation maintainability; organism-history survivability; append-only continuity discipline; deterministic historical continuity; self-documenting lineage architecture; permanent event-fabric coherence.
-- **§J. Immutable Ledger Invariants (LI-1 … LI-10)** — append-only organism truth; deterministic event ordering; lineage permanence; replay-safe reconstruction; anti-history-rewrite enforcement; mutation legality; anti-hidden-write enforcement; temporal continuity supremacy; replay auditability; anti-ledger-drift enforcement. Permanent constitutional laws inherited by all future systems — not tunable, not negotiable, not relaxable.
+The new memory file will contain §A–§J at exhaustive constitutional depth, binding strictly to Eternal Laws, Canonical Organism Architecture, Validation & Determinism Enforcement Suite, and Phases 3–10.
 
-Each section authored at exhaustive constitutional depth: doctrine statement, principles, structural bindings to prior phases (Eternal Laws, Canonical Organism Architecture, Phases 3–9), forbidden patterns, enforcement posture, escalation pathways, replay/auditability requirements, anti-drift discipline. No summaries, simplifications, or placeholders.
+- **§A. Canonical Engine Topology** — canonical engine ecosystem; engine-topology governance; operational-domain ownership; deterministic engine relationships; bounded engine responsibilities; topology visibility guarantees; anti-topology-drift doctrine; replay-safe engine coordination; survivability-first topology governance; long-horizon engine coherence. Every engine must occupy a constitutionally declared operational role.
+- **§B. Operational Domain Governance** — operational-domain doctrine; bounded operational contexts; domain authority hierarchy (Medical→Organism Safety→Longitudinal Survivability→Athlete→Coach/Parent/Org→AI→Population priors); cross-domain interaction governance; anti-domain-fragmentation doctrine; domain lineage continuity; operational isolation guarantees; replay-safe domain coordination; authority-visible domain interaction; deterministic domain evolution.
+- **§C. Execution Sequencing Architecture** — deterministic execution sequencing; causal execution ordering; orchestration sequencing supremacy; anti-non-deterministic execution doctrine; execution dependency governance; replay-safe execution choreography; sequencing lineage permanence; state-transition sequencing guarantees; temporal execution continuity; survivability-first sequencing precedence.
+- **§D. State Propagation Choreography** — organism-state propagation doctrine; bounded state propagation; propagation lineage continuity; confidence-aware propagation; missingness-aware propagation; propagation replay guarantees; anti-propagation-drift doctrine; deterministic state choreography; survivability-first propagation governance; propagation contradiction surfacing. Propagation may never bypass constitutional lineage.
+- **§E. Orchestration & Coordination Governance** — orchestration authority doctrine; bounded orchestration authority; coordination-layer governance; orchestration replayability; orchestration auditability; anti-hidden-orchestration doctrine; deterministic coordination guarantees; orchestration survivability discipline; cross-engine coordination lineage; anti-orchestration-drift enforcement. Orchestration coordinates organism truth but never redefines it.
+- **§F. Dependency & Flow Governance** — dependency-boundary doctrine; anti-cyclic-dependency governance; deterministic dependency flow; bounded dependency propagation; dependency lineage visibility; replay-safe dependency coordination; anti-hidden-flow doctrine; dependency survivability governance; operational-flow auditability; anti-fragmentation dependency discipline.
+- **§G. Execution Failure Modes** — orchestration corruption; sequencing divergence; dependency-cycle containment; propagation corruption; cross-domain execution contradiction; hidden-flow detection; operational-topology corruption; replay sequencing divergence; coordination-layer failure containment; organism-safe execution emergency posture. Failure handling preserves organism continuity above execution throughput.
+- **§H. Topology Observability & Auditability** — engine-topology inspection; orchestration lineage visualization; sequencing audit tooling; dependency-flow observability; propagation lineage inspection; operational-domain auditability; hidden-flow detection observability; replay topology monitoring; orchestration contradiction inspection; constitutional topology observability.
+- **§I. Long-Horizon Operational Coherence** — topology anti-entropy; long-horizon orchestration coherence; bounded operational evolution; replay-safe operational maintainability; anti-fragmentation execution discipline; deterministic operational continuity; self-documenting operational lineage; survivability-first operational maintainability; engineering continuity governance; permanent topology coherence principles.
+- **§J. Immutable Topology Invariants (TI-1…TI-10)** — deterministic execution sequencing; bounded orchestration authority; replay-safe coordination; anti-hidden-flow enforcement; dependency-boundary supremacy; propagation lineage permanence; anti-domain-fragmentation enforcement; orchestration auditability; survivability-first execution topology; anti-operational-drift supremacy. Permanent constitutional laws inherited by all future orchestration, engine, and operational systems.
+
+Each section will include doctrine statements, structural bindings to prior phases, forbidden patterns, enforcement posture, escalation pathways, replay/auditability requirements, and anti-drift discipline. No summaries, simplifications, or placeholders.
 
 ## Index update (`mem://index.md`)
 
-- **Prepend** one new Memories entry referencing the Phase 10 Canonical Data Topology & Organism Ledger Constitution with full §A–§J descriptor at constitutional depth.
-- **Append** Core lines covering: append-only organism truth; deterministic event topology; replay-safe lineage permanence; temporal continuity supremacy; anti-hidden-write enforcement; replay-fabric governance; organism-history auditability; anti-ledger-drift enforcement.
-- Preserve all prior content verbatim.
+- **Prepend** one new Memories entry referencing the Phase 11 Canonical Engine Topology, Operational Domains & Execution Sequencing Constitution.
+- **Append** 8 new Core lines covering: deterministic execution sequencing; bounded orchestration authority; replay-safe state propagation; anti-hidden-flow enforcement; dependency-boundary supremacy; orchestration auditability; survivability-first operational topology; anti-operational-drift supremacy.
+- All prior Core lines and Memories entries preserved verbatim.
 
-## Closing constitutional binding
+## Technical details
 
-Additive only. Replaces nothing. Weakens nothing. Inherits and is governed by every prior constitution. Strictest interpretation governs. Append-only organism truth, deterministic event topology, replay-safe lineage permanence, and anti-ledger-drift supersede infrastructure convenience, storage ergonomics, and operational pressure — absolutely and permanently.
+- Tools used: `code--write` (new memory file) and `code--line_replace` (index prepend + append).
+- No source code, migrations, edge functions, UI, or product surfaces touched.
+- Plan/Behavioral/Envelope/Topic-Registry/Replay/Observability impact lines will be embedded within the constitution itself as required by prior phases' plan-gate doctrine.
