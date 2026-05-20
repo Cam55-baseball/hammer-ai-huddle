@@ -1,53 +1,53 @@
-# Phase 20 — Canonical Attention Protection, Notification Governance & Anti-Addiction Continuity Constitution
+# Phase 21 — Canonical Accessibility, Cognitive Inclusivity & Universal Human Simplicity Constitution
 
-Constitutional human-attention governance phase. No code, UI, runtime, notification infrastructure, analytics, or engagement systems. Strict continuation of Phases 1–19.
+Constitutional accessibility-governance phase. No code, UI, runtime, infrastructure, or scoring engines. Strict continuation of Phases 1–20.
 
 ## Scope — exactly two file touches
 
-1. **Create** `mem://architecture/asb-phase-20-attention-protection-notification-governance-anti-addiction-continuity-constitution.md` containing the full §A–§P constitution.
+1. **Create** `mem://architecture/asb-phase-21-canonical-accessibility-cognitive-inclusivity-universal-human-simplicity-constitution.md` with full §A–§P constitutional depth.
 2. **Update** `mem://index.md`:
-   - Prepend 1 Memories entry referencing Phase 20.
-   - Append 8 Core lines (attention doctrines below).
+   - Prepend 1 Memories entry referencing Phase 21.
+   - Append 8 Core lines (accessibility doctrines below).
    - Preserve all prior content verbatim.
 
 No other files touched.
 
 ## Constitution sections
 
-- §A Canonical Attention Protection Philosophy — attention as survivability infrastructure; anti-addiction; anti-compulsion; calm-system supremacy; anti-dopamine-extraction.
-- §B Attention State Architecture — 12 canonical states: focused-stable, cognitively-fatigued, notification-overloaded, attention-fragmented, guidance-seeking, overstimulated, avoidance-elevated, burnout-sensitive, trust-fatigued, calm-restored, engagement-risk-elevated, attention-protected. All require lineage / confidence inheritance / replay continuity / psychological survivability visibility / anti-hidden-manipulation governance.
-- §C Notification Governance Doctrine — minimalism, survivability-first interruption, anti-anxiety architecture, bounded urgency, replay-visible notification lineage, anti-attention-hijacking.
-- §D Anti-Addiction & Anti-Compulsion Governance — anti-infinite-loop, anti-engagement-maximization, anti-streak-dependency, anti-FOMO, anti-variable-reward, anti-behavioral-extraction.
-- §E Cognitive Load & Overwhelm Prevention — cognitive simplicity continuity, overwhelm visibility, adaptive pacing, progressive disclosure, bounded complexity.
-- §F Attention Recovery & Digital Decompression — overload recovery, interruption recovery continuity, nervous-system decompression, anti-always-on, replay-visible cognitive recovery.
-- §G Youth Attention & Developmental Protection — minor-athlete attention protection, anti-addictive youth engagement, anti-pressure pacing, school/life continuity.
-- §H Human Agency & Autonomy Preservation — autonomy supremacy, anti-coercive interaction, anti-dark-pattern, anti-dependency, dignity continuity.
-- §I Trust / Communication / Psychological Safety — mandatory properties (clarity, confidence-visible, psychologically survivable, non-manipulative, calm-toned, anti-shame, anti-anxiety-escalation, attention-respectful, developmentally-safe, replay-visible); audience hierarchy athlete → guardian → coach → org → observers.
-- §J Organizational Attention Ethics — no engagement-driven authority escalation, anti-retention-optimization, bounded organizational communication authority.
-- §K AI Attention Interpretation Boundaries — MAY surface overload, suggest decompression, reduce burden, adapt density, identify overwhelm, support calm continuity. MAY NOT optimize addiction, maximize screen-time, exploit compulsion, manufacture urgency, weaponize notifications, create dependency, hide manipulation, override autonomy.
-- §L Attention Observability & Auditability — mandatory lineages (notification, attention, overwhelm, communication, engagement, interruption, decompression, autonomy, trust, psychological survivability, replay, confidence, missingness); forbidden hidden urgency / non-auditable manipulation / engagement opacity / dark patterns.
-- §M Long-Horizon Attention Continuity — childhood → adulthood attention continuity, anti-erosion, nervous-system survivability over growth metrics.
-- §N Deferred Questions Register (O1–O10) with universal containment block.
-- §O Immutable Attention Protection Invariants (API-1…API-10).
-- §P Realization Gates + Mandatory Invariants + Out-of-Scope.
+- §A Canonical Accessibility Philosophy — accessibility as constitutional readability of intelligence; usable by any human regardless of age, cognition, or technical literacy.
+- §B Universal Human Comprehension Architecture — 4 canonical audiences supported simultaneously (8-yr-old athlete, adolescent athlete, elite/pro athlete, parent/guardian/coach/operator) with no degradation of truth across audiences.
+- §C Cognitive Load Governance — minimize cognitive strain while preserving full informational integrity; complexity hidden, not removed.
+- §D Progressive Disclosure Doctrine — layered information: immediate action / reason / system reasoning layer.
+- §E Clarity Supremacy Invariant — clarity overrides compression under ambiguity; no output sacrifices understanding for density.
+- §F Instructional Simplicity Doctrine — guidance executable without prior system knowledge; no doctrine dependency required for action.
+- §G Communication Compression Governance — translate multi-layer intelligence into minimal human-readable directives while preserving ASB truth underneath.
+- §H Cognitive Safety & Overwhelm Prevention — adaptive simplification, pacing, structured guidance sequencing.
+- §I Accessibility Across Developmental Stages — adaptive explanation for child / developing / elite athletes and non-athlete stakeholders.
+- §J Multimodal Human Translation Layer (Conceptual) — all internal intelligence translatable into human-consumable language without loss of meaning.
+- §K Anti-Jargon Governance — no essential system behavior depends on technical-language understanding.
+- §L Guidance Execution Simplicity — every output answers: what to do next / why it matters / what happens if not done.
+- §M Trust-Preserving Simplicity — simplification never removes uncertainty visibility, confidence signaling, or safety boundaries.
+- §N Long-Horizon Comprehension Continuity — user understanding improves over time without re-learning system structure.
+- §O Deferred Questions Register (O1–O10) — accessibility scaling edge cases, cross-age adaptation, multilingual simplification, neurodiversity adaptation, with universal containment block.
+- §P Immutable Accessibility Invariants (AI-1…AI-10) — comprehension-before-complexity, clarity supremacy, cognitive-load minimization, no hidden dependency understanding, mandatory progressive disclosure, multi-audience equivalence, instruction executability guarantee, anti-overwhelm enforcement, trust-preserving simplification, longitudinal comprehension continuity.
 
 ## Core lines to append to mem://index.md
 
-1. Attention preservation supremacy over engagement optimization.
-2. Anti-compulsion governance permanence.
-3. Replay-visible notification lineage.
-4. Calm-system continuity governance.
-5. Cognitive-overload prevention continuity.
-6. Bounded AI behavioral authority.
-7. Human autonomy preservation supremacy.
-8. Long-horizon nervous-system survivability protection.
+1. Accessibility supremacy over structural complexity.
+2. Universal human comprehension governance.
+3. Cognitive load minimization continuity.
+4. Progressive disclosure enforcement.
+5. Anti-jargon constitutional enforcement.
+6. Clarity supremacy invariant.
+7. Multi-audience equivalence governance.
+8. Executable guidance guarantee.
 
-Each cites `architecture/asb-phase-20-attention-protection-notification-governance-anti-addiction-continuity-constitution`.
+Each cites `architecture/asb-phase-21-canonical-accessibility-cognitive-inclusivity-universal-human-simplicity-constitution`.
 
 ## Out of scope
 
-No notification infrastructure, analytics, recommendation feeds, behavioral targeting, retention tooling, engagement optimization, runtime services, dashboards, or persuasive-technology infrastructure.
+No UI, frontend design, runtime implementation, dashboards, infrastructure, AI agents, scoring engines, or automation systems.
 
 ## Next phase
 
-Phase 21 — Canonical Accessibility, Cognitive Inclusivity & Universal Human Simplicity Constitution.
+Phase 22 — TBD.
