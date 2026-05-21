@@ -1,36 +1,36 @@
-# Phase 23 — Canonical Sport-Specific Intelligence, Baseball/Softball Execution Systems & Positional Adaptation Doctrine
+# Phase 24 — Canonical Pitching Intelligence System, Sequencing Theory & Arm Health Survival Architecture
 
-Constitutional sport-specialization phase. No code, UI, runtime, migrations, or analytics. Strict continuation of Phases 1–22.
+Constitutional pitching-specialization and arm-survival governance phase. No code, UI, runtime, migrations, analytics, or product discussion. Strict continuation of Phases 1–23.
 
 ## Scope — exactly two file touches
 
 ### File Touch 1 — Create new constitution
 
-Path: `mem://architecture/asb-phase-23-canonical-sport-specific-intelligence-baseball-softball-execution-systems-positional-adaptation-doctrine.md`
+Path: `mem://architecture/asb-phase-24-canonical-pitching-intelligence-system-sequencing-theory-arm-health-survival-architecture.md`
 
 Full §A–§J constitutional depth, exhaustive (matching prior phase density):
 
-- §A Baseball/Softball Organism Intelligence Doctrine — sport modeled as organism-state under competitive temporal pressure; every pitch/swing/throw/run/fielding decision is an ASB-state manifestation, not isolated mechanics.
-- §B Positional Intelligence Architecture — pitcher (sequencing + load + recovery asymmetry), catcher (cognitive compression + durability load), infield (reaction + decision latency), outfield (spatial anticipation + velocity processing), hitter (timing integrity + decision latency under uncertainty); position defines intelligence structure, not role label.
-- §C ASB-to-Sport Translation Layer — readiness→execution stability, fatigue→mechanical degradation probability, missingness→decision uncertainty under pressure, confidence→execution aggressiveness threshold, load→injury-risk + performance decay vector; no sport action exists outside ASB state expression.
-- §D Game-State Intelligence Doctrine — inning pressure, score differential stress, count constraints, base occupancy topology, pitch sequencing history; game state is a dynamic constraint system on organism execution, not scoreboard overlay.
-- §E Biomechanical Execution Integrity — fatigue-induced form drift, asymmetry accumulation (throwing arm vs kinetic chain), load distribution across repeated actions, recovery window constraints per motion type; biomechanics is downstream of organism state.
-- §F Positional Fatigue & Load Differentiation — pitchers (rotational + neural), catchers (sustained squat + cognitive), hitters (timing + explosive variability); fatigue cannot be generalized across roles.
-- §G Sport Decision Latency Architecture — perception + cognition + execution delays; performance ceiling governed by compounded latency under ASB constraints.
-- §H Competitive Execution Systems — pitching sequencing logic, hitting decision trees, base-running risk evaluation, defensive anticipation modeling; all probabilistic outputs of organism state under constraint pressure.
-- §I Developmental Sport Progression Doctrine — mechanical dependency → adaptive contextual execution → autonomous anticipatory execution; governed by ASB stability, not age or rep count.
-- §J Immutable Sport Invariants SSI-1…SSI-10 — sport actions are organism-state expressions; position defines cognitive architecture; fatigue asymmetrical/role-dependent; game state is constraint system; biomechanics downstream of organism state; decision latency governs ceiling; missingness increases execution uncertainty; no action isolated from ASB; development state-driven not time-driven; sport truth replay-safe and ASB-consistent.
+- §A Pitching as Organism Subsystem Doctrine — pitching is a high-frequency organism load system integrating neural sequencing, musculoskeletal stress, and fatigue-driven decision degradation; every pitch is a full ASB-state expression under maximal constraint sensitivity.
+- §B Pitch Sequencing Intelligence Architecture — sequencing as constrained predictive intelligence governed by opponent adaptation history, ASB state constraints, fatigue-modulated decision space, mechanical stability boundaries; never pattern recall.
+- §C Arm Health Survival Governance — cumulative rotational load exposure, micro-fatigue accumulation, recovery window sufficiency, mechanical drift detection; arm health is a survival system, not a performance metric.
+- §D ASB-to-Pitching Translation Layer — readiness→velocity stability + command integrity, fatigue→sequencing narrowing + mechanical variance increase, missingness→decision uncertainty amplification, confidence→pitch aggressiveness threshold, load→injury-risk escalation curve; pitch selection cannot exist outside ASB constraints.
+- §E Pitch Execution Latency Architecture — cognitive sequencing delay, motor execution delay, recovery delay between high-intensity outputs; latency compression defines ceiling performance under fatigue.
+- §F Mechanical Drift Detection System — release point variance, velocity decay patterns, arm slot deviation under fatigue, asymmetry accumulation; drift as leading indicator of organism degradation.
+- §G Pitcher Fatigue State Modeling — neural fatigue (decision sequencing degradation), muscular fatigue (velocity loss), connective fatigue (injury risk escalation); non-linear, non-aggregating across layers.
+- §H Competitive Pitching Intelligence — sequencing adaptation under pressure, batter-specific constraint modeling, count-based probabilistic selection; all ASB-state bounded.
+- §I Developmental Pitcher Progression Doctrine — mechanical stability → adaptive sequencing → autonomous intelligence; governed by ASB stability + arm survivability, not velocity alone.
+- §J Immutable Pitching Invariants PI-1…PI-10 — organism-state dependent execution; arm health as survival constraint; sequencing as adaptive intelligence; multi-layered non-linear fatigue; ASB-governed pitch decisions; mechanical drift as leading failure signal; latency defines ceiling; non-reversible load accumulation risk; state-driven development; replay-safe ASB-consistent pitching truth.
 
 ### File Touch 2 — Update `mem://index.md`
 
-1. Prepend ONE Memories entry referencing the Phase 23 constitution (top of Memories list).
-2. Append 8 Core lines: baseball/softball organism intelligence mapping; positional execution architecture (pitcher/catcher/hitter/fielders); ASB-to-sport translation layer; game-state constraint intelligence; biomechanical execution integrity doctrine; sport decision latency architecture; competitive execution systems (pitching/hitting/fielding); developmental sport progression model. Each references the new constitution path.
+1. Prepend ONE Memories entry referencing the Phase 24 constitution (top of Memories list).
+2. Append 8 Core lines: pitching organism subsystem intelligence; pitch sequencing adaptive intelligence system; arm health survival architecture doctrine; ASB-to-pitching constraint translation layer; mechanical drift detection system; pitcher fatigue state modeling; competitive pitching intelligence system; developmental pitcher progression model. Each references the new constitution path.
 3. Preserve ALL prior content verbatim.
 
 ## Out of scope
 
-No code, UI, dashboards, runtime, analytics, deployment, automation, or external integrations.
+No code, UI, runtime, analytics, deployment, or automation.
 
 ## Next phase
 
-Phase 24 — Canonical Pitching Intelligence System, Sequencing Theory & Arm Health Survival Architecture.
+Phase 25 — Catcher Cognitive Compression System, Defensive Command Architecture & Neural Load Survival Doctrine.
