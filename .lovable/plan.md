@@ -1,23 +1,23 @@
-# Phase 30 — Canonical Learning, Adaptation Memory & Longitudinal Evolution Doctrine
+# Phase 31 — Canonical Governance, Contradiction Resolution & Constitutional Arbitration Doctrine
 
 Constitutional memory-only phase. Two file touches. No code, UI, runtime, migrations, analytics, or product logic.
 
 ## File touches
 
-1. **Create** `mem://architecture/asb-phase-30-canonical-learning-adaptation-memory-longitudinal-evolution-doctrine.md`
-   - Full constitution with §A–§J sections as specified (Core Evolution Doctrine, Longitudinal Athlete Memory Architecture, Adaptation Without Drift, Learning Signal Architecture, Confidence Evolution, Behavioral Adaptation Governance, Temporal Drift Detection, Cross-Phase Memory Continuity, Observability of Learning Evolution, Immutable Invariants LE-1…LE-10).
+1. **Create** `mem://architecture/asb-phase-31-canonical-governance-contradiction-resolution-constitutional-arbitration-doctrine.md`
+   - Full constitution with §A–§J sections as specified (Core Governance Doctrine, Constitutional Authority Hierarchy, Contradiction Classification System, Arbitration Engine Doctrine, Conflict Preservation Doctrine, Authority Drift Prevention, Cross-Phase Consistency Enforcement, Governance Failure Modes, Observability of Governance, Immutable Governance Invariants GV-1…GV-10).
 
 2. **Update** `mem://index.md`
-   - **Prepend** Phase 30 Memories entry (above Phase 29) summarizing append-only, replay-safe longitudinal adaptation doctrine.
+   - **Prepend** Phase 31 Memories entry (above Phase 30) summarizing system-wide authority hierarchy, contradiction classification, and ledger-first arbitration rules.
    - **Append** 8 Core lines to `## Core` section:
-     - longitudinal ASB learning and adaptation architecture
-     - append-only organism memory evolution model
-     - drift detection and temporal consistency governance
-     - confidence evolution across time-bound ASB states
-     - cross-phase memory continuity and replay integrity
-     - behavioral adaptation under fatigue and load history
-     - state-derived learning signal architecture
-     - organism-level temporal evolution observability layer
+     - canonical governance and authority hierarchy enforcement layer
+     - contradiction detection and classification system architecture
+     - ledger-first constitutional arbitration doctrine
+     - cross-phase consistency and replay integrity governance
+     - conflict preservation and lineage-aware resolution model
+     - authority drift detection and override prevention system
+     - system-wide contradiction observability framework
+     - organism-level constitutional arbitration layer
    - All prior content preserved verbatim.
 
 ## Out of scope
