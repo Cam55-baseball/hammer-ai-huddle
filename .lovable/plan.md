@@ -1,41 +1,42 @@
-# Phase 44 — Canonical Implementation Program Charter & Execution Governance Doctrine
+# Phase 45 — Canonical Runtime Architecture Foundation & Deterministic Execution Core
 
-Constitutional implementation-governance initialization. Additive-only over Phases 1–43. No runtime, schema, code, UI, or infrastructure changes — memory-only doctrine ratification.
+Constitutional execution-layer initialization. Additive-only over Phases 1–44. Memory-only doctrine; no runtime code, schemas, UI, infrastructure, analytics, or product logic introduced.
 
 ## Scope
 
-Exactly two file touches, both in the memory namespace:
+Exactly two file touches in the memory namespace:
 
-1. **CREATE** `mem://architecture/asb-phase-44-canonical-implementation-program-charter-execution-governance-doctrine.md` — full §A–§J doctrine.
-2. **UPDATE** `mem://index.md` — prepend one Phase 44 Memories entry above the Phase 43 entry; append 8 Core lines below the existing Core block. Preserve all prior content verbatim.
+1. **CREATE** `mem://architecture/asb-phase-45-canonical-runtime-architecture-foundation-deterministic-execution-core.md` — full §A–§J runtime kernel doctrine.
+2. **UPDATE** `mem://index.md` — prepend one Phase 45 Memories entry above the Phase 44 entry; append 8 Core lines below the existing Core block. Preserve all prior content verbatim.
 
-No other files touched. No source code, no `.lovable/`-adjacent edits beyond this plan.
+No other files touched.
 
 ## Doctrine file structure (§A–§J)
 
-- §A Implementation Governance Doctrine — implementation subordinate to constitutional invariants; replay-safe lineage required.
-- §B Execution Authority Hierarchy — Constitutional doctrine (1–43) > Implementation governance (translation only) > Runtime systems (lowest).
-- §C Implementation Boundary Discipline — strict doctrine/implementation separation; forbids merging runtime decisions into doctrine, shortcutting validation, bypassing replay.
-- §D Canonical Build Sequencing — schema/data contracts → event/ledger primitives → replay engine core → validation/determinism engine → ASB organism state engine → cross-system orchestration → domain engines (pitching, hitting, catching, fielding, baserunning) → UX translation.
-- §E Deterministic Implementation Rules — replay-safe, deterministic, lineage-preserving, ASB-compliant, confidence/missingness-aware.
-- §F Implementation Anti-Drift Doctrine — drift between constitutional intent, runtime behavior, schema evolution, engine execution triggers rollback to constitutional baseline.
-- §G Build Environment & Isolation Governance — isolated per-subsystem environments, no shared hidden state, explicit dependency graphs, no implicit runtime coupling.
-- §H Validation & Pre-Deployment Gate Doctrine — full replay validation, lineage verification, ASB state consistency, missingness/confidence integrity required before deploy.
-- §I Observability of Implementation — every build step emits lineage traces, deterministic execution logs, replay artifacts, validation proofs.
-- §J IM-1…IM-10 immutable implementation invariants — subordination, no hidden state, determinism, replayability, lineage integrity, ASB-governance, schema-first, mandatory validation, no implicit coupling, survivability > performance.
+- §A Deterministic Runtime Kernel — runtime as deterministic execution engine over ASB state; must be deterministic, replayable, state-consistent, lineage-preserving; probabilistic execution paths forbidden.
+- §B Execution Loop Architecture — ingest ASB snapshot → resolve event inputs → evaluate deterministic transitions → apply state mutations → emit lineage-trace event → persist replay frame; no hidden steps.
+- §C Canonical State Transition Engine — all behavior expressed as explicit ASB-bounded transitions; atomic, replay-reversible, lineage-linked, pre-commit validated.
+- §D Replay-First Execution Model — every runtime action reconstructable from event log, deterministically replayable, identical outputs under identical inputs; replay is a core execution requirement, not tooling.
+- §E ASB Runtime State Evaluator — first executable expression of readiness, fatigue propagation, missingness resolution, confidence weighting, load accumulation; outputs derived strictly from state equations.
+- §F Deterministic Event Processor — ordered events, immutable records, lineage-linked transformations; no implicit side effects.
+- §G Runtime Isolation & Execution Safety — strict context isolation, no shared mutable hidden state, explicit dependency injection only, deterministic or disallowed concurrency.
+- §H Failure Containment & Deterministic Rollback — full state rollback via replay; failure contained at event boundary; no partial-state persistence; determinism preserved through failure.
+- §I Observability as Execution Property — observability embedded in execution; every step emits lineage trace, event causality graph, state delta, ASB snapshot evolution.
+- §J RT-1…RT-10 immutable runtime invariants — determinism, full replayability, no hidden state, event-derived actions, ASB governance of transitions, immutable lineage, replay-based rollback, deterministic-or-disallowed concurrency, event-boundary failure containment, survivability over performance.
 
 ## Index update
 
-- Prepend one Memories entry (above Phase 43) summarizing: implementation governance initialization, execution authority hierarchy, deterministic build sequencing, replay-safe construction, anti-drift enforcement, validation gates, IM-1…IM-10.
-- Append 8 Core lines (verbatim list from request) below existing Core block.
+- Prepend one Memories entry (above Phase 44) summarizing the deterministic runtime kernel, execution loop, ASB runtime evaluator, replay-first execution, event processor, state transition engine, isolation/rollback, embedded observability, and RT-1…RT-10.
+- Append the 8 specified Core lines below the existing Core block.
 - All prior Memories entries and Core lines preserved byte-for-byte.
 
 ## Constraints
 
 - Additive-only; no edits, removals, or restructuring of prior content.
-- No runtime, schema, engine, UI, infrastructure, analytics, or product logic.
-- Mode switch to build required to perform the two memory writes.
+- Subordinate to Eternal Laws, FI-1…FI-10, IM-1…IM-10, and all prior immutable invariants across Phases 1–44.
+- No UI, gameplay logic expansion, analytics, product features, domain engine implementations, or distributed infrastructure design.
+- Build mode required to perform the two memory writes.
 
 ## Next
 
-Phase 45 — Canonical Runtime Architecture Foundation & Deterministic Execution Core Doctrine.
+Phase 46 — Canonical Event Ledger & Immutable System of Record Doctrine.
