@@ -1,42 +1,42 @@
-# Phase 45 — Canonical Runtime Architecture Foundation & Deterministic Execution Core
+# Phase 46 — Canonical Event Ledger & Immutable System of Record Doctrine
 
-Constitutional execution-layer initialization. Additive-only over Phases 1–44. Memory-only doctrine; no runtime code, schemas, UI, infrastructure, analytics, or product logic introduced.
+Constitutional persistence-layer initialization. Additive-only over Phases 1–45 and subordinate to Eternal Laws, RT-1…RT-10, IM-1…IM-10, FI-1…FI-10, and all prior immutable invariants. Memory-only doctrine; no runtime code, storage systems, infrastructure, UI, analytics, or product logic introduced.
 
 ## Scope
 
 Exactly two file touches in the memory namespace:
 
-1. **CREATE** `mem://architecture/asb-phase-45-canonical-runtime-architecture-foundation-deterministic-execution-core.md` — full §A–§J runtime kernel doctrine.
-2. **UPDATE** `mem://index.md` — prepend one Phase 45 Memories entry above the Phase 44 entry; append 8 Core lines below the existing Core block. Preserve all prior content verbatim.
+1. **CREATE** `mem://architecture/asb-phase-46-canonical-event-ledger-immutable-system-of-record-doctrine.md` — full §A–§J system-of-record doctrine.
+2. **UPDATE** `mem://index.md` — prepend one Phase 46 Memories entry above the Phase 45 entry; append 8 Core lines below the existing Core block. Preserve all prior content verbatim.
 
 No other files touched.
 
 ## Doctrine file structure (§A–§J)
 
-- §A Deterministic Runtime Kernel — runtime as deterministic execution engine over ASB state; must be deterministic, replayable, state-consistent, lineage-preserving; probabilistic execution paths forbidden.
-- §B Execution Loop Architecture — ingest ASB snapshot → resolve event inputs → evaluate deterministic transitions → apply state mutations → emit lineage-trace event → persist replay frame; no hidden steps.
-- §C Canonical State Transition Engine — all behavior expressed as explicit ASB-bounded transitions; atomic, replay-reversible, lineage-linked, pre-commit validated.
-- §D Replay-First Execution Model — every runtime action reconstructable from event log, deterministically replayable, identical outputs under identical inputs; replay is a core execution requirement, not tooling.
-- §E ASB Runtime State Evaluator — first executable expression of readiness, fatigue propagation, missingness resolution, confidence weighting, load accumulation; outputs derived strictly from state equations.
-- §F Deterministic Event Processor — ordered events, immutable records, lineage-linked transformations; no implicit side effects.
-- §G Runtime Isolation & Execution Safety — strict context isolation, no shared mutable hidden state, explicit dependency injection only, deterministic or disallowed concurrency.
-- §H Failure Containment & Deterministic Rollback — full state rollback via replay; failure contained at event boundary; no partial-state persistence; determinism preserved through failure.
-- §I Observability as Execution Property — observability embedded in execution; every step emits lineage trace, event causality graph, state delta, ASB snapshot evolution.
-- §J RT-1…RT-10 immutable runtime invariants — determinism, full replayability, no hidden state, event-derived actions, ASB governance of transitions, immutable lineage, replay-based rollback, deterministic-or-disallowed concurrency, event-boundary failure containment, survivability over performance.
+- §A Canonical Event Ledger Doctrine — ledger as immutable system of record; all behavior recorded as ordered, immutable, append-only, lineage-linked entries; no state authoritative unless in the ledger.
+- §B Append-Only Event Architecture — append-only, ordering-preserving, causal-history-complete, permanently retained; history mutation forbidden.
+- §C System of Record Supremacy — authority hierarchy Ledger > Replay engine > Runtime > Derived views.
+- §D Event Structure Standardization — unique event ID, ASB snapshot reference, deterministic timestamp, causal parent reference, state delta, confidence/missingness context, lineage metadata.
+- §E Lineage Chain Integrity Doctrine — no orphan events, no disconnected mutations, no hidden transitions, no untraceable changes.
+- §F Replay-Driven Ledger Validation — integrity validated through full deterministic replay, causal graph reconstruction, state equivalence verification; replay failure invalidates ledger artifact.
+- §G Immutability Enforcement Model — immutability over content, ordering, causal relationships, historical reconstruction; no retroactive modification.
+- §H Cross-System Ledger Dependency — all subsystems write into and read truth from the ledger; no independent authoritative state.
+- §I Observability Through Ledger — observability derived exclusively from the ledger; no external observability system authoritative.
+- §J EL-1…EL-10 immutable ledger invariants — append-only, no event mutation, all state derives from event history, replay reconstructs full state, causal integrity intact, no hidden state, all runtime systems depend on ledger, lineage complete and unbroken, determinism required for validation, survivability over performance.
 
 ## Index update
 
-- Prepend one Memories entry (above Phase 44) summarizing the deterministic runtime kernel, execution loop, ASB runtime evaluator, replay-first execution, event processor, state transition engine, isolation/rollback, embedded observability, and RT-1…RT-10.
+- Prepend one Memories entry (above Phase 45) summarizing the canonical event ledger, immutable system-of-record doctrine, append-only architecture, lineage chain integrity, replay-driven validation, event structure standardization, ledger supremacy, and EL-1…EL-10.
 - Append the 8 specified Core lines below the existing Core block.
 - All prior Memories entries and Core lines preserved byte-for-byte.
 
 ## Constraints
 
 - Additive-only; no edits, removals, or restructuring of prior content.
-- Subordinate to Eternal Laws, FI-1…FI-10, IM-1…IM-10, and all prior immutable invariants across Phases 1–44.
-- No UI, gameplay logic expansion, analytics, product features, domain engine implementations, or distributed infrastructure design.
+- Subordinate to Eternal Laws, FI-1…FI-10, IM-1…IM-10, RT-1…RT-10, and all prior immutable invariants across Phases 1–45.
+- No storage implementation, database design, infrastructure deployment, runtime coding, analytics, UI, or visualization systems.
 - Build mode required to perform the two memory writes.
 
 ## Next
 
-Phase 46 — Canonical Event Ledger & Immutable System of Record Doctrine.
+Phase 47 — Canonical Replay Engine & Deterministic State Reconstruction Doctrine.
