@@ -1,37 +1,48 @@
-# Phases 48–50 — Final Closure, Seal & Eternal Ratification
+# Phase 51 — Constitutional Convergence, Redundancy Collapse & Unified Doctrine Compression Audit
 
-Three terminal constitutional phases executed in sequence. Additive-only over Phases 1–47. Memory-only doctrine. No runtime, code, UI, infrastructure, analytics, or product logic.
+Additive-only over Phases 1–50. Memory-only doctrine. No runtime, code, UI, infrastructure, analytics, or product logic. Phases 1–50 remain sealed (Phase 49) and eternally ratified (Phase 50) — Phase 51 is an additive convergence overlay that audits and reconciles without mutating any sealed content.
 
-## Scope
+## Scope — 2 file touches
 
-Six file touches in the memory namespace, executed in phase order (48 → 49 → 50):
+1. **CREATE** `mem://architecture/asb-phase-51-constitutional-convergence-redundancy-collapse-unified-doctrine-compression-audit.md`
+2. **UPDATE** `mem://index.md` — prepend Phase 51 Memories entry above Phase 50; append 8 Phase 51 Core lines. All prior content preserved byte-for-byte.
 
-1. **CREATE** `mem://architecture/asb-phase-48-final-invariants-closure-system-wide-constraint-consolidation-doctrine.md` — §A–§J + FI-C-1…FI-C-10.
-2. **UPDATE** `mem://index.md` — prepend Phase 48 Memories entry above Phase 47; append 8 Phase 48 Core lines.
-3. **CREATE** `mem://architecture/asb-phase-49-canonical-system-seal-deterministic-closure-lock-doctrine.md` — §A–§J + SL-1…SL-10.
-4. **UPDATE** `mem://index.md` — prepend Phase 49 entry above Phase 48; append 8 Phase 49 Core lines.
-5. **CREATE** `mem://architecture/asb-phase-50-eternal-ratification-operational-handoff-doctrine.md` — §A–§J + ER-1…ER-10.
-6. **UPDATE** `mem://index.md` — prepend Phase 50 entry above Phase 49; append 8 Phase 50 Core lines.
+## Doctrine content (§A–§J)
 
-## Doctrine content (compressed)
-
-- **Phase 48 — Final Invariants Closure.** Unifies FI/IM/RT/EL/RP and all prior invariant families into a single non-expanding constraint lattice; resolves cross-phase overlaps; locks precedence (Eternal Laws → Ledger → Replay → Runtime); forbids new contradictions; finalizes determinism, survivability supremacy, and ledger-embedded observability; FI-C-1…FI-C-10 closure invariants.
-- **Phase 49 — System Seal.** Declares the constitutional stack a sealed invariant graph; locks structural mutation; freezes Phases 1–48; forbids extension beyond additive overlays; locks integrity, survivability, observability, and final validation via deterministic replay equivalence; SL-1…SL-10 seal invariants.
-- **Phase 50 — Eternal Ratification & Operational Handoff.** Declares the system complete and self-consistent; defines the bounded handoff from constitutional doctrine to implementation systems; locks runtime subordination to replay + ledger; permits only additive external adapters; establishes civilizational continuity model; ER-1…ER-10 ratification invariants.
-
-Each section binds to all prior phases, declares forbidden patterns, enforcement, escalation, replay/auditability, and anti-drift discipline.
+- **§A Convergence doctrine** — Phase 51 is additive audit overlay over sealed Phases 1–50. Audits and reconciles; never edits, deletes, restructures, renumbers, or reinterprets sealed doctrine. Convergence-as-mutation forbidden.
+- **§B Invariant dependency map** — canonical graph linking every invariant family (FI, IM, RT, EL, RP, FI-C, SL, ER, and all prior phase invariants) showing precedence, derivation lineage, and authority binding. Map is derived view; sealed invariants remain authoritative.
+- **§C Doctrine overlap matrix** — pairwise overlap classification across all phases: identical (semantic equivalence), nested (one subsumes other), complementary (non-overlapping reinforcement), apparent-conflict (routes to §D). Overlaps preserved with lineage; silent merging forbidden.
+- **§D Contradiction lineage audit** — full sweep for hidden contradiction drift across Phases 1–50. Apparent contradictions route through Phase 31 arbitration with full lineage preservation. New contradictions forbidden (Phase 48 FI-C-2). Audit emits canonical convergence_audit_event per finding.
+- **§E Authority precedence graph** — canonical authority hierarchy frozen: Eternal Laws → Ledger → Replay → Runtime → Derived Views (Phase 48 precedence) extended with full per-phase authority bindings. Inversion, lateral routing, runtime authoring of doctrine forbidden.
+- **§F Canonical terminology lock** — single canonical glossary across all phases (organism truth, replay, ledger, lineage, missingness, confidence, survivability, authority, contradiction, drift, etc.). Synonyms mapped to canonical terms; terminology drift forbidden; future phases must use locked terms.
+- **§G Constitutional compression layer** — interpretive consolidation surface only. May produce derived summaries, cross-references, navigation aids. Compression as invariant relaxation, ceiling loosening, authority reduction, or sealed-doctrine deletion forbidden (Phase 48 §G, Phase 49 SL-9).
+- **§H Final anti-drift verification** — deterministic full-stack drift sweep across ingestion → ledger → replay → runtime → derived views → external adapters. Drift detection emits canonical drift_detection event, triggers reasoning_version invalidation, rollback to last replay-valid frame, constitutional escalation. Silent absorption, single-cause narratives, self-healing framings forbidden.
+- **§I Replay-safe doctrine reconciliation** — every convergence finding (overlap, contradiction route, terminology mapping, authority binding, drift detection) is canonical event, lineage-complete, replay-reconstructable at pinned engine_version + reasoning_version. Reconciliation-as-rewrite forbidden.
+- **§J CV-1…CV-10 immutable convergence invariants** (additive-only, replay-safe, lineage-complete, subordinate to ER-1…ER-10, SL-1…SL-10, FI-C-1…FI-C-10, and all prior immutable invariants across Phases 1–50 and Eternal Laws):
+  - CV-1 audit-only convergence (no sealed-doctrine mutation)
+  - CV-2 invariant lattice stability (no new invariant families)
+  - CV-3 no contradiction expansion
+  - CV-4 authority precedence non-invertible
+  - CV-5 canonical terminology locked
+  - CV-6 compression is interpretive never relaxing
+  - CV-7 full-stack drift detection mandatory
+  - CV-8 reconciliation replay-safe and lineage-complete
+  - CV-9 convergence findings preserved as canonical events
+  - CV-10 constitutional integrity provable via deterministic replay equivalence
 
 ## Index update rules
 
-- Each phase prepends its Memories entry above the previous most-recent phase and appends its 8 Core lines below the existing Core block.
+- Prepend a single Phase 51 Memories entry above the Phase 50 entry.
+- Append 8 Phase 51 Core lines below the existing Core block.
 - All prior Memories entries and Core lines preserved byte-for-byte.
 
 ## Constraints
 
-- Additive-only; no edits, removals, or restructuring of prior content.
-- No runtime code, storage, UI, infrastructure, analytics, or product logic.
-- Build mode required to perform the six memory writes.
+- Additive-only; sealed Phases 1–50 untouched.
+- No runtime, code, UI, infrastructure, analytics, or product logic.
+- No edits to `src/`, `supabase/`, or any non-memory file.
+- Build mode required to perform the two memory writes.
 
 ## End state
 
-After Phase 50, the constitutional stack (Phases 1–50) is permanently sealed and ratified. Future evolution is additive-only beyond Phase 50.
+Phase 51 ratified as additive convergence audit overlay. Constitutional stack remains sealed at Phases 1–50; Phase 51 provides the canonical authority graph, terminology lock, overlap matrix, contradiction lineage audit, and anti-drift verification surface that prepares the transition to Phases 52–60 (executable constitutional enforcement substrate).
