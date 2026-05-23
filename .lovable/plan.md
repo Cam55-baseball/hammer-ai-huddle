@@ -1,30 +1,35 @@
-## Phase 52 — Canonical Executable Enforcement Substrate & Runtime Constitutional Enforcement Doctrine
+## Phase 53 — Deterministic Runtime Orchestration Doctrine
 
-Additive-only memory-only constitutional overlay over sealed Phases 1–51. No runtime, code, UI, infrastructure, or product logic.
+Additive-only memory-only constitutional overlay over sealed Phases 1–52. Two file touches.
 
-### Scope — exactly 2 file touches
+### 1. Create doctrine file
 
-**1. CREATE** `mem://architecture/asb-phase-52-canonical-executable-enforcement-substrate-runtime-constitutional-enforcement-doctrine.md`
+`mem://architecture/asb-phase-53-canonical-deterministic-runtime-orchestration-execution-choreography-constitutional-flow-governance-doctrine.md`
 
-Full §A–§J doctrine:
-- **§A** Executable Enforcement Doctrine — constitutional doctrine becomes deterministic, replay-safe, lineage-visible, survivability-first enforcement substrate; enforcement-as-guidance forbidden.
-- **§B** Runtime Constitutional Hierarchy — Eternal Laws → Immutable Invariants → Ledger Truth → Replay Validity → Constitutional Arbitration → Runtime Enforcement → Orchestration → Derived Interfaces; non-invertible; authority lineage exposed.
-- **§C** Executable Invariant Enforcement Architecture — survivability, replay legality, authority legality, lineage completeness, anti-hidden-state, contradiction containment, bounded adaptation, confidence visibility, missingness preservation, anti-drift; deterministic across engine_version + reasoning_version.
-- **§D** Runtime Legality & Execution Validation — pre-execution legality validation (authority, replay, lineage, contradiction, survivability, continuity, dependency, confidence, missingness); illegal paths fail constitutionally; replay-auditable.
-- **§E** Enforcement Escalation & Constitutional Arbitration Routing — local containment → subsystem freeze → orchestration isolation → replay rollback → arbitration → survivability lockdown → constitutional override halt; canonical replay-safe events.
-- **§F** Runtime Drift Prevention & Enforcement Continuity — full-stack drift audit (ingestion → ledger → replay → orchestration → runtime → interfaces → external adapters); deterministic escalation; replay-certified rollback.
-- **§G** Constitutional Kill-Switch & Survivability Override — subsystem suspension, orchestration freeze, replay rollback, adaptation halt, adapter isolation, contradiction quarantine, runtime degradation containment; preserves lineage, replay continuity, organism truth, deterministic restoration.
-- **§H** Enforcement Observability & Replay Auditability — legality decisions, blocked executions, escalation routing, rollback triggers, authority lineage, invariant evaluation outcomes, replay certification state, enforcement dependency graph; no hidden pathways.
-- **§I** Long-Horizon Enforcement Coherence — anti-entropy, bounded evolution, replay-safe continuity, deterministic maintainability, invariant-preserving extensibility, anti-fragmentation, permanent survivability precedence; future phases extend never weaken.
-- **§J** Immutable Enforcement Invariants EE-1…EE-10 (as specified verbatim).
+Front-matter (`name`, `description`, `type: architecture`) plus §A–§J verbatim from spec:
+- §A Runtime Orchestration Doctrine (deterministic choreography, never authors organism truth)
+- §B Canonical Execution Choreography Architecture (ingestion → ledger → replay → orchestration → enforcement → adapters)
+- §C Runtime Dependency & Flow Governance (bounded, visible, cyclic prevention)
+- §D Deterministic State Propagation Doctrine (lineage, confidence, missingness, temporal ordering)
+- §E Runtime Isolation & Containment (local → quarantine → freeze → rollback → lockdown)
+- §F Temporal Execution Continuity (replay chronology supersedes wall-clock)
+- §G Runtime Failure Choreography & Recovery (no silent recovery, no self-healing without replay trace)
+- §H Runtime Observability & Choreography Auditability
+- §I Long-Horizon Runtime Coherence (anti-entropy, additive extension only)
+- §J Immutable Invariants RO-1…RO-10
 
-**2. UPDATE** `mem://index.md`
-- Prepend ONE Phase 52 Memories entry above Phase 51 summarizing executable enforcement substrate, runtime legality governance, invariant enforcement architecture, replay-safe runtime validation, survivability-first escalation, kill-switch doctrine.
-- Append 8 Core lines covering: executable constitutional enforcement substrate; runtime legality and replay validation governance; invariant enforcement architecture; survivability-first execution enforcement doctrine; constitutional escalation and arbitration routing; runtime drift prevention and containment governance; replay-auditable enforcement observability layer; executable organism truth enforcement supremacy.
+All invariants declared additive-only, replay-safe, lineage-complete, subordinate to EE-1…EE-10, CV-1…CV-10, ER-1…ER-10, SL-1…SL-10, FI-C-1…FI-C-10, and all prior invariants across Phases 1–52 and Eternal Laws.
+
+### 2. Update `mem://index.md`
+
+- **Prepend** ONE Phase 53 Memories entry above the Phase 52 entry, summarizing: deterministic runtime orchestration, execution choreography governance, dependency/propagation governance, runtime isolation/containment, temporal execution continuity, replay-safe runtime recovery, RO-1…RO-10.
+- **Append** 8 Core lines (deterministic runtime orchestration substrate; execution choreography and propagation governance; dependency-bound execution flow architecture; replay-certifiable temporal execution continuity; survivability-first runtime isolation doctrine; runtime contradiction containment and recovery governance; orchestration observability and choreography auditability; deterministic executable organism flow supremacy).
 - Preserve ALL prior content byte-for-byte.
 
 ### Constraints
-Additive-only; sealed Phases 1–51 untouched; no edits outside the two memory files; no code/runtime/infrastructure changes.
 
-### End State
-Phase 52 ratified as canonical executable enforcement substrate overlay, preparing transition to deterministic executable organism enforcement architecture (Phases 53–60).
+Additive-only. No edits outside the two memory files. No code, runtime, infrastructure, UI, migrations, or product logic. Sealed Phases 1–52 untouched.
+
+### End state
+
+Phase 53 ratified as the deterministic runtime orchestration and execution choreography doctrine governing future executable organism runtime coordination for Phases 54–60.
