@@ -1,31 +1,31 @@
-## Phase 57 Ratification Plan
+## Phase 58 Ratification Plan
 
 Additive-only memory overlay. Exactly 2 file touches. No code/runtime/UI/infra.
 
-### 1. CREATE `mem://architecture/asb-phase-57-canonical-organism-adaptation-legality-bounded-evolution-governance-survivability-preserving-intelligence-mutation-doctrine.md`
+### 1. CREATE `mem://architecture/asb-phase-58-canonical-constitutional-simulation-predictive-scenario-traversal-survivability-forecasting-doctrine.md`
 
 Frontmatter (`name`, `description`, `type: architecture`) per spec, followed by full §A–§J body verbatim:
-- §A Adaptation Legality Doctrine
-- §B Canonical Adaptation Architecture (signal accumulation → replay validation → contradiction evaluation → survivability arbitration → bounded adaptation eligibility → deterministic adaptation propagation → replay certification)
-- §C Bounded Evolution Governance
-- §D Confidence & Missingness-Aware Adaptation
-- §E Adaptation Mutation Classification
-- §F Adaptation Failure Modes & Containment (local freeze → subsystem rollback → replay restoration → survivability lockdown → constitutional arbitration)
-- §G Replay-Safe Adaptation Restoration
-- §H Adaptation Observability & Auditability
-- §I Long-Horizon Evolution Coherence
-- §J Immutable Adaptation Invariants AE-1…AE-10, subordinate to EE/RO/AR/DG/RE/CV/ER/SL/FI-C and all prior invariants across Phases 1–56 and Eternal Laws
+- §A Constitutional Simulation Doctrine
+- §B Canonical Predictive Traversal Architecture (signal ingestion → lineage reconstruction → confidence/missingness evaluation → legality validation → survivability arbitration → bounded future-state branching → deterministic scenario propagation → replay-safe forecast certification)
+- §C Bounded Future-State Governance
+- §D Confidence & Missingness-Aware Forecasting
+- §E Predictive Scenario Classification
+- §F Simulation Failure Modes & Containment (local invalidation → branch containment → replay restoration → forecast rollback → survivability lockdown → constitutional arbitration)
+- §G Replay-Safe Forecast Restoration
+- §H Simulation Observability & Auditability
+- §I Long-Horizon Forecast Coherence
+- §J Immutable Forecasting Invariants SF-1…SF-10, subordinate to EE/RO/AR/DG/RE/AE/CV/ER/SL/FI-C and all prior invariants across Phases 1–57 and Eternal Laws
 
 ### 2. UPDATE `mem://index.md`
 
-- Prepend ONE Phase 57 Memories entry directly above the Phase 56 entry, summarizing bounded organism adaptation legality, survivability-preserving intelligence mutation governance, replay-safe evolutionary continuity, confidence/missingness-aware adaptation legality, adaptation rollback governance, and AE-1…AE-10 invariants.
+- Prepend ONE Phase 58 Memories entry directly above the Phase 57 entry, summarizing constitutional simulation, predictive scenario traversal, survivability forecasting, replay-safe future-state reconstruction, confidence/missingness-aware forecasting legality, deterministic scenario arbitration, bounded future-state governance, and SF-1…SF-10 invariants.
 - Append 8 Core lines verbatim from spec under the existing Core section.
 - Preserve ALL prior content byte-for-byte. Obey Phase 51 canonical terminology lock.
 
 ### Constraints
 
-Additive-only · Sealed Phases 1–56 untouched · Exactly 2 file touches · No reinterpretation of prior doctrine.
+Additive-only · Sealed Phases 1–57 untouched · Exactly 2 file touches · No reinterpretation of prior doctrine.
 
 ### End State
 
-Phase 57 ratified as the canonical bounded adaptation legality and survivability-preserving organism evolution doctrine governing executable organism intelligence mutation continuity for Phases 58–60.
+Phase 58 ratified as the canonical constitutional simulation and survivability forecasting doctrine governing replay-safe predictive organism intelligence continuity for Phases 59–60.
