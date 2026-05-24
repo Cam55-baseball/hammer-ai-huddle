@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, User } from "lucide-react";
+import { ChevronDown, ChevronRight, ShieldCheck, User } from "lucide-react";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 import { EngineVersionBadge } from "./EngineVersionBadge";
 import { LineageTrace } from "./LineageTrace";
@@ -100,16 +101,24 @@ export function EventCard({ event }: Props) {
               event_id: {event.event_id}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-label={open ? "Collapse lineage" : "Expand lineage"}
-          >
-            {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            <span className="ml-1 text-xs">Trace lineage</span>
-          </Button>
+          <div className="flex flex-col gap-1 items-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label={open ? "Collapse lineage" : "Expand lineage"}
+            >
+              {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              <span className="ml-1 text-xs">Trace lineage</span>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to={`/replay/${event.event_id}`} aria-label="Open replay certification">
+                <ShieldCheck className="h-4 w-4" />
+                <span className="ml-1 text-xs">Replay certify</span>
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {open && (
