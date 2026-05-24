@@ -1,109 +1,61 @@
+# G1 — Athlete Event Timeline with Lineage Drilldown
 
-# Implementation Mode — ASB Build Backlog
+Read-only athlete-facing surface that exposes the canonical ASB event ledger, lineage graph, state snapshots, and engine/reasoning version metadata. No schema changes, no aggregation, no abstraction over the raw records.
 
-Phases 1–150+ are sealed. From here on, work ships as code. This plan converts the existing constitutional architecture into a buildable backlog and defines the first execution slice.
+## Scope
 
-## Mode Transition
+- New route: `/timeline` (athlete-only, accessible from Dashboard).
+- New page: `src/pages/AsbTimeline.tsx`.
+- New components under `src/components/asb/`:
+  - `EventTimeline.tsx` — paginated chronological list of `asb_events` for the current athlete.
+  - `EventCard.tsx` — collapsed event row with timestamp, topic, actor role, confidence, missingness chip, engine_version badge, "Trace lineage" toggle.
+  - `LineageTrace.tsx` — on expand, walks `asb_event_lineage` (parent→child) recursively for that event and renders the causal ancestry tree with derivation_type on each edge.
+  - `StateSnapshotPanel.tsx` — for each event, looks up `asb_state_snapshots` where `as_of_event_id = event.id` and renders the raw `payload` JSON (read-only, no derived rollups).
+  - `EngineVersionBadge.tsx` — shows pinned `engine_version` + `schema_version` joined from `asb_engine_versions`; tooltip exposes release notes.
+- New hook: `src/hooks/useAsbTimeline.ts` — paged query of `asb_events` by `athlete_id`, ordered by `occurred_at desc`, exposing raw rows.
+- New hook: `src/hooks/useEventLineage.ts` — recursive fetch of `asb_event_lineage` rows (parent and child sides) for a given `event_id`.
 
-- Architecture: **FROZEN** (Phases 1–150+ sealed, no new doctrine).
-- Memory doctrine docs become **reference only** — no new `mem://architecture/*` files.
-- All future requests are interpreted as Epic → Feature → Task work items against the backlog below.
-- One memory write only in this plan: add a `mem://build/backlog.md` index so the backlog is durable across sessions (replaces further phase expansion).
+## Doctrine alignment
 
-## The 8 Epics (compression of Phases 1–150+)
+- **No aggregation, no summary-only views.** Every event renders the raw row; lineage is exposed in full one click away (RW-2).
+- **Confidence + missingness visible per event** from `asb_events.payload` and snapshot `confidence` field. Never smoothed, never imputed.
+- **Engine + reasoning version pinned** on every card (RE-7 replay-certification badge).
+- **State snapshot is the raw `payload` jsonb** of `asb_state_snapshots` keyed on `as_of_event_id` — no derived rollup.
+- **Lineage is the actual graph**, not a flattened summary (`derivation_type` shown on every edge).
+- **Read-only.** No writes, no mutation, no event authoring from the UI.
+
+## Data flow
 
 ```text
-EPIC 1  Athlete Intelligence Core      ← organism truth, athlete profile, identity
-EPIC 2  ASB State Engine               ← readiness, fatigue, load, confidence, missingness
-EPIC 3  Sensor & Data Ingestion        ← wearables, video, manual entry, external APIs
-EPIC 4  Replay & Event Timeline        ← append-only event ledger + deterministic replay
-EPIC 5  Coaching Intelligence UI       ← coach dashboard, athlete view, translation layer
-EPIC 6  Recruiting & Evaluation        ← scout profiles, projections, comparison
-EPIC 7  Competitive Analytics          ← forecasting, scenario sim, opponent/context
-EPIC 8  Infrastructure & Observability ← auth, RLS, edge functions, logging, lineage view
+Dashboard ──► /timeline ──► useAsbTimeline(athleteId)
+                              └─► asb_events (paged, raw)
+                                    └─► EventCard
+                                          ├─► EngineVersionBadge ◄── asb_engine_versions
+                                          ├─► StateSnapshotPanel ◄── asb_state_snapshots (as_of_event_id)
+                                          └─► LineageTrace ◄── useEventLineage(eventId)
+                                                                 └─► asb_event_lineage (recursive)
 ```
 
-## Epic → Features (high level)
+## RLS
 
-**EPIC 1 — Athlete Intelligence Core**
-- F1.1 Athlete profile + roles (athlete/coach/recruiter/admin)
-- F1.2 Organism truth record (canonical per-athlete state pointer)
-- F1.3 Authority/role guard (separate `user_roles` table)
+Use existing policies on `asb_events`, `asb_event_lineage`, `asb_state_snapshots`, `asb_engine_versions`. No new policies. If an athlete cannot read their own ledger, that's a separate RLS gap surfaced as a follow-up (not part of G1).
 
-**EPIC 2 — ASB State Engine**
-- F2.1 State snapshot table (readiness, fatigue, load, confidence, missingness)
-- F2.2 Derivation service (pure functions over events → snapshot)
-- F2.3 Confidence + missingness propagation
-- F2.4 Survivability gate (block recommendations below thresholds)
+## Empty state
 
-**EPIC 3 — Sensor & Data Ingestion**
-- F3.1 Manual entry forms (workout, RPE, sleep)
-- F3.2 Generic webhook ingest edge function (HMAC-signed)
-- F3.3 Wearable adapter (one provider first — pick in build mode)
-- F3.4 Video/clip upload via Lovable Cloud storage
+Tables are currently empty in this environment. The UI must render a clear "No events recorded yet" state per surface (timeline, lineage, snapshot) without faking data — preserves lineage visibility doctrine even at zero events.
 
-**EPIC 4 — Replay & Event Timeline**
-- F4.1 Append-only `events` ledger (immutable, versioned)
-- F4.2 Replay engine (rebuild snapshot from events at version pin)
-- F4.3 Timeline UI (athlete event history)
+## Out of scope (explicitly)
 
-**EPIC 5 — Coaching Intelligence UI**
-- F5.1 Coach dashboard (roster + flags)
-- F5.2 Athlete detail view (state + lineage drilldown)
-- F5.3 Translation layer (state → human guidance with confidence bounds)
+- No new tables / migrations / edge functions.
+- No coach, recruiter, or scout views (G3, G4 later).
+- No replay execution / re-derivation (G2 badge later).
+- No forecast / scenario UI (G7 later).
+- No write paths.
 
-**EPIC 6 — Recruiting & Evaluation**
-- F6.1 Recruiter view + saved athletes
-- F6.2 Projection card (bounded, lineage-visible)
-- F6.3 Comparison view
+## Acceptance
 
-**EPIC 7 — Competitive Analytics**
-- F7.1 Scenario inputs + bounded forecast service
-- F7.2 Forecast display with confidence envelope
-
-**EPIC 8 — Infrastructure & Observability**
-- F8.1 Auth (email/password + Google), email confirm ON
-- F8.2 RLS on every table, role-based via `has_role()`
-- F8.3 Edge function logging + lineage event taps
-- F8.4 Admin observability page (event volume, failures)
-
-## Execution Order (first slices)
-
-1. **Supabase schema v1** — auth, roles, athletes, events ledger, state snapshots.
-2. **Ingestion v1** — manual entry + generic webhook edge function.
-3. **ASB engine v1** — derive readiness/fatigue/load/confidence from events.
-4. **Replay v1** — rebuild snapshot from event range.
-5. **UI v1** — auth, athlete dashboard, coach roster, event timeline.
-6. **Integrations v1** — one wearable adapter + video upload.
-7. **Deployment readiness** — RLS audit, linter pass, secrets, observability.
-
-## Data Model (v1 sketch — to be finalized in build mode)
-
-- `profiles(user_id, display_name, role_default, ...)`
-- `user_roles(user_id, role)` — enum: `athlete | coach | recruiter | admin`
-- `athletes(id, owner_user_id, name, dob, sport, position, ...)`
-- `athlete_coaches(athlete_id, coach_user_id)` — access grants
-- `events(id, athlete_id, event_type, source, payload jsonb, occurred_at, ingested_at, engine_version, reasoning_version, lineage jsonb)` — append-only
-- `state_snapshots(id, athlete_id, as_of, readiness, fatigue, load, confidence, missingness jsonb, engine_version, derived_from_event_range int8range)`
-- `ingest_sources(id, athlete_id, kind, config jsonb, secret_ref)`
-- `recruiter_watchlist(recruiter_user_id, athlete_id)`
-
-All tables: RLS on. Roles checked via `public.has_role(auth.uid(), 'role')` security-definer function.
-
-## First Build-Mode Deliverable
-
-When approved and switched to build mode, the first action is a single migration creating: roles enum, `user_roles`, `has_role()`, `profiles`, `athletes`, `athlete_coaches`, `events`, `state_snapshots`, plus RLS policies and timestamp triggers. Then auth UI (email/password + Google) and a minimal athlete dashboard that lists events.
-
-## Out of Scope (permanent)
-
-- New phases, megaphases, doctrines, invariants, or constitutional layering.
-- New `mem://architecture/*` files.
-- Any further compression beyond these 8 Epics.
-
-## Open Choices (answer in build mode, not blockers for plan approval)
-
-- Primary sport vertical for v1 (baseball implied by prior context — confirm).
-- First wearable adapter (Garmin / Whoop / Apple Health via webhook / none yet).
-- Whether to ship recruiter + competitive analytics in v1 or defer to v2.
-
-Approve to switch to build mode and begin with the Supabase schema v1 migration.
+- Athlete navigates from Dashboard to `/timeline`.
+- Sees their own `asb_events` in reverse-chronological order with confidence, missingness, actor role, engine_version visible inline.
+- Expanding an event reveals: full payload jsonb, the associated state snapshot raw payload, and the full lineage trace with derivation_type edges.
+- No event is shown without its engine_version + schema_version pinned.
+- All data on screen is one click from its raw underlying row.

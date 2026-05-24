@@ -73,6 +73,7 @@ const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const VideoLibrary = lazyWithRetry(() => import("./pages/VideoLibrary"));
 const VideoLibraryPlayer = lazyWithRetry(() => import("./pages/VideoLibraryPlayer"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
+const AsbTimeline = lazyWithRetry(() => import("./pages/AsbTimeline"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
@@ -179,6 +180,7 @@ const App = () => {
               <Route path="/profile-setup" element={<ProfileSetup />} />
               <Route path="/activate" element={<Activate />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/timeline" element={<AsbTimeline />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
               <Route path="/video-library" element={<VideoLibrary />} />
