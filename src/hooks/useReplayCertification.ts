@@ -43,27 +43,46 @@ export interface ReplayCertificationData {
   engineVersionInRegistry: boolean;
 }
 
-export function useReplayCertification(eventId: string | null) {
+/**
+ * Step 1: fetch the selected event so its engine_version can participate in
+ * the certification query key (engine_version-safe invalidation per RE-1…RE-10).
+ */
+function useSelectedEvent(eventId: string | null) {
   return useQuery({
-    queryKey: ["asb-replay-certification", eventId],
+    queryKey: ["asb-replay-selected-event", eventId],
     enabled: !!eventId,
-    queryFn: async (): Promise<ReplayCertificationData> => {
-      // 1. Selected event
-      const { data: selfRow, error: selfErr } = await supabase
+    queryFn: async (): Promise<SelectedEventRow> => {
+      const { data, error } = await supabase
         .from("asb_events")
         .select(COLS_EVENT)
         .eq("event_id", eventId!)
         .maybeSingle();
-      if (selfErr) throw selfErr;
-      if (!selfRow) throw new Error("Event not found or not visible under RLS.");
-      const selected = selfRow as SelectedEventRow;
+      if (error) throw error;
+      if (!data) throw new Error("Event not found or not visible under RLS.");
+      return data as SelectedEventRow;
+    },
+  });
+}
 
-      // 2. Single-hop ancestor lineage edges
+export function useReplayCertification(eventId: string | null) {
+  const selectedQuery = useSelectedEvent(eventId);
+  const selected = selectedQuery.data ?? null;
+  const eventEngineVersion = selected?.engine_version ?? null;
+
+  const certQuery = useQuery({
+    queryKey: ["asb-replay-certification", eventId, eventEngineVersion],
+    enabled: !!eventId && !!selected,
+    queryFn: async (): Promise<ReplayCertificationData> => {
+      const selectedEvent = selected!;
+
+      // 2. Single-hop ancestor lineage edges — deterministic ordering
+      // (created_at, parent_event_id) so same-tx inserts have a stable tiebreak.
       const { data: edges, error: edgesErr } = await supabase
         .from("asb_event_lineage")
         .select("parent_event_id, created_at")
         .eq("child_event_id", eventId!)
         .order("created_at", { ascending: true })
+        .order("parent_event_id", { ascending: true })
         .limit(500);
       if (edgesErr) throw edgesErr;
 
@@ -78,7 +97,6 @@ export function useReplayCertification(eventId: string | null) {
         if (pErr) throw pErr;
         const byId = new Map<string, SelectedEventRow>();
         for (const p of (parents ?? []) as SelectedEventRow[]) byId.set(p.event_id, p);
-        // preserve lineage edge order (deterministic chain)
         ancestorRows = parentIds
           .map((id) => byId.get(id))
           .filter((r): r is SelectedEventRow => !!r);
@@ -101,7 +119,7 @@ export function useReplayCertification(eventId: string | null) {
         }>;
         if (all.length === 0) return null;
         return (
-          all.find((s) => s.engine_version === selected.engine_version) ?? all[0]
+          all.find((s) => s.engine_version === selectedEvent.engine_version) ?? all[0]
         );
       })();
 
@@ -109,7 +127,7 @@ export function useReplayCertification(eventId: string | null) {
       const { data: ev, error: evErr } = await supabase
         .from("asb_engine_versions")
         .select("engine_version")
-        .eq("engine_version", selected.engine_version)
+        .eq("engine_version", selectedEvent.engine_version)
         .maybeSingle();
       if (evErr) throw evErr;
       const engineVersionInRegistry = !!ev;
@@ -117,22 +135,22 @@ export function useReplayCertification(eventId: string | null) {
       // 6. Deterministic re-derivation
       const chain: ReplayInput[] = [
         ...ancestorRows.map((a) => ({ event_id: a.event_id, payload: a.payload })),
-        { event_id: selected.event_id, payload: selected.payload },
+        { event_id: selectedEvent.event_id, payload: selectedEvent.payload },
       ];
-      const reDerivation = computeReDerivedState(chain, selected.engine_version);
+      const reDerivation = computeReDerivedState(chain, selectedEvent.engine_version);
 
       // 7. Certification verdict
       const certification = certify({
         snapshotPayload: snapshot?.payload ?? null,
         reDerivedPayload: reDerivation.projection,
         snapshotEngineVersion: snapshot?.engine_version ?? null,
-        eventEngineVersion: selected.engine_version,
+        eventEngineVersion: selectedEvent.engine_version,
         chainLength: chain.length,
         hasEngineVersionInRegistry: engineVersionInRegistry,
       });
 
       return {
-        selectedEvent: selected,
+        selectedEvent,
         ancestorEvents: ancestorRows,
         snapshot,
         reDerivation,
@@ -141,4 +159,13 @@ export function useReplayCertification(eventId: string | null) {
       };
     },
   });
+
+  // Preserve hook surface: merge loading/error from the prerequisite query.
+  if (selectedQuery.isLoading || (!!eventId && !selected && !selectedQuery.error)) {
+    return { ...certQuery, isLoading: true, data: undefined, error: null as any };
+  }
+  if (selectedQuery.error) {
+    return { ...certQuery, isLoading: false, data: undefined, error: selectedQuery.error };
+  }
+  return certQuery;
 }

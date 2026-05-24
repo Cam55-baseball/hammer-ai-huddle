@@ -1,69 +1,82 @@
-## G2 — Replay Certification & Re-Derivation Visibility
+# G2 Determinism Fixes (scoped, no refactors)
 
-Read-only visibility layer on top of the existing `asb_events`, `asb_event_lineage`, `asb_state_snapshots`, `asb_engine_versions` tables. No schema changes, no migrations, no new tables, no recomputation engine rewrite. Per RE-1…RE-10 and Phase 56, replay is a deterministic reconstruction of a derived snapshot from its replay-input chain — never a re-authoring of ledger truth.
+Only `src/hooks/useReplayCertification.ts` changes. No other files touched. No schema, no migrations, no API changes to consumers (`AsbReplay.tsx` continues to call `useReplayCertification(eventId)`).
 
-### Scope
+## Fix 1 — Stable lineage ordering
 
-For any selected `asb_event`:
-1. Resolve the **replay input chain** = single-hop ancestors via `asb_event_lineage.child_event_id = event.id`, ordered by `created_at` then `occurred_at`. No recursion (matches G1 single-hop discipline).
-2. Look up the **original state snapshot** in `asb_state_snapshots` where `as_of_event_id = event.id`.
-3. Compute a **deterministic re-derived projection** purely from the ordered ancestor payloads + the selected event payload, pinned to the event's `engine_version`. The projection is a transparent, declarative merge of input payloads — no smoothing, no imputation, no statistical inference. If a key is absent, it stays absent (missingness preserved).
-4. Render a **lineage-visible diff** between original snapshot payload and re-derived payload: added / removed / changed keys with raw before/after values. No aggregation, no severity scoring.
-5. Emit a **replay certification verdict**: `certified` (byte-equal on overlapping keys), `divergent` (any difference), or `uncertifiable` (missing snapshot, missing engine_version match, empty lineage). Verdict is descriptive only — never mutates ledger state.
+In the `asb_event_lineage` query, add `parent_event_id` as a deterministic secondary sort. Single-hop logic and 500-row cap unchanged.
 
-### Out of scope (explicit)
-
-- No new tables, columns, RPCs, or migrations.
-- No recomputation of organism intelligence — the re-derivation is the declared transparent merge above; we are surfacing equivalence, not authoring truth.
-- No background jobs, no caching layer, no writes of any kind.
-- No multi-hop / transitive replay traversal (preserves G1 discipline).
-- No coach/recruiter surfaces yet (G3+).
-
-### Files to add
-
-```text
-src/lib/asb/replay.ts                       deterministic projection + diff (pure fns)
-src/hooks/useReplayCertification.ts         composes lineage + snapshot + projection
-src/components/asb/ReplayCertificationPanel.tsx   verdict + version pin display
-src/components/asb/ReplayInputChain.tsx     ordered ancestor list with raw payloads
-src/components/asb/StateDiffView.tsx        key-level before/after diff, no abstraction
-src/pages/AsbReplay.tsx                     /replay/:eventId route
+```ts
+.from("asb_event_lineage")
+.select("parent_event_id, created_at")
+.eq("child_event_id", eventId!)
+.order("created_at", { ascending: true })
+.order("parent_event_id", { ascending: true })   // NEW: stable tiebreak
+.limit(500);
 ```
 
-### Files to modify
+Effect: same-transaction lineage inserts (identical `created_at`) now produce a fully deterministic chain order → identical re-derived projection across reads.
 
-```text
-src/components/asb/EventCard.tsx   add "Open replay certification" link → /replay/:eventId
-src/App.tsx                        register /replay/:eventId lazy route
+## Fix 2 — Engine-version-keyed cache (two-step query)
+
+Split into two `useQuery` calls inside the same hook; the outer return surface is preserved.
+
+```ts
+function useSelectedEvent(eventId: string | null) {
+  return useQuery({
+    queryKey: ["asb-replay-selected-event", eventId],
+    enabled: !!eventId,
+    queryFn: async (): Promise<SelectedEventRow> => {
+      const { data, error } = await supabase
+        .from("asb_events").select(COLS_EVENT)
+        .eq("event_id", eventId!).maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("Event not found or not visible under RLS.");
+      return data as SelectedEventRow;
+    },
+  });
+}
+
+export function useReplayCertification(eventId: string | null) {
+  const selectedQuery = useSelectedEvent(eventId);
+  const selected = selectedQuery.data ?? null;
+  const eventEngineVersion = selected?.engine_version ?? null;
+
+  const certQuery = useQuery({
+    queryKey: ["asb-replay-certification", eventId, eventEngineVersion], // engine_version-safe
+    enabled: !!eventId && !!selected,
+    queryFn: async (): Promise<ReplayCertificationData> => {
+      const selectedEvent = selected!;
+      // ... steps 2–7 unchanged (lineage with new tiebreak, ancestors, snapshot,
+      //     registry presence, computeReDerivedState, certify)
+      return { selectedEvent, ancestorEvents, snapshot, reDerivation, certification, engineVersionInRegistry };
+    },
+  });
+
+  // Preserve hook surface: merge loading/error from the prerequisite query.
+  if (selectedQuery.isLoading || (!!eventId && !selected && !selectedQuery.error)) {
+    return { ...certQuery, isLoading: true, data: undefined, error: null as any };
+  }
+  if (selectedQuery.error) {
+    return { ...certQuery, isLoading: false, data: undefined, error: selectedQuery.error };
+  }
+  return certQuery;
+}
 ```
 
-### Technical contract
+Effect: certification cache key participates in `engine_version`. A change in the event's pinned `engine_version` (or registry presence resolved on a later read) cannot be masked by a stale cache entry.
 
-`computeReDerivedState(ancestorPayloads: Record<string, unknown>[], selfPayload, engineVersion)` returns:
-- `projection`: shallow-merged jsonb (ancestor[0] → … → ancestor[n] → self), preserving last-write-wins per top-level key, with full per-key provenance map `Record<key, { source_event_id, source_index }>`.
-- Nested objects are merged recursively without smoothing; arrays are replaced wholesale (never concatenated, never deduped) — no fabrication.
+## Constraints honored
 
-`diffSnapshots(original, reDerived)` returns `{ added: Key[], removed: Key[], changed: { key, before, after }[] }` over the union of top-level keys, with deep equality on values (JSON canonical form). No tolerance windows, no rounding.
+- No new files, no new abstractions, no new patterns.
+- Hook public signature unchanged: `useReplayCertification(eventId)`.
+- Single-hop lineage rule unchanged; no recursion introduced.
+- No changes to `replay.ts`, `StateDiffView.tsx`, `ReplayCertificationPanel.tsx`, `ReplayInputChain.tsx`, `AsbReplay.tsx`, `EventCard.tsx`, or `App.tsx`.
 
-`certify({ snapshotPayload, reDerivedPayload, snapshotEngineVersion, eventEngineVersion })` returns `'certified' | 'divergent' | 'uncertifiable'` with a `reasons: string[]` array. Engine-version mismatch between snapshot and event → `uncertifiable`.
+## Post-fix confirmation
 
-### UI behavior
+- **Deterministic under identical inputs**: lineage order now fully total (created_at, parent_event_id), `computeReDerivedState` already pure → identical projection every run.
+- **Engine_version-safe invalidation**: cache key tuple includes `eventEngineVersion`.
+- **Stable ordering under edge-case inserts**: same-`created_at` parent edges resolved deterministically by `parent_event_id`.
 
-`/replay/:eventId` renders four sections in fixed order, each lineage-visible one click away:
-1. Selected event header (topic, occurred_at, engine_version, schema_version via existing `EngineVersionBadge`).
-2. `ReplayCertificationPanel` — verdict badge + reasons + engine_version pin + ancestor count + snapshot presence.
-3. `ReplayInputChain` — ordered ancestors with raw payload `<pre>` blocks (reuses card styling from G1).
-4. `StateDiffView` — side-by-side original vs re-derived, with `added` / `removed` / `changed` key tables.
-
-All four sections show raw underlying data; nothing is hidden behind aggregation. Empty states are explicit (e.g. "No snapshot recorded as_of this event → uncertifiable").
-
-### Guardrails
-
-- Pure functions in `src/lib/asb/replay.ts` with no side effects, no I/O, deterministic given inputs.
-- React Query keys include `engine_version` so version drift invalidates the cache.
-- RLS continues to enforce `athlete_id = auth.uid()` on every read; no new privileged paths.
-- Ledger remains the only source of truth — re-derivation is presented as a *projection*, never written back.
-
-### After G2
-
-Proceed directly to **G5 — sensor/wearable ingestion adapter audit** (read-only inventory of existing ingest paths, confidence/missingness propagation, idempotency_key usage). No new infrastructure until that audit completes.
+Then proceed to G5.
