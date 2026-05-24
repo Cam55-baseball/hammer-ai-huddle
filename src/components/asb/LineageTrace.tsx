@@ -1,4 +1,5 @@
 import { useEventLineage, type LineageEdge } from "@/hooks/useEventLineage";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowDown, ArrowUp, GitBranch } from "lucide-react";
 
 interface Props {
@@ -19,17 +20,13 @@ function EdgeRow({ edge, direction }: { edge: LineageEdge; direction: "ancestor"
           <span className="text-muted-foreground">
             {direction === "ancestor" ? "parent_event_id" : "child_event_id"}:
           </span>{" "}
-          {other ?? "—"}
+          {other}
         </div>
         <div className="text-muted-foreground">
-          derivation_type: <span className="text-foreground">{edge.derivation_type ?? "—"}</span>
-          {" · "}engine: <span className="text-foreground">{edge.engine_version ?? "—"}</span>
-          {edge.created_at && (
-            <>
-              {" · "}
-              {new Date(edge.created_at).toISOString()}
-            </>
-          )}
+          derivation_type: <span className="text-foreground">{edge.derivation_type}</span>
+          {" · "}engine: <span className="text-foreground">{edge.engine_version}</span>
+          {" · "}
+          {new Date(edge.created_at).toISOString()}
         </div>
         <div className="text-[10px] text-muted-foreground">lineage_id: {edge.lineage_id}</div>
       </div>
@@ -41,7 +38,12 @@ export function LineageTrace({ eventId }: Props) {
   const { data, isLoading, error } = useEventLineage(eventId);
 
   if (isLoading) {
-    return <div className="text-xs text-muted-foreground">Loading lineage…</div>;
+    return (
+      <div className="space-y-2" role="status" aria-live="polite" aria-label="Loading lineage">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    );
   }
   if (error) {
     return (
@@ -58,7 +60,7 @@ export function LineageTrace({ eventId }: Props) {
     return (
       <div className="text-xs text-muted-foreground flex items-center gap-2">
         <GitBranch className="h-3 w-3" />
-        No lineage edges recorded for this event.
+        No lineage edges recorded for this event. Single-hop traversal only.
       </div>
     );
   }

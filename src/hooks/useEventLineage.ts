@@ -1,42 +1,60 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+/** Defensive cap on lineage edges per direction. Single-hop traversal only. */
+const EDGE_CAP_PER_DIRECTION = 500;
+
 export interface LineageEdge {
   lineage_id: string;
-  parent_event_id: string | null;
-  child_event_id: string | null;
-  derivation_type: string | null;
-  engine_version: string | null;
-  created_at: string | null;
+  parent_event_id: string;
+  child_event_id: string;
+  derivation_type: string;
+  engine_version: string;
+  created_at: string;
+}
+
+function dedupeEdges(rows: LineageEdge[]): LineageEdge[] {
+  const seen = new Set<string>();
+  const out: LineageEdge[] = [];
+  for (const e of rows) {
+    if (seen.has(e.lineage_id)) continue;
+    seen.add(e.lineage_id);
+    out.push(e);
+  }
+  return out;
 }
 
 /**
- * Fetch the lineage edges where this event is a child (its ancestors)
- * and where it is a parent (its descendants). No aggregation — raw edges.
+ * Single-hop lineage: ancestors (this event is child) + descendants (this event is parent).
+ * No recursion, no graph traversal — raw edges only.
  */
 export function useEventLineage(eventId: string | null, enabled = true) {
   return useQuery({
     queryKey: ["asb-event-lineage", eventId],
     enabled: !!eventId && enabled,
     queryFn: async (): Promise<{ ancestors: LineageEdge[]; descendants: LineageEdge[] }> => {
+      const cols =
+        "lineage_id, parent_event_id, child_event_id, derivation_type, engine_version, created_at";
       const [{ data: ancestors, error: aErr }, { data: descendants, error: dErr }] =
         await Promise.all([
           supabase
             .from("asb_event_lineage")
-            .select("lineage_id, parent_event_id, child_event_id, derivation_type, engine_version, created_at")
+            .select(cols)
             .eq("child_event_id", eventId!)
-            .order("created_at", { ascending: true }),
+            .order("created_at", { ascending: true })
+            .limit(EDGE_CAP_PER_DIRECTION),
           supabase
             .from("asb_event_lineage")
-            .select("lineage_id, parent_event_id, child_event_id, derivation_type, engine_version, created_at")
+            .select(cols)
             .eq("parent_event_id", eventId!)
-            .order("created_at", { ascending: true }),
+            .order("created_at", { ascending: true })
+            .limit(EDGE_CAP_PER_DIRECTION),
         ]);
       if (aErr) throw aErr;
       if (dErr) throw dErr;
       return {
-        ancestors: (ancestors ?? []) as LineageEdge[],
-        descendants: (descendants ?? []) as LineageEdge[],
+        ancestors: dedupeEdges((ancestors ?? []) as LineageEdge[]),
+        descendants: dedupeEdges((descendants ?? []) as LineageEdge[]),
       };
     },
   });
@@ -45,11 +63,11 @@ export function useEventLineage(eventId: string | null, enabled = true) {
 export interface StateSnapshotRow {
   snapshot_id: string;
   athlete_id: string;
-  snapshot_kind: string | null;
-  as_of_event_id: string | null;
-  engine_version: string | null;
-  payload: Record<string, unknown> | null;
-  created_at: string | null;
+  snapshot_kind: string;
+  as_of_event_id: string;
+  engine_version: string;
+  payload: Record<string, unknown>;
+  created_at: string;
 }
 
 export function useStateSnapshotForEvent(eventId: string | null, enabled = true) {
@@ -70,8 +88,8 @@ export function useStateSnapshotForEvent(eventId: string | null, enabled = true)
 
 export interface EngineVersionRow {
   engine_version: string;
-  schema_version: number | null;
-  released_at: string | null;
+  schema_version: number;
+  released_at: string;
   deprecated_at: string | null;
   notes: string | null;
 }

@@ -12,23 +12,54 @@ interface Props {
   event: AsbEventRow;
 }
 
-function extractConfidence(payload: Record<string, unknown> | null): number | null {
-  if (!payload) return null;
-  const c = (payload as any).confidence;
-  if (typeof c === "number") return c;
-  return null;
+/**
+ * Tolerant extraction of confidence/missingness from a jsonb payload. Reads
+ * from common nested locations only. Never fabricates, smooths, or imputes.
+ * If not present at one of these canonical paths, returns null and the badge
+ * is omitted entirely.
+ */
+function getNumberAt(obj: unknown, path: string[]): number | null {
+  let cur: any = obj;
+  for (const k of path) {
+    if (cur == null || typeof cur !== "object") return null;
+    cur = cur[k];
+  }
+  return typeof cur === "number" && Number.isFinite(cur) ? cur : null;
 }
 
-function extractMissingness(payload: Record<string, unknown> | null): string | null {
-  if (!payload) return null;
-  const m = (payload as any).missingness;
-  if (m == null) return null;
-  if (typeof m === "string" || typeof m === "number") return String(m);
-  try {
-    return JSON.stringify(m);
-  } catch {
-    return null;
+function getAt(obj: unknown, path: string[]): unknown {
+  let cur: any = obj;
+  for (const k of path) {
+    if (cur == null || typeof cur !== "object") return undefined;
+    cur = cur[k];
   }
+  return cur;
+}
+
+function extractConfidence(payload: Record<string, unknown>): number | null {
+  return (
+    getNumberAt(payload, ["confidence"]) ??
+    getNumberAt(payload, ["state", "confidence"]) ??
+    getNumberAt(payload, ["value", "confidence"])
+  );
+}
+
+function extractMissingness(payload: Record<string, unknown>): string | null {
+  const candidates: unknown[] = [
+    (payload as any).missingness,
+    getAt(payload, ["state", "missingness"]),
+    getAt(payload, ["value", "missingness"]),
+  ];
+  for (const m of candidates) {
+    if (m == null) continue;
+    if (typeof m === "string" || typeof m === "number") return String(m);
+    try {
+      return JSON.stringify(m);
+    } catch {
+      /* keep looking */
+    }
+  }
+  return null;
 }
 
 export function EventCard({ event }: Props) {
@@ -45,7 +76,7 @@ export function EventCard({ event }: Props) {
               <span className="font-mono text-sm">{event.topic_id}</span>
               <Badge variant="secondary" className="gap-1">
                 <User className="h-3 w-3" />
-                {event.actor_role ?? "unknown"}
+                {event.actor_role}
               </Badge>
               <EngineVersionBadge engineVersion={event.engine_version} />
               {confidence != null && (
@@ -61,7 +92,7 @@ export function EventCard({ event }: Props) {
             </div>
             <div className="text-xs text-muted-foreground font-mono">
               occurred_at: {new Date(event.occurred_at).toISOString()}
-              {event.effective_at && event.effective_at !== event.occurred_at && (
+              {event.effective_at !== event.occurred_at && (
                 <> · effective_at: {new Date(event.effective_at).toISOString()}</>
               )}
             </div>

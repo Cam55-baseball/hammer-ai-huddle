@@ -24,7 +24,13 @@ export default function AsbTimeline() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-sm text-muted-foreground">Loading session…</div>
+              <div
+                className="text-sm text-muted-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                Loading session…
+              </div>
             ) : !user ? (
               <div className="text-sm text-muted-foreground">
                 Sign in to view your ASB event ledger.
