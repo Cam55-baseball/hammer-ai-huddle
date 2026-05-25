@@ -52,29 +52,36 @@ serve(async (req) => {
       });
     }
 
-    // Check idempotency
-    const { data: existingEvent } = await supabaseClient
+    // Atomic idempotency claim — single insert with on-conflict-do-nothing
+    // against UNIQUE(stripe_event_id). Eliminates the read-then-write race
+    // where two concurrent webhook deliveries could both observe "not seen"
+    // and both proceed. The row IS the claim.
+    const { data: claimed, error: claimErr } = await supabaseClient
       .from('processed_webhook_events')
-      .select('id')
-      .eq('stripe_event_id', event.id)
-      .maybeSingle();
+      .upsert(
+        {
+          stripe_event_id: event.id,
+          event_type: event.type,
+          details: { type: event.type },
+        },
+        { onConflict: 'stripe_event_id', ignoreDuplicates: true }
+      )
+      .select('id');
 
-    if (existingEvent) {
-      logStep("Event already processed", { eventId: event.id });
+    if (claimErr) {
+      logStep("Idempotency claim failed", { error: claimErr.message });
+      throw claimErr;
+    }
+
+    // ignoreDuplicates returns an empty array when the conflict was hit —
+    // meaning another delivery already owns this event_id. Exit clean.
+    if (!claimed || claimed.length === 0) {
+      logStep("Event already processed (atomic dedupe)", { eventId: event.id });
       return new Response(JSON.stringify({ message: "Event already processed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
-
-    // Record this event
-    await supabaseClient
-      .from('processed_webhook_events')
-      .insert({
-        stripe_event_id: event.id,
-        event_type: event.type,
-        details: { type: event.type }
-      });
 
     // Handle different event types
     switch (event.type) {
