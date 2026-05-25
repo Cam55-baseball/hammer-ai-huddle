@@ -1,7 +1,7 @@
 /**
  * Sensor Fusion Adapter Layer — parity & inertness tests.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { SENSOR_TOPIC_REGISTRY, resolveSensorTopic } from "../sensorTopicRegistry";
 import { normalizeSensorPayload } from "../sensorEventNormalizer";
 import { generateSensorIdempotencyKey } from "../sensorIdempotency";
