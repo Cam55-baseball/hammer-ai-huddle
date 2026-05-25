@@ -5,6 +5,59 @@ import { useSchedulingService } from '@/hooks/useSchedulingService';
 import { toast } from 'sonner';
 import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import type { DayType } from '@/utils/tdeeCalculations';
+import { ENGINE_VERSION, computeIdempotencyKey } from '@/lib/asb/engineVersion';
+import { emitAsbEvent } from '@/lib/asb/emit';
+
+const ASB_TOPIC_DAY_TYPE = 'athlete.schedule.day_type';
+const ASB_TOPIC_DAY_TYPE_DELETED = 'athlete.schedule.day_type.deleted';
+
+/**
+ * Build the canonical occurred_at for a day-type event.
+ * Deterministic: same (eventDate, eventTime) → same ISO string.
+ */
+function asbOccurredAt(eventDate: string, eventTime: string | null | undefined): string {
+  const time = eventTime && /^\d{2}:\d{2}/.test(eventTime) ? eventTime.slice(0, 5) : '00:00';
+  return new Date(`${eventDate}T${time}:00Z`).toISOString();
+}
+
+async function emitDayTypeAsbEvent(params: {
+  athleteId: string;
+  topic: string;
+  eventDate: string;
+  eventTime: string | null | undefined;
+  payload: Record<string, unknown>;
+}) {
+  try {
+    const occurred_at = asbOccurredAt(params.eventDate, params.eventTime);
+    const ingested_at = new Date().toISOString();
+    const idempotency_key = await computeIdempotencyKey({
+      athlete_id: params.athleteId,
+      topic_id: params.topic,
+      occurred_at,
+      payload: params.payload,
+    });
+    await emitAsbEvent({
+      event_id: crypto.randomUUID(),
+      athlete_id: params.athleteId,
+      topic_id: params.topic,
+      actor_role: 'athlete',
+      actor_id: params.athleteId,
+      occurred_at,
+      ingested_at,
+      effective_at: occurred_at,
+      valid_from: occurred_at,
+      valid_to: null,
+      payload: params.payload,
+      engine_version: ENGINE_VERSION,
+      idempotency_key,
+      causality_refs: [],
+      lineage_refs: [],
+    });
+  } catch (e) {
+    // Additive emission: never break the legacy path.
+    console.error('[asb] day_type emit guard', (e as Error)?.message);
+  }
+}
 
 export interface AthleteEvent {
   id: string;
