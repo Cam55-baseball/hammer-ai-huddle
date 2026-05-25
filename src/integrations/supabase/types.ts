@@ -12068,6 +12068,10 @@ export type Database = {
             }
             Returns: string
           }
+      is_coach_of: {
+        Args: { _athlete: string; _coach: string }
+        Returns: boolean
+      }
       is_linked_coach: {
         Args: { p_coach_id: string; p_player_id: string }
         Returns: boolean
