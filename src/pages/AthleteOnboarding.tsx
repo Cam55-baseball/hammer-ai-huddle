@@ -171,7 +171,7 @@ export default function AthleteOnboarding() {
           <div className="rounded-md border border-border bg-muted/30 p-3 text-xs">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono">athlete.schedule.day_type</span>
-              <EngineVersionBadge version={ENGINE_VERSION} />
+              <EngineVersionBadge engineVersion={ENGINE_VERSION} />
             </div>
             {emittedEventId && (
               <div className="mt-2 font-mono break-all text-muted-foreground">
