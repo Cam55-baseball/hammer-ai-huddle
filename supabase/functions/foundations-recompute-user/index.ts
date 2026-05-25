@@ -89,6 +89,27 @@ Deno.serve(async (req) => {
       .select("trace_id")
       .maybeSingle();
 
+    // Additive canonical ASB emission of the foundation trigger event.
+    // Single-hop only: no ASB parent in scope for an admin replay marker.
+    try {
+      const occurred_at = new Date().toISOString();
+      const row = await buildAsbRow({
+        athlete_id: userId,
+        topic_id: "foundation.trigger.admin_recompute",
+        occurred_at,
+        payload: {
+          trace_id: trace?.trace_id ?? null,
+          requested_by: caller.id,
+          surface_origin: "admin_replay",
+        },
+        actor_role: "system",
+        actor_id: caller.id,
+      });
+      await emitAsbEvent(admin, row);
+    } catch (e) {
+      console.error("[asb] foundation emit guard", (e as Error)?.message);
+    }
+
     return new Response(
       JSON.stringify({ ok: true, trace_id: trace?.trace_id ?? null }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
