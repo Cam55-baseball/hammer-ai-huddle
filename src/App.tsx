@@ -78,6 +78,8 @@ const AsbReplay = lazyWithRetry(() => import("./pages/AsbReplay"));
 const AthleteCommand = lazyWithRetry(() => import("./pages/AthleteCommand"));
 const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
+const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
+const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetail"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
