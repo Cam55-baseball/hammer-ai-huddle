@@ -3,6 +3,7 @@
 // a diagnostic trace tagged surface_origin='admin_replay'. The next time the
 // hook runs in the user's session it recomputes from scratch.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { buildAsbRow, emitAsbEvent } from "../_shared/asbEmit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
