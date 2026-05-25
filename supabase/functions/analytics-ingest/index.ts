@@ -3,6 +3,7 @@
 // Service-role insert into public.launch_events.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { buildAsbRow, emitAsbEvent } from "../_shared/asbEmit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,6 +75,35 @@ Deno.serve(async (req) => {
     }
   } catch (e) {
     console.error("[analytics-ingest] unexpected error", e);
+  }
+
+  // Additive canonical ASB emission — only when the payload carries an
+  // explicit athlete identity. We do NOT infer an athlete from anonymous
+  // launch telemetry; missingness preserved exactly.
+  const athleteId =
+    typeof payload.user_id === "string" && payload.user_id
+      ? (payload.user_id as string)
+      : typeof payload.athlete_id === "string" && payload.athlete_id
+        ? (payload.athlete_id as string)
+        : null;
+  if (athleteId) {
+    try {
+      const occurredAt =
+        typeof payload.occurred_at === "string" && payload.occurred_at
+          ? (payload.occurred_at as string)
+          : new Date().toISOString();
+      const row = await buildAsbRow({
+        athlete_id: athleteId,
+        topic_id: `analytics.${event}`,
+        occurred_at: occurredAt,
+        payload: { event, payload },
+        actor_role: "athlete",
+        actor_id: athleteId,
+      });
+      await emitAsbEvent(supabase, row);
+    } catch (e) {
+      console.error("[asb] analytics emit guard", (e as Error)?.message);
+    }
   }
 
   // Always 204 — fire-and-forget contract.

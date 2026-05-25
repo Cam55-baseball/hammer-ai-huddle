@@ -1,6 +1,7 @@
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { HITTING_DOCTRINE_PROMPT } from "../_shared/hittingPhases.ts";
 import { HITTING_CAUSAL_CHAIN_PROMPT, PHASE_CAUSAL_CHAINS, PHASE_ROADMAPS, formatChainText, formatRoadmapText } from "../_shared/hittingCausalChains.ts";
+import { ENGINE_VERSION, sha256Hex } from "../_shared/asbEmit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -2104,6 +2105,10 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       analyzed_at: new Date().toISOString(),
     };
 
+    const MODEL_ID = "google/gemini-2.5-flash";
+    const MODEL_VERSION = "2.5-flash";
+    const prompt_hash = await sha256Hex(systemPrompt);
+
     const ai_analysis = {
       summary,
       feedback,
@@ -2113,7 +2118,12 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       violations_detected: violations,
       score_adjusted: scoreWasAdjusted,
       original_ai_score: originalAiScore,
-      model_used: "google/gemini-2.5-flash",
+      model_used: MODEL_ID,
+      // Canonical analyzer provenance — additive, never mutated retroactively.
+      engine_version: ENGINE_VERSION,
+      model_id: MODEL_ID,
+      model_version: MODEL_VERSION,
+      prompt_hash,
       analyzed_at: new Date().toISOString(),
     };
 

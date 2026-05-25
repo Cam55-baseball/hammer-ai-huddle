@@ -4,6 +4,7 @@
 // recovery_responder, streak_fragile, streak_resilient
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { buildAsbRow, emitAsbEvent } from "../_shared/asbEmit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -103,6 +104,29 @@ async function detectForUser(supabase: any, userId: string) {
       last_seen_at: new Date().toISOString(),
       metadata: p.meta,
     }, { onConflict: "user_id,pattern_key" });
+
+    // Additive canonical ASB emission per detected pattern. Single-hop
+    // lineage not emitted: the upstream behavioral_events feeding pattern
+    // detection are not individually addressable as ASB parents in scope.
+    try {
+      const occurred_at = new Date().toISOString();
+      const row = await buildAsbRow({
+        athlete_id: userId,
+        topic_id: `foundation.pattern.${p.type}`,
+        occurred_at,
+        payload: {
+          pattern_key: p.key,
+          pattern_type: p.type,
+          confidence: p.confidence,
+          metadata: p.meta,
+          window_days: WINDOW_DAYS,
+        },
+        actor_role: "system",
+      });
+      await emitAsbEvent(supabase, row);
+    } catch (e) {
+      console.error("[asb] pattern emit guard", (e as Error)?.message);
+    }
   }
 
   return { userId, detected: patterns.length };

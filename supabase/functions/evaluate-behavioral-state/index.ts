@@ -13,6 +13,7 @@
 // source of truth). Adding outcome logic here will desync the system.
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { buildAsbRow, emitAsbEvent } from "../_shared/asbEmit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -481,7 +482,35 @@ async function evaluateUser(supabase: any, userId: string, todayUTC: string) {
     if (!dup || dup.length === 0) pushEvent("coaching_insight", null, { message: it.message }, { message: it.message });
   }
 
-  if (events.length) await supabase.from("behavioral_events").insert(events);
+  if (events.length) {
+    await supabase.from("behavioral_events").insert(events);
+    // Additive canonical ASB emission. Failures never break legacy writes.
+    // Single-hop only: parent ASB events for these behavioral derivations are
+    // not in-scope here, so no asb_event_lineage emit.
+    const nowIso = new Date().toISOString();
+    for (const ev of events) {
+      try {
+        const row = await buildAsbRow({
+          athlete_id: ev.user_id,
+          topic_id: `behavioral.${ev.event_type}`,
+          occurred_at: nowIso,
+          payload: {
+            event_type: ev.event_type,
+            magnitude: ev.magnitude ?? null,
+            metadata: ev.metadata ?? null,
+            command_text: ev.command_text ?? null,
+            action_type: ev.action_type ?? null,
+            action_payload: ev.action_payload ?? null,
+          },
+          actor_role: "system",
+          actor_id: null,
+        });
+        await emitAsbEvent(supabase, row);
+      } catch (e) {
+        console.error("[asb] behavioral emit guard", (e as Error)?.message);
+      }
+    }
+  }
 
   // ────────────────────────────────────────────────────────────────────
   // Phase 10.2 — NN Suggestion Engine (additive, isolated)

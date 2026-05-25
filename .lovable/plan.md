@@ -1,150 +1,64 @@
-# Canonical ASB Ingestion Substrate — Operationalization Plan
+## Canonical ASB Operationalization — Passes 4, 6.2–6.5, 7, 8
 
-Goal: turn the sealed ASB ledger into a live, replay-certifiable runtime by producing real canonical events from existing ingest paths. Additive only. No schema rewrites, no parallel ledgers, no doctrine work.
+Sequential, additive-only execution on top of locked G1/G2 substrate. No schema rewrites, no doctrine, no legacy replacement.
 
----
+### Pass 4 — Lineage Continuity (single-hop, explicit causality only)
 
-## Pass 1 — Lock G1 lineage parity (determinism)
+Wire `emitAsbLineage` from `src/lib/asb/emit.ts` wherever a parent ASB `event_id` is already in scope:
 
-**File:** `src/hooks/useEventLineage.ts`
-- Add `.order("parent_event_id", { ascending: true })` to the ancestors query (after `created_at`).
-- Add `.order("child_event_id", { ascending: true })` to the descendants query (after `created_at`).
-- No other changes; single-hop, 500-cap, dedupe preserved.
+- `useAthleteEvents.deleteEvent` — when deletion produces a new canonical `event_deleted` ASB row, emit lineage `parent = original event_id`, `derivation_type = "deletion"`.
+- Behavioral / foundation derived emitters — when a derived event is produced from a known source `event_id`, emit `derivation_type = "derived"` lineage row.
+- Skip emission anywhere ancestry is not explicit. No inference.
 
-Result: total deterministic lineage ordering matches G2 contract platform-wide.
+Deterministic ordering preserved: every lineage read already uses `created_at` + `parent_event_id`/`child_event_id` tiebreak (G1 parity fix).
 
----
+### Pass 6.2–6.5 — Canonical Producer Expansion
 
-## Pass 2 — Canonical engine_version source
+Add additive `emitAsbEvent` calls to each producer below. Legacy writes untouched. Each producer stamps `ENGINE_VERSION`, computes `idempotency_key` via `computeIdempotencyKey()`, preserves raw payload verbatim, preserves missingness, no smoothing/imputation/aggregation.
 
-**New file:** `src/lib/asb/engineVersion.ts`
-- Export `ENGINE_VERSION` constant (single source of truth, pinned string e.g. `"asb-1.0.0"`).
-- Export `canonicalPayload(obj)` → stable-key-sorted JSON string (reuse logic from `replay.ts` canonicalization rule but local & pure).
-- Export `computeIdempotencyKey({ athlete_id, topic_id, occurred_at, payload })` → `sha256` hex via `crypto.subtle.digest` (browser-safe, async) returning a deterministic string.
+1. **Behavioral event writers** (`useBehavioralEvents` / nearest hook): emit on each behavioral row insert. `topic_id = "behavioral.<kind>"`, `actor_role = "system"` or `"athlete"` per source.
+2. **Foundation trigger emitters** (foundation-related hooks/edge functions): emit on trigger fire with `topic_id = "foundation.<trigger_name>"`.
+3. **analytics-ingest** edge function: wrap each accepted event with additive `asb_events` insert using service-role client.
+4. **Calendar** (event/schedule writers): emit `topic_id = "calendar.<kind>"`.
+5. **Nutrition** writers: emit `topic_id = "nutrition.<kind>"`.
+6. **Video / realtime ingest** paths: emit `topic_id = "media.<kind>"` / `"realtime.<kind>"`, preserve asset refs in `lineage_refs`.
 
-No retroactive mutation. Stamped at write-time only.
+For edge functions, port the small `engineVersion.ts` helpers inline (Deno) — no shared bundling change.
 
----
+### Pass 7 — Stripe Atomicity
 
-## Pass 3 — First canonical ASB producer: athlete events
+In Stripe webhook function: replace `select existing → insert` dedupe with single `insert ... on conflict (stripe_event_id) do nothing` and branch on returned row count. Verify unique index on `stripe_event_id` exists first via `supabase--read_query`; if missing, surface as the only schema blocker requiring approval. No behavior change beyond race elimination.
 
-**File:** `src/hooks/useAthleteEvents.ts`
+### Pass 8 — AI / Analyzer Provenance
 
-In `createEvent`, after the existing legacy `setDayType` write succeeds and the row is re-fetched, fire an additive `asb_events` insert in parallel (non-blocking; failures logged but never break the legacy path).
+For every analyzer edge function path:
+- Stamp `engine_version` (ASB engine constant).
+- Stamp `model_id`, `model_version` from the gateway call site (already known at call time).
+- Stamp `prompt_hash = sha256(canonical(prompt))`.
+- Preserve raw analyzer output verbatim in payload.
 
-Fields populated:
-- `event_id`: `crypto.randomUUID()`
-- `athlete_id`: `user.id`
-- `topic_id`: `"athlete.schedule.day_type"`
-- `actor_role`: `"athlete"`
-- `actor_id`: `user.id`
-- `occurred_at`: `input.eventDate + "T" + (eventTime || "00:00") + "Z"` (ISO, deterministic)
-- `ingested_at`: `now()`
-- `effective_at`: same as `occurred_at`
-- `valid_from`: same as `occurred_at`
-- `engine_version`: `ENGINE_VERSION`
-- `payload`: `{ event_type, event_time, intensity_level, sport, notes, legacy_event_id }`
-- `idempotency_key`: `await computeIdempotencyKey({...})` → on unique-conflict, swallow silently (replay-safe append-only).
-- `lineage_refs`: `[]`
-- `causality_refs`: `[]`
+Verify nullable columns `model_id`, `model_version`, `prompt_hash`, `engine_version` exist on analyzer output tables; if missing, one additive migration adds them as nullable. No backfill.
 
-Identical contract added to `deleteEvent` (topic `athlete.schedule.day_type.deleted`, payload includes prior legacy id).
+### Verification (after each producer pass)
 
-Constraints honored: no aggregation, no smoothing, no inferred certainty; legacy table remains canonical for legacy consumers; ASB row is the canonical replay source going forward.
+- `select count(*) from asb_events where topic_id like '<prefix>%'` returns > 0 after triggering action.
+- Row appears in `/asb/timeline`.
+- `/replay/:eventId` resolves deterministically with pinned `engine_version`.
+- Re-trigger same input → no duplicate (idempotency_key dedupe).
+- Lineage row present when parent was in scope.
 
----
+### Global Constraints (enforced throughout)
 
-## Pass 4 — Snapshot + lineage continuity (where ancestry exists)
+No schema rewrites beyond a single additive nullable-columns migration if Pass 8 requires it. No destructive migrations. No replay authoring. No aggregation. No hidden retries. No parallel truth systems. No legacy consumer replacement. No UI flow changes.
 
-For `useAthleteEvents` no parent ASB event exists yet → `lineage_refs: []`, no `asb_event_lineage` write.
+### Execution Order
 
-For derived emitters added later (behavioral, foundation, analyzer) — when a parent `event_id` is in scope, additionally insert into `asb_event_lineage`:
-- `parent_event_id`, `child_event_id`, `derivation_type` (string declared by the producer), `engine_version`.
-- Single-hop only. No recursion. Deterministic ordering inherited from G1 fix.
+1. Pass 4 lineage emits.
+2. Pass 6.2 behavioral → verify.
+3. Pass 6.3 foundation → verify.
+4. Pass 6.4 analytics-ingest → verify.
+5. Pass 6.5 calendar / nutrition / video / realtime → verify each.
+6. Pass 7 Stripe atomicity → verify.
+7. Pass 8 analyzer provenance → verify.
 
-Optional `asb_state_snapshots` write only when the producer already has a fully-materialized projection (defer until a producer needs it; not added blindly in pass 3).
-
----
-
-## Pass 5 — Ingestion observability hardening
-
-**New file:** `src/lib/asb/emit.ts`
-- `emitAsbEvent(row)` — thin wrapper around `supabase.from("asb_events").insert(row)` that:
-  - On success: `console.info("[asb] emit", { event_id, topic_id, engine_version })`.
-  - On unique-conflict (`23505`): `console.info("[asb] dedupe", { idempotency_key, topic_id })` and resolve quietly.
-  - On other errors: `console.error("[asb] emit_failed", { topic_id, code, message })` and resolve (never throw — additive emission must never break legacy path).
-- `emitAsbLineage(edge)` — same shape for `asb_event_lineage`.
-
-All future producers route through this. Preserves 204/fire-and-forget semantics where required (analytics-ingest edge fn unchanged for now).
-
----
-
-## Pass 6 — Incremental idempotency + engine_version audit (sequenced, additive)
-
-Apply the same `emitAsbEvent` pattern progressively:
-
-1. `useAthleteEvents` (pass 3 above) — `athlete.schedule.day_type`.
-2. `useBehavioralEvents` writer side (where the row is inserted, not the read hook) — topic `athlete.behavior.<event_type>`, with lineage_refs to the triggering source event when known. Locate insert sites in a follow-up pass.
-3. Foundation trigger emitters (`src/lib/foundation*`) — topic `athlete.foundation.<trigger_kind>`, lineage to upstream event.
-4. `supabase/functions/analytics-ingest/index.ts` — additive ASB insert alongside `launch_events`, topic `athlete.analytics.<event>`; keep 204 contract; failures logged only.
-5. Calendar / nutrition / video / realtime — each treated as one additive emit pass per file, deferred until pass 1–4 verified live in `/asb/timeline` and `/asb/replay/:id`.
-
-Each step: add idempotency key, stamp `ENGINE_VERSION`, no schema change unless a unique index on `idempotency_key` is missing (verify in pass 6.0 via read_query; if missing, single additive migration adding the unique index — no destructive change).
-
----
-
-## Pass 7 — Stripe webhook race fix
-
-**File:** `supabase/functions/stripe-webhook/index.ts` (locate in build mode)
-- Replace `select → insert` dedupe on `processed_webhook_events` with a single `insert ... on conflict do nothing` against the existing unique index on `stripe_event_id` (verify index exists; if not, add it in a tiny additive migration).
-- Treat zero-rows-affected as "already processed" and short-circuit.
-- No behavior change beyond atomicity.
-
----
-
-## Pass 8 — AI / sensor / analyzer lineage prep
-
-For each existing analyzer edge function output written to DB (video AI analyzer, etc., enumerated in build mode), ensure the persisted row includes:
-- `engine_version` (from `ENGINE_VERSION` shared constant, or a function-local pin if the function is sealed)
-- `model_id`, `model_version`, `prompt_hash` (sha256 of the canonical prompt string)
-
-No new tables. If existing target tables lack these columns, add them as nullable additive columns in one consolidated migration. Lineage emission deferred until a downstream consumer needs it; the metadata stamping is the prep work.
-
----
-
-## Verification (after pass 3)
-
-1. Create an athlete event in the UI → confirm a new row appears in `asb_events` via `read_query`.
-2. Open `/asb/timeline` → row visible with correct `engine_version`, `topic_id`, `idempotency_key`.
-3. Open `/asb/replay/:eventId` → certification verdict `uncertifiable` (no snapshot yet) with engine_version pinned; re-derivation deterministic across reloads.
-4. Re-trigger same event with same inputs → no duplicate row (idempotency holds); console shows `[asb] dedupe`.
-
-After verification, proceed iteratively through passes 4–8.
-
----
-
-## Technical notes
-
-- All new code in `src/lib/asb/*` is pure & side-effect-free except `emit.ts` (one I/O surface).
-- `crypto.subtle.digest` is available in browser + Deno; same helper usable client-side and in edge functions (or duplicate locally to avoid sharing across runtimes).
-- No changes to `src/integrations/supabase/client.ts` or `types.ts`.
-- No constitutional/doctrine files touched.
-- Only one schema migration may be needed (unique indices on `idempotency_key` / `stripe_event_id` if absent, plus optional nullable analyzer metadata columns) — verified before any migration is written.
-
-## Out of scope
-
-- New phases, doctrine, megaphases.
-- Backfilling historical legacy rows into ASB.
-- Parallel ledger systems or derived-truth replacements.
-- Removing legacy writes.
-
----
-
-## Execution log
-
-- Pass 1: applied — `useEventLineage.ts` ancestors+descendants now total-ordered.
-- Pass 2: applied — `src/lib/asb/engineVersion.ts` (ENGINE_VERSION="asb-1.0.0", canonicalPayload, computeIdempotencyKey/sha256).
-- Pass 3: applied — `useAthleteEvents.createEvent`/`deleteEvent` emit canonical ASB rows additively.
-- Pass 5: applied — `src/lib/asb/emit.ts` centralizes ASB I/O with replay-safe dedupe logging.
-- Migration: added INSERT RLS policies on `asb_events` (athlete owns row) and `asb_event_lineage` (child belongs to athlete).
-- Deferred to next iteration after live verification: Pass 4 (lineage when ancestry exists), Pass 6.2–6.5 (behavioral/foundation/analytics-ingest/calendar emitters), Pass 7 (stripe webhook atomic dedupe), Pass 8 (analyzer metadata stamping).
+Stop only on a concrete schema/index blocker requiring approval.
