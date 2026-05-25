@@ -159,7 +159,23 @@ export function useAthleteEvents() {
         .eq('user_id', user.id)
         .eq('event_date', input.eventDate)
         .maybeSingle();
-      
+
+      // Additive canonical ASB emission. Non-blocking; failures never break legacy.
+      void emitDayTypeAsbEvent({
+        athleteId: user.id,
+        topic: ASB_TOPIC_DAY_TYPE,
+        eventDate: input.eventDate,
+        eventTime: input.eventTime ?? null,
+        payload: {
+          event_type: input.eventType,
+          event_time: input.eventTime ?? null,
+          intensity_level: input.intensityLevel ?? null,
+          sport: input.sport ?? null,
+          notes: input.notes ?? null,
+          legacy_event_id: data?.id ?? null,
+        },
+      });
+
       return data ? mapEvent(data) : null;
     } catch (error) {
       console.error('Error creating event:', error);
