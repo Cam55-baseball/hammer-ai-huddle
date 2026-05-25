@@ -1,196 +1,82 @@
-# Backlog #6 — Performance Intelligence Delivery + Weekly Organism Digest v1
+# Backlog #7 — Sensor Fusion Adapter Layer (Deferred Scaffold)
 
-Deterministic, lineage-cited delivery layer over the sealed ASB ledger. Read-only. Additive-only. No schema changes. No generative prose. No fabricated forecasts.
+Pure, compile-time-only readiness layer. No ingestion, no DB writes, no hooks, no routes, no UI, no edge functions. Mirrors ASB idempotency exactly so a future bridge can plug in without breaking replay determinism.
 
 ## Scope
 
-Three new routes, no existing route replaced:
-- `/digest` — Athlete weekly organism digest
-- `/coach/digest` — Organizational digest (no rankings)
-- `/forecast` — Bounded athlete projection surface
+Create a single new directory `src/lib/sensors/` with five files. Nothing else in the app imports from it (verified by grep). Deleting the directory must cause zero downstream breakage.
 
-## Route Map
+## Files
 
-```text
-/digest              → AthleteDigest.tsx       (auth: athlete self)
-/coach/digest        → CoachDigest.tsx         (gated by useCoachRoster().size > 0)
-/forecast            → ForecastSurface.tsx     (auth: athlete self)
+### 1. `src/lib/sensors/sensorContract.ts`
+Type-only module. Exports:
+- `SensorSource` union: `"apple_health" | "garmin" | "wearable_generic" | "manual_device"`
+- `SensorEvent` interface matching the spec exactly (`sensor_event_id`, `athlete_id`, `source`, `metric_type`, `value: number | string | null`, `unit: string | null`, `occurred_at`, `ingested_at`, `device_metadata: Record<string, unknown>`, `idempotency_key`, `engine_version`)
+- `SensorToASBBridge` interface with `translate(sensorEvent: SensorEvent): null` — reserved placeholder, always null
+- No runtime values, no implementations
+
+### 2. `src/lib/sensors/sensorTopicRegistry.ts`
+Static `as const` mapping object `SENSOR_TOPIC_REGISTRY`:
 ```
-
-Sidebar: add "Weekly Digest" + "Forecast" under athlete section; add "Org Digest" under existing Coach Console section.
-
-## Component Map
-
-```text
-src/pages/
-  AthleteDigest.tsx
-  CoachDigest.tsx
-  ForecastSurface.tsx
-
-src/components/digest/
-  WeeklyDigestHeader.tsx        (window picker: this week / last week, engine_version badge)
-  OrganismChangeCard.tsx        (event-count delta vs prior 7d)
-  WorkloadShiftCard.tsx         (scheduled-day delta)
-  EscalationResolutionCard.tsx  (emerged / persisted / resolved counts)
-  BehavioralTrendCard.tsx       (topic-frequency delta, behavioral.*)
-  RecoveryContinuityCard.tsx    (recovery.* event-density delta)
-  MissingSignalCard.tsx         (no_signal / stale topics in window)
-  DigestTimelineStrip.tsx       (horizontal canonical-event spine)
-  DigestReplayCTA.tsx           (1-click → /replay/:eventId, reuses ReplayDrilldownCTA)
-  DigestEmptyState.tsx          ("No organism history yet.")
-
-src/components/forecast/
-  ForecastWindowCard.tsx        (continuation window)
-  ProjectionConfidenceCard.tsx  (confidence + missingness)
-  ForecastBoundaryCard.tsx      (renders "Bounded projection — not deterministic future state.")
-  ForecastSourceStrip.tsx       (sourceEventIds list, all drillable)
+heart_rate    → sensor.heart_rate
+hrv           → sensor.hrv
+sleep_stage   → sensor.sleep
+load          → sensor.external_load
+gps_velocity  → sensor.movement.velocity
 ```
+Plus a pure `resolveSensorTopic(metric_type: string): string | null` lookup. No inference, no aggregation, no fallback transformation — unknown metrics return `null`.
 
-Reuses existing primitives: `ConfidencePill`, `MissingnessChip`, `IntelligenceCardShell`, `LineageDrilldownButton`, `EngineVersionBadge`, `EmptyStateExplainer`, `ReplayDrilldownCTA`.
+### 3. `src/lib/sensors/sensorEventNormalizer.ts`
+Pure functions only. Reuses `canonicalPayload` from `src/lib/asb/engineVersion.ts` for stable key ordering. Exports:
+- `NOISE_FIELDS` constant: device-jitter fields stripped from `device_metadata` (e.g. `battery_level`, `signal_strength`, `rssi`, `sample_seq`, `_raw`) — declarative list only
+- `stripDeviceNoise(meta: Record<string, unknown>): Record<string, unknown>`
+- `normalizeSensorPayload(event: Pick<SensorEvent, "metric_type" | "value" | "unit" | "occurred_at" | "device_metadata">): { normalized: string; hashBasis: string }` — returns canonical JSON string + the exact string fed to the hasher
+- No side effects, no async I/O beyond what `canonicalPayload` does (sync).
 
-## Data Flow
+### 4. `src/lib/sensors/sensorIdempotency.ts`
+Mirrors `computeIdempotencyKey` from `src/lib/asb/engineVersion.ts` byte-for-byte so future bridge output collides correctly with ASB dedupe. Exports:
+- `generateSensorIdempotencyKey({ athlete_id, metric_type, occurred_at, normalized_payload }): Promise<string>` — composes material as `athlete_id | topic_id | occurred_at | normalized_payload` where `topic_id` comes from `resolveSensorTopic(metric_type)` (throws if unknown to prevent silent miscoding) and hashes via the same sha256-hex routine. Implementation re-uses the ASB hasher pattern (small private `sha256Hex` copy or import — see Technical notes).
 
-```text
-asb_events ─┐
-asb_event_lineage ─┤   single SELECT (14d window for digest, 21d for forecast)
-asb_state_snapshots ─┤
-notification_acks ─┘
-                │
-                ▼
-   src/lib/digest/projections.ts   (pure, deterministic)
-                │
-                ▼
-   src/hooks/digest/useDigestProjection.ts
-   src/hooks/digest/useForecastProjection.ts
-   src/hooks/digest/useCoachDigestProjection.ts (per-athlete bucket → org rollup)
-                │
-                ▼
-   Cards render structured strings only
-```
-
-No writes. No AI calls. No edge functions. No new tables.
-
-## Deterministic Selector Contract
-
-All selectors in `src/lib/digest/projections.ts` return:
-
-```ts
-{
-  value: number | string,
-  delta: number | null,
-  confidence: 'n/a' | 'low' | 'medium' | 'high',
-  missingness: 'ok' | 'partial' | 'stale' | 'no_signal',
-  sourceEventIds: string[],
-  engineVersion: string | null,
-}
-```
-
-Implemented:
-- `compareWindowCounts(events, topicPrefix, currWindow, prevWindow)`
-- `compareTopicFrequency(events, topicPrefix, currWindow, prevWindow)`
-- `detectEscalationEmergence(events, currWindow)` — topics in `foundation.pattern.*`, `behavioral.escalation.*`, `behavioral.risk.*`
-- `detectEscalationResolution(events, currWindow, prevWindow)` — escalations in prior window absent in current
-- `detectScheduleContinuityShift(events, currWindow, prevWindow)` — `athlete.schedule.*`
-- `detectBehavioralTrendShift(events, currWindow, prevWindow)` — `behavioral.*`
-- `boundedForecastWindow(events, horizonDays)` — continuation projection only
-- `extractReplaySources(projection)` — flattens `sourceEventIds[]` for UI
-
-No smoothing, no imputation, no defaults-to-zero certainty. When data is absent: `value=null`, `confidence='n/a'`, `missingness='no_signal'`.
-
-## Sentence Builder
-
-`src/lib/digest/sentences.ts` — pure mapping from projection → fixed templates only:
-
-- `"Workload continuity {increased|decreased|unchanged} from {n} scheduled days to {m} scheduled days week-over-week."`
-- `"No behavioral escalation topics detected in the last 7 days."`
-- `"Recovery-related events {increased|decreased} compared to the prior 7-day window."`
-- `"Behavioral escalation events unresolved for {h}h."`
-- `"No recovery-related events observed in {d} days."`
-
-Templates are constants. No string interpolation outside enumerated slots. Grep-guard test asserts no card calls an LLM client or a Lovable AI gateway.
-
-## Forecast Rules
-
-`/forecast` renders only:
-- continuation windows (e.g. "Current workload continuity trend has persisted for {n} days")
-- workload continuity projections
-- missingness projections
-- escalation persistence visibility
-
-Each card displays the literal string `"Bounded projection — not deterministic future state."` via `ForecastBoundaryCard`. Forbidden topics (injury, psychological, scholarship, performance guarantees) have no selector and no card.
-
-## Coach Digest Rules
-
-Organizational rollup only:
-- roster-wide escalation counts (emerged / persisted / resolved)
-- stale signal counts
-- workload continuity changes (org-level distribution, not per-athlete ranking)
-- unresolved escalation visibility (list, sorted by event timestamp not by severity score)
-- roster event-density changes
-
-No "top athletes", no comparative scoring, no aggregate coach score. Each list row drills to `/coach/athlete/:athleteId` and to `/replay/:eventId`.
-
-## RLS / Access
-
-No migration. Reuses existing policies:
-- athlete reads own `asb_events` (existing self-policy)
-- coach reads roster `asb_events` (added in Backlog #3 via `is_coach_of`)
-
-## Mobile Considerations
-
-- Cards stack single-column < 768px; 2-col 768–1280; 3-col ≥ 1280.
-- `DigestTimelineStrip` horizontally scrollable with snap on mobile.
-- `WeeklyDigestHeader` window picker collapses to a `Select` on mobile.
-- Replay CTAs remain tap-target ≥ 44px.
-- Coach digest tables become stacked rows on mobile (label/value pairs).
-
-## Performance
-
-- One SELECT per surface, 14d (digest) / 21d (forecast) window, ordered by `occurred_at desc`, capped at 2k rows.
-- Projections memoized via `useMemo` keyed on `(athleteId, windowEnd, rowCount)`.
-- No realtime subscriptions on digest pages — explicit refresh button + react-query `staleTime: 5m`.
-
-## Acceptance Criteria
-
-1. `/digest` renders lineage-cited weekly organism summaries.
-2. Every digest statement references ≥1 canonical `sourceEventId`.
-3. `/forecast` renders bounded projections only; every card shows the boundary disclaimer.
-4. Every forecast card exposes `confidence` + `missingness` pills.
-5. No generative AI prose anywhere in `src/components/digest/**` or `src/components/forecast/**` (grep test: no imports from `@/lib/ai`, `openai`, `gemini`, no `supabase.functions.invoke` from these dirs).
-6. When source data absent: `ConfidencePill` shows `n/a`, `MissingnessChip` shows `no signal`, no numeric fabrication.
-7. Empty state renders `"No organism history yet."` via `DigestEmptyState`.
-8. Coach digest contains no ranking UI, no sort-by-score, no per-athlete numeric score.
-9. Every digest/forecast card exposes a 1-click `/replay/:eventId` link via `DigestReplayCTA`.
-10. Zero writes to `asb_events` from any new file (grep test: no `.insert(` / `.update(` / `.delete(` against `asb_events` in new code).
+### 5. `src/lib/sensors/__tests__/sensorContract.test.ts` (optional, recommended)
+Vitest sanity:
+- Topic registry is frozen / deterministic
+- `generateSensorIdempotencyKey` equals `computeIdempotencyKey` when fed equivalent inputs (cross-checks parity)
+- `SensorToASBBridge.translate()` returns `null`
 
 ## Verification Matrix
 
-| # | Check | Method |
-|---|---|---|
-| 1 | Sentence templates exhaustive | Snapshot test on `sentences.ts` |
-| 2 | Projections deterministic | Unit test: same input → same output |
-| 3 | Missingness never collapses to certainty | Unit test: empty events → `confidence='n/a'` |
-| 4 | Replay link present on every card | RTL test per card |
-| 5 | No AI imports in digest/forecast | Grep CI guard |
-| 6 | No writes to `asb_events` | Grep CI guard |
-| 7 | Coach digest has no ranking | RTL: assert no `sort by score`, no per-athlete numeric badge |
-| 8 | Forecast boundary disclaimer present | RTL: assert literal string on every forecast card |
-| 9 | Mobile reflow at 375px | Manual + viewport screenshot |
-| 10 | Single SELECT per surface | Network panel inspection |
+| Check | Method |
+|---|---|
+| No imports from `asb_events`, `digest`, `coach`, `command` | `rg "from ['\"]@/(integrations/supabase\|lib/(digest\|coach\|command))" src/lib/sensors` → empty |
+| No Supabase calls | `rg "supabase" src/lib/sensors` → empty |
+| No DB tables | No migration file added |
+| No edge functions | No `supabase/functions/sensor*` added |
+| Idempotency parity | Test asserts equality vs `computeIdempotencyKey` |
+| Zero downstream coupling | `rg "from ['\"]@/lib/sensors" src` → empty |
+| Bridge inert | `translate()` returns `null` (type signature enforces) |
+| Build passes | Standard build check |
+
+## Technical notes
+
+- Import `canonicalPayload` from `@/lib/asb/engineVersion` (pure helper, no runtime side effects, safe to share).
+- For `sha256Hex`: re-import via a small local copy in `sensorIdempotency.ts` to keep the sensor module self-contained AND assert parity in tests. Alternative: export `sha256Hex` from `engineVersion.ts` — but that's a touch to an ASB file. Prefer **local copy + parity test** to keep ASB sealed.
+- All files use TypeScript `as const` and `readonly` where applicable.
+- No React, no hooks, no JSX.
 
 ## Build Order
 
-1. `src/lib/digest/projections.ts` (pure selectors + types)
-2. `src/lib/digest/sentences.ts` (fixed templates)
-3. `src/hooks/digest/useDigestProjection.ts`, `useForecastProjection.ts`, `useCoachDigestProjection.ts`
-4. Shared digest cards (`OrganismChangeCard`, `WorkloadShiftCard`, …)
-5. `AthleteDigest.tsx` page + route + sidebar entry
-6. `CoachDigest.tsx` page + route + sidebar entry (gated by roster)
-7. Forecast components + `ForecastSurface.tsx` + route + sidebar entry
-8. `DigestReplayCTA` wiring across all cards
-9. Empty states + mobile layout pass
-10. Verification sweep (grep guards + unit/RTL tests)
+1. `sensorContract.ts` (types + bridge interface)
+2. `sensorTopicRegistry.ts` (frozen mapping + resolver)
+3. `sensorEventNormalizer.ts` (noise strip + canonical serialization)
+4. `sensorIdempotency.ts` (hash, mirrors ASB)
+5. `__tests__/sensorContract.test.ts` (parity + inertness)
+6. Run grep guards from verification matrix
 
-## Constraints Recap
+## Out of Scope (explicit)
 
-Additive-only. No schema rewrites. No doctrine. No replay authoring. No AI summaries detached from lineage. No opaque scoring. No fabricated forecasts. Every visible statement traces to canonical ASB events via `sourceEventIds[]`.
+- No wearable SDK integration
+- No `asb_events` writes or bridge execution
+- No UI, no routes, no sidebar entries
+- No hooks, no React Query
+- No migration, no RLS changes
+- No `/command`, `/digest`, `/coach` modifications
