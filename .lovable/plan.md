@@ -1,82 +1,116 @@
-# Backlog #7 — Sensor Fusion Adapter Layer (Deferred Scaffold)
+# Backlog #8 — Cross-Substrate Consistency Hardening
 
-Pure, compile-time-only readiness layer. No ingestion, no DB writes, no hooks, no routes, no UI, no edge functions. Mirrors ASB idempotency exactly so a future bridge can plug in without breaking replay determinism.
+A read-only invariance + parity layer that seals ASB, Digest, Coach, Forecast, and Sensor subsystems to a single canonical interpretation. No routes, no UI, no schema, no runtime behavior changes.
 
 ## Scope
 
-Create a single new directory `src/lib/sensors/` with five files. Nothing else in the app imports from it (verified by grep). Deleting the directory must cause zero downstream breakage.
+Additive-only. Pure TypeScript. Zero coupling to Supabase, hooks, or React. CI/debug-only execution. Deleting `src/lib/asb/invariants/` must cause zero runtime breakage.
 
-## Files
+## Files to create
 
-### 1. `src/lib/sensors/sensorContract.ts`
-Type-only module. Exports:
-- `SensorSource` union: `"apple_health" | "garmin" | "wearable_generic" | "manual_device"`
-- `SensorEvent` interface matching the spec exactly (`sensor_event_id`, `athlete_id`, `source`, `metric_type`, `value: number | string | null`, `unit: string | null`, `occurred_at`, `ingested_at`, `device_metadata: Record<string, unknown>`, `idempotency_key`, `engine_version`)
-- `SensorToASBBridge` interface with `translate(sensorEvent: SensorEvent): null` — reserved placeholder, always null
-- No runtime values, no implementations
+### 1. `src/lib/asb/constants/missingnessThresholds.ts`
+Single source of truth for missingness semantics.
 
-### 2. `src/lib/sensors/sensorTopicRegistry.ts`
-Static `as const` mapping object `SENSOR_TOPIC_REGISTRY`:
+```text
+MISSINGNESS_STATES = "no_signal" | "stale" | "partial" | "ok"
+THRESHOLDS = {
+  staleAfterMs: 7 * 24h,
+  partialRequiredFields: per-topic minimal field set,
+  windowMs: 7 * 24h (default observation window)
+}
+classifyMissingness(events, topic, now) → MissingnessState
 ```
-heart_rate    → sensor.heart_rate
-hrv           → sensor.hrv
-sleep_stage   → sensor.sleep
-load          → sensor.external_load
-gps_velocity  → sensor.movement.velocity
+All subsystems must import from here; no inline thresholds elsewhere.
+
+### 2. `src/lib/asb/invariants/asbInvariantChecks.ts`
+CI/debug entry point.
+
+```text
+runInvariantSuite(sample: AsbEvent[]): ParityResult[]
+runInvariantSuite() asserts:
+  - 100% parity across sampled events
+  - zero topic drift
+  - zero divergence in identity / missingness / confidence
 ```
-Plus a pure `resolveSensorTopic(metric_type: string): string | null` lookup. No inference, no aggregation, no fallback transformation — unknown metrics return `null`.
+Pure — no I/O. Caller supplies sample dataset.
 
-### 3. `src/lib/sensors/sensorEventNormalizer.ts`
-Pure functions only. Reuses `canonicalPayload` from `src/lib/asb/engineVersion.ts` for stable key ordering. Exports:
-- `NOISE_FIELDS` constant: device-jitter fields stripped from `device_metadata` (e.g. `battery_level`, `signal_strength`, `rssi`, `sample_seq`, `_raw`) — declarative list only
-- `stripDeviceNoise(meta: Record<string, unknown>): Record<string, unknown>`
-- `normalizeSensorPayload(event: Pick<SensorEvent, "metric_type" | "value" | "unit" | "occurred_at" | "device_metadata">): { normalized: string; hashBasis: string }` — returns canonical JSON string + the exact string fed to the hasher
-- No side effects, no async I/O beyond what `canonicalPayload` does (sync).
+### 3. `src/lib/asb/invariants/asbParityMatrix.ts`
+Cross-system check registry.
 
-### 4. `src/lib/sensors/sensorIdempotency.ts`
-Mirrors `computeIdempotencyKey` from `src/lib/asb/engineVersion.ts` byte-for-byte so future bridge output collides correctly with ASB dedupe. Exports:
-- `generateSensorIdempotencyKey({ athlete_id, metric_type, occurred_at, normalized_payload }): Promise<string>` — composes material as `athlete_id | topic_id | occurred_at | normalized_payload` where `topic_id` comes from `resolveSensorTopic(metric_type)` (throws if unknown to prevent silent miscoding) and hashes via the same sha256-hex routine. Implementation re-uses the ASB hasher pattern (small private `sha256Hex` copy or import — see Technical notes).
+```text
+ParityResult { subsystem, event_id, pass, mismatch_reason? }
 
-### 5. `src/lib/sensors/__tests__/sensorContract.test.ts` (optional, recommended)
-Vitest sanity:
-- Topic registry is frozen / deterministic
-- `generateSensorIdempotencyKey` equals `computeIdempotencyKey` when fed equivalent inputs (cross-checks parity)
-- `SensorToASBBridge.translate()` returns `null`
+buildParityMatrix(asbEvent) runs:
+  - asb→digest identity match
+  - asb→coach identity match
+  - asb→forecast inclusion consistency
+  - sensor→asb idempotency parity (future-ready, inert)
+  - topic mapping consistency across layers
+```
 
-## Verification Matrix
+### 4. `src/lib/asb/invariants/asbCrossSystemValidators.ts`
+Pure validators.
 
-| Check | Method |
+```text
+validateDigestParity(asbEvent, digestProjection): ParityResult
+validateCoachParity(asbEvent, coachProjection): ParityResult
+validateForecastParity(asbEvent, forecastProjection): ParityResult
+validateSensorForwardCompatibility(sensorEvent): ParityResult
+```
+Each enforces: identity equality, topic interpretation equality, missingness classification equality, confidence forwarding (no amplification, no recomputation).
+
+### 5. `src/lib/asb/invariants/__tests__/parity.test.ts`
+- Sampled ASB events → all validators return `pass: true`
+- Sensor `generateSensorIdempotencyKey` ≡ ASB `computeIdempotencyKey` (byte-for-byte)
+- Missingness states identical across digest + coach selectors for same input
+- Coach projection never aggregates confidence (raw forward only)
+- Forecast confidence ≤ source ASB confidence
+
+### 6. CI guard script — `scripts/check-invariants.sh` (or extend existing CI step)
+Grep-based forbidden-pattern guard:
+- No `staleAfterMs|partialRequiredFields` literal outside `missingnessThresholds.ts`
+- No `sha256(` identity composition outside `engineVersion.ts` + `sensorIdempotency.ts`
+- No subsystem imports another subsystem's `projections.ts`
+- No re-declaration of topic maps outside `sensorTopicRegistry.ts`
+
+## Refactor (minimal, parity-preserving)
+
+Only if existing files contain inline thresholds, replace with imports from `missingnessThresholds.ts`. No behavior change — values stay identical.
+- `src/lib/digest/projections.ts` — if any `staleAfter` / window constants inline, point at central constants.
+- `src/lib/coach/projections.ts` — same.
+
+If thresholds are already implicit/derived, leave files untouched and only export the canonical constants for future use.
+
+## Invariant rules enforced
+
+| Rule | Authority |
 |---|---|
-| No imports from `asb_events`, `digest`, `coach`, `command` | `rg "from ['\"]@/(integrations/supabase\|lib/(digest\|coach\|command))" src/lib/sensors` → empty |
-| No Supabase calls | `rg "supabase" src/lib/sensors` → empty |
-| No DB tables | No migration file added |
-| No edge functions | No `supabase/functions/sensor*` added |
-| Idempotency parity | Test asserts equality vs `computeIdempotencyKey` |
-| Zero downstream coupling | `rg "from ['\"]@/lib/sensors" src` → empty |
-| Bridge inert | `translate()` returns `null` (type signature enforces) |
-| Build passes | Standard build check |
+| Event identity | `computeIdempotencyKey` in `engineVersion.ts` |
+| Topic resolution (sensor) | `sensorTopicRegistry.ts` |
+| Topic resolution (ASB/digest/coach/forecast) | prefix match only, no remap |
+| Missingness thresholds | `missingnessThresholds.ts` |
+| Confidence | ASB-emitted, pass-through only; coach raw, forecast ≤ source |
 
-## Technical notes
+## Acceptance criteria
 
-- Import `canonicalPayload` from `@/lib/asb/engineVersion` (pure helper, no runtime side effects, safe to share).
-- For `sha256Hex`: re-import via a small local copy in `sensorIdempotency.ts` to keep the sensor module self-contained AND assert parity in tests. Alternative: export `sha256Hex` from `engineVersion.ts` — but that's a touch to an ASB file. Prefer **local copy + parity test** to keep ASB sealed.
-- All files use TypeScript `as const` and `readonly` where applicable.
-- No React, no hooks, no JSX.
+- `runInvariantSuite()` returns 100% pass on sampled fixture
+- Sensor idempotency ≡ ASB idempotency (test asserts equality)
+- Single missingness threshold source (grep-verified)
+- No subsystem cross-imports another's projection logic
+- No new routes, hooks, edge functions, migrations
+- Deleting `src/lib/asb/invariants/` leaves app fully functional
+- All existing tests still pass
 
-## Build Order
+## Build order
 
-1. `sensorContract.ts` (types + bridge interface)
-2. `sensorTopicRegistry.ts` (frozen mapping + resolver)
-3. `sensorEventNormalizer.ts` (noise strip + canonical serialization)
-4. `sensorIdempotency.ts` (hash, mirrors ASB)
-5. `__tests__/sensorContract.test.ts` (parity + inertness)
-6. Run grep guards from verification matrix
+1. `missingnessThresholds.ts`
+2. `asbCrossSystemValidators.ts`
+3. `asbParityMatrix.ts`
+4. `asbInvariantChecks.ts`
+5. Parity tests
+6. CI grep guard script
+7. Minimal refactor of digest/coach to import central thresholds (only if inline duplicates exist)
 
-## Out of Scope (explicit)
+## Out of scope
 
-- No wearable SDK integration
-- No `asb_events` writes or bridge execution
-- No UI, no routes, no sidebar entries
-- No hooks, no React Query
-- No migration, no RLS changes
-- No `/command`, `/digest`, `/coach` modifications
+No new ASB writes. No runtime invariant enforcement on hot paths. No sensor activation. No UI surface. No new doctrine. No edge functions. No schema.
