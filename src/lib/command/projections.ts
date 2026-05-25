@@ -64,7 +64,7 @@ export function isStale(occurredAt: string | null, hours: number, now: Date = ne
   return now.getTime() - t > hours * 3600 * 1000;
 }
 
-export const EMPTY_PROJECTION: CardProjection<never> = {
+export const EMPTY_PROJECTION: CardProjection<unknown> = {
   value: null,
   sourceEventId: null,
   occurredAt: null,
