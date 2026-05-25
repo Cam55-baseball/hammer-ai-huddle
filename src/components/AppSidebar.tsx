@@ -170,7 +170,10 @@ export function AppSidebar() {
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
     ...(!isScout && !isCoach ? [{ title: t('navigation.commandCenter', 'Command Center'), url: "/command", icon: Sparkles }] : []),
+    ...(!isScout && !isCoach ? [{ title: t('navigation.weeklyDigest', 'Weekly Digest'), url: "/digest", icon: CalendarDays }] : []),
+    ...(!isScout && !isCoach ? [{ title: t('navigation.forecast', 'Forecast'), url: "/forecast", icon: BarChart3 }] : []),
     ...(isCoach ? [{ title: t('navigation.coachConsole', 'Coach Console'), url: "/coach/console", icon: Users }] : []),
+    ...(isCoach ? [{ title: t('navigation.orgDigest', 'Org Digest'), url: "/coach/digest", icon: CalendarDays }] : []),
     ...(!isScout && !isCoach ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
