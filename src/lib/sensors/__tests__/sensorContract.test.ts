@@ -9,6 +9,12 @@ import { computeIdempotencyKey } from "@/lib/asb/engineVersion";
 import type { SensorEvent, SensorToASBBridge } from "../sensorContract";
 
 describe("sensor adapter layer (deferred scaffold)", () => {
+  beforeAll(async () => {
+    if (!(globalThis.crypto as Crypto | undefined)?.subtle) {
+      const { webcrypto } = await import("node:crypto");
+      Object.defineProperty(globalThis, "crypto", { value: webcrypto, configurable: true });
+    }
+  });
   it("topic registry is deterministic and complete", () => {
     expect(SENSOR_TOPIC_REGISTRY).toEqual({
       heart_rate: "sensor.heart_rate",
