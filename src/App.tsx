@@ -80,6 +80,9 @@ const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
 const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
 const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetail"));
+const AthleteDigest = lazyWithRetry(() => import("./pages/AthleteDigest"));
+const CoachDigest = lazyWithRetry(() => import("./pages/CoachDigest"));
+const ForecastSurface = lazyWithRetry(() => import("./pages/ForecastSurface"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
@@ -193,6 +196,9 @@ const App = () => {
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
               <Route path="/coach/console" element={<CoachConsole />} />
               <Route path="/coach/athlete/:athleteId" element={<CoachAthleteDetail />} />
+              <Route path="/digest" element={<AthleteDigest />} />
+              <Route path="/coach/digest" element={<CoachDigest />} />
+              <Route path="/forecast" element={<ForecastSurface />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
               <Route path="/video-library" element={<VideoLibrary />} />
