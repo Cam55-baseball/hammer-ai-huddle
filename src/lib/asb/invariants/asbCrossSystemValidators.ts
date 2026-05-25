@@ -46,7 +46,9 @@ export interface SensorEventLike {
   athlete_id: string;
   metric_type: string;
   occurred_at: string;
-  payload: unknown;
+  value: number;
+  unit: string;
+  device_metadata?: Record<string, unknown>;
 }
 
 function ok(subsystem: ParityResult["subsystem"], event_id: string): ParityResult {
@@ -147,7 +149,14 @@ export async function validateSensorForwardCompatibility(
   if (topic_id === null) {
     return fail("sensor", pseudoEventId, `unknown metric_type: ${sensor.metric_type}`);
   }
-  const { normalized } = normalizeSensorPayload(sensor.payload);
+  const normInput = {
+    metric_type: sensor.metric_type,
+    value: sensor.value,
+    unit: sensor.unit,
+    occurred_at: sensor.occurred_at,
+    device_metadata: sensor.device_metadata ?? {},
+  };
+  const { normalized } = normalizeSensorPayload(normInput);
   const sensorKey = await generateSensorIdempotencyKey({
     athlete_id: sensor.athlete_id,
     metric_type: sensor.metric_type,
@@ -158,7 +167,7 @@ export async function validateSensorForwardCompatibility(
     athlete_id: sensor.athlete_id,
     topic_id,
     occurred_at: sensor.occurred_at,
-    payload: sensor.payload,
+    payload: normInput,
   });
   if (sensorKey !== asbKey) {
     return fail("sensor", pseudoEventId, `idempotency drift: ${sensorKey} vs ${asbKey}`);

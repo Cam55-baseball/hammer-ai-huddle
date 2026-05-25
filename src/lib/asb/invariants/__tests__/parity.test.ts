@@ -56,8 +56,14 @@ describe("ASB cross-substrate invariants", () => {
   });
 
   it("sensor idempotency equals ASB idempotency byte-for-byte", async () => {
-    const payload = { value: 72, unit: "bpm" };
-    const { normalized } = normalizeSensorPayload(payload);
+    const normInput = {
+      metric_type: "heart_rate",
+      value: 72,
+      unit: "bpm",
+      occurred_at: "2026-05-25T12:00:00Z",
+      device_metadata: {},
+    };
+    const { normalized } = normalizeSensorPayload(normInput);
     const sensorKey = await generateSensorIdempotencyKey({
       athlete_id: "ath-1",
       metric_type: "heart_rate",
@@ -68,7 +74,7 @@ describe("ASB cross-substrate invariants", () => {
       athlete_id: "ath-1",
       topic_id: "sensor.heart_rate",
       occurred_at: "2026-05-25T12:00:00Z",
-      payload,
+      payload: normInput,
     });
     expect(sensorKey).toBe(asbKey);
   });
@@ -78,7 +84,8 @@ describe("ASB cross-substrate invariants", () => {
       athlete_id: "ath-1",
       metric_type: "hrv",
       occurred_at: "2026-05-25T12:00:00Z",
-      payload: { rmssd: 42 },
+      value: 42,
+      unit: "ms",
     });
     expect(r.pass).toBe(true);
   });
