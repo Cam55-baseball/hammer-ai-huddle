@@ -187,6 +187,9 @@ export function useAthleteEvents() {
   const deleteEvent = async (eventId: string): Promise<boolean> => {
     if (!user?.id) return false;
 
+    // Capture the legacy row BEFORE deletion so the ASB delete event has a deterministic occurred_at.
+    const prior = events.find(e => e.id === eventId) ?? null;
+
     try {
       const success = await schedulingService.deleteDayType(eventId);
       if (!success) {
@@ -196,6 +199,24 @@ export function useAthleteEvents() {
 
       await fetchEvents();
       toast.success('Event removed');
+
+      if (prior) {
+        void emitDayTypeAsbEvent({
+          athleteId: user.id,
+          topic: ASB_TOPIC_DAY_TYPE_DELETED,
+          eventDate: prior.eventDate,
+          eventTime: prior.eventTime,
+          payload: {
+            event_type: prior.eventType,
+            event_time: prior.eventTime,
+            intensity_level: prior.intensityLevel,
+            sport: prior.sport,
+            notes: prior.notes,
+            legacy_event_id: prior.id,
+          },
+        });
+      }
+
       return true;
     } catch (error) {
       console.error('Error deleting event:', error);
