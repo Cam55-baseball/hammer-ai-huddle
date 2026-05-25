@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AthleteOnboardingShell } from "@/components/onboarding/AthleteOnboardingShell";
 import { NotificationsPreferencesPanel } from "@/components/notifications/NotificationsPreferencesPanel";
-import { EngineVersionBadge } from "@/components/command/IntelligenceCardShell";
+import { EngineVersionBadge } from "@/components/asb/EngineVersionBadge";
 import { ENGINE_VERSION } from "@/lib/asb/engineVersion";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
