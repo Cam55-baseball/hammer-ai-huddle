@@ -5784,6 +5784,57 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_acks: {
+        Row: {
+          acknowledged_at: string | null
+          channel: string
+          dispatched_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          channel: string
+          dispatched_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          channel?: string
+          dispatched_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          email: boolean
+          in_app: boolean
+          push: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email?: boolean
+          in_app?: boolean
+          push?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email?: boolean
+          in_app?: boolean
+          push?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       nutrition_daily_tips: {
         Row: {
           category: string

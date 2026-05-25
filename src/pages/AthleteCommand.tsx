@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
+import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingState";
 import { TodayOverviewHeader } from "@/components/command/TodayOverviewHeader";
+import { EscalationBanner } from "@/components/command/EscalationBanner";
+import { NotificationBell } from "@/components/command/NotificationBell";
 import { ReadinessCard } from "@/components/command/cards/ReadinessCard";
 import { FatigueCard } from "@/components/command/cards/FatigueCard";
 import { WorkloadCard } from "@/components/command/cards/WorkloadCard";
@@ -25,15 +28,26 @@ export default function AthleteCommand() {
   const { user, loading: authLoading, isAuthStable } = useAuth();
   const navigate = useNavigate();
   const { data: rows, isLoading } = useAthleteCommandRows({ days: 30, limit: 500 });
+  const { hasFirstEvent, loading: onboardingLoading } = useAthleteOnboardingState();
 
   useEffect(() => {
     if (!authLoading && isAuthStable && !user) navigate("/auth", { replace: true });
   }, [authLoading, isAuthStable, user, navigate]);
 
+  useEffect(() => {
+    if (!authLoading && isAuthStable && user && !onboardingLoading && !hasFirstEvent) {
+      navigate("/onboarding/athlete", { replace: true });
+    }
+  }, [authLoading, isAuthStable, user, onboardingLoading, hasFirstEvent, navigate]);
+
   return (
     <DashboardLayout>
       <div className="mx-auto w-full max-w-5xl px-4 pb-12 sm:px-6">
-        <TodayOverviewHeader rows={rows} />
+        <div className="flex items-center justify-between gap-2 pt-4">
+          <TodayOverviewHeader rows={rows} />
+          <NotificationBell />
+        </div>
+        <EscalationBanner />
 
         <Section title="Today">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

@@ -24,6 +24,7 @@ export function BehavioralRegulationCard({ rows, loading }: Props) {
       icon={<Brain className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
+      emptyMessage="Unlocks once behavioral events accumulate (auto-emitted from your activity)."
     >
       <div className="flex items-end gap-2">
         <span className="font-mono text-xl">{stateLabel ?? "—"}</span>

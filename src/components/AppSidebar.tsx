@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2, Gamepad2, Library, Crown, Bell } from "lucide-react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -170,6 +170,7 @@ export function AppSidebar() {
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
     ...(!isScout && !isCoach ? [{ title: t('navigation.commandCenter', 'Command Center'), url: "/command", icon: Sparkles }] : []),
+    ...(!isScout && !isCoach ? [{ title: t('navigation.notifications', 'Notifications'), url: "/settings/notifications", icon: Bell }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),

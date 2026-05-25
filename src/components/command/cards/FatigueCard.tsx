@@ -16,6 +16,7 @@ export function FatigueCard({ rows, loading }: Props) {
       icon={<BatteryLow className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
+      emptyMessage="Fatigue appears after your first completed session."
     >
       <div className="flex items-end gap-2">
         <span className="font-mono text-3xl tabular-nums">
