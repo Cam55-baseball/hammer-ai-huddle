@@ -78,6 +78,8 @@ const AsbReplay = lazyWithRetry(() => import("./pages/AsbReplay"));
 const AthleteCommand = lazyWithRetry(() => import("./pages/AthleteCommand"));
 const AthleteOnboarding = lazyWithRetry(() => import("./pages/AthleteOnboarding"));
 const NotificationsSettings = lazyWithRetry(() => import("./pages/NotificationsSettings"));
+const CoachConsole = lazyWithRetry(() => import("./pages/CoachConsole"));
+const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetail"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
@@ -189,6 +191,8 @@ const App = () => {
               <Route path="/command" element={<AthleteCommand />} />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
+              <Route path="/coach/console" element={<CoachConsole />} />
+              <Route path="/coach/athlete/:athleteId" element={<CoachAthleteDetail />} />
               <Route path="/my-followers" element={<MyFollowers />} />
               <Route path="/analyze/:module" element={<AnalyzeVideo />} />
               <Route path="/video-library" element={<VideoLibrary />} />
