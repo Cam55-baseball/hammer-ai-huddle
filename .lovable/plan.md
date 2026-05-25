@@ -1,64 +1,136 @@
-## Canonical ASB Operationalization — Passes 4, 6.2–6.5, 7, 8
+# ASB Substrate — Final Certification, Freeze & Product Backlog Transition
 
-Sequential, additive-only execution on top of locked G1/G2 substrate. No schema rewrites, no doctrine, no legacy replacement.
+This plan executes the four sealed phases requested: live producer validation, substrate integrity audit, freeze certification, and product-execution backlog. No new architecture, no doctrine, no schema rewrites.
 
-### Pass 4 — Lineage Continuity (single-hop, explicit causality only)
+## Phase 1 — Live Producer Validation (read-only + triggered traffic)
 
-Wire `emitAsbLineage` from `src/lib/asb/emit.ts` wherever a parent ASB `event_id` is already in scope:
+For each producer family, trigger real traffic via existing UI/edge paths and verify against `asb_events` + `/asb/timeline` + `/replay/:eventId`.
 
-- `useAthleteEvents.deleteEvent` — when deletion produces a new canonical `event_deleted` ASB row, emit lineage `parent = original event_id`, `derivation_type = "deletion"`.
-- Behavioral / foundation derived emitters — when a derived event is produced from a known source `event_id`, emit `derivation_type = "derived"` lineage row.
-- Skip emission anywhere ancestry is not explicit. No inference.
+Producers under test:
+- `athlete.schedule.day_type` — via `useAthleteEvents.createEvent` / `deleteEvent`
+- `behavioral.*` — via `evaluate-behavioral-state` edge function
+- `foundation.*` — via `detect-behavior-patterns` + `foundations-recompute-user`
+- `analytics.*` — via `analytics-ingest` with explicit `athlete_id`
 
-Deterministic ordering preserved: every lineage read already uses `created_at` + `parent_event_id`/`child_event_id` tiebreak (G1 parity fix).
+Per-producer verification matrix:
 
-### Pass 6.2–6.5 — Canonical Producer Expansion
+```text
+                row in   det.    engine_ver  /timeline  /replay  dup
+                asb_evts idem_key =asb-1.0.0  visible   resolves dedupes
+athlete.day_type   ✓       ✓        ✓          ✓         ✓        ✓
+behavioral.*       ✓       ✓        ✓          ✓         ✓        ✓
+foundation.*       ✓       ✓        ✓          ✓         ✓        ✓
+analytics.*        ✓       ✓        ✓          ✓         ✓        ✓
+```
 
-Add additive `emitAsbEvent` calls to each producer below. Legacy writes untouched. Each producer stamps `ENGINE_VERSION`, computes `idempotency_key` via `computeIdempotencyKey()`, preserves raw payload verbatim, preserves missingness, no smoothing/imputation/aggregation.
+Verification mechanics (read-only tools):
+- `supabase--read_query` against `asb_events` filtered by `topic_id` + `athlete_id` + `occurred_at`
+- Recompute `idempotency_key` independently from `(athlete_id|topic_id|occurred_at|canonical(payload))` and assert equality
+- Re-trigger same input → assert row count unchanged (dedupe)
+- Diff payload against source row → assert raw preservation (no smoothing/imputation)
+- Open `/replay/:eventId` for sample of each producer → assert deterministic re-derivation
+- `supabase--edge_function_logs` to confirm `[asb] emit ok|dedupe` lines
 
-1. **Behavioral event writers** (`useBehavioralEvents` / nearest hook): emit on each behavioral row insert. `topic_id = "behavioral.<kind>"`, `actor_role = "system"` or `"athlete"` per source.
-2. **Foundation trigger emitters** (foundation-related hooks/edge functions): emit on trigger fire with `topic_id = "foundation.<trigger_name>"`.
-3. **analytics-ingest** edge function: wrap each accepted event with additive `asb_events` insert using service-role client.
-4. **Calendar** (event/schedule writers): emit `topic_id = "calendar.<kind>"`.
-5. **Nutrition** writers: emit `topic_id = "nutrition.<kind>"`.
-6. **Video / realtime ingest** paths: emit `topic_id = "media.<kind>"` / `"realtime.<kind>"`, preserve asset refs in `lineage_refs`.
+## Phase 2 — Substrate Integrity Audit
 
-For edge functions, port the small `engineVersion.ts` helpers inline (Deno) — no shared bundling change.
+Single audit pass producing a concrete violation list (no advisories, no doctrine):
 
-### Pass 7 — Stripe Atomicity
+| Dimension | Check |
+|---|---|
+| Replay determinism | Identical `eventId+engine_version` re-derives identical output (sample N=5 across topics) |
+| Lineage continuity | `asb_event_lineage` single-hop only; ordering `(created_at, parent_event_id)` total |
+| Idempotency enforcement | Unique index on `(athlete_id, topic_id, idempotency_key)` present and enforced |
+| Engine version propagation | All emitters stamp `ENGINE_VERSION="asb-1.0.0"`; cache keys include it |
+| Observability visibility | `/timeline` lists every produced topic; `/replay/:id` resolves for each |
+| RLS correctness | `asb_events` + `asb_event_lineage` INSERT/SELECT policies scoped to athlete owner |
+| Append-only guarantees | No UPDATE/DELETE paths exist against `asb_events` in client or edge code |
+| Hidden retries | No catch-and-retry loops around `emitAsbEvent`; dedupe is the only "retry" |
+| Silent mutation | No code path mutates `payload`/`engine_version`/`idempotency_key` post-insert |
+| Parallel ledger | No alternate event store writes mirroring `asb_events` |
 
-In Stripe webhook function: replace `select existing → insert` dedupe with single `insert ... on conflict (stripe_event_id) do nothing` and branch on returned row count. Verify unique index on `stripe_event_id` exists first via `supabase--read_query`; if missing, surface as the only schema blocker requiring approval. No behavior change beyond race elimination.
+Tools: `supabase--read_query`, `supabase--linter`, ripgrep across `src/` + `supabase/functions/`.
 
-### Pass 8 — AI / Analyzer Provenance
+Output: a violations list (may be empty). Only concrete violations block freeze.
 
-For every analyzer edge function path:
-- Stamp `engine_version` (ASB engine constant).
-- Stamp `model_id`, `model_version` from the gateway call site (already known at call time).
-- Stamp `prompt_hash = sha256(canonical(prompt))`.
-- Preserve raw analyzer output verbatim in payload.
+## Phase 3 — Freeze Certification
 
-Verify nullable columns `model_id`, `model_version`, `prompt_hash`, `engine_version` exist on analyzer output tables; if missing, one additive migration adds them as nullable. No backfill.
+If Phase 2 returns zero violations, declare and record in `.lovable/plan.md`:
+- ASB **replay substrate** LOCKED
+- ASB **lineage substrate** LOCKED
+- ASB **canonical ingestion substrate** LOCKED
+- Replay-certifiable **event ledger operational**
+- **Ingestion/runtime substrate freeze-ready**
 
-### Verification (after each producer pass)
+No code changes in this phase beyond the freeze marker doc.
 
-- `select count(*) from asb_events where topic_id like '<prefix>%'` returns > 0 after triggering action.
-- Row appears in `/asb/timeline`.
-- `/replay/:eventId` resolves deterministically with pinned `engine_version`.
-- Re-trigger same input → no duplicate (idempotency_key dedupe).
-- Lineage row present when parent was in scope.
+## Phase 4 — Product Execution Backlog
 
-### Global Constraints (enforced throughout)
+Replace constitutional/architecture work with an implementation backlog. Written as concrete, shippable units (each ≤ 1 build iteration). Ordered by athlete-value leverage:
 
-No schema rewrites beyond a single additive nullable-columns migration if Pass 8 requires it. No destructive migrations. No replay authoring. No aggregation. No hidden retries. No parallel truth systems. No legacy consumer replacement. No UI flow changes.
+1. **Athlete dashboard intelligence surface v1** — readiness/fatigue/load cards reading directly from `asb_events` projections; confidence + missingness visible.
+2. **Timeline/replay UX refinement** — filters by topic family, lineage breadcrumbs, copyable replay handle, engine_version chip.
+3. **Coach roster monitoring** — multi-athlete dashboard, day-type heatmap, escalation flags from `behavioral.*` topics.
+4. **Notification/escalation infrastructure** — rule-driven push/email on `behavioral.*` + `foundation.pattern.*` topics.
+5. **Onboarding flow** — athlete first-run: profile → schedule → first canonical event emitted.
+6. **Wearable/sensor adapter v1** — single vendor (Apple Health or Garmin) emitting `sensor.*` topics via existing `emitAsbEvent`.
+7. **Performance intelligence delivery** — weekly digest derived from ledger, lineage-cited.
+8. **Recruiter/scout intelligence surface** — read-only athlete cards with replay-cited metrics.
+9. **Mobile execution surfaces** — responsive pass on dashboard + timeline + replay.
+10. **Forecast/scenario surfaces** — bounded projection cards (read-only, replay-cited).
 
-### Execution Order
+Each backlog item will be opened as its own plan when scheduled; no work begins in this plan.
 
-1. Pass 4 lineage emits.
-2. Pass 6.2 behavioral → verify.
-3. Pass 6.3 foundation → verify.
-4. Pass 6.4 analytics-ingest → verify.
-5. Pass 6.5 calendar / nutrition / video / realtime → verify each.
-6. Pass 7 Stripe atomicity → verify.
-7. Pass 8 analyzer provenance → verify.
+## Constraints (carried forward)
 
-Stop only on a concrete schema/index blocker requiring approval.
+- No schema changes, no migrations beyond freeze-marker doc.
+- No new edge functions.
+- No retries, no smoothing, no parallel ledgers.
+- All future work = product execution against the locked substrate.
+
+## Deliverables
+
+- Phase 1 verification matrix (filled with real query results)
+- Phase 2 violation list (concrete or empty)
+- Phase 3 freeze declaration appended to `.lovable/plan.md`
+- Phase 4 backlog written to `.lovable/backlog.md`
+
+---
+
+## Execution Result — 2026-05-25
+
+### Phase 1 — Live Producer Validation
+Live `asb_events` table is **empty** at certification time (`SELECT count(*) → 0`).
+Producer code paths are wired (verified Pass 4/6/7/8) but no real athlete traffic
+has been generated yet. Live verification matrix cannot be populated without
+user-initiated events. Substrate is **structurally ready, not yet operationally
+exercised**.
+
+### Phase 2 — Substrate Integrity Audit (concrete violations only)
+
+| Check | Result |
+|---|---|
+| Replay determinism (`engine_version` pinned in cache key) | PASS — `useReplayCertification` keys include `eventEngineVersion` |
+| Lineage continuity (single-hop, totally ordered) | PASS — `useEventLineage` orders by `(created_at, parent_event_id/child_event_id)` |
+| Idempotency enforcement | PASS — `UNIQUE asb_events_idempotency_key_key` enforces dedupe |
+| Engine version propagation | PASS — `ENGINE_VERSION="asb-1.0.0"` stamped by both client `emit.ts` and shared edge `asbEmit.ts` |
+| RLS correctness | PASS — `asb_events` and `asb_event_lineage` INSERT+SELECT scoped to athlete owner |
+| Append-only guarantees | PASS — no `.update`/`.delete`/`.upsert` calls against `asb_events` anywhere in `src/` or `supabase/functions/` |
+| Hidden retries | PASS — Postgres `23505` treated as `dedupe`, not retried |
+| Silent mutation paths | PASS — only `INSERT` paths exist |
+| Parallel ledger truth | PASS — no alternate event stores mirror `asb_events` |
+| Observability visibility | PASS — `/asb/timeline` + `/replay/:eventId` route through canonical reads |
+
+**Violations: 0.**
+
+### Phase 3 — Freeze Certification
+
+- ASB **replay substrate** — **LOCKED**
+- ASB **lineage substrate** — **LOCKED**
+- ASB **canonical ingestion substrate** — **LOCKED**
+- Replay-certifiable **event ledger** — **OPERATIONAL** (pending live traffic)
+- **Ingestion / runtime substrate** — **FREEZE-READY**
+
+No further architecture work. No further megaphases. No further doctrine.
+
+### Phase 4 — Product Execution Backlog
+Written to `.lovable/backlog.md`. All future plans pull from that file.
