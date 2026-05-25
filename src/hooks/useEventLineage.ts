@@ -42,12 +42,14 @@ export function useEventLineage(eventId: string | null, enabled = true) {
             .select(cols)
             .eq("child_event_id", eventId!)
             .order("created_at", { ascending: true })
+            .order("parent_event_id", { ascending: true })
             .limit(EDGE_CAP_PER_DIRECTION),
           supabase
             .from("asb_event_lineage")
             .select(cols)
             .eq("parent_event_id", eventId!)
             .order("created_at", { ascending: true })
+            .order("child_event_id", { ascending: true })
             .limit(EDGE_CAP_PER_DIRECTION),
         ]);
       if (aErr) throw aErr;
