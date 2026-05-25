@@ -16,6 +16,7 @@ export function ReadinessCard({ rows, loading }: Props) {
       icon={<Activity className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
+      emptyMessage="Log today's day type and one training session to unlock readiness."
     >
       <div className="flex items-end gap-2">
         <span className="font-mono text-3xl tabular-nums">

@@ -18,6 +18,7 @@ export function RecoveryCard({ rows, loading }: Props) {
       icon={<HeartPulse className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
+      emptyMessage="Recovery requires at least one completed session plus a next-day check-in."
     >
       <div className="flex items-end gap-2">
         <span className="font-mono text-3xl tabular-nums">
