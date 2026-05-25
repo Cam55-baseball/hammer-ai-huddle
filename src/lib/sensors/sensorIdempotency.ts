@@ -12,10 +12,11 @@
 import { resolveSensorTopic } from "./sensorTopicRegistry";
 
 async function sha256Hex(s: string): Promise<string> {
-  const buf = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(s),
-  );
+  const subtle =
+    (typeof globalThis !== "undefined" &&
+      (globalThis.crypto as Crypto | undefined)?.subtle) ||
+    (await import("node:crypto")).webcrypto.subtle;
+  const buf = await subtle.digest("SHA-256", new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
