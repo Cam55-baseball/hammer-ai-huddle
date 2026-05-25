@@ -1,156 +1,197 @@
-# Athlete Dashboard Intelligence Surface v1
+# Backlog #4 + #5 — Athlete Daily Operating Loop v1
 
-Backlog item #1. Product execution against the **locked** ASB substrate. Additive-only — no schema, no doctrine, no parallel ledger, no fabricated scores.
+Transition the sealed ASB substrate into a daily athlete loop:
+**onboarding → first canonical emit → /command populates → escalation visible → /replay drilldown → return tomorrow**.
 
-## 1. Scope & Non-Goals
+Strict constraints: additive-only, no schema rewrites, no new doctrine, no replay-authoring, no smoothing/imputation, no parallel ledgers, no fabricated scores, no AI summaries detached from lineage, no sensor work.
 
-**In scope:** new athlete command-center route reading exclusively from `asb_events`, `asb_event_lineage`, `asb_state_snapshots`, plus already-wired foundation/behavioral tables as supplementary raw source. Confidence + missingness always visible. Every card lineage-drillable to `/replay/:eventId` in one click.
+---
 
-**Out of scope:** schema changes, new edge functions, edits to existing `/dashboard`, derived score authoring, smoothing/imputation, retries, aggregations that hide lineage.
+## 1. Route structure
 
-## 2. Route Structure
+- `/onboarding/athlete` (new) — guided first-run flow, athlete-only, gated by "has emitted ≥1 canonical athlete event ever".
+- `/command` (existing) — gains empty-state collapse + escalation banner.
+- `/timeline`, `/replay/:eventId` (existing) — unchanged; just become reachable from onboarding success + escalation surfaces.
+- `/settings/notifications` (new, small) — opt-in toggles for in-app / email / push; reads/writes a single additive `notification_preferences` row.
 
-- `/command` — new athlete intelligence surface (does NOT replace `/dashboard`).
-- Sidebar entry "Command Center" added for athletes only.
-- Existing `/timeline` and `/replay/:eventId` are the drilldown destinations — no new replay routes.
+`App.tsx` adds two lazy routes. Athlete sidebar gets "Notifications" leaf under settings.
 
-## 3. Component Map
-
-```text
-src/pages/AthleteCommand.tsx                 # route shell, mobile-first, single-column
-src/components/command/
-  TodayOverviewHeader.tsx                    # date, engine_version chip, last-event timestamp
-  ReadinessCard.tsx                          # latest behavioral.readiness.* event
-  FatigueCard.tsx                            # latest behavioral.fatigue.* event
-  WorkloadCard.tsx                           # rolling 7d count + intensity from athlete.schedule.day_type
-  RecoveryCard.tsx                           # latest behavioral.recovery.* / foundation.recovery.*
-  BehavioralRegulationCard.tsx               # latest behavioral.regulation.* / pattern.*
-  SchedulingLoadCard.tsx                     # next 7d day_type counts by event_type
-  TrendShiftsCard.tsx                        # diff of last vs prior snapshot per topic family
-  EscalationFlagsCard.tsx                    # foundation.pattern.* + behavioral risk topics, last 72h
-  RecentEventsPreview.tsx                    # last 8 ASB events, link → /replay/:eventId
-  IntelligenceCardShell.tsx                  # shared chrome: confidence pill, missingness chip,
-                                             #   EngineVersionBadge, "View lineage" CTA, empty state
-  ConfidencePill.tsx                         # reads canonical paths only (same as EventCard)
-  MissingnessChip.tsx                        # explicit "no signal" / "stale >Nh" / "n/a"
-  LineageDrilldownButton.tsx                 # → /replay/:eventId for the source event
-```
-
-All cards compose `IntelligenceCardShell`; that shell is the only place chrome lives.
-
-## 4. Data Flow (read-only projection layer)
+## 2. Component map
 
 ```text
-asb_events  ──┐
-              ├─►  src/lib/command/projections.ts  (pure functions, no writes)
-asb_event_   ─┤      • latestByTopicPrefix(rows, "behavioral.readiness")
-lineage       │      • windowCount(rows, prefix, days)
-              │      • scheduleByDay(rows, days)
-asb_state_   ─┤      • trendDelta(latest, prior)
-snapshots     │      • escalationFeed(rows, hours)
-              │      Each returns: { sourceEventId, confidence|null,
-foundation/  ─┘                       missingness|null, value, occurredAt }
-behavioral    
-tables (read) 
+onboarding/
+  AthleteOnboardingShell.tsx          // stepper chrome, progress, exit-disabled until min step
+  steps/
+    WelcomeStep.tsx                   // explains organism / lineage in 3 lines
+    ConfirmProfileStep.tsx            // reads existing profile; no rewrites
+    ScheduleTodayStep.tsx             // pick day_type → triggers first canonical emit
+    FirstEventConfirmStep.tsx         // shows the just-emitted event_id + "view in replay"
+    NotificationsOptInStep.tsx        // optional; writes notification_preferences
+    DoneStep.tsx                      // CTA to /command
+
+command/
+  EmptyStateExplainer.tsx             // per-card unlock copy ("Log a schedule day to unlock readiness")
+  EscalationBanner.tsx                // sticky banner when unacked escalations exist
+  NotificationBell.tsx                // header dropdown listing escalation inbox
+
+notifications/
+  NotificationsPreferencesPanel.tsx
+  EscalationInboxList.tsx
+  EscalationInboxItem.tsx             // lineage chip + "open replay" link
 ```
 
-**Hooks** (all React Query, keyset-friendly, additive):
+Existing intelligence cards gain `emptyExplainer={...}` prop instead of generic empty text.
+
+## 3. Hooks / selectors
+
+All read-only; reuse the locked substrate. **No new edge functions.**
+
+- `useAthleteOnboardingState()` — derives `{ hasProfile, hasFirstEvent, hasNotificationsPref }` purely from existing queries (`profiles`, `asb_events` count, `notification_preferences`). Determines whether to redirect first-time athletes to `/onboarding/athlete`.
+- `useEmitScheduleDayType()` — thin wrapper around existing `athlete.schedule.day_type` producer path; returns `{ eventId, occurredAt }` so onboarding can deep-link into `/replay/:eventId`.
+- `useEscalationFeed({ withinHours = 72 })` — filters `useAthleteCommandRows` rows by `foundation.pattern.*` + `behavioral.escalation.*` + `behavioral.risk.*` (already enumerated in `EscalationFlagsCard`). Adds `acknowledged_at` overlay from a new lightweight `notification_acks` table.
+- `useNotificationPreferences()` / `useUpdateNotificationPreferences()` — single row per athlete.
+- `useDispatchPendingNotifications()` — client-side fan-out **only for in-app**; calls existing `send-email` / `send-push` edge functions for opted-in channels with a payload referencing `event_id`, `engine_version`, `confidence`, `missingness`. No new orchestration ledger.
+
+Selectors all live in `src/lib/command/projections.ts` (extended) — pure functions, no IO.
+
+## 4. Notification event flow
 
 ```text
-src/hooks/command/
-  useAthleteLatestByTopic.ts        # SELECT … ORDER BY occurred_at DESC LIMIT 1, per prefix
-  useAthleteRecentEvents.ts         # reuses useAsbTimeline (pageSize 8)
-  useAthleteSnapshot.ts             # asb_state_snapshots latest row (read-only)
-  useAthleteLineageEdge.ts          # single-hop parent lookup via asb_event_lineage
-  useAthleteScheduleWindow.ts       # day_type events in [today, today+7]
-  useAthleteEscalations.ts          # foundation.pattern.* + behavioral risk topics, 72h
+asb_events insert (existing producer)
+        │
+        ▼
+useEscalationFeed (client query, 30-day window)
+        │
+        ├──► EscalationBanner / NotificationBell  (always, in-app)
+        │
+        └──► useDispatchPendingNotifications
+                 │  (only if preferences.email/push enabled
+                 │   AND row not already in notification_acks as "dispatched")
+                 ▼
+              send-email / send-push edge fn
+                 │  payload = { event_id, topic_id, occurred_at,
+                 │              engine_version, confidence, missingness,
+                 │              replay_url: "/replay/<event_id>" }
+                 ▼
+              notification_acks insert { event_id, channel, dispatched_at }
 ```
 
-No hook writes. No hook fabricates a value when source is missing — it returns `{ value: null, missingness: "no_signal" }`.
+Every notification is **lineage-bound**: payload always carries `event_id` + deep link. No notification is ever synthesized from anything other than an existing `asb_events` row.
 
-## 5. UI Hierarchy (mobile-first, 819×531 baseline)
+## 5. Escalation visibility rules
+
+| State                                  | Surface                                       |
+|----------------------------------------|-----------------------------------------------|
+| 0 escalations in 72h                   | Card shows "No escalations" empty state       |
+| ≥1 unacked escalation                  | Sticky `EscalationBanner` on `/command` top    |
+| ≥1 unacked, any page                   | `NotificationBell` badge count in header      |
+| Item opened                            | Routes to `/replay/:eventId`, writes ack row  |
+| Confidence < 0.5 OR missingness = high | Item rendered with muted tone + visible chip  |
+
+Acks are append-only into `notification_acks` (additive table). No update/delete.
+
+## 6. Onboarding → first-event orchestration
 
 ```text
-<AthleteCommand>
-  <TodayOverviewHeader />                              # sticky, h-14
-  <section "Today">                                    # 1-col mobile, 2-col ≥md
-    <ReadinessCard /> <FatigueCard />
-    <WorkloadCard /> <RecoveryCard />
-  </section>
-  <section "Behavior & Schedule">
-    <BehavioralRegulationCard />
-    <SchedulingLoadCard />
-  </section>
-  <section "Signals">
-    <TrendShiftsCard />
-    <EscalationFlagsCard />                            # red border iff items present
-  </section>
-  <section "Recent activity">
-    <RecentEventsPreview />                            # last 8, link → /replay/:id
-  </section>
-</AthleteCommand>
+login
+  └─► <RequireFirstRun> guard reads useAthleteOnboardingState
+        ├─ if hasFirstEvent → /command (normal flow)
+        └─ else              → /onboarding/athlete
+
+/onboarding/athlete
+  Welcome → ConfirmProfile → ScheduleTodayStep
+      │
+      ▼ user picks day_type (practice|game|rest|travel|recovery)
+      useEmitScheduleDayType() → existing producer →
+        asb_events row (topic_id="athlete.schedule.day_type")
+      │
+      ▼ returns event_id
+  FirstEventConfirmStep shows event_id + EngineVersionBadge
+      "Open in replay" → /replay/:eventId   (verifies E2E)
+      │
+      ▼
+  NotificationsOptInStep (optional)
+      │
+      ▼
+  DoneStep → /command (now populated with at least the schedule card)
 ```
 
-Every card footer: `Confidence · Missingness · engine_version · [View lineage →]`.
+Onboarding never fabricates extra events; it just walks the athlete through emitting the **one** real canonical event that proves the producer chain works for their account.
 
-## 6. Required Hooks/Selectors Contract
+## 7. Empty-state collapse strategy (Command Center)
 
-```ts
-type CardProjection<T> = {
-  value: T | null;
-  sourceEventId: string | null;          // → /replay/:eventId
-  occurredAt: string | null;
-  confidence: number | null;             // canonical paths only
-  missingness: "no_signal" | "stale" | "partial" | null;
-  engineVersion: string | null;
-  topicId: string | null;
-};
+Each card gets a deterministic unlock instruction. No defaults to 0, no placeholder bars.
+
+| Card               | Empty copy                                                        |
+|--------------------|-------------------------------------------------------------------|
+| Readiness          | "Log today's day type and one training session to unlock."        |
+| Fatigue            | "Recorded after your first completed session."                    |
+| Workload           | "Appears after 3+ scheduled days in the last 7."                  |
+| Recovery           | "Requires at least one completed session + next-day check-in."    |
+| Behavioral reg.    | "Unlocks once behavioral events accumulate (auto-emitted)."        |
+| Scheduling load    | "Add days via Calendar or onboarding to populate."                |
+| Trend shifts       | "Needs ≥2 same-topic events to compute a delta."                  |
+| Escalations        | "No escalations in the last 72 hours."                            |
+
+## 8. Daily engagement loop
+
+```text
+Day 1: onboard → emit schedule → /command shows 1 live card + 7 explicit unlock states
+Day 2: open app → /command → log today's schedule → 1 more card unlocks → check escalations
+Day 3+: same shape, more topics accumulate → trend shifts + escalations meaningful
 ```
 
-Selectors never throw, never default to 0, never average across topics. If no source event → `value=null`, `missingness="no_signal"`, lineage button disabled with tooltip "No source event yet".
+Loop optimizes for **signal accumulation + lineage continuity**, not streaks/gamification. The only retention surface is "your organism is more visible today than yesterday" — proven by card unlock + replay growth.
 
-## 7. Performance Considerations
+## 9. Verification matrix
 
-- One Supabase round-trip per topic family on mount; React Query cached 30s.
-- `useAthleteRecentEvents` shares the existing `useAsbTimeline` cache key.
-- Cards render skeletons via existing `DashboardModuleSkeleton` pattern.
-- No N+1: lineage edge fetched only on drilldown click (lazy).
-- Code-split: `AthleteCommand.tsx` via `React.lazy` in `App.tsx`.
+| Check                                                              | How                                              |
+|--------------------------------------------------------------------|--------------------------------------------------|
+| New athlete redirected to `/onboarding/athlete`                    | manual + RequireFirstRun unit                    |
+| Schedule step emits exactly one `asb_events` row                   | `SELECT count(*) FROM asb_events WHERE athlete_id=...` |
+| event_id from emit opens `/replay/:eventId` and renders lineage    | manual nav                                       |
+| `/command` shows that event in `SchedulingLoadCard` immediately    | manual                                           |
+| Cards without source events render explicit unlock copy            | snapshot test on `IntelligenceCardShell`         |
+| Escalation row produces banner + bell badge                        | insert test escalation, observe UI               |
+| Email/push only dispatched when preference enabled                 | `notification_acks` rows + edge fn logs          |
+| Notification payload includes `event_id`, `engine_version`, conf   | edge fn log inspection                           |
+| Re-opening onboarding after completion is impossible               | guard test                                       |
+| No code path writes to `asb_events` outside `emitAsbEvent`         | repo grep                                        |
 
-## 8. Mobile Considerations
+## 10. Acceptance criteria
 
-- Single-column ≤640px; cards full-bleed with 16px gutter.
-- Sticky header collapses to 48px on scroll.
-- Tap targets ≥44px; "View lineage" is a full-width footer button on mobile.
-- Escalation section auto-scrolls into view when items > 0.
-- No horizontal scroll; trend/diff numbers truncate with tooltip.
+1. A brand-new athlete account, from first login, reaches a populated `/command` within **≤3 minutes** via onboarding.
+2. At least **one** real `asb_events` row exists for that athlete after onboarding, with deterministic `idempotency_key` and `engine_version="asb-1.0.0"`.
+3. `/replay/:eventId` for that event renders successfully and shows the lineage edge (if any).
+4. Every empty card shows a concrete unlock action — zero placeholder numbers.
+5. Any `foundation.pattern.*` / `behavioral.escalation.*` / `behavioral.risk.*` row inserted for the athlete appears in banner + bell within one query refresh cycle.
+6. Each notification (in-app/email/push) deep-links to `/replay/:eventId` and shows confidence + missingness.
+7. No new edge functions, no schema rewrites beyond two additive tables (`notification_preferences`, `notification_acks`), no writes to `asb_events` outside existing producers.
 
-## 9. Design Tokens
+## 11. Mobile considerations (819×531 baseline)
 
-Reuses existing semantic tokens from `index.css` (`--background`, `--card`, `--primary`, `--destructive` for escalations, `--muted-foreground` for missingness). No new colors. Escalation card uses `border-destructive/40 bg-destructive/5`.
+- Onboarding steps: single column, sticky bottom CTA, ≥44px tap targets, no horizontal scroll.
+- `EscalationBanner`: collapses to one-line summary with chevron on <640px.
+- `NotificationBell` dropdown becomes full-screen sheet on <640px.
+- Replay deep-links from notifications open in same tab to preserve back-stack.
 
-## 10. Acceptance Criteria
+## 12. Build order
 
-1. `/command` renders for an authenticated athlete; redirects to `/auth` otherwise.
-2. Every card reads from `asb_events` / `asb_event_lineage` / `asb_state_snapshots` (or already-wired foundation/behavioral tables) — verified by grep: no card imports a non-ASB derived store.
-3. Each card displays confidence (or "—" when null) and missingness chip (or "live" when null).
-4. Each card's "View lineage" button navigates to `/replay/:sourceEventId`; disabled with tooltip when null.
-5. `EngineVersionBadge` visible on every card footer when an event exists.
-6. Empty ledger state: cards show "No source event yet" — no fabricated numbers, no spinners stuck.
-7. No writes to `asb_events` from this surface (grep: no `.insert`/`.upsert`/`.update` against `asb_events` in `src/pages/AthleteCommand.tsx` or `src/components/command/**`).
-8. Recent events preview links each row to `/replay/:eventId`.
-9. Escalation section only visible when items exist; uses destructive border.
-10. Lighthouse mobile perf ≥ existing `/dashboard` baseline; initial JS payload code-split.
+1. Additive migration: `notification_preferences` + `notification_acks` (RLS: user owns own rows).
+2. `useAthleteOnboardingState` + `RequireFirstRun` guard.
+3. `AthleteOnboardingShell` + 6 step components; wire `useEmitScheduleDayType` to existing producer.
+4. Empty-state explainers across the 8 cards.
+5. `useEscalationFeed` + `notification_acks` overlay.
+6. `EscalationBanner` + `NotificationBell` in header.
+7. `NotificationsPreferencesPanel` + opt-in step.
+8. `useDispatchPendingNotifications` calling existing `send-email`/`send-push`.
+9. Manual verification matrix walk-through, then mark Backlog #4 + #5 done.
 
-## 11. Constraints Carried From Freeze
+## Technical details
 
-Additive-only. No schema rewrites. No new doctrine. No replay-authoring. No hidden retries. No silent mutation. No parallel ledger. No new edge functions.
-
-## 12. Build Order (post-approval)
-
-1. `IntelligenceCardShell` + `ConfidencePill` + `MissingnessChip` + `LineageDrilldownButton`.
-2. `src/lib/command/projections.ts` pure selectors + unit-shaped tests via existing patterns.
-3. Hooks under `src/hooks/command/`.
-4. Cards (Readiness → Fatigue → Workload → Recovery → Behavioral → Schedule → Trend → Escalation → Recent).
-5. `AthleteCommand.tsx` route + lazy-load in `App.tsx` + sidebar link in `AppSidebar.tsx`.
-6. Manual smoke against current (empty) ledger to verify empty-state correctness.
+- New tables (additive, RLS `user_id = auth.uid()`):
+  - `notification_preferences(user_id pk, in_app bool default true, email bool default false, push bool default false, updated_at)`
+  - `notification_acks(id pk, user_id, event_id, channel text, dispatched_at, acknowledged_at nullable)` with unique `(user_id, event_id, channel)` for idempotency.
+- No changes to `asb_events`, `asb_event_lineage`, `useAsbTimeline`, `useReplayCertification`, `emitAsbEvent`, or `ENGINE_VERSION`.
+- All projections remain pure functions in `src/lib/command/projections.ts`.
+- Reuse existing `send-email` / `send-push` edge fns; if absent, fall back to in-app-only and mark email/push toggles as "coming soon" — no scaffold-out work in this slice.
