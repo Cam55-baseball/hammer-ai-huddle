@@ -137,3 +137,14 @@ After verification, proceed iteratively through passes 4–8.
 - Backfilling historical legacy rows into ASB.
 - Parallel ledger systems or derived-truth replacements.
 - Removing legacy writes.
+
+---
+
+## Execution log
+
+- Pass 1: applied — `useEventLineage.ts` ancestors+descendants now total-ordered.
+- Pass 2: applied — `src/lib/asb/engineVersion.ts` (ENGINE_VERSION="asb-1.0.0", canonicalPayload, computeIdempotencyKey/sha256).
+- Pass 3: applied — `useAthleteEvents.createEvent`/`deleteEvent` emit canonical ASB rows additively.
+- Pass 5: applied — `src/lib/asb/emit.ts` centralizes ASB I/O with replay-safe dedupe logging.
+- Migration: added INSERT RLS policies on `asb_events` (athlete owns row) and `asb_event_lineage` (child belongs to athlete).
+- Deferred to next iteration after live verification: Pass 4 (lineage when ancestry exists), Pass 6.2–6.5 (behavioral/foundation/analytics-ingest/calendar emitters), Pass 7 (stripe webhook atomic dedupe), Pass 8 (analyzer metadata stamping).
