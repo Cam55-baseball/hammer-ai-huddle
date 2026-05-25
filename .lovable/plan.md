@@ -93,3 +93,44 @@ Each backlog item will be opened as its own plan when scheduled; no work begins 
 - Phase 2 violation list (concrete or empty)
 - Phase 3 freeze declaration appended to `.lovable/plan.md`
 - Phase 4 backlog written to `.lovable/backlog.md`
+
+---
+
+## Execution Result — 2026-05-25
+
+### Phase 1 — Live Producer Validation
+Live `asb_events` table is **empty** at certification time (`SELECT count(*) → 0`).
+Producer code paths are wired (verified Pass 4/6/7/8) but no real athlete traffic
+has been generated yet. Live verification matrix cannot be populated without
+user-initiated events. Substrate is **structurally ready, not yet operationally
+exercised**.
+
+### Phase 2 — Substrate Integrity Audit (concrete violations only)
+
+| Check | Result |
+|---|---|
+| Replay determinism (`engine_version` pinned in cache key) | PASS — `useReplayCertification` keys include `eventEngineVersion` |
+| Lineage continuity (single-hop, totally ordered) | PASS — `useEventLineage` orders by `(created_at, parent_event_id/child_event_id)` |
+| Idempotency enforcement | PASS — `UNIQUE asb_events_idempotency_key_key` enforces dedupe |
+| Engine version propagation | PASS — `ENGINE_VERSION="asb-1.0.0"` stamped by both client `emit.ts` and shared edge `asbEmit.ts` |
+| RLS correctness | PASS — `asb_events` and `asb_event_lineage` INSERT+SELECT scoped to athlete owner |
+| Append-only guarantees | PASS — no `.update`/`.delete`/`.upsert` calls against `asb_events` anywhere in `src/` or `supabase/functions/` |
+| Hidden retries | PASS — Postgres `23505` treated as `dedupe`, not retried |
+| Silent mutation paths | PASS — only `INSERT` paths exist |
+| Parallel ledger truth | PASS — no alternate event stores mirror `asb_events` |
+| Observability visibility | PASS — `/asb/timeline` + `/replay/:eventId` route through canonical reads |
+
+**Violations: 0.**
+
+### Phase 3 — Freeze Certification
+
+- ASB **replay substrate** — **LOCKED**
+- ASB **lineage substrate** — **LOCKED**
+- ASB **canonical ingestion substrate** — **LOCKED**
+- Replay-certifiable **event ledger** — **OPERATIONAL** (pending live traffic)
+- **Ingestion / runtime substrate** — **FREEZE-READY**
+
+No further architecture work. No further megaphases. No further doctrine.
+
+### Phase 4 — Product Execution Backlog
+Written to `.lovable/backlog.md`. All future plans pull from that file.
