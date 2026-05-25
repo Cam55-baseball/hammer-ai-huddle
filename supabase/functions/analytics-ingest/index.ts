@@ -3,6 +3,7 @@
 // Service-role insert into public.launch_events.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { buildAsbRow, emitAsbEvent } from "../_shared/asbEmit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
