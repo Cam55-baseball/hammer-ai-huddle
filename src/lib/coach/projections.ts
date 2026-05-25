@@ -25,14 +25,18 @@ export function bucketByAthlete(rows: AsbEventRow[]): RosterRowsByAthlete {
   return m;
 }
 
-/** Latest projection for a topic-prefix match within one athlete's rows. */
+/** Latest projection for a topic-prefix match within one athlete's rows.
+ *  Rows are expected to arrive in occurred_at DESC order. */
 export function latestByTopicPrefix(
   rows: AsbEventRow[],
   prefix: string,
   staleAfterHours?: number,
 ): CardProjection<unknown> {
-  const matched = rows.filter((r) => (r.topic_id ?? "").startsWith(prefix));
-  return projectLatest(matched, { staleAfterHours });
+  const latest = rows.find((r) => {
+    const t = r.topic_id ?? "";
+    return t === prefix || t.startsWith(prefix + ".") || t.startsWith(prefix);
+  }) ?? null;
+  return projectLatest(latest, { staleAfterHours });
 }
 
 /** Latest projection for an exact topic match. */
@@ -41,8 +45,8 @@ export function latestByTopic(
   topicId: string,
   staleAfterHours?: number,
 ): CardProjection<unknown> {
-  const matched = rows.filter((r) => r.topic_id === topicId);
-  return projectLatest(matched, { staleAfterHours });
+  const latest = rows.find((r) => r.topic_id === topicId) ?? null;
+  return projectLatest(latest, { staleAfterHours });
 }
 
 /** Coach-facing per-athlete snapshot — discrete projections only, no aggregate score. */
