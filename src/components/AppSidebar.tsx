@@ -169,6 +169,7 @@ export function AppSidebar() {
 
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
+    ...(!isScout && !isCoach ? [{ title: t('navigation.commandCenter', 'Command Center'), url: "/command", icon: Sparkles }] : []),
     { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     ...(!isScout && !isCoach ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     ...(((!rankingsVisibilityLoading && rankingsVisible) || isOwner || isAdmin) ? [{ title: t('navigation.rankings'), url: "/rankings", icon: Trophy }] : []),
