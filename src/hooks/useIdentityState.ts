@@ -33,47 +33,51 @@ interface TierMeta {
   pulse: boolean;
 }
 
-const DARK_SURFACE = 'from-slate-900 via-slate-950 to-black';
+// Calm runtime palette: surface stays neutral (bg-card), tier color is
+// expressed only by the score text + a thin left accent + a small pill.
+const NEUTRAL_CHIP = 'bg-muted/60 text-foreground border-border';
+const NEUTRAL_RING = 'ring-border';
+const NEUTRAL_TONE = 'text-foreground';
 
 const TIER_META: Record<IdentityTier, TierMeta> = {
   elite: {
-    label: 'ELITE', tone: 'text-white', ring: 'ring-fuchsia-500/40', bg: DARK_SURFACE,
-    chip: 'bg-white/5 text-slate-100 border-white/10',
-    accent: 'bg-fuchsia-400', scoreText: 'text-fuchsia-400',
-    glow: 'shadow-[0_0_60px_-12px_rgba(232,121,249,0.6)]',
-    pill: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/40',
-    pulse: true,
+    label: 'ELITE', tone: NEUTRAL_TONE, ring: NEUTRAL_RING, bg: '',
+    chip: NEUTRAL_CHIP,
+    accent: 'bg-fuchsia-500', scoreText: 'text-fuchsia-600 dark:text-fuchsia-400',
+    glow: '',
+    pill: 'bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/25',
+    pulse: false,
   },
   locked_in: {
-    label: 'LOCKED IN', tone: 'text-white', ring: 'ring-emerald-500/40', bg: DARK_SURFACE,
-    chip: 'bg-white/5 text-slate-100 border-white/10',
-    accent: 'bg-emerald-400', scoreText: 'text-emerald-400',
-    glow: 'shadow-[0_0_60px_-12px_rgba(52,211,153,0.6)]',
-    pill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
-    pulse: true,
+    label: 'LOCKED IN', tone: NEUTRAL_TONE, ring: NEUTRAL_RING, bg: '',
+    chip: NEUTRAL_CHIP,
+    accent: 'bg-emerald-500', scoreText: 'text-emerald-600 dark:text-emerald-400',
+    glow: '',
+    pill: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25',
+    pulse: false,
   },
   consistent: {
-    label: 'CONSISTENT', tone: 'text-white', ring: 'ring-sky-500/40', bg: DARK_SURFACE,
-    chip: 'bg-white/5 text-slate-100 border-white/10',
-    accent: 'bg-sky-400', scoreText: 'text-sky-400',
-    glow: 'shadow-[0_0_50px_-14px_rgba(56,189,248,0.45)]',
-    pill: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
+    label: 'CONSISTENT', tone: NEUTRAL_TONE, ring: NEUTRAL_RING, bg: '',
+    chip: NEUTRAL_CHIP,
+    accent: 'bg-sky-500', scoreText: 'text-sky-600 dark:text-sky-400',
+    glow: '',
+    pill: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25',
     pulse: false,
   },
   building: {
-    label: 'BUILDING', tone: 'text-white', ring: 'ring-amber-500/40', bg: DARK_SURFACE,
-    chip: 'bg-white/5 text-slate-100 border-white/10',
-    accent: 'bg-amber-400', scoreText: 'text-amber-400',
-    glow: 'shadow-[0_0_50px_-14px_rgba(251,191,36,0.45)]',
-    pill: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
+    label: 'BUILDING', tone: NEUTRAL_TONE, ring: NEUTRAL_RING, bg: '',
+    chip: NEUTRAL_CHIP,
+    accent: 'bg-amber-500', scoreText: 'text-amber-600 dark:text-amber-400',
+    glow: '',
+    pill: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25',
     pulse: false,
   },
   slipping: {
-    label: 'SLIPPING', tone: 'text-white', ring: 'ring-rose-500/40', bg: DARK_SURFACE,
-    chip: 'bg-white/5 text-slate-100 border-white/10',
-    accent: 'bg-rose-400', scoreText: 'text-rose-400',
-    glow: 'shadow-[0_0_50px_-14px_rgba(251,113,133,0.45)]',
-    pill: 'bg-rose-500/15 text-rose-300 border-rose-500/40',
+    label: 'SLIPPING', tone: NEUTRAL_TONE, ring: NEUTRAL_RING, bg: '',
+    chip: NEUTRAL_CHIP,
+    accent: 'bg-rose-500', scoreText: 'text-rose-600 dark:text-rose-400',
+    glow: '',
+    pill: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/25',
     pulse: false,
   },
 };
