@@ -27,9 +27,15 @@ if rg -n 'sha256\(|SHA-256' "$SRC" \
 fi
 
 note "3) no subsystem imports another subsystem's projections.ts"
+# Surface dirs that legitimately belong to each subsystem (consumers of own projections).
+declare -A SURFACE_DIRS=( [digest]="digest forecast" [coach]="coach coach-console" )
 for sub in digest coach; do
+  excludes=()
+  for s in ${SURFACE_DIRS[$sub]}; do
+    excludes+=(--glob "!**/$s/**" --glob "!**/pages/Coach*" --glob "!**/pages/Athlete*")
+  done
   others=$(rg -l "from ['\"]@/lib/$sub/projections" "$SRC" \
-           --glob "!**/$sub/**" --glob '!**/invariants/**' --glob '!**/__tests__/**' || true)
+           "${excludes[@]}" --glob '!**/invariants/**' --glob '!**/__tests__/**' || true)
   if [ -n "$others" ]; then
     violate "cross-subsystem import of $sub/projections in: $others"
   fi
@@ -39,6 +45,15 @@ note "4) sensor topic map declared only in sensorTopicRegistry.ts"
 if rg -n 'sensor\.heart_rate|sensor\.hrv|sensor\.sleep|sensor\.external_load|sensor\.movement' \
      "$SRC" --glob '!**/sensorTopicRegistry.ts' --glob '!**/invariants/**' --glob '!**/__tests__/**'; then
   violate "sensor topic strings appearing outside registry"
+fi
+
+note "5) runtime surfaces may only write via emitRuntimeEvent / emitAsbEvent"
+RUNTIME_GLOBS=(--glob 'src/pages/Today*.tsx' --glob 'src/components/runtime/**')
+if rg -n "supabase\.from\(['\"]asb_events['\"]\)\s*\.insert" "${RUNTIME_GLOBS[@]}" "$SRC"; then
+  violate "runtime surface writes directly to asb_events (must use emitRuntimeEvent)"
+fi
+if rg -n "from ['\"]@/lib/asb/replay['\"]" "${RUNTIME_GLOBS[@]}" "$SRC"; then
+  violate "runtime surface imports replay engine (read-only projection rule)"
 fi
 
 if [ "$FAILED" -ne 0 ]; then

@@ -83,6 +83,8 @@ const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetai
 const AthleteDigest = lazyWithRetry(() => import("./pages/AthleteDigest"));
 const CoachDigest = lazyWithRetry(() => import("./pages/CoachDigest"));
 const ForecastSurface = lazyWithRetry(() => import("./pages/ForecastSurface"));
+const Today = lazyWithRetry(() => import("./pages/Today"));
+const TodaySession = lazyWithRetry(() => import("./pages/TodaySession"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
@@ -192,6 +194,8 @@ const App = () => {
               <Route path="/timeline" element={<AsbTimeline />} />
               <Route path="/replay/:eventId" element={<AsbReplay />} />
               <Route path="/command" element={<AthleteCommand />} />
+              <Route path="/today" element={<Today />} />
+              <Route path="/today/session/:id" element={<TodaySession />} />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
               <Route path="/coach/console" element={<CoachConsole />} />

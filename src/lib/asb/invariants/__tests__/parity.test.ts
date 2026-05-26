@@ -9,6 +9,7 @@ import {
   validateCoachParity,
   validateForecastParity,
   validateSensorForwardCompatibility,
+  validateRuntimeProjection,
   type AsbEventLike,
 } from "../asbCrossSystemValidators";
 import { runInvariantSuite, assertInvariantSuite } from "../asbInvariantChecks";
@@ -111,5 +112,50 @@ describe("ASB cross-substrate invariants", () => {
     ]);
     expect(summary.failed).toBe(0);
     expect(() => assertInvariantSuite(summary)).not.toThrow();
+  });
+
+  it("runtime parity passes for faithful prescription", () => {
+    const r = validateRuntimeProjection([sampleAsb], {
+      state: "calm",
+      kind: "lift",
+      confidence: 0.7,
+      missingness: "ok",
+      sourceEventIds: [sampleAsb.event_id],
+    });
+    expect(r.pass).toBe(true);
+  });
+
+  it("runtime parity rejects confidence amplification", () => {
+    const r = validateRuntimeProjection([sampleAsb], {
+      state: "calm",
+      kind: "lift",
+      confidence: 0.99,
+      missingness: "ok",
+      sourceEventIds: [sampleAsb.event_id],
+    });
+    expect(r.pass).toBe(false);
+  });
+
+  it("runtime parity rejects escalate without lineage", () => {
+    const r = validateRuntimeProjection([sampleAsb], {
+      state: "escalate",
+      kind: "recovery",
+      confidence: 0.5,
+      missingness: "partial",
+      sourceEventIds: [],
+    });
+    expect(r.pass).toBe(false);
+    expect(r.mismatch_reason).toMatch(/lineage/);
+  });
+
+  it("runtime parity rejects illegal state", () => {
+    const r = validateRuntimeProjection([sampleAsb], {
+      state: "green" as any,
+      kind: "lift",
+      confidence: 0.5,
+      missingness: "ok",
+      sourceEventIds: [sampleAsb.event_id],
+    });
+    expect(r.pass).toBe(false);
   });
 });
