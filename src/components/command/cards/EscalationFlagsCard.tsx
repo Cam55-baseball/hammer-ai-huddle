@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { IntelligenceCardShell } from "../IntelligenceCardShell";
+import { TopicLabel } from "../TopicLabel";
 import { projectLatest, EMPTY_PROJECTION } from "@/lib/command/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 
@@ -35,7 +36,7 @@ export function EscalationFlagsCard({ rows, loading }: Props) {
       <ul className="space-y-1.5">
         {items.slice(0, 6).map((r) => (
           <li key={r.event_id} className="flex items-center justify-between gap-2 text-sm">
-            <span className="truncate font-mono text-xs">{r.topic_id}</span>
+            <TopicLabel id={r.topic_id} className="min-w-0 flex-1" />
             <Link
               to={`/replay/${r.event_id}`}
               className="shrink-0 text-xs text-primary underline-offset-2 hover:underline"

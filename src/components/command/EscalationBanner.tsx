@@ -1,6 +1,7 @@
 import { AlertTriangle, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEscalationFeed } from "@/hooks/command/useEscalationFeed";
+import { TopicLabel } from "./TopicLabel";
 
 /**
  * Sticky banner shown on /command when ≥1 unacked escalation exists in the
@@ -19,7 +20,7 @@ export function EscalationBanner() {
           {unackedCount} unacknowledged escalation{unackedCount === 1 ? "" : "s"}
         </div>
         <div className="truncate text-xs text-muted-foreground">
-          Most recent: <span className="font-mono">{first.event.topic_id}</span>
+          Most recent: <TopicLabel id={first.event.topic_id} inline />
         </div>
       </div>
       <Link

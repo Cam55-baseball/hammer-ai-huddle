@@ -10,6 +10,7 @@ import { AthleteOnboardingShell } from "@/components/onboarding/AthleteOnboardin
 import { NotificationsPreferencesPanel } from "@/components/notifications/NotificationsPreferencesPanel";
 import { EngineVersionBadge } from "@/components/asb/EngineVersionBadge";
 import { ENGINE_VERSION } from "@/lib/asb/engineVersion";
+import { topicLabel, shortenEventId } from "@/lib/asb/topicLabels";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 
@@ -199,14 +200,28 @@ export default function AthleteOnboarding() {
             downstream — Command Center, Timeline, Replay — now has real signal
             to draw from.
           </p>
-          <div className="rounded-md border border-border bg-muted/30 p-3 text-xs">
+          <div className="rounded-md border border-border bg-muted/30 p-3 text-xs space-y-3">
+            <div>
+              <div className="text-sm font-medium text-foreground">
+                {topicLabel("athlete.schedule.day_type")}
+              </div>
+              <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                athlete.schedule.day_type
+              </div>
+            </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono">athlete.schedule.day_type</span>
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Recorded by</span>
               <EngineVersionBadge engineVersion={ENGINE_VERSION} />
             </div>
             {emittedEventId && (
-              <div className="mt-2 font-mono break-all text-muted-foreground">
-                event_id: {emittedEventId}
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Event reference</div>
+                <div
+                  className="mt-0.5 font-mono text-foreground"
+                  title={emittedEventId}
+                >
+                  {shortenEventId(emittedEventId)}
+                </div>
               </div>
             )}
           </div>

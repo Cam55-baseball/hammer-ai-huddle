@@ -11,6 +11,7 @@ import {
   useEscalationFeed,
   useAcknowledgeEscalation,
 } from "@/hooks/command/useEscalationFeed";
+import { topicLabel } from "@/lib/asb/topicLabels";
 
 /**
  * Header-mounted bell with unacked escalation count.
@@ -66,7 +67,10 @@ export function NotificationBell() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate font-mono text-xs">{i.event.topic_id}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{topicLabel(i.event.topic_id)}</div>
+                      <div className="truncate font-mono text-[10px] text-muted-foreground">{i.event.topic_id}</div>
+                    </div>
                     {!i.acknowledgedAt && (
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
                     )}
