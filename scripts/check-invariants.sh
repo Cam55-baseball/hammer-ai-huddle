@@ -130,3 +130,28 @@ note "18) Wave 3 closure — no confidence amplification in projections/modulato
 if rg -nE "confidence\\s*[+*]\\s*[0-9]|Math\\.max\\([^)]*confidence" "$SRC/lib/runtime/projections/" "$SRC/lib/runtime/modulators/" 2>/dev/null | rg -v '__tests__'; then
   violate "confidence amplification pattern detected"
 fi
+
+note "19) Wave 3 closure — realization topic_id literals must exist in registry seed"
+REGISTRY_SEED="$ROOT/supabase/migrations/20260526172412_3e55c53e-0b81-401e-bb06-5776d2fb19c9.sql"
+if [ -f "$REGISTRY_SEED" ]; then
+  # Match realization-namespace literals, but skip i18n keys (t('...')) and prefix-search callsites.
+  CODE_TOPICS=$(rg -nN "['\"](athlete\.schedule|onboarding|prescription|session|runtime\.feedback)\.[a-z0-9_.]+['\"]" \
+      "$SRC/lib/runtime/" "$SRC/lib/asb/" "$SRC/hooks/" "$SRC/pages/" 2>/dev/null \
+      | rg -v "\bt\(|latestByTopicPrefix|TopicPrefix|startsWith\(" \
+      | rg -oN "['\"]((athlete\.schedule|onboarding|prescription|session|runtime\.feedback)\.[a-z0-9_.]+)['\"]" -r '$1' \
+      | sort -u || true)
+  MISSING=""
+  for t in $CODE_TOPICS; do
+    if ! rg -q -F "'$t'" "$REGISTRY_SEED" && ! rg -q -F "\"$t\"" "$REGISTRY_SEED"; then
+      MISSING="$MISSING $t"
+    fi
+  done
+  if [ -n "$MISSING" ]; then
+    violate "topic_id literals missing from registry seed:$MISSING"
+  fi
+fi
+
+if [ "$FAILED" -ne 0 ]; then
+  echo "[invariants] FAILED (post-closure rules)"
+  exit 1
+fi

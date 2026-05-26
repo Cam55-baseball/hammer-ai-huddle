@@ -39,6 +39,7 @@ export default function AthleteOnboarding() {
   const [dayType, setDayType] = useState<DayType>("training");
   const [emitting, setEmitting] = useState(false);
   const [emittedEventId, setEmittedEventId] = useState<string | null>(null);
+  const [emitError, setEmitError] = useState<{ topic: string; code?: string; message?: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && isAuthStable && !user) navigate("/auth", { replace: true });
@@ -55,9 +56,19 @@ export default function AthleteOnboarding() {
   const handleEmitSchedule = async () => {
     if (!user?.id) return;
     setEmitting(true);
+    setEmitError(null);
     try {
       const today = format(new Date(), "yyyy-MM-dd");
-      await createEvent({ eventDate: today, eventType: dayType });
+      const result = await createEvent({ eventDate: today, eventType: dayType });
+
+      // Canonical-emit failure: block advancement, render inline error, allow retry.
+      const asbErr = (result as (typeof result & { _asbError?: { code?: string; message?: string } }) | null)
+        ?._asbError;
+      if (asbErr) {
+        setEmitError({ topic: "athlete.schedule.day_type", code: asbErr.code, message: asbErr.message });
+        return;
+      }
+
       // Re-read latest canonical event for this athlete (deterministic, no fabrication).
       const { data } = await supabase
         .from("asb_events")
@@ -71,6 +82,11 @@ export default function AthleteOnboarding() {
       if (data?.event_id) {
         setEmittedEventId(data.event_id);
         goNext();
+      } else {
+        setEmitError({
+          topic: "athlete.schedule.day_type",
+          message: "Canonical event not visible in ledger after emit.",
+        });
       }
     } finally {
       setEmitting(false);
@@ -148,12 +164,27 @@ export default function AthleteOnboarding() {
               );
             })}
           </div>
+          {emitError && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs">
+              <div className="font-medium text-destructive">Canonical event not appended.</div>
+              <div className="mt-1 font-mono break-all text-muted-foreground">topic: {emitError.topic}</div>
+              {emitError.code && (
+                <div className="font-mono break-all text-muted-foreground">code: {emitError.code}</div>
+              )}
+              {emitError.message && (
+                <div className="font-mono break-all text-muted-foreground">{emitError.message}</div>
+              )}
+              <div className="mt-2 text-muted-foreground">
+                Nothing advanced. Replay integrity preserved. You can retry below.
+              </div>
+            </div>
+          )}
           <div className="flex justify-between">
             <Button variant="ghost" onClick={goBack}>
               Back
             </Button>
             <Button onClick={handleEmitSchedule} disabled={emitting}>
-              {emitting ? "Emitting…" : "Emit canonical event"}
+              {emitting ? "Emitting…" : emitError ? "Try again" : "Emit canonical event"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
