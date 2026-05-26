@@ -1,6 +1,7 @@
 import { AlertTriangle, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEscalationFeed } from "@/hooks/command/useEscalationFeed";
+import { TopicLabel } from "./TopicLabel";
 
 /**
  * Sticky banner shown on /command when ≥1 unacked escalation exists in the
