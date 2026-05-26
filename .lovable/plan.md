@@ -137,3 +137,20 @@ Additive route wiring in `src/App.tsx`. Optional one additive RLS migration only
 
 ## Out of scope (rejected)
 New doctrine, autonomous AI, notifications, gamification, schema rewrites, parallel runtimes, mutable projections, server-side rate-limit infra (per directive).
+
+---
+
+## Wave 2 — Implementation log
+
+Shipped additive overlay (no schema changes, no parallel runtimes):
+
+- **Ops observability**: `src/lib/ops/{telemetry,parityMonitor,queueHealth}.ts` — pure reducers, no writes.
+- **Recovery**: `src/lib/runtime/recovery/{checkpoints,corruptionGuard,replayOrchestrator}.ts` — IndexedDB checkpoints keyed by `(athleteId, lastEventId, engineVersion)`, invalidated on mismatch (never mutated).
+- **Offline continuity**: `src/lib/runtime/offline/{eventQueue,reconciler}.ts` — IndexedDB outbox, dedupe via server unique key.
+- **Scope chokepoint**: `src/lib/asb/scope/orgScope.ts` — all event queries route through scoped filter.
+- **Authorization**: `src/lib/auth/governance/{roleMatrix,requireRole,overrideAuthority}.ts` — declarative matrix over existing `user_roles`.
+- **Security**: `src/lib/security/{eventValidator,rateLimit}.ts` — structural validation + client-side soft throttle.
+- **Bootstrap**: `src/lib/bootstrap/bootValidation.ts` — engine_version + runtime capability checks.
+- **Ops UI**: `/ops/health`, `/ops/replay`, `/ops/drift`, `/ops/deployment` wired in `App.tsx` behind `RequireCapability`.
+- **CI gates**: `scripts/check-invariants.sh` extended (rules 6–8), `scripts/preflight.sh` added.
+- **Tests**: `src/lib/ops/__tests__/wave2.test.ts` — 8 deterministic tests covering telemetry, queue health, corruption guard, role matrix, rate limit, validator. All pass; full invariant suite passes.
