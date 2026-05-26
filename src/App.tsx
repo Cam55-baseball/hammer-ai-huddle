@@ -194,6 +194,8 @@ const App = () => {
               <Route path="/timeline" element={<AsbTimeline />} />
               <Route path="/replay/:eventId" element={<AsbReplay />} />
               <Route path="/command" element={<AthleteCommand />} />
+              <Route path="/today" element={<Today />} />
+              <Route path="/today/session/:id" element={<TodaySession />} />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
               <Route path="/coach/console" element={<CoachConsole />} />
