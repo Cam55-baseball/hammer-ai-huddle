@@ -17,7 +17,7 @@ export function SchedulingLoadCard({ rows, loading }: Props) {
   return (
     <IntelligenceCardShell
       title="Scheduling load"
-      subtitle="Raw day_type distribution across recent window"
+      subtitle="How your day types break down lately"
       icon={<CalendarDays className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
