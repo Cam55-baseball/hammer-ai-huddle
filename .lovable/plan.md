@@ -47,3 +47,15 @@ Edited: `src/App.tsx`, `src/pages/CoachConsole.tsx`, `src/lib/asb/invariants/asb
 Created: 1–2 lightweight smoke/E2E test files.
 
 Zero migrations. Zero edge functions. Zero new tables. Zero new doctrine.
+
+---
+
+## Wave 1 — CLOSED 2026-05-26
+
+- Routes wired: `/today`, `/today/session/:id`.
+- CoachConsole mounts `ReadinessDistributionStrip` + `OverrideVisibilityQueue`.
+- `validateRuntimeProjection` added + registered in parity matrix.
+- Grep guard extended (runtime surfaces forbidden from direct ledger writes / replay imports). Subsystem #3 exclusions tightened to recognize `coach-console` + `forecast` surface dirs.
+- Tests: 18/18 pass (`src/lib/runtime` + `src/lib/asb/invariants`). Guard: PASSED.
+
+Skipped Playwright E2E (no Playwright in repo); Vitest coverage of `buildDailyPrescription` + runtime parity is in place.
