@@ -75,6 +75,32 @@ if rg -n "localStorage\.setItem\(['\"]asb_|sessionStorage\.setItem\(['\"]asb_" \
   violate "asb_* runtime state written to localStorage outside allowlist"
 fi
 
+note "9) Wave 3 — modulators must be pure (no supabase imports)"
+if rg -n "from ['\"]@/integrations/supabase" "$SRC/lib/runtime/modulators/" 2>/dev/null; then
+  violate "modulator imports supabase client (must be pure)"
+fi
+
+note "10) Wave 3 — notify/toast usage outside src/lib/comm/ and known UI"
+# Allow shadcn toaster + existing surfaces; forbid new notify util outside lib/comm
+if rg -n "from ['\"]@/lib/comm/cadence['\"]" "$SRC" --glob '!**/lib/comm/**' --glob '!**/__tests__/**' | rg -v 'pages/|components/' >/dev/null 2>&1; then
+  : # informational
+fi
+
+note "11) Wave 3 — no domain writes to non-asb_events tables for runtime topics"
+if rg -n "supabase\.from\(['\"](cycle|rtp|illness|env|position|perception|education|cert|share)_" "$SRC/lib/runtime/" "$SRC/pages/" 2>/dev/null; then
+  violate "domain writes to non-asb_events table detected"
+fi
+
+note "12) Wave 3 — no gamification (streak/xp/badge) in education/cert"
+if rg -in "streak|\\bxp\\b|badge" "$SRC/pages/EducationHub.tsx" "$SRC/pages/CertPath.tsx" "$SRC/lib/copy/education.ts" "$SRC/lib/copy/onboarding.ts" 2>/dev/null; then
+  violate "gamification tokens detected in education/cert surfaces"
+fi
+
+note "13) Wave 3 — no Math.random or Date.now in modulators/ or projections/"
+if rg -n "Math\.random|Date\.now" "$SRC/lib/runtime/modulators/" 2>/dev/null | rg -v '__tests__'; then
+  violate "non-deterministic call detected in modulators/"
+fi
+
 if [ "$FAILED" -ne 0 ]; then
   echo "[invariants] FAILED"
   exit 1

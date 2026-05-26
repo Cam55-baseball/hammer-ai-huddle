@@ -18,19 +18,26 @@ export type Capability =
   | "replay"
   | "override"
   | "ops_view"
-  | "deployment_gate";
+  | "deployment_gate"
+  | "wave3_view"
+  | "wave3_share"
+  | "wave3_cert";
 
 const MATRIX: Record<AppRole, Set<Capability>> = {
   owner: new Set<Capability>([
-    "read_event",
-    "replay",
-    "override",
-    "ops_view",
-    "deployment_gate",
+    "read_event", "replay", "override", "ops_view", "deployment_gate",
+    "wave3_view", "wave3_share", "wave3_cert",
   ]),
-  admin: new Set<Capability>(["read_event", "replay", "override", "ops_view"]),
-  coach: new Set<Capability>(["read_event", "replay", "override"]),
-  player: new Set<Capability>(["read_event", "override"]),
+  admin: new Set<Capability>([
+    "read_event", "replay", "override", "ops_view",
+    "wave3_view", "wave3_cert",
+  ]),
+  coach: new Set<Capability>([
+    "read_event", "replay", "override", "wave3_view", "wave3_cert",
+  ]),
+  player: new Set<Capability>([
+    "read_event", "override", "wave3_view", "wave3_share",
+  ]),
   recruiter: new Set<Capability>(["read_event"]),
   scout: new Set<Capability>(["read_event"]),
 };
