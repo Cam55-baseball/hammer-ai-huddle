@@ -55,7 +55,7 @@ async function emitDayTypeAsbEvent(params: {
       lineage_refs: [],
     });
     if (result.ok) return { ok: true, event_id: result.event_id };
-    return { ok: false, code: result.code, message: result.message };
+    return { ok: false, code: (result as { code?: string }).code, message: (result as { message: string }).message };
   } catch (e) {
     const message = (e as Error)?.message ?? 'unknown';
     console.error('[asb] day_type emit guard', message);
