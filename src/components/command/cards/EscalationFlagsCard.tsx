@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { IntelligenceCardShell } from "../IntelligenceCardShell";
+import { TopicLabel } from "../TopicLabel";
 import { projectLatest, EMPTY_PROJECTION } from "@/lib/command/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 
