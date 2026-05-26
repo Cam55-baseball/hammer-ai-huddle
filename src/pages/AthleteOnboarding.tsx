@@ -10,6 +10,7 @@ import { AthleteOnboardingShell } from "@/components/onboarding/AthleteOnboardin
 import { NotificationsPreferencesPanel } from "@/components/notifications/NotificationsPreferencesPanel";
 import { EngineVersionBadge } from "@/components/asb/EngineVersionBadge";
 import { ENGINE_VERSION } from "@/lib/asb/engineVersion";
+import { topicLabel, shortenEventId } from "@/lib/asb/topicLabels";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import type { DayType } from "@/utils/tdeeCalculations";
 
