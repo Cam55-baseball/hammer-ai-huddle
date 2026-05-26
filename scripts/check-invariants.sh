@@ -56,6 +56,25 @@ if rg -n "from ['\"]@/lib/asb/replay['\"]" "${RUNTIME_GLOBS[@]}" "$SRC"; then
   violate "runtime surface imports replay engine (read-only projection rule)"
 fi
 
+note "6) Wave 2 — ops surfaces may only write events via emit wrappers"
+OPS_GLOBS=(--glob 'src/pages/ops/**' --glob 'src/components/ops/**' --glob 'src/lib/ops/**')
+if rg -n "supabase\.from\(['\"]asb_events['\"]\)\s*\.insert" "${OPS_GLOBS[@]}" "$SRC"; then
+  violate "ops surface writes directly to asb_events"
+fi
+
+note "7) Wave 2 — role checks must use user_roles table, never profiles"
+if rg -n "from\(['\"]profiles['\"]\)[\s\S]*role" "$SRC" --glob '!**/__tests__/**'; then
+  violate "role lookups against profiles table detected (use user_roles)"
+fi
+
+note "8) Wave 2 — runtime/offline checkpoint storage allowlisted"
+# localStorage/sessionStorage writes carrying runtime truth are forbidden
+# except in recovery/offline modules that explicitly use IndexedDB.
+if rg -n "localStorage\.setItem\(['\"]asb_|sessionStorage\.setItem\(['\"]asb_" \
+     "$SRC" --glob '!**/runtime/offline/**' --glob '!**/runtime/recovery/**'; then
+  violate "asb_* runtime state written to localStorage outside allowlist"
+fi
+
 if [ "$FAILED" -ne 0 ]; then
   echo "[invariants] FAILED"
   exit 1
