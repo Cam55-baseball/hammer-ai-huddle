@@ -12,7 +12,7 @@ export function FatigueCard({ rows, loading }: Props) {
   return (
     <IntelligenceCardShell
       title="Fatigue"
-      subtitle="Latest behavioral.fatigue.* event"
+      subtitle="Most recent fatigue signal"
       icon={<BatteryLow className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
