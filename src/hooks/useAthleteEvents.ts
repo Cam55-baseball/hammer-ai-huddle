@@ -26,7 +26,7 @@ async function emitDayTypeAsbEvent(params: {
   eventDate: string;
   eventTime: string | null | undefined;
   payload: Record<string, unknown>;
-}) {
+}): Promise<{ ok: boolean; code?: string; message?: string; event_id?: string }> {
   try {
     const occurred_at = asbOccurredAt(params.eventDate, params.eventTime);
     const ingested_at = new Date().toISOString();
@@ -36,8 +36,9 @@ async function emitDayTypeAsbEvent(params: {
       occurred_at,
       payload: params.payload,
     });
-    await emitAsbEvent({
-      event_id: crypto.randomUUID(),
+    const event_id = crypto.randomUUID();
+    const result = await emitAsbEvent({
+      event_id,
       athlete_id: params.athleteId,
       topic_id: params.topic,
       actor_role: 'athlete',
@@ -53,9 +54,12 @@ async function emitDayTypeAsbEvent(params: {
       causality_refs: [],
       lineage_refs: [],
     });
+    if (result.ok) return { ok: true, event_id: result.event_id };
+    return { ok: false, code: (result as { code?: string }).code, message: (result as { message: string }).message };
   } catch (e) {
-    // Additive emission: never break the legacy path.
-    console.error('[asb] day_type emit guard', (e as Error)?.message);
+    const message = (e as Error)?.message ?? 'unknown';
+    console.error('[asb] day_type emit guard', message);
+    return { ok: false, message };
   }
 }
 
@@ -160,8 +164,9 @@ export function useAthleteEvents() {
         .eq('event_date', input.eventDate)
         .maybeSingle();
 
-      // Additive canonical ASB emission. Non-blocking; failures never break legacy.
-      void emitDayTypeAsbEvent({
+      // Canonical ASB emission — now awaited so callers (e.g. onboarding) can
+      // gate UI advancement on real ledger append, not legacy-row presence.
+      const asb = await emitDayTypeAsbEvent({
         athleteId: user.id,
         topic: ASB_TOPIC_DAY_TYPE,
         eventDate: input.eventDate,
@@ -175,6 +180,11 @@ export function useAthleteEvents() {
           legacy_event_id: data?.id ?? null,
         },
       });
+      if (!asb.ok) {
+        // Legacy row already written; surface the canonical failure so the UI
+        // can decide (onboarding blocks; legacy callers ignore).
+        return { ...(data ? mapEvent(data) : ({} as AthleteEvent)), _asbError: asb } as AthleteEvent & { _asbError?: typeof asb };
+      }
 
       return data ? mapEvent(data) : null;
     } catch (error) {
