@@ -99,17 +99,35 @@ function formatEvent(ev: BehavioralEvent): { text: string; tone: string; Icon: a
 }
 
 function toneFor(type: string) {
-  const map: Record<string, string> = {
-    nn_miss: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
-    streak_risk: 'border-amber-500/50 bg-amber-500/10 text-amber-200',
-    rest_overuse: 'border-orange-500/40 bg-orange-500/10 text-orange-200',
-    consistency_drop: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-    consistency_recover: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
-    coaching_insight: 'border-sky-500/40 bg-sky-500/10 text-sky-200',
-    identity_tier_change: 'border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200',
+  // Returns a color key. Surface stays neutral; only a thin left bar +
+  // the icon carry the semantic color.
+  const map: Record<string, 'rose' | 'amber' | 'orange' | 'emerald' | 'sky' | 'fuchsia'> = {
+    nn_miss: 'rose',
+    streak_risk: 'amber',
+    rest_overuse: 'orange',
+    consistency_drop: 'amber',
+    consistency_recover: 'emerald',
+    coaching_insight: 'sky',
+    identity_tier_change: 'fuchsia',
   };
-  return map[type] ?? 'border-border bg-card text-foreground';
+  return map[type] ?? 'sky';
 }
+const BAR_BY_TONE: Record<string, string> = {
+  rose: 'bg-rose-500',
+  amber: 'bg-amber-500',
+  orange: 'bg-orange-500',
+  emerald: 'bg-emerald-500',
+  sky: 'bg-sky-500',
+  fuchsia: 'bg-fuchsia-500',
+};
+const ICON_BY_TONE: Record<string, string> = {
+  rose: 'text-rose-500',
+  amber: 'text-amber-500',
+  orange: 'text-orange-500',
+  emerald: 'text-emerald-500',
+  sky: 'text-sky-500',
+  fuchsia: 'text-fuchsia-500',
+};
 function iconFor(type: string): any {
   const map: Record<string, any> = {
     nn_miss: AlertTriangle, streak_risk: Flame, rest_overuse: Moon,
