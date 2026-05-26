@@ -138,6 +138,65 @@ export function validateForecastParity(
 }
 
 /**
+ * Runtime prescription parity:
+ *  - confidence never amplified above the tightest source confidence
+ *  - missingness ∈ canonical {no_signal, stale, partial, ok|null}
+ *  - escalate/recovery states must cite at least one source event id
+ *  - never authors organism truth: state ∈ {calm, watch, escalate, unknown}
+ */
+const RUNTIME_STATES = new Set(["calm", "watch", "escalate", "unknown"]);
+const RUNTIME_MISSINGNESS = new Set(["no_signal", "stale", "partial", "ok", null, undefined]);
+
+export interface RuntimePrescriptionLike {
+  state: string;
+  kind: string;
+  confidence: number | null;
+  missingness: string | null;
+  sourceEventIds: string[];
+}
+
+export function validateRuntimeProjection(
+  sources: AsbEventLike[],
+  rx: RuntimePrescriptionLike,
+): ParityResult {
+  const pseudoId = sources[0]?.event_id ?? "runtime-no-source";
+  if (!RUNTIME_STATES.has(rx.state)) {
+    return fail("runtime", pseudoId, `illegal runtime state: ${rx.state}`);
+  }
+  if (!RUNTIME_MISSINGNESS.has(rx.missingness as any)) {
+    return fail("runtime", pseudoId, `illegal missingness: ${rx.missingness}`);
+  }
+  // Confidence never amplified above the tightest source confidence present.
+  const srcConf = sources
+    .map((s) => s.confidence)
+    .filter((c): c is number => typeof c === "number");
+  if (srcConf.length > 0 && typeof rx.confidence === "number") {
+    const tightest = Math.min(...srcConf);
+    if (rx.confidence > tightest) {
+      return fail(
+        "runtime",
+        pseudoId,
+        `runtime confidence amplified: ${rx.confidence} > ${tightest}`,
+      );
+    }
+  }
+  // Escalate/recovery decisions must trace to at least one source event.
+  if ((rx.state === "escalate" || rx.kind === "recovery") && rx.sourceEventIds.length === 0) {
+    return fail("runtime", pseudoId, "escalate/recovery state lacks source lineage");
+  }
+  // Every cited source id must exist in the canonical source set.
+  if (sources.length > 0) {
+    const ids = new Set(sources.map((s) => s.event_id));
+    for (const id of rx.sourceEventIds) {
+      if (!ids.has(id)) {
+        return fail("runtime", pseudoId, `cited source ${id} not in canonical set`);
+      }
+    }
+  }
+  return ok("runtime", pseudoId);
+}
+
+/**
  * Future-ready check: sensor idempotency must equal ASB idempotency
  * for the same (athlete_id, resolved topic_id, occurred_at, normalized payload).
  */
