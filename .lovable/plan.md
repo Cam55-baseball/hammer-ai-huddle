@@ -1,156 +1,144 @@
-# Wave 2 — Production Hardening & Operational Survivability
 
-Additive overlay on the Wave 1 runtime. Zero schema rewrites, zero parallel runtimes, zero direct-table mutation. Every new surface stays event-derived, lineage-linked, replay-safe, and CI-gated.
+# Wave 3 — Specialized Intelligence Expansion & Longitudinal Continuity
 
-## Scope guardrails (non-negotiable)
+Additive overlay on the Wave 1/2 ASB runtime. No schema rewrites, no parallel runtimes, no black-box scoring. All new state is **event-derived** from `asb_events` via `emitRuntimeEvent`, lineage-linked, confidence-visible, CI-gated.
 
-- Reuse the existing `asb_events` ledger and `emitRuntimeEvent` / `emitAsbEvent` wrappers. No new write paths.
-- No new doctrine, no autonomous AI authority, no gamification, no notifications loops.
-- All new state is **derived** from events (memoized projections, never mutable truth).
-- Every new module must pass `scripts/check-invariants.sh` and the parity matrix.
-
-## Architecture overview
+## Architectural Rule
+Every Wave 3 domain follows the same pattern already proven in Wave 1:
 
 ```text
-                ┌──────────────────────────────────────┐
-                │  asb_events (append-only, sealed)    │
-                └──────────────┬───────────────────────┘
-                               │ replay
-        ┌──────────────────────┼──────────────────────┐
-        ▼                      ▼                      ▼
-   projections/*         ops-telemetry/*         recovery/*
-  (memoized, pure)     (derived counters,       (checkpoints,
-                        latency, drift)          retry orchestrator)
-        │                      │                      │
-        ▼                      ▼                      ▼
-  athlete/coach UI     /ops/* health surfaces    offline queue
-                              │                       │
-                              ▼                       ▼
-                       CI invariant gate       reconnect reconciler
+input surface → emitRuntimeEvent(topic, payload, sources[])
+              → projection (useMemo, scope+last_event_id)
+              → prescription modulator (pure, lineage-bound)
+              → UI surface (StateBadge + TrustFooter)
 ```
 
-## Deliverables (10 modules, compressed)
+No domain authors organism truth directly. Each is a **modulator** of the existing prescription pipeline with explicit `sources[]` lineage and a confidence ceiling = `min(source confidences)`.
 
-### 1. Operational observability (`src/lib/ops/`)
-- `telemetry.ts` — pure reducers over recent events: throughput, replay timing, projection latency, override frequency, missingness escalation, confidence degradation. No writes.
-- `parityMonitor.ts` — periodic in-browser sampler running `runInvariantSuite` against a rolling window; emits `ops.parity.drift.detected` events when violations appear.
-- `queueHealth.ts` — derived view of the offline queue (size, oldest age, retry count).
+## Event Taxonomy Additions (single canonical list)
+All under existing `asb_events` table, new `topic` values:
 
-### 2. Operational UI (`src/pages/ops/` + `src/components/ops/`)
-- `/ops/health` — runtime health console (throughput, latency, queue, parity status).
-- `/ops/replay` — replay audit explorer (pick event range, replay to projection, diff).
-- `/ops/drift` — projection drift monitor (live parity check results + lineage drilldown).
-- `/ops/deployment` — deployment integrity screen (invariant suite results, engine version, schema hash).
-- Calm, single-column, dense-but-quiet. Owner/admin only.
+- `cycle.phase_logged`, `cycle.symptom_logged` (athlete-private scope flag)
+- `rtp.phase_advanced`, `rtp.restriction_set`, `rtp.clinician_note`
+- `illness.logged`, `illness.resolved`
+- `respiratory.load_logged`, `respiratory.pattern_logged`
+- `env.travel`, `env.sleep_disruption`, `env.climate`, `env.surface`, `env.density`
+- `position.assigned`, `position.workload_logged`, `position.specialization_drift`
+- `perception.fatigue_logged`, `perception.reaction_logged`
+- `education.module_completed`, `education.viewed`
+- `onboarding.step_completed`
+- `cert.module_completed`, `cert.path_advanced`
+- `share.export_generated`, `share.scope_changed`
+- `comm.notification_sent`, `comm.cadence_set`
+- `locale.changed`, `a11y.preference_set`
 
-### 3. Replay recovery (`src/lib/runtime/recovery/`)
-- `checkpoints.ts` — deterministic projection checkpoints keyed by `(athlete_id, last_event_id, engine_version)`. Stored in IndexedDB, **invalidated** never mutated.
-- `replayOrchestrator.ts` — resumable replay: detect interruption → invalidate stale checkpoint → replay from prior checkpoint → re-verify lineage hash.
-- `corruptionGuard.ts` — projection self-check (hash of inputs vs stored hash); on mismatch, drop the projection and recompute. No silent repair.
+Each event carries: `actor_role`, `sources[]`, `confidence`, `visibility_scope` (`self|coach|org|external`), `engine_version`.
 
-### 4. Org-scale hardening (`src/lib/asb/scope/`)
-- `orgScope.ts` — single chokepoint for `org_id` / `athlete_id` filters on every event query. All projection builders must consume scoped iterators only.
-- RLS audit pass on `asb_events` (read-only review via supabase tools); add missing policies via one additive migration if gaps found. No table changes.
-- Roster virtualization in coach console (`react-virtual`) for large rosters.
-
-### 5. Authorization & governance (`src/lib/auth/governance/`)
-- `roleMatrix.ts` — declarative matrix: `{owner, admin, coach, athlete} × {read_event, replay, override, ops_view, deployment_gate}`.
-- `requireRole.tsx` — route + component guard reading `user_roles` (existing table). No role storage on profiles.
-- `overrideAuthority.ts` — wraps `emitRuntimeEvent` for override-class topics; rejects emission if caller lacks authority; emission carries `actor_role` in payload for lineage.
-
-### 6. Deployment & environment survivability (`scripts/` + `src/lib/bootstrap/`)
-- `scripts/preflight.sh` — runs `check-invariants.sh` + `vitest run --reporter=dot` + parity matrix sweep. Wired into CI as gate.
-- `src/lib/bootstrap/bootValidation.ts` — on app boot, verifies engine version + invariant hash + projection schema; on mismatch, blocks runtime surfaces and routes user to `/ops/deployment`.
-- Rollback survivability: checkpoints tagged with `engine_version`; mismatched checkpoints are invalidated, not migrated.
-
-### 7. Offline + low-bandwidth continuity (`src/lib/runtime/offline/`)
-- `eventQueue.ts` — IndexedDB-backed append-only outbox. `emitRuntimeEvent` enqueues locally first, then flushes.
-- `reconciler.ts` — on reconnect: dedupe by client-generated `event_uuid` (already in payload schema), flush in order, drop only on server-confirmed duplicate.
-- `degradedMode.tsx` — UI banner + reduced polling cadence when offline; PrescriptionCard renders last-known projection with `state="unknown"` badge if stale.
-
-### 8. Security & abuse safeguards (`src/lib/security/`)
-- `eventValidator.ts` — Zod schemas per topic; malformed events rejected at emission and at ingestion edge function (additive update to existing function only).
-- `tamperGuard.ts` — payload signature (HMAC with anon key salt) for spoof rejection on the server side.
-- `rateLimit.ts` — client-side soft throttle for override emission; server enforces hard cap. (Note: per directive, no new backend rate limiting infra — this is ad-hoc client throttle + existing edge function bounds.)
-- `abusePatterns.ts` — derived detector for suspicious override bursts; raises `ops.security.suspicious.detected` event.
-
-### 9. Performance optimization
-- Memoize all projection builders with `useMemo` keyed on `(scope, last_event_id)`.
-- Batch event queries with `in()` filters per org/athlete window.
-- Mobile: defer non-critical panels with `React.lazy`; lock LCP to `PulseStrip`.
-- Cache survivability: caches keyed by `last_event_id` → immutable; cache miss recomputes, never patches.
-
-### 10. Production testing suite (`tests/` + `src/lib/asb/invariants/__tests__/`)
-- `scale.test.ts` — 10k-event replay sweep, asserts deterministic projection hash.
-- `concurrency.test.ts` — interleaved emissions across athletes, asserts no cross-scope leakage.
-- `offline.test.ts` — queue → disconnect → reconnect → dedupe assertions.
-- `authz.test.ts` — role matrix boundary tests.
-- `drift.test.ts` — malformed-event injection, asserts rejection + parity preservation.
-- `replay-stress.test.ts` — repeated full replay, asserts byte-identical projections.
-- CI fails on: parity drift, replay divergence, authority leakage, hidden mutation (grep guard extended).
-
-## CI enforcement expansion (`scripts/check-invariants.sh`)
-Add forbids:
-- direct writes to `asb_events` outside `emitRuntimeEvent` / `emitAsbEvent`
-- `localStorage`/`sessionStorage` writes carrying runtime truth (allowlist: queue, checkpoints)
-- role checks against `profiles` table
-- imports from `src/pages/ops/*` outside `src/pages/ops/*` and `src/App.tsx`
-
-## Authorization matrix (summary)
+## Module Inventory (12 domains, compressed)
 
 ```text
-                read_event  replay  override  ops_view  deploy_gate
-owner               ✓         ✓        ✓         ✓          ✓
-admin               ✓         ✓        ✓         ✓          ·
-coach (scoped)      ✓         ✓        ✓         ·          ·
-athlete (self)      ✓         ·        ✓(self)   ·          ·
+src/lib/runtime/modulators/   ← pure projection→prescription functions
+  cycle.ts            rtp.ts            illness.ts
+  respiratory.ts      environment.ts    position.ts
+  perception.ts
+src/lib/runtime/projections/  ← event→state, memoized
+  cycleState.ts  rtpState.ts  illnessState.ts  envState.ts
+  positionState.ts  perceptionState.ts  educationState.ts
+  onboardingState.ts  certState.ts  shareState.ts
+src/lib/comm/                 ← ethical notification governor
+  cadence.ts  restraint.ts
+src/lib/i18n/                 ← multilingual scaffolding
+  registry.ts  formatter.ts  (no runtime semantics changes)
+src/lib/a11y/
+  preferences.ts  simplify.ts
+src/pages/
+  Cycle.tsx            RTP.tsx           Illness.tsx
+  Environment.tsx      Position.tsx      Perception.tsx
+  EducationHub.tsx     OnboardingFlow.tsx
+  CertPath.tsx         ShareConsole.tsx
+src/components/edu/   parent/coach explainer cards (replay walkthrough,
+                       confidence explainer, readiness explainer)
+src/components/onboarding/  progressive disclosure stepper, athlete-type paths
 ```
 
-## Rollout sequencing
-1. Observability reducers + `/ops/health` (read-only, zero risk).
-2. Checkpoints + replay orchestrator (behind feature flag).
-3. Offline queue + reconciler (behind feature flag).
-4. Role matrix + governance guards.
-5. Boot validation + preflight CI gate.
-6. Security validators + tamper guard.
-7. Performance memoization pass.
-8. Full test suite expansion + CI gate flip to required.
+## Prescription Pipeline Integration
+`src/lib/runtime/prescription.ts` already accepts a modulator list. Wave 3 registers the new modulators in fixed order (deterministic): `rtp → illness → cycle → respiratory → environment → position → perception`. Each:
 
-## Operational risk map
-- **Checkpoint staleness** → mitigated by engine-version tagging + hash verify.
-- **Offline dedupe race** → mitigated by client UUID + server unique constraint check (read-only verify, no new constraint added unless gap confirmed).
-- **Parity false positives** → drift monitor emits events, never auto-mutates; humans triage in `/ops/drift`.
-- **Role escalation** → `requireRole` server-revalidates via `getUser()` + `has_role()` RPC (existing).
+- reads its projection (read-only, event-derived)
+- returns `{ ceiling, notes[], sources[] }`
+- never raises confidence, never removes a hard stop, never overrides clinician/coach authority
 
-## Files to be created (compressed list)
-`src/lib/ops/{telemetry,parityMonitor,queueHealth}.ts`
-`src/pages/ops/{Health,Replay,Drift,Deployment}.tsx` + `src/components/ops/*`
-`src/lib/runtime/recovery/{checkpoints,replayOrchestrator,corruptionGuard}.ts`
-`src/lib/asb/scope/orgScope.ts`
-`src/lib/auth/governance/{roleMatrix,requireRole,overrideAuthority}.ts`
-`src/lib/bootstrap/bootValidation.ts`
-`src/lib/runtime/offline/{eventQueue,reconciler,degradedMode}.tsx`
-`src/lib/security/{eventValidator,tamperGuard,rateLimit,abusePatterns}.ts`
-`scripts/preflight.sh` + extended `check-invariants.sh`
-`tests/{scale,concurrency,offline,authz,drift,replay-stress}.test.ts`
-Additive route wiring in `src/App.tsx`. Optional one additive RLS migration only if audit finds a gap.
+`PrescriptionCard` gains a collapsible "Why" panel listing active modulators + sources (one-tap lineage).
 
-## Out of scope (rejected)
-New doctrine, autonomous AI, notifications, gamification, schema rewrites, parallel runtimes, mutable projections, server-side rate-limit infra (per directive).
+## Specialized Domain Notes
 
----
+- **Cycle**: athlete-private by default; `visibility_scope='self'`. Coach view shows only an opaque "modulated" flag unless athlete grants `coach` scope. No phase prediction — only logged-phase modulation. Anti-shame copy reviewed in `src/lib/copy/cycle.ts`.
+- **RTP**: phases are append-only `rtp.phase_advanced` events. Restrictions gate prescriptions via hard ceilings. Clinician notes are first-class lineage sources. No auto-advance.
+- **Illness**: symptom severity is bounded ordinal; outputs are survivability ceilings only — no diagnosis, no medication guidance. Reintegration requires explicit `illness.resolved`.
+- **Respiratory / Perception**: low-friction 1-tap inputs; outputs are recommendation notes with confidence; never composite "scores".
+- **Environment**: derives from logged travel/sleep/climate/density events; modulates load ceilings; temporal continuity preserved via event timestamps.
+- **Position**: tracks assignments + workload per position; specialization drift surfaced as a *visibility* metric, never an alarm; youth athletes get an anti-early-specialization advisory in `PrescriptionCard`.
+- **Education / Cert**: progression = event count over curriculum graph; no streaks, no XP, no badges that decay.
+- **Share / Scout**: exports are deterministic replay-linked summaries; athlete toggles `share.scope_changed`; every external view re-renders from events, no cached PDFs treated as truth.
 
-## Wave 2 — Implementation log
+## Onboarding Architecture
+Single `OnboardingFlow.tsx` with athlete-type branches (youth/HS/college/pro/coach/parent). Progressive disclosure driven by `onboarding.step_completed` events — same event substrate as everything else, so onboarding state is replay-reconstructable. No skipping survivability primitives; advanced surfaces unlock by event, not by toggle.
 
-Shipped additive overlay (no schema changes, no parallel runtimes):
+## Communication Ethics (`src/lib/comm/`)
+`cadence.ts` enforces a hard rate ceiling per athlete per day (default 2 non-critical, unlimited critical-survivability). `restraint.ts` blocks notifications that would re-surface already-acknowledged events. CI rule forbids any component importing a toast/notify API outside `lib/comm/`.
 
-- **Ops observability**: `src/lib/ops/{telemetry,parityMonitor,queueHealth}.ts` — pure reducers, no writes.
-- **Recovery**: `src/lib/runtime/recovery/{checkpoints,corruptionGuard,replayOrchestrator}.ts` — IndexedDB checkpoints keyed by `(athleteId, lastEventId, engineVersion)`, invalidated on mismatch (never mutated).
-- **Offline continuity**: `src/lib/runtime/offline/{eventQueue,reconciler}.ts` — IndexedDB outbox, dedupe via server unique key.
-- **Scope chokepoint**: `src/lib/asb/scope/orgScope.ts` — all event queries route through scoped filter.
-- **Authorization**: `src/lib/auth/governance/{roleMatrix,requireRole,overrideAuthority}.ts` — declarative matrix over existing `user_roles`.
-- **Security**: `src/lib/security/{eventValidator,rateLimit}.ts` — structural validation + client-side soft throttle.
-- **Bootstrap**: `src/lib/bootstrap/bootValidation.ts` — engine_version + runtime capability checks.
-- **Ops UI**: `/ops/health`, `/ops/replay`, `/ops/drift`, `/ops/deployment` wired in `App.tsx` behind `RequireCapability`.
-- **CI gates**: `scripts/check-invariants.sh` extended (rules 6–8), `scripts/preflight.sh` added.
-- **Tests**: `src/lib/ops/__tests__/wave2.test.ts` — 8 deterministic tests covering telemetry, queue health, corruption guard, role matrix, rate limit, validator. All pass; full invariant suite passes.
+## Internationalization & Accessibility
+`i18n/registry.ts` is a flat key→string map with locale fallback. No runtime semantic translation (confidence/lineage labels are canonical tokens). `a11y/simplify.ts` provides a "plain language" toggle that swaps copy bundles — never alters numeric outputs or lineage visibility.
+
+## CI Enforcement (extend `scripts/check-invariants.sh`)
+New rules 9–13:
+- 9: modulators must export pure functions, no `supabase` imports
+- 10: no direct `notify`/`toast` calls outside `src/lib/comm/`
+- 11: no domain may write to a non-`asb_events` table
+- 12: `visibility_scope` required on all cycle/share/illness event emissions (grep)
+- 13: no `Math.random` or `Date.now()` inside `modulators/` or `projections/` (determinism)
+
+Preflight extended: parity test must include every new modulator.
+
+## Validation Strategy
+- Per-domain unit tests under `src/lib/runtime/modulators/__tests__/` — pure-function tables.
+- `parity.test.ts` extended: each modulator validated against `validateRuntimeProjection` (confidence ceiling, escalate-requires-source).
+- Replay determinism test: full Wave 1+2+3 event corpus replayed twice → byte-identical projections.
+- Privacy test: cycle events with `scope='self'` never appear in coach-scope projection snapshots.
+- Notification cadence test: > ceiling emissions are dropped, not deferred silently (logged as `comm.notification_dropped`).
+
+## Rollout Sequencing
+1. Modulator scaffold + prescription registration (no UI yet) → parity green
+2. RTP + Illness (highest survivability value)
+3. Cycle (privacy-first, athlete-only UI)
+4. Environment + Respiratory + Perception
+5. Position specialization
+6. Education / Onboarding / Cert
+7. Share / Scout export
+8. Comm ethics + i18n + a11y
+9. CI rules 9–13 + full preflight
+
+Each step ships behind a capability flag in `roleMatrix`; nothing visible until parity + replay tests pass.
+
+## Operational Risk Map
+- *Risk:* modulator stacking suppresses signal → *Mitigation:* `PrescriptionCard` always shows full modulator list + ceiling source.
+- *Risk:* cycle data leakage → *Mitigation:* scope enforced at projection layer + RLS policy review (one additive migration only if audit finds a gap).
+- *Risk:* notification fatigue → *Mitigation:* cadence ceiling + CI rule 10.
+- *Risk:* education gamification creep → *Mitigation:* no streak/XP fields in event schema; CI grep forbids `streak|xp|badge` in `education/cert` paths.
+- *Risk:* i18n drift breaking lineage labels → *Mitigation:* canonical tokens excluded from translation bundles.
+
+## Technical Debt Prevention
+- No new tables. No new runtimes. No new state stores.
+- Every modulator is a pure function with a unit-test table.
+- Every UI surface composes existing `RuntimeCard / StateBadge / TrustFooter / PrescriptionCard`.
+- All copy centralized in `src/lib/copy/<domain>.ts` for i18n + simplify.
+- Capability flags retire after rollout — no dead toggles.
+
+## Out of Scope (explicit)
+Autonomous medical AI, hormonal scoring models, black-box athlete ranking, social feeds, streaks/XP/badges, push-notification campaigns, schema rewrites, parallel runtimes, mutable projections, ML-based phase prediction, biometric ingestion beyond logged events.
+
+## Files to Create (compressed)
+`src/lib/runtime/modulators/{cycle,rtp,illness,respiratory,environment,position,perception}.ts` + tests; `src/lib/runtime/projections/{cycle,rtp,illness,env,position,perception,education,onboarding,cert,share}State.ts`; `src/lib/comm/{cadence,restraint}.ts`; `src/lib/i18n/{registry,formatter}.ts`; `src/lib/a11y/{preferences,simplify}.ts`; `src/lib/copy/<domain>.ts`; `src/pages/{Cycle,RTP,Illness,Environment,Position,Perception,EducationHub,OnboardingFlow,CertPath,ShareConsole}.tsx`; `src/components/edu/*`, `src/components/onboarding/*`; extended `scripts/check-invariants.sh`; extended `parity.test.ts` + new replay-determinism test.
+
+## Edits
+`src/lib/runtime/prescription.ts` (register modulators), `src/App.tsx` (routes behind capability gates), `src/lib/auth/governance/roleMatrix.ts` (new capability flags), `.lovable/plan.md`.

@@ -90,6 +90,17 @@ const OpsHealth = lazyWithRetry(() => import("./pages/ops/OpsHealth"));
 const OpsReplay = lazyWithRetry(() => import("./pages/ops/OpsReplay"));
 const OpsDrift = lazyWithRetry(() => import("./pages/ops/OpsDrift"));
 const OpsDeployment = lazyWithRetry(() => import("./pages/ops/OpsDeployment"));
+// Wave 3 surfaces
+const Wave3Cycle = lazyWithRetry(() => import("./pages/Cycle"));
+const Wave3RTP = lazyWithRetry(() => import("./pages/RTP"));
+const Wave3Illness = lazyWithRetry(() => import("./pages/Illness"));
+const Wave3Environment = lazyWithRetry(() => import("./pages/Environment"));
+const Wave3Position = lazyWithRetry(() => import("./pages/Position"));
+const Wave3Perception = lazyWithRetry(() => import("./pages/Perception"));
+const Wave3EducationHub = lazyWithRetry(() => import("./pages/EducationHub"));
+const Wave3Onboarding = lazyWithRetry(() => import("./pages/OnboardingFlow"));
+const Wave3CertPath = lazyWithRetry(() => import("./pages/CertPath"));
+const Wave3ShareConsole = lazyWithRetry(() => import("./pages/ShareConsole"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
@@ -234,6 +245,17 @@ const App = () => {
                 }
               />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
+              {/* Wave 3 — longitudinal continuity surfaces (capability-gated) */}
+              <Route path="/runtime/cycle" element={<RequireCapability capability="wave3_view"><Wave3Cycle /></RequireCapability>} />
+              <Route path="/runtime/rtp" element={<RequireCapability capability="wave3_view"><Wave3RTP /></RequireCapability>} />
+              <Route path="/runtime/illness" element={<RequireCapability capability="wave3_view"><Wave3Illness /></RequireCapability>} />
+              <Route path="/runtime/environment" element={<RequireCapability capability="wave3_view"><Wave3Environment /></RequireCapability>} />
+              <Route path="/runtime/position" element={<RequireCapability capability="wave3_view"><Wave3Position /></RequireCapability>} />
+              <Route path="/runtime/perception" element={<RequireCapability capability="wave3_view"><Wave3Perception /></RequireCapability>} />
+              <Route path="/learn" element={<Wave3EducationHub />} />
+              <Route path="/onboarding/flow" element={<Wave3Onboarding />} />
+              <Route path="/cert" element={<RequireCapability capability="wave3_cert"><Wave3CertPath /></RequireCapability>} />
+              <Route path="/share" element={<RequireCapability capability="wave3_share"><Wave3ShareConsole /></RequireCapability>} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
               <Route path="/coach/console" element={<CoachConsole />} />
               <Route path="/coach/athlete/:athleteId" element={<CoachAthleteDetail />} />
