@@ -30,10 +30,10 @@ const COLLAPSE_KEY = 'hm:identityCard:collapsedDate';
 // Day intent meta — kept in sync with the old DayControlCard / DayStateBanner
 // ─────────────────────────────────────────────────────────────────────────────
 const DAY_META: Record<DayType, { label: string; explanation: string; chipClass: string }> = {
-  rest:     { label: 'REST',     explanation: 'Recovery supports performance. Streak protected. Non-Negotiables waived for today.', chipClass: 'bg-sky-500/15 text-sky-300 border-sky-500/40' },
+  rest:     { label: 'REST',     explanation: 'Recovery supports performance. Streak protected. Non-Negotiables waived for today.', chipClass: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25' },
   skip:     { label: 'SKIP',     explanation: 'Day ignored. No progress. No recovery credit.',                                       chipClass: 'bg-muted text-muted-foreground border-border' },
-  push:     { label: 'PUSH',     explanation: 'Higher standard today. Extra output expected.',                                        chipClass: 'bg-amber-500/15 text-amber-300 border-amber-500/40' },
-  standard: { label: 'STANDARD', explanation: 'Operate at your current identity standard.',                                           chipClass: 'bg-background/60 text-muted-foreground border-border' },
+  push:     { label: 'PUSH',     explanation: 'Higher standard today. Extra output expected.',                                        chipClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25' },
+  standard: { label: 'STANDARD', explanation: 'Operate at your current identity standard.',                                           chipClass: 'bg-muted text-muted-foreground border-border' },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
