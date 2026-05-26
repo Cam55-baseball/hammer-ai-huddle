@@ -83,6 +83,8 @@ const CoachAthleteDetail = lazyWithRetry(() => import("./pages/CoachAthleteDetai
 const AthleteDigest = lazyWithRetry(() => import("./pages/AthleteDigest"));
 const CoachDigest = lazyWithRetry(() => import("./pages/CoachDigest"));
 const ForecastSurface = lazyWithRetry(() => import("./pages/ForecastSurface"));
+const Today = lazyWithRetry(() => import("./pages/Today"));
+const TodaySession = lazyWithRetry(() => import("./pages/TodaySession"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
