@@ -225,7 +225,7 @@ export function buildDailyPrescription(
   }
 
   // Green: readiness ≥ 70 and fatigue not high → lift output day.
-  if (typeof r === "number" && r >= 70 && f !== "high") {
+  if (typeof r === "number" && r >= 70) {
     return {
       state: "calm",
       kind: "lift",
