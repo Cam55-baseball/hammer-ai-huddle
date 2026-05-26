@@ -1,116 +1,163 @@
-# Backlog #8 — Cross-Substrate Consistency Hardening
+# Wave 1 — Athlete Runtime Productization & Execution Realization
 
-A read-only invariance + parity layer that seals ASB, Digest, Coach, Forecast, and Sensor subsystems to a single canonical interpretation. No routes, no UI, no schema, no runtime behavior changes.
+This wave converts the already-ratified ASB substrate (`asb_events` ledger, `emit.ts`, `replay.ts`, parity invariants, sensor scaffold, Command/Console/Digest projections) into the first usable athlete + coach operating system. **Nothing here adds new doctrine, schema, or runtime authority.** Every visible state is an event-derived projection; every write is an append-only canonical event through `emitAsbEvent`.
 
-## Scope
+## What already exists (we project from, don't rebuild)
 
-Additive-only. Pure TypeScript. Zero coupling to Supabase, hooks, or React. CI/debug-only execution. Deleting `src/lib/asb/invariants/` must cause zero runtime breakage.
+- ASB ledger + `emitAsbEvent` (append-only, idempotent, dedupe-safe)
+- `replay.ts` deterministic re-derivation + `/replay/:eventId`
+- `useAthleteCommandRows`, `useCoachRosterRows`, digest/forecast projections
+- Command cards (Readiness/Fatigue/Workload/Recovery/Behavioral/Trend/Escalation)
+- Coach Console (RosterGrid, EscalationQueue, MissingSignalQueue, WorkloadContinuity)
+- Confidence/Missingness/Lineage primitives (`ConfidencePill`, `MissingnessChip`, `LineageDrilldownButton`)
+- Parity invariants + central missingness thresholds
 
-## Files to create
+## What Wave 1 actually builds
 
-### 1. `src/lib/asb/constants/missingnessThresholds.ts`
-Single source of truth for missingness semantics.
+Six thin, additive surfaces stitched onto the existing substrate:
 
-```text
-MISSINGNESS_STATES = "no_signal" | "stale" | "partial" | "ok"
-THRESHOLDS = {
-  staleAfterMs: 7 * 24h,
-  partialRequiredFields: per-topic minimal field set,
-  windowMs: 7 * 24h (default observation window)
-}
-classifyMissingness(events, topic, now) → MissingnessState
+### 1. Athlete Daily Runtime — `/today`
+Single mobile-first screen, three stacked zones, progressive disclosure:
+- **Pulse strip** (top): one-line readiness state + fatigue band + recovery debt chip, each tap-to-expand into existing Command cards. No numbers without confidence + lineage.
+- **Today's Prescription card**: rendered from the canonical 6B→6K runtime stack via a new pure `buildDailyPrescription(rows, constraints)` projection. Adapts on readiness/fatigue/recovery/override state already present in the ledger. Shows session type, intent, 3–5 block summary, "why this today" lineage link.
+- **Action rail** (bottom, sticky): `Start session` · `Log how I feel` · `Request change`. Each emits a canonical event (no mutation).
+
+### 2. Session Execution Flow — `/today/session/:prescriptionEventId`
+Linear, one-block-at-a-time, mobile-first:
+- Block header (name, target, intent, confidence pill)
+- Single CTA per state: `Begin` → `Complete` / `Modify` / `Skip` / `Substitute`
+- Inline post-block check (RPE 1–5, optional note)
+- Every transition emits `session.block.started|completed|modified|skipped|substituted` canonical events with `causality_refs` → prescription event
+- Post-session capture screen → `session.response.captured` event
+
+### 3. Override & Deviation Workflow
+Shared sheet component triggered from prescription / session / coach surfaces:
+- Reason (enum), free-text note, optional severity
+- Emits `prescription.override.requested` / `session.deviation.logged` with full lineage refs
+- Visible in athlete history + coach console (existing surfaces auto-pick up via projections)
+
+### 4. Coach Operational Runtime — `/console` (extension)
+Additive panels on existing CoachConsole:
+- **Readiness distribution strip** (compressed histogram across roster, derived from existing rows)
+- **Prescription history drawer** per athlete (reuses `useCoachRosterRows`)
+- **Override visibility queue** (filters events with topic prefix `prescription.override.*`)
+- **Alert hierarchy** unified into one tier-sorted list (red/amber/info) using existing `MissingnessChip` + `ConfidencePill`
+No new endpoints. All projections.
+
+### 5. Confidence + Lineage Continuity Layer
+- Promote `ConfidencePill` + `MissingnessChip` + `LineageDrilldownButton` to a single shared `<TrustFooter />` rendered on every visible runtime card so the "why / what / how reliable" answer is always one tap from any surface.
+- Engine version + replay handle exposed in TrustFooter expander.
+
+### 6. Calm Production UI System
+A small token-level pass in `index.css` / `tailwind.config.ts` adding semantic state tiers (no color hardcoding in components):
+- `--state-calm / --state-watch / --state-escalate / --state-unknown`
+- `--confidence-high / --med / --low / --absent`
+- `--surface-runtime / --surface-runtime-elevated`
+- Typography hierarchy: display / runtime-headline / runtime-body / lineage-caption
+- One shared `RuntimeCard`, `RuntimeSheet`, `RuntimeActionBar` primitives so athlete + coach + session flows share calm spacing, no dashboard bloat.
+
+## Screen inventory (new)
 ```
-All subsystems must import from here; no inline thresholds elsewhere.
-
-### 2. `src/lib/asb/invariants/asbInvariantChecks.ts`
-CI/debug entry point.
-
-```text
-runInvariantSuite(sample: AsbEvent[]): ParityResult[]
-runInvariantSuite() asserts:
-  - 100% parity across sampled events
-  - zero topic drift
-  - zero divergence in identity / missingness / confidence
-```
-Pure — no I/O. Caller supplies sample dataset.
-
-### 3. `src/lib/asb/invariants/asbParityMatrix.ts`
-Cross-system check registry.
-
-```text
-ParityResult { subsystem, event_id, pass, mismatch_reason? }
-
-buildParityMatrix(asbEvent) runs:
-  - asb→digest identity match
-  - asb→coach identity match
-  - asb→forecast inclusion consistency
-  - sensor→asb idempotency parity (future-ready, inert)
-  - topic mapping consistency across layers
+/today                          Athlete Daily Runtime
+/today/session/:id              Session Execution
+/today/session/:id/complete     Post-session capture
+/today/history                  Personal lineage history (read-only over ledger)
+/console (extended)             Coach panels above
+/console/athlete/:id/history    Athlete prescription + override timeline
 ```
 
-### 4. `src/lib/asb/invariants/asbCrossSystemValidators.ts`
-Pure validators.
+## Navigation architecture
+- Athlete root → `/today` (post-onboarding). Existing `/command`, `/digest`, `/forecast` remain as deep surfaces accessible from TrustFooter / pulse expansions.
+- Coach root → `/console` with sub-routes for athlete deep-dives.
+- Bottom tab bar (mobile): Today · History · Digest · Settings.
 
-```text
-validateDigestParity(asbEvent, digestProjection): ParityResult
-validateCoachParity(asbEvent, coachProjection): ParityResult
-validateForecastParity(asbEvent, forecastProjection): ParityResult
-validateSensorForwardCompatibility(sensorEvent): ParityResult
+## Event interaction map (all additive topics)
 ```
-Each enforces: identity equality, topic interpretation equality, missingness classification equality, confidence forwarding (no amplification, no recomputation).
+prescription.daily.rendered         (system, on /today load if absent for date)
+session.started                     (athlete)
+session.block.started|completed     (athlete)
+session.block.modified|skipped|substituted
+session.deviation.logged
+session.response.captured
+prescription.override.requested     (athlete or coach)
+prescription.override.acknowledged  (coach)
+runtime.feedback.captured           ("Log how I feel")
+```
+All emitted via `emitAsbEvent`, idempotency-keyed, lineage-linked to source prescription event. No new tables; existing `asb_events` ledger absorbs them.
 
-### 5. `src/lib/asb/invariants/__tests__/parity.test.ts`
-- Sampled ASB events → all validators return `pass: true`
-- Sensor `generateSensorIdempotencyKey` ≡ ASB `computeIdempotencyKey` (byte-for-byte)
-- Missingness states identical across digest + coach selectors for same input
-- Coach projection never aggregates confidence (raw forward only)
-- Forecast confidence ≤ source ASB confidence
+## Runtime state flow
+```
+ledger(asb_events) ──► projections(useAthleteCommandRows, buildDailyPrescription)
+                              │
+                              ▼
+                       RuntimeCard (read-only)
+                              │ user action
+                              ▼
+                       emitAsbEvent (append-only)
+                              │
+                              ▼
+                       new event ──► re-projects on next render
+```
+Zero frontend-owned truth. Zero direct mutation.
 
-### 6. CI guard script — `scripts/check-invariants.sh` (or extend existing CI step)
-Grep-based forbidden-pattern guard:
-- No `staleAfterMs|partialRequiredFields` literal outside `missingnessThresholds.ts`
-- No `sha256(` identity composition outside `engineVersion.ts` + `sensorIdempotency.ts`
-- No subsystem imports another subsystem's `projections.ts`
-- No re-declaration of topic maps outside `sensorTopicRegistry.ts`
+## API / dependency map
+- Read: `asb_events` via existing hooks (no new query shapes beyond filters).
+- Write: `emitAsbEvent` only.
+- Replay: existing `/replay/:eventId` linked from TrustFooter.
+- No new edge functions. No new schema.
 
-## Refactor (minimal, parity-preserving)
+## Validation strategy
+- Unit: `buildDailyPrescription` is pure → snapshot tests across readiness/fatigue permutations.
+- Parity: extend `asbCrossSystemValidators.ts` with a `validateRuntimeProjection` check — runtime card values must equal ASB-emitted values (no amplification).
+- Replay: every session flow event reconstructable; add a fixture test asserting `prescription → blocks → completion` replay determinism.
+- E2E (Playwright): athlete completes a full daily flow on mobile viewport; coach sees the resulting events in console; replay drilldown opens lineage.
+- Grep guard (`scripts/check-invariants.sh`): forbid direct `supabase.from('asb_events').insert` outside `emit.ts`; forbid inline state tiers outside the new tokens.
 
-Only if existing files contain inline thresholds, replace with imports from `missingnessThresholds.ts`. No behavior change — values stay identical.
-- `src/lib/digest/projections.ts` — if any `staleAfter` / window constants inline, point at central constants.
-- `src/lib/coach/projections.ts` — same.
+## Mobile-first interaction flow (athlete)
+```
+open app → /today (1 tap, <300ms to first paint of pulse strip)
+  ↓ tap Start session
+session block 1 (Begin → Complete) → block 2 → … → post-session capture
+  ↓ done
+back to /today, prescription card now shows "completed" projection
+```
+Minimum-tap goal: cold open → first block begin in ≤3 taps.
 
-If thresholds are already implicit/derived, leave files untouched and only export the canonical constants for future use.
+## Coach workflow flow
+```
+/console → scan readiness distribution + escalation queue
+  ↓ open athlete → /console/athlete/:id/history
+  ↓ review prescription + overrides
+  ↓ (optional) acknowledge override → emits override.acknowledged event
+```
 
-## Invariant rules enforced
+## Production rollout sequencing
+1. UI tokens + RuntimeCard/Sheet/ActionBar primitives + TrustFooter
+2. `buildDailyPrescription` pure projection + tests
+3. `/today` athlete daily runtime
+4. Session execution flow + canonical event emission
+5. Override + deviation sheet (shared)
+6. Coach console additive panels + athlete history route
+7. Parity validator extension + Playwright sweep
+8. Grep guard updates + CI verification
 
-| Rule | Authority |
-|---|---|
-| Event identity | `computeIdempotencyKey` in `engineVersion.ts` |
-| Topic resolution (sensor) | `sensorTopicRegistry.ts` |
-| Topic resolution (ASB/digest/coach/forecast) | prefix match only, no remap |
-| Missingness thresholds | `missingnessThresholds.ts` |
-| Confidence | ASB-emitted, pass-through only; coach raw, forecast ≤ source |
+Each step ships independently; nothing earlier breaks if a later step is paused.
 
-## Acceptance criteria
+## Implementation risk map
+- **Projection drift** → mitigated by extending parity invariants in step 7 before rollout.
+- **Mobile latency** → all projections already cached by React Query; keep `/today` to one query + memoized derivations.
+- **UI bloat regression** → enforced by shared RuntimeCard primitive + token guard.
+- **Hidden mutation temptation** during session flow → grep guard on direct ledger writes; all writes via `emitAsbEvent`.
+- **Override loop confusion** → single shared sheet, single event family, surfaced identically on athlete + coach sides.
 
-- `runInvariantSuite()` returns 100% pass on sampled fixture
-- Sensor idempotency ≡ ASB idempotency (test asserts equality)
-- Single missingness threshold source (grep-verified)
-- No subsystem cross-imports another's projection logic
-- No new routes, hooks, edge functions, migrations
-- Deleting `src/lib/asb/invariants/` leaves app fully functional
-- All existing tests still pass
+## Technical-debt prevention
+- No new tables, no new edge functions, no parallel state.
+- All new components consume existing hooks; new hooks are pure projections over existing rows.
+- New event topics namespaced (`session.*`, `prescription.*`, `runtime.*`) and registered alongside existing topic prefix rules used by parity validators.
+- Tokens centralized; no per-component color literals.
 
-## Build order
+## Strict out-of-scope (explicit)
+No AI summaries, no autonomous authority, no gamification, no notification spam, no social mechanics, no black-box scoring, no schema changes, no architectural rewrites, no sensor activation (Backlog #7 remains deferred).
 
-1. `missingnessThresholds.ts`
-2. `asbCrossSystemValidators.ts`
-3. `asbParityMatrix.ts`
-4. `asbInvariantChecks.ts`
-5. Parity tests
-6. CI grep guard script
-7. Minimal refactor of digest/coach to import central thresholds (only if inline duplicates exist)
-
-## Out of scope
-
-No new ASB writes. No runtime invariant enforcement on hot paths. No sensor activation. No UI surface. No new doctrine. No edge functions. No schema.
+## Deliverable shape
+~25 new files (6 routes, ~10 components, 3 hooks, 1 projection lib, 2 tests, 1 token pass, 1 parity validator extension, 1 grep guard update). Zero migrations. Zero edge functions.

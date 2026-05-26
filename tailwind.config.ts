@@ -96,6 +96,22 @@ export default {
           muted: "hsl(var(--success-muted))",
           "muted-foreground": "hsl(var(--success-muted-foreground))",
         },
+        state: {
+          calm: { DEFAULT: "hsl(var(--state-calm))", foreground: "hsl(var(--state-calm-foreground))" },
+          watch: { DEFAULT: "hsl(var(--state-watch))", foreground: "hsl(var(--state-watch-foreground))" },
+          escalate: { DEFAULT: "hsl(var(--state-escalate))", foreground: "hsl(var(--state-escalate-foreground))" },
+          unknown: { DEFAULT: "hsl(var(--state-unknown))", foreground: "hsl(var(--state-unknown-foreground))" },
+        },
+        confidence: {
+          high: "hsl(var(--confidence-high))",
+          med: "hsl(var(--confidence-med))",
+          low: "hsl(var(--confidence-low))",
+          absent: "hsl(var(--confidence-absent))",
+        },
+        "surface-runtime": {
+          DEFAULT: "hsl(var(--surface-runtime))",
+          elevated: "hsl(var(--surface-runtime-elevated))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

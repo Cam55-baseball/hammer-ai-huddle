@@ -93,6 +93,22 @@ All colors MUST be HSL.
     --success-foreground: 0 0% 100%;
     --success-muted: 142 50% 95%;
     --success-muted-foreground: 142 50% 30%;
+
+    /* Runtime state tiers — semantic, used across athlete + coach surfaces */
+    --state-calm: 142 60% 38%;
+    --state-calm-foreground: 0 0% 100%;
+    --state-watch: 38 92% 50%;
+    --state-watch-foreground: 0 0% 10%;
+    --state-escalate: 0 75% 50%;
+    --state-escalate-foreground: 0 0% 100%;
+    --state-unknown: 0 0% 55%;
+    --state-unknown-foreground: 0 0% 100%;
+    --confidence-high: 142 60% 38%;
+    --confidence-med: 38 92% 50%;
+    --confidence-low: 0 75% 50%;
+    --confidence-absent: 0 0% 55%;
+    --surface-runtime: 0 0% 100%;
+    --surface-runtime-elevated: 0 0% 98%;
   }
 
   .dark {
@@ -168,6 +184,22 @@ All colors MUST be HSL.
     --success-foreground: 0 0% 100%;
     --success-muted: 142 30% 15%;
     --success-muted-foreground: 142 50% 70%;
+
+    /* Runtime state tiers — dark */
+    --state-calm: 142 50% 50%;
+    --state-calm-foreground: 0 0% 100%;
+    --state-watch: 38 90% 55%;
+    --state-watch-foreground: 0 0% 10%;
+    --state-escalate: 0 75% 55%;
+    --state-escalate-foreground: 0 0% 100%;
+    --state-unknown: 0 0% 45%;
+    --state-unknown-foreground: 0 0% 100%;
+    --confidence-high: 142 50% 50%;
+    --confidence-med: 38 85% 55%;
+    --confidence-low: 0 75% 55%;
+    --confidence-absent: 0 0% 40%;
+    --surface-runtime: 0 0% 10%;
+    --surface-runtime-elevated: 0 0% 13%;
   }
 
   /* ============================================
