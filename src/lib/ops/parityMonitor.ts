@@ -22,18 +22,18 @@ export async function sampleParity(
   input: Parameters<typeof runInvariantSuite>[0],
 ): Promise<ParityMonitorSample> {
   const ranAt = new Date().toISOString();
-  let results: ParityResult[] = [];
   try {
-    results = await runInvariantSuite(input);
+    const summary = await runInvariantSuite(input);
+    const violations = summary.results.filter((r) => !r.pass);
+    return {
+      ranAt,
+      total: summary.total,
+      passed: summary.passed,
+      failed: summary.failed,
+      violations,
+    };
   } catch (e) {
     console.error("[ops.parity] suite_threw", (e as Error)?.message);
+    return { ranAt, total: 0, passed: 0, failed: 0, violations: [] };
   }
-  const failed = results.filter((r) => !r.pass);
-  return {
-    ranAt,
-    total: results.length,
-    passed: results.length - failed.length,
-    failed: failed.length,
-    violations: failed,
-  };
 }
