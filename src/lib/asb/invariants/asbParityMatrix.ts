@@ -9,9 +9,11 @@ import {
   validateCoachParity,
   validateForecastParity,
   validateSensorForwardCompatibility,
+  validateRuntimeProjection,
   type AsbEventLike,
   type ProjectionLike,
   type SensorEventLike,
+  type RuntimePrescriptionLike,
   type ParityResult,
 } from "./asbCrossSystemValidators";
 
@@ -23,6 +25,7 @@ export interface ParityInputs {
   coach?: ProjectionLike;
   forecast?: ProjectionLike;
   sensor?: SensorEventLike;
+  runtime?: { sources: AsbEventLike[]; prescription: RuntimePrescriptionLike };
 }
 
 export async function buildParityMatrix(inputs: ParityInputs): Promise<ParityResult[]> {
@@ -31,5 +34,8 @@ export async function buildParityMatrix(inputs: ParityInputs): Promise<ParityRes
   if (inputs.coach) out.push(validateCoachParity(inputs.asb, inputs.coach));
   if (inputs.forecast) out.push(validateForecastParity(inputs.asb, inputs.forecast));
   if (inputs.sensor) out.push(await validateSensorForwardCompatibility(inputs.sensor));
+  if (inputs.runtime) {
+    out.push(validateRuntimeProjection(inputs.runtime.sources, inputs.runtime.prescription));
+  }
   return out;
 }
