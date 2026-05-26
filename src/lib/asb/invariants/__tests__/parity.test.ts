@@ -9,6 +9,7 @@ import {
   validateCoachParity,
   validateForecastParity,
   validateSensorForwardCompatibility,
+  validateRuntimeProjection,
   type AsbEventLike,
 } from "../asbCrossSystemValidators";
 import { runInvariantSuite, assertInvariantSuite } from "../asbInvariantChecks";
