@@ -5,15 +5,24 @@ import { EscalationQueue } from "@/components/coach-console/EscalationQueue";
 import { MissingSignalQueue } from "@/components/coach-console/MissingSignalQueue";
 import { WorkloadContinuityPanel } from "@/components/coach-console/WorkloadContinuityPanel";
 import { RecentBehavioralFeed } from "@/components/coach-console/RecentBehavioralFeed";
+import { ReadinessDistributionStrip } from "@/components/coach-console/ReadinessDistributionStrip";
+import { OverrideVisibilityQueue } from "@/components/coach-console/OverrideVisibilityQueue";
 import { useCoachRosterRows } from "@/hooks/coach/useCoachRosterRows";
 import { Badge } from "@/components/ui/badge";
 import { Users, AlertTriangle, EyeOff } from "lucide-react";
+import { useMemo } from "react";
 
 export default function CoachConsole() {
-  const { roster, snapshots, escalations, missing, workload, isLoading, error } =
+  const { roster, snapshots, escalations, missing, workload, buckets, isLoading, error } =
     useRosterProjection();
   const athleteIds = roster.map((a) => a.athleteId);
   const rowsQ = useCoachRosterRows(athleteIds, { days: 14, limit: 2000 });
+
+  const nameLookup = useMemo(() => {
+    const m = new Map<string, string>();
+    roster.forEach((a: any) => m.set(a.athleteId, a.displayName ?? "Athlete"));
+    return (id: string) => m.get(id) ?? "Athlete";
+  }, [roster]);
 
   return (
     <DashboardLayout>
@@ -39,6 +48,8 @@ export default function CoachConsole() {
           </div>
         )}
 
+        <ReadinessDistributionStrip rowsByAthlete={buckets} />
+
         <section>
           <h2 className="mb-3 text-lg font-semibold">Roster</h2>
           <RosterGrid roster={roster} snapshots={snapshots} isLoading={isLoading} />
@@ -50,9 +61,11 @@ export default function CoachConsole() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <OverrideVisibilityQueue rowsByAthlete={buckets} athleteName={nameLookup} />
           <WorkloadContinuityPanel rows={workload} roster={roster} />
-          <RecentBehavioralFeed rows={rowsQ.data ?? []} roster={roster} />
         </div>
+
+        <RecentBehavioralFeed rows={rowsQ.data ?? []} roster={roster} />
       </div>
     </DashboardLayout>
   );
