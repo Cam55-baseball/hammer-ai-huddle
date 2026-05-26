@@ -26,7 +26,7 @@ async function emitDayTypeAsbEvent(params: {
   eventDate: string;
   eventTime: string | null | undefined;
   payload: Record<string, unknown>;
-}) {
+}): Promise<{ ok: boolean; code?: string; message?: string; event_id?: string }> {
   try {
     const occurred_at = asbOccurredAt(params.eventDate, params.eventTime);
     const ingested_at = new Date().toISOString();
@@ -36,8 +36,9 @@ async function emitDayTypeAsbEvent(params: {
       occurred_at,
       payload: params.payload,
     });
-    await emitAsbEvent({
-      event_id: crypto.randomUUID(),
+    const event_id = crypto.randomUUID();
+    const result = await emitAsbEvent({
+      event_id,
       athlete_id: params.athleteId,
       topic_id: params.topic,
       actor_role: 'athlete',
@@ -53,9 +54,13 @@ async function emitDayTypeAsbEvent(params: {
       causality_refs: [],
       lineage_refs: [],
     });
+    console.info('[onboarding] emit', { topic_id: params.topic, athlete_id: params.athleteId, ok: result.ok });
+    if (result.ok) return { ok: true, event_id: result.event_id };
+    return { ok: false, code: result.code, message: result.message };
   } catch (e) {
-    // Additive emission: never break the legacy path.
-    console.error('[asb] day_type emit guard', (e as Error)?.message);
+    const message = (e as Error)?.message ?? 'unknown';
+    console.error('[asb] day_type emit guard', message);
+    return { ok: false, message };
   }
 }
 
