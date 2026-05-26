@@ -13,10 +13,13 @@ interface EnvPayload {
 }
 
 export const environmentModulator: Modulator = (ctx) => {
-  const recent = pickAll(ctx.rows, "env.").filter((r) => {
-    const age =
-      (Date.now() - new Date(r.occurred_at).getTime()) / (1000 * 60 * 60);
-    return age <= 72; // last 3 days
+  // Determinism: derive "now" from newest event in scope, not wall clock.
+  const all = pickAll(ctx.rows, "env.");
+  const newestTs = all[0]?.occurred_at;
+  const nowMs = newestTs ? new Date(newestTs).getTime() : 0;
+  const recent = all.filter((r) => {
+    const age = (nowMs - new Date(r.occurred_at).getTime()) / (1000 * 60 * 60);
+    return age <= 72; // last 3 days relative to most recent env event
   });
   if (recent.length === 0) return { ...PASS_THROUGH, domain: "environment" };
 
