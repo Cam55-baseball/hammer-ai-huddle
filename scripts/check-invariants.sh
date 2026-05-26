@@ -27,9 +27,15 @@ if rg -n 'sha256\(|SHA-256' "$SRC" \
 fi
 
 note "3) no subsystem imports another subsystem's projections.ts"
+# Surface dirs that legitimately belong to each subsystem (consumers of own projections).
+declare -A SURFACE_DIRS=( [digest]="digest forecast" [coach]="coach coach-console" )
 for sub in digest coach; do
+  excludes=()
+  for s in ${SURFACE_DIRS[$sub]}; do
+    excludes+=(--glob "!**/$s/**" --glob "!**/pages/Coach*" --glob "!**/pages/Athlete*")
+  done
   others=$(rg -l "from ['\"]@/lib/$sub/projections" "$SRC" \
-           --glob "!**/$sub/**" --glob '!**/invariants/**' --glob '!**/__tests__/**' || true)
+           "${excludes[@]}" --glob '!**/invariants/**' --glob '!**/__tests__/**' || true)
   if [ -n "$others" ]; then
     violate "cross-subsystem import of $sub/projections in: $others"
   fi
