@@ -1,99 +1,37 @@
 ## Goal
 
-Replace the raw, jargon-y strings shown in the Command Center (`/command`) and the onboarding "Event recorded" confirm stage with human-readable labels, while keeping the canonical `topic_id`, `engine_version`, and `event_id` visible as secondary lineage metadata (one click away from replay). No changes to the emission pipeline, projections, or replay paths.
+Replace remaining raw/jargon strings on `/command` (and the shared engine version badge) with plain-English copy, while keeping canonical IDs visible as captions/tooltips so replay lineage stays one click away.
 
-## Where the raw text lives today
+## Changes
 
-- **Onboarding confirm (step 3, `src/pages/AthleteOnboarding.tsx` lines 194–226)**
-  - Bare mono `athlete.schedule.day_type`
-  - `EngineVersionBadge` rendering `engine asb-1.0.0· schema v1` (no space, no human framing)
-  - `event_id: 16ab1cfb-…` shown as a wall of UUID
-- **Command Center cards**
-  - `EscalationBanner.tsx` — `Most recent: <topic_id>` raw mono
-  - `cards/RecentEventsPreview.tsx` — list of raw topic_ids
-  - `cards/EscalationFlagsCard.tsx` — raw topic_ids
-  - `NotificationBell.tsx` — raw topic_ids per item
+### 1. `src/components/asb/EngineVersionBadge.tsx` (presentation only)
+Change visible label from:
+- `engine asb-1.0.0 · schema v1`
 
-## Approach
+to:
+- `Recorded by asb-1.0.0 · schema 1`
 
-Add a tiny presentation layer that maps canonical `topic_id`s to human labels. Canonical strings stay in the DOM as captions / tooltips so lineage drilldown remains one interaction away (per the project's replay-visibility rule).
+Keep the existing tooltip (full `engine_version`, `schema_version`, released/deprecated/notes) unchanged — that's where the raw canonical metadata stays accessible. Used by both the onboarding confirm card and every command-center card, so this single edit fixes the onboarding instance too.
 
-### 1. New: `src/lib/asb/topicLabels.ts`
+### 2. Card subtitles in `src/components/command/cards/`
 
-Pure map + helpers, no I/O:
+Humanize the `subtitle` prop passed to `IntelligenceCardShell`. Card titles, icons, projection logic, and the `topicId` caption rendered inside `IntelligenceCardShell` are unchanged — raw topic stays visible there.
 
-```ts
-export function topicLabel(topicId: string): string
-export function topicDescription(topicId: string): string | undefined
-```
+| File | Current subtitle | New subtitle |
+|---|---|---|
+| `FatigueCard.tsx` | `Latest behavioral.fatigue.* event` | `Most recent fatigue signal` |
+| `BehavioralRegulationCard.tsx` | `Latest behavioral.* organism-state event` | `Most recent behavioral state signal` |
+| `SchedulingLoadCard.tsx` | `Raw day_type distribution across recent window` | `How your day types break down lately` |
+| `WorkloadCard.tsx` | `Scheduled day_type events in the trailing 7 days` | `Days you've scheduled in the last week` |
+| `EscalationFlagsCard.tsx` | `foundation.pattern.* + behavioral.escalation/risk.*` | `Pattern, escalation, and risk flags` |
 
-Covers every topic seeded in `20260526172412_…sql` plus the escalation prefix families (`foundation.pattern.*`, `behavioral.escalation.*`, `behavioral.risk.*`). Examples:
-
-- `athlete.schedule.day_type` → "Day type declared"
-- `onboarding.step_completed` → "Onboarding step completed"
-- `prescription.daily.rendered` → "Daily prescription rendered"
-- `session.block.completed` → "Session block completed"
-- prefix `foundation.pattern` → "Foundation pattern flag"
-- prefix `behavioral.escalation` → "Behavioral escalation"
-- prefix `behavioral.risk` → "Behavioral risk signal"
-
-Fallback: title-case the last segment; if still unknown, return the raw `topic_id`. The raw id is never lost — callers render it as a small caption.
-
-### 2. New: `src/components/command/TopicLabel.tsx`
-
-Small reusable presentational component:
-
-```
-<TopicLabel id={topic_id} />
-→  Day type declared
-    athlete.schedule.day_type          ← muted, font-mono, text-[10px]
-```
-
-Variant prop `inline` to render single-line ("Day type declared · `athlete.schedule.day_type`") for the escalation banner.
-
-### 3. Edit `src/pages/AthleteOnboarding.tsx` (step 3 block only)
-
-Restructure the confirm card body:
-
-```
-Day type declared                       ← human label, text-sm font-medium
-athlete.schedule.day_type               ← muted mono caption
-[Engine asb-1.0.0 · schema v1]          ← existing badge, prefixed with "Recorded by"
-Event reference  16ab1cfb…f1aed6  📋    ← short id + copy; full id in title attr
-```
-
-No changes to handlers, no changes to `goNext()` gating, no changes to `EngineVersionBadge` itself.
-
-### 4. Edit Command Center components
-
-Swap each raw `{topic_id}` render for `<TopicLabel id={r.topic_id} />` (or `inline` variant in the banner):
-
-- `EscalationBanner.tsx` — "Most recent: Behavioral escalation" with mono `topic_id` as caption beneath.
-- `cards/RecentEventsPreview.tsx` — human label as primary line, topic_id as `text-[10px]` caption alongside `occurred_at`.
-- `cards/EscalationFlagsCard.tsx` — human label per row; keep "replay →" link unchanged.
-- `NotificationBell.tsx` — human label per item; keep ack-on-click and the unacked dot unchanged.
-
-The `subtitle` on `EscalationFlagsCard` ("foundation.pattern.* + behavioral.escalation/risk.*") is intentionally engineer-facing meta — leave it alone unless you want it humanized too.
-
-## Files touched
-
-- **new** `src/lib/asb/topicLabels.ts`
-- **new** `src/components/command/TopicLabel.tsx`
-- **edit** `src/pages/AthleteOnboarding.tsx` (step 3 section only, ~lines 194–226)
-- **edit** `src/components/command/EscalationBanner.tsx`
-- **edit** `src/components/command/cards/RecentEventsPreview.tsx`
-- **edit** `src/components/command/cards/EscalationFlagsCard.tsx`
-- **edit** `src/components/command/NotificationBell.tsx`
-
-## Out of scope
-
-- No changes to emission, hooks, projections, replay routes, or migrations.
-- `EngineVersionBadge` markup stays as-is (used in 5+ places); the onboarding card just frames it better.
-- Engineer-facing surfaces (`/replay/:id`, `/timeline`, owner ops) keep raw ids — that's their job.
+### 3. Out of scope
+- No changes to data hooks, projections, emit pipeline, ledger, migrations, or replay routes.
+- No changes to engineer-facing surfaces (`/timeline`, `/replay/:id`, ops pages) — raw IDs there are intentional.
+- `ReadinessCard` and `RecoveryCard` subtitles are already human-readable; left alone.
+- `TopicLabel` caption inside each card body keeps raw `topic_id` visible (lineage one click away).
 
 ## Verification
 
-1. `/onboarding/athlete` → reach step 3 → confirm card shows "Day type declared", short event ref, and properly-spaced engine badge.
-2. `/command` → escalation banner, recent activity, escalation flags card, and notification bell all show human labels with raw topic_ids as captions.
-3. Replay links still open `/replay/:event_id` unchanged.
-4. `bash scripts/check-invariants.sh` still passes (no canonical-event or topic-registry surface touched).
+- Visual check of `/command` and the onboarding confirm step.
+- All 19 CI invariant rules still pass (no source-of-truth changes).

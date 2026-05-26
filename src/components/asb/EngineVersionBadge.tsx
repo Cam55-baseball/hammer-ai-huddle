@@ -18,11 +18,11 @@ export function EngineVersionBadge({ engineVersion }: Props) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className="gap-1 font-mono text-xs">
+          <Badge variant="outline" className="gap-1 text-xs">
             <ShieldCheck className="h-3 w-3" />
-            engine {engineVersion}
+            <span>Recorded by <span className="font-mono">{engineVersion}</span></span>
             {data && (
-              <span className="text-muted-foreground">· schema v{data.schema_version}</span>
+              <span className="text-muted-foreground">· schema {data.schema_version}</span>
             )}
           </Badge>
         </TooltipTrigger>
