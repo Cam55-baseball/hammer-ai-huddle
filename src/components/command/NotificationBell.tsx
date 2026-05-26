@@ -11,6 +11,7 @@ import {
   useEscalationFeed,
   useAcknowledgeEscalation,
 } from "@/hooks/command/useEscalationFeed";
+import { topicLabel } from "@/lib/asb/topicLabels";
 
 /**
  * Header-mounted bell with unacked escalation count.
