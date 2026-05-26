@@ -41,6 +41,15 @@ if rg -n 'sensor\.heart_rate|sensor\.hrv|sensor\.sleep|sensor\.external_load|sen
   violate "sensor topic strings appearing outside registry"
 fi
 
+note "5) runtime surfaces may only write via emitRuntimeEvent / emitAsbEvent"
+RUNTIME_GLOBS=(--glob 'src/pages/Today*.tsx' --glob 'src/components/runtime/**')
+if rg -n "supabase\.from\(['\"]asb_events['\"]\)\s*\.insert" "${RUNTIME_GLOBS[@]}" "$SRC"; then
+  violate "runtime surface writes directly to asb_events (must use emitRuntimeEvent)"
+fi
+if rg -n "from ['\"]@/lib/asb/replay['\"]" "${RUNTIME_GLOBS[@]}" "$SRC"; then
+  violate "runtime surface imports replay engine (read-only projection rule)"
+fi
+
 if [ "$FAILED" -ne 0 ]; then
   echo "[invariants] FAILED"
   exit 1
