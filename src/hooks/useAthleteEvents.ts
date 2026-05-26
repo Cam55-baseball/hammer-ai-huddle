@@ -54,7 +54,6 @@ async function emitDayTypeAsbEvent(params: {
       causality_refs: [],
       lineage_refs: [],
     });
-    console.info('[onboarding] emit', { topic_id: params.topic, athlete_id: params.athleteId, ok: result.ok });
     if (result.ok) return { ok: true, event_id: result.event_id };
     return { ok: false, code: result.code, message: result.message };
   } catch (e) {
