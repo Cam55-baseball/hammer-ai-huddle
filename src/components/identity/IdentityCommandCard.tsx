@@ -30,10 +30,10 @@ const COLLAPSE_KEY = 'hm:identityCard:collapsedDate';
 // Day intent meta — kept in sync with the old DayControlCard / DayStateBanner
 // ─────────────────────────────────────────────────────────────────────────────
 const DAY_META: Record<DayType, { label: string; explanation: string; chipClass: string }> = {
-  rest:     { label: 'REST',     explanation: 'Recovery supports performance. Streak protected. Non-Negotiables waived for today.', chipClass: 'bg-sky-500/15 text-sky-300 border-sky-500/40' },
+  rest:     { label: 'REST',     explanation: 'Recovery supports performance. Streak protected. Non-Negotiables waived for today.', chipClass: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25' },
   skip:     { label: 'SKIP',     explanation: 'Day ignored. No progress. No recovery credit.',                                       chipClass: 'bg-muted text-muted-foreground border-border' },
-  push:     { label: 'PUSH',     explanation: 'Higher standard today. Extra output expected.',                                        chipClass: 'bg-amber-500/15 text-amber-300 border-amber-500/40' },
-  standard: { label: 'STANDARD', explanation: 'Operate at your current identity standard.',                                           chipClass: 'bg-background/60 text-muted-foreground border-border' },
+  push:     { label: 'PUSH',     explanation: 'Higher standard today. Extra output expected.',                                        chipClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25' },
+  standard: { label: 'STANDARD', explanation: 'Operate at your current identity standard.',                                           chipClass: 'bg-muted text-muted-foreground border-border' },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -94,22 +94,40 @@ function formatEvent(ev: BehavioralEvent): { text: string; tone: string; Icon: a
       return { text: `Back on track. +${d}%. LOCKED IN.`, tone: toneFor('consistency_recover'), Icon: TrendingUp };
     }
     default:
-      return { text: 'Update available.', tone: 'border-border bg-card text-foreground', Icon: AlertTriangle };
+      return { text: 'Update available.', tone: 'sky', Icon: AlertTriangle };
   }
 }
 
 function toneFor(type: string) {
-  const map: Record<string, string> = {
-    nn_miss: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
-    streak_risk: 'border-amber-500/50 bg-amber-500/10 text-amber-200',
-    rest_overuse: 'border-orange-500/40 bg-orange-500/10 text-orange-200',
-    consistency_drop: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-    consistency_recover: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
-    coaching_insight: 'border-sky-500/40 bg-sky-500/10 text-sky-200',
-    identity_tier_change: 'border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200',
+  // Returns a color key. Surface stays neutral; only a thin left bar +
+  // the icon carry the semantic color.
+  const map: Record<string, 'rose' | 'amber' | 'orange' | 'emerald' | 'sky' | 'fuchsia'> = {
+    nn_miss: 'rose',
+    streak_risk: 'amber',
+    rest_overuse: 'orange',
+    consistency_drop: 'amber',
+    consistency_recover: 'emerald',
+    coaching_insight: 'sky',
+    identity_tier_change: 'fuchsia',
   };
-  return map[type] ?? 'border-border bg-card text-foreground';
+  return map[type] ?? 'sky';
 }
+const BAR_BY_TONE: Record<string, string> = {
+  rose: 'bg-rose-500',
+  amber: 'bg-amber-500',
+  orange: 'bg-orange-500',
+  emerald: 'bg-emerald-500',
+  sky: 'bg-sky-500',
+  fuchsia: 'bg-fuchsia-500',
+};
+const ICON_BY_TONE: Record<string, string> = {
+  rose: 'text-rose-500',
+  amber: 'text-amber-500',
+  orange: 'text-orange-500',
+  emerald: 'text-emerald-500',
+  sky: 'text-sky-500',
+  fuchsia: 'text-fuchsia-500',
+};
 function iconFor(type: string): any {
   const map: Record<string, any> = {
     nn_miss: AlertTriangle, streak_risk: Flame, rest_overuse: Moon,
@@ -245,14 +263,12 @@ export function IdentityCommandCard({ className }: Props) {
     <TooltipProvider delayDuration={200}>
       <div
         className={cn(
-          'relative overflow-hidden rounded-2xl border-2 bg-card text-foreground shadow-lg',
-          ring, className,
+          'relative overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm',
+          className,
         )}
       >
-        {/* Tier accent overlay (subtle, doesn't kill contrast) */}
-        <div className={cn('pointer-events-none absolute inset-0 opacity-60 bg-gradient-to-br', bg)} />
-        {/* Top tier-color accent bar */}
-        <div className="pointer-events-none absolute top-0 left-0 right-0 h-1 bg-primary/80" />
+        {/* Thin tier accent — only colored signal on the surface */}
+        <div className={cn('pointer-events-none absolute inset-y-0 left-0 w-[3px]', accent)} aria-hidden />
 
         {/* ─── Always-visible header (acts as the toggle) ──────────────── */}
         <button
@@ -260,18 +276,18 @@ export function IdentityCommandCard({ className }: Props) {
           onClick={handleToggle}
           aria-expanded={open}
           aria-label={open ? 'Collapse identity card' : 'Open identity card'}
-          className="relative w-full text-left px-3 sm:px-4 py-3 hover:bg-background/30 transition-colors"
+          className="relative w-full text-left px-4 py-3.5 sm:px-5 hover:bg-muted/40 transition-colors"
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/70">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Identity
                 </span>
                 {dayType !== 'standard' && (
                   <span
                     className={cn(
-                      'text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border',
+                      'text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded border',
                       dayMeta.chipClass,
                     )}
                   >
@@ -280,14 +296,14 @@ export function IdentityCommandCard({ className }: Props) {
                 )}
               </div>
 
-              <div className="mt-1 flex items-end justify-between gap-3 sm:block">
+              <div className="mt-1.5 flex items-end justify-between gap-3 sm:block">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className={cn('text-2xl font-black tracking-tight leading-tight sm:text-2xl break-words drop-shadow-sm', tone)}>
+                    <span className={cn('text-2xl font-bold tracking-tight leading-tight break-words', tone)}>
                       {label}
                     </span>
                     {standardConfirmed && (
-                      <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/40 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 px-1.5 py-0.5 rounded">
                         ✓ Confirmed
                       </span>
                     )}
@@ -296,14 +312,10 @@ export function IdentityCommandCard({ className }: Props) {
 
                 {/* Mobile-only score */}
                 <div className="flex flex-col items-end shrink-0 sm:hidden">
-                  <div className={cn(
-                    'rounded-lg border px-2.5 py-1',
-                    'text-3xl font-black tabular-nums leading-none',
-                    chip,
-                  )}>
+                  <div className={cn('text-3xl font-bold tabular-nums leading-none', scoreText)}>
                     {score}
                   </div>
-                  <div className="mt-1 text-[9px] font-black uppercase tracking-widest text-foreground/70">
+                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                     Consistency
                   </div>
                 </div>
@@ -312,14 +324,10 @@ export function IdentityCommandCard({ className }: Props) {
 
             {/* Right column on sm+ */}
             <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
-              <div className={cn(
-                'rounded-lg border px-2.5 py-1',
-                'text-3xl font-black tabular-nums leading-none',
-                chip,
-              )}>
+              <div className={cn('text-3xl font-bold tabular-nums leading-none', scoreText)}>
                 {score}
               </div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-foreground/70">
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Consistency
               </div>
             </div>
@@ -327,11 +335,11 @@ export function IdentityCommandCard({ className }: Props) {
             {/* Chevron */}
             <div className="relative shrink-0 self-start pt-0.5">
               {hasUnreadAlert && !open && (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-background animate-pulse" />
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-card animate-pulse" />
               )}
               <ChevronDown
                 className={cn(
-                  'h-5 w-5 text-foreground/80 transition-transform',
+                  'h-5 w-5 text-muted-foreground transition-transform',
                   open && 'rotate-180',
                 )}
               />
@@ -339,22 +347,26 @@ export function IdentityCommandCard({ className }: Props) {
           </div>
 
           {/* Row 3: streak chips */}
-          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/90 ring-1 ring-border px-2 py-0.5 font-bold text-foreground">
-              <Flame className="h-3 w-3 text-orange-400" />
-              {perfStreak}d perf
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 font-medium text-foreground">
+              <Flame className="h-3 w-3 text-orange-500" />
+              <span className="tabular-nums">{perfStreak}</span>
+              <span className="text-muted-foreground">d perf</span>
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-background/90 ring-1 ring-border px-2 py-0.5 font-bold text-foreground">
-              <ShieldCheck className="h-3 w-3 text-emerald-400" />
-              {discStreak}d active
+            <span className="inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 font-medium text-foreground">
+              <ShieldCheck className="h-3 w-3 text-emerald-500" />
+              <span className="tabular-nums">{discStreak}</span>
+              <span className="text-muted-foreground">d active</span>
             </span>
             {nnMiss > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/20 ring-1 ring-rose-500/40 px-2 py-0.5 font-bold text-rose-300">
-                {nnMiss} miss/7d
+              <span className="inline-flex items-center gap-1.5 h-6 rounded-full border border-rose-500/25 bg-rose-500/10 px-2.5 font-medium text-rose-700 dark:text-rose-300">
+                <span className="tabular-nums">{nnMiss}</span>
+                <span>miss/7d</span>
               </span>
             )}
           </div>
         </button>
+
 
         {/* ─── Expanded panel ─────────────────────────────────────────── */}
         <Collapsible open={open}>
