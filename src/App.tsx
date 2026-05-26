@@ -11,6 +11,7 @@ import { SportThemeProvider } from "./contexts/SportThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { QuickEditProfileProvider } from "./components/profile/QuickEditProfile";
+import { RequireCapability } from "./lib/auth/governance/requireRole";
 // Preloaded lazy imports — triggers fetch at boot, not on navigation
 const dashboardImport = () => import("./pages/Dashboard");
 const scoutDashboardImport = () => import("./pages/ScoutDashboard");
