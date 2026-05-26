@@ -14,7 +14,7 @@ export function simplify(text: string, on: boolean): string {
   if (!on) return text;
   let out = text;
   for (const [k, v] of Object.entries(PLAIN)) {
-    out = out.replaceAll(k, v);
+    out = out.split(k).join(v);
   }
   return out;
 }
