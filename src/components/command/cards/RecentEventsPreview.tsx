@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { TopicLabel } from "../TopicLabel";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 
 interface Props { rows: AsbEventRow[] | undefined; loading?: boolean }
