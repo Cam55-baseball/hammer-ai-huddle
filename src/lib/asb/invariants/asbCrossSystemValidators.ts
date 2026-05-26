@@ -13,7 +13,7 @@ import { resolveSensorTopic } from "@/lib/sensors/sensorTopicRegistry";
 import { classifyMissingness } from "@/lib/asb/constants/missingnessThresholds";
 
 export interface ParityResult {
-  subsystem: "digest" | "coach" | "forecast" | "sensor";
+  subsystem: "digest" | "coach" | "forecast" | "sensor" | "runtime";
   event_id: string;
   pass: boolean;
   mismatch_reason?: string;
