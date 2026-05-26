@@ -1,37 +1,31 @@
 ## Goal
+Replace raw canonical `topic_id` strings shown in the Weekly Digest with human-readable labels via the existing `TopicLabel` / `topicLabel()` helpers, while keeping raw IDs visible as captions/tooltips so replay lineage stays one click away.
 
-Replace remaining raw/jargon strings on `/command` (and the shared engine version badge) with plain-English copy, while keeping canonical IDs visible as captions/tooltips so replay lineage stays one click away.
+## Raw text found
+1. **`MissingSignalCard.tsx`** — chip list renders raw `topic_id` (e.g. `behavioral.fatigue.acute`) in mono font.
+2. **`DigestTimelineStrip.tsx`** — each spine chip shows raw `r.topic_id` as its main text.
+3. **`sentences.ts` → `missingSignalSentence`** — single-topic case interpolates the raw id: `1 tracked topic emitted no events this week (behavioral.fatigue.acute).`
+
+Card titles, sentences, header copy, badges (`conf`, `live/partial/stale/no signal`), and the engine badge are already humanized (engine badge was fixed earlier) — no changes needed there.
 
 ## Changes
 
-### 1. `src/components/asb/EngineVersionBadge.tsx` (presentation only)
-Change visible label from:
-- `engine asb-1.0.0 · schema v1`
+**1. `src/components/digest/MissingSignalCard.tsx`**
+- Replace each `<Badge>{t}</Badge>` chip with `<TopicLabel id={t} inline />` wrapped in a bordered chip, so the human label is primary and the raw id is the muted caption underneath (matching command center pattern).
 
-to:
-- `Recorded by asb-1.0.0 · schema 1`
+**2. `src/components/digest/DigestTimelineStrip.tsx`**
+- In each spine link, render the human label via `topicLabel(r.topic_id)` as the main line and keep the raw `topic_id` as a smaller mono caption beneath (or in the existing `title` tooltip, which already includes it).
+- Preserve `/replay/:eventId` link and timestamp line.
 
-Keep the existing tooltip (full `engine_version`, `schema_version`, released/deprecated/notes) unchanged — that's where the raw canonical metadata stays accessible. Used by both the onboarding confirm card and every command-center card, so this single edit fixes the onboarding instance too.
+**3. `src/lib/digest/sentences.ts`**
+- In `missingSignalSentence`, drop the raw-id parenthetical and use the human label: `` `1 tracked topic emitted no events this week (${topicLabel(topics[0]).label}).` ``. Import from `@/lib/asb/topicLabels`.
+- Same humanization applies to `continuationSentence`, `escalationPersistenceSentence`, and `missingnessProjectionSentence` only if called with a raw topic id; reviewing callers shows `missingnessProjectionSentence(topic, …)` could receive a raw topic — also pass it through `topicLabel().label`. (No behavioral change if callers already pass human strings.)
 
-### 2. Card subtitles in `src/components/command/cards/`
-
-Humanize the `subtitle` prop passed to `IntelligenceCardShell`. Card titles, icons, projection logic, and the `topicId` caption rendered inside `IntelligenceCardShell` are unchanged — raw topic stays visible there.
-
-| File | Current subtitle | New subtitle |
-|---|---|---|
-| `FatigueCard.tsx` | `Latest behavioral.fatigue.* event` | `Most recent fatigue signal` |
-| `BehavioralRegulationCard.tsx` | `Latest behavioral.* organism-state event` | `Most recent behavioral state signal` |
-| `SchedulingLoadCard.tsx` | `Raw day_type distribution across recent window` | `How your day types break down lately` |
-| `WorkloadCard.tsx` | `Scheduled day_type events in the trailing 7 days` | `Days you've scheduled in the last week` |
-| `EscalationFlagsCard.tsx` | `foundation.pattern.* + behavioral.escalation/risk.*` | `Pattern, escalation, and risk flags` |
-
-### 3. Out of scope
-- No changes to data hooks, projections, emit pipeline, ledger, migrations, or replay routes.
-- No changes to engineer-facing surfaces (`/timeline`, `/replay/:id`, ops pages) — raw IDs there are intentional.
-- `ReadinessCard` and `RecoveryCard` subtitles are already human-readable; left alone.
-- `TopicLabel` caption inside each card body keeps raw `topic_id` visible (lineage one click away).
+## Out of scope
+- No changes to projection logic, hooks, ledger writes, or migrations.
+- Engineer-facing surfaces (`/timeline`, `/replay/:id`) untouched.
+- `EngineVersionBadge` already humanized in earlier turn.
 
 ## Verification
-
-- Visual check of `/command` and the onboarding confirm step.
-- All 19 CI invariant rules still pass (no source-of-truth changes).
+- Visit `/digest`, confirm: missing-signal chips read e.g. "Acute fatigue signal" with raw id caption; timeline spine chips read human label with raw id in tooltip; single-topic missing sentence reads human label.
+- Replay drilldown still works from every chip.
