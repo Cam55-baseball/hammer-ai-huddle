@@ -11,7 +11,7 @@ export function WorkloadCard({ rows, loading }: Props) {
   return (
     <IntelligenceCardShell
       title="Workload (7d)"
-      subtitle="Scheduled day_type events in the trailing 7 days"
+      subtitle="Days you've scheduled in the last week"
       icon={<Dumbbell className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
