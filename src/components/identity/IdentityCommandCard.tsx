@@ -94,7 +94,7 @@ function formatEvent(ev: BehavioralEvent): { text: string; tone: string; Icon: a
       return { text: `Back on track. +${d}%. LOCKED IN.`, tone: toneFor('consistency_recover'), Icon: TrendingUp };
     }
     default:
-      return { text: 'Update available.', tone: 'border-border bg-card text-foreground', Icon: AlertTriangle };
+      return { text: 'Update available.', tone: 'sky', Icon: AlertTriangle };
   }
 }
 
