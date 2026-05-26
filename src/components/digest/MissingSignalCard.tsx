@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { CircleSlash } from "lucide-react";
+import { TopicLabel } from "@/components/command/TopicLabel";
 import { missingSignalSentence } from "@/lib/digest/sentences";
 
 export function MissingSignalCard({ topics }: { topics: string[] }) {
@@ -17,9 +17,12 @@ export function MissingSignalCard({ topics }: { topics: string[] }) {
         {topics.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {topics.map((t) => (
-              <Badge key={t} variant="outline" className="font-mono text-xs">
-                {t}
-              </Badge>
+              <span
+                key={t}
+                className="rounded-md border bg-background px-2 py-1 text-xs"
+              >
+                <TopicLabel id={t} inline />
+              </span>
             ))}
           </div>
         )}
