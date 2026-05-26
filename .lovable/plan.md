@@ -1,61 +1,139 @@
-# Finish Wave 1 — Athlete Runtime Productization
+# Wave 2 — Production Hardening & Operational Survivability
 
-All core surfaces, primitives, projection logic, and event wrapper already exist. Remaining work is integration + verification only. No new doctrine, schema, or runtime authority.
+Additive overlay on the Wave 1 runtime. Zero schema rewrites, zero parallel runtimes, zero direct-table mutation. Every new surface stays event-derived, lineage-linked, replay-safe, and CI-gated.
 
-## Remaining tasks
+## Scope guardrails (non-negotiable)
 
-### 1. Route wiring (`src/App.tsx`)
-- Lazy-import `Today` and `TodaySession`.
-- Add routes:
-  - `/today` → `<Today />`
-  - `/today/session/:id` → `<TodaySession />`
-- Place behind existing auth gate alongside other athlete routes.
+- Reuse the existing `asb_events` ledger and `emitRuntimeEvent` / `emitAsbEvent` wrappers. No new write paths.
+- No new doctrine, no autonomous AI authority, no gamification, no notifications loops.
+- All new state is **derived** from events (memoized projections, never mutable truth).
+- Every new module must pass `scripts/check-invariants.sh` and the parity matrix.
 
-### 2. Coach Console integration (`src/pages/CoachConsole.tsx`)
-- Mount `ReadinessDistributionStrip` at top of the roster overview.
-- Mount `OverrideVisibilityQueue` in the operational rail next to `EscalationQueue` / `MissingSignalQueue`.
-- No layout rewrite — additive insertion only, using existing grid slots.
+## Architecture overview
 
-### 3. Parity validator extension (`src/lib/asb/invariants/asbCrossSystemValidators.ts`)
-- Add `validateRuntimeProjection(asbRow, prescription)`:
-  - `prescription.confidence <= asbRow.confidence` (never amplified)
-  - `prescription.missingness` ∈ canonical `MISSINGNESS_STATES`
-  - escalate/recovery state must trace to readiness/fatigue/recovery lineage refs present on the row
-- Register in `asbParityMatrix.ts` and `asbInvariantChecks.ts` so CI runs it.
-- Add unit tests in `src/lib/asb/invariants/__tests__/parity.test.ts` (extend existing file).
+```text
+                ┌──────────────────────────────────────┐
+                │  asb_events (append-only, sealed)    │
+                └──────────────┬───────────────────────┘
+                               │ replay
+        ┌──────────────────────┼──────────────────────┐
+        ▼                      ▼                      ▼
+   projections/*         ops-telemetry/*         recovery/*
+  (memoized, pure)     (derived counters,       (checkpoints,
+                        latency, drift)          retry orchestrator)
+        │                      │                      │
+        ▼                      ▼                      ▼
+  athlete/coach UI     /ops/* health surfaces    offline queue
+                              │                       │
+                              ▼                       ▼
+                       CI invariant gate       reconnect reconciler
+```
 
-### 4. Grep guard update (`scripts/check-invariants.sh`)
-Forbid in `src/pages/Today*.tsx`, `src/components/runtime/**`:
-- direct `supabase.from(...).insert(` on the ASB ledger table
-- imports from `@/lib/asb/replay` or ledger writers
-Only `emitRuntimeEvent` / `emitAsbEvent` may write.
+## Deliverables (10 modules, compressed)
 
-### 5. E2E scaffold (Playwright, optional minimal)
-- `tests/e2e/today.spec.ts`: load `/today`, assert PulseStrip + PrescriptionCard render with TrustFooter visible.
-- `tests/e2e/today-session.spec.ts`: start a session block, assert event emission via network spy.
-- Skip if Playwright isn't already configured — fall back to a Vitest render smoke test.
+### 1. Operational observability (`src/lib/ops/`)
+- `telemetry.ts` — pure reducers over recent events: throughput, replay timing, projection latency, override frequency, missingness escalation, confidence degradation. No writes.
+- `parityMonitor.ts` — periodic in-browser sampler running `runInvariantSuite` against a rolling window; emits `ops.parity.drift.detected` events when violations appear.
+- `queueHealth.ts` — derived view of the offline queue (size, oldest age, retry count).
 
-### 6. Final pass
-- Run `bun test src/lib/runtime src/lib/asb/invariants`.
-- Run `scripts/check-invariants.sh`.
-- Update `.lovable/plan.md` marking Wave 1 closed.
+### 2. Operational UI (`src/pages/ops/` + `src/components/ops/`)
+- `/ops/health` — runtime health console (throughput, latency, queue, parity status).
+- `/ops/replay` — replay audit explorer (pick event range, replay to projection, diff).
+- `/ops/drift` — projection drift monitor (live parity check results + lineage drilldown).
+- `/ops/deployment` — deployment integrity screen (invariant suite results, engine version, schema hash).
+- Calm, single-column, dense-but-quiet. Owner/admin only.
 
-## Files touched
+### 3. Replay recovery (`src/lib/runtime/recovery/`)
+- `checkpoints.ts` — deterministic projection checkpoints keyed by `(athlete_id, last_event_id, engine_version)`. Stored in IndexedDB, **invalidated** never mutated.
+- `replayOrchestrator.ts` — resumable replay: detect interruption → invalidate stale checkpoint → replay from prior checkpoint → re-verify lineage hash.
+- `corruptionGuard.ts` — projection self-check (hash of inputs vs stored hash); on mismatch, drop the projection and recompute. No silent repair.
 
-Edited: `src/App.tsx`, `src/pages/CoachConsole.tsx`, `src/lib/asb/invariants/asbCrossSystemValidators.ts`, `src/lib/asb/invariants/asbParityMatrix.ts`, `src/lib/asb/invariants/asbInvariantChecks.ts`, `src/lib/asb/invariants/__tests__/parity.test.ts`, `scripts/check-invariants.sh`, `.lovable/plan.md`.
+### 4. Org-scale hardening (`src/lib/asb/scope/`)
+- `orgScope.ts` — single chokepoint for `org_id` / `athlete_id` filters on every event query. All projection builders must consume scoped iterators only.
+- RLS audit pass on `asb_events` (read-only review via supabase tools); add missing policies via one additive migration if gaps found. No table changes.
+- Roster virtualization in coach console (`react-virtual`) for large rosters.
 
-Created: 1–2 lightweight smoke/E2E test files.
+### 5. Authorization & governance (`src/lib/auth/governance/`)
+- `roleMatrix.ts` — declarative matrix: `{owner, admin, coach, athlete} × {read_event, replay, override, ops_view, deployment_gate}`.
+- `requireRole.tsx` — route + component guard reading `user_roles` (existing table). No role storage on profiles.
+- `overrideAuthority.ts` — wraps `emitRuntimeEvent` for override-class topics; rejects emission if caller lacks authority; emission carries `actor_role` in payload for lineage.
 
-Zero migrations. Zero edge functions. Zero new tables. Zero new doctrine.
+### 6. Deployment & environment survivability (`scripts/` + `src/lib/bootstrap/`)
+- `scripts/preflight.sh` — runs `check-invariants.sh` + `vitest run --reporter=dot` + parity matrix sweep. Wired into CI as gate.
+- `src/lib/bootstrap/bootValidation.ts` — on app boot, verifies engine version + invariant hash + projection schema; on mismatch, blocks runtime surfaces and routes user to `/ops/deployment`.
+- Rollback survivability: checkpoints tagged with `engine_version`; mismatched checkpoints are invalidated, not migrated.
 
----
+### 7. Offline + low-bandwidth continuity (`src/lib/runtime/offline/`)
+- `eventQueue.ts` — IndexedDB-backed append-only outbox. `emitRuntimeEvent` enqueues locally first, then flushes.
+- `reconciler.ts` — on reconnect: dedupe by client-generated `event_uuid` (already in payload schema), flush in order, drop only on server-confirmed duplicate.
+- `degradedMode.tsx` — UI banner + reduced polling cadence when offline; PrescriptionCard renders last-known projection with `state="unknown"` badge if stale.
 
-## Wave 1 — CLOSED 2026-05-26
+### 8. Security & abuse safeguards (`src/lib/security/`)
+- `eventValidator.ts` — Zod schemas per topic; malformed events rejected at emission and at ingestion edge function (additive update to existing function only).
+- `tamperGuard.ts` — payload signature (HMAC with anon key salt) for spoof rejection on the server side.
+- `rateLimit.ts` — client-side soft throttle for override emission; server enforces hard cap. (Note: per directive, no new backend rate limiting infra — this is ad-hoc client throttle + existing edge function bounds.)
+- `abusePatterns.ts` — derived detector for suspicious override bursts; raises `ops.security.suspicious.detected` event.
 
-- Routes wired: `/today`, `/today/session/:id`.
-- CoachConsole mounts `ReadinessDistributionStrip` + `OverrideVisibilityQueue`.
-- `validateRuntimeProjection` added + registered in parity matrix.
-- Grep guard extended (runtime surfaces forbidden from direct ledger writes / replay imports). Subsystem #3 exclusions tightened to recognize `coach-console` + `forecast` surface dirs.
-- Tests: 18/18 pass (`src/lib/runtime` + `src/lib/asb/invariants`). Guard: PASSED.
+### 9. Performance optimization
+- Memoize all projection builders with `useMemo` keyed on `(scope, last_event_id)`.
+- Batch event queries with `in()` filters per org/athlete window.
+- Mobile: defer non-critical panels with `React.lazy`; lock LCP to `PulseStrip`.
+- Cache survivability: caches keyed by `last_event_id` → immutable; cache miss recomputes, never patches.
 
-Skipped Playwright E2E (no Playwright in repo); Vitest coverage of `buildDailyPrescription` + runtime parity is in place.
+### 10. Production testing suite (`tests/` + `src/lib/asb/invariants/__tests__/`)
+- `scale.test.ts` — 10k-event replay sweep, asserts deterministic projection hash.
+- `concurrency.test.ts` — interleaved emissions across athletes, asserts no cross-scope leakage.
+- `offline.test.ts` — queue → disconnect → reconnect → dedupe assertions.
+- `authz.test.ts` — role matrix boundary tests.
+- `drift.test.ts` — malformed-event injection, asserts rejection + parity preservation.
+- `replay-stress.test.ts` — repeated full replay, asserts byte-identical projections.
+- CI fails on: parity drift, replay divergence, authority leakage, hidden mutation (grep guard extended).
+
+## CI enforcement expansion (`scripts/check-invariants.sh`)
+Add forbids:
+- direct writes to `asb_events` outside `emitRuntimeEvent` / `emitAsbEvent`
+- `localStorage`/`sessionStorage` writes carrying runtime truth (allowlist: queue, checkpoints)
+- role checks against `profiles` table
+- imports from `src/pages/ops/*` outside `src/pages/ops/*` and `src/App.tsx`
+
+## Authorization matrix (summary)
+
+```text
+                read_event  replay  override  ops_view  deploy_gate
+owner               ✓         ✓        ✓         ✓          ✓
+admin               ✓         ✓        ✓         ✓          ·
+coach (scoped)      ✓         ✓        ✓         ·          ·
+athlete (self)      ✓         ·        ✓(self)   ·          ·
+```
+
+## Rollout sequencing
+1. Observability reducers + `/ops/health` (read-only, zero risk).
+2. Checkpoints + replay orchestrator (behind feature flag).
+3. Offline queue + reconciler (behind feature flag).
+4. Role matrix + governance guards.
+5. Boot validation + preflight CI gate.
+6. Security validators + tamper guard.
+7. Performance memoization pass.
+8. Full test suite expansion + CI gate flip to required.
+
+## Operational risk map
+- **Checkpoint staleness** → mitigated by engine-version tagging + hash verify.
+- **Offline dedupe race** → mitigated by client UUID + server unique constraint check (read-only verify, no new constraint added unless gap confirmed).
+- **Parity false positives** → drift monitor emits events, never auto-mutates; humans triage in `/ops/drift`.
+- **Role escalation** → `requireRole` server-revalidates via `getUser()` + `has_role()` RPC (existing).
+
+## Files to be created (compressed list)
+`src/lib/ops/{telemetry,parityMonitor,queueHealth}.ts`
+`src/pages/ops/{Health,Replay,Drift,Deployment}.tsx` + `src/components/ops/*`
+`src/lib/runtime/recovery/{checkpoints,replayOrchestrator,corruptionGuard}.ts`
+`src/lib/asb/scope/orgScope.ts`
+`src/lib/auth/governance/{roleMatrix,requireRole,overrideAuthority}.ts`
+`src/lib/bootstrap/bootValidation.ts`
+`src/lib/runtime/offline/{eventQueue,reconciler,degradedMode}.tsx`
+`src/lib/security/{eventValidator,tamperGuard,rateLimit,abusePatterns}.ts`
+`scripts/preflight.sh` + extended `check-invariants.sh`
+`tests/{scale,concurrency,offline,authz,drift,replay-stress}.test.ts`
+Additive route wiring in `src/App.tsx`. Optional one additive RLS migration only if audit finds a gap.
+
+## Out of scope (rejected)
+New doctrine, autonomous AI, notifications, gamification, schema rewrites, parallel runtimes, mutable projections, server-side rate-limit infra (per directive).
