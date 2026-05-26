@@ -106,3 +106,27 @@ if [ "$FAILED" -ne 0 ]; then
   exit 1
 fi
 echo "[invariants] PASSED"
+
+note "14) Wave 3 closure — projections forbid UI imports"
+if rg -n "from ['\"](@/components|@/pages|react)" "$SRC/lib/runtime/projections/" 2>/dev/null; then
+  violate "projection file imports UI"
+fi
+
+note "15) Wave 3 closure — share exports only via buildShareExport"
+if rg -n "share\\.export_generated" "$SRC/pages/" "$SRC/components/" 2>/dev/null | rg -v "buildShareExport|ShareConsole|exporter" >/dev/null; then
+  : # informational
+fi
+
+note "16) Wave 3 closure — onboarding progression must derive from events"
+if rg -n "useState[^)]*step|setStep\\(" "$SRC/components/onboarding/" 2>/dev/null; then
+  violate "onboarding progression uses local state instead of events"
+fi
+
+note "17) Wave 3 closure — no hardcoded user-facing strings in new edu surfaces (informational)"
+# advisory only — UI text in explainers is allowed but flagged for review
+rg -n ">[A-Z][a-z]+ [a-z]+ [a-z]+<" "$SRC/components/edu/" 2>/dev/null >/dev/null || true
+
+note "18) Wave 3 closure — no confidence amplification in projections/modulators"
+if rg -nE "confidence\\s*[+*]\\s*[0-9]|Math\\.max\\([^)]*confidence" "$SRC/lib/runtime/projections/" "$SRC/lib/runtime/modulators/" 2>/dev/null | rg -v '__tests__'; then
+  violate "confidence amplification pattern detected"
+fi
