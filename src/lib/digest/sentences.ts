@@ -5,6 +5,7 @@
  * No psychological interpretation. No speculative coaching.
  */
 import type { DigestProjection } from "./projections";
+import { topicLabel } from "@/lib/asb/topicLabels";
 
 function direction(delta: number | null): "increased" | "decreased" | "unchanged" {
   if (delta == null) return "unchanged";
@@ -52,7 +53,8 @@ export function recoveryContinuitySentence(p: DigestProjection): string {
 
 export function missingSignalSentence(topics: string[]): string {
   if (topics.length === 0) return "All tracked topics emitted at least one event this week.";
-  if (topics.length === 1) return `1 tracked topic emitted no events this week (${topics[0]}).`;
+  if (topics.length === 1)
+    return `1 tracked topic emitted no events this week (${topicLabel(topics[0])}).`;
   return `${topics.length} tracked topics emitted no events this week.`;
 }
 

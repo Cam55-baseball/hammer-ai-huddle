@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { topicLabel } from "@/lib/asb/topicLabels";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 
 interface Props {
@@ -21,11 +22,18 @@ export function DigestTimelineStrip({ rows }: Props) {
           <Link
             key={r.event_id}
             to={`/replay/${r.event_id}`}
-            className="snap-start rounded border bg-background px-2 py-1 font-mono text-[10px] text-muted-foreground hover:border-primary hover:text-foreground"
+            className="snap-start rounded border bg-background px-2 py-1 text-[11px] text-muted-foreground hover:border-primary hover:text-foreground"
             title={`${r.topic_id} @ ${r.occurred_at}`}
           >
-            <div className="truncate max-w-[140px]">{r.topic_id}</div>
-            <div>{r.occurred_at.slice(5, 16).replace("T", " ")}</div>
+            <div className="truncate max-w-[160px] font-medium text-foreground">
+              {topicLabel(r.topic_id)}
+            </div>
+            <div className="truncate max-w-[160px] font-mono text-[10px]">
+              {r.topic_id}
+            </div>
+            <div className="font-mono text-[10px]">
+              {r.occurred_at.slice(5, 16).replace("T", " ")}
+            </div>
           </Link>
         ))}
       </div>
