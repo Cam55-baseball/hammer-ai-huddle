@@ -33,9 +33,9 @@ export function RecentEventsPreview({ rows, loading }: Props) {
           <ul className="divide-y">
             {items.map((r) => (
               <li key={r.event_id} className="flex items-center justify-between gap-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate font-mono text-xs">{r.topic_id}</p>
-                  <p className="truncate text-[10px] text-muted-foreground">{r.occurred_at}</p>
+                <div className="min-w-0 flex-1">
+                  <TopicLabel id={r.topic_id} />
+                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{r.occurred_at}</p>
                 </div>
                 <Link
                   to={`/replay/${r.event_id}`}
