@@ -20,7 +20,7 @@ export function EscalationBanner() {
           {unackedCount} unacknowledged escalation{unackedCount === 1 ? "" : "s"}
         </div>
         <div className="truncate text-xs text-muted-foreground">
-          Most recent: <span className="font-mono">{first.event.topic_id}</span>
+          Most recent: <TopicLabel id={first.event.topic_id} inline />
         </div>
       </div>
       <Link
