@@ -85,6 +85,10 @@ const CoachDigest = lazyWithRetry(() => import("./pages/CoachDigest"));
 const ForecastSurface = lazyWithRetry(() => import("./pages/ForecastSurface"));
 const Today = lazyWithRetry(() => import("./pages/Today"));
 const TodaySession = lazyWithRetry(() => import("./pages/TodaySession"));
+const OpsHealth = lazyWithRetry(() => import("./pages/ops/OpsHealth"));
+const OpsReplay = lazyWithRetry(() => import("./pages/ops/OpsReplay"));
+const OpsDrift = lazyWithRetry(() => import("./pages/ops/OpsDrift"));
+const OpsDeployment = lazyWithRetry(() => import("./pages/ops/OpsDeployment"));
 
 const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
@@ -196,6 +200,38 @@ const App = () => {
               <Route path="/command" element={<AthleteCommand />} />
               <Route path="/today" element={<Today />} />
               <Route path="/today/session/:id" element={<TodaySession />} />
+              <Route
+                path="/ops/health"
+                element={
+                  <RequireCapability capability="ops_view">
+                    <OpsHealth />
+                  </RequireCapability>
+                }
+              />
+              <Route
+                path="/ops/replay"
+                element={
+                  <RequireCapability capability="replay">
+                    <OpsReplay />
+                  </RequireCapability>
+                }
+              />
+              <Route
+                path="/ops/drift"
+                element={
+                  <RequireCapability capability="ops_view">
+                    <OpsDrift />
+                  </RequireCapability>
+                }
+              />
+              <Route
+                path="/ops/deployment"
+                element={
+                  <RequireCapability capability="deployment_gate">
+                    <OpsDeployment />
+                  </RequireCapability>
+                }
+              />
               <Route path="/onboarding/athlete" element={<AthleteOnboarding />} />
               <Route path="/settings/notifications" element={<NotificationsSettings />} />
               <Route path="/coach/console" element={<CoachConsole />} />
