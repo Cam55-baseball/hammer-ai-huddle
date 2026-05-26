@@ -38,7 +38,11 @@ export interface AsbLineageEdge {
   engine_version: string;
 }
 
-export async function emitAsbEvent(row: AsbEmitRow): Promise<void> {
+export type EmitResult =
+  | { ok: true; event_id: string; deduped?: boolean }
+  | { ok: false; code?: string; message: string };
+
+export async function emitAsbEvent(row: AsbEmitRow): Promise<EmitResult> {
   try {
     const { error } = await supabase.from("asb_events").insert(row as never);
     if (!error) {
@@ -47,26 +51,30 @@ export async function emitAsbEvent(row: AsbEmitRow): Promise<void> {
         topic_id: row.topic_id,
         engine_version: row.engine_version,
       });
-      return;
+      return { ok: true, event_id: row.event_id };
     }
-    // Postgres unique_violation
+    // Postgres unique_violation → idempotent dedupe
     if ((error as { code?: string }).code === "23505") {
       console.info("[asb] dedupe", {
         idempotency_key: row.idempotency_key,
         topic_id: row.topic_id,
       });
-      return;
+      return { ok: true, event_id: row.event_id, deduped: true };
     }
     console.error("[asb] emit_failed", {
       topic_id: row.topic_id,
       code: (error as { code?: string }).code,
       message: error.message,
     });
+    return {
+      ok: false,
+      code: (error as { code?: string }).code,
+      message: error.message,
+    };
   } catch (e) {
-    console.error("[asb] emit_threw", {
-      topic_id: row.topic_id,
-      message: (e as Error)?.message,
-    });
+    const message = (e as Error)?.message ?? "unknown emit failure";
+    console.error("[asb] emit_threw", { topic_id: row.topic_id, message });
+    return { ok: false, message };
   }
 }
 
