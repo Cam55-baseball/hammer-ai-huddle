@@ -164,8 +164,9 @@ export function useAthleteEvents() {
         .eq('event_date', input.eventDate)
         .maybeSingle();
 
-      // Additive canonical ASB emission. Non-blocking; failures never break legacy.
-      void emitDayTypeAsbEvent({
+      // Canonical ASB emission — now awaited so callers (e.g. onboarding) can
+      // gate UI advancement on real ledger append, not legacy-row presence.
+      const asb = await emitDayTypeAsbEvent({
         athleteId: user.id,
         topic: ASB_TOPIC_DAY_TYPE,
         eventDate: input.eventDate,
@@ -179,6 +180,11 @@ export function useAthleteEvents() {
           legacy_event_id: data?.id ?? null,
         },
       });
+      if (!asb.ok) {
+        // Legacy row already written; surface the canonical failure so the UI
+        // can decide (onboarding blocks; legacy callers ignore).
+        return { ...(data ? mapEvent(data) : ({} as AthleteEvent)), _asbError: asb } as AthleteEvent & { _asbError?: typeof asb };
+      }
 
       return data ? mapEvent(data) : null;
     } catch (error) {
