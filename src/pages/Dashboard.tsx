@@ -553,7 +553,7 @@ export default function Dashboard() {
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <GamePlanCollapsible selectedSport={selectedSport} />
+          <GamePlanCard selectedSport={selectedSport} />
         )}
 
         {/* Long-term Hammer video picks — athletes only */}
