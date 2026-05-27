@@ -25,7 +25,7 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCollapsible } from "@/components/dashboard/GamePlanCollapsible";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
-import { CommandCenterSection } from "@/components/command/CommandCenterSection";
+import { CommandCenterCollapsible } from "@/components/dashboard/CommandCenterCollapsible";
 import { QuickActionsCard } from "@/components/identity/QuickActionsCard";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { toast } from "sonner";
