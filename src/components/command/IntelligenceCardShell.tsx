@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EngineVersionBadge } from "@/components/asb/EngineVersionBadge";
 import { ConfidencePill } from "./ConfidencePill";
 import { MissingnessChip } from "./MissingnessChip";
 import { LineageDrilldownButton } from "./LineageDrilldownButton";
@@ -57,25 +56,21 @@ export function IntelligenceCardShell({
             children
           ) : (
             <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 px-3 py-4 text-sm text-muted-foreground">
-              {emptyMessage}
+              {emptyMessage || "Not enough info yet"}
             </div>
           )}
         </div>
 
-        <div className="flex min-h-11 flex-wrap items-center gap-2 border-t pt-3">
+        <div
+          className="flex min-h-11 flex-wrap items-center gap-2 border-t pt-3"
+          title={projection.engineVersion ? `engine ${projection.engineVersion}${projection.occurredAt ? ` · ${projection.occurredAt}` : ""}` : undefined}
+        >
           <ConfidencePill confidence={projection.confidence} />
           <MissingnessChip missingness={projection.missingness} />
-          {projection.engineVersion && <EngineVersionBadge engineVersion={projection.engineVersion} />}
           <div className="ml-auto">
             <LineageDrilldownButton sourceEventId={projection.sourceEventId} />
           </div>
         </div>
-
-        {projection.occurredAt && (
-          <p className="text-[10px] font-mono text-muted-foreground">
-            occurred_at {projection.occurredAt}
-          </p>
-        )}
       </CardContent>
     </Card>
   );

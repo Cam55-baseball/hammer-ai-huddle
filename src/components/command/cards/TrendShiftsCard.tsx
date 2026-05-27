@@ -57,7 +57,7 @@ export function TrendShiftsCard({ rows, loading }: Props) {
           return (
             <li key={t.prefix} className="flex items-center justify-between text-sm">
               <span>{t.label}</span>
-              <span className="flex items-center gap-1 font-mono tabular-nums">
+              <span className="flex items-center gap-1 tabular-nums">
                 <Icon className="h-3 w-3" />
                 {t.delta == null ? "—" : (t.delta > 0 ? "+" : "") + t.delta.toFixed(2)}
               </span>

@@ -48,7 +48,7 @@ export function CommandCenterSection({ compact = false, defaultSignalsOpen = fal
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="w-full min-h-11 justify-between">
               <span className="text-sm font-medium">
-                {showSignals ? "Hide" : "Show"} habits, schedule & trends
+                {showSignals ? "Hide details" : "Show more details"}
               </span>
               <ChevronDown
                 className={`h-4 w-4 transition-transform motion-reduce:transition-none ${showSignals ? "rotate-180" : ""}`}

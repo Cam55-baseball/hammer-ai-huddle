@@ -8,9 +8,9 @@ interface Props {
 }
 
 const META: Record<Exclude<Missingness, null>, { label: string; tip: string; icon: typeof CircleAlert; cls: string }> = {
-  no_signal: { label: "no signal", tip: "No source event for this topic yet.", icon: CircleSlash, cls: "text-muted-foreground" },
-  stale: { label: "stale", tip: "Source event exists but is older than the freshness window.", icon: CircleAlert, cls: "text-destructive" },
-  partial: { label: "partial", tip: "Source event declares partial coverage.", icon: CircleHelp, cls: "text-muted-foreground" },
+  no_signal: { label: "No info yet", tip: "Nothing logged for this yet.", icon: CircleSlash, cls: "text-muted-foreground" },
+  stale: { label: "Needs a fresh check-in", tip: "It's been a while since your last update.", icon: CircleAlert, cls: "text-destructive" },
+  partial: { label: "Some info missing", tip: "We have some of the info, but not all of it.", icon: CircleHelp, cls: "text-muted-foreground" },
 };
 
 export function MissingnessChip({ missingness }: Props) {
@@ -19,12 +19,12 @@ export function MissingnessChip({ missingness }: Props) {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant="outline" className="gap-1 font-mono text-xs">
+            <Badge variant="outline" className="gap-1 text-xs">
               <CircleCheck className="h-3 w-3" />
-              live
+              Up to date
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>Source event present and within freshness window.</TooltipContent>
+          <TooltipContent>Your recent check-ins are current.</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
@@ -35,7 +35,7 @@ export function MissingnessChip({ missingness }: Props) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className={`gap-1 font-mono text-xs ${m.cls}`}>
+          <Badge variant="outline" className={`gap-1 text-xs ${m.cls}`}>
             <Icon className="h-3 w-3" />
             {m.label}
           </Badge>

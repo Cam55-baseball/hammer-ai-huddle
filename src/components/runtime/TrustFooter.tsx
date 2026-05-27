@@ -6,7 +6,8 @@ import type { Missingness } from "@/lib/command/projections";
 /**
  * Single shared trust strip rendered at the bottom of every visible runtime
  * card. Answers "why / what / how reliable" in one tap, every time. Engine
- * version is exposed inline so replay validity is never opaque.
+ * version stays in the DOM as a title attribute so replay validity remains
+ * traceable to ops without leaking engineering vocabulary into athlete UI.
  */
 export function TrustFooter({
   confidence,
@@ -21,16 +22,17 @@ export function TrustFooter({
   engineVersion?: string | null;
   occurredAt?: string | null;
 }) {
+  const title = engineVersion
+    ? `engine ${engineVersion}${occurredAt ? ` · ${occurredAt}` : ""}`
+    : occurredAt ?? undefined;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
+    <div
+      className="flex flex-wrap items-center justify-between gap-2"
+      title={title}
+    >
       <div className="flex flex-wrap items-center gap-1.5">
         <ConfidencePill confidence={confidence} />
         <MissingnessChip missingness={missingness} />
-        {engineVersion ? (
-          <span className="font-mono text-[10px] text-muted-foreground">
-            {engineVersion}
-          </span>
-        ) : null}
         {occurredAt ? (
           <span className="text-[10px] text-muted-foreground">
             {new Date(occurredAt).toLocaleString(undefined, {
