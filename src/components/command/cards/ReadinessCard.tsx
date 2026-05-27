@@ -12,7 +12,7 @@ export function ReadinessCard({ rows, loading }: Props) {
   return (
     <IntelligenceCardShell
       title="Readiness"
-      subtitle="Latest behavioral.readiness.* event"
+      subtitle="How ready you are to train today"
       icon={<Activity className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}
