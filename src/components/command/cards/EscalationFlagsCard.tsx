@@ -25,8 +25,8 @@ export function EscalationFlagsCard({ rows, loading }: Props) {
 
   return (
     <IntelligenceCardShell
-      title="Escalation flags (72h)"
-      subtitle="Pattern, escalation, and risk flags"
+      title="Needs Attention"
+      subtitle="Flags from the last 3 days"
       icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
       projection={p}
       loading={loading}
