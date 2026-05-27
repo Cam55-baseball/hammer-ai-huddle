@@ -497,70 +497,54 @@ export function IdentityCommandCard({ className }: Props) {
                 </div>
               </section>
 
-              {/* ── 3. Active Alerts ─────────────────────────────────── */}
-              <section>
-                <SectionHeader
-                  title="Active Alerts"
-                  helpText="Time-sensitive pressure events from the engine. Each alert tells you exactly what to do. Acting clears it; ignoring it chips at your consistency."
-                />
-                {allEvents && allEvents.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {allEvents.slice(0, 4).map((ev) => {
-                      const { text, tone: t, Icon } = formatEvent(ev);
-                      const actionType = ev.action_type ?? null;
-                      const actionLabel = actionType ? ACTION_LABELS[actionType] ?? 'Act' : null;
-                      return (
-                        <div
-                          key={ev.id}
-                          className={cn(
-                            'rounded-lg border px-2.5 py-2 text-xs font-semibold',
-                            'flex flex-col gap-2 sm:flex-row sm:items-center',
-                            t,
-                          )}
-                          role="status"
-                        >
-                          <div className="flex items-start gap-2 flex-1 min-w-0">
-                            <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            <span className="flex-1 min-w-0 leading-snug break-words">{text}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); acknowledge(ev.id); }}
-                              aria-label="Dismiss"
-                              className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 sm:hidden"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                          {actionType && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleEventAction(ev)}
-                              disabled={running}
-                              className="h-7 px-2 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold text-[10px] w-full sm:w-auto sm:h-6"
-                            >
-                              <Zap className="h-3 w-3" />
-                              {actionLabel}
-                            </Button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => acknowledge(ev.id)}
-                            aria-label="Dismiss"
-                            className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 hidden sm:grid"
+              {/* ── 3. One Rotating Alert (highest priority only) ────── */}
+              {rotatingAlert && (() => {
+                const sourceEvent = allEvents?.find((e) => e.id === rotatingAlert.id);
+                const Icon = iconFor(sourceEvent?.event_type ?? '');
+                const barColor = BAR_BY_TONE[rotatingAlert.tone] ?? 'bg-sky-500';
+                const iconColor = ICON_BY_TONE[rotatingAlert.tone] ?? 'text-sky-500';
+                return (
+                  <section>
+                    <SectionHeader
+                      title="One Thing"
+                      helpText="The single most important thing for you right now. Acting clears it."
+                    />
+                    <div
+                      className="relative overflow-hidden rounded-lg border border-border bg-background/40 px-3 py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center"
+                      role="status"
+                    >
+                      <div className={cn('absolute inset-y-0 left-0 w-[3px]', barColor)} aria-hidden />
+                      <div className="flex items-start gap-2 flex-1 min-w-0 pl-1">
+                        <Icon className={cn('h-3.5 w-3.5 shrink-0 mt-0.5', iconColor)} />
+                        <span className="flex-1 min-w-0 text-xs font-semibold text-foreground leading-snug break-words">
+                          {rotatingAlert.text}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {rotatingAlert.actionType && sourceEvent && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleEventAction(sourceEvent)}
+                            disabled={running}
+                            className="h-7 px-2.5 gap-1 font-bold text-[11px]"
                           >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs font-semibold text-emerald-300">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    All clear. Standard intact.
-                  </div>
-                )}
-              </section>
+                            <Zap className="h-3 w-3" />
+                            {rotatingAlert.actionLabel}
+                          </Button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => acknowledge(rotatingAlert.id)}
+                          aria-label="Dismiss"
+                          className="h-7 w-7 rounded grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+                );
+              })()}
 
             </div>
           </CollapsibleContent>
