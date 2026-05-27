@@ -44,7 +44,7 @@ export function TrendShiftsCard({ rows, loading }: Props) {
 
   return (
     <IntelligenceCardShell
-      title="Trends"
+      title="Progress Trend"
       subtitle="What's changing week over week"
       icon={<TrendingUp className="h-4 w-4 text-primary" />}
       projection={p}

@@ -11,7 +11,7 @@ export function FatigueCard({ rows, loading }: Props) {
   const score = (p.value as any)?.score ?? (p.value as any)?.value ?? null;
   return (
     <IntelligenceCardShell
-      title="Fatigue"
+      title="Energy Drain"
       subtitle="How tired your body looks today"
       icon={<BatteryLow className="h-4 w-4 text-primary" />}
       projection={p}

@@ -11,7 +11,7 @@ export function ReadinessCard({ rows, loading }: Props) {
   const score = (p.value as any)?.score ?? (p.value as any)?.value ?? null;
   return (
     <IntelligenceCardShell
-      title="Readiness"
+      title="Ready Today"
       subtitle="How ready you are to train today"
       icon={<Activity className="h-4 w-4 text-primary" />}
       projection={p}
