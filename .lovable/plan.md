@@ -1,117 +1,112 @@
-# Identity Card — Calm Runtime Refinement
+# Wave 3 — UX Simplification & Dashboard Convergence
 
-Pure presentation pass on `src/components/identity/IdentityCommandCard.tsx` and the tier tokens in `src/hooks/useIdentityState.ts`. No data, hook, ASB event, or runtime-logic changes. Trust/lineage signals stay intact; only their visual weight changes.
+Additive, presentation-only pass. No schema, no ASB runtime, no replay/lineage/confidence/parity logic touched. Every existing data hook, projection, emitter, and TrustFooter stays exactly as-is.
 
-## Diagnosis (what is causing the muddy/dark look today)
+## Scope at a glance
 
-1. **Stacked dark overlay on every theme.** The card renders `bg-card` then layers an absolute `bg-gradient-to-br from-slate-900 via-slate-950 to-black` at `opacity-60` over it (line 253). That overlay is applied in **every** tier and ignores light mode, producing the tinted/muddy surface.
-2. **Neon glow shadows + colored ring** (`shadow-[0_0_60px_-12px_...]`, `ring-fuchsia-500/40`, etc.) push it toward gamer/crypto aesthetic.
-3. **Chip palette `bg-white/5 text-slate-100 border-white/10`** is invisible on a calm surface and only "works" because of the dark overlay.
-4. **Low-contrast text:** `text-foreground/70`, `/80`, `/85` used for headers, helper copy, score label.
-5. **Inconsistent chip surfaces:** `bg-background/30`, `/40`, `/60`, `/90` mixed across header, streak chips, day-budget chip.
-6. **Pressure-event tones** (`bg-rose-500/10 text-rose-200`) are saturated dashboard chips; on a clean surface they read as heavy.
-7. **Score badge** uses tier `chip` token so the consistency number competes with the tier label instead of being the calm anchor.
-
-## Target aesthetic
-
-Elite sports-medicine / Apple-clarity: one solid surface, one thin tier accent, neutral chips, color used only as small dots/text, generous spacing, single vertical scan.
-
-## Changes
-
-### A. `src/hooks/useIdentityState.ts` — calmer tier tokens
-- Remove `DARK_SURFACE` gradient. Set `bg: ''` for every tier (no overlay).
-- Remove `glow` neon shadow strings; set `glow: ''`.
-- Soften `ring` to `ring-border` for all tiers (neutral) — tier color moves to a single 3px left accent bar + the score color.
-- Replace `chip` with a single neutral token: `bg-muted/60 text-foreground border-border` (works in light + dark).
-- Keep `accent` (used for the left bar) and `scoreText` (the only saturated color on the card) per tier.
-- `pill` keeps tier color but with reduced saturation: `bg-{tier}-500/10 text-{tier}-600 dark:text-{tier}-300 border-{tier}-500/25`.
-
-### B. `IdentityCommandCard.tsx` — surface, hierarchy, chips
-
-**Container (lines 246-256)**
-- Drop `border-2` → `border`, drop `shadow-lg` → `shadow-sm`.
-- Remove the absolute `bg-gradient-to-br ... opacity-60` overlay entirely.
-- Replace the top color accent bar with a **left** 3px tier accent: `<div class="absolute inset-y-0 left-0 w-[3px] {accent}" />`. Single tier signal, no surface tint.
-- Surface stays `bg-card text-card-foreground`.
-
-**Header / hierarchy (lines 257-339)**
-- Eyebrow ("Identity"): `text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold` (drop `font-black`, drop `/70`).
-- Tier label: keep large, use `tone: text-foreground` (not white-only) so it inherits theme; tier color is signaled by left bar + score color, not by label.
-- "✓ Confirmed" pill: neutralize to `bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25`.
-- Score block: drop the tier-colored `chip` background. Use a clean stacked layout: large `tabular-nums text-foreground` number colored by `scoreText` (only one saturated element), with `text-[10px] text-muted-foreground` "Consistency" label below. No box around it.
-- Hover state: `hover:bg-muted/40` instead of `hover:bg-background/30`.
-- Chevron: `text-muted-foreground` (drop `/80`).
-- Alert dot ring color: `ring-card` (was `ring-background`).
-
-**Streak chips (lines 342-356)**
-- Single chip recipe used everywhere: `inline-flex items-center gap-1.5 h-6 rounded-full border border-border bg-muted/50 px-2.5 text-[11px] font-medium text-foreground`.
-- Icons keep tier-neutral semantic color (`text-orange-500`, `text-emerald-500`, `text-rose-500`) at `h-3 w-3`; numbers `tabular-nums`; label `text-muted-foreground`.
-- `nnMiss > 0` chip: same recipe but `bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300`.
-
-**Today's Standard section (lines 365-401)**
-- Confirmed state: same chip recipe, `border-emerald-500/25 bg-emerald-500/5`, `text-emerald-700 dark:text-emerald-300`, slightly more padding (`px-3 py-3`).
-- Unconfirmed state: `border-border bg-muted/40` (drop primary tint), copy uses `text-foreground` (drop `/85`), inline tier pill uses new neutral chip token.
-
-**Day Intent (lines 403-449)**
-- DayButton outline state: keep shadcn outline. Active variants stay tinted but at reduced intensity (use `/90` instead of solid).
-- Explanation copy: `text-sm text-muted-foreground` (was `text-xs text-foreground/85`).
-- Rest-budget chip: same shared chip recipe; over-budget variant uses the rose chip recipe above.
-
-**Active Alerts (lines 451-514)**
-- Replace per-type heavy tones with a single calm recipe + tier-color accent: `rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-sm text-foreground` plus a `w-[3px]` left bar colored from `toneFor` (only the bar is colored; surface stays neutral).
-- Icon color carries the type semantic (rose / amber / sky / emerald / fuchsia at 500 weight).
-- Action button: shadcn `variant="secondary" size="sm"` (drop the custom `bg-white/15` which depended on the dark overlay).
-- Dismiss button: `text-muted-foreground hover:bg-muted` (drop `hover:bg-white/10`).
-- "All clear" row: shared chip recipe with emerald accent.
-
-**Section headers (528-556)**
-- `text-[10px] tracking-[0.18em] font-semibold text-muted-foreground` (drop `font-black`); info button `text-muted-foreground` (drop `/60`).
-
-### C. Spacing & rhythm
-- Collapsed header padding: `px-4 py-3.5 sm:px-5`.
-- Expanded panel padding: `px-4 sm:px-5 pb-5 pt-2 space-y-5`.
-- Divider: `border-t border-border` (drop `/40` so it's visible but quiet).
-- Streak-chip row: `mt-3 gap-2` for better thumb spacing.
-
-### D. Trust / lineage preservation
-- All confidence, lineage, replay, engine_version surfaces inside the card remain in their current positions and behavior. Only chip backgrounds, borders and text weights change; no element is removed or relocated.
-- TrustFooter component itself is not touched (it isn't rendered inside this card; the in-card trust signals are the `tier` label, `score`, `streak chips`, `Day Intent`, `Active Alerts`, and "Confirmed" state).
-
-## Before / After rationale
-
-| Concern | Before | After |
+| Surface | Change type | Files (primary) |
 |---|---|---|
-| Surface | `bg-card` + slate-900→black gradient @ 60% opacity | Solid `bg-card`, no overlay |
-| Tier signal | Colored ring + neon glow + gradient + colored top bar | Single 3px left accent bar + colored score number |
-| Chip palette | `bg-white/5 border-white/10` (depends on dark overlay) | `bg-muted/50 border-border` (theme-safe) |
-| Text contrast | `text-foreground/70`–`/85` everywhere | `text-foreground` + `text-muted-foreground`, no opacity |
-| Alerts | Saturated colored cards per type | Neutral surface + colored left bar + colored icon |
-| Score | Tier-colored box competing with label | Single colored number, no box |
-| Shadows | `shadow-lg` + neon `shadow-[0_0_60px...]` | `shadow-sm` |
-| Borders | `border-2` + colored ring | `border` neutral |
+| `/today` (Dashboard) | Reorder + mount Command Center inline | `src/pages/Today.tsx` |
+| Identity Card | Visual rebuild (glass surface, contrast, hierarchy) | `IdentityCommandCard.tsx`, `IdentityBanner.tsx`, `useIdentityState.ts` |
+| Weekly Digest | Plain-language story mode + structure rebuild | `AthleteDigest.tsx`, `digest/*Card.tsx`, `lib/digest/sentences.ts`, new `DigestStorySection.tsx` |
+| Bounded Forecast | Timeline-card rewrite, anti-jargon copy | `ForecastSurface.tsx`, `forecast/*Card.tsx`, `lib/digest/sentences.ts` |
+| Global a11y/usability | Tap targets, spacing, progressive disclosure | shared `RuntimeCard`, `TrustFooter`, simplify toggle |
 
-## Mobile-first notes (375–414 px)
-- Eyebrow row + tier label + day chip wrap cleanly because chip heights normalize to `h-6` (no more 2-line wraps).
-- Score moves to its own row on mobile (already the case); now larger type + no box = clearer scan.
-- DayButton grid keeps 3 columns at `h-10`; tap target ≥40 px.
-- Alert row stacks `flex-col` below `sm`; action button is `w-full sm:w-auto` so it's thumb-friendly.
-- All chips/buttons clear 32–40 px min height.
+---
 
-## Accessibility
-- Body text rises to full `text-foreground` (passes AA against `bg-card` in both themes).
-- Muted text uses semantic `text-muted-foreground` (already AA in the design system).
-- Tier color is reinforced by position (left bar) + score color + tier pill; never color-only.
-- Icon-only dismiss buttons retain `aria-label="Dismiss"`.
-- Info popovers, `aria-expanded` on the toggle, alert `role="status"` all preserved.
+## 1. Command Center → Dashboard convergence
 
-## Out of scope
-- No changes to `useIdentityState` query, snapshot shape, or behavioral-event hooks.
-- No changes to ASB event emission, day-state mutations, or quick-action execution.
-- No changes to `IdentityBanner.tsx` (unused on `/dashboard`; left alone).
-- No new components, no new dependencies.
+**Goal:** `/today` becomes the single organism surface; sidebar Command link becomes deep-link only.
 
-## Verification
-- Visit `/dashboard` on mobile (375px) and desktop: card surface is clean `bg-card`, single thin tier bar on left, score uses tier-color text only, all chips read as one calm row, all alerts share a single neutral recipe.
-- Toggle each tier (elite / locked_in / consistent / building / slipping) via devtools to confirm only the left bar + score color change; surface and chips stay identical.
-- Light and dark theme: text contrast remains crisp because we dropped `/70`–`/85` opacities and the dark overlay.
-- Pressure events (`nn_miss`, `streak_risk`, etc.): each row keeps its semantic color through the left bar + icon, not the background.
+Reorder `src/pages/Today.tsx` to:
+
+```text
+1. PulseStrip
+2. CommandCenter (inlined — extracted from AthleteCommand.tsx body)
+3. Today Prescription
+4. Weekly Organism Digest (compact preview → link to /digest)
+5. Bounded Forecast (compact preview → link to /forecast)
+6. Recovery / Education / History
+```
+
+- Extract the Command body from `pages/AthleteCommand.tsx` into `components/command/CommandCenterSection.tsx` (pure layout — no auth/onboarding redirects). Both `/today` and `/command` render it; the standalone `/command` route stays for deep-links.
+- Each Command card capped at: one headline, one "why" sentence, one primary action. Secondary detail moves behind a "More" disclosure.
+- Section headings use large type, single-line labels (e.g. "How you are today", not "Today").
+
+## 2. Identity Card visual rebuild
+
+`IdentityCommandCard.tsx` + `IdentityBanner.tsx` (banner currently still uses `bg-gradient-to-br` + neon glow — must follow the calm token set already in `useIdentityState.ts`).
+
+Visual recipe:
+- Surface: `bg-card` with a soft layered glass effect — `before:` pseudo with `bg-gradient-to-b from-foreground/[0.02] to-transparent`, `ring-1 ring-border`, `shadow-sm`.
+- Left 3px tier accent bar (already in card — port to banner).
+- Remove every `bg-gradient-to-br from-slate-900…`, `drop-shadow-[0_0_12px…]`, `text-slate-100/400/500` literal. All text → `text-foreground` / `text-muted-foreground`.
+- Hierarchy (top→bottom): Athlete name · Organism state (tier label) · Primary focus (today's standard) · Recovery status · streak chips row · TrustFooter (confidence · lineage · replay · engine version) in `text-xs text-muted-foreground`.
+- Score: tier-colored number only (`scoreText`), no glow, `tabular-nums`.
+- Chips: single recipe `h-6 rounded-full bg-muted/50 border-border text-xs`.
+- Adaptive text: not needed once dark overlay is removed — `bg-card` already guarantees AA against `text-foreground` in both themes.
+
+## 3. Weekly Digest — organism story
+
+Add `components/digest/DigestStorySection.tsx` rendering four blocks built from existing projections (no new data):
+
+| Block | Source projection | Copy template |
+|---|---|---|
+| This week | `organismChange` | "Your body is {stable / building / overloaded / recovering / ready}." |
+| What improved | `workloadShift`, `recoveryContinuity` (positive delta) | "You are recovering better than last week." |
+| Needs attention | `behavioralTrend`, `escalationEmerged` | "This week your workload climbed faster than usual." |
+| What to do next | derived from above | "Hold your sleep window for the next 3 nights." |
+
+Rules enforced in `lib/digest/sentences.ts` additions:
+- Max 2 lines per insight, ≤ 140 chars.
+- Sentence starts: "Your body is…" / "You are…" / "This week…".
+- Replace numeric outputs with state words `stable | building | overloaded | recovering | ready` (numbers move under "Show details").
+- "Explain simply" toggle in `WeeklyDigestHeader` — **default ON**, persists in `localStorage`. When OFF, current dense cards render.
+- Each block has one visual indicator (icon + tier-colored dot), optional `<Collapsible>` "Learn more" exposing the existing dense card verbatim — preserves every confidence/lineage/replay link.
+
+## 4. Bounded Forecast simplification
+
+`ForecastSurface.tsx` reshaped into three timeline cards: **Next 3 days · Next week · Longer trend**. Built from existing `useForecastProjection()` — workload/readiness/behavioral continuation grouped by horizon, no new computation.
+
+Each card answers four lines:
+- What may happen — plain ("You may feel more tired by the weekend.")
+- Why — lineage one-liner
+- What helps
+- What increases risk
+
+Add to `lib/digest/sentences.ts`: `plainContinuationSentence(projection, horizon)` mapping confidence + delta into the anti-jargon phrasing. `FORECAST_BOUNDARY_DISCLAIMER` stays in TrustFooter only. Existing `ForecastWindowCard` / `ProjectionConfidenceCard` / missingness cards move behind a "Show technical view" toggle (default OFF). Removes the default-on grid of 6 dense cards.
+
+Tone: calm, anti-fear, anti-shame — no "risk score" framing.
+
+## 5. Universal usability pass
+
+Applied across Dashboard / Digest / Forecast / Identity / Command:
+- Tap targets ≥ 44×44 (button `size="icon"` → add `min-h-11 min-w-11`).
+- Section headings `text-lg sm:text-xl font-semibold`, generous `space-y-6` between sections.
+- Progressive disclosure: every "advanced" surface inside `<Collapsible>` default-closed.
+- Single label vocabulary — remove duplicates (e.g. "Readiness" vs "How ready"; pick the plain one).
+- Reduce simultaneous cards: digest grid `xl:grid-cols-3` → `md:grid-cols-2` with story section above.
+- All literal `text-slate-*`, `text-gray-*`, `bg-slate-*` swept to semantic tokens.
+- Replace `h-screen` with `h-dvh` where found in changed files.
+
+## 6. Invariants preserved (verification gates)
+
+Before completion, confirm by inspection (no logic edited in these areas):
+- `src/lib/asb/*`, `src/lib/runtime/*`, `src/lib/digest/projections.ts`, all `useAthleteCommandRows` / `useDigestProjection` / `useForecastProjection` — untouched.
+- TrustFooter rendered on every refactored card (confidence · lineage · replay · engine_version).
+- Replay drilldown links (`/replay/:eventId`) preserved.
+- No new event emissions, no schema migrations, no edge function changes.
+- Existing tests run unchanged: `foundationScorer.replay`, `replay-determinism-wave3`, `asb invariants parity` — pass.
+
+## 7. Deliverable on completion
+
+- List of surfaces touched + file diffs summary
+- Before/after readability notes (token swaps, contrast)
+- A11y improvements (tap targets, semantic tokens, dvh)
+- Dashboard convergence summary (`/today` final order + `/command` deep-link status)
+- Remaining risks (e.g. users used to numeric digest may need "Show details" guidance)
+- Confirmation block: "Schema unchanged · Replay unchanged · Lineage unchanged · TrustFooter present · Tests pass"
+
+## Out of scope (explicit)
+
+No changes to: ASB event model, projections, modulators, capability gates, scope filtering, parity matrix, CI rules 1–18, auth, onboarding redirects, edge functions, database.

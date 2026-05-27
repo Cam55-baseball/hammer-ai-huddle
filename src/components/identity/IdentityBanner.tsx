@@ -20,7 +20,6 @@ function useCountUp(target: number, duration = 700) {
       if (startRef.current === null) startRef.current = ts;
       const elapsed = ts - startRef.current;
       const t = Math.min(1, elapsed / duration);
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - t, 3);
       setVal(Math.round(target * eased));
       if (t < 1) raf = requestAnimationFrame(step);
@@ -33,7 +32,7 @@ function useCountUp(target: number, duration = 700) {
 }
 
 export function IdentityBanner({ className }: Props) {
-  const { snapshot, tier, label, tone, ring, bg, accent, scoreText, glow, pill, loading } = useIdentityState();
+  const { snapshot, tier, label, accent, scoreText, pill, loading } = useIdentityState();
   useEngineRecomputeTrigger();
 
   const score = snapshot?.consistency_score ?? 0;
@@ -41,7 +40,7 @@ export function IdentityBanner({ className }: Props) {
 
   if (loading) {
     return (
-      <div className={cn('rounded-2xl border border-white/10 bg-slate-950 p-4 animate-pulse h-28', className)} />
+      <div className={cn('rounded-2xl border border-border bg-card p-4 animate-pulse h-28', className)} />
     );
   }
 
@@ -53,43 +52,47 @@ export function IdentityBanner({ className }: Props) {
     <div className={cn('space-y-2', className)}>
       <div
         className={cn(
-          'relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br p-4 sm:p-5 ring-1',
-          bg, ring, glow
+          'relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm',
         )}
       >
+        {/* Soft glass top sheen — barely visible, never muddy */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-b from-foreground/[0.03] to-transparent"
+          aria-hidden
+        />
         {/* Left tier accent bar */}
-        <div className={cn('absolute left-0 top-0 bottom-0 w-1.5', accent)} aria-hidden />
+        <div className={cn('absolute left-0 top-0 bottom-0 w-1', accent)} aria-hidden />
 
         <div className="relative flex items-start justify-between gap-4 pl-2">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
               Identity
             </div>
-            <div className="mt-1.5 flex items-center gap-2.5 flex-wrap">
-              <div className={cn('text-2xl sm:text-3xl font-black tracking-tight leading-none', tone)}>
+            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+              <div className="text-2xl sm:text-3xl font-bold tracking-tight leading-none text-foreground">
                 {label}
               </div>
-              <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest', pill)}>
+              <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest', pill)}>
                 Tier
               </span>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 font-semibold text-slate-100 border border-white/10">
-                <Flame className="h-3.5 w-3.5 text-orange-400" />
+              <span className="inline-flex items-center gap-1.5 h-6 rounded-full bg-muted/50 border border-border px-2.5 font-medium text-foreground">
+                <Flame className="h-3.5 w-3.5 text-orange-500" />
                 <span className="tabular-nums">{perfStreak}</span>
-                <span className="text-slate-400">d perf</span>
+                <span className="text-muted-foreground">d perf</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2.5 py-1 font-semibold text-slate-100 border border-white/10">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="inline-flex items-center gap-1.5 h-6 rounded-full bg-muted/50 border border-border px-2.5 font-medium text-foreground">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                 <span className="tabular-nums">{discStreak}</span>
-                <span className="text-slate-400">d active</span>
+                <span className="text-muted-foreground">d active</span>
               </span>
               {nnMiss > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 font-semibold text-rose-300 border border-rose-500/30">
+                <span className="inline-flex items-center gap-1.5 h-6 rounded-full bg-rose-500/10 border border-rose-500/25 px-2.5 font-medium text-rose-700 dark:text-rose-300">
                   <AlertCircle className="h-3.5 w-3.5" />
                   <span className="tabular-nums">{nnMiss}</span>
-                  <span className="text-rose-300/80">NN miss/7d</span>
+                  <span className="opacity-80">NN miss/7d</span>
                 </span>
               )}
             </div>
@@ -100,10 +103,10 @@ export function IdentityBanner({ className }: Props) {
           </div>
 
           <div className="flex flex-col items-end shrink-0">
-            <div className={cn('text-5xl sm:text-6xl font-black tabular-nums leading-none drop-shadow-[0_0_12px_currentColor]', scoreText)}>
+            <div className={cn('text-5xl sm:text-6xl font-bold tabular-nums leading-none', scoreText)}>
               {animatedScore}
             </div>
-            <div className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">
+            <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Consistency
             </div>
           </div>
