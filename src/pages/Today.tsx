@@ -15,7 +15,7 @@ import { ClipboardList, MessageSquare } from "lucide-react";
 import { emitRuntimeEvent } from "@/lib/runtime/emitRuntimeEvent";
 import { toast } from "sonner";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
-import { YourNextStep } from "@/components/runtime/YourNextStep";
+import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
 import { topicLabel } from "@/lib/asb/topicLabels";
 
 export default function Today() {
@@ -67,7 +67,7 @@ export default function Today() {
         {/* Fused organism summary: pulse + command center read as one block */}
         <div className="space-y-3">
           <PulseStrip rx={rx} />
-          <YourNextStep />
+          <CommunicationAI />
           <CommandCenterSection />
         </div>
 

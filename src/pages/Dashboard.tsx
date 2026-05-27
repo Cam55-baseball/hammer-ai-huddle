@@ -26,7 +26,9 @@ import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
-import { YourNextStep } from "@/components/runtime/YourNextStep";
+import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
+import { WeeklyDigestPreview } from "@/components/dashboard/WeeklyDigestPreview";
+import { ForecastPreview } from "@/components/dashboard/ForecastPreview";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
@@ -538,7 +540,7 @@ export default function Dashboard() {
 
         {/* Identity Command Card — single consolidated header above the Game Plan. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <YourNextStep />}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
 
         {/* Command Center — primary organism status surface, sits above Game Plan
             so athletes immediately see how their body is doing today. */}
@@ -554,6 +556,14 @@ export default function Dashboard() {
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <GamePlanCard selectedSport={selectedSport} />
+        )}
+
+        {/* Lightweight previews under the Game Plan (athletes only) */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <>
+            <WeeklyDigestPreview />
+            <ForecastPreview />
+          </>
         )}
 
         {/* Long-term Hammer video picks — athletes only */}

@@ -10,7 +10,7 @@ export function WorkloadCard({ rows, loading }: Props) {
   const p = latest ? projectLatest(latest, { staleAfterHours: 168 }) : EMPTY_PROJECTION;
   return (
     <IntelligenceCardShell
-      title="Workload"
+      title="Stress Load"
       subtitle="How much load you've been carrying (last 7 days)"
       icon={<Dumbbell className="h-4 w-4 text-primary" />}
       projection={p}

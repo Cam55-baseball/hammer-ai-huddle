@@ -19,7 +19,7 @@ export function BehavioralRegulationCard({ rows, loading }: Props) {
     null;
   return (
     <IntelligenceCardShell
-      title="Habits"
+      title="Daily Habits"
       subtitle="Your recent behaviour patterns"
       icon={<Brain className="h-4 w-4 text-primary" />}
       projection={p}

@@ -42,7 +42,7 @@ export function CommandCenterSection({ compact = false, defaultSignalsOpen = fal
   }, [open]);
 
   return (
-    <section aria-label="Organism command center" className="space-y-4">
+    <section aria-label="How your body is today" className="space-y-4">
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger asChild>
           <button
