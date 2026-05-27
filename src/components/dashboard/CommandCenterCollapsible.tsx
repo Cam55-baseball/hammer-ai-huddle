@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { GamePlanCard } from "@/components/GamePlanCard";
+import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 
-const STORAGE_KEY = "dashboard.gameplan.open";
+const STORAGE_KEY = "dashboard.commandcenter.open";
 
 interface Props {
-  selectedSport: "baseball" | "softball";
+  defaultSignalsOpen?: boolean;
 }
 
 /**
- * UI-only collapsible wrapper around <GamePlanCard />.
+ * UI-only collapsible wrapper around <CommandCenterSection />.
  * Visible chevron button pinned to the top-right corner.
  */
-export function GamePlanCollapsible({ selectedSport }: Props) {
+export function CommandCenterCollapsible({ defaultSignalsOpen = false }: Props) {
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -34,13 +34,13 @@ export function GamePlanCollapsible({ selectedSport }: Props) {
         <button
           type="button"
           aria-expanded={open}
-          aria-label={open ? "Hide Game Plan" : "Show Game Plan"}
+          aria-label={open ? "Hide Command Center" : "Show Command Center"}
           className="flex w-full min-h-14 items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <div className="min-w-0">
-            <div className="text-base font-semibold text-foreground">Game Plan</div>
+            <div className="text-base font-semibold text-foreground">Command Center</div>
             <div className="truncate text-sm text-muted-foreground">
-              Your training plan for today
+              How your body is doing today
             </div>
           </div>
           <span
@@ -56,7 +56,9 @@ export function GamePlanCollapsible({ selectedSport }: Props) {
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-        <GamePlanCard selectedSport={selectedSport} />
+        <div className="rounded-xl border border-border bg-card/40 p-4 sm:p-5">
+          <CommandCenterSection defaultSignalsOpen={defaultSignalsOpen} />
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );

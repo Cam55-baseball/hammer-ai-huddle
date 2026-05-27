@@ -540,12 +540,9 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <QuickActionsCard />}
 
-        {/* Command Center — primary organism status surface, sits above Game Plan
-            so athletes immediately see how their body is doing today. */}
+        {/* Command Center — primary organism status surface, collapsible. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <section className="rounded-xl border border-border bg-card/40 p-4 sm:p-5">
-            <CommandCenterSection />
-          </section>
+          <CommandCenterCollapsible />
         )}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
