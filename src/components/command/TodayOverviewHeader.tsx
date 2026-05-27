@@ -1,6 +1,4 @@
-import { format } from "date-fns";
-import { ShieldCheck } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { format, formatDistanceToNow } from "date-fns";
 import { ENGINE_VERSION } from "@/lib/asb/engineVersion";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 
@@ -10,20 +8,29 @@ interface Props {
 
 export function TodayOverviewHeader({ rows }: Props) {
   const latest = rows?.[0] ?? null;
+  const updated = latest ? formatDistanceToNow(new Date(latest.occurred_at), { addSuffix: true }) : null;
   return (
-    <header className="sticky top-0 z-20 -mx-4 mb-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:-mx-6 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <header
+      className="mb-2"
+      title={`engine ${ENGINE_VERSION}`}
+    >
+      <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-lg font-semibold leading-tight sm:text-xl">Command Center</h1>
+          <h1 className="text-xl font-semibold leading-tight sm:text-2xl">
+            How your body is doing today
+          </h1>
           <p className="truncate text-xs text-muted-foreground">
-            {format(new Date(), "EEEE, MMM d · yyyy")}
-            {latest ? ` · last event ${latest.occurred_at}` : " · no events yet"}
+            {format(new Date(), "EEEE, MMM d")}
+            {updated ? ` · updated ${updated}` : ""}
           </p>
         </div>
-        <Badge variant="outline" className="gap-1 font-mono text-xs">
-          <ShieldCheck className="h-3 w-3" />
-          engine {ENGINE_VERSION}
-        </Badge>
+        <span
+          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          aria-label="Live"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          Live
+        </span>
       </div>
     </header>
   );

@@ -19,10 +19,10 @@ export function FatigueCard({ rows, loading }: Props) {
       emptyMessage="Fatigue appears after your first completed session."
     >
       <div className="flex items-end gap-2">
-        <span className="font-mono text-3xl tabular-nums">
+        <span className="text-3xl font-semibold tabular-nums">
           {typeof score === "number" ? score.toFixed(2) : "—"}
         </span>
-        <span className="text-xs text-muted-foreground">{p.topicId}</span>
+        <span className="pb-1 text-xs text-muted-foreground">today</span>
       </div>
     </IntelligenceCardShell>
   );

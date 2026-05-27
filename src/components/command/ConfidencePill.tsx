@@ -11,18 +11,18 @@ interface Props {
  * When null, render an explicit em-dash — never a synthetic number.
  */
 export function ConfidencePill({ confidence }: Props) {
-  const display = confidence == null ? "—" : `${Math.round(confidence * 100)}%`;
+  const display = confidence == null ? "—" : `${Math.round(confidence * 100)}% sure`;
   const tooltip =
     confidence == null
-      ? "Confidence not declared by source event."
-      : `Confidence ${display} — read from canonical payload path.`;
+      ? "We don't have enough info to say yet."
+      : `We're about ${Math.round(confidence * 100)}% sure based on your recent check-ins.`;
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className="gap-1 font-mono text-xs">
+          <Badge variant="outline" className="gap-1 text-xs">
             <Gauge className="h-3 w-3" />
-            conf {display}
+            {display}
           </Badge>
         </TooltipTrigger>
         <TooltipContent>{tooltip}</TooltipContent>

@@ -26,12 +26,12 @@ export function EscalationFlagsCard({ rows, loading }: Props) {
   return (
     <IntelligenceCardShell
       title="Needs Attention"
-      subtitle="Flags from the last 3 days"
+      subtitle="Things from the last 3 days that need a look"
       icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
       projection={p}
       loading={loading}
       destructive={hasItems}
-      emptyMessage="No escalations in the last 72 hours"
+      emptyMessage="Nothing needs attention right now"
     >
       <ul className="space-y-1.5">
         {items.slice(0, 6).map((r) => (
@@ -41,7 +41,7 @@ export function EscalationFlagsCard({ rows, loading }: Props) {
               to={`/replay/${r.event_id}`}
               className="shrink-0 text-xs text-primary underline-offset-2 hover:underline"
             >
-              replay →
+              see why →
             </Link>
           </li>
         ))}

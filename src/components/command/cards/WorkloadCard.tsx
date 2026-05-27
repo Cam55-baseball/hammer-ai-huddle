@@ -18,8 +18,8 @@ export function WorkloadCard({ rows, loading }: Props) {
       emptyMessage="No scheduled days yet"
     >
       <div className="flex items-end gap-3">
-        <span className="font-mono text-3xl tabular-nums">{count}</span>
-        <span className="text-xs text-muted-foreground">events · raw count, not smoothed</span>
+        <span className="text-3xl font-semibold tabular-nums">{count}</span>
+        <span className="pb-1 text-xs text-muted-foreground">training days this week</span>
       </div>
     </IntelligenceCardShell>
   );

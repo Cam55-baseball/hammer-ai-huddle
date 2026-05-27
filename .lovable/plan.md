@@ -1,101 +1,119 @@
-# Final UX Parity Pass — Additive Only
+# Plan — Command Center as Dashboard + Human Language Pass
 
-No schema, runtime, projection, hook, or doctrine changes. All ASB lineage, replay, confidence, TrustFooter, and CI rules preserved.
+Additive UI-only changes. No schema, hook, projection, runtime, or test changes. All ASB lineage, replay, confidence, missingness, engine_version, and TrustFooter wiring stays intact — only the **visible strings and visual hierarchy** change. Internal topic IDs, engine version pins, and dev surfaces (`/asb/*`, `/replay/*`, `/ops/*`, owner pages) are untouched.
 
 ---
 
-## 1. AthleteCommand → CommandCenterSection parity
+## 1. `/today` — Command Center becomes the dashboard
 
-**Goal:** `/command` becomes a thin wrapper around the same `CommandCenterSection` already mounted on `/today`. One canonical surface, identical spacing/typography/TrustFooter/state semantics.
+`src/pages/Today.tsx`
+- Drop the extra `Today / {date}` header and the `max-w-3xl` shell — let CC breathe full-width (`max-w-5xl`).
+- Render order, no surrounding `RuntimeCard` wrappers around CC:
+  1. `<PulseStrip rx={rx} />` (kept, but spacing tightened to `space-y-3` against CC so they read as one block)
+  2. `<CommandCenterSection defaultSignalsOpen={false} />` — visually dominant, no outer container
+  3. `<PrescriptionCard />` (today's plan)
+  4. Compact link row: "Weekly recap", "What's next", "Log how I feel" as 3 small tiles instead of 3 stacked `RuntimeCard`s
+  5. Recent history (renamed from "Recent prescriptions & overrides" → "Recent activity"; rows show human topic label, not `font-mono` topic id — use existing `TopicLabel`)
+- Remove the "Becomes a canonical event you and your coach can both replay" sentence → "Quick check-in. Your coach can see it too."
 
-- Rewrite `src/pages/AthleteCommand.tsx` to:
-  - Keep auth + onboarding redirects (unchanged logic).
-  - Render `<DashboardLayout>` → header row (`TodayOverviewHeader` already inside section is reused) → `<CommandCenterSection compact={false} />` → `<RecentEventsPreview rows={rows} loading={isLoading} />` for the "Recent activity" tail only.
-  - Use the same `useAthleteCommandRows({ days: 30, limit: 500 })` once at page level and pass `rows` to `RecentEventsPreview`; `CommandCenterSection` continues to own its own fetch (cached by react-query under the same key so no double network call).
-  - Drop the local `Section` helper and the duplicated 4-card / behaviour / signals grids — those now live exclusively inside `CommandCenterSection`.
-- Extend `CommandCenterSection` with an optional `defaultSignalsOpen?: boolean` prop so the deep-link `/command` route opens the behaviour+signals collapsible by default while `/today` keeps it collapsed. No new state, no new events.
+`src/components/command/TodayOverviewHeader.tsx`
+- Title: "Command Center" → **"How your body is doing today"**
+- Subline: drop `last event {ISO timestamp}` → "Updated {relative time}" or nothing when empty
+- Replace `engine {ENGINE_VERSION}` badge with a small muted "Live" dot; keep `ENGINE_VERSION` available in a `title=` tooltip only (still rendered in DOM for ops, just not as a visible mono badge)
+- Remove sticky positioning so it merges into the page rather than feeling like a sub-module header
 
-Outcome: identical card hierarchy, identical `IntelligenceCardShell` wrapper, identical TrustFooter row (already inside the shell), identical spacing rhythm (`space-y-4`, `gap-4`, `md:grid-cols-2`) across both routes.
+---
 
-## 2. Terminology simplification (display strings only)
+## 2. Athlete-facing language rewrite (display strings only)
 
-Edit only the `title` / `subtitle` props passed to `IntelligenceCardShell` and the collapsible label. No topic IDs, projection keys, or event names touched.
+Topic IDs, payload keys, and projection code are **not touched**.
 
-| File | Before | After |
-|---|---|---|
-| `RecoveryCard.tsx` | "Recovery" / "Latest behavioral/foundation recovery event" | "Recovery" / "How well you're bouncing back" |
-| `BehavioralRegulationCard.tsx` | "Behavioral regulation" | "Habits" / "Your recent behaviour patterns" |
-| `EscalationFlagsCard.tsx` | "Escalation flags (72h)" | "Needs Attention" / "Flags from the last 3 days" |
-| `SchedulingLoadCard.tsx` | "Scheduling load" | "Schedule Load" / "How packed your week looks" |
-| `TrendShiftsCard.tsx` | "Trend shifts" | "Trends" / "What's changing week over week" |
-| `FatigueCard.tsx` subtitle | technical phrasing | "How tired your body looks today" |
-| `WorkloadCard.tsx` subtitle | technical phrasing | "How much load you've been carrying" |
-| `ReadinessCard.tsx` subtitle | technical phrasing | "How ready you are to train today" |
-| `CommandCenterSection.tsx` collapsible | "Show behaviour, schedule & signals" | "Show habits, schedule & trends" |
+`src/components/command/cards/ReadinessCard.tsx`, `FatigueCard.tsx`, `RecoveryCard.tsx`
+- Remove the `{p.topicId}` mono caption next to the score (it leaks `behavioral.readiness` etc.). Replace with a plain word: "today", "today", "this week".
 
-## 3. Identity card final hierarchy
+`src/components/command/cards/WorkloadCard.tsx`
+- "events · raw count, not smoothed" → "training days this week"
 
-Edit `src/components/identity/IdentityBanner.tsx` (and one tiny addition to `useIdentityState.ts`) to expose the canonical 5-row organism identity:
+`src/components/command/cards/SchedulingLoadCard.tsx`
+- Title "Schedule Load" → "Your week"
+- Replace raw `event_type` keys (`athlete.schedule.day_type`, etc.) in the list with a small human map: `practice → "Practice"`, `game → "Game"`, `lift → "Lift"`, `rest → "Rest"`, fallback = title-cased last segment. Unknown keys are humanized, never shown as dot.notation.
 
-```
-A. Athlete name           (text-xs muted, top label row)
-B. Organism state         (LABEL — text-3xl bold, primary)
-C. Primary focus          (one short sentence, text-sm muted)
-D. Recovery status        (new row, plain English)
-E. Confidence + lineage   (TrustFooter — quiet, bottom)
-```
+`src/components/command/cards/EscalationFlagsCard.tsx`
+- "replay →" link text → "see why"
 
-Changes:
-- Replace the "Tier" pill block with a name row: pull `user.user_metadata.full_name ?? user.email` from `useAuth()`; render as `text-xs uppercase tracking-[0.25em] text-muted-foreground` above the state label. Falls back gracefully when missing.
-- Keep the big state `LABEL` (`text-3xl sm:text-4xl font-bold`) as row B; remove the inline "Tier" badge so the headline reads cleanly.
-- Add a **Primary focus** line driven by the existing `tier` value (pure derivation, no new event): one sentence per tier (e.g. elite → "Hold the line. Recovery is your edge.", building → "Stack consistent days. Small wins compound.").
-- Add a **Recovery row** built from existing `snapshot.nn_miss_count_7d`, `discipline_streak`, and `performance_streak` (already in `IdentitySnapshot`). Pure UI mapping:
-  - `nnMiss === 0 && discStreak >= 3` → "Recovering Well" (emerald dot)
-  - `nnMiss >= 3` → "Needs More Recovery" (rose dot)
-  - else → "Stable" (sky dot)
-  - Render as `inline-flex items-center gap-2 h-7 rounded-full bg-muted/40 border border-border px-3 text-sm`.
-- Quiet TrustFooter: move the existing streak chips (`perf`, `active`, `NN miss/7d`) into a single bottom row using the same chip class already in use, separated by a `border-t border-border/60 pt-3 mt-4`. Confidence/lineage stay subtle.
-- Adaptive spacing: container uses `p-4 sm:p-5 md:p-6`; right-side consistency score uses `text-5xl md:text-6xl`. No layout shift.
-- Subtle sheen: keep the existing `bg-gradient-to-b from-foreground/[0.03]` top hairline; add a single `transition-shadow duration-500 hover:shadow-md` on the container. No parallax, no animated gradients, performance-safe.
-- Expose two tiny helpers from `useIdentityState.ts` (additive only): `focusSentence: string` and `recoveryStatus: { label: 'Recovering Well' | 'Needs More Recovery' | 'Stable'; tone: 'emerald' | 'rose' | 'sky' }`. Pure derivations from existing snapshot fields — no new query, no schema.
+`src/components/command/EscalationBanner.tsx`
+- "{n} unacknowledged escalation(s)" → "{n} thing{s} that need a look"
+- "Most recent:" → "Latest:"
+- Button "Open replay" → "See why"
 
-## 4. Micro-interaction polish
+`src/components/command/CommandCenterSection.tsx`
+- Collapsible label "Show/Hide habits, schedule & trends" → "Show more details" / "Hide details"
 
-- Add a shared `transition-colors duration-200` and `focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` to the `Card` wrapper in `IntelligenceCardShell` (via `className` merge) so every command card gets identical hover/focus behaviour.
-- Reserve space in `IntelligenceCardShell` body via the existing `min-h-[64px]` — extend the TrustFooter row to also reserve `min-h-9` so replay refreshes don't reflow.
-- Replace the raw `animate-pulse bg-muted/50` skeleton with a slightly softer `bg-muted/40 rounded-md` block, matching height of the populated state to prevent jitter when projections land.
-- Collapsible chevron: keep existing `transition-transform`; add `motion-reduce:transition-none` so reduced-motion users get instant toggles.
+`src/components/command/IntelligenceCardShell.tsx`
+- "No source event yet" empty fallback → "Not enough info yet"
+- Remove the `occurred_at {ISO}` mono footer line (engine version + occurred_at still passed into TrustFooter for advanced/coach surfaces, just hidden from athlete cards).
 
-No flashy animations introduced. No new dependencies.
+`src/components/command/ConfidencePill.tsx`
+- Visible label "conf {n}%" → "{n}% sure" (e.g. "82% sure"); when null → "—". Tooltip → "How sure we are based on your recent check-ins."
 
-## 5. Accessibility + readability hardening
+`src/components/command/MissingnessChip.tsx`
+- `live` → "Up to date"
+- `no_signal` → "No info yet"
+- `stale` → "Needs a fresh check-in"
+- `partial` → "Some info missing"
+- Tooltips rewritten in plain language; remove the word "event".
 
-- `IntelligenceCardShell` `LineageDrilldownButton` already inside footer — ensure wrapper has `min-h-11` on the footer row for thumb reach (currently `pt-3` only).
-- `CommandCenterSection` collapsible trigger already `min-h-11`; verify and keep.
-- Identity banner streak chips bumped from `h-6` → `h-7` and `text-xs` → `text-sm` so elderly readers can parse them at default zoom.
-- Add `aria-live="polite"` to the consistency score wrapper so screen readers announce updates from the count-up without spam.
-- Replace remaining `text-[10px]` micro-labels in the banner with `text-[11px]` and add `whitespace-nowrap` to the "Consistency" caption to prevent wrap collisions at 320–360px viewports.
-- Confirm no card uses raw color classes; semantic tokens only (already true after Wave 2/3).
+`src/components/command/LineageDrilldownButton.tsx`
+- "View lineage" → "Why?" (icon kept). Disabled tooltip → "Nothing to show yet."
 
-## 6. Files touched (additive edits only)
+`src/components/runtime/TrustFooter.tsx`
+- Drop the inline `engine_version` mono string from athlete render (keep it in DOM as a `title` attribute on the row for ops parity; no visible mono engineering text).
+- The relative time stays as the only visible meta.
 
-- `src/pages/AthleteCommand.tsx` — slim wrapper around `CommandCenterSection` + `RecentEventsPreview`.
-- `src/components/command/CommandCenterSection.tsx` — add `defaultSignalsOpen` prop; rename collapsible label.
-- `src/components/command/IntelligenceCardShell.tsx` — focus ring, footer min-height, softened skeleton.
-- `src/components/command/cards/*.tsx` — 8 files, display string edits only (title/subtitle/empty copy). No logic, no projection changes.
-- `src/components/identity/IdentityBanner.tsx` — 5-row hierarchy, recovery row, quiet footer, hover shadow, a11y.
-- `src/hooks/useIdentityState.ts` — additive `focusSentence` + `recoveryStatus` derivations from existing snapshot fields.
+---
 
-## Out of scope (explicitly not touched)
+## 3. Sweep for other leaks shown in athlete mode
 
-- `src/lib/asb/*`, `src/lib/command/projections.ts`, `src/lib/runtime/*`, `src/lib/digest/*` projections.
-- `useAthleteCommandRows`, `useAsbTimeline`, `useEngineRecomputeTrigger`, any Supabase query.
-- `asb_events` schema, edge functions, migrations.
-- TrustFooter signals (engine version, confidence pill, missingness chip, lineage drilldown) — visible and unchanged.
-- Capability gates, parity matrix, CI rules 1–18, replay determinism, event chronology.
+Limited, screen-targeted edits — not a global rename:
 
-## Verification
+- `src/pages/Today.tsx` RecentList: swap `font-mono {topic_id}` for `<TopicLabel id=... />`.
+- Any "canonical" / "emit" / "lineage" / "replay" / "escalation" wording in the **Today, Command Center, Digest, Forecast** trees (already-touched files only) is replaced per §2.
+- Owner/admin pages, `/asb/*`, `/replay/*`, `/ops/*`, edge functions, tests, and `docs/` keep their existing technical vocabulary.
 
-- Compare `/today` and `/command` side-by-side: same card grid, same shell, same TrustFooter row, same chip styling.
-- Identity card on `/dashboard` shows name → state → focus sentence → recovery status → quiet metrics footer with confidence/lineage still one tap away.
-- Existing parity/replay/invariant tests untouched and pass unchanged (only display strings + presentational JSX modified).
+---
+
+## 4. Out of scope (explicitly unchanged)
+
+- `src/lib/asb/*`, `src/lib/command/projections.ts`, `src/lib/runtime/*`, `src/hooks/command/*`, `useAsbTimeline`, `asb_events` schema, edge functions, migrations.
+- TrustFooter signal wiring, capability gates, parity matrix, replay determinism, CI rules, engine_version semantics.
+- Topic IDs, payload shapes, projection logic, missingness classification thresholds.
+- Coach/owner/ops/replay surfaces.
+
+---
+
+## 5. Verification
+
+- Visual: `/today` first screen reads as one "how your body is doing today" surface with PulseStrip + CC fused.
+- Text: no `font-mono` topic IDs, no "canonical / emit / lineage / replay / escalation / engine vX" visible on `/today`, `/command`, `/digest`, `/forecast`.
+- Behavior: ConfidencePill / MissingnessChip / LineageDrilldownButton still receive the same props and still link to `/replay/:id` — only labels change.
+- Tests: no test files touched; existing parity/replay/invariant suites continue to pass since projections and topic IDs are untouched.
+
+---
+
+### Files affected (UI strings + Today layout only)
+
+- `src/pages/Today.tsx`
+- `src/components/command/CommandCenterSection.tsx`
+- `src/components/command/TodayOverviewHeader.tsx`
+- `src/components/command/EscalationBanner.tsx`
+- `src/components/command/ConfidencePill.tsx`
+- `src/components/command/MissingnessChip.tsx`
+- `src/components/command/LineageDrilldownButton.tsx`
+- `src/components/command/IntelligenceCardShell.tsx`
+- `src/components/command/cards/ReadinessCard.tsx`
+- `src/components/command/cards/FatigueCard.tsx`
+- `src/components/command/cards/RecoveryCard.tsx`
+- `src/components/command/cards/WorkloadCard.tsx`
+- `src/components/command/cards/SchedulingLoadCard.tsx`
+- `src/components/command/cards/EscalationFlagsCard.tsx`
+- `src/components/runtime/TrustFooter.tsx`

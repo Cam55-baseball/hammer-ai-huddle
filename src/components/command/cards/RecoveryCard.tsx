@@ -21,10 +21,10 @@ export function RecoveryCard({ rows, loading }: Props) {
       emptyMessage="Recovery requires at least one completed session plus a next-day check-in."
     >
       <div className="flex items-end gap-2">
-        <span className="font-mono text-3xl tabular-nums">
+        <span className="text-3xl font-semibold tabular-nums">
           {typeof score === "number" ? score.toFixed(2) : "—"}
         </span>
-        <span className="text-xs text-muted-foreground">{p.topicId}</span>
+        <span className="pb-1 text-xs text-muted-foreground">this week</span>
       </div>
     </IntelligenceCardShell>
   );
