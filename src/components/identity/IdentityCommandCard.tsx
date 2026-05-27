@@ -147,10 +147,16 @@ interface Props { className?: string }
 
 export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
-  const { snapshot, tier, label, tone, ring, bg, chip, accent, scoreText, loading } = useIdentityState();
+  const { snapshot, tier, label, tone, ring, bg, chip, accent, scoreText, loading, focusSentence } = useIdentityState();
   const { dayType, setDayType, restBudgetLeft, usedThisWeek, maxPerWeek, overBudget } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
+  const { data: commandRows } = useAthleteCommandRows({ days: 30, limit: 500 });
+  const todaysStandard = useMemo(
+    () => deriveTodaysStandard(commandRows, dayType),
+    [commandRows, dayType],
+  );
+  const rotatingAlert = useMemo(() => pickRotatingAlert(allEvents), [allEvents]);
   useEngineRecomputeTrigger();
 
   // ─── Standard-confirmed state ───────────────────────────────────────────
