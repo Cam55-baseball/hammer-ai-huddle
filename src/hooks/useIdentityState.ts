@@ -123,6 +123,9 @@ export function useIdentityState() {
   const tier: IdentityTier = (query.data?.identity_tier ?? 'building') as IdentityTier;
   const meta = TIER_META[tier];
 
+  const focusSentence = FOCUS_SENTENCES[tier];
+  const recoveryStatus = deriveRecoveryStatus(query.data);
+
   return {
     snapshot: query.data ?? null,
     loading: query.isLoading,
@@ -137,5 +140,29 @@ export function useIdentityState() {
     glow: meta.glow,
     pill: meta.pill,
     pulse: meta.pulse,
+    focusSentence,
+    recoveryStatus,
   };
 }
+
+const FOCUS_SENTENCES: Record<IdentityTier, string> = {
+  elite: 'Hold the line. Recovery is your edge.',
+  locked_in: 'Stay sharp. Consistency is compounding.',
+  consistent: 'Keep showing up. Small wins stack.',
+  building: 'Stack consistent days. Momentum is forming.',
+  slipping: 'Reset gently. One honest day at a time.',
+};
+
+export type RecoveryStatus = {
+  label: 'Recovering Well' | 'Needs More Recovery' | 'Stable';
+  tone: 'emerald' | 'rose' | 'sky';
+};
+
+function deriveRecoveryStatus(snap: IdentitySnapshot | null | undefined): RecoveryStatus {
+  const nnMiss = snap?.nn_miss_count_7d ?? 0;
+  const discStreak = snap?.discipline_streak ?? 0;
+  if (nnMiss >= 3) return { label: 'Needs More Recovery', tone: 'rose' };
+  if (nnMiss === 0 && discStreak >= 3) return { label: 'Recovering Well', tone: 'emerald' };
+  return { label: 'Stable', tone: 'sky' };
+}
+
