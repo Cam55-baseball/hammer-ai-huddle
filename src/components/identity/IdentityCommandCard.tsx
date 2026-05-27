@@ -12,6 +12,9 @@ import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioral
 
 import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
+import { useAthleteCommandRows } from '@/hooks/command/useAthleteCommandRows';
+import { pickRotatingAlert } from '@/lib/identity/rotatingAlert';
+import { deriveTodaysStandard } from '@/lib/standard/todaysStandard';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
