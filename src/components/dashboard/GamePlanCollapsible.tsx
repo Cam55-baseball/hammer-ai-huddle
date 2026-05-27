@@ -11,7 +11,9 @@ interface Props {
 
 /**
  * UI-only collapsible wrapper around <GamePlanCard />.
- * Visible chevron button pinned to the top-right corner.
+ * Lets athletes hide the long Game Plan body so the Command Center
+ * remains visible above the fold. Persists open/closed locally.
+ * No changes to GamePlanCard internals, projections, or runtime logic.
  */
 export function GamePlanCollapsible({ selectedSport }: Props) {
   const [open, setOpen] = useState<boolean>(() => {
@@ -43,16 +45,11 @@ export function GamePlanCollapsible({ selectedSport }: Props) {
               Your training plan for today
             </div>
           </div>
-          <span
-            aria-hidden="true"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm"
-          >
-            <ChevronDown
-              className={`h-5 w-5 transition-transform motion-reduce:transition-none ${
-                open ? "rotate-180" : ""
-              }`}
-            />
-          </span>
+          <ChevronDown
+            className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none ${
+              open ? "rotate-180" : ""
+            }`}
+          />
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">

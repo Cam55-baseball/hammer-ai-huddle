@@ -25,7 +25,7 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCollapsible } from "@/components/dashboard/GamePlanCollapsible";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
-import { CommandCenterCollapsible } from "@/components/dashboard/CommandCenterCollapsible";
+import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { QuickActionsCard } from "@/components/identity/QuickActionsCard";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { toast } from "sonner";
@@ -540,9 +540,12 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <QuickActionsCard />}
 
-        {/* Command Center — primary organism status surface, collapsible. */}
+        {/* Command Center — primary organism status surface, sits above Game Plan
+            so athletes immediately see how their body is doing today. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <CommandCenterCollapsible />
+          <section className="rounded-xl border border-border bg-card/40 p-4 sm:p-5">
+            <CommandCenterSection />
+          </section>
         )}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
