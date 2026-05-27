@@ -26,7 +26,7 @@ import { GamePlanCard } from "@/components/GamePlanCard";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
-import { QuickActionsCard } from "@/components/identity/QuickActionsCard";
+import { YourNextStep } from "@/components/runtime/YourNextStep";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { toast } from "sonner";
 import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
@@ -538,7 +538,7 @@ export default function Dashboard() {
 
         {/* Identity Command Card — single consolidated header above the Game Plan. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <QuickActionsCard />}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <YourNextStep />}
 
         {/* Command Center — primary organism status surface, sits above Game Plan
             so athletes immediately see how their body is doing today. */}
