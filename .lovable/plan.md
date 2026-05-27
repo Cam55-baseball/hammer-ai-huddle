@@ -1,60 +1,45 @@
-# Put the Command Center on the real Dashboard + make Game Plan collapsible
+## Goal
 
-You're on `/dashboard` (the `Dashboard.tsx` page), not `/today`. The earlier passes mounted `CommandCenterSection` only on `/today` and `/command`, which is why you still don't see it here. The fix is additive and UI-only — no projection, runtime, or schema changes.
+Make both **Game Plan** and **Command Center** on `/dashboard` clearly collapsible with a visible chevron arrow in the top-right corner of each section header. UI-only; no runtime, projection, or doctrine changes.
 
-## 1. Mount Command Center on `/dashboard`
+## Problem
 
-File: `src/pages/Dashboard.tsx`
+- **Game Plan**: `GamePlanCollapsible` already wraps `GamePlanCard` with a header row + chevron, but the chevron is rendered as a small muted `ChevronDown` inside a low-contrast trigger row that visually blends with the card below — the user reports not seeing it.
+- **Command Center**: `CommandCenterSection` has no outer collapse. Only an internal "Show more details" disclosure for secondary cards exists. The whole section cannot be hidden.
 
-- Import `CommandCenterSection` from `@/components/command/CommandCenterSection`.
-- Render it in the athlete branch (gated by the existing `(isOwner || isAdmin || (!isScout && !isCoach))` condition already used around line 542) so it appears in this order:
+## Changes
 
-```text
-Hero / module cards
-IdentityCommandCard
-QuickActionsCard
-CommandCenterSection            ← NEW
-GamePlanCard (collapsible)      ← wrapped
-LongTermVideoSuggestions
-```
+### 1. `src/components/dashboard/GamePlanCollapsible.tsx` (edit)
 
-- Wrap the section in a thin container giving it strong visual prominence (clear top spacing, no extra card chrome — the section already supplies its own heading and cards).
-- Do not render it for `isScout` / `isCoach` branches (their existing `CoachScoutGamePlanCard` flow is untouched).
+Strengthen the trigger so the arrow is unmistakable in the top-right:
 
-The `CommandCenterSection` already provides the "How your body is doing today" header, escalation banner, four large organism cards (Readiness / Fatigue / Workload / Recovery) and the "Show more details" disclosure. Nothing changes inside that component.
+- Keep the existing `Collapsible` + `localStorage` persistence.
+- Replace the muted `ChevronDown` with a bordered, circular icon button visual: `h-9 w-9 rounded-full border border-border bg-background text-foreground` with the chevron centered, pinned to the top-right via `justify-between`.
+- Keep title "Game Plan" and subtitle on the left.
+- Preserve `aria-expanded` and `aria-label`.
 
-## 2. Wrap Game Plan in a collapsible shell
+### 2. `src/components/dashboard/CommandCenterCollapsible.tsx` (new)
 
-`GamePlanCard` is ~3.6k lines and we won't touch its internals. Instead, wrap the dashboard's `<GamePlanCard />` mount in a new local component:
+New thin wrapper mirroring `GamePlanCollapsible`:
 
-File: `src/components/dashboard/GamePlanCollapsible.tsx` (new)
+- Header row (`min-h-14`, `rounded-xl border border-border bg-card`): title **"Command Center"**, subtitle **"How your body is doing today"**, and the same top-right circular chevron button.
+- `Collapsible` with `open` persisted to `localStorage` key `dashboard.commandcenter.open` (default `true`).
+- `CollapsibleContent` renders `<CommandCenterSection />` unchanged.
+- No props beyond an optional `defaultSignalsOpen` passthrough.
 
-- Uses `Collapsible` / `CollapsibleTrigger` / `CollapsibleContent` from `@/components/ui/collapsible`.
-- Header row: large tap target (`min-h-14`), title "Game Plan", plain-language subtitle ("Your training plan for today"), animated chevron on the right.
-- Default `open = true`.
-- Persists open/closed in `localStorage` under key `dashboard.gameplan.open` (mirrors the pattern used elsewhere for `selectedSport`).
-- Collapsed state: shows only the header row (no extra "compact summary" — keeps scope minimal and avoids duplicating GamePlanCard logic). When users want details, one tap expands the full card.
-- Expanded state: renders `<GamePlanCard selectedSport={selectedSport} />` unchanged inside `CollapsibleContent` with the existing collapsible-down/up animation classes already used by `IdentityCommandCard`.
+### 3. `src/pages/Dashboard.tsx` (edit)
 
-Replace the current `<GamePlanCard selectedSport={selectedSport} />` line in `Dashboard.tsx` with `<GamePlanCollapsible selectedSport={selectedSport} />`.
+- Replace the existing bare `<CommandCenterSection />` mount (currently inside a `rounded-xl border ... p-4` div) with `<CommandCenterCollapsible />`. Remove the now-redundant outer wrapper div so the collapsible owns its border.
+- `GamePlanCollapsible` mount stays as-is.
 
-## 3. Mobile-first behavior
+## Out of scope
 
-- `CommandCenterSection` already uses `grid-cols-1 md:grid-cols-2`, so on the 1330px and mobile viewports the four big organism cards stack cleanly and appear immediately under the identity header.
-- The collapsible Game Plan header becomes a short, thumb-reachable row, eliminating the long stretch of Game Plan content that previously pushed everything else below the fold.
-- No new sticky elements, no horizontal scroll.
+- No edits to `CommandCenterSection` internals, `GamePlanCard`, projections, hooks, ASB events, replay/lineage, capability gates, parity tests, or any non-UI logic.
+- No changes to `/today` or `/command`.
+- No changes to scout/coach Game Plan branch (`CoachScoutGamePlanCard`).
 
-## 4. Out of scope (unchanged)
+## Files
 
-- `/today`, `/command`, projections, replay, lineage, ASB events, confidence, capability gates, runtime emitters, parity tests, GamePlanCard internals, scout/coach Game Plan, IdentityCommandCard, QuickActionsCard.
-
-## Files touched
-
-- `src/pages/Dashboard.tsx` — add import, mount `CommandCenterSection`, swap `GamePlanCard` for `GamePlanCollapsible`.
-- `src/components/dashboard/GamePlanCollapsible.tsx` — new wrapper.
-
-## Verification
-
-- Visit `/dashboard` on the 1330px viewport and on a mobile viewport (375×812): Command Center heading + organism cards visible in the first viewport above Game Plan.
-- Toggle Game Plan: collapses to header-only, expands back to full card; preference survives a reload.
-- No console errors; existing tests untouched since logic surfaces are unchanged.
+- edit `src/components/dashboard/GamePlanCollapsible.tsx`
+- new  `src/components/dashboard/CommandCenterCollapsible.tsx`
+- edit `src/pages/Dashboard.tsx`
