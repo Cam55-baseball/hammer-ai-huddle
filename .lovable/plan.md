@@ -1,74 +1,113 @@
-## "Your Next Step" — adaptive coach communication layer
+## Goal
 
-Replace the generic `QuickActionsCard` with a new **`YourNextStep`** RuntimeCard that synthesizes canonical ASB rows into one clear human-coach prescription: headline, why, exact next action, and a single primary CTA. Pure UI/projection layer — no event writes, no schema, no parity changes.
+Turn the dashboard from a stack of metric cards into one calm, motivating organism narrative. Pure presentation layer — no schema, projection, replay, parity, or capability-gate changes.
 
-### New file: `src/components/runtime/YourNextStep.tsx`
+## New dashboard flow (athletes)
 
-A single large centered card. Reads the existing `useAthleteCommandRows({ days: 30, limit: 500 })` and `useEscalationFeed({ withinHours: 72 })` hooks (no new data sources). Pure derivation function `deriveNextStep(rows, escalations, hour)` returns `{ tier, headline, why, action, cta: { label, route } }`.
-
-**Adaptive priority engine** (first match wins, mirrors constitutional precedence — survivability → recovery → readiness → performance → optimization):
-
-| Tier | Trigger | Headline / Action |
-|---|---|---|
-| `survivability` | Any unacknowledged item in `useEscalationFeed` (foundation.pattern / behavioral.escalation / behavioral.risk) within 72h | "Pause and check in with your body." → `cta: Review Alert → /command` |
-| `recovery` | Latest `behavioral.recovery` score < 0.45 **or** latest `behavioral.fatigue` score > 0.7 | "Your body needs recovery today." / "Your recent workload has been high and recovery has dropped." → `cta: Start Recovery → /bounce-back-bay` |
-| `readiness-low` | Latest `behavioral.readiness` < 0.4 | "Take it easy today." / "Readiness is below your normal range." → `cta: Open Recovery → /bounce-back-bay` |
-| `performance` | Readiness ≥ 0.65 and fatigue ≤ 0.55 | "You are ready to push today." → `cta: Start Training → /practice` |
-| `optimization` (default time-of-day fallback) | hour < 10 → "Begin your morning prep routine." / 10–16 → "Hit your training window." / 16–21 → "Lock in today's session." / else → "Wind down — quality sleep wins." | route mirrors current `useNextAction` defaults (`/tex-vision`, `/practice`, `/vault`, `/nutrition-hub`) |
-
-Missing-data state (no rows yet) shows: "Log today's check-in to unlock your next step." with CTA to `/today-checkin` (or whichever onboarding entry is current). Confidence and missingness from the underlying projections gate the headline strength — when the driving score is stale (>36h for readiness/fatigue, >48h for recovery) we fall back one tier and surface a small "based on older signals" note. Lineage stays one click away via the existing `LineageDrilldownButton` reused in a small "Why this?" footer link.
-
-**Visual structure** (Tailwind, design tokens only — no raw colors):
-
-```
-┌───────────────────────────────────────────────┐
-│  [icon]  YOUR NEXT STEP            [tier pill]│
-│                                               │
-│  Headline (text-2xl sm:text-3xl font-semibold,│
-│  tracking-tight, max-w-2xl)                   │
-│                                               │
-│  Why this matters (text-base text-muted-fg,   │
-│  max 2 lines)                                 │
-│                                               │
-│  → Exact next action (text-sm font-medium)    │
-│                                               │
-│  [ Primary CTA — large, single ]              │
-│                                               │
-│  Why this?  ·  Updated 2h ago                 │
-└───────────────────────────────────────────────┘
+```text
+1. Identity Card        (rebuilt — rotating single alert + "Develop This Week" + Today's Standard inline + motivational line)
+2. Communication AI     (new — replaces YourNextStep visually, same data sources, tone driven by Today's Standard)
+3. Command Center       (renamed labels, plain-English, always visible)
+4. Game Plan            (unchanged)
+5. Weekly Digest Preview
+6. Forecast Preview
 ```
 
-- Rounded-2xl, generous padding (`p-6 sm:p-8`), subtle gradient (`from-primary/8 via-card to-card`), thin `border-primary/20`, single large CTA button (`size="lg"`, full-width on mobile, auto on desktop).
-- No grid, no chips row, no competing actions. Tier pill is a small muted badge top-right (`Survivability` / `Recovery` / `Ready` / etc).
-- Calm typography hierarchy — large headline, lighter subtext, single accented action line with `→`.
+Coach/scout branch unchanged.
 
-### Dashboard changes — `src/pages/Dashboard.tsx`
+## Today's Standard — single source of truth
 
-- Remove `QuickActionsCard` import and its mount on line 541.
-- Add `YourNextStep` import and mount it in this order under the athlete branch:
-  1. IdentityCommandCard (unchanged)
-  2. **`<YourNextStep />`** (new — primary intelligence layer)
-  3. `CommandCenterSection` wrapped in its existing supporting-surface container (unchanged structurally, but the wrapper gets a smaller header treatment: subdued label `Organism Status` instead of competing for primacy)
-  4. `GamePlanCard` (unchanged — today's executable training)
+Today's Standard lives **inside the Identity Card only**. No separate strip on the dashboard. The pure derivation function is extracted so other surfaces can read the same sentence without rendering another card.
 
-### Today page changes — `src/pages/Today.tsx`
+- New: `src/lib/standard/todaysStandard.ts` — `deriveTodaysStandard(rows, identitySnapshot, dayType, now)` → `{ standard, tone, rationale }`. Pure, read-only.
+- `IdentityCommandCard` consumes it and renders the standard sentence in its existing standard area + adds the bottom motivational line tied to it.
+- `CommunicationAI` consumes the same function to align its tone/copy with the standard, but does **not** render the standard itself.
 
-Insert `<YourNextStep />` between `<PulseStrip rx={rx} />` (line 68) and `<CommandCenterSection />` (line 69) so /today and /dashboard share the same primary coaching surface.
+## New / changed files
 
-### Delete
+**New**
+- `src/lib/standard/todaysStandard.ts` — pure derivation described above.
+- `src/lib/identity/rotatingAlert.ts` — picks **one** alert from `useBehavioralEvents` + command rows by priority. Returns `{ text, tone, action? } | null`.
+- `src/components/dashboard/CommunicationAI.tsx` — replaces visual role of `YourNextStep`. Uses `useAthleteCommandRows`, `useEscalationFeed`, and `deriveTodaysStandard` for tone. Renders: tier pill, title, 1 instruction, 1 explanation, 1 "why this matters" line, 1 primary CTA. Reuses the existing `deriveNextStep` priority logic with rewritten plain-English copy.
+- `src/components/dashboard/WeeklyDigestPreview.tsx` — read-only preview (3 short bullets from last 7d) + "Open weekly digest" link.
+- `src/components/dashboard/ForecastPreview.tsx` — read-only preview (2–3 lines, next 3–5 days outlook) + "Open forecast" link.
 
-`src/components/identity/QuickActionsCard.tsx` — no other usages (verified by `rg`). Its `useNextAction` hook is superseded by the new derivation, so also delete `src/hooks/useNextAction.ts` after confirming nothing else imports it (will re-verify in build mode and skip the deletion if any other file uses it).
+**Edited**
+- `src/components/identity/IdentityCommandCard.tsx`
+  - Replace stacked pressure-event list with a **single rotating alert** via `rotatingAlert.ts`. Keep acknowledge action.
+  - Add "Develop This Week" sentence in the always-visible header area.
+  - Surface Today's Standard sentence in its existing standard area (sourced from `deriveTodaysStandard`).
+  - Add bottom motivational line tied to the standard.
+  - Keep existing collapse behavior, tier accent, streak chips, standard-confirmed pill.
+- `src/components/command/CommandCenterSection.tsx`
+  - Rename section label "Organism command center" → "How Your Body Is Today".
+  - Pass plain-English titles to child cards.
+- Command cards (`ReadinessCard`, `FatigueCard`, `WorkloadCard`, `RecoveryCard`, `BehavioralRegulationCard`, `TrendShiftsCard`, `SchedulingLoadCard`, `EscalationFlagsCard`) — title strings + any user-visible "lineage/projection/event/canonical/runtime/envelope/deterministic/replay/emit/propagation/organism continuity/athlete.schedule.day_type" copy replaced with plain English. No behavior changes. Internal code untouched.
+  - Readiness → "Ready Today"
+  - Fatigue → "Energy Drain"
+  - Workload → "Stress Load"
+  - Recovery → "Recovery"
+  - Trends → "Progress Trend"
+  - Behavioral Regulation → "Daily Habits"
+- `src/pages/Dashboard.tsx`
+  - Replace `<YourNextStep />` with `<CommunicationAI />`.
+  - After `GamePlanCard`, mount `<WeeklyDigestPreview />` and `<ForecastPreview />` (athlete branch only).
+- `src/pages/Today.tsx` — swap `YourNextStep` → `CommunicationAI` for parity.
 
-### Out of scope (explicitly unchanged)
+**Deleted**
+- `src/components/runtime/YourNextStep.tsx` (superseded by CommunicationAI).
 
-- `useAthleteCommandRows`, projections, escalation feed, lineage, replay, parity, capability gates, append-only ledger, edge functions, event schemas.
-- Command Center internals, Game Plan internals, identity card, PulseStrip.
-- No new ASB events emitted; `YourNextStep` is a pure read-only projection consumer.
-- i18n strings: new copy added in component literals for now (can move to `en.json` in a follow-up); no existing keys removed.
+**Untouched (non-negotiable)**
+- `GamePlanCard` (no collapsible change), ASB ledger / event schema / projections / replay / parity tests / capability gates / edge functions / `useAthleteCommandRows` / `useEscalationFeed` / `TrustFooter` / identity tier engine / day state engine / behavioral events backend / Supabase migrations.
 
-### Verification
+## Adaptive priority logic (shared between CommunicationAI + Identity rotating alert)
 
-- Visual check on /dashboard and /today at 1330×890 and mobile (375).
-- `rg QuickActionsCard src/` returns no hits.
-- TypeScript build clean.
-- Existing Command Center / Game Plan / Identity card render unchanged below the new card.
+First match wins:
+
+1. **Survivability** — `unackedCount > 0` from `useEscalationFeed`
+2. **Recovery risk** — `recovery < 0.45` or `fatigue > 0.7` (non-stale)
+3. **Readiness low** — `readiness < 0.4` (non-stale)
+4. **Consistency slip** — `nn_miss_count_7d ≥ 2` or recent `consistency_drop` event
+5. **Performance ready** — `readiness ≥ 0.65 && fatigue ≤ 0.55`
+6. **Positive reinforcement** — recent `consistency_recover` or upward `identity_tier_change`
+7. **Time-of-day optimization** — prep / train / lock-in / recover
+8. **Missing data** — "Log today's check-in"
+
+Stale signals demote to optimization tier with a "based on older signals" note.
+
+## Language sweep (user-facing strings only)
+
+| Old | New |
+|---|---|
+| emit / event | update |
+| canonical | official |
+| projection | summary |
+| lineage | history |
+| deterministic | consistent |
+| replay | review |
+| runtime | live |
+| envelope | range |
+| organism continuity | your body's rhythm |
+| propagation | knock-on effect |
+| athlete.schedule.day_type | day type |
+
+Internal names, types, function/file names, console logs stay as-is.
+
+## Visual direction
+
+- Reduce card density: more whitespace, larger headings, fewer pills above the fold.
+- Identity → Communication AI form one breathable column. No overlapping muddy gradients.
+- Communication AI uses one subtle primary-tinted gradient + one CTA.
+- All colors via semantic tokens.
+
+## Confirmation checklist (post-build)
+
+- [ ] No edits under `supabase/`, `src/hooks/command/`, `src/lib/command/projections.ts`, edge functions, test files, or `GamePlanCard`
+- [ ] `YourNextStep` references removed everywhere
+- [ ] Today's Standard appears in exactly one place on the dashboard (Identity Card)
+- [ ] Build passes
+- [ ] Dashboard renders: Identity → Communication AI → Command Center → Game Plan → Weekly Digest Preview → Forecast Preview
+
+## Out of scope
+
+Schema rewrites, replay/parity changes, Game Plan collapsibility, new AI autonomy, notifications, gamification, TrustFooter removal, sidebar restructuring.
