@@ -199,11 +199,11 @@ export function YourNextStep({ className }: Props) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: rows, isLoading } = useAthleteCommandRows({ days: 30, limit: 500 });
-  const { active } = useEscalationFeed({ withinHours: 72 });
+  const { unackedCount } = useEscalationFeed({ withinHours: 72 });
 
   const step = useMemo(
-    () => deriveNextStep(rows, active?.length ?? 0),
-    [rows, active],
+    () => deriveNextStep(rows, unackedCount ?? 0),
+    [rows, unackedCount],
   );
 
   if (!user || isLoading) {
