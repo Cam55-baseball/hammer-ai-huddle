@@ -383,15 +383,38 @@ export function IdentityCommandCard({ className }: Props) {
             <div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
 
               {/* ── 1. Today's Standard ──────────────────────────────── */}
-              <section>
+              <section className="space-y-3">
                 <SectionHeader
                   title="Today's Standard"
                   helpText={
-                    `Your tier is ${label}. Confirming declares you're holding yourself to it today. ` +
-                    `A confirmed standard with all Non-Negotiables met locks your streak. ` +
-                    `A confirmed-but-missed day applies pressure to your identity score.`
+                    `Your tier is ${label}. Confirming means you're holding yourself to it today. ` +
+                    `Hitting your standard with everything checked off locks your streak. ` +
+                    `Confirming and then missing chips at your consistency.`
                   }
                 />
+
+                {/* Plain-English standard sentence (single source of truth) */}
+                <div className="rounded-lg border border-border/60 bg-background/40 px-3 py-2.5">
+                  <p className="text-sm font-semibold text-foreground leading-snug">
+                    {todaysStandard.standard}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                    {todaysStandard.rationale}
+                  </p>
+                </div>
+
+                {/* Develop This Week — one sentence, plain English */}
+                {focusSentence && (
+                  <div className="flex items-start gap-2 px-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground mt-0.5 shrink-0">
+                      Develop&nbsp;this&nbsp;week
+                    </span>
+                    <p className="text-xs text-foreground/85 leading-relaxed">
+                      {focusSentence}
+                    </p>
+                  </div>
+                )}
+
                 {standardConfirmed ? (
                   <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/5 px-3 py-2.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -419,6 +442,11 @@ export function IdentityCommandCard({ className }: Props) {
                     </Button>
                   </div>
                 )}
+
+                {/* Motivational closer tied to standard tone */}
+                <p className="text-xs italic text-muted-foreground text-center px-2">
+                  {todaysStandard.motivational}
+                </p>
               </section>
 
               {/* ── 2. Day Intent ────────────────────────────────────── */}
