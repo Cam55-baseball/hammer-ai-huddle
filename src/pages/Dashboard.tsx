@@ -22,9 +22,10 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
-import { GamePlanCard } from "@/components/GamePlanCard";
+import { GamePlanCollapsible } from "@/components/dashboard/GamePlanCollapsible";
 import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { IdentityCommandCard } from "@/components/identity/IdentityCommandCard";
+import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { QuickActionsCard } from "@/components/identity/QuickActionsCard";
 import { LongTermVideoSuggestions } from "@/components/dashboard/LongTermVideoSuggestions";
 import { toast } from "sonner";
@@ -535,19 +536,24 @@ export default function Dashboard() {
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
-        {/* Identity Command Card — single consolidated header above the Game Plan.
-            Replaces TodayCommandBar + IdentityBanner + DailyStandardCheck +
-            BehavioralPressureToast + DayControlCard + DayStateBanner +
-            StandardActivationBanner. */}
+        {/* Identity Command Card — single consolidated header above the Game Plan. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <QuickActionsCard />}
+
+        {/* Command Center — primary organism status surface, sits above Game Plan
+            so athletes immediately see how their body is doing today. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <section className="rounded-xl border border-border bg-card/40 p-4 sm:p-5">
+            <CommandCenterSection />
+          </section>
+        )}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         )}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <GamePlanCard selectedSport={selectedSport} />
+          <GamePlanCollapsible selectedSport={selectedSport} />
         )}
 
         {/* Long-term Hammer video picks — athletes only */}

@@ -1,119 +1,60 @@
-# Plan — Command Center as Dashboard + Human Language Pass
+# Put the Command Center on the real Dashboard + make Game Plan collapsible
 
-Additive UI-only changes. No schema, hook, projection, runtime, or test changes. All ASB lineage, replay, confidence, missingness, engine_version, and TrustFooter wiring stays intact — only the **visible strings and visual hierarchy** change. Internal topic IDs, engine version pins, and dev surfaces (`/asb/*`, `/replay/*`, `/ops/*`, owner pages) are untouched.
+You're on `/dashboard` (the `Dashboard.tsx` page), not `/today`. The earlier passes mounted `CommandCenterSection` only on `/today` and `/command`, which is why you still don't see it here. The fix is additive and UI-only — no projection, runtime, or schema changes.
 
----
+## 1. Mount Command Center on `/dashboard`
 
-## 1. `/today` — Command Center becomes the dashboard
+File: `src/pages/Dashboard.tsx`
 
-`src/pages/Today.tsx`
-- Drop the extra `Today / {date}` header and the `max-w-3xl` shell — let CC breathe full-width (`max-w-5xl`).
-- Render order, no surrounding `RuntimeCard` wrappers around CC:
-  1. `<PulseStrip rx={rx} />` (kept, but spacing tightened to `space-y-3` against CC so they read as one block)
-  2. `<CommandCenterSection defaultSignalsOpen={false} />` — visually dominant, no outer container
-  3. `<PrescriptionCard />` (today's plan)
-  4. Compact link row: "Weekly recap", "What's next", "Log how I feel" as 3 small tiles instead of 3 stacked `RuntimeCard`s
-  5. Recent history (renamed from "Recent prescriptions & overrides" → "Recent activity"; rows show human topic label, not `font-mono` topic id — use existing `TopicLabel`)
-- Remove the "Becomes a canonical event you and your coach can both replay" sentence → "Quick check-in. Your coach can see it too."
+- Import `CommandCenterSection` from `@/components/command/CommandCenterSection`.
+- Render it in the athlete branch (gated by the existing `(isOwner || isAdmin || (!isScout && !isCoach))` condition already used around line 542) so it appears in this order:
 
-`src/components/command/TodayOverviewHeader.tsx`
-- Title: "Command Center" → **"How your body is doing today"**
-- Subline: drop `last event {ISO timestamp}` → "Updated {relative time}" or nothing when empty
-- Replace `engine {ENGINE_VERSION}` badge with a small muted "Live" dot; keep `ENGINE_VERSION` available in a `title=` tooltip only (still rendered in DOM for ops, just not as a visible mono badge)
-- Remove sticky positioning so it merges into the page rather than feeling like a sub-module header
+```text
+Hero / module cards
+IdentityCommandCard
+QuickActionsCard
+CommandCenterSection            ← NEW
+GamePlanCard (collapsible)      ← wrapped
+LongTermVideoSuggestions
+```
 
----
+- Wrap the section in a thin container giving it strong visual prominence (clear top spacing, no extra card chrome — the section already supplies its own heading and cards).
+- Do not render it for `isScout` / `isCoach` branches (their existing `CoachScoutGamePlanCard` flow is untouched).
 
-## 2. Athlete-facing language rewrite (display strings only)
+The `CommandCenterSection` already provides the "How your body is doing today" header, escalation banner, four large organism cards (Readiness / Fatigue / Workload / Recovery) and the "Show more details" disclosure. Nothing changes inside that component.
 
-Topic IDs, payload keys, and projection code are **not touched**.
+## 2. Wrap Game Plan in a collapsible shell
 
-`src/components/command/cards/ReadinessCard.tsx`, `FatigueCard.tsx`, `RecoveryCard.tsx`
-- Remove the `{p.topicId}` mono caption next to the score (it leaks `behavioral.readiness` etc.). Replace with a plain word: "today", "today", "this week".
+`GamePlanCard` is ~3.6k lines and we won't touch its internals. Instead, wrap the dashboard's `<GamePlanCard />` mount in a new local component:
 
-`src/components/command/cards/WorkloadCard.tsx`
-- "events · raw count, not smoothed" → "training days this week"
+File: `src/components/dashboard/GamePlanCollapsible.tsx` (new)
 
-`src/components/command/cards/SchedulingLoadCard.tsx`
-- Title "Schedule Load" → "Your week"
-- Replace raw `event_type` keys (`athlete.schedule.day_type`, etc.) in the list with a small human map: `practice → "Practice"`, `game → "Game"`, `lift → "Lift"`, `rest → "Rest"`, fallback = title-cased last segment. Unknown keys are humanized, never shown as dot.notation.
+- Uses `Collapsible` / `CollapsibleTrigger` / `CollapsibleContent` from `@/components/ui/collapsible`.
+- Header row: large tap target (`min-h-14`), title "Game Plan", plain-language subtitle ("Your training plan for today"), animated chevron on the right.
+- Default `open = true`.
+- Persists open/closed in `localStorage` under key `dashboard.gameplan.open` (mirrors the pattern used elsewhere for `selectedSport`).
+- Collapsed state: shows only the header row (no extra "compact summary" — keeps scope minimal and avoids duplicating GamePlanCard logic). When users want details, one tap expands the full card.
+- Expanded state: renders `<GamePlanCard selectedSport={selectedSport} />` unchanged inside `CollapsibleContent` with the existing collapsible-down/up animation classes already used by `IdentityCommandCard`.
 
-`src/components/command/cards/EscalationFlagsCard.tsx`
-- "replay →" link text → "see why"
+Replace the current `<GamePlanCard selectedSport={selectedSport} />` line in `Dashboard.tsx` with `<GamePlanCollapsible selectedSport={selectedSport} />`.
 
-`src/components/command/EscalationBanner.tsx`
-- "{n} unacknowledged escalation(s)" → "{n} thing{s} that need a look"
-- "Most recent:" → "Latest:"
-- Button "Open replay" → "See why"
+## 3. Mobile-first behavior
 
-`src/components/command/CommandCenterSection.tsx`
-- Collapsible label "Show/Hide habits, schedule & trends" → "Show more details" / "Hide details"
+- `CommandCenterSection` already uses `grid-cols-1 md:grid-cols-2`, so on the 1330px and mobile viewports the four big organism cards stack cleanly and appear immediately under the identity header.
+- The collapsible Game Plan header becomes a short, thumb-reachable row, eliminating the long stretch of Game Plan content that previously pushed everything else below the fold.
+- No new sticky elements, no horizontal scroll.
 
-`src/components/command/IntelligenceCardShell.tsx`
-- "No source event yet" empty fallback → "Not enough info yet"
-- Remove the `occurred_at {ISO}` mono footer line (engine version + occurred_at still passed into TrustFooter for advanced/coach surfaces, just hidden from athlete cards).
+## 4. Out of scope (unchanged)
 
-`src/components/command/ConfidencePill.tsx`
-- Visible label "conf {n}%" → "{n}% sure" (e.g. "82% sure"); when null → "—". Tooltip → "How sure we are based on your recent check-ins."
+- `/today`, `/command`, projections, replay, lineage, ASB events, confidence, capability gates, runtime emitters, parity tests, GamePlanCard internals, scout/coach Game Plan, IdentityCommandCard, QuickActionsCard.
 
-`src/components/command/MissingnessChip.tsx`
-- `live` → "Up to date"
-- `no_signal` → "No info yet"
-- `stale` → "Needs a fresh check-in"
-- `partial` → "Some info missing"
-- Tooltips rewritten in plain language; remove the word "event".
+## Files touched
 
-`src/components/command/LineageDrilldownButton.tsx`
-- "View lineage" → "Why?" (icon kept). Disabled tooltip → "Nothing to show yet."
+- `src/pages/Dashboard.tsx` — add import, mount `CommandCenterSection`, swap `GamePlanCard` for `GamePlanCollapsible`.
+- `src/components/dashboard/GamePlanCollapsible.tsx` — new wrapper.
 
-`src/components/runtime/TrustFooter.tsx`
-- Drop the inline `engine_version` mono string from athlete render (keep it in DOM as a `title` attribute on the row for ops parity; no visible mono engineering text).
-- The relative time stays as the only visible meta.
+## Verification
 
----
-
-## 3. Sweep for other leaks shown in athlete mode
-
-Limited, screen-targeted edits — not a global rename:
-
-- `src/pages/Today.tsx` RecentList: swap `font-mono {topic_id}` for `<TopicLabel id=... />`.
-- Any "canonical" / "emit" / "lineage" / "replay" / "escalation" wording in the **Today, Command Center, Digest, Forecast** trees (already-touched files only) is replaced per §2.
-- Owner/admin pages, `/asb/*`, `/replay/*`, `/ops/*`, edge functions, tests, and `docs/` keep their existing technical vocabulary.
-
----
-
-## 4. Out of scope (explicitly unchanged)
-
-- `src/lib/asb/*`, `src/lib/command/projections.ts`, `src/lib/runtime/*`, `src/hooks/command/*`, `useAsbTimeline`, `asb_events` schema, edge functions, migrations.
-- TrustFooter signal wiring, capability gates, parity matrix, replay determinism, CI rules, engine_version semantics.
-- Topic IDs, payload shapes, projection logic, missingness classification thresholds.
-- Coach/owner/ops/replay surfaces.
-
----
-
-## 5. Verification
-
-- Visual: `/today` first screen reads as one "how your body is doing today" surface with PulseStrip + CC fused.
-- Text: no `font-mono` topic IDs, no "canonical / emit / lineage / replay / escalation / engine vX" visible on `/today`, `/command`, `/digest`, `/forecast`.
-- Behavior: ConfidencePill / MissingnessChip / LineageDrilldownButton still receive the same props and still link to `/replay/:id` — only labels change.
-- Tests: no test files touched; existing parity/replay/invariant suites continue to pass since projections and topic IDs are untouched.
-
----
-
-### Files affected (UI strings + Today layout only)
-
-- `src/pages/Today.tsx`
-- `src/components/command/CommandCenterSection.tsx`
-- `src/components/command/TodayOverviewHeader.tsx`
-- `src/components/command/EscalationBanner.tsx`
-- `src/components/command/ConfidencePill.tsx`
-- `src/components/command/MissingnessChip.tsx`
-- `src/components/command/LineageDrilldownButton.tsx`
-- `src/components/command/IntelligenceCardShell.tsx`
-- `src/components/command/cards/ReadinessCard.tsx`
-- `src/components/command/cards/FatigueCard.tsx`
-- `src/components/command/cards/RecoveryCard.tsx`
-- `src/components/command/cards/WorkloadCard.tsx`
-- `src/components/command/cards/SchedulingLoadCard.tsx`
-- `src/components/command/cards/EscalationFlagsCard.tsx`
-- `src/components/runtime/TrustFooter.tsx`
+- Visit `/dashboard` on the 1330px viewport and on a mobile viewport (375×812): Command Center heading + organism cards visible in the first viewport above Game Plan.
+- Toggle Game Plan: collapses to header-only, expands back to full card; preference survives a reload.
+- No console errors; existing tests untouched since logic surfaces are unchanged.
