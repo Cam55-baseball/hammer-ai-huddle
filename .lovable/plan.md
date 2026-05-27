@@ -1,16 +1,15 @@
-## Remove the collapsible Game Plan wrapper
+## Add collapse arrow to Command Center
 
-The `GamePlanCollapsible` shell sits between the Command Center and the full Game Plan chart, duplicating the "Game Plan" header that `GamePlanCard` already renders. Unwrap it so only the full chart remains.
+Mirror the `IdentityCommandCard` pattern: a chevron in the top-right of the header row collapses the entire Command Center body.
 
 ### Changes
 
-`src/pages/Dashboard.tsx`
-- Replace the `GamePlanCollapsible` import with the existing `GamePlanCard` import.
-- Swap `<GamePlanCollapsible selectedSport={selectedSport} />` (line 556) for `<GamePlanCard selectedSport={selectedSport} />`.
-
-`src/components/dashboard/GamePlanCollapsible.tsx`
-- Delete (no other references in the codebase).
+`src/components/command/CommandCenterSection.tsx`
+- Add `open` state (default `true`), persisted in `localStorage` under `command.center.open`.
+- Wrap the existing header row in a `<CollapsibleTrigger asChild>` button so the whole header is clickable. Keep `TodayOverviewHeader` on the left; add a `ChevronDown` on the right that rotates 180° when open. Include `aria-expanded` / `aria-label`.
+- Wrap the escalation banner + 4-card grid + "Show more details" disclosure inside `<CollapsibleContent>` using the same `data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up` classes used by IdentityCommandCard.
+- When collapsed, only the header row is visible (matches identity-card behavior).
 
 ### Out of scope
 
-Command Center, GamePlanCard internals, coach/scout Game Plan, projections, runtime, replay, parity tests. UI-only removal.
+No changes to projections, hooks, card internals, escalation logic, `/today`, `/command`, Dashboard mount, or any runtime/replay logic. Pure UI.
