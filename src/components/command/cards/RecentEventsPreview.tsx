@@ -41,7 +41,7 @@ export function RecentEventsPreview({ rows, loading }: Props) {
                   to={`/replay/${r.event_id}`}
                   className="shrink-0 text-xs text-primary underline-offset-2 hover:underline"
                 >
-                  replay →
+                  review →
                 </Link>
               </li>
             ))}
