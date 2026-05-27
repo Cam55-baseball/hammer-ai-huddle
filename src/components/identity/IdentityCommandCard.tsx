@@ -12,6 +12,9 @@ import { useBehavioralEvents, type BehavioralEvent } from '@/hooks/useBehavioral
 
 import { useQuickActionExecutor, type QuickActionType } from '@/hooks/useQuickActionExecutor';
 import { useEngineRecomputeTrigger } from '@/hooks/useEngineRecomputeTrigger';
+import { useAthleteCommandRows } from '@/hooks/command/useAthleteCommandRows';
+import { pickRotatingAlert } from '@/lib/identity/rotatingAlert';
+import { deriveTodaysStandard } from '@/lib/standard/todaysStandard';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
@@ -144,10 +147,16 @@ interface Props { className?: string }
 
 export function IdentityCommandCard({ className }: Props) {
   const { user } = useAuth();
-  const { snapshot, tier, label, tone, ring, bg, chip, accent, scoreText, loading } = useIdentityState();
+  const { snapshot, tier, label, tone, ring, bg, chip, accent, scoreText, loading, focusSentence } = useIdentityState();
   const { dayType, setDayType, restBudgetLeft, usedThisWeek, maxPerWeek, overBudget } = useDayState();
   const { active: activeEvent, all: allEvents, acknowledge } = useBehavioralEvents();
   const { execute, running } = useQuickActionExecutor();
+  const { data: commandRows } = useAthleteCommandRows({ days: 30, limit: 500 });
+  const todaysStandard = useMemo(
+    () => deriveTodaysStandard(commandRows, dayType),
+    [commandRows, dayType],
+  );
+  const rotatingAlert = useMemo(() => pickRotatingAlert(allEvents), [allEvents]);
   useEngineRecomputeTrigger();
 
   // ─── Standard-confirmed state ───────────────────────────────────────────
@@ -374,15 +383,38 @@ export function IdentityCommandCard({ className }: Props) {
             <div className="px-3 sm:px-4 pb-4 pt-1 space-y-4 border-t border-border/40">
 
               {/* ── 1. Today's Standard ──────────────────────────────── */}
-              <section>
+              <section className="space-y-3">
                 <SectionHeader
                   title="Today's Standard"
                   helpText={
-                    `Your tier is ${label}. Confirming declares you're holding yourself to it today. ` +
-                    `A confirmed standard with all Non-Negotiables met locks your streak. ` +
-                    `A confirmed-but-missed day applies pressure to your identity score.`
+                    `Your tier is ${label}. Confirming means you're holding yourself to it today. ` +
+                    `Hitting your standard with everything checked off locks your streak. ` +
+                    `Confirming and then missing chips at your consistency.`
                   }
                 />
+
+                {/* Plain-English standard sentence (single source of truth) */}
+                <div className="rounded-lg border border-border/60 bg-background/40 px-3 py-2.5">
+                  <p className="text-sm font-semibold text-foreground leading-snug">
+                    {todaysStandard.standard}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                    {todaysStandard.rationale}
+                  </p>
+                </div>
+
+                {/* Develop This Week — one sentence, plain English */}
+                {focusSentence && (
+                  <div className="flex items-start gap-2 px-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground mt-0.5 shrink-0">
+                      Develop&nbsp;this&nbsp;week
+                    </span>
+                    <p className="text-xs text-foreground/85 leading-relaxed">
+                      {focusSentence}
+                    </p>
+                  </div>
+                )}
+
                 {standardConfirmed ? (
                   <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/5 px-3 py-2.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -410,6 +442,11 @@ export function IdentityCommandCard({ className }: Props) {
                     </Button>
                   </div>
                 )}
+
+                {/* Motivational closer tied to standard tone */}
+                <p className="text-xs italic text-muted-foreground text-center px-2">
+                  {todaysStandard.motivational}
+                </p>
               </section>
 
               {/* ── 2. Day Intent ────────────────────────────────────── */}
@@ -460,70 +497,54 @@ export function IdentityCommandCard({ className }: Props) {
                 </div>
               </section>
 
-              {/* ── 3. Active Alerts ─────────────────────────────────── */}
-              <section>
-                <SectionHeader
-                  title="Active Alerts"
-                  helpText="Time-sensitive pressure events from the engine. Each alert tells you exactly what to do. Acting clears it; ignoring it chips at your consistency."
-                />
-                {allEvents && allEvents.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {allEvents.slice(0, 4).map((ev) => {
-                      const { text, tone: t, Icon } = formatEvent(ev);
-                      const actionType = ev.action_type ?? null;
-                      const actionLabel = actionType ? ACTION_LABELS[actionType] ?? 'Act' : null;
-                      return (
-                        <div
-                          key={ev.id}
-                          className={cn(
-                            'rounded-lg border px-2.5 py-2 text-xs font-semibold',
-                            'flex flex-col gap-2 sm:flex-row sm:items-center',
-                            t,
-                          )}
-                          role="status"
-                        >
-                          <div className="flex items-start gap-2 flex-1 min-w-0">
-                            <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            <span className="flex-1 min-w-0 leading-snug break-words">{text}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); acknowledge(ev.id); }}
-                              aria-label="Dismiss"
-                              className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 sm:hidden"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                          {actionType && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleEventAction(ev)}
-                              disabled={running}
-                              className="h-7 px-2 gap-1 bg-white/15 hover:bg-white/25 text-current border-0 font-bold text-[10px] w-full sm:w-auto sm:h-6"
-                            >
-                              <Zap className="h-3 w-3" />
-                              {actionLabel}
-                            </Button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => acknowledge(ev.id)}
-                            aria-label="Dismiss"
-                            className="h-5 w-5 rounded grid place-items-center text-current hover:bg-white/10 shrink-0 hidden sm:grid"
+              {/* ── 3. One Rotating Alert (highest priority only) ────── */}
+              {rotatingAlert && (() => {
+                const sourceEvent = allEvents?.find((e) => e.id === rotatingAlert.id);
+                const Icon = iconFor(sourceEvent?.event_type ?? '');
+                const barColor = BAR_BY_TONE[rotatingAlert.tone] ?? 'bg-sky-500';
+                const iconColor = ICON_BY_TONE[rotatingAlert.tone] ?? 'text-sky-500';
+                return (
+                  <section>
+                    <SectionHeader
+                      title="One Thing"
+                      helpText="The single most important thing for you right now. Acting clears it."
+                    />
+                    <div
+                      className="relative overflow-hidden rounded-lg border border-border bg-background/40 px-3 py-2.5 flex flex-col gap-2 sm:flex-row sm:items-center"
+                      role="status"
+                    >
+                      <div className={cn('absolute inset-y-0 left-0 w-[3px]', barColor)} aria-hidden />
+                      <div className="flex items-start gap-2 flex-1 min-w-0 pl-1">
+                        <Icon className={cn('h-3.5 w-3.5 shrink-0 mt-0.5', iconColor)} />
+                        <span className="flex-1 min-w-0 text-xs font-semibold text-foreground leading-snug break-words">
+                          {rotatingAlert.text}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {rotatingAlert.actionType && sourceEvent && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleEventAction(sourceEvent)}
+                            disabled={running}
+                            className="h-7 px-2.5 gap-1 font-bold text-[11px]"
                           >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs font-semibold text-emerald-300">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    All clear. Standard intact.
-                  </div>
-                )}
-              </section>
+                            <Zap className="h-3 w-3" />
+                            {rotatingAlert.actionLabel}
+                          </Button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => acknowledge(rotatingAlert.id)}
+                          aria-label="Dismiss"
+                          className="h-7 w-7 rounded grid place-items-center text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+                );
+              })()}
 
             </div>
           </CollapsibleContent>

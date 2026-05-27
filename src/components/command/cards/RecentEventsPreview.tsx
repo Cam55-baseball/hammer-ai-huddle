@@ -27,7 +27,7 @@ export function RecentEventsPreview({ rows, loading }: Props) {
           <div className="h-24 w-full animate-pulse rounded-md bg-muted/50" />
         ) : items.length === 0 ? (
           <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 px-3 py-4 text-sm text-muted-foreground">
-            No canonical events yet. Once a producer emits one, it appears here in real time.
+            No updates yet. New activity will appear here in real time.
           </div>
         ) : (
           <ul className="divide-y">
@@ -41,7 +41,7 @@ export function RecentEventsPreview({ rows, loading }: Props) {
                   to={`/replay/${r.event_id}`}
                   className="shrink-0 text-xs text-primary underline-offset-2 hover:underline"
                 >
-                  replay →
+                  review →
                 </Link>
               </li>
             ))}
