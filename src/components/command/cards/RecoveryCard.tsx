@@ -14,7 +14,7 @@ export function RecoveryCard({ rows, loading }: Props) {
   return (
     <IntelligenceCardShell
       title="Recovery"
-      subtitle="Latest behavioral/foundation recovery event"
+      subtitle="How well you're bouncing back"
       icon={<HeartPulse className="h-4 w-4 text-primary" />}
       projection={p}
       loading={loading}

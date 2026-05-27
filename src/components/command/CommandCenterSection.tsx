@@ -14,14 +14,20 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 
+interface Props {
+  compact?: boolean;
+  /** When true, the Habits / Schedule / Trends collapsible opens by default. */
+  defaultSignalsOpen?: boolean;
+}
+
 /**
  * Pure Command Center surface (no auth/layout wrappers).
  * Mounts inside Today (/today) as the primary organism view and inside
  * /command as the deep-link surface. Reads only canonical ASB events.
  */
-export function CommandCenterSection({ compact = false }: { compact?: boolean }) {
+export function CommandCenterSection({ compact = false, defaultSignalsOpen = false }: Props) {
   const { data: rows, isLoading } = useAthleteCommandRows({ days: 30, limit: 500 });
-  const [showSignals, setShowSignals] = useState(false);
+  const [showSignals, setShowSignals] = useState(defaultSignalsOpen);
 
   return (
     <section aria-label="Organism command center" className="space-y-4">
@@ -42,10 +48,10 @@ export function CommandCenterSection({ compact = false }: { compact?: boolean })
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="w-full min-h-11 justify-between">
               <span className="text-sm font-medium">
-                {showSignals ? "Hide" : "Show"} behaviour, schedule & signals
+                {showSignals ? "Hide" : "Show"} habits, schedule & trends
               </span>
               <ChevronDown
-                className={`h-4 w-4 transition-transform ${showSignals ? "rotate-180" : ""}`}
+                className={`h-4 w-4 transition-transform motion-reduce:transition-none ${showSignals ? "rotate-180" : ""}`}
               />
             </Button>
           </CollapsibleTrigger>

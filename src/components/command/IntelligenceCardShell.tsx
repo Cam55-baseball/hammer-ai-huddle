@@ -29,7 +29,12 @@ export function IntelligenceCardShell({
 }: Props) {
   const hasEvent = !!projection.sourceEventId;
   return (
-    <Card className={destructive ? "border-destructive/40 bg-destructive/5" : undefined}>
+    <Card
+      className={
+        "transition-colors duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 " +
+        (destructive ? "border-destructive/40 bg-destructive/5" : "")
+      }
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -38,7 +43,7 @@ export function IntelligenceCardShell({
               <span className="truncate">{title}</span>
             </CardTitle>
             {subtitle && (
-              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{subtitle}</p>
+              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{subtitle}</p>
             )}
           </div>
         </div>
@@ -47,17 +52,17 @@ export function IntelligenceCardShell({
       <CardContent className="space-y-4">
         <div className="min-h-[64px]">
           {loading ? (
-            <div className="h-16 w-full animate-pulse rounded-md bg-muted/50" />
+            <div className="h-16 w-full animate-pulse rounded-md bg-muted/40" />
           ) : hasEvent ? (
             children
           ) : (
             <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 px-3 py-4 text-sm text-muted-foreground">
-              {emptyMessage} — once a canonical event lands it appears here.
+              {emptyMessage}
             </div>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t pt-3">
+        <div className="flex min-h-11 flex-wrap items-center gap-2 border-t pt-3">
           <ConfidencePill confidence={projection.confidence} />
           <MissingnessChip missingness={projection.missingness} />
           {projection.engineVersion && <EngineVersionBadge engineVersion={projection.engineVersion} />}
