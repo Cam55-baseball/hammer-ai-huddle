@@ -65,8 +65,8 @@ function deriveFallbackStep(
       instruction:
         "Take 30 seconds to tell Coach Hammer how you feel and what's on the schedule.",
       why: "Without a fresh signal, guidance falls back to defaults.",
-      ctaLabel: "Open Check-In",
-      ctaRoute: "/command",
+      ctaLabel: "Do Check-In",
+      ctaRoute: "/check-in",
     };
   }
   return {
