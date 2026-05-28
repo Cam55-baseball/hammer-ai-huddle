@@ -56,6 +56,13 @@ function staleHoursOf(ev: AsbEventRow | null): number | null {
 export function useCoachHammerNextStep() {
   const { user } = useAuth();
   const { data: rows, isLoading: rowsLoading } = useAthleteCommandRows({
+    days: 30,
+    limit: 500,
+  });
+  const { unackedCount } = useEscalationFeed({ withinHours: 72 });
+  const { dayType } = useDayState();
+  const { data: mpi } = useMPIScores();
+
   const snapshot = useMemo(() => {
     if (!rows) return null;
     const readinessEv = latestByTopicPrefix(rows, "behavioral.readiness");
