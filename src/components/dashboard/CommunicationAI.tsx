@@ -72,7 +72,7 @@ function deriveFallbackStep(
     tier: "optimization",
     tierLabel: "Standby",
     title: "Coach Hammer is catching his breath.",
-    analysis: "AI guidance is temporarily unavailable.",
+    analysis: "Hammer guidance is temporarily unavailable.",
     instruction: "Open Command to review today's signals manually.",
     why: "We'd rather pause than guess.",
     ctaLabel: "Open Command",
