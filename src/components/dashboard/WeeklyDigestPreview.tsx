@@ -59,38 +59,3 @@ export function WeeklyDigestPreview() {
     </section>
   );
 }
-
-          <h2 className="text-[11px] font-black uppercase tracking-[0.22em] text-foreground">
-            Weekly Recap
-          </h2>
-        </div>
-        <Link
-          to="/digest"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-        >
-          Open weekly digest <ArrowRight className="h-3 w-3" />
-        </Link>
-      </header>
-      {isLoading ? (
-        <ul className="space-y-2">
-          <li className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-          <li className="h-4 w-2/3 rounded bg-muted animate-pulse" />
-          <li className="h-4 w-1/2 rounded bg-muted animate-pulse" />
-        </ul>
-      ) : bullets.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nothing logged in the last 7 days yet.
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {bullets.map((b, i) => (
-            <li key={i} className="text-sm text-foreground/90 leading-relaxed flex gap-2">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" aria-hidden />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
