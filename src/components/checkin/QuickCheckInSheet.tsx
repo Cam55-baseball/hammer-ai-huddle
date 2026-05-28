@@ -259,15 +259,26 @@ export function QuickCheckInSheet({ open, onOpenChange }: Props) {
     );
 
     try {
-      await Promise.all(emissions);
+      const results = (await Promise.all(emissions)) as Array<{ ok: boolean; message?: string }>;
+      const failed = results.filter((r) => r && r.ok === false);
+      if (failed.length > 0) {
+        console.error("[check-in] some emissions failed", failed);
+        toast.error("Could not save check-in", {
+          description: "Some signals didn't save. Try again.",
+        });
+        setSaving(false);
+        return;
+      }
       setSaved(true);
       toast.success("Check-in saved", {
         description: "Coach Hammer is recalculating.",
       });
-      // Refresh Hammer + command rows
-      qc.invalidateQueries({ queryKey: ["coach-hammer-next-step"] });
-      qc.invalidateQueries({ queryKey: ["athlete-command-rows"] });
-      qc.invalidateQueries({ queryKey: ["escalation-feed"] });
+      // Refresh Hammer + command rows (correct query keys)
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["asb-command-rows"] }),
+        qc.invalidateQueries({ queryKey: ["coach-hammer-next-step"] }),
+        qc.invalidateQueries({ queryKey: ["escalation-feed"] }),
+      ]);
       setTimeout(close, 900);
     } catch (e) {
       console.error("[check-in] emit failed", e);
