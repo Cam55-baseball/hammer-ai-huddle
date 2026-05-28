@@ -24,14 +24,15 @@ export function WeeklyDigestPreview() {
   }, [rows]);
 
   return (
-    <section className="rounded-2xl border-2 border-foreground/20 bg-card p-4">
-      <header className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-primary" aria-hidden />
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">
+    <section className="rounded-2xl border-2 border-foreground/40 bg-card p-3 sm:p-4">
+      <header className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden />
+          <h2 className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground truncate">
             Weekly Recap
           </h2>
         </div>
+
         <Link
           to="/digest"
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
