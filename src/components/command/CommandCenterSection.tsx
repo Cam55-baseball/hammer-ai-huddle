@@ -42,7 +42,8 @@ export function CommandCenterSection({ compact = false, defaultSignalsOpen = fal
   }, [open]);
 
   return (
-    <section aria-label="How your body is today" className="space-y-4">
+    <section aria-label="How your body is today" className="space-y-4 rounded-2xl border-2 border-foreground/40 bg-card p-4 sm:p-5">
+
       <Collapsible open={open} onOpenChange={setOpen}>
         <CollapsibleTrigger asChild>
           <button
