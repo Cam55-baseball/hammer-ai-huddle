@@ -56,40 +56,58 @@ function staleHoursOf(ev: AsbEventRow | null): number | null {
 export function useCoachHammerNextStep() {
   const { user } = useAuth();
   const { data: rows, isLoading: rowsLoading } = useAthleteCommandRows({
-    days: 30,
-    limit: 500,
-  });
-  const { unackedCount } = useEscalationFeed({ withinHours: 72 });
-  const { dayType } = useDayState();
-  const { data: mpi } = useMPIScores();
-
   const snapshot = useMemo(() => {
     if (!rows) return null;
     const readinessEv = latestByTopicPrefix(rows, "behavioral.readiness");
     const fatigueEv = latestByTopicPrefix(rows, "behavioral.fatigue");
-    const recoveryEv =
-      latestByTopicPrefix(rows, "behavioral.recovery") ??
-      latestByTopicPrefix(rows, "foundation.recovery");
+    const sorenessEv = latestByTopicPrefix(rows, "behavioral.soreness");
+    const sleepEv = latestByTopicPrefix(rows, "behavioral.sleep");
+    const stressEv = latestByTopicPrefix(rows, "behavioral.stress");
+    const hydrationEv = latestByTopicPrefix(rows, "behavioral.hydration");
+    const planEv = latestByTopicPrefix(rows, "athlete.plan.today");
+    const checkinEv = latestByTopicPrefix(rows, "behavioral.checkin");
 
     const sessions = windowCount(rows, "athlete.session", 7);
     const checkIns = windowCount(rows, "behavioral.checkin", 7);
-    const recoverySessions = windowCount(rows, "behavioral.recovery", 7);
+
+    const payloadOf = (ev: typeof readinessEv) =>
+      ev ? (projectLatest<Record<string, unknown>>(ev).value as any) : null;
+
+    const sleepP = payloadOf(sleepEv);
+    const planP = payloadOf(planEv);
+    const checkinP = payloadOf(checkinEv);
 
     return {
       hour: new Date().getHours(),
       dayType: dayType ?? null,
       escalationCount: unackedCount ?? 0,
-      readiness: {
-        score: scoreOf(readinessEv),
-        staleHours: staleHoursOf(readinessEv),
+      readiness: { score: scoreOf(readinessEv), staleHours: staleHoursOf(readinessEv) },
+      fatigue: { score: scoreOf(fatigueEv), staleHours: staleHoursOf(fatigueEv) },
+      soreness: {
+        score: scoreOf(sorenessEv),
+        regions: (payloadOf(sorenessEv)?.regions as string[] | undefined) ?? null,
+        staleHours: staleHoursOf(sorenessEv),
       },
-      fatigue: {
-        score: scoreOf(fatigueEv),
-        staleHours: staleHoursOf(fatigueEv),
+      sleep: {
+        hours: typeof sleepP?.hours === "number" ? sleepP.hours : null,
+        quality: typeof sleepP?.quality === "number" ? sleepP.quality : null,
+        staleHours: staleHoursOf(sleepEv),
       },
-      recovery: {
-        score: scoreOf(recoveryEv),
-        staleHours: staleHoursOf(recoveryEv),
+      stress: { score: scoreOf(stressEv), staleHours: staleHoursOf(stressEv) },
+      hydration: {
+        level: (payloadOf(hydrationEv)?.level as string | undefined) ?? null,
+        staleHours: staleHoursOf(hydrationEv),
+      },
+      plan: {
+        modules: (planP?.modules as string[] | undefined) ?? null,
+        liftingIntensity: (planP?.lifting_intensity as string | null) ?? null,
+        volume: (planP?.volume as string | null) ?? null,
+        staleHours: staleHoursOf(planEv),
+      },
+      checkin: {
+        note: (checkinP?.note as string | undefined) ?? null,
+        skipped: (checkinP?.skipped as string[] | undefined) ?? null,
+        staleHours: staleHoursOf(checkinEv),
       },
       mpi: {
         score: mpi?.adjusted_global_score ?? null,
@@ -98,18 +116,9 @@ export function useCoachHammerNextStep() {
       recentActivity: {
         sessionsLast7Days: sessions.count,
         checkInsLast7Days: checkIns.count,
-        recoveryLast7Days: recoverySessions.count,
       },
     };
   }, [rows, unackedCount, dayType, mpi]);
-
-  // Bucket the hour to 30-min windows so the cache key doesn't churn every render
-  const hashKey = useMemo(() => {
-    if (!snapshot) return null;
-    const halfHour = Math.floor(Date.now() / (30 * 60 * 1000));
-    return JSON.stringify({ ...snapshot, halfHour });
-  }, [snapshot]);
-
   const query = useQuery({
     queryKey: ["coach-hammer-next-step", user?.id, hashKey],
     enabled: !!user && !!snapshot,
