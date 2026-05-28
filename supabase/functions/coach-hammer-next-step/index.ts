@@ -18,6 +18,7 @@ const corsHeaders = {
 };
 
 const ALLOWED_ROUTES = [
+  "/check-in",
   "/command",
   "/practice",
   "/tex-vision",
@@ -62,15 +63,15 @@ Tell this athlete the single most important thing to do RIGHT NOW, in coach voic
 
 RULES:
 - Survivability first: if escalationCount > 0, route to /command and tell them to check the alert before training.
+- If readiness, fatigue, or recovery is missing (null) OR staleHours > 18, route to /check-in with ctaLabel "Do Check-In" and tell them you need a fresh check-in before you can coach. Tier = "missing".
 - If recovery is low (< 0.45 and fresh) OR fatigue is high (> 0.7 and fresh), prioritize recovery.
 - If readiness is < 0.4 and fresh, tell them to take it easy.
 - If readiness >= 0.65 and fatigue is in check, encourage a strong session.
 - Otherwise, pick the right action for the time of day (hour 0-23).
-- All signals "staleHours" > 36 means that signal is stale — say so and ask for a fresh check-in instead of inventing certainty.
+- Any signal with staleHours > 36 means that signal is stale — say so and route to /check-in instead of inventing certainty.
 - One sentence each for analysis, instruction, and why. No lists. No emojis.
 - ctaRoute MUST be one of: ${ALLOWED_ROUTES.join(", ")}
 - tier MUST be one of: ${ALLOWED_TIERS.join(", ")}
-
 Return ONLY valid JSON matching this exact shape, no markdown, no commentary:
 {
   "tier": "<one of the tiers above>",
