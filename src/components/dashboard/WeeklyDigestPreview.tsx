@@ -31,6 +31,7 @@ export function WeeklyDigestPreview() {
           <h2 className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground truncate">
             Weekly Recap
           </h2>
+        </div>
       </header>
 
       {isLoading ? (
@@ -50,6 +51,14 @@ export function WeeklyDigestPreview() {
           ))}
         </ul>
       )}
+
+      <Link
+        to="/digest"
+        className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+      >
+        Full recap <ArrowRight className="h-3 w-3" />
+      </Link>
+
     </section>
   );
 }
