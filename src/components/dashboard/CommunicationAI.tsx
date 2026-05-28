@@ -242,15 +242,13 @@ export function CommunicationAI({ className }: Props) {
     <section
       aria-labelledby="communication-ai-heading"
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-primary/20 p-6 sm:p-8",
+        "relative overflow-hidden rounded-2xl border border-primary/20 p-4 sm:p-5",
         "bg-gradient-to-br from-primary/10 via-card to-card",
-        "shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.35)]",
+        "shadow-sm",
         className,
       )}
     >
-      <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/15 blur-3xl" />
-
-      <div className="relative flex items-center justify-between gap-3 mb-5">
+      <div className="relative flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" aria-hidden />
           <h2
@@ -270,23 +268,22 @@ export function CommunicationAI({ className }: Props) {
         </span>
       </div>
 
-      <div className="relative space-y-3 max-w-2xl">
-        <h3 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground leading-tight">
+      <div className="relative space-y-2 max-w-2xl">
+        <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground leading-tight">
           {step.title}
         </h3>
         <p className="text-sm font-medium text-foreground flex items-start gap-2">
           <ArrowRight className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden />
           <span>{step.instruction}</span>
         </p>
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-xs text-muted-foreground leading-relaxed">
           <span className="font-semibold text-foreground/80">Why this matters: </span>
           {step.why}
         </p>
       </div>
 
-      <div className="relative mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="relative mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
         <Button
-          size="lg"
           onClick={() => navigate(step.ctaRoute)}
           className="w-full sm:w-auto font-semibold"
         >

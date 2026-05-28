@@ -1,42 +1,26 @@
 ## Goal
 
-Make the dashboard feel calmer. Pull Weekly Recap and What's Likely Next up to the top, shrink them, put them side-by-side with stronger borders, and tighten a few other busy spots.
+Reduce visual overwhelm on the dashboard with three small UI-only edits.
 
 ## Changes
 
-### 1. Weekly Recap + What's Likely Next — compact side-by-side row at the top
+### 1. Weekly Recap + What's Likely Next — side-by-side on every viewport
+`src/pages/Dashboard.tsx` (line 540): change grid from `grid-cols-1 sm:grid-cols-2` to `grid-cols-2` and reduce gap to `gap-2 sm:gap-3` so the two boxes always sit next to each other (including the current 390px mobile view where they're stacking today).
 
-In `src/pages/Dashboard.tsx`:
-- Remove the existing `<WeeklyDigestPreview />` and `<ForecastPreview />` block from below the Game Plan.
-- Add a new compact row directly under the hero image (above the Identity card) for athletes only:
-  ```
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <WeeklyDigestPreview />
-    <ForecastPreview />
-  </div>
-  ```
+Inside `WeeklyDigestPreview.tsx` and `ForecastPreview.tsx`: tighten padding to `p-3 sm:p-4` and headers to `text-[11px]` so the side-by-side cards stay readable on narrow screens. No data/logic changes.
 
-In `src/components/dashboard/WeeklyDigestPreview.tsx` and `ForecastPreview.tsx`:
-- Swap `border-border` → `border-2 border-foreground/20` for a darker, more defined edge.
-- Reduce padding `p-5 sm:p-6` → `p-4`.
-- Show only the top 2 bullets max (truncate from current 3 in Weekly, current 2 in Forecast stays).
-- Shrink bullet text to `text-xs sm:text-sm`, tighten line-height.
-- Shorten header link copy: "Open weekly digest" → "Full recap", "Open forecast" → "See more".
+### 2. Darker border around "How your body is doing today"
+`src/components/command/CommandCenterSection.tsx`: wrap the existing `<section>` body with a card frame — add `rounded-2xl border-2 border-foreground/25 bg-card p-4 sm:p-5` to the section element. The internal Collapsible/cards stay unchanged.
 
-### 2. Other cleanup moves to reduce overwhelm
-
-- **Hero image**: drop `aspect-[16/9] sm:aspect-[21/9]` → `aspect-[21/9] sm:aspect-[32/9]` so it takes less vertical space on mobile.
-- **Command Center wrapper**: remove the extra `<section className="rounded-xl border border-border bg-card/40 p-4 sm:p-5">` wrapper — it double-frames the cards inside. Render `<CommandCenterSection />` directly.
-- **Spacing**: change root container `space-y-4 sm:space-y-6` → `space-y-3 sm:space-y-5` for tighter rhythm.
-- **Merch card**: this is a heavy gradient block at the bottom. No structural change requested, but flag for future: could be collapsed into a small banner.
+### 3. Smaller "Your Next Best Step" card
+`src/components/dashboard/CommunicationAI.tsx` (lines 241–303): reduce visual weight without removing content:
+- Outer padding `p-6 sm:p-8` → `p-4 sm:p-5`
+- Remove the decorative blurred blob (`-top-16 -right-16 ... blur-3xl`)
+- Soften shadow to `shadow-sm`
+- Title `text-2xl sm:text-3xl` → `text-lg sm:text-xl`
+- Header margin `mb-5` → `mb-3`, body `space-y-3` → `space-y-2`
+- Button `size="lg"` → default size, top margin `mt-6` → `mt-4`
 
 ## Out of scope
 
-- Game Plan, Identity Card, Command Center internals, Communication AI, module cards, merch card visuals — all untouched.
-- No data, hook, or routing changes.
-
-## Files
-
-- edit `src/pages/Dashboard.tsx`
-- edit `src/components/dashboard/WeeklyDigestPreview.tsx`
-- edit `src/components/dashboard/ForecastPreview.tsx`
+Game Plan, Identity Card, Command Center card internals, module cards, data hooks, routing — all untouched.

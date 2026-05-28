@@ -537,7 +537,8 @@ export default function Dashboard() {
 
         {/* Compact summary row — pulled to the top to reduce overwhelm */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+
             <WeeklyDigestPreview />
             <ForecastPreview />
           </div>
