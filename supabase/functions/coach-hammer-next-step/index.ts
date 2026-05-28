@@ -43,12 +43,16 @@ interface Snapshot {
   escalationCount: number;
   readiness?: { score: number | null; staleHours: number | null } | null;
   fatigue?: { score: number | null; staleHours: number | null } | null;
-  recovery?: { score: number | null; staleHours: number | null } | null;
+  soreness?: { score: number | null; regions: string[] | null; staleHours: number | null } | null;
+  sleep?: { hours: number | null; quality: number | null; staleHours: number | null } | null;
+  stress?: { score: number | null; staleHours: number | null } | null;
+  hydration?: { level: string | null; staleHours: number | null } | null;
+  plan?: { modules: string[] | null; liftingIntensity: string | null; volume: string | null; staleHours: number | null } | null;
+  checkin?: { note: string | null; skipped: string[] | null; staleHours: number | null } | null;
   mpi?: { score: number | null; trend: string | null } | null;
   recentActivity?: {
     sessionsLast7Days: number;
     checkInsLast7Days: number;
-    recoveryLast7Days: number;
   };
 }
 
@@ -59,17 +63,17 @@ ATHLETE SNAPSHOT (right now):
 ${JSON.stringify(snap, null, 2)}
 
 YOUR JOB:
-Tell this athlete the single most important thing to do RIGHT NOW, in coach voice. Acknowledge what they've actually done recently (the recentActivity counts), then give one clear instruction and one short reason. Stay grounded in the snapshot — do not invent metrics, drills, or numbers that aren't there.
+Tell this athlete the single most important thing to do RIGHT NOW, in coach voice. Use their freshest check-in signals (readiness, fatigue, soreness + regions, sleep, stress, hydration, today's plan, and any flagged note) to make the call. Then give one clear instruction and one short reason. Stay grounded in the snapshot — do not invent metrics, drills, or numbers that aren't there.
 
 RULES:
-- Survivability first: if escalationCount > 0, route to /command and tell them to check the alert before training.
-- If readiness, fatigue, or recovery is missing (null) OR staleHours > 18, route to /check-in with ctaLabel "Do Check-In" and tell them you need a fresh check-in before you can coach. Tier = "missing".
-- If recovery is low (< 0.45 and fresh) OR fatigue is high (> 0.7 and fresh), prioritize recovery.
-- If readiness is < 0.4 and fresh, tell them to take it easy.
-- If readiness >= 0.65 and fatigue is in check, encourage a strong session.
-- Otherwise, pick the right action for the time of day (hour 0-23).
-- Any signal with staleHours > 36 means that signal is stale — say so and route to /check-in instead of inventing certainty.
-- One sentence each for analysis, instruction, and why. No lists. No emojis.
+- Survivability first: if escalationCount > 0, route to /command, ctaLabel "Review Alert", tier "survivability".
+- Treat the check-in as fresh if checkin.staleHours != null AND checkin.staleHours <= 18. When fresh, DO NOT route to /check-in — use the signals you have.
+- Only route to /check-in (tier "missing", ctaLabel "Do Check-In") when checkin is null OR checkin.staleHours > 18 AND readiness/fatigue are both null or stale.
+- Soreness regions, sleep hours/quality, stress, and hydration directly inform the call. Examples: soreness score >= 7 OR specific region soreness (e.g. shoulders/arms) on a throwing/lifting day → recovery-tier, route /bounce-back-bay or /command. Sleep hours < 6 OR quality <= 4 → recovery-tier. Stress >= 8 → recovery-tier, lighter day. Hydration "low" → flag it in the instruction.
+- If plan.modules is set and includes lifting with liftingIntensity "heavy"/"max" while readiness <= 4 OR fatigue >= 7 → tell them to deload today, tier "recovery".
+- If readiness >= 7 AND fatigue <= 5 AND no major soreness → encourage a strong session matched to plan.modules, tier "performance".
+- Otherwise pick the right action for hour of day and plan.
+- One sentence each for analysis, instruction, and why. Reference at least one actual snapshot value in the analysis. No lists. No emojis.
 - ctaRoute MUST be one of: ${ALLOWED_ROUTES.join(", ")}
 - tier MUST be one of: ${ALLOWED_TIERS.join(", ")}
 Return ONLY valid JSON matching this exact shape, no markdown, no commentary:
@@ -77,7 +81,7 @@ Return ONLY valid JSON matching this exact shape, no markdown, no commentary:
   "tier": "<one of the tiers above>",
   "tierLabel": "<2-3 word badge label, Title Case>",
   "title": "<short headline, max 8 words, no period>",
-  "analysis": "<one sentence acknowledging what they have or haven't done recently>",
+  "analysis": "<one sentence acknowledging the actual signals they just logged>",
   "instruction": "<one sentence telling them exactly what to do now>",
   "why": "<one short sentence explaining the reason>",
   "ctaLabel": "<2-3 word button label>",
