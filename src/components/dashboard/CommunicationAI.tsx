@@ -184,15 +184,6 @@ export function CommunicationAI({ className }: Props) {
       <div className="relative mt-3">
         <Button
           size="sm"
-          onClick={() => navigate(step.ctaRoute)}
-          className="font-semibold"
-        >
-          {step.ctaLabel}
-        </Button>
-      </div>
-      <div className="relative mt-3">
-        <Button
-          size="sm"
           onClick={() => handleCta(step.ctaRoute)}
           className="font-semibold"
         >
