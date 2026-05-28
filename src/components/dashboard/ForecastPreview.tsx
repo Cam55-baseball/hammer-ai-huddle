@@ -43,16 +43,9 @@ export function ForecastPreview() {
         <div className="flex items-center gap-1.5 min-w-0">
           <TrendingUp className="h-3.5 w-3.5 text-primary shrink-0" aria-hidden />
           <h2 className="text-[10px] font-black uppercase tracking-[0.18em] text-foreground truncate">
-            What's Likely Next
+            What's Next
           </h2>
         </div>
-
-        <Link
-          to="/forecast"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-        >
-          See more <ArrowRight className="h-3 w-3" />
-        </Link>
       </header>
       {isLoading ? (
         <div className="space-y-1.5">
@@ -69,6 +62,14 @@ export function ForecastPreview() {
           ))}
         </ul>
       )}
+
+      <Link
+        to="/forecast"
+        className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+      >
+        See more <ArrowRight className="h-3 w-3" />
+      </Link>
     </section>
+
   );
 }
