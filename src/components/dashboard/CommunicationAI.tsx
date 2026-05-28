@@ -242,20 +242,20 @@ export function CommunicationAI({ className }: Props) {
     <section
       aria-labelledby="communication-ai-heading"
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-primary/20 p-4 sm:p-5",
+        "relative overflow-hidden rounded-2xl border border-primary/20 p-3 sm:p-4",
         "bg-gradient-to-br from-primary/10 via-card to-card",
         "shadow-sm",
         className,
       )}
     >
-      <div className="relative flex items-center justify-between gap-3 mb-3">
+      <div className="relative flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" aria-hidden />
           <h2
             id="communication-ai-heading"
             className="text-[11px] font-black uppercase tracking-[0.22em] text-foreground"
           >
-            Your Next Best Step
+            Coach Hammer · Next Best Step
           </h2>
         </div>
         <span
@@ -268,35 +268,31 @@ export function CommunicationAI({ className }: Props) {
         </span>
       </div>
 
-      <div className="relative space-y-2 max-w-2xl">
-        <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground leading-tight">
+      <div className="relative space-y-1 max-w-2xl">
+        <h3 className="text-base sm:text-lg font-semibold tracking-tight text-foreground leading-tight">
           {step.title}
         </h3>
         <p className="text-sm font-medium text-foreground flex items-start gap-2">
           <ArrowRight className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden />
           <span>{step.instruction}</span>
         </p>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          <span className="font-semibold text-foreground/80">Why this matters: </span>
-          {step.why}
-        </p>
       </div>
 
-      <div className="relative mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="relative mt-3 flex items-center gap-3">
         <Button
+          size="sm"
           onClick={() => navigate(step.ctaRoute)}
-          className="w-full sm:w-auto font-semibold"
+          className="font-semibold"
         >
           {step.ctaLabel}
         </Button>
         {step.staleNote ? (
           <span className="text-xs text-muted-foreground">{step.staleNote}</span>
-        ) : (
-          <span className="text-xs text-muted-foreground italic">
-            Long-term: {standard.motivational}
-          </span>
-        )}
+        ) : null}
       </div>
     </section>
+  );
+}
+
   );
 }
