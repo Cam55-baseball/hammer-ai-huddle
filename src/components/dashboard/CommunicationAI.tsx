@@ -300,7 +300,3 @@ export function CommunicationAI({ className }: Props) {
     </section>
   );
 }
-
-    </section>
-  );
-}
