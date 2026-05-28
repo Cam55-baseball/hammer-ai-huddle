@@ -509,7 +509,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full">
+      <div className="space-y-3 sm:space-y-5 overflow-x-hidden max-w-full">
         <FollowRequestsPanel />
         
         <div>
@@ -521,7 +521,7 @@ export default function Dashboard() {
         </div>
 
         {/* Hero Image Card */}
-        <Card className="relative overflow-hidden border-2 border-black shadow-lg aspect-[16/9] sm:aspect-[21/9] w-full max-w-full">
+        <Card className="relative overflow-hidden border-2 border-black shadow-lg aspect-[21/9] sm:aspect-[32/9] w-full max-w-full">
           <img 
             key={currentHeroIndex}
             src={heroImages[currentHeroIndex]} 
@@ -535,6 +535,14 @@ export default function Dashboard() {
           </div>
         </Card>
 
+        {/* Compact summary row — pulled to the top to reduce overwhelm */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <WeeklyDigestPreview />
+            <ForecastPreview />
+          </div>
+        )}
+
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
@@ -542,13 +550,8 @@ export default function Dashboard() {
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
 
-        {/* Command Center — primary organism status surface, sits above Game Plan
-            so athletes immediately see how their body is doing today. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <section className="rounded-xl border border-border bg-card/40 p-4 sm:p-5">
-            <CommandCenterSection />
-          </section>
-        )}
+        {/* Command Center — primary organism status surface. */}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommandCenterSection />}
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && (
@@ -558,13 +561,6 @@ export default function Dashboard() {
           <GamePlanCard selectedSport={selectedSport} />
         )}
 
-        {/* Lightweight previews under the Game Plan (athletes only) */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
-          <>
-            <WeeklyDigestPreview />
-            <ForecastPreview />
-          </>
-        )}
 
         {/* Long-term Hammer video picks — athletes only */}
         {(!isScout && !isCoach) && <LongTermVideoSuggestions />}
