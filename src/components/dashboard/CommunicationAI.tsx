@@ -6,7 +6,7 @@
  * the personalized recommendation. Falls back to a deterministic step if the
  * model is unavailable so the dashboard never breaks.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   type CoachHammerStep,
   type CoachHammerTier,
 } from "@/hooks/useCoachHammerNextStep";
+import { QuickCheckInSheet } from "@/components/checkin/QuickCheckInSheet";
 import { cn } from "@/lib/utils";
 
 const TIER_TONE: Record<CoachHammerTier, string> = {
