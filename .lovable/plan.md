@@ -1,42 +1,42 @@
-## Root cause
+Root cause found:
 
-The Quick Check-In sheet emits 8 ASB events, but every emit fails with FK constraint `asb_events_topic_id_fkey` (see console logs at 20:39:58). The topic IDs the sheet emits are not registered in `asb_topic_registry`, so the database rejects every insert. The UI shows a success toast because the existing `emitAsbEvent` helper swallows the error, but nothing persists and Hammer never sees new signals.
+- The check-ins did save: I confirmed two completed check-ins in `asb_events`, each with the expected 8 rows and shared check-in group IDs.
+- Nothing visibly changed because Hammer still treats `recovery` as missing. The check-in emits readiness, fatigue, soreness, sleep, stress, hydration, plan, and summary — but `useCoachHammerNextStep` only considers `behavioral.recovery` / `foundation.recovery` as recovery, and those topics do not exist.
+- The sheet also invalidates the wrong command query key: it invalidates `athlete-command-rows`, but the actual query key is `asb-command-rows`. That means Hammer can recalculate against stale cached rows.
+- The save path currently calls `Promise.all(emissions)` but `emitAsbEvent` returns `{ ok: false }` instead of throwing, so future persistence failures could still show a success state.
 
-Missing topic IDs:
-- `behavioral.readiness`
-- `behavioral.fatigue`
-- `behavioral.soreness`
-- `behavioral.sleep`
-- `behavioral.stress`
-- `behavioral.hydration`
-- `athlete.plan.today`
-- `behavioral.checkin`
+Plan to fix now:
 
-## Fix
+1. Make check-in data first-class Hammer inputs
+   - Update `useCoachHammerNextStep` to read the latest check-in topics directly:
+     - `behavioral.checkin`
+     - `behavioral.readiness`
+     - `behavioral.fatigue`
+     - `behavioral.soreness`
+     - `behavioral.sleep`
+     - `behavioral.stress`
+     - `behavioral.hydration`
+     - `athlete.plan.today`
+   - Add these into the snapshot sent to Coach Hammer so the recommendation can actually use what the athlete just submitted.
 
-Single schema migration that inserts these 8 rows into `asb_topic_registry`, classified consistently with existing rows:
+2. Fix the false “recovery missing” blocker
+   - Treat a fresh check-in with sleep, soreness, stress, hydration, readiness, and fatigue as valid recovery/readiness context.
+   - Only route to “Do Check-In” when the check-in itself is missing or stale, not because a nonexistent `behavioral.recovery` topic is absent.
 
-```text
-behavioral.readiness  → readiness          / athlete / snapshot / deterministic_with_inputs
-behavioral.fatigue    → readiness          / athlete / snapshot / deterministic_with_inputs
-behavioral.soreness   → readiness          / athlete / snapshot / deterministic_with_inputs
-behavioral.sleep      → recovery_state     / athlete / snapshot / deterministic_with_inputs
-behavioral.stress     → readiness          / athlete / snapshot / deterministic_with_inputs
-behavioral.hydration  → recovery_state     / athlete / snapshot / deterministic_with_inputs
-athlete.plan.today    → athlete_intent     / athlete / snapshot / deterministic_with_inputs
-behavioral.checkin    → session_feedback   / athlete / snapshot / deterministic
-```
+3. Fix query refresh after saving
+   - Replace the incorrect invalidation key with the real one: `asb-command-rows`.
+   - Await/refetch Hammer and command-row invalidation after save so the dashboard updates immediately after the sheet closes.
 
-Idempotent via `ON CONFLICT (topic_id) DO NOTHING`. `introduced_in_engine_version` set to the current engine version.
+4. Make save success truthful
+   - Inspect every `emitAsbEvent` result.
+   - If any required event fails, show an error and keep the sheet open instead of saying “Sent to Hammer.”
+   - Only show success once all emitted rows return `ok: true`.
 
-## Verification
+5. Harden Hammer’s backend prompt/logic
+   - Update `coach-hammer-next-step` so it understands fresh check-in-derived recovery context.
+   - Include plan/soreness/sleep/stress/hydration in decision rules so the next step changes based on the athlete’s actual answers, not just generic readiness/fatigue.
 
-1. Run the migration.
-2. Open Hammer → Do Check-In → complete all steps → Save.
-3. Confirm no `[asb] emit_failed` errors in console.
-4. Query `asb_events` for the user and confirm 8 rows sharing one `causality_refs` group ID.
-5. Confirm Hammer's next-step card updates (query invalidation already wired).
-
-## Out of scope
-
-No changes to the sheet UI, `emitAsbEvent` helper, edge function, or any other surface. Pure additive registry inserts.
+6. Validate E2E
+   - Confirm recent check-in rows are present in the database.
+   - Confirm the dashboard query key refreshes.
+   - Confirm Hammer no longer asks for check-in immediately after a successful check-in and instead gives an updated next best step based on submitted readiness/fatigue/recovery/plan signals.
