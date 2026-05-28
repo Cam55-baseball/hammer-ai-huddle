@@ -12,8 +12,7 @@ export function ForecastPreview() {
   const lines = useMemo(() => {
     const standard = deriveTodaysStandard(rows, dayType);
     const out: string[] = [];
-    const standard = deriveTodaysStandard(rows, dayType);
-    const out: string[] = [];
+
     switch (standard.tone) {
       case "recover":
         out.push("Recovery-led next few days.");
