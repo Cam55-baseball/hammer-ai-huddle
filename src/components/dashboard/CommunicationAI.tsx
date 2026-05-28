@@ -6,7 +6,7 @@
  * the personalized recommendation. Falls back to a deterministic step if the
  * model is unavailable so the dashboard never breaks.
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   type CoachHammerStep,
   type CoachHammerTier,
 } from "@/hooks/useCoachHammerNextStep";
+import { QuickCheckInSheet } from "@/components/checkin/QuickCheckInSheet";
 import { cn } from "@/lib/utils";
 
 const TIER_TONE: Record<CoachHammerTier, string> = {
@@ -64,8 +65,8 @@ function deriveFallbackStep(
       instruction:
         "Take 30 seconds to tell Coach Hammer how you feel and what's on the schedule.",
       why: "Without a fresh signal, guidance falls back to defaults.",
-      ctaLabel: "Open Check-In",
-      ctaRoute: "/command",
+      ctaLabel: "Do Check-In",
+      ctaRoute: "/check-in",
     };
   }
   return {
@@ -94,6 +95,15 @@ export function CommunicationAI({ className }: Props) {
   const { unackedCount } = useEscalationFeed({ withinHours: 72 });
   const { step: aiStep, isLoading: aiLoading, error } =
     useCoachHammerNextStep();
+  const [checkInOpen, setCheckInOpen] = useState(false);
+
+  const handleCta = (route: string) => {
+    if (route === "/check-in") {
+      setCheckInOpen(true);
+      return;
+    }
+    navigate(route);
+  };
 
   const step = useMemo<CoachHammerStep | null>(() => {
     if (aiStep) return aiStep;
@@ -174,12 +184,13 @@ export function CommunicationAI({ className }: Props) {
       <div className="relative mt-3">
         <Button
           size="sm"
-          onClick={() => navigate(step.ctaRoute)}
+          onClick={() => handleCta(step.ctaRoute)}
           className="font-semibold"
         >
           {step.ctaLabel}
         </Button>
       </div>
+      <QuickCheckInSheet open={checkInOpen} onOpenChange={setCheckInOpen} />
     </section>
   );
 }
