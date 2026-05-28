@@ -95,6 +95,15 @@ export function CommunicationAI({ className }: Props) {
   const { unackedCount } = useEscalationFeed({ withinHours: 72 });
   const { step: aiStep, isLoading: aiLoading, error } =
     useCoachHammerNextStep();
+  const [checkInOpen, setCheckInOpen] = useState(false);
+
+  const handleCta = (route: string) => {
+    if (route === "/check-in") {
+      setCheckInOpen(true);
+      return;
+    }
+    navigate(route);
+  };
 
   const step = useMemo<CoachHammerStep | null>(() => {
     if (aiStep) return aiStep;
@@ -181,6 +190,16 @@ export function CommunicationAI({ className }: Props) {
           {step.ctaLabel}
         </Button>
       </div>
+      <div className="relative mt-3">
+        <Button
+          size="sm"
+          onClick={() => handleCta(step.ctaRoute)}
+          className="font-semibold"
+        >
+          {step.ctaLabel}
+        </Button>
+      </div>
+      <QuickCheckInSheet open={checkInOpen} onOpenChange={setCheckInOpen} />
     </section>
   );
 }
