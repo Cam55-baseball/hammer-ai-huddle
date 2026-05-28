@@ -547,9 +547,9 @@ export default function Dashboard() {
         {/* Module cards above Game Plan when user has no tier (players only) */}
         {!hasAnyTier && !isCoach && !isScout && moduleCardsSection}
 
-        {/* Identity Command Card — single consolidated header above the Game Plan. */}
-        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
+        {/* Coach Hammer Next Best Step — surfaced above the Identity card. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommunicationAI />}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && <IdentityCommandCard />}
 
         {/* Command Center — primary organism status surface. */}
         {(isOwner || isAdmin || (!isScout && !isCoach)) && <CommandCenterSection />}
