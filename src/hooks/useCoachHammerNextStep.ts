@@ -126,6 +126,12 @@ export function useCoachHammerNextStep() {
       },
     };
   }, [rows, unackedCount, dayType, mpi]);
+  const hashKey = useMemo(() => {
+    if (!snapshot) return null;
+    const halfHour = Math.floor(Date.now() / (30 * 60 * 1000));
+    return JSON.stringify({ ...snapshot, halfHour });
+  }, [snapshot]);
+
   const query = useQuery({
     queryKey: ["coach-hammer-next-step", user?.id, hashKey],
     enabled: !!user && !!snapshot,
