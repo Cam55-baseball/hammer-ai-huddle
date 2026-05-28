@@ -12,36 +12,37 @@ export function ForecastPreview() {
   const lines = useMemo(() => {
     const standard = deriveTodaysStandard(rows, dayType);
     const out: string[] = [];
+
     switch (standard.tone) {
       case "recover":
-        out.push("Next 3 days look recovery-led — protect sleep and hydration.");
-        out.push("Expect lighter sessions; quality over volume.");
+        out.push("Recovery-led next few days.");
+        out.push("Quality over volume.");
         break;
       case "rest":
-        out.push("Today is rest. Expect a fresher push within 48 hours.");
-        out.push("Hold the standard tomorrow to stack the rebound.");
+        out.push("Rest now, fresher push within 48h.");
+        out.push("Hold the standard tomorrow.");
         break;
       case "push":
-        out.push("Strong window ahead — your body is set up for output.");
-        out.push("Plan a deeper recovery 24h after your hardest session.");
+        out.push("Strong output window ahead.");
+        out.push("Plan deeper recovery after.");
         break;
       case "protect":
-        out.push("Next couple of days favor smooth, controlled work.");
-        out.push("Ease intensity until readiness climbs again.");
+        out.push("Smooth, controlled work coming up.");
+        out.push("Ease intensity until readiness climbs.");
         break;
       default:
-        out.push("Steady week ahead — consistency is your best lever.");
-        out.push("Watch for small wins; they compound across the month.");
+        out.push("Steady week ahead.");
+        out.push("Small wins compound.");
     }
     return out;
   }, [rows, dayType]);
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-      <header className="flex items-center justify-between gap-2 mb-4">
+    <section className="rounded-2xl border-2 border-foreground/20 bg-card p-4">
+      <header className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-primary" aria-hidden />
-          <h2 className="text-[11px] font-black uppercase tracking-[0.22em] text-foreground">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">
             What's Likely Next
           </h2>
         </div>
@@ -49,19 +50,19 @@ export function ForecastPreview() {
           to="/forecast"
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
         >
-          Open forecast <ArrowRight className="h-3 w-3" />
+          See more <ArrowRight className="h-3 w-3" />
         </Link>
       </header>
       {isLoading ? (
-        <div className="space-y-2">
-          <div className="h-4 w-3/4 rounded bg-muted animate-pulse" />
-          <div className="h-4 w-2/3 rounded bg-muted animate-pulse" />
+        <div className="space-y-1.5">
+          <div className="h-3 w-3/4 rounded bg-muted animate-pulse" />
+          <div className="h-3 w-2/3 rounded bg-muted animate-pulse" />
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {lines.map((l, i) => (
-            <li key={i} className="text-sm text-foreground/90 leading-relaxed flex gap-2">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" aria-hidden />
+            <li key={i} className="text-xs sm:text-sm text-foreground/90 leading-snug flex gap-2">
+              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/70" aria-hidden />
               <span>{l}</span>
             </li>
           ))}

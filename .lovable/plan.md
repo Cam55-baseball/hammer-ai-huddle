@@ -1,28 +1,42 @@
-# WAVE 3.5 — Final Pass
+## Goal
 
-Finish the remaining presentation-layer work. No backend, schema, replay, or doctrine changes.
+Make the dashboard feel calmer. Pull Weekly Recap and What's Likely Next up to the top, shrink them, put them side-by-side with stronger borders, and tighten a few other busy spots.
 
-## 1. IdentityCommandCard.tsx (edit)
-- Import `pickRotatingAlert` from `src/lib/identity/rotatingAlert.ts` and `deriveTodaysStandard` from `src/lib/standard/todaysStandard.ts`.
-- Replace the existing multi-alert / multi-pill block with **one** rotating alert (priority order already defined in `rotatingAlert.ts`). If none → render nothing (no empty shell).
-- Add a single "Develop This Week" sentence sourced from the identity snapshot's current focus area (plain English, no jargon).
-- Render Today's Standard sentence in the existing standard slot using `deriveTodaysStandard(...)` — no new card, no new strip.
-- Add a bottom motivational line tied to the standard's `tone` (one short sentence).
-- Language sweep on all visible copy in this file (emit→update, lineage→history, projection→summary, runtime→live, envelope→range, etc.).
-- Reduce pill count above the fold; widen spacing; larger heading.
+## Changes
 
-## 2. Cleanup
-- Delete `src/components/runtime/YourNextStep.tsx` (already replaced by `CommunicationAI`; confirm no remaining imports first).
+### 1. Weekly Recap + What's Likely Next — compact side-by-side row at the top
 
-## 3. Verification
-- Grep for `YourNextStep` references — must be zero.
-- Grep visible-copy jargon list in `src/components/identity/` and `src/components/command/cards/` — must be zero user-facing hits.
-- Visually confirm: Identity card shows tier, one alert, Develop This Week, Today's Standard, motivational line — in one breathable column flowing into CommunicationAI.
+In `src/pages/Dashboard.tsx`:
+- Remove the existing `<WeeklyDigestPreview />` and `<ForecastPreview />` block from below the Game Plan.
+- Add a new compact row directly under the hero image (above the Identity card) for athletes only:
+  ```
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <WeeklyDigestPreview />
+    <ForecastPreview />
+  </div>
+  ```
+
+In `src/components/dashboard/WeeklyDigestPreview.tsx` and `ForecastPreview.tsx`:
+- Swap `border-border` → `border-2 border-foreground/20` for a darker, more defined edge.
+- Reduce padding `p-5 sm:p-6` → `p-4`.
+- Show only the top 2 bullets max (truncate from current 3 in Weekly, current 2 in Forecast stays).
+- Shrink bullet text to `text-xs sm:text-sm`, tighten line-height.
+- Shorten header link copy: "Open weekly digest" → "Full recap", "Open forecast" → "See more".
+
+### 2. Other cleanup moves to reduce overwhelm
+
+- **Hero image**: drop `aspect-[16/9] sm:aspect-[21/9]` → `aspect-[21/9] sm:aspect-[32/9]` so it takes less vertical space on mobile.
+- **Command Center wrapper**: remove the extra `<section className="rounded-xl border border-border bg-card/40 p-4 sm:p-5">` wrapper — it double-frames the cards inside. Render `<CommandCenterSection />` directly.
+- **Spacing**: change root container `space-y-4 sm:space-y-6` → `space-y-3 sm:space-y-5` for tighter rhythm.
+- **Merch card**: this is a heavy gradient block at the bottom. No structural change requested, but flag for future: could be collapsed into a small banner.
 
 ## Out of scope
-GamePlanCard, ASB ledger, projections, replay, parity, capability gates, edge functions, migrations, identity tier engine, day state engine, behavioral events backend.
+
+- Game Plan, Identity Card, Command Center internals, Communication AI, module cards, merch card visuals — all untouched.
+- No data, hook, or routing changes.
 
 ## Files
-- edit: `src/components/identity/IdentityCommandCard.tsx`
-- delete: `src/components/runtime/YourNextStep.tsx`
-- edit (if jargon found): `.lovable/plan.md` status note
+
+- edit `src/pages/Dashboard.tsx`
+- edit `src/components/dashboard/WeeklyDigestPreview.tsx`
+- edit `src/components/dashboard/ForecastPreview.tsx`
