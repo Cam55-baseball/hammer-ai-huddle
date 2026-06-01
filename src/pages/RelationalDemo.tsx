@@ -5,7 +5,7 @@
  * Zero local relational state; all reads via projections, all writes via
  * canonical emit wrappers. The choreography itself is presentation-only.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDemoMode } from "@/contexts/DemoModeContext";
 import type { Scope } from "@/lib/runtime/projections/types";
@@ -20,6 +20,7 @@ import { SlumpReloadFlow } from "@/components/relational/SlumpReloadFlow";
 import { InjuryLifecycleStrip } from "@/components/relational/InjuryLifecycleStrip";
 import { RecruitingRoadmap } from "@/components/relational/RecruitingRoadmap";
 import { AthleteJourneyMap } from "@/components/relational/AthleteJourneyMap";
+import { PresenterOverlay } from "@/components/relational/PresenterOverlay";
 
 export default function RelationalDemo() {
   const { user } = useAuth();
