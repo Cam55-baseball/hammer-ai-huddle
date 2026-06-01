@@ -1,45 +1,31 @@
-# Presentation Mode Lock
+# Presentation Mode Lock — RELEASED
 
-**Effective:** upon merge. **Scope:** Hammers Modality relational organism substrate (Phases 152–154).
+**Status:** RELEASED on 2026-06-01. Presentation completed; RR-5…RR-10
+constitutional sealing authorized under the Post-Mastery Phase.
 
-Phases 152–154 are sealed and constitutionally verified. The system has been
-proven replay-safe, lineage-complete, visibility-firewalled, and presentation-ready.
+**Original scope:** Hammers Modality relational organism substrate (Phases
+152–154). The lock froze new doctrine, new relational primitives (RR-4…RR-10),
+schema, canonical pipeline, and major surfaces while the presentation was in
+flight.
 
-We are no longer proving possibility. We are proving product coherence.
+## Why released
 
-## Frozen
+The presentation has completed. Megaphase 151–160 may now resume under
+standard additive-only governance. RR-5…RR-10 are sealed as constitutional
+doctrine (no implementation yet) in the Post-Mastery sealing phase — see:
 
-The following are frozen until the presentation completes:
+- `docs/asb/rr-5-narrative-continuity-constitution.md`
+- `docs/asb/rr-6-injury-recovery-constitution.md`
+- `docs/asb/rr-7-career-arc-constitution.md`
+- `docs/asb/rr-8-life-context-constitution.md`
+- `docs/asb/rr-9-exposure-visibility-constitution.md`
+- `docs/asb/rr-10-recruiter-commercial-constitution.md`
+- `docs/asb/rr-cross-constitution-audit.md`
+- `docs/asb/post-mastery-expansion-roadmap.md`
 
-- **Architecture** — no new constitutional doctrine, no megaphase work.
-- **Relational primitives** — RR-4…RR-10 remain reserved. No new ASB topics under `relational.*`.
-- **Doctrine** — no new memories under `mem://architecture/*` for relational scope.
-- **Major surfaces** — no new pages, no new top-level routes, no new component families.
-- **Schema** — no migrations, no changes to `asb_events`, `asb_event_lineage`, or projection types.
-- **Canonical pipeline** — no edits to `prepareRows`, `emit.ts`, `buildAsbRow`, `emitAsbEvent`.
+## What remains immutable
 
-## Allowed
-
-Only the following classes of change may land:
-
-- Bug fixes (regressions, broken renders, console errors).
-- Copy refinement (tone, clarity, protection-first wording) via `src/lib/relational/copy.ts`.
-- Performance stabilization (lazy loading, memoization, projection caching).
-- Visual polish (spacing, typography, color tokens — all via existing design system).
-- Presentation resilience (fallback flows, fixture seeds, recovery paths).
-
-## Subordination
-
-This lock is subordinate to:
-
-- All Eternal Laws.
-- Megaphase 151–160 (relational organism architecture).
-- All prior immutable invariants across Phases 1–150.
-
-This lock supersedes any contradictory operational, aesthetic, or expansion pressure
-between now and the post-presentation review.
-
-## Unlock
-
-After the presentation completes, this lock is reviewed. Phases 155–160 may then
-resume under the standard additive-only governance described in Megaphase 151–160.
+All prior immutable invariants across Phases 1–150, Megaphase 151–160 demo
+firewall, minor-athlete supremacy, replay equivalence, and RR-4 relationship
+constitution remain in force. Sealing RR-5…RR-10 is additive doctrine only.
+No implementation lands under this release.
