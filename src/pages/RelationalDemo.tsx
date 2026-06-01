@@ -25,7 +25,10 @@ import { PresenterOverlay } from "@/components/relational/PresenterOverlay";
 export default function RelationalDemo() {
   const { user } = useAuth();
   const { isDemo } = useDemoMode();
-  const athleteId = user?.id ?? "demo-athlete-001";
+  // Stable demo athlete UUID — matches scripts/seed-relational-demo.ts and the
+  // fixture fallback. `asb_events.athlete_id` is `uuid`; a non-UUID fallback
+  // would silently return empty projections.
+  const athleteId = user?.id ?? "00000000-0000-4000-8000-000000000001";
   const scope: Scope = isDemo ? "demo" : "self";
   const debug =
     typeof window !== "undefined" &&
