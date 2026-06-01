@@ -129,16 +129,16 @@ describe("RR-4 relationship replay", () => {
 describe("RR-4 visibility arbitration", () => {
   it("revoked parent loses reads on rows carrying its relationship_id", () => {
     const rows = [
-      created("e1", "r1", "parent_a", "2026-03-01T00:00:00Z"),
-      confirmed("e2", "r1", "e1", "2026-03-01T00:01:00Z"),
-      revoked("e3", "r1", "e1", "2026-03-02T00:00:00Z"),
+      created("va1", "rva", "parent_a", "2026-03-01T00:00:00Z"),
+      confirmed("va2", "rva", "va1", "2026-03-01T00:01:00Z"),
+      revoked("va3", "rva", "va1", "2026-03-02T00:00:00Z"),
     ];
     const { state } = relationshipState(rows, "self");
     const dataRow = mk({
-      event_id: "d1",
+      event_id: "vad1",
       topic_id: "relational.psych.self_report",
       occurred_at: "2026-03-03T00:00:00Z",
-      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "r1" },
+      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "rva" },
     });
     const arbitrated = applyRelationshipVisibility([dataRow], "parent_a", state);
     expect(arbitrated.length).toBe(0);
@@ -146,16 +146,16 @@ describe("RR-4 visibility arbitration", () => {
 
   it("paused relationship downgrades data row to presence-only", () => {
     const rows = [
-      created("e1", "r1", "parent_a", "2026-03-01T00:00:00Z"),
-      confirmed("e2", "r1", "e1", "2026-03-01T00:01:00Z"),
-      paused("e3", "r1", "e1", "2026-03-02T00:00:00Z"),
+      created("vb1", "rvb", "parent_a", "2026-03-01T00:00:00Z"),
+      confirmed("vb2", "rvb", "vb1", "2026-03-01T00:01:00Z"),
+      paused("vb3", "rvb", "vb1", "2026-03-02T00:00:00Z"),
     ];
     const { state } = relationshipState(rows, "self");
     const dataRow = mk({
-      event_id: "d1",
+      event_id: "vbd1",
       topic_id: "relational.psych.self_report",
       occurred_at: "2026-03-03T00:00:00Z",
-      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "r1", value: -1.5, axis: "mood" },
+      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "rvb", value: -1.5, axis: "mood" },
     });
     const out = applyRelationshipVisibility([dataRow], "parent_a", state);
     expect(out.length).toBe(1);
@@ -165,26 +165,25 @@ describe("RR-4 visibility arbitration", () => {
 
   it("trust does not bypass visibility — revoked stays revoked regardless", () => {
     const rows = [
-      created("e1", "r1", "parent_a", "2026-03-01T00:00:00Z"),
-      revoked("e3", "r1", "e1", "2026-03-02T00:00:00Z"),
+      created("vc1", "rvc", "parent_a", "2026-03-01T00:00:00Z"),
+      revoked("vc3", "rvc", "vc1", "2026-03-02T00:00:00Z"),
     ];
     const { state } = relationshipState(rows, "self");
-    // Even with a fabricated high-trust assumption, revoked filter still blocks.
     const dataRow = mk({
-      event_id: "d1",
+      event_id: "vcd1",
       topic_id: "relational.psych.self_report",
       occurred_at: "2026-03-03T00:00:00Z",
-      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "r1" },
+      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "rvc" },
     });
     expect(applyRelationshipVisibility([dataRow], "parent_a", state).length).toBe(0);
   });
 
   it("parent precedence survives replay rebuild", () => {
     const rows = [
-      created("e1", "r_p", "parent_a", "2026-03-01T00:00:00Z", "parent"),
-      confirmed("e2", "r_p", "e1", "2026-03-01T00:01:00Z"),
-      created("e3", "r_c", "coach_b", "2026-03-01T00:02:00Z", "coach"),
-      confirmed("e4", "r_c", "e3", "2026-03-01T00:03:00Z"),
+      created("vd1", "r_p_d", "parent_a", "2026-03-01T00:00:00Z", "parent"),
+      confirmed("vd2", "r_p_d", "vd1", "2026-03-01T00:01:00Z"),
+      created("vd3", "r_c_d", "coach_b", "2026-03-01T00:02:00Z", "coach"),
+      confirmed("vd4", "r_c_d", "vd3", "2026-03-01T00:03:00Z"),
     ];
     const a = relationshipState(rows, "self").state;
     const b = relationshipState(rows.map((r) => ({ ...r })), "self").state;
