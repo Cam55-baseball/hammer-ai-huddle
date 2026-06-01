@@ -15,8 +15,10 @@ import {
   createParentInvite,
   revokeParentRelationship,
 } from "@/lib/runtime/relational/parentLinking";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Collapsible,
   CollapsibleContent,
@@ -26,6 +28,8 @@ import { toast } from "sonner";
 import { PARENT_INVITE_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
 import { Copy, ChevronDown } from "lucide-react";
 
+type TransportStatus = "sent" | "skipped_disabled" | "failed" | null;
+
 export default function ParentInvite() {
   const { user } = useAuth();
   const athleteId = user?.id ?? "";
@@ -33,14 +37,45 @@ export default function ParentInvite() {
   const [link, setLink] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [transport, setTransport] = useState<TransportStatus>(null);
 
   async function handleCreate() {
     if (!user || busy) return;
     setBusy(true);
+    setTransport(null);
     try {
       const out = await createParentInvite({ athleteId: user.id });
       const url = `${window.location.origin}/accept-parent-invite?token=${encodeURIComponent(out.token)}`;
       setLink(url);
+
+      const trimmed = email.trim();
+      if (trimmed && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            "send-parent-invite",
+            {
+              body: {
+                relationship_id: out.relationship_id,
+                athlete_id: user.id,
+                recipient_email: trimmed,
+                invite_url: url,
+              },
+            },
+          );
+          if (error) {
+            setTransport("failed");
+          } else {
+            const delivery = (data as { delivery?: string } | null)?.delivery;
+            if (delivery === "sent") setTransport("sent");
+            else if (delivery === "skipped_disabled") setTransport("skipped_disabled");
+            else setTransport("failed");
+          }
+        } catch (e) {
+          console.warn("[parent-invite] transport failed", e);
+          setTransport("failed");
+        }
+      }
     } catch (e) {
       toast.error(PARENT_INVITE_VOICE.fail);
       console.warn("[parent-invite] create failed", e);
@@ -120,20 +155,50 @@ export default function ParentInvite() {
           </div>
 
           {!link && (
-            <Button
-              onClick={handleCreate}
-              disabled={busy || !user}
-              size="lg"
-              className="w-full min-h-11"
-            >
-              {busy
-                ? PARENT_INVITE_VOICE.createBusy
-                : PARENT_INVITE_VOICE.createCta}
-            </Button>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="parent-email"
+                  className="text-xs text-muted-foreground"
+                >
+                  {PARENT_INVITE_VOICE.emailLabel}
+                </label>
+                <Input
+                  id="parent-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder={PARENT_INVITE_VOICE.emailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={busy}
+                  className="min-h-11"
+                />
+              </div>
+              <Button
+                onClick={handleCreate}
+                disabled={busy || !user}
+                size="lg"
+                className="w-full min-h-11"
+              >
+                {busy
+                  ? email.trim()
+                    ? PARENT_INVITE_VOICE.sendingEmail
+                    : PARENT_INVITE_VOICE.createBusy
+                  : email.trim()
+                    ? PARENT_INVITE_VOICE.sendEmailCta
+                    : PARENT_INVITE_VOICE.createCta}
+              </Button>
+            </div>
           )}
 
           {link && (
             <div className="space-y-2">
+              {transport && (
+                <p className="text-xs text-muted-foreground">
+                  {PARENT_INVITE_VOICE.transport[transport]}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {PARENT_INVITE_VOICE.linkReady}
               </p>
