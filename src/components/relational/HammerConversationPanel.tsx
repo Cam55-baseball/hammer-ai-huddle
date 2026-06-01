@@ -97,7 +97,7 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
                 className="rounded-md border border-border p-2 text-sm"
               >
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="capitalize">{turn.speaker_role.replace("_", " ")}</span>
+                  <span>{HAMMER_VOICE.speakerLabel(turn.speaker_role)}</span>
                   <span>{new Date(turn.occurred_at).toLocaleDateString()}</span>
                 </div>
                 {turn.redacted ? (

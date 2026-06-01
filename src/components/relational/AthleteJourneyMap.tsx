@@ -17,11 +17,8 @@ interface Props {
   scope: Scope;
 }
 
-const TOPIC_LABEL: Record<string, string> = {
-  transition: "Stage change",
-  marker: "Narrative beat",
-  contact: "Exposure",
-};
+// Topic labels live in `JOURNEY_VOICE.topicLabels` (canonical copy).
+
 
 export function AthleteJourneyMap({ athleteId, scope }: Props) {
   const q = useAsbTimeline({ athleteId });

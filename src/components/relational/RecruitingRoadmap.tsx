@@ -21,11 +21,11 @@ export function RecruitingRoadmap({ athleteId, scope }: Props) {
   const q = useAsbTimeline({ athleteId });
   if (dev.gating_flags.recruiter_blocked) {
     return (
-      <Card className="p-4 space-y-2">
+      <Card className="p-5 space-y-2">
         <h3 className="font-semibold text-foreground">
           {RECRUITING_VOICE.gatedTitle}
         </h3>
-        <Badge variant="secondary">Developmental safeguard active</Badge>
+        <Badge variant="secondary">{RECRUITING_VOICE.gatedBadge}</Badge>
         <p className="text-sm text-muted-foreground">{RECRUITING_VOICE.gatedBody}</p>
       </Card>
     );

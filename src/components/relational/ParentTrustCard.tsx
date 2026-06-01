@@ -42,15 +42,17 @@ export function ParentTrustCard({
       <p className="text-sm text-foreground">{PARENT_VOICE.protectedBody}</p>
       {parent ? (
         <p className="text-xs text-muted-foreground">
-          Parent has shown up{" "}
-          <span className="text-foreground font-medium">
-            {parent.contribution_count}
-          </span>{" "}
-          time{parent.contribution_count === 1 ? "" : "s"}.{" "}
+          {PARENT_VOICE.momentsTogether(parent.contribution_count)}{" "}
           {PARENT_VOICE.trustNote}
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">{PARENT_VOICE.noHistory}</p>
+      )}
+      {debug && (
+        <div className="text-xs text-muted-foreground border-t border-border pt-2">
+          trust={parent?.trust_score.toFixed(2) ?? "—"} · shared=
+          {sharedScopes.length ? sharedScopes.join(", ") : "none"}
+        </div>
       )}
       {debug && (
         <div className="text-xs text-muted-foreground border-t border-border pt-2">
