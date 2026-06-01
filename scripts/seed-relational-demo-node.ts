@@ -31,6 +31,7 @@
  *   bun scripts/seed-relational-demo-node.ts --athlete <uuid>
  */
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "node:crypto";
 import { buildDemoSeed, DEMO_ATHLETE_ID } from "../src/lib/runtime/relational/__tests__/_seed";
 import type { AsbEventRow } from "../src/hooks/useAsbTimeline";
 
@@ -47,6 +48,50 @@ function parseArgs(argv: string[]): Args {
     else if (a === "--athlete") out.athleteOverride = argv[++i] ?? null;
   }
   return out;
+}
+
+/**
+ * Deterministic UUIDv5-shaped derivation from a stable string id. The fixture
+ * seed uses readable string event_ids (`ev_age_0001`, etc.) because the
+ * in-memory fixture path never touches the DB. The live `asb_events.event_id`
+ * column is typed `uuid`, so we project each fixture id into a stable UUID
+ * derived from `sha1("relational-demo-seed:" + id)` with the v5 version /
+ * variant bits set. Same input → same UUID forever → idempotent re-runs.
+ */
+const NS = "relational-demo-seed:";
+function stableUuid(id: string): string {
+  const h = createHash("sha1").update(NS + id).digest();
+  const b = Buffer.from(h.subarray(0, 16));
+  b[6] = (b[6] & 0x0f) | 0x50; // version 5
+  b[8] = (b[8] & 0x3f) | 0x80; // RFC4122 variant
+  const hex = b.toString("hex");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
+/**
+ * Rewrite a canonical fixture row into a live-DB-shaped row:
+ *   • event_id  → stable UUID (deterministic)
+ *   • lineage_refs / payload.lineage_parent_ids → corresponding stable UUIDs
+ *   • idempotency_key stays equal to event_id (mirrors fixture semantics; the
+ *     unique constraint still guarantees re-run is a no-op)
+ * No payload semantics change. No schema mutation. No new fields.
+ */
+function liveize(rows: AsbEventRow[]): AsbEventRow[] {
+  return rows.map((r) => {
+    const eid = stableUuid(r.event_id);
+    const parents = (r.payload as { lineage_parent_ids?: string[] }).lineage_parent_ids;
+    const mappedParents = parents?.map((p) => stableUuid(p));
+    const payload = mappedParents
+      ? { ...r.payload, lineage_parent_ids: mappedParents }
+      : r.payload;
+    return {
+      ...r,
+      event_id: eid,
+      idempotency_key: eid,
+      lineage_refs: mappedParents ?? r.lineage_refs,
+      payload,
+    };
+  });
 }
 
 function requireEnv(): { url: string; key: string } {
