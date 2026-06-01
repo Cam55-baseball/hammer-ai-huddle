@@ -1,6 +1,8 @@
 /**
  * Phase 153 — Slump reload flow. Shown only when psych confidence axis
  * lands in `strained` or `crisis`. Writes go through `emitPsychSelfReport`.
+ *
+ * Presentation pass: tone calmed, buttons humanized, no clinical language.
  */
 import { useState } from "react";
 import { usePsychState } from "@/hooks/useRelationalProjections";
@@ -8,6 +10,7 @@ import { emitPsychSelfReport } from "@/lib/runtime/relational/emit";
 import type { Scope } from "@/lib/runtime/projections/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SLUMP_VOICE } from "@/lib/relational/copy";
 
 interface Props {
   athleteId: string;
@@ -47,22 +50,26 @@ export function SlumpReloadFlow({ athleteId, scope }: Props) {
     }
   }
 
+  const buttons: Array<{ label: string; value: number; primary?: boolean }> = [
+    { label: SLUMP_VOICE.buttons.worse, value: -1 },
+    { label: SLUMP_VOICE.buttons.same, value: 0 },
+    { label: SLUMP_VOICE.buttons.better, value: 1, primary: true },
+    { label: SLUMP_VOICE.buttons.much_better, value: 2, primary: true },
+  ];
+
   return (
     <Card className="p-4 space-y-3 border-destructive/40">
-      <h3 className="font-semibold text-foreground">Slump check-in</h3>
-      <p className="text-sm text-muted-foreground">
-        Your confidence is in the {conf.effective_band} band. Reload with a
-        self-report — your input always overrides inference.
-      </p>
-      <div className="flex gap-2">
-        {[-1, 0, 1, 2].map((v) => (
+      <h3 className="font-semibold text-foreground">{SLUMP_VOICE.title}</h3>
+      <p className="text-sm text-muted-foreground">{SLUMP_VOICE.body}</p>
+      <div className="flex gap-2 flex-wrap">
+        {buttons.map((b) => (
           <Button
-            key={v}
-            variant={v >= 1 ? "default" : "secondary"}
+            key={b.value}
+            variant={b.primary ? "default" : "secondary"}
             disabled={sending}
-            onClick={() => reload(v)}
+            onClick={() => reload(b.value)}
           >
-            {v > 0 ? `+${v}` : v}
+            {b.label}
           </Button>
         ))}
       </div>
