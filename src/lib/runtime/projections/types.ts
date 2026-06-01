@@ -7,17 +7,26 @@
  */
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 
-export type Scope = "self" | "coach" | "org" | "external";
+export type Scope =
+  | "self"
+  | "coach"
+  | "org"
+  | "external"
+  | "parent"
+  | "demo";
 
 /**
  * Phase 151 (Megaphase 151–160, Relational Organism Architecture):
  * `"demo"` is a first-class visibility scope reserved for relational
  * presentation-stabilization surfaces. Demo events are replay-legal but
  * constitutionally firewalled from production scopes — no demo event may
- * propagate into self/coach/org/external projections, and no production
+ * propagate into self/coach/org/external/parent projections, and no production
  * scope may read demo events.
+ *
+ * Phase 152: `"parent"` promoted to first-class Scope for minor-athlete
+ * supremacy and parent-gated visibility per developmental gating matrix.
  */
-export type VisibilityScope = Scope | "demo" | "parent";
+export type VisibilityScope = Scope;
 
 export interface ProjectionMeta {
   lastEventId: string | null;
