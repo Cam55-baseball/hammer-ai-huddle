@@ -4,6 +4,9 @@
  * All surfaces are pure projections over the canonical ASB ledger. No local
  * relational state; no mocks; no fabricated lineage. Demo seeding (when
  * present in the ledger) is firewalled to demo scope per Phase 151.
+ *
+ * Phase C humanization: single-column on mobile, calmer title, ordered
+ * by emotional weight (check-in → conversation → protection → history).
  */
 import { useAuth } from "@/hooks/useAuth";
 import type { Scope } from "@/lib/runtime/projections/types";
@@ -15,6 +18,7 @@ import { InjuryLifecycleStrip } from "@/components/relational/InjuryLifecycleStr
 import { RecruitingRoadmap } from "@/components/relational/RecruitingRoadmap";
 import { AthleteJourneyMap } from "@/components/relational/AthleteJourneyMap";
 import { useDemoMode } from "@/contexts/DemoModeContext";
+import { RELATIONAL_PAGE_VOICE } from "@/lib/relational/copy";
 
 export default function Relational() {
   const { user } = useAuth();
@@ -23,24 +27,35 @@ export default function Relational() {
   const scope: Scope = isDemo ? "demo" : "self";
 
   return (
-    <main className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-4">
-        <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-foreground">
-            Relational organism
-          </h1>
-          <DevelopmentalStageChip athleteId={athleteId} scope={scope} />
-        </header>
-        <SlumpReloadFlow athleteId={athleteId} scope={scope} />
-        <div className="grid gap-4 md:grid-cols-2">
-          <HammerConversationPanel athleteId={athleteId} scope={scope} />
-          <div className="space-y-4">
-            <ParentTrustCard athleteId={athleteId} scope={scope} />
-            <InjuryLifecycleStrip athleteId={athleteId} scope={scope} />
+    <main className="min-h-dvh bg-background p-4 md:p-8">
+      <div className="mx-auto max-w-3xl space-y-5">
+        <header className="space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                {RELATIONAL_PAGE_VOICE.title}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {RELATIONAL_PAGE_VOICE.subtitle}
+              </p>
+            </div>
+            <DevelopmentalStageChip athleteId={athleteId} scope={scope} />
           </div>
-          <RecruitingRoadmap athleteId={athleteId} scope={scope} />
-          <AthleteJourneyMap athleteId={athleteId} scope={scope} />
-        </div>
+        </header>
+
+        {/* Emotional weight order: check-in first, then conversation,
+            then protection signals, then history. */}
+        <SlumpReloadFlow athleteId={athleteId} scope={scope} />
+
+        <HammerConversationPanel athleteId={athleteId} scope={scope} />
+
+        <ParentTrustCard athleteId={athleteId} scope={scope} />
+
+        <RecruitingRoadmap athleteId={athleteId} scope={scope} />
+
+        <InjuryLifecycleStrip athleteId={athleteId} scope={scope} />
+
+        <AthleteJourneyMap athleteId={athleteId} scope={scope} />
       </div>
     </main>
   );
