@@ -58,7 +58,7 @@ export function SlumpReloadFlow({ athleteId, scope }: Props) {
   ];
 
   return (
-    <Card className="p-4 space-y-3 border-destructive/40">
+    <Card className="p-5 space-y-3">
       <h3 className="font-semibold text-foreground">{SLUMP_VOICE.title}</h3>
       <p className="text-sm text-muted-foreground">{SLUMP_VOICE.body}</p>
       <div className="flex gap-2 flex-wrap">
@@ -68,6 +68,7 @@ export function SlumpReloadFlow({ athleteId, scope }: Props) {
             variant={b.primary ? "default" : "secondary"}
             disabled={sending}
             onClick={() => reload(b.value)}
+            className="min-h-11"
           >
             {b.label}
           </Button>
