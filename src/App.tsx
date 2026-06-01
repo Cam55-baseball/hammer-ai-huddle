@@ -335,6 +335,9 @@ const App = () => {
               <Route path="/relational/demo" element={<RelationalDemo />} />
               <Route path="/parent-invite" element={<ParentInvite />} />
               <Route path="/accept-parent-invite" element={<AcceptParentInvite />} />
+              <Route path="/safety" element={<SafetyCenter />} />
+              <Route path="/relationships/settings" element={<RelationshipSettings />} />
+
               <Route path="/demo" element={<DemoRoot />} />
               <Route path="/demo/upgrade" element={<DemoUpgrade />} />
               <Route path="/demo/:tier" element={<DemoTier />} />
