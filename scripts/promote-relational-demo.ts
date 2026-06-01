@@ -165,7 +165,8 @@ async function main() {
   for (const p of plan) {
     const res = await emitAsbEvent(p.promoted);
     if (!res.ok) {
-      console.error("[promote] emit_failed", p.promoted.event_id, res.message);
+      const fail = res as { ok: false; message: string };
+      console.error("[promote] emit_failed", p.promoted.event_id, fail.message);
       continue;
     }
     await emitAsbLineage({
