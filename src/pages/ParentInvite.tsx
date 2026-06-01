@@ -15,8 +15,10 @@ import {
   createParentInvite,
   revokeParentRelationship,
 } from "@/lib/runtime/relational/parentLinking";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Collapsible,
   CollapsibleContent,
@@ -25,6 +27,8 @@ import {
 import { toast } from "sonner";
 import { PARENT_INVITE_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
 import { Copy, ChevronDown } from "lucide-react";
+
+type TransportStatus = "sent" | "skipped_disabled" | "failed" | null;
 
 export default function ParentInvite() {
   const { user } = useAuth();
