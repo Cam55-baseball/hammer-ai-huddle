@@ -155,20 +155,50 @@ export default function ParentInvite() {
           </div>
 
           {!link && (
-            <Button
-              onClick={handleCreate}
-              disabled={busy || !user}
-              size="lg"
-              className="w-full min-h-11"
-            >
-              {busy
-                ? PARENT_INVITE_VOICE.createBusy
-                : PARENT_INVITE_VOICE.createCta}
-            </Button>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="parent-email"
+                  className="text-xs text-muted-foreground"
+                >
+                  {PARENT_INVITE_VOICE.emailLabel}
+                </label>
+                <Input
+                  id="parent-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder={PARENT_INVITE_VOICE.emailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={busy}
+                  className="min-h-11"
+                />
+              </div>
+              <Button
+                onClick={handleCreate}
+                disabled={busy || !user}
+                size="lg"
+                className="w-full min-h-11"
+              >
+                {busy
+                  ? email.trim()
+                    ? PARENT_INVITE_VOICE.sendingEmail
+                    : PARENT_INVITE_VOICE.createBusy
+                  : email.trim()
+                    ? PARENT_INVITE_VOICE.sendEmailCta
+                    : PARENT_INVITE_VOICE.createCta}
+              </Button>
+            </div>
           )}
 
           {link && (
             <div className="space-y-2">
+              {transport && (
+                <p className="text-xs text-muted-foreground">
+                  {PARENT_INVITE_VOICE.transport[transport]}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {PARENT_INVITE_VOICE.linkReady}
               </p>
