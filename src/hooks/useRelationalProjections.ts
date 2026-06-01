@@ -10,22 +10,27 @@ import { psychState } from "@/lib/runtime/projections/psychState";
 import { developmentalState } from "@/lib/runtime/projections/developmentalState";
 import { trustState } from "@/lib/runtime/projections/trustState";
 
+function useRows(athleteId: string) {
+  const q = useAsbTimeline({ athleteId });
+  return q.data?.rows;
+}
+
 export function useConversationMemory(athleteId: string, scope: Scope) {
-  const { rows } = useAsbTimeline(athleteId);
+  const rows = useRows(athleteId);
   return useMemo(() => conversationMemoryState(rows, scope), [rows, scope]);
 }
 
 export function usePsychState(athleteId: string, scope: Scope) {
-  const { rows } = useAsbTimeline(athleteId);
+  const rows = useRows(athleteId);
   return useMemo(() => psychState(rows, scope), [rows, scope]);
 }
 
 export function useDevelopmentalState(athleteId: string, scope: Scope) {
-  const { rows } = useAsbTimeline(athleteId);
+  const rows = useRows(athleteId);
   return useMemo(() => developmentalState(rows, scope), [rows, scope]);
 }
 
 export function useTrustState(athleteId: string, scope: Scope) {
-  const { rows } = useAsbTimeline(athleteId);
+  const rows = useRows(athleteId);
   return useMemo(() => trustState(rows, scope), [rows, scope]);
 }
