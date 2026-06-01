@@ -32,11 +32,11 @@ export const HAMMER_VOICE = {
 } as const;
 
 export const PARENT_VOICE = {
-  protectedLead: "Protected by design",
+  protectedLead: "Protected first",
   protectedBody:
-    "Recruiter outreach, performance pressure, and exposure stay behind developmental safeguards until age-appropriate.",
+    "Recruiter outreach, performance pressure, and exposure stay behind developmental safeguards. You see everything before they do.",
   trustNote:
-    "Trust grows from interaction history. It opens visibility — it never opens authority.",
+    "Trust grows from how people show up over time. It opens visibility — never authority.",
   noHistory: "No parent activity yet.",
 } as const;
 
@@ -55,7 +55,7 @@ export const DEVELOPMENTAL_VOICE = {
   loadCeiling: (pct: number | null | undefined) =>
     pct == null ? "Load: not capped" : `Load held at ${pct}%`,
   growthSpurtNote:
-    "A growth spurt was observed. Load is held lower while bones and tendons catch up.",
+    "A growth spurt is happening. Load is held lower while bones and tendons catch up.",
   minorBadge: "Minor — parent visible",
 } as const;
 

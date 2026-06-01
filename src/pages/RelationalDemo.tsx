@@ -5,7 +5,7 @@
  * Zero local relational state; all reads via projections, all writes via
  * canonical emit wrappers. The choreography itself is presentation-only.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDemoMode } from "@/contexts/DemoModeContext";
 import type { Scope } from "@/lib/runtime/projections/types";
@@ -20,6 +20,7 @@ import { SlumpReloadFlow } from "@/components/relational/SlumpReloadFlow";
 import { InjuryLifecycleStrip } from "@/components/relational/InjuryLifecycleStrip";
 import { RecruitingRoadmap } from "@/components/relational/RecruitingRoadmap";
 import { AthleteJourneyMap } from "@/components/relational/AthleteJourneyMap";
+import { PresenterOverlay } from "@/components/relational/PresenterOverlay";
 
 export default function RelationalDemo() {
   const { user } = useAuth();
@@ -29,10 +30,20 @@ export default function RelationalDemo() {
   const debug =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
+  const presenter =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("presenter") === "1";
 
   const [stepIdx, setStepIdx] = useState(-1); // -1 = intro
   const total = DEMO_CHOREO.steps.length;
   const step = stepIdx >= 0 ? DEMO_CHOREO.steps[stepIdx] : null;
+
+  // Cold-start warm: kick a paint frame on mount so the first step renders
+  // without a flash when the user clicks Begin.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {});
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   return (
     <main className="min-h-screen bg-background p-4">
@@ -80,7 +91,15 @@ export default function RelationalDemo() {
         )}
 
         {step?.id === "slump" && (
-          <SlumpReloadFlow athleteId={athleteId} scope={scope} />
+          <div className="space-y-2">
+            <SlumpReloadFlow athleteId={athleteId} scope={scope} />
+            <Card className="p-4">
+              <p className="text-sm text-foreground">
+                Confidence has been low for several weeks. The system noticed before
+                anyone named it out loud — and held back, instead of pushing harder.
+              </p>
+            </Card>
+          </div>
         )}
 
         {step?.id === "hammer" && (
@@ -133,6 +152,7 @@ export default function RelationalDemo() {
           </Button>
         </footer>
       </div>
+      {presenter && <PresenterOverlay stepIdx={stepIdx} onStep={setStepIdx} />}
     </main>
   );
 }
