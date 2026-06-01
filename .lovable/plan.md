@@ -1,115 +1,61 @@
+# Phase B — RR-4 Sealing + Parent Linkage Activation
 
-# Phase A — Relational Infrastructure Activation (Backlog 1–4)
+Strict, additive-only. Halts at backlog item #5. No recruiter, injury, narrative, exposure, career_arc, or RR-5…RR-10 work.
 
-Strict scope: activate the already-constitutionalized relational substrate (Phases 151–154) for live use. Additive-only. Canonical `emitAsbEvent` path only. No new primitives, no RR-4…RR-10 sealing, no recruiter/injury/career_arc/narrative work.
+## Section 1 — RR-4 Constitutional Sealing
 
----
+- **New** `docs/asb/rr-4-relational-relationship-constitution.md` — full RR-4 doctrine: relationships are append-only events; revocation never deletes lineage; parent supremacy for minors; commercial never overrides safeguarding; trust never grants authorization; relationship state is replay-derived; no mutable relationship table; no silent escalation; all transitions lineage-visible.
+- **New memory** `mem://constraints/rr-4-relationship-sealing` — RR-4 invariants 1…10 (additive-only events, no mutable truth, revocation preserves history, immediate visibility removal on revoke, parent precedence for minors, commercial < safeguarding, trust ≠ authorization, replay-derived state, lineage-visible transitions, no silent escalation).
+- **Update** `mem://index.md` Core/Memories sections to reference the new constraint file. Preserve all existing entries verbatim (full-file overwrite rule).
+- Subordinate to Eternal Laws, Megaphase 151–160, and presentation-mode lock allowances (additive doctrine is allowed; no schema or pipeline changes).
 
-## Section 1 — Relational topic registry activation
+## Section 2 — Relationship Schema Activation
 
-Additive idempotent migration registering the 16 relational topics into `public.asb_topic_registry`. Existing rows are never mutated; re-runs are no-ops via `ON CONFLICT (topic_id) DO NOTHING`.
+Topics already registered in `asb_topic_registry` from Phase A (`relational.relationship.created|confirmed|revoked|paused`). Activation = schemas + emitters only; no DB changes.
 
-Topic-class mapping (constrained by the existing `asb_topic_class` enum, which has no `interpretive` member — relational primitives are interpretive overlays per Phase 151, so they map to the closest legal class without authoring organism truth):
+- **New** `src/lib/runtime/relational/relationshipSchemas.ts` — Zod schemas for the four verbs with exact fields specified by the user (`relationship_id`, `subject_user_id`, `counterparty_user_id`, `relationship_type ∈ {parent, coach, athlete_self}`, `initiated_by`, `consent_required`, `visibility_scope`, `lineage_parent_ids[]` for `created`; corresponding fields for `confirmed|revoked|paused`).
+- **New** `src/lib/runtime/relational/relationshipEmitters.ts` — `emitRelationshipCreated/Confirmed/Revoked/Paused` wrappers around canonical `emitAsbEvent` + `emitAsbLineage`. Deterministic `idempotency_key` via existing `computeIdempotencyKey` over (athlete_id, topic_id, occurred_at anchor, payload). `occurred_at` anchored to invite token issuance time so retries dedupe.
 
-| Topic | topic_class | authority_pathway | replay_policy | materialization |
-|---|---|---|---|---|
-| `relational.conversation.turn` | `observability` | `athlete` | `deterministic_with_inputs` | `on_demand` |
-| `relational.conversation.shared` | `observability` | `coach_parent_org` | `deterministic_with_inputs` | `on_demand` |
-| `relational.conversation.redacted` | `observability` | `athlete` | `deterministic_with_inputs` | `on_demand` |
-| `relational.psych.self_report` | `confidence_signal` | `athlete` | `deterministic_with_inputs` | `on_demand` |
-| `relational.psych.inferred` | `confidence_signal` | `ai` | `deterministic_with_inputs` | `on_demand` |
-| `relational.psych.transition` | `confidence_signal` | `system` | `deterministic_with_inputs` | `on_demand` |
-| `relational.developmental.age_observed` | `constraint_signal` | `athlete` | `deterministic_with_inputs` | `snapshot` |
-| `relational.developmental.growth_attestation` | `constraint_signal` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
-| `relational.developmental.puberty_marker` | `constraint_signal` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
-| `relational.developmental.deload_window` | `constraint_signal` | `system` | `deterministic_with_inputs` | `on_demand` |
-| `relational.developmental.transition` | `constraint_signal` | `system` | `deterministic_with_inputs` | `snapshot` |
-| `relational.developmental.gate_decision` | `constraint_signal` | `system` | `deterministic_with_inputs` | `on_demand` |
-| `relational.relationship.created` | `org_propagation` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
-| `relational.relationship.confirmed` | `org_propagation` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
-| `relational.relationship.revoked` | `org_propagation` | `coach_parent_org` | `deterministic` | `snapshot` |
-| `relational.relationship.paused` | `org_propagation` | `coach_parent_org` | `deterministic` | `snapshot` |
+## Section 3 — Parent Invite / Linkage Flow (Backlog #5)
 
-`introduced_in_engine_version` = `asb-1.0.0` (matches `ENGINE_VERSION`).
+- **New** `src/lib/runtime/relational/parentLinking.ts` — pure functions: `createParentInvite(athleteId, parentEmail)` → emits `relationship.created` (`consent_required: true`, `visibility_scope: "parent"`); `acceptParentInvite(token, parentUserId)` → emits `relationship.confirmed` with `lineage_parent_ids` pointing back to the `created` event_id; `revokeParentRelationship(relationshipId, revokedBy, reason)` → emits `relationship.revoked`. Invite token = signed payload `{relationship_id, athlete_id, parent_email, issued_at}` (HMAC via existing project secret pattern; if no secret available, use deterministic UUID stored in payload — flagged in plan as confirmation point).
+- **New** `src/pages/ParentInvite.tsx` — authenticated athlete page: enter parent email → call `createParentInvite` → display shareable invite link `/accept-parent-invite?token=…`. Lists pending + active relationships derived from replay (no parallel state).
+- **New** `src/pages/AcceptParentInvite.tsx` — reads `?token=…`, requires parent sign-in/sign-up, calls `acceptParentInvite` on confirm. Idempotent on repeat acceptance.
+- **Route registration** in `src/App.tsx` for the two new pages.
+- No new tables. No parallel relationship state. All linkage state is `useAsbTimeline` → projection-derived.
 
-The migration is a single `INSERT … ON CONFLICT DO NOTHING` per row, additive-only, replay-safe on re-run, no existing rows touched.
+## Section 4 — Visibility Arbitration Enforcement
 
----
+- **New** projection `src/lib/runtime/projections/relationshipState.ts` — replay-derives current relationship set per athlete: active / paused / revoked, with parent supremacy flag when subject is minor (cross-reference `developmentalState`).
+- **Extend** `src/lib/runtime/projections/types.ts::prepareRows` — when reader scope is `coach` and an active `parent` relationship exists for the same subject on a safeguarding-flagged payload, parent precedence wins. Revoked relationships → reader loses visibility on rows whose `payload.visibility_scope` matches the revoked side. Paused relationships → downgrade to presence-only (rows pass header/topic but `payload` redacted to `{paused: true}`). Recruiter scope remains universally blocked (already enforced).
+- **New tests** `src/lib/runtime/relational/__tests__/relational-relationship-visibility.test.ts` — assertions exactly as user listed (revoked parent loses reads; revoked coach loses reads; paused → presence-only; parent precedence survives replay rebuild; trust score cannot bypass visibility gates).
 
-## Section 2 — Live relational seeder activation
+## Section 5 — Safeguarding Route Foundation
 
-Augment `scripts/seed-relational-demo-node.ts` (do not duplicate it):
+- **New** `src/lib/runtime/relational/safeguardingRoute.ts` — pure deterministic classifier `classifySafeguardingSignal(row) → { route: "notify_parent" | "lockdown_commercial" | "arbitration_required" | "none", reasons: string[] }`. Routes only — **no** notification emission, **no** external integration, **no** state mutation. Triggers on: psych self-report with crisis tags, developmental marker for minor combined with commercial-scope event, explicit safeguarding category in payload.
+- Small unit test file `safeguardingRoute.test.ts` for the classifier truth table.
 
-1. **Lineage edge emission.** After each successful row insert, walk `payload.lineage_parent_ids`, and for each parent emit a row into `asb_event_lineage` via `INSERT … ON CONFLICT DO NOTHING` with `derivation_type = "relational_seed"`, `engine_version = "asb-1.0.0"`. Idempotent on re-run.
-2. **Post-seed replay reconstruction verification.** After all inserts, fetch the seeded rows back via the same client, feed them through `conversationMemoryState`, `psychState`, `developmentalState`, `trustState` (scope `"demo"`), and assert byte-stable equality (via `stableStringify`) against the in-memory `buildDemoSeed()` projections. Exit non-zero on divergence.
-3. **Verification report.** On completion, print a structured block: `inserted`, `deduped`, `total_rows`, `lineage_edges_inserted`, `lineage_edges_deduped`, `projection_parity: ok|FAIL`, `duplicate_run_proof` (counts from the verification SELECT). Also writes `/mnt/documents/relational-live-seed-report.json` for the operator.
-4. **Service-role + canonical emit semantics** are already correct; preserved as-is.
+## Section 6 — Replay & Persistence Verification
 
-No payload mutation, no parallel storage, no new topics — relies entirely on Section 1.
+- **New** `relationship-replay.test.ts` — emit created→confirmed→revoked, rebuild projection from event log, assert final state matches; emit out-of-order (revoked before confirmed) and assert deterministic resolution by `occurred_at`.
+- **New** `parent-linkage.test.ts` — full invite flow, acceptance, revocation, idempotent re-acceptance, demo↔live firewall preserved.
 
----
+## Section 7 — Final Verification
 
-## Section 3 — Authenticated relational persistence
+Run `bunx tsc --noEmit`, full relational vitest suite, and document exact counts + remaining blockers (RR-5…RR-10 unsealed, recruiter inactive, injury isolated, safeguarding notifications not operational, exposure/career/narrative inactive) in `.lovable/plan.md`.
 
-Relational emitters (`emitConversationTurn`, `emitPsychSelfReport`, …) already route through canonical `emitAsbEvent`. With Section 1 in place, FK failures stop and authenticated writes persist under existing RLS (`Athletes insert own events` / `Athletes read own events`).
+## Technical notes
 
-Two surface changes:
+- All emission flows through `emitAsbEvent` / `emitAsbLineage` in `src/lib/asb/emit.ts`. No `supabase.from("asb_events")` calls in new code.
+- `useAsbTimeline` remains the sole reader; new projection plugs into `useRelationalProjections.ts` as `useRelationshipState(athleteId, scope)`.
+- Idempotency: `occurred_at` anchored to deterministic anchors (invite issuance, acceptance click) so retries collapse via existing 23505 path.
+- Lineage: every `confirmed`/`revoked`/`paused` carries `lineage_parent_ids` referencing the originating `created` event_id; written via `emitAsbLineage` with `derivation_type: "relationship_transition"`.
+- Presentation-mode lock: Phase B work is explicitly authorized by the user message overriding the lock for backlog items #5 + RR-4 sealing only.
 
-1. **`useAsbTimeline` scope coupling.** The hook today auto-switches to fixture mode when `?fallback=fixture` is present. Add: if no fallback param AND `user` is authenticated, always read live (current behavior). When `?fallback=fixture` is present AND the user is authenticated, still read fixture for that page — but log one `console.info("[relational] fixture-mode-with-auth")` so we can audit any unintended bleed. No new state; no projection mutation.
-2. **`Relational.tsx` scope.** Already chooses `"demo" | "self"` based on `useDemoMode`. Confirm `isDemo` is only true for the explicit demo route — verify in code, no change unless a leak is found.
+## Out of scope (will not touch)
 
-**New test:** `relational-live-persistence.test.ts` — round-trips a `psych.self_report` and a `conversation.turn` against an in-memory event array (no DB), asserts projections after persistence equal projections built from the source rows directly. Mixed demo/live coexistence test: feed a mix of `visibility_scope: "demo"` and `"self"` rows; assert `prepareRows("self", …)` strips demo, `prepareRows("demo", …)` strips self.
+Recruiter workflows, injury lifecycle, `narrative_event`, `career_arc`, `exposure_event`, `recruiter_contact_event`, RR-5…RR-10, schema rewrites, safeguarding notification delivery, external integrations.
 
-Refresh survivability is structurally guaranteed: writes hit `asb_events`, reads hit `useAsbTimeline`, projections rebuild on mount — no client cache to lose.
+## Confirmation point
 
----
-
-## Section 4 — Production relational onboarding
-
-Constitutional onboarding bootstrap: a newly-authenticated athlete emits a minimal, constitutionally legal set of relational events the first time they reach the onboarding flow. No fabricated psych state, no AI inference at onboarding, all missingness explicit.
-
-Trigger location: `src/pages/OnboardingFlow.tsx`, gated by the existing `onboarding.step_completed` ledger check — emit only if no `relational.relationship.created` event exists for `user.id` (idempotency via deterministic `idempotency_key`).
-
-Bootstrap emission set (all via canonical emitters):
-
-1. **`relational.relationship.created`** — `{ subject_role: "self", subject_user_id: user.id, visibility_scope: "self", confidence: 1.0, source: "onboarding_bootstrap" }`. Establishes the athlete↔self relationship anchor.
-2. **`relational.developmental.age_observed`** — only when the onboarding form captures DOB/age. If unknown at this point: emit nothing for developmental, leaving `developmentalState.current_stage` as `null` (explicit missingness, per Phase 151). Do NOT impute.
-3. **No psych emission.** Confidence/motivation/etc. remain `source: "none"` until the athlete files a self-report. This is constitutional — Phase 151 forbids hidden inferred psych state at onboarding.
-
-Determinism: `idempotency_key = sha256("onboarding-bootstrap::" + user.id + "::" + topic_id)`, so repeated visits are no-ops.
-
-**Deliverables (committed alongside code):**
-- `docs/asb/relational-onboarding-flow.md` — flow map, emission map, visibility audit, replay reconstruction proof (drawn from the new test).
-- `relational-onboarding.test.ts` — replays a bootstrap event sequence and asserts projections equal the expected baseline (relationship present, developmental null, psych `source: "none"`).
-
----
-
-## Section 5 — Verification pass
-
-Executed at the end of the build phase; no summaries without execution:
-
-1. `bunx tsc --noEmit` — type-check.
-2. `bunx vitest run src/lib/runtime/relational/__tests__/` — full relational suite incl. new persistence + onboarding tests.
-3. `bun scripts/seed-relational-demo-node.ts --dry-run` — verify seed builds against the live registry without writes.
-4. `bun scripts/seed-relational-demo-node.ts` — live seed against the dev DB; assert verification report shows `projection_parity: ok` and `inserted + deduped == total_rows`.
-5. Re-run #4 — assert `inserted == 0`, `deduped == total_rows` (idempotency proof).
-
-Return: exact files changed, exact migrations added, exact test counts (pass/fail), and a single explicit statement of remaining blockers before backlog items 5–6 (expected: parent account invite flow + recruiter visibility scope + safeguarding sub-route — all out of scope here).
-
----
-
-## Files touched
-
-- **Migration (new):** `INSERT … ON CONFLICT DO NOTHING` for 16 relational topic rows.
-- `scripts/seed-relational-demo-node.ts` — add lineage edge writes + post-seed projection parity check + report file.
-- `src/hooks/useAsbTimeline.ts` — auth-aware fixture-mode audit log (single `console.info`, no behavior change).
-- `src/pages/OnboardingFlow.tsx` — bootstrap emission gated on user + idempotency.
-- `src/lib/runtime/relational/__tests__/relational-live-persistence.test.ts` *(new)*.
-- `src/lib/runtime/relational/__tests__/relational-onboarding.test.ts` *(new)*.
-- `docs/asb/relational-onboarding-flow.md` *(new)*.
-- `mem://constraints/presentation-mode-lock` — append: lock partially lifted for backlog items 1–4 only; RR-4…RR-10 remain sealed.
-- `.lovable/plan.md` — log Phase A entry.
-
-## Out of scope (explicit)
-
-Recruiter visibility, injury lifecycle wiring, parent invite flow, `narrative_event`, `life_context_event`, `exposure_event`, `recruiter_contact_event`, `career_arc`, RR-4…RR-10 sealing, replay observability dashboards, projection perf profiling. Execution halts at backlog item 4.
+Invite token signing — do you want HMAC via a new `PARENT_INVITE_SIGNING_KEY` secret, or is a server-generated opaque token (random UUID stored only inside the `relationship.created` payload, validated by lookup at acceptance time) acceptable? Default if you don't answer: opaque UUID (no new secret required, simpler, replay-derivable).
