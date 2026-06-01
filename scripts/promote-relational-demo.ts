@@ -87,16 +87,15 @@ export async function planPromotions(
   for (const r of rows) {
     if ((r.payload as { visibility_scope?: string }).visibility_scope !== "demo")
       continue;
-    const newPayload = { ...r.payload, visibility_scope: targetScope };
-    const lineageParents = Array.isArray(
-      (newPayload as { lineage_parent_ids?: unknown }).lineage_parent_ids,
-    )
-      ? ((newPayload as { lineage_parent_ids: string[] }).lineage_parent_ids)
+    const newPayload: Record<string, unknown> = {
+      ...r.payload,
+      visibility_scope: targetScope,
+    };
+    const existingLineage = newPayload.lineage_parent_ids;
+    const lineageParents = Array.isArray(existingLineage)
+      ? (existingLineage as string[])
       : [];
-    (newPayload as { lineage_parent_ids: string[] }).lineage_parent_ids = [
-      ...lineageParents,
-      r.event_id,
-    ];
+    newPayload.lineage_parent_ids = [...lineageParents, r.event_id];
     const idMaterial = promotedIdempotencyMaterial(r.event_id, targetScope);
     const newEventId = await sha256Hex(`evt::${idMaterial}`);
     const idempotencyKey = await computeIdempotencyKey({
