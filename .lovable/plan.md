@@ -1,115 +1,107 @@
-# Relational System Validation Pass — Phases 152–154
+# Presentation Finalization Pass — Phases 152–154
 
-Verification-only. No new primitives, no scope expansion. Proves the relational substrate is coherent, replay-safe, lineage-complete, and presentation-ready.
+Substrate is frozen. This pass turns the verified relational organism into a 10–12 minute investor-grade demo. No new primitives, no new doctrine, no new megaphases. All work stays in seeding, copy, layout, pacing, and resilience.
 
-## Section 1 — Test Suite Execution
+## Section 1 — Live Demo Athlete Hydration
 
-Run via `lovable-exec test`:
-- `src/lib/runtime/relational/__tests__/relational-conversation.replay.test.ts`
-- `src/lib/runtime/relational/__tests__/relational-psych.replay.test.ts`
-- `src/lib/runtime/relational/__tests__/relational-developmental.replay.test.ts`
-- `src/lib/runtime/relational/__tests__/relational-visibility.matrix.test.ts`
-- `src/lib/runtime/relational/__tests__/promote-relational-demo.test.ts`
-- Any sibling projection tests touched by `projections/types.ts` Scope widening
-- TypeScript check across `src/lib/runtime/relational/**` and `src/components/relational/**`
+Run `scripts/seed-relational-demo.ts` against the live DB for canonical athlete `demo-athlete-001` via the verified pipeline.
 
-Report per-file: pass/fail, failing assertions, replay divergence, visibility leakage, deterministic-state mismatches.
+- All writes go through `src/lib/runtime/relational/emit.ts` wrappers — no direct `asb_events` inserts, no bypass paths.
+- `visibility_scope: "demo"` on every emitted event.
+- Deterministic `event_id = sha256(athlete_id, topic, offset)` ensures idempotent re-runs; existing rows are skipped, not duplicated.
+- Add a `--live` flag to the existing seed script (currently test-fixture only) that:
+  1. Confirms DB target via `VITE_SUPABASE_PROJECT_ID` echo + prompt
+  2. Walks the deterministic offset table emitting through `emit.ts`
+  3. Writes `asb_event_lineage` edges alongside each event
+  4. Prints a per-topic count summary
 
-## Section 2 — Canonical Demo Seeding
+Longitudinal cadence (deterministic clock = `2026-01-01T00:00:00Z` + offsets in days):
+- d0–d30: `youth_intro` developmental baseline, parent relationship established, coach relationship established, first 3 Hammer turns
+- d45–d90: `developmental_foundation` gate, growth spurt detected → automatic deload prescription, parent trust accrual
+- d100–d140: confidence dip / slump narrative event, Hammer reload conversation citing earlier turns (RR-1)
+- d150–d200: recovery progression, psych self-report supremacy demonstrated, bounded inferred state ≤ 0.7
+- d210–d280: `competitive_entry` gate, recruiter contact (gated as minor → parent supremacy), exposure event
+- d290–d330: continued coach continuity, narrative markers, journey arc closure
 
-Add `scripts/seed-relational-demo.ts` (one-shot Node/Bun, no UI, no direct table writes). Routes a single demo athlete `demo-athlete-001` through `relational/emit.ts` wrappers only:
+## Section 2 — Narrative Coherence Pass
 
-- developmental_stage_event → `youth_intro` → `developmental_foundation` → `competitive_entry`
-- conversation_event turns (coach_hammer + self) with `recalled_event_ids` citations
-- psychological_state_event (self_report + bounded inferred ≤ 0.7)
-- trust_delta events (parent ↑, coach ↑, recruiter blocked)
-- growth_spurt + deload window
-- slump → reload cycle
-- relationship events (parent, coach, recruiter)
-- recruiting exposure events (gated by stage)
-- injury_event lifecycle (read-only seed)
-- narrative_event journey markers
+Audit each `/relational` surface for one-human continuity. Component-level edits only — no projection changes.
 
-All events: `visibility_scope: "demo"`, deterministic timestamps from a fixed epoch + offset table, lineage edges via `asb_event_lineage`, idempotent on re-run.
+- `HammerConversationPanel`: unify voice (calm, observant, accountable, non-hype). Remove any seeded line containing hype/clichés.
+- `DevelopmentalStageChip`, `AthleteJourneyMap`: ensure stage labels and journey beats reference the same vocabulary.
+- `SlumpReloadFlow`: emotional arc must reference cited Hammer turns by date, not abstract IDs.
+- `ParentTrustCard`, `RecruitingRoadmap`, `InjuryLifecycleStrip`: terminology pass for consistency (e.g. one term for "deload" everywhere).
+- Build a single `src/lib/relational/copy.ts` tone dictionary so all surfaces draw from one voice source.
 
-## Section 3 — Replay Reconstruction Audit
+## Section 3 — UX Simplification Pass
 
-Add `src/lib/runtime/relational/__tests__/relational-replay-reconstruction.test.ts`:
-- Load seeded raw `asb_events` for `demo-athlete-001`
-- Rebuild all five projections (`conversationMemoryState`, `psychState`, `developmentalState`, `trustState`, + any narrative projection consumed by surfaces)
-- Compare to live `useRelationalProjections` snapshot via deep equality (byte-stable JSON.stringify with sorted keys)
-- Shuffle event order within same-timestamp bucket → assert stable output
-- Cold-start replay (empty cache) → assert identical to warm replay
+Athlete-facing surfaces strip internal terminology.
 
-Report: replay integrity, projection divergence, lineage completeness.
+- Remove visible mentions of: `visibility_scope`, `engine_version`, `reasoning_version`, `lineage`, `replay`, `confidence ceiling`, `RR-1/2/3`, `ASB`, `projection`.
+- Move all such labels behind a single "Replay proof" panel (Section 4 last beat) only.
+- Tighten typography hierarchy on mobile (440px viewport is the demo target): one H1 per screen, generous spacing, max 2 emphasis weights.
+- Hide debug chips by default; expose via `?debug=1` query param for engineering review only.
 
-## Section 4 — Visibility Boundary Audit
+## Section 4 — Demo Choreography (10–12 min target)
 
-Extend `relational-visibility.matrix.test.ts` with intentional violation attempts:
-- parent reading coach-only psych → rejected
-- coach reading parent-only consent → rejected
-- demo event surfacing in `self`/`parent`/`coach` projection without `demo_promotion` lineage → rejected
-- conversation redaction on safeguarding-flagged turn
-- developmental gate: recruiter topic at `youth_intro` → rejected, containment event emitted
-- minor-athlete recruiter contact → blocked
-- presence-only downgrade when confidence < threshold
-- revoked relationship → subsequent reads return empty
+Add `src/pages/RelationalDemo.tsx` — a guided sequencer that drives the same components in a fixed click-path with subtle Motion transitions. Existing `/relational` page remains the free-explore surface.
 
-Report: rejection correctness, emitted containment events, any leakage.
+Sequence (≈11 min):
+```text
+1. Start Here / Today                       0:00 – 0:45  emotional anchor
+2. Athlete Journey Map (overview)           0:45 – 2:00  longitudinal feel
+3. Developmental Stage Chip + growth spurt  2:00 – 3:30  developmental intelligence
+4. Slump Reload Flow (cited memories)       3:30 – 5:30  emotional peak
+5. Hammer Conversation Panel                5:30 – 7:30  relational continuity
+6. Parent Trust Card                        7:30 – 9:00  safety perception
+7. Recruiting Roadmap (minor gating)        9:00 – 10:00 protective override
+8. Injury Lifecycle Strip                  10:00 – 10:30 read-only continuity
+9. Replay Proof Panel (technical close)    10:30 – 11:30 credibility reinforcement
+```
 
-## Section 5 — Surface Wiring Audit
+Emotional peaks (Slump Reload, Parent Trust) precede the technical replay proof.
 
-Static audit of `src/components/relational/*.tsx` + `src/pages/Relational.tsx`:
-- grep for `useState` holding relational truth (allowed only for ephemeral UI: open/closed, focus)
-- grep for direct `supabase.from('asb_events')` or table reads
-- grep for hardcoded psych/developmental literals
-- verify every read flows through `useRelationalProjections`
-- verify every write flows through `relational/emit.ts` wrappers
+## Section 5 — Hammer Conversation Refinement
 
-Report exact `file:line` violations.
+Rewrite seeded `coach_hammer` turns in `_seed.ts` → live seed:
+- Every turn cites ≥1 `recalled_event_ids` (RR-1 enforced at schema; this pass ensures cites feel earned, not mechanical).
+- Voice rules codified in `copy.ts`: short sentences, no exclamation marks, no "you got this", no diagnosis language, no certainty about future outcomes.
+- One reflective question per 3 statements maximum.
+- Reference observable facts (dates, prior turns, prescribed deloads), never feelings the athlete didn't self-report.
 
-## Section 6 — Narrative Walkthrough Audit
+## Section 6 — Parent Trust Pass
 
-Drive `/relational` at viewport 440x782 through the approved narrative (Start Here → Today → Developmental chip → Hammer conversation → Slump reload → Parent trust → Recruiting roadmap → Injury lifecycle → Journey map → Replay proof) using the seeded demo athlete. Validate continuity, lineage, transitions, no orphan events, no dead ends, no fabricated state. Capture screenshots per step for the readiness report.
+`ParentTrustCard` copy + `RecruitingRoadmap` minor-athlete gating:
+- Lead with what's protected, not what's exposed.
+- Recruiting exposure language always shown beneath developmental safeguard status.
+- For minor athletes, recruiter contact rows display "Parent consent required" badge sourced from existing relationship projection — no new state.
 
-## Section 7 — Failure Injection
+## Section 7 — Final Presentation Risk Audit
 
-Add `src/lib/runtime/relational/__tests__/relational-failure-injection.test.ts`:
-- psych inference confidence 0.85 → clamped/rejected at 0.7
-- psych emit missing parent consent on consent-required surface → rejected
-- developmental regression `competitive_entry` → `youth_intro` → rejected, monotonicity invariant fires
-- replay with scrambled cross-timestamp ordering → divergence detected
-- relationship revocation → trust derivation excludes post-revocation deltas
-- demo event tagged `self` scope → firewall rejects in `prepareRows`
-- coach_hammer turn with empty `recalled_event_ids` → RR-1 rejection
-- trust_delta burst (e.g., +0.9 in one event) → bounded/rejected
+Produce `docs/asb/relational-presentation-runbook.md` containing:
+- Final screen order + timing table
+- Talking points per screen (3 bullets each)
+- Fallback recovery: if seeded data missing → `/relational?fallback=fixture` renders from in-memory `_seed.ts` fixtures
+- Known fragility points (network reload, projection cold-start latency) + mitigations
+- Pre-demo checklist (seed run, visibility audit, viewport set to 440×782)
 
-Assert each emits the canonical containment/rejection event.
+## Section 8 — Presentation Mode Lock
 
-## Section 8 — Final Readiness Report
-
-Write `docs/asb/relational-validation-report.md`:
-- constitutional integrity (RR-1, RR-2, RR-3 status)
-- replay integrity (per-projection byte equality)
-- visibility integrity (matrix results + containment counts)
-- demo readiness (seed idempotency, narrative pass)
-- unresolved risks
-- presentation-risk areas
-- exact remaining blockers before live presentation
+After this pass merges:
+- Add `docs/asb/presentation-mode-lock.md` enumerating what is frozen (architecture, primitives, doctrine, major surfaces) and what remains allowed (bug fixes, copy, perf, polish, resilience).
+- Update `mem://index.md` Core with one line: "Presentation mode locked — only bug fixes, copy, perf, polish, resilience until further notice."
 
 ## Technical Notes
 
-- No DB migrations. Seed script writes via existing `emitAsbEvent` path through Supabase using `demo` scope only.
-- No new ASB topics; no new files under `src/lib/runtime/relational/` except tests.
-- Seed script is idempotent: keyed on deterministic `event_id = hash(athlete_id, topic, offset)`.
-- All new tests use shared `_fixtures.ts`; deterministic clock = `2026-01-01T00:00:00Z` + offset table.
-- Phases 155–160 remain frozen. No changes to `mem://` invariants — RR-4…RR-10 stay reserved.
+- Zero migrations. Zero new ASB topics. Zero changes to `prepareRows`, `emit.ts`, schemas, or projection logic.
+- All seeding idempotent via deterministic `event_id`.
+- New files: `src/pages/RelationalDemo.tsx`, `src/lib/relational/copy.ts`, `docs/asb/relational-presentation-runbook.md`, `docs/asb/presentation-mode-lock.md`.
+- Edited files: 7 components under `src/components/relational/`, `scripts/seed-relational-demo.ts` (add `--live`), `src/App.tsx` (register `/relational/demo`), `mem://index.md` (Core line).
+- RR-4…RR-10 remain reserved. Phases 155–160 remain frozen.
 
-## Deliverables
+## Out of Scope
 
-- `scripts/seed-relational-demo.ts`
-- `src/lib/runtime/relational/__tests__/relational-replay-reconstruction.test.ts`
-- `src/lib/runtime/relational/__tests__/relational-failure-injection.test.ts`
-- expanded `relational-visibility.matrix.test.ts`
-- `docs/asb/relational-validation-report.md`
-- screenshots embedded in the report
+- New relational primitives or topics
+- Auth, billing, multi-athlete switching
+- Real-time subscriptions
+- Any change to `src/lib/runtime/projections/types.ts` or visibility firewall

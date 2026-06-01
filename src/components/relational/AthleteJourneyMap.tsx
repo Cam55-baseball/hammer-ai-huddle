@@ -2,7 +2,7 @@
  * Phase 154+ — Athlete journey map.
  *
  * Read-only composition of developmental stage history + narrative/exposure
- * projections. No frontend-local state.
+ * projections. Presentation pass: humanizes the "today" line and topic chips.
  */
 import { useAsbTimeline } from "@/hooks/useAsbTimeline";
 import { useDevelopmentalState } from "@/hooks/useRelationalProjections";
@@ -10,11 +10,18 @@ import { prepareRows } from "@/lib/runtime/projections/types";
 import type { Scope } from "@/lib/runtime/projections/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DEVELOPMENTAL_VOICE, JOURNEY_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
 
 interface Props {
   athleteId: string;
   scope: Scope;
 }
+
+const TOPIC_LABEL: Record<string, string> = {
+  transition: "Stage change",
+  marker: "Narrative beat",
+  contact: "Exposure",
+};
 
 export function AthleteJourneyMap({ athleteId, scope }: Props) {
   const q = useAsbTimeline({ athleteId });
@@ -24,27 +31,30 @@ export function AthleteJourneyMap({ athleteId, scope }: Props) {
     "relational.narrative.",
     "relational.exposure.",
   ]);
+  const stageKey = dev.current_stage ?? "unknown";
+  const stageLabel = DEVELOPMENTAL_VOICE.stages[stageKey] ?? stageKey;
   return (
     <Card className="p-4 space-y-2">
-      <h3 className="font-semibold text-foreground">Athlete journey</h3>
+      <h3 className="font-semibold text-foreground">{SURFACE_TITLES.journey}</h3>
       <p className="text-xs text-muted-foreground">
-        Current stage:{" "}
-        <span className="font-mono">{dev.current_stage ?? "unknown"}</span>
+        {JOURNEY_VOICE.currentStage(stageLabel)}
       </p>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No journey events yet.
-        </p>
+        <p className="text-sm text-muted-foreground">{JOURNEY_VOICE.empty}</p>
       ) : (
         <ol className="space-y-1">
-          {rows.map((r) => (
-            <li key={r.event_id} className="text-sm flex items-center gap-2">
-              <Badge variant="outline">{r.topic_id.split(".").pop()}</Badge>
-              <span className="text-xs text-muted-foreground">
-                {new Date(r.occurred_at).toLocaleDateString()}
-              </span>
-            </li>
-          ))}
+          {rows.map((r) => {
+            const tail = r.topic_id.split(".").pop() ?? "";
+            const label = TOPIC_LABEL[tail] ?? tail;
+            return (
+              <li key={r.event_id} className="text-sm flex items-center gap-2">
+                <Badge variant="outline">{label}</Badge>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(r.occurred_at).toLocaleDateString()}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       )}
     </Card>
