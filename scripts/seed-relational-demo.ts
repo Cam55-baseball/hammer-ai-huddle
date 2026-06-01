@@ -31,9 +31,12 @@ import {
   type RelationalEmitContext,
 } from "../src/lib/runtime/relational/emit";
 
-const DEMO_ATHLETE_ID = "demo-athlete-001";
-const DEMO_PARENT_ID = "demo-parent-001";
-const DEMO_COACH_ID = "demo-coach-001";
+// Valid UUIDs (v4-shaped) — `asb_events.athlete_id` is typed `uuid`. Must
+// stay in lockstep with src/lib/runtime/relational/__tests__/_seed.ts so the
+// live ledger and the fixture fallback project onto the same identifiers.
+const DEMO_ATHLETE_ID = "00000000-0000-4000-8000-000000000001";
+const DEMO_PARENT_ID = "00000000-0000-4000-8000-000000000003";
+const DEMO_COACH_ID = "00000000-0000-4000-8000-000000000002";
 const EPOCH_MS = Date.UTC(2026, 0, 1, 0, 0, 0); // 2026-01-01T00:00:00Z
 
 interface Args {
