@@ -181,6 +181,15 @@ export const PARENT_INVITE_VOICE = {
   invalid: "This invite link is invalid or has expired.",
   fail: TERMS.somethingOff,
   successToast: "Linked",
+  emailLabel: "Parent's email (optional)",
+  emailPlaceholder: "parent@example.com",
+  sendEmailCta: "Send invitation",
+  sendingEmail: "Sending…",
+  transport: {
+    sent: "Invitation sent.",
+    skipped_disabled: "Email isn't set up yet — copy the link instead.",
+    failed: "We couldn't send the email. Copy the link instead.",
+  },
 } as const;
 
 export const ONBOARDING_VOICE = {
