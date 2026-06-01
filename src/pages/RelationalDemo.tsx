@@ -49,7 +49,7 @@ export default function RelationalDemo() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-background p-4">
+    <main className="min-h-dvh bg-background p-4">
       <div className="max-w-2xl mx-auto space-y-4">
         <header className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-foreground">
@@ -61,17 +61,17 @@ export default function RelationalDemo() {
         </header>
 
         {stepIdx < 0 && (
-          <Card className="p-4 space-y-3">
+          <Card className="p-5 space-y-3">
             <p className="text-base text-foreground">{DEMO_CHOREO.intro.body}</p>
-            <Button onClick={() => setStepIdx(0)}>Begin</Button>
+            <Button onClick={() => setStepIdx(0)} className="min-h-11">Begin</Button>
           </Card>
         )}
 
         {step?.id === "today" && (
-          <Card className="p-4 space-y-2">
+          <Card className="p-5 space-y-2">
             <DevelopmentalStageChip athleteId={athleteId} scope={scope} debug={debug} />
             <p className="text-sm text-muted-foreground">
-              One athlete, today. Everything below is reconstructed from a single ledger.
+              One athlete, today. Everything below is reconstructed from a single source of truth.
             </p>
           </Card>
         )}
@@ -81,9 +81,9 @@ export default function RelationalDemo() {
         )}
 
         {step?.id === "developmental" && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <DevelopmentalStageChip athleteId={athleteId} scope={scope} debug={debug} />
-            <Card className="p-4">
+            <Card className="p-5">
               <p className="text-sm text-foreground">
                 A growth spurt was observed. Training load is held lower while bones and
                 tendons catch up. The cap drops automatically — no human approval needed
@@ -94,11 +94,11 @@ export default function RelationalDemo() {
         )}
 
         {step?.id === "slump" && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <SlumpReloadFlow athleteId={athleteId} scope={scope} />
-            <Card className="p-4">
+            <Card className="p-5">
               <p className="text-sm text-foreground">
-                Confidence has been low for several weeks. The system noticed before
+                Things have felt heavier for several weeks. The system noticed before
                 anyone named it out loud — and held back, instead of pushing harder.
               </p>
             </Card>
@@ -122,15 +122,14 @@ export default function RelationalDemo() {
         )}
 
         {step?.id === "proof" && (
-          <Card className="p-4 space-y-2">
+          <Card className="p-5 space-y-2">
             <h2 className="font-semibold text-foreground">Replay proof</h2>
             <p className="text-sm text-foreground">
-              Every surface you just saw is a pure projection over one append-only ledger.
-              No screen holds its own state. Rebuild the ledger and every screen
-              reconstructs byte-identical.
+              Every surface you just saw is reconstructed from one append-only source of truth.
+              No screen holds its own state. Rebuild it and every screen comes back identical.
             </p>
             <p className="text-xs text-muted-foreground">
-              Verified by 80+ replay tests covering visibility, gating, citation, and
+              Verified by 100+ tests covering visibility, protection, citation, and
               failure containment.
             </p>
           </Card>
