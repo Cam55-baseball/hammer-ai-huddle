@@ -233,3 +233,55 @@ export const DEMO_CHOREO = {
     { id: "proof", title: "Replay proof", seconds: 60 },
   ],
 } as const;
+
+// ─── Phase D — Safety Center, Relationship Settings, Transport ────────────
+
+export const SAFETY_VOICE = {
+  title: "Safety",
+  subtitle: "Things flagged for a calm second look.",
+  empty: "Nothing needs attention right now.",
+  routes: {
+    notify_parent: "A check-in may be helpful.",
+    arbitration_required: "Review recommended.",
+    lockdown_commercial: "External contact paused for now.",
+  } as Record<string, string>,
+  status: {
+    pending: "Pending review",
+    reviewed: "Reviewed",
+    muted: "Set aside",
+  } as Record<string, string>,
+  markReviewed: "Mark reviewed",
+  mute: "Set aside",
+} as const;
+
+export const RELATIONSHIP_SETTINGS_VOICE = {
+  title: "People in your circle",
+  subtitle: "Pause or remove access at any time.",
+  empty: "No one is linked yet.",
+  pause: "Pause access",
+  restore: "Restore access",
+  remove: "Remove access",
+  whatTheySee: TERMS.whatTheySee,
+  confirmRemoveLead: "This removes their access right away.",
+  confirmRemoveBody:
+    "They will not see new updates. The history of the link stays on record.",
+  confirm: "Confirm",
+  cancel: "Cancel",
+  statusLabels: {
+    active: "Linked",
+    pending: "Invite pending",
+    paused: "Paused",
+    revoked: TERMS.accessRemoved,
+  } as Record<string, string>,
+  pauseReason: "Pausing for now",
+} as const;
+
+export const TRANSPORT_VOICE = {
+  invitationCreated: "Invitation created",
+  deliveryDelayed: "Email delivery delayed — share the link below instead.",
+  deliverySent: "Invitation sent",
+  sendCta: "Send invitation",
+  sending: "Sending…",
+  retry: "Try again",
+} as const;
+
