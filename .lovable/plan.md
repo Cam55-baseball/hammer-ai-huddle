@@ -1,73 +1,69 @@
-# Final Operational Truth Audit — Execution Plan
+# Final Pre-Launch Operations Pass
 
-I'm in plan mode and cannot execute commands or edit files until you approve. Once approved, I will execute this audit literally — no summaries without execution, no invented results.
+Strictly operational. No new primitives, no doctrine, no megaphases. Presentation-mode lock honored.
 
-## Section 1 — Live Operational Execution
-Run, in order, capturing real output:
-1. `bunx tsc --noEmit` — full type-check
-2. `bunx vitest run` (scoped to `src/lib/relational/**` + `src/components/relational/**` + projection tests) — report pass/fail counts and failing files
-3. `bun run build` — production bundle, capture warnings + errors
-4. `bunx vite preview` (background) — production preview server
-5. Live seed: `bun scripts/seed-relational-demo.ts` against live DB — capture row counts in `asb_events` + `asb_event_lineage`
-6. Browser walkthrough of `/relational/demo` in production preview at **440×782** and **1280×720** — screenshot every step, capture console + network
-7. Fallback walkthrough: block Supabase via network throttling/offline + `?fallback=fixture` — verify all 9 steps render
-8. Hard refresh on each step (1–9) — verify cold-start resilience
+## Section 1 — Node-safe seed runner
 
-Return real numbers: test pass/fail, build warnings, console errors, network failures, hydration warnings.
+Create `scripts/seed-relational-demo-node.ts`:
 
-## Section 2 — Canonical Data Path Verification
-For every file in `src/components/relational/*` + `src/pages/RelationalDemo.tsx`:
-- Grep for direct `supabase.from(` usage
-- Grep for hardcoded psych/stage/recruiter/trust literals
-- Verify all reads go through `useRelationalProjections` / canonical projection selectors
-- Verify all writes go through `emitAsbEvent` / `buildAsbRow`
+- Uses `@supabase/supabase-js` directly with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` from `process.env`, configured with `auth: { persistSession: false, autoRefreshToken: false, storage: undefined }` so no `localStorage` dependency.
+- Reuses canonical `buildDemoSeed()` from `src/lib/runtime/relational/__tests__/_seed.ts` (already the single source of truth shared with the fixture fallback).
+- Routes every row through canonical emit path: imports `emitAsbEvent` + `emitAsbLineage` helpers (server-safe variant — uses `src/lib/asb/emit.ts` if Node-safe, otherwise inlines the same canonical insert with idempotency_key derivation matching `supabase/functions/_shared/asbEmit.ts`). No raw `.insert()` shortcuts; no parallel schema.
+- Same UUIDs, same lineage edges, same `engine_version`, same idempotency keys → re-run is a no-op (23505 dedupe).
+- Run: `bun run scripts/seed-relational-demo-node.ts` (bun executes Node-compatible TS; falls back to `tsx` if needed).
 
-Output as table: `File | Projection Source | Canonical? | Violations`. Fix any violation, rerun Section 1 tests, report remediation.
+Verification:
+- `SELECT count(*) FROM asb_events WHERE athlete_id = '00000000-0000-4000-8000-000000000001'` — expect == `buildDemoSeed().length`.
+- `SELECT count(*) FROM asb_event_lineage WHERE child_event_id IN (...)` — expect == lineage edge count emitted by seed.
+- Re-run existing replay reconstruction test against live-seeded athlete by fetching rows via `supabase--read_query` and feeding them through the four projection functions, asserting `stableStringify` parity with fixture output.
 
-## Section 3 — Stress & Failure Testing
-Via browser automation against production preview:
-- Rapid route switches across all 9 steps (10 cycles)
-- Refresh mid-projection-load
-- Empty projection state (`?fallback=empty` if available, else clear seed)
-- Missing relationship edges / psych rows / dev transitions (DB-targeted deletes on a scratch namespace, not prod data)
-- Broken lineage parent refs (verify projection guards)
-- Throttled network (Slow 3G profile)
-- Duplicate seed execution (idempotency check)
-- Offline fallback
+## Section 2 — Live device smoke test
 
-Verify: no crashes, no white screens, no `undefined` flashes, no infinite spinners, no error boundaries tripped, no projection divergence between refreshes.
+Use the browser tool against `/relational/demo?fallback=fixture` (and once against live-seeded `/relational/demo`):
 
-## Section 4 — Longevity Audit
-Static scan (ripgrep) across `src/lib/relational/**`, `src/lib/runtime/**`, `src/components/relational/**`:
-- `Math.random` usage
-- `Date.now()` / `new Date()` inside replay/projection paths
-- Mutable module-level state in projections
-- Implicit event-order assumptions
-- Render-timing coupling (`setTimeout` driving truth)
-- Local caches outside canonical projection layer
+- Viewports: 390×844 (iPhone) and 1280×720 (desktop).
+- Scenarios: cold refresh per step, slow-3G network throttle, offline fallback (`?fallback=fixture` with Supabase blocked).
+- Walk all 9 steps: Start Here → Today → Journey → Developmental → Slump Reload → Hammer Conversation → Parent Trust → Recruiting → Injury → Replay Proof.
+- Capture screenshot per step per viewport. Check console logs and network for errors, undefined flashes, hydration mismatches, stuck spinners.
 
-Output: `Risk Level | File:Line | Reason | Fix Status`.
+Deliverable: pass/fail per step + screenshot bundle written to `/mnt/documents/launch-smoke/`.
 
-## Section 5 — Demo Confidence Verification
-Real-time walkthrough using browser automation with stopwatch per step. For each of 9 steps:
-- Measure dwell + transition time vs `DEMO_CHOREO` targets
-- Score emotional clarity / technical clarity / trust perception (1–5) based on rendered output
-- Identify strongest moment, weakest moment, highest live-demo risk, exact mitigation
+## Section 3 — Purchase / onboarding flow audit
 
-## Section 6 — Final Verdict
-Issue exactly one of: **GO**, **CONDITIONAL GO** (with explicit blockers), or **NO GO** — justified solely by Section 1–5 execution evidence.
+Trace the path from "I want this" → first usable surface:
+- Read `src/pages/Pricing.tsx`, `src/pages/Success.tsx`, `src/contexts/AuthContext.tsx`, `src/pages/OnboardingFlow.tsx`, auth/signup routes registered in `src/App.tsx`, `src/pages/SelectUserRole.tsx`, `src/pages/SelectSport.tsx`, `src/pages/start-here/StartHereRunner.tsx`.
+- Confirm: signup → email verification → role select → sport select → onboarding steps → first today surface, with no dead ends on mobile (440px).
+- Check `redirectTo` URLs, post-success routing, refresh-mid-flow resilience, presence of `/reset-password`.
 
-## Section 7 — Completion Gate
-Verify all 11 completion conditions literally. Only if all pass, state the canonical readiness sentence.
+Deliverable: numbered onboarding path table with risk points (severity + mitigation). Only doc edits; no flow code changes unless a hard bug is found, in which case it's a contained null-guard / redirect fix.
 
-## Scope Guarantees
-- **Zero** new ASB topics, primitives, doctrine, schemas, or routes.
-- Only allowed edits: bug fixes surfaced by Section 1–3, copy refinement in `src/lib/relational/copy.ts`, null-guards, skeleton fallbacks.
-- Presentation mode lock honored throughout.
+## Section 4 — Demo mode isolation proofs
+
+Explicit violation attempts:
+1. Load `/relational/demo?fallback=fixture` with DevTools network tab — confirm zero `asb_events` POST requests.
+2. Confirm fixture rows have `visibility_scope: "demo"` and Phase 151 firewall in `src/lib/runtime/projections/types.ts::prepareRows` strips them under `"self"` scope (covered by test `(4) demo firewall`; re-run).
+3. Load `/relational/demo` without `?fallback=fixture` and without `?presenter=1` — confirm `PresenterOverlay` not rendered and `debug` chips not shown.
+4. Visit a production route (`/today`, `/relational`) with a real user and confirm projections return no demo rows.
+
+Deliverable: 4-row pass/fail report appended to `docs/asb/relational-operational-truth-audit.md`.
+
+## Section 5 — Final launch risk table
+
+Single markdown table covering: onboarding confusion, auth instability, mobile layout, network dependency, projection cold-start, emotional clarity, support burden, live seed failure, device/browser variance. Columns: Risk | Severity | Likelihood | Mitigation | Status.
+
+## Section 6 — Final verdict
+
+One of READY / READY WITH CONDITIONS / NOT READY, justified strictly by Sections 1–5 evidence. If READY: explicit stable-surface list, explicit future-work list, explicit "do/don't promise tomorrow" guidance.
 
 ## Deliverables
-- Inline audit report in chat with real numbers and tables
-- Updated `docs/asb/relational-final-readiness.md` with verdict + evidence
-- New `docs/asb/relational-operational-truth-audit.md` capturing raw execution output
 
-Approve to begin execution.
+- `scripts/seed-relational-demo-node.ts` (new)
+- `/mnt/documents/launch-smoke/` screenshot bundle
+- `docs/asb/relational-launch-readiness.md` (new — Sections 2–6 report)
+- Append isolation proof to `docs/asb/relational-operational-truth-audit.md`
+
+## Scope guardrails
+
+- No new ASB topics, primitives, doctrine, schemas, or routes.
+- Only allowed code edits: the new Node seed script, plus contained null-guards / copy fixes if smoke test surfaces a real bug.
+- Presentation-mode lock honored throughout.
