@@ -35,3 +35,8 @@ export function useTrustState(athleteId: string, scope: Scope) {
   const rows = useRows(athleteId);
   return useMemo(() => trustState(rows, scope), [rows, scope]);
 }
+
+export function useRelationshipState(athleteId: string, scope: Scope) {
+  const rows = useRows(athleteId);
+  return useMemo(() => relationshipState(rows, scope), [rows, scope]);
+}
