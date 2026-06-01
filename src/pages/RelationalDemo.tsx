@@ -152,6 +152,7 @@ export default function RelationalDemo() {
           </Button>
         </footer>
       </div>
+      {presenter && <PresenterOverlay stepIdx={stepIdx} onStep={setStepIdx} />}
     </main>
   );
 }
