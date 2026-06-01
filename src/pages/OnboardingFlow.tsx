@@ -3,18 +3,13 @@ import { RuntimeCard } from "@/components/runtime/RuntimeCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
-import { onboardingCopy } from "@/lib/copy/onboarding";
+import { ONBOARDING_VOICE } from "@/lib/relational/copy";
 import { emitRuntimeEvent } from "@/lib/runtime/emitRuntimeEvent";
 import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-const STEPS = [
-  { id: "welcome", title: "Welcome", body: "We unlock surfaces as you log signal." },
-  { id: "checkin", title: "Your first check-in", body: "Log readiness, fatigue, recovery — any one." },
-  { id: "scope", title: "Privacy & sharing", body: "You control what coaches see." },
-  { id: "ready", title: "You're ready", body: "Today's session unlocks now." },
-];
+const STEPS = ONBOARDING_VOICE.steps;
 
 export default function OnboardingFlow() {
   const { user } = useAuth();
@@ -65,17 +60,26 @@ export default function OnboardingFlow() {
     }
   }
 
+  const stepNumber = Math.min(nextIdx + 1, STEPS.length);
+
   return (
     <DashboardLayout>
-      <main className="mx-auto max-w-2xl space-y-4 p-4">
+      <main className="mx-auto max-w-xl space-y-5 p-4">
         <RuntimeCard
-          eyebrow={onboardingCopy.step(Math.min(nextIdx + 1, STEPS.length), STEPS.length)}
+          eyebrow={`${ONBOARDING_VOICE.eyebrow} · ${stepNumber} of ${STEPS.length}`}
           title={cur.title}
           tone="elevated"
         >
-          <p className="mb-4 text-sm text-muted-foreground">{cur.body}</p>
-          <Button onClick={complete} disabled={busy || done} size="lg">
-            {done ? "All set" : "Continue"}
+          <p className="mb-5 text-sm text-muted-foreground">
+            {done ? ONBOARDING_VOICE.done : cur.body}
+          </p>
+          <Button
+            onClick={complete}
+            disabled={busy || done}
+            size="lg"
+            className="w-full min-h-11"
+          >
+            {done ? "All set" : ONBOARDING_VOICE.continue}
           </Button>
         </RuntimeCard>
       </main>

@@ -42,7 +42,7 @@ export function AthleteJourneyMap({ athleteId, scope }: Props) {
         <ol className="space-y-1">
           {rows.map((r) => {
             const tail = r.topic_id.split(".").pop() ?? "";
-            const label = TOPIC_LABEL[tail] ?? tail;
+            const label = JOURNEY_VOICE.topicLabels[tail] ?? tail;
             return (
               <li key={r.event_id} className="text-sm flex items-center gap-2">
                 <Badge variant="outline">{label}</Badge>
