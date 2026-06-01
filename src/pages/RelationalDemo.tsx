@@ -91,7 +91,15 @@ export default function RelationalDemo() {
         )}
 
         {step?.id === "slump" && (
-          <SlumpReloadFlow athleteId={athleteId} scope={scope} />
+          <div className="space-y-2">
+            <SlumpReloadFlow athleteId={athleteId} scope={scope} />
+            <Card className="p-4">
+              <p className="text-sm text-foreground">
+                Confidence has been low for several weeks. The system noticed before
+                anyone named it out loud — and held back, instead of pushing harder.
+              </p>
+            </Card>
+          </div>
         )}
 
         {step?.id === "hammer" && (
