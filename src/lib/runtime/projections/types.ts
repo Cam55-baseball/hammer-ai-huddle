@@ -43,8 +43,12 @@ export function prepareRows(
   const filtered: AsbEventRow[] = [];
   for (const r of rows) {
     if (!topicPrefixes.some((p) => r.topic_id?.startsWith(p))) continue;
-    const vis = (r.payload as { visibility_scope?: Scope } | undefined)
+    const vis = (r.payload as { visibility_scope?: VisibilityScope } | undefined)
       ?.visibility_scope;
+    // Phase 151 demo firewall: demo events never propagate into production
+    // projections (any non-demo scope). Demo scope only reads demo events.
+    if (vis === "demo" && scope !== ("demo" as Scope)) continue;
+    if (vis !== "demo" && (scope as string) === "demo") continue;
     if (vis === "self" && scope !== "self") continue;
     filtered.push(r);
   }
