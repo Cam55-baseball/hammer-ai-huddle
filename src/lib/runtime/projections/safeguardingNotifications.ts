@@ -9,9 +9,9 @@
  * Pure module — caller fetches `safeguarding_notifications` rows and
  * passes them in alongside the canonical row set.
  */
-import { memoize, type Scope } from "./types";
+import { prepareRows, type Scope, type ProjectionMeta, projectionKey } from "./types";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
-import { projectDeliveries, type DeliveryDecision } from "@/lib/runtime/relational/safeguardingDelivery";
+import { projectDeliveries } from "@/lib/runtime/relational/safeguardingDelivery";
 
 export type SafetyStatus = "pending" | "reviewed" | "muted";
 
@@ -35,37 +35,45 @@ export interface SafetyState {
   notifications: SafetyNotificationView[];
 }
 
-const PREFIXES: string[] = []; // accepts the full relational stream
-
-/** Build the safety state from a row prefix + a status snapshot. */
-export const buildSafetyState = memoize<SafetyState, { is_minor: boolean; statusRows: SafeguardingStatusRow[] }>(
-  (rows, { is_minor, statusRows }) => {
-    const deliveries = projectDeliveries(rows, { is_minor });
-    // Latest status wins per (source_event_id, route).
-    const statusByKey = new Map<string, SafetyStatus>();
-    for (const s of statusRows) {
-      statusByKey.set(`${s.source_event_id}::${s.route}`, s.status);
-    }
-    const occurredByEvent = new Map<string, string>();
-    for (const r of rows) occurredByEvent.set(r.event_id, r.occurred_at ?? "");
-
-    const notifications: SafetyNotificationView[] = deliveries.map((d) => ({
-      id: d.dedupeKey,
-      source_event_id: d.classification.source_event_id,
-      route: d.classification.route,
-      status: statusByKey.get(d.dedupeKey) ?? "pending",
-      copy: d.copy,
-      reasons: d.classification.reasons,
-      occurred_at: occurredByEvent.get(d.classification.source_event_id) ?? null,
-    }));
-    return { notifications };
-  },
-);
+// Accept the full relational stream — safeguarding can fire on any prefix
+// (psych, exposure, conversation). We use the broad prefix.
+const PREFIXES = ["relational."];
 
 export function safetyState(
   rows: AsbEventRow[] | undefined,
   scope: Scope,
   opts: { is_minor: boolean; statusRows: SafeguardingStatusRow[] },
-) {
-  return buildSafetyState(rows, scope, PREFIXES, opts);
+): { state: SafetyState; meta: ProjectionMeta } {
+  const prepared = prepareRows(rows, scope, PREFIXES);
+  const last = prepared.length > 0 ? (prepared[prepared.length - 1].event_id ?? null) : null;
+  const deliveries = projectDeliveries(prepared, { is_minor: opts.is_minor });
+
+  const statusByKey = new Map<string, SafetyStatus>();
+  for (const s of opts.statusRows) {
+    statusByKey.set(`${s.source_event_id}::${s.route}`, s.status);
+  }
+  const occurredByEvent = new Map<string, string>();
+  for (const r of prepared) occurredByEvent.set(r.event_id, r.occurred_at ?? "");
+
+  const notifications: SafetyNotificationView[] = deliveries.map((d) => ({
+    id: d.dedupeKey,
+    source_event_id: d.classification.source_event_id,
+    route: d.classification.route,
+    status: statusByKey.get(d.dedupeKey) ?? "pending",
+    copy: d.copy,
+    reasons: d.classification.reasons,
+    occurred_at: occurredByEvent.get(d.classification.source_event_id) ?? null,
+  }));
+
+  return {
+    state: Object.freeze({ notifications }) as SafetyState,
+    meta: {
+      lastEventId: last,
+      sourceCount: prepared.length,
+      scope,
+    },
+  };
 }
+
+// Re-export for parity with other projection modules.
+export { projectionKey };
