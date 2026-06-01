@@ -165,6 +165,8 @@ const Relational = lazyWithRetry(() => import("./pages/Relational"));
 const RelationalDemo = lazyWithRetry(() => import("./pages/RelationalDemo"));
 const ParentInvite = lazyWithRetry(() => import("./pages/ParentInvite"));
 const AcceptParentInvite = lazyWithRetry(() => import("./pages/AcceptParentInvite"));
+const SafetyCenter = lazyWithRetry(() => import("./pages/SafetyCenter"));
+const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSettings"));
 import { DemoGate } from "./components/demo/DemoGate";
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -333,6 +335,9 @@ const App = () => {
               <Route path="/relational/demo" element={<RelationalDemo />} />
               <Route path="/parent-invite" element={<ParentInvite />} />
               <Route path="/accept-parent-invite" element={<AcceptParentInvite />} />
+              <Route path="/safety" element={<SafetyCenter />} />
+              <Route path="/relationships/settings" element={<RelationshipSettings />} />
+
               <Route path="/demo" element={<DemoRoot />} />
               <Route path="/demo/upgrade" element={<DemoUpgrade />} />
               <Route path="/demo/:tier" element={<DemoTier />} />

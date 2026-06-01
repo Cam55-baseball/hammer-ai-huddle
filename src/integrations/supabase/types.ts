@@ -6299,6 +6299,42 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_invite_dispatches: {
+        Row: {
+          athlete_id: string
+          attempt_count: number
+          created_at: string
+          id: string
+          last_error: string | null
+          recipient_email: string
+          relationship_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          recipient_email: string
+          relationship_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          recipient_email?: string
+          relationship_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pending_drills: {
         Row: {
           ai_context: string | null
@@ -7480,6 +7516,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      safeguarding_notifications: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          id: string
+          reasons: string[]
+          route: string
+          source_event_id: string
+          status: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          id?: string
+          reasons?: string[]
+          route: string
+          source_event_id: string
+          status?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          id?: string
+          reasons?: string[]
+          route?: string
+          source_event_id?: string
+          status?: string
+        }
+        Relationships: []
       }
       scheduled_practice_sessions: {
         Row: {
