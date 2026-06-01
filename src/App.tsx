@@ -165,6 +165,8 @@ const Relational = lazyWithRetry(() => import("./pages/Relational"));
 const RelationalDemo = lazyWithRetry(() => import("./pages/RelationalDemo"));
 const ParentInvite = lazyWithRetry(() => import("./pages/ParentInvite"));
 const AcceptParentInvite = lazyWithRetry(() => import("./pages/AcceptParentInvite"));
+const SafetyCenter = lazyWithRetry(() => import("./pages/SafetyCenter"));
+const RelationshipSettings = lazyWithRetry(() => import("./pages/RelationshipSettings"));
 import { DemoGate } from "./components/demo/DemoGate";
 const queryClient = new QueryClient({
   defaultOptions: {
