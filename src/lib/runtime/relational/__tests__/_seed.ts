@@ -32,10 +32,13 @@ import {
   RELATIONAL_TOPICS,
 } from "../schemas";
 
-export const DEMO_ATHLETE_ID = "demo-athlete-001" as const;
-export const DEMO_COACH_ID = "demo-coach-001" as const;
-export const DEMO_PARENT_ID = "demo-parent-001" as const;
-export const DEMO_RECRUITER_ID = "demo-recruiter-001" as const;
+// Valid UUIDs (v4-shaped) — required by `asb_events.athlete_id::uuid`.
+// Kept stable + namespaced so the live demo seed is idempotent and the
+// fixture fallback reads the same identifiers as production.
+export const DEMO_ATHLETE_ID = "00000000-0000-4000-8000-000000000001" as const;
+export const DEMO_COACH_ID = "00000000-0000-4000-8000-000000000002" as const;
+export const DEMO_PARENT_ID = "00000000-0000-4000-8000-000000000003" as const;
+export const DEMO_RECRUITER_ID = "00000000-0000-4000-8000-000000000004" as const;
 export const DEMO_EPOCH_MS = Date.UTC(2026, 0, 1, 0, 0, 0); // 2026-01-01T00:00:00Z
 
 const ENV = {

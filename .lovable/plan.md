@@ -1,78 +1,73 @@
-# Final Demo War-Room Pass
+# Final Operational Truth Audit — Execution Plan
 
-Presentation-resilience hardening for `/relational/demo`. No architecture, no new primitives, no new doctrine. One new gated surface (`?presenter=1` overlay) — allowed under presentation-mode-lock as "presentation resilience".
+I'm in plan mode and cannot execute commands or edit files until you approve. Once approved, I will execute this audit literally — no summaries without execution, no invented results.
 
-## 1. Rehearsal & telemetry capture
+## Section 1 — Live Operational Execution
+Run, in order, capturing real output:
+1. `bunx tsc --noEmit` — full type-check
+2. `bunx vitest run` (scoped to `src/lib/relational/**` + `src/components/relational/**` + projection tests) — report pass/fail counts and failing files
+3. `bun run build` — production bundle, capture warnings + errors
+4. `bunx vite preview` (background) — production preview server
+5. Live seed: `bun scripts/seed-relational-demo.ts` against live DB — capture row counts in `asb_events` + `asb_event_lineage`
+6. Browser walkthrough of `/relational/demo` in production preview at **440×782** and **1280×720** — screenshot every step, capture console + network
+7. Fallback walkthrough: block Supabase via network throttling/offline + `?fallback=fixture` — verify all 9 steps render
+8. Hard refresh on each step (1–9) — verify cold-start resilience
 
-Use the in-sandbox browser to walk the full `/relational/demo` flow at 440×782, then 1280×720:
-- Record per-step dwell, transition times, any console errors, network waterfall.
-- Capture screenshots at each of the 9 steps; check for null/undefined flashes, layout shift, scroll friction.
-- Verify `/relational?fallback=fixture` renders the same components against in-memory seed.
-- Log findings into `docs/asb/relational-rehearsal-log.md` (timings, flat spots, dead clicks).
+Return real numbers: test pass/fail, build warnings, console errors, network failures, hydration warnings.
 
-## 2. Resilience hardening
+## Section 2 — Canonical Data Path Verification
+For every file in `src/components/relational/*` + `src/pages/RelationalDemo.tsx`:
+- Grep for direct `supabase.from(` usage
+- Grep for hardcoded psych/stage/recruiter/trust literals
+- Verify all reads go through `useRelationalProjections` / canonical projection selectors
+- Verify all writes go through `emitAsbEvent` / `buildAsbRow`
 
-Audit and fix any of these that the rehearsal exposes:
-- **Cold refresh:** confirm `RelationalDemo` lazy chunk loads with a graceful skeleton, no white screen.
-- **Loading skeletons:** every projection-dependent component must render a `bg-muted animate-pulse` placeholder while `useRelationalProjections` is loading. Patch any component returning `null` on undefined.
-- **Null guards:** in all 7 relational components + `RelationalDemo`, replace any `data.x.y` access with optional chaining + fallback copy from `copy.ts`.
-- **Fallback route guarantee:** ensure `/relational?fallback=fixture` always works even if Supabase is unreachable (force fixture seed path, skip live fetch).
-- **Projection cold-start:** add a 1-frame `requestAnimationFrame` warm in `RelationalDemo` mount so first step paints before user clicks Next.
+Output as table: `File | Projection Source | Canonical? | Violations`. Fix any violation, rerun Section 1 tests, report remediation.
 
-No schema, no `prepareRows`, no `emit.ts`, no projection logic changes.
+## Section 3 — Stress & Failure Testing
+Via browser automation against production preview:
+- Rapid route switches across all 9 steps (10 cycles)
+- Refresh mid-projection-load
+- Empty projection state (`?fallback=empty` if available, else clear seed)
+- Missing relationship edges / psych rows / dev transitions (DB-targeted deletes on a scratch namespace, not prod data)
+- Broken lineage parent refs (verify projection guards)
+- Throttled network (Slow 3G profile)
+- Duplicate seed execution (idempotency check)
+- Offline fallback
 
-## 3. Performance stabilization (only if rehearsal flags)
+Verify: no crashes, no white screens, no `undefined` flashes, no infinite spinners, no error boundaries tripped, no projection divergence between refreshes.
 
-- Wrap `RelationalDemo` step content in `React.memo` keyed by step id.
-- Memoize `useRelationalProjections` selectors with `useMemo` if a flamegraph shows recompute on every step change.
-- Strip any `console.log` left in `src/components/relational/*` and `src/lib/relational/*` and `RelationalDemo.tsx`.
-- Remove `debug` prop usage from the live demo page (keep in `/relational` admin surface).
+## Section 4 — Longevity Audit
+Static scan (ripgrep) across `src/lib/relational/**`, `src/lib/runtime/**`, `src/components/relational/**`:
+- `Math.random` usage
+- `Date.now()` / `new Date()` inside replay/projection paths
+- Mutable module-level state in projections
+- Implicit event-order assumptions
+- Render-timing coupling (`setTimeout` driving truth)
+- Local caches outside canonical projection layer
 
-## 4. Copy polish via `copy.ts`
+Output: `Risk Level | File:Line | Reason | Fix Status`.
 
-Only edit `src/lib/relational/copy.ts`. Refine:
-- Hammer turn cadence — shorter, fewer connectives, one reflective question per 3 statements.
-- Parent reassurance — lead with protection, never recruiting.
-- Recruiting safeguard — "we hold this until you are ready" framing.
-- Developmental stage descriptions — observational, not prescriptive.
-- Slump-recovery transitions — name the slump, don't fix it.
+## Section 5 — Demo Confidence Verification
+Real-time walkthrough using browser automation with stopwatch per step. For each of 9 steps:
+- Measure dwell + transition time vs `DEMO_CHOREO` targets
+- Score emotional clarity / technical clarity / trust perception (1–5) based on rendered output
+- Identify strongest moment, weakest moment, highest live-demo risk, exact mitigation
 
-Voice: concise, calm, intelligent, non-hype, human. No exclamation marks. No "you got this".
+## Section 6 — Final Verdict
+Issue exactly one of: **GO**, **CONDITIONAL GO** (with explicit blockers), or **NO GO** — justified solely by Section 1–5 execution evidence.
 
-## 5. Presenter Assist overlay (gated by `?presenter=1`)
+## Section 7 — Completion Gate
+Verify all 11 completion conditions literally. Only if all pass, state the canonical readiness sentence.
 
-New file: `src/components/relational/PresenterOverlay.tsx`. Mounted only inside `RelationalDemo` when `new URLSearchParams(location.search).get("presenter") === "1"`. Absent in production by default.
+## Scope Guarantees
+- **Zero** new ASB topics, primitives, doctrine, schemas, or routes.
+- Only allowed edits: bug fixes surfaced by Section 1–3, copy refinement in `src/lib/relational/copy.ts`, null-guards, skeleton fallbacks.
+- Presentation mode lock honored throughout.
 
-Features:
-- Fixed bottom-right pill (z-50, semantic tokens only).
-- Keyboard: `→`/`Space` next step, `←` prev, `R` reset to step 1, `F` open fallback route in new tab.
-- Section label (current step name + index `3 / 9`).
-- Timing helper: elapsed time since first step, target band (e.g., "Slump Reload — target 2:00").
-- Quick-jump select (1–9).
-- "Fallback reset" button that navigates to `/relational/demo?presenter=1` and forces step 1.
+## Deliverables
+- Inline audit report in chat with real numbers and tables
+- Updated `docs/asb/relational-final-readiness.md` with verdict + evidence
+- New `docs/asb/relational-operational-truth-audit.md` capturing raw execution output
 
-Zero effect on the surface when `?presenter=1` is absent — no DOM nodes, no listeners, no state.
-
-## 6. Final Readiness Report
-
-Create `docs/asb/relational-final-readiness.md`:
-- Measured presentation runtime (min/typical/max).
-- System stability status.
-- Highest-risk failure point + mitigation.
-- Fallback confidence (Low/Med/High) with evidence.
-- Emotional coherence rating (1–5) per step.
-- Technical coherence rating (1–5).
-- Final **go / no-go** recommendation with conditions.
-
-## Files
-
-- New: `src/components/relational/PresenterOverlay.tsx`, `docs/asb/relational-rehearsal-log.md`, `docs/asb/relational-final-readiness.md`.
-- Edit (only as rehearsal demands): `src/pages/RelationalDemo.tsx` (mount overlay, null-guard), `src/lib/relational/copy.ts` (polish), individual relational components (skeletons / null guards only — no projection logic).
-- Untouched: `prepareRows`, `emit.ts`, `buildAsbRow`, schemas, migrations, projection types, ASB topics.
-
-## Out of scope
-
-- New ASB topics, new primitives, new megaphases, new doctrine.
-- Any schema or DB migration.
-- New top-level routes beyond `/relational/demo` (already registered).
-- Changes to `/relational` admin surface beyond bug fixes surfaced by rehearsal.
+Approve to begin execution.

@@ -44,11 +44,29 @@ const COLS =
  * No aggregation, no smoothing — raw ledger rows only.
  */
 export function useAsbTimeline({ athleteId, pageSize = 50, cursor = null }: UseAsbTimelineOptions) {
+  // Presentation-resilience: when the URL carries `?fallback=fixture`, project
+  // off the canonical in-memory demo seed instead of Supabase. Lets the live
+  // demo survive an offline or degraded backend. Reads only — never writes.
+  const fixtureMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("fallback") === "fixture";
+
   return useQuery({
-    queryKey: ["asb-timeline", athleteId, pageSize, cursor?.occurred_at ?? null, cursor?.event_id ?? null],
+    queryKey: ["asb-timeline", athleteId, pageSize, cursor?.occurred_at ?? null, cursor?.event_id ?? null, fixtureMode ? "fixture" : "live"],
     enabled: !!athleteId,
     placeholderData: keepPreviousData,
     queryFn: async (): Promise<AsbTimelinePage> => {
+      if (fixtureMode) {
+        const { buildDemoSeed } = await import("@/lib/runtime/relational/demoFixture");
+        const all = buildDemoSeed()
+          .filter((r) => r.athlete_id === athleteId)
+          .sort((a, b) => {
+            if (a.occurred_at === b.occurred_at) return a.event_id < b.event_id ? 1 : -1;
+            return a.occurred_at < b.occurred_at ? 1 : -1;
+          });
+        return { rows: all.slice(0, pageSize), nextCursor: null };
+      }
+
       let q = supabase
         .from("asb_events")
         .select(COLS)
@@ -58,7 +76,6 @@ export function useAsbTimeline({ athleteId, pageSize = 50, cursor = null }: UseA
         .limit(pageSize + 1);
 
       if (cursor) {
-        // (occurred_at, event_id) < (cursor.occurred_at, cursor.event_id) in descending order
         q = q.or(
           `occurred_at.lt.${cursor.occurred_at},and(occurred_at.eq.${cursor.occurred_at},event_id.lt.${cursor.event_id})`
         );
