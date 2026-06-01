@@ -50,6 +50,18 @@ export function useAsbTimeline({ athleteId, pageSize = 50, cursor = null }: UseA
   const fixtureMode =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("fallback") === "fixture";
+  // Phase A §3 audit: log when fixture-mode is active alongside an
+  // authenticated athleteId so we can spot accidental demo↔live coexistence
+  // on production routes. The firewall in prepareRows still enforces scope.
+  if (
+    fixtureMode &&
+    athleteId &&
+    typeof window !== "undefined" &&
+    !(window as { __relFixtureAuthLogged?: boolean }).__relFixtureAuthLogged
+  ) {
+    console.info("[relational] fixture-mode-with-auth", { athleteId });
+    (window as { __relFixtureAuthLogged?: boolean }).__relFixtureAuthLogged = true;
+  }
 
   return useQuery({
     queryKey: ["asb-timeline", athleteId, pageSize, cursor?.occurred_at ?? null, cursor?.event_id ?? null, fixtureMode ? "fixture" : "live"],

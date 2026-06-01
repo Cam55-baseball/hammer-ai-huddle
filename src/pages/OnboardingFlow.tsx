@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAthleteCommandRows } from "@/hooks/command/useAthleteCommandRows";
 import { onboardingCopy } from "@/lib/copy/onboarding";
 import { emitRuntimeEvent } from "@/lib/runtime/emitRuntimeEvent";
-import { useMemo, useState } from "react";
+import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const STEPS = [
@@ -31,6 +32,19 @@ export default function OnboardingFlow() {
   const nextIdx = STEPS.findIndex((s) => !completed.has(s.id));
   const cur = nextIdx === -1 ? STEPS[STEPS.length - 1] : STEPS[nextIdx];
   const done = nextIdx === -1;
+
+  // Phase A §4 — Relational onboarding bootstrap. Idempotent at the emit
+  // layer (deterministic idempotency_key); the in-process guard just avoids
+  // re-running the network round-trip per page mount.
+  const bootstrappedRef = useRef(false);
+  useEffect(() => {
+    if (!user || bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+    emitOnboardingBootstrap(user).catch((e) => {
+      // Constitutional: failures degrade visibly but never block onboarding.
+      console.warn("[relational] onboarding bootstrap deferred", e);
+    });
+  }, [user]);
 
   async function complete() {
     if (!user || done) return;
