@@ -161,6 +161,7 @@ const DemoCategory = lazyWithRetry(() => import("./pages/demo/DemoCategory"));
 const DemoSubmodule = lazyWithRetry(() => import("./pages/demo/DemoSubmodule"));
 const DemoUpgrade = lazyWithRetry(() => import("./pages/demo/DemoUpgrade"));
 const StartHereRunner = lazyWithRetry(() => import("./pages/start-here/StartHereRunner"));
+const Relational = lazyWithRetry(() => import("./pages/Relational"));
 import { DemoGate } from "./components/demo/DemoGate";
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -325,6 +326,7 @@ const App = () => {
               <Route path="/bundle/:id" element={<BuildAccessGate buildType="bundle" />} />
               <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
               <Route path="/start-here" element={<StartHereRunner />} />
+              <Route path="/relational" element={<Relational />} />
               <Route path="/demo" element={<DemoRoot />} />
               <Route path="/demo/upgrade" element={<DemoUpgrade />} />
               <Route path="/demo/:tier" element={<DemoTier />} />
