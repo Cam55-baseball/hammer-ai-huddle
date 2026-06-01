@@ -57,10 +57,17 @@ function promotedIdempotencyMaterial(
 }
 
 async function sha256Hex(s: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const subtle =
+    (globalThis as { crypto?: { subtle?: SubtleCrypto } }).crypto?.subtle;
+  if (subtle) {
+    const buf = await subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+  // Fallback for jsdom / older runtimes — use node crypto.
+  const nodeCrypto = await import("node:crypto");
+  return nodeCrypto.createHash("sha256").update(s).digest("hex");
 }
 
 interface DemoRow {
