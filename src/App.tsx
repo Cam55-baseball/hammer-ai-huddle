@@ -328,6 +328,7 @@ const App = () => {
               <Route path="/consultation/:id" element={<BuildAccessGate buildType="consultation" />} />
               <Route path="/start-here" element={<StartHereRunner />} />
               <Route path="/relational" element={<Relational />} />
+              <Route path="/relational/demo" element={<RelationalDemo />} />
               <Route path="/demo" element={<DemoRoot />} />
               <Route path="/demo/upgrade" element={<DemoUpgrade />} />
               <Route path="/demo/:tier" element={<DemoTier />} />
