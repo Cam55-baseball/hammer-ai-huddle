@@ -1,102 +1,115 @@
 
-# Final Pre-Publish Lock Pass
+# Phase A — Relational Infrastructure Activation (Backlog 1–4)
 
-Scope-bound to presentation lock (docs/asb/presentation-mode-lock.md): no architecture, no new primitives, no schema, no doctrine. Only audit, docs, and contained bug fixes if a real violation is found.
+Strict scope: activate the already-constitutionalized relational substrate (Phases 151–154) for live use. Additive-only. Canonical `emitAsbEvent` path only. No new primitives, no RR-4…RR-10 sealing, no recruiter/injury/career_arc/narrative work.
 
-## Section 1 — Publish Safety Static Audit
+---
 
-Run targeted ripgrep sweeps across the relational surface and report exact `file:line` violations. No edits unless a hard violation surfaces.
+## Section 1 — Relational topic registry activation
 
-Paths:
-- `src/components/relational/**`
-- `src/pages/RelationalDemo.tsx`, `src/pages/Relational.tsx`
-- `src/lib/runtime/**` (projections + relational fixture)
-- `src/lib/relational/**`
-- `src/hooks/useAsbTimeline.ts`, `src/hooks/useRelationalProjections.ts`
+Additive idempotent migration registering the 16 relational topics into `public.asb_topic_registry`. Existing rows are never mutated; re-runs are no-ops via `ON CONFLICT (topic_id) DO NOTHING`.
 
-Checks (each = one `rg` pass):
-1. `TODO|FIXME|XXX|HACK` in those paths
-2. `console\.(log|debug|info|warn|error)` (warn/error allowed only in genuine error branches — flag for review)
-3. Mock/debug labels rendered without a query-param gate (`debug`, `presenter`, `mock`, `fixture` literals in JSX without surrounding `?debug=1`/`?presenter=1` guard)
-4. Direct `supabase.from(` in `src/components/relational/**` or relational hooks other than `useAsbTimeline` (which is the single canonical reader)
-5. Hardcoded `localhost`, `127.0.0.1`, `http://`, or dev-only URLs
-6. `PresenterOverlay` import sites — confirm every render site is gated by `?presenter=1`
-7. Potential null-render: `.map(` / `.[0]` on projection outputs without a guard in the relational components
+Topic-class mapping (constrained by the existing `asb_topic_class` enum, which has no `interpretive` member — relational primitives are interpretive overlays per Phase 151, so they map to the closest legal class without authoring organism truth):
 
-Deliverable: a violations table in the chat reply (file, line, snippet, severity). If severity = blocker, switch to fix-mode for that single item only.
+| Topic | topic_class | authority_pathway | replay_policy | materialization |
+|---|---|---|---|---|
+| `relational.conversation.turn` | `observability` | `athlete` | `deterministic_with_inputs` | `on_demand` |
+| `relational.conversation.shared` | `observability` | `coach_parent_org` | `deterministic_with_inputs` | `on_demand` |
+| `relational.conversation.redacted` | `observability` | `athlete` | `deterministic_with_inputs` | `on_demand` |
+| `relational.psych.self_report` | `confidence_signal` | `athlete` | `deterministic_with_inputs` | `on_demand` |
+| `relational.psych.inferred` | `confidence_signal` | `ai` | `deterministic_with_inputs` | `on_demand` |
+| `relational.psych.transition` | `confidence_signal` | `system` | `deterministic_with_inputs` | `on_demand` |
+| `relational.developmental.age_observed` | `constraint_signal` | `athlete` | `deterministic_with_inputs` | `snapshot` |
+| `relational.developmental.growth_attestation` | `constraint_signal` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
+| `relational.developmental.puberty_marker` | `constraint_signal` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
+| `relational.developmental.deload_window` | `constraint_signal` | `system` | `deterministic_with_inputs` | `on_demand` |
+| `relational.developmental.transition` | `constraint_signal` | `system` | `deterministic_with_inputs` | `snapshot` |
+| `relational.developmental.gate_decision` | `constraint_signal` | `system` | `deterministic_with_inputs` | `on_demand` |
+| `relational.relationship.created` | `org_propagation` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
+| `relational.relationship.confirmed` | `org_propagation` | `coach_parent_org` | `deterministic_with_inputs` | `snapshot` |
+| `relational.relationship.revoked` | `org_propagation` | `coach_parent_org` | `deterministic` | `snapshot` |
+| `relational.relationship.paused` | `org_propagation` | `coach_parent_org` | `deterministic` | `snapshot` |
 
-## Section 2 — Post-Camp Productionization Backlog
+`introduced_in_engine_version` = `asb-1.0.0` (matches `ENGINE_VERSION`).
 
-Create `docs/asb/post-camp-productionization-backlog.md`. Pure documentation, no code.
+The migration is a single `INSERT … ON CONFLICT DO NOTHING` per row, additive-only, replay-safe on re-run, no existing rows touched.
 
-Structure: brief preamble (subordinate to presentation lock and Megaphase 151–160; nothing here may execute until lock lifts), then 16 numbered entries in this fixed order:
+---
 
-1. Relational topic registry registration (the 13 `relational.*` topics into `asb_topic_registry`)
-2. Live relational seeding enablement (Node seeder + topic FKs)
-3. Production relational onboarding
-4. Authenticated relational persistence
-5. Live parent account linkage
-6. Recruiter workflow activation
-7. Injury lifecycle production wiring
-8. `narrative_event` implementation (RR-5)
-9. `life_context_event` implementation (RR-8)
-10. `exposure_event` implementation (RR-9)
-11. `recruiter_contact_event` implementation (RR-10)
-12. `career_arc` implementation (RR-7)
-13. RR-4…RR-10 invariant sealing
-14. Live replay observability dashboards
-15. Production projection performance profiling
-16. Full relational orchestration completion audit
+## Section 2 — Live relational seeder activation
 
-Each entry uses identical fields:
-- **Objective** — one sentence
-- **Dependency chain** — ordered list of prerequisite items by number
-- **Risk level** — Low / Medium / High / Critical
-- **Constitutional constraints** — invariant families it must honor (Eternal Laws, RR-1…RR-3 sealed, Phase 151 firewall, Megaphase 151–160, etc.)
-- **Estimated order** — integer 1–16
+Augment `scripts/seed-relational-demo-node.ts` (do not duplicate it):
 
-Closes with explicit statement: backlog is reference-only; nothing here is in-scope until presentation lock is lifted.
+1. **Lineage edge emission.** After each successful row insert, walk `payload.lineage_parent_ids`, and for each parent emit a row into `asb_event_lineage` via `INSERT … ON CONFLICT DO NOTHING` with `derivation_type = "relational_seed"`, `engine_version = "asb-1.0.0"`. Idempotent on re-run.
+2. **Post-seed replay reconstruction verification.** After all inserts, fetch the seeded rows back via the same client, feed them through `conversationMemoryState`, `psychState`, `developmentalState`, `trustState` (scope `"demo"`), and assert byte-stable equality (via `stableStringify`) against the in-memory `buildDemoSeed()` projections. Exit non-zero on divergence.
+3. **Verification report.** On completion, print a structured block: `inserted`, `deduped`, `total_rows`, `lineage_edges_inserted`, `lineage_edges_deduped`, `projection_parity: ok|FAIL`, `duplicate_run_proof` (counts from the verification SELECT). Also writes `/mnt/documents/relational-live-seed-report.json` for the operator.
+4. **Service-role + canonical emit semantics** are already correct; preserved as-is.
 
-## Section 3 — Presentation Route Verification
+No payload mutation, no parallel storage, no new topics — relies entirely on Section 1.
 
-Verify `/relational/demo?fallback=fixture` against five conditions. Read-only investigation first; report findings; only fix if a hard blocker is confirmed.
+---
 
-Verification steps:
-1. Trace fixture path: `RelationalDemo.tsx` → `useRelationalProjections` → `useAsbTimeline` (fixture branch) → `demoFixture.buildDemoSeed()`. Confirm zero Supabase calls when `fallback=fixture`.
-2. Grep every relational component for `supabase.` / `useQuery` outside `useAsbTimeline` to confirm no parallel DB reads.
-3. Hard-refresh / cold-start: confirm state machine (`stepIdx`) initializes deterministically; `requestAnimationFrame` warm already in place.
-4. Mobile (440×782 — current viewport): visually walk all 9 steps via browser tools, capture screenshots to `/mnt/documents/launch-smoke/route-lock/`.
-5. Without `?presenter=1`: confirm `PresenterOverlay` is not in the DOM.
-6. Offline: DevTools-equivalent — confirm no network requests to `/rest/v1/asb_events` on the fixture route by inspecting the timeline hook branch logic.
+## Section 3 — Authenticated relational persistence
 
-Deliverable: 6-row pass/fail table. If any row fails with a code root cause, list the file paths blocking and request scope expansion.
+Relational emitters (`emitConversationTurn`, `emitPsychSelfReport`, …) already route through canonical `emitAsbEvent`. With Section 1 in place, FK failures stop and authenticated writes persist under existing RLS (`Athletes insert own events` / `Athletes read own events`).
 
-## Section 4 — Final Publish Checklist
+Two surface changes:
 
-Create `docs/asb/final-publish-checklist.md` with checkbox sections:
+1. **`useAsbTimeline` scope coupling.** The hook today auto-switches to fixture mode when `?fallback=fixture` is present. Add: if no fallback param AND `user` is authenticated, always read live (current behavior). When `?fallback=fixture` is present AND the user is authenticated, still read fixture for that page — but log one `console.info("[relational] fixture-mode-with-auth")` so we can audit any unintended bleed. No new state; no projection mutation.
+2. **`Relational.tsx` scope.** Already chooses `"demo" | "self"` based on `useDemoMode`. Confirm `isDemo` is only true for the explicit demo route — verify in code, no change unless a leak is found.
 
-- **Environment** — `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` present; no dev URLs in bundle; `import.meta.env.DEV` guards intact.
-- **Mobile viewport** — 390×844 and 440×782 walkthrough pass.
-- **Fallback** — `?fallback=fixture` returns non-empty projections; no `asb_events` POST/GET during walk.
-- **Routes** — `/relational/demo`, `/relational/demo?fallback=fixture`, `/relational/demo?fallback=fixture&presenter=1` all reachable; 404 unaffected.
-- **Auth safety** — unauthenticated visit to fixture route does not trigger redirects or auth modals.
-- **Production build** — `vite build` clean, no type errors, no warnings beyond known baseline.
-- **Demo route** — choreography Begin → 9 steps → End completes without crash; back navigation stable.
-- **Rollback** — published URL revert path documented (use Lovable version history; identify last known-good publish hash and the fixture URL as canonical fallback). Include "if demo is unstable mid-camp, narrate from screenshots in `/mnt/documents/launch-smoke/`" as last-resort.
+**New test:** `relational-live-persistence.test.ts` — round-trips a `psych.self_report` and a `conversation.turn` against an in-memory event array (no DB), asserts projections after persistence equal projections built from the source rows directly. Mixed demo/live coexistence test: feed a mix of `visibility_scope: "demo"` and `"self"` rows; assert `prepareRows("self", …)` strips demo, `prepareRows("demo", …)` strips self.
 
-## Section 5 — Final Readiness Verdict
+Refresh survivability is structurally guaranteed: writes hit `asb_events`, reads hit `useAsbTimeline`, projections rebuild on mount — no client cache to lose.
 
-Single verdict line (READY TO PUBLISH / READY WITH CONDITIONS / NOT READY), justified strictly from Sections 1, 3, 4 evidence. Expected outcome based on prior passes: **READY WITH CONDITIONS** (fixture route only; live DB seeding remains blocked by missing topic registry rows — documented in Section 2 item 1).
+---
 
-## Files Touched
+## Section 4 — Production relational onboarding
 
-Create only:
-- `docs/asb/post-camp-productionization-backlog.md`
-- `docs/asb/final-publish-checklist.md`
-- `/mnt/documents/launch-smoke/route-lock/*.png` (screenshots)
+Constitutional onboarding bootstrap: a newly-authenticated athlete emits a minimal, constitutionally legal set of relational events the first time they reach the onboarding flow. No fabricated psych state, no AI inference at onboarding, all missingness explicit.
 
-No source edits unless Section 1 or 3 surfaces a hard blocker; in that case scope is limited to the single null-guard or gating fix required.
+Trigger location: `src/pages/OnboardingFlow.tsx`, gated by the existing `onboarding.step_completed` ledger check — emit only if no `relational.relationship.created` event exists for `user.id` (idempotency via deterministic `idempotency_key`).
 
-## Out of Scope
+Bootstrap emission set (all via canonical emitters):
 
-No new ASB topics, primitives, schema, doctrine, megaphases, routes, or components. Presentation-mode lock honored end-to-end.
+1. **`relational.relationship.created`** — `{ subject_role: "self", subject_user_id: user.id, visibility_scope: "self", confidence: 1.0, source: "onboarding_bootstrap" }`. Establishes the athlete↔self relationship anchor.
+2. **`relational.developmental.age_observed`** — only when the onboarding form captures DOB/age. If unknown at this point: emit nothing for developmental, leaving `developmentalState.current_stage` as `null` (explicit missingness, per Phase 151). Do NOT impute.
+3. **No psych emission.** Confidence/motivation/etc. remain `source: "none"` until the athlete files a self-report. This is constitutional — Phase 151 forbids hidden inferred psych state at onboarding.
+
+Determinism: `idempotency_key = sha256("onboarding-bootstrap::" + user.id + "::" + topic_id)`, so repeated visits are no-ops.
+
+**Deliverables (committed alongside code):**
+- `docs/asb/relational-onboarding-flow.md` — flow map, emission map, visibility audit, replay reconstruction proof (drawn from the new test).
+- `relational-onboarding.test.ts` — replays a bootstrap event sequence and asserts projections equal the expected baseline (relationship present, developmental null, psych `source: "none"`).
+
+---
+
+## Section 5 — Verification pass
+
+Executed at the end of the build phase; no summaries without execution:
+
+1. `bunx tsc --noEmit` — type-check.
+2. `bunx vitest run src/lib/runtime/relational/__tests__/` — full relational suite incl. new persistence + onboarding tests.
+3. `bun scripts/seed-relational-demo-node.ts --dry-run` — verify seed builds against the live registry without writes.
+4. `bun scripts/seed-relational-demo-node.ts` — live seed against the dev DB; assert verification report shows `projection_parity: ok` and `inserted + deduped == total_rows`.
+5. Re-run #4 — assert `inserted == 0`, `deduped == total_rows` (idempotency proof).
+
+Return: exact files changed, exact migrations added, exact test counts (pass/fail), and a single explicit statement of remaining blockers before backlog items 5–6 (expected: parent account invite flow + recruiter visibility scope + safeguarding sub-route — all out of scope here).
+
+---
+
+## Files touched
+
+- **Migration (new):** `INSERT … ON CONFLICT DO NOTHING` for 16 relational topic rows.
+- `scripts/seed-relational-demo-node.ts` — add lineage edge writes + post-seed projection parity check + report file.
+- `src/hooks/useAsbTimeline.ts` — auth-aware fixture-mode audit log (single `console.info`, no behavior change).
+- `src/pages/OnboardingFlow.tsx` — bootstrap emission gated on user + idempotency.
+- `src/lib/runtime/relational/__tests__/relational-live-persistence.test.ts` *(new)*.
+- `src/lib/runtime/relational/__tests__/relational-onboarding.test.ts` *(new)*.
+- `docs/asb/relational-onboarding-flow.md` *(new)*.
+- `mem://constraints/presentation-mode-lock` — append: lock partially lifted for backlog items 1–4 only; RR-4…RR-10 remain sealed.
+- `.lovable/plan.md` — log Phase A entry.
+
+## Out of scope (explicit)
+
+Recruiter visibility, injury lifecycle wiring, parent invite flow, `narrative_event`, `life_context_event`, `exposure_event`, `recruiter_contact_event`, `career_arc`, RR-4…RR-10 sealing, replay observability dashboards, projection perf profiling. Execution halts at backlog item 4.
