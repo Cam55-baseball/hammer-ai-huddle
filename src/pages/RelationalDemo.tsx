@@ -30,10 +30,20 @@ export default function RelationalDemo() {
   const debug =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
+  const presenter =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("presenter") === "1";
 
   const [stepIdx, setStepIdx] = useState(-1); // -1 = intro
   const total = DEMO_CHOREO.steps.length;
   const step = stepIdx >= 0 ? DEMO_CHOREO.steps[stepIdx] : null;
+
+  // Cold-start warm: kick a paint frame on mount so the first step renders
+  // without a flash when the user clicks Begin.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {});
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   return (
     <main className="min-h-screen bg-background p-4">
