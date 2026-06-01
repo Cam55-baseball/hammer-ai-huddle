@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRelationshipState } from "@/hooks/useRelationalProjections";
+import type { RelationshipRecord } from "@/lib/runtime/projections/relationshipState";
 import { createParentInvite, revokeParentRelationship } from "@/lib/runtime/relational/parentLinking";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -53,7 +54,7 @@ export default function ParentInvite() {
     }
   }
 
-  const parents = Object.values(state.byId).filter(
+  const parents = (Object.values(state.byId) as RelationshipRecord[]).filter(
     (r) => r.relationship_type === "parent",
   );
 
