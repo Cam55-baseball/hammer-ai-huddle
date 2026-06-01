@@ -1,61 +1,95 @@
-# Phase B — RR-4 Sealing + Parent Linkage Activation
+# Phase C — Humanization & Productization Layer
 
-Strict, additive-only. Halts at backlog item #5. No recruiter, injury, narrative, exposure, career_arc, or RR-5…RR-10 work.
+Strict scope reminder: no new primitives, no new doctrine, no RR-5…RR-10 sealing, no recruiter/injury/narrative/career/exposure work, no schema rewrites, no new event families. Edits live in presentation + copy + a11y + polish only. Canonical `emitAsbEvent` paths and existing projections are untouched.
 
-## Section 1 — RR-4 Constitutional Sealing
+## What gets built
 
-- **New** `docs/asb/rr-4-relational-relationship-constitution.md` — full RR-4 doctrine: relationships are append-only events; revocation never deletes lineage; parent supremacy for minors; commercial never overrides safeguarding; trust never grants authorization; relationship state is replay-derived; no mutable relationship table; no silent escalation; all transitions lineage-visible.
-- **New memory** `mem://constraints/rr-4-relationship-sealing` — RR-4 invariants 1…10 (additive-only events, no mutable truth, revocation preserves history, immediate visibility removal on revoke, parent precedence for minors, commercial < safeguarding, trust ≠ authorization, replay-derived state, lineage-visible transitions, no silent escalation).
-- **Update** `mem://index.md` Core/Memories sections to reference the new constraint file. Preserve all existing entries verbatim (full-file overwrite rule).
-- Subordinate to Eternal Laws, Megaphase 151–160, and presentation-mode lock allowances (additive doctrine is allowed; no schema or pipeline changes).
+### 1. Humanization audit doc
+- New: `docs/asb/humanization-audit.md`
+- One table per surface (`Relational.tsx`, `RelationalDemo.tsx`, `HammerConversationPanel`, `ParentTrustCard`, `DevelopmentalStageChip`, `SlumpReloadFlow`, `InjuryLifecycleStrip`, `RecruitingRoadmap`, `AthleteJourneyMap`, `ParentInvite.tsx`, `AcceptParentInvite.tsx`, `OnboardingFlow.tsx`).
+- Columns: issue · severity (P0/P1/P2) · emotional impact · fix recommendation · resolved-in-section.
+- Captured from a live mobile walkthrough at 390px + 440px (browser tool).
 
-## Section 2 — Relationship Schema Activation
+### 2. Canonical language system — `src/lib/relational/copy.ts`
+- Add a `TERMS` map (one phrase per concept globally) + helper `humanize(key)`.
+- Replacements applied across all relational surfaces (sweep, not just additions):
+  - "relationship revoked" → "access removed"
+  - "developmental gating" / "gated" → "age-based protection"
+  - "scope" → "what they can see"
+  - "lineage" / "replay-derived" → removed from athlete/parent-facing strings (kept only in `debug` blocks)
+  - "confidence" / "inference" → "recent pattern"
+  - "event" / "projection" / "state" → human equivalents per context
+  - "consent" → "permission"
+  - "counterparty" → "person"
+- Voice: calm, observant, no exclamation marks, no hype, no startup language, no sports clichés.
+- Existing keys (`HAMMER_VOICE`, `PARENT_VOICE`, etc.) are expanded — not renamed — so no consumer breaks.
 
-Topics already registered in `asb_topic_registry` from Phase A (`relational.relationship.created|confirmed|revoked|paused`). Activation = schemas + emitters only; no DB changes.
+### 3. Interface simplification pass
+For each relational screen, enforce: **one primary action**, **one emotional focus per section**, progressive disclosure for secondary info.
+- `Relational.tsx`: collapse the 2-column grid on mobile, give each card breathing room, hide debug data behind a "Details" disclosure.
+- `HammerConversationPanel`: shorter responses, tighter line-height, no paragraph walls, single composer focus.
+- `ParentTrustCard`: protection lead first, trust note second, counts moved to muted footer.
+- `DevelopmentalStageChip`, `SlumpReloadFlow`, `InjuryLifecycleStrip`, `RecruitingRoadmap`, `AthleteJourneyMap`: remove redundant labels, soften radii/shadows, unify spacing rhythm using existing tokens.
+- No new components; no logic changes; no new state.
 
-- **New** `src/lib/runtime/relational/relationshipSchemas.ts` — Zod schemas for the four verbs with exact fields specified by the user (`relationship_id`, `subject_user_id`, `counterparty_user_id`, `relationship_type ∈ {parent, coach, athlete_self}`, `initiated_by`, `consent_required`, `visibility_scope`, `lineage_parent_ids[]` for `created`; corresponding fields for `confirmed|revoked|paused`).
-- **New** `src/lib/runtime/relational/relationshipEmitters.ts` — `emitRelationshipCreated/Confirmed/Revoked/Paused` wrappers around canonical `emitAsbEvent` + `emitAsbLineage`. Deterministic `idempotency_key` via existing `computeIdempotencyKey` over (athlete_id, topic_id, occurred_at anchor, payload). `occurred_at` anchored to invite token issuance time so retries dedupe.
+### 4. Parent experience optimization
+- `ParentInvite.tsx`: lead with "You stay in control." Three plain-language bullets: what they'll see, what's protected, how to remove access. Single primary CTA. Existing parent list collapses behind a disclosure once >0 items exist.
+- `AcceptParentInvite.tsx`: replace IDs / "Issued at" timestamps with a calm one-sentence summary; keep technical details only inside a "Details" disclosure. Add reassurance paragraph: revocation is one tap, either side, anytime.
+- `ParentTrustCard`: tighten copy via §2 vocab.
 
-## Section 3 — Parent Invite / Linkage Flow (Backlog #5)
+### 5. Athlete experience optimization
+- `OnboardingFlow.tsx`: reduce step body text, single CTA, calmer eyebrow copy, no "unlock surfaces" jargon.
+- `HammerConversationPanel`: max 2 short sentences per response, more whitespace, memory callbacks use observable references only ("you mentioned X on Tuesday"), no piled questions.
 
-- **New** `src/lib/runtime/relational/parentLinking.ts` — pure functions: `createParentInvite(athleteId, parentEmail)` → emits `relationship.created` (`consent_required: true`, `visibility_scope: "parent"`); `acceptParentInvite(token, parentUserId)` → emits `relationship.confirmed` with `lineage_parent_ids` pointing back to the `created` event_id; `revokeParentRelationship(relationshipId, revokedBy, reason)` → emits `relationship.revoked`. Invite token = signed payload `{relationship_id, athlete_id, parent_email, issued_at}` (HMAC via existing project secret pattern; if no secret available, use deterministic UUID stored in payload — flagged in plan as confirmation point).
-- **New** `src/pages/ParentInvite.tsx` — authenticated athlete page: enter parent email → call `createParentInvite` → display shareable invite link `/accept-parent-invite?token=…`. Lists pending + active relationships derived from replay (no parallel state).
-- **New** `src/pages/AcceptParentInvite.tsx` — reads `?token=…`, requires parent sign-in/sign-up, calls `acceptParentInvite` on confirm. Idempotent on repeat acceptance.
-- **Route registration** in `src/App.tsx` for the two new pages.
-- No new tables. No parallel relationship state. All linkage state is `useAsbTimeline` → projection-derived.
+### 6. Visual polish
+- Spacing: unify to `space-y-4` rhythm on stacked cards, `p-5` on primary cards.
+- Radius/shadow: standardize on `rounded-xl` + `shadow-sm` for relational cards.
+- Empty states: every relational surface gets a calm one-line empty state via §2 copy.
+- Loading: replace any raw "Loading…" with skeleton or muted placeholder.
+- No new animations; soften any existing harsh transitions.
 
-## Section 4 — Visibility Arbitration Enforcement
+### 7. Accessibility & resilience
+- Audit per `skill/accessibility`: icon-only buttons get `aria-label`, tap targets ≥ 44×44 on mobile, single `<main>` per page (verify `Relational.tsx`, `ParentInvite.tsx`, `AcceptParentInvite.tsx`), `h-dvh` over `h-screen`, contrast via tokens.
+- Refresh survivability: verify all surfaces re-render purely from projections (already true — spot-check, no code change unless drift found).
 
-- **New** projection `src/lib/runtime/projections/relationshipState.ts` — replay-derives current relationship set per athlete: active / paused / revoked, with parent supremacy flag when subject is minor (cross-reference `developmentalState`).
-- **Extend** `src/lib/runtime/projections/types.ts::prepareRows` — when reader scope is `coach` and an active `parent` relationship exists for the same subject on a safeguarding-flagged payload, parent precedence wins. Revoked relationships → reader loses visibility on rows whose `payload.visibility_scope` matches the revoked side. Paused relationships → downgrade to presence-only (rows pass header/topic but `payload` redacted to `{paused: true}`). Recruiter scope remains universally blocked (already enforced).
-- **New tests** `src/lib/runtime/relational/__tests__/relational-relationship-visibility.test.ts` — assertions exactly as user listed (revoked parent loses reads; revoked coach loses reads; paused → presence-only; parent precedence survives replay rebuild; trust score cannot bypass visibility gates).
+### 8. Cohesion pass
+- Single sweep ensuring every surface uses §2 vocab, §6 spacing rhythm, §3 single-primary-action rule. Cross-link in audit doc.
 
-## Section 5 — Safeguarding Route Foundation
+### 9. Final humanization verification
+- Mobile walkthroughs at 390 + 440 via browser tool: athlete onboarding · parent invite create · parent invite accept · revoke · relational demo page.
+- Captured screenshots referenced in audit doc.
+- Closing section in `humanization-audit.md`: issues fixed (with line refs), remaining friction, highest-risk confusion area, recommended next phase.
 
-- **New** `src/lib/runtime/relational/safeguardingRoute.ts` — pure deterministic classifier `classifySafeguardingSignal(row) → { route: "notify_parent" | "lockdown_commercial" | "arbitration_required" | "none", reasons: string[] }`. Routes only — **no** notification emission, **no** external integration, **no** state mutation. Triggers on: psych self-report with crisis tags, developmental marker for minor combined with commercial-scope event, explicit safeguarding category in payload.
-- Small unit test file `safeguardingRoute.test.ts` for the classifier truth table.
+### 10. Stop gate
+- No recruiter / exposure / narrative / career / injury / RR-5…RR-10 work. Phase ends after §9 report is written.
 
-## Section 6 — Replay & Persistence Verification
+## Files expected to change
 
-- **New** `relationship-replay.test.ts` — emit created→confirmed→revoked, rebuild projection from event log, assert final state matches; emit out-of-order (revoked before confirmed) and assert deterministic resolution by `occurred_at`.
-- **New** `parent-linkage.test.ts` — full invite flow, acceptance, revocation, idempotent re-acceptance, demo↔live firewall preserved.
+**New**
+- `docs/asb/humanization-audit.md`
 
-## Section 7 — Final Verification
+**Edited (copy / layout / a11y only)**
+- `src/lib/relational/copy.ts` (expanded)
+- `src/components/relational/HammerConversationPanel.tsx`
+- `src/components/relational/ParentTrustCard.tsx`
+- `src/components/relational/DevelopmentalStageChip.tsx`
+- `src/components/relational/SlumpReloadFlow.tsx`
+- `src/components/relational/InjuryLifecycleStrip.tsx`
+- `src/components/relational/RecruitingRoadmap.tsx`
+- `src/components/relational/AthleteJourneyMap.tsx`
+- `src/pages/Relational.tsx`
+- `src/pages/RelationalDemo.tsx`
+- `src/pages/ParentInvite.tsx`
+- `src/pages/AcceptParentInvite.tsx`
+- `src/pages/OnboardingFlow.tsx`
+- `src/components/onboarding/AthleteOnboardingShell.tsx` (spacing only, if needed)
 
-Run `bunx tsc --noEmit`, full relational vitest suite, and document exact counts + remaining blockers (RR-5…RR-10 unsealed, recruiter inactive, injury isolated, safeguarding notifications not operational, exposure/career/narrative inactive) in `.lovable/plan.md`.
+## Verification
 
-## Technical notes
+- `bunx tsc --noEmit`
+- Existing relational vitest suite (must remain 103 passing — no logic changes expected).
+- Browser walkthroughs at 390 + 440px, screenshots in audit doc.
 
-- All emission flows through `emitAsbEvent` / `emitAsbLineage` in `src/lib/asb/emit.ts`. No `supabase.from("asb_events")` calls in new code.
-- `useAsbTimeline` remains the sole reader; new projection plugs into `useRelationalProjections.ts` as `useRelationshipState(athleteId, scope)`.
-- Idempotency: `occurred_at` anchored to deterministic anchors (invite issuance, acceptance click) so retries collapse via existing 23505 path.
-- Lineage: every `confirmed`/`revoked`/`paused` carries `lineage_parent_ids` referencing the originating `created` event_id; written via `emitAsbLineage` with `derivation_type: "relationship_transition"`.
-- Presentation-mode lock: Phase B work is explicitly authorized by the user message overriding the lock for backlog items #5 + RR-4 sealing only.
+## Out of scope (hard stop)
 
-## Out of scope (will not touch)
-
-Recruiter workflows, injury lifecycle, `narrative_event`, `career_arc`, `exposure_event`, `recruiter_contact_event`, RR-5…RR-10, schema rewrites, safeguarding notification delivery, external integrations.
-
-## Confirmation point
-
-Invite token signing — do you want HMAC via a new `PARENT_INVITE_SIGNING_KEY` secret, or is a server-generated opaque token (random UUID stored only inside the `relationship.created` payload, validated by lookup at acceptance time) acceptable? Default if you don't answer: opaque UUID (no new secret required, simpler, replay-derivable).
+Recruiter workflow, injury lifecycle expansion, `narrative_event`, `career_arc`, `exposure_event`, `recruiter_contact_event`, RR-5…RR-10 sealing, new event families, schema rewrites, new architecture, notification transports, safeguarding delivery.
