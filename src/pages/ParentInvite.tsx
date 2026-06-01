@@ -37,14 +37,45 @@ export default function ParentInvite() {
   const [link, setLink] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [transport, setTransport] = useState<TransportStatus>(null);
 
   async function handleCreate() {
     if (!user || busy) return;
     setBusy(true);
+    setTransport(null);
     try {
       const out = await createParentInvite({ athleteId: user.id });
       const url = `${window.location.origin}/accept-parent-invite?token=${encodeURIComponent(out.token)}`;
       setLink(url);
+
+      const trimmed = email.trim();
+      if (trimmed && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            "send-parent-invite",
+            {
+              body: {
+                relationship_id: out.relationship_id,
+                athlete_id: user.id,
+                recipient_email: trimmed,
+                invite_url: url,
+              },
+            },
+          );
+          if (error) {
+            setTransport("failed");
+          } else {
+            const delivery = (data as { delivery?: string } | null)?.delivery;
+            if (delivery === "sent") setTransport("sent");
+            else if (delivery === "skipped_disabled") setTransport("skipped_disabled");
+            else setTransport("failed");
+          }
+        } catch (e) {
+          console.warn("[parent-invite] transport failed", e);
+          setTransport("failed");
+        }
+      }
     } catch (e) {
       toast.error(PARENT_INVITE_VOICE.fail);
       console.warn("[parent-invite] create failed", e);
