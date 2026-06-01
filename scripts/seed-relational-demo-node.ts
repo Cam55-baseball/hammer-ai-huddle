@@ -118,11 +118,13 @@ async function main() {
   console.log(`[seed-node] athlete=${athleteId} mode=${args.dryRun ? "dry-run" : "LIVE"}`);
 
   // Build canonical rows up-front (Zod validation runs here — fail fast).
-  const rowsAll = buildDemoSeed();
-  const rows: AsbEventRow[] =
+  const fixtureRows = buildDemoSeed();
+  const scoped: AsbEventRow[] =
     athleteId === DEMO_ATHLETE_ID
-      ? rowsAll
-      : rowsAll.map((r) => ({ ...r, athlete_id: athleteId }));
+      ? fixtureRows
+      : fixtureRows.map((r) => ({ ...r, athlete_id: athleteId }));
+  // Project fixture string ids → stable UUIDs for the live `uuid` column.
+  const rows = liveize(scoped);
 
   console.log(`[seed-node] canonical rows built: ${rows.length}`);
   const lineageEdgeCount = rows.reduce((n, r) => {
@@ -130,6 +132,7 @@ async function main() {
     return n + parents.length;
   }, 0);
   console.log(`[seed-node] embedded lineage edges (lineage_refs): ${lineageEdgeCount}`);
+  console.log(`[seed-node] first event_id (post-liveize): ${rows[0].event_id}`);
 
   if (args.dryRun) {
     console.log("[seed-node] --dry-run: skipping DB writes");
