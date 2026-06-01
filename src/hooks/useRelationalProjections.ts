@@ -9,6 +9,7 @@ import { conversationMemoryState } from "@/lib/runtime/projections/conversationM
 import { psychState } from "@/lib/runtime/projections/psychState";
 import { developmentalState } from "@/lib/runtime/projections/developmentalState";
 import { trustState } from "@/lib/runtime/projections/trustState";
+import { relationshipState } from "@/lib/runtime/projections/relationshipState";
 
 function useRows(athleteId: string) {
   const q = useAsbTimeline({ athleteId });
