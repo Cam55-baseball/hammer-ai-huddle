@@ -1,26 +1,63 @@
 /**
- * Presentation Finalization — single source of athlete-facing voice.
+ * Phase C — Canonical athlete/parent-facing vocabulary.
  *
- * Consumed by all surfaces under src/components/relational/* and
- * src/pages/RelationalDemo.tsx. No constitutional internals — no mention of
- * lineage, replay, engine_version, RR-* invariants, or projections in
- * athlete-facing strings.
+ * Single source of truth for every word the user reads on a relational
+ * surface. Hammer voice rules:
  *
- * Voice rules (Hammer):
- *   • calm, observant, accountable, non-hype
+ *   • calm, observant, accountable, never hype
  *   • short sentences; no exclamation marks
  *   • no "you got this" / no diagnosis / no certainty about the future
  *   • references observable facts only (dates, prior turns, deloads)
+ *   • zero technical leakage — no "lineage", "replay", "projection",
+ *     "scope", "event", "confidence score", "inference", "AI", "state
+ *     machine", "authority pathway"
+ *
+ * Components MUST import from this file rather than inlining strings.
  */
+
+/**
+ * One phrase per concept, globally. When a new surface needs a word that's
+ * already in here, reuse the existing entry — never invent a synonym.
+ */
+export const TERMS = {
+  // Relationships
+  accessRemoved: "Access removed",
+  removeAccess: "Remove access",
+  removingAccess: "Removing access…",
+  permission: "Permission",
+  person: "Person",
+
+  // Visibility
+  whatTheySee: "What they can see",
+  whatStaysPrivate: "What stays private",
+  youStayInControl: "You stay in control",
+
+  // Developmental
+  ageBasedProtection: "Age-based protection",
+  minorParentVisible: "Parent can see this",
+
+  // Psych / emotional
+  recentPattern: "Recent pattern",
+  quickCheckIn: "Quick check-in",
+
+  // System voice
+  resolving: "Looking that up…",
+  saving: "Saving…",
+  saved: "Saved",
+  somethingOff: "Something didn't go through. Try again in a moment.",
+} as const;
 
 export const SURFACE_TITLES = {
   hammer: "Hammer",
   parentTrust: "Parent view",
   developmental: "Where you are right now",
-  slumpReload: "Quick check-in",
+  slumpReload: TERMS.quickCheckIn,
   recruiting: "Recruiting path",
   injury: "Recovery timeline",
   journey: "Your journey so far",
+  yourCircle: "Your circle",
+  parentLinkage: "Parents",
+  acceptInvite: "Accept invite",
 } as const;
 
 export const HAMMER_VOICE = {
@@ -29,15 +66,25 @@ export const HAMMER_VOICE = {
   cite: (n: number) => `looking back at ${n} earlier moment${n === 1 ? "" : "s"}`,
   redacted: "You removed this from the record.",
   send: "Send",
+  /** Map raw speaker role to a calm human label. */
+  speakerLabel: (role: string): string => {
+    if (role === "athlete") return "You";
+    if (role === "hammer") return "Hammer";
+    if (role === "parent") return "Parent";
+    if (role === "coach") return "Coach";
+    return role.replace("_", " ");
+  },
 } as const;
 
 export const PARENT_VOICE = {
   protectedLead: "Protected first",
   protectedBody:
-    "Recruiter outreach, performance pressure, and exposure stay behind developmental safeguards. You see everything before they do.",
+    "Recruiter outreach, performance pressure, and exposure stay behind protections. You see everything before they do.",
   trustNote:
-    "Trust grows from how people show up over time. It opens visibility — never authority.",
+    "Trust grows from how people show up over time. It opens what they can see — never what they decide.",
   noHistory: "No parent activity yet.",
+  momentsTogether: (n: number) =>
+    `${n} moment${n === 1 ? "" : "s"} together so far.`,
 } as const;
 
 export const DEVELOPMENTAL_VOICE = {
@@ -56,43 +103,123 @@ export const DEVELOPMENTAL_VOICE = {
     pct == null ? "Load: not capped" : `Load held at ${pct}%`,
   growthSpurtNote:
     "A growth spurt is happening. Load is held lower while bones and tendons catch up.",
-  minorBadge: "Minor — parent visible",
+  minorBadge: TERMS.minorParentVisible,
+  recruitingPaused: "Recruiting paused",
+  protectionLabel: TERMS.ageBasedProtection,
 } as const;
 
 export const SLUMP_VOICE = {
-  title: "Quick check-in",
-  body: "Confidence has been low. Your word always overrides what the system inferred.",
+  title: TERMS.quickCheckIn,
+  body: "Things have felt heavier lately. Your word always overrides anything the system inferred from the side.",
   buttons: { worse: "Worse", same: "Same", better: "Better", much_better: "Much better" },
 } as const;
 
 export const RECRUITING_VOICE = {
   gatedTitle: "Recruiting stays paused",
   gatedBody:
-    "At this developmental stage, recruiter outreach is held back. Parents see everything; nothing reaches you yet.",
+    "At this stage, recruiter outreach is held back. Parents see everything; nothing reaches you yet.",
+  gatedBadge: TERMS.ageBasedProtection,
   unlockedEmpty: "No recruiter contact yet.",
-  minorConsent: "Parent consent required",
+  minorConsent: "Parent permission required",
 } as const;
 
 export const INJURY_VOICE = {
   empty: "Healthy — no recent injuries.",
   phaseLabels: {
-    acute: "Acute",
-    subacute: "Subacute",
-    rehab: "Rehab",
-    return_to_play: "Return to play",
+    acute: "Just happened",
+    subacute: "Settling",
+    rehab: "Coming back",
+    return_to_play: "Returning",
     cleared: "Cleared",
   } as Record<string, string>,
 } as const;
 
 export const JOURNEY_VOICE = {
   currentStage: (label: string) => `Today: ${label}`,
-  empty: "Your journey starts with your first event.",
+  empty: "Your journey starts with your first check-in.",
+  topicLabels: {
+    transition: "Growing up step",
+    marker: "Memory",
+    contact: "Outside attention",
+  } as Record<string, string>,
+} as const;
+
+/**
+ * Parent invite + accept-invite copy. Lead with safety, never with mechanics.
+ */
+export const PARENT_INVITE_VOICE = {
+  athleteTitle: "Invite a parent",
+  athleteIntro:
+    "Add a parent to your circle. They'll see what helps them support you — nothing more. You can remove access any time.",
+  createCta: "Create invite link",
+  createBusy: "Creating…",
+  linkReady: "Share this link with your parent.",
+  copyLink: "Copy link",
+  linkCopied: "Link copied",
+  yourParents: "Your parents",
+  noParentsYet: "No parents linked yet.",
+  removeCta: TERMS.removeAccess,
+  removing: TERMS.removingAccess,
+  removedToast: TERMS.accessRemoved,
+  control: TERMS.youStayInControl,
+  controlBullets: [
+    "They see your scope-appropriate signal — not raw data.",
+    "Recruiter outreach and pressure stay behind protections.",
+    "You can remove their access in one tap, any time.",
+  ] as const,
+  detailsToggle: "Details",
+  acceptTitle: SURFACE_TITLES.acceptInvite,
+  acceptIntro:
+    "Accepting this invite links you as a parent. You'll see what helps you support them — nothing more.",
+  acceptReassurance:
+    "Either of you can remove this link at any time, in one tap. Nothing is ever final.",
+  acceptCta: "Accept and link",
+  acceptBusy: "Linking…",
+  resolving: TERMS.resolving,
+  signInPrompt: "Sign in as the parent to accept this invite.",
+  signInCta: "Sign in",
+  invalid: "This invite link is invalid or has expired.",
+  fail: TERMS.somethingOff,
+  successToast: "Linked",
+} as const;
+
+export const ONBOARDING_VOICE = {
+  eyebrow: "Welcome",
+  steps: [
+    {
+      id: "welcome",
+      title: "Welcome",
+      body: "This is your space. You decide what to share, and when.",
+    },
+    {
+      id: "checkin",
+      title: "First check-in",
+      body: "Log how today feels — readiness, fatigue, or recovery. Any one works.",
+    },
+    {
+      id: "scope",
+      title: "Sharing",
+      body: "You choose what coaches and parents can see. You can change it later.",
+    },
+    {
+      id: "ready",
+      title: "You're set",
+      body: "Today's session is ready. Take it at your pace.",
+    },
+  ] as const,
+  continue: "Continue",
+  done: "All set — see you in there.",
+} as const;
+
+export const RELATIONAL_PAGE_VOICE = {
+  title: SURFACE_TITLES.yourCircle,
+  subtitle: "The people, signals, and steps that shape your week.",
 } as const;
 
 export const DEMO_CHOREO = {
   intro: {
     title: "Meet the athlete",
-    body: "One athlete. Three hundred and thirty days. Everything you see is reconstructed from a single ledger.",
+    body: "One athlete. Three hundred and thirty days. Everything you see is reconstructed from a single source of truth.",
   },
   steps: [
     { id: "today", title: "Today", seconds: 45 },
