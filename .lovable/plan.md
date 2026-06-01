@@ -1,69 +1,102 @@
-# Final Pre-Launch Operations Pass
 
-Strictly operational. No new primitives, no doctrine, no megaphases. Presentation-mode lock honored.
+# Final Pre-Publish Lock Pass
 
-## Section 1 — Node-safe seed runner
+Scope-bound to presentation lock (docs/asb/presentation-mode-lock.md): no architecture, no new primitives, no schema, no doctrine. Only audit, docs, and contained bug fixes if a real violation is found.
 
-Create `scripts/seed-relational-demo-node.ts`:
+## Section 1 — Publish Safety Static Audit
 
-- Uses `@supabase/supabase-js` directly with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` from `process.env`, configured with `auth: { persistSession: false, autoRefreshToken: false, storage: undefined }` so no `localStorage` dependency.
-- Reuses canonical `buildDemoSeed()` from `src/lib/runtime/relational/__tests__/_seed.ts` (already the single source of truth shared with the fixture fallback).
-- Routes every row through canonical emit path: imports `emitAsbEvent` + `emitAsbLineage` helpers (server-safe variant — uses `src/lib/asb/emit.ts` if Node-safe, otherwise inlines the same canonical insert with idempotency_key derivation matching `supabase/functions/_shared/asbEmit.ts`). No raw `.insert()` shortcuts; no parallel schema.
-- Same UUIDs, same lineage edges, same `engine_version`, same idempotency keys → re-run is a no-op (23505 dedupe).
-- Run: `bun run scripts/seed-relational-demo-node.ts` (bun executes Node-compatible TS; falls back to `tsx` if needed).
+Run targeted ripgrep sweeps across the relational surface and report exact `file:line` violations. No edits unless a hard violation surfaces.
 
-Verification:
-- `SELECT count(*) FROM asb_events WHERE athlete_id = '00000000-0000-4000-8000-000000000001'` — expect == `buildDemoSeed().length`.
-- `SELECT count(*) FROM asb_event_lineage WHERE child_event_id IN (...)` — expect == lineage edge count emitted by seed.
-- Re-run existing replay reconstruction test against live-seeded athlete by fetching rows via `supabase--read_query` and feeding them through the four projection functions, asserting `stableStringify` parity with fixture output.
+Paths:
+- `src/components/relational/**`
+- `src/pages/RelationalDemo.tsx`, `src/pages/Relational.tsx`
+- `src/lib/runtime/**` (projections + relational fixture)
+- `src/lib/relational/**`
+- `src/hooks/useAsbTimeline.ts`, `src/hooks/useRelationalProjections.ts`
 
-## Section 2 — Live device smoke test
+Checks (each = one `rg` pass):
+1. `TODO|FIXME|XXX|HACK` in those paths
+2. `console\.(log|debug|info|warn|error)` (warn/error allowed only in genuine error branches — flag for review)
+3. Mock/debug labels rendered without a query-param gate (`debug`, `presenter`, `mock`, `fixture` literals in JSX without surrounding `?debug=1`/`?presenter=1` guard)
+4. Direct `supabase.from(` in `src/components/relational/**` or relational hooks other than `useAsbTimeline` (which is the single canonical reader)
+5. Hardcoded `localhost`, `127.0.0.1`, `http://`, or dev-only URLs
+6. `PresenterOverlay` import sites — confirm every render site is gated by `?presenter=1`
+7. Potential null-render: `.map(` / `.[0]` on projection outputs without a guard in the relational components
 
-Use the browser tool against `/relational/demo?fallback=fixture` (and once against live-seeded `/relational/demo`):
+Deliverable: a violations table in the chat reply (file, line, snippet, severity). If severity = blocker, switch to fix-mode for that single item only.
 
-- Viewports: 390×844 (iPhone) and 1280×720 (desktop).
-- Scenarios: cold refresh per step, slow-3G network throttle, offline fallback (`?fallback=fixture` with Supabase blocked).
-- Walk all 9 steps: Start Here → Today → Journey → Developmental → Slump Reload → Hammer Conversation → Parent Trust → Recruiting → Injury → Replay Proof.
-- Capture screenshot per step per viewport. Check console logs and network for errors, undefined flashes, hydration mismatches, stuck spinners.
+## Section 2 — Post-Camp Productionization Backlog
 
-Deliverable: pass/fail per step + screenshot bundle written to `/mnt/documents/launch-smoke/`.
+Create `docs/asb/post-camp-productionization-backlog.md`. Pure documentation, no code.
 
-## Section 3 — Purchase / onboarding flow audit
+Structure: brief preamble (subordinate to presentation lock and Megaphase 151–160; nothing here may execute until lock lifts), then 16 numbered entries in this fixed order:
 
-Trace the path from "I want this" → first usable surface:
-- Read `src/pages/Pricing.tsx`, `src/pages/Success.tsx`, `src/contexts/AuthContext.tsx`, `src/pages/OnboardingFlow.tsx`, auth/signup routes registered in `src/App.tsx`, `src/pages/SelectUserRole.tsx`, `src/pages/SelectSport.tsx`, `src/pages/start-here/StartHereRunner.tsx`.
-- Confirm: signup → email verification → role select → sport select → onboarding steps → first today surface, with no dead ends on mobile (440px).
-- Check `redirectTo` URLs, post-success routing, refresh-mid-flow resilience, presence of `/reset-password`.
+1. Relational topic registry registration (the 13 `relational.*` topics into `asb_topic_registry`)
+2. Live relational seeding enablement (Node seeder + topic FKs)
+3. Production relational onboarding
+4. Authenticated relational persistence
+5. Live parent account linkage
+6. Recruiter workflow activation
+7. Injury lifecycle production wiring
+8. `narrative_event` implementation (RR-5)
+9. `life_context_event` implementation (RR-8)
+10. `exposure_event` implementation (RR-9)
+11. `recruiter_contact_event` implementation (RR-10)
+12. `career_arc` implementation (RR-7)
+13. RR-4…RR-10 invariant sealing
+14. Live replay observability dashboards
+15. Production projection performance profiling
+16. Full relational orchestration completion audit
 
-Deliverable: numbered onboarding path table with risk points (severity + mitigation). Only doc edits; no flow code changes unless a hard bug is found, in which case it's a contained null-guard / redirect fix.
+Each entry uses identical fields:
+- **Objective** — one sentence
+- **Dependency chain** — ordered list of prerequisite items by number
+- **Risk level** — Low / Medium / High / Critical
+- **Constitutional constraints** — invariant families it must honor (Eternal Laws, RR-1…RR-3 sealed, Phase 151 firewall, Megaphase 151–160, etc.)
+- **Estimated order** — integer 1–16
 
-## Section 4 — Demo mode isolation proofs
+Closes with explicit statement: backlog is reference-only; nothing here is in-scope until presentation lock is lifted.
 
-Explicit violation attempts:
-1. Load `/relational/demo?fallback=fixture` with DevTools network tab — confirm zero `asb_events` POST requests.
-2. Confirm fixture rows have `visibility_scope: "demo"` and Phase 151 firewall in `src/lib/runtime/projections/types.ts::prepareRows` strips them under `"self"` scope (covered by test `(4) demo firewall`; re-run).
-3. Load `/relational/demo` without `?fallback=fixture` and without `?presenter=1` — confirm `PresenterOverlay` not rendered and `debug` chips not shown.
-4. Visit a production route (`/today`, `/relational`) with a real user and confirm projections return no demo rows.
+## Section 3 — Presentation Route Verification
 
-Deliverable: 4-row pass/fail report appended to `docs/asb/relational-operational-truth-audit.md`.
+Verify `/relational/demo?fallback=fixture` against five conditions. Read-only investigation first; report findings; only fix if a hard blocker is confirmed.
 
-## Section 5 — Final launch risk table
+Verification steps:
+1. Trace fixture path: `RelationalDemo.tsx` → `useRelationalProjections` → `useAsbTimeline` (fixture branch) → `demoFixture.buildDemoSeed()`. Confirm zero Supabase calls when `fallback=fixture`.
+2. Grep every relational component for `supabase.` / `useQuery` outside `useAsbTimeline` to confirm no parallel DB reads.
+3. Hard-refresh / cold-start: confirm state machine (`stepIdx`) initializes deterministically; `requestAnimationFrame` warm already in place.
+4. Mobile (440×782 — current viewport): visually walk all 9 steps via browser tools, capture screenshots to `/mnt/documents/launch-smoke/route-lock/`.
+5. Without `?presenter=1`: confirm `PresenterOverlay` is not in the DOM.
+6. Offline: DevTools-equivalent — confirm no network requests to `/rest/v1/asb_events` on the fixture route by inspecting the timeline hook branch logic.
 
-Single markdown table covering: onboarding confusion, auth instability, mobile layout, network dependency, projection cold-start, emotional clarity, support burden, live seed failure, device/browser variance. Columns: Risk | Severity | Likelihood | Mitigation | Status.
+Deliverable: 6-row pass/fail table. If any row fails with a code root cause, list the file paths blocking and request scope expansion.
 
-## Section 6 — Final verdict
+## Section 4 — Final Publish Checklist
 
-One of READY / READY WITH CONDITIONS / NOT READY, justified strictly by Sections 1–5 evidence. If READY: explicit stable-surface list, explicit future-work list, explicit "do/don't promise tomorrow" guidance.
+Create `docs/asb/final-publish-checklist.md` with checkbox sections:
 
-## Deliverables
+- **Environment** — `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` present; no dev URLs in bundle; `import.meta.env.DEV` guards intact.
+- **Mobile viewport** — 390×844 and 440×782 walkthrough pass.
+- **Fallback** — `?fallback=fixture` returns non-empty projections; no `asb_events` POST/GET during walk.
+- **Routes** — `/relational/demo`, `/relational/demo?fallback=fixture`, `/relational/demo?fallback=fixture&presenter=1` all reachable; 404 unaffected.
+- **Auth safety** — unauthenticated visit to fixture route does not trigger redirects or auth modals.
+- **Production build** — `vite build` clean, no type errors, no warnings beyond known baseline.
+- **Demo route** — choreography Begin → 9 steps → End completes without crash; back navigation stable.
+- **Rollback** — published URL revert path documented (use Lovable version history; identify last known-good publish hash and the fixture URL as canonical fallback). Include "if demo is unstable mid-camp, narrate from screenshots in `/mnt/documents/launch-smoke/`" as last-resort.
 
-- `scripts/seed-relational-demo-node.ts` (new)
-- `/mnt/documents/launch-smoke/` screenshot bundle
-- `docs/asb/relational-launch-readiness.md` (new — Sections 2–6 report)
-- Append isolation proof to `docs/asb/relational-operational-truth-audit.md`
+## Section 5 — Final Readiness Verdict
 
-## Scope guardrails
+Single verdict line (READY TO PUBLISH / READY WITH CONDITIONS / NOT READY), justified strictly from Sections 1, 3, 4 evidence. Expected outcome based on prior passes: **READY WITH CONDITIONS** (fixture route only; live DB seeding remains blocked by missing topic registry rows — documented in Section 2 item 1).
 
-- No new ASB topics, primitives, doctrine, schemas, or routes.
-- Only allowed code edits: the new Node seed script, plus contained null-guards / copy fixes if smoke test surfaces a real bug.
-- Presentation-mode lock honored throughout.
+## Files Touched
+
+Create only:
+- `docs/asb/post-camp-productionization-backlog.md`
+- `docs/asb/final-publish-checklist.md`
+- `/mnt/documents/launch-smoke/route-lock/*.png` (screenshots)
+
+No source edits unless Section 1 or 3 surfaces a hard blocker; in that case scope is limited to the single null-guard or gating fix required.
+
+## Out of Scope
+
+No new ASB topics, primitives, schema, doctrine, megaphases, routes, or components. Presentation-mode lock honored end-to-end.
