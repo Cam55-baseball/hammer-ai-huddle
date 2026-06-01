@@ -4,6 +4,9 @@
  * Reads ?token=… from the URL, requires the parent to be authenticated,
  * resolves the originating created event via the athlete's timeline, and
  * emits relationship.confirmed. Idempotent at the emit boundary.
+ *
+ * Phase C humanization: protection-first lead, IDs/timestamps moved to
+ * Details disclosure, explicit reassurance about easy removal.
  */
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -16,7 +19,14 @@ import { useAsbTimeline } from "@/hooks/useAsbTimeline";
 import { RELATIONSHIP_TOPICS } from "@/lib/runtime/relational/relationshipSchemas";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { toast } from "sonner";
+import { PARENT_INVITE_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
+import { ChevronDown } from "lucide-react";
 
 export default function AcceptParentInvite() {
   const [sp] = useSearchParams();
@@ -46,7 +56,7 @@ export default function AcceptParentInvite() {
 
   useEffect(() => {
     if (!decoded) {
-      toast.error("Invalid invite link");
+      toast.error(PARENT_INVITE_VOICE.invalid);
     }
   }, [decoded]);
 
@@ -59,10 +69,10 @@ export default function AcceptParentInvite() {
         parentUserId: user.id,
         createdEventId,
       });
-      toast.success("Relationship confirmed");
+      toast.success(PARENT_INVITE_VOICE.successToast);
       navigate("/");
     } catch (e) {
-      toast.error("Could not confirm");
+      toast.error(PARENT_INVITE_VOICE.fail);
       console.warn("[accept-parent-invite] failed", e);
     } finally {
       setBusy(false);
@@ -70,61 +80,81 @@ export default function AcceptParentInvite() {
   }
 
   return (
-    <main className="min-h-screen bg-background p-4 md:p-8">
-      <div className="mx-auto max-w-lg space-y-4">
-        <h1 className="text-2xl font-semibold text-foreground">
-          Accept parent invite
-        </h1>
+    <main className="min-h-dvh bg-background p-4 md:p-8">
+      <div className="mx-auto max-w-xl space-y-5">
+        <header className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            {PARENT_INVITE_VOICE.acceptTitle}
+          </h1>
+        </header>
 
         {!decoded && (
-          <Card className="p-4">
+          <Card className="p-5">
             <p className="text-sm text-muted-foreground">
-              This invite link is invalid or malformed.
+              {PARENT_INVITE_VOICE.invalid}
             </p>
           </Card>
         )}
 
         {decoded && !user && (
-          <Card className="p-4 space-y-2">
-            <p className="text-sm">Sign in as the parent to accept this invite.</p>
-            <Button onClick={() => navigate(`/auth?redirect=/accept-parent-invite?token=${encodeURIComponent(token)}`)}>
-              Sign in
+          <Card className="p-5 space-y-3">
+            <p className="text-sm text-foreground">
+              {PARENT_INVITE_VOICE.signInPrompt}
+            </p>
+            <Button
+              onClick={() =>
+                navigate(
+                  `/auth?redirect=/accept-parent-invite?token=${encodeURIComponent(token)}`,
+                )
+              }
+              size="lg"
+              className="w-full min-h-11"
+            >
+              {PARENT_INVITE_VOICE.signInCta}
             </Button>
           </Card>
         )}
 
         {decoded && user && (
-          <Card className="p-4 space-y-3">
-            <div className="text-sm">
-              <div>
-                <span className="text-muted-foreground">Relationship:</span>{" "}
-                <span className="font-mono text-xs">{decoded.relationship_id}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Athlete:</span>{" "}
-                <span className="font-mono text-xs">{decoded.athlete_id}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Issued:</span>{" "}
-                {decoded.issued_at}
-              </div>
-            </div>
+          <Card className="p-5 space-y-4">
+            <p className="text-sm text-foreground">
+              {PARENT_INVITE_VOICE.acceptIntro}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {PARENT_INVITE_VOICE.acceptReassurance}
+            </p>
+
             <Button
               onClick={handleAccept}
               disabled={!createdEventId || busy}
               size="lg"
+              className="w-full min-h-11"
             >
               {busy
-                ? "Confirming…"
+                ? PARENT_INVITE_VOICE.acceptBusy
                 : !createdEventId
-                  ? "Resolving invite…"
-                  : "Accept and confirm"}
+                  ? PARENT_INVITE_VOICE.resolving
+                  : PARENT_INVITE_VOICE.acceptCta}
             </Button>
-            <p className="text-xs text-muted-foreground">
-              By accepting you become a constitutional parent counterparty for this
-              athlete. Either side may revoke at any time. All transitions are
-              lineage-visible and replay-derived.
-            </p>
+
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronDown className="h-3 w-3" aria-hidden />
+                {PARENT_INVITE_VOICE.detailsToggle}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2 space-y-1 text-xs text-muted-foreground">
+                <div>
+                  <span>Reference:</span>{" "}
+                  <span className="font-mono">
+                    {decoded.relationship_id.slice(0, 8)}…
+                  </span>
+                </div>
+                <div>
+                  <span>Issued:</span>{" "}
+                  {new Date(decoded.issued_at).toLocaleString()}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
         )}
       </div>
