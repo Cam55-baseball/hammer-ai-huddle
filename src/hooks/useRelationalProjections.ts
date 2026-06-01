@@ -9,6 +9,7 @@ import { conversationMemoryState } from "@/lib/runtime/projections/conversationM
 import { psychState } from "@/lib/runtime/projections/psychState";
 import { developmentalState } from "@/lib/runtime/projections/developmentalState";
 import { trustState } from "@/lib/runtime/projections/trustState";
+import { relationshipState } from "@/lib/runtime/projections/relationshipState";
 
 function useRows(athleteId: string) {
   const q = useAsbTimeline({ athleteId });
@@ -33,4 +34,9 @@ export function useDevelopmentalState(athleteId: string, scope: Scope) {
 export function useTrustState(athleteId: string, scope: Scope) {
   const rows = useRows(athleteId);
   return useMemo(() => trustState(rows, scope), [rows, scope]);
+}
+
+export function useRelationshipState(athleteId: string, scope: Scope) {
+  const rows = useRows(athleteId);
+  return useMemo(() => relationshipState(rows, scope), [rows, scope]);
 }
