@@ -54,6 +54,9 @@ function expected(scope: Scope, p: PayloadScope): boolean {
   if (scope === "demo") return false;
   // Self-scoped payloads only visible to self scope.
   if (p === "self") return scope === "self";
+  // RR-4 + RR-8 + Phase 152 minor-athlete supremacy: parent-scoped payloads
+  // only visible to parent scope.
+  if (p === "parent") return scope === "parent";
   // Unscoped + other scopes pass the prefix filter; no further filter applied.
   return true;
 }
