@@ -1,75 +1,86 @@
-## Post-Mastery Phase — RR-5…RR-10 Constitutional Sealing
+# Wave 1 — RR-5 Narrative Continuity Activation
 
-Doctrine-only. No code, no schemas, no routes, no projections, no emitters.
+Activates the reserved `relational.narrative.*` family as a fully replay-derived continuity layer. Doctrine subordination: Eternal Laws → Megaphase 151–160 → RR-1…RR-10 → safeguarding orchestration → developmental gating. Strict stop gate: no RR-6…RR-10 work, no recruiter / injury / exposure / career-arc systems, no schema rewrites, no new primitives outside the reserved narrative_event family, no projection rewrites outside `narrativeState`.
 
-### Step 0 — Lift Presentation Mode Lock
+## 1. Schema activation
+- New `src/lib/runtime/relational/narrativeSchemas.ts` — Zod schemas extending `RelationalEnvelope` for five topics:
+  - `relational.narrative.memory_anchor`
+  - `relational.narrative.slump_marker`
+  - `relational.narrative.breakthrough_marker`
+  - `relational.narrative.identity_reflection`
+  - `relational.narrative.context_recall`
+- Every payload requires non-empty `lineage_parent_ids` (RR-5 invariant 2: citation-bound). `identity_reflection` is athlete-authored only (`authority="self"`). `slump_marker` is observational (pattern window + cited antecedents; no labels). No free-text feelings — utterance-style fields are hashed refs like existing conversation turns.
+- Register topic prefixes in any topic registry list used by `prepareRows` consumers.
 
-- Edit `docs/asb/presentation-mode-lock.md` → mark **RELEASED** with date and a one-line rationale (presentation complete; RR-5…RR-10 sealing authorized).
-- Overwrite `mem://constraints/presentation-mode-lock` to a brief "Released — see post-mastery sealing" note so the Core line in `mem://index.md` no longer reflects an active lock.
-- Update the Core block of `mem://index.md` to replace the "presentation mode locked" one-liner with a "post-mastery constitutional sealing in progress" line.
+## 2. Emitter layer
+- New `src/lib/runtime/relational/narrativeEmitters.ts` — thin wrappers over canonical `emitAsbEvent`/`buildAsbRow` only, mirroring `relationshipEmitters.ts`. No parallel storage. Each emitter:
+  - validates with the Zod schema,
+  - asserts `lineage_parent_ids.length >= 1` (anchor/recall/slump/breakthrough),
+  - refuses emission if a safeguarding lockdown projection is active for the athlete (defers to safeguarding sub-route),
+  - blocks `coach_hammer` from authoring `identity_reflection` (RR-5 invariant 7).
+- No mutable narrative tables. No summaries persisted as truth.
 
-### Step 1 — Create six RR sealing documents
+## 3. Projection layer
+- New `src/lib/runtime/projections/narrativeState.ts` — pure, memoized, replay-deterministic. Produces:
+  - `continuityTimeline`: ordered narrative events with cited antecedents.
+  - `resurfacingCandidates`: deterministic ranking (recency × lineage richness × athlete-revocation respect), no AI/ML, no random, no `Date.now`.
+  - `unresolvedThreads`: slump/breakthrough markers with no resolving event in window.
+  - `longitudinalContext`: bounded summary windows (counts only — never inferred emotion).
+  - `missingness`: surfaced as explicit signal, never imputed.
+- Revocation: `identity_reflection` with `revokes_event_id` removes downstream visibility on next rebuild — no cached narrative authority.
+- No new projection rewrites elsewhere.
 
-Each file follows the established RR-4 doctrine shape (status / scope / subordination / invariants list / verbs or scope items / out-of-scope / replay guarantee). All are interpretive-only, replay-derived, safeguarding-subordinate, additive-only.
+## 4. Hammer memory resurfacing
+- Extend `src/lib/runtime/relational/hammerMemory.ts` with a `validateHammerNarrativeReference` check used before any Hammer turn that cites narrative state:
+  - must cite at least one canonical antecedent (`FABRICATED_RECALL` reuse),
+  - rejects banned framings (destiny / diagnosis / identity-locking) via a denylist token set,
+  - inferred confidence ≤ 0.7,
+  - safeguarding lockdown ⇒ rejection.
+- `HammerConversationPanel`: read `narrativeState` via a new `useNarrativeState` hook (added to `useRelationalProjections.ts`) and render at most one observational callback per session, sourced from `resurfacingCandidates[0]`. Callback text comes from `copy.ts` templates filled with cited dates only — no model-generated prose.
 
-- `docs/asb/rr-5-narrative-continuity-constitution.md` — narrative_event, memory resurfacing, slump continuity, emotional replay, contextual recall, longitudinal identity continuity. Invariants per Section 1 of request.
-- `docs/asb/rr-6-injury-recovery-constitution.md` — injury lifecycle, recovery, rehab observability, RTP continuity, medical safeguarding hierarchy. No diagnosis / no prescription / athlete-reported pain outranks inference / RTP requires explicit human authorization / missingness is a signal.
-- `docs/asb/rr-7-career-arc-constitution.md` — career arc, identity evolution, longitudinal milestones, transition memory. No destiny framing / no identity locking / replay-derived summaries only.
-- `docs/asb/rr-8-life-context-constitution.md` — life_context_event, academic/social/family context, non-sport organism load. User disclosure control / missingness acceptable / no profiling / context never becomes surveillance.
-- `docs/asb/rr-9-exposure-visibility-constitution.md` — exposure_event, discoverability, showcase logic, recruiting exposure ethics. Minors protection-first / no algorithmic popularity loops / safeguarding precedence.
-- `docs/asb/rr-10-recruiter-commercial-constitution.md` — recruiter_contact_event, recruiter workflows, commercial interactions, scholarship visibility, opportunity continuity. Commercial subordinate to safeguarding / parent supremacy for minors / no pay-to-win visibility.
+## 5. Copy / humanization
+- Extend `src/lib/relational/copy.ts` with a `NARRATIVE_VOICE` block:
+  - allowed templates ("You mentioned {topic} on {date}.", "This echoes what you noted after {anchor}.")
+  - empty / revoked / safeguarded states
+  - explicit denylist (destiny, "always", "never", "becoming", "sabotage", "fragile", diagnostic verbs)
+- All narrative-facing components import from `copy.ts`; no inline strings.
 
-### Step 2 — Create six matching memory constraints
+## 6. UI continuity pass
+- `HammerConversationPanel`: subtle "Remembering" chip above composer when a resurfacing candidate is available; tap reveals the cited antecedent. No feed, no banner.
+- `AthleteJourneyMap`: add narrative markers inline in existing list (badge + cited date). No new section, no clutter.
+- `Relational.tsx`: no structural changes — narrative reads flow through existing components. Mobile-first (440/390) preserved.
 
-Short, rule-shaped, referenced from `mem://index.md`:
+## 7. Replay & tests
+- New `src/lib/runtime/projections/__tests__/narrativeState.test.ts`:
+  - rebuild determinism (same rows → identical output, byte-equal JSON)
+  - resurfacing determinism (stable ordering under shuffled input)
+  - duplicate event idempotency
+  - out-of-order replay stability
+  - revocation removes downstream visibility on next rebuild
+  - missing-memory survivability (gaps remain visible as gaps)
+  - safeguarding lockdown suppresses narrative output
+- New `src/lib/runtime/relational/__tests__/narrativeEmitters.test.ts`:
+  - rejects emission without `lineage_parent_ids`
+  - rejects `coach_hammer` `identity_reflection`
+  - rejects under safeguarding lockdown
+- Extend `hammerMemory` tests with narrative-reference validation cases.
+- Run: `bunx tsc --noEmit`, full relational vitest suite, narrative tests, `scripts/preflight.sh`.
 
-- `mem://constraints/rr-5-narrative-continuity`
-- `mem://constraints/rr-6-injury-recovery`
-- `mem://constraints/rr-7-career-arc`
-- `mem://constraints/rr-8-life-context`
-- `mem://constraints/rr-9-exposure-visibility`
-- `mem://constraints/rr-10-recruiter-commercial`
+## 8. Audit
+- New `docs/asb/narrative-continuity-audit.md`:
+  - emotional safety findings (denylist coverage, manipulation patterns reviewed)
+  - continuity coherence (cross-projection consistency)
+  - replay guarantees (test list + outcomes)
+  - resurfacing examples (allowed vs forbidden, with rationale)
+  - manipulation-risk audit (RR-5 invariants 3–5, 9 mapped to enforcement points)
+  - remaining risks
+  - final verdict
 
-Each captures the core invariants (one-liners + "Why" / "How to apply") so future loops auto-apply them.
+## Technical notes
+- All new files pure modules; no `Date.now`, no `Math.random`, no I/O.
+- `narrativeState.ts` follows the `memoize` + `Scope` pattern from `conversationMemoryState.ts`; `prepareRows` handles demo/prod firewall.
+- No migrations. No edits to `runtime/projections/types.ts` beyond the narrative prefix list if needed.
+- No edits to: schemas of other primitives, recruiter/injury/exposure/career-arc surfaces, App.tsx routes.
 
-### Step 3 — Cross-RR consistency audit
-
-Create `docs/asb/rr-cross-constitution-audit.md`. Per-row table: `issue | affected RR | severity | constitutional resolution`. Audit RR-1…RR-10 for invariant collisions, safeguarding conflicts, authority leakage, replay contradictions, emotional manipulation risk, commercial pressure risk, hidden authority, identity locking, non-deterministic continuity. Doctrine resolution only — no code recommendations.
-
-### Step 4 — Post-Mastery expansion roadmap
-
-Create `docs/asb/post-mastery-expansion-roadmap.md`. Strictly ordered, doctrine-only:
-
-1. Narrative system activation
-2. Injury continuity activation
-3. Life-context integration
-4. Exposure system activation
-5. Recruiter workflow activation
-6. Career arc activation
-7. Observability + orchestration
-8. Scale hardening
-
-Each entry: objective / dependencies / safeguarding constraints / replay constraints / operational risk / emotional risk / activation prerequisites. No timelines, no code.
-
-### Step 5 — Final constitution verification
-
-Append a verification section to `docs/asb/rr-cross-constitution-audit.md` (or create `docs/asb/rr-final-verification.md` if cleaner) listing:
-
-- RR-1…RR-10 sealing status (file + memory reference for each)
-- Unresolved constitutional tensions
-- Remaining implementation blockers (none expected — sealing is doctrine-only)
-- Final verdict: **CONSTITUTIONALLY SEALED / SEALED WITH CONDITIONS / NOT SEALED**
-
-### Step 6 — Update memory index
-
-Update `mem://index.md`:
-- Core block: replace presentation-lock line with post-mastery sealing line.
-- Memories section: add the six new `mem://constraints/rr-*` entries with one-line descriptions.
-
-### Stop gate (enforced)
-
-No edits to: `src/lib/runtime/**`, `supabase/migrations/**`, `supabase/functions/**`, `src/pages/**`, `src/components/**`, projections, emitters, schemas, routes, `App.tsx`, `relational/copy.ts`. No new ASB topics, no new event families, no new primitives beyond what is already reserved in Megaphase 151–160.
-
-### Deliverable
-
-Final response lists: exact files created (≈9 docs + 6 memories + index update + lock release = ~17 files), unresolved tensions (expected: none), remaining blockers (expected: none — implementation deferred per roadmap), and final verdict.
+## Deliverables
+Exact files changed, exact test counts and pass/fail, replay guarantees enumerated, emotional safety findings, remaining risks, final verdict.
