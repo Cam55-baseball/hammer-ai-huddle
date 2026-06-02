@@ -195,9 +195,9 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
 }
 
 // Deterministic, non-cryptographic FNV-1a fingerprint for utterance_ref.
-// utterance_ref is interpretive lineage, not event identity — SHA-256
-// composition is reserved for canonical identity authors (engineVersion.ts,
-// sensorIdempotency.ts) per preflight invariant #2.
+// utterance_ref is interpretive lineage, not event identity — cryptographic
+// digest composition is reserved for canonical identity authors
+// (engineVersion.ts, sensorIdempotency.ts) per preflight invariant #2.
 function hashUtterance(s: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {
