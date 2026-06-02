@@ -27,12 +27,19 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
   const { state } = useConversationMemory(athleteId, scope);
   const { state: dev } = useDevelopmentalState(athleteId, scope);
   const { state: narrative } = useNarrativeState(athleteId, scope);
+  const { state: lifeCtx } = useLifeContextState(athleteId, scope);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
 
   const threads = Object.values(state.threads);
   // RR-5: at most one observational callback per session — never a feed.
   const callback = narrative.resurfacingCandidates[0] ?? null;
+  // RR-8: at most one observational life-context acknowledgement per session.
+  // Suppressed when safeguarding is holding the disclosure (invariant 8).
+  const lifeCtxAck =
+    !lifeCtx.safeguardingHeld && lifeCtx.activePressureSignals.length > 0
+      ? lifeCtx.activePressureSignals[lifeCtx.activePressureSignals.length - 1]
+      : null;
 
   async function send() {
     if (!draft.trim()) return;
