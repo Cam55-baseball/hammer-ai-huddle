@@ -205,3 +205,84 @@ export function assertLifeContextReferenceLegality(
     );
   }
 }
+
+// ─── RR-5 ↔ RR-8 — single-callback arbitration ──────────────────────────────
+//
+// At most one memory callback may speak per assistant turn. This pure helper
+// arbitrates between the RR-5 narrative resurfacing candidate and the RR-8
+// life-context acknowledgement so the panel never renders both.
+//
+// Rules:
+//   • If safeguardingLockdown → none (safeguarding suppresses both).
+//   • Newest legal reference wins by occurred_at (ISO 8601 lexical compare).
+//   • Ties resolved by lexical ordering of topic_tag ?? category ?? kind ?? "".
+//   • Replay-safe: pure, no Date.now, no Math.random.
+
+export interface ArbitrationNarrativeRef {
+  event_id: string;
+  occurred_at: string;
+  topic_tag: string | null;
+  kind: string;
+}
+
+export interface ArbitrationLifeContextRef {
+  event_id: string;
+  occurred_at: string;
+  topic_tag: string | null;
+  category: string;
+}
+
+export type MemoryCallback =
+  | { kind: "narrative"; ref: ArbitrationNarrativeRef }
+  | { kind: "life_context"; ref: ArbitrationLifeContextRef }
+  | { kind: "none" };
+
+export interface MemoryArbitrationInput {
+  narrative: ArbitrationNarrativeRef | null;
+  lifeContext: ArbitrationLifeContextRef | null;
+  safeguardingLockdown: boolean;
+}
+
+function tieKey(
+  ref:
+    | ArbitrationNarrativeRef
+    | ArbitrationLifeContextRef,
+): string {
+  if (ref.topic_tag) return ref.topic_tag;
+  if ((ref as ArbitrationLifeContextRef).category) {
+    return (ref as ArbitrationLifeContextRef).category;
+  }
+  if ((ref as ArbitrationNarrativeRef).kind) {
+    return (ref as ArbitrationNarrativeRef).kind;
+  }
+  return "";
+}
+
+export function arbitrateMemoryCallback(
+  input: MemoryArbitrationInput,
+): MemoryCallback {
+  if (input.safeguardingLockdown) return { kind: "none" };
+  const { narrative, lifeContext } = input;
+  if (!narrative && !lifeContext) return { kind: "none" };
+  if (narrative && !lifeContext) return { kind: "narrative", ref: narrative };
+  if (lifeContext && !narrative) {
+    return { kind: "life_context", ref: lifeContext };
+  }
+  // Both present — newest wins, ties broken lexically by tieKey, then
+  // by deterministic kind preference (narrative < life_context) so the
+  // result is reproducible across replays.
+  const n = narrative as ArbitrationNarrativeRef;
+  const l = lifeContext as ArbitrationLifeContextRef;
+  if (n.occurred_at !== l.occurred_at) {
+    return n.occurred_at > l.occurred_at
+      ? { kind: "narrative", ref: n }
+      : { kind: "life_context", ref: l };
+  }
+  const nk = tieKey(n);
+  const lk = tieKey(l);
+  if (nk !== lk) {
+    return nk < lk ? { kind: "narrative", ref: n } : { kind: "life_context", ref: l };
+  }
+  // Final deterministic tie-break: narrative wins by name ordering.
+  return { kind: "narrative", ref: n };
+}
