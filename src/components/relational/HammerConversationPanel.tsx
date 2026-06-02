@@ -7,7 +7,7 @@
  * `assertHammerTurnLegality` before emission.
  */
 import { useState } from "react";
-import { useConversationMemory } from "@/hooks/useRelationalProjections";
+import { useConversationMemory, useNarrativeState } from "@/hooks/useRelationalProjections";
 import { useDevelopmentalState } from "@/hooks/useRelationalProjections";
 import { emitConversationTurn } from "@/lib/runtime/relational/emit";
 import type { Scope } from "@/lib/runtime/projections/types";
@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HAMMER_VOICE, SURFACE_TITLES, DEVELOPMENTAL_VOICE } from "@/lib/relational/copy";
+import { HAMMER_VOICE, SURFACE_TITLES, DEVELOPMENTAL_VOICE, NARRATIVE_VOICE } from "@/lib/relational/copy";
 
 interface Props {
   athleteId: string;
