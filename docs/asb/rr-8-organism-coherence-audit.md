@@ -210,3 +210,99 @@ Replay determinism is restored across the RR-5 + RR-8 corpus via test
 fixture namespacing alone — zero production projection logic changed.
 Wave 1C uncovered one previously-masked constitutional gap (parent-scope
 visibility) and reports it without acting on it, per the stop gate.
+
+## 12. Parent Visibility Closure (Wave 1D)
+
+**Constitutional gap surfaced in Wave 1C:** `prepareRows` filtered
+`visibility_scope: "self"` payloads from non-self readers but did not
+apply the symmetric guard for `visibility_scope: "parent"`. Parent-scoped
+payloads — RR-4 parent-only authorization records, RR-8 parent-disclosed
+family/safeguarding context, and any Phase 152 minor-athlete supremacy
+disclosures — silently leaked into `self`, `coach`, `org`, and `external`
+projections.
+
+**Authorized minimal production fix** (1 line in
+`src/lib/runtime/projections/types.ts::prepareRows`, immediately after the
+existing self-scope guard):
+
+```ts
+if (vis === "parent" && scope !== "parent") continue;
+```
+
+No other projection logic, sort order, prefix filter, memoization, or
+demo↔production firewall behavior changed.
+
+**Truth-table update.** `docs/asb/relational-visibility-matrix.md` parent
+payload column updated to ✗ for all non-parent reader scopes. The
+`relational-visibility.matrix.test.ts` `expected(scope, p)` table updated
+with the symmetric `if (p === "parent") return scope === "parent"` clause.
+
+**Test-fixture correction.** `relational-relationship-visibility.test.ts`
+previously labeled athlete-managed relationship lifecycle events
+(`created`, `confirmed`, `revoked`, `paused`) with
+`visibility_scope: "parent"` and read them from `"self"` scope. That label
+was constitutionally wrong: the athlete must see the existence of their
+own relationships. Lifecycle records are now correctly tagged
+`visibility_scope: "self"`. Parent scope is preserved for parent-only
+content disclosures (RR-8 family context, safeguarding-routed events),
+where the visibility matrix correctly hides them from `self`, `coach`,
+`org`, `external`.
+
+**Replay safety.** Filter runs inside `prepareRows`, upstream of
+projection state assembly. Same inputs → same filtered row set → same
+projection state across replay. No event-ordering change. No memoization
+contract change (key is `(scope, last_event_id)`; the filter narrows
+candidates but does not mutate any row). Replay determinism unchanged.
+
+**Visibility isolation proof.** `life-context-visibility.test.ts` §5, §7,
+§8 assert parent-scope rows are hidden from coach/self readers and
+visible to parent. `relational-visibility.matrix.test.ts` exercises the
+full `{6 reader scopes} × {7 payload scopes}` grid post-fix.
+`relational-relationship-visibility.test.ts` re-asserts athlete-self
+visibility of own relationships under the corrected scope label. 150/150
+relational tests pass.
+
+**Safeguarding precedence unchanged.** Safeguarding routing remains
+governed by the Megaphase 151–160 sub-route; the new guard narrows
+visibility of `parent`-scoped payloads to the parent reader only, which
+is the safeguarding-aware route for minor athletes (Phase 152
+minor-athlete supremacy). Demo↔production firewall behavior untouched.
+
+## 13. Preflight Integrity Restoration (Wave 1D)
+
+**Pre-existing violation (Wave 1B residue):** `HammerConversationPanel.tsx`
+defined `hashUtterance` using `crypto.subtle.digest("…", …)` to compute
+`utterance_ref`. Preflight invariant #2 reserves cryptographic-digest
+composition for canonical event-identity authors (`engineVersion.ts`,
+`sensorIdempotency.ts`). The violation was functional, not formatting —
+`utterance_ref` is an interpretive content fingerprint on the
+`relational.conversation.turn` payload, never an event-identity hash.
+
+**Minimal fix.** `hashUtterance` replaced with a synchronous FNV-1a
+fingerprint that returns a 16-hex-character string (8 hex of FNV-1a state
++ 8 hex of input length, sufficient for replay-stable thread-local
+uniqueness). The single call site lost its `await`. No copy change, no
+behavior change, no schema change, no new primitive, no replay-engine
+edit. Output is a pure deterministic function of input — replay-equivalent
+across rebuilds.
+
+**Constitutional safety.** `utterance_ref` carries no collision-resistance
+or pre-image-resistance requirement at this layer; it is a thread-scoped
+content fingerprint for memory recall lineage. Removing cryptographic
+digest usage at this site keeps `engineVersion.ts` and
+`sensorIdempotency.ts` as the sole authors of cryptographic event-identity
+composition, restoring the canonical author set required by invariant #2.
+
+**Preflight restoration proof.** `bash scripts/preflight.sh` exits with
+`[preflight] PASSED`. All 13 invariant checks green; 32/32 invariant
+vitest tests green.
+
+**Remaining risks.** None within RR-8 scope. Pre-existing invariant #1
+warning about `missingness` references in `src/lib/command/projections.ts`
+and `src/lib/coach/projections.ts` is informational only (whitelisted in
+the grep output, does not fail preflight), and is outside RR-8 scope.
+
+**Final RR-8 verdict.** Operationally sealed. Parent visibility closed,
+preflight clean, replay determinism preserved, safeguarding precedence
+intact, no new primitives, no schema rewrites, no replay-engine changes,
+no RR-6/7/9/10 activation.
