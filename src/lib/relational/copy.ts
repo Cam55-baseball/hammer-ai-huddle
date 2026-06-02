@@ -206,6 +206,11 @@ export const ONBOARDING_VOICE = {
       body: "Log how today feels — readiness, fatigue, or recovery. Any one works.",
     },
     {
+      id: "life_context_checkin",
+      title: "Quick check-in",
+      body: "Is anything heavy outside of training right now? Optional — skip any time.",
+    },
+    {
       id: "scope",
       title: "Sharing",
       body: "You choose what coaches and parents can see. You can change it later.",
@@ -219,6 +224,30 @@ export const ONBOARDING_VOICE = {
   continue: "Continue",
   done: "All set — see you in there.",
 } as const;
+
+/**
+ * RR-8 — onboarding life-context check-in.
+ *
+ * Optional, calm, fully skippable. No scoring, no progression gating, no
+ * surveillance framing. Selecting "Nothing heavy right now" emits nothing.
+ * Skipping emits nothing.
+ */
+export const LIFE_CONTEXT_CHECKIN = {
+  helper: "No score. Nothing shared with anyone else.",
+  skip: "Skip",
+  confirm: "Save",
+  options: [
+    { id: "school_or_schedule", label: "School or schedule" },
+    { id: "travel", label: "Travel" },
+    { id: "sleep", label: "Sleep" },
+    { id: "family", label: "Family" },
+    { id: "general_pressure", label: "General pressure" },
+    { id: "nothing", label: "Nothing heavy right now" },
+  ] as const,
+} as const;
+
+export type LifeContextCheckinOptionId =
+  (typeof LIFE_CONTEXT_CHECKIN.options)[number]["id"];
 
 export const RELATIONAL_PAGE_VOICE = {
   title: SURFACE_TITLES.yourCircle,

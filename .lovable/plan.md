@@ -1,105 +1,86 @@
-# RR-8 Wave 1 — Life Context Integration Activation
+# RR-8 Wave 1B — Completion & Organism Stability Pass
 
-Mirrors the RR-5 narrative wave: schemas + canonical emitters + pure replay-derived projection + read-only UI awareness + safeguarding subordination + tests + audit. Strictly additive. No RR-6/7/9/10 work, no recruiter / injury / exposure / career-arc surfaces, no schema rewrites, no new primitives outside the reserved `relational.life_context.*` family.
+Strict additive continuation of RR-8 only. No RR-6/7/9/10. No recruiter, injury, exposure, career-arc, or commercial activation. No schema rewrites, no new primitives, no new event families.
 
-## Subordination chain
-Eternal Laws → Megaphase 151–160 → RR-1…RR-8 invariants → safeguarding orchestration sub-route → developmental gating → relational visibility matrix → projection legality.
+## Section 1 — Onboarding Life-Context Check-In
 
-## Files to create
+**Edit only** `src/pages/OnboardingFlow.tsx` and `src/lib/relational/copy.ts` (add `LIFE_CONTEXT_CHECKIN` block under `ONBOARDING_VOICE`).
 
-1. `src/lib/runtime/relational/lifeContextSchemas.ts`
-   - `LIFE_CONTEXT_TOPICS` map + `LIFE_CONTEXT_TOPIC_PREFIX = "relational.life_context."`.
-   - Six Zod schemas extending `RelationalEnvelope`:
-     `academic_load`, `schedule_stress`, `sleep_disruption`, `travel_load`, `family_context`, `general_pressure`.
-   - Plus a `disclosure_revocation` payload (revokes prior life-context event by id) — uses the already-reserved `life_context_event` family, no new primitive.
-   - Payload fields are **observational and bounded** only: `window_start`, `window_end`, `intensity_band: "light" | "moderate" | "heavy"`, optional `topic_tag` (≤64 chars, surface via copy templates), `visibility_scope ∈ {"self","parent","coach","safeguarding_only","demo"}` (no `external`, no recruiter).
-   - **Forbidden fields** (not present in schema): personality, sentiment, "stress_score", inferred household composition, demographic data, free-text feeling content. `family_context` carries only an `intensity_band` + optional cited antecedents.
-   - Cite-bound topics require `lineage_parent_ids.length >= 1` where antecedent exists (athlete-authored disclosure is its own antecedent for first-time disclosure — modeled the same way `identity_reflection` is in RR-5).
-   - `authority` constrained to `self` or `parent` (parent only legal when developmental gate marks minor).
+- Insert one new optional step after `"checkin"` and before `"scope"` in `ONBOARDING_VOICE.steps`: id `"life_context_checkin"`, title "Quick check-in", body "Is anything heavy outside of training right now?".
+- Render six selectable chips + skip button. Allowed labels exactly:
+  - School or schedule → `topic_tag: "school_or_schedule"`
+  - Travel → `"travel"`
+  - Sleep → `"sleep"`
+  - Family → `"family"`
+  - General pressure → `"general_pressure"`
+  - Nothing heavy right now → emits nothing
+- Skip button (secondary) also emits nothing. Either path emits canonical `onboarding.step_completed`.
+- Selecting a non-empty option calls `emitLifeContextDisclosure(ctx, "general_pressure", payload, gate)` with:
+  - `visibility_scope: "self"`, `authority: "self"`, `intensity_band: "moderate"`
+  - `window_start`/`window_end` set to `occurredAt` (no wall-clock drift; passed in once)
+  - `topic_tag` derived from selection
+  - `confidence: null`, `missingness: { fields: [], reason: "not_observed" }`, `lineage_parent_ids: []`
+  - `gate: { safeguardingLockdown: false, isMinor }` (isMinor read from existing developmental projection if available; otherwise default `false`)
+- Constraints honored: single primary CTA, one-sentence helper text, mobile-first spacing, no progression gating, no scoring, no free-text, no surveillance copy, no inference, no persistence outside canonical event flow.
 
-2. `src/lib/runtime/relational/lifeContextEmitters.ts`
-   - Thin wrappers over `emitAsbEvent` / `emitAsbLineage` only. No mutable tables, no parallel storage.
-   - `LifeContextEmissionError` + `LifeContextEmitGate { safeguardingLockdown: boolean; isMinor: boolean }`.
-   - Pre-emission asserts:
-     - Zod parse.
-     - Block `coach` and `recruiter` actor roles (RR-8 invariant 1 + 9).
-     - If `visibility_scope === "coach"` and `isMinor`, require parent authority binding (Phase 152 minor supremacy).
-     - If `safeguardingLockdown`, route through safeguarding sub-route (defer the original visibility scope to `safeguarding_only`).
-     - Never emit derived/composite scores.
-   - One emitter per topic + `emitLifeContextRevocation`.
+## Section 2 — Visibility Matrix Completion Test
 
-3. `src/lib/runtime/projections/lifeContextState.ts`
-   - Pure, memoized, deterministic, replay-safe. Same `memoize` + `Scope` pattern as `narrativeState.ts` / `conversationMemoryState.ts`.
-   - Output:
-     - `currentContext` — most recent disclosure per category within bounded window (no inference into empty categories).
-     - `activePressureSignals` — disclosures whose `window_end` is open or `>= last observed event timestamp`. No wall-clock.
-     - `suppressionCandidates` — context items that should soften scheduled load (returned as references; never as scores, never authoring organism truth).
-     - `continuityTimeline` — chronological visible events.
-     - `revokedEventIds` — removed on next rebuild (RR-8 invariant 2).
-     - `missingness` — explicit gap signal, never imputed (RR-8 invariant 3).
-   - No predictive scoring, no behavioural classification, no identity locking. No `Date.now`, no `Math.random`, no I/O.
-   - Filtered through existing `prepareRows(rows, scope, prefixes)` — inherits demo↔production firewall + visibility matrix without modification.
+**Create** `src/lib/runtime/relational/__tests__/life-context-visibility.test.ts` modeled on `relational-visibility.matrix.test.ts`, driven through `lifeContextState`.
 
-4. `src/hooks/useRelationalProjections.ts` (edit)
-   - Add `useLifeContextState(athleteId, scope)` mirroring `useNarrativeState`. No other changes.
+Cases:
+1. `self` scope sees self-authored life-context rows.
+2. `demo` scope never sees self-authored rows.
+3. `self` scope never sees demo-authored rows (bidirectional firewall).
+4. `recruiter` (modelled as `external` scope — recruiter scope does not exist in `Scope` union) reads zero life-context rows when payload scope is `self|parent`. Asserts recruiter-equivalent surfaces are starved.
+5. Rows carrying `safeguarding_category: true` (treated as safeguarding_only) are excluded from `coach` scope.
+6. Revocation event removes the original disclosure on replay rebuild.
+7. Paused relationship downgrades visibility — simulated by emitting a coach-scoped disclosure followed by a revocation; coach projection drops it.
+8. Parent supremacy: parent-authored row visible to `parent` scope when athlete is minor; self-authored row stays self-only.
 
-5. `src/lib/relational/copy.ts` (edit)
-   - Append `LIFE_CONTEXT_VOICE` block:
-     - Observational templates only: "You mentioned travel has been heavy this week.", "Looks like your schedule has been packed lately.", "Sleep has been tight recently — easing today's load."
-     - Empty / revoked / safeguarded-state strings.
-     - **Denylist** (mirrors RR-5 NARRATIVE_VOICE pattern): "emotionally overwhelmed", "burnout", "fragile", "prone to", "affecting your confidence", "stress score", "mental score", diagnostic verbs.
+No production logic edits unless test surfaces a real invariant violation.
 
-6. `src/components/relational/HammerConversationPanel.tsx` (edit)
-   - Add `useLifeContextState` read.
-   - At most **one** observational context acknowledgement per session, sourced from `activePressureSignals[0]`, rendered from `LIFE_CONTEXT_VOICE` templates with cited date only. Coexists with the existing RR-5 resurfacing chip (separate slot, never both speaking on the same turn — pick the most recent disclosure deterministically).
-   - Reuses existing `validateNarrativeReference`-style guard pattern: new tiny `validateLifeContextReference` in `hammerMemory.ts` enforcing denylist + confidence ≤ 0.7 + safeguarding lockdown → reject.
+## Section 3 — Hammer Memory Arbitration Stability
 
-7. `src/pages/Relational.tsx` (edit, minimal)
-   - No structural changes. Mobile-first layout preserved. No new dashboard, no timeline feed.
-   - Optional: pass-through visibility unchanged. Section ordering unchanged.
+**Edit only** `src/lib/runtime/relational/hammerMemory.ts` and `src/components/relational/HammerConversationPanel.tsx`.
 
-8. `src/pages/OnboardingFlow.tsx` (edit, minimal)
-   - Add one **optional** "Is anything heavy off the field right now?" calm check-in step. Skippable with no penalty. Emits exactly one `general_pressure` event via canonical emitter when answered. Never gates progression.
+- Add pure helper `arbitrateMemoryCallback({ narrative, lifeContext, safeguardingLockdown })` returning `{ kind: "narrative" | "life_context" | "none", ref }`.
+  - If `safeguardingLockdown` → `none`.
+  - Pick newest legal reference by `occurred_at` descending.
+  - Ties resolved by lexical comparison of `topic_tag ?? category ?? kind` ascending.
+  - At most one callback per session — invariant unchanged.
+- Update `HammerConversationPanel.tsx` to consume the helper instead of independently rendering both `callback` and `lifeCtxAck`. Render either the RR-5 chip OR the RR-8 chip, never both. Safeguarding lockdown suppresses both.
+- No new UI surfaces. No copy changes beyond what already exists.
 
-9. `src/lib/runtime/relational/hammerMemory.ts` (edit)
-   - Add `validateLifeContextReference(text, ctx)` — same denylist/confidence-ceiling/lockdown contract as the narrative validator.
+## Section 4 — Organism Coherence Verification
 
-## Tests to add
+**Create** `docs/asb/rr-8-organism-coherence-audit.md` covering:
+- Onboarding emotional safety review (skippability, no scoring, no surveillance framing).
+- Disclosure coercion audit (no gating, no nudges, no implied requirement).
+- Replay determinism confirmation (pure projection + emitter, pinned versions).
+- Visibility isolation confirmation (matrix test results).
+- Memory arbitration proof (RR-5 ↔ RR-8 single-callback rule).
+- Safeguarding precedence verification.
+- Missingness preservation proof.
+- Mobile walkthrough findings at 390px and 440px.
+- Remaining risks and final verdict.
 
-All under `src/lib/runtime/relational/__tests__/` using shared `_fixtures.ts`.
+## Section 5 — Verification
 
-- `lifeContextSchemas.test.ts` — schema acceptance/rejection, denylist of forbidden fields, parent-authority rule for minor coach-visibility.
-- `lifeContextEmitters.test.ts` — coach/recruiter actor block, safeguarding lockdown deferral, revocation emission, lineage population.
-- `lifeContextState.replay.test.ts`:
-  - rebuild determinism (shuffled input → identical output)
-  - duplicate idempotency
-  - out-of-order replay stability
-  - revocation removes downstream visibility on next rebuild
-  - missingness preserved (never imputed)
-  - safeguarding lockdown precedence (item routed away from non-safeguarding scopes)
-  - demo↔production firewall (already covered by visibility matrix test — add a life-context row to that suite if cheap, else dedicated case here)
-- `life-context-reference.test.ts` — `validateLifeContextReference` denylist + confidence ceiling + lockdown.
+Run sequentially and report exact results:
+- `bunx tsc --noEmit`
+- Full relational vitest suite (`src/lib/runtime/relational` + `src/lib/runtime/projections` + `src/hooks/__tests__` if present)
+- RR-5 + RR-8 tests together (narrative + life-context test files)
+- `bash scripts/preflight.sh`
 
-Run: `bunx tsc --noEmit`, full relational suite, life-context replay suite, `bash scripts/preflight.sh`.
+Return: exact files changed, exact tests added, pass/fail totals, invariant violations found, remaining risks, final verdict.
 
-## Audit deliverable
+## Stop Gate
 
-`docs/asb/life-context-audit.md` covering:
-- emotional safety review (template-by-template denylist enforcement)
-- profiling-risk audit (confirming no composite scores, no demographic inference)
-- safeguarding precedence walk-through
-- replay guarantees (determinism proof + revocation behaviour)
-- visibility isolation (matrix row coverage including `safeguarding_only`)
-- manipulation-risk review (no engagement loops, no coercive disclosure)
-- remaining risks
-- final verdict
+No RR-6/7/9/10 code. No recruiter workflows. No exposure systems. No injury systems. No career-arc systems. No new primitives. No schema rewrites. No new event families. No commercial activation.
 
-## Stop gate enforced
-- No RR-6 (injury), RR-7 (career arc), RR-9 (exposure), RR-10 (recruiter) code.
-- No recruiter visibility for life-context events at any layer.
-- No new primitives, no schema rewrites, no projection rewrites outside `lifeContextState`.
-- No mutable storage, no edge functions, no migrations.
-- Commercial / recruiting surfaces remain blocked from `relational.life_context.*` by topic-prefix isolation + visibility matrix.
+## Technical notes
 
-## Verification deliverable
-Return: exact files changed, tests added, pass/fail counts, replay guarantees, emotional safety findings, remaining risks, final verdict.
+- `general_pressure` is the canonical onboarding topic family per the user's directive; per-selection differentiation lives in `topic_tag` (free-form short tag already permitted by `BoundedWindow`).
+- `emitLifeContextDisclosure` already enforces actor/authority/safeguarding gating — onboarding only constructs the payload and gate.
+- Visibility test uses `external` scope to represent recruiter (Scope union has no `recruiter`; recruiter surfaces consume `external` projections). This matches RR-10 reservation without introducing new scopes.
+- Arbitration helper is pure and replay-stable; no clocks, no randomness.

@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useConversationMemory, useNarrativeState, useLifeContextState } from "@/hooks/useRelationalProjections";
 import { useDevelopmentalState } from "@/hooks/useRelationalProjections";
 import { emitConversationTurn } from "@/lib/runtime/relational/emit";
+import { arbitrateMemoryCallback } from "@/lib/runtime/relational/hammerMemory";
 import type { Scope } from "@/lib/runtime/projections/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,14 +33,41 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
   const [sending, setSending] = useState(false);
 
   const threads = Object.values(state.threads);
-  // RR-5: at most one observational callback per session — never a feed.
-  const callback = narrative.resurfacingCandidates[0] ?? null;
-  // RR-8: at most one observational life-context acknowledgement per session.
-  // Suppressed when safeguarding is holding the disclosure (invariant 8).
-  const lifeCtxAck =
-    !lifeCtx.safeguardingHeld && lifeCtx.activePressureSignals.length > 0
+  // RR-5 ↔ RR-8 single-callback arbitration: at most one memory chip per
+  // assistant turn, never both. Safeguarding lockdown suppresses both.
+  const newestNarrative =
+    narrative.resurfacingCandidates.length > 0
+      ? [...narrative.resurfacingCandidates].sort((a, b) =>
+          a.occurred_at < b.occurred_at ? 1 : -1,
+        )[0]
+      : null;
+  const newestLifeCtx =
+    lifeCtx.activePressureSignals.length > 0
       ? lifeCtx.activePressureSignals[lifeCtx.activePressureSignals.length - 1]
       : null;
+  const arbitrated = arbitrateMemoryCallback({
+    narrative: newestNarrative
+      ? {
+          event_id: newestNarrative.event_id,
+          occurred_at: newestNarrative.occurred_at,
+          topic_tag: newestNarrative.topic_tag,
+          kind: newestNarrative.kind,
+        }
+      : null,
+    lifeContext: newestLifeCtx
+      ? {
+          event_id: newestLifeCtx.event_id,
+          occurred_at: newestLifeCtx.occurred_at,
+          topic_tag: newestLifeCtx.topic_tag,
+          category: newestLifeCtx.category,
+        }
+      : null,
+    safeguardingLockdown: lifeCtx.safeguardingHeld,
+  });
+  const callback =
+    arbitrated.kind === "narrative" ? newestNarrative : null;
+  const lifeCtxAck =
+    arbitrated.kind === "life_context" ? newestLifeCtx : null;
 
   async function send() {
     if (!draft.trim()) return;
