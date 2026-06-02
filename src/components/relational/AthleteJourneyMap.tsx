@@ -10,7 +10,7 @@ import { prepareRows } from "@/lib/runtime/projections/types";
 import type { Scope } from "@/lib/runtime/projections/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DEVELOPMENTAL_VOICE, JOURNEY_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
+import { DEVELOPMENTAL_VOICE, JOURNEY_VOICE, SURFACE_TITLES, NARRATIVE_VOICE } from "@/lib/relational/copy";
 
 interface Props {
   athleteId: string;
@@ -42,7 +42,11 @@ export function AthleteJourneyMap({ athleteId, scope }: Props) {
         <ol className="space-y-1">
           {rows.map((r) => {
             const tail = r.topic_id.split(".").pop() ?? "";
-            const label = JOURNEY_VOICE.topicLabels[tail] ?? tail;
+            // RR-5: narrative markers get observational labels from copy.ts.
+            const isNarrative = r.topic_id.startsWith("relational.narrative.");
+            const label = isNarrative
+              ? NARRATIVE_VOICE.journeyMarkers[tail] ?? tail
+              : JOURNEY_VOICE.topicLabels[tail] ?? tail;
             return (
               <li key={r.event_id} className="text-sm flex items-center gap-2">
                 <Badge variant="outline">{label}</Badge>

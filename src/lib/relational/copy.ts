@@ -225,6 +225,59 @@ export const RELATIONAL_PAGE_VOICE = {
   subtitle: "The people, signals, and steps that shape your week.",
 } as const;
 
+/**
+ * RR-5 — narrative & memory continuity voice.
+ *
+ * Observational, citation-bound, calm. Never destiny, diagnosis, identity
+ * labelling, or predictive emotion. Resurfacing copy always fills with
+ * cited dates / topic tags — no free-form generation.
+ *
+ * The denylist is enforced in code (`hammerMemory.assertNarrativeReferenceLegality`)
+ * — these strings must never appear in user-facing narrative output.
+ */
+export const NARRATIVE_VOICE = {
+  resurfacingChip: "Remembering",
+  resurfacingLabel: (topicTag: string, dateLabel: string) =>
+    `You mentioned ${topicTag} on ${dateLabel}.`,
+  echoLabel: (anchorTag: string) =>
+    `This echoes what you noted after ${anchorTag}.`,
+  unresolvedLabel: (dateLabel: string) =>
+    `Still carrying what you logged on ${dateLabel}.`,
+  empty: "Nothing to recall yet.",
+  revoked: "You set this aside.",
+  safeguarded: "Held back for now.",
+  journeyMarkers: {
+    memory_anchor: "Memory",
+    breakthrough_marker: "Lift",
+    slump_marker: "Heavier stretch",
+    identity_reflection: "Your words",
+    context_recall: "Looked back",
+  } as Record<string, string>,
+  /**
+   * Forbidden tokens in any user-facing narrative string. Identity locking,
+   * destiny framing, diagnosis, manipulation language. Case-insensitive.
+   */
+  denylist: [
+    "always",
+    "never",
+    "destined",
+    "becoming",
+    "fragile",
+    "sabotage",
+    "broken",
+    "doomed",
+    "you are a",
+    "you are an",
+    "you will",
+    "you won't",
+    "diagnosed",
+    "diagnosis",
+    "disorder",
+    "depressed",
+    "anxious",
+  ] as const,
+} as const;
+
 export const DEMO_CHOREO = {
   intro: {
     title: "Meet the athlete",

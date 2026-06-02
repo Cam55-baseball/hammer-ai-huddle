@@ -10,6 +10,7 @@ import { psychState } from "@/lib/runtime/projections/psychState";
 import { developmentalState } from "@/lib/runtime/projections/developmentalState";
 import { trustState } from "@/lib/runtime/projections/trustState";
 import { relationshipState } from "@/lib/runtime/projections/relationshipState";
+import { narrativeState } from "@/lib/runtime/projections/narrativeState";
 
 function useRows(athleteId: string) {
   const q = useAsbTimeline({ athleteId });
@@ -39,4 +40,10 @@ export function useTrustState(athleteId: string, scope: Scope) {
 export function useRelationshipState(athleteId: string, scope: Scope) {
   const rows = useRows(athleteId);
   return useMemo(() => relationshipState(rows, scope), [rows, scope]);
+}
+
+/** RR-5 — read-only narrative continuity projection. */
+export function useNarrativeState(athleteId: string, scope: Scope) {
+  const rows = useRows(athleteId);
+  return useMemo(() => narrativeState(rows, scope), [rows, scope]);
 }
