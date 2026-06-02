@@ -9,8 +9,8 @@
  *   • coach / recruiter / clinician / system_inferred actor roles cannot
  *     author life-context events.
  *   • For minors, coach visibility requires parent authority binding.
- *   • Safeguarding lockdown reroutes the disclosure: visibility narrows
- *     to `parent` and `safeguarding_category` is forced true (invariant 8).
+ *   • Safeguarding lockdown reroutes: visibility narrows to `parent` and
+ *     `safeguarding_category` is forced true (invariant 8).
  *   • Never emit composite/derived scores — schema disallows them.
  */
 import {
@@ -58,23 +58,34 @@ function newEventId(): string {
   return `evt_${Math.random().toString(36).slice(2)}_${Date.now()}`;
 }
 
-function withEnvelope<P extends Record<string, unknown>>(p: P) {
+type LifeContextEnvelopeLike = {
+  visibility_scope: string;
+  authority: string;
+  safeguarding_category?: boolean;
+  lineage_parent_ids: string[];
+  engine_version: string;
+  reasoning_version: string;
+} & Record<string, unknown>;
+
+function withEnvelope<P extends Record<string, unknown>>(
+  p: P,
+): LifeContextEnvelopeLike {
   return {
-    ...p,
+    ...(p as Record<string, unknown>),
     engine_version: ENGINE_VERSION,
     reasoning_version: RELATIONAL_REASONING_VERSION,
-  };
+  } as LifeContextEnvelopeLike;
 }
 
 /**
  * Pre-emission constitutional checks (RR-8 invariants 1, 8, 9 + RR-10).
- * Returns a (possibly rerouted) payload + lineage parents to emit with.
+ * Returns a (possibly rerouted) payload to emit with.
  */
-function gate<P extends { visibility_scope: string; authority: string; safeguarding_category?: boolean; lineage_parent_ids: string[] }>(
+function gate(
   ctx: RelationalEmitContext,
-  payload: P,
+  payload: LifeContextEnvelopeLike,
   gateInput: LifeContextEmitGate,
-): P {
+): LifeContextEnvelopeLike {
   if (
     ctx.actorRole !== "athlete" &&
     ctx.actorRole !== "parent" &&
@@ -97,8 +108,6 @@ function gate<P extends { visibility_scope: string; authority: string; safeguard
       "athlete actor must author with authority='self'",
     );
   }
-  // Minor + coach visibility requires parent authorship (Phase 152 minor
-  // supremacy + RR-8 invariant 9).
   if (
     gateInput.isMinor &&
     payload.visibility_scope === "coach" &&
@@ -109,15 +118,12 @@ function gate<P extends { visibility_scope: string; authority: string; safeguard
       "for minors, coach-visible life-context disclosure requires parent authority",
     );
   }
-  // Safeguarding lockdown reroutes: narrow visibility to parent and flag
-  // safeguarding_category. The original disclosure stays in the ledger;
-  // downstream projections honour the safeguarding posture (invariant 8).
   if (gateInput.safeguardingLockdown) {
     return {
       ...payload,
       visibility_scope: "parent",
       safeguarding_category: true,
-    } as P;
+    };
   }
   return payload;
 }
@@ -166,22 +172,14 @@ async function emitLifeContext(
 
 type Strip<T> = Omit<T, "engine_version" | "reasoning_version">;
 
-type CategoryPayload =
-  | typeof AcademicLoadPayload
-  | typeof ScheduleStressPayload
-  | typeof SleepDisruptionPayload
-  | typeof TravelLoadPayload
-  | typeof FamilyContextPayload
-  | typeof GeneralPressurePayload;
-
-const CATEGORY_SCHEMA: Record<LifeContextCategory, CategoryPayload> = {
+const CATEGORY_SCHEMA = {
   academic_load: AcademicLoadPayload,
   schedule_stress: ScheduleStressPayload,
   sleep_disruption: SleepDisruptionPayload,
   travel_load: TravelLoadPayload,
   family_context: FamilyContextPayload,
   general_pressure: GeneralPressurePayload,
-};
+} as const;
 
 const CATEGORY_TOPIC: Record<LifeContextCategory, string> = {
   academic_load: LIFE_CONTEXT_TOPICS.academic_load,
@@ -193,29 +191,25 @@ const CATEGORY_TOPIC: Record<LifeContextCategory, string> = {
 };
 
 /**
- * Single category emitter. Per the namespace plan, all six categories
- * share an identical observational payload shape (bounded window +
- * intensity_band + optional topic_tag), so one wrapper covers them all
- * without flattening the topic identity — `topic_id` remains distinct
- * per category for downstream observability + filtering.
+ * Single category emitter — all six categories share an identical
+ * observational payload shape (bounded window + intensity_band +
+ * optional topic_tag). `topic_id` remains distinct per category for
+ * downstream observability + filtering.
  */
-export async function emitLifeContextDisclosure<
-  C extends LifeContextCategory,
->(
+export async function emitLifeContextDisclosure(
   ctx: RelationalEmitContext,
-  category: C,
-  payload: Strip<z.infer<(typeof CATEGORY_SCHEMA)[C]>>,
+  category: LifeContextCategory,
+  payload: Strip<z.infer<typeof AcademicLoadPayload>>,
   gateInput: LifeContextEmitGate,
 ): Promise<string> {
-  const full = withEnvelope(payload);
-  const schema = CATEGORY_SCHEMA[category];
-  schema.parse(full);
-  const routed = gate(ctx, full as never, gateInput);
+  const full = withEnvelope(payload as unknown as Record<string, unknown>);
+  CATEGORY_SCHEMA[category].parse(full);
+  const routed = gate(ctx, full, gateInput);
   return emitLifeContext(
     ctx,
     CATEGORY_TOPIC[category],
-    routed as Record<string, unknown>,
-    (routed as { lineage_parent_ids: string[] }).lineage_parent_ids ?? [],
+    routed,
+    routed.lineage_parent_ids ?? [],
   );
 }
 
@@ -229,10 +223,11 @@ export async function emitLifeContextRevocation(
   payload: Strip<z.infer<typeof DisclosureRevocationPayload>>,
   gateInput: LifeContextEmitGate,
 ): Promise<string> {
-  const full = withEnvelope(payload);
+  const full = withEnvelope(payload as unknown as Record<string, unknown>);
   DisclosureRevocationPayload.parse(full);
   const routed = gate(ctx, full, gateInput);
-  const parents = [routed.revokes_event_id, ...routed.lineage_parent_ids];
+  const revokes = (routed as { revokes_event_id: string }).revokes_event_id;
+  const parents = [revokes, ...(routed.lineage_parent_ids ?? [])];
   return emitLifeContext(
     ctx,
     LIFE_CONTEXT_TOPICS.disclosure_revocation,

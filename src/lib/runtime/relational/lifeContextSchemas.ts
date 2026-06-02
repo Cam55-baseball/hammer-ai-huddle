@@ -33,37 +33,17 @@ export const LIFE_CONTEXT_INTENSITY_BANDS = [
 export type LifeContextIntensityBand =
   (typeof LIFE_CONTEXT_INTENSITY_BANDS)[number];
 
-/**
- * Allowed disclosure authority. Per RR-8 invariant 1 + 9, life context is
- * athlete- or parent-disclosed only. `coach`, `clinician`, and
- * `system_inferred` are constitutionally illegal authoring authorities for
- * life-context events.
- */
-const requireDisclosureAuthority = (d: { authority: string }) =>
-  d.authority === "self" || d.authority === "parent";
-
 const DISCLOSURE_AUTHORITY_MSG = {
   message:
     "life-context authority must be 'self' or 'parent' (RR-8 invariants 1, 9)",
 };
-
-/**
- * `safeguarding_only`-class disclosures route through the safeguarding
- * sub-route via the existing envelope `safeguarding_category` flag. Recruiter
- * visibility is never legal for life-context events (RR-8 invariant 9 + RR-10).
- */
-const requireLegalScope = (d: { visibility_scope: string }) =>
-  d.visibility_scope === "self" ||
-  d.visibility_scope === "parent" ||
-  d.visibility_scope === "coach" ||
-  d.visibility_scope === "demo";
 
 const LEGAL_SCOPE_MSG = {
   message:
     "life-context visibility must be self|parent|coach|demo — recruiter/org/external forbidden (RR-8 + RR-10)",
 };
 
-/** Bounded observational window. Window strings are ledger timestamps. */
+/** Bounded observational window — shared across all categories. */
 const BoundedWindow = {
   window_start: z.string().min(1),
   window_end: z.string().min(1),
@@ -73,20 +53,48 @@ const BoundedWindow = {
 };
 
 export const AcademicLoadPayload = RelationalEnvelope.extend(BoundedWindow)
-  .refine(requireDisclosureAuthority, DISCLOSURE_AUTHORITY_MSG)
-  .refine(requireLegalScope, LEGAL_SCOPE_MSG);
+  .refine((d) => d.authority === "self" || d.authority === "parent", DISCLOSURE_AUTHORITY_MSG)
+  .refine(
+    (d) =>
+      d.visibility_scope === "self" ||
+      d.visibility_scope === "parent" ||
+      d.visibility_scope === "coach" ||
+      d.visibility_scope === "demo",
+    LEGAL_SCOPE_MSG,
+  );
 
 export const ScheduleStressPayload = RelationalEnvelope.extend(BoundedWindow)
-  .refine(requireDisclosureAuthority, DISCLOSURE_AUTHORITY_MSG)
-  .refine(requireLegalScope, LEGAL_SCOPE_MSG);
+  .refine((d) => d.authority === "self" || d.authority === "parent", DISCLOSURE_AUTHORITY_MSG)
+  .refine(
+    (d) =>
+      d.visibility_scope === "self" ||
+      d.visibility_scope === "parent" ||
+      d.visibility_scope === "coach" ||
+      d.visibility_scope === "demo",
+    LEGAL_SCOPE_MSG,
+  );
 
 export const SleepDisruptionPayload = RelationalEnvelope.extend(BoundedWindow)
-  .refine(requireDisclosureAuthority, DISCLOSURE_AUTHORITY_MSG)
-  .refine(requireLegalScope, LEGAL_SCOPE_MSG);
+  .refine((d) => d.authority === "self" || d.authority === "parent", DISCLOSURE_AUTHORITY_MSG)
+  .refine(
+    (d) =>
+      d.visibility_scope === "self" ||
+      d.visibility_scope === "parent" ||
+      d.visibility_scope === "coach" ||
+      d.visibility_scope === "demo",
+    LEGAL_SCOPE_MSG,
+  );
 
 export const TravelLoadPayload = RelationalEnvelope.extend(BoundedWindow)
-  .refine(requireDisclosureAuthority, DISCLOSURE_AUTHORITY_MSG)
-  .refine(requireLegalScope, LEGAL_SCOPE_MSG);
+  .refine((d) => d.authority === "self" || d.authority === "parent", DISCLOSURE_AUTHORITY_MSG)
+  .refine(
+    (d) =>
+      d.visibility_scope === "self" ||
+      d.visibility_scope === "parent" ||
+      d.visibility_scope === "coach" ||
+      d.visibility_scope === "demo",
+    LEGAL_SCOPE_MSG,
+  );
 
 /**
  * family_context — intensity_band only. No household composition, no
@@ -94,12 +102,26 @@ export const TravelLoadPayload = RelationalEnvelope.extend(BoundedWindow)
  * (RR-8 invariant 7).
  */
 export const FamilyContextPayload = RelationalEnvelope.extend(BoundedWindow)
-  .refine(requireDisclosureAuthority, DISCLOSURE_AUTHORITY_MSG)
-  .refine(requireLegalScope, LEGAL_SCOPE_MSG);
+  .refine((d) => d.authority === "self" || d.authority === "parent", DISCLOSURE_AUTHORITY_MSG)
+  .refine(
+    (d) =>
+      d.visibility_scope === "self" ||
+      d.visibility_scope === "parent" ||
+      d.visibility_scope === "coach" ||
+      d.visibility_scope === "demo",
+    LEGAL_SCOPE_MSG,
+  );
 
 export const GeneralPressurePayload = RelationalEnvelope.extend(BoundedWindow)
-  .refine(requireDisclosureAuthority, DISCLOSURE_AUTHORITY_MSG)
-  .refine(requireLegalScope, LEGAL_SCOPE_MSG);
+  .refine((d) => d.authority === "self" || d.authority === "parent", DISCLOSURE_AUTHORITY_MSG)
+  .refine(
+    (d) =>
+      d.visibility_scope === "self" ||
+      d.visibility_scope === "parent" ||
+      d.visibility_scope === "coach" ||
+      d.visibility_scope === "demo",
+    LEGAL_SCOPE_MSG,
+  );
 
 /**
  * Revocation removes downstream visibility on the next projection rebuild
@@ -108,8 +130,15 @@ export const GeneralPressurePayload = RelationalEnvelope.extend(BoundedWindow)
 export const DisclosureRevocationPayload = RelationalEnvelope.extend({
   revokes_event_id: z.string().min(1),
 })
-  .refine(requireDisclosureAuthority, DISCLOSURE_AUTHORITY_MSG)
-  .refine(requireLegalScope, LEGAL_SCOPE_MSG);
+  .refine((d) => d.authority === "self" || d.authority === "parent", DISCLOSURE_AUTHORITY_MSG)
+  .refine(
+    (d) =>
+      d.visibility_scope === "self" ||
+      d.visibility_scope === "parent" ||
+      d.visibility_scope === "coach" ||
+      d.visibility_scope === "demo",
+    LEGAL_SCOPE_MSG,
+  );
 
 export type AcademicLoadPayload = z.infer<typeof AcademicLoadPayload>;
 export type ScheduleStressPayload = z.infer<typeof ScheduleStressPayload>;
