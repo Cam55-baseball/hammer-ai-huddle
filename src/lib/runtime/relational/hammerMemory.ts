@@ -93,3 +93,60 @@ export function assertHammerTurnLegality(
     );
   }
 }
+
+// ─── RR-5 — narrative reference legality ───────────────────────────────────
+
+import { NARRATIVE_VOICE } from "@/lib/relational/copy";
+
+export type NarrativeRejection =
+  | "FABRICATED_NARRATIVE_RECALL"
+  | "NARRATIVE_DENYLIST_HIT"
+  | "NARRATIVE_CONFIDENCE_EXCEEDED"
+  | "NARRATIVE_UNDER_SAFEGUARDING";
+
+export interface NarrativeReferenceDraft {
+  /** Text the surface intends to render to the athlete. */
+  utterance: string;
+  /** Antecedent event IDs the surface claims to cite. */
+  citedEventIds: string[];
+  /** Inferred confidence in [0,1] for this reference. */
+  inferredConfidence: number;
+  /** True if the safeguarding sub-route currently holds the athlete. */
+  safeguardingLockdown: boolean;
+}
+
+const NARRATIVE_INFERRED_CONFIDENCE_CEILING = 0.7 as const;
+
+export function validateNarrativeReference(
+  draft: NarrativeReferenceDraft,
+): { valid: boolean; rejections: NarrativeRejection[] } {
+  const rejections: NarrativeRejection[] = [];
+  if (draft.safeguardingLockdown) {
+    rejections.push("NARRATIVE_UNDER_SAFEGUARDING");
+  }
+  if (draft.citedEventIds.length === 0) {
+    rejections.push("FABRICATED_NARRATIVE_RECALL");
+  }
+  if (draft.inferredConfidence > NARRATIVE_INFERRED_CONFIDENCE_CEILING) {
+    rejections.push("NARRATIVE_CONFIDENCE_EXCEEDED");
+  }
+  const lc = draft.utterance.toLowerCase();
+  for (const token of NARRATIVE_VOICE.denylist) {
+    if (lc.includes(token)) {
+      rejections.push("NARRATIVE_DENYLIST_HIT");
+      break;
+    }
+  }
+  return { valid: rejections.length === 0, rejections };
+}
+
+export function assertNarrativeReferenceLegality(
+  draft: NarrativeReferenceDraft,
+): void {
+  const v = validateNarrativeReference(draft);
+  if (!v.valid) {
+    throw new Error(
+      `NARRATIVE_REFERENCE_CONSTITUTIONALLY_ILLEGAL: ${v.rejections.join(",")}`,
+    );
+  }
+}
