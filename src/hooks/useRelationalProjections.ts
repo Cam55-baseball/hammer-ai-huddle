@@ -55,3 +55,9 @@ export function useLifeContextState(athleteId: string, scope: Scope) {
   const rows = useRows(athleteId);
   return useMemo(() => lifeContextState(rows, scope), [rows, scope]);
 }
+
+/** RR-6 — read-only injury recovery continuity projection. */
+export function useInjuryRecoveryState(athleteId: string, scope: Scope) {
+  const rows = useRows(athleteId);
+  return useMemo(() => injuryRecoveryState(rows, scope), [rows, scope]);
+}
