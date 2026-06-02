@@ -7,7 +7,7 @@
  * `assertHammerTurnLegality` before emission.
  */
 import { useState } from "react";
-import { useConversationMemory, useNarrativeState, useLifeContextState } from "@/hooks/useRelationalProjections";
+import { useConversationMemory, useNarrativeState, useLifeContextState, useInjuryRecoveryState } from "@/hooks/useRelationalProjections";
 import { useDevelopmentalState } from "@/hooks/useRelationalProjections";
 import { emitConversationTurn } from "@/lib/runtime/relational/emit";
 import { arbitrateMemoryCallback } from "@/lib/runtime/relational/hammerMemory";
@@ -16,7 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HAMMER_VOICE, SURFACE_TITLES, DEVELOPMENTAL_VOICE, NARRATIVE_VOICE, LIFE_CONTEXT_VOICE } from "@/lib/relational/copy";
+import { HAMMER_VOICE, SURFACE_TITLES, DEVELOPMENTAL_VOICE, NARRATIVE_VOICE, LIFE_CONTEXT_VOICE, INJURY_RECOVERY_VOICE } from "@/lib/relational/copy";
 
 interface Props {
   athleteId: string;
@@ -29,12 +29,13 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
   const { state: dev } = useDevelopmentalState(athleteId, scope);
   const { state: narrative } = useNarrativeState(athleteId, scope);
   const { state: lifeCtx } = useLifeContextState(athleteId, scope);
+  const { state: injury } = useInjuryRecoveryState(athleteId, scope);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
 
   const threads = Object.values(state.threads);
-  // RR-5 ↔ RR-8 single-callback arbitration: at most one memory chip per
-  // assistant turn, never both. Safeguarding lockdown suppresses both.
+  // RR-5 ↔ RR-8 ↔ RR-6 single-callback arbitration: at most one memory chip
+  // per assistant turn, never multiple. Safeguarding lockdown suppresses all.
   const newestNarrative =
     narrative.resurfacingCandidates.length > 0
       ? [...narrative.resurfacingCandidates].sort((a, b) =>
@@ -45,6 +46,11 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
     lifeCtx.activePressureSignals.length > 0
       ? lifeCtx.activePressureSignals[lifeCtx.activePressureSignals.length - 1]
       : null;
+  const newestInjury =
+    injury.visibleRecoveryTimeline.length > 0
+      ? injury.visibleRecoveryTimeline[injury.visibleRecoveryTimeline.length - 1]
+      : null;
+  const safeguardingHeld = lifeCtx.safeguardingHeld || injury.safeguardingHeld;
   const arbitrated = arbitrateMemoryCallback({
     narrative: newestNarrative
       ? {
@@ -62,12 +68,25 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
           category: newestLifeCtx.category,
         }
       : null,
-    safeguardingLockdown: lifeCtx.safeguardingHeld,
+    injury: newestInjury
+      ? {
+          event_id: newestInjury.event_id,
+          occurred_at: newestInjury.occurred_at,
+          topic_tag: null,
+          phase: newestInjury.kind,
+        }
+      : null,
+    safeguardingLockdown: safeguardingHeld,
   });
-  const callback =
-    arbitrated.kind === "narrative" ? newestNarrative : null;
-  const lifeCtxAck =
-    arbitrated.kind === "life_context" ? newestLifeCtx : null;
+  const callback = arbitrated.kind === "narrative" ? newestNarrative : null;
+  const lifeCtxAck = arbitrated.kind === "life_context" ? newestLifeCtx : null;
+  const injuryAck = arbitrated.kind === "injury_continuity" ? newestInjury : null;
+  const injuryLineKey: keyof typeof INJURY_RECOVERY_VOICE.continuityLines =
+    injuryAck?.kind === "rtp_authorized"
+      ? "rtp_updated"
+      : injuryAck?.kind === "recovery_checkpoint"
+        ? "load_adjusted"
+        : "routine";
 
   async function send() {
     if (!draft.trim()) return;
@@ -177,6 +196,14 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
               LIFE_CONTEXT_VOICE.intensityLabels[lifeCtxAck.intensity_band] ?? "noticeably",
             )}
           </span>
+        </div>
+      )}
+      {injuryAck && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-2">
+          <Badge variant="outline" className="font-normal">
+            {INJURY_RECOVERY_VOICE.ackChip}
+          </Badge>
+          <span>{INJURY_RECOVERY_VOICE.continuityLines[injuryLineKey]}</span>
         </div>
       )}
       <div className="flex gap-2">

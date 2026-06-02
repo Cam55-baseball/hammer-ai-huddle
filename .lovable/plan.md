@@ -1,84 +1,72 @@
+# RR-6 Wave 1 — Injury Recovery Continuity Activation
 
-# RR-8 Wave 1D — Constitutional Gap Closure
+Strict additive activation under RR-6 constitution and Megaphase 151–160 namespace. Mirrors the RR-5/RR-8 build pattern that is already in production. No schema rewrites, no replay-engine changes, no mutable recovery state, no RR-7/9/10 work.
 
-Scope-locked: parent-scope visibility guard, SHA-256 preflight invariant, audit addendum, final green verification. No RR-6/7/9/10, no new primitives, no schema or replay-engine changes.
+## Files created
 
-## 1. Parent visibility guard (production)
+1. `src/lib/runtime/relational/injurySchemas.ts`
+   - Topic family: `relational.injury.reported | updated | recovery_checkpoint | rtp_authorized | visibility_revoked`.
+   - Zod schemas extending the shared `RelationalEnvelope` (matches `narrativeSchemas.ts` / `lifeContextSchemas.ts`).
+   - Allowed payload fields **only**: `body_region`, `severity_band` ∈ {light, moderate, significant}, `participation_status` ∈ {full, modified, limited, inactive}, `reported_symptoms` (bounded controlled vocabulary enum, max length capped), `recovery_focus?`, `checkpoint_type?` ∈ {mobility, strength, conditioning, throwing, general}, `visibility_scope` ∈ {self, parent, coach, safeguarding_only, demo}, `authority`, `lineage_parent_ids`, `occurred_at`, `missingness`, `confidence`.
+   - Strict `.strict()` rejection of any forbidden field (diagnosis, prognosis, treatment, prescription, ETA, pain score, biometric prediction, AI RTP).
+   - `RTP_AUTHORIZED_ACTORS` constant = {`parent`, `authorized_adult`}. Coach / AI / system actors rejected at schema layer for `rtp_authorized`.
 
-**File:** `src/lib/runtime/projections/types.ts` — `prepareRows`
+2. `src/lib/runtime/relational/injuryEmitters.ts`
+   - Thin wrappers over `emitAsbEvent` / `emitAsbLineage`. No DB tables, no mutable state.
+   - Exports `InjuryEmissionError` and `InjuryEmitGate { safeguardingLockdown; isMinor }`.
+   - Pre-emission assertions: block `actor_role` ∈ {recruiter, commercial, ai} for any RR-6 emit; coach blocked specifically from `rtp_authorized`; under `safeguardingLockdown` rewrite `visibility_scope → "safeguarding_only"`; full Zod validation; lineage preservation; reject payload strings hitting the diagnostic denylist (see §5).
+   - Emitters: `emitInjuryReported`, `emitInjuryUpdated`, `emitRecoveryCheckpoint`, `emitRtpAuthorized`, `emitInjuryVisibilityRevoked`.
 
-Add exactly one additive line immediately after the existing self-scope restriction:
+3. `src/lib/runtime/projections/injuryRecoveryState.ts`
+   - Pure deterministic projection, memoized via existing `memoize(...)` helper from `projections/types.ts` (inherits `prepareRows` demo↔production firewall and the new parent-scope guard sealed in Wave 1D).
+   - Output: `activeRecoveryState | null`, `participationStatus`, `latestCheckpointByType: Record<type, event_id>`, `visibleRecoveryTimeline: Array<...>`, `revokedEventIds: Set<string>`, `safeguardingHeld: boolean`, `missingness: { fields: string[]; reason }`.
+   - Replay rules: stable under shuffled input (sorted by `(occurred_at, event_id)` in `prepareRows`), idempotent on duplicate ids, `visibility_revoked` events remove the referenced ids from the next rebuild, safeguarding precedence inherited. No `Date.now`, no randomness, no future estimates, no scoring, no RTP inference.
 
-```ts
-if (vis === "self" && scope !== "self") continue;
-if (vis === "parent" && scope !== "parent") continue;   // ← new
-```
+4. `src/lib/runtime/relational/__tests__/injurySchemas.test.ts`
+   `src/lib/runtime/relational/__tests__/injuryEmitters.test.ts`
+   `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts`
+   `src/lib/runtime/relational/__tests__/injury-visibility.test.ts`
+   `src/lib/runtime/relational/__tests__/injury-reference.test.ts`
+   - Test directory is `__tests__/` to match the existing convention (and Wave 1C replay-isolation fixtures live there).
+   - Each test namespaces event ids and `occurred_at` bands per the Wave 1C replay-isolation convention.
+   - Coverage: replay determinism (shuffled input), duplicate-id idempotency, revocation rebuild, safeguarding precedence override, demo firewall, parent supremacy for minors, coach RTP block, recruiter / commercial actor block, denylist enforcement, missingness preservation, arbitration stability.
 
-No other edits. Demo↔production firewall, sort, prefix filter, memoization untouched.
+5. `docs/asb/injury-recovery-audit.md`
+   - Sections: emotional-safety review, anti-diagnosis audit, safeguarding precedence proof, replay determinism proof, visibility matrix verification (extends `docs/asb/relational-visibility-matrix.md` for the new `safeguarding_only` scope value), manipulation/coercion review, parent supremacy review, remaining risks, final verdict.
 
-Constitutional basis: RR-4 + RR-8 parent-only visibility, Phase 152 minor-athlete supremacy.
+## Files edited (minimal)
 
-## 2. Visibility re-verification
+6. `src/hooks/useRelationalProjections.ts`
+   - Add `useInjuryRecoveryState(athleteId, scope)` following the existing one-liner pattern. No other hook changes.
 
-Run:
-- `src/lib/runtime/relational/__tests__/life-context-visibility.test.ts`
-- `src/lib/runtime/relational/__tests__/relational-visibility.matrix.test.ts`
-- RR-5 narrative + RR-8 life-context replay suites
+7. `src/lib/relational/copy.ts`
+   - Add `INJURY_RECOVERY_VOICE`: observational, calm, non-medical, protection-first sample lines ("Recovery has been part of your recent routine.", "Training load has been adjusted recently.", "Return-to-play guidance was updated.").
+   - Add `INJURY_RECOVERY_VOICE.denylist`: "fully healed", "safe to return", "career-threatening", "high risk athlete", "injury prone", "recovered ahead of schedule", "guaranteed return", and the existing diagnostic tokens ("diagnosed", "diagnosis", "disorder", "prescribed", "treatment plan", "prognosis").
 
-Expected:
-- coach/self/org/external cannot read `parent`-scoped rows
-- parent retains lawful visibility
-- safeguarding precedence unchanged
-- demo firewall unchanged
-- replay determinism unchanged (no projection logic touched, only filter)
+8. `src/lib/runtime/relational/hammerMemory.ts`
+   - Extend `MemoryCallback` with a third `{ kind: "injury_continuity"; ref: ArbitrationInjuryRef }` variant.
+   - Add `ArbitrationInjuryRef { event_id; occurred_at; topic_tag; phase }`.
+   - Extend `arbitrateMemoryCallback` input with `injury: ArbitrationInjuryRef | null`. Deterministic priority: safeguardingLockdown ⇒ none → newest `occurred_at` wins across all three candidates → lexical `tieKey` tie-break → fixed kind ordering `narrative < life_context < injury_continuity` for absolute ties.
+   - Add `assertInjuryReferenceLegality` enforcing `INJURY_RECOVERY_VOICE.denylist`, cited-event-id requirement, inferred-confidence ceiling 0.7, and safeguarding suppression.
 
-Note: the matrix test currently treats payload `parent` as visible to coach/org/external/self. Those expectations must be updated to match the new (and constitutionally correct) truth table: payload `parent` is visible **only** to reader `parent`. This is a test-fixture correction, not a logic relaxation. `docs/asb/relational-visibility-matrix.md` truth table row for "parent" payload column will be updated to reflect the same.
+9. `src/components/relational/HammerConversationPanel.tsx`
+   - Wire the third arbitration candidate from `useInjuryRecoveryState`. No new sections; the existing single-callback chip surface renders the `injury_continuity` variant when arbitration selects it.
 
-## 3. SHA-256 preflight invariant
+10. `src/components/relational/InjuryLifecycleStrip.tsx`
+    - Switch from the raw timeline read to `useInjuryRecoveryState`. Render the existing phase strip plus one calm recovery-continuity chip sourced from `INJURY_RECOVERY_VOICE`. No predictions, no countdowns, no scoring, no RTP recommendation surface. `safeguardingHeld` collapses the strip to a calm held-back line.
 
-**Root cause** (verified via `scripts/check-invariants.sh`):
+11. `src/pages/Relational.tsx`
+    - No structural change. The strip already lives at the right slot; it just now consumes the projection.
 
-```
-[invariants] 2) event-identity sha256 composition only in engineVersion.ts + sensorIdempotency.ts
-src/components/relational/HammerConversationPanel.tsx:198
-```
+## Stop gates held
 
-`hashUtterance` uses `crypto.subtle.digest("SHA-256", …)` to derive `utterance_ref`. The invariant reserves SHA-256 composition for canonical event-identity authors (`engineVersion.ts`, `sensorIdempotency.ts`). `utterance_ref` is a content fingerprint, not an event-identity hash — it does not need cryptographic properties.
+No RR-7 / RR-9 / RR-10 activation. No recruiter, exposure, commercial, or career-arc work. No schema rewrites of `asb_events` / `asb_event_lineage`. No new primitives outside the reserved `relational.injury.*` family. No replay-engine rewrites. No mutable recovery state. No autonomous RTP, no diagnosis, no prescription, no future-estimate language anywhere.
 
-**Minimal fix:** replace `hashUtterance` with a synchronous non-crypto fingerprint (FNV-1a → 16-hex-char string). Same shape (`string`), same determinism (pure function of input), same replay behavior, no copy or behavioral change. Removes SHA-256 usage from the file entirely; canonical identity authors remain the sole SHA-256 sites.
+## Verification (run after build)
 
-```ts
-function hashUtterance(s: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return (h >>> 0).toString(16).padStart(8, "0") + (s.length >>> 0).toString(16).padStart(8, "0");
-}
-```
+- `bunx tsc --noEmit`
+- Full relational vitest suite
+- RR-5 + RR-6 + RR-8 suites together
+- `bash scripts/preflight.sh`
 
-Call sites updated to drop `await` (function becomes sync). No other behavioral change.
-
-Constitutional safety: deterministic, replay-stable, no collision-resistance requirement at this site (utterance_ref is interpretive lineage, not identity), no new primitive, no schema change.
-
-## 4. Audit addendum
-
-Append to `docs/asb/rr-8-organism-coherence-audit.md`:
-
-- **§12 Parent Visibility Closure** — one-line additive guard in `prepareRows`; matrix test + doc truth table updated; coach/self/org/external isolation proven; parent lawful visibility preserved; demo firewall and safeguarding precedence unchanged.
-- **§13 Preflight Integrity Restoration** — SHA-256 invariant root cause (utterance_ref using crypto.subtle outside canonical identity authors); resolution via FNV-1a fingerprint (deterministic, replay-stable, sync); preflight clean.
-
-## 5. Final verification
-
-Sequential:
-1. `bunx tsc --noEmit`
-2. full relational vitest suite
-3. RR-5 + RR-8 suites together
-4. `bash scripts/preflight.sh`
-
-Deliverables in final response: files changed, exact production lines changed (2 files, ~1 line in `types.ts`, hash helper swap in `HammerConversationPanel.tsx`), pass/fail totals, replay-behavior delta (expected: none), remaining risks, final RR-8 verdict.
-
-## Stop gate
-
-No RR-6/7/9/10. No recruiter/injury/exposure/career-arc/commercial. No new primitives. No replay-engine rewrites. No schema changes.
+Report will return: exact files changed, exact added test counts, pass/fail totals, replay-determinism guarantees, remaining risks, and the final RR-6 Wave 1 verdict.

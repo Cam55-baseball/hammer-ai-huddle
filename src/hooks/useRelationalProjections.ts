@@ -12,6 +12,7 @@ import { trustState } from "@/lib/runtime/projections/trustState";
 import { relationshipState } from "@/lib/runtime/projections/relationshipState";
 import { narrativeState } from "@/lib/runtime/projections/narrativeState";
 import { lifeContextState } from "@/lib/runtime/projections/lifeContextState";
+import { injuryRecoveryState } from "@/lib/runtime/projections/injuryRecoveryState";
 
 function useRows(athleteId: string) {
   const q = useAsbTimeline({ athleteId });
@@ -53,4 +54,10 @@ export function useNarrativeState(athleteId: string, scope: Scope) {
 export function useLifeContextState(athleteId: string, scope: Scope) {
   const rows = useRows(athleteId);
   return useMemo(() => lifeContextState(rows, scope), [rows, scope]);
+}
+
+/** RR-6 — read-only injury recovery continuity projection. */
+export function useInjuryRecoveryState(athleteId: string, scope: Scope) {
+  const rows = useRows(athleteId);
+  return useMemo(() => injuryRecoveryState(rows, scope), [rows, scope]);
 }

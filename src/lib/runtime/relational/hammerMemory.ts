@@ -96,7 +96,7 @@ export function assertHammerTurnLegality(
 
 // ─── RR-5 — narrative reference legality ───────────────────────────────────
 
-import { NARRATIVE_VOICE, LIFE_CONTEXT_VOICE } from "@/lib/relational/copy";
+import { NARRATIVE_VOICE, LIFE_CONTEXT_VOICE, INJURY_RECOVERY_VOICE } from "@/lib/relational/copy";
 
 export type NarrativeRejection =
   | "FABRICATED_NARRATIVE_RECALL"
@@ -206,17 +206,65 @@ export function assertLifeContextReferenceLegality(
   }
 }
 
-// ─── RR-5 ↔ RR-8 — single-callback arbitration ──────────────────────────────
+// ─── RR-6 — injury continuity reference legality ───────────────────────────
+
+export type InjuryRejection =
+  | "FABRICATED_INJURY_RECALL"
+  | "INJURY_DENYLIST_HIT"
+  | "INJURY_CONFIDENCE_EXCEEDED"
+  | "INJURY_UNDER_SAFEGUARDING";
+
+export interface InjuryReferenceDraft {
+  utterance: string;
+  citedEventIds: string[];
+  inferredConfidence: number;
+  safeguardingLockdown: boolean;
+}
+
+const INJURY_INFERRED_CONFIDENCE_CEILING = 0.7 as const;
+
+export function validateInjuryReference(
+  draft: InjuryReferenceDraft,
+): { valid: boolean; rejections: InjuryRejection[] } {
+  const rejections: InjuryRejection[] = [];
+  if (draft.safeguardingLockdown) rejections.push("INJURY_UNDER_SAFEGUARDING");
+  if (draft.citedEventIds.length === 0) rejections.push("FABRICATED_INJURY_RECALL");
+  if (draft.inferredConfidence > INJURY_INFERRED_CONFIDENCE_CEILING) {
+    rejections.push("INJURY_CONFIDENCE_EXCEEDED");
+  }
+  const lc = draft.utterance.toLowerCase();
+  for (const token of INJURY_RECOVERY_VOICE.denylist) {
+    if (lc.includes(token)) {
+      rejections.push("INJURY_DENYLIST_HIT");
+      break;
+    }
+  }
+  return { valid: rejections.length === 0, rejections };
+}
+
+export function assertInjuryReferenceLegality(draft: InjuryReferenceDraft): void {
+  const v = validateInjuryReference(draft);
+  if (!v.valid) {
+    throw new Error(
+      `INJURY_REFERENCE_CONSTITUTIONALLY_ILLEGAL: ${v.rejections.join(",")}`,
+    );
+  }
+}
+
+// ─── RR-5 ↔ RR-8 ↔ RR-6 — single-callback arbitration ───────────────────────
 //
-// At most one memory callback may speak per assistant turn. This pure helper
-// arbitrates between the RR-5 narrative resurfacing candidate and the RR-8
-// life-context acknowledgement so the panel never renders both.
+// At most one memory callback may speak per assistant turn. Three-way pure
+// arbitration between RR-5 narrative resurfacing, RR-8 life-context
+// acknowledgement, and RR-6 injury continuity reference.
 //
-// Rules:
-//   • If safeguardingLockdown → none (safeguarding suppresses both).
-//   • Newest legal reference wins by occurred_at (ISO 8601 lexical compare).
-//   • Ties resolved by lexical ordering of topic_tag ?? category ?? kind ?? "".
-//   • Replay-safe: pure, no Date.now, no Math.random.
+// Deterministic priority:
+//   • safeguardingLockdown → none (safeguarding suppresses all three).
+//   • newest occurred_at wins across candidates (ISO 8601 lexical compare).
+//   • ties resolved by lexical ordering of topic_tag ?? category ?? phase
+//     ?? kind ?? "".
+//   • absolute ties resolved by fixed kind ordering:
+//     narrative < life_context < injury_continuity.
+// Pure, replay-safe — no Date.now, no Math.random.
 
 export interface ArbitrationNarrativeRef {
   event_id: string;
@@ -232,25 +280,38 @@ export interface ArbitrationLifeContextRef {
   category: string;
 }
 
+export interface ArbitrationInjuryRef {
+  event_id: string;
+  occurred_at: string;
+  topic_tag: string | null;
+  phase: string;
+}
+
 export type MemoryCallback =
   | { kind: "narrative"; ref: ArbitrationNarrativeRef }
   | { kind: "life_context"; ref: ArbitrationLifeContextRef }
+  | { kind: "injury_continuity"; ref: ArbitrationInjuryRef }
   | { kind: "none" };
 
 export interface MemoryArbitrationInput {
   narrative: ArbitrationNarrativeRef | null;
   lifeContext: ArbitrationLifeContextRef | null;
+  injury?: ArbitrationInjuryRef | null;
   safeguardingLockdown: boolean;
 }
 
 function tieKey(
   ref:
     | ArbitrationNarrativeRef
-    | ArbitrationLifeContextRef,
+    | ArbitrationLifeContextRef
+    | ArbitrationInjuryRef,
 ): string {
   if (ref.topic_tag) return ref.topic_tag;
   if ((ref as ArbitrationLifeContextRef).category) {
     return (ref as ArbitrationLifeContextRef).category;
+  }
+  if ((ref as ArbitrationInjuryRef).phase) {
+    return (ref as ArbitrationInjuryRef).phase;
   }
   if ((ref as ArbitrationNarrativeRef).kind) {
     return (ref as ArbitrationNarrativeRef).kind;
@@ -258,31 +319,38 @@ function tieKey(
   return "";
 }
 
+const KIND_ORDER: Record<MemoryCallback["kind"], number> = {
+  narrative: 0,
+  life_context: 1,
+  injury_continuity: 2,
+  none: 99,
+};
+
+type Candidate = Exclude<MemoryCallback, { kind: "none" }>;
+
 export function arbitrateMemoryCallback(
   input: MemoryArbitrationInput,
 ): MemoryCallback {
   if (input.safeguardingLockdown) return { kind: "none" };
-  const { narrative, lifeContext } = input;
-  if (!narrative && !lifeContext) return { kind: "none" };
-  if (narrative && !lifeContext) return { kind: "narrative", ref: narrative };
-  if (lifeContext && !narrative) {
-    return { kind: "life_context", ref: lifeContext };
+  const candidates: Candidate[] = [];
+  if (input.narrative) {
+    candidates.push({ kind: "narrative", ref: input.narrative });
   }
-  // Both present — newest wins, ties broken lexically by tieKey, then
-  // by deterministic kind preference (narrative < life_context) so the
-  // result is reproducible across replays.
-  const n = narrative as ArbitrationNarrativeRef;
-  const l = lifeContext as ArbitrationLifeContextRef;
-  if (n.occurred_at !== l.occurred_at) {
-    return n.occurred_at > l.occurred_at
-      ? { kind: "narrative", ref: n }
-      : { kind: "life_context", ref: l };
+  if (input.lifeContext) {
+    candidates.push({ kind: "life_context", ref: input.lifeContext });
   }
-  const nk = tieKey(n);
-  const lk = tieKey(l);
-  if (nk !== lk) {
-    return nk < lk ? { kind: "narrative", ref: n } : { kind: "life_context", ref: l };
+  if (input.injury) {
+    candidates.push({ kind: "injury_continuity", ref: input.injury });
   }
-  // Final deterministic tie-break: narrative wins by name ordering.
-  return { kind: "narrative", ref: n };
+  if (candidates.length === 0) return { kind: "none" };
+  candidates.sort((a, b) => {
+    if (a.ref.occurred_at !== b.ref.occurred_at) {
+      return a.ref.occurred_at > b.ref.occurred_at ? -1 : 1;
+    }
+    const ak = tieKey(a.ref);
+    const bk = tieKey(b.ref);
+    if (ak !== bk) return ak < bk ? -1 : 1;
+    return KIND_ORDER[a.kind] - KIND_ORDER[b.kind];
+  });
+  return candidates[0];
 }
