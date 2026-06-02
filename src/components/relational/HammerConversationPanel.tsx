@@ -73,7 +73,7 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
     if (!draft.trim()) return;
     setSending(true);
     try {
-      const hash = await hashUtterance(draft);
+      const hash = hashUtterance(draft);
       await emitConversationTurn({
         ctx: {
           athleteId,
@@ -194,10 +194,18 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
   );
 }
 
-async function hashUtterance(s: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(buf))
-    .slice(0, 8)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+// Deterministic, non-cryptographic FNV-1a fingerprint for utterance_ref.
+// utterance_ref is interpretive lineage, not event identity — SHA-256
+// composition is reserved for canonical identity authors (engineVersion.ts,
+// sensorIdempotency.ts) per preflight invariant #2.
+function hashUtterance(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (
+    (h >>> 0).toString(16).padStart(8, "0") +
+    (s.length >>> 0).toString(16).padStart(8, "0")
+  );
 }
