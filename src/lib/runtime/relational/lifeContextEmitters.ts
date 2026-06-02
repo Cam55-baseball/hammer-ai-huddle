@@ -226,7 +226,7 @@ export async function emitLifeContextRevocation(
   const full = withEnvelope(payload as unknown as Record<string, unknown>);
   DisclosureRevocationPayload.parse(full);
   const routed = gate(ctx, full, gateInput);
-  const revokes = (routed as { revokes_event_id: string }).revokes_event_id;
+  const revokes = (routed as unknown as { revokes_event_id: string }).revokes_event_id;
   const parents = [revokes, ...(routed.lineage_parent_ids ?? [])];
   return emitLifeContext(
     ctx,
