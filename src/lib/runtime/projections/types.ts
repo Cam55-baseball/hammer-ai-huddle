@@ -59,6 +59,7 @@ export function prepareRows(
     if (vis === "demo" && scope !== ("demo" as Scope)) continue;
     if (vis !== "demo" && (scope as string) === "demo") continue;
     if (vis === "self" && scope !== "self") continue;
+    if (vis === "parent" && scope !== "parent") continue;
     filtered.push(r);
   }
   // Deterministic order: (occurred_at, event_id) ascending.

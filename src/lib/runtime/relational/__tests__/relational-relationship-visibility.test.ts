@@ -13,7 +13,7 @@ function created(id: string, rel: string, counterparty: string, t: string, type:
     occurred_at: t,
     payload: {
       ...ENV,
-      visibility_scope: "parent",
+      visibility_scope: "self",
       confidence: 1,
       authority: "self",
       relationship_id: rel,
@@ -32,7 +32,7 @@ function confirmed(id: string, rel: string, parentId: string, t: string) {
     occurred_at: t,
     payload: {
       ...ENV,
-      visibility_scope: "parent",
+      visibility_scope: "self",
       confidence: 1,
       authority: "parent",
       lineage_parent_ids: [parentId],
@@ -49,7 +49,7 @@ function revoked(id: string, rel: string, parentId: string, t: string) {
     occurred_at: t,
     payload: {
       ...ENV,
-      visibility_scope: "parent",
+      visibility_scope: "self",
       confidence: 1,
       authority: "self",
       lineage_parent_ids: [parentId],
@@ -66,7 +66,7 @@ function paused(id: string, rel: string, parentId: string, t: string) {
     occurred_at: t,
     payload: {
       ...ENV,
-      visibility_scope: "parent",
+      visibility_scope: "self",
       confidence: 1,
       authority: "self",
       lineage_parent_ids: [parentId],
@@ -138,7 +138,7 @@ describe("RR-4 visibility arbitration", () => {
       event_id: "vad1",
       topic_id: "relational.psych.self_report",
       occurred_at: "2026-03-03T00:00:00Z",
-      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "rva" },
+      payload: { ...ENV, visibility_scope: "self", confidence: 1, authority: "self", relationship_id: "rva" },
     });
     const arbitrated = applyRelationshipVisibility([dataRow], "parent_a", state);
     expect(arbitrated.length).toBe(0);
@@ -155,7 +155,7 @@ describe("RR-4 visibility arbitration", () => {
       event_id: "vbd1",
       topic_id: "relational.psych.self_report",
       occurred_at: "2026-03-03T00:00:00Z",
-      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "rvb", value: -1.5, axis: "mood" },
+      payload: { ...ENV, visibility_scope: "self", confidence: 1, authority: "self", relationship_id: "rvb", value: -1.5, axis: "mood" },
     });
     const out = applyRelationshipVisibility([dataRow], "parent_a", state);
     expect(out.length).toBe(1);
@@ -173,7 +173,7 @@ describe("RR-4 visibility arbitration", () => {
       event_id: "vcd1",
       topic_id: "relational.psych.self_report",
       occurred_at: "2026-03-03T00:00:00Z",
-      payload: { ...ENV, visibility_scope: "parent", confidence: 1, authority: "self", relationship_id: "rvc" },
+      payload: { ...ENV, visibility_scope: "self", confidence: 1, authority: "self", relationship_id: "rvc" },
     });
     expect(applyRelationshipVisibility([dataRow], "parent_a", state).length).toBe(0);
   });

@@ -10,11 +10,11 @@ by the matrix below.
 
 | Reader scope ↓ / Payload scope → | `self` | `coach` | `parent` | `org` | `external` | `demo` | _unset_ |
 |---|---|---|---|---|---|---|---|
-| `self`     | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
-| `coach`    | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
+| `self`     | ✓ | ✓ | ✗ | ✓ | ✓ | ✗ | ✓ |
+| `coach`    | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | ✓ |
 | `parent`   | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
-| `org`      | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
-| `external` | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
+| `org`      | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | ✓ |
+| `external` | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | ✓ |
 | `demo`     | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ |
 
 Read as: "When the reader scope is _R_ and the event's `visibility_scope`
