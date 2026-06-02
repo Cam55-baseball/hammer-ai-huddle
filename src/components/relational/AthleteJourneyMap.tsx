@@ -10,7 +10,7 @@ import { prepareRows } from "@/lib/runtime/projections/types";
 import type { Scope } from "@/lib/runtime/projections/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DEVELOPMENTAL_VOICE, JOURNEY_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
+import { DEVELOPMENTAL_VOICE, JOURNEY_VOICE, SURFACE_TITLES, NARRATIVE_VOICE } from "@/lib/relational/copy";
 
 interface Props {
   athleteId: string;
