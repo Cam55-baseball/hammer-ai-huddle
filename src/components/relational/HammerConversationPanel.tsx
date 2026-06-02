@@ -138,6 +138,19 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
           </span>
         </div>
       )}
+      {lifeCtxAck && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-2">
+          <Badge variant="outline" className="font-normal">
+            {LIFE_CONTEXT_VOICE.ackChip}
+          </Badge>
+          <span>
+            {LIFE_CONTEXT_VOICE.observationalLine(
+              LIFE_CONTEXT_VOICE.categoryLabels[lifeCtxAck.category] ?? "things",
+              LIFE_CONTEXT_VOICE.intensityLabels[lifeCtxAck.intensity_band] ?? "noticeably",
+            )}
+          </span>
+        </div>
+      )}
       <div className="flex gap-2">
         <Input
           value={draft}
