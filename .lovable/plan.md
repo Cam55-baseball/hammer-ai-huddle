@@ -1,96 +1,84 @@
-# RR-8 Wave 1C — Determinism Stabilization
 
-## Root cause (confirmed via code read)
+# RR-8 Wave 1D — Constitutional Gap Closure
 
-`memoize` in `src/lib/runtime/projections/types.ts` keys on `${scope}::${lastEventId}` with a `sourceCount` tiebreak. Cache lives in module-scope closure, so it persists across `it` blocks within a single test file (and across files importing the same builder).
+Scope-locked: parent-scope visibility guard, SHA-256 preflight invariant, audit addendum, final green verification. No RR-6/7/9/10, no new primitives, no schema or replay-engine changes.
 
-Tests that reuse short event IDs (`"01"`, `"02"`, `n1`…`n4`) within the same projection-call sequence land on a previously-cached `(scope, lastEventId, sourceCount)` triple and receive **stale state**, masquerading as a replay-determinism failure.
+## 1. Parent visibility guard (production)
 
-Concrete collisions:
-- `lifeContextState.replay.test.ts` — uses bare IDs `"01"`/`"02"` across multiple `it` blocks; revocation test collides with the determinism test (`self::02`, count 2).
-- `narrativeState.replay.test.ts` — `bad1` case and `dup` case both terminate at `n4` with `sourceCount=5`.
+**File:** `src/lib/runtime/projections/types.ts` — `prepareRows`
 
-Production projection logic is **not** the defect. The memoize contract is "same key + same count ⇒ same state under identical inputs"; tests violate that by reusing IDs across distinct logical event sets.
+Add exactly one additive line immediately after the existing self-scope restriction:
 
-## Fix strategy — additive, test-only
+```ts
+if (vis === "self" && scope !== "self") continue;
+if (vis === "parent" && scope !== "parent") continue;   // ← new
+```
 
-Namespace every test's event_id, athlete_id, relationship_id, lineage refs, topic_tag, and `occurred_at` anchor so that no two `it`-block scenarios across RR-5 + RR-8 suites ever share a `(scope, lastEventId, sourceCount)` triple.
+No other edits. Demo↔production firewall, sort, prefix filter, memoization untouched.
 
-No production code changes. No memoize/cache-key changes. No projection edits. No schema edits.
+Constitutional basis: RR-4 + RR-8 parent-only visibility, Phase 152 minor-athlete supremacy.
 
-### Section 1 — Test fixture namespacing
+## 2. Visibility re-verification
 
-Edit only:
+Run:
+- `src/lib/runtime/relational/__tests__/life-context-visibility.test.ts`
+- `src/lib/runtime/relational/__tests__/relational-visibility.matrix.test.ts`
+- RR-5 narrative + RR-8 life-context replay suites
 
-1. `src/lib/runtime/relational/__tests__/lifeContextState.replay.test.ts`
-   - Per-test prefixes: `lc_det_*`, `lc_miss_*`, `lc_rev_*`, `lc_safe_*`, `lc_demo_*`, `lc_curr_*`.
-   - Stagger `occurred_at` per test into disjoint date bands (e.g. `2026-03-01…`, `2026-03-05…`, `2026-03-10…`).
-   - Update `revokes_event_id` references accordingly.
+Expected:
+- coach/self/org/external cannot read `parent`-scoped rows
+- parent retains lawful visibility
+- safeguarding precedence unchanged
+- demo firewall unchanged
+- replay determinism unchanged (no projection logic touched, only filter)
 
-2. `src/lib/runtime/relational/__tests__/narrativeState.replay.test.ts`
-   - Replace shared `ROWS` constant with a `makeRows(prefix)` builder; each `it` uses its own prefix: `narr_det_`, `narr_shuffle_`, `narr_cite_`, `narr_rev_`, `narr_miss_`, `narr_rank_`, `narr_dup_`, `narr_unres_`, `narr_demo_`.
-   - Update internal cross-references (`recalled_event_ids`, `revokes_event_id`, lineage refs) to use the same prefix.
-   - Stagger `occurred_at` per test into disjoint date bands within `2026-04-*`.
+Note: the matrix test currently treats payload `parent` as visible to coach/org/external/self. Those expectations must be updated to match the new (and constitutionally correct) truth table: payload `parent` is visible **only** to reader `parent`. This is a test-fixture correction, not a logic relaxation. `docs/asb/relational-visibility-matrix.md` truth table row for "parent" payload column will be updated to reflect the same.
 
-3. `src/lib/runtime/relational/__tests__/life-context-visibility.test.ts`
-   - Already namespaced (`lcv*` + `2026-02-*`). Audit only; no edits expected unless a new collision surfaces.
+## 3. SHA-256 preflight invariant
 
-4. `src/lib/runtime/relational/__tests__/narrative-reference.test.ts`
-   - Pure validator tests, no projection calls. Audit only; no edits expected.
+**Root cause** (verified via `scripts/check-invariants.sh`):
 
-5. Shared fixtures (`_fixtures.ts`, `_seed.ts`)
-   - **Not edited.** Builders remain generic; only call sites pass namespaced IDs.
+```
+[invariants] 2) event-identity sha256 composition only in engineVersion.ts + sensorIdempotency.ts
+src/components/relational/HammerConversationPanel.tsx:198
+```
 
-Rule applied uniformly: every event_id starts with a suite + test prefix; every `occurred_at` is unique across the whole RR-5/RR-8 corpus; no two tests share the same trailing event_id.
+`hashUtterance` uses `crypto.subtle.digest("SHA-256", …)` to derive `utterance_ref`. The invariant reserves SHA-256 composition for canonical event-identity authors (`engineVersion.ts`, `sensorIdempotency.ts`). `utterance_ref` is a content fingerprint, not an event-identity hash — it does not need cryptographic properties.
 
-### Section 2 — Replay determinism re-verification
+**Minimal fix:** replace `hashUtterance` with a synchronous non-crypto fingerprint (FNV-1a → 16-hex-char string). Same shape (`string`), same determinism (pure function of input), same replay behavior, no copy or behavioral change. Removes SHA-256 usage from the file entirely; canonical identity authors remain the sole SHA-256 sites.
 
-After fixture isolation, the existing assertions already cover:
-- shuffled-input rebuild stability (`narrativeState.replay.test.ts` test 2)
-- duplicate idempotency (`narrativeState.replay.test.ts` test 7)
-- revocation rebuild behaviour (both replay suites + visibility matrix)
-- safeguarding precedence (life-context visibility test 5, narrative reference test)
-- demo↔production firewall (both replay suites + visibility tests 2/3)
-- arbitration stability (`arbitrateMemoryCallback` covered indirectly via `HammerConversationPanel`; pure helper, no projection cache)
-- missingness preservation (`narrativeState` test 5, `lifeContextState` test 2)
+```ts
+function hashUtterance(s: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0") + (s.length >>> 0).toString(16).padStart(8, "0");
+}
+```
 
-No new assertions are added unless re-running surfaces a real invariant gap (escalation rule below).
+Call sites updated to drop `await` (function becomes sync). No other behavioral change.
 
-### Section 3 — Preflight
+Constitutional safety: deterministic, replay-stable, no collision-resistance requirement at this site (utterance_ref is interpretive lineage, not identity), no new primitive, no schema change.
 
-Run `bash scripts/preflight.sh`. Fix only presentation-safe issues if any. No architectural or replay-engine modifications.
+## 4. Audit addendum
 
-### Section 4 — Audit addendum
+Append to `docs/asb/rr-8-organism-coherence-audit.md`:
 
-Append section **"11. Replay Isolation Verification"** to `docs/asb/rr-8-organism-coherence-audit.md`:
+- **§12 Parent Visibility Closure** — one-line additive guard in `prepareRows`; matrix test + doc truth table updated; coach/self/org/external isolation proven; parent lawful visibility preserved; demo firewall and safeguarding precedence unchanged.
+- **§13 Preflight Integrity Restoration** — SHA-256 invariant root cause (utterance_ref using crypto.subtle outside canonical identity authors); resolution via FNV-1a fingerprint (deterministic, replay-stable, sync); preflight clean.
 
-- Root cause: memoize closure cache + short shared IDs across `it` blocks; not a projection bug.
-- Why production untouched: memoize contract (`same (scope, lastEventId, sourceCount) ⇒ same state under identical inputs`) is constitutionally correct; weakening it would (a) expand cache-key surface, (b) risk hiding real ledger-equivalence drift, (c) violate the additive-only / no-replay-engine-rewrite stop gate.
-- Why namespacing is constitutionally safer: tests now mirror real ledger discipline (globally unique event_ids); replay equivalence is exercised against disjoint event corpora rather than fortuitously-overlapping ones.
-- Proof of determinism: enumerated re-run results.
-- Remaining operational risk: future test authors must continue to namespace IDs; mitigated by the additive convention documented in the addendum.
+## 5. Final verification
 
-### Section 5 — Final verification
-
-Sequentially:
+Sequential:
 1. `bunx tsc --noEmit`
-2. Full relational vitest suite
-3. RR-5 + RR-8 suites together (single vitest invocation)
+2. full relational vitest suite
+3. RR-5 + RR-8 suites together
 4. `bash scripts/preflight.sh`
 
-Return: exact files changed, exact tests modified, exact pass/fail totals, confirmation that no production logic changed, remaining risks, final RR-8 Wave 1 verdict.
+Deliverables in final response: files changed, exact production lines changed (2 files, ~1 line in `types.ts`, hash helper swap in `HammerConversationPanel.tsx`), pass/fail totals, replay-behavior delta (expected: none), remaining risks, final RR-8 verdict.
 
-## Escalation rule
+## Stop gate
 
-Only if fixture namespacing fails to resolve the collisions: stop, report exact failing suites, exact cache-key collision evidence, and the minimal required production fix surface. Do not independently harden `memoize` without explicit authorization.
-
-## Stop gate (held)
-
-No RR-6/7/9/10 work. No recruiter, injury, exposure, career-arc, or commercial activation. No schema rewrites, no new primitives, no replay-engine rewrites.
-
-## Files touched (expected)
-
-- edit `src/lib/runtime/relational/__tests__/lifeContextState.replay.test.ts`
-- edit `src/lib/runtime/relational/__tests__/narrativeState.replay.test.ts`
-- edit `docs/asb/rr-8-organism-coherence-audit.md` (append addendum)
-- (audit-only, likely no edit) `life-context-visibility.test.ts`, `narrative-reference.test.ts`, `_fixtures.ts`, `_seed.ts`
+No RR-6/7/9/10. No recruiter/injury/exposure/career-arc/commercial. No new primitives. No replay-engine rewrites. No schema changes.
