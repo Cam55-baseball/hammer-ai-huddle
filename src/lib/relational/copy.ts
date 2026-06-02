@@ -134,6 +134,58 @@ export const INJURY_VOICE = {
   } as Record<string, string>,
 } as const;
 
+/**
+ * RR-6 — injury recovery continuity voice.
+ *
+ * Observational, calm, non-medical, protection-first. Never predictive,
+ * never diagnostic, never prescriptive. Templates render from cited
+ * lineage; free-form generation forbidden. Denylist is enforced in code
+ * (`hammerMemory.assertInjuryReferenceLegality` + emitter denylist scan)
+ * and must never appear in any user-facing injury surface.
+ */
+export const INJURY_RECOVERY_VOICE = {
+  ackChip: "Recovery in progress",
+  continuityLines: {
+    routine: "Recovery has been part of your recent routine.",
+    load_adjusted: "Training load has been adjusted recently.",
+    rtp_updated: "Return-to-play guidance was updated.",
+    held: "Held back for now.",
+  } as Record<string, string>,
+  participationLabels: {
+    full: "Full participation",
+    modified: "Modified work",
+    limited: "Limited work",
+    inactive: "Resting today",
+  } as Record<string, string>,
+  empty: "Nothing on the recovery record right now.",
+  revoked: "You set this aside.",
+  safeguarded: "Held back for now.",
+  /**
+   * Forbidden tokens in any user-facing injury string. Diagnostic,
+   * prognostic, prescriptive, profiling, or false-certainty language.
+   * Case-insensitive.
+   */
+  denylist: [
+    "fully healed",
+    "safe to return",
+    "career-threatening",
+    "career threatening",
+    "high risk athlete",
+    "high-risk athlete",
+    "injury prone",
+    "injury-prone",
+    "recovered ahead of schedule",
+    "guaranteed return",
+    "diagnosed",
+    "diagnosis",
+    "disorder",
+    "prescribed",
+    "prescription",
+    "treatment plan",
+    "prognosis",
+  ] as const,
+} as const;
+
 export const JOURNEY_VOICE = {
   currentStage: (label: string) => `Today: ${label}`,
   empty: "Your journey starts with your first check-in.",

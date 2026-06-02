@@ -12,6 +12,7 @@ import { trustState } from "@/lib/runtime/projections/trustState";
 import { relationshipState } from "@/lib/runtime/projections/relationshipState";
 import { narrativeState } from "@/lib/runtime/projections/narrativeState";
 import { lifeContextState } from "@/lib/runtime/projections/lifeContextState";
+import { injuryRecoveryState } from "@/lib/runtime/projections/injuryRecoveryState";
 
 function useRows(athleteId: string) {
   const q = useAsbTimeline({ athleteId });
