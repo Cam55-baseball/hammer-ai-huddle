@@ -278,6 +278,64 @@ export const NARRATIVE_VOICE = {
   ] as const,
 } as const;
 
+/**
+ * RR-8 — life context voice.
+ *
+ * Observational only. Templates render from cited dates / category tags;
+ * never free-form. Forbidden tokens are enforced in code
+ * (`hammerMemory.assertLifeContextReferenceLegality`) and must never
+ * appear in any user-facing life-context string.
+ */
+export const LIFE_CONTEXT_VOICE = {
+  ackChip: "Noticing",
+  categoryLabels: {
+    academic_load: "schoolwork",
+    schedule_stress: "your schedule",
+    sleep_disruption: "sleep",
+    travel_load: "travel",
+    family_context: "things at home",
+    general_pressure: "the week",
+  } as Record<string, string>,
+  intensityLabels: {
+    light: "a bit",
+    moderate: "noticeably",
+    heavy: "a lot",
+  } as Record<string, string>,
+  observationalLine: (categoryLabel: string, intensityLabel: string) =>
+    `Looks like ${categoryLabel} has been ${intensityLabel} lately.`,
+  softenedLoadLine: (categoryLabel: string) =>
+    `Easing today's load a touch — ${categoryLabel} has been heavy.`,
+  emptyState: "Nothing logged off the field right now.",
+  revoked: "You set this aside.",
+  safeguarded: "Held back for now.",
+  /**
+   * Forbidden tokens in any user-facing life-context string. Diagnostic,
+   * profiling, certainty, or psychological-labelling language.
+   * Case-insensitive.
+   */
+  denylist: [
+    "emotionally overwhelmed",
+    "overwhelmed",
+    "burnout",
+    "burned out",
+    "fragile",
+    "prone to",
+    "affecting your confidence",
+    "stress score",
+    "mental score",
+    "wellbeing score",
+    "support score",
+    "diagnosed",
+    "diagnosis",
+    "disorder",
+    "depressed",
+    "anxious",
+    "you are",
+    "you always",
+    "you never",
+  ] as const,
+} as const;
+
 export const DEMO_CHOREO = {
   intro: {
     title: "Meet the athlete",

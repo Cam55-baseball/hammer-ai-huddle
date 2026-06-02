@@ -11,6 +11,7 @@ import { developmentalState } from "@/lib/runtime/projections/developmentalState
 import { trustState } from "@/lib/runtime/projections/trustState";
 import { relationshipState } from "@/lib/runtime/projections/relationshipState";
 import { narrativeState } from "@/lib/runtime/projections/narrativeState";
+import { lifeContextState } from "@/lib/runtime/projections/lifeContextState";
 
 function useRows(athleteId: string) {
   const q = useAsbTimeline({ athleteId });
@@ -46,4 +47,10 @@ export function useRelationshipState(athleteId: string, scope: Scope) {
 export function useNarrativeState(athleteId: string, scope: Scope) {
   const rows = useRows(athleteId);
   return useMemo(() => narrativeState(rows, scope), [rows, scope]);
+}
+
+/** RR-8 — read-only life context projection. */
+export function useLifeContextState(athleteId: string, scope: Scope) {
+  const rows = useRows(athleteId);
+  return useMemo(() => lifeContextState(rows, scope), [rows, scope]);
 }

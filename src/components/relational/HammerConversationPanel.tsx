@@ -7,7 +7,7 @@
  * `assertHammerTurnLegality` before emission.
  */
 import { useState } from "react";
-import { useConversationMemory, useNarrativeState } from "@/hooks/useRelationalProjections";
+import { useConversationMemory, useNarrativeState, useLifeContextState } from "@/hooks/useRelationalProjections";
 import { useDevelopmentalState } from "@/hooks/useRelationalProjections";
 import { emitConversationTurn } from "@/lib/runtime/relational/emit";
 import type { Scope } from "@/lib/runtime/projections/types";
@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HAMMER_VOICE, SURFACE_TITLES, DEVELOPMENTAL_VOICE, NARRATIVE_VOICE } from "@/lib/relational/copy";
+import { HAMMER_VOICE, SURFACE_TITLES, DEVELOPMENTAL_VOICE, NARRATIVE_VOICE, LIFE_CONTEXT_VOICE } from "@/lib/relational/copy";
 
 interface Props {
   athleteId: string;
@@ -27,12 +27,19 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
   const { state } = useConversationMemory(athleteId, scope);
   const { state: dev } = useDevelopmentalState(athleteId, scope);
   const { state: narrative } = useNarrativeState(athleteId, scope);
+  const { state: lifeCtx } = useLifeContextState(athleteId, scope);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
 
   const threads = Object.values(state.threads);
   // RR-5: at most one observational callback per session — never a feed.
   const callback = narrative.resurfacingCandidates[0] ?? null;
+  // RR-8: at most one observational life-context acknowledgement per session.
+  // Suppressed when safeguarding is holding the disclosure (invariant 8).
+  const lifeCtxAck =
+    !lifeCtx.safeguardingHeld && lifeCtx.activePressureSignals.length > 0
+      ? lifeCtx.activePressureSignals[lifeCtx.activePressureSignals.length - 1]
+      : null;
 
   async function send() {
     if (!draft.trim()) return;
@@ -127,6 +134,19 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
             {NARRATIVE_VOICE.resurfacingLabel(
               callback.topic_tag ?? NARRATIVE_VOICE.journeyMarkers[callback.kind] ?? "this",
               new Date(callback.occurred_at).toLocaleDateString(),
+            )}
+          </span>
+        </div>
+      )}
+      {lifeCtxAck && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-2">
+          <Badge variant="outline" className="font-normal">
+            {LIFE_CONTEXT_VOICE.ackChip}
+          </Badge>
+          <span>
+            {LIFE_CONTEXT_VOICE.observationalLine(
+              LIFE_CONTEXT_VOICE.categoryLabels[lifeCtxAck.category] ?? "things",
+              LIFE_CONTEXT_VOICE.intensityLabels[lifeCtxAck.intensity_band] ?? "noticeably",
             )}
           </span>
         </div>
