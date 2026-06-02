@@ -96,7 +96,7 @@ export function assertHammerTurnLegality(
 
 // ─── RR-5 — narrative reference legality ───────────────────────────────────
 
-import { NARRATIVE_VOICE } from "@/lib/relational/copy";
+import { NARRATIVE_VOICE, LIFE_CONTEXT_VOICE } from "@/lib/relational/copy";
 
 export type NarrativeRejection =
   | "FABRICATED_NARRATIVE_RECALL"
@@ -147,6 +147,61 @@ export function assertNarrativeReferenceLegality(
   if (!v.valid) {
     throw new Error(
       `NARRATIVE_REFERENCE_CONSTITUTIONALLY_ILLEGAL: ${v.rejections.join(",")}`,
+    );
+  }
+}
+
+// ─── RR-8 — life context reference legality ────────────────────────────────
+
+export type LifeContextRejection =
+  | "FABRICATED_LIFE_CONTEXT_RECALL"
+  | "LIFE_CONTEXT_DENYLIST_HIT"
+  | "LIFE_CONTEXT_CONFIDENCE_EXCEEDED"
+  | "LIFE_CONTEXT_UNDER_SAFEGUARDING";
+
+export interface LifeContextReferenceDraft {
+  /** Text the surface intends to render to the athlete. */
+  utterance: string;
+  /** Antecedent disclosure event IDs the surface claims to cite. */
+  citedEventIds: string[];
+  /** Inferred confidence in [0,1] for this reference. */
+  inferredConfidence: number;
+  /** True if the safeguarding sub-route currently holds the athlete. */
+  safeguardingLockdown: boolean;
+}
+
+const LIFE_CONTEXT_INFERRED_CONFIDENCE_CEILING = 0.7 as const;
+
+export function validateLifeContextReference(
+  draft: LifeContextReferenceDraft,
+): { valid: boolean; rejections: LifeContextRejection[] } {
+  const rejections: LifeContextRejection[] = [];
+  if (draft.safeguardingLockdown) {
+    rejections.push("LIFE_CONTEXT_UNDER_SAFEGUARDING");
+  }
+  if (draft.citedEventIds.length === 0) {
+    rejections.push("FABRICATED_LIFE_CONTEXT_RECALL");
+  }
+  if (draft.inferredConfidence > LIFE_CONTEXT_INFERRED_CONFIDENCE_CEILING) {
+    rejections.push("LIFE_CONTEXT_CONFIDENCE_EXCEEDED");
+  }
+  const lc = draft.utterance.toLowerCase();
+  for (const token of LIFE_CONTEXT_VOICE.denylist) {
+    if (lc.includes(token)) {
+      rejections.push("LIFE_CONTEXT_DENYLIST_HIT");
+      break;
+    }
+  }
+  return { valid: rejections.length === 0, rejections };
+}
+
+export function assertLifeContextReferenceLegality(
+  draft: LifeContextReferenceDraft,
+): void {
+  const v = validateLifeContextReference(draft);
+  if (!v.valid) {
+    throw new Error(
+      `LIFE_CONTEXT_REFERENCE_CONSTITUTIONALLY_ILLEGAL: ${v.rejections.join(",")}`,
     );
   }
 }
