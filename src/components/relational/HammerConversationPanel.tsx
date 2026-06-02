@@ -118,6 +118,19 @@ export function HammerConversationPanel({ athleteId, scope, debug = false }: Pro
           </div>
         ))}
       </div>
+      {callback && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border pt-2">
+          <Badge variant="outline" className="font-normal">
+            {NARRATIVE_VOICE.resurfacingChip}
+          </Badge>
+          <span>
+            {NARRATIVE_VOICE.resurfacingLabel(
+              callback.topic_tag ?? NARRATIVE_VOICE.journeyMarkers[callback.kind] ?? "this",
+              new Date(callback.occurred_at).toLocaleDateString(),
+            )}
+          </span>
+        </div>
+      )}
       <div className="flex gap-2">
         <Input
           value={draft}
