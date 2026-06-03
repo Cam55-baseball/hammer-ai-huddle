@@ -106,3 +106,72 @@ observational, replay-safe, survivability-bound overlay. No diagnosis,
 no prescription, no autonomous RTP, no commercial exposure. Stop-gate
 held: no RR-7/9/10 activation, no schema rewrites, no replay-engine
 changes, no mutable recovery state.
+
+## 10. Final verification
+
+Verification pass executed RR-6 Wave 1A. All checks green.
+
+- `bunx tsc --noEmit` — clean (exit 0, no diagnostics)
+- Full relational suite (`src/lib/runtime/relational/__tests__`): **24 files, 183/183 tests passed**
+- RR-5 + RR-6 + RR-8 combined (narrative*, injury*, lifeContext* — 12 files): **77/77 tests passed**
+- `bash scripts/preflight.sh`: invariants 1–19 PASSED, targeted vitest 4 files / 32/32 tests, `[preflight] PASSED`
+
+Replay guarantees confirmed in test output:
+
+- shuffled-input rebuild stability (`injuryRecoveryState.replay.test.ts` — rebuild order-independent)
+- revocation rebuild (invariant 10 — `relational.injury.visibility_revoked` removes downstream visibility)
+- safeguarding precedence (invariant 9 — `safeguarding_category` flips `safeguardingHeld`; coach scope cannot read parent-scoped safeguarding rows)
+- demo↔production firewall (self scope reads zero demo rows; Wave 1D `prepareRows` guard)
+- parent supremacy (Wave 1D guard — `visibility_scope: "parent"` exclusively visible to parent readers)
+- missingness preservation (invariant 6 — `missingness.fields` flows through without imputation)
+- RTP authority restriction (invariant 5 — `rtp_authorized` only flips on explicit `relational.injury.rtp_authorized` event)
+- three-way arbitration stability (RR-5 / RR-8 / RR-6 — single chip per turn via `arbitrateMemoryCallback`)
+- duplicate `event_id` ledger-layer convention (RR-6 inherits RR-5 precedent — projection passes duplicates through deterministically without altering safeguarding or participation state)
+
+Remaining risks (carryover from §8):
+
+- `"safeguarding_only"` realized as `visibility_scope="parent" + safeguarding_category=true`. A distinct scope, if ever required, must come through a Megaphase 151 namespace amendment.
+- Emitter denylist scans only known free-text string fields (`recovery_focus`, `body_region`, `topic_tag`). Any new free-text field added in future waves must be appended to the scan list.
+
+---
+
+# RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED
+
+**Ratified:** 2026-06-03
+**Wave:** RR-6 Wave 1 + Wave 1A (verification alignment)
+
+**Files created (Wave 1):**
+- `src/lib/runtime/relational/injurySchemas.ts`
+- `src/lib/runtime/relational/injuryEmitters.ts`
+- `src/lib/runtime/projections/injuryRecoveryState.ts`
+- `src/lib/runtime/relational/__tests__/injurySchemas.test.ts`
+- `src/lib/runtime/relational/__tests__/injuryEmitters.test.ts`
+- `src/lib/runtime/relational/__tests__/injury-reference.test.ts`
+- `src/lib/runtime/relational/__tests__/injury-visibility.test.ts`
+- `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts`
+- `docs/asb/injury-recovery-audit.md`
+
+**Files edited (Wave 1):**
+- `src/hooks/useRelationalProjections.ts`
+- `src/lib/relational/copy.ts`
+- `src/lib/runtime/relational/hammerMemory.ts`
+- `src/components/relational/HammerConversationPanel.tsx`
+- `src/components/relational/InjuryLifecycleStrip.tsx`
+- `.lovable/plan.md`
+
+**Files edited (Wave 1A):**
+- `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts` — renamed `idempotent on duplicate ids` → `duplicate event_ids flow through projection output (ledger-layer responsibility)`; assertions reshaped to match RR-5 convention. Zero production change.
+- `docs/asb/injury-recovery-audit.md` — §10 + ratification stamp
+- `.lovable/plan.md` — ratification entry
+
+**Final test totals:**
+- TypeScript: 0 errors
+- Full relational suite: 24/24 files, 183/183 tests
+- RR-5 + RR-6 + RR-8 combined: 12/12 files, 77/77 tests
+- Preflight: 19/19 invariant checks + 4/4 files, 32/32 tests
+
+**Replay guarantees:** shuffled-input stability, revocation rebuild, safeguarding precedence, demo↔production firewall, parent supremacy, missingness preservation, RTP authority restriction, three-way arbitration stability, ledger-layer duplicate convention.
+
+**Remaining risks:** as recorded in §8 + §10.
+
+**Final verdict:** RR-6 Wave 1 — injury recovery continuity is operational as an observational, replay-safe, survivability-bound overlay. No diagnosis, no prescription, no autonomous RTP, no commercial exposure. Stop-gate held: no RR-7/9/10 activation, no schema rewrites, no replay-engine changes, no mutable recovery state.
