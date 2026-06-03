@@ -1,50 +1,57 @@
-## RR-6 Wave 1 — Verification & Constitutional Ratification
+## RR-6 Wave 1A — Verification Alignment & Ratification
 
-Verification-only pass. No feature expansion, no schema/projection/emitter edits.
+Test-only fix to unblock RR-6 Wave 1 ratification. Aligns the inherited duplicate-id assertion with the already-ratified RR-5 projection convention (projections do not dedupe — that is a ledger-ingestion responsibility).
 
-### Section 1 — Verification execution (sequential)
+### Section 1 — Test corpus alignment
+
+File: `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts`
+
+Rename the failing test from `"idempotent on duplicate ids"` to `"duplicate event_ids flow through projection output (ledger-layer responsibility)"`.
+
+Replace the `expect(r1).toEqual(r2)` assertion with assertions that verify:
+- duplicate rows remain visible in `visibleRecoveryTimeline` (length grows with duplication, matching RR-5 precedent)
+- ordering remains deterministic across repeated runs (`r2 === r2'` byte-equal across two builds of the duplicated input)
+- replay remains stable (re-running the duplicated input twice produces identical output)
+- duplicate inputs do not alter `safeguardingHeld`
+- duplicate inputs do not alter the per-region `participation_status` selection in `activeRecoveryState`
+
+No other tests in this file are modified. No production code, projection, emitter, schema, replay-engine, or UI changes.
+
+### Section 2 — Verification re-run (sequential)
 
 1. `bunx tsc --noEmit`
-2. Full relational suite: `bunx vitest run src/lib/runtime/relational/__tests__ --reporter=dot`
-3. RR-5 + RR-6 + RR-8 suites together (narrative*, injury*, lifeContext* test files) in one vitest invocation
+2. `bunx vitest run src/lib/runtime/relational/__tests__ --reporter=dot`
+3. RR-5 + RR-6 + RR-8 suites together — one vitest invocation across `narrative*`, `injury*`, `lifeContext*` files plus visibility matrix
 4. `bash scripts/preflight.sh`
 
-Report exact totals: files executed, tests executed, pass/fail, failing names.
+Report exact files executed, tests executed, pass/fail totals, invariant totals, preflight totals.
 
-### Section 2 — Replay verification
+### Section 3 — Append §10 to `docs/asb/injury-recovery-audit.md`
 
-Confirm in test output:
-- shuffled-input rebuild stability
-- duplicate-id idempotency
-- revocation rebuild
-- safeguarding precedence (parent reroute + chip suppression)
-- demo↔production firewall (bidirectional)
-- parent supremacy (Wave 1D guard)
-- missingness preservation
-- three-way arbitration stability (RR-5 / RR-8 / RR-6 single chip per turn)
+Add `## 10. Final verification` section recording:
+- TypeScript result
+- Full relational suite result
+- RR-5 + RR-6 + RR-8 combined result
+- Preflight result
+- Replay guarantees confirmed: shuffled-input rebuild stability, revocation rebuild, safeguarding precedence, demo↔production firewall, parent supremacy (Wave 1D guard), missingness preservation, RTP authority restriction, three-way arbitration stability
+- Remaining risks (carryover from §8 + any newly observed)
 
-If any assertion fails: stop, identify invariant + file, propose minimal fix surface, do NOT implement without authorization.
+### Section 4 — Ratification (conditional on all green)
 
-### Section 3 — Audit verification
-
-Review `docs/asb/injury-recovery-audit.md` against:
-anti-diagnosis, anti-prescription, RTP authority restriction, safeguarding precedence, replay determinism, visibility isolation, manipulation review, emotional safety.
-
-Append `## 10. Final verification` section recording test counts + replay guarantees observed.
-
-### Section 4 — Ratification
-
-If all checks pass, append `RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED` to:
+Append `RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED` block to both:
 - `docs/asb/injury-recovery-audit.md`
 - `.lovable/plan.md`
 
-Include files created, files edited, test totals, replay guarantees, remaining risks, final verdict.
+Recording: files created, files edited, final test totals, replay guarantees, remaining risks, final verdict.
 
-If any failure occurs: stop, report, do not ratify.
+If any check fails: stop, report, do not ratify.
 
-### Files touched (verification-only)
+### Files touched
 
+- `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts` — rename + reshape one test only
 - `docs/asb/injury-recovery-audit.md` — append §10 + ratification stamp
 - `.lovable/plan.md` — append ratification entry
 
-No code, schema, projection, emitter, or UI edits unless required to fix a failing invariant (in which case: stop and report first).
+### Stop gate
+
+No production logic, schema, projection, emitter, replay-engine, UI, or RR-7/9/10 changes.
