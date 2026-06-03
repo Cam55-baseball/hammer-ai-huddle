@@ -1,47 +1,47 @@
-## Hammer Activation Phase 3 — Name Disambiguation Constitution
+## Hammer Activation Phase 4 — Today Surface Guidance Architecture
 
-Doctrine-only deliverable. No code, UI, schema, projections, emitters, or RR-7/9/10 activation.
+Architecture-only doctrine. No code, UI, prompts, schema, projections, emitters, or RR-7/9/10 activation.
 
 ### Files
 
-1. **Create** `docs/asb/hammer-name-disambiguation-constitution.md`
-2. **Append** Phase 3 entry to `.lovable/plan.md`
+1. **Create** `docs/asb/hammer-today-guidance-architecture.md`
+2. **Append** Phase 4 entry to `.lovable/plan.md`
 
-### Document Outline
+### Document Outline (§0–§11)
 
-`docs/asb/hammer-name-disambiguation-constitution.md` will follow the exact §0–§10 structure specified:
-
-- **§0 Objective** — resolve three-way collision (Hammer voice / Organism State / brand layer) into a single one-sentence answer to "What is Hammer?"
-- **§1 Canonical Definitions** — Hammer (singular guide; Recall/Explain/Guide; cites RR-5/6/8; never authors truth), Organism State (replay-derived readiness; silent; non-narrating), Brand Layer (marketing only; not runtime; not authority).
-- **§2 Naming Rules** — Allowed: `Hammer`, `Organism State`. Forbidden: `Hammer State`, `Hammer Readiness`, `Hammer Score`, `Hammer Intelligence`, `Hammer Brain`, `AI Hammer`, plural Hammer entities. Rule: **One Hammer only.**
-- **§3 Authority Separation** — Hammer may explain/summarize/guide/recall; may not diagnose/predict/score/authorize/override safeguarding/override parents/override replay truth. Organism State may expose readiness; may not speak/recommend/narrate.
-- **§4 Surface Vocabulary Matrix** — capability-level table for Today, Dashboard, Onboarding, Relational, Safety, Parent, Practice, Training, RTP, Bounce Back Bay — terms required vs. terms forbidden per surface.
-- **§5 Parent Interpretation Audit** — first-time-parent comprehension of Hammer / Organism State / Safety Center / Recovery guidance; list residual confusion vectors.
-- **§6 Athlete Interpretation Audit** — first-time-athlete comprehension of Hammer / Organism State / readiness / guidance / memory continuity; list residual confusion vectors.
-- **§7 Readiness Impact** — qualitative impact on onboarding completion, athlete clarity, parent trust, navigation independence, trial conversion.
-- **§8 Success Criteria** — one Hammer, one Organism State, all other references subordinate, athlete + parent confusion materially reduced.
-- **§9 Final Verdict** — Yes, C1 remains the highest-leverage activation capability; rationale grounded in Phase 2 dependency order (C1 → C2/C3 → C6 → C5; C7 → C4).
-- **§10 Stop Gate Confirmation** — no code/UI/prompts/schemas/projections/emitters/RR-7/9/10; single doctrine file.
+- **§0 Objective** — Restrict scope to *what guidance responsibility Hammer owns on Today* (not what it knows or remembers).
+- **§1 Today Surface Authority Model** — Roles for Hammer (guide / explainer / navigator), Organism State (silent readiness signal cited by Hammer), Today Surface (operational command center, not a chat or memory screen). Authority boundaries inherited from Phase 3 constitution.
+- **§2 Four Guidance Slots** — Entry, Context, Next-Action (strictly one), Exit. For each: purpose, inputs (replay-derived only), outputs (interpretive only), authority limits, silence conditions (safeguarding / RTP / minor-private / commercial zones from Phase 1 §4).
+- **§3 Athlete Arrival States (A1–A7)** — First login, first week, consistent training, missed activity, recovery phase, life-context pressure (RR-8), narrative setback (RR-5). Per state: what Hammer knows / explains / recommends / must-not-say.
+- **§4 Navigation Architecture** — Lawful handoffs to Relational, Practice, Training, Safety, RTP, Bounce Back Bay, Parent Invite. Per handoff: rationale, required explanation, prohibited explanation. Hammer routes, never authors truth.
+- **§5 Parent Interpretation Test** — First-time parent on Today: understandable surfaces, no-explanation-needed surfaces, Hammer-clarification surfaces, residual confusion risks.
+- **§6 Failure-State Analysis** — Five athlete confusion scenarios with split responsibility across Hammer / Organism State / Human.
+- **§7 Readiness Scoring (0–10)** — Athlete clarity, navigation independence, trust, retention support, parent understanding. Each score justified.
+- **§8 Activation Prerequisites** — Already Complete / Must Complete First / Future Enhancements.
+- **§9 Launch Impact** — Qualitative impact on conversion, onboarding completion, retention, parent trust.
+- **§10 Final Verdict** — Yes, C2 implementation materially improves launch readiness; rationale grounded in Phase 2 dependency chain (C1 → C2 unlocks C6 → C5).
+- **§11 Stop Gate Confirmation** — Single architecture document; no code/UI/prompts/schema/projections/emitters/RR-7/9/10.
 
 ### Plan log entry
 
-Append a short Phase 3 entry to `.lovable/plan.md` referencing the new doctrine file and reaffirming the stop gate.
+Append Phase 4 entry to `.lovable/plan.md` referencing the new architecture file and reaffirming the stop gate.
 
 ### Stop gate
 
-No production changes of any kind. Doctrine document + plan log entry only.
+Doctrine document + plan log entry only. No production changes of any kind.
 
 ---
 
-## Phase 3 — Completed
+## Phase 4 — Completed
 
-- Created `docs/asb/hammer-name-disambiguation-constitution.md` (§0–§10).
-- Canonical one-sentence answer to "What is Hammer?" established.
-- Allowed vocabulary: **Hammer**, **Organism State**, **Hammers Modality** (brand only).
-- Forbidden vocabulary enumerated: Hammer State, Hammer Readiness, Hammer Score, Hammer Intelligence, Hammer Brain, AI Hammer, multiple-Hammer framings.
-- Rule sealed: **One Hammer only.**
-- Authority separation codified: Hammer interprets/guides/recalls; Organism State is silent and replay-derived.
-- Surface vocabulary matrix issued for Today, Dashboard, Onboarding, Relational, Safety, Parent, Practice, Training, RTP, Bounce Back Bay.
-- Parent + athlete interpretation audits completed; residual confusion vectors listed.
-- Verdict: C1 remains the highest-leverage activation capability.
+- Created `docs/asb/hammer-today-guidance-architecture.md` (§0–§11).
+- Today authority model fixed: Hammer = guide/explainer/navigator; Organism State = silent readiness signal cited by Hammer; Today = operational command center (not chat, not memory).
+- Four guidance slots architected: **Entry**, **Context**, **Next-Action** (strictly one), **Exit** — each with purpose / inputs / outputs / authority limits / silence conditions. Exit Guidance is never silent.
+- Athlete arrival states A1–A7 mapped (first login, first week, consistent training, missed activity, recovery, life-context pressure, narrative setback) with what Hammer knows / explains / recommends / must-not-say per state.
+- Navigation handoff table ratified: Relational, Practice, Training, Safety, RTP, Bounce Back Bay, Parent Invite — each with required vs. prohibited explanation. Hammer routes; never authors truth on destination.
+- Parent interpretation test documented; residual confusion risks listed.
+- Failure-state responsibility split across Hammer / Organism State / Human for the five canonical confusion scenarios.
+- Current Today readiness scored 2–3/10 across all five dimensions; impact of C2 implementation rated High on conversion, onboarding completion, retention.
+- Activation prerequisites enumerated: C1 implementation, Organism State chip rename, silence-zone primitive, lineage-one-tap surface, handoff table ratification.
+- Verdict: Yes — C2 implementation materially improves launch readiness; constitutional cost is zero.
 - Stop gate held: no code, UI, prompts, schema, projections, emitters, replay-engine changes, or RR-7/9/10 activation.
