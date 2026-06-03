@@ -30,3 +30,18 @@ Append a short Phase 3 entry to `.lovable/plan.md` referencing the new doctrine 
 ### Stop gate
 
 No production changes of any kind. Doctrine document + plan log entry only.
+
+---
+
+## Phase 3 — Completed
+
+- Created `docs/asb/hammer-name-disambiguation-constitution.md` (§0–§10).
+- Canonical one-sentence answer to "What is Hammer?" established.
+- Allowed vocabulary: **Hammer**, **Organism State**, **Hammers Modality** (brand only).
+- Forbidden vocabulary enumerated: Hammer State, Hammer Readiness, Hammer Score, Hammer Intelligence, Hammer Brain, AI Hammer, multiple-Hammer framings.
+- Rule sealed: **One Hammer only.**
+- Authority separation codified: Hammer interprets/guides/recalls; Organism State is silent and replay-derived.
+- Surface vocabulary matrix issued for Today, Dashboard, Onboarding, Relational, Safety, Parent, Practice, Training, RTP, Bounce Back Bay.
+- Parent + athlete interpretation audits completed; residual confusion vectors listed.
+- Verdict: C1 remains the highest-leverage activation capability.
+- Stop gate held: no code, UI, prompts, schema, projections, emitters, replay-engine changes, or RR-7/9/10 activation.
