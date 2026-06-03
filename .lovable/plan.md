@@ -55,3 +55,21 @@ If any check fails: stop, report, do not ratify.
 ### Stop gate
 
 No production logic, schema, projection, emitter, replay-engine, UI, or RR-7/9/10 changes.
+
+---
+
+# RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED
+
+**Ratified:** 2026-06-03 (Wave 1 + Wave 1A verification alignment).
+
+**Files created:** `src/lib/runtime/relational/injurySchemas.ts`, `injuryEmitters.ts`, `src/lib/runtime/projections/injuryRecoveryState.ts`, 5 RR-6 test files under `src/lib/runtime/relational/__tests__/`, `docs/asb/injury-recovery-audit.md`.
+
+**Files edited:** `src/hooks/useRelationalProjections.ts`, `src/lib/relational/copy.ts`, `src/lib/runtime/relational/hammerMemory.ts`, `src/components/relational/HammerConversationPanel.tsx`, `src/components/relational/InjuryLifecycleStrip.tsx`. Wave 1A: `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts` (test-only rename + reshape to RR-5 ledger-layer convention).
+
+**Final test totals:** tsc 0 errors · full relational suite 24/24 files 183/183 tests · RR-5+RR-6+RR-8 combined 12/12 files 77/77 tests · preflight 19/19 invariants + 4/4 files 32/32 tests.
+
+**Replay guarantees:** shuffled-input stability · revocation rebuild · safeguarding precedence · demo↔production firewall · parent supremacy · missingness preservation · RTP authority restriction · three-way arbitration stability · ledger-layer duplicate convention.
+
+**Remaining risks:** `safeguarding_only` realized via `parent + safeguarding_category=true` (Megaphase 151 amendment required for a distinct scope); emitter denylist scan list must be extended for any new free-text fields.
+
+**Final verdict:** RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED. Observational, replay-safe, survivability-bound. No diagnosis, no prescription, no autonomous RTP, no commercial exposure. Stop-gate held: no RR-7/9/10, no schema rewrites, no replay-engine changes, no mutable recovery state.
