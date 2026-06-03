@@ -45,11 +45,37 @@ describe("injuryRecoveryState — RR-6 Wave 1 replay invariants", () => {
     expect(r1).toEqual(r2);
   });
 
-  it("idempotent on duplicate ids", () => {
+  it("duplicate event_ids flow through projection output (ledger-layer responsibility)", () => {
+    // Per RR-5 convention: prepareRows does not dedupe event_ids — that is a
+    // ledger-ingestion responsibility (canonical emitAsbEvent). Projections
+    // replay canonical antecedents exactly as received. This test verifies
+    // duplicates flow through deterministically without altering safeguarding
+    // precedence or participation-status selection.
     const a = obs("ir_dup_a", INJURY_TOPICS.reported, "2026-05-05T10:00:00Z");
     const r1 = injuryRecoveryState([a], "self").state;
     const r2 = injuryRecoveryState([a, a], "self").state;
-    expect(r1).toEqual(r2);
+    const r2b = injuryRecoveryState([a, a], "self").state;
+
+    // Duplicate rows remain visible.
+    expect(r2.visibleRecoveryTimeline.length).toBe(
+      r1.visibleRecoveryTimeline.length + 1,
+    );
+
+    // Replay determinism: identical inputs produce identical output.
+    expect(r2).toEqual(r2b);
+
+    // Ordering remains deterministic — both timeline entries reference the
+    // same event_id under canonical (occurred_at, event_id) sort.
+    expect(r2.visibleRecoveryTimeline.every((e) => e.event_id === "ir_dup_a"))
+      .toBe(true);
+
+    // Safeguarding precedence unaffected by duplication.
+    expect(r2.safeguardingHeld).toBe(r1.safeguardingHeld);
+
+    // Participation-state selection unaffected by duplication.
+    expect(r2.activeRecoveryState["shoulder"]?.participation_status).toBe(
+      r1.activeRecoveryState["shoulder"]?.participation_status,
+    );
   });
 
   it("revocation removes downstream visibility on rebuild (invariant 10)", () => {
