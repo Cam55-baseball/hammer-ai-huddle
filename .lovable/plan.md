@@ -29,3 +29,19 @@ Append Phase 4 entry to `.lovable/plan.md` referencing the new architecture file
 ### Stop gate
 
 Doctrine document + plan log entry only. No production changes of any kind.
+
+---
+
+## Phase 4 — Completed
+
+- Created `docs/asb/hammer-today-guidance-architecture.md` (§0–§11).
+- Today authority model fixed: Hammer = guide/explainer/navigator; Organism State = silent readiness signal cited by Hammer; Today = operational command center (not chat, not memory).
+- Four guidance slots architected: **Entry**, **Context**, **Next-Action** (strictly one), **Exit** — each with purpose / inputs / outputs / authority limits / silence conditions. Exit Guidance is never silent.
+- Athlete arrival states A1–A7 mapped (first login, first week, consistent training, missed activity, recovery, life-context pressure, narrative setback) with what Hammer knows / explains / recommends / must-not-say per state.
+- Navigation handoff table ratified: Relational, Practice, Training, Safety, RTP, Bounce Back Bay, Parent Invite — each with required vs. prohibited explanation. Hammer routes; never authors truth on destination.
+- Parent interpretation test documented; residual confusion risks listed.
+- Failure-state responsibility split across Hammer / Organism State / Human for the five canonical confusion scenarios.
+- Current Today readiness scored 2–3/10 across all five dimensions; impact of C2 implementation rated High on conversion, onboarding completion, retention.
+- Activation prerequisites enumerated: C1 implementation, Organism State chip rename, silence-zone primitive, lineage-one-tap surface, handoff table ratification.
+- Verdict: Yes — C2 implementation materially improves launch readiness; constitutional cost is zero.
+- Stop gate held: no code, UI, prompts, schema, projections, emitters, replay-engine changes, or RR-7/9/10 activation.
