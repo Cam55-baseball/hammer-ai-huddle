@@ -91,3 +91,12 @@ Restates: no production code, no RR-7/9/10 activation, no schema/projection/emit
 
 ## Out of scope
 Code, prompts, schema, projections, emitters, UI, RR-7/9/10 activation, any new primitives.
+
+---
+
+# Hammer Activation Phase 2 — Critical Capability Map
+
+**Deliverable:** `docs/asb/hammer-critical-capability-map.md` (created).
+**Scope:** Architecture-only; Critical tier (C1–C7) inventoried with objective / athlete value / parent value / dependencies / coverage / readiness score; surface matrix; adoption impact; dependency graph; three launch gates (A internal, B closed beta, C public = full Critical tier).
+**Verdict:** Readiness 3/10 — **Not Ready**. Recommended first build: **C1 Name Disambiguation** (universal prerequisite).
+**Stop gate held:** no code, schema, projections, emitters, replay-engine, UI, prompts, primitives, or RR-7/9/10 activation.
