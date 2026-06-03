@@ -1,75 +1,80 @@
-## RR-6 Wave 1A — Verification Alignment & Ratification
+# HAMMER PHASE 1 — Guidance Orchestration Audit (Plan)
 
-Test-only fix to unblock RR-6 Wave 1 ratification. Aligns the inherited duplicate-id assertion with the already-ratified RR-5 projection convention (projections do not dedupe — that is a ledger-ingestion responsibility).
+Audit-only. No code, no schema, no RR-7/9/10 activation, no new primitives.
 
-### Section 1 — Test corpus alignment
+## Deliverable
 
-File: `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts`
+Single new file: `docs/asb/hammer-guidance-orchestration-audit.md`.
 
-Rename the failing test from `"idempotent on duplicate ids"` to `"duplicate event_ids flow through projection output (ledger-layer responsibility)"`.
+Nothing else is touched. No tests run, no projections edited, no copy edited.
 
-Replace the `expect(r1).toEqual(r2)` assertion with assertions that verify:
-- duplicate rows remain visible in `visibleRecoveryTimeline` (length grows with duplication, matching RR-5 precedent)
-- ordering remains deterministic across repeated runs (`r2 === r2'` byte-equal across two builds of the duplicated input)
-- replay remains stable (re-running the duplicated input twice produces identical output)
-- duplicate inputs do not alter `safeguardingHeld`
-- duplicate inputs do not alter the per-region `participation_status` selection in `activeRecoveryState`
+## Method
 
-No other tests in this file are modified. No production code, projection, emitter, schema, replay-engine, or UI changes.
+Read-only walkthrough of the surfaces already in the repo:
 
-### Section 2 — Verification re-run (sequential)
+- Conversational Hammer: `src/components/relational/HammerConversationPanel.tsx`, `src/lib/runtime/relational/hammerMemory.ts`, `src/lib/relational/copy.ts` (HAMMER_VOICE, NARRATIVE_VOICE, LIFE_CONTEXT_VOICE, INJURY_RECOVERY_VOICE, ONBOARDING_VOICE, PARENT_VOICE, RECRUITING_VOICE, SAFETY_VOICE).
+- Hammer State (biomarker): `src/components/hammer/HammerStateBadge.tsx`, `ReadinessChip.tsx`, `EliteModePanel.tsx`, `src/hooks/useHammerState.ts`, `src/hooks/useNextAction.ts`, `src/hooks/useCoachHammerNextStep.ts`.
+- Pages: `Index.tsx`, `Today.tsx`, `Relational.tsx`, `SafetyCenter.tsx`, `RelationshipSettings.tsx`, `ParentInvite.tsx`, `AcceptParentInvite.tsx`, `AthleteOnboarding.tsx`, `OnboardingFlow.tsx`, `RTP.tsx`, `BounceBackBay.tsx`, `Dashboard.tsx`, `PracticeHub.tsx`, `TrainingBlock.tsx`, `CoachDashboard.tsx`.
+- Adjacent: `AthleteOnboardingShell.tsx`, `TodayCommandBar.tsx`, `AthleteJourneyMap.tsx`, `SlumpReloadFlow.tsx`, `InjuryLifecycleStrip.tsx`, `RecruitingRoadmap.tsx`, `DevelopmentalStageChip.tsx`, `ParentTrustCard.tsx`.
 
-1. `bunx tsc --noEmit`
-2. `bunx vitest run src/lib/runtime/relational/__tests__ --reporter=dot`
-3. RR-5 + RR-6 + RR-8 suites together — one vitest invocation across `narrative*`, `injury*`, `lifeContext*` files plus visibility matrix
-4. `bash scripts/preflight.sh`
+For each surface: extract what Hammer knows (projections wired), what it displays, what it can explain (templated copy / arbitration callbacks), what it cannot explain (free-form generation forbidden, denylists, no recall outside cited events).
 
-Report exact files executed, tests executed, pass/fail totals, invariant totals, preflight totals.
+## Document outline
 
-### Section 3 — Append §10 to `docs/asb/injury-recovery-audit.md`
+### §0 Scope & method
+Restate audit-only constraint; list the three distinct "Hammer" concepts found in the codebase and flag the naming collision as an upstream confusion source:
+1. **Conversational Hammer** — `HammerConversationPanel` on `/relational`. Replay-derived memory + single-callback arbitration across RR-5/6/8.
+2. **Hammer State** — biomarker overall_state (`prime`/`ready`/`caution`/`recover`) on `/today` via `HammerStateBadge`, `EliteModePanel`, `useNextAction`.
+3. **"Hammer" marketing label** — landing page (`Index.tsx`) uses "Hammer Motion Capture" / "Hammer Powered Results" with no in-product referent.
 
-Add `## 10. Final verification` section recording:
-- TypeScript result
-- Full relational suite result
-- RR-5 + RR-6 + RR-8 combined result
-- Preflight result
-- Replay guarantees confirmed: shuffled-input rebuild stability, revocation rebuild, safeguarding precedence, demo↔production firewall, parent supremacy (Wave 1D guard), missingness preservation, RTP authority restriction, three-way arbitration stability
-- Remaining risks (carryover from §8 + any newly observed)
+### §1 Surface inventory
+Table per surface (knows / displays / can explain / cannot explain / decision supported):
+- HammerConversationPanel (/relational)
+- Onboarding (`AthleteOnboarding`, `OnboardingFlow`, `AthleteOnboardingShell`, `ProgressiveDisclosureStepper`, `LIFE_CONTEXT_CHECKIN`)
+- Relational hub (`Relational.tsx`, `RelationalDemo.tsx`)
+- Parent-facing (`ParentTrustCard`, `ParentInvite`, `AcceptParentInvite`, `RelationshipSettings`)
+- Safety (`SafetyCenter`, classifier-fed notifications)
+- Athlete dashboard (`Today`, `Dashboard`, `TodayCommandBar`, `EliteModePanel`)
+- Training guidance (`PracticeHub`, `TrainingBlock`, `PrescriptionCard`)
+- Roadmap (`AthleteJourneyMap`)
+- Recruiting (`RecruitingRoadmap`)
+- Slump recovery (`SlumpReloadFlow`)
+- Injury continuity (`InjuryLifecycleStrip`, `RTP`, `BounceBackBay`)
+- Life-context (LIFE_CONTEXT_VOICE chip in HammerConversationPanel; no standalone surface)
+- Narrative continuity (NARRATIVE_VOICE chip; no standalone surface)
 
-### Section 4 — Ratification (conditional on all green)
+### §2 Athlete journey (Day 0 → first milestone)
+Step table: Day 0 / onboarding / first training week / first setback / first parent interaction / first recovery event / first improvement milestone. Each row: what Hammer says, what Hammer knows, what Hammer recommends, residual confusion. Call out moments where Hammer is silent (sign-up, dashboard, training, parent invite acceptance, RTP, injury logging).
 
-Append `RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED` block to both:
-- `docs/asb/injury-recovery-audit.md`
-- `.lovable/plan.md`
+### §3 Parent trust journey
+Onboarding → invite → safety center → progress visibility → recovery visibility. Map where trust is created (PARENT_VOICE copy, scope firewall, one-tap removal), unclear (no Hammer narrator anywhere in parent UX; Safety Center is event list with no Hammer voice), Hammer present (only in relational hub, parent rarely lands there), Hammer absent (everywhere else parents go).
 
-Recording: files created, files edited, final test totals, replay guarantees, remaining risks, final verdict.
+### §4 Navigation dependency audit
+Workflows that today require platform knowledge (no Hammer guidance): finding `/relational`, `/safety`, `/relationships`, `/rtp`, `/bounce-back-bay`, `/practice`, `/digest`, `/forecast`, parent invite acceptance, demo vs production scope, switching between `/today` (biomarker Hammer) and `/relational` (conversational Hammer). Severity + athlete/parent confusion risk + current coverage + missing coverage per row.
 
-If any check fails: stop, report, do not ratify.
+### §5 Readiness scores (0–10 with justification)
+- Guidance Readiness
+- Parent Simplicity
+- Athlete Simplicity
+- Navigation Independence
+- Trust Formation
+- Retention Support
 
-### Files touched
+Justification cites specific surfaces / gaps from §1–§4.
 
-- `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts` — rename + reshape one test only
-- `docs/asb/injury-recovery-audit.md` — append §10 + ratification stamp
-- `.lovable/plan.md` — append ratification entry
+### §6 Missing capabilities (Critical / Important / Future)
+Capability-level only (no implementation):
+- **Critical**: cross-surface Hammer presence (today + onboarding + parent + safety), Hammer-led navigation handoffs, name disambiguation, parent-facing Hammer voice, first-setback explainer, onboarding narrator.
+- **Important**: in-context "what is this surface" tooltips, Hammer summary on /today, Hammer-led injury check-in coach, parent digest from Hammer voice.
+- **Future**: cross-device continuity, multi-language Hammer voice, voice/audio modality.
 
-### Stop gate
+### §7 Final verdict
+**Hammer Partially Ready** (anticipated). With:
+- biggest adoption blocker: Hammer lives only on `/relational`; new athletes never discover it.
+- biggest parent blocker: zero Hammer voice in parent UX; `ParentTrustCard` and `SafetyCenter` read as data lists.
+- biggest athlete blocker: name collision between conversational Hammer and Hammer State; no narrator on `/today`.
+- fastest path to perceived value: surface conversational Hammer on `/today` and during onboarding, with explicit handoffs into `/relational`, `/safety`, `/rtp`, `/practice`.
 
-No production logic, schema, projection, emitter, replay-engine, UI, or RR-7/9/10 changes.
+## Stop gate
 
----
-
-# RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED
-
-**Ratified:** 2026-06-03 (Wave 1 + Wave 1A verification alignment).
-
-**Files created:** `src/lib/runtime/relational/injurySchemas.ts`, `injuryEmitters.ts`, `src/lib/runtime/projections/injuryRecoveryState.ts`, 5 RR-6 test files under `src/lib/runtime/relational/__tests__/`, `docs/asb/injury-recovery-audit.md`.
-
-**Files edited:** `src/hooks/useRelationalProjections.ts`, `src/lib/relational/copy.ts`, `src/lib/runtime/relational/hammerMemory.ts`, `src/components/relational/HammerConversationPanel.tsx`, `src/components/relational/InjuryLifecycleStrip.tsx`. Wave 1A: `src/lib/runtime/relational/__tests__/injuryRecoveryState.replay.test.ts` (test-only rename + reshape to RR-5 ledger-layer convention).
-
-**Final test totals:** tsc 0 errors · full relational suite 24/24 files 183/183 tests · RR-5+RR-6+RR-8 combined 12/12 files 77/77 tests · preflight 19/19 invariants + 4/4 files 32/32 tests.
-
-**Replay guarantees:** shuffled-input stability · revocation rebuild · safeguarding precedence · demo↔production firewall · parent supremacy · missingness preservation · RTP authority restriction · three-way arbitration stability · ledger-layer duplicate convention.
-
-**Remaining risks:** `safeguarding_only` realized via `parent + safeguarding_category=true` (Megaphase 151 amendment required for a distinct scope); emitter denylist scan list must be extended for any new free-text fields.
-
-**Final verdict:** RR-6 WAVE 1 — CONSTITUTIONALLY RATIFIED. Observational, replay-safe, survivability-bound. No diagnosis, no prescription, no autonomous RTP, no commercial exposure. Stop-gate held: no RR-7/9/10, no schema rewrites, no replay-engine changes, no mutable recovery state.
+No production code, projection, emitter, schema, replay-engine, or UI changes. No RR-7/9/10 activation. Only the new audit markdown file is created.
