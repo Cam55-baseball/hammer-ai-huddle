@@ -1,102 +1,47 @@
-# Hammer Activation Phase 2 — Critical Capability Mapping
+## Hammer Activation Phase 3 — Name Disambiguation Constitution
 
-## Deliverable
-- **Create:** `docs/asb/hammer-critical-capability-map.md`
-- **Edit:** `.lovable/plan.md` (append Phase 2 entry)
+Doctrine-only deliverable. No code, UI, schema, projections, emitters, or RR-7/9/10 activation.
 
-Single architecture document. No code, schema, projections, emitters, prompts, or UI. No RR-7/9/10 activation. Builds on Phase 1 audit + Activation Architecture, subordinate to RR-5/6/8 sealed doctrine and Eternal Laws.
+### Files
 
-## Document Structure
+1. **Create** `docs/asb/hammer-name-disambiguation-constitution.md`
+2. **Append** Phase 3 entry to `.lovable/plan.md`
 
-### §0 Objective
-- Define minimum Hammer capability set for: athlete clarity, parent trust, onboarding simplicity, navigation independence.
-- Gate question verbatim: *"If a first-time athlete and parent enter the platform today, can Hammer successfully guide them without requiring platform knowledge?"*
-- Scope: capability inventory only — no implementation, no file/component references except as dependencies.
+### Document Outline
 
-### §1 Critical Capability Inventory (C1–C7)
-For each capability, a uniform block:
-- **Objective** — one sentence.
-- **Athlete value** — what clarity it unlocks.
-- **Parent value** — what trust it unlocks.
-- **Existing dependencies** — what sealed primitives / surfaces / RR constitutions it relies on.
-- **Current coverage** — what exists today (from Phase 1 audit).
-- **Missing coverage** — capability gap.
-- **Readiness score (0–10)** — single number.
+`docs/asb/hammer-name-disambiguation-constitution.md` will follow the exact §0–§10 structure specified:
 
-Capabilities:
-- **C1 — Name Disambiguation** (Organism State vs. Hammer voice vs. brand label).
-- **C2 — Hammer Presence on Today** (Entry/Context/Next-action/Exit slots over Organism State + readiness).
-- **C3 — Hammer Presence During Onboarding** (athlete + parent invite paths).
-- **C4 — Parent-Facing Hammer Voice** (trust card, invite landing, digest scope only).
-- **C5 — First Setback Guidance** (Hammer's first RR-6/RR-5-cited response when readiness drops or check-in flags pain).
-- **C6 — Navigation Handoff Capability** (Hammer routing user to /safety, /practice, /rtp, /bounce-back-bay without authoring action).
-- **C7 — RTP / Safeguarding Silence Enforcement** (silence zones from Phase 1 §4; explicit non-speech under arbitration / RTP / minor-private threads).
+- **§0 Objective** — resolve three-way collision (Hammer voice / Organism State / brand layer) into a single one-sentence answer to "What is Hammer?"
+- **§1 Canonical Definitions** — Hammer (singular guide; Recall/Explain/Guide; cites RR-5/6/8; never authors truth), Organism State (replay-derived readiness; silent; non-narrating), Brand Layer (marketing only; not runtime; not authority).
+- **§2 Naming Rules** — Allowed: `Hammer`, `Organism State`. Forbidden: `Hammer State`, `Hammer Readiness`, `Hammer Score`, `Hammer Intelligence`, `Hammer Brain`, `AI Hammer`, plural Hammer entities. Rule: **One Hammer only.**
+- **§3 Authority Separation** — Hammer may explain/summarize/guide/recall; may not diagnose/predict/score/authorize/override safeguarding/override parents/override replay truth. Organism State may expose readiness; may not speak/recommend/narrate.
+- **§4 Surface Vocabulary Matrix** — capability-level table for Today, Dashboard, Onboarding, Relational, Safety, Parent, Practice, Training, RTP, Bounce Back Bay — terms required vs. terms forbidden per surface.
+- **§5 Parent Interpretation Audit** — first-time-parent comprehension of Hammer / Organism State / Safety Center / Recovery guidance; list residual confusion vectors.
+- **§6 Athlete Interpretation Audit** — first-time-athlete comprehension of Hammer / Organism State / readiness / guidance / memory continuity; list residual confusion vectors.
+- **§7 Readiness Impact** — qualitative impact on onboarding completion, athlete clarity, parent trust, navigation independence, trial conversion.
+- **§8 Success Criteria** — one Hammer, one Organism State, all other references subordinate, athlete + parent confusion materially reduced.
+- **§9 Final Verdict** — Yes, C1 remains the highest-leverage activation capability; rationale grounded in Phase 2 dependency order (C1 → C2/C3 → C6 → C5; C7 → C4).
+- **§10 Stop Gate Confirmation** — no code/UI/prompts/schemas/projections/emitters/RR-7/9/10; single doctrine file.
 
-### §2 Surface Dependency Matrix
-Table, one row per surface — Today, Dashboard, Onboarding, Relational, Safety, Parent, Practice, Training, RTP, Bounce Back Bay.
-Columns:
-- Hammer present?
-- Hammer absent?
-- Knows enough?
-- Can explain enough?
-- Can guide enough?
-- Status: **GREEN / YELLOW / RED**
+### Plan log entry
 
-### §3 Adoption Impact Analysis
-For each C1–C7, qualitative impact rating (High / Medium / Low) on:
-- trial conversion
-- parent trust
-- athlete retention
-- onboarding completion
-- navigation independence
+Append a short Phase 3 entry to `.lovable/plan.md` referencing the new doctrine file and reaffirming the stop gate.
 
-Brief rationale per cell. Capability-level only.
+### Stop gate
 
-### §4 Capability Dependency Order
-Strict precedence: which capability must exist before another becomes useful. ASCII dependency graph:
-
-```text
-C1 (Name Disambiguation)
- └─► C2 (Today Presence) ──┐
- └─► C3 (Onboarding) ──────┤
-                           ├─► C6 (Navigation Handoff) ─► C5 (First Setback)
- C7 (Silence Enforcement) ─┘                                   │
-                                                               ▼
-                                                          C4 (Parent Voice)
-```
-
-Explanation of each edge: why the predecessor is structurally required.
-
-### §5 Readiness Gate
-Three launch gates with exact capability requirements:
-- **Launch Gate A — Internal rehearsal only:** C1 + C7.
-- **Launch Gate B — Athlete-facing closed beta:** C1 + C2 + C3 + C6 + C7.
-- **Launch Gate C — Public launch (athlete + parent):** C1 + C2 + C3 + C4 + C5 + C6 + C7.
-
-State the minimum subset required before public launch becomes rational (= Gate C).
-
-### §6 Final Recommendation
-Single capability — no ties. Recommendation: **C1 — Name Disambiguation**, justified by:
-- It is the only universal prerequisite (blocks C2, C3, C4, C6).
-- Highest leverage for conversion + confusion reduction at lowest scope.
-- Unlocks coherent voice required by every downstream capability.
-
-### §7 Verdict
-- Readiness score: **3 / 10**
-- Current launch readiness: **Not Ready**
-- One-paragraph explanation tying the score to Gate C unmet requirements and the C1 prerequisite.
-
-### §8 Stop Gate Confirmation
-Restates: no production code, no RR-7/9/10 activation, no schema/projection/emitter/UI/prompt changes; single output file.
-
-## Out of scope
-Code, prompts, schema, projections, emitters, UI, RR-7/9/10 activation, any new primitives.
+No production changes of any kind. Doctrine document + plan log entry only.
 
 ---
 
-# Hammer Activation Phase 2 — Critical Capability Map
+## Phase 3 — Completed
 
-**Deliverable:** `docs/asb/hammer-critical-capability-map.md` (created).
-**Scope:** Architecture-only; Critical tier (C1–C7) inventoried with objective / athlete value / parent value / dependencies / coverage / readiness score; surface matrix; adoption impact; dependency graph; three launch gates (A internal, B closed beta, C public = full Critical tier).
-**Verdict:** Readiness 3/10 — **Not Ready**. Recommended first build: **C1 Name Disambiguation** (universal prerequisite).
-**Stop gate held:** no code, schema, projections, emitters, replay-engine, UI, prompts, primitives, or RR-7/9/10 activation.
+- Created `docs/asb/hammer-name-disambiguation-constitution.md` (§0–§10).
+- Canonical one-sentence answer to "What is Hammer?" established.
+- Allowed vocabulary: **Hammer**, **Organism State**, **Hammers Modality** (brand only).
+- Forbidden vocabulary enumerated: Hammer State, Hammer Readiness, Hammer Score, Hammer Intelligence, Hammer Brain, AI Hammer, multiple-Hammer framings.
+- Rule sealed: **One Hammer only.**
+- Authority separation codified: Hammer interprets/guides/recalls; Organism State is silent and replay-derived.
+- Surface vocabulary matrix issued for Today, Dashboard, Onboarding, Relational, Safety, Parent, Practice, Training, RTP, Bounce Back Bay.
+- Parent + athlete interpretation audits completed; residual confusion vectors listed.
+- Verdict: C1 remains the highest-leverage activation capability.
+- Stop gate held: no code, UI, prompts, schema, projections, emitters, replay-engine changes, or RR-7/9/10 activation.
