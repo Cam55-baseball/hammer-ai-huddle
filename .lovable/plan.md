@@ -1,77 +1,102 @@
-# Hammer Activation Phase 1 — Cross-Surface Guidance Architecture (Plan)
+# Hammer Activation Phase 2 — Critical Capability Mapping
 
 ## Deliverable
-Single new file: `docs/asb/hammer-activation-architecture.md`. No code, no schema, no projections, no emitters, no RR-7/9/10 activation. Builds directly on the Phase 1 audit (`docs/asb/hammer-guidance-orchestration-audit.md`) and the sealed RR-5 / RR-6 / RR-8 constitutions.
+- **Create:** `docs/asb/hammer-critical-capability-map.md`
+- **Edit:** `.lovable/plan.md` (append Phase 2 entry)
+
+Single architecture document. No code, schema, projections, emitters, prompts, or UI. No RR-7/9/10 activation. Builds on Phase 1 audit + Activation Architecture, subordinate to RR-5/6/8 sealed doctrine and Eternal Laws.
 
 ## Document Structure
 
-### §0 Scope & Subordination
-- Architecture-only; no production changes.
-- Subordinate to Eternal Laws, RR-5/6/8 sealed doctrine, RR-7/9/10 sealed-but-deferred, Presentation Mode Lock release, and the relational namespace firewall (demo↔production).
-- Defines capabilities, not implementations.
+### §0 Objective
+- Define minimum Hammer capability set for: athlete clarity, parent trust, onboarding simplicity, navigation independence.
+- Gate question verbatim: *"If a first-time athlete and parent enter the platform today, can Hammer successfully guide them without requiring platform knowledge?"*
+- Scope: capability inventory only — no implementation, no file/component references except as dependencies.
 
-### §1 Hammer Role Definition (resolves naming collision)
-- **Hammer State** → rename in doctrine to *Organism State* (biomarker chip on `/today`). Stays a replay-derived readiness signal, never speaks.
-- **Conversational Hammer** → rename in doctrine to *Hammer* (the singular user-facing voice). Owns memory continuity across RR-5/6/8.
-- **Hammer Guide** → not a separate entity; defined as the *navigation + explanation modality* of the same Hammer voice. One voice, three modalities: Recall, Explain, Guide.
-- Marketing "Hammer Motion Capture" label scoped to brand layer only; not a runtime referent.
-- Unification verdict: **one Hammer, three modalities; one biomarker (Organism State) it can cite but does not author.**
+### §1 Critical Capability Inventory (C1–C7)
+For each capability, a uniform block:
+- **Objective** — one sentence.
+- **Athlete value** — what clarity it unlocks.
+- **Parent value** — what trust it unlocks.
+- **Existing dependencies** — what sealed primitives / surfaces / RR constitutions it relies on.
+- **Current coverage** — what exists today (from Phase 1 audit).
+- **Missing coverage** — capability gap.
+- **Readiness score (0–10)** — single number.
 
-### §2 Hammer Surface Map
-Table per surface — columns: *knows / explains / recommends / never does / modality (Recall|Explain|Guide|Silent)*.
+Capabilities:
+- **C1 — Name Disambiguation** (Organism State vs. Hammer voice vs. brand label).
+- **C2 — Hammer Presence on Today** (Entry/Context/Next-action/Exit slots over Organism State + readiness).
+- **C3 — Hammer Presence During Onboarding** (athlete + parent invite paths).
+- **C4 — Parent-Facing Hammer Voice** (trust card, invite landing, digest scope only).
+- **C5 — First Setback Guidance** (Hammer's first RR-6/RR-5-cited response when readiness drops or check-in flags pain).
+- **C6 — Navigation Handoff Capability** (Hammer routing user to /safety, /practice, /rtp, /bounce-back-bay without authoring action).
+- **C7 — RTP / Safeguarding Silence Enforcement** (silence zones from Phase 1 §4; explicit non-speech under arbitration / RTP / minor-private threads).
 
-Surfaces covered: Today, Dashboard, Onboarding, Relational, Safety Center, Parent Invite, Relationship Settings, Practice, Training Block, RTP, Bounce Back Bay, Athlete Journey Map, Parent Trust Card, Parent Digest.
+### §2 Surface Dependency Matrix
+Table, one row per surface — Today, Dashboard, Onboarding, Relational, Safety, Parent, Practice, Training, RTP, Bounce Back Bay.
+Columns:
+- Hammer present?
+- Hammer absent?
+- Knows enough?
+- Can explain enough?
+- Can guide enough?
+- Status: **GREEN / YELLOW / RED**
 
-For each, what Hammer must never do is enumerated against RR-5/6/8 + safeguarding precedence.
+### §3 Adoption Impact Analysis
+For each C1–C7, qualitative impact rating (High / Medium / Low) on:
+- trial conversion
+- parent trust
+- athlete retention
+- onboarding completion
+- navigation independence
 
-### §3 Guidance Architecture (athlete)
-For every surface in §2, four guidance slots defined at the capability level:
-- **Entry guidance** — why am I here
-- **Context explanation** — what this surface shows, in plain language, cited
-- **Next-action guidance** — one concrete suggestion, navigation-aware
-- **Exit guidance** — where to go next + what Hammer will remember
+Brief rationale per cell. Capability-level only.
 
-Architecture only — no prompt text, no UI components.
+### §4 Capability Dependency Order
+Strict precedence: which capability must exist before another becomes useful. ASCII dependency graph:
 
-### §4 Parent Guidance Architecture
-Five parent journeys defined as capability slots:
-- Onboarding (invite landing → first visibility)
-- Trust (what Hammer can/can't see; RR-8 disclosure controls)
-- Safety (RR-6 safeguarding precedence; parent supremacy for minors)
-- Progress (replay-cited summaries, never destiny framing per RR-7)
-- Recovery (RTP authorization restriction; pain self-report supremacy)
+```text
+C1 (Name Disambiguation)
+ └─► C2 (Today Presence) ──┐
+ └─► C3 (Onboarding) ──────┤
+                           ├─► C6 (Navigation Handoff) ─► C5 (First Setback)
+ C7 (Silence Enforcement) ─┘                                   │
+                                                               ▼
+                                                          C4 (Parent Voice)
+```
 
-Explicit *silence zones*: arbitration events, contradictions-in-progress, minor's private narrative threads the athlete has not shared, recruiter contact surfaces (RR-10 deferred anyway).
+Explanation of each edge: why the predecessor is structurally required.
 
-### §5 Hammer Authority Boundaries (hard limits)
-Permit list: explain, summarize, guide, recall cited events, hand off to human roles.
-Prohibit list: diagnose, predict, promise outcomes, override safeguarding (RR-6), override parents (RR-8/minor supremacy), authorize RTP (RR-6), create narrative identity (RR-5), invent feelings, fabricate citations, speak in silence zones, cross demo↔production firewall.
-Each prohibition mapped to the sealed invariant that enforces it.
+### §5 Readiness Gate
+Three launch gates with exact capability requirements:
+- **Launch Gate A — Internal rehearsal only:** C1 + C7.
+- **Launch Gate B — Athlete-facing closed beta:** C1 + C2 + C3 + C6 + C7.
+- **Launch Gate C — Public launch (athlete + parent):** C1 + C2 + C3 + C4 + C5 + C6 + C7.
 
-### §6 Day-One Athlete Simulation
-Walk a single new athlete: Day 0 → onboarding → first workout → first setback → first recovery event → first milestone.
-At each step: what Hammer says (modality), what it cites, what it withholds, what handoff it offers, what gap remains.
-Output: ordered gap list feeding §7.
+State the minimum subset required before public launch becomes rational (= Gate C).
 
-### §7 Activation Roadmap (capability-level)
-Three tiers:
-- **Critical** — name disambiguation, Hammer presence on `/today` + onboarding, parent-facing Hammer voice on invite + trust card, first-setback explainer, RTP/safeguarding silence enforcement, navigation handoff capability.
-- **Important** — in-context tooltips, weekly recap voice, injury check-in companion, parent digest narrator, journey-map narration.
-- **Future** — cross-device continuity, multi-language, voice/audio modality, coach-facing translation layer (defers to RR-10 sealed work).
+### §6 Final Recommendation
+Single capability — no ties. Recommendation: **C1 — Name Disambiguation**, justified by:
+- It is the only universal prerequisite (blocks C2, C3, C4, C6).
+- Highest leverage for conversion + confusion reduction at lowest scope.
+- Unlocks coherent voice required by every downstream capability.
 
-No file paths, no component names, no schema — capabilities only.
+### §7 Verdict
+- Readiness score: **3 / 10**
+- Current launch readiness: **Not Ready**
+- One-paragraph explanation tying the score to Gate C unmet requirements and the C1 prerequisite.
 
-### §8 Final Verdict
-Answer the gate question with: readiness score (0–10), biggest remaining adoption risk, biggest remaining parent risk, biggest remaining athlete risk, and a one-line verdict (Ready / Partially Ready / Not Ready *if implemented as specified*).
-
-Expected verdict: **Partially Ready if Critical tier implemented; Ready only after Important tier.**
-
-### §9 Stop Gate Confirmation
-Restates: no production code, no RR-7/9/10 activation, no schema/projection/emitter/replay-engine changes, single output file.
-
-## Files
-- Create: `docs/asb/hammer-activation-architecture.md`
-- Edit: `.lovable/plan.md` (append architecture-phase entry)
+### §8 Stop Gate Confirmation
+Restates: no production code, no RR-7/9/10 activation, no schema/projection/emitter/UI/prompt changes; single output file.
 
 ## Out of scope
-Any code, prompts, UI mockups, schema, projections, emitters, or activation of RR-7/9/10.
+Code, prompts, schema, projections, emitters, UI, RR-7/9/10 activation, any new primitives.
+
+---
+
+# Hammer Activation Phase 2 — Critical Capability Map
+
+**Deliverable:** `docs/asb/hammer-critical-capability-map.md` (created).
+**Scope:** Architecture-only; Critical tier (C1–C7) inventoried with objective / athlete value / parent value / dependencies / coverage / readiness score; surface matrix; adoption impact; dependency graph; three launch gates (A internal, B closed beta, C public = full Critical tier).
+**Verdict:** Readiness 3/10 — **Not Ready**. Recommended first build: **C1 Name Disambiguation** (universal prerequisite).
+**Stop gate held:** no code, schema, projections, emitters, replay-engine, UI, prompts, primitives, or RR-7/9/10 activation.
