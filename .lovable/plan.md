@@ -47,3 +47,14 @@ A complete §0–§9 ratification report (Implementation Log, Build Results, Ver
 ## §7 Stop gate
 
 No Wave 3. No Wave 4. No RR-7/9/10. No capability additions. No scope expansion. **Wave 2 only.**
+
+---
+
+## Wave 2 — Build Sealed (2026-06-04)
+
+- **Status:** Complete · Verified · Ratified.
+- **Tests:** 28/28 green across `src/lib/runtime/handoff`, `src/lib/runtime/guidance`, `src/lib/runtime/silence`, `src/lib/hammer`.
+- **Audits:** zero raw `"Hammer State"` literals in `src/pages/Today.tsx` + `src/components/today/`; zero `Date.now|Math.random|fetch|emit|supabase` in `slots.ts`; zero forbidden tokens (`diagnose|prescribe|authorize|cleared|predict`) in `destinations.ts` executable code.
+- **TodayCommandBar.tsx** intentionally left unchanged this turn: Next-up CTA already navigates via `useNextAction().route`, identity already resolved via `getHammerIdentity()` (Wave 1). No Wave 2 capability requires editing it; touching it would be scope expansion. Reclassified from "edit" to "intentionally untouched".
+- **Stop gate:** No Wave 3 / Wave 4 / RR-7 / RR-9 / RR-10 work performed.
+- **Exit gate:** Satisfied. Wave 3 (C3 + C4 per Wave 2 §11) may begin upon explicit authorization.
