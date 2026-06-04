@@ -861,6 +861,7 @@ export type Database = {
           created_at: string
           current_state: string
           last_transition_reason: string | null
+          pie_v2_caution_state: Json | null
           prev_state: string | null
           state_entered_at: string
           updated_at: string
@@ -871,6 +872,7 @@ export type Database = {
           created_at?: string
           current_state?: string
           last_transition_reason?: string | null
+          pie_v2_caution_state?: Json | null
           prev_state?: string | null
           state_entered_at?: string
           updated_at?: string
@@ -881,6 +883,7 @@ export type Database = {
           created_at?: string
           current_state?: string
           last_transition_reason?: string | null
+          pie_v2_caution_state?: Json | null
           prev_state?: string | null
           state_entered_at?: string
           updated_at?: string
@@ -6420,6 +6423,7 @@ export type Database = {
           opponent_level: string | null
           opponent_name: string | null
           organization_id: string | null
+          pie_v2_signals: Json | null
           player_grade: number | null
           schema_version: number
           season_context: string | null
@@ -6465,6 +6469,7 @@ export type Database = {
           opponent_level?: string | null
           opponent_name?: string | null
           organization_id?: string | null
+          pie_v2_signals?: Json | null
           player_grade?: number | null
           schema_version?: number
           season_context?: string | null
@@ -6510,6 +6515,7 @@ export type Database = {
           opponent_level?: string | null
           opponent_name?: string | null
           organization_id?: string | null
+          pie_v2_signals?: Json | null
           player_grade?: number | null
           schema_version?: number
           season_context?: string | null
