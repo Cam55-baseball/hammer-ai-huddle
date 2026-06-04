@@ -43,18 +43,8 @@ describe("PIE V2 replay determinism", () => {
 
   it("aggregateSession produces identical aggregates across runs", () => {
     const reps = [rep({ rep_id: "r1" }), rep({ rep_id: "r2", energy_angle_deg: 22 }), rep({ rep_id: "r3", energy_angle_deg: 27 })];
-    const scores1 = reps.flatMap((r) => [
-      scoreSignal("energy_angle", r),
-      scoreSignal("tempo", r),
-      scoreSignal("stride", r),
-    ]);
-    const scores2 = reps.flatMap((r) => [
-      scoreSignal("energy_angle", r),
-      scoreSignal("tempo", r),
-      scoreSignal("stride", r),
-    ]);
-    const a1 = aggregateSession("sess-1", "ath-1", reps, scores1, "2026-06-04T12:00:00.000Z");
-    const a2 = aggregateSession("sess-1", "ath-1", reps, scores2, "2026-06-04T12:00:00.000Z");
+    const a1 = aggregateSession("sess-1", "ath-1", reps, "2026-06-04T12:00:00.000Z");
+    const a2 = aggregateSession("sess-1", "ath-1", reps, "2026-06-04T12:00:00.000Z");
     expect(a1).toEqual(a2);
     expect(a1.engine_version).toBe(PIE_V2_ENGINE_VERSION);
   });
