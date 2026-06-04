@@ -3,6 +3,7 @@
  * to taxonomy keys consumed by the video recommendation engine.
  */
 import type { SkillDomain } from './videoRecommendationEngine';
+import type { PieV2SignalId } from './pieV2/types';
 
 // HIE weakness area → movement_pattern key
 const HIE_AREA_TO_MOVEMENT: Record<string, string> = {
