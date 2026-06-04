@@ -54,3 +54,19 @@ Wave 3 Build Execution Report: Scope · Implementation Log · Build · Verificat
 ## Stop Gate (§7)
 
 Wave 3 only. No Wave 4. No RR-7/9/10. No capability additions. No scope expansion.
+
+---
+
+# Hammer Wave 3 — Build (Ratified)
+
+**Status:** Built + verified. 42/42 Wave 1+2+3 tests green.
+
+**Created:** `src/lib/runtime/onboarding/{types.ts,resolver.ts,tests/resolver.test.ts}` · `src/lib/runtime/setback/{types.ts,resolver.ts,tests/resolver.test.ts}` · `src/components/onboarding/HammerOnboardingPresence.tsx` · `src/components/runtime/HammerSetbackGuidance.tsx`.
+
+**Edited (additive only):** `src/pages/AthleteOnboarding.tsx` (mounted presence) · `src/pages/Today.tsx` (mounted setback guidance + pure `deriveSetbackState`).
+
+**Untouched:** `src/lib/hammer/identity.ts` · `src/lib/runtime/silence/**` · `src/lib/runtime/handoff/**` · `src/lib/runtime/guidance/**` · `src/branding.ts` · `prepareRows` · `demoFirewall.ts` · `DemoModeContext.tsx` · `relational/**` · `supabase/migrations/**` · `supabase/config.toml`.
+
+**Constitutional audit:** RR-5/6/8 preserved · safeguarding precedence verified · identity reuse 100% · forbidden-token grep clean · replay byte-identical · zero writes to organism_truth/athlete_intent/authority_override/hard_stop/rehabilitation_state · zero new schemas/migrations/projections/emitters.
+
+**Stop gate:** Wave 3 only. No Wave 4. No RR-7/9/10. No capability additions.
