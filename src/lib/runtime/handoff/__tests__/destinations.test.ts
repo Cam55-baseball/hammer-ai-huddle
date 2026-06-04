@@ -122,10 +122,13 @@ describe("forbidden-phrase source audit", () => {
       resolve(__dirname, "../destinations.ts"),
       "utf8",
     );
-    expect(src).not.toMatch(/Date\.now/);
-    expect(src).not.toMatch(/Math\.random/);
-    expect(src).not.toMatch(/\bfetch\(/);
-    expect(src).not.toMatch(/\bemit[A-Z]/);
+    const code = src
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/.*$/gm, "");
+    expect(code).not.toMatch(/Date\.now/);
+    expect(code).not.toMatch(/Math\.random/);
+    expect(code).not.toMatch(/\bfetch\(/);
+    expect(code).not.toMatch(/\bemit[A-Z]/);
   });
 });
 

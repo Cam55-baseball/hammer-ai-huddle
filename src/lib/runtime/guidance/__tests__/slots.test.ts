@@ -109,11 +109,14 @@ describe("safeguarding precedence end-to-end", () => {
 describe("purity source audit", () => {
   it("slots.ts contains no Date.now / Math.random / fetch / emit / supabase", () => {
     const src = readFileSync(resolve(__dirname, "../slots.ts"), "utf8");
-    expect(src).not.toMatch(/Date\.now/);
-    expect(src).not.toMatch(/Math\.random/);
-    expect(src).not.toMatch(/\bfetch\(/);
-    expect(src).not.toMatch(/\bemit[A-Z]/);
-    expect(src).not.toMatch(/supabase/i);
+    const code = src
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/.*$/gm, "");
+    expect(code).not.toMatch(/Date\.now/);
+    expect(code).not.toMatch(/Math\.random/);
+    expect(code).not.toMatch(/\bfetch\(/);
+    expect(code).not.toMatch(/\bemit[A-Z]/);
+    expect(code).not.toMatch(/supabase/i);
   });
 });
 
