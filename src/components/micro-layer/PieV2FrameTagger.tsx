@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { PIE_V2_SIGNALS } from "@/data/baseball/pieV2Signals";
-import { scorePieV2Rep } from "@/lib/pieV2/scoring";
+import { scoreSignal } from "@/lib/pieV2/scoring";
 import { emitPieV2RepScore } from "@/lib/pieV2/emit";
 import {
   PIE_V2_SCORED_SIGNALS,
@@ -61,7 +61,7 @@ export function PieV2FrameTagger({ athleteId, sessionId, videoId, parentVideoEve
         video_frame_range: [fs, fe],
         ...raw,
       };
-      const score = scorePieV2Rep(rep, signalId);
+      const score = scoreSignal(signalId, rep);
       await emitPieV2RepScore(rep, score, {
         parent_video_event_id: parentVideoEventId,
         actor_role: "coach",
@@ -113,7 +113,7 @@ export function PieV2FrameTagger({ athleteId, sessionId, videoId, parentVideoEve
         <SignalRawInput signalId={signalId} value={raw} onChange={setRaw} />
 
         <div className="text-[11px] text-muted-foreground">
-          {def.description}
+          {def.purpose}
         </div>
 
         <Button onClick={submit} disabled={submitting} className="w-full" size="sm">
