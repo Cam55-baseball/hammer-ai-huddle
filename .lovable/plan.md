@@ -63,3 +63,26 @@ Wave 4 Build Execution Report (§0–§9) with parent supremacy, RR-5, RR-6, RR-
 ## Stop Gate
 
 Wave 4 only. Parent Voice interpretive layer only. No RR-7/9/10. No capability additions. No scope expansion.
+
+---
+
+# Hammer Wave 4 — Build — SEALED
+
+**Scope:** C4 Parent Voice only (interpretive overlay). Excludes C1/C2/C3/C5, RR-7/9/10, all schema/migration/projection/emitter/authority/safeguarding/RTP changes, any new Hammer capability.
+
+**Subordination:** Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 · RR-8 · Hammer Activation 1–8 · Hammer Execution Constitution · Waves 1–3 Ratified · Wave 4 Execution Package.
+
+**Files created:**
+- `src/lib/runtime/parent/types.ts` — `ParentStateKind` (7), `ParentInput`, `ParentDescriptor`, `ParentResult`, `PARENT_ALLOWED_VERBS` = explain · summarize · guide · route.
+- `src/lib/runtime/parent/resolver.ts` — pure `resolveParentVoice(input)`. Composes only `getHammerIdentity`, `resolveGuidanceSlots` (transitively `classifySilenceZone`), handoff types, `resolveOnboardingPresence`, `resolveSetbackGuidance`. Safeguarding short-circuits all slots to lawful silence. Recovery state never routes (RR-6). Onboarding/setback states delegate to upstream resolvers.
+- `src/lib/runtime/parent/tests/resolver.test.ts` — coverage: 7 states · identity reuse · safeguarding precedence · parent supremacy shape · missingness visibility · onboarding+setback delegation slot equivalence · replay determinism (byte-identical JSON) · forbidden-token source audit (`diagnose|prescribe|authorize|cleared|predict|guarantee|will recover|feels|wants|deserves|should feel|expects|Date.now|Math.random`).
+- `src/components/parent/HammerParentVoice.tsx` — thin renderer; renders `null` on lawful silence; uses identity labels only; no copy authorship.
+
+**Files edited:**
+- `src/pages/AcceptParentInvite.tsx` — additive mount of `<HammerParentVoice input={{ state: "invited-not-accepted" }} />`. No removals, no nav/auth/data changes.
+
+**Audits:** parent supremacy ✓ · RR-5 (no narrative authorship) ✓ · RR-6 (no diagnosis / no RTP route) ✓ · RR-8 (no life-context inference; missingness preserved) ✓ · single Hammer authority (`getHammerIdentity` sole label source) ✓ · Organism State silence (entry slot `labelRef`-only) ✓ · demo↔prod firewall (no relational/demo imports) ✓ · replay determinism (pure, no Date.now/Math.random/I/O) ✓ · identity reuse 100% ✓ · forbidden-token grep clean ✓.
+
+**Exit gate:** All 7 parent states verified · all constitutional audits green · zero open escalations · Hammer Critical Stack complete · ready for Hammer Critical Stack Validation Audit.
+
+**Stop gate:** Wave 4 only. Parent Voice interpretive layer only. No RR-7/9/10. No capability additions. No scope expansion.
