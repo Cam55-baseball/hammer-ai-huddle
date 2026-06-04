@@ -101,7 +101,7 @@ describe("resolveOnboardingPresence", () => {
 
   it("resolver source contains no forbidden tokens", () => {
     const src = readFileSync(
-      new URL("../resolver.ts", import.meta.url),
+      "src/lib/runtime/onboarding/resolver.ts",
       "utf8",
     );
     const forbidden = [

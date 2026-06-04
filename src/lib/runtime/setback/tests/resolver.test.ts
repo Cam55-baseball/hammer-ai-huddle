@@ -93,7 +93,7 @@ describe("resolveSetbackGuidance", () => {
 
   it("resolver source contains no forbidden tokens", () => {
     const src = readFileSync(
-      new URL("../resolver.ts", import.meta.url),
+      "src/lib/runtime/setback/resolver.ts",
       "utf8",
     );
     const forbidden = [
