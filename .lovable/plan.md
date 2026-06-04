@@ -34,3 +34,25 @@ Pure forensic review against existing source. Citations reference file paths and
 ## Stop Gate
 
 Audit only. No code. No schema. No new capability. No RR-7/9/10. Two files touched.
+
+---
+
+# Hammer Critical Stack Validation Audit — SEALED
+
+**Scope:** Forensic constitutional validation of the entire Hammer capability stack after Waves 1–4. Audit-only. No implementation. No schema. No migrations. No emitters. No projections. No RR-7/9/10.
+
+**Subordination:** Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 · RR-8 · Hammer Activation 1–8 · Hammer Execution Constitution · Waves 1–4 Ratified.
+
+**Document:** `docs/asb/hammer-critical-stack-validation-audit.md` (§0–§12).
+
+**Capability readiness (C1–C7):** C1 95 · C2 88 · C3 90 · C4 78 · C5 87 · C6 90 · C7 98.
+
+**Constitutional audits:** RR-5 PASS · RR-6 PASS · RR-8 PASS · Replay determinism PASS · Parent supremacy PASS · Safeguarding precedence PASS · Single Hammer authority PASS · Organism State silence PASS · Demo↔prod firewall PASS.
+
+**Overall readiness:** 80 / 100. Constitutional compliance 96 / 100.
+
+**Hidden gaps identified:** G1 silence rationale surface · G2 parent dashboard mount · G3 identity-label lint · G4 reason-key copy table · G5 athlete pain-input channel · G6 multi-athlete parent contract docs · G7 route registry parity test · G8 setback re-entry route · G9 lineage handle opacity · G10 demo firewall DEV-only test gating.
+
+**Final verdict:** Hammer Critical Stack constitutionally complete. Athlete-facing production launch may proceed. Parent-facing launch recommended to ship G1 + G2 first. No constitutional blockers. No authority leaks. No RR-5/6/8 violations. No demo↔prod leaks.
+
+**Stop gate:** Audit only. No implementation. No new capability creation. No RR-7/9/10. No scope expansion.
