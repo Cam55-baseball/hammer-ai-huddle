@@ -1,88 +1,58 @@
-# Hammer Wave 4 — Build Implementation Plan (C4 Parent Voice)
+# Hammer Critical Stack Validation Audit — Plan
 
-Subordinate to Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 · RR-8 · Hammer Activation 1–8 · Hammer Execution Constitution · Waves 1–3 Ratified · Wave 4 Execution Package. Parent Voice is an interpretive overlay only — no schema, migrations, projections, emitters, authority, safeguarding, RTP, recruiter, commercial, or RR-7/9/10 changes.
+Audit-only deliverable. No code, schema, migrations, emitters, projections, or implementation. Two files touched.
 
-## Files to Create
+## Files
 
-1. **`src/lib/runtime/parent/types.ts`** — pure types.
-   - `ParentStateKind` union of 7: `invited-not-accepted`, `accepted-no-athlete-activity`, `accepted-active-athlete`, `accepted-missingness-state`, `accepted-recovery-state`, `accepted-onboarding-state`, `accepted-setback-state`.
-   - `ParentInput`: `{ state; safeguardingActive?; knownSignalRefs?; unknownSignalRefs?; lineageHandle?; onboarding?: OnboardingInput; setback?: SetbackInput }`.
-   - `ParentDescriptor`: `{ state; slots: GuidanceSlotsOutput; missingnessVisible: true; knownSignalRefs; unknownSignalRefs; allowedVerbs: readonly ['explain','summarize','guide','route'] }`.
-   - `ParentResult`: `{ descriptor }`.
+- **Create** `docs/asb/hammer-critical-stack-validation-audit.md` — full forensic audit spanning §0–§12.
+- **Append** `.lovable/plan.md` — sealed audit entry referencing the new document.
 
-2. **`src/lib/runtime/parent/resolver.ts`** — pure `resolveParentVoice(input)`.
-   - Imports only: `getHammerIdentity`, `classifySilenceZone` (transitively via slots), `resolveGuidanceSlots`, `resolveHandoff` types, `resolveOnboardingPresence`, `resolveSetbackGuidance`.
-   - State→zone map mirrors §3:
-     - `invited-not-accepted` → `awaiting-input` (all slots; no route).
-     - `accepted-no-athlete-activity` → `unpopulated-surface-no-signal`.
-     - `accepted-active-athlete` → `unpopulated-surface-with-signal`, exit handoff to `/progress` with `practice.window_active` reasonKey.
-     - `accepted-missingness-state` → `missing-data-dominant`.
-     - `accepted-recovery-state` → `missing-data-dominant`, no route (RR-6: no diagnosis, no RTP implication).
-     - `accepted-onboarding-state` → delegates to `resolveOnboardingPresence` and projects its slots.
-     - `accepted-setback-state` → delegates to `resolveSetbackGuidance` and projects its slots; preserves `knownSignalRefs`/`unknownSignalRefs`.
-   - `safeguardingActive === true` short-circuits via zone safeguarding flag → all slots lawful, no route.
-   - Returns frozen descriptor. No `Date.now`, no `Math.random`, no I/O, no network, no storage, no emit, no mutation.
+No other files modified.
 
-3. **`src/lib/runtime/parent/tests/resolver.test.ts`** — vitest coverage:
-   - Frozen descriptor for all 7 states.
-   - Identity reuse: labelRef `organismStateLabel` on entry slot.
-   - Safeguarding precedence: all slots `lawful` + no route, all 7 states.
-   - Parent supremacy: descriptor never carries authority/RTP/diagnosis fields (asserted by shape).
-   - Missingness visibility: `missingnessVisible === true` always; `unknownSignalRefs` preserved.
-   - Replay determinism: byte-identical JSON across two calls with same input, all states.
-   - Onboarding/setback delegation: descriptor state matches and slots equal underlying resolver slots.
-   - Forbidden-token source audit on `resolver.ts`: `diagnose|prescribe|authorize|cleared|predict|guarantee|will recover|feels|wants|deserves|should feel|expects|Date\.now|Math\.random`.
+## Document Structure
 
-4. **`src/components/parent/HammerParentVoice.tsx`** — thin renderer.
-   - Props: `{ input: ParentInput }`.
-   - Calls `resolveParentVoice`. Reads `getHammerIdentity()` for labels only (no inline copy).
-   - Returns `null` when every slot verdict is `lawful` (lawful silence renders nothing).
-   - Otherwise renders accidental slots using existing `RuntimeCard` styling with label refs (Organism State label, no diagnostic copy).
-   - No state, no effects, no fetches.
+The audit document will contain the following sealed sections, each grounded in the actual implementation surface from Waves 1–4 (`src/lib/hammer/identity.ts`, `src/lib/runtime/silence/*`, `src/lib/runtime/guidance/*`, `src/lib/runtime/handoff/*`, `src/lib/runtime/onboarding/*`, `src/lib/runtime/setback/*`, `src/lib/runtime/parent/*`, and their mount points in `Today.tsx`, `AthleteOnboarding.tsx`, `AcceptParentInvite.tsx`).
 
-## Files to Edit
+- **§0 Audit Scope** — C1–C7 across Athlete · Parent · Recovery · Onboarding · Setback · Navigation · Today · Silence · Identity · Trust · Authority · Safeguarding · Replay determinism · Demo↔prod isolation.
+- **§1 Capability Verification (C1–C7)** — per capability: constitutional objective, implementation inventory (file paths), dependency satisfaction, verification evidence (test suite refs), remaining risk, readiness score (0–100), partial implementation, hidden assumptions, unresolved edge cases.
+- **§2 Athlete Journey Validation** — 14 states (Discovery → Ongoing Usage). Per state: sees / understands / Hammer explains / Hammer does not explain / routes to / confusion vectors / improvement gaps.
+- **§3 Parent Journey Validation** — 9 states mapped against the 7 `ParentStateKind` values. Same per-state matrix as §2.
+- **§4 Silence Architecture Validation** — `classifySilenceZone`, guidance slots, handoff, onboarding, setback, parent voice. Lawful vs accidental silence, missingness, safeguarding, parent supremacy, RR-5 compliance, user-confusion states.
+- **§5 Navigation Validation** — 7 lawful destinations: reachability, handoff quality, lineage traceability, authority limits, failure handling, dead ends, broken loops, circular routing, missing destinations.
+- **§6 Trust Formation Audit** — Athlete · Parent · Recovery · Platform. Per axis: what creates trust, what destroys it, current readiness, remaining gaps, severity.
+- **§7 Constitutional Compliance Audit** — RR-5, RR-6, RR-8, replay determinism, parent supremacy, safeguarding precedence, single Hammer authority, Organism State silence, demo↔prod firewall. Per item: evidence, risk level, residual concerns, pass/fail.
+- **§8 Failure-State Stress Testing** — 25 scenarios (3-week athlete disappearance, late parent join, recovery interruption, missing data, no activity, broken onboarding, safety concern, conflicting signals, etc.). Per scenario: current vs expected behavior, risk, severity, required mitigation.
+- **§9 Hidden Gap Search** — missing capabilities, hidden dependencies, undefined states, broken assumptions, UX blind spots, trust blind spots.
+- **§10 Launch Readiness Scoring** — explicit criteria for Athlete Simplicity, Parent Simplicity, Navigation Clarity, Trust Formation, Recovery Safety, Guidance Quality, Constitutional Compliance, Overall Hammer Readiness.
+- **§11 Final Verdict** — Hammer complete? Launch ready? What's missing / non-blocking / blocking? Can production launch proceed?
+- **§12 Stop Gate** — audit-only confirmation; no implementation; no RR-7/9/10; no new capability creation.
 
-- **`src/pages/AcceptParentInvite.tsx`** — parent-facing dashboard entry surface. Additively mount `<HammerParentVoice input={{ state: <derived> }} />` near the top of the existing layout. Pure derivation of `ParentStateKind` from already-available invite/acceptance flags. No removals, no redesign, no nav/auth/data changes.
-- **`.lovable/plan.md`** — append sealed "Hammer Wave 4 — Build — SEALED" entry summarizing scope, primitives reused, exit gate, stop gate.
+## Method
 
-## Intentionally Untouched
-
-`src/lib/hammer/identity.ts`, `src/lib/runtime/{silence,handoff,guidance,onboarding,setback}/**`, `src/branding.ts`, `prepareRows`, `demoFirewall.ts`, `DemoModeContext.tsx`, `relational/**`, all recruiter/commercial surfaces, all RR-7/9/10 paths, all migrations, `supabase/config.toml`, all authority/safeguarding/RTP writers.
-
-## Verification
-
-- `bunx vitest run` Wave 1+2+3+4 suites — all green.
-- Source greps on new resolver + component for forbidden tokens (empty).
-- Replay determinism test asserts byte-identical JSON.
-- Audits: identity reuse, parent supremacy, safeguarding precedence, missingness visibility, demo↔prod firewall (no relational/demo imports touched), single Hammer authority (only `getHammerIdentity` for labels).
-
-## Output
-
-Wave 4 Build Execution Report (§0–§9) with parent supremacy, RR-5, RR-6, RR-8, single Hammer authority, Organism State silence, demo↔prod firewall, replay determinism audits.
+Pure forensic review against existing source. Citations reference file paths and test suites already in the repo. No runtime checks, no edits.
 
 ## Stop Gate
 
-Wave 4 only. Parent Voice interpretive layer only. No RR-7/9/10. No capability additions. No scope expansion.
+Audit only. No code. No schema. No new capability. No RR-7/9/10. Two files touched.
 
 ---
 
-# Hammer Wave 4 — Build — SEALED
+# Hammer Critical Stack Validation Audit — SEALED
 
-**Scope:** C4 Parent Voice only (interpretive overlay). Excludes C1/C2/C3/C5, RR-7/9/10, all schema/migration/projection/emitter/authority/safeguarding/RTP changes, any new Hammer capability.
+**Scope:** Forensic constitutional validation of the entire Hammer capability stack after Waves 1–4. Audit-only. No implementation. No schema. No migrations. No emitters. No projections. No RR-7/9/10.
 
-**Subordination:** Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 · RR-8 · Hammer Activation 1–8 · Hammer Execution Constitution · Waves 1–3 Ratified · Wave 4 Execution Package.
+**Subordination:** Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 · RR-8 · Hammer Activation 1–8 · Hammer Execution Constitution · Waves 1–4 Ratified.
 
-**Files created:**
-- `src/lib/runtime/parent/types.ts` — `ParentStateKind` (7), `ParentInput`, `ParentDescriptor`, `ParentResult`, `PARENT_ALLOWED_VERBS` = explain · summarize · guide · route.
-- `src/lib/runtime/parent/resolver.ts` — pure `resolveParentVoice(input)`. Composes only `getHammerIdentity`, `resolveGuidanceSlots` (transitively `classifySilenceZone`), handoff types, `resolveOnboardingPresence`, `resolveSetbackGuidance`. Safeguarding short-circuits all slots to lawful silence. Recovery state never routes (RR-6). Onboarding/setback states delegate to upstream resolvers.
-- `src/lib/runtime/parent/tests/resolver.test.ts` — coverage: 7 states · identity reuse · safeguarding precedence · parent supremacy shape · missingness visibility · onboarding+setback delegation slot equivalence · replay determinism (byte-identical JSON) · forbidden-token source audit (`diagnose|prescribe|authorize|cleared|predict|guarantee|will recover|feels|wants|deserves|should feel|expects|Date.now|Math.random`).
-- `src/components/parent/HammerParentVoice.tsx` — thin renderer; renders `null` on lawful silence; uses identity labels only; no copy authorship.
+**Document:** `docs/asb/hammer-critical-stack-validation-audit.md` (§0–§12).
 
-**Files edited:**
-- `src/pages/AcceptParentInvite.tsx` — additive mount of `<HammerParentVoice input={{ state: "invited-not-accepted" }} />`. No removals, no nav/auth/data changes.
+**Capability readiness (C1–C7):** C1 95 · C2 88 · C3 90 · C4 78 · C5 87 · C6 90 · C7 98.
 
-**Audits:** parent supremacy ✓ · RR-5 (no narrative authorship) ✓ · RR-6 (no diagnosis / no RTP route) ✓ · RR-8 (no life-context inference; missingness preserved) ✓ · single Hammer authority (`getHammerIdentity` sole label source) ✓ · Organism State silence (entry slot `labelRef`-only) ✓ · demo↔prod firewall (no relational/demo imports) ✓ · replay determinism (pure, no Date.now/Math.random/I/O) ✓ · identity reuse 100% ✓ · forbidden-token grep clean ✓.
+**Constitutional audits:** RR-5 PASS · RR-6 PASS · RR-8 PASS · Replay determinism PASS · Parent supremacy PASS · Safeguarding precedence PASS · Single Hammer authority PASS · Organism State silence PASS · Demo↔prod firewall PASS.
 
-**Exit gate:** All 7 parent states verified · all constitutional audits green · zero open escalations · Hammer Critical Stack complete · ready for Hammer Critical Stack Validation Audit.
+**Overall readiness:** 80 / 100. Constitutional compliance 96 / 100.
 
-**Stop gate:** Wave 4 only. Parent Voice interpretive layer only. No RR-7/9/10. No capability additions. No scope expansion.
+**Hidden gaps identified:** G1 silence rationale surface · G2 parent dashboard mount · G3 identity-label lint · G4 reason-key copy table · G5 athlete pain-input channel · G6 multi-athlete parent contract docs · G7 route registry parity test · G8 setback re-entry route · G9 lineage handle opacity · G10 demo firewall DEV-only test gating.
+
+**Final verdict:** Hammer Critical Stack constitutionally complete. Athlete-facing production launch may proceed. Parent-facing launch recommended to ship G1 + G2 first. No constitutional blockers. No authority leaks. No RR-5/6/8 violations. No demo↔prod leaks.
+
+**Stop gate:** Audit only. No implementation. No new capability creation. No RR-7/9/10. No scope expansion.
