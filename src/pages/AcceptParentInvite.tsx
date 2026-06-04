@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { PARENT_INVITE_VOICE, SURFACE_TITLES } from "@/lib/relational/copy";
 import { ChevronDown } from "lucide-react";
+import { HammerParentVoice } from "@/components/parent/HammerParentVoice";
 
 export default function AcceptParentInvite() {
   const [sp] = useSearchParams();
@@ -87,6 +88,9 @@ export default function AcceptParentInvite() {
             {PARENT_INVITE_VOICE.acceptTitle}
           </h1>
         </header>
+
+        <HammerParentVoice input={{ state: "invited-not-accepted" }} />
+
 
         {!decoded && (
           <Card className="p-5">
