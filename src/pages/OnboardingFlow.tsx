@@ -11,6 +11,8 @@ import {
 import { emitRuntimeEvent } from "@/lib/runtime/emitRuntimeEvent";
 import { emitOnboardingBootstrap } from "@/lib/runtime/relational/onboardingBootstrap";
 import { emitLifeContextDisclosure } from "@/lib/runtime/relational/lifeContextEmitters";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
