@@ -214,3 +214,39 @@ export function aggregateWeaknessClustersToTaxonomy(
     contextTags: [...ctxSet].slice(0, 4),
   };
 }
+
+// ============================================================================
+// PIE V2 — pitching mechanics V2 bucket.
+// Maps PIE V2 signal deficiencies to the existing movement_pattern taxonomy
+// so the canonical video recommender surfaces correct mechanics videos. No
+// new pipeline; additive over the existing skill_domain='pitching' surface.
+// ============================================================================
+
+const PIE_V2_SIGNAL_TO_MOVEMENT: Record<PieV2SignalId, string> = {
+  energy_angle: 'weak_back_side_load',
+  visual_stability: 'eyes_off_target',
+  separation: 'early_shoulder_rotation',
+  tempo: 'rushed_tempo',
+  stride: 'short_stride',
+  head_stability: 'head_drift_release',
+  hip_alignment: 'hips_open_to_3b',
+  front_side: 'glove_pull_off',
+  head_alignment: 'head_tilt_release',
+  shoulder_level: 'shoulder_dip_release',
+  rear_foot_drag: 'rear_foot_jump',
+  extension_consistency: 'extension_variance',
+  arm_slot_consistency: 'arm_slot_variance',
+};
+
+export function mapPieV2SignalToMovement(signal: PieV2SignalId): string {
+  return PIE_V2_SIGNAL_TO_MOVEMENT[signal];
+}
+
+export function pieV2SignalsToTaxonomyBucket(
+  signals: PieV2SignalId[],
+): { skillDomain: SkillDomain; movementPatterns: string[] } {
+  return {
+    skillDomain: 'pitching' as SkillDomain,
+    movementPatterns: signals.map(mapPieV2SignalToMovement),
+  };
+}
