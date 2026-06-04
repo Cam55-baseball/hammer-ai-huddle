@@ -17,10 +17,8 @@ import { getHammerIdentity } from "@/lib/hammer/identity";
 import { resolveGuidanceSlots } from "@/lib/runtime/guidance/slots";
 import { useNextAction } from "@/hooks/useNextAction";
 import { useHammerState } from "@/hooks/useHammerState";
-import {
-  isLawfulDestination,
-  type LawfulDestination,
-} from "@/lib/runtime/handoff/destinations";
+import { isLawfulDestination } from "@/lib/runtime/handoff/destinations";
+import type { LawfulDestination } from "@/lib/runtime/handoff/types";
 import type { GuidanceSlotsInput } from "@/lib/runtime/guidance/types";
 
 interface Props {

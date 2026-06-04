@@ -64,12 +64,13 @@ export function resolveGuidanceSlots(
   });
 
   const exitVerdict = classifySilenceZone(input.exitZone);
+  const exitHandoff = input.exitHandoff === null
+    ? ({ silence: "lawful" } as const)
+    : resolveHandoff(input.exitHandoff);
   const exit: ExitSlot = Object.freeze({
     kind: "exit",
     verdict: exitVerdict,
-    handoff: input.exitHandoff === null
-      ? { silence: "lawful" }
-      : resolveHandoff(input.exitHandoff),
+    handoff: exitHandoff,
   });
 
   return Object.freeze({ entry, context, next, exit });
