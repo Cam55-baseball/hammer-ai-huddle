@@ -43,16 +43,20 @@ function deriveParentState(
   safeguardingActive: boolean;
   unknownSignalRefs: string[];
 } {
+  const injuryState = injury?.state;
+  const lifeState = life?.state;
+
   const safeguardingActive =
-    Boolean(injury?.safeguardingHeld) || Boolean(life?.safeguardingHeld);
+    Boolean(injuryState?.safeguardingHeld) ||
+    Boolean(lifeState?.safeguardingHeld);
 
   const unknownSignalRefs = [
-    ...(injury?.missingness?.fields ?? []),
-    ...(life?.missingness?.fields ?? []),
+    ...(injuryState?.missingness?.fields ?? []),
+    ...(lifeState?.missingness?.fields ?? []),
   ];
 
   const inActiveRecovery = Object.values(
-    injury?.activeRecoveryState ?? {},
+    injuryState?.activeRecoveryState ?? {},
   ).some((r) => !r.rtp_authorized);
 
   let state: ParentStateKind = "accepted-active-athlete";
