@@ -28,10 +28,9 @@ export function usePitchingV2Trends(athleteId: string | undefined) {
         .gte("occurred_at", since)
         .order("occurred_at", { ascending: true });
       if (error) throw error;
-      const aggs: PieV2SessionAggregate[] = (data ?? []).map((r) => {
-        const p = (r as { payload: PieV2SessionAggregate }).payload;
-        return p;
-      });
+      const aggs: PieV2SessionAggregate[] = (data ?? []).map(
+        (r) => (r as unknown as { payload: PieV2SessionAggregate }).payload,
+      );
       const sliceSince = (days: number) => {
         const cutoff = new Date(now.getTime() - days * 86400_000).getTime();
         return aggs.filter((a) => new Date(a.computed_at).getTime() >= cutoff);
