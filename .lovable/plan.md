@@ -36,3 +36,25 @@ Scope: G2 only. Additive mount of the already-ratified Wave 4 `HammerParentVoice
 ### Deliverable
 
 `PARENT LAUNCH REMEDIATION REPORT` (§0–§9) returned in chat after build mode execution, with explicit answers on parent launch and full platform launch gates.
+
+---
+
+# SEALED — G2 Remediation Executed
+
+**Scope:** G2 only. Mounted existing Wave 4 `HammerParentVoice` on `src/pages/Relational.tsx` post-accept surface. State derivation purely from replay-derived projections (`useInjuryRecoveryState`, `useLifeContextState`).
+
+**Files edited:**
+- `src/pages/Relational.tsx` — additive mount + local `deriveParentState` helper.
+- `.lovable/plan.md` — this entry.
+
+**Files NOT touched:** resolver, parent types, silence, guidance, handoff, onboarding, setback, authority, safeguarding, routing, schema, migrations, emitters, projections, athlete-facing components.
+
+**Constitutional audit:** RR-5 · RR-6 · RR-8 · Parent supremacy · Safeguarding precedence · Single Hammer authority · Organism State silence · Replay determinism · Demo↔prod firewall — all unchanged (no code touched in those layers; `scope` flows through existing projection hooks; safeguarding propagates non-downgradably from projection state into existing resolver short-circuit).
+
+**Scope audit:** no new capability · no new primitive · no new route · no schema change · no migration · no emitter · no authority change · no safeguarding change · no RR-7 · no RR-9 · no RR-10.
+
+**Verdict:**
+- Parent launch: **proceed.** G2 resolved.
+- Full platform launch: **proceed.** G1 (silence rationale microcopy) remains non-blocking backfill per Parent Launch Blocker Resolution Audit.
+
+**SEALED.**
