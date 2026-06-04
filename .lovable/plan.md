@@ -1,3 +1,22 @@
+## Hammer Wave 1 — Execution Package
+
+Planning-only artifact converting Phase 8's Execution Constitution into the ratifiable Wave 1 work package for **C1 — Name Disambiguation** and **C7 — Silence Enforcement**. No production code, UI, prompts, schema, projections, emitters, or RR-7/9/10 activation.
+
+### Files
+
+1. **Created** `docs/asb/hammer-wave-1-execution-package.md`
+2. **Prepended** Wave 1 Execution Package entry to `.lovable/plan.md`
+
+### Result
+
+Complete §0–§9 package: **§0** scope lock (C1 + C7 only; full exclusion table for C2–C6, RR-7/9/10, parallel personalities, schema/projection/emitter mutation). **§1** file impact inventory — 5 new substrate files (`src/lib/hammer/identity.ts`, `src/lib/runtime/silence/{types,classifier}.ts`, plus tests) + 4 user-visible rename targets (`HammerStateBadge.tsx`, `useWhyExplanation.ts`, `WhyExplanationSheet.tsx`, `EngineHealthDashboard.tsx`) + explicit untouched list (Today/parent/onboarding/coach surfaces, `prepareRows` firewall, internal `HammerState` type names, all `organism_truth` writers). **§2** ordered 6-step plan (resolver → classifier → tests → renames → preflight → constitutional audit). **§3** per-invariant preservation table covering all 11 Constitution §3 rows. **§4** six measurable acceptance criteria (grep audits, zero-undefined-verdict, byte-identical replay, preflight pass). **§5** six-category test plan. **§6** failure-detection-correction matrix with halt conditions. **§7** three separately-defined statuses (Wave 1 Complete / Verified / Ratified). **§8** four-condition exit gate for Wave 2 start. **§9** stop gate confirmation.
+
+### Stop gate
+
+Single execution-package doc + plan log entry. Zero production code. Build execution of C1 + C7 begins after ratification.
+
+---
+
 ## Hammer Activation Phase 8 — Execution Constitution
 
 Governance-only lock before Wave 1 build. No code, UI, prompts, schema, projections, emitters, or RR-7/9/10 activation.
