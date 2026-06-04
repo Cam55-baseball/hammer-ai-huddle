@@ -1,27 +1,67 @@
 ## Hammer Activation Phase 8 — Execution Constitution
 
-Final governance artifact before Wave 1 build execution. Locks scope, dependency order, invariants, and verification gates so implementation cannot drift from Phases 1–7.
+Governance-only lock before Wave 1 build. No code, UI, prompts, schema, projections, emitters, or RR-7/9/10 activation.
 
-### Deliverables
+### Files
 
-1. **Create** `docs/asb/hammer-execution-constitution.md`
-2. **Append** Phase 8 entry to `.lovable/plan.md`
+1. **Created** `docs/asb/hammer-execution-constitution.md`
+2. **Appended** Phase 8 entry to `.lovable/plan.md`
 
-### Document outline (`hammer-execution-constitution.md`)
+### Result
 
-- **§0 Objective** — define "what must never happen while building Waves 1–4"; governance not capability.
-- **§1 Immutable Scope Lock** — enumerate only C1, C7 (W1); C6, C2 (W2); C3, C5 (W3); C4 (W4). Explicitly forbid additions, hidden workstreams, or partial RR-7/9/10 work.
-- **§2 Dependency Lock** — strict W1 → W2 → W3 → W4, with per-wave dependency rationale traced to Phase 6 audit (e.g., W2 requires C7 silence law before C2 can lawfully speak).
-- **§3 Constitutional Invariant Preservation** — table-form, per invariant: RR-5 (no invented feelings, no fictional continuity), RR-6 (no diagnosis, RTP gated), RR-8 (no coercive disclosure), replay determinism, parent supremacy for minors, safeguarding precedence, demo↔prod firewall (`prepareRows`), single Hammer authority (C1), Organism State silence (C7). Each row: violation vector + required verification.
-- **§4 Wave Completion Gates** — per wave: required verification artifacts, audit checklist, measurable acceptance criteria (carried from Phase 7 §4), constitutional review sign-off. Subjective "feels done" forbidden.
-- **§5 Anti-Drift Controls** — forbid: new Hammer personalities, parallel memory systems, alternative authority surfaces, arbitration bypass, safeguarding bypass, visibility-matrix bypass. Any deviation → explicit constitutional review event.
-- **§6 Verification Requirements** — per wave: TypeScript clean, replay determinism check, constitutional audit, acceptance criteria pass, preflight pass. All five required to advance.
-- **§7 Failure Escalation Rules** — Stop conditions (dependency fail, invariant fail, replay drift, safeguarding weakening). Escalation path: halt wave → write findings doc → constitutional review → remediation plan → re-verification before resume.
-- **§8 Launch Readiness Gate** — launch permitted only on W1–W4 complete + all verification passed + zero open escalations.
-- **§9 Post-Launch Boundary** — RR-7/RR-9/RR-10 remain sealed-only per `post-mastery-expansion-roadmap.md`; no implementation leakage during W1–W4.
-- **§10 Final Verdict** — single sentence: governance complete, execution may begin at Wave 1.
-- **§11 Stop Gate Confirmation** — no code, UI, prompts, schemas, projections, emitters, or RR-7/9/10 activation under this phase.
+Final execution-governance artifact. §1 immutable scope lock (W1: C1+C7 → W2: C6+C2 → W3: C3+C5 → W4: C4). §2 strict W1→W2→W3→W4 dependency order with per-wave rationale. §3 invariant-preservation table covering RR-5, RR-6, RR-8, replay determinism, parent supremacy, safeguarding precedence, demo↔prod firewall, single Hammer authority, Organism State silence — each row pairs a likely violation vector with the required verification. §4 four-part completion gates (artifacts, audit, acceptance criteria, constitutional sign-off). §5 anti-drift controls forbidding parallel Hammer personalities/memory/authority surfaces. §6 five-category verification (TypeScript, replay determinism, constitutional, acceptance, preflight) — all required to advance. §7 stop-and-escalate rules for dependency, invariant, replay, and safeguarding failures. §8 launch readiness gate. §9 RR-7/9/10 post-launch boundary. **§10 verdict: governance complete; Wave 1 build (C1 + C7) may begin under this constitution.**
 
 ### Stop gate
 
-Single governance doc + plan log entry. Zero production changes. Next step after approval: begin Wave 1 build (C1 + C7) under this constitution.
+Single governance doc + plan log entry. Zero production changes.
+
+---
+
+## Hammer Activation Phase 7 — Implementation Master Plan
+
+Planning-only consolidation of the Phase 6–verified Critical Stack (C1–C7) into the minimum viable wave sequence. No code, UI, prompts, schema, projections, emitters, or RR-7/9/10 activation.
+
+### Files
+
+1. **Created** `docs/asb/hammer-implementation-master-plan.md`
+2. **Appended** Phase 7 entry to `.lovable/plan.md`
+
+### Result
+
+**Final wave count: 4.** Launch sequence:
+
+- **Wave 1** — C1 Name Disambiguation + C7 Silence Enforcement (substrate)
+- **Wave 2** — C6 Navigation Handoff + C2 Today Presence (first athlete surface)
+- **Wave 3** — C3 Onboarding Presence + C5 First Setback Guidance (athlete narrative)
+- **Wave 4** — C4 Parent Voice (parent trust)
+
+Projected launch readiness: **2/10 → 8/10** across W1–W4. Shortest valid traversal of the Phase 6 strict order `C1 → C7 → C6 → C2 → C3 → C5 → C4`; no further reduction possible without constitutional breach (proof in §3). Phase 7 is the **terminal planning artifact** — subsequent phases enter build execution starting with Wave 1.
+
+### Stop gate
+
+Single master-plan doc + plan log entry. Zero production changes.
+
+---
+
+## Hammer Activation Phase 6 — Critical Stack Verification Audit
+
+Architecture-only verification of Phases 1–5. No new doctrine. No code, UI, prompts, schema, projections, emitters, or RR-7/9/10 activation.
+
+### Files
+
+1. **Created** `docs/asb/hammer-critical-stack-verification-audit.md`
+2. **Appended** Phase 6 entry to `.lovable/plan.md`
+
+### Result
+
+**Verdict: COMPLETE.** Critical Stack C1–C7 is dependency-exhaustive across blocker mapping, athlete journey, parent journey, silence-zone audit, failure-mode stress test, and hidden-capability search. No additional Critical capabilities required. Single remaining risk: **sequencing** (build order C1 → C7 → C6 → C2 → C3 → C5 → C4 must be honored). Implementation planning may begin — next architectural step is Phase 7 (Implementation Sequencing, planning-only).
+
+### Stop gate
+
+Single verification doc + plan log entry. Zero production changes.
+
+---
+
+## Hammer Activation Phase 5 — Critical Launch Blueprint
+
+Architecture-only consolidation of Phases 1–4 into a single Critical-tier launch blueprint. Files: created `docs/asb/hammer-critical-launch-blueprint.md`; appended Phase 5 entry. Zero production changes.
