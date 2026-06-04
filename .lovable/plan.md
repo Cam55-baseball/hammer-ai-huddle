@@ -1,63 +1,60 @@
-# Parent Launch Blocker Resolution Audit — Plan
+## G2 Remediation — Mount HammerParentVoice on Post-Accept Parent Surface
 
-Audit-only. Two files touched. No code, schema, migrations, emitters, projections, or capability additions. No RR-7/9/10.
+Scope: G2 only. Additive mount of the already-ratified Wave 4 `HammerParentVoice` on `src/pages/Relational.tsx`. No changes to resolver, types, authority, safeguarding, routing, schema, or any other capability.
 
-## Files
+### Files Edited
 
-- **Create** `docs/asb/parent-launch-blocker-resolution-audit.md` — full forensic resolution audit, §0–§11.
-- **Append** `.lovable/plan.md` — sealed entry referencing the new document.
+1. **`src/pages/Relational.tsx`** — additive mount only.
+   - Import `HammerParentVoice` from `@/components/parent/HammerParentVoice`.
+   - Import existing relational projection hooks already in use elsewhere (`useRelationshipState`, `useInjuryRecoveryState`, `useLifeContextState`) via `@/hooks/useRelationalProjections` to derive `ParentStateKind` from replay-derived state only.
+   - Add a pure derivation function `deriveParentState(...)` (local to the file, no exports, no new module) returning one of the existing `ParentStateKind` values from `@/lib/runtime/parent/types`:
+     - `accepted-recovery-state` when injury/recovery projection indicates active recovery
+     - `accepted-missingness-state` when projections expose unknown signal refs
+     - `accepted-active-athlete` otherwise (default post-accept active branch)
+     - Onboarding / setback branches are NOT synthesized here — the resolver already requires `onboarding`/`setback` inputs, which Relational page does not own; those branches remain reachable only from their owning surfaces. Audit-acceptable per §2 (resolver unchanged).
+   - Mount `<HammerParentVoice input={{ state, knownSignalRefs, unknownSignalRefs }} />` at the top of the page body, above `SlumpReloadFlow`, so post-accept parents always have Parent Voice visibility.
+   - Renders nothing automatically when all slots are lawful-silent (existing component behavior) — no athlete-facing change.
 
-## Source Grounding
+2. **`.lovable/plan.md`** — append sealed G2 remediation entry referencing this plan and the resulting verification.
 
-Pure forensic review against existing artifacts:
-- `docs/asb/production-launch-readiness-audit.md` (origin of G1, G2)
-- `docs/asb/hammer-critical-stack-validation-audit.md` (G1–G10 definitions, severity context)
-- `src/components/parent/HammerParentVoice.tsx`, `src/lib/runtime/parent/resolver.ts`, `src/lib/runtime/parent/types.ts`
-- `src/pages/AcceptParentInvite.tsx`, `src/pages/Relational.tsx`
-- `src/lib/runtime/silence/types.ts` and silence classifier (G1 surface origin)
-- Constitutional anchors: Eternal Laws, Megaphase 151–160, RR-5, RR-6, RR-8
+### Files NOT Touched
 
-No runtime execution. No edits. No new capability.
+- `src/components/parent/HammerParentVoice.tsx`
+- `src/lib/runtime/parent/{resolver,types}.ts`
+- silence / guidance / handoff / onboarding / setback / authority / safeguarding modules
+- routes, schema, migrations, emitters, projections
+- athlete-facing components
 
-## Document Structure
+### Verification (post-implementation)
 
-- **§0 Audit Objective** — explicit answers: identity of G1 and G2, blocker rationale, harm if unresolved, severity, minimum valid resolution.
-- **§1 G1 Forensic Analysis** — silence rationale surface absence. Exact description, originating evidence (Critical Stack Audit + Launch Readiness Audit citations), affected surfaces (Today, Practice, Parent Voice empty states), affected users (athlete + parent), constitutional implications (RR-8 missingness visibility, Organism State silence row), trust implications, launch implications. Classification: Critical / Major / Minor / Non-blocking with justification.
-- **§2 G2 Forensic Analysis** — parent dashboard `HammerParentVoice` mount absence on post-accept parent surfaces. Same structure as §1. Evidence trace through `AcceptParentInvite.tsx` (mount present pre-accept) and `Relational.tsx` (no post-accept mount).
-- **§3 Athlete Impact Analysis** — onboarding · guidance · navigation · trust · retention if G1+G2 unresolved. Evidence: G2 is parent-only; G1 is silence-rationale only. Verdict on athlete launch continuity.
-- **§4 Parent Impact Analysis** — onboarding · understanding · trust · retention · authority interpretation if G1+G2 unresolved. Evidence: post-accept silence with no Parent Voice surface = parent sees blank state, cannot distinguish lawful silence from system failure. Verdict on parent launch continuity.
-- **§5 Constitutional Impact Analysis** — G1 and G2 evaluated against RR-5, RR-6, RR-8, Parent supremacy, Safeguarding precedence, Replay determinism, Single Hammer authority, Organism State silence. Classify each as: constitutional failure · implementation gap · UX gap · copy gap · education gap · launch preference.
-- **§6 Resolution Option Analysis** — per blocker:
-  - Option A: minimum implementation fix (G1: silence rationale microcopy slot in existing silence resolver consumer; G2: mount existing `HammerParentVoice` on `Relational.tsx` post-accept state with `accepted-*` inputs already supported by resolver)
-  - Option B: minimum UX fix
-  - Option C: minimum copy fix
-  - Option D: launch with known limitation
-  - Each: cost · risk · time · constitutional impact · launch impact.
-- **§7 Blocker Classification** — each blocker into: Launch Critical · Launch Major · Launch Minor · Launch Cosmetic · Not A Blocker. Justification.
-- **§8 Publish Decision Simulation** — Scenarios A (neither), B (G1 only), C (G2 only), D (both). Risk · trust · retention · recommendation per scenario.
-- **§9 Minimum Publish Path** — shortest sequenced task list to enable full publish. Exact tasks, sequence, dependencies. No future architecture. No RR-7/9/10.
-- **§10 Final Verdict** — explicit answers: can product publish today, can athlete publish today, can parent publish today, must G1 be resolved, must G2 be resolved, minimum publishable state.
-- **§11 Stop Gate** — audit-only confirmation.
+- TypeScript + lint + preflight clean.
+- Manual trace through resolver for `accepted-active-athlete`, `accepted-missingness-state`, `accepted-recovery-state`, `accepted-onboarding-state`, `accepted-setback-state` confirming no resolver change required (all five already supported by Wave 4 resolver).
+- Constitutional audit: RR-5/6/8, parent supremacy, safeguarding precedence, single Hammer authority, Organism State silence, replay determinism, demo↔prod firewall — unchanged (no code touched in those layers; `scope` continues to flow through projection hooks).
+- Regression: Wave 1–4 tests unchanged, no test files modified.
+- Scope audit: no new capability, primitive, route, schema, migration, emitter, authority, safeguarding change. No RR-7/9/10.
 
-## Stop Gate
+### Deliverable
 
-Audit only. Two files touched. No implementation. No new capability. No architecture expansion. No RR-7/9/10.
+`PARENT LAUNCH REMEDIATION REPORT` (§0–§9) returned in chat after build mode execution, with explicit answers on parent launch and full platform launch gates.
 
 ---
 
-# SEALED — Parent Launch Blocker Resolution Audit
+# SEALED — G2 Remediation Executed
 
-**Document:** `docs/asb/parent-launch-blocker-resolution-audit.md`
-**Status:** SEALED · Audit-only · No implementation · No schema · No migrations · No emitters · No projections · No new capability · No RR-7/9/10.
+**Scope:** G2 only. Mounted existing Wave 4 `HammerParentVoice` on `src/pages/Relational.tsx` post-accept surface. State derivation purely from replay-derived projections (`useInjuryRecoveryState`, `useLifeContextState`).
 
-**Findings:**
-- **G1** (silence rationale surface absence) — UX + copy gap. Athlete: Launch Minor. Parent: Launch Major. Backfill-acceptable.
-- **G2** (parent dashboard `HammerParentVoice` mount absence on `Relational.tsx` post-accept) — implementation gap (mount-site only). Athlete: Not A Blocker. Parent: Launch Major. Single parent-facing launch blocker.
-- Neither blocker is constitutional. Neither violates RR-5, RR-6, RR-8, parent supremacy, safeguarding precedence, replay determinism, single Hammer authority, or Organism State silence.
+**Files edited:**
+- `src/pages/Relational.tsx` — additive mount + local `deriveParentState` helper.
+- `.lovable/plan.md` — this entry.
+
+**Files NOT touched:** resolver, parent types, silence, guidance, handoff, onboarding, setback, authority, safeguarding, routing, schema, migrations, emitters, projections, athlete-facing components.
+
+**Constitutional audit:** RR-5 · RR-6 · RR-8 · Parent supremacy · Safeguarding precedence · Single Hammer authority · Organism State silence · Replay determinism · Demo↔prod firewall — all unchanged (no code touched in those layers; `scope` flows through existing projection hooks; safeguarding propagates non-downgradably from projection state into existing resolver short-circuit).
+
+**Scope audit:** no new capability · no new primitive · no new route · no schema change · no migration · no emitter · no authority change · no safeguarding change · no RR-7 · no RR-9 · no RR-10.
 
 **Verdict:**
-- Athlete-facing public launch: **proceed immediately.**
-- Parent-facing public launch: **resolve G2, then proceed.** G1 backfilled post-launch.
-- Minimum publish path: (1) ship athlete launch, (2) mount `HammerParentVoice` on `Relational.tsx` post-accept with `accepted-*` state derivation, (3) add silence rationale microcopy, (4) open parent launch.
+- Parent launch: **proceed.** G2 resolved.
+- Full platform launch: **proceed.** G1 (silence rationale microcopy) remains non-blocking backfill per Parent Launch Blocker Resolution Audit.
 
 **SEALED.**
