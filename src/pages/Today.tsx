@@ -176,3 +176,16 @@ function RecentList({ rows }: { rows: Array<{ event_id: string; topic_id: string
     </ul>
   );
 }
+
+/**
+ * Wave 3 — pure setback-state derivation from canonical projection rows.
+ * Replay-safe: depends only on row count. Never invents a reason; the
+ * resolver decides whether to render anything.
+ */
+function deriveSetbackState(
+  rows: ReadonlyArray<{ event_id: string; topic_id: string; occurred_at: string }>,
+): SetbackStateKind {
+  if (rows.length === 0) return "unavailable-signal";
+  if (rows.length < 3) return "incomplete-logging";
+  return "missed-day";
+}
