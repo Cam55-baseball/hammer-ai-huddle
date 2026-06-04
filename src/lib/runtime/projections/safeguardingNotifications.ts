@@ -35,9 +35,12 @@ export interface SafetyState {
   notifications: SafetyNotificationView[];
 }
 
-// Accept the full relational stream — safeguarding can fire on any prefix
-// (psych, exposure, conversation). We use the broad prefix.
-const PREFIXES = ["relational."];
+// Accept the full relational stream plus PIE V2 advisory events so RR-6
+// arm-health cautions reach the Safety Center alongside relational psych /
+// exposure / conversation routes. Phase 31 arbitration sub-route lives in
+// `safeguardingRoute.ts` — these prefixes determine what is *eligible* to be
+// classified into a delivery; classification itself stays unchanged.
+const PREFIXES = ["relational.", "pitching.v2."];
 
 export function safetyState(
   rows: AsbEventRow[] | undefined,

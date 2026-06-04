@@ -31,18 +31,32 @@ export function ScoutEvaluationForm({ athleteId, onSubmitted }: ScoutEvaluationF
     if (!user || !targetId) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from('scout_evaluations' as any).insert({
+      // Resolve athlete sport from their mpi settings; fall back to 'baseball'.
+      const { data: settings } = await supabase
+        .from('athlete_mpi_settings')
+        .select('sport')
+        .eq('user_id', targetId)
+        .maybeSingle();
+      const sport = (settings as { sport?: string } | null)?.sport ?? 'baseball';
+
+      const { error } = await supabase.from('scout_evaluations').insert({
         scout_id: user.id,
         athlete_id: targetId,
+        sport,
+        evaluation_date: new Date().toISOString().slice(0, 10),
         tool_grades: grades,
         overall_grade: overallGrade,
-        projection_notes: notes || null,
+        notes: notes || null,
       });
       if (error) throw error;
       toast({ title: 'Evaluation Submitted', description: 'Scout evaluation recorded.' });
       onSubmitted?.();
-    } catch {
-      toast({ title: 'Error', description: 'Failed to submit evaluation.', variant: 'destructive' });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: (err as Error)?.message ?? 'Failed to submit evaluation.',
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
