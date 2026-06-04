@@ -1,5 +1,34 @@
 import { useState, useCallback } from 'react';
 import type { MovementKey } from '@/lib/pitchMovementProfile';
+import type { PieV2RepInput } from '@/lib/pieV2/types';
+
+/**
+ * PIE V2 capture surface — additive bag carried alongside MicroLayerData.
+ * Pure data; lineage / replay handled at emit time via `emitPieV2RepScore`.
+ */
+export type PieV2CaptureBag = Partial<
+  Pick<
+    PieV2RepInput,
+    | 'energy_angle_deg'
+    | 'eyes_on_target'
+    | 'shoulders_closed_to_footstrike'
+    | 'leg_lift_to_footstrike_sec'
+    | 'stride_pct_body_height'
+    | 'head_vertical_drop_pct'
+    | 'hips_fired_toward_target'
+    | 'glove_inside_frame'
+    | 'head_offset_from_belly_line_deg'
+    | 'shoulder_horizontal_offset_deg'
+    | 'rear_foot_drag_foot_lengths'
+    | 'rear_foot_drag_direction_clean'
+    | 'release_extension_ft'
+    | 'arm_slot_deg'
+    | 'video_id'
+    | 'video_frame_range'
+    | 'athlete_reported_pain'
+    | 'provenance'
+  >
+>;
 
 export interface MicroLayerData {
   pitch_location?: { row: number; col: number };
@@ -47,6 +76,8 @@ export interface MicroLayerData {
   actual_outcome?: string;
   bp_distance_ft?: number;
   machine_velocity_band?: string;
+  // PIE V2 capture bag — baseball pitching only
+  pie_v2?: PieV2CaptureBag;
 }
 
 export function useMicroLayerInput() {
@@ -55,6 +86,10 @@ export function useMicroLayerInput() {
 
   const updateField = useCallback(<K extends keyof MicroLayerData>(field: K, value: MicroLayerData[K]) => {
     setCurrentRep(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const updatePieV2 = useCallback((patch: PieV2CaptureBag) => {
+    setCurrentRep(prev => ({ ...prev, pie_v2: { ...(prev.pie_v2 ?? {}), ...patch } }));
   }, []);
 
   const commitRep = useCallback(() => {
@@ -71,5 +106,5 @@ export function useMicroLayerInput() {
     setCurrentRep({});
   }, []);
 
-  return { repData, currentRep, updateField, commitRep, removeRep, reset };
+  return { repData, currentRep, updateField, updatePieV2, commitRep, removeRep, reset };
 }
