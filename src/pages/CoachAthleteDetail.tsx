@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,14 +19,37 @@ import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldAlert } from "lucide-react";
 
 const COLS =
   "event_id, athlete_id, topic_id, actor_role, actor_id, occurred_at, ingested_at, effective_at, valid_from, valid_to, payload, engine_version, idempotency_key, causality_refs, lineage_refs";
 
 export default function CoachAthleteDetail() {
   const { athleteId } = useParams<{ athleteId: string }>();
+  const { user } = useAuth();
   const [recruitingOptIn, setRecruitingOptIn] = useState(false);
+
+  // P0-REC-3 — roster membership guard. A coach may only drill into an
+  // athlete present in their accepted scout_follows roster. Prevents
+  // arbitrary UUID enumeration of athlete event streams.
+  const { data: rosterAccess, isLoading: checkingAccess } = useQuery({
+    queryKey: ["coach-roster-access", user?.id, athleteId],
+    enabled: !!user?.id && !!athleteId,
+    queryFn: async () => {
+      if (!user?.id || !athleteId) return false;
+      if (user.id === athleteId) return true; // self-view always allowed
+      const { data, error } = await supabase
+        .from("scout_follows")
+        .select("id")
+        .eq("scout_id", user.id)
+        .eq("player_id", athleteId)
+        .eq("status", "accepted")
+        .maybeSingle();
+      if (error) return false;
+      return !!data;
+    },
+  });
+
   const { data: pieV2Trends } = usePitchingV2Trends(athleteId ?? "");
   const pieV2_30d = pieV2Trends?.find((w) => w.window === "30d");
   const pieV2Latest = pieV2_30d?.aggregates[pieV2_30d.aggregates.length - 1];
@@ -33,7 +57,7 @@ export default function CoachAthleteDetail() {
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["coach-athlete-rows", athleteId],
-    enabled: !!athleteId,
+    enabled: !!athleteId && rosterAccess === true,
     queryFn: async (): Promise<AsbEventRow[]> => {
       const since = new Date(Date.now() - 30 * 86400 * 1000).toISOString();
       const { data, error } = await supabase
@@ -49,7 +73,34 @@ export default function CoachAthleteDetail() {
     },
   });
 
-  const snap = athleteId ? snapshotAthlete(athleteId, rows) : null;
+  const snap = athleteId && rosterAccess === true ? snapshotAthlete(athleteId, rows) : null;
+
+  if (!checkingAccess && rosterAccess === false) {
+    return (
+      <DashboardLayout>
+        <div className="mx-auto max-w-xl space-y-4 p-6">
+          <Card className="border-destructive/40 bg-destructive/5">
+            <CardHeader className="flex flex-row items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-destructive" />
+              <CardTitle className="text-base">Not on your roster</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                This athlete isn't in your accepted roster. Coaches may only
+                view athletes who've accepted a follow request. This guard
+                enforces RR-9 exposure ethics and prevents enumeration of
+                event streams by UUID.
+              </p>
+              <Button asChild variant="outline" size="sm">
+                <Link to="/coach/console"><ArrowLeft className="mr-1 h-4 w-4" /> Back to roster</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
 
   return (
     <DashboardLayout>

@@ -46,8 +46,10 @@ export function deriveInjuryCaution(
   let level: PieV2CautionLevel = "none";
   if (pain && factors.length > 0) level = "elevated";
   else if (pain) level = "watch"; // pain alone — RR-6: outranks inferred readiness
-  else if (factors.length >= 2) level = "watch";
+  // Order matters: ≥3 must be checked BEFORE ≥2 so three concurrent
+  // mechanical-risk factors escalate to "elevated", not "watch".
   else if (factors.length >= 3) level = "elevated";
+  else if (factors.length >= 2) level = "watch";
 
   return {
     level,

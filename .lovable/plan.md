@@ -1,221 +1,200 @@
-# PIE V2 — Wave A Forensic Verification Audit
+# Hammers Modality — Launch Readiness Ratification
 
-Scope: prove integration, not file existence. Wave B (HUAC) blocked until items in §7 are sealed.
+**Verdict: 🔴 NO-GO for public launch.**
 
----
+This is an organism audit, not a code audit. Six parallel forensic passes were run against new/youth onboarding, pitcher journey, hitter journey, coach/parent/recruiter journeys, safety + recommendation engine + ASB + softball parity, and design/perf/report-card/AI-Hammer coherence. Findings are evidence-cited with `file:line`.
 
-## 1. Wave A forensic verification report
+- **Launch readiness score:** 38 / 100
+- **Publication readiness score:** 31 / 100
+- **P0 blockers:** 16 · **P1:** 26 · **P2:** 22 · **P3:** 17
 
-Legend: ✅ wired end-to-end · ⚠️ substrate only / not consumed · ❌ missing.
-
-| Artifact | Path | Upstream | Downstream | Test | Replay | Prod status |
-|---|---|---|---|---|---|---|
-| Types | `src/lib/pieV2/types.ts` | — | all PIE V2 modules | typecheck | engine_version pinned `pie-v2.0.0` | ✅ |
-| Scoring | `src/lib/pieV2/scoring.ts` | types | aggregate, emit | `scoring.test.ts` | ✅ deterministic test | ✅ |
-| Aggregate | `src/lib/pieV2/aggregate.ts` | scoring | CoachPanel, HammerBrief, athleteState, recommenders | `replay.test.ts` | ✅ byte-equal | ✅ |
-| Emit | `src/lib/pieV2/emit.ts` | scoring | `asb_events` ledger | ❌ no emit test | ⚠️ topic `pitching.v2.*` not lineage-verified | ⚠️ |
-| Athlete state | `src/lib/pieV2/athleteState.ts` | aggregate, injuryDetection | `pie_v2_caution_state` JSONB | ❌ | ⚠️ projection not consumed by any UI | ⚠️ |
-| Injury detection | `src/lib/pieV2/injuryDetection.ts` | aggregate, athlete-reported pain | athleteState | ❌ | ⚠️ safeguarding route not wired to Phase 31 escalation | ⚠️ |
-| Recommend drills | `src/lib/pieV2/recommendDrills.ts` | aggregate, drill catalog | none mounted | ❌ | ⚠️ no UI consumer | ⚠️ |
-| Recommend videos | `src/lib/pieV2/recommendVideos.ts` | aggregate, video catalog | none mounted | ❌ | ⚠️ no UI consumer; not bridged to `videoRecommendationEngine` | ⚠️ |
-| Longitudinal | `src/lib/pieV2/longitudinal.ts` | `asb_events` | `usePitchingV2Trends` | ❌ | ⚠️ replay-derived but untested | ⚠️ |
-| Hammer talking points | `src/lib/pieV2/aiHammerTalkingPoints.ts` | aggregate | HammerBriefPanel | ❌ | ✅ deterministic envelope | ⚠️ |
-| Drill catalog | `src/data/baseball/pieV2DrillCatalog.ts` | — | recommendDrills | ❌ coverage matrix | — | ⚠️ 52 slots — coverage of 13 signals × 4 tiers unverified |
-| Video catalog | `src/data/baseball/pieV2VideoCatalog.ts` | — | recommendVideos | ❌ | — | ⚠️ 65 slots — same |
-| Frame tagger | `src/components/micro-layer/PieV2FrameTagger.tsx` | `useMicroLayerInput.updatePieV2` | emit | ❌ | ❌ not mounted in any capture route | ❌ |
-| Micro input | `src/components/micro-layer/PitchingV2MicroInput.tsx` | useMicroLayerInput | emit | ❌ | ❌ not mounted in pitching session route | ❌ |
-| Coach panel | `src/components/coach/PieV2CoachPanel.tsx` | usePitchingV2Trends, aggregate | CoachAthleteDetail | ❌ render test | ⚠️ mounted but data path from sessions → aggregate not verified | ⚠️ |
-| Hammer brief panel | `src/components/coach/PieV2HammerBriefPanel.tsx` | aggregate | CoachAthleteDetail | ❌ | ⚠️ aggregate prop source unverified | ⚠️ |
-| Recruiting card | `src/components/recruiting/PieV2RecruitingCard.tsx` | aggregate | CoachAthleteDetail (RR-9 opt-in) | ❌ | ⚠️ opt-in toggle present, audit trail of opt-in not emitted as relational event | ⚠️ |
-| Hook trends | `src/hooks/usePitchingV2Trends.ts` | `asb_events` query | CoachPanel | ❌ | ⚠️ | ⚠️ |
-| Taxonomy bridge | `src/lib/analysisToTaxonomy.ts` | signals | video recommender | ❌ | ⚠️ mapping exists but not invoked in production recommend path | ⚠️ |
-| Migration | `supabase/migrations/…_pie_v2_signals.sql` | — | `performance_sessions.pie_v2_signals`, `athlete_foundation_state.pie_v2_caution_state` | manual | — | ✅ schema deployed, ⚠️ no writer wired |
-
-**Verdict:** substrate complete; **no end-to-end capture→ledger→aggregate→UI path is wired in production routes**. Wave A is **substrate-sealed, integration-incomplete**.
+The platform's constitutional substrate (Phases 1–160, PIE V2, HIE phase doctrine, ASB event fabric) is internally coherent and well-architected. The failure mode is **integration**: the substrate is wired to itself, not to the user. Capture surfaces are unmounted, edge functions skip the doctrine, projections never write back, recommendations cannot be played, the Universal Hammers Report Card was never built, AI Hammer is a deterministic stub, and Softball PIE V2 does not exist.
 
 ---
 
-## 2. PIE V2 consumption matrix (13 signals × 12 surfaces)
+## Journey Verdicts
 
-A=capture B=storage C=scoring D=surface E=trend F=athlete-state G=AI Hammer H=drills I=videos J=recruiting K=coach K2=report card
-
-| # | Signal | A | B | C | D | E | F | G | H | I | J | K | L (RC) |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | energy_angle | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 2 | visual_stability (eyes_on_target) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 3 | separation (shoulders closed) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 4 | tempo (≤1.05s) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 5 | stride (%BH) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 6 | head_stability (≤2%) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 7 | hip_alignment | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 8 | front_side (glove in frame) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 9 | head_alignment (≤15° belly line) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 10 | shoulder_level (≤10°) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 11 | rear_foot_drag | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
-| 12 | release_extension (tracked) | ⚠️* | ✅ | ✅ tracked-only | ⚠️ | ✅ | ⚠️ advisory | ⚠️ | n/a | n/a | ⚠️ | ⚠️ | ❌ |
-| 13 | arm_slot (tracked) | ⚠️* | ✅ | ✅ tracked-only | ⚠️ | ✅ | ⚠️ advisory | ⚠️ | n/a | n/a | ⚠️ | ⚠️ | ❌ |
-
-*Capture exists in components but components are not mounted in any production pitching capture route. **Universally orphaned at capture-entry and report-card surfaces.**
-
----
-
-## 3. Throwing efficiency hardening matrix (baseball + softball)
-
-| Item | Baseball PIE V2 | Softball | Status |
+| # | Journey | Verdict | Headline failure |
 |---|---|---|---|
-| 1. Eyes on target @ peak leg lift | `visual_stability` (boolean eyes_on_target) | ❌ no softball engine | **Partial** — baseball-only; softball substrate absent |
-| 2. Hips fire, shoulders closed to landing | `separation` (shoulders_closed_to_footstrike) | ❌ | Partial |
-| 3. ≤1.05s lift→strike | `tempo` (leg_lift_to_footstrike_sec, threshold pinned) | ❌ | Partial |
-| 4. Stride length + repeatability | `stride` (%BH + within-session variance via `consistency`) | ❌ | Partial; landing-spot repeatability not separately tracked — folded into `consistency` only |
-| 5. Head stability ≤2% | `head_stability` (head_vertical_drop_pct) | ❌ | Partial |
-| 6. Directional hip alignment | `hip_alignment` (hips_fired_toward_target boolean) | ❌ | Partial — boolean is coarse; no angular signal |
-| 7. Front side control (glove in body frame) | `front_side` (glove_inside_frame boolean) | ❌ | Partial — Open→Target→Closed→Body sequence not modeled, lateral glove swing not detected |
-| 8. Head alignment @ release ≤15° belly line | `head_alignment` (head_offset_from_belly_line_deg) | ❌ | Partial |
-| 9. Shoulder level @ release ≤10° | `shoulder_level` (shoulder_horizontal_offset_deg) | ❌ | Partial |
-| 10. Rear foot drag efficiency | `rear_foot_drag` (length + direction_clean) | ❌ | Partial |
-| 11. Release extension consistency | `extension_consistency` tracked-only | ❌ | Partial |
-| 12. Arm slot consistency | `arm_slot_consistency` tracked-only | ❌ | Partial |
-
-**Gaps to seal before Wave B:**
-- G1: Softball throwing has no PIE V2 mirror. Baseball-only constitution conflicts with the request that #1–#12 hold for both sports.
-- G2: Front-side sequence (Open→Target→Closed→Body) and lateral-swing detection not modeled.
-- G3: Hip direction is boolean; needs angular signal to enable trajectory.
-- G4: Landing-spot repeatability not a first-class signal (currently inferred from `consistency`).
+| 1 | New athlete | 🔴 Fail | Onboarding has 3 disconnected funnels; paying path never reaches Hammer surface |
+| 2 | Youth (10–12) | 🔴 Fail | First screen says "Emit canonical event" and "Your organism is the source of truth" |
+| 3 | Advanced athlete | 🟠 Degraded | Trends/longitudinal exist but starve — no signal writer feeds them |
+| 4 | Pitcher | 🔴 Fail | PitchingV2MicroInput + PieV2FrameTagger never mounted; entire PIE V2 pipeline dead |
+| 5 | Hitter | 🔴 Fail | `hie-analyze` edge function never calls hitting phase doctrine; chains/roadmaps orphaned |
+| 6 | Coach | 🟠 Degraded | Roster shows raw UUIDs as names; no roster membership guard on drilldown |
+| 7 | Parent | 🟠 Degraded | Invite tokens never expire; HammerParentVoice blank for normal active state |
+| 8 | Recruiter / scout | 🔴 Fail | `scout_evaluations` insert violates NOT NULL on every submission |
 
 ---
 
-## 4. HIE readiness verification (pre-Wave C)
+## P0 — Launch Blockers (must fix before any public release)
 
-Code state: **HIE substrate does not exist yet** (no `src/lib/hie/`, no `src/data/baseball/hieFoundation.ts`). Verifications below are doctrinal readiness, not implementation.
+Grouped by failure surface. Each carries a file:line citation in the per-domain reports above.
 
-| Phase | Requirement | Doctrine present | Code present |
-|---|---|---|---|
-| **P1 Stabilize** | stability, head control, rear-foot pressure scored + pass/fail + recommendation + report-card | ✅ in HUAC plan | ❌ |
-| **P2 Hand Load** | bow-and-arrow, scap load, barrel-behind-head, head/forward drift, load integrity | ✅ in HUAC plan | ❌ |
-| **P3 Back Hip Direction** | hip→release vector, front shoulder closed, separation, landing posture, launch position | ✅ | ❌ |
-| **P4 Hitter's Move** | knob retention, elbow path, hand path, barrel delivery, contact efficiency, palms-up/down, fair-territory delivery | ✅ | ❌ |
+### Capture & ingestion (PIE V2 dead)
+- **P0-PIE-1** `PitchingV2MicroInput` never mounted (`MicroLayerInput.tsx` absent of import).
+- **P0-PIE-2** `PieV2FrameTagger` never mounted (`AnalyzeVideo.tsx` no import).
+- **P0-PIE-3** `emitPieV2SessionAggregate` / `aggregateSession` never called → `usePitchingV2Trends` always empty.
 
-**Verdict:** HIE is **doctrinally specified but uncoded**. Wave C must produce a `hie/` parallel to `pieV2/` with identical replay/lineage discipline.
+### Hitting doctrine bypassed
+- **P0-HIE-1** `supabase/functions/hie-analyze/index.ts` does not import `hittingPhases` / `hittingCausalChains` → snapshots have no phase attribution, no P4 cap.
+- **P0-HIE-2** `HittingCausalChainCard` + `HittingRoadmapLadder` orphaned (zero call sites).
+- **P0-HIE-3** `/analyze/hitting` route does not exist — `CompleteHitter.tsx` is a dead-end tile.
+- **P0-HIE-4** `PieV2RecruitingCard` rendered for hitters shows pitching signals as "Mechanics Snapshot".
 
----
+### Onboarding broken
+- **P0-OB-1** `/select-role` route not registered in `App.tsx` — entire SelectRole flow unreachable.
+- **P0-OB-2** `OnboardingFlow.tsx:199` — "All set" button permanently disabled at completion (no `navigate()`).
+- **P0-OB-3** `OnboardingFlow.tsx:105` — `isMinor: false` hardcoded; DOB collected but never read → safeguarding never activates for youth.
+- **P0-OB-4** Paying funnel (ProfileSetup → Activate → Dashboard) never visits any Hammer onboarding surface.
 
-## 5. Universal Report Card (UHRC) pillar mapping
+### Safety (RR-6 / Phase 31)
+- **P0-SAFE-1** `injuryDetection.ts:46–51` — `factors.length >= 3` elevated branch is dead code (preceded by `>= 2` watch). Three concurrent mechanical risks with no pain → "watch" instead of "elevated". RR-6 silently under-escalates.
+- **P0-SAFE-2** Phase 31 arbitration is a comment, not a route. `safeguardingRoute.ts` classifies `arbitration_required` and never delivers it. No App route, no notification dispatch.
+- **P0-SAFE-3** `arm_health_caution` from `derivePieV2StateDelta` is computed but never emitted to ASB — invisible to coaches, parents, Safety Center.
 
-Proposed canonical pillars (6, capped for cognitive load):
+### Recruiter / scout security
+- **P0-REC-1** `ScoutEvaluationForm.tsx:34` — insert omits required `evaluation_date` + `sport`; every submission fails silently.
+- **P0-REC-2** Parent invite token has no `issued_at` expiry check — permanent link validity.
+- **P0-REC-3** `CoachAthleteDetail` accepts any UUID — no roster membership guard → arbitrary athlete event enumeration.
 
-| # | Pillar | Pitching (PIE V2) | Hitting (HIE) | Softball Throwing | Future systems |
-|---|---|---|---|---|---|
-| 1 | **Sequencing** | tempo, separation, hip_alignment | P3 back-hip direction, separation | mirror PIE V2 | movement-chain signals |
-| 2 | **Stability** | visual_stability, head_stability, head_alignment | P1 head control, rear-foot pressure | mirror | balance/posture signals |
-| 3 | **Direction** | hip_alignment, energy_angle, rear_foot_drag direction | P3 hip-to-launch vector | mirror | trajectory signals |
-| 4 | **Load / Repeatability** | stride, rear_foot_drag length, consistency | P2 hand load, load integrity | mirror | load-pattern signals |
-| 5 | **Delivery / Finish** | front_side, shoulder_level, extension, arm_slot | P4 knob/elbow/hand/barrel path, palms relationship | mirror | finishing signals |
-| 6 | **Outcome Integrity** | composite + outcome-tag lineage | contact efficiency + fair-territory delivery | mirror | outcome signals |
+### Unified report card & AI Hammer
+- **P0-UHRC-1** Universal Hammers Report Card does **not exist** (`src/lib/uhrc/*` absent). Per-engine cards (Scorecard, PieV2CoachPanel, PieV2HammerBriefPanel, PracticeIntelligenceCard) are not unified — 10-second comprehension test fails.
+- **P0-AIH-1** `aiHammerTalkingPoints.ts` missing required fields: `biggest_win`, `biggest_leak`, `priority_fix`, explicit drill ref, video ref, trend. `recommendDrills` / `recommendVideos` exist in the library but are **not imported** by the brief — split-brain coaching.
 
-**Orphan / duplicate / conflict audit:**
-- No PIE V2 signal is orphaned — each maps to exactly one pillar.
-- No HIE phase is orphaned — P1→2, P2→4, P3→1+3, P4→5+6.
-- No duplicate scoring: each signal contributes weight to exactly one pillar (separation appears in Sequencing only; hip_alignment appears in Direction only — even though both reference hips).
-- No conflict: composites computed at pillar level, never cross-pillar.
-- Cognitive load: 6 pillars ≤ 7±2; one-line label + score + tier per pillar.
-
----
-
-## 6. Architectural bypass audit
-
-Possible bypass paths discovered:
-
-| # | Bypass | Where | Seal |
-|---|---|---|---|
-| B1 | Components write `pie_v2_signals` JSONB directly without `emitPieV2RepScore` | future writers | **Constitutional rule:** projection columns are read-only outside the emit pipeline; enforce via DB trigger that rejects writes not stamped with `engine_version`. |
-| B2 | Video recommender consumes raw signals instead of `analysisToTaxonomy` bridge | `videoRecommendationEngine` callers | Force all PIE V2→video paths through `pieV2SignalsToTaxonomyBucket`. |
-| B3 | AI Hammer free-form prose around PIE V2 talking points | future Hammer surfaces | All Hammer output for PIE V2 signals must originate from `talkingPointsForSession`; lint rule forbidding string concatenation around signal labels. |
-| B4 | Recruiting card surfaces signals without RR-9 opt-in event | future recruiting routes | Mount must emit `relational.exposure.opt_in` ledger event; render guarded by query of that event, not local boolean. |
-| B5 | Athlete-state writer bypasses `pie_v2_caution_state` and writes to legacy state | future state-engine refactors | Caution projection is single-writer (`pieV2/athleteState.ts`); add invariant test. |
-| B6 | Injury advisory routed to UI without safeguarding orchestration | future injury surfaces | All `arm_health_caution` surfaces must traverse Phase 31 safeguarding sub-route (RR-6 supremacy). |
-| B7 | UHRC pillar score computed outside canonical pillar reducer | future report-card consumers | Single reducer `uhrc/computePillars.ts`; report cards may only render its output. |
+### Recommendation engine unplayable
+- **P0-REC-ENG-1** PIE V2 drill IDs (`pie_v2.drill.*`) have no bridge to the `drills` table → coaches cannot assign recommendations.
+- **P0-REC-ENG-2** PIE V2 video catalog entries have no `url` / `embed_id` and no `library_videos` mapping → recommendations unplayable.
 
 ---
 
-## 7. Remaining risks (blocking Wave B)
+## P1 — Must fix before scale
 
-1. **Capture surfaces unmounted** — `PieV2FrameTagger` and `PitchingV2MicroInput` exist but are not rendered in any pitching capture route. No production data can enter the engine.
-2. **Emit not lineage-verified** — `emitPieV2RepScore` lacks a test proving `asb_events` lineage parents resolve and `engine_version` stamps round-trip.
-3. **Projection caches have no writer** — `pie_v2_signals` and `pie_v2_caution_state` columns exist but nothing writes to them on session close.
-4. **CoachPanel data path unproven** — `usePitchingV2Trends` queries the ledger; no fixture proving signals show up after a real capture session.
-5. **Safeguarding route not wired** — injury detection produces advisories but they do not reach the safeguarding orchestration route.
-6. **Drill/video catalog coverage matrices unaudited** — 52/65 slots claimed but no test asserts every (signal × tier) cell is filled.
-7. **Softball throwing parity absent.**
-8. **RR-9 opt-in not ledger-backed.**
+Onboarding (5): dual `localStorage` role-key race; `Auth.tsx` falsely marks name-only profile as onboarded; no baseline establishment anywhere; first AI Hammer feedback unreachable from primary funnel; SelectModules back-button mis-routes.
 
----
+Pitcher logic (3): `rollupAggregates` only encodes `energy_angle` — 12 signals null in cross-session trends; `pie_v2_signals` projection cache has no writer; lineage only fires from unmounted `PieV2FrameTagger`.
 
-## 8. Constitutional hardening recommendations (Wave A.5 — pre-Wave B)
+Hitter (4): no hitting report card on ProgressDashboard; `PHASE_DRILL_RECOMMENDATIONS` IDs never resolved against DB drill engine; AI Hammer dashboard context contains no hitting phase violation data; coach `CoachPlayerCard` has no phase visibility.
 
-Sequenced; each item produces evidence, not just code.
+Coach/Parent/Recruiter (5): approved scout role row never persisted (session-only access); `vault_scout_grades` has no `scout_id` column (no provenance); RR-9 opt-in is ephemeral `useState` (not server-persisted consent); `parent_invite_dispatches` not written for manual-link path; raw UUIDs shown as athlete identity in Coach Console + Detail.
 
-**A.5.1 Capture mount + emit lineage**
-- Mount `PieV2FrameTagger` and `PitchingV2MicroInput` in the pitching session capture route.
-- Add `emit.test.ts` proving: rep input → `asb_events` row with `topic='pitching.v2.rep_score'`, parent lineage to session event, `engine_version='pie-v2.0.0'`, replay-safe payload.
+Safety (3): `injuryEmitters.ts` lacks `isMinor` narrowing independent of lockdown → minor injury events may reach coach scope without parent authority; `physio_*` tables disconnected from RR-6 chain; `RTP.tsx` / `Illness.tsx` have no ASB write path for authorizations.
 
-**A.5.2 Projection writer**
-- Add `pieV2/persistSession.ts` that, on session close, writes aggregate to `performance_sessions.pie_v2_signals` and caution state to `athlete_foundation_state.pie_v2_caution_state`. Single-writer invariant test.
+ASB (2): `reconcileFoundationState` never emits ASB → foundation state transitions invisible to projection layer; `derivePieV2StateDelta` has zero call sites.
 
-**A.5.3 Coach data path proof**
-- Fixture test: seed 3 reps → emit → aggregate → `usePitchingV2Trends` returns expected series → `PieV2CoachPanel` renders all 13 signals.
+Softball parity (2): no signal-level scoring model for windmill pitching; hitting has no slap-specific signal scoring even though logic exists.
 
-**A.5.4 Safeguarding wire**
-- Route `arm_health_caution` through Phase 31 safeguarding sub-route; emit `relational.safeguarding.signal` event; never surface caution UI without traversing the route.
-
-**A.5.5 Catalog coverage matrix**
-- `pieV2DrillCatalog.test.ts` asserts every (signal × tier) cell is filled; same for videos.
-
-**A.5.6 Softball throwing parity (G1)**
-- Create `src/lib/pieV2-softball/` mirroring baseball with identical signal set 1–13 and engine_version `pie-v2-sb.0.0`. Same emit topic prefix `pitching.v2.softball.*`. Same scoring discipline. Required because items 1–12 are sport-agnostic mechanical truths.
-
-**A.5.7 Front-side & directional refinement (G2–G4)**
-- Extend `front_side` with sequence-state signal (Open→Target→Closed→Body) and lateral-swing detection.
-- Promote `hip_alignment` from boolean to angular degrees.
-- Promote landing-spot repeatability to a first-class signal `landing_repeatability` (scored from across-rep stride end-point variance).
-
-**A.5.8 Bypass seals (B1–B7)**
-- DB trigger rejecting non-engine writes to projection columns.
-- Lint rule on Hammer prose.
-- RR-9 opt-in ledger event + render guard.
-- Invariant tests for single-writer state and pillar reducer.
-
-**A.5.9 UHRC pillar reducer skeleton (Wave B entry condition, not Wave B itself)**
-- `src/lib/uhrc/computePillars.ts` with pure mapping from PIE V2 + HIE (when present) into the 6 pillars. Used to prove no orphans/duplicates at type level.
+Design / perf (3): raw Tailwind palette throughout `TheScorecard` and Dashboard merch card; `ProgressDashboard` reads `localStorage` synchronously inside render; 15 heavy components mount unconditionally on ProgressDashboard.
 
 ---
 
-## 9. Wave B entry gate
+## P2 — Can launch with mitigation (22)
 
-Wave B (HUAC / Universal Report Card) begins **only after** A.5.1–A.5.5 produce green evidence and A.5.6–A.5.8 are sealed in code (A.5.9 is the handoff). Until then, HUAC would consume an engine that has no production data flowing through it.
+- Youth-incomprehensible jargon throughout `AthleteOnboarding.tsx` ("organism", "emit canonical event", "ledger", "appended").
+- `systemTone.ts` combative library-publisher language exists at a deceptively global path.
+- Age verification dialog asks child to check parent's consent box — parent not authenticated.
+- `SelectModules` add-mode skips auth check → unauthenticated checkout entry possible.
+- `CoachingReportDisplay` rendered in `SessionDetailDialog` with no role gate (athletes see Root-Cause Analysis).
+- `HammerParentVoice` returns `null` for normal active-athlete state → blank card.
+- `TeamWeaknessEngine` hardcodes `sport: 'baseball'`.
+- `useCoachHammerNextStep` reads coach's own ASB rows, not the player's.
+- `ScoutEvaluationForm` free-text UUID input with no follow-gate.
+- `ParentTrustCard` debug block rendered twice.
+- `recommendDrills` returns `[]` for fully clean athletes — no maintenance / L4 surface.
+- `aiHammerTalkingPoints` uses only `root_causes[0]` and `teaching_progression[0]`.
+- No severity sort on `talkingPointsForSession`.
+- `AnalyzeVideo.tsx` has zero PIE V2 integration.
+- `pieV2SignalsToTaxonomyBucket` bridge never called from any UI.
+- `recommendVideos` never called from any panel.
+- Drill + video catalogs are programmatically-generated stubs (single demo cue, no `url`).
+- 4 hero JPGs statically imported on Dashboard; single global `<Suspense>` for 114 lazy routes.
+- `Index.tsx` "Coming Soon" rendered as a red error-styled card.
+- `AthleteCommand` over-fetches 500 events for a 10-row preview.
+- `PieV2RecruitingCard` shows raw `conf 0.73` decimals to scouts.
+- Missingness thresholds cover only 4 prefixes — injury/psych signals stale up to 168h before flagged.
 
 ---
 
-## 10. Technical appendix (file deltas at Wave A.5 close)
+## P3 — Post-launch (17)
+
+Hardcoded English DOB error string; dual toast system (`sonner` + shadcn) active; dead `onboardingCopy` export; OnboardingFlow step counter shows "0 of 5" on completion; brand logo unused on `Index.tsx`; `Index.tsx` hardcoded "H" letter logo; hero interval keeps running on hidden tab; PieV2CoachPanel silently returns null for non-baseball; CoachDigest shows raw `topic_id` strings; AcceptParentInvite navigates to `/`; duplicated follow logic across Coach/Scout dashboards; vault 12-week grade lock is client-only; BounceBackBay "section opened = complete" with no comprehension gate; offline reconciler hardcodes `actor_role: "system"`; `topicLabels.ts` missing PIE V2 / relational entries; `_shared/hittingPhases.ts` (374 lines) diverged from client `src/lib/hittingPhases.ts` (298 lines); softball stealing trainer emits no ASB events.
+
+---
+
+## Exact Pre-Launch Fix Order
+
+Each wave is fully verifiable before the next begins. Estimated calendar effort assumes one focused agent.
 
 ```text
-src/lib/pieV2/
-  emit.ts                         (+ lineage test)
-  persistSession.ts               (NEW — single projection writer)
-  __tests__/emit.test.ts          (NEW)
-  __tests__/persistSession.test.ts(NEW)
-  __tests__/catalogCoverage.test.ts (NEW — drills + videos)
-src/lib/pieV2-softball/           (NEW — mirror of pieV2/)
-src/lib/uhrc/
-  computePillars.ts               (NEW — skeleton reducer)
-  __tests__/pillarMapping.test.ts (NEW — orphan/duplicate guard)
-src/components/micro-layer/
-  PitchingV2MicroInput.tsx        (mounted in capture route)
-  PieV2FrameTagger.tsx            (mounted in capture route)
-src/pages/<pitching capture route>.tsx  (edited to mount)
-src/lib/safeguarding/             (route arm_health_caution through Phase 31)
-supabase/migrations/<new>.sql     (trigger: projection columns single-writer + engine_version stamp required)
-docs/asb/pie-v2-wave-a5-hardening.md (NEW ratification doc)
-.lovable/plan.md                  (Wave A.5 sealed; Wave B unblocked)
+WAVE 1 — STOP THE BLEEDING (security + safety)
+  1. P0-REC-1   Fix scout_evaluations insert (add evaluation_date + sport).
+  2. P0-REC-3   Roster-membership guard on CoachAthleteDetail.
+  3. P0-REC-2   Parent invite token expiry (24h) + server-side verification.
+  4. P0-SAFE-1  Swap injuryDetection severity branches (≥3 elevated before ≥2 watch).
+  5. P0-SAFE-3  Wire arm_health_caution to emitAsbEvent.
+  6. P0-SAFE-2  Implement Phase 31 arbitration delivery (notify_safeguarding_role
+                + safeguardingNotifications projection extends prefixes to pitching.v2.*).
+  7. P0-OB-3    Read DOB → derive isMinor → pass into OnboardingFlow gateInput.
+
+WAVE 2 — CONNECT THE ORGANISM (capture → emit → projection)
+  8. P0-PIE-1   Mount PitchingV2MicroInput inside MicroLayerInput (sport-gated).
+  9. P0-PIE-2   Mount PieV2FrameTagger inside AnalyzeVideo with parent_video_event_id.
+ 10. P0-PIE-3   Call aggregateSession + emitPieV2SessionAggregate on session close;
+                add persistSession writer for pie_v2_signals projection column.
+ 11. P0-HIE-1   Wire hittingPhases + hittingCausalChains into supabase/functions/hie-analyze;
+                add violated_phases / causal_chains / p4_severity columns + write them.
+ 12. P0-HIE-3   Build /analyze/hitting route + page.
+
+WAVE 3 — MAKE RECOMMENDATIONS PLAYABLE
+ 13. P0-REC-ENG-1  Seed drills table with PIE V2 IDs OR add bridge resolver.
+ 14. P0-REC-ENG-2  Seed library_videos rows for pie_v2.video.* IDs with real URLs.
+ 15. P0-AIH-1     Extend PieV2TalkingPoint with biggest_win/biggest_leak/priority_fix/
+                  drill/video/trend; have aiHammerTalkingPoints import recommendDrills+
+                  recommendVideos so brief and panel share one codepath.
+ 16. P0-UHRC-1    Build src/lib/uhrc/computePillars.ts unifying PIE V2 + HIE + Foundation
+                  into 6 pillars; render UniversalHammersReportCard on ProgressDashboard
+                  + CoachAthleteDetail + Recruiter card.
+
+WAVE 4 — FIX ENTRY & EXIT
+ 17. P0-OB-1   Register /select-role route (or delete page + references).
+ 18. P0-OB-2   OnboardingFlow completion: enable button + navigate to /command.
+ 19. P0-OB-4   ProfileSetup → Activate → /onboarding/athlete → /command (replace
+               /dashboard target for first-time users).
+ 20. P0-HIE-2  Mount HittingCausalChainCard + HittingRoadmapLadder on Progress + Coach.
+ 21. P0-HIE-4  Build HittingRecruitingCard; gate PieV2RecruitingCard to pitchers only.
+
+WAVE 5 — P1 SWEEP (must be done before scale)
+   - Fix rollupAggregates to encode all 13 signals.
+   - Persist RR-9 consent to a new server table (recruiting_visibility_consent).
+   - Persist approved scout role row.
+   - Add scout_id + RLS to vault_scout_grades.
+   - Replace localStorage role keys with single useUserRole hook backed by profile.
+   - Replace UUID-as-name with athlete profile lookup in Coach Console + Detail.
+   - Refactor TheScorecard + Dashboard merch card to semantic tokens.
+   - Add lazy/Suspense per heavy ProgressDashboard section.
+   - Wire physio_* + RTP + Illness pages to RR-6 injury chain.
+   - Build src/lib/pieV2-softball/ — signals + drills + videos + recommender +
+     injuryDetection + emit (windmill mechanics).
+
+WAVE 6 — P2 / P3 (post-soft-launch ok)
+   - Youth-voice copy pass on AthleteOnboarding + systemTone re-scoping.
+   - HammerParentVoice non-empty default state.
+   - TeamWeaknessEngine sport from team context.
+   - Drill/video catalogs filled with real cues + URLs.
+   - Missingness thresholds for pitching.v2.* + relational.injury.* + relational.psych.*.
+   - Polish bucket from P3 list.
 ```
 
-Approve to proceed with Wave A.5 hardening, after which Wave B (HUAC) opens.
+---
+
+## Go / No-Go Recommendation
+
+**NO-GO** for public launch in current state.
+
+**Soft-launch candidacy** (closed cohort, supervised): possible after **Waves 1–4 complete and verified end-to-end**. Wave 1 alone is the minimum legal/safety floor — without it the platform fails its own RR-6 safeguarding constitution, exposes athlete event streams by UUID enumeration, and silently drops every scout evaluation.
+
+**Public launch candidacy:** requires Waves 1–5 complete + a fresh forensic verification audit confirming a real session produces a populated UHRC, a non-empty AI Hammer brief with a drill the coach can actually assign, and a safety event reaching the Safety Center for an `elevated` caution.
+
+**Softball parity:** until Wave 5 PIE V2-softball ships, the product cannot truthfully be marketed as a baseball-and-softball platform. Either ship parity or scope public launch to baseball only.
+
+The substrate is sound. The wiring is not. Fix the wiring before the doors open.
