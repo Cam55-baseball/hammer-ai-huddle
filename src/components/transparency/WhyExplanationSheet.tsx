@@ -14,7 +14,7 @@ interface Props {
 const TITLE: Record<WhySource, string> = {
   hie: 'Why this prescription?',
   mpi: 'Why this MPI score?',
-  hammer: 'Why this Hammer State?',
+  hammer: 'Why this Organism State?',
 };
 
 export function WhyExplanationSheet({ open, onOpenChange, sourceType, sourceId }: Props) {
