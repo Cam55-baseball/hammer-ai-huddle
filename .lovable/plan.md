@@ -1,40 +1,44 @@
-# Hammers Modality — Production Launch Readiness Audit (Plan)
+# Parent Launch Blocker Resolution Audit — Plan
 
-Audit-only deliverable. No code, schema, migrations, emitters, projections, or capability additions. Two files touched.
+Audit-only. Two files touched. No code, schema, migrations, emitters, projections, or capability additions. No RR-7/9/10.
 
 ## Files
 
-- **Create** `docs/asb/production-launch-readiness-audit.md` — full launch-governance audit, §0–§12.
-- **Append** `.lovable/plan.md` — sealed audit entry referencing the new document.
+- **Create** `docs/asb/parent-launch-blocker-resolution-audit.md` — full forensic resolution audit, §0–§11.
+- **Append** `.lovable/plan.md` — sealed entry referencing the new document.
 
-No other files modified. No RR-7, RR-9, RR-10. No architecture expansion.
+## Source Grounding
 
-## Method
+Pure forensic review against existing artifacts:
+- `docs/asb/production-launch-readiness-audit.md` (origin of G1, G2)
+- `docs/asb/hammer-critical-stack-validation-audit.md` (G1–G10 definitions, severity context)
+- `src/components/parent/HammerParentVoice.tsx`, `src/lib/runtime/parent/resolver.ts`, `src/lib/runtime/parent/types.ts`
+- `src/pages/AcceptParentInvite.tsx`, `src/pages/Relational.tsx`
+- `src/lib/runtime/silence/types.ts` and silence classifier (G1 surface origin)
+- Constitutional anchors: Eternal Laws, Megaphase 151–160, RR-5, RR-6, RR-8
 
-Pure forensic launch-readiness review against existing source from Foundations, RR-5, RR-6, RR-8, Hammer Waves 1–4, and the Hammer Critical Stack Validation Audit. Citations reference file paths and audit sections already in the repo. No runtime checks, no edits, no new capabilities.
-
-Grounded in actual surfaces:
-- Athlete: `src/pages/Today.tsx`, `AthleteOnboarding.tsx`, `Practice*`, `TrainingBlock.tsx`, `RTP.tsx`, `SafetyCenter.tsx`, `ProgressDashboard.tsx`, `AthleteCommand.tsx`
-- Parent: `src/pages/AcceptParentInvite.tsx`, `Relational.tsx`, `src/components/parent/HammerParentVoice.tsx`
-- Runtime: `src/lib/runtime/{silence,guidance,handoff,onboarding,setback,parent}/*`, `src/lib/hammer/identity.ts`
-- Prior audits: `docs/asb/hammer-critical-stack-validation-audit.md`, `relational-final-readiness.md`, `final-publish-checklist.md`
+No runtime execution. No edits. No new capability.
 
 ## Document Structure
 
-- **§0 Audit Objective** — explicit verdicts on (a) athlete self-service launch viability, (b) parent self-service launch viability, (c) launch-proceed decision.
-- **§1 Launch Surface Inventory** — Today · Onboarding · Practice · Training · Relational · Safety · Recovery · RTP · Parent Invite · Parent Dashboard · Progress · Setback · Guidance · Navigation. Per surface: purpose · implementation path · dependencies · user visibility · launch criticality (P0/P1/P2).
-- **§2 Athlete First-30-Minute Audit** — Discovery → Signup → Onboarding → First login → First action → First prescription → First guidance → First navigation → First confusion. Per step: sees / believes / system intends / mismatch risk / severity / launch impact.
-- **§3 Athlete First-30-Day Audit** — Day 1/3/7/14/30 with missed-day, missing-data, recovery-interruption, partial-onboarding, no-activity overlays. Score retention · trust · clarity · guidance · confusion.
-- **§4 Parent First-30-Minute Audit** — Invite → Accept → Dashboard → Athlete review → Missingness review → Recovery review → Progress review. Per step: sees / understands / trust impact / confusion risk / severity.
-- **§5 Parent First-30-Day Audit** — Normal · Struggling · Missing · Recovering athlete scenarios. Score trust · retention · understanding · safety · authority clarity.
-- **§6 Navigation & UX Audit** — Every lawful destination and entry route. Reachability · clarity · loop completion · dead ends · broken journeys · circular routing · unclear CTAs · missing explanations · missing exits. Per issue: severity · launch impact · required action.
-- **§7 Guidance Quality Audit** — Today Guidance · Onboarding Guidance · Setback Guidance · Parent Voice · Navigation Handoffs. Score clarity · specificity · trustworthiness · missingness honesty · silence quality · authority compliance · confusion potential.
-- **§8 Trust & Safety Audit** — Athlete · Parent · Recovery · Platform · Safety. Per axis: current strength · weaknesses · failure modes · launch impact.
-- **§9 Launch Blocker Search** — Adversarial scan. Critical · Major · Minor · Hidden · Architectural · UX · Trust · Adoption blockers, each enumerated with evidence.
-- **§10 Launch Readiness Scoring** — Athlete Simplicity · Parent Simplicity · Guidance Quality · Navigation Quality · Trust Formation · Recovery Safety · Retention Potential · Launch Readiness · Overall Platform Readiness. Each with rationale and 0–100 score.
-- **§11 Final Launch Verdict** — Immediate · Conditional · Blocked. Enumerated blocking items, non-blocking items, recommended actions, launch recommendation.
-- **§12 Stop Gate** — Audit-only confirmation. No implementation. No RR-7/9/10. No new capability. No architecture expansion.
+- **§0 Audit Objective** — explicit answers: identity of G1 and G2, blocker rationale, harm if unresolved, severity, minimum valid resolution.
+- **§1 G1 Forensic Analysis** — silence rationale surface absence. Exact description, originating evidence (Critical Stack Audit + Launch Readiness Audit citations), affected surfaces (Today, Practice, Parent Voice empty states), affected users (athlete + parent), constitutional implications (RR-8 missingness visibility, Organism State silence row), trust implications, launch implications. Classification: Critical / Major / Minor / Non-blocking with justification.
+- **§2 G2 Forensic Analysis** — parent dashboard `HammerParentVoice` mount absence on post-accept parent surfaces. Same structure as §1. Evidence trace through `AcceptParentInvite.tsx` (mount present pre-accept) and `Relational.tsx` (no post-accept mount).
+- **§3 Athlete Impact Analysis** — onboarding · guidance · navigation · trust · retention if G1+G2 unresolved. Evidence: G2 is parent-only; G1 is silence-rationale only. Verdict on athlete launch continuity.
+- **§4 Parent Impact Analysis** — onboarding · understanding · trust · retention · authority interpretation if G1+G2 unresolved. Evidence: post-accept silence with no Parent Voice surface = parent sees blank state, cannot distinguish lawful silence from system failure. Verdict on parent launch continuity.
+- **§5 Constitutional Impact Analysis** — G1 and G2 evaluated against RR-5, RR-6, RR-8, Parent supremacy, Safeguarding precedence, Replay determinism, Single Hammer authority, Organism State silence. Classify each as: constitutional failure · implementation gap · UX gap · copy gap · education gap · launch preference.
+- **§6 Resolution Option Analysis** — per blocker:
+  - Option A: minimum implementation fix (G1: silence rationale microcopy slot in existing silence resolver consumer; G2: mount existing `HammerParentVoice` on `Relational.tsx` post-accept state with `accepted-*` inputs already supported by resolver)
+  - Option B: minimum UX fix
+  - Option C: minimum copy fix
+  - Option D: launch with known limitation
+  - Each: cost · risk · time · constitutional impact · launch impact.
+- **§7 Blocker Classification** — each blocker into: Launch Critical · Launch Major · Launch Minor · Launch Cosmetic · Not A Blocker. Justification.
+- **§8 Publish Decision Simulation** — Scenarios A (neither), B (G1 only), C (G2 only), D (both). Risk · trust · retention · recommendation per scenario.
+- **§9 Minimum Publish Path** — shortest sequenced task list to enable full publish. Exact tasks, sequence, dependencies. No future architecture. No RR-7/9/10.
+- **§10 Final Verdict** — explicit answers: can product publish today, can athlete publish today, can parent publish today, must G1 be resolved, must G2 be resolved, minimum publishable state.
+- **§11 Stop Gate** — audit-only confirmation.
 
 ## Stop Gate
 
-Audit only. Two files touched. No implementation. No new capability. No RR-7/9/10. No scope expansion.
+Audit only. Two files touched. No implementation. No new capability. No architecture expansion. No RR-7/9/10.
