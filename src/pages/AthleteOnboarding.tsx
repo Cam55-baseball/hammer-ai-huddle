@@ -7,6 +7,8 @@ import { useAthleteEvents } from "@/hooks/useAthleteEvents";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { AthleteOnboardingShell } from "@/components/onboarding/AthleteOnboardingShell";
+import { HammerOnboardingPresence } from "@/components/onboarding/HammerOnboardingPresence";
+import type { OnboardingStateKind } from "@/lib/runtime/onboarding/types";
 import { NotificationsPreferencesPanel } from "@/components/notifications/NotificationsPreferencesPanel";
 import { EngineVersionBadge } from "@/components/asb/EngineVersionBadge";
 import { ENGINE_VERSION } from "@/lib/asb/engineVersion";
@@ -94,8 +96,20 @@ export default function AthleteOnboarding() {
     }
   };
 
+  const onboardingState: OnboardingStateKind = emittedEventId
+    ? "first-completed-action"
+    : hasFirstEvent
+      ? "first-completed-action"
+      : step === 0
+        ? "first-login"
+        : "incomplete-onboarding";
+
   return (
     <AthleteOnboardingShell stepIndex={step} steps={STEPS}>
+      <HammerOnboardingPresence
+        state={onboardingState}
+        lineageHandle={emittedEventId ? `ledger:evt:${emittedEventId}` : undefined}
+      />
       {step === 0 && (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Your organism is the source of truth.</h2>

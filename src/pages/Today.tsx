@@ -18,6 +18,8 @@ import { CommandCenterSection } from "@/components/command/CommandCenterSection"
 import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
 import { topicLabel } from "@/lib/asb/topicLabels";
 import { TodayGuidanceSlots } from "@/components/today/TodayGuidanceSlots";
+import { HammerSetbackGuidance } from "@/components/runtime/HammerSetbackGuidance";
+import type { SetbackStateKind } from "@/lib/runtime/setback/types";
 
 export default function Today() {
   const { user, loading, isAuthStable } = useAuth();
@@ -77,6 +79,12 @@ export default function Today() {
           latestPrescriptionEventId={todaysRenderEvent?.event_id ?? rx.sourceEventIds[0] ?? null}
           hasSignal={(rows?.length ?? 0) > 0}
         />
+        <HammerSetbackGuidance
+          state={deriveSetbackState(rows ?? [])}
+          knownSignalRefs={(rows ?? []).slice(0, 3).map((r) => `proj:${r.topic_id}:${r.event_id}`)}
+          lineageHandle={todaysRenderEvent?.event_id ? `ledger:evt:${todaysRenderEvent.event_id}` : undefined}
+        />
+
         <PrescriptionCard
           rx={rx}
           prescriptionEventId={todaysRenderEvent?.event_id ?? rx.sourceEventIds[0] ?? null}
@@ -167,4 +175,17 @@ function RecentList({ rows }: { rows: Array<{ event_id: string; topic_id: string
       ))}
     </ul>
   );
+}
+
+/**
+ * Wave 3 — pure setback-state derivation from canonical projection rows.
+ * Replay-safe: depends only on row count. Never invents a reason; the
+ * resolver decides whether to render anything.
+ */
+function deriveSetbackState(
+  rows: ReadonlyArray<{ event_id: string; topic_id: string; occurred_at: string }>,
+): SetbackStateKind {
+  if (rows.length === 0) return "unavailable-signal";
+  if (rows.length < 3) return "incomplete-logging";
+  return "missed-day";
 }
