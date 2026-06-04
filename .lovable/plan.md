@@ -42,3 +42,22 @@ No runtime execution. No edits. No new capability.
 ## Stop Gate
 
 Audit only. Two files touched. No implementation. No new capability. No architecture expansion. No RR-7/9/10.
+
+---
+
+# SEALED — Parent Launch Blocker Resolution Audit
+
+**Document:** `docs/asb/parent-launch-blocker-resolution-audit.md`
+**Status:** SEALED · Audit-only · No implementation · No schema · No migrations · No emitters · No projections · No new capability · No RR-7/9/10.
+
+**Findings:**
+- **G1** (silence rationale surface absence) — UX + copy gap. Athlete: Launch Minor. Parent: Launch Major. Backfill-acceptable.
+- **G2** (parent dashboard `HammerParentVoice` mount absence on `Relational.tsx` post-accept) — implementation gap (mount-site only). Athlete: Not A Blocker. Parent: Launch Major. Single parent-facing launch blocker.
+- Neither blocker is constitutional. Neither violates RR-5, RR-6, RR-8, parent supremacy, safeguarding precedence, replay determinism, single Hammer authority, or Organism State silence.
+
+**Verdict:**
+- Athlete-facing public launch: **proceed immediately.**
+- Parent-facing public launch: **resolve G2, then proceed.** G1 backfilled post-launch.
+- Minimum publish path: (1) ship athlete launch, (2) mount `HammerParentVoice` on `Relational.tsx` post-accept with `accepted-*` state derivation, (3) add silence rationale microcopy, (4) open parent launch.
+
+**SEALED.**
