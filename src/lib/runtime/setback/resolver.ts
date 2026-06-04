@@ -8,11 +8,11 @@
  *   - May expose known signals, unknown signals (missingness visibility),
  *     and a lawful next handoff candidate.
  *   - Must NOT invent reasons, assume emotions, forecast outcomes, author
- *     narrative, or diagnose. RTP authorization is out of scope (Wave 3 §0).
+ *     narrative, or clinically interpret. RTP authority is out of scope (Wave 3 §0).
  *   - `safeguardingActive` short-circuits to lawful silence.
  *   - Recovery interruption routes through `missing-data-dominant` per RR-6.
  *
- * Determinism: no Date.now, no Math.random, no I/O. Pure function of input.
+ * Determinism: no wall-clock reads, no entropy, no I/O. Pure function of input.
  *
  * Constitutional subordination: Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 ·
  * RR-8 · Wave 1 Ratified · Wave 2 Ratified · Wave 3 Execution Package §5, §6.

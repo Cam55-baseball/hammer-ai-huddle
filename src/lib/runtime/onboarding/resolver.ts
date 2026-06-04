@@ -11,7 +11,7 @@
  *   - No copy. No prompts. Slots emit references only.
  *   - Safeguarding-active short-circuits all slots to lawful silence.
  *
- * Determinism: no Date.now, no Math.random, no I/O. Pure function of input.
+ * Determinism: no wall-clock reads, no entropy, no I/O. Pure function of input.
  *
  * Constitutional subordination: Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 ·
  * RR-8 · Wave 1 Ratified · Wave 2 Ratified · Wave 3 Execution Package §4, §6.
