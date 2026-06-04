@@ -5,8 +5,14 @@
  * relational state; no mocks; no fabricated lineage. Demo seeding (when
  * present in the ledger) is firewalled to demo scope per Phase 151.
  *
- * Phase C humanization: single-column on mobile, calmer title, ordered
- * by emotional weight (check-in → conversation → protection → history).
+ * G2 remediation — additive mount of the already-ratified Wave 4
+ * `HammerParentVoice` on post-accept parent surfaces. `ParentStateKind`
+ * is derived purely from replay-derived projection state (RR-6 injury,
+ * RR-8 life context). Interpretive overlay only; never authors organism
+ * truth, athlete_intent, authority_override, hard_stop, or
+ * rehabilitation_state. Onboarding / setback branches remain reachable
+ * only from their owning surfaces, which supply the required resolver
+ * inputs.
  */
 import { useAuth } from "@/hooks/useAuth";
 import type { Scope } from "@/lib/runtime/projections/types";
@@ -19,12 +25,65 @@ import { RecruitingRoadmap } from "@/components/relational/RecruitingRoadmap";
 import { AthleteJourneyMap } from "@/components/relational/AthleteJourneyMap";
 import { useDemoMode } from "@/contexts/DemoModeContext";
 import { RELATIONAL_PAGE_VOICE } from "@/lib/relational/copy";
+import { HammerParentVoice } from "@/components/parent/HammerParentVoice";
+import {
+  useInjuryRecoveryState,
+  useLifeContextState,
+} from "@/hooks/useRelationalProjections";
+import type {
+  ParentInput,
+  ParentStateKind,
+} from "@/lib/runtime/parent/types";
+
+function deriveParentState(
+  injury: ReturnType<typeof useInjuryRecoveryState>,
+  life: ReturnType<typeof useLifeContextState>,
+): {
+  state: ParentStateKind;
+  safeguardingActive: boolean;
+  unknownSignalRefs: string[];
+} {
+  const safeguardingActive =
+    Boolean(injury?.safeguardingHeld) || Boolean(life?.safeguardingHeld);
+
+  const unknownSignalRefs = [
+    ...(injury?.missingness?.fields ?? []),
+    ...(life?.missingness?.fields ?? []),
+  ];
+
+  const inActiveRecovery = Object.values(
+    injury?.activeRecoveryState ?? {},
+  ).some((r) => !r.rtp_authorized);
+
+  let state: ParentStateKind = "accepted-active-athlete";
+  if (inActiveRecovery) {
+    state = "accepted-recovery-state";
+  } else if (unknownSignalRefs.length > 0) {
+    state = "accepted-missingness-state";
+  }
+
+  return { state, safeguardingActive, unknownSignalRefs };
+}
 
 export default function Relational() {
   const { user } = useAuth();
   const { isDemo } = useDemoMode();
   const athleteId = user?.id ?? "demo-athlete";
   const scope: Scope = isDemo ? "demo" : "self";
+
+  const injury = useInjuryRecoveryState(athleteId, scope);
+  const life = useLifeContextState(athleteId, scope);
+
+  const { state, safeguardingActive, unknownSignalRefs } = deriveParentState(
+    injury,
+    life,
+  );
+
+  const parentInput: ParentInput = {
+    state,
+    safeguardingActive,
+    unknownSignalRefs,
+  };
 
   return (
     <main className="min-h-dvh bg-background p-4 md:p-8">
@@ -42,6 +101,10 @@ export default function Relational() {
             <DevelopmentalStageChip athleteId={athleteId} scope={scope} />
           </div>
         </header>
+
+        {/* G2 — Parent Voice mounted on post-accept parent surface.
+            Renders nothing when all slots are lawful-silent. */}
+        <HammerParentVoice input={parentInput} />
 
         {/* Emotional weight order: check-in first, then conversation,
             then protection signals, then history. */}
