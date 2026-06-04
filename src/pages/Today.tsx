@@ -79,6 +79,12 @@ export default function Today() {
           latestPrescriptionEventId={todaysRenderEvent?.event_id ?? rx.sourceEventIds[0] ?? null}
           hasSignal={(rows?.length ?? 0) > 0}
         />
+        <HammerSetbackGuidance
+          state={deriveSetbackState(rows ?? [])}
+          knownSignalRefs={(rows ?? []).slice(0, 3).map((r) => `proj:${r.topic_id}:${r.event_id}`)}
+          lineageHandle={todaysRenderEvent?.event_id ? `ledger:evt:${todaysRenderEvent.event_id}` : undefined}
+        />
+
         <PrescriptionCard
           rx={rx}
           prescriptionEventId={todaysRenderEvent?.event_id ?? rx.sourceEventIds[0] ?? null}
