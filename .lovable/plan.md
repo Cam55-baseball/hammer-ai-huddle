@@ -165,3 +165,20 @@ Audit all hitting videos / drills / recommendations / taxonomy rows. Produce `do
 - Tests: pure-function determinism, replay equivalence under fixed inputs, contract validation for `ReportCardContract`.
 
 Approve to enter build mode and execute Wave A through Wave E in order.
+
+---
+
+## Wave A — SEALED 2026-06-04
+
+Pitching Intelligence Engine V2 substrate ratified per `docs/asb/pie-v2-wave-a-ratification.md`.
+
+Completed:
+- `useMicroLayerInput` PIE V2 bag + `updatePieV2` helper
+- `PieV2FrameTagger` video annotation → canonical emit
+- `analysisToTaxonomy.ts` PIE V2 bucket (`mapPieV2SignalToMovement`, `pieV2SignalsToTaxonomyBucket`)
+- `PieV2CoachPanel` + `PieV2HammerBriefPanel` mounted on `CoachAthleteDetail` (baseball-gated)
+- `PieV2RecruitingCard` mounted behind RR-9 opt-in toggle
+- Schema migration: `performance_sessions.pie_v2_signals` jsonb, `athlete_foundation_state.pie_v2_caution_state` jsonb
+- Replay determinism tests at pinned `pie-v2.0.0`
+
+Wave B (HUAC / Universal Report Card) unblocked. Wave C (HIE) gated by Wave B sealing.
