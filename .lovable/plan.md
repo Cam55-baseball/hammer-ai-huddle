@@ -78,3 +78,23 @@ Wave 3 only. No Wave 4. No RR-7/9/10. No capability additions.
 
 ## `.lovable/plan.md` Append
 Single sealed Wave 3 Execution Package entry referencing the new doc, scope, subordination chain, and stop-gate confirmation. No other edits.
+
+---
+
+# Hammer Wave 3 — Execution Package (Sealed)
+
+**Status:** Sealed governance entry. Package: `docs/asb/hammer-wave-3-execution-package.md`.
+
+**Subordinate to:** Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 · RR-8 · Hammer Activation 1–8 · Hammer Execution Constitution · Wave 1 Ratified · Wave 2 Ratified.
+
+**Scope (locked):** C3 Onboarding Presence + C5 First Setback Guidance only.
+
+**Excluded:** C4 Parent Voice · RR-7 · RR-9 · RR-10 · all parent/recruiter/commercial surfaces · all schema/migration/projection/emitter/authority changes · all RTP authorization logic · all safeguarding logic changes · all capability additions beyond C3+C5 · all edits to Wave 1 / Wave 2 sealed files.
+
+**Athlete-state inventory:** 7 onboarding states + 6 setback states (see package §2). Resolution flows entirely through Wave 1 `classifySilenceZone` + Wave 2 `resolveGuidanceSlots` / `resolveHandoff`. Zero new primitives.
+
+**Acceptance:** 52 slot assertions across unit, integration, replay, safeguarding, authority, visibility, regression classes. All §6 constitutional audits required green. Wave 1 + Wave 2 regression suites must remain unchanged and green.
+
+**Exit gate:** All 13 athlete states verified · all constitutional audits green · zero open escalations · Wave 4 prerequisites documented.
+
+**Stop gate:** Wave 3 only. No Wave 4. No RR-7/9/10. No capability additions. No new schemas, migrations, projections, emitters, or authority changes.
