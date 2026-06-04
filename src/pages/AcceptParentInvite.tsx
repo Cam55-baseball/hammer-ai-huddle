@@ -89,6 +89,9 @@ export default function AcceptParentInvite() {
           </h1>
         </header>
 
+        <HammerParentVoice input={{ state: "invited-not-accepted" }} />
+
+
         {!decoded && (
           <Card className="p-5">
             <p className="text-sm text-muted-foreground">
