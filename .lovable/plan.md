@@ -1,184 +1,221 @@
-# Unified Constitutional Plan — PIE V2 Completion + HIE + Universal Report Card
+# PIE V2 — Wave A Forensic Verification Audit
 
-## Part 1 — PIE V2 Completion Audit (verified from filesystem)
-
-| Item | Status | Evidence |
-|---|---|---|
-| `pie-v2-constitution.md` | COMPLETED | file present |
-| `pie-v2-integration-map.md` | COMPLETED | file present |
-| `pieV2/types.ts` (13 signals, provenance, confidence, missingness) | COMPLETED | present |
-| `data/baseball/pieV2Signals.ts` | COMPLETED | present |
-| `pieV2/scoring.ts` (deterministic, pinned engine_version) | COMPLETED | present |
-| `pieV2/aggregate.ts` (session weighted mean + fatigue slope) | COMPLETED | present |
-| `pieV2/emit.ts` (canonical `pitching.v2.*`) | COMPLETED | present |
-| `pieV2/__tests__/scoring.test.ts` | COMPLETED | present (scoring only) |
-| `PitchingV2MicroInput.tsx` capture component | COMPLETED | present |
-| `PieV2FrameTagger.tsx` video annotation → emit | **NOT STARTED** | missing |
-| `useMicroLayerInput` extension for PIE V2 fields | **NOT STARTED** | not referenced |
-| `pieV2/athleteState.ts` (priors + caution channel) | COMPLETED | present |
-| `pieV2/aiHammerTalkingPoints.ts` | COMPLETED (substrate); **NOT WIRED** into actual AI Hammer surface |
-| `pieV2DrillCatalog.ts` (52 drills) | COMPLETED | present |
-| `pieV2VideoCatalog.ts` (65 videos) | COMPLETED | present |
-| `recommendDrills.ts` / `recommendVideos.ts` | COMPLETED | present |
-| `analysisToTaxonomy.ts` integration of PIE V2 bucket | **NOT STARTED** | no reference |
-| `usePitchingV2Trends.ts` longitudinal hook | COMPLETED | present |
-| `pieV2/longitudinal.ts` | COMPLETED | present |
-| `pieV2/injuryDetection.ts` (RR-6 advisory) | COMPLETED | present |
-| `PieV2CoachPanel.tsx` | COMPLETED (component); **NOT MOUNTED** in any route |
-| `PieV2RecruitingCard.tsx` | COMPLETED (component); **NOT MOUNTED** in any route |
-| Wave 6 schema (`pie_v2_signals`, `pie_v2_caution_state` JSONB) | **NOT STARTED** | no migration |
-| `asbInvariantChecks.ts` PIE V2 updates | **NOT STARTED** |
-| Replay determinism tests for PIE V2 | **NOT STARTED** |
-| Final sealed ratification entry in `.lovable/plan.md` | **NOT STARTED** |
-
-**Verdict:** Waves 0, 1, 3, 5 substrate ~complete. **Wave 2 partial** (capture done, frame tagger + hook extension missing). **Wave 4 partial** (catalogs + recommenders done, `analysisToTaxonomy` not integrated). **Wave 6 not started.** Coach + recruiting components built but **never mounted into the app**.
+Scope: prove integration, not file existence. Wave B (HUAC) blocked until items in §7 are sealed.
 
 ---
 
-## Part 2 — Unified Constitutional Architecture
+## 1. Wave A forensic verification report
 
-All three programs (PIE V2 finish, HIE, Universal Report Card) ship under a single sealed constitutional umbrella: **Hammers Universal Analysis Constitution (HUAC v1.0.0)**. Subordinate to Eternal Laws, Megaphase 151–160, RR-5/6/8, replay legality, demo↔production firewall. Engine versions pinned: `pie-v2.0.0`, `hie-v1.0.0`, `huac-v1.0.0`.
+Legend: ✅ wired end-to-end · ⚠️ substrate only / not consumed · ❌ missing.
 
-### 2.1 Universal Report Card (UHRC) — the new primary analysis surface
+| Artifact | Path | Upstream | Downstream | Test | Replay | Prod status |
+|---|---|---|---|---|---|---|
+| Types | `src/lib/pieV2/types.ts` | — | all PIE V2 modules | typecheck | engine_version pinned `pie-v2.0.0` | ✅ |
+| Scoring | `src/lib/pieV2/scoring.ts` | types | aggregate, emit | `scoring.test.ts` | ✅ deterministic test | ✅ |
+| Aggregate | `src/lib/pieV2/aggregate.ts` | scoring | CoachPanel, HammerBrief, athleteState, recommenders | `replay.test.ts` | ✅ byte-equal | ✅ |
+| Emit | `src/lib/pieV2/emit.ts` | scoring | `asb_events` ledger | ❌ no emit test | ⚠️ topic `pitching.v2.*` not lineage-verified | ⚠️ |
+| Athlete state | `src/lib/pieV2/athleteState.ts` | aggregate, injuryDetection | `pie_v2_caution_state` JSONB | ❌ | ⚠️ projection not consumed by any UI | ⚠️ |
+| Injury detection | `src/lib/pieV2/injuryDetection.ts` | aggregate, athlete-reported pain | athleteState | ❌ | ⚠️ safeguarding route not wired to Phase 31 escalation | ⚠️ |
+| Recommend drills | `src/lib/pieV2/recommendDrills.ts` | aggregate, drill catalog | none mounted | ❌ | ⚠️ no UI consumer | ⚠️ |
+| Recommend videos | `src/lib/pieV2/recommendVideos.ts` | aggregate, video catalog | none mounted | ❌ | ⚠️ no UI consumer; not bridged to `videoRecommendationEngine` | ⚠️ |
+| Longitudinal | `src/lib/pieV2/longitudinal.ts` | `asb_events` | `usePitchingV2Trends` | ❌ | ⚠️ replay-derived but untested | ⚠️ |
+| Hammer talking points | `src/lib/pieV2/aiHammerTalkingPoints.ts` | aggregate | HammerBriefPanel | ❌ | ✅ deterministic envelope | ⚠️ |
+| Drill catalog | `src/data/baseball/pieV2DrillCatalog.ts` | — | recommendDrills | ❌ coverage matrix | — | ⚠️ 52 slots — coverage of 13 signals × 4 tiers unverified |
+| Video catalog | `src/data/baseball/pieV2VideoCatalog.ts` | — | recommendVideos | ❌ | — | ⚠️ 65 slots — same |
+| Frame tagger | `src/components/micro-layer/PieV2FrameTagger.tsx` | `useMicroLayerInput.updatePieV2` | emit | ❌ | ❌ not mounted in any capture route | ❌ |
+| Micro input | `src/components/micro-layer/PitchingV2MicroInput.tsx` | useMicroLayerInput | emit | ❌ | ❌ not mounted in pitching session route | ❌ |
+| Coach panel | `src/components/coach/PieV2CoachPanel.tsx` | usePitchingV2Trends, aggregate | CoachAthleteDetail | ❌ render test | ⚠️ mounted but data path from sessions → aggregate not verified | ⚠️ |
+| Hammer brief panel | `src/components/coach/PieV2HammerBriefPanel.tsx` | aggregate | CoachAthleteDetail | ❌ | ⚠️ aggregate prop source unverified | ⚠️ |
+| Recruiting card | `src/components/recruiting/PieV2RecruitingCard.tsx` | aggregate | CoachAthleteDetail (RR-9 opt-in) | ❌ | ⚠️ opt-in toggle present, audit trail of opt-in not emitted as relational event | ⚠️ |
+| Hook trends | `src/hooks/usePitchingV2Trends.ts` | `asb_events` query | CoachPanel | ❌ | ⚠️ | ⚠️ |
+| Taxonomy bridge | `src/lib/analysisToTaxonomy.ts` | signals | video recommender | ❌ | ⚠️ mapping exists but not invoked in production recommend path | ⚠️ |
+| Migration | `supabase/migrations/…_pie_v2_signals.sql` | — | `performance_sessions.pie_v2_signals`, `athlete_foundation_state.pie_v2_caution_state` | manual | — | ✅ schema deployed, ⚠️ no writer wired |
 
-One component family `<UniversalReportCard />` driven by a sport-agnostic contract:
+**Verdict:** substrate complete; **no end-to-end capture→ledger→aggregate→UI path is wired in production routes**. Wave A is **substrate-sealed, integration-incomplete**.
+
+---
+
+## 2. PIE V2 consumption matrix (13 signals × 12 surfaces)
+
+A=capture B=storage C=scoring D=surface E=trend F=athlete-state G=AI Hammer H=drills I=videos J=recruiting K=coach K2=report card
+
+| # | Signal | A | B | C | D | E | F | G | H | I | J | K | L (RC) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | energy_angle | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 2 | visual_stability (eyes_on_target) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 3 | separation (shoulders closed) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 4 | tempo (≤1.05s) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 5 | stride (%BH) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 6 | head_stability (≤2%) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 7 | hip_alignment | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 8 | front_side (glove in frame) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 9 | head_alignment (≤15° belly line) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 10 | shoulder_level (≤10°) | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 11 | rear_foot_drag | ⚠️* | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| 12 | release_extension (tracked) | ⚠️* | ✅ | ✅ tracked-only | ⚠️ | ✅ | ⚠️ advisory | ⚠️ | n/a | n/a | ⚠️ | ⚠️ | ❌ |
+| 13 | arm_slot (tracked) | ⚠️* | ✅ | ✅ tracked-only | ⚠️ | ✅ | ⚠️ advisory | ⚠️ | n/a | n/a | ⚠️ | ⚠️ | ❌ |
+
+*Capture exists in components but components are not mounted in any production pitching capture route. **Universally orphaned at capture-entry and report-card surfaces.**
+
+---
+
+## 3. Throwing efficiency hardening matrix (baseball + softball)
+
+| Item | Baseball PIE V2 | Softball | Status |
+|---|---|---|---|
+| 1. Eyes on target @ peak leg lift | `visual_stability` (boolean eyes_on_target) | ❌ no softball engine | **Partial** — baseball-only; softball substrate absent |
+| 2. Hips fire, shoulders closed to landing | `separation` (shoulders_closed_to_footstrike) | ❌ | Partial |
+| 3. ≤1.05s lift→strike | `tempo` (leg_lift_to_footstrike_sec, threshold pinned) | ❌ | Partial |
+| 4. Stride length + repeatability | `stride` (%BH + within-session variance via `consistency`) | ❌ | Partial; landing-spot repeatability not separately tracked — folded into `consistency` only |
+| 5. Head stability ≤2% | `head_stability` (head_vertical_drop_pct) | ❌ | Partial |
+| 6. Directional hip alignment | `hip_alignment` (hips_fired_toward_target boolean) | ❌ | Partial — boolean is coarse; no angular signal |
+| 7. Front side control (glove in body frame) | `front_side` (glove_inside_frame boolean) | ❌ | Partial — Open→Target→Closed→Body sequence not modeled, lateral glove swing not detected |
+| 8. Head alignment @ release ≤15° belly line | `head_alignment` (head_offset_from_belly_line_deg) | ❌ | Partial |
+| 9. Shoulder level @ release ≤10° | `shoulder_level` (shoulder_horizontal_offset_deg) | ❌ | Partial |
+| 10. Rear foot drag efficiency | `rear_foot_drag` (length + direction_clean) | ❌ | Partial |
+| 11. Release extension consistency | `extension_consistency` tracked-only | ❌ | Partial |
+| 12. Arm slot consistency | `arm_slot_consistency` tracked-only | ❌ | Partial |
+
+**Gaps to seal before Wave B:**
+- G1: Softball throwing has no PIE V2 mirror. Baseball-only constitution conflicts with the request that #1–#12 hold for both sports.
+- G2: Front-side sequence (Open→Target→Closed→Body) and lateral-swing detection not modeled.
+- G3: Hip direction is boolean; needs angular signal to enable trajectory.
+- G4: Landing-spot repeatability not a first-class signal (currently inferred from `consistency`).
+
+---
+
+## 4. HIE readiness verification (pre-Wave C)
+
+Code state: **HIE substrate does not exist yet** (no `src/lib/hie/`, no `src/data/baseball/hieFoundation.ts`). Verifications below are doctrinal readiness, not implementation.
+
+| Phase | Requirement | Doctrine present | Code present |
+|---|---|---|---|
+| **P1 Stabilize** | stability, head control, rear-foot pressure scored + pass/fail + recommendation + report-card | ✅ in HUAC plan | ❌ |
+| **P2 Hand Load** | bow-and-arrow, scap load, barrel-behind-head, head/forward drift, load integrity | ✅ in HUAC plan | ❌ |
+| **P3 Back Hip Direction** | hip→release vector, front shoulder closed, separation, landing posture, launch position | ✅ | ❌ |
+| **P4 Hitter's Move** | knob retention, elbow path, hand path, barrel delivery, contact efficiency, palms-up/down, fair-territory delivery | ✅ | ❌ |
+
+**Verdict:** HIE is **doctrinally specified but uncoded**. Wave C must produce a `hie/` parallel to `pieV2/` with identical replay/lineage discipline.
+
+---
+
+## 5. Universal Report Card (UHRC) pillar mapping
+
+Proposed canonical pillars (6, capped for cognitive load):
+
+| # | Pillar | Pitching (PIE V2) | Hitting (HIE) | Softball Throwing | Future systems |
+|---|---|---|---|---|---|
+| 1 | **Sequencing** | tempo, separation, hip_alignment | P3 back-hip direction, separation | mirror PIE V2 | movement-chain signals |
+| 2 | **Stability** | visual_stability, head_stability, head_alignment | P1 head control, rear-foot pressure | mirror | balance/posture signals |
+| 3 | **Direction** | hip_alignment, energy_angle, rear_foot_drag direction | P3 hip-to-launch vector | mirror | trajectory signals |
+| 4 | **Load / Repeatability** | stride, rear_foot_drag length, consistency | P2 hand load, load integrity | mirror | load-pattern signals |
+| 5 | **Delivery / Finish** | front_side, shoulder_level, extension, arm_slot | P4 knob/elbow/hand/barrel path, palms relationship | mirror | finishing signals |
+| 6 | **Outcome Integrity** | composite + outcome-tag lineage | contact efficiency + fair-territory delivery | mirror | outcome signals |
+
+**Orphan / duplicate / conflict audit:**
+- No PIE V2 signal is orphaned — each maps to exactly one pillar.
+- No HIE phase is orphaned — P1→2, P2→4, P3→1+3, P4→5+6.
+- No duplicate scoring: each signal contributes weight to exactly one pillar (separation appears in Sequencing only; hip_alignment appears in Direction only — even though both reference hips).
+- No conflict: composites computed at pillar level, never cross-pillar.
+- Cognitive load: 6 pillars ≤ 7±2; one-line label + score + tier per pillar.
+
+---
+
+## 6. Architectural bypass audit
+
+Possible bypass paths discovered:
+
+| # | Bypass | Where | Seal |
+|---|---|---|---|
+| B1 | Components write `pie_v2_signals` JSONB directly without `emitPieV2RepScore` | future writers | **Constitutional rule:** projection columns are read-only outside the emit pipeline; enforce via DB trigger that rejects writes not stamped with `engine_version`. |
+| B2 | Video recommender consumes raw signals instead of `analysisToTaxonomy` bridge | `videoRecommendationEngine` callers | Force all PIE V2→video paths through `pieV2SignalsToTaxonomyBucket`. |
+| B3 | AI Hammer free-form prose around PIE V2 talking points | future Hammer surfaces | All Hammer output for PIE V2 signals must originate from `talkingPointsForSession`; lint rule forbidding string concatenation around signal labels. |
+| B4 | Recruiting card surfaces signals without RR-9 opt-in event | future recruiting routes | Mount must emit `relational.exposure.opt_in` ledger event; render guarded by query of that event, not local boolean. |
+| B5 | Athlete-state writer bypasses `pie_v2_caution_state` and writes to legacy state | future state-engine refactors | Caution projection is single-writer (`pieV2/athleteState.ts`); add invariant test. |
+| B6 | Injury advisory routed to UI without safeguarding orchestration | future injury surfaces | All `arm_health_caution` surfaces must traverse Phase 31 safeguarding sub-route (RR-6 supremacy). |
+| B7 | UHRC pillar score computed outside canonical pillar reducer | future report-card consumers | Single reducer `uhrc/computePillars.ts`; report cards may only render its output. |
+
+---
+
+## 7. Remaining risks (blocking Wave B)
+
+1. **Capture surfaces unmounted** — `PieV2FrameTagger` and `PitchingV2MicroInput` exist but are not rendered in any pitching capture route. No production data can enter the engine.
+2. **Emit not lineage-verified** — `emitPieV2RepScore` lacks a test proving `asb_events` lineage parents resolve and `engine_version` stamps round-trip.
+3. **Projection caches have no writer** — `pie_v2_signals` and `pie_v2_caution_state` columns exist but nothing writes to them on session close.
+4. **CoachPanel data path unproven** — `usePitchingV2Trends` queries the ledger; no fixture proving signals show up after a real capture session.
+5. **Safeguarding route not wired** — injury detection produces advisories but they do not reach the safeguarding orchestration route.
+6. **Drill/video catalog coverage matrices unaudited** — 52/65 slots claimed but no test asserts every (signal × tier) cell is filled.
+7. **Softball throwing parity absent.**
+8. **RR-9 opt-in not ledger-backed.**
+
+---
+
+## 8. Constitutional hardening recommendations (Wave A.5 — pre-Wave B)
+
+Sequenced; each item produces evidence, not just code.
+
+**A.5.1 Capture mount + emit lineage**
+- Mount `PieV2FrameTagger` and `PitchingV2MicroInput` in the pitching session capture route.
+- Add `emit.test.ts` proving: rep input → `asb_events` row with `topic='pitching.v2.rep_score'`, parent lineage to session event, `engine_version='pie-v2.0.0'`, replay-safe payload.
+
+**A.5.2 Projection writer**
+- Add `pieV2/persistSession.ts` that, on session close, writes aggregate to `performance_sessions.pie_v2_signals` and caution state to `athlete_foundation_state.pie_v2_caution_state`. Single-writer invariant test.
+
+**A.5.3 Coach data path proof**
+- Fixture test: seed 3 reps → emit → aggregate → `usePitchingV2Trends` returns expected series → `PieV2CoachPanel` renders all 13 signals.
+
+**A.5.4 Safeguarding wire**
+- Route `arm_health_caution` through Phase 31 safeguarding sub-route; emit `relational.safeguarding.signal` event; never surface caution UI without traversing the route.
+
+**A.5.5 Catalog coverage matrix**
+- `pieV2DrillCatalog.test.ts` asserts every (signal × tier) cell is filled; same for videos.
+
+**A.5.6 Softball throwing parity (G1)**
+- Create `src/lib/pieV2-softball/` mirroring baseball with identical signal set 1–13 and engine_version `pie-v2-sb.0.0`. Same emit topic prefix `pitching.v2.softball.*`. Same scoring discipline. Required because items 1–12 are sport-agnostic mechanical truths.
+
+**A.5.7 Front-side & directional refinement (G2–G4)**
+- Extend `front_side` with sequence-state signal (Open→Target→Closed→Body) and lateral-swing detection.
+- Promote `hip_alignment` from boolean to angular degrees.
+- Promote landing-spot repeatability to a first-class signal `landing_repeatability` (scored from across-rep stride end-point variance).
+
+**A.5.8 Bypass seals (B1–B7)**
+- DB trigger rejecting non-engine writes to projection columns.
+- Lint rule on Hammer prose.
+- RR-9 opt-in ledger event + render guard.
+- Invariant tests for single-writer state and pillar reducer.
+
+**A.5.9 UHRC pillar reducer skeleton (Wave B entry condition, not Wave B itself)**
+- `src/lib/uhrc/computePillars.ts` with pure mapping from PIE V2 + HIE (when present) into the 6 pillars. Used to prove no orphans/duplicates at type level.
+
+---
+
+## 9. Wave B entry gate
+
+Wave B (HUAC / Universal Report Card) begins **only after** A.5.1–A.5.5 produce green evidence and A.5.6–A.5.8 are sealed in code (A.5.9 is the handoff). Until then, HUAC would consume an engine that has no production data flowing through it.
+
+---
+
+## 10. Technical appendix (file deltas at Wave A.5 close)
 
 ```text
-ReportCardContract {
-  engine_version, sport, discipline,
-  pillars: Pillar[]            // 6–8 max
-  corrective_priorities: PriorityItem[]   // top 3, ranked
-  ai_hammer_brief: HammerBrief // ordered exactly per spec
-  trend_window: '7d'|'30d'|'90d'
-  toggles: { detailed_view_route }
-}
-Pillar { id, label, score_0_10, meter_state, pass_fail_components[],
-         trend: 'up'|'flat'|'down', priority_rank,
-         drilldown: { explanation, why_it_matters, drills[], videos[], history[] } }
+src/lib/pieV2/
+  emit.ts                         (+ lineage test)
+  persistSession.ts               (NEW — single projection writer)
+  __tests__/emit.test.ts          (NEW)
+  __tests__/persistSession.test.ts(NEW)
+  __tests__/catalogCoverage.test.ts (NEW — drills + videos)
+src/lib/pieV2-softball/           (NEW — mirror of pieV2/)
+src/lib/uhrc/
+  computePillars.ts               (NEW — skeleton reducer)
+  __tests__/pillarMapping.test.ts (NEW — orphan/duplicate guard)
+src/components/micro-layer/
+  PitchingV2MicroInput.tsx        (mounted in capture route)
+  PieV2FrameTagger.tsx            (mounted in capture route)
+src/pages/<pitching capture route>.tsx  (edited to mount)
+src/lib/safeguarding/             (route arm_health_caution through Phase 31)
+supabase/migrations/<new>.sql     (trigger: projection columns single-writer + engine_version stamp required)
+docs/asb/pie-v2-wave-a5-hardening.md (NEW ratification doc)
+.lovable/plan.md                  (Wave A.5 sealed; Wave B unblocked)
 ```
 
-Every analysis system (PIE V2, HIE, future) implements an adapter producing this contract. View toggle (Report Card ↔ Detailed) lives in a shared header component.
-
-### 2.2 AI Hammer Standardization
-
-Single `HammerBrief` schema, fixed slot order, no free-form prose outside slots:
-`report_card → biggest_win → biggest_leak → priority_fix → why_it_matters → drill → video → trend`.
-Deterministic envelope (LLM may only rephrase within slot). RR-5 compliant.
-
-### 2.3 PIE V2 → Pillar mapping (8 pillars)
-
-| Pillar | Source signals |
-|---|---|
-| Sequencing | separation, tempo |
-| Energy Transfer | energy_angle, stride |
-| Stability | head_stability, visual_stability |
-| Direction | hip_alignment, front_side |
-| Repeatability | within-session variance across all scored signals |
-| Release Integrity | head_alignment, shoulder_level |
-| Command Potential | visual_stability + repeatability composite |
-| Velocity Potential | energy_angle + stride + separation composite |
-
-Pillar scoring is pure derivation from existing `PieV2SessionAggregate`; no new measurements.
-
-### 2.4 Hitting Intelligence Engine (HIE v1.0.0)
-
-New `src/lib/hie/` mirroring PIE V2 architecture. Foundation model = 4 phases (P1 STABILIZE, P2 HAND LOAD, P3 BACK HIP DIRECTION, P4 HITTER'S MOVE) plus additional checkpoints (shoulder level at footstrike, hands position, head stability, separation integrity, landing posture, launch position).
-
-**HIE Pillars (8):** Stability, Load Quality, Separation, Timing, Launch Position, Barrel Delivery, Contact Efficiency, Repeatability.
-
-Each P-phase has non-negotiable pass/fail components + negotiable magnitude components per user spec.
-
-### 2.5 Hitting Taxonomy Correction
-
-Audit all hitting videos / drills / recommendations / taxonomy rows. Produce `docs/asb/hie-taxonomy-mismatch-report.md` mapping current content to P1/P2/P3/P4. Apply corrections via deterministic migration script that updates `video_tag_assignments`, `video_tag_rules`, `drillDefinitions`, and any hitting-recommendation modules. No silent reclassification — every change emits a `hitting.taxonomy.correction` event with before/after.
-
----
-
-## Part 3 — System Impact Map
-
-| System | PIE V2 finish | HIE | UHRC |
-|---|---|---|---|
-| Database | +2 JSONB cols on `performance_sessions`, `athlete_foundation_state` | +2 JSONB cols (hie_signals, hie_caution_state) | none (pure derivation) |
-| ASB topics | `pitching.v2.*` | `hitting.v1.*` | none |
-| Athlete State | adds caution priors | adds caution priors | none |
-| Drill library | catalog already exists, wire recommender | new 32-drill catalog (4 phases × 8 tiers) + recommender | surfaces drills via pillar drilldown |
-| Video library | catalog exists, wire recommender + retag audit | new 40-video catalog + tagging correction migration | surfaces videos via pillar drilldown |
-| Coach dashboard | mount `PieV2CoachPanel` | mount `HieCoachPanel` | unified `<UniversalReportCard />` page |
-| Recruiting | mount `PieV2RecruitingCard` (RR-9 gated) | mount `HieRecruitingCard` (RR-9 gated) | unified card variant |
-| AI Hammer | wire `aiHammerTalkingPoints` into existing Hammer surface | new `hammerTalkingPoints` | standard `HammerBrief` slot renderer |
-| `analysisToTaxonomy` | add pitching.v2 bucket | add hitting.v1 bucket | reads via adapter |
-| Demo↔prod firewall | already inherited | inherited via `prepareRows` | inherited |
-
----
-
-## Part 4 — Exact Implementation Order (no incremental rollout)
-
-**Wave A — PIE V2 closeout (sealed first, no HIE work begins until A done)**
-1. `PieV2FrameTagger.tsx` + `useMicroLayerInput` extension.
-2. `analysisToTaxonomy.ts` PIE V2 bucket integration.
-3. Mount `PieV2CoachPanel` on `CoachAthleteDetail` (toggle gated); mount `PieV2RecruitingCard` on recruiting profile (RR-9 gated).
-4. Wire `aiHammerTalkingPoints` into the live AI Hammer surface behind `HammerBrief` slot contract.
-5. Schema migration: `pie_v2_signals` (JSONB) on `performance_sessions`, `pie_v2_caution_state` (JSONB) on `athlete_foundation_state`. Grants + RLS verified.
-6. `asbInvariantChecks.ts` updates + replay determinism tests for scoring, aggregate, longitudinal.
-7. Sealed ratification entry in `.lovable/plan.md`.
-
-**Wave B — HUAC substrate (Universal Report Card)**
-8. `docs/asb/huac-constitution.md` + `docs/asb/huac-integration-map.md`.
-9. `src/lib/huac/`: `types.ts` (ReportCardContract, Pillar, HammerBrief), `pillarMath.ts`, `hammerBriefBuilder.ts`, tests.
-10. `src/components/report-card/UniversalReportCard.tsx` + `ReportCardHeader` (view toggle) + `PillarCard` + `PillarDrilldownSheet` + `HammerBriefPanel`.
-11. PIE V2 → UHRC adapter (`src/lib/pieV2/uhrcAdapter.ts`) emitting 8 pitching pillars.
-12. Mount Report Card view on the existing pitching analysis route with toggle to Detailed Analysis.
-
-**Wave C — HIE substrate**
-13. `docs/asb/hie-constitution.md` + `docs/asb/hie-integration-map.md` (P1–P4 model, checkpoints, RR-5/6/8 compliance).
-14. `src/lib/hie/`: `types.ts`, `signals.ts` (P1–P4 + checkpoints), `scoring.ts`, `aggregate.ts`, `emit.ts` (`hitting.v1.*`), `athleteState.ts`, `longitudinal.ts`, `injuryDetection.ts`, tests.
-15. `src/data/baseball/hieDrillCatalog.ts` (32) + `hieVideoCatalog.ts` (40) + `recommendDrills.ts` + `recommendVideos.ts`.
-16. `HitterV1MicroInput.tsx` + `HieFrameTagger.tsx` + `useHittingV1Trends.ts`.
-17. `HieCoachPanel.tsx` + `HieRecruitingCard.tsx` (RR-9 gated); mount in coach + recruiting routes.
-18. HIE → UHRC adapter; Report Card variant for hitting (8 pillars).
-19. `aiHammerTalkingPoints` for hitting; slot into shared `HammerBrief`.
-20. Schema: `hie_signals` JSONB on `performance_sessions`, `hie_caution_state` JSONB on `athlete_foundation_state`.
-
-**Wave D — Hitting Taxonomy Correction**
-21. Read-only audit script → `docs/asb/hie-taxonomy-mismatch-report.md` (COMPLETED / PARTIAL / MISCLASSIFIED per row).
-22. Deterministic correction migration: updates `video_tag_assignments`, `video_tag_rules`, `drillDefinitions` (hitting). Every change emits `hitting.taxonomy.correction` event with before/after lineage.
-23. Re-verify against report; seal `hie-taxonomy-correction-ratification.md`.
-
-**Wave E — UX Consistency Sweep**
-24. Replace all bespoke analysis headers with shared `ReportCardHeader`. Remove duplicate scoring surfaces. Single visual + scoring + recommendation language. Toggle Report Card ↔ Detailed everywhere.
-25. Replay determinism tests across PIE V2 + HIE + UHRC adapters at pinned engine_version triple.
-26. Final sealed ratification: `huac-launch-ratification.md` + `.lovable/plan.md` entry.
-
-**Hard rule:** no wave begins until prior wave's ratification is sealed. No incremental rollout of UHRC alone — pitching and hitting both ship under UHRC together at Wave E.
-
----
-
-## Technical notes (engineering)
-
-- All engine versions pinned constants; never read at runtime from config.
-- All emissions ride canonical `emitAsbEvent` → `asb_events` + `asb_event_lineage`. Zero parallel storage.
-- New JSONB columns are projection cache only; canonical truth = `asb_events`.
-- All RLS: existing row-owner policies cover new columns; new tables N/A.
-- RR-6 supremacy: caution/injury advisories never gate execution; athlete-reported pain outranks inferred state.
-- RR-9 gating: recruiting cards opt-in, parent supremacy for minors.
-- Demo↔prod firewall inherited via `prepareRows`; new topics namespaced `pitching.v2.*`, `hitting.v1.*`, `huac.*`.
-- Tests: pure-function determinism, replay equivalence under fixed inputs, contract validation for `ReportCardContract`.
-
-Approve to enter build mode and execute Wave A through Wave E in order.
-
----
-
-## Wave A — SEALED 2026-06-04
-
-Pitching Intelligence Engine V2 substrate ratified per `docs/asb/pie-v2-wave-a-ratification.md`.
-
-Completed:
-- `useMicroLayerInput` PIE V2 bag + `updatePieV2` helper
-- `PieV2FrameTagger` video annotation → canonical emit
-- `analysisToTaxonomy.ts` PIE V2 bucket (`mapPieV2SignalToMovement`, `pieV2SignalsToTaxonomyBucket`)
-- `PieV2CoachPanel` + `PieV2HammerBriefPanel` mounted on `CoachAthleteDetail` (baseball-gated)
-- `PieV2RecruitingCard` mounted behind RR-9 opt-in toggle
-- Schema migration: `performance_sessions.pie_v2_signals` jsonb, `athlete_foundation_state.pie_v2_caution_state` jsonb
-- Replay determinism tests at pinned `pie-v2.0.0`
-
-Wave B (HUAC / Universal Report Card) unblocked. Wave C (HIE) gated by Wave B sealing.
+Approve to proceed with Wave A.5 hardening, after which Wave B (HUAC) opens.
