@@ -39,3 +39,25 @@ Based on sealed prior audits: G1 resolved via Wave 4 silence rationale surfaces,
 ### Stop Gate
 
 Audit-only. Two files. No other changes.
+---
+
+## SEALED — Publish Authorization & Release Readiness Ratification (2026-06-04)
+
+**Artifact:** `docs/asb/publish-authorization-and-release-readiness-ratification.md`
+**Mode:** Governance only. No implementation, code, schema, migrations, emitters, projections, capability additions, RR-7/9/10, or architecture expansion.
+
+**Verdict:** **APPROVED.** Hammers Modality is authorized for public launch.
+
+**Closure summary:**
+- Capabilities C1–C7 sealed and verified.
+- G1 (silence rationale microcopy) — Resolved, backfill-acceptable, non-blocking.
+- G2 (`HammerParentVoice` mount on `Relational.tsx`) — Resolved via prior G2 Remediation.
+- RR-5, RR-6, RR-8, replay determinism, parent supremacy, safeguarding precedence, single Hammer authority, Organism State silence, demo↔production firewall — all Pass.
+- No Critical or Major risks. RR-7 / RR-9 / RR-10 intentionally deferred, non-blocking.
+- Publishability 10/10 across athlete, parent, recovery, platform, trust.
+
+**Final answers:** Launch — yes. Public release — yes. Athlete onboarding — yes. Parent onboarding — yes. No prerequisite work required.
+
+**Baseline frozen:** Megaphase 151 substrate · Hammer Activation 1–8 · Waves 1–4 · G2 Remediation · RR-5/6/8 doctrinal compliance · demo↔prod firewall.
+
+**Stop Gate enforced.** No further capability work authorized under this ratification.
