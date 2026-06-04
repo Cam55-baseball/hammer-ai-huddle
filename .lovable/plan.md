@@ -46,3 +46,19 @@ Sealed entry: "Hammer Wave 4 — Execution Package (Governance Only) — SEALED"
 ## Stop Gate
 
 Wave 4 governance package only. No code. No schema. No RR-7/9/10. No capability additions. Parent Voice interpretation layer only.
+
+---
+
+# Hammer Wave 4 — Execution Package (Governance Only) — SEALED
+
+**Scope:** C4 Parent Voice only (interpretation layer). Excludes C1/C2/C3/C5, RR-7/9/10, recruiter/commercial surfaces, all schema/migration/projection/emitter/authority/safeguarding/RTP changes, any new Hammer capability.
+
+**Subordination:** Eternal Laws · Megaphase 151–160 · RR-5 · RR-6 · RR-8 · Hammer Activation Phases 1–8 · Hammer Execution Constitution · Wave 1/2/3 Ratified.
+
+**Document:** `docs/asb/hammer-wave-4-execution-package.md` (§0–§12: scope, capability review, 7-state parent inventory, surface inventory, behavior plan with RR-5/6/8 enforcement matrix, Wave 2 handoff-only routing plan, constitutional verification plan, measurable acceptance criteria, 7-state × 7-class test matrix, failure analysis, ratification requirements, exit gate, stop gate).
+
+**Parent states (7):** invited-not-accepted · accepted-no-athlete-activity · accepted-active-athlete · accepted-missingness-state · accepted-recovery-state · accepted-onboarding-state · accepted-setback-state. All resolve through Wave 1 `classifySilenceZone` + Wave 2 `resolveGuidanceSlots`/`resolveHandoff` + Wave 3 onboarding/setback resolvers. Zero new primitives.
+
+**Exit gate:** all 7 parent states verified · all constitutional audits green · zero open escalations · Hammer Critical Stack complete · ready for Hammer Critical Stack Validation Audit.
+
+**Stop gate:** Wave 4 only. No RR-7/9/10. No capability additions. Parent Voice interpretation layer only.
