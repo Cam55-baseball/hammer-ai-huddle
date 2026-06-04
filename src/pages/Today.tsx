@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { CommunicationAI } from "@/components/dashboard/CommunicationAI";
 import { topicLabel } from "@/lib/asb/topicLabels";
+import { TodayGuidanceSlots } from "@/components/today/TodayGuidanceSlots";
 
 export default function Today() {
   const { user, loading, isAuthStable } = useAuth();
@@ -72,6 +73,10 @@ export default function Today() {
         </div>
 
         {/* Today's plan */}
+        <TodayGuidanceSlots
+          latestPrescriptionEventId={todaysRenderEvent?.event_id ?? rx.sourceEventIds[0] ?? null}
+          hasSignal={(rows?.length ?? 0) > 0}
+        />
         <PrescriptionCard
           rx={rx}
           prescriptionEventId={todaysRenderEvent?.event_id ?? rx.sourceEventIds[0] ?? null}
