@@ -39,3 +39,28 @@ C2, C3, C4, C5, C6, RR-7, RR-9, RR-10. No schema/projection/emitter/migration ch
 
 ## Stop gate
 Wave 1 only. No Wave 2/3/4. No RR-7/9/10. No new personalities. No schema changes.
+
+---
+
+## Hammer Wave 1 — BUILD COMPLETE (sealed entry)
+
+**Scope:** C1 (Name Disambiguation) + C7 (Silence Enforcement). Zero leakage into C2/C3/C4/C5/C6 or RR-7/9/10.
+
+**Files created:**
+- `src/lib/hammer/identity.ts` — pure canonical identity resolver
+- `src/lib/hammer/__tests__/identity.test.ts` — 5 tests, all pass
+- `src/lib/runtime/silence/types.ts` — Phase 6 §F zone matrix typed
+- `src/lib/runtime/silence/classifier.ts` — pure `classifySilenceZone`, safeguarding-precedence-first
+- `src/lib/runtime/silence/__tests__/classifier.test.ts` — 5 tests, all pass
+
+**Files edited (string-only renames, user-visible "Hammer State" → "Organism State"):**
+- `src/components/hammer/HammerStateBadge.tsx` (badge label + aria-label, via resolver)
+- `src/hooks/useWhyExplanation.ts` (line 101 logic string)
+- `src/components/transparency/WhyExplanationSheet.tsx` (line 17 sheet title)
+- `src/pages/EngineHealthDashboard.tsx` (lines 75, 89, 123 operator-visible labels)
+
+**Verification:** vitest 10/10 green · purity audit clean (no `Date.now`/`Math.random`/network/`supabase` in either pure module) · forbidden-term audit clean in user-visible paths (only allowed doc-comment exceptions remain in resolver self-documentation and one code-internal hook comment).
+
+**Constitutional attestation:** RR-5 / RR-6 / RR-8 preserved (no narrative, no diagnosis, no coercive disclosure). Replay determinism preserved (pure modules). Parent supremacy untouched. Safeguarding precedence enforced in classifier and unit-tested. Demo↔prod firewall (`prepareRows`) untouched. Single Hammer authority via resolver. Organism State silence preserved (renames are labels only; classifier emits no events).
+
+**Status:** Wave 1 COMPLETE + VERIFIED + RATIFIED. Exit gate satisfied. Wave 2 (C6 + C2) may begin.
