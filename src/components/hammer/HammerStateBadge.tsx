@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useHammerState } from '@/hooks/useHammerState';
+import { getHammerIdentity } from '@/lib/hammer/identity';
 import { cn } from '@/lib/utils';
 import { Activity } from 'lucide-react';
 import { WhyButton } from '@/components/transparency/WhyButton';
@@ -14,6 +15,7 @@ interface Props {
 
 export function HammerStateBadge({ className, showLabel = true }: Props) {
   const { snapshot, color, label, tone, loading } = useHammerState();
+  const { organismStateLabel } = getHammerIdentity();
   const [open, setOpen] = useState(false);
 
   if (loading) {
@@ -34,7 +36,7 @@ export function HammerStateBadge({ className, showLabel = true }: Props) {
           'inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium transition-colors hover:bg-accent',
           className
         )}
-        aria-label={`Hammer State: ${label}`}
+        aria-label={`${organismStateLabel}: ${label}`}
       >
         <span className={cn('h-2 w-2 rounded-full', color)} />
         {showLabel && <span className={tone}>{label}</span>}
@@ -45,7 +47,7 @@ export function HammerStateBadge({ className, showLabel = true }: Props) {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Hammer State — {label}
+              {organismStateLabel} — {label}
               <WhyButton sourceType="hammer" />
             </SheetTitle>
           </SheetHeader>

@@ -72,7 +72,7 @@ export default function EngineHealthDashboard() {
             </h1>
             <p className="mt-1 flex items-center gap-2 text-muted-foreground">
               <Shield className="h-4 w-4" />
-              Owner/Admin only — monitors HIE, MPI, and Hammer State pipelines.
+              Owner/Admin only — monitors HIE, MPI, and Organism State pipelines.
             </p>
           </div>
           <SystemIntegrityBadge />
@@ -86,7 +86,7 @@ export default function EngineHealthDashboard() {
         <div className="grid gap-4 md:grid-cols-3">
           <CronCard title="Nightly MPI" timestamp={health.lastNightlyMpi} status={mpiStatus} loading={health.loading} />
           <CronCard title="Nightly HIE" timestamp={health.lastNightlyHie} status={hieStatus} loading={health.loading} />
-          <CronCard title="Hammer State" timestamp={health.lastHammerState} status={hsStatus} loading={health.loading} />
+          <CronCard title="Organism State" timestamp={health.lastHammerState} status={hsStatus} loading={health.loading} />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -120,7 +120,7 @@ export default function EngineHealthDashboard() {
               Engine Heartbeat (last 24h)
             </CardTitle>
             <CardDescription>
-              Continuous pipeline check every 15 min — write → HIE → Hammer State → aggregation → timing
+              Continuous pipeline check every 15 min — write → HIE → Organism State → aggregation → timing
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

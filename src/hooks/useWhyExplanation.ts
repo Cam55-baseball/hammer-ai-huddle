@@ -98,7 +98,7 @@ export function useWhyExplanation(sourceType: WhySource, sourceId?: string): Why
               );
             }
           });
-          logic = `Hammer State "${data.overall_state}" derived from arousal=${data.arousal_score ?? '—'}, recovery=${data.recovery_score ?? '—'}, motor=${data.motor_state ?? '—'}.`;
+          logic = `Organism State "${data.overall_state}" derived from arousal=${data.arousal_score ?? '—'}, recovery=${data.recovery_score ?? '—'}, motor=${data.motor_state ?? '—'}.`;
           confidence = 0.7;
         }
       }
