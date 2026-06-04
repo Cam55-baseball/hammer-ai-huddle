@@ -13,8 +13,8 @@
  *   - Interpretive overlay only. Never authors organism_truth, athlete_intent,
  *     authority_override, hard_stop, or rehabilitation_state.
  *   - Allowed verbs: explain · summarize · guide · route.
- *   - Forbidden: diagnose · prescribe · authorize · cleared · predict ·
- *     guarantee · invent feelings / wants / expects.
+ *   - Forbidden verbs and framings per Wave 4 Execution Package §4
+ *     (enforced by source audit in tests/resolver.test.ts).
  *   - Safeguarding-active short-circuits all slots to lawful silence.
  *   - RR-6: recovery state never routes (no RTP implication, no diagnosis).
  *
