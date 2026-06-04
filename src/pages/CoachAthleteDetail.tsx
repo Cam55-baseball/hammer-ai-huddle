@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,9 +6,16 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ConfidencePill } from "@/components/command/ConfidencePill";
 import { MissingnessChip } from "@/components/command/MissingnessChip";
 import { ReplayDrilldownCTA } from "@/components/coach-console/ReplayDrilldownCTA";
+import { PieV2CoachPanel } from "@/components/coach/PieV2CoachPanel";
+import { PieV2HammerBriefPanel } from "@/components/coach/PieV2HammerBriefPanel";
+import { PieV2RecruitingCard } from "@/components/recruiting/PieV2RecruitingCard";
+import { usePitchingV2Trends } from "@/hooks/usePitchingV2Trends";
+import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
 import { snapshotAthlete } from "@/lib/coach/projections";
 import type { AsbEventRow } from "@/hooks/useAsbTimeline";
 import { ArrowLeft } from "lucide-react";
@@ -17,6 +25,11 @@ const COLS =
 
 export default function CoachAthleteDetail() {
   const { athleteId } = useParams<{ athleteId: string }>();
+  const [recruitingOptIn, setRecruitingOptIn] = useState(false);
+  const { data: pieV2Trends } = usePitchingV2Trends(athleteId ?? "");
+  const pieV2_30d = pieV2Trends?.find((w) => w.window === "30d");
+  const pieV2Latest = pieV2_30d?.aggregates[pieV2_30d.aggregates.length - 1];
+  const pieV2Trajectories = pieV2_30d ? trajectoriesAll(pieV2_30d.aggregates) : [];
 
   const { data: rows = [], isLoading, error } = useQuery({
     queryKey: ["coach-athlete-rows", athleteId],
@@ -76,6 +89,30 @@ export default function CoachAthleteDetail() {
             })}
           </div>
         )}
+
+        {athleteId && <PieV2CoachPanel athleteId={athleteId} />}
+        {pieV2Latest && <PieV2HammerBriefPanel aggregate={pieV2Latest} />}
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between text-base">
+              <span>Recruiting snapshot (RR-9 gated)</span>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="rr9" className="text-xs text-muted-foreground">Opt in</Label>
+                <Switch id="rr9" checked={recruitingOptIn} onCheckedChange={setRecruitingOptIn} />
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recruitingOptIn && pieV2Latest ? (
+              <PieV2RecruitingCard aggregate={pieV2Latest} trajectories={pieV2Trajectories} optIn />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Visibility off. Toggle requires explicit opt-in per RR-9 exposure ethics.
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader className="pb-3">
