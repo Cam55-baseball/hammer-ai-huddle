@@ -1,0 +1,68 @@
+/**
+ * PIE V2 — deterministic drill recommender.
+ *
+ * Inputs: session aggregate + optional RR-6 caution state.
+ * Outputs: ranked drill list. Caution dampens L4 velocity-tier drills
+ * monotonically. Tracked-only signals (extension, arm slot) emit a
+ * survival-first L1/L2 recommendation when variance is elevated.
+ */
+import { PIE_V2_DRILL_CATALOG, type PieV2Drill } from "@/data/baseball/pieV2DrillCatalog";
+import type { PieV2SessionAggregate, PieV2SeverityTier } from "./types";
+
+const TIER_RANK: Record<PieV2SeverityTier, number> = {
+  critical: 4,
+  major: 3,
+  minor: 2,
+  clean: 1,
+};
+
+export interface PieV2DrillRecommendation {
+  drill: PieV2Drill;
+  rank_score: number;
+  rationale: string;
+}
+
+export function recommendDrills(
+  agg: PieV2SessionAggregate,
+  opts: { armHealthCaution?: "none" | "watch" | "elevated"; maxRecommendations?: number } = {},
+): PieV2DrillRecommendation[] {
+  const caution = opts.armHealthCaution ?? "none";
+  const max = opts.maxRecommendations ?? 6;
+  const recs: PieV2DrillRecommendation[] = [];
+
+  for (const s of agg.signals) {
+    if (s.tracked_only) {
+      if ((s.variance ?? 0) > 10) {
+        const drills = PIE_V2_DRILL_CATALOG.filter(
+          (d) => d.signal_id === s.signal_id && (d.tier === "L1_awareness" || d.tier === "L2_patterning"),
+        );
+        for (const d of drills) {
+          recs.push({
+            drill: d,
+            rank_score: 60,
+            rationale: `tracked-signal variance elevated for ${s.signal_id}`,
+          });
+        }
+      }
+      continue;
+    }
+    if (!s.tier || s.tier === "clean") continue;
+    const eligible = PIE_V2_DRILL_CATALOG.filter(
+      (d) => d.signal_id === s.signal_id && TIER_RANK[s.tier!] >= TIER_RANK[d.severity_floor],
+    );
+    for (const d of eligible) {
+      // Dampen L4 velocity-tier under any caution. RR-6 supremacy.
+      if (d.tier === "L4_velocity" && caution !== "none") continue;
+      const base = TIER_RANK[s.tier] * 25;
+      const tierBoost = d.tier === "L1_awareness" ? 10 : d.tier === "L2_patterning" ? 6 : d.tier === "L3_integration" ? 3 : 0;
+      const confidenceWeight = (s.confidence.score / 100) * 5;
+      recs.push({
+        drill: d,
+        rank_score: base + tierBoost + confidenceWeight,
+        rationale: `${s.signal_id} at tier ${s.tier}`,
+      });
+    }
+  }
+
+  return recs.sort((a, b) => b.rank_score - a.rank_score).slice(0, max);
+}
