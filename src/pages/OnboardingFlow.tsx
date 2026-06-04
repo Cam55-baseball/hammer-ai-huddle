@@ -20,6 +20,31 @@ const LIFE_CONTEXT_STEP_ID = "life_context_checkin" as const;
 export default function OnboardingFlow() {
   const { user } = useAuth();
   const { data: rows } = useAthleteCommandRows({ days: 60, limit: 200 });
+
+  // P0-OB-3 — derive isMinor from the athlete's profile DOB so RR-6 / Phase 31
+  // safeguarding actually activates for youth athletes. Defaults to TRUE
+  // (protection-first) while DOB is unknown or loading — never fail open.
+  const { data: profileDob } = useQuery({
+    queryKey: ["profile-dob", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("date_of_birth")
+        .eq("id", user!.id)
+        .maybeSingle();
+      return (data as { date_of_birth: string | null } | null)?.date_of_birth ?? null;
+    },
+  });
+  const isMinor = (() => {
+    if (!profileDob) return true; // protection-first default
+    const dob = new Date(profileDob);
+    if (Number.isNaN(dob.getTime())) return true;
+    const ageMs = Date.now() - dob.getTime();
+    const ageYears = ageMs / (365.25 * 24 * 3600 * 1000);
+    return ageYears < 18;
+  })();
+
   const completed = useMemo(() => {
     if (!rows) return new Set<string>();
     return new Set(
@@ -102,7 +127,7 @@ export default function OnboardingFlow() {
             intensity_band: "moderate",
             topic_tag: selection,
           } as Parameters<typeof emitLifeContextDisclosure>[2],
-          { safeguardingLockdown: false, isMinor: false },
+          { safeguardingLockdown: false, isMinor },
         );
       }
       await markStepComplete(LIFE_CONTEXT_STEP_ID);
