@@ -193,6 +193,7 @@ export async function acceptParentInvite(input: {
     }
     throw new AcceptInviteError("expired_token");
   }
+  const occurredAt = input.occurredAt ?? new Date().toISOString();
   const ctx: RelationshipEmitContext = {
     athleteId: decoded.athlete_id,
     actorId: input.parentUserId,
