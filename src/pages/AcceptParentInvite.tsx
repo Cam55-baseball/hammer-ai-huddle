@@ -129,7 +129,23 @@ export default function AcceptParentInvite() {
           </Card>
         )}
 
-        {decoded && user && (
+        {decoded && user && expired && (
+          <Card className="p-5 space-y-3">
+            <p className="text-sm text-foreground">
+              {PARENT_INVITE_VOICE.expired}
+            </p>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full min-h-11"
+              onClick={() => navigate("/")}
+            >
+              {PARENT_INVITE_VOICE.expiredCta}
+            </Button>
+          </Card>
+        )}
+
+        {decoded && user && !expired && (
           <Card className="p-5 space-y-4">
             <p className="text-sm text-foreground">
               {PARENT_INVITE_VOICE.acceptIntro}
@@ -167,6 +183,12 @@ export default function AcceptParentInvite() {
                   <span>Issued:</span>{" "}
                   {new Date(decoded.issued_at).toLocaleString()}
                 </div>
+                {decoded.expires_at && (
+                  <div>
+                    <span>Expires:</span>{" "}
+                    {new Date(decoded.expires_at).toLocaleString()}
+                  </div>
+                )}
               </CollapsibleContent>
             </Collapsible>
           </Card>
