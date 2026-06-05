@@ -57,14 +57,18 @@ export default function AcceptParentInvite() {
     return hit?.event_id ?? null;
   })();
 
+  const expired = decoded ? isInviteTokenExpired(decoded) : false;
+
   useEffect(() => {
     if (!decoded) {
       toast.error(PARENT_INVITE_VOICE.invalid);
+    } else if (expired) {
+      toast.error(PARENT_INVITE_VOICE.expired);
     }
-  }, [decoded]);
+  }, [decoded, expired]);
 
   async function handleAccept() {
-    if (!user || !decoded || !createdEventId || busy) return;
+    if (!user || !decoded || !createdEventId || busy || expired) return;
     setBusy(true);
     try {
       await acceptParentInvite({
@@ -75,7 +79,11 @@ export default function AcceptParentInvite() {
       toast.success(PARENT_INVITE_VOICE.successToast);
       navigate("/");
     } catch (e) {
-      toast.error(PARENT_INVITE_VOICE.fail);
+      if (e instanceof AcceptInviteError && e.reason === "expired_token") {
+        toast.error(PARENT_INVITE_VOICE.expired);
+      } else {
+        toast.error(PARENT_INVITE_VOICE.fail);
+      }
       console.warn("[accept-parent-invite] failed", e);
     } finally {
       setBusy(false);
