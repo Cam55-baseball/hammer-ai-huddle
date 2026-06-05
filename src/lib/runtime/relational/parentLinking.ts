@@ -87,7 +87,8 @@ export function decodeInviteToken(token: string): ParentInviteToken | null {
     if (
       typeof obj?.relationship_id === "string" &&
       typeof obj?.athlete_id === "string" &&
-      typeof obj?.issued_at === "string"
+      typeof obj?.issued_at === "string" &&
+      (obj.expires_at === undefined || typeof obj.expires_at === "string")
     ) {
       return obj as ParentInviteToken;
     }
