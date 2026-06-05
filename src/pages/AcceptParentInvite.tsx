@@ -14,6 +14,8 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   acceptParentInvite,
   decodeInviteToken,
+  isInviteTokenExpired,
+  AcceptInviteError,
 } from "@/lib/runtime/relational/parentLinking";
 import { useAsbTimeline } from "@/hooks/useAsbTimeline";
 import { RELATIONSHIP_TOPICS } from "@/lib/runtime/relational/relationshipSchemas";
@@ -55,14 +57,18 @@ export default function AcceptParentInvite() {
     return hit?.event_id ?? null;
   })();
 
+  const expired = decoded ? isInviteTokenExpired(decoded) : false;
+
   useEffect(() => {
     if (!decoded) {
       toast.error(PARENT_INVITE_VOICE.invalid);
+    } else if (expired) {
+      toast.error(PARENT_INVITE_VOICE.expired);
     }
-  }, [decoded]);
+  }, [decoded, expired]);
 
   async function handleAccept() {
-    if (!user || !decoded || !createdEventId || busy) return;
+    if (!user || !decoded || !createdEventId || busy || expired) return;
     setBusy(true);
     try {
       await acceptParentInvite({
@@ -73,7 +79,11 @@ export default function AcceptParentInvite() {
       toast.success(PARENT_INVITE_VOICE.successToast);
       navigate("/");
     } catch (e) {
-      toast.error(PARENT_INVITE_VOICE.fail);
+      if (e instanceof AcceptInviteError && e.reason === "expired_token") {
+        toast.error(PARENT_INVITE_VOICE.expired);
+      } else {
+        toast.error(PARENT_INVITE_VOICE.fail);
+      }
       console.warn("[accept-parent-invite] failed", e);
     } finally {
       setBusy(false);
@@ -119,7 +129,23 @@ export default function AcceptParentInvite() {
           </Card>
         )}
 
-        {decoded && user && (
+        {decoded && user && expired && (
+          <Card className="p-5 space-y-3">
+            <p className="text-sm text-foreground">
+              {PARENT_INVITE_VOICE.expired}
+            </p>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full min-h-11"
+              onClick={() => navigate("/")}
+            >
+              {PARENT_INVITE_VOICE.expiredCta}
+            </Button>
+          </Card>
+        )}
+
+        {decoded && user && !expired && (
           <Card className="p-5 space-y-4">
             <p className="text-sm text-foreground">
               {PARENT_INVITE_VOICE.acceptIntro}
@@ -157,6 +183,12 @@ export default function AcceptParentInvite() {
                   <span>Issued:</span>{" "}
                   {new Date(decoded.issued_at).toLocaleString()}
                 </div>
+                {decoded.expires_at && (
+                  <div>
+                    <span>Expires:</span>{" "}
+                    {new Date(decoded.expires_at).toLocaleString()}
+                  </div>
+                )}
               </CollapsibleContent>
             </Collapsible>
           </Card>

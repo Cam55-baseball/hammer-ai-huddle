@@ -13,10 +13,45 @@ import {
   type RelationshipEmitContext,
 } from "./relationshipEmitters";
 
+/**
+ * Wave-1 closure: tokens now carry an explicit `expires_at` (ISO-8601).
+ * Acceptance MUST reject tokens whose `expires_at` is in the past.
+ * Default lifetime: 24 hours from `issued_at`.
+ *
+ * Legacy tokens emitted before this change carry no `expires_at`; the
+ * decoder treats them as expired so old links cannot bypass the new gate.
+ */
+export const PARENT_INVITE_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+
 export interface ParentInviteToken {
   relationship_id: string;
   athlete_id: string;
   issued_at: string;
+  /** ISO-8601 timestamp. Tokens missing this field are treated as expired. */
+  expires_at?: string;
+}
+
+export type AcceptInviteFailureReason =
+  | "invalid_token"
+  | "expired_token"
+  | "tampered_token";
+
+export class AcceptInviteError extends Error {
+  constructor(public readonly reason: AcceptInviteFailureReason) {
+    super(reason);
+    this.name = "AcceptInviteError";
+  }
+}
+
+/** Returns true if the decoded token is past its expires_at (or has none). */
+export function isInviteTokenExpired(
+  token: ParentInviteToken,
+  now: Date = new Date(),
+): boolean {
+  if (!token.expires_at) return true;
+  const exp = Date.parse(token.expires_at);
+  if (Number.isNaN(exp)) return true;
+  return exp <= now.getTime();
 }
 
 function base64urlEncode(s: string): string {
@@ -52,7 +87,8 @@ export function decodeInviteToken(token: string): ParentInviteToken | null {
     if (
       typeof obj?.relationship_id === "string" &&
       typeof obj?.athlete_id === "string" &&
-      typeof obj?.issued_at === "string"
+      typeof obj?.issued_at === "string" &&
+      (obj.expires_at === undefined || typeof obj.expires_at === "string")
     ) {
       return obj as ParentInviteToken;
     }
@@ -107,10 +143,14 @@ export async function createParentInvite(input: {
     initiated_by: "self",
     consent_required: true,
   });
+  const expiresAt = new Date(
+    Date.parse(occurredAt) + PARENT_INVITE_TOKEN_TTL_MS,
+  ).toISOString();
   const token = encodeInviteToken({
     relationship_id: relationshipId,
     athlete_id: input.athleteId,
     issued_at: occurredAt,
+    expires_at: expiresAt,
   });
   return { relationship_id: relationshipId, created_event_id: eventId, token };
 }
@@ -133,7 +173,26 @@ export async function acceptParentInvite(input: {
   occurredAt?: string;
 }): Promise<{ confirmed_event_id: string; relationship_id: string }> {
   const decoded = decodeInviteToken(input.token);
-  if (!decoded) throw new Error("INVALID_INVITE_TOKEN");
+  if (!decoded) throw new AcceptInviteError("invalid_token");
+  if (isInviteTokenExpired(decoded, input.occurredAt ? new Date(input.occurredAt) : new Date())) {
+    // Audit lineage: emit a terminal revocation with reason="expired" so
+    // replay sees the rejection without ever asserting confirmation.
+    try {
+      await revokeParentRelationship({
+        athleteId: decoded.athlete_id,
+        relationshipId: decoded.relationship_id,
+        createdEventId: input.createdEventId,
+        revokedBy: "system_inferred",
+        revokedByUserId: null,
+        reason: "expired",
+        occurredAt: input.occurredAt,
+      });
+    } catch {
+      // Lineage emission is best-effort; the AcceptInviteError below is
+      // the authoritative client-visible signal.
+    }
+    throw new AcceptInviteError("expired_token");
+  }
   const occurredAt = input.occurredAt ?? new Date().toISOString();
   const ctx: RelationshipEmitContext = {
     athleteId: decoded.athlete_id,

@@ -118,3 +118,78 @@ export async function emitPieV2SessionAggregate(
     lineage_refs: {},
   });
 }
+
+/**
+ * Wave-1 closure §1.3 — RR-6 arm-health advisory emission.
+ *
+ * Derives a bounded caution from the session aggregate and (when level
+ * != "none") publishes `pitching.v2.arm_health_caution` through the
+ * canonical event fabric. The safeguarding projection
+ * (`safeguardingNotifications.ts`) subscribes to `pitching.v2.*` and will
+ * route this signal through `classifySafeguardingSignal`.
+ *
+ * Never diagnoses, never prescribes. Athlete-reported pain outranks
+ * inferred mechanical risk per RR-6.
+ */
+export async function emitPieV2ArmHealthCaution(input: {
+  athlete_id: string;
+  session_id: string;
+  occurred_at: string;
+  level: "watch" | "elevated";
+  contributing_factors: string[];
+  athlete_reported_pain: boolean;
+  recommended_action: string;
+  parent_aggregate_event_id?: string;
+  ctx?: PieV2EmitContext;
+}): Promise<void> {
+  const topic_id = "pitching.v2.arm_health_caution";
+  // Elevated caution arrives at the safety surface as a safeguarding-class
+  // signal; classifySafeguardingSignal will route per RR-6 + minor status.
+  const payload: Record<string, unknown> = {
+    session_id: input.session_id,
+    level: input.level,
+    contributing_factors: input.contributing_factors,
+    athlete_reported_pain: input.athlete_reported_pain,
+    recommended_action: input.recommended_action,
+    visibility_scope: "self",
+    confidence: 1,
+    authority: "system",
+    safeguarding_category: input.level === "elevated",
+    engine_version: PIE_V2_ENGINE_VERSION,
+  };
+  const idempotency_key = await computeIdempotencyKey({
+    athlete_id: input.athlete_id,
+    topic_id,
+    occurred_at: input.occurred_at,
+    payload,
+  });
+  const event_id = idempotency_key.slice(0, 32);
+  const result = await emitAsbEvent({
+    event_id,
+    athlete_id: input.athlete_id,
+    topic_id,
+    actor_role: input.ctx?.actor_role ?? "system",
+    actor_id: input.ctx?.actor_id ?? null,
+    occurred_at: input.occurred_at,
+    ingested_at: new Date().toISOString(),
+    effective_at: input.occurred_at,
+    valid_from: input.occurred_at,
+    valid_to: null,
+    payload,
+    engine_version: PIE_V2_ENGINE_VERSION,
+    idempotency_key,
+    causality_refs: { session_id: input.session_id },
+    lineage_refs: input.parent_aggregate_event_id
+      ? { parent_aggregate_event_id: input.parent_aggregate_event_id }
+      : {},
+  });
+
+  if (result.ok && input.parent_aggregate_event_id) {
+    await emitAsbLineage({
+      parent_event_id: input.parent_aggregate_event_id,
+      child_event_id: event_id,
+      derivation_type: "session_aggregate_to_arm_health_caution",
+      engine_version: PIE_V2_ENGINE_VERSION,
+    });
+  }
+}
