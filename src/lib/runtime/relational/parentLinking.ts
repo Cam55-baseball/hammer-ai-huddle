@@ -143,10 +143,14 @@ export async function createParentInvite(input: {
     initiated_by: "self",
     consent_required: true,
   });
+  const expiresAt = new Date(
+    Date.parse(occurredAt) + PARENT_INVITE_TOKEN_TTL_MS,
+  ).toISOString();
   const token = encodeInviteToken({
     relationship_id: relationshipId,
     athlete_id: input.athleteId,
     issued_at: occurredAt,
+    expires_at: expiresAt,
   });
   return { relationship_id: relationshipId, created_event_id: eventId, token };
 }
