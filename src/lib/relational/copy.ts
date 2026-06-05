@@ -231,6 +231,9 @@ export const PARENT_INVITE_VOICE = {
   signInPrompt: "Sign in as the parent to accept this invite.",
   signInCta: "Sign in",
   invalid: "This invite link is invalid or has expired.",
+  expired:
+    "This invite has expired. Ask your athlete to send a new link — invites last 24 hours.",
+  expiredCta: "Request a new invite",
   fail: TERMS.somethingOff,
   successToast: "Linked",
   emailLabel: "Parent's email (optional)",
