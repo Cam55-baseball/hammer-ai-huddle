@@ -173,8 +173,26 @@ export async function acceptParentInvite(input: {
   occurredAt?: string;
 }): Promise<{ confirmed_event_id: string; relationship_id: string }> {
   const decoded = decodeInviteToken(input.token);
-  if (!decoded) throw new Error("INVALID_INVITE_TOKEN");
-  const occurredAt = input.occurredAt ?? new Date().toISOString();
+  if (!decoded) throw new AcceptInviteError("invalid_token");
+  if (isInviteTokenExpired(decoded, input.occurredAt ? new Date(input.occurredAt) : new Date())) {
+    // Audit lineage: emit a terminal revocation with reason="expired" so
+    // replay sees the rejection without ever asserting confirmation.
+    try {
+      await revokeParentRelationship({
+        athleteId: decoded.athlete_id,
+        relationshipId: decoded.relationship_id,
+        createdEventId: input.createdEventId,
+        revokedBy: "system_inferred",
+        revokedByUserId: null,
+        reason: "expired",
+        occurredAt: input.occurredAt,
+      });
+    } catch {
+      // Lineage emission is best-effort; the AcceptInviteError below is
+      // the authoritative client-visible signal.
+    }
+    throw new AcceptInviteError("expired_token");
+  }
   const ctx: RelationshipEmitContext = {
     athleteId: decoded.athlete_id,
     actorId: input.parentUserId,
