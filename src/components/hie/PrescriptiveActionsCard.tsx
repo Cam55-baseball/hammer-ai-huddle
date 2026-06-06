@@ -12,7 +12,7 @@ export function PrescriptiveActionsCard() {
   if (!snapshot || snapshot.prescriptive_actions.length === 0) return null;
 
   const handleStartDrill = (drill: any) => {
-    // Navigate to practice hub with drill parameters
+    // RFL-014 fix: route is `/practice` (PracticeHub), never `/practice-hub`.
     const params = new URLSearchParams({
       drill_type: drill.drill_type || drill.name,
       module: drill.module,
@@ -21,7 +21,7 @@ export function PrescriptiveActionsCard() {
     if (drill.module === 'tex-vision') {
       navigate(`/tex-vision?${params.toString()}`);
     } else {
-      navigate(`/practice-hub?${params.toString()}`);
+      navigate(`/practice?${params.toString()}`);
     }
   };
 
