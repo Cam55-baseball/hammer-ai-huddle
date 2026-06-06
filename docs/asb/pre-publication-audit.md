@@ -74,11 +74,12 @@ copy + onboarding polish. Treat softball parity as the sprint after that.
 
 ## Hostile re-verification (2026-06-06)
 
-The hostile sprint (`docs/asb/baseball-launch-verification.md`) **downgrades** the prior 96% verdict to **88%** based on freshly classified P0 blockers in the recruiting / RR-9 / RR-10 lane:
+The hostile sprint (`docs/asb/baseball-launch-verification.md`) downgraded the prior 96% verdict to 88% based on RR-9 / RR-10 violations. **The RR-9 / RR-10 Authority Correction sprint has closed all P0 blockers** (`docs/asb/baseball-public-launch-ratification.md`):
 
-- **B-1 (P0)** — RR-9 recruiting visibility gate is controlled by the viewing scout, not the athlete.
-- **B-3 (P0)** — Minor protection is not enforced at the recruiting render.
-- **B-4 (P0)** — No athlete-facing recruiting consent surface exists.
-- **B-2 (P1)** — Hitter recruiting card missing (carried forward from prior P1-A).
+- **B-1 (was P0) — CLOSED.** RR-9 consent now athlete-owned via `public.athlete_recruiting_consent`.
+- **B-3 (was P0) — CLOSED.** Minor protection enforced fail-closed via `resolve_recruiting_visibility` and `RecruitingVisibilityGate`.
+- **B-4 (was P0) — CLOSED.** Athlete consent surface at `/athlete/recruiting-consent`.
+- **B-2 (was P1) — CLOSED.** `HittingRecruitingCard` ships behind the same gate.
 
-Soft-launch verdict remains **YES, conditional on disabling the recruiting card** for the soft-launch cohort. Public-launch verdict is **NO** until B-1 / B-3 / B-4 resolve. The recommended final sprint is **RR-9 / RR-10 Authority Correction**.
+Public-launch verdict: **YES for adult athletes**, **soft-launch-hidden for minors** until parent-authorization write surface (P1-F) ships. Recomputed readiness: **96%**. See `docs/asb/baseball-public-launch-ratification.md`.
+
