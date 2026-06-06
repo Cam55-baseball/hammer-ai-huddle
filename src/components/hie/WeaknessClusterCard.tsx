@@ -62,6 +62,12 @@ export function WeaknessClusterCard() {
             />
           );
         })()}
+
+        {hasDoctrine && (
+          <div className="pt-2 border-t">
+            <HittingDoctrineBlock doctrine={snapshot.hitting_doctrine ?? null} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
