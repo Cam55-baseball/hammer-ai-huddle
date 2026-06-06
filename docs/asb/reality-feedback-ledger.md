@@ -95,3 +95,16 @@ See `docs/asb/coach-hammer-runtime-ratification.md` for the full runtime ratific
 | RFL-025 | Rich athlete-context tables (`sprint_analyses`, `athlete_load_tracking`, `physio_health_profiles`, `user_injury_progress`, `hammer_state_snapshots`) populated by capture pipelines but **completely unread** by any prescription / Hammer / roadmap surface — capture / projection gap is the second-largest blocker after RFL-023. | P0 | Open |
 
 See `docs/asb/athlete-development-intelligence-audit.md` and `docs/asb/athlete-development-intelligence-roadmap.md`.
+
+
+## RFL openings — Athlete Context Spine Constitution Sprint (2026-06-06)
+
+| ID | Finding | Severity | Status |
+|---|---|---|---|
+| RFL-026 | Canonical athlete-context spine was constitutionally undefined prior to this sprint. No single document declared which variables, owners, propagation rules, lifecycle bands, and longitudinal semantics govern all developmental intelligence. Now ratified in `docs/asb/athlete-context-spine-constitution.md` (17 profile groups, six lifecycle bands, four equipment scopes, eight speed variables, five longitudinal classes). | P0 | Open (implementation pending) |
+| RFL-027 | Equipment & environment model has no canonical enum, no scope precedence (persistent / session / temporary / inferred), no TTL semantics, and no resolver. Workout generators today cannot constitutionally honor an athlete's actual training environment. | P0 | Open |
+| RFL-028 | Longitudinal adaptation rules (remember / forget / decay / accumulate / re-evaluate) constitutionally undefined. No decay engine, no re-evaluation triggers, no event-sourced training-age / lifting-age lineage. Consumers today read raw values without confidence, missingness, or decay envelopes — violating FC global continuity. | P0 | Open |
+
+**Intelligence ceiling map (Section H):** Today ~20% · Minimum spine 35% · Recommended spine 70% · Elite spine 95%.
+
+See `docs/asb/athlete-context-spine-constitution.md` and `docs/asb/athlete-context-spine-gap-analysis.md`.
