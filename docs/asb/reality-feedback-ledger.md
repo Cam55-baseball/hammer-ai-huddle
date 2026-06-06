@@ -176,3 +176,14 @@ Hostile audit withdrew the P0-3 "GO WITH KNOWN LIMITATIONS" verdict. New launch 
 **Launch verdict:** **NO-GO** until RFL-032 / RFL-033 / RFL-034 closed. After P0 remediation, expected to revert to **GO WITH KNOWN LIMITATIONS** (P1s as disclosed launch debt).
 
 See `docs/asb/launch-readiness-hostile-audit.md` for full evidence and rebuttals.
+
+
+## RFL closures — P0 Launch Blocker Remediation Sprint (2026-06-06)
+
+| ID | Status | Evidence |
+|---|---|---|
+| RFL-032 | **CLOSED** | `src/pages/Auth.tsx` sign-in adds `asb_events`-count query; new athlete-cohort branch routes profile-only-no-event users to `/onboarding/athlete`. Ledger truth (`hasFirstEvent`) is now the canonical onboarding authority. See `docs/asb/p0-launch-blocker-remediation-ratification.md` §RFL-032. |
+| RFL-033 | **CLOSED** | Removed duplicate `getSeasonProfile` from `supabase/functions/_shared/seasonPhase.ts`. `compute-hammer-state` deploys and returns `200 { status: "ok", … }`. See ratification doc §RFL-033. |
+| RFL-034 | **CLOSED** | `decisionFilters.ts` + `dailyPlan.ts` now consume `isMinor` / `parentSupremacyActive` / `parentConcerns` from the spine. Minor + parent-concern personas verified: speed→`tempo_recovery`, daily speed block `awaiting-input`, roadmap high-risk milestones suppressed. Evidence: `scripts/audits/evidence/p0-3-differentiation.json` (11/11 unique daily plans). See ratification doc §RFL-034. |
+
+**Launch verdict (post-remediation):** **GO WITH LIMITATIONS.** P1s (RFL-035…RFL-043) carried forward as disclosed launch debt.
