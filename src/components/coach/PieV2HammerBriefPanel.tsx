@@ -1,16 +1,21 @@
 /**
  * PIE V2 — AI Hammer brief panel.
  *
- * Renders deterministic talking points produced by
- * `talkingPointsForSession`. The HammerBrief slot order is fixed by HUAC
- * (Wave B) and pre-anticipated here in its simplest form: per-signal
- * observation → root-cause hint → next step. No free-form prose, no
- * fabricated certainty, RR-5 compliant.
+ * As of the Intelligence Consumption Sprint, this panel now consumes
+ * `generateHammerBrief` (canonical UHRC translator) in addition to the
+ * existing per-signal talking-points (kept for back-compat / per-leak
+ * detail). Hammer remains a translator, not an analyst — every field
+ * carries lineage back to a source signal id.
  */
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { talkingPointsForSession } from "@/lib/pieV2/aiHammerTalkingPoints";
 import { PIE_V2_SIGNALS } from "@/data/baseball/pieV2Signals";
+import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
+import { recommendDrills } from "@/lib/pieV2/recommendDrills";
+import { recommendVideos } from "@/lib/pieV2/recommendVideos";
+import { buildUhrcReport } from "@/lib/uhrc/buildReport";
+import { generateHammerBrief } from "@/lib/uhrc/generateHammerBrief";
 import type { PieV2SessionAggregate } from "@/lib/pieV2/types";
 
 interface Props {
@@ -18,6 +23,33 @@ interface Props {
 }
 
 export function PieV2HammerBriefPanel({ aggregate }: Props) {
+  // Canonical UHRC-derived brief.
+  const uhrc = buildUhrcReport({
+    athlete_id: aggregate.athlete_id,
+    disciplines: ["pitching"],
+    pieV2Latest: aggregate,
+  });
+  const trends = trajectoriesAll([aggregate]).map((t) => ({
+    source_signal_id: t.signal_id,
+    trend: t.trend,
+    slope: t.slope_30d,
+  }));
+  const drills = recommendDrills(aggregate);
+  const videos = recommendVideos(aggregate);
+  const brief = generateHammerBrief({
+    uhrc,
+    recommendations: {
+      drill: drills[0]
+        ? { id: drills[0].drill.id, name: drills[0].drill.name, rationale: drills[0].rationale, source_signal_id: drills[0].drill.signal_id }
+        : null,
+      video: videos[0]
+        ? { id: videos[0].video.id, title: videos[0].video.title, rationale: videos[0].rationale, source_signal_id: videos[0].video.signal_id }
+        : null,
+    },
+    trends,
+  });
+
+  // Per-signal leak detail (existing behavior).
   const points = talkingPointsForSession(
     aggregate.signals.map((s) => ({
       signal_id: s.signal_id,
@@ -25,16 +57,7 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
       tracked_only: s.tracked_only,
     })),
   );
-  if (points.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">AI Hammer brief</CardTitle></CardHeader>
-        <CardContent className="text-xs text-muted-foreground">
-          No leaks detected this session. Hold the pattern.
-        </CardContent>
-      </Card>
-    );
-  }
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -43,7 +66,26 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
           <Badge variant="outline">{points.length} priorities</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
+        {/* Canonical UHRC-derived envelope */}
+        <div className="rounded border p-3 text-xs space-y-1 bg-muted/30">
+          <div><span className="text-muted-foreground">Biggest win:</span> {brief.biggest_win.headline}</div>
+          <div><span className="text-muted-foreground">Biggest leak:</span> {brief.biggest_leak.headline}</div>
+          <div><span className="text-muted-foreground">Priority fix:</span> {brief.priority_fix.headline}</div>
+          <div><span className="text-muted-foreground">Why it matters:</span> {brief.why_it_matters.text}</div>
+          {brief.drill && (
+            <div><span className="text-muted-foreground">Drill:</span> {brief.drill.name} — {brief.drill.rationale}</div>
+          )}
+          {brief.video && (
+            <div><span className="text-muted-foreground">Video:</span> {brief.video.title} — {brief.video.rationale}</div>
+          )}
+          <div><span className="text-muted-foreground">Trend:</span> {brief.trend.direction} <code className="text-[10px]">({brief.trend.source_signal_id})</code></div>
+          <div className="pt-1 text-[10px] text-muted-foreground border-t">
+            {brief.evidence.length} evidence anchors · engine {brief.engine_version}
+          </div>
+        </div>
+
+        {/* Per-leak detail */}
         {points.map((p) => {
           const def = PIE_V2_SIGNALS[p.signal_id];
           return (
@@ -61,7 +103,7 @@ export function PieV2HammerBriefPanel({ aggregate }: Props) {
           );
         })}
         <div className="text-[10px] text-muted-foreground border-t pt-1">
-          engine_version {aggregate.engine_version} · RR-5 deterministic envelope
+          engine_version {aggregate.engine_version} · RR-5 deterministic envelope · UHRC {brief.engine_version}
         </div>
       </CardContent>
     </Card>
