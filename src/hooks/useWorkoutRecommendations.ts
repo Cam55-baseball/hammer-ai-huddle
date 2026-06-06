@@ -9,6 +9,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { filterExercisesForPain } from '@/utils/painExerciseFilter';
+import { useHammerAthleteContext } from '@/lib/hammer/context/athleteContext';
+import { projectEnvelope, toEdgeFunctionPayload } from '@/lib/hammer/context/decisionFilters';
 
 export interface RecoveryWarning {
   show: boolean;
