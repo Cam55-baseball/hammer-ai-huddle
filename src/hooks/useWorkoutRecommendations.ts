@@ -149,6 +149,8 @@ export function useWorkoutRecommendations(): UseWorkoutRecommendationsResult {
   const [recoveryContext, setRecoveryContext] = useState<RecoveryContext | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // P0-3 (RFL-029): spine envelope forwarded to edge function for context-aware filtering/rerank.
+  const athleteCtx = useHammerAthleteContext();
 
   const generateRecommendations = useCallback(async () => {
     setIsLoading(true);
