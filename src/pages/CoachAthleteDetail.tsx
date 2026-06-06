@@ -29,7 +29,7 @@ const COLS =
 export default function CoachAthleteDetail() {
   const { athleteId } = useParams<{ athleteId: string }>();
   const { user } = useAuth();
-  const [recruitingOptIn, setRecruitingOptIn] = useState(false);
+  const { user } = useAuth();
 
   // P0-REC-3 — roster membership guard. A coach may only drill into an
   // athlete present in their accepted scout_follows roster. Prevents
