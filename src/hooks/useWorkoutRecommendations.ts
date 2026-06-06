@@ -197,11 +197,13 @@ export function useWorkoutRecommendations(): UseWorkoutRecommendationsResult {
 
       setRecoveryContext(recoveryCtx);
 
-      // Call edge function with recovery context
+      // Call edge function with recovery context + athlete spine projection
+      const athletePayload = toEdgeFunctionPayload(projectEnvelope(athleteCtx));
       const { data, error: functionError } = await supabase.functions.invoke('recommend-workout', {
         body: { 
           activityLogs: activityLogsResult.data || [],
           recoveryContext: recoveryCtx,
+          athleteContext: athletePayload,
         },
       });
 
