@@ -1,6 +1,7 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { PlayerSnapshotCard } from '@/components/hie/PlayerSnapshotCard';
 import { WeaknessClusterCard } from '@/components/hie/WeaknessClusterCard';
+import { UhrcAthleteSection } from '@/components/report-card/UhrcAthleteSection';
 import { PrescriptiveActionsCard } from '@/components/hie/PrescriptiveActionsCard';
 import { ReadinessCard } from '@/components/hie/ReadinessCard';
 import { ReadinessBreakdownCard } from '@/components/hie/ReadinessBreakdownCard';
@@ -102,10 +103,13 @@ Confidence: ${snapshot.development_confidence}%
           <div className="space-y-6">
             {hasAdvancedAccess ? (
               <>
+                {/* Section 0: Universal Hammers Report Card — primary surface */}
+                <UhrcAthleteSection />
+
                 {/* Section 1: Player Snapshot */}
                 <PlayerSnapshotCard />
 
-                {/* Section 2: What's Holding You Back */}
+                {/* Section 2: What's Holding You Back (detailed drill-down) */}
                 <WeaknessClusterCard />
 
                 {/* Section 3: What To Do Next */}
