@@ -161,7 +161,7 @@ describe("PIE V2 runtime end-to-end (Section 2.1 / 2.3 / 2.4)", () => {
       // athlete_id / event_id; remaining columns are tolerated as unknown.
     } as AsbEventRow;
 
-    const { state, meta } = safetyState([asbRow], { athlete_id: c.athlete_id, viewer_role: "self" }, {
+    const { state, meta } = safetyState([asbRow], "self", {
       is_minor: false,
       statusRows: [],
     });
