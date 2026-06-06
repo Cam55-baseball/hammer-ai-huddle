@@ -278,15 +278,17 @@ function builder({ modality, ctx, proj, speed }: BuilderArgs): PrescribedBlock {
 
       const steps = finisher ? [...baseSteps, finisher] : baseSteps;
 
+      const prioritySuffix =
+        devPriorities.length > 0 ? ` · priority:${devPriorities[0]}` : "";
       const title = youthScale
         ? "Strength — youth template"
         : bodyweightOnly
-          ? `Strength — bodyweight (${equipment})`
+          ? `Strength — bodyweight (${equipment})${prioritySuffix}`
           : heavyLiftBlocked
-            ? "Strength — injury-modified"
+            ? `Strength — injury-modified${prioritySuffix}`
             : workloadHigh
-              ? `Strength — auto-deload (${phaseTemplate.name})`
-              : `Strength — ${phaseTemplate.name}`;
+              ? `Strength — auto-deload (${phaseTemplate.name})${prioritySuffix}`
+              : `Strength — ${phaseTemplate.name}${prioritySuffix}`;
 
       const why = recoverDay
         ? "Deload day — preserve quality, drop volume."
