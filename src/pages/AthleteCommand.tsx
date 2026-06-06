@@ -7,6 +7,7 @@ import { useAthleteOnboardingState } from "@/hooks/command/useAthleteOnboardingS
 import { NotificationBell } from "@/components/command/NotificationBell";
 import { CommandCenterSection } from "@/components/command/CommandCenterSection";
 import { RecentEventsPreview } from "@/components/command/cards/RecentEventsPreview";
+import { UhrcAthleteSection } from "@/components/report-card/UhrcAthleteSection";
 
 /**
  * Athlete Command Center deep-link route. Renders the same canonical
@@ -36,6 +37,10 @@ export default function AthleteCommand() {
       <div className="mx-auto w-full max-w-5xl px-4 pb-12 sm:px-6">
         <div className="flex items-center justify-end pt-4">
           <NotificationBell />
+        </div>
+
+        <div className="mt-4">
+          <UhrcAthleteSection />
         </div>
 
         <CommandCenterSection defaultSignalsOpen />
