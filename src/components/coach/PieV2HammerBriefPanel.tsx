@@ -7,8 +7,10 @@
  * detail). Hammer remains a translator, not an analyst — every field
  * carries lineage back to a source signal id.
  */
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { talkingPointsForSession } from "@/lib/pieV2/aiHammerTalkingPoints";
 import { PIE_V2_SIGNALS } from "@/data/baseball/pieV2Signals";
 import { trajectoriesAll } from "@/lib/pieV2/longitudinal";
@@ -17,7 +19,7 @@ import { recommendVideos } from "@/lib/pieV2/recommendVideos";
 import { buildUhrcReport } from "@/lib/uhrc/buildReport";
 import { generateHammerBrief } from "@/lib/uhrc/generateHammerBrief";
 import { useAuth } from "@/hooks/useAuth";
-import { useEmitOnce } from "@/hooks/useEmitObservability";
+import { useEmitOnce, emitObservability } from "@/hooks/useEmitObservability";
 import type { PieV2SessionAggregate } from "@/lib/pieV2/types";
 
 
