@@ -281,6 +281,12 @@ export function applyContextFilter<T extends ItemContextView>(
       legal = false;
       reasons.push(`lifecycle:${proj.lifecycleBand}`);
     }
+    // RFL-034 — minor + parent-supremacy gate.
+    const mp = isMinorParentLegal(it.tags, proj);
+    if (!mp.legal) {
+      legal = false;
+      for (const r of mp.reasons) reasons.push(r);
+    }
     let boost = 0;
     const hay = it.tags.join(" ").toLowerCase();
     for (const p of proj.developmentPriorities) {
@@ -320,6 +326,15 @@ export interface SpeedFocusDecision {
 }
 
 export function selectSpeedFocus(proj: AthleteContextProjection): SpeedFocusDecision {
+  // RFL-034 — minor + parent-concern supremacy (precedes injury per minor-supremacy doctrine).
+  if (proj.isMinor === true && proj.parentConcerns.includes("speed_max")) {
+    return {
+      focus: "tempo_recovery",
+      rationale: "minor + parent concern (speed_max) — max-effort sprints suppressed",
+      maxEffortAllowed: false,
+      recommendedReps: 4,
+    };
+  }
   // Injury supremacy — RR-6 doctrine.
   if (proj.injuryRegions.some((r) => ["hamstring", "ankle", "knee", "groin"].includes(r))) {
     return {
