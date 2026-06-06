@@ -62,8 +62,13 @@ export async function persistContextAnswer(
   if (!column) throw new Error(`Unknown context key: ${key}`);
 
   // Read existing confidence map so we can merge.
-  const { data: existing } = await supabase
-    .from("athlete_context")
+  const { data: existing } = await (supabase.from("athlete_context") as unknown as {
+    select: (c: string) => {
+      eq: (col: string, val: string) => {
+        maybeSingle: () => Promise<{ data: { confidence: Record<string, string> | null } | null }>;
+      };
+    };
+  })
     .select("confidence")
     .eq("user_id", userId)
     .maybeSingle();
