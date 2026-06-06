@@ -47,6 +47,13 @@ export interface RecommendationInput {
   detectedIssues?: string[];
   usageStats?: DrillUsageStats[];
   userLevel?: number; // 1-7 progression level
+  /**
+   * P0-3 (RFL-029): optional spine envelope projection. When provided, the
+   * engine hard-filters illegal drills (equipment / injury / lifecycle) and
+   * soft-reranks by development priorities + season phase. Missingness is
+   * permissive — never fabricated.
+   */
+  athleteContext?: import("@/lib/hammer/context/decisionFilters").AthleteContextProjection;
 }
 
 export interface ScoreBreakdown {
