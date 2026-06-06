@@ -3,13 +3,14 @@
  *
  * Declarative list of variables Hammer must know to coach an athlete. Each
  * gap declares (a) the context key to read from `useHammerAthleteContext`,
- * (b) the question Hammer asks when missing, (c) the persistence target.
+ * (b) the question Hammer asks when missing, (c) the canonical spine key
+ * persisted via `persistContextAnswer`.
  *
- * Sprint: Coach Hammer Authority Consolidation (Section B).
+ * Sprint: Athlete Context Spine Implementation (P0-1).
  *
- * Interpretive — never authors organism truth. Persistence target is always
- * `profiles.<col>`; the answer is then re-read through the canonical context
- * inventory so confidence/missingness invariants stay intact.
+ * Interpretive — never authors organism truth. Persistence target is the
+ * canonical Athlete Context Spine (`athlete_context` table); answers are
+ * re-read through the envelope so missingness/confidence stay intact.
  */
 export interface KnowledgeGap {
   readonly id: string;
@@ -19,13 +20,28 @@ export interface KnowledgeGap {
   readonly helper?: string;
   readonly inputKind: "text" | "select" | "number";
   readonly options?: ReadonlyArray<{ value: string; label: string }>;
-  /** Profile column the answer is persisted into. */
+  /** Canonical spine key the answer is persisted into via persistContextAnswer. */
   readonly persistTo: string;
   /** Canonical ASB topic emitted on successful resolution. */
   readonly topic: "onboarding.knowledge_gap_resolved";
 }
 
 export const HAMMER_KNOWLEDGE_GAPS: ReadonlyArray<KnowledgeGap> = [
+  {
+    id: "sport_primary",
+    contextKey: "sport_primary",
+    priority: 5,
+    question: "What's your primary sport?",
+    inputKind: "select",
+    options: [
+      { value: "baseball", label: "Baseball" },
+      { value: "softball", label: "Softball" },
+      { value: "football", label: "Football" },
+      { value: "other", label: "Other" },
+    ],
+    persistTo: "sport_primary",
+    topic: "onboarding.knowledge_gap_resolved",
+  },
   {
     id: "goal_summary",
     contextKey: "goal_summary",
@@ -43,46 +59,21 @@ export const HAMMER_KNOWLEDGE_GAPS: ReadonlyArray<KnowledgeGap> = [
     question: "Where are you in your season right now?",
     inputKind: "select",
     options: [
-      { value: "offseason", label: "Offseason" },
-      { value: "preseason", label: "Preseason" },
-      { value: "inseason", label: "In season" },
-      { value: "postseason", label: "Postseason" },
+      { value: "off", label: "Offseason" },
+      { value: "pre", label: "Preseason" },
+      { value: "in", label: "In season" },
+      { value: "post", label: "Postseason" },
     ],
-    persistTo: "training_focus",
+    persistTo: "season_phase",
     topic: "onboarding.knowledge_gap_resolved",
   },
   {
-    id: "position",
-    contextKey: "position",
-    priority: 30,
-    question: "What's your primary position?",
+    id: "school_grade",
+    contextKey: "school_grade",
+    priority: 35,
+    question: "What grade or class are you in?",
     inputKind: "text",
-    persistTo: "position",
-    topic: "onboarding.knowledge_gap_resolved",
-  },
-  {
-    id: "experience_level",
-    contextKey: "experience_level",
-    priority: 40,
-    question: "How would you describe your experience level?",
-    inputKind: "select",
-    options: [
-      { value: "youth", label: "Youth" },
-      { value: "high_school", label: "High school" },
-      { value: "college", label: "College" },
-      { value: "pro", label: "Pro / aspiring pro" },
-    ],
-    persistTo: "experience_level",
-    topic: "onboarding.knowledge_gap_resolved",
-  },
-  {
-    id: "equipment_access",
-    contextKey: "equipment_access",
-    priority: 50,
-    question: "What equipment do you have regular access to?",
-    helper: "Bat, tee, net, weights, turf, gym, field — list what you have.",
-    inputKind: "text",
-    persistTo: "equipment_access",
+    persistTo: "school_grade",
     topic: "onboarding.knowledge_gap_resolved",
   },
   {
@@ -95,22 +86,31 @@ export const HAMMER_KNOWLEDGE_GAPS: ReadonlyArray<KnowledgeGap> = [
     topic: "onboarding.knowledge_gap_resolved",
   },
   {
-    id: "weekly_availability",
-    contextKey: "weekly_availability",
+    id: "weekly_availability_days",
+    contextKey: "weekly_availability_days",
     priority: 70,
-    question: "Roughly how many hours per week can you train with me?",
+    question: "How many days per week can you train with me?",
     inputKind: "number",
-    persistTo: "weekly_availability",
+    persistTo: "weekly_availability_days",
     topic: "onboarding.knowledge_gap_resolved",
   },
   {
-    id: "injury_history",
-    contextKey: "injury_history",
+    id: "weekly_availability_hours",
+    contextKey: "weekly_availability_hours",
+    priority: 71,
+    question: "Roughly how many total hours per week?",
+    inputKind: "number",
+    persistTo: "weekly_availability_hours",
+    topic: "onboarding.knowledge_gap_resolved",
+  },
+  {
+    id: "training_focus",
+    contextKey: "training_focus",
     priority: 80,
-    question: "Any current injuries or pain I should plan around?",
-    helper: "Say 'none' if you're fully healthy. Your answer always outranks anything I infer.",
+    question: "What should we focus on first — strength, speed, hitting, throwing, defense?",
+    helper: "Pick one or two; we can add more later.",
     inputKind: "text",
-    persistTo: "injury_history",
+    persistTo: "training_focus",
     topic: "onboarding.knowledge_gap_resolved",
   },
   {
@@ -120,6 +120,16 @@ export const HAMMER_KNOWLEDGE_GAPS: ReadonlyArray<KnowledgeGap> = [
     question: "Of these — power, contact, speed, defense, arm — which two matter most to you right now?",
     inputKind: "text",
     persistTo: "development_priorities",
+    topic: "onboarding.knowledge_gap_resolved",
+  },
+  {
+    id: "injury_history",
+    contextKey: "injury_history",
+    priority: 100,
+    question: "Any current injuries or pain I should plan around?",
+    helper: "Say 'none' if you're fully healthy. Your answer always outranks anything I infer.",
+    inputKind: "text",
+    persistTo: "injury_history",
     topic: "onboarding.knowledge_gap_resolved",
   },
 ];
