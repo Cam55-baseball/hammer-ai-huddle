@@ -1,73 +1,79 @@
-# Production Path Activation Sprint
 
-Activation-and-verification sprint only. No new architecture, doctrine, intelligence, or pillars. Closes the one remaining production gap (invite acceptance → linkage activation), then runs runtime rehearsals and produces operational documentation.
+# Post-Launch Observability & Reality Validation Sprint — Plan
 
-## Verified gap (single P1)
+**Constitutional posture:** Observation only. No new doctrine, no scoring, no recommendation redesign, no schema authority changes, no new organism truth surfaces. Every artifact is a **replay-derived projection** over the canonical `asb_events` ledger — zero new authoritative storage. Aligns with Phases 46 (EL), 47 (RP), 53 (RO), 54 (AR), 55 (DG), 57 (AE), Megaphase 91–110 (PR-8 intelligence delivery explainability), Megaphase 111–150 (athlete intelligence delivery / observability supremacy), and RR-9/RR-10 visibility governance.
 
-`acceptParentInvite` (`src/lib/runtime/relational/parentLinking.ts:169`) emits `relational.relationship.confirmed` but does **not** insert a row into `public.parent_athlete_links`. Without that row, `is_authorizing_parent()` returns false and the RR-10 trigger blocks every parent authorization write — minors stay hidden forever in real onboarding.
+## Scope
 
-Adjacent state:
-- `parent_invite_dispatches` (send-side dispatch log) exists; no acceptance pathway writes to `parent_athlete_links`.
-- `AcceptParentInvite.tsx` (route `/accept-parent-invite`) already decodes the token and calls `acceptParentInvite`.
-- `parent_athlete_links` schema, RLS, and `is_authorizing_parent()` are already shipped.
+9 documentation artifacts under `docs/asb/` plus a small set of **read-only projection helpers** under `src/lib/observability/` that derive funnel/utilization/safeguarding metrics from existing ASB rows. No migrations. No new tables. No new edge functions. No UI redesign.
 
-## Section A — Parent invite activation (the only code change)
+## Deliverables
 
-**Approach:** activate the linkage from the trusted server side, driven by the canonical `relational.relationship.confirmed` ASB event. The client keeps emitting; the server projects.
+### Section A — `docs/asb/post-launch-observability.md`
+Inventory table of every critical organism behavior with columns: `behavior | event_name | source_file | asb_topic | consumer | owner | success_criteria`. Covers all 16 behaviors listed in the prompt (signup → trend review). Cross-references existing topic registry (`asb_topic_registry`) and identifies any behavior currently lacking a canonical topic emission — flagged as **instrumentation gap**, not fixed in this sprint.
 
-1. **DB trigger** on `public.asb_events` AFTER INSERT, `WHEN topic_id = 'relational.relationship.confirmed'`:
-   - Read `payload.relationship_id`, `athlete_id`, `actor_id` (parent_user_id), `payload.relationship` (default `'parent'`).
-   - `INSERT INTO parent_athlete_links (parent_user_id, athlete_user_id, relationship, status, invited_at, accepted_at) VALUES (...,'active', occurred_at, occurred_at) ON CONFLICT (parent_user_id, athlete_user_id) DO UPDATE SET status='active', accepted_at=COALESCE(parent_athlete_links.accepted_at, EXCLUDED.accepted_at), revoked_at=NULL WHERE parent_athlete_links.status <> 'revoked' OR EXCLUDED.accepted_at IS NOT NULL`.
-   - Mirror revoke: on `relational.relationship.revoked`, set `status='revoked', revoked_at=occurred_at`.
-   - `SECURITY DEFINER`, `search_path=public`, idempotent, never throws (wrap in `BEGIN/EXCEPTION WHEN OTHERS THEN PERFORM 1; END`).
-2. **Backfill** existing confirmed/revoked events into `parent_athlete_links` in the same migration (idempotent via `ON CONFLICT`).
-3. **Dispatch correlation** (no schema change): after successful `acceptParentInvite` in `AcceptParentInvite.tsx`, fire-and-forget update of the matching `parent_invite_dispatches` row to `status='accepted'` (best-effort, RLS-scoped to dispatches the parent can see; failure does not block).
+### Section B — `docs/asb/funnel-instrumentation.md` + `src/lib/observability/funnels.ts`
+Four canonical funnels (Athlete / Coach / Recruiter / Parent) defined as ordered stage arrays mapped to ASB topic predicates. `funnels.ts` is a **pure reducer** over `AsbEventRow[]` (same shape as `useAthleteCommandRows`) returning `{stage, entries, exits, completionPct, abandonmentPct, medianTimeToNextMs}` per stage. No writes. Document lists every stage → topic binding; any missing topic logged as a Section-G ledger entry.
 
-**Why a trigger, not client RPC:** trigger guarantees replay-safety (linkage is a deterministic projection of the ledger), idempotency, multi-device safety, and refresh safety — all required by the sprint brief — without trusting client code.
+### Section C — `docs/asb/dropoff-detection.md`
+Per-stage drop-off methodology + flag thresholds (advisory, not enforcement). Defines what counts as "stalled", "orphaned", "dead-end", "unconsumed intelligence". Bound to the same projection in `funnels.ts` — no separate engine.
 
-## Section B — Minor journey rehearsal
+### Section D — `docs/asb/recommendation-effectiveness-observability.md` + `src/lib/observability/recommendationFunnel.ts`
+Recommendation lifecycle projection: `shown → opened → drill_started → drill_completed → video_watched → repeat → improvement_correlation → coach_ack`. Pure reducer over existing topics (`foundation_recommendation_traces`, `foundation_video_outcomes`, drill prescription topics). Measurement only — no scoring writeback, no ranking influence (consistent with `videoConversionAnalytics.ts` posture).
 
-Script `scripts/rehearse-minor-journey.ts` (runtime, not a doc). Walks SQL-level evidence for:
-athlete signup → DOB → `is_minor()=true` → recruiting consent default hidden → invite emit (`relational.relationship.created`) → accept (`relational.relationship.confirmed`) → trigger fires → `parent_athlete_links` row active → parent flips `parent_authorized=true` via `ParentRecruitingAuthorization` → `resolve_recruiting_visibility()=true` → coach/recruiter gates open. Capture each event_id, row, and `file:line`.
+### Section E — `docs/asb/intelligence-utilization-audit.md` + `src/lib/observability/intelligenceUtilization.ts`
+Per-surface view counters (UHRC, detailed analysis, Hammer, roadmap, recruiting, coach intelligence, trends) derived from existing view/open topics. Identifies surfaces with **zero or near-zero consumption** as candidates for the next sprint — not redesigned here.
 
-## Section C — Failure recovery matrix
+### Section F — `docs/asb/safeguarding-observability.md` + `src/lib/observability/safeguarding.ts`
+Reducer over `safeguarding_notifications` + `relational.safeguarding.*` ASB topics: emitted, viewed, coach_ack, parent_ack, resolution_time, repeat_frequency. Verifies the constitutional invariant that **no safeguarding signal disappears or remains unseen** (RR-10, Phase 60 §G containment).
 
-Re-run the rehearsal with the 9 hostile cases from the brief (double-accept, refresh, second device, revoke/re-authorize, athlete toggle, viewer refresh mid-transition). PASS/FAIL/BLOCKED + evidence per case. Results land in `docs/asb/production-rehearsal.md`.
+### Section G — `docs/asb/reality-feedback-ledger.md`
+Append-only markdown ledger template with columns: `observed_behavior | evidence (event_id / query / file:line) | frequency | severity | recommended_future_action | status=observed`. Pre-seeded with all instrumentation gaps surfaced in Sections A–F. Constitutionally: this is a human-curated overlay, not organism truth — it never authors ledger state.
 
-## Section D — Onboarding production audit
+### Section H — `docs/asb/launch-success-scoreboard.md`
+Day 1 / Day 7 / Day 30 targets for: activation, retention, analysis usage, recommendation completion, coach engagement, recruiter engagement, parent participation, safeguarding response, athlete progression. Targets are **measurement baselines**, not optimization goals (per RR-9 anti-engagement-optimization doctrine).
 
-`docs/asb/onboarding-production-audit.md` — trace every entry point (`/auth`, `/onboarding`, `/parent-invite`, `/accept-parent-invite`, `/athlete/recruiting-consent`, `/parent/athletes`, `/parent/athletes/:id/recruiting`). List dead-ends, orphan flows, manual-SQL requirements, admin interventions. Target: zero.
+### Section I — `docs/asb/post-launch-command-center.md`
+Single operational source of truth: critical dashboards (`/ops/health`, `/ops/drift`, `/asb/replay`, `/asb/timeline`), critical ASB topics (consolidates lists from `launch-operations-package.md`), critical alerts, critical tables, daily/weekly review checklists, escalation procedures, RACI for "who investigates what". Supersedes ad-hoc sections inside `launch-operations-package.md` by reference.
 
-## Section E — Operational readiness audit
+## Technical Section (for implementers)
 
-`docs/asb/operational-readiness-audit.md` — enumerate required setup, manual steps, hidden deps, env assumptions, missing seed/production data for new athlete / parent / coach / recruiter.
+**New files (9 docs + 4 TS reducers):**
+- `docs/asb/post-launch-observability.md`
+- `docs/asb/funnel-instrumentation.md`
+- `docs/asb/dropoff-detection.md`
+- `docs/asb/recommendation-effectiveness-observability.md`
+- `docs/asb/intelligence-utilization-audit.md`
+- `docs/asb/safeguarding-observability.md`
+- `docs/asb/reality-feedback-ledger.md`
+- `docs/asb/launch-success-scoreboard.md`
+- `docs/asb/post-launch-command-center.md`
+- `src/lib/observability/funnels.ts`
+- `src/lib/observability/recommendationFunnel.ts`
+- `src/lib/observability/intelligenceUtilization.ts`
+- `src/lib/observability/safeguarding.ts`
 
-## Section F — Final production rehearsal
+**Pattern:** Each reducer mirrors `src/lib/ops/telemetry.ts` and `src/lib/digest/projections.ts` — pure functions over `AsbEventRow[]`, no I/O, no writes, no smoothing, lineage preserved (`event_id` traceable for every counted transition).
 
-Adult, minor, pitcher, hitter, coach, recruiter, parent journeys executed against the live runtime. Results table (PASS/FAIL/BLOCKED + evidence) appended to `docs/asb/production-rehearsal.md`.
+**No changes to:** migrations, edge functions, `client.ts`, `types.ts`, RLS policies, schema, intelligence engines, recommendation logic, UI surfaces. Hooks consuming these reducers can be added in a follow-up sprint once the reducers are validated against real ledger data.
 
-## Section G — Launch operations package
+**Out of scope (explicitly):** any fix to instrumentation gaps discovered, any optimization, any UI work, any recommendation/intelligence/onboarding changes.
 
-`docs/asb/launch-operations-package.md` — launch / rollback / monitoring / support / escalation checklists; critical dashboards, ASB topics (`relational.relationship.*`, `relational.exposure.consent_changed`, `relational.exposure.gate_blocked`), DB tables (`asb_events`, `parent_athlete_links`, `athlete_recruiting_consent`, `*_audit`), and alert conditions.
+## Sprint Exit
 
-## Section H — Final go/no-go ratification
+- 9 docs created
+- 4 read-only reducers created
+- All 16 critical behaviors inventoried with explicit gap flags
+- 4 funnels defined and instrumentable
+- Reality feedback ledger seeded with observed gaps
+- Scoreboard targets defined
+- Command center consolidated
 
-`docs/asb/final-launch-ratification.md` — 10 yes/no questions from the brief, each with file:line or SQL evidence. Compute launch readiness %, GO / NO-GO.
+## Return at completion
 
-## Out of scope
-
-Parent onboarding UX redesign, softball, UHRC, Hammer, new pillars, copy polish, new ASB primitives, intelligence work, infra changes.
-
-## Files
-
-**Migration (1):** new — trigger `project_relationship_to_parent_link` + backfill + revoke mirror.
-
-**Code edits (1):** `src/pages/AcceptParentInvite.tsx` — best-effort dispatch status update post-accept.
-
-**Scripts (1):** `scripts/rehearse-minor-journey.ts` (read-only SQL probes).
-
-**Docs (4):** `onboarding-production-audit.md`, `operational-readiness-audit.md`, `production-rehearsal.md`, `launch-operations-package.md`, `final-launch-ratification.md`.
-
-## Return on completion
-
-Operational audit · production rehearsal results · remaining blockers · launch readiness % · GO/NO-GO · recommended next sprint.
+1. Observability inventory (Section A table)
+2. Funnel coverage matrix (Section B)
+3. Instrumentation gaps (rolled up from A–F into Section G ledger)
+4. Reality feedback ledger (Section G)
+5. 30-day success scoreboard (Section H)
+6. Recommended first post-launch optimization sprint — driven by whichever gap in Section G scores highest severity × frequency (likely "instrument missing topics" before any optimization)
