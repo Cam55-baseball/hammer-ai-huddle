@@ -1,117 +1,93 @@
-# Intelligence Consumption Sprint — Plan
+# Hostile Baseball Launch Verification Sprint
 
-Goal: prove every existing intelligence output is consumed end-to-end. Build the Universal Hammers Report Card (UHRC) as the single analysis surface, standardize AI Hammer as a deterministic translator, and produce nine audit artifacts that gate baseball public launch.
+Evidence-only verification pass. No new features, engines, doctrine, or polish. Challenge every prior audit. Trust only what is verifiable in the running code, the database, and the live preview.
 
-No new doctrine. No new scoring. No new intelligence engines. Translation, consumption, and proof only.
+## Operating rules
 
----
+- Treat the 96% / SOFT-LAUNCH-READY verdict as **unverified** until re-proven.
+- Every PASS requires a concrete artifact: file:line, SQL result, screenshot, console/network capture, or test run.
+- Every FAIL requires reproduction steps + the canonical source of the broken behavior.
+- No code edits in this sprint except (a) reclassification fixes that are P0 launch blockers discovered mid-audit, and (b) audit document creation. Anything larger gets logged, not fixed.
 
-## Section 1 — Intelligence Consumption Audit
-**Deliverable:** `docs/asb/intelligence-consumption-audit.md`
+## Section 1 — Real user journey verification
 
-Inventory every producer with `| System | Engine Version | Inputs | Outputs | Consumed By | Orphan? |`:
-- PIE V2 (pitching aggregates, arm-health caution, talking points)
-- HIE (weakness clusters, hitting doctrine, roadmap, causal chains)
-- Foundation Engine (fatigue, onboarding decisions, replay outcomes)
-- Athlete State (`athlete_foundation_state`, `pie_v2_caution_state`)
-- Longitudinal (`trajectoriesAll`, trend windows)
-- Injury Detection (`deriveInjuryCaution`, RR-6)
-- Safeguarding (RR-9 visibility, parent supremacy)
-- Drill Recommendations (`recommendDrills`, drill_prescriptions)
-- Video Recommendations (`VideoSuggestionsPanel`, pieV2VideoCatalog)
-- Coach Intelligence (`PieV2CoachPanel`, roster projection)
-- Recruiting Intelligence (recruiter visibility surface)
-- AI Hammer Inputs (`talkingPointsForSession`, MPI prompts)
-- MPI Scores / Hammer State Snapshots
-- Any additional engines discovered during audit
+Walk each persona end-to-end against the live preview + database. For each step record: route, component file:line, network calls observed, ASB events emitted, PASS/FAIL/BLOCKED.
 
-For each output the audit must name a concrete consumer file:line, or flag ORPHAN.
+Personas:
+1. New baseball athlete — signup → onboarding → first session → first analysis → UHRC → AI Hammer → recommendation → progress
+2. Pitcher — capture → PIE V2 → UHRC → Hammer → drill assignment → coach view → recruiting view
+3. Hitter — capture → HIE → UHRC → Hammer → roadmap → coach view → recruiting view
+4. Parent — invite → approval → visibility → safeguarding event
+5. Coach — roster → drilldown → assign drill → trends → cautions
+6. Recruiter / Scout — discovery → profile → intelligence view → evaluation submission
 
----
+Tooling: `browser--view_preview` + `browser--act/observe/screenshot`, `supabase--read_query` against `asb_events`, `hie_snapshots`, `performance_sessions`, `drill_assignments`, `scout_evaluations`, `safeguarding_notifications`, `parent_invite_dispatches`.
 
-## Section 2 — Universal Hammers Report Card (UHRC)
-**New code:** `src/lib/uhrc/`, `src/components/report-card/`
+## Section 2 — Hostile failure testing
 
-- `src/lib/uhrc/types.ts` — `UhrcReport`, `UhrcPillar`, `UhrcSignalContribution`, `UhrcEvidence`.
-- `src/lib/uhrc/buildReport.ts` — pure builder consuming HIE snapshot + latest PIE V2 aggregate + foundation state + longitudinal trends → `UhrcReport`. Replay-safe, engine-version pinned, confidence/missingness preserved (no fabrication).
-- `src/lib/uhrc/pillars.ts` — canonical pillar list and signal→pillar map (single source).
-- `src/components/report-card/UhrcReportCard.tsx` — primary view (pillars + composite + biggest leak/win).
-- `src/components/report-card/UhrcDetailedAnalysis.tsx` — secondary view; existing `WeaknessClusterCard`, `HittingDoctrineBlock`, `PieV2CoachPanel` become drill-down children.
-- Mount UHRC as default on `AthleteCommand`, `ProgressDashboard`, `CoachAthleteDetail`. Existing analysis cards demoted behind "Detailed analysis" disclosure — not deleted, just no longer the default.
+Active attempts to break: onboarding, role switching, athlete visibility, recruiting visibility, RR-9 consent, parent authority, safeguarding, drill assignment, video playback, report card rendering, Hammer rendering.
 
-Constraints: UHRC reads only existing intelligence; never re-scores. Every pillar value traces to a source event with lineage handle exposed one click away.
+For each: scripted negative case (unauthenticated access, role-mismatched UID, revoked consent, minor-as-target, missing snapshot, zero-rep state, malformed payload, replay against stale engine_version). PASS / FAIL / BLOCKED with evidence row.
 
----
+## Section 3 — Data consistency audit
 
-## Section 3 — Pillar Reduction Audit
-**Deliverable:** `docs/asb/uhrc-pillar-mapping-audit.md`
+Verify UHRC, AI Hammer, coach surfaces, and recruiting surfaces project from a single canonical source. For each displayed numeric/state value: trace component → hook → projection → `asb_events` / `hie_snapshots` / `performance_sessions`. Flag any value that:
+- diverges across surfaces for the same athlete/window
+- bypasses `buildUhrcReport` / `generateHammerBrief`
+- recomputes scoring locally instead of consuming canonical output
 
-For every PIE V2 signal, HIE signal, athlete-state output: `Signal → Pillar → Weight → Explanation`. Audit fails if `signals_produced ≠ signals_consumed` or any signal lands in two pillars. Includes diff against `pillars.ts` so drift is visible.
+Deliverable: `docs/asb/data-consistency-audit.md` — table of `Value | UHRC | Hammer | Coach | Recruiting | Canonical source | Match? | Evidence`.
 
----
+## Section 4 — Recruiting completeness audit
 
-## Section 4 — AI Hammer Standardization
-**New:** `src/lib/uhrc/generateHammerBrief.ts`
+Audit `PieV2RecruitingCard`, scout evaluation flow, recruiter discovery, RR-9 gating, minor protection. Specifically test:
+- Hitter profile shows zero pitching intelligence
+- Pitcher profile shows zero hitting intelligence
+- RR-9 opt-out hides aggregate cards
+- Minor athletes never expose recruiter contact surface
+- Scout evaluation writes only into `scout_evaluations` and never mutates organism truth
 
-Deterministic translator. Input: `{ uhrc, recommendations, trends, athleteState }`. Output:
-```
-{ biggest_win, biggest_leak, priority_fix, why_it_matters, drill, video, trend, evidence[] }
-```
-Every field carries `source_event_id` / `source_signal_id`. Updates `PieV2HammerBriefPanel` to consume `generateHammerBrief` exclusively. No independent scoring/ranking/selection — pure projection over UHRC + recommendation engine outputs. RR-5 envelope preserved.
+Append findings to `docs/asb/recruiting-intelligence-audit.md` (already exists) under a new "Hostile verification" section.
 
----
+## Section 5 — Performance & UX audit
 
-## Section 5 — Recommendation Resolution Audit
-**Deliverable:** `docs/asb/recommendation-resolution-audit.md`
+Measure on the live preview:
+- Athlete dashboard, UHRC card, Hammer panel, coach dashboard, recruiting card, video analysis flow, session save flow
 
-Script `scripts/audit-recommendation-resolution.ts` walks every PIE V2 signal and every HIE phase, verifying:
-- ≥1 assignable drill (drill_definitions / pieV2DrillCatalog)
-- ≥1 playable video (library_videos / pieV2VideoCatalog)
-- ≥1 coach action
-- ≥1 athlete action
+Use `browser--performance_profile` + network capture. Record: TTI, slowest XHR, duplicate identical queries, blocking spinners > 2s, empty-state correctness, debug-only surfaces still mounted in production paths.
 
-Per-signal verdict GREEN/YELLOW/RED. Dead URLs, missing drills, orphan catalog entries surface as RED with file:line.
+## Section 6 — Launch blocker revalidation
 
----
+Reclassify from scratch — **discard prior P0/P1/P2 labels**. For every finding from Sections 1–5 assign a fresh class based on observed launch impact, with evidence row. Output goes into Section 7 doc.
 
-## Section 6 — Coach Intelligence Consumption
-**Deliverable:** `docs/asb/coach-intelligence-audit.md`
+## Section 7 — Final baseball launch verdict
 
-Audit `CoachAthleteDetail`, `CoachConsole`, coach dashboard. Confirm every recommendation, caution, trend, pillar, drill, video reaches a non-debug coach surface. Any gap → mount fix in the smallest surface change (no new coach surfaces).
+Deliverable: `docs/asb/baseball-launch-verification.md`
 
----
+Contents:
+- Per-section PASS/FAIL summary with evidence links
+- Consolidated blocker table (freshly classified)
+- Answers to the six diagnostic questions (what breaks / confuses / leaks / bypasses safeguards / bypasses permissions / inconsistent)
+- Exact baseball launch readiness % (computed from weighted PASS/FAIL, not inherited from prior audit)
+- SOFT-LAUNCH verdict (YES/NO + conditions)
+- PUBLIC-LAUNCH verdict (YES/NO + conditions)
+- Exact remaining work list, ordered
 
-## Section 7 — Recruiting Intelligence Consumption
-**Deliverable:** `docs/asb/recruiting-intelligence-audit.md`
+## Deliverables
 
-Verify pitcher recruiting surfaces only render pitching intelligence; hitter surfaces only hitting. Confirm RR-9 visibility gating and RR-10 minor protection. Cross-sport leakage = blocker.
-
----
-
-## Section 8 — Forensic Consumption Test
-Two journey transcripts appended to `docs/asb/intelligence-consumption-audit.md` (Pitcher + Hitter): Capture → Analysis → UHRC → AI Hammer → Recommendation → Coach → Recruiting → Athlete State. PASS/FAIL + file:line + event lineage per step. Evidence only.
-
----
-
-## Section 9 — Launch Blocker Report
-**Deliverable:** `docs/asb/pre-publication-audit.md`
-- P0 / P1 blockers
-- Baseball launch readiness %
-- Softball launch readiness %
-- Baseball public-launch verdict
-- Softball public-launch verdict
-- Exact remaining work before public release
-
----
-
-## Files
-
-**New:** `docs/asb/intelligence-consumption-audit.md`, `docs/asb/uhrc-pillar-mapping-audit.md`, `docs/asb/recommendation-resolution-audit.md`, `docs/asb/coach-intelligence-audit.md`, `docs/asb/recruiting-intelligence-audit.md`, `docs/asb/pre-publication-audit.md`, `src/lib/uhrc/{types,pillars,buildReport}.ts`, `src/lib/uhrc/generateHammerBrief.ts`, `src/components/report-card/{UhrcReportCard,UhrcDetailedAnalysis}.tsx`, `scripts/audit-recommendation-resolution.ts`, `src/lib/uhrc/__tests__/{buildReport,generateHammerBrief}.test.ts`.
-
-**Edited (mount only, no logic changes):** `src/pages/AthleteCommand.tsx`, `src/pages/ProgressDashboard.tsx`, `src/pages/CoachAthleteDetail.tsx`, `src/components/coach/PieV2HammerBriefPanel.tsx`.
+- `docs/asb/data-consistency-audit.md` (new)
+- `docs/asb/baseball-launch-verification.md` (new)
+- Appended "Hostile verification" sections in `docs/asb/recruiting-intelligence-audit.md` and `docs/asb/pre-publication-audit.md`
+- No source code changes unless a P0 is discovered mid-audit; any such fix is called out explicitly in the final doc.
 
 ## Out of scope
-New scoring engines, new doctrine, new recommendations, new athlete-state systems, softball parity work, onboarding redesign, database schema changes (UHRC is pure projection over existing snapshots/events).
 
-## Exit criteria
-UHRC default on athlete + coach surfaces. AI Hammer consumes canonical intelligence only. All six audit docs committed. Recommendation resolution GREEN for every shipped signal. Zero orphan intelligence outputs. Pitcher + hitter forensic journeys PASS end-to-end.
+New features, new engines, new doctrine, new pillars, AI Hammer expansion, UHRC redesign, onboarding redesign, softball parity, schema changes, copy polish.
+
+## Final return format
+
+1. Launch readiness %
+2. Remaining blockers (freshly classified)
+3. Soft-launch verdict
+4. Public-launch verdict
+5. Recommended final sprint
