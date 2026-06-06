@@ -274,7 +274,8 @@ export default function PracticeHub() {
     setSessionType(null);
     setSessionConfig(null);
     setReps([]);
-    
+    setPieV2MicroInput({});
+
     setNotes('');
     setSavedSessionId(null);
     setLinkAttachError(null);
@@ -594,6 +595,14 @@ export default function PracticeHub() {
                       reps={reps}
                       onRepsChange={handleRepsChange}
                       sessionConfig={sessionConfig}
+                    />
+                  )}
+
+                  {/* PIE V2 — Advanced Mechanics (baseball pitching only). */}
+                  {sportKey === 'baseball' && activeModule === 'pitching' && (
+                    <PitchingV2MicroInput
+                      value={pieV2MicroInput}
+                      onChange={setPieV2MicroInput}
                     />
                   )}
 
