@@ -35,3 +35,16 @@
 - Every new production observation appends a new row with monotonic `RFL-NNN` id.
 - Each row must include reproducible evidence. No anecdotes.
 - This ledger feeds **prioritization**, not architecture mutation. Architecture changes still flow through the constitutional sprint process.
+
+## Audit-only additions — Coach Hammer Authority Audit (2026-06-06)
+
+See `docs/asb/coach-hammer-authority-audit.md` and `docs/asb/coach-hammer-roadmap.md`.
+
+| ID | Finding | Severity | Status |
+|---|---|---|---|
+| RFL-011 | Two next-step engines (`useCoachHammerNextStep` vs `useNextAction`) under Hammer brand can disagree across Dashboard vs Today | M | Open |
+| RFL-012 | `PrescriptiveActionsCard` navigates to `/practice-hub` which does not exist → 404 | M | Open |
+| RFL-013 | Hammer reasoning never reads `profiles` (position, throws/bats, grade, experience) | M | Open |
+| RFL-014 | 4 of 9 daily modalities (hitting, defense, baserunning, fueling) absent from canonical prescription | M | Open |
+| RFL-015 | Onboarding does not perform Hammer-led knowledge-gap acquisition | M | Open |
+| RFL-016 | Ask-Coach (HelpDeskChat) is a separate AI surface from Coach Hammer | L | Open |
