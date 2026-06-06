@@ -134,7 +134,9 @@ export function computeFunnel(
   // For each user, first timestamp they hit each stage.
   const userStageFirst = new Map<string, Map<string, number>>();
   for (const row of sorted) {
-    const uid = (row as Record<string, unknown>)[userIdField] as string | null;
+    const uid = (row as unknown as Record<string, unknown>)[userIdField] as
+      | string
+      | null;
     if (!uid) continue;
     for (const { stage, predicate } of def.stages) {
       if (predicate.topic === null) continue;
